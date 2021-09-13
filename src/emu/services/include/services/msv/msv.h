@@ -23,6 +23,7 @@
 #include <services/msv/common.h>
 #include <services/msv/entry.h>
 #include <services/msv/registry.h>
+#include <services/msv/operations/base.h>
 
 #include <kernel/server.h>
 #include <services/framework.h>
@@ -45,8 +46,10 @@ namespace eka2l1 {
         msv_lock_store = 0xE,
         msv_release_store = 0xF,
         msv_operation_data = 0x12,
+        msv_command_data = 0x13,
         msv_operation_progress = 0x15,
         msv_operation_completion = 0x16,
+        msv_mtm_command = 0x18,
         msv_mtm_group_ref = 0x1C,
         msv_mtm_group_unref = 0x1D,
         msv_fill_registered_mtm_dll_array = 0x19,
@@ -60,6 +63,8 @@ namespace eka2l1 {
         msv_dec_store_reader_count = 0x32,
         msv_get_message_drive = 0x33
     };
+    
+    void absorb_entry_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent);
 
     struct msv_event_data {
         epoc::msv::change_notification_type nof_;
@@ -88,14 +93,16 @@ namespace eka2l1 {
         const std::u16string message_folder() const {
             return message_folder_;
         }
+        
+        epoc::msv::entry_indexer *indexer() {
+            return indexer_.get();
+        }
 
         void connect(service::ipc_context &context) override;
         void queue(msv_event_data &evt);
     };
 
     struct msv_client_session : public service::typical_session {
-        using operation_buffer = std::vector<std::uint8_t>;
-
         epoc::notify_info msv_info_;
         epoc::des8 *change_;
         epoc::des8 *selection_;
@@ -112,12 +119,12 @@ namespace eka2l1 {
 
         std::vector<epoc::msv::entry *> child_entries_;
 
-        std::map<std::uint32_t, operation_buffer> operation_buffers_;
-        std::map<std::uint32_t, operation_buffer> progress_buffers_;
+        std::map<std::uint32_t, epoc::msv::operation_buffer> operation_buffers_;
+        std::vector<std::shared_ptr<epoc::msv::operation>> operations_;
 
     protected:
         bool listen(epoc::notify_info &info, epoc::des8 *change, epoc::des8 *sel);
-        bool claim_operation_buffer(const std::uint32_t operation_id, operation_buffer &buffer);
+        bool claim_operation_buffer(const std::uint32_t operation_id, epoc::msv::operation_buffer &buffer);
 
     public:
         explicit msv_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
@@ -145,6 +152,7 @@ namespace eka2l1 {
         void operation_data(service::ipc_context *ctx);
         void create_entry(service::ipc_context *ctx);
         void change_entry(service::ipc_context *ctx);
+        void command_data(service::ipc_context *ctx);
         void operation_info(service::ipc_context *ctx, const bool is_complete);
 
         void queue(msv_event_data &evt);

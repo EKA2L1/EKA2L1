@@ -78,6 +78,10 @@ add_library(epocservs
         include/services/loader/loader.h
         include/services/install/install.h
         include/services/loader/op.h
+        include/services/msv/operations/base.h
+        include/services/msv/operations/change.h
+        include/services/msv/operations/create.h
+        include/services/msv/operations/move.h
         include/services/msv/cache.h
         include/services/msv/common.h
         include/services/msv/entry.h
@@ -205,6 +209,10 @@ add_library(epocservs
         src/hwrm/vibration/vibration.cpp
         src/install/install.cpp
         src/loader/loader.cpp
+        src/msv/operations/base.cpp
+        src/msv/operations/change.cpp
+        src/msv/operations/create.cpp
+        src/msv/operations/move.cpp
         src/msv/cache.cpp
         src/msv/entry.cpp
         src/msv/msv.cpp

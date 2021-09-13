@@ -55,6 +55,7 @@ namespace eka2l1::epoc::msv {
         root_entry_.type_uid_ = MTM_SERVICE_UID_ROOT;
         root_entry_.parent_id_ = epoc::error_not_found;
         root_entry_.data_ = 0;
+        root_entry_.service_id_ = MSV_ROOT_ID_VALUE;
         root_entry_.time_ = common::get_current_utc_time_in_microseconds_since_0ad();
         root_entry_.visible_id_ = 0;
 
@@ -110,12 +111,18 @@ namespace eka2l1::epoc::msv {
     }
 
     std::optional<std::u16string> entry_indexer::get_entry_data_file(entry &ent) {
-        std::u16string file_path = eka2l1::add_path(msg_dir_, get_folder_name(ent.service_id_, MSV_FOLDER_TYPE_SERVICE));
-        if (!io_->exist(file_path)) {
-            io_->create_directories(file_path);
+        if ((ent.type_uid_ == MSV_FOLDER_TYPE_SERVICE) || (ent.type_uid_ == MTM_SERVICE_UID_ROOT)) {
+            return eka2l1::add_path(msg_dir_, fmt::format(u"{:08X}", ent.service_id_));
         }
 
-        return eka2l1::add_path(file_path, eka2l1::add_path(fmt::format(u"\\{:X}\\", ent.id_ & 0xF), get_folder_name(ent.id_, MSV_FOLDER_TYPE_NORMAL)));
+        const std::u16string file_path = eka2l1::add_path(msg_dir_, get_folder_name(ent.service_id_, MSV_FOLDER_TYPE_SERVICE));
+        const std::u16string hiearchy_folder = eka2l1::add_path(file_path, fmt::format(u"\\{:X}\\", ent.id_ & 0xF));
+        
+        if (!io_->exist(hiearchy_folder)) {
+            io_->create_directories(hiearchy_folder);
+        }
+        
+        return eka2l1::add_path(hiearchy_folder, get_folder_name(ent.id_, MSV_FOLDER_TYPE_NORMAL));
     }
 
     bool entry_indexer::create_standard_entries(drive_number crr_drive) {
@@ -271,14 +278,37 @@ namespace eka2l1::epoc::msv {
 
         return nullptr;
     }
+
+    static void grab_children_copy_relocated_ignorance_way(visible_folder *folder, const std::uint32_t parent_id, const std::uint32_t new_folder_id, std::vector<entry> &entries) {
+        entry *ent = folder->get_entry(parent_id);
+        if (!ent) {
+            return;
+        }
+
+        // If it's a visible folder, the children entries will sit in another visible folder, and we only
+        // want to relocate entry that is currently in this visible folder, so its ok
+        if (ent->children_looked_up()) {
+            epoc::msv::visible_folder_children_query_error err;
+            std::vector<entry*> childs = folder->get_children_by_parent(ent->id_, &err);
+
+            if (err == epoc::msv::visible_folder_children_query_ok) {
+                for (auto child: childs) {
+                    epoc::msv::entry copy = *child;
+                    copy.visible_id_ = new_folder_id;
+
+                    entries.push_back(std::move(copy));
+                    grab_children_copy_relocated_ignorance_way(folder, copy.id_, new_folder_id, entries);
+                }
+            }
+        }
+    }
  
     bool entry_indexer::change_entry(entry &ent) {
-        // WHERE IS IT!!!!! Get out aaaaaaaa
         common::double_linked_queue_element *first = folders_.first();
         common::double_linked_queue_element *end = folders_.end();
 
-        entry decent_copy;
-        bool need_copy = false;
+        std::vector<entry> need_relocate;
+        std::uint32_t relocate_folder = 0;
 
         do {
             if (!first) {
@@ -288,14 +318,18 @@ namespace eka2l1::epoc::msv {
             visible_folder *folder = E_LOFF(first, visible_folder, indexer_link_);
             if (auto result = folder->get_entry(ent.id_)) {
                 entry *to_cop = nullptr;
+                entry decent_copy;
 
-                if (result->visible_id_ == folder->id()) {
+                if (ent.visible_id_ == folder->id()) {
                     to_cop = result;
                 } else {
-                    // Delete this, make a copy and call add later
-                    need_copy = true;
                     decent_copy = *result;
                     to_cop = &decent_copy;
+                    
+                    relocate_folder = ent.visible_id_;
+
+                    // Grab any recursive children of this entry from this visible folder for relocation
+                    grab_children_copy_relocated_ignorance_way(folder, result->parent_id_, relocate_folder, need_relocate);
                 }
 
                 if (to_cop) {
@@ -317,18 +351,176 @@ namespace eka2l1::epoc::msv {
                     to_cop->mtm_datas_[0] = ent.mtm_datas_[0];
                     to_cop->mtm_datas_[1] = ent.mtm_datas_[1];
                     to_cop->mtm_datas_[2] = ent.mtm_datas_[2];
-
-                    break;
                 }
+
+                if (relocate_folder) {
+                    need_relocate.push_back(decent_copy);
+
+                    for (std::size_t i = 0; i < need_relocate.size(); i++) {
+                        folder->remove_entry(need_relocate[i].id_);
+                    }
+                }
+
+                break;
             }
 
             first = first->next;
         } while (first != end);
 
-        if (need_copy) {
-            return entry_indexer::add_entry(decent_copy);
+        if (relocate_folder) {
+            first = folders_.first();
+            end = folders_.end();
+
+            // Last entry is parent, but anyway, we add all
+            do {
+                if (!first) {
+                    break;
+                }
+
+                visible_folder *folder = E_LOFF(first, visible_folder, indexer_link_);
+                if (folder->id() == relocate_folder) {
+                    folder->add_entry_list(need_relocate, false);
+                    return true;
+                }
+
+                first = first->next;
+            } while (first != end);
+
+            visible_folder *new_folder_obj = new visible_folder(relocate_folder);
+            new_folder_obj->add_entry_list(need_relocate, false);
+
+            folders_.push(&new_folder_obj->indexer_link_);
         }
 
+        return true;
+    }
+
+    bool entry_indexer::owning_service(const std::uint32_t id, std::uint32_t &owning) {
+        if (id == MSV_ROOT_ID_VALUE) {
+            return MSV_ROOT_ID_VALUE;
+        }
+
+        std::uint32_t lookup_id = id;
+
+        while (true) {
+            entry *ent = get_entry(lookup_id);
+            if (!ent) {
+                return false;
+            }
+
+            if (ent->type_uid_ == MSV_SERVICE_UID) {
+                owning = ent->id_;
+                return true;
+            }
+
+            lookup_id = ent->parent_id_;
+        }
+
+        return false;
+    }
+
+    bool entry_indexer::get_children_id(const std::uint32_t vf, const std::uint32_t parent_id,
+        std::vector<std::uint32_t> &children_ids) {
+        common::double_linked_queue_element *first = folders_.first();
+        common::double_linked_queue_element *end = folders_.end();
+
+        do {
+            if (!first) {
+                break;
+            }
+
+            visible_folder *folder = E_LOFF(first, visible_folder, indexer_link_);
+            if (folder->id() == vf) {
+                epoc::msv::visible_folder_children_query_error error = epoc::msv::visible_folder_children_query_ok;
+                if (parent_id != vf) {
+                    entry *parent_entry = folder->get_entry(parent_id);
+                    if (!parent_entry) {
+                        return false;
+                    }
+
+                    if (!parent_entry->children_looked_up()) {
+                        return false;
+                    }
+
+                    children_ids.insert(children_ids.begin(), parent_entry->children_ids_.begin(), parent_entry->children_ids_.end());
+                } else {
+                    std::vector<entry*> ents = folder->get_children_by_parent(parent_id, &error);
+
+                    if (error != epoc::msv::visible_folder_children_query_ok) {
+                        return false;
+                    }
+
+                    for (auto ent: ents) {
+                        children_ids.push_back(ent->id_);
+                    }
+                }
+                
+                return true;
+            }
+
+            first = first->next;
+        } while (first != end);
+
+        return false;
+    }
+
+    bool entry_indexer::move_entry_to_new_folder(entry *ent, const std::uint32_t new_parent, const std::uint32_t new_folder) {
+        common::double_linked_queue_element *first = folders_.first();
+        common::double_linked_queue_element *end = folders_.end();
+
+        std::vector<entry> need_relocate;
+
+        if (ent->visible_id_ != new_folder) {
+            entry copy = *ent;
+            copy.parent_id_ = new_parent;
+            copy.visible_id_ = new_folder;
+
+            need_relocate.push_back(copy);
+        } else {
+            ent->parent_id_ = new_parent;
+            return true;
+        }
+
+        do {
+            if (!first) {
+                break;
+            }
+
+            visible_folder *folder = E_LOFF(first, visible_folder, indexer_link_);
+            if (folder->id() == ent->visible_id_) {
+                grab_children_copy_relocated_ignorance_way(folder, ent->id_, new_folder, need_relocate);
+        
+                for (std::size_t i = 0; i < need_relocate.size(); i++) {
+                    folder->remove_entry(need_relocate[i].id_);
+                }
+                
+                break;
+            }
+
+            first = first->next;
+        } while (first != end);
+
+        first = folders_.first();
+
+        do {
+            if (!first) {
+                break;
+            }
+
+            visible_folder *folder = E_LOFF(first, visible_folder, indexer_link_);
+            if (folder->id() == new_folder) {
+                folder->add_entry_list(need_relocate, false);
+                return true;
+            }
+
+            first = first->next;
+        } while (first != end);
+
+        // No folder, may we create one
+        visible_folder *new_folder_obj = new visible_folder(new_folder);
+        new_folder_obj->add_entry_list(need_relocate, false);
+
+        folders_.push(&new_folder_obj->indexer_link_);
         return true;
     }
 
@@ -337,6 +529,7 @@ namespace eka2l1::epoc::msv {
         , database_(nullptr)
         , create_entry_stmt_(nullptr)
         , change_entry_stmt_(nullptr)
+        , relocate_entry_stmt_(nullptr)
         , visible_folder_find_stmt_(nullptr)
         , find_entry_stmt_(nullptr)
         , query_child_entries_stmt_(nullptr)
@@ -358,6 +551,10 @@ namespace eka2l1::epoc::msv {
 
         if (change_entry_stmt_) {
             sqlite3_finalize(change_entry_stmt_);
+        }
+
+        if (relocate_entry_stmt_) {
+            sqlite3_finalize(relocate_entry_stmt_);
         }
 
         if (visible_folder_find_stmt_) {
@@ -568,7 +765,7 @@ namespace eka2l1::epoc::msv {
         // Get a new entry slot for us all
         if (is_add) {
             if (ent.id_ == 0) {
-                ent.id_ = id_counter_ + 1;
+                ent.id_ = ++id_counter_;
             }
         }
 
@@ -580,23 +777,36 @@ namespace eka2l1::epoc::msv {
             }
         }
 
+        entry *ccent = get_entry(ent.id_);
+        msv_id old_visible_id = 0;
+        
+        if (ccent) {
+            old_visible_id = ccent->visible_id_;
+        }
+
         ent.visible_id_ = visible_folder_id;
 
         // Parent's visbility affects child visiblity
         // The fact that the visible folder ID retrieved not equals to parent ID, means that
         // the parent entry is not a visible folder. So the child can not be too
-        if (ent.type_uid_ == MTM_SERVICE_UID_ROOT) {
-            ent.visible_folder(true);
-        } else {
-            if (ent.parent_id_ == visible_folder_id) {
-                if (ent.visible() && ((ent.type_uid_ == MSV_SERVICE_UID) || (ent.type_uid_ == MSV_FOLDER_UID))) {
-                    ent.visible_folder(true);
+        if (is_add) {
+            if (ent.type_uid_ == MTM_SERVICE_UID_ROOT) {
+                ent.visible_folder(true);
+            } else {
+                if (ent.parent_id_ == visible_folder_id) {
+                    if (ent.visible() && ((ent.type_uid_ == MSV_SERVICE_UID) || (ent.type_uid_ == MSV_FOLDER_UID))) {
+                        ent.visible_folder(true);
+                    } else {
+                        ent.visible_folder(false);
+                    }
                 } else {
                     ent.visible_folder(false);
                 }
-            } else {
-                ent.visible_folder(false);
             }
+        }
+
+        if (is_add) {
+            get_entry_data_file(ent);
         }
 
         // Let's bind value to add in the database
@@ -641,14 +851,44 @@ namespace eka2l1::epoc::msv {
             return false;
         }
 
-        id_counter_++;
-
         if (is_add) {
             result = entry_indexer::add_entry(ent);
             return true;
         }
 
+        if (!is_add && (old_visible_id != visible_folder_id)) {
+            change_all_children_to_new_folder(old_visible_id, ent.id_, visible_folder_id);
+        }
+
         return entry_indexer::change_entry(ent);
+    }
+    
+    void sql_entry_indexer::change_all_children_to_new_folder(const std::uint32_t visible_folder, const std::uint32_t parent_id, const std::uint32_t new_folder) {
+        // Need to apply this changes to the children too
+        // CTE seems to be limited to max 16bit, assume we don't spam thousand of messages
+        // Can just use a list
+        std::vector<std::uint32_t> required_change_ids;
+        recursive_children_ids_same_folder(visible_folder, parent_id, required_change_ids);
+
+        if (!required_change_ids.empty()) {
+            std::string UPDATE_VISIBILE_FOLDER_CHILDREN = "UPDATE IndexEntry SET visibleParent=";
+            UPDATE_VISIBILE_FOLDER_CHILDREN += common::to_string(new_folder);
+            UPDATE_VISIBILE_FOLDER_CHILDREN += " WHERE id IN (";
+
+            for (std::size_t i = 0; i < required_change_ids.size(); i++) {
+                UPDATE_VISIBILE_FOLDER_CHILDREN += common::to_string(required_change_ids[i]);
+
+                if (i < required_change_ids.size() - 1)
+                    UPDATE_VISIBILE_FOLDER_CHILDREN += ",";
+            }
+
+            UPDATE_VISIBILE_FOLDER_CHILDREN += ")";
+
+            const int result_code = sqlite3_exec(database_, UPDATE_VISIBILE_FOLDER_CHILDREN.c_str(), nullptr, nullptr, nullptr);
+            if ((result_code != SQLITE_DONE) && (result_code != SQLITE_OK)) {
+                LOG_ERROR(SERVICE_MSV, "Failed to update new visible folder ID!");
+            }
+        }
     }
 
     entry *sql_entry_indexer::add_entry(entry &ent) {
@@ -868,5 +1108,103 @@ namespace eka2l1::epoc::msv {
         }
 
         return entries;
+    }
+    
+    bool sql_entry_indexer::get_children_id(const std::uint32_t visible_folder, const std::uint32_t parent_id,
+        std::vector<std::uint32_t> &children_ids) {
+        if (entry_indexer::get_children_id(visible_folder, parent_id, children_ids)) {
+            return true;
+        }
+
+        if (!query_child_ids_stmt_) {
+            static const char *QUERY_CHILD_ID_REQUIRE_VF_STMT = "SELECT id FROM IndexEntry "
+                "WHERE visibleParent=:visibleParent AND parentId=:parentId";
+
+            if (sqlite3_prepare(database_, QUERY_CHILD_ID_REQUIRE_VF_STMT, -1, &query_child_ids_stmt_, nullptr) != SQLITE_OK) {
+                LOG_ERROR(SERVICE_MSV, "unable to prepare children ID query statement!");
+                return false;
+            }
+        }
+
+        sqlite3_reset(query_child_ids_stmt_);
+        sqlite3_bind_int(query_child_ids_stmt_, 1, static_cast<int>(visible_folder));
+        sqlite3_bind_int(query_child_ids_stmt_, 2, static_cast<int>(parent_id));
+
+        do {
+            int error = sqlite3_step(query_child_ids_stmt_);
+            if (error == SQLITE_DONE) {
+                return true;
+            }
+
+            if (error != SQLITE_ROW) {
+                LOG_ERROR(SERVICE_MSV, "Error {} while querying children IDs from SQL database", error);
+                break;
+            }
+
+            const std::uint32_t id = static_cast<std::uint32_t>(sqlite3_column_int(query_child_ids_stmt_, 0));
+            children_ids.push_back(id);
+        } while (true);
+
+        return false;
+    }
+
+    void sql_entry_indexer::recursive_children_ids_same_folder(const std::uint32_t visible_folder, const std::uint32_t parent_id, std::vector<std::uint32_t> &children_ids) {
+        std::vector<std::uint32_t> current_child_list;
+        get_children_id(visible_folder, parent_id, current_child_list);
+
+        children_ids.insert(children_ids.begin(), current_child_list.begin(), current_child_list.end());
+
+        for (const std::uint32_t id: current_child_list) {
+            recursive_children_ids_same_folder(visible_folder, id, children_ids);
+        }
+    }
+
+    bool sql_entry_indexer::move_entry(const std::uint32_t id, const std::uint32_t new_parent) {
+        entry *ent = get_entry(id);
+
+        if (!ent) {
+            LOG_ERROR(SERVICE_MSV, "Entry to move with id {} does not exist!", id);
+            return false;
+        }
+
+        if (ent->parent_id_ == new_parent) {
+            return true;
+        }
+
+        const std::uint32_t new_folder = get_suitable_visible_parent_id(new_parent);
+        const std::uint32_t old_folder = ent->visible_id_;
+        bool significant_move = (ent->visible_id_ != new_folder);
+
+        // Do a database set
+        if (!relocate_entry_stmt_) {
+            static const char *RELOCATE_ENTRY_STMT_STR = "UPDATE IndexEntry SET parentId=:id visibleParent=:visibleParent "
+                "WHERE id=:id";
+
+            if (sqlite3_prepare(database_, RELOCATE_ENTRY_STMT_STR, -1, &relocate_entry_stmt_, nullptr) != SQLITE_OK) {
+                LOG_ERROR(SERVICE_MSV, "Error while preparing relocate entry SQL statement!");
+                return false;
+            }
+        }
+
+        sqlite3_reset(relocate_entry_stmt_);
+        sqlite3_bind_int(relocate_entry_stmt_, 1, static_cast<int>(new_parent));
+        sqlite3_bind_int(relocate_entry_stmt_, 2, static_cast<int>(new_folder));
+        sqlite3_bind_int(relocate_entry_stmt_, 3, static_cast<int>(id));
+
+        const int error_code = sqlite3_step(relocate_entry_stmt_);
+        if (error_code != SQLITE_DONE) {
+            LOG_ERROR(SERVICE_MSV, "Error {} while relocating entry in the database!", error_code);
+            return false;
+        }
+
+        if (!move_entry_to_new_folder(ent, new_parent, new_folder)) {
+            return false;
+        }
+
+        if (significant_move) {
+            change_all_children_to_new_folder(old_folder, id, new_folder);
+        }
+
+        return true;
     }
 }

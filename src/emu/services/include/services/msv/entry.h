@@ -44,7 +44,10 @@ namespace eka2l1::epoc::msv {
         entry root_entry_;
 
         bool create_standard_entries(drive_number crr_drive);
-        std::vector<entry *> get_entries_by_parent_through_cache(const std::uint32_t visible_folder, const std::uint32_t parent_id);
+        bool move_entry_to_new_folder(entry *ent, const std::uint32_t new_parent, const std::uint32_t new_folder);
+
+        virtual bool get_children_id(const std::uint32_t visible_folder, const std::uint32_t parent_id,
+            std::vector<std::uint32_t> &children_ids);
 
     public:
         explicit entry_indexer(io_system *io, const std::u16string &msg_folder, const language preferred_lang);
@@ -53,6 +56,8 @@ namespace eka2l1::epoc::msv {
         virtual entry *add_entry(entry &ent);
         virtual entry *get_entry(const std::uint32_t id);
         virtual bool change_entry(entry &ent);
+        virtual bool owning_service(const std::uint32_t id, std::uint32_t &owning);
+        virtual bool move_entry(const std::uint32_t id, const std::uint32_t new_parent) = 0;
 
         virtual std::vector<entry *> get_entries_by_parent(const std::uint32_t parent_id) = 0;
         std::optional<std::u16string> get_entry_data_file(entry &ent);
@@ -63,9 +68,11 @@ namespace eka2l1::epoc::msv {
         sqlite3 *database_;
         sqlite3_stmt *create_entry_stmt_;
         sqlite3_stmt *change_entry_stmt_;
+        sqlite3_stmt *relocate_entry_stmt_;
         sqlite3_stmt *visible_folder_find_stmt_;
         sqlite3_stmt *find_entry_stmt_;
         sqlite3_stmt *query_child_entries_stmt_;
+        sqlite3_stmt *query_child_ids_stmt_;
 
         std::uint32_t id_counter_;
 
@@ -75,6 +82,14 @@ namespace eka2l1::epoc::msv {
 
         msv_id get_suitable_visible_parent_id(const msv_id parent_id);
         bool add_or_change_entry(entry &ent, entry *&result, const bool is_add);
+        
+        bool get_children_id(const std::uint32_t visible_folder, const std::uint32_t parent_id,
+            std::vector<std::uint32_t> &children_ids) override;
+
+        void recursive_children_ids_same_folder(const std::uint32_t visible_folder,
+            const std::uint32_t parent_id, std::vector<std::uint32_t> &children_ids);
+
+        void change_all_children_to_new_folder(const std::uint32_t visible_folder, const std::uint32_t parent_id, const std::uint32_t new_folder);
 
     public:
         explicit sql_entry_indexer(io_system *io, const std::u16string &msg_folder, const language preferred_lang);
@@ -83,6 +98,7 @@ namespace eka2l1::epoc::msv {
         entry *add_entry(entry &ent) override;
         entry *get_entry(const std::uint32_t id) override;
         bool change_entry(entry &ent) override;
+        bool move_entry(const std::uint32_t id, const std::uint32_t new_parent) override;
 
         std::vector<entry *> get_entries_by_parent(const std::uint32_t parent_id) override;
     };

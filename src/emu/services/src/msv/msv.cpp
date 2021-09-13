@@ -19,6 +19,9 @@
  */
 
 #include <services/msv/msv.h>
+#include <services/msv/operations/change.h>
+#include <services/msv/operations/create.h>
+
 #include <system/epoc.h>
 #include <vfs/vfs.h>
 
@@ -289,6 +292,10 @@ namespace eka2l1 {
             operation_data(ctx);
             break;
 
+        case msv_command_data:
+            command_data(ctx);
+            break;
+
         case msv_change_entry:
             change_entry(ctx);
             break;
@@ -374,7 +381,7 @@ namespace eka2l1 {
         }
     }
 
-    static void absorb_entry_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent) {
+    void absorb_entry_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent) {
         epoc::msv::entry_data data_str;
         if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
             data_str.data_ = ent.data_;
@@ -417,9 +424,9 @@ namespace eka2l1 {
         pad_out_data(seri);
     }
 
-    static void absorb_entry_and_service_id_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent) {
+    static void absorb_entry_and_owning_service_id_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent, std::uint32_t &owning_service) {
         absorb_entry_to_buffer(seri, ent);
-        seri.absorb(ent.service_id_);
+        seri.absorb(owning_service);
     }
 
     void msv_client_session::get_entry(service::ipc_context *ctx) {
@@ -446,8 +453,13 @@ namespace eka2l1 {
             return;
         }
 
+        std::uint32_t owning_service_id = 0;
+        if (!indexer->owning_service(ent->id_, owning_service_id)) {
+            LOG_WARN(SERVICE_MSV, "Unable to obtain owning service ID!");
+        }
+
         common::chunkyseri seri(buffer, buffer_max_size, common::SERI_MODE_MEASURE);
-        absorb_entry_and_service_id_to_buffer(seri, *ent);
+        absorb_entry_and_owning_service_id_to_buffer(seri, *ent, owning_service_id);
 
         if (seri.size() > buffer_max_size) {
             ctx->complete(epoc::error_overflow);
@@ -455,13 +467,13 @@ namespace eka2l1 {
         }
 
         seri = common::chunkyseri(buffer, buffer_max_size, common::SERI_MODE_WRITE);
-        absorb_entry_and_service_id_to_buffer(seri, *ent);
+        absorb_entry_and_owning_service_id_to_buffer(seri, *ent, owning_service_id);
 
         ctx->set_descriptor_argument_length(1, static_cast<std::uint32_t>(seri.size()));
         
         // Slot 2 is usually service ID on old MSV
         if (ctx->get_descriptor_argument_ptr(2)) {
-            ctx->write_data_to_descriptor_argument<std::uint32_t>(2, ent->service_id_);
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(2, owning_service_id);
         }
 
         ctx->complete(epoc::error_none);
@@ -849,7 +861,7 @@ namespace eka2l1 {
                 operation_buffers_.erase(ite);
             }
         } else {
-            operation_buffer &mee = operation_buffers_[operation_id.value()];
+            epoc::msv::operation_buffer &mee = operation_buffers_[operation_id.value()];
             mee.resize(operation_buffer_size);
 
             std::memcpy(mee.data(), operation_buffer_ptr, operation_buffer_size);
@@ -858,7 +870,42 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    bool msv_client_session::claim_operation_buffer(const std::uint32_t operation_id, operation_buffer &buffer) {
+    void msv_client_session::command_data(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> operation_id = ctx->get_argument_value<std::uint32_t>(0);
+
+        std::uint8_t *operation_buffer_ptr = ctx->get_descriptor_argument_ptr(1);
+        std::size_t operation_buffer_size = ctx->get_argument_data_size(1);
+
+        std::uint8_t *parameter_ptr = ctx->get_descriptor_argument_ptr(2);
+        std::size_t parameter_size = ctx->get_argument_data_size(2);
+
+        if (!operation_id.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        if (!operation_buffer_ptr || !operation_buffer_size) {
+            LOG_WARN(SERVICE_MSV, "Operation data buffer is empty, clearing it out");
+
+            auto ite = operation_buffers_.find(operation_id.value());
+            if (ite != operation_buffers_.end()) {
+                operation_buffers_.erase(ite);
+            }
+        } else {
+            epoc::msv::operation_buffer &mee = operation_buffers_[operation_id.value()];
+            mee.resize(operation_buffer_size);
+
+            std::memcpy(mee.data(), operation_buffer_ptr, operation_buffer_size);
+
+            if (parameter_ptr && parameter_size) {
+                mee.insert(mee.begin(), parameter_ptr, parameter_ptr + parameter_size);
+            }
+        }
+
+        ctx->complete(epoc::error_none);
+    }
+
+    bool msv_client_session::claim_operation_buffer(const std::uint32_t operation_id, epoc::msv::operation_buffer &buffer) {
         auto ite = operation_buffers_.find(operation_id);
         if (ite != operation_buffers_.end()) {
             buffer = std::move(ite->second);
@@ -872,6 +919,7 @@ namespace eka2l1 {
 
     void msv_client_session::create_entry(service::ipc_context *ctx) {
         std::optional<std::uint32_t> operation_id = ctx->get_argument_value<std::uint32_t>(0);
+        std::optional<std::uint32_t> process_id = ctx->get_argument_value<std::uint32_t>(1);
 
         // TODO: Consider the second argument in newer version for security.
         if (!operation_id.has_value()) {
@@ -879,7 +927,7 @@ namespace eka2l1 {
             return;
         }
 
-        operation_buffer buffer;
+        epoc::msv::operation_buffer buffer;
         if (!claim_operation_buffer(operation_id.value(), buffer)) {
             LOG_ERROR(SERVICE_MSV, "No buffer correspond with operation ID 0x{:X} to create entry", operation_id.value());
             ctx->complete(epoc::error_argument);
@@ -887,47 +935,18 @@ namespace eka2l1 {
             return;
         }
 
-        epoc::msv::entry target_entry;
+        epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
 
-        common::chunkyseri seri(buffer.data(), buffer.size(), common::SERI_MODE_READ);
-        absorb_entry_to_buffer(seri, target_entry);
+        std::shared_ptr<epoc::msv::operation> operation = std::make_shared<epoc::msv::create_operation>(
+            operation_id.value(), buffer, info);
 
-        msv_server *serv = server<msv_server>();
-        epoc::msv::entry *final_entry = serv->indexer_->add_entry(target_entry);
-        
-        epoc::msv::local_operation_progress progress;
-        progress.operation_ = epoc::msv::local_operation_new;
-        progress.number_of_entries_ = 1;
-
-        if (!final_entry) {
-            LOG_ERROR(SERVICE_MSV, "Error adding entry!");
-
-            progress.number_failed_++;
-            progress.number_remaining_ = 1;
-            progress.error_ = epoc::error_general;
-        } else {
-            progress.mid_ = final_entry->id_;
-            progress.number_completed_++;
-
-            // Queue entry added event
-            msv_event_data created;
-            created.nof_ = epoc::msv::change_notification_type_entries_created;
-            created.arg1_ = final_entry->id_;
-            created.arg2_ = final_entry->parent_id_;
-
-            serv->queue(created);
-        }
-
-        // Report progress
-        operation_buffer &progress_buffer = progress_buffers_[operation_id.value()];
-        progress_buffer.resize(sizeof(progress));
-        std::memcpy(progress_buffer.data(), &progress, sizeof(progress));
-
-        ctx->complete(epoc::error_none);
+        operations_.push_back(operation);
+        operation->execute(server<msv_server>(), process_id.value());
     }
 
     void msv_client_session::change_entry(service::ipc_context *ctx) {
         std::optional<std::uint32_t> operation_id = ctx->get_argument_value<std::uint32_t>(0);
+        std::optional<std::uint32_t> process_id = ctx->get_argument_value<std::uint32_t>(1);
 
         // TODO: Consider the second argument in newer version for security.
         if (!operation_id.has_value()) {
@@ -935,7 +954,7 @@ namespace eka2l1 {
             return;
         }
 
-        operation_buffer buffer;
+        epoc::msv::operation_buffer buffer;
         if (!claim_operation_buffer(operation_id.value(), buffer)) {
             LOG_ERROR(SERVICE_MSV, "No buffer correspond with operation ID 0x{:X} to create entry", operation_id.value());
             ctx->complete(epoc::error_argument);
@@ -943,43 +962,13 @@ namespace eka2l1 {
             return;
         }
 
-        epoc::msv::entry target_entry;
+        epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
 
-        common::chunkyseri seri(buffer.data(), buffer.size(), common::SERI_MODE_READ);
-        absorb_entry_to_buffer(seri, target_entry);
+        std::shared_ptr<epoc::msv::operation> operation = std::make_shared<epoc::msv::change_operation>(
+            operation_id.value(), buffer, info);
 
-        msv_server *serv = server<msv_server>();
-        const bool result = serv->indexer_->change_entry(target_entry);
-        
-        epoc::msv::local_operation_progress progress;
-        progress.operation_ = epoc::msv::local_operation_changed;
-        progress.number_of_entries_ = 1;
-
-        if (!result) {
-            LOG_ERROR(SERVICE_MSV, "Error changing entry!");
-
-            progress.number_failed_++;
-            progress.number_remaining_ = 1;
-            progress.error_ = epoc::error_general;
-        } else {
-            progress.mid_ = target_entry.id_;
-            progress.number_completed_++;
-
-            // Queue entry changed event
-            msv_event_data created;
-            created.nof_ = epoc::msv::change_notification_type_entries_changed;
-            created.arg1_ = target_entry.id_;
-            created.arg2_ = target_entry.parent_id_;
-
-            serv->queue(created);
-        }
-
-        // Report progress
-        operation_buffer &progress_buffer = progress_buffers_[operation_id.value()];
-        progress_buffer.resize(sizeof(progress));
-        std::memcpy(progress_buffer.data(), &progress, sizeof(progress));
-
-        ctx->complete(epoc::error_none);
+        operations_.push_back(operation);
+        operation->execute(server<msv_server>(), process_id.value());
     }
 
     void msv_client_session::operation_info(service::ipc_context *ctx, const bool is_complete) {
@@ -990,19 +979,41 @@ namespace eka2l1 {
             return;
         }
 
-        auto ite = progress_buffers_.find(operation_id.value());
-        if (ite == progress_buffers_.end()) {
-            LOG_ERROR(SERVICE_MSV, "Progress buffer for operation 0x{:X} is not ready!", operation_id.value());
+        for (std::size_t i = 0; i < operations_.size(); i++) {
+            if (operations_[i]->operation_id() == operation_id.value()) {
+                if (operations_[i]->state() == epoc::msv::operation_state_queued) {
+                    ctx->complete(epoc::error_not_ready);
+                    return;
+                }
 
-            ctx->complete(epoc::error_not_ready);
-            return;
+                if (operations_[i]->state() == epoc::msv::operation_state_failure) {
+                    ctx->complete(epoc::error_none);
+                    return;
+                }
+
+                if ((is_complete && (operations_[i]->state() == epoc::msv::operation_state_success)) ||
+                    (!is_complete && (operations_[i]->state() == epoc::msv::operation_state_pending))) {
+                    const epoc::msv::operation_buffer &buffer = operations_[i]->progress_buffer();
+
+                    ctx->write_data_to_descriptor_argument(1, buffer.data(), static_cast<std::uint32_t>(buffer.size()));
+                    ctx->complete(static_cast<int>(buffer.size()));
+
+                    if (is_complete)
+                        operations_.erase(operations_.begin() + i);
+
+                    return;
+                }
+
+                LOG_ERROR(SERVICE_MSV, "Accessing operation 0x{:X} progress with contradict state={}!", operation_id.value(),
+                    static_cast<int>(operations_[i]->state()));
+
+                ctx->complete(epoc::error_argument);
+
+                return;
+            }
         }
 
-        ctx->write_data_to_descriptor_argument(1, ite->second.data(), static_cast<std::uint32_t>(ite->second.size()));
-        ctx->complete(static_cast<int>(ite->second.size()));
-
-        if (is_complete) {
-            progress_buffers_.erase(ite);
-        }
+        LOG_ERROR(SERVICE_MSV, "Progress buffer for operation 0x{:X} can't be found!", operation_id.value());
+        ctx->complete(epoc::error_not_found);
     }
 }

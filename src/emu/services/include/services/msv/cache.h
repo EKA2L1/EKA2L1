@@ -94,6 +94,7 @@ namespace eka2l1::epoc::msv {
         }
 
         bool splitable() const;
+        const std::size_t left_to_splittable() const;
         bool do_split(const msv_id parent_splitter);
 
         bool update_child_id(const msv_id parent_id, const msv_id child_id, const bool is_add);

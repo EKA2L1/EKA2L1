@@ -106,22 +106,22 @@ namespace eka2l1::epoc::msv {
     static_assert(sizeof(entry_data) == 84, "Entry data size is not binary compatible");
 
     struct entry {
-        std::uint32_t id_;
-        std::int32_t parent_id_;
-        std::uint32_t service_id_;
-        std::uint32_t related_id_;
-        std::uint32_t visible_id_;
-        std::int32_t pc_sync_count_;
-        epoc::uid type_uid_;
-        epoc::uid mtm_uid_;
+        std::uint32_t id_ = 0;
+        std::int32_t parent_id_ = 0;
+        std::uint32_t service_id_ = 0;
+        std::uint32_t related_id_ = 0;
+        std::uint32_t visible_id_ = 0;
+        std::int32_t pc_sync_count_ = 0;
+        epoc::uid type_uid_ = 0;
+        epoc::uid mtm_uid_ = 0;
         std::uint32_t data_ = 0;
         std::u16string description_;
         std::u16string details_;
-        std::uint64_t time_;
+        std::uint64_t time_ = 0;
 
-        std::int32_t size_;
-        std::int32_t error_;
-        std::int32_t bio_type_;
+        std::int32_t size_ = 0;
+        std::int32_t error_ = 0;
+        std::int32_t bio_type_ = 0;
         std::int32_t reserved_ = 0;
 
         std::int32_t mtm_datas_[3];
@@ -195,6 +195,7 @@ namespace eka2l1::epoc::msv {
     };
 
     using msv_id = std::uint32_t;
+    using operation_buffer = std::vector<std::uint8_t>;
 
     static constexpr std::uint32_t MTM_DEFAULT_SPECIFIC_UID = 0x10202D51;
     static constexpr std::uint32_t MTM_SERVICE_UID_ROOT = 0x10000F67;

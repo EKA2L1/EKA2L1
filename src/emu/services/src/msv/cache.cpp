@@ -153,6 +153,14 @@ namespace eka2l1::epoc::msv {
         return (entries_.size() >= CACHE_THRESHOLD);
     }
 
+    const std::size_t entry_range_table::left_to_splittable() const {
+        if (CACHE_THRESHOLD <= entries_.size()) {
+            return 0;
+        }
+
+        return (CACHE_THRESHOLD - entries_.size());
+    }
+
     bool entry_range_table::do_split(const msv_id parent_splitter) {
         // Take the middle entry 
         entry_range_table *new_table = new entry_range_table;
@@ -314,6 +322,10 @@ namespace eka2l1::epoc::msv {
             }
         };
 
+        std::sort(entries.begin(), entries.end(), [](const entry &lhs, const entry &rhs) {
+            return lhs.id_ < rhs.id_;
+        });
+
         if (tables_.empty()) {
             // Add some new tables
             make_tables_and_add(0, entries.size());
@@ -358,9 +370,21 @@ namespace eka2l1::epoc::msv {
 
             if (first->next == end) {
                 if (skipped < entries.size()) {
+                    // We spends some last effort trying to add it to the last table till it reachs the threshold
+                    // Then we can create new table for it.
+                    const std::size_t more_to = the_table->left_to_splittable();
+                    const std::size_t to_take = common::min<std::size_t>(more_to, entries.size() - skipped);
+
+                    if (to_take > 0) {
+                        the_table->add_tons(entries, skipped, to_take);
+                        skipped += to_take;
+                    }
+
                     // Make new tables and add
-                    make_tables_and_add(skipped, entries.size() - skipped);
-                    break;
+                    if (skipped < entries.size()) {
+                        make_tables_and_add(skipped, entries.size() - skipped);
+                        break;
+                    }
                 }
             }
 
