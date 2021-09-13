@@ -723,7 +723,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="446"/>
       <source>Disable status bar</source>
-      <translation type="unfinished">Disable status bar</translation>
+      <translation>Схаваць радок стану</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="457"/>
