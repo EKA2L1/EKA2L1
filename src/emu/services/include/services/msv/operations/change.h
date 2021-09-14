@@ -28,5 +28,6 @@ namespace eka2l1::epoc::msv {
             epoc::notify_info complete_info);
 
         void execute(msv_server *server, const kernel::uid process_uid) override;
+        std::int32_t system_progress(system_progress_info &progress) override;
     };
 }

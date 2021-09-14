@@ -22,6 +22,7 @@
 
 #include <services/msv/common.h>
 #include <services/msv/entry.h>
+#include <services/msv/factory.h>
 #include <services/msv/registry.h>
 #include <services/msv/operations/base.h>
 
@@ -35,11 +36,16 @@
 #include <queue>
 
 namespace eka2l1 {
+    class io_system;
+    class fs_server;
+    struct fs_server_client;
+
     enum msv_opcode {
         msv_get_entry = 0x0,
         msv_get_children = 0x1,
         msv_change_entry = 0x6,
         msv_create_entry = 0x7,
+        msv_move_entries = 0x9,
         msv_notify_session_event = 0xB,
         msv_cancel_notify_session_event = 0xC,
         msv_read_store = 0xD,
@@ -49,6 +55,7 @@ namespace eka2l1 {
         msv_command_data = 0x13,
         msv_operation_progress = 0x15,
         msv_operation_completion = 0x16,
+        msv_operation_mtm = 0x17,
         msv_mtm_command = 0x18,
         msv_mtm_group_ref = 0x1C,
         msv_mtm_group_unref = 0x1D,
@@ -61,17 +68,27 @@ namespace eka2l1 {
         msv_set_mtm_path = 0x2F,
         msv_set_receive_entry_events = 0x31,
         msv_dec_store_reader_count = 0x32,
-        msv_get_message_drive = 0x33
+        msv_get_message_drive = 0x33,
+        msv_get_required_capabilities = 0x34,
+        msv_open_file_store_for_read = 0x39,
+        msv_open_temp_store = 0x3A,
+        msv_replace_file_store = 0x3B,
+        msv_file_store_exist = 0x3D,
+        msv_system_progress = 0x47
     };
-    
-    void absorb_entry_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent);
+
+    void absorb_command_data(common::chunkyseri &seri, std::vector<epoc::msv::msv_id> &ids, std::uint32_t &param1,
+        std::uint32_t &param2);
 
     struct msv_event_data {
         epoc::msv::change_notification_type nof_;
         std::uint32_t arg1_;
         std::uint32_t arg2_;
-        std::string selection_;
+        std::vector<std::uint32_t> ids_;
     };
+
+    // To compatible with all versions :)
+    static constexpr std::uint32_t MAX_ID_PER_EVENT_DATA_REPORT = 15;
 
     class msv_server : public service::typical_server {
         friend struct msv_client_session;
@@ -80,12 +97,16 @@ namespace eka2l1 {
         epoc::msv::mtm_registry reg_;
 
         std::unique_ptr<epoc::msv::entry_indexer> indexer_;
+        std::vector<std::unique_ptr<epoc::msv::operation_factory>> factories_;
+
+        fs_server *fserver_;
 
         bool inited_;
 
     protected:
         void install_rom_mtm_modules();
         void init();
+        void init_sms_settings();
 
     public:
         explicit msv_server(eka2l1::system *sys);
@@ -98,14 +119,24 @@ namespace eka2l1 {
             return indexer_.get();
         }
 
+        io_system *get_io_system();
+
         void connect(service::ipc_context &context) override;
         void queue(msv_event_data &evt);
+
+        bool move_entry(const std::uint32_t id, const std::uint32_t new_parent_id);
+
+        void install_factory(std::unique_ptr<epoc::msv::operation_factory> &factory);
+        epoc::msv::operation_factory *get_factory(const std::uint32_t mtm_uid);
+
+        void absorb_entry_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent);
+        void absorb_entry_and_owning_service_id_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent, std::uint32_t &owning_service);
     };
 
     struct msv_client_session : public service::typical_session {
         epoc::notify_info msv_info_;
         epoc::des8 *change_;
-        epoc::des8 *selection_;
+        epoc::des8 *sequence_;
 
         std::queue<msv_event_data> events_;
         std::uint32_t nof_sequence_;
@@ -123,8 +154,9 @@ namespace eka2l1 {
         std::vector<std::shared_ptr<epoc::msv::operation>> operations_;
 
     protected:
-        bool listen(epoc::notify_info &info, epoc::des8 *change, epoc::des8 *sel);
+        bool listen(epoc::notify_info &info, epoc::des8 *change, epoc::des8 *seq);
         bool claim_operation_buffer(const std::uint32_t operation_id, epoc::msv::operation_buffer &buffer);
+        fs_server_client *make_new_fs_client(service::session *&ss);
 
     public:
         explicit msv_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
@@ -152,9 +184,18 @@ namespace eka2l1 {
         void operation_data(service::ipc_context *ctx);
         void create_entry(service::ipc_context *ctx);
         void change_entry(service::ipc_context *ctx);
+        void move_entries(service::ipc_context *ctx);
         void command_data(service::ipc_context *ctx);
-        void operation_info(service::ipc_context *ctx, const bool is_complete);
+        void operation_info(service::ipc_context *ctx, const bool is_complete, const bool is_system = false);
+        void transfer_mtm_command(service::ipc_context *ctx);
+        void open_file_store_for_read(service::ipc_context *ctx);
+        void open_temp_file_store(service::ipc_context *ctx);
+        void replace_file_store(service::ipc_context *ctx);
+        void file_store_exists(service::ipc_context *ctx);
+        void required_capabilities(service::ipc_context *ctx);
+        void operation_mtm(service::ipc_context *ctx);
 
-        void queue(msv_event_data &evt);
+        // Do not add reference here!
+        void queue(msv_event_data evt);
     };
 }

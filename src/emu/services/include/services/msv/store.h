@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 EKA2L1 Team
+ * Copyright (c) 2020 EKA2L1 Team
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -19,15 +19,32 @@
 
 #pragma once
 
-#include <services/msv/operations/base.h>
+#include <map>
+#include <vector>
+
+namespace eka2l1::common {
+    class ro_stream;
+    class wo_stream;
+}
 
 namespace eka2l1::epoc::msv {
-    class create_operation: public operation {
-    public:
-        explicit create_operation(const msv_id operation_id, const operation_buffer &buffer,
-            epoc::notify_info complete_info);
+    using store_buffer = std::vector<std::uint8_t>;
 
-        void execute(msv_server *server, const kernel::uid process_uid) override;
-        std::int32_t system_progress(system_progress_info &progress) override;
+    class store {
+    private:
+        std::map<std::uint32_t, store_buffer> stores_;
+
+    public:
+        explicit store();
+
+        bool read(common::ro_stream &stream);
+        bool write(common::wo_stream &stream);
+
+        store_buffer &buffer_for(const std::uint32_t uid);
+        bool buffer_exists(const std::uint32_t uid);
+
+        const std::size_t buffer_count() const {
+            return stores_.size();
+        }
     };
 }

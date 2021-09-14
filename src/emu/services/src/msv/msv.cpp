@@ -19,8 +19,14 @@
  */
 
 #include <services/msv/msv.h>
+#include <services/msv/store.h>
 #include <services/msv/operations/change.h>
 #include <services/msv/operations/create.h>
+#include <services/msv/operations/move.h>
+#include <services/sms/mtm/factory.h>
+#include <services/sms/settings.h>
+#include <services/fs/fs.h>
+#include <services/fs/std.h>
 
 #include <system/epoc.h>
 #include <vfs/vfs.h>
@@ -30,6 +36,7 @@
 #include <vfs/vfs.h>
 
 #include <utils/bafl.h>
+#include <utils/sec.h>
 
 #include <common/cvt.h>
 #include <common/time.h>
@@ -40,6 +47,7 @@
 
 namespace eka2l1 {
     static const std::u16string DEFAULT_MSG_DATA_DIR = u"C:\\private\\1000484b\\Mail2\\";
+    static const std::u16string DEFAULT_MSG_DATA_DIR_OLD = u"C:\\System\\Mail\\";
 
     std::string get_msv_server_name_by_epocver(const epocver ver) {
         if (ver < epocver::epoc81a) {
@@ -52,6 +60,7 @@ namespace eka2l1 {
     msv_server::msv_server(eka2l1::system *sys)
         : service::typical_server(sys, get_msv_server_name_by_epocver((sys->get_symbian_version_use())))
         , reg_(sys->get_io_system())
+        , fserver_(nullptr)
         , inited_(false) {
     }
 
@@ -88,11 +97,62 @@ namespace eka2l1 {
             }
         }
     }
+    
+    io_system *msv_server::get_io_system() {
+        return sys->get_io_system();
+    }
+
+    static constexpr std::uint32_t SMS_SETTINGS_STORE_UID = 0x1000996E;
+
+    void msv_server::init_sms_settings() {
+        epoc::sms::sms_settings settings;
+        epoc::sms::supply_sim_settings(sys, &settings);
+
+        std::vector<epoc::msv::entry*> entries = indexer_->get_entries_by_parent(epoc::msv::MSV_ROOT_ID_VALUE);
+        for (std::size_t i = 0; i < entries.size(); i++) {
+            if (entries[i]->mtm_uid_ == epoc::msv::MSV_MSG_TYPE_UID) {
+                std::optional<std::u16string> path = indexer_->get_entry_data_file(entries[i]);
+                if (path.has_value()) {
+                    io_system *io = sys->get_io_system();
+                    symfile f = io->open_file(path.value(), READ_MODE | BIN_MODE);
+
+                    epoc::msv::store the_store;
+
+                    if (f) {
+                        eka2l1::ro_file_stream rstream(f.get());
+                        the_store.read(rstream);
+                    }
+
+                    epoc::msv::store_buffer &buffer = the_store.buffer_for(SMS_SETTINGS_STORE_UID);
+                    common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
+
+                    settings.absorb(seri);
+
+                    buffer.resize(seri.size());
+                    seri = common::chunkyseri(buffer.data(), buffer.size(), common::SERI_MODE_WRITE);
+                    settings.absorb(seri);
+
+                    if (f) {
+                        f->close();
+                    }
+
+                    f = io->open_file(path.value(), WRITE_MODE | BIN_MODE);
+                    
+                    if (f) {
+                        eka2l1::wo_file_stream wstream(f.get());
+                        the_store.write(wstream);
+
+                        f->close();
+                    }
+                }
+            }
+        }
+    }
 
     void msv_server::init() {
         // Instantiate the message folder
         device_manager *mngr = sys->get_device_manager();
-        message_folder_ = eka2l1::add_path(DEFAULT_MSG_DATA_DIR,
+        message_folder_ = eka2l1::add_path(kern->is_eka1() ? DEFAULT_MSG_DATA_DIR_OLD : DEFAULT_MSG_DATA_DIR,
             common::utf8_to_ucs2(mngr->get_current()->firmware_code) + u"\\");
 
         io_system *io = sys->get_io_system();
@@ -111,6 +171,13 @@ namespace eka2l1 {
 
         indexer_ = std::make_unique<epoc::msv::sql_entry_indexer>(io, message_folder_, sys->get_system_language());
 
+        std::unique_ptr<epoc::msv::operation_factory> sms_opftr = std::make_unique<epoc::sms::sms_operation_factory>();
+        install_factory(sms_opftr);
+
+        fserver_ = reinterpret_cast<fs_server*>(kern->get_by_name<service::server>(eka2l1::epoc::fs::get_server_name_through_epocver(
+            kern->get_epoc_version())));
+
+        init_sms_settings();
         inited_ = true;
     }
 
@@ -132,10 +199,166 @@ namespace eka2l1 {
     }
 
     void msv_server::queue(msv_event_data &evt) {
+        // Split to multiple event in case too much
+        std::vector<msv_event_data> reports;
+
+        if (evt.ids_.size() > MAX_ID_PER_EVENT_DATA_REPORT) {
+            for (std::size_t i = 0; i < (evt.ids_.size() + MAX_ID_PER_EVENT_DATA_REPORT - 1) / MAX_ID_PER_EVENT_DATA_REPORT; i++) {
+                msv_event_data copy;
+                copy.nof_ = evt.nof_;
+                copy.arg1_ = evt.arg1_;
+                copy.arg2_ = evt.arg2_;
+
+                copy.ids_.insert(copy.ids_.begin(), evt.ids_.begin() + i * MAX_ID_PER_EVENT_DATA_REPORT, (evt.ids_.size() < (i + 1) * MAX_ID_PER_EVENT_DATA_REPORT)
+                    ? evt.ids_.end() : evt.ids_.begin() + (i + 1) * MAX_ID_PER_EVENT_DATA_REPORT);
+
+                reports.push_back(copy);
+            }
+        }
+
         for (auto &session: sessions) {
             msv_client_session *cli = reinterpret_cast<msv_client_session*>(session.second.get());
-            cli->queue(evt);
+            
+            if (!reports.empty()) {
+                for (std::size_t i = 0; i < reports.size(); i++) {
+                    cli->queue(reports[i]);
+                }
+            } else {
+                cli->queue(evt);
+            }
         }
+    }
+
+    // When using move to change parent, you are guranteed that your store is also gonna be moved
+    bool msv_server::move_entry(const std::uint32_t id, const std::uint32_t new_parent_id) {
+        std::uint32_t current_own_service = 0;
+        std::uint32_t new_own_service = 0;
+
+        if (!indexer_->owning_service(id, current_own_service)) {
+            LOG_ERROR(SERVICE_MSV, "Unable to get current owning service of entry id 0x{:X}", id);
+            return false;
+        }
+
+        if (!indexer_->owning_service(new_parent_id, new_own_service)) {
+            LOG_ERROR(SERVICE_MSV, "Unable to get current owning service of entry id 0x{:X}", id);
+            return false;
+        }
+
+        if (!indexer_->move_entry(id, new_parent_id)) {
+            return false;
+        }
+
+        if (current_own_service != new_own_service) {
+            // Move attachments to new folder
+            std::optional<std::u16string> old_folder_path = indexer_->get_entry_data_directory(id,
+                epoc::msv::MSV_NORMAL_UID, current_own_service);
+
+            std::optional<std::u16string> new_folder_path = indexer_->get_entry_data_directory(id,
+                epoc::msv::MSV_NORMAL_UID, new_own_service);
+
+            if (!old_folder_path.has_value() || !new_folder_path.has_value()) {
+                LOG_WARN(SERVICE_MSV, "Unable to construct store path, store will not be moved");
+            } else {
+                const std::u16string store_name = epoc::msv::get_folder_name(id, epoc::msv::MSV_FOLDER_TYPE_NORMAL);
+                const std::u16string external_name = epoc::msv::get_folder_name(id, epoc::msv::MSV_FOLDER_TYPE_PATH);
+
+                io_system *io = sys->get_io_system();
+
+                std::u16string path_to_store = eka2l1::add_path(old_folder_path.value(), store_name);
+                if (io->exist(path_to_store)) {
+                    io->rename(path_to_store, eka2l1::add_path(new_folder_path.value(), store_name));
+                }
+
+                std::u16string path_to_external = eka2l1::add_path(old_folder_path.value(), external_name);
+                if (io->exist(path_to_external)) {
+                    io->rename(path_to_external, eka2l1::add_path(new_folder_path.value(), external_name));
+                }
+            }
+        }
+
+        return true;
+    }
+
+    void msv_server::install_factory(std::unique_ptr<epoc::msv::operation_factory> &factory) {
+        factories_.push_back(std::move(factory));
+    }
+    
+    epoc::msv::operation_factory *msv_server::get_factory(const std::uint32_t mtm_uid) {
+        for (std::size_t i = 0; i < factories_.size(); i++) {
+            if (factories_[i]->mtm_uid() == mtm_uid) {
+                return factories_[i].get();
+            }
+        }
+
+        return nullptr;
+    }
+
+    static void pad_out_data(common::chunkyseri &seri) {
+        std::uint8_t padding[3];
+
+        // Pad out
+        if (seri.size() % 4 != 0) {
+            seri.absorb_impl(padding, 4 - seri.size() % 4);
+        }
+    }
+
+    void msv_server::absorb_entry_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent) {
+        epoc::msv::entry_data data_str;
+        if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
+            data_str.data_ = ent.data_;
+            data_str.date_ = ent.time_;
+            data_str.id_ = ent.id_;
+            data_str.parent_id_ = ent.parent_id_;
+            data_str.service_id_ = ent.service_id_;
+            data_str.mtm_uid_ = ent.mtm_uid_;
+            data_str.type_uid_ = ent.type_uid_;
+            data_str.bio_type_ = ent.bio_type_;
+            data_str.size_ = ent.size_;
+
+            data_str.description_.set_length(nullptr, static_cast<std::uint32_t>(ent.description_.length()));
+            data_str.details_.set_length(nullptr, static_cast<std::uint32_t>(ent.details_.length()));
+        }
+        
+        if (kern->is_eka1()) {
+            seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&data_str), sizeof(epoc::msv::entry_data));
+        } else {
+            // The date value is aligned to offset 40, to fit 8-bit alignment
+            // This is due to change of compiler compiling these built-in DLLs in EKA2
+            seri.absorb_impl(reinterpret_cast<std::uint8_t*>(&data_str), offsetof(epoc::msv::entry_data, date_));
+
+            std::uint32_t padding = 0;
+            seri.absorb(padding);
+
+            seri.absorb_impl(reinterpret_cast<std::uint8_t*>(&data_str.date_), sizeof(epoc::msv::entry_data) - offsetof(epoc::msv::entry_data, date_));
+        }
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            ent.data_ = data_str.data_;
+            ent.time_ = data_str.date_;
+            ent.id_ = data_str.id_;
+            ent.parent_id_ = data_str.parent_id_;
+            ent.service_id_ = data_str.service_id_;
+            ent.mtm_uid_ = data_str.mtm_uid_;
+            ent.type_uid_ = data_str.type_uid_;
+            ent.bio_type_ = data_str.bio_type_;
+            ent.size_ = data_str.size_;
+
+            ent.description_.resize(data_str.description_.get_length());
+            ent.details_.resize(data_str.details_.get_length());
+        }
+
+        pad_out_data(seri);
+        seri.absorb_impl(reinterpret_cast<std::uint8_t*>(ent.description_.data()), ent.description_.length() * sizeof(char16_t));
+
+        pad_out_data(seri);
+        seri.absorb_impl(reinterpret_cast<std::uint8_t*>(ent.details_.data()), ent.details_.length() * sizeof(char16_t));
+
+        pad_out_data(seri);
+    }
+
+    void msv_server::absorb_entry_and_owning_service_id_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent, std::uint32_t &owning_service) {
+        absorb_entry_to_buffer(seri, ent);
+        seri.absorb(owning_service);
     }
 
     msv_client_session::msv_client_session(service::typical_server *serv, const kernel::uid ss_id,
@@ -153,7 +376,9 @@ namespace eka2l1 {
             return;
         }
 
-        if (buf->get_max_length(pr) < 3 * sizeof(std::uint32_t)) {
+        const std::uint32_t total_int32 = static_cast<std::uint32_t>(4 + data.ids_.size());
+
+        if (buf->get_max_length(pr) < total_int32 * sizeof(std::uint32_t)) {
             LOG_ERROR(SERVICE_MSV, "Insufficent change buffer size");
             return;
         }
@@ -161,11 +386,16 @@ namespace eka2l1 {
         buffer_raw[0] = static_cast<std::uint32_t>(data.nof_);
         buffer_raw[1] = data.arg1_;
         buffer_raw[2] = data.arg2_;
+        buffer_raw[3] = static_cast<std::uint32_t>(data.ids_.size());
 
-        buf->set_length(pr, 3 * sizeof(std::uint32_t));
+        for (std::size_t i = 0; i < data.ids_.size(); i++) {
+            buffer_raw[4 + i] = data.ids_[i];
+        }
+
+        buf->set_length(pr, total_int32 * sizeof(std::uint32_t));
     }
 
-    bool msv_client_session::listen(epoc::notify_info &info, epoc::des8 *change, epoc::des8 *sel) {
+    bool msv_client_session::listen(epoc::notify_info &info, epoc::des8 *change, epoc::des8 *seq) {
         if (!msv_info_.empty()) {
             return false;
         }
@@ -176,9 +406,12 @@ namespace eka2l1 {
 
             kernel::process *own_pr = info.requester->owning_process();
 
+            nof_sequence_++;
+            std::string nof_sequence_data(reinterpret_cast<const char *>(&nof_sequence_), sizeof(std::uint32_t));
+
             // Copy change
             pack_change_buffer(change, own_pr, evt);
-            sel->assign(own_pr, evt.selection_);
+            seq->assign(own_pr, nof_sequence_data);
 
             info.complete(epoc::error_none);
             return true;
@@ -186,21 +419,21 @@ namespace eka2l1 {
 
         msv_info_ = info;
         change_ = change;
-        selection_ = sel;
+        sequence_ = seq;
 
         return true;
     }
 
-    void msv_client_session::queue(msv_event_data &evt) {
+    void msv_client_session::queue(msv_event_data evt) {
         nof_sequence_++;
-        evt.selection_ = std::string(reinterpret_cast<const char *>(&nof_sequence_), sizeof(std::uint32_t));
+        std::string nof_sequence_data(reinterpret_cast<const char *>(&nof_sequence_), sizeof(std::uint32_t));
 
         if (!msv_info_.empty()) {
             kernel::process *own_pr = msv_info_.requester->owning_process();
 
             // Copy change
             pack_change_buffer(change_, own_pr, evt);
-            selection_->assign(own_pr, evt.selection_);
+            sequence_->assign(own_pr, nof_sequence_data);
 
             msv_info_.complete(epoc::error_none);
             return;
@@ -304,12 +537,48 @@ namespace eka2l1 {
             create_entry(ctx);
             break;
 
+        case msv_move_entries:
+            move_entries(ctx);
+            break;
+
         case msv_operation_progress:
             operation_info(ctx, false);
             break;
 
         case msv_operation_completion:
             operation_info(ctx, true);
+            break;
+
+        case msv_system_progress:
+            operation_info(ctx, false, true);
+            break;
+
+        case msv_mtm_command:
+            transfer_mtm_command(ctx);
+            break;
+
+        case msv_open_file_store_for_read:
+            open_file_store_for_read(ctx);
+            break;
+
+        case msv_open_temp_store:
+            open_temp_file_store(ctx);
+            break;
+
+        case msv_replace_file_store:
+            replace_file_store(ctx);
+            break;
+
+        case msv_get_required_capabilities:
+            required_capabilities(ctx);
+            break;
+
+        case msv_file_store_exist:
+            file_store_exists(ctx);
+            break;
+
+        case msv_operation_mtm:
+            operation_mtm(ctx);
             break;
 
         default: {
@@ -371,62 +640,21 @@ namespace eka2l1 {
 
         ctx->complete(epoc::error_none);
     }
+    
+    void absorb_command_data(common::chunkyseri &seri, std::vector<epoc::msv::msv_id> &ids, std::uint32_t &param1,
+        std::uint32_t &param2) {
+        std::uint32_t count = static_cast<std::uint32_t>(ids.size());
+        seri.absorb(count);
 
-    static void pad_out_data(common::chunkyseri &seri) {
-        std::uint8_t padding[3];
+        if (seri.get_seri_mode() == common::SERI_MODE_READ)
+            ids.resize(count);
 
-        // Pad out
-        if (seri.size() % 4 != 0) {
-            seri.absorb_impl(padding, 4 - seri.size() % 4);
-        }
-    }
-
-    void absorb_entry_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent) {
-        epoc::msv::entry_data data_str;
-        if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
-            data_str.data_ = ent.data_;
-            data_str.date_ = ent.time_;
-            data_str.id_ = ent.id_;
-            data_str.parent_id_ = ent.parent_id_;
-            data_str.service_id_ = ent.service_id_;
-            data_str.mtm_uid_ = ent.mtm_uid_;
-            data_str.type_uid_ = ent.type_uid_;
-            data_str.bio_type_ = ent.bio_type_;
-            data_str.size_ = ent.size_;
-
-            data_str.description_.set_length(nullptr, static_cast<std::uint32_t>(ent.description_.length()));
-            data_str.details_.set_length(nullptr, static_cast<std::uint32_t>(ent.details_.length()));
+        for (std::size_t i = 0; i < ids.size(); i++) {
+            seri.absorb(ids[i]);
         }
 
-        seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&data_str), sizeof(epoc::msv::entry_data));
-
-        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
-            ent.data_ = data_str.data_;
-            ent.time_ = data_str.date_;
-            ent.id_ = data_str.id_;
-            ent.parent_id_ = data_str.parent_id_;
-            ent.service_id_ = data_str.service_id_;
-            ent.mtm_uid_ = data_str.mtm_uid_;
-            ent.type_uid_ = data_str.type_uid_;
-            ent.bio_type_ = data_str.bio_type_;
-            ent.size_ = data_str.size_;
-
-            ent.description_.resize(data_str.description_.get_length());
-            ent.details_.resize(data_str.details_.get_length());
-        }
-
-        pad_out_data(seri);
-        seri.absorb_impl(reinterpret_cast<std::uint8_t*>(ent.description_.data()), ent.description_.length() * sizeof(char16_t));
-
-        pad_out_data(seri);
-        seri.absorb_impl(reinterpret_cast<std::uint8_t*>(ent.details_.data()), ent.details_.length() * sizeof(char16_t));
-
-        pad_out_data(seri);
-    }
-
-    static void absorb_entry_and_owning_service_id_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent, std::uint32_t &owning_service) {
-        absorb_entry_to_buffer(seri, ent);
-        seri.absorb(owning_service);
+        seri.absorb(param1);
+        seri.absorb(param2);
     }
 
     void msv_client_session::get_entry(service::ipc_context *ctx) {
@@ -458,8 +686,10 @@ namespace eka2l1 {
             LOG_WARN(SERVICE_MSV, "Unable to obtain owning service ID!");
         }
 
+        msv_server *serv = server<msv_server>();
+
         common::chunkyseri seri(buffer, buffer_max_size, common::SERI_MODE_MEASURE);
-        absorb_entry_and_owning_service_id_to_buffer(seri, *ent, owning_service_id);
+        serv->absorb_entry_and_owning_service_id_to_buffer(seri, *ent, owning_service_id);
 
         if (seri.size() > buffer_max_size) {
             ctx->complete(epoc::error_overflow);
@@ -467,7 +697,7 @@ namespace eka2l1 {
         }
 
         seri = common::chunkyseri(buffer, buffer_max_size, common::SERI_MODE_WRITE);
-        absorb_entry_and_owning_service_id_to_buffer(seri, *ent, owning_service_id);
+        serv->absorb_entry_and_owning_service_id_to_buffer(seri, *ent, owning_service_id);
 
         ctx->set_descriptor_argument_length(1, static_cast<std::uint32_t>(seri.size()));
         
@@ -506,7 +736,10 @@ namespace eka2l1 {
             return;
         }
 
+        msv_server *serv = server<msv_server>();
+
         details->child_count_total_ = static_cast<std::uint32_t>(child_entries_.size());
+        details->child_count_in_array_ = 0;
 
         std::size_t written = 0;
         common::chunkyseri seri(buffer, buffer_max_size, common::SERI_MODE_WRITE);
@@ -515,7 +748,7 @@ namespace eka2l1 {
 
         while ((written < buffer_max_size) && (!child_entries_.empty())) {
             common::chunkyseri measurer(nullptr, 0x1000, common::SERI_MODE_MEASURE);
-            absorb_entry_to_buffer(measurer, *child_entries_.back());
+            serv->absorb_entry_to_buffer(measurer, *child_entries_.back());
 
             if (measurer.size() + written > buffer_max_size) {
                 is_overflow = true;
@@ -523,7 +756,7 @@ namespace eka2l1 {
             }
 
             // Start writing to this buffer
-            absorb_entry_to_buffer(seri, *child_entries_.back());
+            serv->absorb_entry_to_buffer(seri, *child_entries_.back());
 
             details->child_count_in_array_++;
 
@@ -971,7 +1204,27 @@ namespace eka2l1 {
         operation->execute(server<msv_server>(), process_id.value());
     }
 
-    void msv_client_session::operation_info(service::ipc_context *ctx, const bool is_complete) {
+    void msv_client_session::move_entries(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> operation_id = ctx->get_argument_value<std::uint32_t>(0);
+
+        epoc::msv::operation_buffer buffer;
+        if (!claim_operation_buffer(operation_id.value(), buffer)) {
+            LOG_ERROR(SERVICE_MSV, "No buffer correspond with operation ID 0x{:X} to create entry", operation_id.value());
+            ctx->complete(epoc::error_argument);
+
+            return;
+        }
+
+        epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
+
+        std::shared_ptr<epoc::msv::operation> operation = std::make_shared<epoc::msv::move_operation>(
+            operation_id.value(), buffer, info);
+
+        operations_.push_back(operation);
+        operation->execute(server<msv_server>(), 0);
+    }
+
+    void msv_client_session::operation_info(service::ipc_context *ctx, const bool is_complete, const bool is_system) {
         std::optional<std::uint32_t> operation_id = ctx->get_argument_value<std::uint32_t>(0);
         
         if (!operation_id.has_value()) {
@@ -991,17 +1244,27 @@ namespace eka2l1 {
                     return;
                 }
 
-                if ((is_complete && (operations_[i]->state() == epoc::msv::operation_state_success)) ||
-                    (!is_complete && (operations_[i]->state() == epoc::msv::operation_state_pending))) {
-                    const epoc::msv::operation_buffer &buffer = operations_[i]->progress_buffer();
+                if (is_system) {
+                    epoc::msv::system_progress_info progress;
+                    const std::int32_t code = operations_[i]->system_progress(progress);
 
-                    ctx->write_data_to_descriptor_argument(1, buffer.data(), static_cast<std::uint32_t>(buffer.size()));
-                    ctx->complete(static_cast<int>(buffer.size()));
-
-                    if (is_complete)
-                        operations_.erase(operations_.begin() + i);
+                    ctx->write_data_to_descriptor_argument<epoc::msv::system_progress_info>(1, progress);
+                    ctx->complete(code);
 
                     return;
+                } else {
+                    if ((is_complete && (operations_[i]->state() == epoc::msv::operation_state_success)) ||
+                        (!is_complete && (operations_[i]->state() == epoc::msv::operation_state_pending))) {
+                        const epoc::msv::operation_buffer &buffer = operations_[i]->progress_buffer();
+
+                        ctx->write_data_to_descriptor_argument(1, buffer.data(), static_cast<std::uint32_t>(buffer.size()));
+                        ctx->complete(static_cast<int>(buffer.size()));
+
+                        if (is_complete)
+                            operations_.erase(operations_.begin() + i);
+
+                        return;
+                    }
                 }
 
                 LOG_ERROR(SERVICE_MSV, "Accessing operation 0x{:X} progress with contradict state={}!", operation_id.value(),
@@ -1015,5 +1278,383 @@ namespace eka2l1 {
 
         LOG_ERROR(SERVICE_MSV, "Progress buffer for operation 0x{:X} can't be found!", operation_id.value());
         ctx->complete(epoc::error_not_found);
+    }
+
+    void msv_client_session::transfer_mtm_command(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> operation_id = ctx->get_argument_value<std::uint32_t>(0);
+
+        // As reviewed in source code, the first entry will indicates which MTM DLL/ factory will be used
+        // to instatiate operation resoltuion
+        if (!operation_id.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        // Claim operation buffer
+        epoc::msv::operation_buffer buffer;
+        if (!claim_operation_buffer(operation_id.value(), buffer)) {
+            LOG_ERROR(SERVICE_MSV, "No buffer correspond with operation ID 0x{:X} to create entry", operation_id.value());
+            ctx->complete(epoc::error_argument);
+
+            return;
+        }
+
+        std::vector<std::uint32_t> ids;
+        std::uint32_t param1 = 0;
+        std::uint32_t param2 = 0;
+
+        common::chunkyseri seri(buffer.data(), buffer.size(), common::SERI_MODE_READ);
+        absorb_command_data(seri, ids, param1, param2);
+
+        if (ids.empty()) {
+            LOG_ERROR(SERVICE_MSV, "Operating with empty list of entries!");
+            ctx->complete(epoc::error_argument);
+
+            return;
+        }
+
+        std::uint32_t mtm_id = 0;
+
+        msv_server *serv = server<msv_server>();
+        epoc::msv::entry *ent = serv->indexer()->get_entry(ids[0]);
+
+        if (!ent) {
+            LOG_ERROR(SERVICE_MSV, "First entry to validate command transfer does not exist!");
+            ctx->complete(epoc::error_argument);
+
+            return;
+        }
+
+        if (ent) {
+            mtm_id = ent->mtm_uid_;
+        }
+
+        epoc::msv::operation_factory *factory = serv->get_factory(mtm_id);
+        if (!factory) {
+            LOG_ERROR(SERVICE_MSV, "No factory available with MTM UID 0x{:X}", mtm_id);
+            ctx->complete(epoc::error_not_supported);
+
+            return;
+        }
+
+        epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
+
+        std::shared_ptr<epoc::msv::operation> operation = factory->create_operation(operation_id.value(),
+            buffer, info, param1);
+
+        if (!operation) {
+            LOG_ERROR(SERVICE_MSV, "Operation with id 0x{:X} not supported with factory MTM UID 0x{:X}", param1, mtm_id);
+            ctx->complete(epoc::error_not_supported);
+
+            return;
+        }
+
+        operations_.push_back(operation);
+        operation->execute(server<msv_server>(), 0);
+    }
+
+    fs_server_client *msv_client_session::make_new_fs_client(service::session *&ss) {
+        msv_server *msver = server<msv_server>();
+        kernel_system *kern = msver->get_kernel_object_owner();
+
+        ss = kern->create<service::session>(reinterpret_cast<server_ptr>(msver->fserver_), 4);
+        if (!ss) {
+            LOG_ERROR(SERVICE_MSV, "Can't establish a new session for opening file");
+            return nullptr;
+        }
+
+        fs_server_client *fclient = msver->fserver_->get_correspond_client(ss);
+        if (!fclient) {
+            kern->destroy(ss);
+
+            LOG_ERROR(SERVICE_MSV, "Can't establish a client-side file server session!");
+            return nullptr;
+        }
+
+        return fclient;
+    }
+
+    void msv_client_session::open_file_store_for_read(service::ipc_context *ctx) {
+        msv_server *msver = server<msv_server>();
+        kernel_system *kern = msver->get_kernel_object_owner();
+
+        std::optional<std::uint32_t> id = ctx->get_argument_value<std::uint32_t>(0);
+        if (!id.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        epoc::msv::entry *ent = msver->indexer()->get_entry(id.value());
+        if (!ent) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        service::session *ss = nullptr;
+        fs_server_client *fclient = make_new_fs_client(ss);
+
+        if (!fclient) {
+            ctx->complete(epoc::error_not_ready);
+            return;
+        }
+
+        std::optional<std::u16string> path = msver->indexer()->get_entry_data_file(ent);
+        if (!path.has_value()) {
+            LOG_ERROR(SERVICE_MSV, "Can't construct file store path for entry 0x{:X}", id.value());
+            ctx->complete(epoc::error_general);
+
+            msver->fserver_->disconnect_impl(ss);
+            kern->destroy(ss);
+
+            return;
+        }
+
+        const int res = fclient->new_node(msver->get_io_system(), ctx->msg->own_thr, path.value(), epoc::fs::file_read | epoc::fs::file_share_any,
+            false, false, true);
+        
+        if (res < 0) {
+            ctx->complete(res);
+
+            msver->fserver_->disconnect_impl(ss);
+            kern->destroy(ss);
+
+            return;
+        }
+
+        kernel::handle h = kern->open_handle_with_thread(ctx->msg->own_thr, ss, kernel::owner_type::process);
+
+        ctx->write_data_to_descriptor_argument<int>(1, res);
+        ctx->complete(h);
+    }
+
+    static constexpr const char16_t *TEMP_EXT_STR = u".new";
+
+    void msv_client_session::open_temp_file_store(service::ipc_context *ctx) {
+        msv_server *msver = server<msv_server>();
+        kernel_system *kern = msver->get_kernel_object_owner();
+
+        std::optional<std::uint32_t> id = ctx->get_argument_value<std::uint32_t>(0);
+        if (!id.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        epoc::msv::entry *ent = msver->indexer()->get_entry(id.value());
+        if (!ent) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        service::session *ss = nullptr;
+        fs_server_client *fclient = make_new_fs_client(ss);
+
+        if (!fclient) {
+            ctx->complete(epoc::error_not_ready);
+            return;
+        }
+
+        std::optional<std::u16string> path = msver->indexer()->get_entry_data_file(ent);
+        if (!path.has_value()) {
+            LOG_ERROR(SERVICE_MSV, "Can't construct file store path for entry 0x{:X}", id.value());
+            ctx->complete(epoc::error_general);
+
+            msver->fserver_->disconnect_impl(ss);
+            kern->destroy(ss);
+
+            return;
+        }
+
+        path.value() += TEMP_EXT_STR;
+
+        const int res = fclient->new_node(msver->get_io_system(), ctx->msg->own_thr, path.value(), epoc::fs::file_write | epoc::fs::file_share_any,
+            true, false, true);
+        
+        if (res < 0) {
+            ctx->complete(res);
+
+            msver->fserver_->disconnect_impl(ss);
+            kern->destroy(ss);
+
+            return;
+        }
+
+        kernel::handle h = kern->open_handle_with_thread(ctx->msg->own_thr, ss, kernel::owner_type::process);
+
+        ctx->write_data_to_descriptor_argument<int>(1, res);
+        ctx->complete(h);
+    }
+
+    void msv_client_session::replace_file_store(service::ipc_context *ctx) {
+        msv_server *msver = server<msv_server>();
+
+        std::optional<std::uint32_t> id = ctx->get_argument_value<std::uint32_t>(0);
+        if (!id.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        epoc::msv::entry *ent = msver->indexer()->get_entry(id.value());
+        if (!ent) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        std::optional<std::u16string> path = msver->indexer()->get_entry_data_file(ent);
+        if (!path.has_value()) {
+            LOG_ERROR(SERVICE_MSV, "Can't construct file store path for entry 0x{:X}", id.value());
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        io_system *io = msver->get_io_system();
+        io->delete_entry(path.value());
+
+        if (!io->rename(path.value() + TEMP_EXT_STR, path.value())) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->complete(epoc::error_none);
+    }
+
+    static void absorb_msv_capabilities(common::chunkyseri &seri, epoc::capability_set &set) {
+        std::uint32_t version = 1;
+        seri.absorb(version);
+
+        std::string buffer(reinterpret_cast<char*>(set.bytes_), set.total_size);
+        epoc::absorb_des_string(buffer, seri, false);
+    }
+
+    void msv_client_session::required_capabilities(service::ipc_context *ctx) {
+        // SendAs server use this to verify if the sender has right permission to send without
+        // user consent backgroundly. If this capabilities check fails, it will use Notifier to show
+        // a dialogue asking user to confirm the send.
+        std::uint8_t *buffer = ctx->get_descriptor_argument_ptr(1);
+        std::size_t buffer_size = ctx->get_argument_max_data_size(1);
+
+        if (!buffer || !buffer_size) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+        
+        epoc::capability_set set;
+        set.clear();
+
+        common::chunkyseri seri(buffer, buffer_size, common::SERI_MODE_WRITE);
+        absorb_msv_capabilities(seri, set);
+
+        ctx->set_descriptor_argument_length(1, static_cast<std::uint32_t>(seri.size()));
+        ctx->complete(epoc::error_none);
+    }
+
+    void msv_client_session::file_store_exists(service::ipc_context *ctx) {
+        msv_server *msver = server<msv_server>();
+
+        std::optional<std::uint32_t> id = ctx->get_argument_value<std::uint32_t>(0);
+        if (!id.has_value()) {
+            ctx->complete(0);
+            return;
+        }
+
+        epoc::msv::entry *ent = msver->indexer()->get_entry(id.value());
+        if (!ent) {
+            ctx->complete(0);
+            return;
+        }
+
+        std::optional<std::u16string> path = msver->indexer()->get_entry_data_file(ent);
+        if (!path.has_value()) {
+            LOG_ERROR(SERVICE_MSV, "Can't construct file store path for entry 0x{:X}", id.value());
+            ctx->complete(0);
+            return;
+        }
+
+        io_system *io = msver->get_io_system();
+        bool result = io->exist(path.value());
+
+        ctx->complete(static_cast<int>(result));
+    }
+
+    void msv_client_session::operation_mtm(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> id1 = ctx->get_argument_value<std::uint32_t>(0);
+        std::optional<std::uint32_t> id2 = ctx->get_argument_value<std::uint32_t>(1);
+
+        if (!id1.has_value() || !id2.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        msv_server *srv = server<msv_server>();
+        epoc::msv::entry *ent1 = srv->indexer()->get_entry(id1.value());
+
+        if (!ent1) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        std::uint32_t mtm = 0;
+        std::uint32_t service = 0;
+
+        if (id1.value() == id2.value()) {
+            std::uint32_t owning = 0;
+            if (!srv->indexer()->owning_service(id1.value(), owning)) {
+                LOG_ERROR(SERVICE_MSV, "Operation MTM owning service for id 0x{:X} can't be retrieved", id1.value());
+
+                ctx->complete(epoc::error_not_found);
+                return;
+            }
+
+            if (owning == epoc::msv::MSV_LOCAL_SERVICE_ID_VALUE) {
+                mtm = epoc::msv::MSV_LOCAL_SERVICE_MTM_UID;
+                service = epoc::msv::MSV_LOCAL_SERVICE_ID_VALUE;
+            } else {
+                mtm = ent1->mtm_uid_;
+                service = ent1->service_id_;
+            }
+        } else {  
+            epoc::msv::entry *ent2 = srv->indexer()->get_entry(id2.value());
+
+            if (!ent2) {
+                ctx->complete(epoc::error_not_found);
+                return;
+            }
+            
+            std::uint32_t owning1 = 0;
+            std::uint32_t owning2 = 0;
+
+            if (!srv->indexer()->owning_service(id1.value(), owning1)) {
+                LOG_ERROR(SERVICE_MSV, "Operation MTM owning service for id 0x{:X} can't be retrieved", id1.value());
+
+                ctx->complete(epoc::error_not_found);
+                return;
+            }
+
+            if (!srv->indexer()->owning_service(id2.value(), owning2)) {
+                LOG_ERROR(SERVICE_MSV, "Operation MTM owning service for id 0x{:X} can't be retrieved", id2.value());
+
+                ctx->complete(epoc::error_not_found);
+                return;
+            }
+
+            if ((owning1 == epoc::msv::MSV_LOCAL_SERVICE_ID_VALUE) && (owning2 == epoc::msv::MSV_LOCAL_SERVICE_ID_VALUE)) {
+                mtm = epoc::msv::MSV_LOCAL_SERVICE_MTM_UID;
+                service = epoc::msv::MSV_LOCAL_SERVICE_ID_VALUE;
+            } else if (ent1->mtm_uid_ == ent2->mtm_uid_) {
+                mtm = ent1->mtm_uid_;
+                service = ent1->service_id_;
+            } else if (ent1->mtm_uid_ == epoc::msv::MSV_LOCAL_SERVICE_MTM_UID) {
+                // Entry 1 is local, entry 2 is MTM-dependent. Same comment as in original source code
+                mtm = ent2->mtm_uid_;
+                service = ent2->mtm_uid_;
+            } else {
+                mtm = ent1->mtm_uid_;
+                service = ent1->service_id_;
+            }
+        }
+
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(2, mtm);
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(3, service);
+
+        ctx->complete(epoc::error_none);
     }
 }

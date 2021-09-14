@@ -86,6 +86,7 @@ add_library(epocservs
         include/services/msv/common.h
         include/services/msv/entry.h
         include/services/msv/msv.h
+        include/services/msv/store.h
         include/services/notifier/notifier.h
         include/services/notifier/queries.h
         include/services/posix/posix.h
@@ -217,6 +218,7 @@ add_library(epocservs
         src/msv/entry.cpp
         src/msv/msv.cpp
         src/msv/registry.cpp
+        src/msv/store.cpp
         src/notifier/notifier.cpp
         src/notifier/queries.cpp
         src/posix/posix.cpp
@@ -227,10 +229,13 @@ add_library(epocservs
         src/sensor/sensor.cpp
         src/shutdown/shutdown.cpp
         src/sisregistry/sisregistry.cpp
+        src/sms/mtm/factory.cpp
+        src/sms/mtm/send.cpp
         src/sms/protocols/datagram.cpp
         src/sms/protocols/overall.cpp
         src/sms/sa/sa.cpp
         src/sms/sendas/sendas.cpp
+        src/sms/common.cpp
         src/sms/settings.cpp
         src/socket/agent/genconn.cpp
         src/socket/connection.cpp

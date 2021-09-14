@@ -60,8 +60,16 @@ namespace eka2l1::service {
         sessions.clear();
     }
 
+    void typical_server::disconnect_impl(service::session *ss) {
+        if (!ss) {
+            return;
+        }
+
+        sessions.erase(ss->unique_id());
+    }
+
     void typical_server::disconnect(service::ipc_context &ctx) {
-        sessions.erase(ctx.msg->msg_session->unique_id());
+        disconnect_impl(ctx.msg->msg_session);
         ctx.complete(0);
     }
 

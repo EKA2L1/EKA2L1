@@ -80,13 +80,7 @@ namespace eka2l1::epoc::msv {
         std::uint32_t flags_;
     };
 
-    enum msv_folder_type {
-        MSV_FOLDER_TYPE_NORMAL = 0,
-        MSV_FOLDER_TYPE_PATH = 1 << 0,
-        MSV_FOLDER_TYPE_SERVICE = 1 << 1
-    };
-
-    static std::u16string get_folder_name(const std::uint32_t id, const msv_folder_type type) {
+    std::u16string get_folder_name(const std::uint32_t id, const msv_folder_type type) {
         if ((id == 0) && (type == MSV_FOLDER_TYPE_SERVICE)) {
             return u"";
         }
@@ -110,19 +104,36 @@ namespace eka2l1::epoc::msv {
         return in_hex;
     }
 
-    std::optional<std::u16string> entry_indexer::get_entry_data_file(entry &ent) {
-        if ((ent.type_uid_ == MSV_FOLDER_TYPE_SERVICE) || (ent.type_uid_ == MTM_SERVICE_UID_ROOT)) {
-            return eka2l1::add_path(msg_dir_, fmt::format(u"{:08X}", ent.service_id_));
+    std::optional<std::u16string> entry_indexer::get_entry_data_directory(const std::uint32_t id, const std::uint32_t type,
+        const std::uint32_t owning_service) {
+        if ((type == MSV_SERVICE_UID) || (type == MTM_SERVICE_UID_ROOT)) {
+            return msg_dir_;
         }
 
-        const std::u16string file_path = eka2l1::add_path(msg_dir_, get_folder_name(ent.service_id_, MSV_FOLDER_TYPE_SERVICE));
-        const std::u16string hiearchy_folder = eka2l1::add_path(file_path, fmt::format(u"\\{:X}\\", ent.id_ & 0xF));
+        const std::u16string file_path = eka2l1::add_path(msg_dir_, get_folder_name(owning_service, MSV_FOLDER_TYPE_SERVICE));
+        const std::u16string hiearchy_folder = eka2l1::add_path(file_path, fmt::format(u"\\{:X}\\", id & 0xF));
         
         if (!io_->exist(hiearchy_folder)) {
             io_->create_directories(hiearchy_folder);
         }
         
-        return eka2l1::add_path(hiearchy_folder, get_folder_name(ent.id_, MSV_FOLDER_TYPE_NORMAL));
+        return hiearchy_folder;
+    }
+
+    std::optional<std::u16string> entry_indexer::get_entry_data_file(entry *ent) {
+        if (!ent) {
+            return std::nullopt;
+        }
+
+        std::uint32_t oss = 0;
+        owning_service(ent->id_, oss);
+
+        std::optional<std::u16string> base = get_entry_data_directory(ent->id_, ent->type_uid_, oss);
+        if (!base.has_value()) {
+            return base;
+        }
+        
+        return eka2l1::add_path(base.value(), fmt::format(u"{:08X}", ent->id_));
     }
 
     bool entry_indexer::create_standard_entries(drive_number crr_drive) {
@@ -533,7 +544,8 @@ namespace eka2l1::epoc::msv {
         , visible_folder_find_stmt_(nullptr)
         , find_entry_stmt_(nullptr)
         , query_child_entries_stmt_(nullptr)
-        , id_counter_(MSV_FIRST_FREE_ENTRY_ID) {
+        , query_child_ids_stmt_(nullptr)
+        , id_counter_(MSV_FIRST_FREE_ENTRY_ID - 1) {
         bool newly_created = false;
 
         if (load_or_create_databases(newly_created)) {
@@ -569,6 +581,10 @@ namespace eka2l1::epoc::msv {
             sqlite3_finalize(query_child_entries_stmt_);
         }
 
+        if (query_child_ids_stmt_) {
+            sqlite3_finalize(query_child_ids_stmt_);
+        }
+
         if (database_) {
             sqlite3_close(database_);
         }
@@ -577,16 +593,9 @@ namespace eka2l1::epoc::msv {
     static constexpr std::uint32_t MSV_SQL_DATABASE_VERSION = 2;
     
     bool sql_entry_indexer::load_or_create_databases(bool &newly_created) {
-        const std::u16string root = eka2l1::root_name(msg_dir_, true);
-        drive_number database_reside = drive_c;
-
         newly_created = false;
 
-        if (root.length() > 1) {
-            database_reside = char16_to_drive(root[0]);
-        }
-
-        std::u16string vert_path = fmt::format(u"{}:\\messaging.db", drive_to_char16(database_reside));
+        std::u16string vert_path = eka2l1::add_path(msg_dir_, u"messaging.db");
         std::optional<std::u16string> database_real_path = io_->get_raw_path(vert_path);
 
         if (!database_real_path) {
@@ -738,6 +747,9 @@ namespace eka2l1::epoc::msv {
         }
 
         if (!is_add) {
+            if (ent.id_ == 4101) {
+                LOG_TRACE(KERNEL, "HEY!");
+            }
             if (!change_entry_stmt_) {
                 const char *MODIFY_ENTRY_STMT_STRING = "UPDATE IndexEntry SET "
                     "parentId=:parentId, serviceId=:serviceId, mtmId=:mtmId, type=:type, date=:date, data=:data,"
@@ -806,7 +818,14 @@ namespace eka2l1::epoc::msv {
         }
 
         if (is_add) {
-            get_entry_data_file(ent);
+            if (ent.type_uid_ == MSV_NORMAL_UID) {
+                std::uint32_t owning_service_id = 0;
+                owning_service(ent.parent_id_, owning_service_id);
+
+                if (owning_service_id) {
+                    get_entry_data_directory(ent.id_, ent.type_uid_, owning_service_id);
+                }
+            }
         }
 
         // Let's bind value to add in the database
@@ -1171,13 +1190,18 @@ namespace eka2l1::epoc::msv {
             return true;
         }
 
+        if (ent->read_count_ != 0) {
+            LOG_ERROR(SERVICE_MSV, "The entry store is still being read and can't be moved!");
+            return false;
+        }
+
         const std::uint32_t new_folder = get_suitable_visible_parent_id(new_parent);
         const std::uint32_t old_folder = ent->visible_id_;
         bool significant_move = (ent->visible_id_ != new_folder);
 
         // Do a database set
         if (!relocate_entry_stmt_) {
-            static const char *RELOCATE_ENTRY_STMT_STR = "UPDATE IndexEntry SET parentId=:id visibleParent=:visibleParent "
+            static const char *RELOCATE_ENTRY_STMT_STR = "UPDATE IndexEntry SET parentId=:parentId, visibleParent=:visibleParent "
                 "WHERE id=:id";
 
             if (sqlite3_prepare(database_, RELOCATE_ENTRY_STMT_STR, -1, &relocate_entry_stmt_, nullptr) != SQLITE_OK) {

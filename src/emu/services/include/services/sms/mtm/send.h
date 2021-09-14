@@ -21,13 +21,16 @@
 
 #include <services/msv/operations/base.h>
 
-namespace eka2l1::epoc::msv {
-    class create_operation: public operation {
+namespace eka2l1::epoc::sms {
+    class schedule_copy_operation: public epoc::msv::operation {
+    private:
+        epoc::msv::system_progress_info sys_progress_;
+
     public:
-        explicit create_operation(const msv_id operation_id, const operation_buffer &buffer,
+        explicit schedule_copy_operation(const epoc::msv::msv_id operation_id, const epoc::msv::operation_buffer &buffer,
             epoc::notify_info complete_info);
 
         void execute(msv_server *server, const kernel::uid process_uid) override;
-        std::int32_t system_progress(system_progress_info &progress) override;
+        std::int32_t system_progress(epoc::msv::system_progress_info &progress) override;
     };
 }

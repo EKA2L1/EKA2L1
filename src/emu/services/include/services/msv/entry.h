@@ -33,6 +33,14 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::epoc::msv {
+    enum msv_folder_type {
+        MSV_FOLDER_TYPE_NORMAL = 0,
+        MSV_FOLDER_TYPE_PATH = 1 << 0,
+        MSV_FOLDER_TYPE_SERVICE = 1 << 1
+    };
+
+    std::u16string get_folder_name(const std::uint32_t id, const msv_folder_type type);
+
     struct entry_indexer {
     protected:
         io_system *io_;
@@ -60,7 +68,11 @@ namespace eka2l1::epoc::msv {
         virtual bool move_entry(const std::uint32_t id, const std::uint32_t new_parent) = 0;
 
         virtual std::vector<entry *> get_entries_by_parent(const std::uint32_t parent_id) = 0;
-        std::optional<std::u16string> get_entry_data_file(entry &ent);
+
+        std::optional<std::u16string> get_entry_data_directory(const std::uint32_t id, const std::uint32_t type,
+            const std::uint32_t owning_service);
+
+        std::optional<std::u16string> get_entry_data_file(entry *ent);
     };
 
     struct sql_entry_indexer: public entry_indexer {

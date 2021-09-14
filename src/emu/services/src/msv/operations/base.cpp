@@ -32,4 +32,8 @@ namespace eka2l1::epoc::msv {
     void operation::cancel() {
         complete_info_.complete(epoc::error_cancel);
     }
+
+    std::int32_t operation::system_progress(system_progress_info &progress) {
+        return epoc::error_not_supported;
+    }
 }

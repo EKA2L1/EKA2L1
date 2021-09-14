@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 EKA2L1 Team
+ * Copyright (c) 2020 EKA2L1 Team
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -20,14 +20,26 @@
 #pragma once
 
 #include <services/msv/operations/base.h>
+#include <services/msv/common.h>
+
+#include <cstdint>
+#include <memory>
 
 namespace eka2l1::epoc::msv {
-    class create_operation: public operation {
-    public:
-        explicit create_operation(const msv_id operation_id, const operation_buffer &buffer,
-            epoc::notify_info complete_info);
+    class operation_factory {
+    private:
+        msv_id mtm_uid_;
 
-        void execute(msv_server *server, const kernel::uid process_uid) override;
-        std::int32_t system_progress(system_progress_info &progress) override;
+    public:
+        explicit operation_factory(const msv_id id)
+            : mtm_uid_(id) {
+        }
+
+        virtual std::shared_ptr<operation> create_operation(const msv_id operation_id, const operation_buffer &buffer,
+            epoc::notify_info complete_info, const std::uint32_t command) = 0;
+
+        const msv_id mtm_uid() const {
+            return mtm_uid_;
+        }
     };
 }

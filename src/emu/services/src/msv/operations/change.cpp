@@ -37,10 +37,10 @@ namespace eka2l1::epoc::msv {
         entry target_entry;
 
         common::chunkyseri seri(buffer_.data(), buffer_.size(), common::SERI_MODE_READ);
-        absorb_entry_to_buffer(seri, target_entry);
+        server->absorb_entry_to_buffer(seri, target_entry);
 
         const bool result = server->indexer()->change_entry(target_entry);
-        
+
         local_operation_progress *progress = progress_data<local_operation_progress>();
 
         progress->operation_ = epoc::msv::local_operation_changed;
@@ -59,13 +59,22 @@ namespace eka2l1::epoc::msv {
             // Queue entry changed event
             msv_event_data created;
             created.nof_ = epoc::msv::change_notification_type_entries_changed;
-            created.arg1_ = target_entry.id_;
-            created.arg2_ = target_entry.parent_id_;
+            created.ids_.push_back(target_entry.id_);
+            created.arg1_ = target_entry.parent_id_;
 
             server->queue(created);
         }
 
         state(operation_state_success);
         complete_info_.complete(epoc::error_none);
+    }
+
+    std::int32_t change_operation::system_progress(system_progress_info &progress) {
+        local_operation_progress *localprg = progress_data<local_operation_progress>();
+
+        progress.err_code_ = localprg->error_;
+        progress.id_ = localprg->mid_;
+
+        return epoc::error_none;
     }
 }

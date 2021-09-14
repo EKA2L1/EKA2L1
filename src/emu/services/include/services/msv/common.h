@@ -65,6 +65,25 @@ namespace eka2l1::epoc::msv {
         local_operation_changed = 5
     };
 
+    enum send_state {
+        send_state_in_preparation = 0,
+        send_state_waiting_to_send = 1,
+        send_state_connecting = 2,
+        send_state_sending = 3,
+        send_state_done = 4,
+        send_state_failed = 5
+    };
+
+    enum bio_msg_type : std::uint8_t {
+        bio_msg_id_unknown,
+        bio_msg_id_iana,
+        bio_msg_id_nbs,
+        bio_msg_id_wap,
+        bio_msg_id_wap_secure,
+        bio_msg_id_wsp,
+        bio_msg_id_wsp_secure
+    };
+
 #pragma pack(push, 1)
     struct local_operation_progress {
         local_operation operation_ = local_operation_none;
@@ -133,7 +152,8 @@ namespace eka2l1::epoc::msv {
 
         enum emulator_flag {
             EMULATOR_FLAG_CHILDREN_LOOKED = 1 << 0,
-            EMULATOR_FLAG_STORE_LOCK = 1 << 1
+            EMULATOR_FLAG_STORE_LOCK = 1 << 1,
+            EMULATOR_FLAG_ENTRY_LOCK = 1 << 2
         };
 
         enum data_flag {
@@ -171,6 +191,18 @@ namespace eka2l1::epoc::msv {
             }
         }
 
+        const bool locked() const {
+            return emulator_flags_ & EMULATOR_FLAG_ENTRY_LOCK;
+        }
+
+        void lock() {
+            emulator_flags_ |= EMULATOR_FLAG_STORE_LOCK;
+        }
+
+        void unlock() {
+            emulator_flags_ &= ~EMULATOR_FLAG_STORE_LOCK;
+        }
+
         const bool visible() const {
             return !(data_ & DATA_FLAG_INVISIBLE);
         }
@@ -194,6 +226,14 @@ namespace eka2l1::epoc::msv {
         }
     };
 
+#pragma pack(push, 1)
+    struct system_progress_info {
+        std::int32_t version_ = 1;
+        std::int32_t err_code_ = 0;
+        std::uint32_t id_ = 0;
+    };
+#pragma pack(pop)
+
     using msv_id = std::uint32_t;
     using operation_buffer = std::vector<std::uint8_t>;
 
@@ -201,8 +241,12 @@ namespace eka2l1::epoc::msv {
     static constexpr std::uint32_t MTM_SERVICE_UID_ROOT = 0x10000F67;
     static constexpr std::uint32_t MSV_SERVICE_UID = 0x10000F68;
     static constexpr std::uint32_t MSV_FOLDER_UID = 0x10000F69;
+    static constexpr std::uint32_t MSV_NORMAL_UID = 0x10000F6A;
+    static constexpr std::uint32_t MSV_LOCAL_SERVICE_MTM_UID = 0x10000F71;
     static constexpr std::uint32_t MSV_ROOT_ID_VALUE = 0x1000;
     static constexpr std::uint32_t MSV_LOCAL_SERVICE_ID_VALUE = 0x1001;
+    static constexpr std::uint32_t MSV_DRAFT_ENTRY_ID_VALUE = 0x1004;
+    static constexpr std::uint32_t MSV_SENT_ENTRY_ID_VALUE = 0x1005;
     static constexpr std::uint32_t MSV_FIRST_FREE_ENTRY_ID = 0x100000;
     static constexpr std::uint32_t MSV_MSG_TYPE_UID = 0x1000102C;
 }

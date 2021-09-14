@@ -27,7 +27,7 @@
 
 #include <common/log.h>
 
-namespace eka2l1::epoc {
+namespace eka2l1::epoc::sms {
     sms_number::sms_number()
         : recp_status_(recipient_status_not_yet_sent)
         , error_(0)
@@ -51,8 +51,10 @@ namespace eka2l1::epoc {
 
         seri.absorb(log_id_);
 
-        if ((seri.get_seri_mode() == common::SERI_MODE_READ) && (version <= 1)) {
-            delivery_status_ = sms_no_acknowledge;
+        if (version <= 1) {
+            if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+                delivery_status_ = sms_no_acknowledge;
+            } 
         } else {
             std::uint8_t val = static_cast<std::uint8_t>(delivery_status_);
             seri.absorb(val);
@@ -151,7 +153,7 @@ namespace eka2l1::epoc {
         }
     }
     
-    void supply_sim_settings(eka2l1::system *sys) {
+    void supply_sim_settings(eka2l1::system *sys, sms_settings *furnished) {
         io_system *io = sys->get_io_system();
 
         // 1st. Supply data to SMS settings dat file, and modify the MSV store file that contains
@@ -206,6 +208,10 @@ namespace eka2l1::epoc {
         } else {
             setting_read_file->write_file(buffer.data(), static_cast<std::uint32_t>(buffer.size()), 1);
             setting_read_file->close();
+        }
+
+        if (furnished) {
+            *furnished = settings;
         }
 
         // TODO: Supply data to cenrep too. It was the main source

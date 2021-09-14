@@ -163,6 +163,7 @@ namespace eka2l1::service {
         void process_accepted_msg() override;
 
         void disconnect(service::ipc_context &ctx) override;
+        void disconnect_impl(service::session *ss);
 
         void destroy() override {
             clear_all_sessions();

@@ -70,6 +70,8 @@ namespace eka2l1::epoc::msv {
         virtual void execute(msv_server *server, const kernel::uid process_uid) = 0;
         virtual void cancel();
 
+        virtual std::int32_t system_progress(epoc::msv::system_progress_info &progress);
+
         const msv_id operation_id() const {
             return operation_id_;
         }
