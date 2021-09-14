@@ -56,4 +56,19 @@ namespace eka2l1::utils {
         val_ = len;
         return true;
     }
+
+    bool cardinality::externalize(common::wo_stream &stream) {
+        if (val_ <= (0xFF >> 1)) {
+            std::uint8_t b = static_cast<std::uint8_t>(val_ << 1);
+            return (stream.write(&b, 1) == 1);
+        }
+
+        if (val_ <= (0xFFFF >> 2)) {
+            std::uint16_t b = static_cast<std::uint16_t>(val_ << 2) + 0x1;
+            return (stream.write(&b, 2) == 2);
+        }
+
+        std::uint32_t b = (val_ << 3) + 0x3;
+        return (stream.write(&b, 4) == 4);
+    }
 }
