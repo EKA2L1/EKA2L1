@@ -28,13 +28,11 @@
 #include <services/audio/mmf/dev.h>
 #include <services/backup/backup.h>
 #include <services/bluetooth/btman.h>
-#include <services/cdl/cdl.h>
 #include <services/centralrepo/centralrepo.h>
 #include <services/comm/comm.h>
 #include <services/drm/helper.h>
 #include <services/drm/notifier/notifier.h>
 #include <services/drm/rights.h>
-#include <services/ecom/ecom.h>
 #include <services/etel/etel.h>
 #include <services/fbs/fbs.h>
 #include <services/featmgr/featmgr.h>

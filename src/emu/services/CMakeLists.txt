@@ -25,10 +25,6 @@ add_library(epocservs
         include/services/bluetooth/protocols/overall.h
         include/services/bluetooth/btman.h
         include/services/bluetooth/btmidman.h
-        include/services/cdl/cdl.h
-        include/services/cdl/common.h
-        include/services/cdl/ops.h
-        include/services/cdl/watcher.h
         include/services/centralrepo/centralrepo.h
         include/services/centralrepo/common.h
         include/services/centralrepo/repo.h
@@ -43,9 +39,6 @@ add_library(epocservs
         include/services/drm/notifier/notifier.h
         include/services/drm/helper.h
         include/services/drm/rights.h
-        include/services/ecom/ecom.h
-        include/services/ecom/hleutils.h
-        include/services/ecom/plugin.h
         include/services/etel/common.h
         include/services/etel/etel.h
         include/services/etel/line.h
@@ -89,8 +82,6 @@ add_library(epocservs
         include/services/msv/store.h
         include/services/notifier/notifier.h
         include/services/notifier/queries.h
-        include/services/posix/posix.h
-        include/services/posix/op.h
         include/services/remcon/common.h
         include/services/remcon/controller.h
         include/services/remcon/remcon.h
@@ -159,10 +150,6 @@ add_library(epocservs
         src/bluetooth/protocols/overall.cpp
         src/bluetooth/btman.cpp
         src/bluetooth/btmidman.cpp
-        src/cdl/cdl.cpp
-        src/cdl/common.cpp
-        src/cdl/observer.cpp
-        src/cdl/watcher.cpp
         src/centralrepo/centralrepo.cpp
         src/centralrepo/cre.cpp
         src/centralrepo/repo.cpp
@@ -177,10 +164,6 @@ add_library(epocservs
         src/drm/notifier/notifier.cpp
         src/drm/helper.cpp    
         src/drm/rights.cpp
-        src/ecom/ecom.cpp
-        src/ecom/hleutils.cpp
-        src/ecom/instantiate.cpp
-        src/ecom/plugin.cpp
         src/etel/etel.cpp
         src/etel/line.cpp
         src/etel/modmngr.cpp
@@ -221,7 +204,6 @@ add_library(epocservs
         src/msv/store.cpp
         src/notifier/notifier.cpp
         src/notifier/queries.cpp
-        src/posix/posix.cpp
         src/remcon/common.cpp
         src/remcon/controller.cpp
         src/remcon/remcon.cpp
