@@ -245,7 +245,7 @@ namespace eka2l1::epoc {
 
     void window_user::take_action_on_change(kernel::thread *drawer) {
         // Want to trigger a screen redraw
-        if (is_visible()) {
+        if (is_visible() && !is_dsa_active()) {
             epoc::animation_scheduler *sched = client->get_ws().get_anim_scheduler();
             ntimer *timing = client->get_ws().get_ntimer();
 
