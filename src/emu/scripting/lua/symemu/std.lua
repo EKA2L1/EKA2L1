@@ -108,15 +108,19 @@ end
 
 setmetatable(descriptor16, { __index = descriptor })
 
+function std.rawUtf16ToString(raw, length)
+    local result = ffi.C.symemu_std_utf16_to_utf8(raw, length)
+    ffi.gc(result, ffi.C.symemu_free_string)
+
+    return ffi.string(result)
+end
+
 function descriptor16:rawData()
     return self.pr:readMemory(self.dataAddr, self.length * 2)
 end
 
 function descriptor16:__tostring()
-    local result = ffi.C.symemu_std_utf16_to_utf8(self:rawData(), self.length)
-    ffi.gc(result, ffi.C.symemu_free_string)
-
-    return ffi.string(result)
+	return std.rawUtf16ToString(self:rawData(), self.length)
 end
 
 function std.makeDescriptor16(pr, addr)
