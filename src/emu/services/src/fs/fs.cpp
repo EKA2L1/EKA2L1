@@ -147,13 +147,12 @@ namespace eka2l1 {
         return (common::compare_ignore_case(x, y) == -1);
     }
 
-    fs_server_client::fs_server_client(service::typical_server *srv, kernel::uid suid, epoc::version client_version, service::ipc_context *ctx)
+    fs_server_client::fs_server_client(service::typical_server *srv, kernel::uid suid, epoc::version client_version, kernel::thread *own_thr)
         : typical_session(srv, suid, client_version) {
         // Please don't remove the separator, absolute path needs this to determine root directory
-        kernel::process *pr = ctx->msg->own_thr->owning_process();
-        const std::u16string root_name = eka2l1::root_name(pr->get_exe_path());
+        kernel::process *pr = own_thr ? own_thr->owning_process() : nullptr;
 
-        if (server<fs_server>()->kern->is_eka1()) {
+        if (server<fs_server>()->kern->is_eka1() || !pr) {
             ss_path = server<fs_server>()->default_sys_path;
         } else {
             // The default session path is private path with system drive, see sf_main.cpp in sfile module, line 122
@@ -466,12 +465,25 @@ namespace eka2l1 {
             init();
         }
 
-        fs_server_client *cli = create_session<fs_server_client>(&ctx, &ctx);
+        fs_server_client *cli = create_session<fs_server_client>(&ctx, ctx.msg->own_thr);
         typical_server::connect(ctx);
     }
 
     void fs_server::disconnect(service::ipc_context &ctx) {
         typical_server::disconnect(ctx);
+    }
+
+    fs_server_client *fs_server::get_correspond_client(service::session *ss) {
+        if (!(flags & FLAG_INITED)) {
+            init();
+        }
+
+        auto result = sessions.find(ss->unique_id());
+        if (result != sessions.end()) {
+            return reinterpret_cast<fs_server_client*>(result->second.get());
+        }
+
+        return create_session_impl<fs_server_client>(ss->unique_id(), epoc::version{ 0 }, nullptr);
     }
 
     void fs_server_client::session_path(service::ipc_context *ctx) {

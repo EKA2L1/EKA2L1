@@ -790,7 +790,7 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    int fs_server_client::new_node(io_system *io, kernel::thread *sender, std::u16string name, int org_mode, bool overwrite, bool temporary) {
+    int fs_server_client::new_node(io_system *io, kernel::thread *sender, std::u16string name, int org_mode, bool overwrite, bool temporary, bool ignore_caps) {
         int real_mode = org_mode & ~(epoc::fs::file_stream_text | epoc::fs::file_read_async_all | epoc::fs::file_big_size);
         epoc::fs::file_mode share_mode = static_cast<epoc::fs::file_mode>(real_mode & 0b11);
 
@@ -823,10 +823,12 @@ namespace eka2l1 {
         kernel::uid own_pr_uid = own_pr->unique_id();
 
         // Check capabilities
-        if (!check_path_capabilities_pass(name, own_pr, epoc::fs::private_comp_access_policy, (access_mode & WRITE_MODE) ? epoc::fs::sys_resource_modify_access_policy : epoc::fs::sys_read_only_access_policy,
-                (access_mode & WRITE_MODE) ? epoc::fs::sys_resource_modify_access_policy : epoc::fs::resource_read_only_access_policy)) {
-            LOG_ERROR(SERVICE_EFSRV, "New file node fails capabilities requirements with path={}, process UID=0x{:X}", common::ucs2_to_utf8(name), own_pr_uid);
-            return epoc::error_permission_denied;
+        if (!ignore_caps) {
+            if (!check_path_capabilities_pass(name, own_pr, epoc::fs::private_comp_access_policy, (access_mode & WRITE_MODE) ? epoc::fs::sys_resource_modify_access_policy : epoc::fs::sys_read_only_access_policy,
+                    (access_mode & WRITE_MODE) ? epoc::fs::sys_resource_modify_access_policy : epoc::fs::resource_read_only_access_policy)) {
+                LOG_ERROR(SERVICE_EFSRV, "New file node fails capabilities requirements with path={}, process UID=0x{:X}", common::ucs2_to_utf8(name), own_pr_uid);
+                return epoc::error_permission_denied;
+            }
         }
 
         // Check the attribute first

@@ -39,6 +39,7 @@ namespace eka2l1::kernel {
 
 namespace eka2l1::service {
     class property;
+    class session;
 }
 
 namespace eka2l1 {
@@ -105,7 +106,7 @@ namespace eka2l1 {
             return obj_table_.get<fs_node>(handle);
         }
 
-        explicit fs_server_client(service::typical_server *srv, kernel::uid suid, epoc::version client_version, service::ipc_context *ctx);
+        explicit fs_server_client(service::typical_server *srv, kernel::uid suid, epoc::version client_version, kernel::thread *own_thr);
         void fetch(service::ipc_context *ctx) override;
 
         void generic_close(service::ipc_context *ctx);
@@ -155,7 +156,7 @@ namespace eka2l1 {
         void create_private_path(service::ipc_context *ctx);
 
         int new_node(io_system *io, kernel::thread *sender, std::u16string name, int org_mode,
-            bool overwrite = false, bool temporary = false);
+            bool overwrite = false, bool temporary = false, bool ignore_caps = false);
 
         void entry(service::ipc_context *ctx);
         void is_file_in_rom(service::ipc_context *ctx);
@@ -330,5 +331,7 @@ namespace eka2l1 {
 
         file *get_file(const kernel::uid session_uid, const std::uint32_t handle);
         bool is_file_opened(const std::u16string &path);
+
+        fs_server_client *get_correspond_client(service::session *ss);
     };
 }
