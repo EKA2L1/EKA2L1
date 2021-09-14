@@ -1018,7 +1018,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="650"/>
       <source>Unbind</source>
-      <translation>Адвязаць</translation>
+      <translation>Не прывязана</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="695"/>
