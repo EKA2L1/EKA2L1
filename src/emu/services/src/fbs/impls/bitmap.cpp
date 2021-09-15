@@ -802,7 +802,7 @@ namespace eka2l1 {
         header.color = get_bitmap_color_type_from_display_mode(info.dpm_);
         header.header_len = sizeof(loader::sbm_header);
         header.palette_size = 0;
-        header.size_twips = info.size_ * twips_mul;
+        header.size_twips = info.size_ * epoc::APPROXIMATE_NORMAL_PHONE_TWIPS_MUL;
         header.bit_per_pixels = epoc::get_bpp_from_display_mode(info.dpm_);
 
         bws_bmp->construct(header, info.dpm_, data, base, support_current_display_mode_flag, true);
@@ -1029,7 +1029,7 @@ namespace eka2l1 {
             loader::sbm_header old_header = new_bmp->bitmap_->header_;
             old_header.size_pixels.x = new_size.x;
             old_header.size_pixels.y = new_size.y;
-            old_header.size_twips = old_header.size_pixels * twips_mul;
+            old_header.size_twips = old_header.size_pixels * epoc::APPROXIMATE_NORMAL_PHONE_TWIPS_MUL;
 
             // Free old data
             std::uint8_t *data = new_bmp->original_pointer(fbss);

@@ -151,7 +151,7 @@ namespace eka2l1::epoc {
             }
 
             info.size_in_pixels_ = scr->size();
-            info.size_in_twips_ = info.size_in_pixels_ * 15;
+            info.size_in_twips_ = info.size_in_pixels_ * epoc::APPROXIMATE_NORMAL_PHONE_TWIPS_MUL;
             info.is_mono_ = is_display_mode_mono(mode);
             info.bits_per_pixel_ = get_bpp_from_display_mode(mode);
             info.is_pixel_order_rgb_ = (mode >= epoc::display_mode::color4k);
@@ -371,7 +371,7 @@ namespace eka2l1::epoc {
         info.display_id_ = 0;
         info.xy_input_size_pixels_ = crr_screen->size();
         info.display_size_pixels_ = crr_screen->size();
-        info.physical_screen_size_ = info.display_size_pixels_ * 15; // In twips
+        info.physical_screen_size_ = info.display_size_pixels_ * epoc::APPROXIMATE_NORMAL_PHONE_TWIPS_MUL; // In twips
         info.input_type_ = xy_input_type_pointer;
         info.keyboard_id_ = 0;
         info.keyboard_present_ = 1;

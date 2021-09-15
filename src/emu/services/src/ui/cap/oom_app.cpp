@@ -190,7 +190,7 @@ namespace eka2l1 {
             mode_info.dmode = epoc::display_mode::color16ma;
             mode_info.info.orientation = epoc::number_to_orientation(scr_config->modes[i].rotation);
             mode_info.info.pixel_size = scr_config->modes[i].size;
-            mode_info.info.twips_size = mode_info.info.pixel_size * twips_mul;
+            mode_info.info.twips_size = mode_info.info.pixel_size * epoc::APPROXIMATE_NORMAL_PHONE_TWIPS_MUL;
             mode_info.screen_style_hash = calculate_screen_style_hash(scr_config->modes[i].style);
 
             result.append(reinterpret_cast<char *>(&mode_info), sizeof(akn_screen_mode_info));

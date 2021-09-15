@@ -45,9 +45,9 @@ enum {
     remote_slot = 2
 };
 
-constexpr int twips_mul = 15;
-
 namespace eka2l1::epoc {
+    static constexpr int APPROXIMATE_NORMAL_PHONE_TWIPS_MUL = 9;
+
     enum {
         base_handle = 0x40000000
     };

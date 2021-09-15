@@ -125,7 +125,7 @@ namespace eka2l1::epoc {
         if (bonus_the_twips) {
             pixel_twips_and_rot data;
             data.pixel_size = scr_mode->size;
-            data.twips_size = scr_mode->size * twips_mul;
+            data.twips_size = scr_mode->size * epoc::APPROXIMATE_NORMAL_PHONE_TWIPS_MUL;
             data.orientation = number_to_orientation(scr_mode->rotation);
 
             ctx.write_data_to_descriptor_argument(reply_slot, data);
@@ -146,7 +146,7 @@ namespace eka2l1::epoc {
         if (twips) {
             pixel_twips_and_rot data;
             data.pixel_size = mode.size;
-            data.twips_size = mode.size * twips_mul;
+            data.twips_size = mode.size * epoc::APPROXIMATE_NORMAL_PHONE_TWIPS_MUL;
             data.orientation = number_to_orientation(mode.rotation);
 
             ctx.write_data_to_descriptor_argument<pixel_twips_and_rot>(reply_slot, data);
@@ -245,7 +245,7 @@ namespace eka2l1::epoc {
                 break;
             }
 
-            eka2l1::vec2 screen_size = mode->size * twips_mul;
+            eka2l1::vec2 screen_size = mode->size * epoc::APPROXIMATE_NORMAL_PHONE_TWIPS_MUL;
             ctx.write_data_to_descriptor_argument<eka2l1::vec2>(reply_slot, screen_size);
             ctx.complete(0);
 

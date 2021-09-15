@@ -436,8 +436,8 @@ namespace eka2l1 {
 
         support->info_.name = info->face_attrib.name.to_std_string(nullptr);
         support->info_.flags = 0;
-        support->max_height_in_twips_ = info->metrics.max_height * twips_mul;
-        support->min_height_in_twips_ = info->face_attrib.min_size_in_pixels * twips_mul;
+        support->max_height_in_twips_ = info->metrics.max_height * epoc::APPROXIMATE_NORMAL_PHONE_TWIPS_MUL;
+        support->min_height_in_twips_ = info->face_attrib.min_size_in_pixels * epoc::APPROXIMATE_NORMAL_PHONE_TWIPS_MUL;
         support->num_heights_ = 1;
         support->is_scalable_ = info->adapter->vectorizable();
 
@@ -630,7 +630,7 @@ namespace eka2l1 {
         // I don't know why when I tested with eka2, this height starts to be in pixels for pixel opcode.
         // TODO: Find out if spec height is always in twips for eka2.
         if (serv->kern->is_eka1() || is_twips) {
-            spec.height = static_cast<std::int32_t>(static_cast<float>(spec.height) / 15);
+            spec.height = static_cast<std::int32_t>(static_cast<float>(spec.height) / epoc::APPROXIMATE_NORMAL_PHONE_TWIPS_MUL);
         }
 
         // Observing font plugin on real phone, it seems to clamp the height between 2 to 256.
@@ -746,8 +746,6 @@ namespace eka2l1 {
         write_font_handle(ctx, font, 1);
     }
 
-    static constexpr std::uint16_t FBS_TWIPS_MUL = 15;
-
     void fbscli::get_twips_height(service::ipc_context *ctx) {
         fbs_server *serv = server<fbs_server>();
         std::optional<epoc::handle> font_local_handle = ctx->get_argument_value<epoc::handle>(0);
@@ -764,7 +762,7 @@ namespace eka2l1 {
             return;
         }
 
-        const std::int32_t twips_height = static_cast<std::int32_t>(font->of_info.metrics.max_height * FBS_TWIPS_MUL);
+        const std::int32_t twips_height = static_cast<std::int32_t>(font->of_info.metrics.max_height * epoc::APPROXIMATE_NORMAL_PHONE_TWIPS_MUL);
 
         ctx->write_data_to_descriptor_argument<std::int32_t>(1, twips_height);
         ctx->complete(epoc::error_none);
