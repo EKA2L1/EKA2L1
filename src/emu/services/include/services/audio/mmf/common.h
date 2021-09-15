@@ -53,10 +53,14 @@ namespace eka2l1::epoc {
         mmf_sample_rate_64000hz = 1 << 11
     };
 
+    inline mmf_sample_rate operator | (mmf_sample_rate a, mmf_sample_rate b) {
+        return static_cast<mmf_sample_rate>(static_cast<int>(a) | static_cast<int>(b));
+    }
+
     static constexpr std::uint32_t TARGET_REQUEST_SAMPLES = 512;
 
     struct mmf_capabilities {
-        mmf_sample_rate rate_;
+        std::uint32_t rate_;
         mmf_encoding encoding_;
         std::uint32_t channels_;
         std::int32_t buffer_size_;
@@ -139,6 +143,8 @@ namespace eka2l1::epoc {
         mmf_dev_chunk_op chunk_op_; ///< Request that the client side should reopen the chunk handle.
             ///< May occur due to chunk recreating
     };
+
+    static_assert(sizeof(mmf_dev_hw_buf_v1) == 16);
 
     struct mmf_dev_hw_buf_v2 {
         std::uint32_t buffer_type_; ///< UID of the buffer.
