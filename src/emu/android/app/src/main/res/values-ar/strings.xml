@@ -73,7 +73,7 @@
     <string name="confirmation_required">التأكيد مطلوب</string>
     <string name="force_close_confirmation">فرض اغلاق التطبيق قد يؤدي لفقد بعض البيانات او تدميرها بالكامل!\nمتابعه؟</string>
     <string name="log_saved">تم حفظ السجل</string>
-    <string name="about_icon_by">&lt;BR&gt;أيقونة بواسطة: </string>
+    <string name="about_icon_by">&lt;BR&gt;الايقونة بواسطة: </string>
     <string name="version">الإصدار: </string>
     <string name="recommended_devices_note"><b>ملاحظة:</b> ينصح باستخدام البرامج الثابتة لتثبيت الأجهزة من S60v3 وما فوق.</string>
 </resources>

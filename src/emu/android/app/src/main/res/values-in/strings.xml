@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="error">Error</string>
+    <string name="error">Galat</string>
     <string name="no_data">Tidak ada data</string>
     <string name="search">Cari</string>
     <string name="about">Tentang</string>
@@ -10,7 +10,7 @@
     <string name="processing">Memproses...</string>
     <string name="completed">Selesai!</string>
     <string name="remove">Hapus</string>
-    <string name="mount_sd">Pasang MMC/SD Card</string>
+    <string name="mount_sd">Pasang MMC/Kartu SD</string>
     <string name="no_devices_found">Tidak ada firmware perangkat yang ditemukan</string>
     <string name="exit">Keluar</string>
     <string name="rename">Ganti nama</string>
@@ -22,23 +22,23 @@
     <string name="path_to_rom">Jalur ke ROM</string>
     <string name="firmware">Firmware</string>
     <string name="path_to_firmware">Jalur ke VPL</string>
-    <string name="install_method">Metode instalasi</string>
+    <string name="install_method">Metode pemasangan</string>
     <string name="enter_new_name">Masukkan nama baru</string>
-    <string name="no_device_dialog_title">Tidak ada perangkat yang terinstal!</string>
+    <string name="no_device_dialog_title">Tak ada perangkat terpasang!</string>
     <string name="no_device_installed">Harap instal firmware perangkat. File dan ROM dari perangkat Symbian diperlukan untuk penginstalan. \n\n<b>Catatan:</b> Setiap aplikasi memerlukan perangkat Symbian yang cocok untuk menjalankannya.</string>
-    <string name="install_device_note_may_need_rpkg">Untuk perangkat S60v2 atau lebih tinggi, diperlukan file tambahan yang bernama RPKG. Jika perangkat tersebut terdeteksi maka muncul permintaan untuk memasukkan file tersebut.</string>
-    <string name="recommended_devices_to_install">Rekomendasi firmware perangkat untuk diinstal</string>
+    <string name="install_device_note_may_need_rpkg">Untuk perangkat S60v2 atau lebih tinggi, perlu ada berkas tambahan bernama RPKG. Jika perangkatnya terdeteksi maka akan muncul permintaan memasukkan berkas tersebut.</string>
+    <string name="recommended_devices_to_install">Perangkat anjuran untuk dipasang</string>
     <string name="wiki_info">Untuk informasi lebih lanjut mengenai pemasangan perangkat, silakan kunjungi wiki kami:</string>
-    <string name="install_rpkg_corrupt">File RPKG yang disediakan telah rusak!</string>
+    <string name="install_rpkg_corrupt">Berkas RPKG yang disediakan rusak!</string>
     <string name="install_rpkg_file_not_found">File RPKG tidak bisa dibuka!</string>
     <string name="install_raw_dump_fail_to_copy">Gagal menyalin file raw dump ke tempat tujuan!</string>
     <string name="install_rom_fail_to_copy">Gagal menyalin ROM ke tempat tujuan!</string>
     <string name="install_rpkg_insufficent_size">Ukuran file RPKG terlaku kecil, kemungkinan proses dump tidak akan selesai!</string>
-    <string name="install_already_exist">Perangkat yang terinstal sudah ada!</string>
+    <string name="install_already_exist">Perangkat yang dipasang sudah ada!</string>
     <string name="install_product_determine_fail">Gagal menentukan informasi produk!</string>
     <string name="install_device_vpl_invalid_msg">File deskripsi firmware (VPL) tidak valid!</string>
     <string name="install_device_rofs_corrupt_msg">File ROFS rusak!</string>
-    <string name="install_device_rom_corrupt_msg">File ROM rusak!</string>
+    <string name="install_device_rom_corrupt_msg">Berkas ROM rusak!</string>
     <string name="install_device_fpsx_corrupt_msg">File FPSX rusak!</string>
     <string name="pref_general_title">Umum</string>
     <string name="pref_system_title">Sistem</string>
@@ -59,8 +59,8 @@
     <string name="pref_system_real_time_accuracy_level_name_high">Tinggi</string>
     <string name="pref_system_time_delay_option_name">Penundaan waktu</string>
     <string name="pref_system_setting_inheritance_option_name">Mengatur waris</string>
-    <string name="emulated_screen_rotation_item_name">Rotasi</string>
-    <string name="emulated_screen_refresh_rate_item_name">Refresh rate</string>
+    <string name="emulated_screen_rotation_item_name">Perputaran</string>
+    <string name="emulated_screen_refresh_rate_item_name">Laju refresh</string>
     <string name="mapping_dialog_title">Tekan tombol</string>
     <string name="mapping_dialog_message" formatted="false">Pemetaan saat ini: %1$s</string>
     <string name="reset_mapping">Atur ulang</string>
@@ -75,5 +75,5 @@
     <string name="log_saved">Log telah disimpan</string>
     <string name="about_icon_by">&lt;BR&gt;Ikon oleh: </string>
     <string name="version">Versi: </string>
-    <string name="recommended_devices_note"><b>Catatan:</b> Direkomendasikan untuk menggunakan metode instalasi \"firmware\" untuk perangkat S60v3 ke atas.</string>
+    <string name="recommended_devices_note"><b>Catatan:</b> Dianjurkan untuk menggunakan firmware pada pemasangan perangkat S60v3 ke atas.</string>
 </resources>

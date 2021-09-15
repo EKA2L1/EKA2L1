@@ -137,7 +137,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="220"/>
       <source>An unknown error has occured. Please contact the developers with your log!</source>
-      <translation>Terjadi kesalahan yang tak diketahui. Tolong hubungi pengembang dengan catatan Anda!</translation>
+      <translation>Terjadi kegalatan (error) tak diketahui. Tolong hubungi pengembang dengan catatan (log) Anda!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="224"/>
@@ -371,7 +371,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="677"/>
       <source>The ZIP file is corrupted!</source>
-      <translation type="unfinished">The ZIP file is corrupted!</translation>
+      <translation>Berkas ZIP rusak!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="682"/>
@@ -381,12 +381,12 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="688"/>
       <source>The choosen file is not a ZIP file!</source>
-      <translation type="unfinished">The choosen file is not a ZIP file!</translation>
+      <translation>Berkas yang dipilih bukan berkas ZIP!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="702"/>
       <source>Game card problem</source>
-      <translation type="unfinished">Game card problem</translation>
+      <translation>Kartu permainan bermasalah</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="702"/>
@@ -396,32 +396,32 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="706"/>
       <source>Game card dump folder correction</source>
-      <translation type="unfinished">Game card dump folder correction</translation>
+      <translation>Pembetulan folder dump kartu permainan</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="706"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
-      <translation type="unfinished">The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</translation>
+      <translation>Jalur yang dipilih terlihat tidak tepat.&lt;br&gt;Ingin dibetulkan langsung oleh emulator?</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="762"/>
       <source>Choose the game card dump folder</source>
-      <translation type="unfinished">Choose the game card dump folder</translation>
+      <translation>Pilih folder dump kartu permainan</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="782"/>
       <source>Choose the game card zip</source>
-      <translation type="unfinished">Choose the game card zip</translation>
+      <translation>Pilih ZIP kartu permainan</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="856"/>
       <source>Document</source>
-      <translation type="unfinished">Document</translation>
+      <translation>Dokumen</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="874"/>
       <source>Choose a language for the package</source>
-      <translation type="unfinished">Choose a language for the package</translation>
+      <translation>Pilih bahasa untuk paket</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="648"/>
@@ -437,12 +437,12 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="919"/>
       <source>Installation aborted</source>
-      <translation type="unfinished">Installation aborted</translation>
+      <translation>Pemasangan dibantut</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="919"/>
       <source>The installation has been canceled</source>
-      <translation type="unfinished">The installation has been canceled</translation>
+      <translation>Pemasangan telah dibatalkan</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="924"/>
@@ -452,37 +452,37 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="924"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
-      <translation type="unfinished">Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</translation>
+      <translation>Gagal memasang paket pada jalur: %1. Pastikan jalurnya ke berkas SIS/SISX yang sahih.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="931"/>
       <source>Installation success</source>
-      <translation type="unfinished">Installation success</translation>
+      <translation>Pemasangan berhasil</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="931"/>
       <source>Package has been successfully installed</source>
-      <translation type="unfinished">Package has been successfully installed</translation>
+      <translation>Paket telah berhasil dipasang</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="952"/>
       <source>Choose the file to install</source>
-      <translation type="unfinished">Choose the file to install</translation>
+      <translation>Pilih berkas untuk dipasang</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="952"/>
       <source>SIS file (*.sis *.sisx)</source>
-      <translation type="unfinished">SIS file (*.sis *.sisx)</translation>
+      <translation>Berkas SIS (*.sis *.sisx)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1117"/>
       <source>Load theme failed!</source>
-      <translation type="unfinished">Load theme failed!</translation>
+      <translation>Gagal memuat tema!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1117"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
-      <translation type="unfinished">The Dark theme&apos;s style file can&apos;t be found!</translation>
+      <translation>Berkas tema gelap tidak ditemukan!</translation>
     </message>
   </context>
   <context>
@@ -500,7 +500,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="66"/>
       <source>UID</source>
-      <translation type="unfinished">UID</translation>
+      <translation>UID</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="71"/>
@@ -515,42 +515,42 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="81"/>
       <source>Drives</source>
-      <translation type="unfinished">Drives</translation>
+      <translation>Kandar (Drive)</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="89"/>
       <source>Uninstall</source>
-      <translation type="unfinished">Uninstall</translation>
+      <translation>Copot</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="94"/>
       <source>List files</source>
-      <translation type="unfinished">List files</translation>
+      <translation>Senaraikan berkas</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="126"/>
       <source>Uninstall failed!</source>
-      <translation type="unfinished">Uninstall failed!</translation>
+      <translation>Pencopotan gagal!</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="126"/>
       <source>Failed to uninstall the package</source>
-      <translation type="unfinished">Failed to uninstall the package</translation>
+      <translation>Gagal memasang paket</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="142"/>
       <source>%1&apos;s files</source>
-      <translation type="unfinished">%1&apos;s files</translation>
+      <translation>Berkas-berkas %1</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="151"/>
       <source>Installed</source>
-      <translation type="unfinished">Installed</translation>
+      <translation>Terpasang</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="155"/>
       <source>Delete on uninstall</source>
-      <translation type="unfinished">Delete on uninstall</translation>
+      <translation>Hapus setelah dicopot</translation>
     </message>
   </context>
   <context>
@@ -568,17 +568,17 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="48"/>
       <source>Application</source>
-      <translation type="unfinished">Application</translation>
+      <translation>Aplikasi</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="120"/>
       <source>Time delay (0-500us)</source>
-      <translation type="unfinished">Time delay (0-500us)</translation>
+      <translation>Tunda waktu (0-500us)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="159"/>
       <source>Save screen scale and rotations</source>
-      <translation type="unfinished">Save screen scale and rotations</translation>
+      <translation>Simpan skala dan perputaran layar</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="169"/>
@@ -588,7 +588,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="185"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; None</source>
-      <translation type="unfinished">&lt;b&gt;Configuration for:&lt;/b&gt; None</translation>
+      <translation>&lt;b&gt;Setelan untuk:&lt;/b&gt; Tak ada</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="201"/>
@@ -638,12 +638,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="273"/>
       <source>Data</source>
-      <translation type="unfinished">Data</translation>
+      <translation>Data</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="281"/>
       <source>Emulator data path</source>
-      <translation type="unfinished">Emulator data path</translation>
+      <translation>Jalur data emulator</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="291"/>
@@ -653,22 +653,22 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="300"/>
       <source>Clear all UI configurations</source>
-      <translation type="unfinished">Clear all UI configurations</translation>
+      <translation>Kosongkan semua setelan UI</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="311"/>
       <source>Interface</source>
-      <translation type="unfinished">Interface</translation>
+      <translation>Antarmuka</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="317"/>
       <source>Emulator display</source>
-      <translation type="unfinished">Emulator display</translation>
+      <translation>Tampilan emulator</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="349"/>
       <source>Background color</source>
-      <translation type="unfinished">Background color</translation>
+      <translation>Warna latar</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="362"/>
@@ -678,7 +678,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="372"/>
       <source>Hide mouse cursor</source>
-      <translation type="unfinished">Hide mouse cursor</translation>
+      <translation>Hilangi kursor tetikus</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="379"/>
@@ -693,12 +693,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="389"/>
       <source>Allow resizing display to phone screen&apos;s true size in pixels</source>
-      <translation type="unfinished">Allow resizing display to phone screen&apos;s true size in pixels</translation>
+      <translation>Izinkan ubah ukuran tampilan sesuai piksel layar ponsel asli</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="401"/>
       <source>User interface</source>
-      <translation type="unfinished">User interface</translation>
+      <translation>Antarmuka pengguna</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="409"/>
@@ -755,7 +755,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="529"/>
       <source>Current</source>
-      <translation type="unfinished">Current</translation>
+      <translation>Saat ini</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="552"/>
@@ -766,7 +766,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="563"/>
       <source>Check for any unimported devices and correct existing one&apos;s infos.</source>
-      <translation type="unfinished">Check for any unimported devices and correct existing one&apos;s infos.</translation>
+      <translation>Periksa perangkat yang belum diimpor dan betulkan info bagi yang sudah ada.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="566"/>
@@ -781,17 +781,17 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="576"/>
       <source>Validate current device</source>
-      <translation type="unfinished">Validate current device</translation>
+      <translation>Sahihkan perangkat saat ini</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="588"/>
       <source>Hardware emulation</source>
-      <translation type="unfinished">Hardware emulation</translation>
+      <translation>Emulasi perangkat keras</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="602"/>
       <source>CPU emulator</source>
-      <translation type="unfinished">CPU emulator</translation>
+      <translation>Emulator CPU</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="610"/>
@@ -836,17 +836,17 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="698"/>
       <source>Check</source>
-      <translation type="unfinished">Check</translation>
+      <translation>Periksa</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="709"/>
       <source>Battery level (0 - 100)</source>
-      <translation type="unfinished">Battery level (0 - 100)</translation>
+      <translation>Tingkat baterai (0 - 100)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="755"/>
       <source>System language</source>
-      <translation type="unfinished">System language</translation>
+      <translation>Bahasa sistem</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="777"/>
@@ -861,17 +861,17 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="815"/>
       <source>Add</source>
-      <translation type="unfinished">Add</translation>
+      <translation>Tambah</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="841"/>
       <source>Delete</source>
-      <translation type="unfinished">Delete</translation>
+      <translation>Hapus</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="860"/>
       <source>Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</source>
-      <translation type="unfinished">Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</translation>
+      <translation>Catatan: Salah satu tombol ada yang dipautkan ke tombol tetikus, kebergunaan layar sentuh akan dinonaktifkan.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="878"/>
@@ -976,49 +976,49 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="402"/>
       <source>Choose the data folder</source>
-      <translation type="unfinished">Choose the data folder</translation>
+      <translation>Pilih folder data</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="404"/>
       <location filename="../src/settings_dialog.cpp" line="1079"/>
       <location filename="../src/settings_dialog.cpp" line="1104"/>
       <source>Relaunch needed</source>
-      <translation type="unfinished">Relaunch needed</translation>
+      <translation>Perlu diluncur ulang</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="404"/>
       <source>This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</source>
-      <translation type="unfinished">This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</translation>
+      <translation>Perubahan ini perlu peluncuran ulang pada emulator.&lt;br&gt;Anda ingin lanjut?</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="522"/>
       <source>Please wait</source>
-      <translation type="unfinished">Please wait</translation>
+      <translation>Mohon tunggu</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="523"/>
       <source>Validation is in process. Please do not exit or launch applications until this operation is done.</source>
-      <translation type="unfinished">Validation is in process. Please do not exit or launch applications until this operation is done.</translation>
+      <translation>Pengesahan sedang berlangsung. Mohon jangan keluar atau luncurkan aplikasi sampai ini selesai.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="543"/>
       <source>Validation done!</source>
-      <translation type="unfinished">Validation done!</translation>
+      <translation>Pengesahan selesai!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="543"/>
       <source>The validation has successfully completed!</source>
-      <translation type="unfinished">The validation has successfully completed!</translation>
+      <translation>Pengesahan telah berhasil dilengkapi!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="554"/>
       <source>Enter new device name</source>
-      <translation type="unfinished">Enter new device name</translation>
+      <translation>Masukkan nama perangkat baru</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="650"/>
       <source>Unbind</source>
-      <translation type="unfinished">Unbind</translation>
+      <translation>Lerai tombol</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="695"/>
@@ -1029,19 +1029,19 @@
       <location filename="../src/settings_dialog.cpp" line="710"/>
       <location filename="../src/settings_dialog.cpp" line="756"/>
       <source>Mouse button %1</source>
-      <translation type="unfinished">Mouse button %1</translation>
+      <translation>Tombol tetikus %1</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="712"/>
       <location filename="../src/settings_dialog.cpp" line="798"/>
       <source>Controller %1 : Button %2</source>
-      <translation type="unfinished">Controller %1 : Button %2</translation>
+      <translation>Alat kendali %1 : Tombol %2</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="823"/>
       <location filename="../src/settings_dialog.cpp" line="847"/>
       <source>Enter profile name</source>
-      <translation type="unfinished">Enter profile name</translation>
+      <translation>Masukkan nama profil</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="831"/>
@@ -1072,7 +1072,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="908"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
-      <translation type="unfinished">&lt;b&gt;Configuration for:&lt;/b&gt; %1</translation>
+      <translation>&lt;b&gt;Setelan untuk:&lt;/b&gt; %1</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="911"/>
@@ -1098,12 +1098,12 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="1018"/>
       <source>Unidentified error!</source>
-      <translation type="unfinished">Unidentified error!</translation>
+      <translation>Galat tak dikenal!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1025"/>
       <source>IMEI valid!</source>
-      <translation type="unfinished">IMEI valid!</translation>
+      <translation>IMEI sahih!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1025"/>
@@ -1123,12 +1123,12 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="1040"/>
       <source>Cancel closing</source>
-      <translation type="unfinished">Cancel closing</translation>
+      <translation>Batalkan penutupan</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1079"/>
       <source>This change will be effective on the next launch of the emulator.</source>
-      <translation type="unfinished">This change will be effective on the next launch of the emulator.</translation>
+      <translation>Ubahan ini akan efektif pada peluncuran emulator berikutnya.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1087"/>
@@ -1143,7 +1143,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="1104"/>
       <source>The language will be updated on the next launch of the emulator.</source>
-      <translation type="unfinished">The language will be updated on the next launch of the emulator.</translation>
+      <translation>Bahasa akan diperbarui pada peluncuran emulator berikutnya.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1124"/>

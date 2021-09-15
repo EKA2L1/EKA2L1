@@ -16,7 +16,7 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="50"/>
       <source>&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</translation>
+      <translation>&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="53"/>
@@ -177,12 +177,12 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="256"/>
       <source>Installation failed</source>
-      <translation>Помилка встановлення</translation>
+      <translation>Не вдалося встановити</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="265"/>
       <source>Choose VPL file</source>
-      <translation>Виберіть VPL файл</translation>
+      <translation>Виберіть файл VPL</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="266"/>
@@ -376,7 +376,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="682"/>
       <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
-      <translation type="unfinished">The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</translation>
+      <translation>ZIP не містить системної теки в кореневій теці. Системна тека повинна перебувати в дампі гри.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="688"/>
@@ -391,37 +391,37 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="702"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
-      <translation type="unfinished">The game card dump has case-sensitive files. This may cause problems with the emulator.</translation>
+      <translation>Дамп ігрової картки містить чутливі до регістру файли. Це може спричинити проблеми з емулятором.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="706"/>
       <source>Game card dump folder correction</source>
-      <translation type="unfinished">Game card dump folder correction</translation>
+      <translation>Виправлення теки з дампом ігрової картки</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="706"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
-      <translation type="unfinished">The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</translation>
+      <translation>Схоже, вибраний шлях неправильний.&lt;br&gt;Ви хочете, щоб емулятор виправив його?</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="762"/>
       <source>Choose the game card dump folder</source>
-      <translation type="unfinished">Choose the game card dump folder</translation>
+      <translation>Виберіть теку з дампом ігрової картки</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="782"/>
       <source>Choose the game card zip</source>
-      <translation type="unfinished">Choose the game card zip</translation>
+      <translation>Виберіть архів ZIP з ігровою карткою</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="856"/>
       <source>Document</source>
-      <translation type="unfinished">Document</translation>
+      <translation>Документ</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="874"/>
       <source>Choose a language for the package</source>
-      <translation type="unfinished">Choose a language for the package</translation>
+      <translation>Виберіть мову для пакета</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="648"/>
@@ -432,57 +432,57 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="895"/>
       <source>Installing package progress</source>
-      <translation type="unfinished">Installing package progress</translation>
+      <translation>Прогрес установлення пакета</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="919"/>
       <source>Installation aborted</source>
-      <translation type="unfinished">Installation aborted</translation>
+      <translation>Установлення перервано</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="919"/>
       <source>The installation has been canceled</source>
-      <translation type="unfinished">The installation has been canceled</translation>
+      <translation>Установлення скасовано</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="924"/>
       <source>Installation failed</source>
-      <translation>Помилка встановлення</translation>
+      <translation>Не вдалося встановити</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="924"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
-      <translation type="unfinished">Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</translation>
+      <translation>Не вдалося встановити пакет за шляхом: %1. Переконайтеся, що шлях указує на дійсний файл SIS/SISX.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="931"/>
       <source>Installation success</source>
-      <translation type="unfinished">Installation success</translation>
+      <translation>Установлення успішне</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="931"/>
       <source>Package has been successfully installed</source>
-      <translation type="unfinished">Package has been successfully installed</translation>
+      <translation>Пакет успішно встановлено</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="952"/>
       <source>Choose the file to install</source>
-      <translation type="unfinished">Choose the file to install</translation>
+      <translation>Виберіть файл для встановлення</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="952"/>
       <source>SIS file (*.sis *.sisx)</source>
-      <translation type="unfinished">SIS file (*.sis *.sisx)</translation>
+      <translation>Файл SIS (*.sis *.sisx)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1117"/>
       <source>Load theme failed!</source>
-      <translation type="unfinished">Load theme failed!</translation>
+      <translation>Не вдалося завантажити тему!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1117"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
-      <translation type="unfinished">The Dark theme&apos;s style file can&apos;t be found!</translation>
+      <translation>Не вдається знайти файл стилю темної теми!</translation>
     </message>
   </context>
   <context>
@@ -500,7 +500,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="66"/>
       <source>UID</source>
-      <translation type="unfinished">UID</translation>
+      <translation>UID</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="71"/>
@@ -515,42 +515,42 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="81"/>
       <source>Drives</source>
-      <translation type="unfinished">Drives</translation>
+      <translation>Диски</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="89"/>
       <source>Uninstall</source>
-      <translation type="unfinished">Uninstall</translation>
+      <translation>Видалити</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="94"/>
       <source>List files</source>
-      <translation type="unfinished">List files</translation>
+      <translation>Список файлів</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="126"/>
       <source>Uninstall failed!</source>
-      <translation type="unfinished">Uninstall failed!</translation>
+      <translation>Не вдалося видалити!</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="126"/>
       <source>Failed to uninstall the package</source>
-      <translation type="unfinished">Failed to uninstall the package</translation>
+      <translation>Не вдалося видалити пакет</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="142"/>
       <source>%1&apos;s files</source>
-      <translation type="unfinished">%1&apos;s files</translation>
+      <translation>Файли %1</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="151"/>
       <source>Installed</source>
-      <translation type="unfinished">Installed</translation>
+      <translation>Установлено</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="155"/>
       <source>Delete on uninstall</source>
-      <translation type="unfinished">Delete on uninstall</translation>
+      <translation>Стерти після видалення</translation>
     </message>
   </context>
   <context>
@@ -568,27 +568,27 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="48"/>
       <source>Application</source>
-      <translation type="unfinished">Application</translation>
+      <translation>Застосунок</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="120"/>
       <source>Time delay (0-500us)</source>
-      <translation type="unfinished">Time delay (0-500us)</translation>
+      <translation>Затримка часу (0-500мс)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="159"/>
       <source>Save screen scale and rotations</source>
-      <translation type="unfinished">Save screen scale and rotations</translation>
+      <translation>Зберегти масштаб і поворот екрана</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="169"/>
       <source>Inherit these settings for child processes</source>
-      <translation type="unfinished">Inherit these settings for child processes</translation>
+      <translation>Успадковувати ці налаштування для дочірніх процесів</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="185"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; None</source>
-      <translation type="unfinished">&lt;b&gt;Configuration for:&lt;/b&gt; None</translation>
+      <translation>&lt;b&gt;Конфігурація для:&lt;/b&gt; Немає</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="201"/>
@@ -638,12 +638,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="273"/>
       <source>Data</source>
-      <translation type="unfinished">Data</translation>
+      <translation>Дані</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="281"/>
       <source>Emulator data path</source>
-      <translation type="unfinished">Emulator data path</translation>
+      <translation>Шлях до даних емулятора</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="291"/>
@@ -653,32 +653,32 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="300"/>
       <source>Clear all UI configurations</source>
-      <translation type="unfinished">Clear all UI configurations</translation>
+      <translation>Очистити всі налаштування інтерфейсу</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="311"/>
       <source>Interface</source>
-      <translation type="unfinished">Interface</translation>
+      <translation>Інтерфейс</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="317"/>
       <source>Emulator display</source>
-      <translation type="unfinished">Emulator display</translation>
+      <translation>Дисплей емулятора</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="349"/>
       <source>Background color</source>
-      <translation type="unfinished">Background color</translation>
+      <translation>Колір тла</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="362"/>
       <source>Pick</source>
-      <translation type="unfinished">Pick</translation>
+      <translation>Вибрати</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="372"/>
       <source>Hide mouse cursor</source>
-      <translation type="unfinished">Hide mouse cursor</translation>
+      <translation>Приховувати курсор миші</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="379"/>
@@ -688,17 +688,17 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="386"/>
       <source>By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</source>
-      <translation type="unfinished">By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</translation>
+      <translation>За промовчанням, емулятор дозволяє змінювати розмір дисплея емулятора тільки до найменшого значення розміру екрана телефона, помноженого на системний масштаб дисплея, щоб задовольнити очі більшості користувачів</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="389"/>
       <source>Allow resizing display to phone screen&apos;s true size in pixels</source>
-      <translation type="unfinished">Allow resizing display to phone screen&apos;s true size in pixels</translation>
+      <translation>Дозволити зміну розміру дисплея до справжнього розміру екрана телефона в пікселях</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="401"/>
       <source>User interface</source>
-      <translation type="unfinished">User interface</translation>
+      <translation>Користувацький інтерфейс</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="409"/>
@@ -723,7 +723,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="446"/>
       <source>Disable status bar</source>
-      <translation type="unfinished">Disable status bar</translation>
+      <translation>Приховати рядок стану</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="457"/>
@@ -733,12 +733,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="463"/>
       <source>Audio</source>
-      <translation type="unfinished">Audio</translation>
+      <translation>Звук</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="477"/>
       <source>Volume</source>
-      <translation type="unfinished">Volume</translation>
+      <translation>Гучність</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="500"/>
@@ -755,7 +755,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="529"/>
       <source>Current</source>
-      <translation type="unfinished">Current</translation>
+      <translation>Поточний</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="552"/>
@@ -766,7 +766,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="563"/>
       <source>Check for any unimported devices and correct existing one&apos;s infos.</source>
-      <translation type="unfinished">Check for any unimported devices and correct existing one&apos;s infos.</translation>
+      <translation>Перевірте, чи немає неімпортованих пристроїв, і виправте інформацію про наявні.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="566"/>
@@ -781,32 +781,32 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="576"/>
       <source>Validate current device</source>
-      <translation type="unfinished">Validate current device</translation>
+      <translation>Перевірити поточний пристрій</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="588"/>
       <source>Hardware emulation</source>
-      <translation type="unfinished">Hardware emulation</translation>
+      <translation>Емуляція обладнання</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="602"/>
       <source>CPU emulator</source>
-      <translation type="unfinished">CPU emulator</translation>
+      <translation>Емулятор ЦП</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="610"/>
       <source>Dynarmic (CPU recompiler)</source>
-      <translation type="unfinished">Dynarmic (CPU recompiler)</translation>
+      <translation>Dynarmic (рекомпілятор ЦП)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="615"/>
       <source>Dyncom (CPU interpreter)</source>
-      <translation type="unfinished">Dyncom (CPU interpreter)</translation>
+      <translation>Dyncom (інтерпретатор ЦП)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="627"/>
       <source>Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</source>
-      <translation type="unfinished">Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</translation>
+      <translation>Виберіть рівень точності для операцій із часовими періодами.&lt;br&gt;Що вищий рівень, то більше споживається потужність процесора, але потенційно швидша робота в деяких застосунках!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="630"/>
@@ -831,22 +831,22 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="667"/>
       <source>Properties</source>
-      <translation type="unfinished">Properties</translation>
+      <translation>Параметри</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="698"/>
       <source>Check</source>
-      <translation type="unfinished">Check</translation>
+      <translation>Перевірити</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="709"/>
       <source>Battery level (0 - 100)</source>
-      <translation type="unfinished">Battery level (0 - 100)</translation>
+      <translation>Рівень батареї (0 - 100)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="755"/>
       <source>System language</source>
-      <translation type="unfinished">System language</translation>
+      <translation>Мова системи</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="777"/>
@@ -856,67 +856,67 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="792"/>
       <source>Profile</source>
-      <translation type="unfinished">Profile</translation>
+      <translation>Профіль</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="815"/>
       <source>Add</source>
-      <translation type="unfinished">Add</translation>
+      <translation>Додати</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="841"/>
       <source>Delete</source>
-      <translation type="unfinished">Delete</translation>
+      <translation>Видалити</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="860"/>
       <source>Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</source>
-      <translation type="unfinished">Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</translation>
+      <translation>Примітка: Одна з прив'язок пов'язана з кнопкою миші, функціональні можливості сенсорного екрана буде вимкнено.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="878"/>
       <source>Left softkey</source>
-      <translation type="unfinished">Left softkey</translation>
+      <translation>Ліва функціональна клавіша</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="916"/>
       <source>Up arrow</source>
-      <translation type="unfinished">Up arrow</translation>
+      <translation>Стрілка вгору</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="948"/>
       <source>Right softkey</source>
-      <translation type="unfinished">Right softkey</translation>
+      <translation>Права функціональна клавіша</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="984"/>
       <source>Left arrow</source>
-      <translation type="unfinished">Left arrow</translation>
+      <translation>Стрілка ліворуч</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1016"/>
       <source>Middle softkey</source>
-      <translation type="unfinished">Middle softkey</translation>
+      <translation>Середня функціональна клавіша</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1048"/>
       <source>Right arrow</source>
-      <translation type="unfinished">Right arrow</translation>
+      <translation>Стрілка праворуч</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1084"/>
       <source>Green softkey</source>
-      <translation type="unfinished">Green softkey</translation>
+      <translation>Зелена функціональна клавіша</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1116"/>
       <source>Down arrow</source>
-      <translation type="unfinished">Down arrow</translation>
+      <translation>Стрілка вниз</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1148"/>
       <source>Red softkey</source>
-      <translation type="unfinished">Red softkey</translation>
+      <translation>Червона функціональна клавіша</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1184"/>
@@ -976,109 +976,109 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="402"/>
       <source>Choose the data folder</source>
-      <translation type="unfinished">Choose the data folder</translation>
+      <translation>Виберіть теку даних</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="404"/>
       <location filename="../src/settings_dialog.cpp" line="1079"/>
       <location filename="../src/settings_dialog.cpp" line="1104"/>
       <source>Relaunch needed</source>
-      <translation type="unfinished">Relaunch needed</translation>
+      <translation>Потрібен перезапуск</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="404"/>
       <source>This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</source>
-      <translation type="unfinished">This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</translation>
+      <translation>Ця зміна потребує перезапуску емулятора.&lt;br&gt;Ви хочете продовжити?</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="522"/>
       <source>Please wait</source>
-      <translation type="unfinished">Please wait</translation>
+      <translation>Будь ласка, зачекайте</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="523"/>
       <source>Validation is in process. Please do not exit or launch applications until this operation is done.</source>
-      <translation type="unfinished">Validation is in process. Please do not exit or launch applications until this operation is done.</translation>
+      <translation>Перевірка в процесі. Будь ласка, не виходьте чи не запускайте застосунки, доки ця операція не буде завершена.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="543"/>
       <source>Validation done!</source>
-      <translation type="unfinished">Validation done!</translation>
+      <translation>Перевірку виконано!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="543"/>
       <source>The validation has successfully completed!</source>
-      <translation type="unfinished">The validation has successfully completed!</translation>
+      <translation>Перевірка успішно завершена!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="554"/>
       <source>Enter new device name</source>
-      <translation type="unfinished">Enter new device name</translation>
+      <translation>Уведіть нове ім'я пристрою</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="650"/>
       <source>Unbind</source>
-      <translation type="unfinished">Unbind</translation>
+      <translation>Не прив'язано</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="695"/>
       <source>Waiting for input</source>
-      <translation type="unfinished">Waiting for input</translation>
+      <translation>Очікування на введення</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="710"/>
       <location filename="../src/settings_dialog.cpp" line="756"/>
       <source>Mouse button %1</source>
-      <translation type="unfinished">Mouse button %1</translation>
+      <translation>Кнопка миші %1</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="712"/>
       <location filename="../src/settings_dialog.cpp" line="798"/>
       <source>Controller %1 : Button %2</source>
-      <translation type="unfinished">Controller %1 : Button %2</translation>
+      <translation>Контролер %1 : Кнопка %2</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="823"/>
       <location filename="../src/settings_dialog.cpp" line="847"/>
       <source>Enter profile name</source>
-      <translation type="unfinished">Enter profile name</translation>
+      <translation>Уведіть ім'я профілю</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="831"/>
       <source>Profile creation failed</source>
-      <translation type="unfinished">Profile creation failed</translation>
+      <translation>Не вдалося створити профіль</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="831"/>
       <location filename="../src/settings_dialog.cpp" line="855"/>
       <source>A profile with that name already exists!</source>
-      <translation type="unfinished">A profile with that name already exists!</translation>
+      <translation>Профіль з таким ім'ям уже існує!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="855"/>
       <source>Profile rename failed</source>
-      <translation type="unfinished">Profile rename failed</translation>
+      <translation>Не вдалося перейменувати профіль</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="870"/>
       <source>Profile deletion failed</source>
-      <translation type="unfinished">Profile deletion failed</translation>
+      <translation>Не вдалося видалити профіль</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="870"/>
       <source>This is the only profile left!</source>
-      <translation type="unfinished">This is the only profile left!</translation>
+      <translation>Це єдиний наявний профіль!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="908"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
-      <translation type="unfinished">&lt;b&gt;Configuration for:&lt;/b&gt; %1</translation>
+      <translation>&lt;b&gt;Конфігурація для:&lt;/b&gt; %1</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="911"/>
       <location filename="../src/settings_dialog.cpp" line="916"/>
       <source>None</source>
-      <translation type="unfinished">None</translation>
+      <translation>Немає</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1006"/>
@@ -1098,57 +1098,57 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="1018"/>
       <source>Unidentified error!</source>
-      <translation type="unfinished">Unidentified error!</translation>
+      <translation>Невідома помилка!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1025"/>
       <source>IMEI valid!</source>
-      <translation type="unfinished">IMEI valid!</translation>
+      <translation>IMEI дійсний!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1025"/>
       <source>The IMEI sequence is valid!</source>
-      <translation type="unfinished">The IMEI sequence is valid!</translation>
+      <translation>Послідовність IMEI дійсна!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1028"/>
       <source>IMEI invalid!</source>
-      <translation type="unfinished">IMEI invalid!</translation>
+      <translation>IMEI недійсний!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1038"/>
       <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
-      <translation type="unfinished">Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</translation>
+      <translation>Ваш IMEI недійсний, тому що: %1.&lt;br&gt;Ви хочете редагувати поточний IMEI замість закриття? Вибір "Ні" збереже поточне значення IMEI.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1040"/>
       <source>Cancel closing</source>
-      <translation type="unfinished">Cancel closing</translation>
+      <translation>Скасувати закриття</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1079"/>
       <source>This change will be effective on the next launch of the emulator.</source>
-      <translation type="unfinished">This change will be effective on the next launch of the emulator.</translation>
+      <translation>Ця зміна набуде чинності після наступного запуску емулятора.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1087"/>
       <source>Confirmation</source>
-      <translation type="unfinished">Confirmation</translation>
+      <translation>Підтвердження</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1087"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
-      <translation type="unfinished">Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</translation>
+      <translation>Ви впевнені в цьому? Вашу поточну тему буде скинуто, всі вікна повідомлень, що були вимкнені, буде знову ввімкнено, і всі недавні монтування буде очищено.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1104"/>
       <source>The language will be updated on the next launch of the emulator.</source>
-      <translation type="unfinished">The language will be updated on the next launch of the emulator.</translation>
+      <translation>Мову буде оновлено після наступного запуску емулятора.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1124"/>
       <source>Pick the screen background color</source>
-      <translation type="unfinished">Pick the screen background color</translation>
+      <translation>Виберіть колір тла екрана</translation>
     </message>
   </context>
 </TS>
