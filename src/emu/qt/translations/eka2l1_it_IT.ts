@@ -668,12 +668,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="349"/>
       <source>Background color</source>
-      <translation type="unfinished">Background color</translation>
+      <translation>Colore dello sfondo</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="362"/>
       <source>Pick</source>
-      <translation type="unfinished">Pick</translation>
+      <translation>Seleziona</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="372"/>
@@ -688,12 +688,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="386"/>
       <source>By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</source>
-      <translation type="unfinished">By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</translation>
+      <translation>Per impostazione predefinita, l'emulatore consente solo di ridimensionare il display emulato al minimo delle dimensioni dello schermo del telefono, moltiplicato con la scala del display del sistema, per adattarsi agli occhi della maggior parte degli utenti</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="389"/>
       <source>Allow resizing display to phone screen&apos;s true size in pixels</source>
-      <translation type="unfinished">Allow resizing display to phone screen&apos;s true size in pixels</translation>
+      <translation>Consenti il ridimensionamento del display alla vera risoluzione in pixel del telefono</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="401"/>
@@ -1148,7 +1148,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="1124"/>
       <source>Pick the screen background color</source>
-      <translation type="unfinished">Pick the screen background color</translation>
+      <translation>Scegli il colore di sfondo dello schermo</translation>
     </message>
   </context>
 </TS>
