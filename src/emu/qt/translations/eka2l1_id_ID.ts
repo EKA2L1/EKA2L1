@@ -142,17 +142,17 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="224"/>
       <source>The disk space is insufficient to perform the device install! Please free your disk space!</source>
-      <translation>Ruang perangkat tak mencukupi untuk melakukan pemasangan perangkat. Mohon bebaskan ruang perangkat!</translation>
+      <translation>Ruang perangkat tak mencukupi untuk melakukan pemasangan perangkat. Mohon luangkan ruang perangkat!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="228"/>
       <source>Some files provided for installation do not exist anymore. Please keep them intact until the installation is done!</source>
-      <translation>Beberapa berkas instalasi tak lagi ditemukan. Tolong jangan diubah hingga pemasangan selesai!</translation>
+      <translation>Beberapa berkas untuk pemasangan (installation) tak lagi ditemukan. Tolong jangan diubah hingga pemasangan selesai!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="232"/>
       <source>The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</source>
-      <translation>ROFS dalam firmware rusak! Pastikan berkas firmware tidak tidak.</translation>
+      <translation>ROFS dalam berkas firmware-nya rusak! Pastikan berkas firmware Anda tidak rusak.</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="236"/>
@@ -270,7 +270,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="80"/>
       <source>Mount game card dump</source>
-      <translation>Muat dump kartu permainan</translation>
+      <translation>Mount dump kartu permainan</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="152"/>
@@ -366,7 +366,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="672"/>
       <source>Mounting aborted</source>
-      <translation>Pemuatan dibatalkan</translation>
+      <translation>Mount dibatalkan</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="677"/>
@@ -467,7 +467,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="952"/>
       <source>Choose the file to install</source>
-      <translation>Pilih berkas untuk dipasang</translation>
+      <translation>Pilih berkas untuk dipasang (install)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="952"/>
@@ -683,7 +683,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="379"/>
       <source>Enable nearest neighbor filtering</source>
-      <translation>Hidupkan pemfilteran terdekat</translation>
+      <translation>Hidupkan tapisan Nearest Neighbor</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="386"/>
@@ -1138,7 +1138,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="1087"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
-      <translation type="unfinished">Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</translation>
+      <translation>Apakah Anda yakin? Tema Anda saat ini akan diatur ulang, semua kotak pesan yang telah dinonaktifkan akan diaktifkan ulang, dan semua mount tadi akan dikosongkan.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1104"/>
