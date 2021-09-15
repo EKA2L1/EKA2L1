@@ -36,6 +36,26 @@ namespace eka2l1 {
     static constexpr std::uint32_t MMF_BUFFER_SIZE_MAX = 0x4000;
     static constexpr std::uint32_t MMF_BUFFER_SIZE_DEFAULT = 0x1000;
 
+    static std::uint32_t recommended_buffer_size(const std::uint32_t sample_rate) {
+        if (sample_rate < 16000) {
+            return MMF_BUFFER_SIZE_MIN;
+        }
+
+        if (sample_rate < 24000) {
+            return 0x1000;
+        }
+
+        if (sample_rate < 44100) {
+            return 0x2000;
+        }
+
+        if (sample_rate < 88200) {
+            return 0x3000;
+        }
+
+        return MMF_BUFFER_SIZE_MAX;
+    }
+
     const std::uint32_t freq_enum_to_number(const epoc::mmf_sample_rate rate) {
         switch (rate) {
         case epoc::mmf_sample_rate_8000hz:
@@ -110,7 +130,7 @@ namespace eka2l1 {
     }
 
     inline std::uint32_t duration_to_bytes(const std::uint32_t duration_ms, const epoc::mmf_capabilities &caps) {
-        return duration_to_samples(duration_ms, caps.rate_) * caps.average_bytes_per_sample();
+        return duration_to_samples(duration_ms, static_cast<epoc::mmf_sample_rate>(caps.rate_)) * caps.average_bytes_per_sample();
     }
 
     std::uint32_t epoc::mmf_capabilities::average_bytes_per_sample() const {
@@ -135,7 +155,7 @@ namespace eka2l1 {
     }
 
     std::uint32_t epoc::mmf_capabilities::buffer_size_recommended() const {
-        return common::align(average_bytes_per_sample() * freq_enum_to_number(rate_) / 4, MMF_BUFFER_SIZE_ALIGN, 0);
+        return common::align(average_bytes_per_sample() * freq_enum_to_number(static_cast<epoc::mmf_sample_rate>(rate_)) / 4, MMF_BUFFER_SIZE_ALIGN, 0);
     }
 
     mmf_dev_server::mmf_dev_server(eka2l1::system *sys)
@@ -158,7 +178,10 @@ namespace eka2l1 {
         , volume_(5)
         , left_balance_(50)
         , right_balance_(50) {
-        conf_ = get_caps();
+        conf_.channels_ = 1;
+        conf_.rate_ = epoc::mmf_sample_rate_8000hz;
+        conf_.buffer_size_ = MMF_BUFFER_SIZE_DEFAULT;
+        conf_.encoding_ = epoc::mmf_encoding_16bit_pcm; 
 
         kernel_system *kern = serv->get_system()->get_kernel_system();
     }
@@ -361,7 +384,12 @@ namespace eka2l1 {
         // Fill our preferred settings
         caps.channels_ = 2;
         caps.encoding_ = epoc::mmf_encoding_16bit_pcm;
-        caps.rate_ = epoc::mmf_sample_rate_44100hz;
+        caps.rate_ = epoc::mmf_sample_rate_8000hz | epoc::mmf_sample_rate_11025hz | 
+            epoc::mmf_sample_rate_12000hz | epoc::mmf_sample_rate_16000hz | epoc::mmf_sample_rate_22050hz |
+            epoc::mmf_sample_rate_24000hz | epoc::mmf_sample_rate_32000hz | epoc::mmf_sample_rate_44100hz |
+            epoc::mmf_sample_rate_48000hz | epoc::mmf_sample_rate_64000hz | epoc::mmf_sample_rate_88200hz |
+            epoc::mmf_sample_rate_96000hz;
+
         caps.buffer_size_ = MMF_BUFFER_SIZE_DEFAULT;
 
         return caps;
@@ -392,9 +420,11 @@ namespace eka2l1 {
         }
 
         conf_ = settings->conf_;
-        conf_.buffer_size_ = static_cast<std::int32_t>(common::clamp(MMF_BUFFER_SIZE_MIN, MMF_BUFFER_SIZE_MAX, static_cast<std::uint32_t>(conf_.buffer_size_)));
 
-        const std::uint32_t freq = freq_enum_to_number(conf_.rate_);
+        const std::uint32_t freq = freq_enum_to_number(static_cast<epoc::mmf_sample_rate>(conf_.rate_));
+
+        conf_.buffer_size_ = static_cast<std::int32_t>(common::clamp(MMF_BUFFER_SIZE_MIN, MMF_BUFFER_SIZE_MAX,
+            recommended_buffer_size(freq)));
 
         stream_->set_properties(freq, conf_.channels_);
         ctx->complete(epoc::error_none);
@@ -624,6 +654,14 @@ namespace eka2l1 {
 
         drivers::dsp_output_stream *out_stream = reinterpret_cast<drivers::dsp_output_stream *>(stream_.get());
         out_stream->write(reinterpret_cast<std::uint8_t *>(buffer_chunk_->host_base()), supplied_size);
+
+        // Work around for Space Impact N-Gage 2.0
+        // TODO: Why it is submitting 16 times smaller bytes
+        // Maybe on real phone it just requests more each time it nears drain
+        if ((supplied_size * 16) == conf_.buffer_size_) {
+            conf_.buffer_size_ = common::clamp<std::int32_t>(MMF_BUFFER_SIZE_MIN, MMF_BUFFER_SIZE_MAX,
+                conf_.buffer_size_ * 16);
+        }
 
         ctx->complete(epoc::error_none);
     }
