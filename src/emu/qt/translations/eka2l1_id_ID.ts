@@ -376,7 +376,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="682"/>
       <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
-      <translation type="unfinished">The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</translation>
+      <translation>Di dalam ZIP tidak ada folder System pada root. Folder System harus ada di dump permainan.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="688"/>
@@ -391,7 +391,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="702"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
-      <translation type="unfinished">The game card dump has case-sensitive files. This may cause problems with the emulator.</translation>
+      <translation>Dump kartu permainan terdapat berkas yang perlu ada huruf besar kecil. Ini bisa bermasalah pada emulator.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="706"/>
@@ -432,7 +432,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="895"/>
       <source>Installing package progress</source>
-      <translation type="unfinished">Installing package progress</translation>
+      <translation>Progres pemasangan paket</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="919"/>
@@ -673,7 +673,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="362"/>
       <source>Pick</source>
-      <translation type="unfinished">Pick</translation>
+      <translation>Memilih</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="372"/>
@@ -1078,7 +1078,7 @@
       <location filename="../src/settings_dialog.cpp" line="911"/>
       <location filename="../src/settings_dialog.cpp" line="916"/>
       <source>None</source>
-      <translation type="unfinished">None</translation>
+      <translation>Tak ada</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1006"/>
@@ -1148,7 +1148,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="1124"/>
       <source>Pick the screen background color</source>
-      <translation type="unfinished">Pick the screen background color</translation>
+      <translation>Pilih warna latar belakang layar</translation>
     </message>
   </context>
 </TS>
