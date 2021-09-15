@@ -46,5 +46,6 @@ namespace eka2l1::utils {
         pri_queue act_queue_;
 
         void dump(kernel::process *owner);
+        bool check_stray(kernel::process *owner);
     };
 }
