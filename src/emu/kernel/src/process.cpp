@@ -224,7 +224,7 @@ namespace eka2l1::kernel {
         generation_ = refresh_generation();
     }
 
-    void process::destroy() {
+    int process::destroy() {
         kern->destroy(dll_lock);
 
         if (exit_type == entity_exit_type::pending) {
@@ -243,6 +243,7 @@ namespace eka2l1::kernel {
         }
 
         bss_man_.reset();
+        return 0;
     }
 
     std::string process::name() const {

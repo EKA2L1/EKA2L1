@@ -136,7 +136,7 @@ namespace eka2l1 {
                 (attrib == chunk_attrib::anonymous ? ", anonymous" : ""));
         }
 
-        void chunk::destroy() {
+        int chunk::destroy() {
             kernel::process *own = get_own_process();
 
             if (!mmc_impl_unq_)
@@ -146,6 +146,8 @@ namespace eka2l1 {
 
             if (own)
                 own->decrease_access_count();
+
+            return 0;
         }
 
         void chunk::open_to(process *own) {

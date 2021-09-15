@@ -73,11 +73,13 @@ namespace eka2l1 {
             return std::vector<uint32_t>{};
         }
 
-        void library::destroy() {
+        int library::destroy() {
             if (reffed) {
                 codeseg->deref(kern->crr_thread());
                 codeseg->unmark();
             }
+
+            return 1;
         }
 
         bool library::attached(kernel::process *pr) {

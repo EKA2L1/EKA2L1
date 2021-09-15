@@ -125,7 +125,7 @@ namespace eka2l1 {
             bool decommit(uint32_t offset, size_t size);
 
             /*! \brief Destroy the chunk */
-            void destroy() override;
+            int destroy() override;
 
             void open_to(process *own) override;
 

@@ -18,7 +18,7 @@ namespace eka2l1::kernel {
         library(kernel_system *kern, codeseg_ptr codeseg);
         ~library() {}
 
-        void destroy() override;
+        int destroy() override;
 
         std::optional<uint32_t> get_ordinal_address(kernel::process *pr, const std::uint32_t idx);
         std::vector<uint32_t> attach(kernel::process *pr);

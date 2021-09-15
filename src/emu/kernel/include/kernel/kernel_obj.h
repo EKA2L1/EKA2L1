@@ -107,10 +107,12 @@ namespace eka2l1 {
 
         public:
             virtual ~kernel_obj() {}
-            virtual void destroy() {
+            virtual int destroy() {
                 if (owner) {
                     owner->decrease_access_count();
                 }
+
+                return 0;
             }
 
             virtual void open_to(process *own) {}
@@ -154,7 +156,7 @@ namespace eka2l1 {
             void full_name(std::string &name_will_full);
 
             void increase_access_count() { access_count++; }
-            void decrease_access_count();
+            int decrease_access_count();
 
             int get_access_count() { return access_count; }
 

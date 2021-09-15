@@ -58,7 +58,7 @@ namespace eka2l1 {
             mutex(kernel_system *kern, ntimer *timing, std::string name, bool init_locked,
                 kernel::access_type access = kernel::access_type::local_access);
 
-            void destroy() override;
+            int destroy() override;
 
             /*! \brief Timeout reached, whether it's on the pendings
             */

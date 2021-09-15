@@ -138,7 +138,7 @@ namespace eka2l1 {
 
             void detach(session *svse);
 
-            virtual void destroy() override;
+            virtual int destroy() override;
 
             int deliver(ipc_msg_ptr msg);
             void receive(ipc_msg_ptr &msg);

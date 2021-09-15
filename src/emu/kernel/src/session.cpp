@@ -205,7 +205,7 @@ namespace eka2l1 {
             }
         }
 
-        void session::destroy() {
+        int session::destroy() {
             detatch(epoc::error_session_closed);
 
             // Try to send a disconnect message. Headless session and use sync message.
@@ -233,6 +233,8 @@ namespace eka2l1 {
 
             if (owner)
                 owner->decrease_access_count();
+
+            return 0;
         }
     }
 }

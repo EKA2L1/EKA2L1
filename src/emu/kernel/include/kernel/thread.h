@@ -330,7 +330,7 @@ namespace eka2l1 {
             ~thread() {}
 
             void do_cleanup();
-            void destroy() override;
+            int destroy() override;
 
             chunk_ptr get_stack_chunk();
 
@@ -417,6 +417,7 @@ namespace eka2l1 {
 
             std::vector<std::uint32_t> get_detach_eps();
             std::int32_t get_detach_eps_limit(std::int32_t *count, address *addrs);
+            void cleanup_detachs();
 
             thread_state current_state() const {
                 return state;

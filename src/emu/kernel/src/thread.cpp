@@ -334,7 +334,7 @@ namespace eka2l1 {
             owner->get_thread_list().push(&process_thread_link);
         }
 
-        void thread::destroy() {
+        int thread::destroy() {
             // Unlink from proces's thread list
             process_thread_link.deque();
 
@@ -351,6 +351,8 @@ namespace eka2l1 {
                 stop();
                 do_cleanup();
             }
+
+            return 0;
         }
 
         void thread::do_cleanup() {
@@ -359,11 +361,7 @@ namespace eka2l1 {
                 thread_handles.reset();
 
             kern->free_msg(sync_msg);
-
-            while (!closing_libs.empty()) {
-                kernel::codeseg::attached_info *info = E_LOFF(closing_libs.first()->deque(), kernel::codeseg::attached_info, closing_lib_link);
-                info->parent_seg->detach(info->attached_process);
-            }
+            cleanup_detachs();
         }
 
         tls_slot *thread::get_tls_slot(uint32_t handle, uint32_t dll_uid) {
@@ -916,6 +914,13 @@ namespace eka2l1 {
 
             cached_detach = false;
             return epoc::error_eof;
+        }
+
+        void thread::cleanup_detachs() {
+            while (!closing_libs.empty()) {
+                kernel::codeseg::attached_info *info = E_LOFF(closing_libs.first()->deque(), kernel::codeseg::attached_info, closing_lib_link);
+                info->parent_seg->detach(info->attached_process);
+            }
         }
     }
 

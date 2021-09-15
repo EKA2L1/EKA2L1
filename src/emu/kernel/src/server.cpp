@@ -86,7 +86,7 @@ namespace eka2l1::service {
         }
     }
 
-    void server::destroy() {
+    int server::destroy() {
         if (owner_thread)
             owner_thread->decrease_access_count();
 
@@ -100,6 +100,7 @@ namespace eka2l1::service {
         }
 
         sessions.clear();
+        return 0;
     }
 
     void server::accept(ipc_msg_ptr msg, const bool notify_owner) {

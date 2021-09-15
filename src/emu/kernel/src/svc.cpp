@@ -1988,6 +1988,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, library_detached) {
+        kern->crr_thread()->cleanup_detachs();
         return epoc::error_none;
     }
 

@@ -225,7 +225,7 @@ namespace eka2l1::kernel {
 
         ~process() = default;
 
-        void destroy() override;
+        int destroy() override;
         bool run();
         void kill(const entity_exit_type ext, const std::int32_t reason);
 

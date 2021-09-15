@@ -45,7 +45,7 @@ namespace eka2l1 {
             }
         }
 
-        void mutex::destroy() {
+        int mutex::destroy() {
             while (!pendings.empty()) {
                 thread *thr = E_LOFF(pendings.first()->deque(), thread, pending_link);
                 thr->state = thread_state::ready;
@@ -59,6 +59,7 @@ namespace eka2l1 {
             }
 
             timing->remove_event(mutex_event_type);
+            return 0;
         }
 
         void mutex::wait() {

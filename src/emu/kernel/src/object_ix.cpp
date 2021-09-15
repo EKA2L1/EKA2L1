@@ -157,12 +157,8 @@ namespace eka2l1::kernel {
                 return -1;
             }
 
-            obj->decrease_access_count();
+            ret_value = obj->decrease_access_count();
             totals--;
-
-            if (totals == 0) {
-                ret_value = 1;
-            }
 
             objects[info.object_ix_index].free = true;
             objects[info.object_ix_index].object = nullptr;
