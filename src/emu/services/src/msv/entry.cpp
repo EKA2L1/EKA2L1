@@ -747,9 +747,6 @@ namespace eka2l1::epoc::msv {
         }
 
         if (!is_add) {
-            if (ent.id_ == 4101) {
-                LOG_TRACE(KERNEL, "HEY!");
-            }
             if (!change_entry_stmt_) {
                 const char *MODIFY_ENTRY_STMT_STRING = "UPDATE IndexEntry SET "
                     "parentId=:parentId, serviceId=:serviceId, mtmId=:mtmId, type=:type, date=:date, data=:data,"
