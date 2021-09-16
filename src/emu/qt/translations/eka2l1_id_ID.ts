@@ -535,7 +535,7 @@
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="126"/>
       <source>Failed to uninstall the package</source>
-      <translation>Gagal memasang paket</translation>
+      <translation>Gagal mencopot paket</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="142"/>
@@ -678,7 +678,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="372"/>
       <source>Hide mouse cursor</source>
-      <translation>Hilangi kursor tetikus</translation>
+      <translation>Samarkan kursor tetikus</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="379"/>
@@ -806,7 +806,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="627"/>
       <source>Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</source>
-      <translation type="unfinished">Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</translation>
+      <translation>Pilih level ketepatan untuk operasi pewaktuan.&lt;br&gt;Semakin tinggi level-nya, daya CPU semakin dikuras, tapi berpotensi menjadi lebih cepat di beberapa aplikasi!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="630"/>
@@ -856,7 +856,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="792"/>
       <source>Profile</source>
-      <translation type="unfinished">Profile</translation>
+      <translation>Profil</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="815"/>
@@ -881,7 +881,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="916"/>
       <source>Up arrow</source>
-      <translation type="unfinished">Up arrow</translation>
+      <translation>Panah atas</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="948"/>
@@ -891,7 +891,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="984"/>
       <source>Left arrow</source>
-      <translation type="unfinished">Left arrow</translation>
+      <translation>Panah kiri</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1016"/>
@@ -901,7 +901,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="1048"/>
       <source>Right arrow</source>
-      <translation type="unfinished">Right arrow</translation>
+      <translation>Panah kanan</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1084"/>
@@ -911,7 +911,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="1116"/>
       <source>Down arrow</source>
-      <translation type="unfinished">Down arrow</translation>
+      <translation>Panah bawah</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1148"/>
@@ -1023,7 +1023,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="695"/>
       <source>Waiting for input</source>
-      <translation type="unfinished">Waiting for input</translation>
+      <translation>Menunggu masukan (input)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="710"/>
@@ -1046,28 +1046,28 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="831"/>
       <source>Profile creation failed</source>
-      <translation type="unfinished">Profile creation failed</translation>
+      <translation>Gagal membuat profil</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="831"/>
       <location filename="../src/settings_dialog.cpp" line="855"/>
       <source>A profile with that name already exists!</source>
-      <translation type="unfinished">A profile with that name already exists!</translation>
+      <translation>Profil dengan nama tersebut sudah ada!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="855"/>
       <source>Profile rename failed</source>
-      <translation type="unfinished">Profile rename failed</translation>
+      <translation>Gagal mengganti nama profil</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="870"/>
       <source>Profile deletion failed</source>
-      <translation type="unfinished">Profile deletion failed</translation>
+      <translation>Gagal menghapus profil</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="870"/>
       <source>This is the only profile left!</source>
-      <translation type="unfinished">This is the only profile left!</translation>
+      <translation>Hanya tinggal profil yang ini!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="908"/>
