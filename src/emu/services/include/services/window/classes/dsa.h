@@ -21,6 +21,7 @@
 
 #include <services/window/classes/wsobj.h>
 #include <utils/reqsts.h>
+#include <common/region.h>
 
 #include <queue>
 #include <string>
@@ -43,6 +44,7 @@ namespace eka2l1::epoc {
         eka2l1::ptr<epoc::request_status> sync_status_;
 
         epoc::notify_info dsa_must_stop_notify_;
+        common::region operate_region_;
 
         enum state {
             state_none,
@@ -53,6 +55,8 @@ namespace eka2l1::epoc {
 
         explicit dsa(window_server_client_ptr client);
         ~dsa() override;
+
+        void visible_region_changed(const common::region &new_region);
 
         void do_cancel();
         void abort(const std::int32_t reason);

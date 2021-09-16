@@ -72,29 +72,32 @@ namespace eka2l1::epoc {
         : window_user_base(client, scr, parent, window_kind::client)
         , win_type(type_of_window)
         , pos(0, 0)
-        , size(0, 0)
         , resize_needed(false)
-        , clear_color_enable(true)
+        , clear_color_enable(false)
         , clear_color(0xFFFFFFFF)
         , filter(pointer_filter_type::pointer_enter | pointer_filter_type::pointer_drag | pointer_filter_type::pointer_move)
         , cursor_pos(-1, -1)
         , dmode(dmode)
         , driver_win_id(0)
+        , direct(nullptr)
         , shadow_height(0)
         , max_pointer_buffer_(0)
         , last_draw_(0)
         , last_fps_sync_(0)
         , fps_count_(0) {
+        abs_rect.top = reinterpret_cast<window_user_base *>(parent)->absolute_position();
+        abs_rect.size = eka2l1::vec2(0, 0);
+
         if (parent->type != epoc::window_kind::top_client && parent->type != epoc::window_kind::client) {
             LOG_ERROR(SERVICE_WINDOW, "Parent is not a window client type!");
         } else {
             if (parent->type == epoc::window_kind::client) {
                 // Inherits parent's size
                 epoc::window_user *user = reinterpret_cast<epoc::window_user *>(parent);
-                size = user->size;
+                abs_rect.size = user->abs_rect.size;
             } else {
                 // Going fullscreen
-                size = scr->size();
+                abs_rect.size = scr->size();
             }
         }
 
@@ -104,6 +107,7 @@ namespace eka2l1::epoc {
         }
 
         set_client_handle(client_handle);
+        scr->need_update_visible_regions(true);
     }
 
     window_user::~window_user() {        
@@ -129,6 +133,14 @@ namespace eka2l1::epoc {
         }
     }
 
+    bool window_user::can_be_physically_seen() const {
+        return is_visible() && !visible_region.empty();
+    }
+
+    bool window_user::is_visible() const {
+        return ((flags & flags_active) && (flags & flags_visible));
+    }
+
     eka2l1::vec2 window_user::get_origin() {
         return pos;
     }
@@ -136,9 +148,17 @@ namespace eka2l1::epoc {
     eka2l1::rect window_user::bounding_rect() const {
         eka2l1::rect bound;
         bound.top = { 0, 0 };
-        bound.size = size;
+        bound.size = abs_rect.size;
 
         return bound;
+    }
+
+    eka2l1::rect window_user::absolute_rect() const {
+        return abs_rect;
+    }
+
+    eka2l1::vec2 window_user::size() const {
+        return abs_rect.size;
     }
 
     void window_user::queue_event(const epoc::event &evt) {
@@ -151,21 +171,61 @@ namespace eka2l1::epoc {
         window::queue_event(evt);
     }
 
+    struct window_absolute_postion_change_walker : public window_tree_walker {
+        eka2l1::vec2 diff_;
+
+        explicit window_absolute_postion_change_walker(const eka2l1::vec2 &diff)
+            : diff_(diff) {
+        }
+
+        bool do_it(epoc::window *win) override {
+            if (win->type == window_kind::client) {
+                window_user *user = reinterpret_cast<window_user*>(win);
+                user->recalculate_absolute_position(diff_);
+            }
+
+            return false;
+        }
+    };
+
+    void window_user::recalculate_absolute_position(const eka2l1::vec2 &diff) {
+        if (diff == eka2l1::vec2(0, 0)) {
+            return;
+        }
+
+        // Relative position stays the same, however the absolute one got a definite change
+        abs_rect.top += diff;
+    }
+
     void window_user::set_extent(const eka2l1::vec2 &top, const eka2l1::vec2 &new_size) {
+        eka2l1::vec2 pos_diff = top - pos;
+
+        const bool size_changed = (new_size != abs_rect.size);
+        const bool pos_changed = (pos_diff != eka2l1::vec2(0, 0));
+
+        abs_rect.top += pos_diff;
+        abs_rect.size = new_size;
+
         pos = top;
 
-        if (size != new_size) {
-            size = new_size;
+        if (size_changed) {
             redraw_region.make_empty();
-
             resize_needed = true;
 
             // We need to invalidate the whole new window
             invalidate(bounding_rect());
+        }
 
-            // Force the DSA to abort. We don't do much drawings for now so forcefully discharge to refresh the size
-            if (is_dsa_active()) {
-                direct->abort(dsa_terminate_rotation_change);
+        if (pos_changed) {
+            // Change the absolute position of children too!
+            window_absolute_postion_change_walker walker(pos_diff);
+            walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children);
+        }
+        
+        if (pos_changed || size_changed) {
+            // Force a visible region update when the next screen redraw comes
+            if (is_visible()) {
+                scr->need_update_visible_regions(true);
             }
         }
     }
@@ -199,6 +259,8 @@ namespace eka2l1::epoc {
         }
 
         if (should_trigger_redraw) {
+            scr->need_update_visible_regions(true);
+
             // Redraw the screen. NOW!
             client->get_ws().get_anim_scheduler()->schedule(client->get_ws().get_graphics_driver(),
                 scr, client->get_ws().get_ntimer()->microseconds());
@@ -235,7 +297,7 @@ namespace eka2l1::epoc {
     }
 
     eka2l1::vec2 window_user::absolute_position() const {
-        return reinterpret_cast<window_user_base *>(parent)->absolute_position() + pos;
+        return abs_rect.top;
     }
 
     epoc::display_mode window_user::display_mode() const {
@@ -244,8 +306,12 @@ namespace eka2l1::epoc {
     }
 
     void window_user::take_action_on_change(kernel::thread *drawer) {
+        if (scr->need_update_visible_regions()) {
+            scr->recalculate_visible_regions();
+        }
+
         // Want to trigger a screen redraw
-        if (is_visible() && !is_dsa_active()) {
+        if (can_be_physically_seen()) {
             epoc::animation_scheduler *sched = client->get_ws().get_anim_scheduler();
             ntimer *timing = client->get_ws().get_ntimer();
 
@@ -307,9 +373,9 @@ namespace eka2l1::epoc {
             auto cmd_builder = drv->new_command_builder(cmd_list.get());
 
             if (driver_win_id == 0) {
-                driver_win_id = drivers::create_bitmap(drv, size, 32);
+                driver_win_id = drivers::create_bitmap(drv, abs_rect.size, 32);
             } else {
-                cmd_builder->resize_bitmap(driver_win_id, size);
+                cmd_builder->resize_bitmap(driver_win_id, abs_rect.size);
                 cmd_builder->bind_bitmap(driver_win_id);
             }
 
@@ -545,7 +611,7 @@ namespace eka2l1::epoc {
 
         // Get window size.
         case EWsWinOpSize: {
-            ctx.write_data_to_descriptor_argument<eka2l1::vec2>(reply_slot, size);
+            ctx.write_data_to_descriptor_argument<eka2l1::vec2>(reply_slot, abs_rect.size);
             ctx.complete(epoc::error_none);
             break;
         }

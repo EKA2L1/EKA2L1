@@ -492,32 +492,15 @@ namespace eka2l1::android {
                 dest.top = eka2l1::vec2(x, y);
                 dest.size = eka2l1::vec2(width, height);
 
-                // 270 rotation clock-wise makes screen content comes from the top where camera lies, to down where the ports reside.
-                // That makes it a standard, non-flip landscape. 0 is obviously standard too. Therefore mode 90 and 180 needs flip.
-                int normal_rotation = (((crr_mode.rotation == 90) || (crr_mode.rotation == 180) ? 180 : 0) + scr->ui_rotation) % 360;
+                advance_dsa_pos_around_origin(dest, scr->ui_rotation);
 
-                if (scr->last_texture_access) {
-                    advance_dsa_pos_around_origin(dest, normal_rotation);
-
-                    // Rotate back to original size
-                    if (normal_rotation % 180 != 0) {
-                        std::swap(dest.size.x, dest.size.y);
-                        std::swap(src.size.x, src.size.y);
-                    }
-
-                    builder->set_texture_filter(scr->dsa_texture, filter, filter);
-                    builder->draw_bitmap(scr->dsa_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(normal_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
-                } else {
-                    advance_dsa_pos_around_origin(dest, scr->ui_rotation);
-
-                    if (scr->ui_rotation % 180 != 0) {
-                        std::swap(dest.size.x, dest.size.y);
-                        std::swap(src.size.x, src.size.y);
-                    }
-
-                    builder->set_texture_filter(scr->screen_texture, filter, filter);
-                    builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(scr->ui_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
+                if (scr->ui_rotation % 180 != 0) {
+                    std::swap(dest.size.x, dest.size.y);
+                    std::swap(src.size.x, src.size.y);
                 }
+
+                builder->set_texture_filter(scr->screen_texture, filter, filter);
+                builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(scr->ui_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
 
                 scr->screen_mutex.unlock();
             }

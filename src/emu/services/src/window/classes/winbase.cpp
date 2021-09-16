@@ -71,8 +71,7 @@ namespace eka2l1::epoc {
                 cur = sibling;
 
                 // If this has a child, traverse to the oldest possible child.
-                // We can start walking again from bottom. Don't question much, this code is like why does it work idk.
-                // TODO (pent0): figure out the magic behind this. This is ripped from OSS code.
+                // We can start walking again from bottom.
                 while (cur->child != nullptr) {
                     cur = cur->child;
                 }
@@ -81,13 +80,17 @@ namespace eka2l1::epoc {
                 cur = parent;
             }
 
+            if (cur == end) {
+                break;
+            }
+
             parent = cur->parent;
             sibling = cur->sibling;
 
             if (walker->do_it(cur)) {
                 return;
             }
-        } while (cur != end);
+        } while (true);
     }
 
     window::~window() {
@@ -104,6 +107,10 @@ namespace eka2l1::epoc {
             if (type == epoc::window_kind::group) {
                 window_server &serv = client->get_ws();
                 scr->update_focus(&serv, nullptr);
+            }
+            
+            if ((type == epoc::window_kind::client) || (type == epoc::window_kind::group)) {
+                scr->need_update_visible_regions(true);
             }
         }
     }
@@ -202,13 +209,15 @@ namespace eka2l1::epoc {
             return;
         }
 
-        // Gone through all siblings, walk on their childs
-        // TODO: Is this correct? Older guy, children of older guy, then newer guy, children of newer guy.
+        // Friends first
         walk_tree_back_to_front(start->sibling, walker);
+
+        // No more friend, start working on ourself
         if (walker->do_it(start)) {
             return;
         }
 
+        // The children will be in front of the parent
         walk_tree_back_to_front(start->child, walker);
     }
 

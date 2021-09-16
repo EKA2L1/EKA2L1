@@ -66,7 +66,6 @@ namespace eka2l1::epoc {
     struct screen {
         int number;
         int ui_rotation; ///< Rotation for UI display. So nikita can skip neck day.
-        bool orientation_lock; ///< If this is true. Rotate the screen won't change the orientation.
 
         std::uint8_t refresh_rate;
         float scale_x;
@@ -76,14 +75,13 @@ namespace eka2l1::epoc {
         // Draw order will be child in front of parent, newer in front of older.
         std::unique_ptr<epoc::window> root;
         drivers::handle screen_texture; ///< Server handle to texture of the screen
-        drivers::handle dsa_texture; ///< Server handle to the DSA modified part of the screen.
+        drivers::handle dsa_texture;    ///< Texture use for temporary DSA transfer
         epoc::display_mode disp_mode;
 
         std::uint64_t last_vsync;
         std::uint64_t last_fps_check;
         std::uint64_t last_fps;
         std::uint64_t frame_passed_per_sec;
-        std::atomic<bool> last_texture_access;
 
         epoc::config::screen scr_config; ///< All mode of this screen
         std::uint8_t crr_mode; ///< The current mode being used by the screen.
@@ -93,9 +91,7 @@ namespace eka2l1::epoc {
 
         screen *next;
 
-        eka2l1::rect dsa_rect;
         kernel::chunk *screen_buffer_chunk;
-
         std::mutex screen_mutex;
 
         // Position of this screen in graphics driver
@@ -104,6 +100,14 @@ namespace eka2l1::epoc {
 
         std::map<std::int32_t, eka2l1::rect> pointer_areas_;
         eka2l1::vec2 pointer_cursor_pos_;
+
+        std::uint32_t flags_ = 0;
+        std::int32_t active_dsa_count_ = 0;
+
+        enum {
+            FLAG_NEED_RECALC_VISIBLE = 1 << 0,
+            FLAG_ORIENTATION_LOCK = 1 << 1
+        };
 
         using focus_change_callback = std::pair<void *, focus_change_callback_handler>;
         using screen_redraw_callback = std::pair<void *, screen_redraw_callback_handler>;
@@ -133,6 +137,7 @@ namespace eka2l1::epoc {
         void set_rotation(window_server *winserv, drivers::graphics_driver *drv, int rot);
         void set_orientation_lock(drivers::graphics_driver *drv, const bool lock);
         void abort_all_dsas(const std::int32_t reason);
+        void recalculate_visible_regions();
 
         // ========================= UTILITIES FUNCTIONS ===========================
         epoc::window_group *get_group_chain();
@@ -203,5 +208,26 @@ namespace eka2l1::epoc {
          * \brief Update the window group focus.
          */
         epoc::window_group *update_focus(window_server *serv, epoc::window_group *closing_group);
+
+        const bool orientation_lock() const {
+            return flags_ & FLAG_ORIENTATION_LOCK;
+        }
+
+        void orientation_lock(const bool value) {
+            if (value) {
+                flags_ |= FLAG_ORIENTATION_LOCK;
+            } else {
+                flags_ &= ~FLAG_ORIENTATION_LOCK;
+            }
+        }
+
+        const bool need_update_visible_regions() const {
+            return flags_ & FLAG_NEED_RECALC_VISIBLE;
+        }
+
+        void need_update_visible_regions(const bool value);
+
+        void ref_dsa_usage();
+        void deref_dsa_usage();
     };
 }

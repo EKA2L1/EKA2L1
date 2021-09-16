@@ -159,4 +159,18 @@ namespace eka2l1::common {
 
         return intersection;
     }
+
+    bool region::identical(const region &rhs) const {
+        if (rects_.size() != rhs.rects_.size()) {
+            return false;
+        }
+
+        for (std::size_t i = 0; i < rects_.size(); i++) {
+            if ((rects_[i].size != rhs.rects_[i].size) || (rects_[i].top != rhs.rects_[i].top)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

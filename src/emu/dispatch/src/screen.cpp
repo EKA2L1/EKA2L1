@@ -74,9 +74,6 @@ namespace eka2l1::dispatch {
                 command_builder->update_bitmap(scr->dsa_texture, reinterpret_cast<const char *>(scr->screen_buffer_ptr()),
                     buffer_size, { 0, 0 }, screen_size);
 
-                scr->last_texture_access = 1;
-                scr->fire_screen_redraw_callbacks(true);
-
                 // NOTE: This is a hack for some apps that dont fill alpha
                 // TODO: Figure out why or better solution (maybe the display mode is not really correct?)
                 switch (scr->disp_mode) {
@@ -92,7 +89,20 @@ namespace eka2l1::dispatch {
                     break;
                 }
 
+                // 270 rotation clock-wise makes screen content comes from the top where camera lies, to down where the ports reside.
+                // That makes it a standard, non-flip landscape. 0 is obviously standard too. Therefore mode 90 and 180 needs flip.
+                const std::uint32_t flags = ((mode_info.rotation == 90) || (mode_info.rotation == 180)) ? drivers::bitmap_draw_flag_no_flip : 0;
+
+                eka2l1::rect source_rect { eka2l1::vec2(0, 0), mode_info.size };
+                eka2l1::rect dest_rect = source_rect;
+
+                command_builder->bind_bitmap(scr->screen_texture);
+                command_builder->set_clipping(false);
+                command_builder->draw_bitmap(scr->dsa_texture, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), 0, flags);
+                command_builder->bind_bitmap(0);
+
                 driver->submit_command_list(*command_list);
+                scr->fire_screen_redraw_callbacks(true);
             }
 
             scr = scr->next;

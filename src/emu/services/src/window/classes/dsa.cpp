@@ -124,45 +124,70 @@ namespace eka2l1::epoc {
         husband_->set_dsa_active(true);
         husband_->direct = this;
 
-        eka2l1::rect extent;
-        extent.top = husband_->pos;
-        extent.size = husband_->size;
+        husband_->scr->ref_dsa_usage();
 
-        husband_->scr->dsa_rect.merge(extent);
-
-        ctx.complete(1);
+        operate_region_ = husband_->visible_region;
+        ctx.complete(static_cast<int>(operate_region_.rects_.size()));
     }
 
     void dsa::get_region(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         std::uint32_t max_rects = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
 
-        if ((max_rects == 0) || (state_ != state_prepare)) {
-            // What? Nothing?
-            if ((sync_thread_) && (client->client_version().build <= WS_OLDARCH_VER)) {
-                // Old DSA want 0
-                ctx.complete(0);
+        if ((max_rects != 0) && (state_ == state_prepare)) {
+            if (operate_region_.rects_.size() != max_rects) {
+                ctx.complete(static_cast<int>(operate_region_.rects_.size()));
             } else {
-                ctx.complete(epoc::CINT32_MAX);
+                eka2l1::rect *data_ptr = reinterpret_cast<eka2l1::rect*>(ctx.get_descriptor_argument_ptr(reply_slot));
+                const std::size_t data_bsize = ctx.get_argument_max_data_size(reply_slot);
+
+                if (data_bsize != max_rects * sizeof(eka2l1::rect)) {
+                    LOG_ERROR(SERVICE_WINDOW, "The length of region rects buffer is contradicting! (expected {}, got {})", max_rects * sizeof(eka2l1::rect), data_bsize);
+                    ctx.complete(epoc::error_argument);
+
+                    return;
+                }
+
+                if (!data_ptr) {
+                    ctx.complete(epoc::error_argument);
+                    return;
+                }
+
+                for (std::size_t i = 0; i < operate_region_.rects_.size(); i++) {
+                    data_ptr[i] = operate_region_.rects_[i];
+                    data_ptr[i].transform_to_symbian_rectangle();
+                }
+
+                ctx.set_descriptor_argument_length(reply_slot, max_rects * sizeof(eka2l1::rect));
             }
-
-            return;
         }
-
-        // The whole window for you!
-        eka2l1::rect extent;
-        extent.top = husband_->pos;
-        extent.size = husband_->size;
 
         state_ = state_running;
 
-        ctx.write_data_to_descriptor_argument<eka2l1::rect>(reply_slot, extent);
-        ctx.complete(1);
+        if ((sync_thread_) && (client->client_version().build <= WS_OLDARCH_VER)) {
+            // Old DSA want 0
+            ctx.complete(0);
+        } else {
+            ctx.complete(epoc::CINT32_MAX);
+        }
+    }
+
+    void dsa::visible_region_changed(const common::region &new_region) {
+        // There might be race condition when we notify region changed (due to notification)
+        // For safety, just do a copy and assign first
+        common::region old_one = operate_region_;
+        operate_region_ = new_region;
+
+        if ((state_ == state_running) && !old_one.identical(new_region)) {
+            abort(dsa_terminate_region);
+        }
     }
 
     void dsa::do_cancel() {
         state_ = state_completed;
 
         if (husband_) {
+            husband_->scr->deref_dsa_usage();
+
             husband_->set_dsa_active(false);
             husband_->direct = nullptr;
             husband_ = nullptr;

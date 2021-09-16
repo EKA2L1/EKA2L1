@@ -38,7 +38,7 @@
 
 namespace eka2l1::epoc {
     bool graphic_context::no_building() const {
-        return !attached_window || (attached_window->size == eka2l1::vec2(0, 0));
+        return !attached_window || (attached_window->abs_rect.size == eka2l1::vec2(0, 0));
     }
 
     void graphic_context::active(service::ipc_context &context, ws_cmd cmd) {
@@ -74,7 +74,7 @@ namespace eka2l1::epoc {
             // We already completed our request, so it's no fear to unlock the kernel now!
             kern->unlock();
 
-            attached_window->driver_win_id = drivers::create_bitmap(drv, attached_window->size, 32);
+            attached_window->driver_win_id = drivers::create_bitmap(drv, attached_window->size(), 32);
             attached_window->resize_needed = false;
 
             kern->lock();
@@ -84,12 +84,12 @@ namespace eka2l1::epoc {
 
         eka2l1::rect viewport;
         viewport.top = { 0, 0 };
-        viewport.size = attached_window->size;
+        viewport.size = attached_window->size();
 
         if (attached_window->resize_needed) {
             // Try to resize our bitmap. My NVIDIA did forgive me if texture has same spec
             // as before, but not Intel... Note: NVIDIA also
-            cmd_builder->resize_bitmap(attached_window->driver_win_id, attached_window->size);
+            cmd_builder->resize_bitmap(attached_window->driver_win_id, attached_window->size());
             attached_window->resize_needed = false;
         }
 
@@ -326,7 +326,7 @@ namespace eka2l1::epoc {
 
             eka2l1::rect viewport;
             viewport.top = { 0, 0 };
-            viewport.size = attached_window->size;
+            viewport.size = attached_window->size();
 
             cmd_builder->set_viewport(viewport);
 
@@ -696,7 +696,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::clear(service::ipc_context &context, ws_cmd &cmd) {
-        eka2l1::rect area(attached_window->pos, attached_window->size);
+        eka2l1::rect area(attached_window->pos, attached_window->size());
 
         if (!area.valid()) {
             context.complete(epoc::error_none);

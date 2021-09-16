@@ -49,13 +49,13 @@ namespace eka2l1::epoc {
 
             window_user *winuser = reinterpret_cast<window_user *>(win);
 
-            if (!winuser || !winuser->driver_win_id || !winuser->is_visible()) {
+            if (!winuser || !winuser->driver_win_id || !winuser->can_be_physically_seen()) {
                 // No need to redraw this window yet. It doesn't even have any content ready.
                 return false;
             }
 
             // Check if extent is just invalid
-            if (winuser->size.x == 0 || winuser->size.y == 0) {
+            if (winuser->size().x == 0 || winuser->size().y == 0) {
                 // No one can see this. Leave it for now.
                 return false;
             }
@@ -70,14 +70,17 @@ namespace eka2l1::epoc {
                 }
 
                 builder_->set_brush_color_detail({ color_extracted[0], color_extracted[1], color_extracted[2], color_extracted[3] });
-                builder_->draw_rectangle(eka2l1::rect(abs_pos, winuser->size));
+                builder_->draw_rectangle(eka2l1::rect(abs_pos, winuser->size()));
             } else {
                 builder_->set_brush_color(eka2l1::vec3(255, 255, 255));
             }
 
             // Draw it onto current binding buffer
+            // TODO: We can probably also make use of visible regions and stencil buffer to reduce and provide
+            // more accurate drawing results. I don't want to complicated it more now, since there's transparent region
+            // not implemented (region that is visible even though another window is on top of it)
             builder_->draw_bitmap(winuser->driver_win_id, 0, eka2l1::rect(abs_pos, { 0, 0 }),
-                eka2l1::rect({ 0, 0 }, winuser->size), eka2l1::vec2(0, 0), 0.0f, 0);
+                eka2l1::rect({ 0, 0 }, winuser->size()), eka2l1::vec2(0, 0), 0.0f, 0);
 
             total_redrawed_++;
 
@@ -131,7 +134,6 @@ namespace eka2l1::epoc {
     screen::screen(const int number, epoc::config::screen &scr_conf)
         : number(number)
         , ui_rotation(0)
-        , orientation_lock(true)
         , refresh_rate(60)
         , scale_x(1.0f)
         , scale_y(1.0f)
@@ -142,12 +144,12 @@ namespace eka2l1::epoc {
         , last_fps_check(0)
         , last_fps(0)
         , frame_passed_per_sec(0)
-        , last_texture_access(0)
         , scr_config(scr_conf)
         , crr_mode(0)
         , focus(nullptr)
         , next(nullptr)
         , screen_buffer_chunk(nullptr)
+        , flags_(FLAG_ORIENTATION_LOCK)
         , focus_callbacks(focus_callback_free_check_func, focus_callback_free_func)
         , screen_redraw_callbacks(screen_redraw_callback_free_check_func, screen_redraw_callback_free_func)
         , screen_mode_change_callbacks(screen_mode_change_callback_free_check_func, screen_mode_change_callback_free_func) {
@@ -162,6 +164,10 @@ namespace eka2l1::epoc {
     }
 
     void screen::redraw(drivers::graphics_command_list_builder *cmd_builder, const bool need_bind) {
+        if (need_update_visible_regions()) {
+            recalculate_visible_regions();
+        }
+
         if (need_bind) {
             cmd_builder->bind_bitmap(screen_texture);
         }
@@ -179,7 +185,6 @@ namespace eka2l1::epoc {
 
         // Done! Unbind and submit this to the driver
         cmd_builder->bind_bitmap(0);
-        last_texture_access = 0;
     }
 
     void screen::redraw(drivers::graphics_driver *driver) {
@@ -201,12 +206,12 @@ namespace eka2l1::epoc {
         auto cmd_list = driver->new_command_list();
         auto cmd_builder = driver->new_command_builder(cmd_list.get());
 
-        if (screen_texture) {
-            cmd_builder->destroy_bitmap(screen_texture);
-        }
-
         if (dsa_texture) {
             cmd_builder->destroy_bitmap(dsa_texture);
+        }
+
+        if (screen_texture) {
+            cmd_builder->destroy_bitmap(screen_texture);
         }
 
         driver->submit_command_list(*cmd_list);
@@ -408,6 +413,7 @@ namespace eka2l1::epoc {
             if (modeinfo_o && modeinfo_n) {
                 if (modeinfo_o->size != modeinfo_n->size) {
                     abort_all_dsas(dsa_terminate_rotation_change);
+                    need_update_visible_regions(true);
                 }
             }
         }
@@ -461,7 +467,7 @@ namespace eka2l1::epoc {
     }
 
     void screen::set_rotation(window_server *winserv, drivers::graphics_driver *drv, const int rot) {
-        if (orientation_lock) {
+        if (orientation_lock()) {
             // Feel like we are at home
             ui_rotation = rot;
         } else {
@@ -477,22 +483,88 @@ namespace eka2l1::epoc {
     }
 
     void screen::set_orientation_lock(drivers::graphics_driver *drv, const bool lock) {
-        if (orientation_lock == lock) {
+        if (orientation_lock() == lock) {
             return;
         }
 
-        if (orientation_lock && !lock) {
+        if (orientation_lock() && !lock) {
             // Transitioning to wild mode
-            orientation_lock = false;
+            orientation_lock(false);
             return;
         }
 
         // Abadon our UI rotation
         ui_rotation = 0;
-        orientation_lock = true;
+        orientation_lock(true);
     }
 
     std::uint8_t *screen::screen_buffer_ptr() {
         return reinterpret_cast<std::uint8_t *>(screen_buffer_chunk->host_base()) + sizeof(std::uint16_t) * WORD_PALETTE_ENTRIES_COUNT;
+    }
+
+    struct window_visible_region_calc_walker: public window_tree_walker {
+        common::region visible_left_region_;
+
+        explicit window_visible_region_calc_walker(const common::region &master_region)
+            : visible_left_region_(master_region) {
+        }
+
+        bool do_it(epoc::window *win) override {
+            if (win->type == epoc::window_kind::client) {
+                epoc::window_user *winuser = reinterpret_cast<epoc::window_user*>(win);
+                
+                winuser->visible_region.make_empty();
+
+                if (!visible_left_region_.empty() && winuser->is_visible()) {
+                    winuser->visible_region.add_rect(winuser->abs_rect);
+
+                    // The region that window can render is the region intersects with the current available left region
+                    // Eliminating the intersected region that is reserved for this window, we got the next region left to go on.
+                    winuser->visible_region = winuser->visible_region.intersect(visible_left_region_);
+                    visible_left_region_.eliminate(winuser->visible_region);
+                }
+
+                if (winuser->is_dsa_active()) {
+                    winuser->direct->visible_region_changed(winuser->visible_region);
+                }
+            }
+
+            return false;
+        }
+    };
+
+    void screen::recalculate_visible_regions() {
+        common::region master_region;
+        eka2l1::rect master_rect{ eka2l1::vec2(0, 0), current_mode().size };
+
+        master_region.add_rect(master_rect);
+        window_visible_region_calc_walker walker(master_region);
+
+        root->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children);
+        need_update_visible_regions(false);
+    }
+
+    void screen::ref_dsa_usage() {
+        active_dsa_count_++;
+
+        if (need_update_visible_regions()) {
+            recalculate_visible_regions();
+        }
+    }
+
+    void screen::deref_dsa_usage() {
+        active_dsa_count_--;
+    }
+
+    void screen::need_update_visible_regions(const bool value) {
+        if (value) {
+            flags_ |= FLAG_NEED_RECALC_VISIBLE;
+
+            if (active_dsa_count_) {
+                recalculate_visible_regions();
+            }
+        } else {
+            flags_ &= ~FLAG_NEED_RECALC_VISIBLE;
+        }
     }
 }

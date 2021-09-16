@@ -90,7 +90,7 @@ namespace eka2l1::epoc {
                 continue;
             }
 
-            eka2l1::rect window_rect{ user->pos, user->size };
+            eka2l1::rect window_rect{ user->pos, user->size() };
             evt.type = epoc::event_code::touch;
 
             if (!sent_to_highest_z) {

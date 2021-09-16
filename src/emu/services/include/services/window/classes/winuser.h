@@ -51,7 +51,7 @@ namespace eka2l1::epoc {
 
         // The position
         eka2l1::vec2 pos{ 0, 0 };
-        eka2l1::vec2 size{ 0, 0 };
+        eka2l1::rect abs_rect;
 
         bool resize_needed;
         bool clear_color_enable;
@@ -66,6 +66,7 @@ namespace eka2l1::epoc {
         std::uint64_t driver_win_id;
 
         common::region redraw_region;
+        common::region visible_region;
         eka2l1::rect redraw_rect_curr;
 
         dsa *direct;
@@ -89,14 +90,13 @@ namespace eka2l1::epoc {
         ~window_user() override;
 
         epoc::display_mode display_mode() const;
-
         eka2l1::vec2 absolute_position() const override;
-
         eka2l1::vec2 get_origin() override;
 
         std::uint32_t redraw_priority(int *shift = nullptr) override;
-
         eka2l1::rect bounding_rect() const;
+        eka2l1::rect absolute_rect() const;
+        eka2l1::vec2 size() const;
 
         /**
          * \brief Set window extent in screen space.
@@ -105,10 +105,10 @@ namespace eka2l1::epoc {
          * \param size  The size of the window, in pixel.
          */
         void set_extent(const eka2l1::vec2 &top, const eka2l1::vec2 &size);
+        void recalculate_absolute_position(const eka2l1::vec2 &diff);
 
-        bool is_visible() const {
-            return ((flags & flags_active) && (flags & flags_visible));
-        }
+        bool is_visible() const;
+        bool can_be_physically_seen() const;
 
         bool is_faded() const {
             return (flags & flags_faded);

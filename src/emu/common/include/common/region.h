@@ -36,6 +36,14 @@ namespace eka2l1::common {
         }
 
         /**
+         * @brief       Check if two regions are identical in terms of rectangles it contains
+         * 
+         * Note that if your rectangle are splitted to more smaller part, this can't check that. Hence
+         * the identical name here.
+         */
+        bool identical(const region &lhs) const;
+
+        /**
          * @brief       Add a rectangle to this region.
          * @returns     True if new rectangle create modification to the region.
          */
