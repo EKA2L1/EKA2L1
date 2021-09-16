@@ -69,7 +69,7 @@
     <string name="layout_edit_mode">Ubah letak tombol</string>
     <string name="layout_scale_mode">Ubah ukuran tombol</string>
     <string name="layout_switch">Tukar letak tombol</string>
-    <string name="hide_buttons">Tombol tersembunyi</string>
+    <string name="hide_buttons">Samarkan tombol</string>
     <string name="confirmation_required">Memerlukan konfirmasi</string>
     <string name="force_close_confirmation">Menutup paksa aplikasi akan mengakibatkan hilangnya data atau bahkan menghancurkan sepenuhnya! \nLanjutkan?</string>
     <string name="log_saved">Log telah disimpan</string>
