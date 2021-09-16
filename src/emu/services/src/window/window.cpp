@@ -1535,11 +1535,12 @@ namespace eka2l1 {
         switch (input_event.type_) {
         case drivers::input_event_type::key:
         case drivers::input_event_type::key_raw:
-            make_key_event(input_mapping.key_input_map, input_event, guest_event);
-            key_shipper.add_new_event(guest_event);
-            key_shipper.start_shipping();
+            if (make_key_event(input_mapping.key_input_map, input_event, guest_event)) {
+                key_shipper.add_new_event(guest_event);
+                key_shipper.start_shipping();
 
-            shipped = true;
+                shipped = true;
+            }
 
             break;
 
