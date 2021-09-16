@@ -52,7 +52,7 @@
   <context>
     <name>applist_search_bar</name>
     <message>
-      <location filename="../src/applistwidget.cpp" line="43"/>
+      <location filename="../src/applistwidget.cpp" line="44"/>
       <source>Search</source>
       <translation>搜索</translation>
     </message>
@@ -60,7 +60,7 @@
   <context>
     <name>applist_widget</name>
     <message>
-      <location filename="../src/applistwidget.cpp" line="335"/>
+      <location filename="../src/applistwidget.cpp" line="341"/>
       <source>&lt;br&gt;App UID: 0x%1</source>
       <translation>&lt;br&gt;应用UID：0x%1</translation>
     </message>
@@ -328,159 +328,159 @@
       <translation>文件夹</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="246"/>
+      <location filename="../src/mainwindow.cpp" line="232"/>
       <source>Clear menu</source>
       <translation>清除菜单</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="308"/>
+      <location filename="../src/mainwindow.cpp" line="295"/>
       <source>Touchscreen disabled</source>
       <translation>触摸屏已禁用</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="308"/>
+      <location filename="../src/mainwindow.cpp" line="295"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
       <translation>您当前的一些按键绑定与鼠标按钮相关联。因此模拟触摸屏已禁用。&lt;br&gt;&lt;br&gt;&lt;b&gt;注意：&lt;/b&gt;&lt;br&gt;可通过键盘按键重新绑定鼠标按钮重新启用触摸屏。</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="309"/>
-      <location filename="../src/mainwindow.cpp" line="373"/>
+      <location filename="../src/mainwindow.cpp" line="296"/>
+      <location filename="../src/mainwindow.cpp" line="360"/>
       <source>Don&apos;t show this again</source>
       <translation>不再显示</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="372"/>
+      <location filename="../src/mainwindow.cpp" line="359"/>
       <source>No device installed</source>
       <translation>未安装设备</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="372"/>
+      <location filename="../src/mainwindow.cpp" line="359"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
       <translation>您尚未安装任何设备，请安装设备或在GitHub上查询EKA2L1项目中的Wiki说明页</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="651"/>
+      <location filename="../src/mainwindow.cpp" line="639"/>
       <source>Extracting game dump files</source>
       <translation>提取游戏转储文件</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="672"/>
+      <location filename="../src/mainwindow.cpp" line="660"/>
       <source>Mounting aborted</source>
       <translation>挂载中止</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="677"/>
+      <location filename="../src/mainwindow.cpp" line="665"/>
       <source>The ZIP file is corrupted!</source>
       <translation>ZIP文件已损坏！</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="682"/>
+      <location filename="../src/mainwindow.cpp" line="670"/>
       <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
       <translation>ZIP在根文件夹中没有系统文件夹。系统文件夹必须存在于游戏转储中。</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="688"/>
+      <location filename="../src/mainwindow.cpp" line="676"/>
       <source>The choosen file is not a ZIP file!</source>
       <translation>选择的文件不是ZIP文件！</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="702"/>
+      <location filename="../src/mainwindow.cpp" line="690"/>
       <source>Game card problem</source>
       <translation>游戏卡问题</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="702"/>
+      <location filename="../src/mainwindow.cpp" line="690"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
       <translation>游戏卡转储有区分大小写的文件。这可能会导致模拟器出现问题。</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="706"/>
+      <location filename="../src/mainwindow.cpp" line="694"/>
       <source>Game card dump folder correction</source>
       <translation>游戏卡转储文件夹校正</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="706"/>
+      <location filename="../src/mainwindow.cpp" line="694"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
       <translation>选定的路径似乎不正确。&lt;br&gt;您想要模拟器纠正吗？</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="762"/>
+      <location filename="../src/mainwindow.cpp" line="750"/>
       <source>Choose the game card dump folder</source>
       <translation>选择游戏卡转储文件夹</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="782"/>
+      <location filename="../src/mainwindow.cpp" line="770"/>
       <source>Choose the game card zip</source>
       <translation>选择游戏卡压缩包</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="856"/>
+      <location filename="../src/mainwindow.cpp" line="848"/>
       <source>Document</source>
       <translation>文档</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="874"/>
+      <location filename="../src/mainwindow.cpp" line="866"/>
       <source>Choose a language for the package</source>
       <translation>选择软件包的语言</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="648"/>
-      <location filename="../src/mainwindow.cpp" line="892"/>
+      <location filename="../src/mainwindow.cpp" line="636"/>
+      <location filename="../src/mainwindow.cpp" line="884"/>
       <source>Cancel</source>
       <translation>取消</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="895"/>
+      <location filename="../src/mainwindow.cpp" line="887"/>
       <source>Installing package progress</source>
       <translation>正在安装软件包</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="919"/>
+      <location filename="../src/mainwindow.cpp" line="911"/>
       <source>Installation aborted</source>
       <translation>安装中止</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="919"/>
+      <location filename="../src/mainwindow.cpp" line="911"/>
       <source>The installation has been canceled</source>
       <translation>安装已被取消</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="924"/>
+      <location filename="../src/mainwindow.cpp" line="916"/>
       <source>Installation failed</source>
       <translation>安装失败</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="924"/>
+      <location filename="../src/mainwindow.cpp" line="916"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
       <translation>无法在路径上安装包：%1。请确保路径定位到一个有效的SIS/SISX文件。</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="931"/>
+      <location filename="../src/mainwindow.cpp" line="923"/>
       <source>Installation success</source>
       <translation>安装成功</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="931"/>
+      <location filename="../src/mainwindow.cpp" line="923"/>
       <source>Package has been successfully installed</source>
       <translation>软件包已成功安装</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="952"/>
+      <location filename="../src/mainwindow.cpp" line="944"/>
       <source>Choose the file to install</source>
       <translation>选择要安装的文件</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="952"/>
+      <location filename="../src/mainwindow.cpp" line="944"/>
       <source>SIS file (*.sis *.sisx)</source>
       <translation>SIS文件(*.sis *.sisx)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1117"/>
+      <location filename="../src/mainwindow.cpp" line="1108"/>
       <source>Load theme failed!</source>
       <translation>加载主题失败！</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1117"/>
+      <location filename="../src/mainwindow.cpp" line="1108"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
       <translation>无法找到暗色主题的样式文件！</translation>
     </message>
