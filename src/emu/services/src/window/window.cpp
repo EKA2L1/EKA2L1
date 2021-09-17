@@ -1191,6 +1191,18 @@ namespace eka2l1 {
             }
         }
 
+        bool is_auto_clear = false;
+
+        common::ini_node_ptr auto_clear_node = ws_config.find("AUTOCLEAR");
+        if (auto_clear_node) {
+            std::uint32_t auto_clear_value = 0;
+
+            common::ini_pair *auto_clear_pair = auto_clear_node->get_as<common::ini_pair>();
+            if (auto_clear_pair->get(&auto_clear_value, 1, 0) == 1) {
+                is_auto_clear = (auto_clear_value != 0);
+            }
+        }
+
         common::ini_node *screen_node = nullptr;
         int total_screen = 0;
 
@@ -1220,6 +1232,7 @@ namespace eka2l1 {
 
             scr.screen_number = total_screen - 1;
             scr.disp_mode = scr_mode_global;
+            scr.auto_clear = is_auto_clear;
 
             int total_mode = 0;
             bool one_mode_only = false;

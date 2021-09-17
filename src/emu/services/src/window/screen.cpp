@@ -36,10 +36,12 @@ namespace eka2l1::epoc {
     struct window_drawer_walker : public window_tree_walker {
         drivers::graphics_command_list_builder *builder_;
         std::uint32_t total_redrawed_;
+        bool auto_clear_;
 
-        explicit window_drawer_walker(drivers::graphics_command_list_builder *builder)
+        explicit window_drawer_walker(drivers::graphics_command_list_builder *builder, const bool auto_clear)
             : builder_(builder)
-            , total_redrawed_(0) {
+            , total_redrawed_(0)
+            , auto_clear_(auto_clear) {
         }
 
         bool do_it(window *win) {
@@ -62,7 +64,9 @@ namespace eka2l1::epoc {
 
             eka2l1::vec2 abs_pos = winuser->absolute_position();
 
-            if (winuser->clear_color_enable) {
+            // If it does not have content drawn to it, it makes no sense to draw the background
+            // Else, there's a flag in window server that enables clear on any siutation
+            if (winuser->clear_color_enable && (winuser->has_redraw_content() || auto_clear_)) {
                 auto color_extracted = common::rgba_to_vec(winuser->clear_color);
 
                 if (winuser->display_mode() <= epoc::display_mode::color16mu) {
@@ -161,6 +165,10 @@ namespace eka2l1::epoc {
                 physical_mode = static_cast<std::uint8_t>(i);
             }
         }
+
+        if (scr_conf.auto_clear) {
+            flags_ = FLAG_AUTO_CLEAR_BACKGROUND;
+        }
     }
 
     void screen::redraw(drivers::graphics_command_list_builder *cmd_builder, const bool need_bind) {
@@ -180,7 +188,7 @@ namespace eka2l1::epoc {
         // Walk through the window tree in recursive order, and do draw
         // We dont care about visible regions. Nowadays, detect visible region to reduce pixel plotting is
         // just not really worth the time, since GPU draws so fast. Symbian code still has it though.
-        window_drawer_walker adrawwalker(cmd_builder);
+        window_drawer_walker adrawwalker(cmd_builder, flags_ & FLAG_AUTO_CLEAR_BACKGROUND);
         root->walk_tree_back_to_front(&adrawwalker);
 
         // Done! Unbind and submit this to the driver

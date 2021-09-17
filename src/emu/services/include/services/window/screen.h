@@ -106,7 +106,8 @@ namespace eka2l1::epoc {
 
         enum {
             FLAG_NEED_RECALC_VISIBLE = 1 << 0,
-            FLAG_ORIENTATION_LOCK = 1 << 1
+            FLAG_ORIENTATION_LOCK = 1 << 1,
+            FLAG_AUTO_CLEAR_BACKGROUND = 1 << 2
         };
 
         using focus_change_callback = std::pair<void *, focus_change_callback_handler>;

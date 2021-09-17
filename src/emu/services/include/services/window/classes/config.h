@@ -47,6 +47,7 @@ namespace eka2l1::epoc {
         struct screen {
             int screen_number;
             epoc::display_mode disp_mode;
+            bool auto_clear;
 
             std::vector<screen_mode> modes;
             std::vector<hardware_state> hardware_states;
