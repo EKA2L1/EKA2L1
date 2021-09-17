@@ -73,7 +73,7 @@ namespace eka2l1::epoc {
         , win_type(type_of_window)
         , pos(0, 0)
         , resize_needed(false)
-        , clear_color_enable(false)
+        , clear_color_enable(true)
         , clear_color(0xFFFFFFFF)
         , filter(pointer_filter_type::pointer_enter | pointer_filter_type::pointer_drag | pointer_filter_type::pointer_move)
         , cursor_pos(-1, -1)
@@ -474,6 +474,7 @@ namespace eka2l1::epoc {
     }
 
     bool window_user::clear_redraw_store() {
+        has_redraw_content(false);
         return true;
     }
 
@@ -604,7 +605,7 @@ namespace eka2l1::epoc {
 
         case EWsWinOpSetPos: {
             eka2l1::vec2 *pos_to_set = reinterpret_cast<eka2l1::vec2 *>(cmd.data_ptr);
-            pos = *pos_to_set;
+            set_extent(*pos_to_set, size());
             ctx.complete(epoc::error_none);
             break;
         }
@@ -649,8 +650,9 @@ namespace eka2l1::epoc {
             break;
         }
 
-        case EWsWinOpSetBackgroundColor: {
-            if (cmd.header.cmd_len == 0) {
+        case EWsWinOpSetBackgroundColor:
+        case EWsWinOpSetNoBackgroundColor: {
+            if ((cmd.header.cmd_len == 0) && (cmd.header.op == EWsWinOpSetNoBackgroundColor)) {
                 clear_color_enable = false;
                 ctx.complete(epoc::error_none);
 
