@@ -79,7 +79,6 @@ namespace eka2l1::epoc {
         , cursor_pos(-1, -1)
         , dmode(dmode)
         , driver_win_id(0)
-        , direct(nullptr)
         , shadow_height(0)
         , max_pointer_buffer_(0)
         , last_draw_(0)
@@ -119,6 +118,24 @@ namespace eka2l1::epoc {
         }
 
         client->remove_redraws(this);
+    }
+
+    bool window_user::is_dsa_active() const {
+        return !directs_.empty();
+    }
+
+    void window_user::add_dsa_active(dsa *dsa) {
+        auto result = std::find(directs_.begin(), directs_.end(), dsa);
+        if (result == directs_.end()) {
+            directs_.push_back(dsa);
+        }
+    }
+
+    void window_user::remove_dsa_active(dsa *dsa) {
+        auto result = std::find(directs_.begin(), directs_.end(), dsa);
+        if (result != directs_.end()) {
+            directs_.erase(result);
+        }
     }
 
     void window_user::wipeout() {

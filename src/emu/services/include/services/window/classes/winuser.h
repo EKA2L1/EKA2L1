@@ -69,8 +69,6 @@ namespace eka2l1::epoc {
         common::region visible_region;
         eka2l1::rect redraw_rect_curr;
 
-        dsa *direct;
-
         int shadow_height;
 
         std::uint32_t max_pointer_buffer_;
@@ -79,6 +77,9 @@ namespace eka2l1::epoc {
         std::uint64_t last_draw_;
         std::uint64_t last_fps_sync_;
         std::uint64_t fps_count_;
+
+        // NOTE: If you ever want to access this and call a function that can directly affect this list elements, copy it first
+        std::vector<dsa*> directs_;
 
         void invalidate(const eka2l1::rect &irect);
         void wipeout();
@@ -114,16 +115,10 @@ namespace eka2l1::epoc {
             return (flags & flags_faded);
         }
 
-        bool is_dsa_active() const {
-            return (flags & flags_dsa);
-        }
+        bool is_dsa_active() const;
 
-        void set_dsa_active(const bool yes) {
-            flags &= ~flags_dsa;
-            if (yes) {
-                flags |= flags_dsa;
-            }
-        }
+        void add_dsa_active(dsa *dsa);
+        void remove_dsa_active(dsa *dsa);
 
         /**
          * @brief Set window visibility.

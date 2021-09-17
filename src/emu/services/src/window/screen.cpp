@@ -103,7 +103,11 @@ namespace eka2l1::epoc {
             if (win->type == window_kind::client) {
                 window_user *user = reinterpret_cast<window_user*>(win);
                 if (user->is_dsa_active()) {
-                    user->direct->abort(reason_);
+                    std::vector<dsa*> dsa_residents = user->directs_;
+
+                    for (std::size_t i = 0; i < dsa_residents.size(); i++) {
+                        dsa_residents[i]->abort(reason_);
+                    }
                 }
             }
 
@@ -420,8 +424,8 @@ namespace eka2l1::epoc {
 
             if (modeinfo_o && modeinfo_n) {
                 if (modeinfo_o->size != modeinfo_n->size) {
-                    abort_all_dsas(dsa_terminate_rotation_change);
                     need_update_visible_regions(true);
+                    abort_all_dsas(dsa_terminate_rotation_change);
                 }
             }
         }
@@ -533,7 +537,11 @@ namespace eka2l1::epoc {
                 }
 
                 if (winuser->is_dsa_active()) {
-                    winuser->direct->visible_region_changed(winuser->visible_region);
+                    std::vector<dsa*> dsa_residents = winuser->directs_;
+
+                    for (std::size_t i = 0; i < dsa_residents.size(); i++) {
+                        dsa_residents[i]->visible_region_changed(winuser->visible_region);
+                    }
                 }
             }
 

@@ -109,33 +109,27 @@ namespace eka2l1::epoc {
         husband_ = user;
         state_ = state_prepare;
 
-        // We allow the whole window region to be DSAed!
-        // But what is the point... To override a DSA? Should that be possible...
-        // TODO: Verify...
         if (husband_->is_dsa_active()) {
-            LOG_WARN(SERVICE_WINDOW, "Husband window is currently active in a DSA, silently pass");
-
-            ctx.complete(1);
-            return;
+            LOG_WARN(SERVICE_WINDOW, "Husband window is currently active in a DSA, adding reference");
         }
 
         LOG_TRACE(SERVICE_WINDOW, "DSA requested for window {}", user->id);
 
-        husband_->set_dsa_active(true);
-        husband_->direct = this;
-
+        husband_->add_dsa_active(this);
         husband_->scr->ref_dsa_usage();
 
         operate_region_ = husband_->visible_region;
+
         ctx.complete(static_cast<int>(operate_region_.rects_.size()));
     }
 
     void dsa::get_region(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         std::uint32_t max_rects = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
 
-        if ((max_rects != 0) && (state_ == state_prepare)) {
+        if (state_ == state_prepare) {
             if (operate_region_.rects_.size() != max_rects) {
                 ctx.complete(static_cast<int>(operate_region_.rects_.size()));
+                return;
             } else {
                 eka2l1::rect *data_ptr = reinterpret_cast<eka2l1::rect*>(ctx.get_descriptor_argument_ptr(reply_slot));
                 const std::size_t data_bsize = ctx.get_argument_max_data_size(reply_slot);
@@ -188,8 +182,7 @@ namespace eka2l1::epoc {
         if (husband_) {
             husband_->scr->deref_dsa_usage();
 
-            husband_->set_dsa_active(false);
-            husband_->direct = nullptr;
+            husband_->remove_dsa_active(this);
             husband_ = nullptr;
         }
 
