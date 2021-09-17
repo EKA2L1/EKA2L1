@@ -108,20 +108,10 @@ namespace eka2l1::epoc {
                 window_server &serv = client->get_ws();
                 scr->update_focus(&serv, nullptr);
             }
-            
-            if ((type == epoc::window_kind::client) || (type == epoc::window_kind::group)) {
-                scr->need_update_visible_regions(true);
-            }
         }
     }
 
     void window::move_window(epoc::window *new_parent, const int new_pos) {
-        if (type == window_kind::group || type == window_kind::client || new_parent != parent) {
-            // TODO: Check if any childs need a redraw before hassle.
-            client->get_ws().get_anim_scheduler()->schedule(client->get_ws().get_graphics_driver(),
-                scr, client->get_ws().get_ntimer()->microseconds());
-        }
-
         remove_from_sibling_list();
 
         // The window that will be previous sibling of our future window.
@@ -139,10 +129,19 @@ namespace eka2l1::epoc {
             prev = &((*prev)->sibling);
         }
 
+        epoc::window *old_parent = parent;
+
         // Link to the list
         sibling = *prev;
         parent = new_parent;
         *prev = this;
+        
+        if (type == window_kind::group || type == window_kind::client || new_parent != old_parent) {
+            // TODO: Check if any childs need a redraw before hassle.
+            scr->need_update_visible_regions(true);
+            client->get_ws().get_anim_scheduler()->schedule(client->get_ws().get_graphics_driver(),
+                scr, client->get_ws().get_ntimer()->microseconds());
+        }
     }
 
     bool window::check_order_change(const int new_pos) {

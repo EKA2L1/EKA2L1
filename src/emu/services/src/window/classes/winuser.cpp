@@ -114,6 +114,10 @@ namespace eka2l1::epoc {
         remove_from_sibling_list();
         wipeout();
 
+        if (scr) {
+            scr->need_update_visible_regions(true);
+        }
+
         client->remove_redraws(this);
     }
 
@@ -535,6 +539,11 @@ namespace eka2l1::epoc {
         flags |= flags_active;
 
         invalidate(bounding_rect());
+
+        if (is_visible()) {
+            scr->need_update_visible_regions(true);
+        }
+
         context.complete(epoc::error_none);
     }
 

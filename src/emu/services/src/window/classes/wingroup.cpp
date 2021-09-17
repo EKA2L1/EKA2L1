@@ -114,6 +114,10 @@ namespace eka2l1::epoc {
             scr->update_focus(&client->get_ws(), this);
         }
 
+        if (scr) {
+            scr->need_update_visible_regions(true);
+        }
+
         remove_from_sibling_list();
     }
 
