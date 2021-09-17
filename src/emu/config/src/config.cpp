@@ -140,7 +140,7 @@ namespace eka2l1::config {
         try {
             node = YAML::LoadFile("config.yml");
         } catch (...) {
-            serialize();
+            serialize(false);
             return;
         }
 
