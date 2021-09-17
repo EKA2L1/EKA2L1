@@ -26,7 +26,24 @@
 
 using namespace std::chrono_literals;
 
-namespace eka2l1::drivers {
+namespace eka2l1::drivers {    
+    void server_graphics_command_list::clear() {
+        command *cmd = list_.first_;
+        command *next = nullptr;
+
+        while (cmd) {
+            next = cmd->next_;
+
+            // TODO: If any command list requires not rebuilding the buffer, dont delete the command.
+            // For now, not likely
+            delete cmd;
+            cmd = next;
+        }
+
+        list_.first_ = nullptr;
+        list_.last_ = nullptr;
+    }
+
     static int send_sync_command_detail(graphics_driver *drv, command *cmd) {
         int status = -100;
         cmd->status_ = &status;

@@ -104,6 +104,7 @@ namespace eka2l1::drivers {
         }
 
         virtual bool empty() const = 0;
+        virtual void clear() = 0;
     };
 
     struct server_graphics_command_list : public graphics_command_list {
@@ -111,6 +112,8 @@ namespace eka2l1::drivers {
 
         ~server_graphics_command_list() override {
         }
+
+        void clear() override;
 
         bool empty() const override {
             return list_.empty();
