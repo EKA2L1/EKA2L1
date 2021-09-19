@@ -319,6 +319,7 @@ namespace eka2l1 {
                         const std::string rom_directory = eka2l1::add_path(conf_->storage, eka2l1::add_path("roms", firm_name + "\\"));
                         const std::string rom_file = eka2l1::add_path(rom_directory, "SYM.ROM");
                         if (!eka2l1::exists(rom_file)) {
+                            LOG_ERROR(SYSTEM, "Removing broken device: {} ({})", model, firm_name);
                             eka2l1::common::delete_folder(rom_directory);
                             eka2l1::common::delete_folder(full_entry_path);
                             continue;
