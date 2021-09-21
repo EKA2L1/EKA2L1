@@ -26,7 +26,7 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="64"/>
       <source>&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</source>
-      <translation>&lt;b&gt;Desarrolladores principales:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Principales desarrolladores:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="78"/>
