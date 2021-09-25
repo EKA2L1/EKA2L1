@@ -752,8 +752,7 @@ namespace eka2l1 {
             for (std::uint32_t i = 0; i < icon_list_file.trailer.count; i++) {
                 fbs_bitmap_data_info info;
                 info.comp_ = static_cast<epoc::bitmap_file_compression>(icon_list_file.sbm_headers[i].compression);
-                info.data_ = icon_list_file.sbm_headers[i].header_len + icon_list_file.trailer.sbm_offsets[i]
-                    + mbm_data.data();
+                info.data_ = mbm_data.data() + icon_list_file.bitmap_data_offset(i);
                 info.data_size_ = icon_list_file.sbm_headers[i].bitmap_size - icon_list_file.sbm_headers[i].header_len;
                 info.dpm_ = epoc::get_display_mode_from_bpp(icon_list_file.sbm_headers[i].bit_per_pixels, icon_list_file.sbm_headers[i].color);
 

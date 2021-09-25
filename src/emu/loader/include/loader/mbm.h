@@ -61,6 +61,7 @@ namespace eka2l1::loader {
     };
 
     struct mbm_file {
+        bool is_rom_version;
         mbm_header header;
         mbm_trailer trailer;
 
@@ -115,5 +116,14 @@ namespace eka2l1::loader {
          * \returns True on success
          */
         bool save_bitmap_to_file(const std::size_t index, const char *name);
+
+        /**
+         * @brief       Get the offset from the beginning of the file to the bitmap data.
+         * 
+         * @param       index           The index of the bitmap we want to get bitmap data offset
+         * 
+         * \returns     The offset in bytes from the beginning of the file.
+         */
+        std::size_t bitmap_data_offset(const std::size_t index);
     };
 }
