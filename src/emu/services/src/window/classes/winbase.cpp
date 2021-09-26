@@ -307,7 +307,7 @@ namespace eka2l1::epoc {
 
         // Patching out user opcode.
         if ((cli_ver.major == WS_MAJOR_VER) && (cli_ver.minor == WS_MINOR_VER)) {
-            if (cli_ver.build <= WS_OLDARCH_VER) {
+            if ((cli_ver.build <= WS_OLDARCH_VER) || (kern->get_epoc_version() <= epocver::epoc80)) {
                 // Skip absolute position opcode
                 if (cmd.header.op >= EWsWinOpAbsPosition) {
                     cmd.header.op += 1;
