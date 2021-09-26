@@ -980,8 +980,8 @@
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="404"/>
-      <location filename="../src/settings_dialog.cpp" line="1079"/>
-      <location filename="../src/settings_dialog.cpp" line="1104"/>
+      <location filename="../src/settings_dialog.cpp" line="1080"/>
+      <location filename="../src/settings_dialog.cpp" line="1105"/>
       <source>Relaunch needed</source>
       <translation>Neustart erforderlich</translation>
     </message>
@@ -1016,137 +1016,137 @@
       <translation>Neuen Gerätenamen eingeben</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="650"/>
+      <location filename="../src/settings_dialog.cpp" line="651"/>
       <source>Unbind</source>
       <translation>Herauslösen</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="695"/>
+      <location filename="../src/settings_dialog.cpp" line="696"/>
       <source>Waiting for input</source>
       <translation>Warten auf Eingaben</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="710"/>
-      <location filename="../src/settings_dialog.cpp" line="756"/>
+      <location filename="../src/settings_dialog.cpp" line="711"/>
+      <location filename="../src/settings_dialog.cpp" line="757"/>
       <source>Mouse button %1</source>
       <translation>Maustaste %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="712"/>
-      <location filename="../src/settings_dialog.cpp" line="798"/>
+      <location filename="../src/settings_dialog.cpp" line="713"/>
+      <location filename="../src/settings_dialog.cpp" line="799"/>
       <source>Controller %1 : Button %2</source>
       <translation>Controller %1 : Taste %2</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="823"/>
-      <location filename="../src/settings_dialog.cpp" line="847"/>
+      <location filename="../src/settings_dialog.cpp" line="824"/>
+      <location filename="../src/settings_dialog.cpp" line="848"/>
       <source>Enter profile name</source>
       <translation>Profilnamen eingeben</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="831"/>
+      <location filename="../src/settings_dialog.cpp" line="832"/>
       <source>Profile creation failed</source>
       <translation>Erstellung des Profils fehlgeschlagen</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="831"/>
-      <location filename="../src/settings_dialog.cpp" line="855"/>
+      <location filename="../src/settings_dialog.cpp" line="832"/>
+      <location filename="../src/settings_dialog.cpp" line="856"/>
       <source>A profile with that name already exists!</source>
       <translation>Ein Profil mit diesem Namen existiert bereits!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="855"/>
+      <location filename="../src/settings_dialog.cpp" line="856"/>
       <source>Profile rename failed</source>
       <translation>Umbenennung des Profils fehlgeschlagen</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="870"/>
+      <location filename="../src/settings_dialog.cpp" line="871"/>
       <source>Profile deletion failed</source>
       <translation>Löschung des Profils fehlgeschlagen</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="870"/>
+      <location filename="../src/settings_dialog.cpp" line="871"/>
       <source>This is the only profile left!</source>
       <translation>Dies ist das einzige übrig gebliebene Profil!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="908"/>
+      <location filename="../src/settings_dialog.cpp" line="909"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
       <translation>&lt;b&gt;Konfiguration für:&lt;/b&gt; %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="911"/>
-      <location filename="../src/settings_dialog.cpp" line="916"/>
+      <location filename="../src/settings_dialog.cpp" line="912"/>
+      <location filename="../src/settings_dialog.cpp" line="917"/>
       <source>None</source>
       <translation>Keine</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1006"/>
+      <location filename="../src/settings_dialog.cpp" line="1007"/>
       <source>IMEI sequence contains non-numeric character!</source>
       <translation>Die IMEI-Sequenz enthält nichtnumerische Zeichen!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1009"/>
+      <location filename="../src/settings_dialog.cpp" line="1010"/>
       <source>IMEI sequence has invalid sum!</source>
       <translation>Die IMEI-Sequenz weist eine ungültige Summe auf!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1012"/>
+      <location filename="../src/settings_dialog.cpp" line="1013"/>
       <source>IMEI sequence length must be 15!</source>
       <translation>Die Länge der IMEI-Sequenz muss 15 betragen!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1018"/>
+      <location filename="../src/settings_dialog.cpp" line="1019"/>
       <source>Unidentified error!</source>
       <translation>Unbekannter Fehler!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1025"/>
+      <location filename="../src/settings_dialog.cpp" line="1026"/>
       <source>IMEI valid!</source>
       <translation>IMEI gültig!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1025"/>
+      <location filename="../src/settings_dialog.cpp" line="1026"/>
       <source>The IMEI sequence is valid!</source>
       <translation>Die IMEI-Sequenz ist gültig!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1028"/>
+      <location filename="../src/settings_dialog.cpp" line="1029"/>
       <source>IMEI invalid!</source>
       <translation>IMEI ungültig!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1038"/>
+      <location filename="../src/settings_dialog.cpp" line="1039"/>
       <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
       <translation>Ihre IMEI ist ungültig. Grund: %1.&lt;br&gt;Möchten Sie die aktuelle IMEI bearbeiten, anstatt zu schließen? Wenn Sie &quot;Nein&quot; wählen, wird der aktuelle IMEI-Wert gespeichert.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1040"/>
+      <location filename="../src/settings_dialog.cpp" line="1041"/>
       <source>Cancel closing</source>
       <translation>Schließen abbrechen</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1079"/>
+      <location filename="../src/settings_dialog.cpp" line="1080"/>
       <source>This change will be effective on the next launch of the emulator.</source>
       <translation>Diese Änderung wird mit dem nächsten Start des Emulators wirksam.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1087"/>
+      <location filename="../src/settings_dialog.cpp" line="1088"/>
       <source>Confirmation</source>
       <translation>Bestätigung</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1087"/>
+      <location filename="../src/settings_dialog.cpp" line="1088"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
       <translation>Sind Sie sicher? Ihr aktuelles Design wird zurückgesetzt, alle Nachrichtenfelder, die deaktiviert wurden, werden wieder aktiviert und alle kürzlich vorgenommenen Mounts werden gelöscht.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1104"/>
+      <location filename="../src/settings_dialog.cpp" line="1105"/>
       <source>The language will be updated on the next launch of the emulator.</source>
       <translation>Die Sprache wird beim nächsten Start des Emulators aktualisiert.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1124"/>
+      <location filename="../src/settings_dialog.cpp" line="1125"/>
       <source>Pick the screen background color</source>
       <translation type="unfinished">Pick the screen background color</translation>
     </message>
