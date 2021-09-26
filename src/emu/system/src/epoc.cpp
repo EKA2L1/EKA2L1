@@ -881,7 +881,10 @@ namespace eka2l1 {
 
         device *dvc = dvcmngr_->get_current();
 
-        if (conf_->language == -1) {
+        const bool lang_not_found_in_device = (std::find(dvc->languages.begin(), dvc->languages.end(), conf_->language) == dvc->languages.end());
+        const bool lang_undetermined = (conf_->language == -1);
+
+        if (lang_undetermined || lang_not_found_in_device) {
             conf_->language = dvc->default_language_code;
             conf_->serialize();
         }
