@@ -19,7 +19,6 @@ add_library(epocservs
         include/services/audio/keysound/ringtab.h
         include/services/audio/mmf/audio.h
         include/services/audio/mmf/dev.h
-        include/services/backup/backup.h
         include/services/bluetooth/protocols/btlink/btlink.h
         include/services/bluetooth/protocols/common.h
         include/services/bluetooth/protocols/overall.h
@@ -69,7 +68,6 @@ add_library(epocservs
         include/services/hwrm/vibration/vibration_data.h
         include/services/hwrm/vibration/vibration.h
         include/services/loader/loader.h
-        include/services/install/install.h
         include/services/loader/op.h
         include/services/msv/operations/base.h
         include/services/msv/operations/change.h
@@ -144,7 +142,6 @@ add_library(epocservs
         src/audio/keysound/keysound.cpp
         src/audio/mmf/audio.cpp
         src/audio/mmf/dev.cpp
-        src/backup/backup.cpp
         src/bluetooth/protocols/btlink/resolver.cpp
         src/bluetooth/protocols/l2cap/socket.cpp
         src/bluetooth/protocols/overall.cpp
@@ -191,7 +188,6 @@ add_library(epocservs
         src/hwrm/power/power_data.cpp
         src/hwrm/vibration/vibration_data.cpp
         src/hwrm/vibration/vibration.cpp
-        src/install/install.cpp
         src/loader/loader.cpp
         src/msv/operations/base.cpp
         src/msv/operations/change.cpp

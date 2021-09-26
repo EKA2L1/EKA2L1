@@ -105,8 +105,8 @@ OPCODE2(ws_gc, draw_ws_graphic, u151m2, 71, curr, 81)
 OPCODE2(ws_gc, draw_ws_graphic_ptr, u151m2, 72, curr, 82)
 
 // Extension opcodes
-OPCODE3(ws_gc, set_faded, u139, 200, u151m2, 200, curr, 200)
-OPCODE3(ws_gc, set_fade_params, u139, 201, u151m2, 201, curr, 201)
+OPCODE4(ws_gc, set_faded, u139, 200, u151m1, 200, u151m2, 200, curr, 200)
+OPCODE4(ws_gc, set_fade_params, u139, 201, u151m1, 201, u151m2, 201, curr, 201)
 OPCODE2(ws_gc, gdi_alpha_blend_bitmaps, u151m2, 202, curr, 202)
 OPCODE2(ws_gc, gdi_ws_alpha_blend_bitmaps, u151m2, 203, curr, 203)
 OPCODE2(ws_gc, set_opaque, u151m2, 204, curr, 204)

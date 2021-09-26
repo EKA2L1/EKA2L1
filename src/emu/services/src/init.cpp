@@ -26,7 +26,6 @@
 #include <services/audio/keysound/keysound.h>
 #include <services/audio/mmf/audio.h>
 #include <services/audio/mmf/dev.h>
-#include <services/backup/backup.h>
 #include <services/bluetooth/btman.h>
 #include <services/centralrepo/centralrepo.h>
 #include <services/comm/comm.h>
@@ -171,22 +170,10 @@ namespace eka2l1 {
 
             config::state *cfg = sys->get_config();
 
-            //if (cfg->enable_srv_ecom)
-            //    CREATE_SERVER(sys, ecom_server);
-
             CREATE_SERVER(sys, fbs_server);
             CREATE_SERVER(sys, window_server);
-
-            //if (cfg->enable_srv_cenrep)
             CREATE_SERVER(sys, central_repo_server);
-
             CREATE_SERVER(sys, featmgr_server);
-
-            if (cfg->enable_srv_backup)
-                CREATE_SERVER(sys, backup_server);
-
-            //if (cfg->enable_srv_install)
-            //    CREATE_SERVER(sys, install_server);
 
             if (cfg->enable_srv_rights)
                 CREATE_SERVER(sys, rights_server);
@@ -211,14 +198,9 @@ namespace eka2l1 {
             CREATE_SERVER(sys, connmonitor_server);
             CREATE_SERVER(sys, nifman_server);
             CREATE_SERVER(sys, drm_notifier_server);
-            //CREATE_SERVER(sys, sendas_server);
             CREATE_SERVER(sys, sisregistry_server);
             CREATE_SERVER(sys, alarm_server);
-            //CREATE_SERVER(sys, uiss_server);
-
-            //if (cfg->enable_srv_socket) {
             CREATE_SERVER(sys, socket_server);
-            //}
 
             CREATE_SERVER(sys, comm_server);
             CREATE_SERVER(sys, btman_server);
@@ -227,16 +209,11 @@ namespace eka2l1 {
             // Not really sure about this one
             CREATE_SERVER(sys, keysound_server);
 
-            //if (cfg->enable_srv_eikapp_ui)
             CREATE_SERVER(sys, eikappui_server);
 
             if (cfg->enable_srv_akn_icon)
                 CREATE_SERVER(sys, akn_icon_server);
 
-            //if (cfg->enable_srv_cdl)
-            //    CREATE_SERVER(sys, cdl_server);
-
-            //if (cfg->enable_srv_akn_skin)
             CREATE_SERVER(sys, akn_skin_server);
 
             CREATE_SERVER(sys, system_agent_server);
