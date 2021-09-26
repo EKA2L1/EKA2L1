@@ -430,6 +430,16 @@ namespace eka2l1::epoc {
             *reinterpret_cast<std::uint32_t *>(data) = HAL_CONTRAST_MAX;
             break;
 
+        case kernel::hal_data_eka1_display_memory_address: {    
+            window_server *winserv = reinterpret_cast<window_server *>(sys->get_kernel_system()->get_by_name<service::server>(
+                eka2l1::get_winserv_name_by_epocver(sys->get_symbian_version_use())));
+
+            epoc::screen *crr_screen = winserv->get_current_focus_screen();
+
+            *reinterpret_cast<std::uint32_t *>(data) = crr_screen->screen_buffer_chunk->base(nullptr).ptr_address();
+            break;
+        }
+
         case kernel::hal_data_eka1_screen_info: {
             display_hal *the_hal = reinterpret_cast<display_hal *>(sys->get_hal(hal_category_display));
 

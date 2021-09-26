@@ -50,11 +50,17 @@
 
 #define BRIDGE_FUNC(ret, name, ...) ret name(kernel_system *kern, ##__VA_ARGS__)
 
-namespace eka2l1::kernel {
-    struct memory_info;
+namespace eka2l1 {
+    class system;
+
+    namespace kernel {
+        struct memory_info;
+    }
 }
 
 namespace eka2l1::epoc {
+    struct raw_event;
+
     struct ipc_copy_info {
         eka2l1::ptr<std::uint8_t> target_ptr;
         std::int32_t target_length;
@@ -307,6 +313,13 @@ namespace eka2l1::epoc {
         time_set_local_time = 16,
         time_set_secure = 32
     };
+    
+    // These twos are implemented in dispatcher module. Their implementations should not be here!
+    void dispatcher_do_resolve(eka2l1::system *sys, const std::uint32_t ordinal);
+    void dispatcher_do_event_add(eka2l1::system *sys, epoc::raw_event &evt);
+
+    int do_hal(eka2l1::system *sys, uint32_t cage, uint32_t func, int *a1, int *a2);
+    int do_hal_by_data_num(eka2l1::system *sys, const std::uint32_t data_num, void *data);
 
     ///> @brief The SVC map for Symbian S60v3.
     extern const eka2l1::hle::func_map svc_register_funcs_v93;

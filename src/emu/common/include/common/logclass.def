@@ -37,6 +37,7 @@ LOGCLASS(BRIDGE, "Bridge", "Bridge")
 
 LOGCLASS(LDD, "Ldd", "Logical device driver")
 LOGCLASS(LDD_MMCIF, "Ldd.MmcIf", "Mmc driver")
+LOGCLASS(LDD_HAL, "Ldd.Hal", "HAL driver")
 
 LOGCLASS(SERVICE_TRACK, "Service.Track", "Service tracking")
 LOGCLASS(SERVICE_ALARM, "Service.Alarm", "Alarm")

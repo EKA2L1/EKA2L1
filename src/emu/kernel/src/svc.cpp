@@ -51,13 +51,6 @@
 #include <utils/err.h>
 
 namespace eka2l1::epoc {
-    // These twos are implemented in dispatcher module. Their implementations should not be here!
-    void dispatcher_do_resolve(eka2l1::system *sys, const std::uint32_t ordinal);
-    void dispatcher_do_event_add(eka2l1::system *sys, epoc::raw_event &evt);
-
-    int do_hal(eka2l1::system *sys, uint32_t cage, uint32_t func, int *a1, int *a2);
-    int do_hal_by_data_num(eka2l1::system *sys, const std::uint32_t data_num, void *data);
-
     static security_policy server_exclamation_point_name_policy({ cap_prot_serv });
 
     static eka2l1::kernel::thread_local_data *current_local_data(kernel_system *kern) {
@@ -4193,8 +4186,8 @@ namespace eka2l1::epoc {
         ldd::factory *ff = kern->get_by_name<ldd::factory>(ldd_name);
 
         if (!ff) {
-            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_ready);
-            return epoc::error_not_ready;
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
         }
 
         auto chn = ff->make_channel(extra_info->ver_);
@@ -5820,6 +5813,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x1A, mutex_signal_eka1),
         BRIDGE_REGISTER(0x1B, process_id),
         BRIDGE_REGISTER(0x20, process_exit_type),
+        BRIDGE_REGISTER(0x21, process_exit_reason),
+        BRIDGE_REGISTER(0x29, semaphore_count_eka1),
         BRIDGE_REGISTER(0x2A, semaphore_wait_eka1),
         BRIDGE_REGISTER(0x32, thread_id),
         BRIDGE_REGISTER(0x3C, thread_request_count),
@@ -5841,6 +5836,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8D, locked_inc_32),
         BRIDGE_REGISTER(0x8E, locked_dec_32),
         BRIDGE_REGISTER(0xB8, user_svr_rom_root_dir_address),
+        BRIDGE_REGISTER(0xBE, math_rand),
         BRIDGE_REGISTER(0xBC, user_svr_rom_header_address),
         BRIDGE_REGISTER(0xFE, static_call_list),
         BRIDGE_REGISTER(0x800010, library_lookup_eka1),
@@ -5877,6 +5873,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8000AA, process_type_eka1),
         BRIDGE_REGISTER(0x8000AB, get_locale_char_set),
         BRIDGE_REGISTER(0x8000AF, process_set_type_eka1),
+        BRIDGE_REGISTER(0x8000B7, bus_dev_open_socket),
         BRIDGE_REGISTER(0x8000BB, user_svr_dll_filename),
         BRIDGE_REGISTER(0x8000C0, process_command_line_length),
         BRIDGE_REGISTER(0x8000C2, get_inactivity_time),
@@ -5890,6 +5887,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8000E6, message_ipc_copy_eka1),
         BRIDGE_REGISTER(0x8000EA, message_queue_notify_space_available),
         BRIDGE_REGISTER(0x8000EB, message_queue_notify_data_available),
+        BRIDGE_REGISTER(0xC0000E, logical_channel_do_control_eka1),
         BRIDGE_REGISTER(0xC0001D, process_resume),
         BRIDGE_REGISTER(0xC00024, process_set_priority_eka1),
         BRIDGE_REGISTER(0xC0002B, semaphore_signal_eka1),
@@ -5927,6 +5925,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x1A, mutex_signal_eka1),
         BRIDGE_REGISTER(0x1B, process_id),
         BRIDGE_REGISTER(0x20, process_exit_type),
+        BRIDGE_REGISTER(0x29, semaphore_count_eka1),
         BRIDGE_REGISTER(0x2A, semaphore_wait_eka1),
         BRIDGE_REGISTER(0x32, thread_id),
         BRIDGE_REGISTER(0x3C, thread_request_count),
@@ -5997,6 +5996,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8000E6, message_ipc_copy_eka1),
         BRIDGE_REGISTER(0x8000EA, message_queue_notify_space_available),
         BRIDGE_REGISTER(0x8000EB, message_queue_notify_data_available),
+        BRIDGE_REGISTER(0xC0000E, logical_channel_do_control_eka1),
         BRIDGE_REGISTER(0xC0001D, process_resume),
         BRIDGE_REGISTER(0xC00024, process_set_priority_eka1),
         BRIDGE_REGISTER(0xC0002B, semaphore_signal_eka1),

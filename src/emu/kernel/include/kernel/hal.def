@@ -18,7 +18,7 @@
  */
 
 // Convention:
-// HAL_ENTRY(generic_name, display_name, key)
+// HAL_ENTRY(generic_name, display_name, key, key_old)
 
 #ifndef HAL_ENTRY
 #define HAL_ENTRY(a, b, c, d)
@@ -36,6 +36,7 @@ HAL_ENTRY(tick_period, TickPeriod, 0, 10)
 HAL_ENTRY(display_screen_x_pixels, ScreenXPixels, 31, 0)
 HAL_ENTRY(display_screen_y_pixels, ScreenYPixels, 32, 0)
 HAL_ENTRY(display_contrast_max, DisplayContrastMax, 0, 38)
+HAL_ENTRY(display_memory_address, DisplayMemoryAddress, 0, 78)
 HAL_ENTRY(screen_info, ScreenInfo, 0, 0xC00000)
 
 #ifdef HAL_ENTRY

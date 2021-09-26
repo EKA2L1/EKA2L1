@@ -2,10 +2,12 @@ add_library(epocldd
         include/ldd/collection.h
         include/ldd/ecomm/consts.h
         include/ldd/ecomm/ecomm.h
+        include/ldd/hal/hal.h
         include/ldd/mmcif/consts.h
         include/ldd/mmcif/mmcif.h
         src/collection.cpp
         src/ecomm/ecomm.cpp
+        src/hal/hal.cpp
         src/mmcif/mmcif.cpp
         )
 
