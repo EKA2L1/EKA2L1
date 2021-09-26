@@ -60,7 +60,7 @@ namespace eka2l1::arm {
     using memory_write_exclusive_with_core_64bit_func = std::function<std::int32_t(core *, address, std::uint64_t, std::uint64_t)>;
 
     using system_call_handler_func = std::function<void(const std::uint32_t)>;
-    using handle_exception_func = std::function<void(exception_type, const std::uint32_t)>;
+    using handle_exception_func = std::function<bool(exception_type, const std::uint32_t)>;
 
     class core;
 

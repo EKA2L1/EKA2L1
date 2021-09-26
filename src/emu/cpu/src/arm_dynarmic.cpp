@@ -104,24 +104,32 @@ namespace eka2l1::arm {
             return cp15.get();
         }
 
-        void invalid_memory_read(const Dynarmic::A32::VAddr addr) {
-            parent.exception_handler(exception_type_access_violation_read, addr);
+        /**
+         * @brief Raise access violation and get feedback on whether we should reaccess the address again.
+         * 
+         * @param addr          Address where the violation happens.
+         * @param is_read       True if the raised exception is from an invalid read. Otherwise, it's from an invalid write.
+         * 
+         * @returns True if the handler fixed the violation and a re-read/re-write should be reissued.
+         */
+        bool raise_invalid_access_and_get_feedback(const Dynarmic::A32::VAddr addr, const bool is_read) {
+            return parent.exception_handler(is_read ? exception_type_access_violation_read : exception_type_access_violation_write, addr);
         }
 
-        void invalid_memory_write(const Dynarmic::A32::VAddr addr) {
-            parent.exception_handler(exception_type_access_violation_write, addr);
-        }
-
-        void handle_read_status(const bool status, const Dynarmic::A32::VAddr addr) {
+        bool handle_read_status(const bool status, const Dynarmic::A32::VAddr addr) {
             if (!status) {
-                invalid_memory_read(addr);
+                return raise_invalid_access_and_get_feedback(addr, true);
             }
+
+            return false;
         }
 
-        void handle_write_status(const bool status, const Dynarmic::A32::VAddr addr) {
+        bool handle_write_status(const bool status, const Dynarmic::A32::VAddr addr) {
             if (!status) {
-                invalid_memory_write(addr);
+                return raise_invalid_access_and_get_feedback(addr, false);
             }
+
+            return false;
         }
 
         std::uint32_t MemoryReadCode(Dynarmic::A32::VAddr addr) override {
@@ -129,53 +137,71 @@ namespace eka2l1::arm {
             constexpr std::uint32_t UNDEFINED_WORD = 0xE11EFF2F;
 
             bool status = parent.read_code(addr, &code_result);
-            handle_read_status(status, addr);
+            if (handle_read_status(status, addr)) {
+                status = parent.read_code(addr, &code_result);
+            }
 
             return status ? code_result : UNDEFINED_WORD;
         }
 
         uint8_t MemoryRead8(Dynarmic::A32::VAddr addr) override {
             std::uint8_t ret = 0;
-            handle_read_status(parent.read_8bit(addr, &ret), addr);
+            if (handle_read_status(parent.read_8bit(addr, &ret), addr)) {
+                parent.read_8bit(addr, &ret);
+            }
 
             return ret;
         }
 
         uint16_t MemoryRead16(Dynarmic::A32::VAddr addr) override {
             std::uint16_t ret = 0;
-            handle_read_status(parent.read_16bit(addr, &ret), addr);
+            if (handle_read_status(parent.read_16bit(addr, &ret), addr)) {
+                parent.read_16bit(addr, &ret);
+            }
 
             return ret;
         }
 
         uint32_t MemoryRead32(Dynarmic::A32::VAddr addr) override {
             std::uint32_t ret = 0;
-            handle_read_status(parent.read_32bit(addr, &ret), addr);
+            if (handle_read_status(parent.read_32bit(addr, &ret), addr)) {
+                parent.read_32bit(addr, &ret);
+            }
 
             return ret;
         }
 
         uint64_t MemoryRead64(Dynarmic::A32::VAddr addr) override {
             std::uint64_t ret = 0;
-            handle_read_status(parent.read_64bit(addr, &ret), addr);
+            if (handle_read_status(parent.read_64bit(addr, &ret), addr)) {
+                parent.read_64bit(addr, &ret);
+            }
 
             return ret;
         }
 
         void MemoryWrite8(Dynarmic::A32::VAddr addr, uint8_t value) override {
-            handle_write_status(parent.write_8bit(addr, &value), addr);
+            if (handle_write_status(parent.write_8bit(addr, &value), addr)) {
+                parent.write_8bit(addr, &value);
+            }
         }
 
         void MemoryWrite16(Dynarmic::A32::VAddr addr, uint16_t value) override {
-            handle_write_status(parent.write_16bit(addr, &value), addr);
+            if (handle_write_status(parent.write_16bit(addr, &value), addr)) {
+                parent.write_16bit(addr, &value);
+            }
         }
 
         void MemoryWrite32(Dynarmic::A32::VAddr addr, uint32_t value) override {
-            handle_write_status(parent.write_32bit(addr, &value), addr);
+            if (handle_write_status(parent.write_32bit(addr, &value), addr)) {
+                parent.write_32bit(addr, &value);
+            }
         }
 
         void MemoryWrite64(Dynarmic::A32::VAddr addr, uint64_t value) override {
-            handle_write_status(parent.write_64bit(addr, &value), addr);
+            if (handle_write_status(parent.write_64bit(addr, &value), addr)) {
+                parent.write_64bit(addr, &value);
+            }
         }
 
         bool MemoryWriteExclusive8(Dynarmic::A32::VAddr addr, std::uint8_t value, std::uint8_t expected) override {

@@ -3799,6 +3799,10 @@ SUB_INST : {
     GOTO_NEXT_INST;
 }
 SWI_INST : {
+    // Increase the PC first
+    cpu->Reg[15] += cpu->GetInstructionSize();
+    INC_PC(sizeof(swi_inst));
+
     // Some system calls modify PC, so do this first
     const std::uint32_t current_pc = cpu->Reg[15];
 
@@ -3815,9 +3819,6 @@ SWI_INST : {
             goto DISPATCH;
         }
     }
-
-    cpu->Reg[15] += cpu->GetInstructionSize();
-    INC_PC(sizeof(swi_inst));
 
     FETCH_INST;
     GOTO_NEXT_INST;

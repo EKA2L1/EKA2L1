@@ -316,10 +316,26 @@ namespace eka2l1 {
         return true;
     }
 
-    void kernel_system::cpu_exception_handler(arm::core *core, arm::exception_type exception_type, const std::uint32_t exception_data) {
+    bool kernel_system::cpu_handle_access_violation(arm::core *core, const address occurred, const bool read) {
+        if (is_eka1()) {
+            if ((occurred >= mem::kern_mapping_eka1) && (occurred <= mem::kern_mapping_eka1_end)) {
+                setup_stub_io_mapping(occurred);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    bool kernel_system::cpu_exception_handler(arm::core *core, arm::exception_type exception_type, const std::uint32_t exception_data) {
         switch (exception_type) {
         case arm::exception_type_access_violation_read:
         case arm::exception_type_access_violation_write:
+            if (cpu_handle_access_violation(core, exception_data, exception_type == arm::exception_type_access_violation_read)) {
+                return true;
+            }
+
             LOG_ERROR(KERNEL, "Access violation {} address 0x{:X} in thread {}", (exception_type == arm::exception_type_access_violation_read) ? "reading" : "writing", exception_data, crr_thread()->name());
             break;
 
@@ -336,14 +352,14 @@ namespace eka2l1 {
                 break;
             }
 
-            return;
+            return true;
 
         case arm::exception_type_breakpoint:
             for (auto &breakpoint_callback_func : breakpoint_callbacks_) {
                 breakpoint_callback_func(core, crr_thread(), exception_data);
             }
 
-            return;
+            return true;
 
         default:
             LOG_ERROR(KERNEL, "Unknown exception encountered in thread {}", crr_thread()->name());
@@ -351,6 +367,7 @@ namespace eka2l1 {
         }
 
         cpu_exception_thread_handle(core);
+        return false;
     }
 
     void kernel_system::setup_nanokern_controller() {
@@ -375,23 +392,20 @@ namespace eka2l1 {
         }
     }
 
-    void kernel_system::setup_stub_io_mapping() {
+    void kernel_system::setup_stub_io_mapping(const address addr) {
         // Just safety measures :D
         static constexpr std::size_t IO_MAPPING_SIZE = common::MB(1);
-        address IO_MAPPING_ADDR = (kern_ver_ == epocver::epoc81a) ? 0x59800000 : 0x59600000;
 
-        if (kern_ver_ == epocver::epoc81a || kern_ver_ == epocver::epoc80) {
-            // Some roms just hardcoded IO mapping, what the fuck
-            create<kernel::chunk>(mem_, nullptr, "StubIOMapping", 0, static_cast<address>(IO_MAPPING_SIZE),
-                IO_MAPPING_SIZE, prot_read_write, kernel::chunk_type::normal, kernel::chunk_access::kernel_mapping,
-                kernel::chunk_attrib::none, 0, false, IO_MAPPING_ADDR, nullptr);
-        }
+        // Some roms just hardcoded IO mapping, what the fuck
+        create<kernel::chunk>(mem_, nullptr, "StubIOMapping", 0, static_cast<address>(IO_MAPPING_SIZE),
+            IO_MAPPING_SIZE, prot_read_write, kernel::chunk_type::normal, kernel::chunk_access::kernel_mapping,
+            kernel::chunk_attrib::none, 0, false, addr, nullptr);
     }
 
     void kernel_system::start_bootload() {
         // Disable these
         // setup_nanokern_controller();
-        setup_stub_io_mapping();
+        // setup_stub_io_mapping();
     }
 
     void kernel_system::setup_custom_code() {
@@ -450,8 +464,8 @@ namespace eka2l1 {
             }
         };
 
-        cpu_->exception_handler = [this](arm::exception_type exception_type, const std::uint32_t data) {
-            cpu_exception_handler(cpu_, exception_type, data);
+        cpu_->exception_handler = [this](arm::exception_type exception_type, const std::uint32_t data) -> bool {
+            return cpu_exception_handler(cpu_, exception_type, data);
         };
     }
 

@@ -346,9 +346,10 @@ namespace eka2l1 {
 
         void setup_nanokern_controller();
         void setup_custom_code();
-        void setup_stub_io_mapping();
+        void setup_stub_io_mapping(const address addr);
 
         bool cpu_exception_handle_unpredictable(arm::core *core, const address occurred);
+        bool cpu_handle_access_violation(arm::core *core, const address occurred, const bool read);
         void cpu_exception_thread_handle(arm::core *core);
 
     public:
@@ -364,7 +365,7 @@ namespace eka2l1 {
             return thr_sch_.get();
         }
 
-        void cpu_exception_handler(arm::core *core, arm::exception_type exception_type, const std::uint32_t exception_data);
+        bool cpu_exception_handler(arm::core *core, arm::exception_type exception_type, const std::uint32_t exception_data);
 
         void call_ipc_send_callbacks(const std::string &server_name, const int ord, const ipc_arg &args,
             address reqsts_addr, kernel::thread *callee);

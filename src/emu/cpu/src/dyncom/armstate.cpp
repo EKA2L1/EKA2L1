@@ -196,9 +196,16 @@ std::uint8_t ARMul_State::ReadMemory8(std::uint32_t address) const {
     }
 
     std::uint8_t value = 0;
-    if (!core->read_8bit(address, &value)) {
+    bool result = core->read_8bit(address, &value);
+
+    if (!result) {
+        if (core->exception_handler(eka2l1::arm::exception_type_access_violation_read, address)) {
+            result = core->read_8bit(address, &value);
+        }
+    }
+
+    if (!result) {
         LOG_ERROR(eka2l1::CPU_DYNCOM, "Failure reading 8bit value at 0x{:X}", address);
-        core->exception_handler(eka2l1::arm::exception_type_access_violation_read, address);
     }
 
     return value;
@@ -211,10 +218,16 @@ std::uint16_t ARMul_State::ReadMemory16(std::uint32_t address) const {
     }
 
     std::uint16_t value = 0;
+    bool result = core->read_16bit(address, &value);
 
-    if (!core->read_16bit(address, &value)) {
+    if (!result) {
+        if (core->exception_handler(eka2l1::arm::exception_type_access_violation_read, address)) {
+            result = core->read_16bit(address, &value);
+        }
+    }
+
+    if (!result) {
         LOG_ERROR(eka2l1::CPU_DYNCOM, "Failure reading 16bit value at 0x{:X}", address);
-        core->exception_handler(eka2l1::arm::exception_type_access_violation_read, address);
     }
 
     if (InBigEndianMode())
@@ -230,10 +243,16 @@ std::uint32_t ARMul_State::ReadMemory32(std::uint32_t address) const {
     }
 
     std::uint32_t value = 0;
+    bool result = core->read_32bit(address, &value);
 
-    if (!core->read_32bit(address, &value)) {
+    if (!result) {
+        if (core->exception_handler(eka2l1::arm::exception_type_access_violation_read, address)) {
+            result = core->read_32bit(address, &value);
+        }
+    }
+
+    if (!result) {
         LOG_ERROR(eka2l1::CPU_DYNCOM, "Failure reading 32bit value at 0x{:X}", address);
-        core->exception_handler(eka2l1::arm::exception_type_access_violation_read, address);
     }
 
     if (InBigEndianMode())
@@ -244,10 +263,16 @@ std::uint32_t ARMul_State::ReadMemory32(std::uint32_t address) const {
 
 std::uint32_t ARMul_State::ReadCode(std::uint32_t address) const {
     std::uint32_t value = 0;
+    bool result = core->read_code(address, &value);
 
-    if (!core->read_code(address, &value)) {
+    if (!result) {
+        if (core->exception_handler(eka2l1::arm::exception_type_access_violation_read, address)) {
+            result = core->read_code(address, &value);
+        }
+    }
+
+    if (!result) {
         LOG_ERROR(eka2l1::CPU_DYNCOM, "Failure reading 32bit CODE value at 0x{:X}", address);
-        core->exception_handler(eka2l1::arm::exception_type_access_violation_read, address);
     }
 
     return value;
@@ -260,10 +285,16 @@ std::uint64_t ARMul_State::ReadMemory64(std::uint32_t address) const {
     }
 
     std::uint64_t value = 0;
+    bool result = core->read_64bit(address, &value);
 
-    if (!core->read_64bit(address, &value)) {
+    if (!result) {
+        if (core->exception_handler(eka2l1::arm::exception_type_access_violation_read, address)) {
+            result = core->read_64bit(address, &value);
+        }
+    }
+
+    if (!result) {
         LOG_ERROR(eka2l1::CPU_DYNCOM, "Failure reading 64bit value at 0x{:X}", address);
-        core->exception_handler(eka2l1::arm::exception_type_access_violation_read, address);
     }
 
     if (InBigEndianMode())
@@ -279,9 +310,16 @@ void ARMul_State::WriteMemory8(std::uint32_t address, std::uint8_t data) {
         return;
     }
 
-    if (!core->write_8bit(address, &data)) {
+    bool result = core->write_8bit(address, &data);
+
+    if (!result) {
+        if (core->exception_handler(eka2l1::arm::exception_type_access_violation_write, address)) {
+            result = core->write_8bit(address, &data);
+        }
+    }
+
+    if (!result) {
         LOG_ERROR(eka2l1::CPU_DYNCOM, "Failure writing 8bit value at 0x{:X}", address);
-        core->exception_handler(eka2l1::arm::exception_type_access_violation_write, address);
     }
 }
 
@@ -295,9 +333,16 @@ void ARMul_State::WriteMemory16(std::uint32_t address, std::uint16_t data) {
         return;
     }
 
-    if (!core->write_16bit(address, &data)) {
+    bool result = core->write_16bit(address, &data);
+
+    if (!result) {
+        if (core->exception_handler(eka2l1::arm::exception_type_access_violation_write, address)) {
+            result = core->write_16bit(address, &data);
+        }
+    }
+
+    if (!result) {
         LOG_ERROR(eka2l1::CPU_DYNCOM, "Failure writing 16bit value at 0x{:X}", address);
-        core->exception_handler(eka2l1::arm::exception_type_access_violation_write, address);
     }
 }
 
@@ -311,9 +356,16 @@ void ARMul_State::WriteMemory32(std::uint32_t address, std::uint32_t data) {
         return;
     }
 
-    if (!core->write_32bit(address, &data)) {
+    bool result = core->write_32bit(address, &data);
+
+    if (!result) {
+        if (core->exception_handler(eka2l1::arm::exception_type_access_violation_write, address)) {
+            result = core->write_32bit(address, &data);
+        }
+    }
+
+    if (!result) {
         LOG_ERROR(eka2l1::CPU_DYNCOM, "Failure writing 32bit value at 0x{:X}", address);
-        core->exception_handler(eka2l1::arm::exception_type_access_violation_write, address);
     }
 }
 
@@ -327,9 +379,16 @@ void ARMul_State::WriteMemory64(std::uint32_t address, std::uint64_t data) {
         return;
     }
 
-    if (!core->write_64bit(address, &data)) {
+    bool result = core->write_64bit(address, &data);
+
+    if (!result) {
+        if (core->exception_handler(eka2l1::arm::exception_type_access_violation_write, address)) {
+            result = core->write_64bit(address, &data);
+        }
+    }
+
+    if (!result) {
         LOG_ERROR(eka2l1::CPU_DYNCOM, "Failure writing 64bit value at 0x{:X}", address);
-        core->exception_handler(eka2l1::arm::exception_type_access_violation_write, address);
     }
 }
 

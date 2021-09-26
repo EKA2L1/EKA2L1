@@ -332,6 +332,8 @@ namespace eka2l1::mem {
             addr = (offset << control_->page_size_bits_) + chunk_sec->beg_;
             max_size_ = static_cast<std::size_t>(max_page) << control_->page_size_bits_;
         } else {
+            addr &= ~(((1 << control_->page_per_tab_shift_) << control_->page_size_bits_) - 1);
+
             // Mark those as allocated
             max_size_ = chunk_sec->alloc_.force_fill((addr - chunk_sec->beg_) >> control_->page_size_bits_,
                 static_cast<int>(total_pt << control_->page_per_tab_shift_), false);
