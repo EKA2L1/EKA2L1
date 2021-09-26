@@ -634,7 +634,8 @@ void settings_dialog::on_system_language_choose(const int index) {
     eka2l1::device_manager *device_mngr = system_->get_device_manager();
     if (device_mngr) {
         const std::lock_guard<std::mutex> guard(device_mngr->lock);
-        eka2l1::device *targetto = (index < 0) ? device_mngr->get_current() : device_mngr->get(static_cast<std::uint8_t>(index));
+        eka2l1::device *targetto = device_mngr->get_current();
+
         if (targetto) {
             if (index < targetto->languages.size()) {
                 set_current_language(targetto->languages[index]);
