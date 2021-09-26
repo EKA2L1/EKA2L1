@@ -68,6 +68,12 @@ namespace eka2l1 {
     }
 
     void ipc_msg::ref() {
+        if (ref_count == 0) {
+            if (own_thr) {
+                own_thr->increase_access_count();
+            }
+        }
+
         ref_count++;
     }
 
@@ -75,6 +81,10 @@ namespace eka2l1 {
         if (--ref_count == 0) {
             if (msg_session) {
                 session_msg_link.deque();
+            }
+
+            if (own_thr) {
+                own_thr->decrease_access_count();
             }
 
             switch (type) {

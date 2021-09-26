@@ -320,9 +320,8 @@ namespace eka2l1 {
         if (is_eka1()) {
             if ((occurred >= mem::kern_mapping_eka1) && (occurred <= mem::kern_mapping_eka1_end)) {
                 setup_stub_io_mapping(occurred);
+                return true;
             }
-
-            return true;
         }
 
         return false;

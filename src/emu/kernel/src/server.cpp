@@ -128,6 +128,7 @@ namespace eka2l1::service {
             dat_hle->session_ptr = msg->session_ptr_lle;
 
             std::copy(msg->args.args, msg->args.args + 4, dat_hle->args);
+            msg->thread_handle_low = 0;
         }
 
         (request_status.get(request_own_thread->owning_process()))->set(0, kern->is_eka1()); // KErrNone
@@ -135,6 +136,8 @@ namespace eka2l1::service {
         if (notify_owner) {
             request_own_thread->signal_request();
         }
+
+        request_own_thread->decrease_access_count();
 
         request_own_thread = nullptr;
         request_status = 0;
@@ -149,6 +152,8 @@ namespace eka2l1::service {
         request_status = msg_request_status;
         request_own_thread = kern->crr_thread();
         request_data = data;
+
+        request_own_thread->increase_access_count();
 
         if (!pending_msg) {
             return;
