@@ -840,13 +840,15 @@ namespace eka2l1::epoc {
         //LOG_TRACE(SERVICE_WINDOW, "Graphics context opcode {}", cmd.header.op);
         ws_graphics_context_opcode op = static_cast<decltype(op)>(cmd.header.op);
 
-        // General rules: Stub to err_none = nullptr, implement = function pointer
-        //                Do nothing = add nothing
         using ws_graphics_context_op_handler = std::function<void(graphic_context *,
             service::ipc_context & ctx, ws_cmd & cmd)>;
 
         using ws_graphics_context_table_op = std::map<ws_graphics_context_opcode, std::tuple<ws_graphics_context_op_handler, bool, bool>>;
 
+        // The order of the variables follow in this order.
+        // opcode | (function pointer to implementation, will need to flush graphics, will end drawing)
+        // If the function pointer to implementation is nullptr, it's silently ignored! However, if the function
+        // is not presented in this list at all, a warning will be issued.
         static const ws_graphics_context_table_op v139u_opcode_handlers = {
             { ws_gc_u139_active, { &graphic_context::active, false, false } },
             { ws_gc_u139_set_clipping_rect, { &graphic_context::set_clipping_rect, false, false } },
@@ -875,6 +877,8 @@ namespace eka2l1::epoc {
             { ws_gc_u139_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3, true, false } },
             { ws_gc_u139_gdi_blt_masked, { &graphic_context::gdi_blt_masked, true, false } },
             { ws_gc_u139_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked, true, false } },
+            { ws_gc_u139_set_faded, { nullptr, true, false } },
+            { ws_gc_u139_set_fade_params, { nullptr, true, false } },
             { ws_gc_u139_free, { &graphic_context::free, true, true } }
         };
 
@@ -906,6 +910,8 @@ namespace eka2l1::epoc {
             { ws_gc_u151m1_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3, true, false } },
             { ws_gc_u151m1_gdi_blt_masked, { &graphic_context::gdi_blt_masked, true, false } },
             { ws_gc_u151m1_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked, true, false } },
+            { ws_gc_u151m1_set_faded, { nullptr, true, false } },
+            { ws_gc_u151m1_set_fade_params, { nullptr, true, false } },
             { ws_gc_u151m1_free, { &graphic_context::free, true, true } }
         };
 
@@ -938,6 +944,8 @@ namespace eka2l1::epoc {
             { ws_gc_u151m2_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3, true, false } },
             { ws_gc_u151m2_gdi_blt_masked, { &graphic_context::gdi_blt_masked, true, false } },
             { ws_gc_u151m2_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked, true, false } },
+            { ws_gc_u151m2_set_faded, { nullptr, true, false } },
+            { ws_gc_u151m2_set_fade_params, { nullptr, true, false } },
             { ws_gc_u151m2_free, { &graphic_context::free, true, true } }
         };
 
@@ -970,6 +978,8 @@ namespace eka2l1::epoc {
             { ws_gc_curr_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3, true, false } },
             { ws_gc_curr_gdi_blt_masked, { &graphic_context::gdi_blt_masked, true, false } },
             { ws_gc_curr_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked, true, false } },
+            { ws_gc_curr_set_faded, { nullptr, true, false } },
+            { ws_gc_curr_set_fade_params, { nullptr, true, false } },
             { ws_gc_curr_free, { &graphic_context::free, true, true } }
         };
 
@@ -981,8 +991,11 @@ namespace eka2l1::epoc {
 
 #define FIND_OPCODE(op, table)                                                               \
     auto result = table.find(op);                                                            \
-    if (result == table.end() || !std::get<0>(result->second)) {                             \
+    if (result == table.end()) {                                                             \
         LOG_WARN(SERVICE_WINDOW, "Unimplemented graphics context opcode {}", cmd.header.op); \
+        return false;                                                                        \
+    }                                                                                        \
+    if (!std::get<0>(result->second)) {                                                    \
         return false;                                                                        \
     }                                                                                        \
     handler = std::get<0>(result->second);                                                   \
