@@ -54,7 +54,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="44"/>
       <source>Search</source>
-      <translation>搜索</translation>
+      <translation>Search</translation>
     </message>
   </context>
   <context>
@@ -97,7 +97,7 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="125"/>
       <source>Install</source>
-      <translation>安装</translation>
+      <translation>Install</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="138"/>
@@ -225,7 +225,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="73"/>
       <source>Install</source>
-      <translation>安装</translation>
+      <translation>Install</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="96"/>
@@ -250,7 +250,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="132"/>
       <source>About</source>
-      <translation>关于</translation>
+      <translation>About</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="137"/>
@@ -275,7 +275,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="152"/>
       <source>Settings</source>
-      <translation>设置</translation>
+      <translation>Settings</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="160"/>
@@ -495,7 +495,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
       <source>Search</source>
-      <translation>搜索</translation>
+      <translation>Search</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="66"/>
@@ -558,7 +558,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="20"/>
       <source>Settings</source>
-      <translation>设置</translation>
+      <translation>Settings</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="36"/>
@@ -750,7 +750,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="512"/>
       <source>Devices</source>
-      <translation>设备</translation>
+      <translation>Devices</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="529"/>
@@ -761,7 +761,7 @@
       <location filename="../src/settings_dialog.ui" line="552"/>
       <location filename="../src/settings_dialog.ui" line="828"/>
       <source>Rename</source>
-      <translation>重命名</translation>
+      <translation>Rename</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="563"/>
@@ -980,8 +980,8 @@
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="404"/>
-      <location filename="../src/settings_dialog.cpp" line="1079"/>
-      <location filename="../src/settings_dialog.cpp" line="1104"/>
+      <location filename="../src/settings_dialog.cpp" line="1080"/>
+      <location filename="../src/settings_dialog.cpp" line="1105"/>
       <source>Relaunch needed</source>
       <translation>需要重启</translation>
     </message>
@@ -1016,137 +1016,137 @@
       <translation>输入新设备名称</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="650"/>
+      <location filename="../src/settings_dialog.cpp" line="651"/>
       <source>Unbind</source>
       <translation>解除绑定</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="695"/>
+      <location filename="../src/settings_dialog.cpp" line="696"/>
       <source>Waiting for input</source>
       <translation>等待输入</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="710"/>
-      <location filename="../src/settings_dialog.cpp" line="756"/>
+      <location filename="../src/settings_dialog.cpp" line="711"/>
+      <location filename="../src/settings_dialog.cpp" line="757"/>
       <source>Mouse button %1</source>
       <translation>鼠标按键 %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="712"/>
-      <location filename="../src/settings_dialog.cpp" line="798"/>
+      <location filename="../src/settings_dialog.cpp" line="713"/>
+      <location filename="../src/settings_dialog.cpp" line="799"/>
       <source>Controller %1 : Button %2</source>
       <translation>控制器 %1 ：按钮 %2</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="823"/>
-      <location filename="../src/settings_dialog.cpp" line="847"/>
+      <location filename="../src/settings_dialog.cpp" line="824"/>
+      <location filename="../src/settings_dialog.cpp" line="848"/>
       <source>Enter profile name</source>
       <translation>输入配置名称</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="831"/>
+      <location filename="../src/settings_dialog.cpp" line="832"/>
       <source>Profile creation failed</source>
       <translation>配置创建失败</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="831"/>
-      <location filename="../src/settings_dialog.cpp" line="855"/>
+      <location filename="../src/settings_dialog.cpp" line="832"/>
+      <location filename="../src/settings_dialog.cpp" line="856"/>
       <source>A profile with that name already exists!</source>
       <translation>同名配置已存在！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="855"/>
+      <location filename="../src/settings_dialog.cpp" line="856"/>
       <source>Profile rename failed</source>
       <translation>配置重命名失败</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="870"/>
+      <location filename="../src/settings_dialog.cpp" line="871"/>
       <source>Profile deletion failed</source>
       <translation>配置删除失败</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="870"/>
+      <location filename="../src/settings_dialog.cpp" line="871"/>
       <source>This is the only profile left!</source>
       <translation>这是仅剩的配置！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="908"/>
+      <location filename="../src/settings_dialog.cpp" line="909"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
       <translation>&lt;b&gt;配置为：&lt;/b&gt; %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="911"/>
-      <location filename="../src/settings_dialog.cpp" line="916"/>
+      <location filename="../src/settings_dialog.cpp" line="912"/>
+      <location filename="../src/settings_dialog.cpp" line="917"/>
       <source>None</source>
       <translation>无</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1006"/>
+      <location filename="../src/settings_dialog.cpp" line="1007"/>
       <source>IMEI sequence contains non-numeric character!</source>
       <translation>IMEI序列包含非数字字符！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1009"/>
+      <location filename="../src/settings_dialog.cpp" line="1010"/>
       <source>IMEI sequence has invalid sum!</source>
       <translation>IMEI序列值无效！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1012"/>
+      <location filename="../src/settings_dialog.cpp" line="1013"/>
       <source>IMEI sequence length must be 15!</source>
       <translation>IMEI序列长度必须为15！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1018"/>
+      <location filename="../src/settings_dialog.cpp" line="1019"/>
       <source>Unidentified error!</source>
       <translation>未定义的错误！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1025"/>
+      <location filename="../src/settings_dialog.cpp" line="1026"/>
       <source>IMEI valid!</source>
       <translation>IMEI有效！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1025"/>
+      <location filename="../src/settings_dialog.cpp" line="1026"/>
       <source>The IMEI sequence is valid!</source>
       <translation>IMEI序列有效！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1028"/>
+      <location filename="../src/settings_dialog.cpp" line="1029"/>
       <source>IMEI invalid!</source>
       <translation>IMEI无效！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1038"/>
+      <location filename="../src/settings_dialog.cpp" line="1039"/>
       <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
       <translation>您的IMEI无效，因为：%1。&lt;br&gt;您想要编辑当前IMEI而不是关闭吗？选择&quot;没有&quot;将保存当前IMEI值。</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1040"/>
+      <location filename="../src/settings_dialog.cpp" line="1041"/>
       <source>Cancel closing</source>
       <translation>取消关闭</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1079"/>
+      <location filename="../src/settings_dialog.cpp" line="1080"/>
       <source>This change will be effective on the next launch of the emulator.</source>
       <translation>此更改将在下次启动模拟器时生效。</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1087"/>
+      <location filename="../src/settings_dialog.cpp" line="1088"/>
       <source>Confirmation</source>
       <translation>确认</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1087"/>
+      <location filename="../src/settings_dialog.cpp" line="1088"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
       <translation>您确定要这样做吗？ 您当前的主题将被重置，所有已被禁用的消息框将被重新启用，所有最近的挂载将被清除。</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1104"/>
+      <location filename="../src/settings_dialog.cpp" line="1105"/>
       <source>The language will be updated on the next launch of the emulator.</source>
       <translation>此语言将在下次启动模拟器时更新。</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1124"/>
+      <location filename="../src/settings_dialog.cpp" line="1125"/>
       <source>Pick the screen background color</source>
       <translation>选取屏幕背景颜色</translation>
     </message>
