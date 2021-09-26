@@ -224,7 +224,7 @@ namespace eka2l1 {
         }
 
         void bitwise_bitmap::post_construct(fbs_server *serv) {
-            if (serv->legacy_level() >= FBS_LEGACY_LEVEL_S60V1) {
+            if (serv->legacy_level() >= FBS_LEGACY_LEVEL_EARLY_KERNEL_TRANSITION) {
                 if ((header_.compression == epoc::bitmap_file_byte_rle_compression) || (header_.compression == epoc::bitmap_file_twelve_bit_rle_compression))
                     header_.compression += epoc::LEGACY_BMP_COMPRESS_IN_MEMORY_TYPE_BASE;
             }
@@ -859,6 +859,7 @@ namespace eka2l1 {
 
         switch (legacy_level()) {
         case FBS_LEGACY_LEVEL_S60V1:
+        case FBS_LEGACY_LEVEL_EARLY_KERNEL_TRANSITION:
             return size_aligned >= RANGE_START_LARGE;
 
         case FBS_LEGACY_LEVEL_KERNEL_TRANSITION:

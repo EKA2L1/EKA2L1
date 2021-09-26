@@ -150,7 +150,8 @@ namespace eka2l1 {
         FBS_LEGACY_LEVEL_MORDEN = 0,
         FBS_LEGACY_LEVEL_EARLY_EKA2 = 1,
         FBS_LEGACY_LEVEL_KERNEL_TRANSITION = 2,
-        FBS_LEGACY_LEVEL_S60V1 = 3
+        FBS_LEGACY_LEVEL_EARLY_KERNEL_TRANSITION = 3,
+        FBS_LEGACY_LEVEL_S60V1 = 4
     };
 
     enum class fbsobj_kind {

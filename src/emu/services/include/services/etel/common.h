@@ -354,6 +354,8 @@ namespace eka2l1::epoc {
         epoc::buf_static<char16_t, MAX_SERIAL_NUMBER_LENGTH> serial_num_;
     };
 
+    static_assert(sizeof(etel_phone_id_v0) == 432);
+
     struct etel_phone_id_v1 : public etel_multimode_type {
         etel_phone_id_v0 detail_;
     };

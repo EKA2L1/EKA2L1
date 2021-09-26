@@ -953,6 +953,7 @@ namespace eka2l1 {
 
         switch (serv->legacy_level()) {
         case FBS_LEGACY_LEVEL_KERNEL_TRANSITION:
+        case FBS_LEGACY_LEVEL_EARLY_KERNEL_TRANSITION:
         case FBS_LEGACY_LEVEL_S60V1:
             serv->destroy_bitmap_font<epoc::bitmapfont_v1>(reinterpret_cast<epoc::bitmapfont_v1 *>(font_ptr));
             break;
