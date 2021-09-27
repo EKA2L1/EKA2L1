@@ -37,7 +37,6 @@
 #include <services/featmgr/featmgr.h>
 #include <services/fs/fs.h>
 #include <services/hwrm/hwrm.h>
-#include <services/install/install.h>
 #include <services/internet/connmonitor.h>
 #include <services/internet/nifman.h>
 #include <services/loader/loader.h>

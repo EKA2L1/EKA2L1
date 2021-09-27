@@ -97,6 +97,10 @@ namespace eka2l1::epoc {
         return graphics_orientation::normal;
     }
 
+    window_server_client::~window_server_client() {
+        objects.clear();
+    }
+
     void window_server_client::parse_command_buffer(service::ipc_context &ctx) {
         std::optional<std::string> dat = ctx.get_argument_value<std::string>(cmd_slot);
 
