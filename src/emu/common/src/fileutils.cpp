@@ -61,8 +61,8 @@ namespace eka2l1::common {
 
         return static_cast<std::int64_t>(data.nFileSizeLow | (__int64)data.nFileSizeHigh << 32);
 #else
-        struct stat st;
-        auto res = stat(path.c_str(), &st);
+        struct stat64 st;
+        auto res = stat64(path.c_str(), &st);
 
         if (res == -1) {
             return res;
@@ -110,8 +110,8 @@ namespace eka2l1::common {
 
         return get_file_type_from_attrib_platform_specific(h);
 #else
-        struct stat st;
-        auto res = stat(path.c_str(), &st);
+        struct stat64 st;
+        auto res = stat64(path.c_str(), &st);
 
         if (res == -1) {
             return FILE_INVALID;
@@ -245,8 +245,15 @@ namespace eka2l1::common {
         entry.name = d->d_name;
 
         if (detail) {
-            entry.size = file_size(dir_name + "/" + entry.name);
-            entry.type = get_file_type(dir_name + "/" + entry.name);
+            const std::string path_full = dir_name + "/" + entry.name;
+
+            struct stat64 st;
+            auto res = stat64(path_full.c_str(), &st);
+
+            if (res != -1) {
+                entry.size = st.st_size;
+                entry.type = get_file_type_from_attrib_platform_specific(st.st_mode);
+            }
         }
 
         do {
@@ -365,8 +372,8 @@ namespace eka2l1::common {
             static_cast<std::uint64_t>(last_modify_time.dwLowDateTime) | (static_cast<std::uint64_t>(last_modify_time.dwHighDateTime) << 32));
 #else
         const std::string name_utf8 = common::ucs2_to_utf8(path);
-        struct stat st;
-        auto res = stat(name_utf8.c_str(), &st);
+        struct stat64 st;
+        auto res = stat64(name_utf8.c_str(), &st);
 
         if (res == -1) {
             return 0xFFFFFFFFFFFFFFFF;
