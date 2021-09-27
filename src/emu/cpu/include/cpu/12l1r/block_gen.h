@@ -109,7 +109,7 @@ namespace eka2l1::arm::r12l1 {
         void flush_range(const vaddress start, const vaddress end, const asid aid);
         void flush_all();
 
-        void raise_guest_exception(const exception_type exc, const std::uint32_t usrdata);
+        bool raise_guest_exception(const exception_type exc, const std::uint32_t usrdata);
         void raise_system_call(const std::uint32_t num);
 
         std::uint8_t read_byte(const vaddress addr);

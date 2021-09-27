@@ -318,7 +318,7 @@ namespace eka2l1::arm::r12l1 {
         assemble_control_funcs();
     }
 
-    void dashixiong_block::raise_guest_exception(const exception_type exc, const std::uint32_t usrdata) {
+    bool dashixiong_block::raise_guest_exception(const exception_type exc, const std::uint32_t usrdata) {
         parent_->exception_handler(exc, usrdata);
     }
 
@@ -329,6 +329,12 @@ namespace eka2l1::arm::r12l1 {
     std::uint8_t dashixiong_block::read_byte(const vaddress addr) {
         std::uint8_t value = 0;
         bool res = parent_->read_8bit(addr, &value);
+
+        if (!res) {
+            if (raise_guest_exception(exception_type_access_violation_read, addr)) {
+                res = parent_->read_8bit(addr, &value);
+            }
+        }
 
         if (!res) {
             LOG_ERROR(CPU_12L1R, "Failed to read BYTE at address 0x{:X}", addr);
@@ -342,6 +348,12 @@ namespace eka2l1::arm::r12l1 {
         bool res = parent_->read_16bit(addr, &value);
 
         if (!res) {
+            if (raise_guest_exception(exception_type_access_violation_read, addr)) {
+                res = parent_->read_16bit(addr, &value);
+            }
+        }
+
+        if (!res) {
             LOG_ERROR(CPU_12L1R, "Failed to read WORD at address 0x{:X}", addr);
         }
 
@@ -351,6 +363,12 @@ namespace eka2l1::arm::r12l1 {
     std::uint32_t dashixiong_block::read_dword(const vaddress addr) {
         std::uint32_t value = 0;
         bool res = parent_->read_32bit(addr, &value);
+
+        if (!res) {
+            if (raise_guest_exception(exception_type_access_violation_read, addr)) {
+                res = parent_->read_32bit(addr, &value);
+            }
+        }
 
         if (!res) {
             LOG_ERROR(CPU_12L1R, "Failed to read DWORD at address 0x{:X}", addr);
@@ -364,6 +382,12 @@ namespace eka2l1::arm::r12l1 {
         bool res = parent_->read_64bit(addr, &value);
 
         if (!res) {
+            if (raise_guest_exception(exception_type_access_violation_read, addr)) {
+                res = parent_->read_64bit(addr, &value);
+            }
+        }
+
+        if (!res) {
             LOG_ERROR(CPU_12L1R, "Failed to read QWORD at address 0x{:X}", addr);
         }
 
@@ -371,25 +395,57 @@ namespace eka2l1::arm::r12l1 {
     }
 
     void dashixiong_block::write_byte(const vaddress addr, std::uint8_t dat) {
-        if (!parent_->write_8bit(addr, &dat)) {
+        bool result = parent_->write_8bit(addr, &dat);
+
+        if (!result) {
+            if (raise_guest_exception(exception_type_access_violation_write, addr)) {
+                result = parent_->write_8bit(addr, &dat);
+            }
+        }
+
+        if (!result) {
             LOG_ERROR(CPU_12L1R, "Failed to write BYTE to address 0x{:X}", addr);
         }
     }
 
     void dashixiong_block::write_word(const vaddress addr, std::uint16_t dat) {
-        if (!parent_->write_16bit(addr, &dat)) {
+        bool result = parent_->write_16bit(addr, &dat);
+
+        if (!result) {
+            if (raise_guest_exception(exception_type_access_violation_write, addr)) {
+                result = parent_->write_16bit(addr, &dat);
+            }
+        }
+
+        if (!result) {
             LOG_ERROR(CPU_12L1R, "Failed to write WORD to address 0x{:X}", addr);
         }
     }
 
     void dashixiong_block::write_dword(const vaddress addr, std::uint32_t dat) {
-        if (!parent_->write_32bit(addr, &dat)) {
+        bool result = parent_->write_32bit(addr, &dat);
+
+        if (!result) {
+            if (raise_guest_exception(exception_type_access_violation_write, addr)) {
+                result = parent_->write_32bit(addr, &dat);
+            }
+        }
+
+        if (!result) {
             LOG_ERROR(CPU_12L1R, "Failed to write DWORD to address 0x{:X}", addr);
         }
     }
 
     void dashixiong_block::write_qword(const vaddress addr, std::uint64_t dat) {
-        if (!parent_->write_64bit(addr, &dat)) {
+        bool result = parent_->write_64bit(addr, &dat);
+
+        if (!result) {
+            if (raise_guest_exception(exception_type_access_violation_write, addr)) {
+                result = parent_->write_64bit(addr, &dat);
+            }
+        }
+
+        if (!result) {
             LOG_ERROR(CPU_12L1R, "Failed to write QWORD to address 0x{:X}", addr);
         }
     }
