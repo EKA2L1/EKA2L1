@@ -34,6 +34,15 @@ namespace eka2l1::config {
     static constexpr const char *KEYBIND_TYPE_MOUSE = "mouse";
     static constexpr const char *KEYBIND_DEFAULT_FILE = "keybind.yml";
 
+    enum screen_buffer_sync_option {
+        screen_buffer_sync_option_preferred = 0,            ///< Let emulator chooses what platforms should it performed
+        screen_buffer_sync_option_off = 1,                  ///< Sync is turned off permanently.
+        screen_buffer_sync_option_on = 2                    ///< Sync is turned on permanently.
+    };
+
+    screen_buffer_sync_option get_screen_buffer_sync_option_from_string(std::string str);
+    const char *get_string_from_screen_buffer_sync_option(const screen_buffer_sync_option opt);
+
     struct keybind {
         struct {
             std::string type; // one of "key", "controller"
@@ -78,11 +87,9 @@ namespace eka2l1::config {
 
         std::string storage = "data"; // Set this to dot, avoid making it absolute
 
-        bool enable_srv_backup{ true };
         bool enable_srv_rights{ true };
         bool enable_srv_sa{ true };
         bool enable_srv_drm{ true };
-        bool enable_srv_akn_icon{ false };
 
         bool fbs_enable_compression_queue{ false };
         bool enable_btrace{ false };
@@ -108,6 +115,9 @@ namespace eka2l1::config {
         std::string imei{ DEFAULT_IMI };
         std::string mmc_id{ DEFAULT_MMC_ID };
         std::string current_keybind_profile{ "default" };
+        std::string screen_buffer_sync_string{ "preferred" };
+
+        screen_buffer_sync_option screen_buffer_sync{ screen_buffer_sync_option_preferred };
 
         std::atomic<std::uint32_t> display_background_color{ 0xFFD0D0D0 };
 

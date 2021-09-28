@@ -44,7 +44,6 @@ OPTION(emulator-language, emulator_language, -1)
 OPTION(enable-gdb-stub, enable_gdbstub, false)
 OPTION(data-storage, storage, "")
 OPTION(gdb-port, gdb_port, 24689)
-OPTION(enable-srv-backup, enable_srv_backup, true)
 OPTION(enable-srv-rights, enable_srv_rights, true)
 OPTION(enable-srv-sa, enable_srv_sa, true)
 OPTION(enable-srv-drm, enable_srv_drm, true)
@@ -66,6 +65,7 @@ OPTION(imei, imei, DEFAULT_IMI)
 OPTION(mmc-id, mmc_id, DEFAULT_MMC_ID)
 OPTION(audio-master-volume, audio_master_volume, 100)
 OPTION(current-keybind-profile, current_keybind_profile, "default")
+OPTION(screen-buffer-sync, screen_buffer_sync_string, "preferred")
 
 #ifdef OPTION
 #undef OPTION

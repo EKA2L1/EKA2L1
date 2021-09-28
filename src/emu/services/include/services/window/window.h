@@ -484,5 +484,6 @@ namespace eka2l1 {
         void send_screen_change_events(epoc::screen *scr);
 
         void init_key_mappings();
+        void set_screen_sync_buffer_option(const int option);
     };
 }

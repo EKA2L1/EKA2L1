@@ -175,7 +175,32 @@ namespace eka2l1::epoc {
         }
     }
 
-    void screen::redraw(drivers::graphics_command_list_builder *cmd_builder, const bool need_bind) {
+    static void flip_screen_image(std::uint8_t *buffer, const std::uint32_t line_pitch, const std::uint32_t line_count) {
+        std::uint8_t *pitcher = new std::uint8_t[line_pitch];
+
+        for (std::size_t y = 0; y < line_count / 2; y++) {
+            std::memcpy(pitcher, buffer + y * line_pitch, line_pitch);
+            std::memmove(buffer + y * line_pitch, buffer + (line_count - y - 1) * line_pitch, line_pitch);
+            std::memmove(buffer + (line_count - y - 1) * line_pitch, pitcher, line_pitch);
+        }
+
+        delete pitcher;
+    }
+
+    void screen::sync_screen_buffer_data(drivers::graphics_driver *driver) {
+        std::uint8_t *buffer_ptr = screen_buffer_ptr();
+        const config::screen_mode &crrmode = current_mode();
+
+        drivers::read_bitmap(driver, screen_texture, eka2l1::point(0, 0), eka2l1::object_size(crrmode.size),
+            get_bpp_from_display_mode(disp_mode), buffer_ptr);
+
+        if ((crrmode.rotation == 90) || (crrmode.rotation == 180)) {
+            const std::uint32_t current_pitch = epoc::get_byte_width(crrmode.size.x, epoc::get_bpp_from_display_mode(disp_mode));
+            flip_screen_image(buffer_ptr, current_pitch, crrmode.size.y);
+        }
+    }
+
+    bool screen::redraw(drivers::graphics_command_list_builder *cmd_builder, const bool need_bind) {
         if (need_update_visible_regions()) {
             recalculate_visible_regions();
         }
@@ -197,6 +222,8 @@ namespace eka2l1::epoc {
 
         // Done! Unbind and submit this to the driver
         cmd_builder->bind_bitmap(0);
+
+        return adrawwalker.total_redrawed_;
     }
 
     void screen::redraw(drivers::graphics_driver *driver) {
@@ -207,8 +234,12 @@ namespace eka2l1::epoc {
         // Make command list first, and bind our screen bitmap
         auto cmd_list = driver->new_command_list();
         auto cmd_builder = driver->new_command_builder(cmd_list.get());
-        redraw(cmd_builder.get(), true);
+        const bool performed = redraw(cmd_builder.get(), true);
         driver->submit_command_list(*cmd_list);
+
+        if (performed && sync_screen_buffer) {
+            sync_screen_buffer_data(driver);
+        }
 
         fire_screen_redraw_callbacks(false);
     }
@@ -255,8 +286,12 @@ namespace eka2l1::epoc {
             need_bind = false;
         }
 
-        redraw(cmd_builder.get(), need_bind);
+        const bool performed = redraw(cmd_builder.get(), need_bind);
         driver->submit_command_list(*cmd_list);
+
+        if (performed && sync_screen_buffer) {
+            sync_screen_buffer_data(driver);
+        }
     }
 
     static epoc::window_group *find_group_to_focus(epoc::window *root) {

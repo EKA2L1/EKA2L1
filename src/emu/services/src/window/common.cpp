@@ -123,6 +123,55 @@ namespace eka2l1::epoc {
 
         return epoc::display_mode::color_last;
     }
+    
+    int get_byte_width(const std::uint32_t pixels_width, const std::uint8_t bits_per_pixel) {
+        int word_width = 0;
+
+        switch (bits_per_pixel) {
+        case 1: {
+            word_width = (pixels_width + 31) / 32;
+            break;
+        }
+
+        case 2: {
+            word_width = (pixels_width + 15) / 16;
+            break;
+        }
+
+        case 4: {
+            word_width = (pixels_width + 7) / 8;
+            break;
+        }
+
+        case 8: {
+            word_width = (pixels_width + 3) / 4;
+            break;
+        }
+
+        case 12:
+        case 16: {
+            word_width = (pixels_width + 1) / 2;
+            break;
+        }
+
+        case 24: {
+            word_width = (((pixels_width * 3) + 11) / 12) * 3;
+            break;
+        }
+
+        case 32: {
+            word_width = pixels_width;
+            break;
+        }
+
+        default: {
+            assert(false);
+            break;
+        }
+        }
+
+        return word_width * 4;
+    }
 
     epoc::display_mode string_to_display_mode(const std::string &disp_str) {
         const std::string disp_str_lower = common::lowercase_string(disp_str);

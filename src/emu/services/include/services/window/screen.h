@@ -104,6 +104,8 @@ namespace eka2l1::epoc {
         std::uint32_t flags_ = 0;
         std::int32_t active_dsa_count_ = 0;
 
+        bool sync_screen_buffer = false;
+
         enum {
             FLAG_NEED_RECALC_VISIBLE = 1 << 0,
             FLAG_ORIENTATION_LOCK = 1 << 1,
@@ -169,6 +171,8 @@ namespace eka2l1::epoc {
 
         const void get_max_num_colors(int &colors, int &greys) const;
 
+        void sync_screen_buffer_data(drivers::graphics_driver *driver);
+
         /**
          * \brief Set screen mode.
          */
@@ -197,7 +201,7 @@ namespace eka2l1::epoc {
         void resize(drivers::graphics_driver *driver, const eka2l1::vec2 &new_size);
 
         void deinit(drivers::graphics_driver *driver);
-        void redraw(drivers::graphics_command_list_builder *builder, const bool need_bind);
+        bool redraw(drivers::graphics_command_list_builder *builder, const bool need_bind);
 
         /**
          * \brief Redraw the screen.

@@ -26,7 +26,43 @@
 #include <fstream>
 #include <yaml-cpp/yaml.h>
 
-namespace eka2l1::config {
+namespace eka2l1::config {    
+    screen_buffer_sync_option get_screen_buffer_sync_option_from_string(std::string str) {
+        str = common::lowercase_string(str);
+
+        if (str == "preferred") {
+            return screen_buffer_sync_option_preferred;
+        }
+
+        if (str == "on") {
+            return screen_buffer_sync_option_on;
+        }
+
+        if (str == "off") {
+            return screen_buffer_sync_option_off;
+        }
+
+        return screen_buffer_sync_option_preferred;
+    }
+    
+    const char *get_string_from_screen_buffer_sync_option(const screen_buffer_sync_option opt) {
+        switch (opt) {
+        case screen_buffer_sync_option_preferred:
+            return "preferred";
+
+        case screen_buffer_sync_option_on:
+            return "on";
+
+        case screen_buffer_sync_option_off:
+            return "off";
+
+        default:
+            break;
+        }
+
+        return nullptr;
+    }
+
     template <typename T, typename Q = T>
     void get_yaml_value(YAML::Node &config_node, const char *key, T *target_val, Q default_val) {
         try {
@@ -114,6 +150,7 @@ namespace eka2l1::config {
 
     void state::serialize(const bool with_bindings) {
         audio_master_volume = common::clamp(0, 100, audio_master_volume);
+        screen_buffer_sync_string = get_string_from_screen_buffer_sync_option(screen_buffer_sync);
 
         YAML::Emitter emitter;
         emitter << YAML::BeginMap;
@@ -149,6 +186,7 @@ namespace eka2l1::config {
 #undef OPTION
 
         audio_master_volume = common::clamp(0, 100, audio_master_volume);
+        screen_buffer_sync = get_screen_buffer_sync_option_from_string(screen_buffer_sync_string);
 
         if (with_bindings)
             keybinds.deserialize(fmt::format("bindings/{}.yml", current_keybind_profile));

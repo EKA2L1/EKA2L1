@@ -56,55 +56,6 @@ namespace eka2l1 {
         return epoc::color_bitmap;
     }
 
-    static int get_byte_width(const std::uint32_t pixels_width, const std::uint8_t bits_per_pixel) {
-        int word_width = 0;
-
-        switch (bits_per_pixel) {
-        case 1: {
-            word_width = (pixels_width + 31) / 32;
-            break;
-        }
-
-        case 2: {
-            word_width = (pixels_width + 15) / 16;
-            break;
-        }
-
-        case 4: {
-            word_width = (pixels_width + 7) / 8;
-            break;
-        }
-
-        case 8: {
-            word_width = (pixels_width + 3) / 4;
-            break;
-        }
-
-        case 12:
-        case 16: {
-            word_width = (pixels_width + 1) / 2;
-            break;
-        }
-
-        case 24: {
-            word_width = (((pixels_width * 3) + 11) / 12) * 3;
-            break;
-        }
-
-        case 32: {
-            word_width = pixels_width;
-            break;
-        }
-
-        default: {
-            assert(false);
-            break;
-        }
-        }
-
-        return word_width * 4;
-    }
-
     fbs_bitmap_data_info::fbs_bitmap_data_info()
         : dpm_(epoc::display_mode::none)
         , comp_(epoc::bitmap_file_compression::bitmap_file_no_compression)
@@ -448,7 +399,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        std::size_t size_when_compressed = get_byte_width(mbmf_.sbm_headers[idx_].size_pixels.x,
+        std::size_t size_when_compressed = epoc::get_byte_width(mbmf_.sbm_headers[idx_].size_pixels.x,
                                                mbmf_.sbm_headers[idx_].bit_per_pixels)
             * mbmf_.sbm_headers[idx_].size_pixels.y;
 
@@ -735,7 +686,7 @@ namespace eka2l1 {
             return 0;
         }
 
-        return get_byte_width(size.x, epoc::get_bpp_from_display_mode(bpp)) * size.y;
+        return epoc::get_byte_width(size.x, epoc::get_bpp_from_display_mode(bpp)) * size.y;
     }
 
     static std::uint32_t calculate_reserved_each_side(const std::uint32_t height) {
@@ -761,7 +712,7 @@ namespace eka2l1 {
         }
 
         // Calculate the size
-        const std::size_t byte_width = get_byte_width(info.size_.x, epoc::get_bpp_from_display_mode(info.dpm_));
+        const std::size_t byte_width = epoc::get_byte_width(info.size_.x, epoc::get_bpp_from_display_mode(info.dpm_));
 
         std::size_t original_bytes = (info.data_size_ == 0) ? calculate_aligned_bitmap_bytes(
                                          info.size_, info.dpm_)
@@ -978,7 +929,7 @@ namespace eka2l1 {
         if (fbss->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
             new_bmp = bmp;
 
-            const int dest_byte_width = get_byte_width(new_size.x, bmp->bitmap_->header_.bit_per_pixels);
+            const int dest_byte_width = epoc::get_byte_width(new_size.x, bmp->bitmap_->header_.bit_per_pixels);
             const int size_total = dest_byte_width * new_size.y;
             const int size_added_reserve = size_total + reserved_each_size * dest_byte_width * 2;
 

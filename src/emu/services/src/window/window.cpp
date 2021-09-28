@@ -1680,6 +1680,12 @@ namespace eka2l1 {
 
         // Set default focus screen to be the first
         focus_screen_ = screens;
+
+        config::state *config = kern->get_config();
+
+        if (config) {
+            set_screen_sync_buffer_option(config->screen_buffer_sync);
+        }
     }
 
     epoc::screen *window_server::get_screen(const int number) {
@@ -1841,6 +1847,8 @@ namespace eka2l1 {
         init_screens();
         init_ws_mem();
         init_repeatable();
+
+        
 
         loaded = true;
     }
@@ -2134,6 +2142,24 @@ namespace eka2l1 {
             if (cli) {
                 cli->send_screen_change_events(scr);
             }
+        }
+    }
+
+    void window_server::set_screen_sync_buffer_option(const int option) {
+        bool on = false;
+
+        if (option == config::screen_buffer_sync_option_preferred) {
+            if (kern->is_eka1()) {
+                on = true;
+            } else {
+                on = false;
+            }
+        } else if (option == config::screen_buffer_sync_option_on) {
+            on = true;
+        }
+
+        for (epoc::screen *scr = screens; scr; scr = scr->next) {
+            scr->sync_screen_buffer = on;
         }
     }
 }
