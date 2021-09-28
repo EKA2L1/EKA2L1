@@ -40,6 +40,23 @@ namespace eka2l1::drivers {
     struct command_list;
     class graphics_driver;
 
+    /**
+     * BPP to texture format table:
+     * 
+     * BPP in EKA2L1 follows exactly the order stored on Symbian. The general rules always will be:
+     * 
+     * - RGB components order will be consequencely placed from high bits to low bits
+     * - If the BPP supports alpha, the alpha will be on top of RGB. So the order is always ARGB
+     * 
+     * For OpenGL (format, internal format, upload data type, swizzle (optional)):
+     * 
+     * - 8bits: GL_R, GL_R8, GL_BYTE, swizzle RRRR
+     * - 12bits: GL_RGBA, GL_RGBA4, GL_UNSIGNED_SHORT_4_4_4_4, swizzle GBA1
+     * - 16bits: GL_RGB, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, swizzle RGB1
+     * - 24bits: GL_RGB, GL_RGB, GL_BYTE, swizzle BGR1
+     * - 32bits: GL_BGRA, GL_BGRA, GL_BYTE, swizzle RGBA
+     */
+
     using graphics_driver_dialog_callback = std::function<void(const char *)>;
 
     /** \brief Create a new bitmap in the server size.
@@ -98,6 +115,23 @@ namespace eka2l1::drivers {
      */
     drivers::handle create_buffer(graphics_driver *driver, const std::size_t initial_size, const buffer_hint hint,
         const buffer_upload_hint upload_hint);
+
+    /**
+     * @brief Read bitmap data from a region into memory buffer.
+     * 
+     * The data will also be word-aligned each line pitch.
+     * 
+     * @param h             Handle to the bitmap.
+     * @param pos           The position to start clipping bitmap data from.
+     * @param size          The size of the clipped bitmap region.
+     * @param bpp           The target BPP that will be written to the memory.
+     * @param buffer_ptr    The buffer to read the data into.
+     * @param buffer_size   Size of the buffer to read the data to.
+     * 
+     * @returns False on error (either the buffer size is inefficient or some errors happen during the read).
+     */
+    bool read_bitmap(graphics_driver *driver, drivers::handle h, const eka2l1::point &pos, const eka2l1::object_size &size,
+        const std::uint32_t bpp, std::uint8_t *buffer_ptr);
 
     struct graphics_command_list {
         virtual ~graphics_command_list() {

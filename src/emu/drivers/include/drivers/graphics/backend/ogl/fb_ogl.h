@@ -37,6 +37,7 @@ namespace eka2l1::drivers {
         framebuffer_bind_type last_bind_type;
 
         int max_color_attachment{ 0 };
+        graphics_driver *bind_driver;
 
     public:
         std::uint32_t get_fbo() const {
@@ -59,5 +60,7 @@ namespace eka2l1::drivers {
         bool remove_color_buffer(const std::int32_t position) override;
         bool blit(const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect, const std::uint32_t flags,
             const filter_option copy_filter) override;
+
+        bool read(const texture_format type, const texture_data_type dest_format, const eka2l1::point &pos, const eka2l1::object_size &size, std::uint8_t *buffer_ptr) override;
     };
 }

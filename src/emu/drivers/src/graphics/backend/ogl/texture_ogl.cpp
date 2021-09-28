@@ -25,69 +25,6 @@
 #include <cassert>
 
 namespace eka2l1::drivers {
-    static GLint to_gl_format(const texture_format format) {
-        switch (format) {
-        case texture_format::r:
-            return GL_RED;
-
-        case texture_format::r8:
-            return GL_R8;
-
-        case texture_format::rg:
-            return GL_RG;
-
-        case texture_format::rgb:
-            return GL_RGB;
-
-        case texture_format::bgr:
-            return GL_BGR;
-
-        case texture_format::bgra:
-            return GL_BGRA;
-
-        case texture_format::rgba:
-            return GL_RGBA;
-
-        case texture_format::rgba4:
-            return GL_RGBA4;
-
-        case texture_format::depth24_stencil8:
-            return GL_DEPTH24_STENCIL8;
-
-        case texture_format::depth_stencil:
-            return GL_DEPTH_STENCIL;
-
-        default:
-            break;
-        }
-
-        return 0;
-    }
-
-    static GLint to_gl_data_type(const texture_data_type data_type) {
-        switch (data_type) {
-        case texture_data_type::ubyte:
-            return GL_UNSIGNED_BYTE;
-
-        case texture_data_type::ushort:
-            return GL_UNSIGNED_SHORT;
-
-        case texture_data_type::uint_24_8:
-            return GL_UNSIGNED_INT_24_8;
-
-        case texture_data_type::ushort_4_4_4_4:
-            return GL_UNSIGNED_SHORT_4_4_4_4;
-
-        case texture_data_type::ushort_5_6_5:
-            return GL_UNSIGNED_SHORT_5_6_5;
-
-        default:
-            break;
-        }
-
-        return 0;
-    }
-
     static GLint to_gl_tex_dim(const int dim) {
         switch (dim) {
         case 1:
@@ -111,20 +48,20 @@ namespace eka2l1::drivers {
 
         switch (dimensions) {
         case 1:
-            glTexImage1D(GL_TEXTURE_1D, mip_level, to_gl_format(internal_format), tex_size.x, 0, to_gl_format(format),
-                to_gl_data_type(tex_data_type), tex_data);
+            glTexImage1D(GL_TEXTURE_1D, mip_level, texture_format_to_gl_enum(internal_format), tex_size.x, 0, texture_format_to_gl_enum(format),
+                texture_data_type_to_gl_enum(tex_data_type), tex_data);
 
             break;
 
         case 2:
-            glTexImage2D(GL_TEXTURE_2D, mip_level, to_gl_format(internal_format), tex_size.x, tex_size.y, 0, to_gl_format(format),
-                to_gl_data_type(tex_data_type), tex_data);
+            glTexImage2D(GL_TEXTURE_2D, mip_level, texture_format_to_gl_enum(internal_format), tex_size.x, tex_size.y, 0, texture_format_to_gl_enum(format),
+                texture_data_type_to_gl_enum(tex_data_type), tex_data);
 
             break;
 
         case 3:
-            glTexImage3D(GL_TEXTURE_3D, mip_level, to_gl_format(internal_format), tex_size.x, tex_size.y, tex_size.z, 0, to_gl_format(format),
-                to_gl_data_type(tex_data_type), tex_data);
+            glTexImage3D(GL_TEXTURE_3D, mip_level, texture_format_to_gl_enum(internal_format), tex_size.x, tex_size.y, tex_size.z, 0, texture_format_to_gl_enum(format),
+                texture_data_type_to_gl_enum(tex_data_type), tex_data);
 
             break;
 
@@ -278,17 +215,17 @@ namespace eka2l1::drivers {
 
         switch (dimensions) {
         case 1:
-            glTexSubImage1D(GL_TEXTURE_1D, mip_lvl, offset.x, size.x, to_gl_format(data_format), to_gl_data_type(data_type), data);
+            glTexSubImage1D(GL_TEXTURE_1D, mip_lvl, offset.x, size.x, texture_format_to_gl_enum(data_format), texture_data_type_to_gl_enum(data_type), data);
             break;
 
         case 2: {
-            glTexSubImage2D(GL_TEXTURE_2D, mip_lvl, offset.x, offset.y, size.x, size.y, to_gl_format(data_format), to_gl_data_type(data_type), data);
+            glTexSubImage2D(GL_TEXTURE_2D, mip_lvl, offset.x, offset.y, size.x, size.y, texture_format_to_gl_enum(data_format), texture_data_type_to_gl_enum(data_type), data);
             break;
         }
 
         case 3:
-            glTexSubImage3D(GL_TEXTURE_3D, mip_lvl, offset.x, offset.y, offset.z, size.x, size.y, size.z, to_gl_format(data_format),
-                to_gl_data_type(data_type), data);
+            glTexSubImage3D(GL_TEXTURE_3D, mip_lvl, offset.x, offset.y, offset.z, size.x, size.y, size.z, texture_format_to_gl_enum(data_format),
+                texture_data_type_to_gl_enum(data_type), data);
 
             break;
 

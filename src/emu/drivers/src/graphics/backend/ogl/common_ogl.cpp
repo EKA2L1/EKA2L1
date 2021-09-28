@@ -37,6 +37,69 @@ namespace eka2l1::drivers {
 
         return GL_INVALID_ENUM;
     }
+    
+    GLint texture_format_to_gl_enum(const texture_format format) {
+        switch (format) {
+        case texture_format::r:
+            return GL_RED;
+
+        case texture_format::r8:
+            return GL_R8;
+
+        case texture_format::rg:
+            return GL_RG;
+
+        case texture_format::rgb:
+            return GL_RGB;
+
+        case texture_format::bgr:
+            return GL_BGR;
+
+        case texture_format::bgra:
+            return GL_BGRA;
+
+        case texture_format::rgba:
+            return GL_RGBA;
+
+        case texture_format::rgba4:
+            return GL_RGBA4;
+
+        case texture_format::depth24_stencil8:
+            return GL_DEPTH24_STENCIL8;
+
+        case texture_format::depth_stencil:
+            return GL_DEPTH_STENCIL;
+
+        default:
+            break;
+        }
+
+        return 0;
+    }
+
+    GLint texture_data_type_to_gl_enum(const texture_data_type data_type) {
+        switch (data_type) {
+        case texture_data_type::ubyte:
+            return GL_UNSIGNED_BYTE;
+
+        case texture_data_type::ushort:
+            return GL_UNSIGNED_SHORT;
+
+        case texture_data_type::uint_24_8:
+            return GL_UNSIGNED_INT_24_8;
+
+        case texture_data_type::ushort_4_4_4_4:
+            return GL_UNSIGNED_SHORT_4_4_4_4;
+
+        case texture_data_type::ushort_5_6_5:
+            return GL_UNSIGNED_SHORT_5_6_5;
+
+        default:
+            break;
+        }
+
+        return 0;
+    }
 
     GLint to_filter_option(const filter_option op) {
         switch (op) {

@@ -353,6 +353,71 @@ namespace eka2l1::drivers {
         set_viewport(eka2l1::rect(eka2l1::vec2(0, 0), bmp->tex->get_size()));
     }
 
+    void shared_graphics_driver::read_bitmap(command_helper &helper) {
+        drivers::handle handle = 0;
+        helper.pop(handle);
+        
+        bitmap *bmp = get_bitmap(handle);
+
+        if (!bmp) {
+            helper.finish(this, 0);
+            return;
+        }
+
+        eka2l1::point pos(0, 0);
+        eka2l1::object_size size(0, 0);
+        std::uint32_t bpp = 0;
+
+        helper.pop(pos);
+        helper.pop(size);
+        helper.pop(bpp);
+
+        texture_format target_format = texture_format::rgba;
+        texture_data_type target_data_type = texture_data_type::ubyte;
+
+        switch (bpp) {
+        case 8:
+        case 24:
+        case 32:
+            break;
+
+        case 12:
+            target_format = texture_format::rgba4;
+            target_data_type = texture_data_type::ushort_4_4_4_4;
+            break;
+
+        case 16:
+            target_format = texture_format::rgb;
+            target_data_type = texture_data_type::ushort_5_6_5;
+            break;
+
+        default:
+            LOG_ERROR(DRIVER_GRAPHICS, "Unsupported BPP type to read format from (value={})", bpp);
+            helper.finish(this, 0);
+
+            return;
+        }
+
+        std::uint8_t *ptr = nullptr;
+        helper.pop(ptr);
+
+        if (!ptr) {
+            helper.finish(this, 0);
+            return;
+        }
+
+        if (!bmp->fb) {
+            // Make new one
+            bmp->init_fb(this);
+        }
+
+        bmp->fb->bind(this, drivers::framebuffer_bind_read_draw);
+        const bool res = bmp->fb->read(target_format, target_data_type, pos, size, ptr);
+        bmp->fb->unbind(this);
+        
+        helper.finish(this, res);
+    }
+
     void shared_graphics_driver::destroy_bitmap(command_helper &helper) {
         drivers::handle h = 0;
         helper.pop(h);
@@ -827,6 +892,10 @@ namespace eka2l1::drivers {
             set_swizzle(helper);
             break;
         }
+
+        case graphics_driver_read_bitmap:
+            read_bitmap(helper);
+            break;
 
         default:
             LOG_ERROR(DRIVER_GRAPHICS, "Unimplemented opcode {} for graphics driver", cmd->opcode_);

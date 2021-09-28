@@ -143,6 +143,11 @@ namespace eka2l1::drivers {
 
         return handle_num;
     }
+    
+    bool read_bitmap(graphics_driver *driver, drivers::handle h, const eka2l1::point &pos, const eka2l1::object_size &size,
+        const std::uint32_t bpp, std::uint8_t *buffer_ptr) {
+        return send_sync_command(driver, graphics_driver_read_bitmap, h, pos.x, pos.y, size.x, size.y, bpp, buffer_ptr);
+    }
 
     server_graphics_command_list_builder::server_graphics_command_list_builder(graphics_command_list *cmd_list)
         : graphics_command_list_builder(cmd_list) {

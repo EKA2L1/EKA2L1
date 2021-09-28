@@ -105,6 +105,7 @@ namespace eka2l1::drivers {
             = 0;
 
         virtual bool remove_color_buffer(const std::int32_t position) = 0;
+        virtual bool read(const texture_format type, const texture_data_type dest_format, const eka2l1::point &pos, const eka2l1::object_size &size, std::uint8_t *buffer_ptr) = 0;
 
         virtual std::uint64_t color_attachment_handle(const std::int32_t attachment_id);
     };

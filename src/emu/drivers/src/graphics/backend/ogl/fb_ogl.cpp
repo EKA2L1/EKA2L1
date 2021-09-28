@@ -29,7 +29,8 @@ namespace eka2l1::drivers {
     ogl_framebuffer::ogl_framebuffer(std::initializer_list<texture *> color_buffer_list, texture *depth_and_stencil_buffer)
         : framebuffer(color_buffer_list, depth_and_stencil_buffer)
         , last_bind_type(framebuffer_bind_read_draw)
-        , last_fb(-1) {
+        , last_fb(-1)
+        , bind_driver(nullptr) {
         glGenFramebuffers(1, &fbo);
         bind(nullptr, framebuffer_bind_read_draw);
 
@@ -94,6 +95,7 @@ namespace eka2l1::drivers {
         glBindFramebuffer(enums.first, fbo);
 
         last_bind_type = type_bind;
+        driver = driver;
     }
 
     void ogl_framebuffer::unbind(graphics_driver *driver) {
@@ -103,6 +105,8 @@ namespace eka2l1::drivers {
 
             last_fb = -1;
         }
+
+        bind_driver = nullptr;
     }
 
     std::int32_t ogl_framebuffer::set_color_buffer(texture *tex, const std::int32_t position) {
@@ -207,5 +211,109 @@ namespace eka2l1::drivers {
             blit_mask_ogl, to_filter_option(copy_filter));
 
         return true;
+    }
+
+    bool ogl_framebuffer::read(const texture_format type, const texture_data_type dest_format, const eka2l1::point &pos, const eka2l1::object_size &size, std::uint8_t *buffer_ptr) {
+        if ((type != texture_format::rgb) && (type != texture_format::rgba) && (type != texture_format::rgba4)) {
+            LOG_ERROR(DRIVER_GRAPHICS, "Framebuffer read only supports RGB/RGBA/RGBA4 (got format={})", static_cast<int>(type));
+            return false;
+        }
+
+        if (((type == texture_format::rgba4) && (dest_format != texture_data_type::ushort_4_4_4_4)) ||
+            ((type == texture_format::rgb) && (dest_format != texture_data_type::ushort_5_6_5)) ||
+            ((type != texture_format::rgba4) && (dest_format == texture_data_type::ushort_4_4_4_4)) ||
+            ((type != texture_format::rgb) && (dest_format == texture_data_type::ushort_5_6_5))) {
+            LOG_ERROR(DRIVER_GRAPHICS, "Conflicted read back type/format!");
+            return false;
+        }
+        
+        GLuint format_gl = texture_data_type_to_gl_enum(dest_format);
+        GLuint type_gl = texture_format_to_gl_enum(type);
+
+        GLint read_type = 0;
+        GLint read_format = 0;
+
+        glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_TYPE, &read_type);
+        glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_FORMAT, &read_format);
+
+        if ((read_format == format_gl) && (read_type == type_gl)) {
+            glReadPixels(pos.x, pos.y, size.x, size.y, type_gl, format_gl, buffer_ptr);
+            return true;
+        } else {
+            // Read RGBA than do manual conversion. Isn't this just too cruel!!
+            std::vector<std::uint8_t> temp_data;
+            temp_data.resize(size.x * 4 * size.y);
+
+            glReadPixels(pos.x, pos.y, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, temp_data.data());
+    
+            switch (dest_format) {
+            case texture_data_type::ushort_4_4_4_4: {
+                for (int y = 0; y < size.y; y++) {
+                    std::uint16_t *ptr = reinterpret_cast<std::uint16_t*>(buffer_ptr + (y * (((size.x * 2) + 3) >> 2) << 2));
+                    std::uint32_t *ptr_source = reinterpret_cast<std::uint32_t*>(temp_data.data() + y * size.x * 4);
+
+                    for (int x = 0; x < size.x; x++) {
+                        *ptr = ((((*ptr_source & 0xFF) / 17) & 0xF) << 8) | (((((*ptr_source >> 24) & 0xFF) / 17) & 0xF) << 12)
+                            | (((((*ptr_source >> 8) & 0xFF) / 17) & 0xF) << 4) | ((((*ptr_source >> 16) & 0xFF) / 17) & 0xF);
+                    
+                        ptr++;
+                        ptr_source++;
+                    }
+                }
+
+                return true;
+            }
+
+            case texture_data_type::ushort_5_6_5: {
+                for (int y = 0; y < size.y; y++) {
+                    std::uint16_t *ptr = reinterpret_cast<std::uint16_t*>(buffer_ptr + (y * (((size.x * 2) + 3) >> 2) << 2));
+                    std::uint32_t *ptr_source = reinterpret_cast<std::uint32_t*>(temp_data.data() + y * size.x * 4);
+
+                    for (int x = 0; x < size.x; x++) {
+                        // In order: R, G, B
+                        *ptr = (((*ptr_source & 0xFF) & 0xF8) << 8) | ((((*ptr_source >> 8) & 0xFF) & 0xFC) << 3) |
+                            ((((*ptr_source >> 16) & 0xFF) & 0xF8) >> 3);
+
+                        ptr++;
+                        ptr_source++;
+                    }
+                }
+
+                return true;
+            }
+
+            case texture_data_type::ubyte: {
+                // Reorder the data
+                std::uint32_t bytes_per_pixel = (type == texture_format::rgb) ? 3 : 4;
+
+                for (int y = 0; y < size.y; y++) {
+                    std::uint8_t *ptr = buffer_ptr + (y * (((size.x * bytes_per_pixel) + 3) >> 2) << 2);
+                    std::uint8_t *ptr_source = temp_data.data() + y * size.x * 4;
+
+                    for (int x = 0; x < size.x; x++) {
+                        // In order: R, G, B
+                        ptr[0] = ptr_source[0];
+                        ptr[1] = ptr_source[1];
+                        ptr[2] = ptr_source[2];
+
+                        if (bytes_per_pixel == 4) {
+                            ptr[3] = ptr_source[3];
+                        }
+
+                        ptr += bytes_per_pixel;
+                        ptr_source += 4;
+                    }
+                }
+
+                return true;
+            }
+
+            default:
+                LOG_ERROR(DRIVER_GRAPHICS, "Unsupported format for read conversion {}", static_cast<int>(dest_format));
+                break;
+            }
+        }
+
+        return false;
     }
 }
