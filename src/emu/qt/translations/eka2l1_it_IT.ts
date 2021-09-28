@@ -851,34 +851,34 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="770"/>
       <source>Graphics</source>
-      <translation type="unfinished">Graphics</translation>
+      <translation>Grafica</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="782"/>
       <source>Screen buffer sync</source>
-      <translation type="unfinished">Screen buffer sync</translation>
+      <translation>Sincronizzazione buffer schermo</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="796"/>
       <source>Preferred</source>
-      <translation type="unfinished">Preferred</translation>
+      <translation>Preferiti</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="806"/>
       <source>Enable</source>
-      <translation type="unfinished">Enable</translation>
+      <translation>Attiva</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="801"/>
       <source>Disable</source>
-      <translation type="unfinished">Disable</translation>
+      <translation>Disattiva</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="778"/>
       <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
-      <translation type="unfinished">This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
-Preferred option will automatically enable this on S60v1/S60v2 devices.</translation>
+      <translation>Questo permette ai software emulati di avere abilità di registrazione e previene il lampeggiare di alcuni vecchi giochi S60v1/S60v2.
+Per opzione preferita sarà attivo su dispositivi S60v1/S60v2.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="826"/>
