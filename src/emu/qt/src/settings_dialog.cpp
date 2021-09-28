@@ -255,6 +255,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     ui_->system_prop_imei_edit->setText(QString::fromUtf8(configuration_.imei.c_str()));
     ui_->system_audio_vol_slider->setValue(configuration_.audio_master_volume);
     ui_->system_audio_current_val_label->setText(QString("%1").arg(configuration_.audio_master_volume));
+    ui_->system_screen_buffer_sync_combo->setCurrentIndex(static_cast<int>(configuration_.screen_buffer_sync));
 
     QSettings settings;
     ui_->interface_status_bar_checkbox->setChecked(settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
@@ -369,6 +370,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->system_prop_bat_slider, &QSlider::valueChanged, this, &settings_dialog::on_system_battery_slider_value_moved);
     connect(ui_->system_prop_imei_check_btn, &QPushButton::clicked, this, &settings_dialog::on_check_imei_validity_clicked);
     connect(ui_->system_audio_vol_slider, &QSlider::valueChanged, this, &settings_dialog::on_master_volume_value_changed);
+    connect(ui_->system_screen_buffer_sync_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_screen_buffer_sync_option_changed);
 
     connect(ui_->settings_tab, &QTabWidget::currentChanged, this, &settings_dialog::on_tab_changed);
     connect(ui_->control_profile_add_btn, &QPushButton::clicked, this, &settings_dialog::on_control_profile_add_clicked);
@@ -1143,4 +1145,15 @@ void settings_dialog::on_background_color_pick_button_clicked() {
     settings.setValue(BACKGROUND_COLOR_DISPLAY_SETTING_NAME, choosen_color);
 
     delete dialog;
+}
+
+void settings_dialog::on_screen_buffer_sync_option_changed(int index) {
+    // Index correspond to level type
+    configuration_.screen_buffer_sync = static_cast<eka2l1::config::screen_buffer_sync_option>(index);
+    configuration_.serialize(false);
+
+    eka2l1::window_server *server = get_window_server_through_system(system_);
+    if (server) {
+        server->set_screen_sync_buffer_option(index);
+    }
 }

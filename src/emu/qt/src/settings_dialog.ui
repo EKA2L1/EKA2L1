@@ -29,7 +29,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="general_widget">
       <attribute name="title">
@@ -758,6 +758,55 @@
             </item>
             <item>
              <widget class="QComboBox" name="system_prop_lang_combobox"/>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QGroupBox" name="system_graphics_group_box">
+         <property name="title">
+          <string>Graphics</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_13">
+          <item row="0" column="0">
+           <layout class="QHBoxLayout" name="system_screen_buffer_sync_layout" stretch="1,2">
+            <item>
+             <widget class="QLabel" name="system_screen_buffer_sync_label">
+              <property name="toolTip">
+               <string>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
+Preferred option will automatically enable this on S60v1/S60v2 devices.</string>
+              </property>
+              <property name="text">
+               <string>Screen buffer sync</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="system_screen_buffer_sync_combo">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <item>
+               <property name="text">
+                <string>Preferred</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Disable</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Enable</string>
+               </property>
+              </item>
+             </widget>
             </item>
            </layout>
           </item>
