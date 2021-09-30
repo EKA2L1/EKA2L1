@@ -851,27 +851,27 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="770"/>
       <source>Graphics</source>
-      <translation type="unfinished">Graphics</translation>
+      <translation>Gráficos</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="782"/>
       <source>Screen buffer sync</source>
-      <translation type="unfinished">Screen buffer sync</translation>
+      <translation>Sincronização do buffer de tela</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="796"/>
       <source>Preferred</source>
-      <translation type="unfinished">Preferred</translation>
+      <translation>Preferenciais</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="806"/>
       <source>Enable</source>
-      <translation type="unfinished">Enable</translation>
+      <translation>Habilitar</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="801"/>
       <source>Disable</source>
-      <translation type="unfinished">Disable</translation>
+      <translation>Desabilitar</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="778"/>
