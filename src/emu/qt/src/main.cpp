@@ -23,10 +23,16 @@
 #include <qt/thread.h>
 #include <qt/utils.h>
 
+#include <common/fileutils.h>
+#include <common/path.h>
+#include <common/platform.h>
+
 #include <QApplication>
+#include <QDir>
 #include <QFile>
 #include <QLocale>
 #include <QSettings>
+#include <QStandardPaths>
 #include <QTranslator>
 
 #include <memory>
@@ -68,6 +74,19 @@ int main(int argc, char *argv[]) {
     
     qRegisterMetaType<std::vector<std::string>>("std::vector<std::string>");
     qRegisterMetaType<eka2l1::drivers::input_event>("eka2l1::drivers::input_event");
+#if EKA2L1_PLATFORM(MACOS)
+    QString data_path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/EKA2L1/";
+    QDir root_dir = QDir::root();
+    root_dir.mkpath(data_path);
+    std::string data_path_str = data_path.toUtf8().toStdString();
+    
+    QString app_path = QDir(QCoreApplication::applicationDirPath()).path();
+    std::string app_path_str = app_path.toUtf8().toStdString();
+    eka2l1::common::copy_folder(app_path_str + "/patch", data_path_str + "/patch", 0, nullptr);
+    eka2l1::common::copy_folder(app_path_str + "/resources", data_path_str + "/resources", 0, nullptr);
+    
+    eka2l1::set_current_directory(data_path_str);
+#endif
 
     eka2l1::desktop::emulator emulator_state;
     return eka2l1::desktop::emulator_entry(a, emulator_state, argc, const_cast<const char **>(argv));

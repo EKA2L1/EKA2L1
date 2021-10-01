@@ -186,6 +186,12 @@ if(APPLE)
     target_sources(eka2l1_qt PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/duck.icns")
     set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/duck.icns" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 
+    add_custom_command(
+        TARGET eka2l1_qt
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:eka2l1_qt>/patch"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/bin/patch/" "$<TARGET_FILE_DIR:eka2l1_qt>/patch/")
+
     # Update library references to make the bundle portable
     include(DolphinPostprocessBundle)
     dolphin_postprocess_bundle(eka2l1_qt)

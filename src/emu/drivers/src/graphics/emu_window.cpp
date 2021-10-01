@@ -49,6 +49,7 @@ namespace eka2l1 {
         bool init_window_library(const window_api win_type) {
             switch (win_type) {
             case window_api::glfw:
+                glfwInitHint(GLFW_COCOA_CHDIR_RESOURCES, GLFW_FALSE);
                 return glfwInit() == GLFW_TRUE ? true : false;
 
             default:
