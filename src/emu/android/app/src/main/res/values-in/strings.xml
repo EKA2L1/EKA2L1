@@ -30,8 +30,8 @@
     <string name="recommended_devices_to_install">Perangkat anjuran untuk dipasang</string>
     <string name="wiki_info">Untuk informasi lanjut mengenai pemasangan perangkat, silakan periksa wiki kami:</string>
     <string name="install_rpkg_corrupt">Berkas RPKG yang disediakan rusak!</string>
-    <string name="install_rpkg_file_not_found">File RPKG tidak bisa dibuka!</string>
-    <string name="install_raw_dump_fail_to_copy">Gagal menyalin file raw dump ke tempat tujuan!</string>
+    <string name="install_rpkg_file_not_found">Berkas RPKG tidak bisa dibuka!</string>
+    <string name="install_raw_dump_fail_to_copy">Gagal menyalin berkas raw dump ke tempat tujuan!</string>
     <string name="install_rom_fail_to_copy">Gagal menyalin ROM ke tempat tujuan!</string>
     <string name="install_rpkg_insufficent_size">Ukuran berkas RPKG terlalu kecil, dump mungkin tidak akan selesai!</string>
     <string name="install_already_exist">Perangkat yang dipasang sudah ada!</string>
