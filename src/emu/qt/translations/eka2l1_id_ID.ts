@@ -16,12 +16,12 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="50"/>
       <source>&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</source>
-      <translation>&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</translation>
+      <translation>&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; cabang &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="53"/>
       <source>&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</source>
-      <translation>&lt;b&gt;(C) 2018- Tim EKA2L1&lt;/b&gt;&lt;br&gt;&lt;b&gt;Terima kasih karena telah menggunakan emulator ini!&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;(C) 2018- Tim EKA2L1&lt;/b&gt;&lt;br&gt;&lt;b&gt;Terima kasih telah menggunakan emulator ini!&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="64"/>
@@ -31,7 +31,7 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="78"/>
       <source>&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</source>
-      <translation>&lt;b&gt;Kontributor:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Penyumbang:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="92"/>
@@ -41,7 +41,7 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="106"/>
       <source>&lt;b&gt;Honors:&lt;/b&gt;&lt;br&gt;</source>
-      <translation>&lt;b&gt;Penghargaan:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Penghormatan:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="120"/>
@@ -77,12 +77,12 @@
       <location filename="../src/device_install_dialog.ui" line="174"/>
       <location filename="../src/device_install_dialog.ui" line="207"/>
       <source>Browse</source>
-      <translation>Jelajah</translation>
+      <translation>Telusur</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="80"/>
       <source>Choose the installation method</source>
-      <translation>Pilih metode instalasi</translation>
+      <translation>Pilih metode pemasangan</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="94"/>
@@ -117,7 +117,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="200"/>
       <source>Device %1 (%2) has been successfully installed!</source>
-      <translation>Perangkat %1 (%2) telah terpasang dengan sukses!</translation>
+      <translation>Perangkat %1 (%2) telah berhasil dipasang!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="208"/>
@@ -132,7 +132,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="216"/>
       <source>One of the FPSX files provided in the firmware is corrupted!</source>
-      <translation>Salah satu berkas FPSX yang terkandung dalam firmware rusak!</translation>
+      <translation>Salah satu berkas FPSX yang tersedia dalam firmware-nya rusak!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="220"/>
@@ -147,12 +147,12 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="228"/>
       <source>Some files provided for installation do not exist anymore. Please keep them intact until the installation is done!</source>
-      <translation>Beberapa berkas untuk pemasangan (installation) tak lagi ditemukan. Tolong jangan diubah hingga pemasangan selesai!</translation>
+      <translation>Beberapa berkas untuk pemasangan (installation) tak lagi ditemukan. Mohon jangan diubah hingga pemasangan selesai!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="232"/>
       <source>The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</source>
-      <translation>ROFS dalam berkas firmware-nya rusak! Pastikan berkas firmware Anda tidak rusak.</translation>
+      <translation>ROFS dalam berkas firmware-nya rusak! Pastikan berkas firmware Anda tidak rusak (corrupt).</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="236"/>
@@ -162,12 +162,12 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="240"/>
       <source>The provided ROM is corrupted! Please make sure your ROM is valid!</source>
-      <translation>ROM yang dipilih rusak! Pastikan ROM sah!</translation>
+      <translation>ROM yang dipilih rusak! Pastikan ROM absah!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="244"/>
       <source>The provided RPKG is corrupted! Please make sure your RPKG is valid!</source>
-      <translation>RPKG yang dipilih rusak! Pastikan RPKG sah!</translation>
+      <translation>RPKG yang dipilih rusak! Pastikan RPKG absah!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="248"/>
@@ -340,7 +340,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="295"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
-      <translation>Beberapa pemetaan tombol terhubung dengan tombol tetikus. Sehingga layar sentuh dinonaktifkan.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Layar sentuh dapat diaktifkan kembali dengan memetakan tombol tetikus dengan tombol papan ketik.</translation>
+      <translation>Beberapa pemetaan tombol dipautkan dengan tombol tetikus. Sehingga layar sentuh dinonaktifkan.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Layar sentuh dapat diaktifkan kembali dengan memetakan tombol tetikus dengan tombol papan ketik.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="296"/>
@@ -452,7 +452,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="916"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
-      <translation>Gagal memasang paket pada jalur: %1. Pastikan jalurnya ke berkas SIS/SISX yang sahih.</translation>
+      <translation>Gagal memasang paket pada jalur: %1. Pastikan jalurnya ke berkas SIS/SISX yang absah.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="923"/>
@@ -583,7 +583,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="169"/>
       <source>Inherit these settings for child processes</source>
-      <translation type="unfinished">Inherit these settings for child processes</translation>
+      <translation>Wariskan pengaturan ini untuk child process</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="185"/>
@@ -608,7 +608,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="227"/>
       <source>This option will not be saved after emulator shutdown. Non-effective when GDBStub is enabled.</source>
-      <translation>Opsi ini tidak akan disimpan setelah emulator dimatikan. Tidak efektif jika GDBStub diaktifkan.</translation>
+      <translation>Opsi ini tidak akan disimpan setelah emulator dimatikan. Tidak mangkus jika GDBStub diaktifkan.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="230"/>
@@ -628,7 +628,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="257"/>
       <source>Enable kernel tracing that is used in driver. Slowdown expected on enable.</source>
-      <translation>Aktifkan pelacakan kernel yang digunakan di driver. Pelambatan diharapkan aktif.</translation>
+      <translation>Aktifkan pelacakan kernel yang digunakan di pengandar (driver). Ketika diaktifkan kadang lambat.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="260"/>
@@ -648,7 +648,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="291"/>
       <source>Browse</source>
-      <translation>Jelajah</translation>
+      <translation>Telusur</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="300"/>
@@ -683,7 +683,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="379"/>
       <source>Enable nearest neighbor filtering</source>
-      <translation>Hidupkan tapisan Nearest Neighbor</translation>
+      <translation>Aktifkan tapisan Nearest Neighbor</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="386"/>
@@ -723,7 +723,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="446"/>
       <source>Disable status bar</source>
-      <translation type="unfinished">Disable status bar</translation>
+      <translation>Nonaktifkan bilah status</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="457"/>
@@ -781,7 +781,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="576"/>
       <source>Validate current device</source>
-      <translation>Sahihkan perangkat saat ini</translation>
+      <translation>Absahkan perangkat saat ini</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="588"/>
@@ -801,7 +801,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="615"/>
       <source>Dyncom (CPU interpreter)</source>
-      <translation type="unfinished">Dyncom (CPU interpreter)</translation>
+      <translation>Dyncom (Penafsir CPU)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="627"/>
@@ -856,7 +856,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="782"/>
       <source>Screen buffer sync</source>
-      <translation type="unfinished">Screen buffer sync</translation>
+      <translation>Sinkronisasi penyangga layar</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="796"/>
@@ -866,12 +866,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="806"/>
       <source>Enable</source>
-      <translation type="unfinished">Enable</translation>
+      <translation>Aktifkan</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="801"/>
       <source>Disable</source>
-      <translation type="unfinished">Disable</translation>
+      <translation>Nonaktifkan</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="778"/>
@@ -1030,17 +1030,17 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="525"/>
       <source>Validation is in process. Please do not exit or launch applications until this operation is done.</source>
-      <translation>Pengesahan sedang berlangsung. Mohon jangan keluar atau luncurkan aplikasi sampai ini selesai.</translation>
+      <translation>Pengabsahan sedang berlangsung. Mohon jangan keluar atau luncurkan aplikasi sampai ini selesai.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="545"/>
       <source>Validation done!</source>
-      <translation>Pengesahan selesai!</translation>
+      <translation>Pengabsahan selesai!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="545"/>
       <source>The validation has successfully completed!</source>
-      <translation>Pengesahan telah berhasil dilengkapi!</translation>
+      <translation>Pengabsahan telah berhasil dilengkapi!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="556"/>
@@ -1120,7 +1120,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="1012"/>
       <source>IMEI sequence has invalid sum!</source>
-      <translation>Urutan dari IMEI memiliki jumlah yang tidak valid!</translation>
+      <translation>Urutan IMEI memiliki jumlah yang tidak sah!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1015"/>
@@ -1135,17 +1135,17 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="1028"/>
       <source>IMEI valid!</source>
-      <translation>IMEI sahih!</translation>
+      <translation>IMEI absah!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1028"/>
       <source>The IMEI sequence is valid!</source>
-      <translation type="unfinished">The IMEI sequence is valid!</translation>
+      <translation>Urutan IMEI-nya absah!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1031"/>
       <source>IMEI invalid!</source>
-      <translation type="unfinished">IMEI invalid!</translation>
+      <translation>IMEI tidak sah!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1041"/>
@@ -1165,7 +1165,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="1090"/>
       <source>Confirmation</source>
-      <translation type="unfinished">Confirmation</translation>
+      <translation>Konfirmasi</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1090"/>
