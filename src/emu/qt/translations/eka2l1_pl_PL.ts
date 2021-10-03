@@ -688,12 +688,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="386"/>
       <source>By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</source>
-      <translation type="unfinished">By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</translation>
+      <translation>Domyślnie emulator pozwala jedynie na zmianę rozmiaru ekranu emulatora do minimalnego rozmiaru ekranu telefonu, pomnożonego przez systemowy mnożnik skalowania, tak aby odpowiadał on większości użytkowników</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="389"/>
       <source>Allow resizing display to phone screen&apos;s true size in pixels</source>
-      <translation type="unfinished">Allow resizing display to phone screen&apos;s true size in pixels</translation>
+      <translation>Zezwalaj na zmianę rozmiaru ekranu do rzeczywistego rozmiaru ekranu telefonu w pikselach</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="401"/>
@@ -851,34 +851,34 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="770"/>
       <source>Graphics</source>
-      <translation type="unfinished">Graphics</translation>
+      <translation>Grafika</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="782"/>
       <source>Screen buffer sync</source>
-      <translation type="unfinished">Screen buffer sync</translation>
+      <translation>Synchronizacja buforu ekranu</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="796"/>
       <source>Preferred</source>
-      <translation type="unfinished">Preferred</translation>
+      <translation>Preferowane</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="806"/>
       <source>Enable</source>
-      <translation type="unfinished">Enable</translation>
+      <translation>Włącz</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="801"/>
       <source>Disable</source>
-      <translation type="unfinished">Disable</translation>
+      <translation>Wyłącz</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="778"/>
       <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
-      <translation type="unfinished">This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
-Preferred option will automatically enable this on S60v1/S60v2 devices.</translation>
+      <translation>Pozwala to emulowanym programom na nagrywanie i zapobiega miganiu w niektórych starych grach z S60v1/S60v2.
+Preferowana opcja automatycznie włączy to na urządzeniach S60v1/S60v2.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="826"/>
