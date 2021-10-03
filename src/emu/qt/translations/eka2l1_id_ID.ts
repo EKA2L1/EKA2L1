@@ -31,7 +31,7 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="78"/>
       <source>&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</source>
-      <translation>&lt;b&gt;Penyumbang:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Penyumbangsih:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="92"/>
@@ -235,7 +235,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="100"/>
       <source>Rotate screen</source>
-      <translation>Rotasi layar</translation>
+      <translation>Putar Layar</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="112"/>
@@ -265,7 +265,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="147"/>
       <source>Package manager</source>
-      <translation>Manajer paket</translation>
+      <translation>Pengelola paket</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="80"/>
@@ -295,7 +295,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="175"/>
       <source>Threads</source>
-      <translation>Urutan</translation>
+      <translation>Utas (Thread)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="180"/>
@@ -330,7 +330,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="232"/>
       <source>Clear menu</source>
-      <translation>Bersihkan menu</translation>
+      <translation>Kosongkan menu</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="295"/>
@@ -366,7 +366,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="660"/>
       <source>Mounting aborted</source>
-      <translation>Mount dibatalkan</translation>
+      <translation>Mount digagalkan</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="665"/>
@@ -437,7 +437,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="911"/>
       <source>Installation aborted</source>
-      <translation>Pemasangan dibantut</translation>
+      <translation>Pemasangan digagalkan</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="911"/>
@@ -490,7 +490,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="17"/>
       <source>Package manager</source>
-      <translation>Manajer paket</translation>
+      <translation>Pengelola paket</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
@@ -693,7 +693,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="389"/>
       <source>Allow resizing display to phone screen&apos;s true size in pixels</source>
-      <translation>Izinkan ubah ukuran tampilan sesuai piksel layar ponsel asli</translation>
+      <translation>Izinkan mengubah ukuran tampilan sesuai piksel layar ponsel asli</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="401"/>
@@ -733,12 +733,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="463"/>
       <source>Audio</source>
-      <translation type="unfinished">Audio</translation>
+      <translation>Audio</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="477"/>
       <source>Volume</source>
-      <translation type="unfinished">Volume</translation>
+      <translation>Volume</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="500"/>
@@ -796,7 +796,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="610"/>
       <source>Dynarmic (CPU recompiler)</source>
-      <translation type="unfinished">Dynarmic (CPU recompiler)</translation>
+      <translation>Dynarmic (Kompilator ulang CPU)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="615"/>
@@ -851,7 +851,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="770"/>
       <source>Graphics</source>
-      <translation type="unfinished">Graphics</translation>
+      <translation>Grafis</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="782"/>
@@ -883,7 +883,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="826"/>
       <source>Control</source>
-      <translation>Kontrol</translation>
+      <translation>Kendalian</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="841"/>
@@ -1020,7 +1020,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="406"/>
       <source>This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</source>
-      <translation>Perubahan ini perlu peluncuran ulang pada emulator.&lt;br&gt;Anda ingin lanjut?</translation>
+      <translation>Perubahan ini perlu peluncuran ulang pada emulator.&lt;br&gt;Ingin Anda lanjutkan?</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="524"/>
@@ -1150,17 +1150,17 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="1041"/>
       <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
-      <translation type="unfinished">Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</translation>
+      <translation>IMEI Anda tidak sah karena: %1.&lt;br&gt;Apakah Anda ingin mengubah IMEI saat ini sebelum menutup? Memilih &quot;No&quot; akan menyimpan nilai (value) IMEI saat ini.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1043"/>
       <source>Cancel closing</source>
-      <translation>Batalkan penutupan</translation>
+      <translation>Batalkan menutup</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1082"/>
       <source>This change will be effective on the next launch of the emulator.</source>
-      <translation>Ubahan ini akan efektif pada peluncuran emulator berikutnya.</translation>
+      <translation>Ubahan ini akan mangkus pada peluncuran emulator berikutnya.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1090"/>
