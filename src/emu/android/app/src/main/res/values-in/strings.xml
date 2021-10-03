@@ -11,7 +11,7 @@
     <string name="completed">Selesai!</string>
     <string name="remove">Hapus</string>
     <string name="mount_sd">Mount MMC/Kartu SD</string>
-    <string name="no_devices_found">Tidak ditemukan firmware perangkat</string>
+    <string name="no_devices_found">Tak ditemukan firmware perangkat</string>
     <string name="exit">Keluar</string>
     <string name="rename">Ganti nama</string>
     <string name="save_log">Simpan log</string>
@@ -25,7 +25,7 @@
     <string name="install_method">Metode pemasangan</string>
     <string name="enter_new_name">Masukkan nama baru</string>
     <string name="no_device_dialog_title">Tak ada perangkat terpasang!</string>
-    <string name="no_device_installed">Harap instal firmware perangkat. File dan ROM dari perangkat Symbian diperlukan untuk penginstalan. \n\n<b>Catatan:</b> Setiap aplikasi memerlukan perangkat Symbian yang cocok untuk menjalankannya.</string>
+    <string name="no_device_installed">Harap pasang firmware perangkat. Berkas dan ROM dari perangkat Symbian diperlukan untuk pemasangan.\n\n<b>Catatan:</b> Setiap aplikasi memerlukan perangkat Symbian yang cocok untuk dijalankan.</string>
     <string name="install_device_note_may_need_rpkg">Untuk perangkat S60v2 atau lebih tinggi, perlu ada berkas tambahan bernama RPKG. Jika perangkatnya terdeteksi maka akan muncul permintaan memasukkan berkas tersebut.</string>
     <string name="recommended_devices_to_install">Perangkat anjuran untuk dipasang</string>
     <string name="wiki_info">Untuk informasi lanjut mengenai pemasangan perangkat, silakan periksa wiki kami:</string>
@@ -71,7 +71,7 @@
     <string name="layout_switch">Ganti letak tombol</string>
     <string name="hide_buttons">Samarkan tombol</string>
     <string name="confirmation_required">Memerlukan konfirmasi</string>
-    <string name="force_close_confirmation">Menutup paksa aplikasi akan mengakibatkan hilangnya data atau bahkan menghancurkan sepenuhnya!\nLanjutkan?</string>
+    <string name="force_close_confirmation">Menutup paksa aplikasi akan mengakibatkan hilangnya data atau bahkan jadi hancur sepenuhnya!\nLanjutkan?</string>
     <string name="log_saved">Log telah disimpan</string>
     <string name="about_icon_by">&lt;BR&gt;Ikon oleh: </string>
     <string name="version">Versi: </string>
