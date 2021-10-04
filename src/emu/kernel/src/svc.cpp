@@ -2652,6 +2652,16 @@ namespace eka2l1::epoc {
 
         timer->after(kern->crr_thread(), req_sts, us_after);
     }
+    
+    BRIDGE_FUNC(void, timer_after_ticks_eka1, eka2l1::ptr<epoc::request_status> req_sts, std::int32_t ticks_after, kernel::handle h) {
+        timer_ptr timer = kern->get<kernel::timer>(h);
+
+        if (!timer) {
+            return;
+        }
+
+        timer->after_ticks(kern->crr_thread(), req_sts, ticks_after);
+    }
 
     BRIDGE_FUNC(void, timer_at_utc, kernel::handle h, eka2l1::ptr<epoc::request_status> req_sts, std::uint64_t *us_at) {
         timer_ptr timer = kern->get<kernel::timer>(h);
@@ -6026,6 +6036,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC0009F, set_exception_handler_eka1),
         BRIDGE_REGISTER(0xC000A1, raise_exception_eka1),
         BRIDGE_REGISTER(0xC000BF, session_send_sync_eka1),
+        BRIDGE_REGISTER(0xC000F2, timer_after_ticks_eka1),
         BRIDGE_REGISTER(0xC10000, hle_dispatch),
         BRIDGE_REGISTER(0xC10001, hle_dispatch_2),
         BRIDGE_REGISTER(0xC20000, restore_thread_exception_state)

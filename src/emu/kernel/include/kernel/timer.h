@@ -54,6 +54,10 @@ namespace eka2l1 {
 
             bool after(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts,
                 std::uint64_t us_signal);
+
+            bool after_ticks(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts,
+                std::uint64_t tick_count);
+
             bool request_finish();
             bool cancel_request();
         };

@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/common.h>
 #include <common/cvt.h>
 #include <common/log.h>
 
@@ -62,6 +63,12 @@ namespace eka2l1 {
             timing->schedule_event(us_signal, callback_type, reinterpret_cast<std::uint64_t>(&info));
 
             return false;
+        }
+        
+        bool timer::after_ticks(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts,
+            std::uint64_t tick_count) {
+            const std::uint64_t us_per_ticks = (common::microsecs_per_sec / epoc::TICK_TIMER_HZ);
+            return after(requester, sts, us_per_ticks * tick_count);
         }
 
         bool timer::request_finish() {
