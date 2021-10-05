@@ -581,6 +581,10 @@ namespace eka2l1 {
             operation_mtm(ctx);
             break;
 
+        case msv_cancel_operation:
+            cancel_operation(ctx);
+            break;
+
         default: {
             LOG_ERROR(SERVICE_MSV, "Unimplemented opcode for MsvServer 0x{:X}", ctx->msg->function);
             break;
@@ -1656,5 +1660,36 @@ namespace eka2l1 {
         ctx->write_data_to_descriptor_argument<std::uint32_t>(3, service);
 
         ctx->complete(epoc::error_none);
+    }
+
+    void msv_client_session::cancel_operation(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> operation_id = ctx->get_argument_value<std::uint32_t>(0);
+        
+        if (!operation_id.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        for (std::size_t i = 0; i < operations_.size(); i++) {
+            if (operations_[i]->operation_id() == operation_id.value()) {
+                operations_[i]->cancel();
+
+                if (operations_[i]->state() != epoc::msv::operation_state_queued) {
+                    const epoc::msv::operation_buffer &buffer = operations_[i]->progress_buffer();
+
+                    ctx->write_data_to_descriptor_argument(1, buffer.data(), static_cast<std::uint32_t>(buffer.size()));
+                    ctx->complete(static_cast<int>(buffer.size()));
+                } else {
+                    ctx->complete(epoc::error_none);
+                }
+
+                operations_.erase(operations_.begin() + i);
+
+                return;
+            }
+        }
+
+        LOG_ERROR(SERVICE_MSV, "Progress buffer for operation 0x{:X} can't be found!", operation_id.value());
+        ctx->complete(epoc::error_not_found);
     }
 }

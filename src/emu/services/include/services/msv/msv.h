@@ -53,6 +53,7 @@ namespace eka2l1 {
         msv_release_store = 0xF,
         msv_operation_data = 0x12,
         msv_command_data = 0x13,
+        msv_cancel_operation = 0x14,
         msv_operation_progress = 0x15,
         msv_operation_completion = 0x16,
         msv_operation_mtm = 0x17,
@@ -194,6 +195,7 @@ namespace eka2l1 {
         void file_store_exists(service::ipc_context *ctx);
         void required_capabilities(service::ipc_context *ctx);
         void operation_mtm(service::ipc_context *ctx);
+        void cancel_operation(service::ipc_context *ctx);
 
         // Do not add reference here!
         void queue(msv_event_data evt);
