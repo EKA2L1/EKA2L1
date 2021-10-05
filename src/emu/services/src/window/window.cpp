@@ -1985,7 +1985,11 @@ namespace eka2l1 {
         }
 
         bool do_it(epoc::window *win) {
-            if (win && win->type != epoc::window_kind::group && ((accept_pri == -1) || (win->priority == accept_pri))) {
+            if (win && (win->type != epoc::window_kind::group)) {
+                return false;
+            }
+
+            if ((accept_pri != -1) && (win->priority != accept_pri)) {
                 return false;
             }
 
