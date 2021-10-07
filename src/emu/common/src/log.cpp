@@ -37,6 +37,10 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+#if EKA2L1_PLATFORM(WIN32)
+#include <Windows.h>
+#endif
+
 namespace eka2l1 {
     bool already_setup = false;
 

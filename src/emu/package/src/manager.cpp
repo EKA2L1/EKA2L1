@@ -37,6 +37,9 @@
 #include <fstream>
 #include <yaml-cpp/yaml.h>
 
+#include <fmt/format.h>
+#include <fmt/xchar.h>
+
 namespace eka2l1 {
     namespace manager {
         static constexpr const char *APP_REGISTRY_FILENAME = "apps_registry.yml";

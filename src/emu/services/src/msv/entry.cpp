@@ -33,6 +33,9 @@
 
 #include <string>
 
+#include <fmt/format.h>
+#include <fmt/xchar.h>
+
 namespace eka2l1::epoc::msv {
     entry_indexer::entry_indexer(io_system *io, const std::u16string &msg_folder, const language preferred_lang)
         : io_(io)

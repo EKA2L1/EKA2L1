@@ -23,6 +23,7 @@
 #include <vfs/vfs.h>
 
 #include <fmt/format.h>
+#include <fmt/xchar.h>
 
 namespace eka2l1::epoc {
     static std::u16string pid_to_string(const epoc::pid skin_pid) {

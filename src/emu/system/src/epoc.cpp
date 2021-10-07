@@ -121,8 +121,6 @@ namespace eka2l1 {
         config::state *conf_;
         config::app_settings *app_settings_;
 
-        bool reschedule_pending = false;
-
         std::atomic<bool> exit = false;
         std::atomic<bool> paused = false;
 
@@ -409,7 +407,6 @@ namespace eka2l1 {
 
         void prepare_reschedule() {
             cpu->stop();
-            reschedule_pending = true;
         }
 
         const language get_system_language() const {
@@ -651,9 +648,7 @@ namespace eka2l1 {
             }
         }
 
-        if (to_run == nullptr) {
-            prepare_reschedule();
-        } else {
+        if (to_run != nullptr) {
             if (!should_step) {
                 cpu->run(to_run->get_remaining_screenticks());
             } else {
@@ -670,7 +665,6 @@ namespace eka2l1 {
 
         if (!kern_->should_terminate()) {
             kern_->reschedule();
-            reschedule_pending = false;
         } else {
             exit = true;
             return 0;
