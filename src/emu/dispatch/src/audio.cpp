@@ -35,6 +35,11 @@
 
 #include <utils/des.h>
 
+#include <thread>
+#include <chrono>
+
+using namespace std::literals::chrono_literals;
+
 namespace eka2l1::dispatch {
     dsp_epoc_audren_sema::dsp_epoc_audren_sema()
         : own_(0) {
@@ -468,7 +473,7 @@ namespace eka2l1::dispatch {
         dsp_epoc_stream *stream_org_new = reinterpret_cast<dsp_epoc_stream *>(stream_new.get());
 
         stream_org_new->ll_stream_->register_callback(
-            drivers::dsp_stream_notification_buffer_copied, [](void *userdata) {
+            drivers::dsp_stream_notification_more_buffer, [](void *userdata) {
                 dsp_epoc_stream *epoc_stream = reinterpret_cast<dsp_epoc_stream *>(userdata);
                 const std::lock_guard<std::mutex> guard(epoc_stream->lock_);
 
@@ -663,10 +668,17 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
+        kernel_system *kern = sys->get_kernel_system();
+
+        if (kern->is_eka1()) {
+            // Simulate IPC latency
+            std::this_thread::sleep_for(1us);
+        }
+
         // Well weird enough this position is calculated from the total sample copied
         // This is related to THPS. Where it checks for the duration when the buffer has just been copied.
         // If the duration played drains the buffer, only at that time it starts to supply more audio data.
-        *the_time = stream->ll_stream_->position();
+        *the_time = stream->ll_stream_->real_time_position();
         return epoc::error_none;
     }
 
