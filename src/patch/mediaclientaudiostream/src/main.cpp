@@ -52,8 +52,6 @@ CMdaAudioOutputStream::CMdaAudioOutputStream()
 }
 
 void CMdaAudioOutputStream::Open(TMdaPackage *aPackage) {
-    LogOut(KMcaCat, _L("We are openinggggg!"));
-
     TMdaAudioDataSettings *settings = reinterpret_cast<TMdaAudioDataSettings *>(aPackage);
 
     // Try to set audio properties
@@ -191,13 +189,11 @@ TAny *CMdaAudioOutputStream::CustomInterface(TUid aInterfaceId) {
 // Note: Special functions
 
 TInt CMdaAudioOutputStream::KeepOpenAtEnd() {
-    LogOut(KMcaCat, _L("WARN:: Keep open at end not supported!"));
-    return KErrNotSupported;
+    return iProperties->KeepOpenAtEnd();
 }
 
 TInt CMdaAudioOutputStream::RequestStop() {
-    LogOut(KMcaCat, _L("WARN:: Request stop not supported!"));
-    return KErrNotSupported;
+    return iProperties->RequestStop();
 }
 
 #ifndef EKA2

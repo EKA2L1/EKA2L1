@@ -26,11 +26,10 @@
 #include <e32std.h>
 
 enum TMdaState {
-    EMdaStateIdle = 0,
-    EMdaStatePlay = 1,
-    EMdaStatePause = 2,
-    EMdaStateReady = 3,
-    EMdaStateStop = 4
+    EMdaStatePlay = 0,
+    EMdaStatePause = 1,
+    EMdaStateStop = 2,
+    EMdaStateWaitWorkThenStop = 3
 };
 
 struct TMMFMdaBufferNode : public TDblQueLink {
@@ -84,6 +83,9 @@ class CMMFMdaAudioOutputStream {
     CMMFMdaOutputOpen iOpen;
 
     TBool iSetPriorityUnimplNotified;
+    
+    CPeriodic *iWaitBufferEndTimer;
+    TBool iKeepOpenAtEnd;
 
 public:
     MMdaAudioOutputStreamCallback &iCallback;
@@ -94,12 +96,16 @@ public:
     void NotifyOpenComplete();
 
     static CMMFMdaAudioOutputStream *NewL(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
-    void ConstructL();
 
+    void ConstructL();
     void StartRaw();
 
     void Play();
     void Stop();
+    TInt RequestStop();
+
+    void DataWaitTimeout();
+    void HandleBufferInsufficient();
 
     TInt Pause();
     TInt Resume();
@@ -128,6 +134,10 @@ public:
 
     TBool IsPriorityUnimplNotified() const;
     void SetPriorityUnimplNotified();
+
+    TInt KeepOpenAtEnd();
+    
+    void StartWaitBufferTimeoutTimer();
 };
 
 #endif

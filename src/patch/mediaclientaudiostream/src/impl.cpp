@@ -31,6 +31,17 @@
 
 #include <e32std.h>
 
+static const TUint32 KWaitBufferTimeInMicroseconds = 100000;
+
+static TInt OnWaitBufferTimeout(void *aUserdata) {
+    CMMFMdaAudioOutputStream *stream = reinterpret_cast<CMMFMdaAudioOutputStream *>(aUserdata);
+    if (stream) {
+        stream->DataWaitTimeout();
+    }
+
+    return KErrNone;
+}
+
 CMMFMdaOutputBufferQueue::CMMFMdaOutputBufferQueue(CMMFMdaAudioOutputStream *aStream)
     : CActive(CActive::EPriorityStandard)
     , iStream(aStream)
@@ -39,21 +50,12 @@ CMMFMdaOutputBufferQueue::CMMFMdaOutputBufferQueue(CMMFMdaAudioOutputStream *aSt
 
 void CMMFMdaOutputBufferQueue::WriteAndWait() {
     if (iBufferNodes.IsEmpty()) {
-        iStream->iState = EMdaStateStop;
         iCopied = NULL;
-
-        iStream->iCallback.MaoscPlayComplete(KErrUnderflow);
-
-        iStream->RegisterNotifyBufferSent(iStatus);
-        Cancel();
-
         iStatus = KErrNone;
 
-        return;
-    }
+        iStream->HandleBufferInsufficient();
 
-    if (iCopied == NULL) {
-        iStream->StartRaw();
+        return;
     }
 
     TMMFMdaBufferNode *node = iBufferNodes.First();
@@ -85,7 +87,7 @@ void CMMFMdaOutputBufferQueue::RunL() {
     }
 
     // Stream might been canceled in buffer copied
-    if ((iStatus != KErrAbort) && (iStream->iState == EMdaStatePlay)) {
+    if ((iStatus != KErrAbort) && ((iStream->iState == EMdaStatePlay) || (iStream->iState == EMdaStateWaitWorkThenStop))) {
         WriteAndWait();
     }
 }
@@ -164,18 +166,23 @@ void CMMFMdaOutputOpen::FixupActiveStatus() {
 CMMFMdaAudioOutputStream::CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref)
     : iPriority(aPriority)
     , iPref(aPref)
-    , iState(EMdaStateReady)
+    , iState(EMdaStateStop)
     , iBufferQueue(this)
     , iOpen()
     , iSetPriorityUnimplNotified(EFalse)
+    , iWaitBufferEndTimer(NULL)
+    , iKeepOpenAtEnd(EFalse)
     , iCallback(aCallback) {
 }
 
 CMMFMdaAudioOutputStream::~CMMFMdaAudioOutputStream() {
     iOpen.Cancel();
     iBufferQueue.Cancel();
+    iWaitBufferEndTimer->Cancel();
 
     EAudioDspStreamDestroy(0, iDispatchInstance);
+
+    delete iWaitBufferEndTimer;
 }
 
 CMMFMdaAudioOutputStream *CMMFMdaAudioOutputStream::NewL(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref) {
@@ -193,6 +200,8 @@ void CMMFMdaAudioOutputStream::ConstructL() {
     if (!iDispatchInstance) {
         User::Leave(KErrGeneral);
     }
+    
+    iWaitBufferEndTimer = CPeriodic::NewL(CActive::EPriorityStandard);
 
     CActiveScheduler::Add(&iBufferQueue);
     CActiveScheduler::Add(&iOpen);
@@ -206,8 +215,6 @@ void CMMFMdaAudioOutputStream::NotifyOpenComplete() {
 }
 
 void CMMFMdaAudioOutputStream::StartRaw() {
-    iState = EMdaStatePlay;
-
     if (EAudioDspStreamStart(0, iDispatchInstance) != KErrNone) {
         LogOut(KMcaCat, _L("Failed to start audio output stream"));
     }
@@ -218,14 +225,16 @@ void CMMFMdaAudioOutputStream::Play() {
 }
 
 void CMMFMdaAudioOutputStream::Stop() {
-    // Reset the stat first
-    EAudioDspStreamResetStat(0, iDispatchInstance);
+    iWaitBufferEndTimer->Cancel();
+
+    iBufferQueue.CleanQueue();
+    iBufferQueue.Cancel();
 
     if (iState == EMdaStateStop)
         return;
 
-    iBufferQueue.CleanQueue();
-    iBufferQueue.Cancel();
+    // Reset the stat first
+    EAudioDspStreamResetStat(0, iDispatchInstance);
 
     if (EAudioDspStreamStop(0, iDispatchInstance) != KErrNone) {
         LogOut(KMcaCat, _L("Failed to stop audio output stream"));
@@ -233,6 +242,19 @@ void CMMFMdaAudioOutputStream::Stop() {
         iState = EMdaStateStop;
         iCallback.MaoscPlayComplete(KErrCancel);
     }
+}
+
+TInt CMMFMdaAudioOutputStream::RequestStop() {
+    if (!iKeepOpenAtEnd) {
+        return KErrNotSupported;
+    }
+
+    if ((iState == EMdaStateStop) || (iState == EMdaStateWaitWorkThenStop)) {
+        return KErrNotReady;
+    }
+
+    iState = EMdaStateWaitWorkThenStop;
+    return KErrNone;
 }
 
 void CMMFMdaAudioOutputStream::WriteL(const TDesC8 &aData) {
@@ -243,6 +265,8 @@ void CMMFMdaAudioOutputStream::WriteL(const TDesC8 &aData) {
 }
 
 void CMMFMdaAudioOutputStream::WriteWithQueueL(const TDesC8 &aData) {
+    iWaitBufferEndTimer->Cancel();
+
     TMMFMdaBufferNode *node = new (ELeave) TMMFMdaBufferNode;
     node->iBuffer = &aData;
 
@@ -251,6 +275,7 @@ void CMMFMdaAudioOutputStream::WriteWithQueueL(const TDesC8 &aData) {
 
     if (iState == EMdaStateStop) {
         iState = EMdaStatePlay;
+        StartRaw();
     }
 
     if (isFirst) {
@@ -388,4 +413,31 @@ TBool CMMFMdaAudioOutputStream::IsPriorityUnimplNotified() const {
 
 void CMMFMdaAudioOutputStream::SetPriorityUnimplNotified() {
     iSetPriorityUnimplNotified = ETrue;
+}
+
+void CMMFMdaAudioOutputStream::DataWaitTimeout() {
+    iWaitBufferEndTimer->Cancel();
+
+    iState = EMdaStateStop;
+    iCallback.MaoscPlayComplete(KErrUnderflow);
+}
+
+void CMMFMdaAudioOutputStream::StartWaitBufferTimeoutTimer() {
+    iWaitBufferEndTimer->Start(KWaitBufferTimeInMicroseconds, KWaitBufferTimeInMicroseconds, TCallBack(OnWaitBufferTimeout, this));
+}
+
+TInt CMMFMdaAudioOutputStream::KeepOpenAtEnd() {
+    iKeepOpenAtEnd = ETrue;
+    return KErrNone;
+}
+
+void CMMFMdaAudioOutputStream::HandleBufferInsufficient() {
+    if (!iKeepOpenAtEnd) {
+        // Wait for a new buffer in an interval
+        StartWaitBufferTimeoutTimer();
+    } else {
+        if (iState == EMdaStateWaitWorkThenStop) {
+            DataWaitTimeout();
+        }
+    }
 }
