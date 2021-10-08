@@ -319,7 +319,7 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool dashixiong_block::raise_guest_exception(const exception_type exc, const std::uint32_t usrdata) {
-        parent_->exception_handler(exc, usrdata);
+        return parent_->exception_handler(exc, usrdata);
     }
 
     void dashixiong_block::raise_system_call(const std::uint32_t num) {
