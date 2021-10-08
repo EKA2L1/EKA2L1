@@ -117,4 +117,8 @@ namespace eka2l1::drivers {
     float cubeb_audio_output_stream::get_volume() const {
         return volume_;
     }
+
+    bool cubeb_audio_output_stream::current_frame_position(std::uint64_t *pos)  {
+        return (cubeb_stream_get_position(stream_, pos) == CUBEB_OK);
+    }
 }

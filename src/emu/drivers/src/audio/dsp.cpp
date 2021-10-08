@@ -27,9 +27,9 @@ namespace eka2l1::drivers {
         , freq_(0)
         , channels_(0)
         , complete_callback_(nullptr)
-        , buffer_copied_callback_(nullptr)
+        , more_buffer_callback_(nullptr)
         , complete_userdata_(nullptr)
-        , buffer_copied_userdata_(nullptr) {
+        , more_buffer_userdata_(nullptr) {
     }
 
     dsp_output_stream::dsp_output_stream()

@@ -45,5 +45,7 @@ namespace eka2l1::drivers {
 
         bool set_volume(const float volume) override;
         float get_volume() const override;
+        
+        bool current_frame_position(std::uint64_t *pos) override;
     };
 }

@@ -43,12 +43,13 @@ namespace eka2l1::drivers {
         std::int16_t last_frame_[2];
         std::mutex callback_lock_;
 
+        std::size_t avg_frame_count_;
+
         bool virtual_stop;
+        bool more_requested;
 
     protected:
-        virtual bool need_more_user_buffer() {
-            return true;
-        }
+        virtual bool internal_decode_running_out();
 
     public:
         explicit dsp_output_stream_shared(drivers::audio_driver *aud);
@@ -70,8 +71,8 @@ namespace eka2l1::drivers {
         virtual bool start() override;
         virtual bool stop() override;
 
+        virtual std::uint64_t real_time_position() override;
         std::uint64_t position() override;
-        std::uint64_t real_time_position() override;
 
         virtual bool is_playing() const override {
             return !virtual_stop;

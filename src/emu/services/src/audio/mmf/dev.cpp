@@ -206,7 +206,7 @@ namespace eka2l1 {
 
         // Register complete callback
         stream_->register_callback(
-            drivers::dsp_stream_notification_buffer_copied, [this](void *userdata) {
+            drivers::dsp_stream_notification_more_buffer, [this](void *userdata) {
                 kernel_system *kern = server<mmf_dev_server>()->get_kernel_object_owner();
                 kern->lock();
 

@@ -282,7 +282,8 @@ namespace eka2l1::drivers {
         return true;
     }
 
-    bool dsp_output_stream_ffmpeg::need_more_user_buffer() {
-        return (queued_data_.size() <= CUSTOM_IO_BUFFER_SIZE * 2);
+    bool dsp_output_stream_ffmpeg::internal_decode_running_out() {
+        return ((format_ != drivers::PCM16_FOUR_CC_CODE) && (queued_data_.size() <= CUSTOM_IO_BUFFER_SIZE * 2)) ||
+            dsp_output_stream_shared::internal_decode_running_out();
     }
 }

@@ -42,5 +42,7 @@ namespace eka2l1::drivers {
 
         virtual bool set_volume(const float volume) = 0;
         virtual float get_volume() const = 0;
+
+        virtual bool current_frame_position(std::uint64_t *pos) = 0;
     };
 };

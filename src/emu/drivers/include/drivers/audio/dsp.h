@@ -39,7 +39,7 @@ namespace eka2l1::drivers {
     static constexpr four_cc PCM8_FOUR_CC_CODE = make_four_cc(' ', ' ', 'P', '8');
 
     enum dsp_stream_notification_type {
-        dsp_stream_notification_buffer_copied = 0,
+        dsp_stream_notification_more_buffer = 0,
         dsp_stream_notification_done = 1
     };
 
@@ -57,10 +57,10 @@ namespace eka2l1::drivers {
         four_cc format_;
 
         dsp_stream_notification_callback complete_callback_;
-        dsp_stream_notification_callback buffer_copied_callback_;
+        dsp_stream_notification_callback more_buffer_callback_;
 
         dsp_stream_userdata complete_userdata_;
-        dsp_stream_userdata buffer_copied_userdata_;
+        dsp_stream_userdata more_buffer_userdata_;
 
     public:
         explicit dsp_stream();

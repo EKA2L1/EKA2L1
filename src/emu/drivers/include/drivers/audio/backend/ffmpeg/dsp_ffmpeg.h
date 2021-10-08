@@ -46,7 +46,7 @@ namespace eka2l1::drivers {
         } state_;
 
     protected:
-        bool need_more_user_buffer() override;
+        bool internal_decode_running_out() override;
 
     public:
         explicit dsp_output_stream_ffmpeg(drivers::audio_driver *aud);

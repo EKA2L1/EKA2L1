@@ -25,7 +25,9 @@ namespace eka2l1::drivers {
         : dsp_output_stream()
         , aud_(aud)
         , pointer_(0)
-        , virtual_stop(true) {
+        , virtual_stop(true)
+        , more_requested(false)
+        , avg_frame_count_(0) {
         last_frame_[0] = 0;
         last_frame_[1] = 0;
     }
@@ -94,6 +96,8 @@ namespace eka2l1::drivers {
             virtual_stop = true;
         }
 
+        avg_frame_count_ = 0;
+
         if (virtual_stop) {
             if (!stream_->start()) {
                 return false;
@@ -134,9 +138,9 @@ namespace eka2l1::drivers {
             complete_userdata_ = userdata;
             break;
 
-        case dsp_stream_notification_buffer_copied:
-            buffer_copied_userdata_ = userdata;
-            buffer_copied_callback_ = callback;
+        case dsp_stream_notification_more_buffer:
+            more_buffer_userdata_ = userdata;
+            more_buffer_callback_ = callback;
             break;
 
         default:
@@ -150,8 +154,8 @@ namespace eka2l1::drivers {
         case dsp_stream_notification_done:
             return complete_userdata_;
 
-        case dsp_stream_notification_buffer_copied:
-            return buffer_copied_userdata_;
+        case dsp_stream_notification_more_buffer:
+            return more_buffer_userdata_;
 
         default:
             LOG_ERROR(DRIVER_AUD, "Unsupport notification type!");
@@ -174,17 +178,32 @@ namespace eka2l1::drivers {
         return true;
     }
 
+    bool dsp_output_stream_shared::internal_decode_running_out() {
+        if (format_ == PCM16_FOUR_CC_CODE) {
+            return (decoded_.size() - pointer_) <= (avg_frame_count_ * channels_ * sizeof(std::int16_t) * 4);
+        }
+
+        return false;
+    }
+
     std::size_t dsp_output_stream_shared::data_callback(std::int16_t *buffer, const std::size_t frame_count) {
         std::size_t frame_wrote = 0;
 
+        if (avg_frame_count_ == 0) {
+            avg_frame_count_ = frame_count;
+        } else {
+            avg_frame_count_ = (avg_frame_count_ + frame_count) / 2;
+        }
+
         while (frame_wrote < frame_count) {
             std::optional<dsp_buffer> encoded;
+
             bool exit_loop = false;
+            bool need_more = false;
 
             if ((decoded_.size() == 0) || (decoded_.size() == pointer_)) {
                 // Get the next buffer
                 encoded = buffers_.pop();
-                bool need_more = true;
 
                 if ((format_ == PCM16_FOUR_CC_CODE) && !encoded) {
                     exit_loop = true;
@@ -197,23 +216,18 @@ namespace eka2l1::drivers {
                     decoded_ = encoded.value();
                 } else {
                     std::vector<std::uint8_t> empty;
-                    need_more = !decode_data(encoded ? encoded.value() : empty, decoded_);
+                    decode_data(encoded ? encoded.value() : empty, decoded_);
                 }
 
                 if (decoded_.empty()) {
                     exit_loop = true;
                 }
 
-                // Callback that internal buffer has been copied
-                {
-                    std::size_t total_sample = (decoded_.size() / sizeof(std::uint16_t));
-                    samples_copied_ += total_sample;
-
-                    const std::lock_guard<std::mutex> guard(callback_lock_);
-                    if (buffer_copied_callback_ && (need_more_user_buffer() || need_more)) {
-                        buffer_copied_callback_(buffer_copied_userdata_);
-                    }
+                if (!exit_loop) {
+                    more_requested = false;
                 }
+
+                samples_copied_ += decoded_.size() / sizeof(std::uint16_t);
             }
 
             if (exit_loop) {
@@ -224,30 +238,51 @@ namespace eka2l1::drivers {
             std::size_t frame_to_wrote = ((decoded_.size() - pointer_) / channels_ / sizeof(std::int16_t));
             frame_to_wrote = std::min<std::size_t>(frame_to_wrote, frame_count - frame_wrote);
 
-            std::memcpy(&buffer[frame_wrote * channels_], &decoded_[pointer_], frame_to_wrote * channels_ * sizeof(std::int16_t));
+            std::size_t sample_to_wrote = frame_to_wrote * channels_;
+            std::size_t size_to_wrote = frame_to_wrote * channels_ * sizeof(std::int16_t);
+
+            // If the amount of buffer left is deemed to be insufficient (this takes account of current frame count that is needed)
+            if (internal_decode_running_out()) {
+                if (!more_requested && (buffers_.size() == 0)) {
+                    const std::lock_guard<std::mutex> guard(callback_lock_);
+                    if (more_buffer_callback_) {
+                        more_buffer_callback_(more_buffer_userdata_);
+                    }
+                    
+                    more_requested = true;
+                }
+            }
+            
+            std::memcpy(&buffer[frame_wrote * channels_], &decoded_[pointer_], size_to_wrote);
 
             // Set last frame
             std::memcpy(last_frame_, &decoded_[pointer_ + (frame_to_wrote - 1) * channels_ * sizeof(std::int16_t)], channels_ * sizeof(std::int16_t));
 
-            pointer_ += frame_to_wrote * channels_ * sizeof(std::int16_t);
-            samples_played_ += frame_to_wrote * channels_;
+            pointer_ += size_to_wrote;
+            samples_played_ += sample_to_wrote;
 
             frame_wrote += frame_to_wrote;
         }
 
-        for (; frame_wrote < frame_count; frame_wrote++) {
-            // We dont want to drain the audio driver, so fill it with last frame
-            std::memcpy(&buffer[frame_wrote * channels_], last_frame_, channels_ * sizeof(std::int16_t));
+        // We dont want to drain the audio driver, so fill it with last frame
+        if (frame_wrote < frame_count) {
+            std::memset(&buffer[frame_wrote * channels_], 0, (frame_count - frame_wrote) * channels_ * sizeof(std::int16_t));            
         }
 
         return frame_count;
     }
 
     std::uint64_t dsp_output_stream_shared::position() {
-        return samples_copied_ * 1000000ULL / freq_;
+        return samples_played_ * 1000000ULL / freq_;
     }
 
     std::uint64_t dsp_output_stream_shared::real_time_position() {
-        return samples_played_ * 1000000ULL / freq_;
+        std::uint64_t frame_streamed = 0;
+        if (!stream_->current_frame_position(&frame_streamed)) {
+            LOG_ERROR(DRIVER_AUD, "Fail to retrieve streamed sample count!");
+            return 0;
+        }
+
+        return frame_streamed * channels_ * 1000000ULL / freq_;
     }
 }
