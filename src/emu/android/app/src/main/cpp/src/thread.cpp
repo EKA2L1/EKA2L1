@@ -159,7 +159,7 @@ namespace eka2l1::android {
 
     void os_thread(emulator &state) {
         eka2l1::common::set_thread_name(os_thread_name);
-        //state.graphics_sema.wait();
+        eka2l1::common::set_thread_priority(eka2l1::common::thread_priority_high);
 
         while (!state.should_emu_quit) {
 #if !defined(NDEBUG)
