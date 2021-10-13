@@ -17,6 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <drivers/input/common.h>
+
 #include <qt/state.h>
 #include <qt/thread.h>
 #include <qt/utils.h>
@@ -63,6 +65,9 @@ int main(int argc, char *argv[]) {
             }
         }
     }
+    
+    qRegisterMetaType<std::vector<std::string>>("std::vector<std::string>");
+    qRegisterMetaType<eka2l1::drivers::input_event>("eka2l1::drivers::input_event");
 
     eka2l1::desktop::emulator emulator_state;
     return eka2l1::desktop::emulator_entry(a, emulator_state, argc, const_cast<const char **>(argv));
