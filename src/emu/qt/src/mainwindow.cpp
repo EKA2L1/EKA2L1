@@ -320,11 +320,11 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
 
     connect(rotate_group_, &QActionGroup::triggered, this, &main_window::on_another_rotation_triggered);
 
-    connect(this, &main_window::progress_dialog_change, this, &main_window::on_progress_dialog_change);
-    connect(this, &main_window::status_bar_update, this, &main_window::on_status_bar_update);
+    connect(this, &main_window::progress_dialog_change, this, &main_window::on_progress_dialog_change, Qt::QueuedConnection);
+    connect(this, &main_window::status_bar_update, this, &main_window::on_status_bar_update, Qt::QueuedConnection);
     connect(this, &main_window::package_install_text_ask, this, &main_window::on_package_install_text_ask, Qt::BlockingQueuedConnection);
     connect(this, &main_window::package_install_language_choose, this, &main_window::on_package_install_language_choose, Qt::BlockingQueuedConnection);
-    connect(this, &main_window::screen_focus_group_changed, this, &main_window::on_screen_current_group_change_callback);
+    connect(this, &main_window::screen_focus_group_changed, this, &main_window::on_screen_current_group_change_callback, Qt::QueuedConnection);
 
     setAcceptDrops(true);
 }

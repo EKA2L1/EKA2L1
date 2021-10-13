@@ -64,7 +64,7 @@ device_install_dialog::device_install_dialog(QWidget *parent, eka2l1::device_man
     connect(ui->rpkg_browse_btn, &QPushButton::clicked, this, &device_install_dialog::on_rpkg_browse_triggered);
     connect(ui->confirmation_install_btn, &QPushButton::clicked, this, &device_install_dialog::on_install_triggered);
     connect(ui->confirmation_cancel_btn, &QPushButton::clicked, this, &device_install_dialog::on_cancel_triggered);
-    connect(this, &device_install_dialog::progress_bar_update, this, &device_install_dialog::on_progress_bar_update);
+    connect(this, &device_install_dialog::progress_bar_update, this, &device_install_dialog::on_progress_bar_update, Qt::QueuedConnection);
     connect(this, &device_install_dialog::firmware_variant_selects, this, &device_install_dialog::on_firmware_variant_selects, Qt::BlockingQueuedConnection);
 }
 
