@@ -71,13 +71,17 @@ namespace eka2l1 {
         std::int32_t left_balance_;
         std::int32_t right_balance_;
 
+        int underflow_event_;
+
     protected:
         void do_get_buffer_to_be_filled();
         void init_stream_through_state();
         void deref_audio_buffer_chunk();
+        void stop();
 
     public:
         explicit mmf_dev_server_session(service::typical_server *serv, kernel::uid client_ss_uid, epoc::version client_version);
+        ~mmf_dev_server_session() override;
 
         void fetch(service::ipc_context *ctx) override;
 
@@ -106,6 +110,8 @@ namespace eka2l1 {
         // Play sync, when finish complete the status
         void play_error(service::ipc_context *ctx);
         void play_data(service::ipc_context *ctx);
+
+        void complete_play(const std::int32_t code);
     };
 
     class mmf_dev_server : public service::typical_server {

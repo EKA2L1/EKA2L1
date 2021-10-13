@@ -177,13 +177,27 @@ namespace eka2l1 {
         , stream_(nullptr)
         , volume_(5)
         , left_balance_(50)
-        , right_balance_(50) {
+        , right_balance_(50)
+        , underflow_event_(0) {
         conf_.channels_ = 1;
         conf_.rate_ = epoc::mmf_sample_rate_8000hz;
         conf_.buffer_size_ = MMF_BUFFER_SIZE_DEFAULT;
         conf_.encoding_ = epoc::mmf_encoding_16bit_pcm; 
+    }
 
-        kernel_system *kern = serv->get_system()->get_kernel_system();
+    mmf_dev_server_session::~mmf_dev_server_session() {
+        kernel_system *kern = server<mmf_dev_server>()->get_kernel_object_owner();
+        ntimer *timing = kern->get_ntimer();
+        
+        if (stream_)
+            stream_->stop();
+
+        timing->unschedule_event(underflow_event_, reinterpret_cast<std::uint64_t>(this));
+    }
+
+    void mmf_dev_server_session::complete_play(const std::int32_t error) {
+        stop();
+        finish_info_.complete(error);
     }
 
     void mmf_dev_server_session::init_stream_through_state() {
@@ -214,7 +228,7 @@ namespace eka2l1 {
                 const std::lock_guard<std::mutex> guard(dev_access_lock_);
 
                 if (last_buffer_) {
-                    finish_info_.complete(epoc::error_underflow);
+                    complete_play(epoc::error_underflow);
                 } else {
                     do_get_buffer_to_be_filled();
                 }
@@ -469,12 +483,16 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    void mmf_dev_server_session::stop(service::ipc_context *ctx) {
+    void mmf_dev_server_session::stop() {
         stream_->stop();
         stream_state_ = epoc::mmf_state_idle;
 
         // Done waiting for all notifications to be completed/ignored, it's time to do deref buffer chunk
         deref_audio_buffer_chunk();
+    }
+
+    void mmf_dev_server_session::stop(service::ipc_context *ctx) {
+        stop();
         ctx->complete(epoc::error_none);
     }
 
@@ -548,6 +566,7 @@ namespace eka2l1 {
         epocver ver_use = kern->get_epoc_version();
 
         kernel::handle return_value = 0;
+        bool first_time = !buffer_chunk_;
 
         if (!buffer_chunk_ || (buffer_chunk_->max_size() < conf_.buffer_size_)) {
             deref_audio_buffer_chunk();
@@ -595,6 +614,19 @@ namespace eka2l1 {
         }
 
         buffer_fill_info_.complete(return_value);
+
+        if (!first_time) {
+            ntimer *timing = kern->get_ntimer();
+            if (!underflow_event_) {
+                underflow_event_ = timing->register_event("MMFUnderflowEvent", [](std::uint64_t userdata, const int late) {
+                    mmf_dev_server_session *session = reinterpret_cast<mmf_dev_server_session*>(userdata);
+                    session->complete_play(epoc::error_underflow);
+                });
+            }
+
+            // Timeout 60ms then we are done
+            timing->schedule_event(60000, underflow_event_, reinterpret_cast<std::uint64_t>(this));
+        }
     }
 
     void mmf_dev_server_session::get_buffer_to_be_filled(service::ipc_context *ctx) {
@@ -629,6 +661,10 @@ namespace eka2l1 {
         const std::lock_guard<std::mutex> guard(dev_access_lock_);
 
         kernel_system *kern = server<mmf_dev_server>()->get_kernel_object_owner();
+        ntimer *timing = kern->get_ntimer();
+        
+        timing->unschedule_event(underflow_event_, reinterpret_cast<std::uint64_t>(this));
+
         epocver ver_use = kern->get_epoc_version();
 
         std::uint32_t supplied_size = 0;
