@@ -39,6 +39,8 @@ namespace eka2l1::drivers {
         std::uint64_t timestamp_in_base_;
         std::vector<std::uint8_t> queued_data_;
 
+        std::mutex decode_lock_;
+
         enum state {
             STATE_NONE,
             STATE_FORMAT_OPENED,
@@ -55,7 +57,9 @@ namespace eka2l1::drivers {
         bool format(const four_cc fmt) override;
 
         void get_supported_formats(std::vector<four_cc> &cc_list) override;
-        bool decode_data(dsp_buffer &original, std::vector<std::uint8_t> &dest) override;
+        
+        bool decode_data(std::vector<std::uint8_t> &dest);
+        void queue_data_decode(const std::uint8_t *original, const std::size_t original_size) override;
 
         int read_queued_data(std::uint8_t *buffer, int buffer_size);
     };

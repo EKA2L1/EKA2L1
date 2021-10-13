@@ -478,11 +478,14 @@ namespace eka2l1::dispatch {
                 const std::lock_guard<std::mutex> guard(epoc_stream->lock_);
 
                 epoc::notify_info &info = epoc_stream->copied_info_;
-                kernel_system *kern = info.requester->get_kernel_object_owner();
 
-                kern->lock();
-                info.complete(epoc::error_none);
-                kern->unlock();
+                if (!info.empty()) {
+                    kernel_system *kern = info.requester->get_kernel_object_owner();
+
+                    kern->lock();
+                    info.complete(epoc::error_none);
+                    kern->unlock();
+                }
             },
             stream_new.get());
 

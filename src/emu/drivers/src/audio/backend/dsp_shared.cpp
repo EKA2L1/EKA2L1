@@ -24,12 +24,9 @@ namespace eka2l1::drivers {
     dsp_output_stream_shared::dsp_output_stream_shared(drivers::audio_driver *aud)
         : dsp_output_stream()
         , aud_(aud)
-        , pointer_(0)
         , virtual_stop(true)
         , more_requested(false)
         , avg_frame_count_(0) {
-        last_frame_[0] = 0;
-        last_frame_[1] = 0;
     }
 
     dsp_output_stream_shared::~dsp_output_stream_shared() {
@@ -120,10 +117,7 @@ namespace eka2l1::drivers {
             complete_callback_(complete_userdata_);
 
         virtual_stop = true;
-
-        // Discard all buffers
-        while (auto buffer = buffers_.pop()) {
-        }
+        buffer_.reset();
 
         return true;
     }
@@ -167,20 +161,19 @@ namespace eka2l1::drivers {
 
     bool dsp_output_stream_shared::write(const std::uint8_t *data, const std::uint32_t data_size) {
         // Copy buffer to queue
-        dsp_buffer buffer;
-        buffer.resize(data_size);
+        if (format_ != PCM16_FOUR_CC_CODE) {
+            queue_data_decode(data, data_size);
+        } else {
+            buffer_.push(data, (data_size + 1) / 2);
+        }
 
-        std::memcpy(&buffer[0], data, data_size);
-
-        // Push it to the queue
-        buffers_.push(buffer);
-
+        more_requested = false;
         return true;
     }
 
     bool dsp_output_stream_shared::internal_decode_running_out() {
         if (format_ == PCM16_FOUR_CC_CODE) {
-            return (decoded_.size() - pointer_) <= (avg_frame_count_ * channels_ * sizeof(std::int16_t) * 4);
+            return (buffer_.size() <= (avg_frame_count_ * channels_ * 4));
         }
 
         return false;
@@ -195,78 +188,40 @@ namespace eka2l1::drivers {
             avg_frame_count_ = (avg_frame_count_ + frame_count) / 2;
         }
 
-        while (frame_wrote < frame_count) {
-            std::optional<dsp_buffer> encoded;
+        if (format_ != PCM16_FOUR_CC_CODE) {
+            // Running on low
+            if (buffer_.size() <= (avg_frame_count_ * channels_ * 4)) {
+                std::vector<std::uint8_t> target_buffer;
+                decode_data(target_buffer);
 
-            bool exit_loop = false;
-            bool need_more = false;
-
-            if ((decoded_.size() == 0) || (decoded_.size() == pointer_)) {
-                // Get the next buffer
-                encoded = buffers_.pop();
-
-                if ((format_ == PCM16_FOUR_CC_CODE) && !encoded) {
-                    exit_loop = true;
-                    break;
-                }
-
-                pointer_ = 0;
-
-                if (format_ == PCM16_FOUR_CC_CODE) {
-                    decoded_ = encoded.value();
-                } else {
-                    std::vector<std::uint8_t> empty;
-                    decode_data(encoded ? encoded.value() : empty, decoded_);
-                }
-
-                if (decoded_.empty()) {
-                    exit_loop = true;
-                }
-
-                if (!exit_loop) {
-                    more_requested = false;
-                }
-
-                samples_copied_ += decoded_.size() / sizeof(std::uint16_t);
+                buffer_.push(target_buffer.data(), (target_buffer.size() + 1) / 2);
             }
-
-            if (exit_loop) {
-                break;
-            }
-
-            // We want to decode more
-            std::size_t frame_to_wrote = ((decoded_.size() - pointer_) / channels_ / sizeof(std::int16_t));
-            frame_to_wrote = std::min<std::size_t>(frame_to_wrote, frame_count - frame_wrote);
-
-            std::size_t sample_to_wrote = frame_to_wrote * channels_;
-            std::size_t size_to_wrote = frame_to_wrote * channels_ * sizeof(std::int16_t);
-
-            // If the amount of buffer left is deemed to be insufficient (this takes account of current frame count that is needed)
-            if (internal_decode_running_out()) {
-                if (!more_requested && (buffers_.size() == 0)) {
-                    const std::lock_guard<std::mutex> guard(callback_lock_);
-                    if (more_buffer_callback_) {
-                        more_buffer_callback_(more_buffer_userdata_);
-                    }
-                    
-                    more_requested = true;
-                }
-            }
-            
-            std::memcpy(&buffer[frame_wrote * channels_], &decoded_[pointer_], size_to_wrote);
-
-            // Set last frame
-            std::memcpy(last_frame_, &decoded_[pointer_ + (frame_to_wrote - 1) * channels_ * sizeof(std::int16_t)], channels_ * sizeof(std::int16_t));
-
-            pointer_ += size_to_wrote;
-            samples_played_ += sample_to_wrote;
-
-            frame_wrote += frame_to_wrote;
         }
 
-        // We dont want to drain the audio driver, so fill it with last frame
+        std::size_t frame_to_wrote = buffer_.pop(buffer, frame_count * channels_) / channels_;
+
+        samples_copied_ += frame_to_wrote * channels_;
+
+        std::size_t sample_to_wrote = frame_to_wrote * channels_;
+        std::size_t size_to_wrote = frame_to_wrote * channels_ * sizeof(std::int16_t);
+
+        // If the amount of buffer left is deemed to be insufficient (this takes account of current frame count that is needed)
+        if (internal_decode_running_out()) {
+            if (!more_requested) {
+                const std::lock_guard<std::mutex> guard(callback_lock_);
+                if (more_buffer_callback_) {
+                    more_buffer_callback_(more_buffer_userdata_);
+                }
+                
+                more_requested = true;
+            }
+        }
+
+        samples_played_ += sample_to_wrote;
+        frame_wrote += frame_to_wrote;
+
         if (frame_wrote < frame_count) {
-            std::memset(&buffer[frame_wrote * channels_], 0, (frame_count - frame_wrote) * channels_ * sizeof(std::int16_t));            
+            std::memset(&buffer[frame_wrote * channels_], 0, (frame_count - frame_wrote) * channels_ * sizeof(std::int16_t));
         }
 
         return frame_count;

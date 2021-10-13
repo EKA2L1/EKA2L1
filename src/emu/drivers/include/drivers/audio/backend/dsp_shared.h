@@ -22,7 +22,7 @@
 #include <drivers/audio/audio.h>
 #include <drivers/audio/dsp.h>
 
-#include <common/queue.h>
+#include <common/container.h>
 
 #include <mutex>
 #include <vector>
@@ -30,19 +30,17 @@
 namespace eka2l1::drivers {
     using dsp_buffer = std::vector<std::uint8_t>;
 
+
     struct dsp_output_stream_shared : public dsp_output_stream {
     protected:
+        static constexpr std::size_t RING_BUFFER_MAX_SAMPLE_COUNT = 0x20000;
+
         drivers::audio_driver *aud_;
         std::unique_ptr<drivers::audio_output_stream> stream_;
 
-        threadsafe_cn_queue<dsp_buffer> buffers_;
+        common::ring_buffer<std::uint16_t, RING_BUFFER_MAX_SAMPLE_COUNT> buffer_;
 
-        dsp_buffer decoded_;
-        std::size_t pointer_;
-
-        std::int16_t last_frame_[2];
         std::mutex callback_lock_;
-
         std::size_t avg_frame_count_;
 
         bool virtual_stop;
@@ -55,7 +53,9 @@ namespace eka2l1::drivers {
         explicit dsp_output_stream_shared(drivers::audio_driver *aud);
         ~dsp_output_stream_shared() override;
 
-        virtual bool decode_data(dsp_buffer &original, std::vector<std::uint8_t> &dest) = 0;
+        virtual bool decode_data(std::vector<std::uint8_t> &dest) = 0;
+        virtual void queue_data_decode(const std::uint8_t *original, const std::size_t original_size) = 0;
+
         std::size_t data_callback(std::int16_t *buffer, const std::size_t frame_count);
 
         bool write(const std::uint8_t *data, const std::uint32_t data_size) override;

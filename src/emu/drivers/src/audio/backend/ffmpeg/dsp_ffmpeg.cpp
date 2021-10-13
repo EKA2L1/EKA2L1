@@ -71,6 +71,8 @@ namespace eka2l1::drivers {
     }
 
     int dsp_output_stream_ffmpeg::read_queued_data(std::uint8_t *buffer, int buffer_size) {
+        const std::lock_guard<std::mutex> guard(decode_lock_);
+
         if (queued_data_.empty()) {
             return 0;
         }
@@ -178,15 +180,20 @@ namespace eka2l1::drivers {
         return true;
     }
 
-    bool dsp_output_stream_ffmpeg::decode_data(dsp_buffer &original, std::vector<std::uint8_t> &dest) {
-        decoded_.clear();
+    void dsp_output_stream_ffmpeg::queue_data_decode(const std::uint8_t *original, const std::size_t original_size) {
+        const std::lock_guard<std::mutex> guard(decode_lock_);
 
-        if (original.empty() && queued_data_.empty()) {
+        queued_data_.resize(queued_data_.size() + original_size);
+        std::memcpy(queued_data_.data() + queued_data_.size() - original_size, original, original_size);
+    }
+
+    bool dsp_output_stream_ffmpeg::decode_data( std::vector<std::uint8_t> &dest) {
+        dest.clear();
+
+        if (queued_data_.empty()) {
             // Nothing more to resolve
             return false;
         }
-
-        queued_data_.insert(queued_data_.end(), original.begin(), original.end());
 
         if (!av_format_ || (state_ == STATE_NONE)) {
             const char *sample_filename = FOUR_CC_TO_FILENAME_QUICK_REG_MAP[format_];
