@@ -60,7 +60,7 @@ namespace eka2l1::drivers {
 #endif
 
 #ifdef EKA2L1_PLATFORM_ANDROID
-        minimum_latency = common::max<std::uint32_t>(256U, minimum_latency),
+        minimum_latency = common::max<std::uint32_t>(256U, minimum_latency);
 #endif
 
         const auto result = cubeb_stream_init(context, &stream_, "EKA2L1 StreamPeam",
