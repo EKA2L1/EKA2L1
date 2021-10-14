@@ -115,8 +115,19 @@ namespace eka2l1 {
     };
 
     class mmf_dev_server : public service::typical_server {
+    protected:
+        std::uint32_t flags_ = 0;
+
+        enum {
+            FLAG_ENABLE_UNDERFLOW_REPORT = 1 << 0           ///< Reports underflow if time ran out. Still experiemental, breaks Bounce
+        };
+
     public:
         explicit mmf_dev_server(eka2l1::system *sys);
         void connect(service::ipc_context &context) override;
+
+        bool report_inactive_underflow() const {
+            return flags_ & FLAG_ENABLE_UNDERFLOW_REPORT;
+        }
     };
 }

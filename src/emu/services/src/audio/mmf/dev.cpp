@@ -21,6 +21,8 @@
 #include <services/audio/mmf/dev.h>
 #include <utils/err.h>
 
+#include <config/config.h>
+
 #include <kernel/kernel.h>
 #include <system/epoc.h>
 
@@ -160,6 +162,10 @@ namespace eka2l1 {
 
     mmf_dev_server::mmf_dev_server(eka2l1::system *sys)
         : service::typical_server(sys, MMF_DEV_SERVER_NAME) {
+        config::state *state = sys->get_config();
+        if (state && state->report_mmfdev_underflow) {
+            flags_ |= FLAG_ENABLE_UNDERFLOW_REPORT;
+        }
     }
 
     void mmf_dev_server::connect(service::ipc_context &context) {
@@ -186,13 +192,16 @@ namespace eka2l1 {
     }
 
     mmf_dev_server_session::~mmf_dev_server_session() {
-        kernel_system *kern = server<mmf_dev_server>()->get_kernel_object_owner();
+        mmf_dev_server *serv = server<mmf_dev_server>();
+        kernel_system *kern = serv->get_kernel_object_owner();
         ntimer *timing = kern->get_ntimer();
         
         if (stream_)
             stream_->stop();
 
-        timing->unschedule_event(underflow_event_, reinterpret_cast<std::uint64_t>(this));
+        if (serv->report_inactive_underflow()) {
+            timing->unschedule_event(underflow_event_, reinterpret_cast<std::uint64_t>(this));
+        }
     }
 
     void mmf_dev_server_session::complete_play(const std::int32_t error) {
@@ -487,6 +496,15 @@ namespace eka2l1 {
         stream_->stop();
         stream_state_ = epoc::mmf_state_idle;
 
+        mmf_dev_server *serv = server<mmf_dev_server>();
+
+        if (serv->report_inactive_underflow()) {
+            kernel_system *kern = serv->get_kernel_object_owner();
+            ntimer *timing = kern->get_ntimer();
+            
+            timing->unschedule_event(underflow_event_, reinterpret_cast<std::uint64_t>(this));
+        }
+
         // Done waiting for all notifications to be completed/ignored, it's time to do deref buffer chunk
         deref_audio_buffer_chunk();
     }
@@ -562,7 +580,9 @@ namespace eka2l1 {
             return;
         }
 
-        kernel_system *kern = server<mmf_dev_server>()->get_kernel_object_owner();
+        mmf_dev_server *serv = server<mmf_dev_server>();
+
+        kernel_system *kern = serv->get_kernel_object_owner();
         epocver ver_use = kern->get_epoc_version();
 
         kernel::handle return_value = 0;
@@ -615,7 +635,7 @@ namespace eka2l1 {
 
         buffer_fill_info_.complete(return_value);
 
-        if (!first_time) {
+        if (!first_time && serv->report_inactive_underflow()) {
             ntimer *timing = kern->get_ntimer();
             if (!underflow_event_) {
                 underflow_event_ = timing->register_event("MMFUnderflowEvent", [](std::uint64_t userdata, const int late) {
@@ -624,8 +644,7 @@ namespace eka2l1 {
                 });
             }
 
-            // Timeout 60ms then we are done
-            timing->schedule_event(60000, underflow_event_, reinterpret_cast<std::uint64_t>(this));
+            timing->schedule_event(100000, underflow_event_, reinterpret_cast<std::uint64_t>(this));
         }
     }
 
@@ -660,10 +679,13 @@ namespace eka2l1 {
 
         const std::lock_guard<std::mutex> guard(dev_access_lock_);
 
-        kernel_system *kern = server<mmf_dev_server>()->get_kernel_object_owner();
-        ntimer *timing = kern->get_ntimer();
-        
-        timing->unschedule_event(underflow_event_, reinterpret_cast<std::uint64_t>(this));
+        mmf_dev_server *serv = server<mmf_dev_server>();
+        kernel_system *kern = serv->get_kernel_object_owner();
+
+        if (serv->report_inactive_underflow()) {
+            ntimer *timing = kern->get_ntimer();
+            timing->unschedule_event(underflow_event_, reinterpret_cast<std::uint64_t>(this));
+        }
 
         epocver ver_use = kern->get_epoc_version();
 

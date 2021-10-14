@@ -110,13 +110,13 @@ namespace eka2l1::drivers {
         if (!stream_)
             return true;
 
-        const std::lock_guard<std::mutex> guard(callback_lock_);
-
         // Call the finish callback
         if (complete_callback_)
             complete_callback_(complete_userdata_);
 
         virtual_stop = true;
+        more_requested = false;
+
         buffer_.reset();
 
         return true;

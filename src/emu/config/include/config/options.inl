@@ -66,6 +66,7 @@ OPTION(mmc-id, mmc_id, DEFAULT_MMC_ID)
 OPTION(audio-master-volume, audio_master_volume, 100)
 OPTION(current-keybind-profile, current_keybind_profile, "default")
 OPTION(screen-buffer-sync, screen_buffer_sync_string, "preferred")
+OPTION(report-mmfdev-underflow, report_mmfdev_underflow, false)
 
 #ifdef OPTION
 #undef OPTION
