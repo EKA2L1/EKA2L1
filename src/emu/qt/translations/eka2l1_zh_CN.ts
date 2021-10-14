@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/utils.cpp" line="126"/>
       <source>EKA2L1 - Symbian OS emulator</source>
-      <translation type="unfinished">EKA2L1 - Symbian OS emulator</translation>
+      <translation>EKA2L1 - 塞班系统模拟器</translation>
     </message>
   </context>
   <context>
@@ -736,12 +736,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="453"/>
       <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
-      <translation type="unfinished">Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</translation>
+      <translation>启用此选项将使窗口具有 &quot;EKA2L1&quot;的常量名，但没有附加信息。</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="459"/>
       <source>Disable easter egg title</source>
-      <translation type="unfinished">Disable easter egg title</translation>
+      <translation>禁用彩蛋标题</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="470"/>
@@ -869,34 +869,34 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="783"/>
       <source>Graphics</source>
-      <translation type="unfinished">Graphics</translation>
+      <translation>图像</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="795"/>
       <source>Screen buffer sync</source>
-      <translation type="unfinished">Screen buffer sync</translation>
+      <translation>屏幕缓冲同步</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="809"/>
       <source>Preferred</source>
-      <translation type="unfinished">Preferred</translation>
+      <translation>首选</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="819"/>
       <source>Enable</source>
-      <translation type="unfinished">Enable</translation>
+      <translation>启用</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="814"/>
       <source>Disable</source>
-      <translation type="unfinished">Disable</translation>
+      <translation>禁用</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="791"/>
       <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
-      <translation type="unfinished">This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
-Preferred option will automatically enable this on S60v1/S60v2 devices.</translation>
+      <translation>这允许模拟软件具有录制能力，并防止在一些旧的S60v1/S60v2游戏中闪屏。
+首选选项将在S60v1/S60v2设备上自动启用此选项。</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="839"/>
