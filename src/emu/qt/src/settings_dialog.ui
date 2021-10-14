@@ -29,7 +29,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="general_widget">
       <attribute name="title">
@@ -400,7 +400,7 @@
          <property name="title">
           <string>User interface</string>
          </property>
-         <layout class="QGridLayout" name="gridLayout_4" rowstretch="1,1,1">
+         <layout class="QGridLayout" name="gridLayout_4" rowstretch="1,0,0,0">
           <item row="1" column="0">
            <layout class="QHBoxLayout" name="interface_theme_layout">
             <item>
@@ -426,6 +426,13 @@
             </item>
            </layout>
           </item>
+          <item row="2" column="0">
+           <widget class="QCheckBox" name="interface_status_bar_checkbox">
+            <property name="text">
+             <string>Disable status bar</string>
+            </property>
+           </widget>
+          </item>
           <item row="0" column="0">
            <layout class="QHBoxLayout" name="interface_language_layout">
             <item>
@@ -440,10 +447,16 @@
             </item>
            </layout>
           </item>
-          <item row="2" column="0">
-           <widget class="QCheckBox" name="interface_status_bar_checkbox">
+          <item row="3" column="0">
+           <widget class="QCheckBox" name="interface_disable_easter_egg_title_checkbox">
+            <property name="toolTip">
+             <string>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</string>
+            </property>
+            <property name="statusTip">
+             <string/>
+            </property>
             <property name="text">
-             <string>Disable status bar</string>
+             <string>Disable easter egg title</string>
             </property>
            </widget>
           </item>

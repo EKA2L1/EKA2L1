@@ -442,6 +442,7 @@ void main_window::on_settings_triggered() {
         connect(settings_dialog_.data(), &settings_dialog::theme_change_request, this, &main_window::on_theme_change_requested);
         connect(settings_dialog_.data(), &settings_dialog::minimum_display_size_change, this, &main_window::force_update_display_minimum_size);
         connect(settings_dialog_.data(), &settings_dialog::active_app_setting_changed, this, &main_window::on_app_setting_changed, Qt::DirectConnection);
+        connect(settings_dialog_.data(), &settings_dialog::window_title_setting_changed, this, &main_window::on_window_title_setting_changed);
         connect(this, &main_window::app_launching, settings_dialog_.data(), &settings_dialog::on_app_launching);
         connect(this, &main_window::controller_button_press, settings_dialog_.data(), &settings_dialog::on_controller_button_press);
         connect(this, &main_window::screen_focus_group_changed, settings_dialog_.data(), &settings_dialog::refresh_app_configuration_details);
@@ -1123,6 +1124,10 @@ void main_window::force_update_display_minimum_size() {
     }
 
     mode_change_screen(&emulator_state_, get_current_active_screen(), 0);
+}
+
+void main_window::on_window_title_setting_changed() {
+    setWindowTitle(get_emulator_window_title());
 }
 
 void main_window::save_ui_layouts() {

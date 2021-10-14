@@ -261,6 +261,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     ui_->interface_status_bar_checkbox->setChecked(settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
     ui_->interface_theme_combo->setCurrentIndex(settings.value(THEME_SETTING_NAME, 0).toInt());
     ui_->emulator_display_true_size_checkbox->setChecked(settings.value(TRUE_SIZE_RESIZE_SETTING_NAME, false).toBool());
+    ui_->interface_disable_easter_egg_title_checkbox->setChecked(settings.value(STATIC_TITLE_SETTING_NAME, false).toBool());
 
     QVariant current_language_variant = settings.value(LANGUAGE_SETTING_NAME);
 
@@ -351,6 +352,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->interface_status_bar_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_status_bar_visibility_change);
     connect(ui_->interface_theme_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_theme_changed);
     connect(ui_->interface_language_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_ui_language_changed);
+    connect(ui_->interface_disable_easter_egg_title_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_easter_egg_title_toggled);
 
     connect(ui_->debugging_cpu_read_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_cpu_read_toggled);
     connect(ui_->debugging_cpu_write_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_cpu_write_toggled);
@@ -1106,6 +1108,13 @@ void settings_dialog::on_ui_language_changed(int index) {
 
         QMessageBox::information(this, tr("Relaunch needed"), tr("The language will be updated on the next launch of the emulator."));
     }
+}
+
+void settings_dialog::on_easter_egg_title_toggled(bool val) {
+    QSettings settings;
+    settings.setValue(STATIC_TITLE_SETTING_NAME, val);
+
+    emit window_title_setting_changed();
 }
 
 void settings_dialog::on_true_size_enable_toogled(bool val) {

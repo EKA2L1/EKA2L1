@@ -86,6 +86,7 @@ private:
     QString get_imei_error_string(const int err);
 
 private slots:
+    void on_easter_egg_title_toggled(bool val);
     void on_nearest_neighbor_toggled(bool val);
     void on_cpu_read_toggled(bool val);
     void on_cpu_write_toggled(bool val);
@@ -138,6 +139,7 @@ signals:
     void active_app_setting_changed();
     void theme_change_request(const QString &theme_name);
     void minimum_display_size_change();
+    void window_title_setting_changed();
 
 public:
     explicit settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::drivers::emu_controller *controller,
