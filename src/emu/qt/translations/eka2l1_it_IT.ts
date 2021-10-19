@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/utils.cpp" line="126"/>
       <source>EKA2L1 - Symbian OS emulator</source>
-      <translation type="unfinished">EKA2L1 - Symbian OS emulator</translation>
+      <translation>EKA2L1 - Emulatore Symbian OS</translation>
     </message>
   </context>
   <context>
@@ -736,12 +736,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="453"/>
       <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
-      <translation type="unfinished">Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</translation>
+      <translation>Abilitando questa opzione, il nome della finestra sarà soltanto &quot;EKA2L1&quot;, senza informazioni aggiuntive.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="459"/>
       <source>Disable easter egg title</source>
-      <translation type="unfinished">Disable easter egg title</translation>
+      <translation>Disattiva Easter Egg nel titolo</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="470"/>
