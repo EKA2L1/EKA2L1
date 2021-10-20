@@ -32,29 +32,28 @@ namespace eka2l1 {
         void emu_controller_glfw3::poll() {
             for (int jid = GLFW_JOYSTICK_1; jid <= GLFW_JOYSTICK_LAST; jid++) {
                 if (glfwJoystickPresent(jid)) {
-                    int axis_count = 0, button_count = 0;
+                    GLFWgamepadstate external_gamepad_state;
+                    int axis_count = 0;
+
                     const float *axes = glfwGetJoystickAxes(jid, &axis_count);
-                    const unsigned char *buttons = glfwGetJoystickButtons(jid, &button_count);
+                    glfwGetGamepadState(jid, &external_gamepad_state);
 
                     // Only allow the maximum of 6 axes, 2 being LT and RT, treats them as button
                     axis_count = std::min<int>(axis_count, 6);
 
                     if (gamepads.count(jid) == 0) {
-                        gamepads[jid] = { std::vector<bool>(button_count, false),
+                        gamepads[jid] = { std::vector<bool>(GLFW_GAMEPAD_BUTTON_LAST, false),
                             std::vector<float>(axis_count, 0.0f) };
                     } else {
-                        if (gamepads[jid].button.size() != button_count) {
-                            gamepads[jid].button = std::vector<bool>(button_count, false);
-                        }
                         if (gamepads[jid].axis.size() != axis_count) {
                             gamepads[jid].axis = std::vector<float>(axis_count, 0.0f);
                         }
                     }
                     gamepad_state &current_pad = gamepads[jid];
-                    for (int i = 0; i < button_count; i++) {
-                        if ((buttons[i] == GLFW_PRESS) != current_pad.button[i]) {
-                            current_pad.button[i] = (buttons[i] == GLFW_PRESS) ? true : false;
-                            on_button_event(jid, i, buttons[i]);
+                    for (int i = 0; i < GLFW_GAMEPAD_BUTTON_LAST; i++) {
+                        if ((external_gamepad_state.buttons[i] == GLFW_PRESS) != current_pad.button[i]) {
+                            current_pad.button[i] = (external_gamepad_state.buttons[i] == GLFW_PRESS) ? true : false;
+                            on_button_event(jid, i, external_gamepad_state.buttons[i]);
                         }
                     }
                     for (int i = 0; i < axis_count; i++) {
