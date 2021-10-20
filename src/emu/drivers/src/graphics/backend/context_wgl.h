@@ -16,7 +16,7 @@ namespace eka2l1::drivers::graphics {
 
         ~gl_context_wgl() override;
 
-        bool is_headless() const;
+        bool is_headless() const override;
 
         std::unique_ptr<gl_context> create_shared_context() override;
 

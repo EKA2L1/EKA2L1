@@ -56,6 +56,8 @@ namespace eka2l1::drivers::graphics {
         virtual void update() = 0;
         virtual void set_swap_interval(const std::int32_t interval) = 0;
 
+        virtual bool is_headless() const = 0;
+
         virtual std::unique_ptr<gl_context> create_shared_context() = 0;
     };
 
