@@ -173,14 +173,17 @@ if(APPLE)
        XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS "--deep --options=runtime"
        OUTPUT_NAME EKA2L1
     )
-    # Copy Qt plugins into the bundle
-    get_target_property(qtcocoa_location Qt5::QCocoaIntegrationPlugin LOCATION)
-    target_sources(eka2l1_qt PRIVATE "${qtcocoa_location}")
-    set_source_files_properties("${qtcocoa_location}" PROPERTIES MACOSX_PACKAGE_LOCATION MacOS/platforms)
 
-    get_target_property(qtmacstyle_location Qt5::QMacStylePlugin LOCATION)
-    target_sources(eka2l1_qt PRIVATE "${qtmacstyle_location}")
-    set_source_files_properties("${qtmacstyle_location}" PROPERTIES MACOSX_PACKAGE_LOCATION MacOS/styles)
+    # Copy Qt plugins into the bundle
+    if (${QT_VERSION_MAJOR} EQUAL 5)
+        get_target_property(qtcocoa_location Qt${QT_VERSION_MAJOR}::QCocoaIntegrationPlugin LOCATION)
+        target_sources(eka2l1_qt PRIVATE "${qtcocoa_location}")
+        set_source_files_properties("${qtcocoa_location}" PROPERTIES MACOSX_PACKAGE_LOCATION MacOS/platforms)
+
+        get_target_property(qtmacstyle_location Qt${QT_VERSION_MAJOR}::QMacStylePlugin LOCATION)
+        target_sources(eka2l1_qt PRIVATE "${qtmacstyle_location}")
+        set_source_files_properties("${qtmacstyle_location}" PROPERTIES MACOSX_PACKAGE_LOCATION MacOS/styles)
+    endif()
 
     # Copy icon into the bundle
     target_sources(eka2l1_qt PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/duck.icns")
