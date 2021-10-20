@@ -131,10 +131,6 @@ namespace eka2l1::desktop {
         eka2l1::common::set_thread_name(graphics_driver_thread_name);
         eka2l1::common::set_thread_priority(eka2l1::common::thread_priority_high);
 
-        if (!drivers::init_window_library(drivers::window_api::glfw)) {
-            return -1;
-        }
-
         state.window->raw_mouse_event = on_ui_window_mouse_evt;
         state.window->button_pressed = on_ui_window_key_press;
         state.window->button_released = on_ui_window_key_release;
@@ -180,13 +176,13 @@ namespace eka2l1::desktop {
         };
 
         // Signal that the initialization is done
-        state.graphics_sema.notify(2);
+        state.graphics_event.set();
         return 0;
     }
 
     static int graphics_driver_thread_deinitialization(emulator &state) {
         if (state.stage_two_inited)
-            state.graphics_sema.wait();
+            state.graphics_event.wait();
 
         state.joystick_controller->stop_polling();
         state.graphics_driver.reset();
@@ -243,7 +239,7 @@ namespace eka2l1::desktop {
             state.init_event.set();
 
             if (first_time) {
-                state.graphics_sema.wait();
+                state.graphics_event.wait();
                 first_time = false;
             }
 
@@ -284,7 +280,7 @@ namespace eka2l1::desktop {
 
         state.kill_event.wait();
         state.symsys.reset();
-        state.graphics_sema.notify();
+        state.graphics_event.set();
 
 #if EKA2L1_PLATFORM(WIN32)
         CoUninitialize();
@@ -351,7 +347,7 @@ namespace eka2l1::desktop {
             if (state.should_emu_quit) {
                 // Notify the OS thread that is still sleeping, waiting for
                 // graphics sema to be freed.
-                state.graphics_sema.notify();
+                state.graphics_event.set();
 
                 std::cout << err << std::endl;
                 os_thread_obj.join();
@@ -365,12 +361,12 @@ namespace eka2l1::desktop {
         state.ui_main->setWindowTitle(get_emulator_window_title());
 
         state.window = state.ui_main->render_window();
-        std::thread graphics_thread_obj(graphics_driver_thread, std::ref(state));
-
-        state.graphics_sema.wait();
-        if (state.init_app_launched) {
-            state.ui_main->setup_and_switch_to_game_mode();
+        
+        if (!drivers::init_window_library(drivers::window_api::glfw)) {
+            return -1;
         }
+
+        std::thread graphics_thread_obj(graphics_driver_thread, std::ref(state));
 
         const int exec_code = application.exec();
         kill_emulator(state);

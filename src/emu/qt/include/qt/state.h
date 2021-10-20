@@ -70,8 +70,9 @@ namespace eka2l1::desktop {
         bool first_time;
         bool init_fullscreen;
         bool init_app_launched;
+        bool inited_graphics;
 
-        common::semaphore graphics_sema;
+        common::event graphics_event;
         common::event init_event;
         common::event pause_event;
         common::event kill_event;

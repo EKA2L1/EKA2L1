@@ -111,7 +111,7 @@ static void mode_change_screen(void *userdata, eka2l1::epoc::screen *scr, const 
     widget->setMinimumSize(new_minsize);
 }
 
-static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, const bool is_dsa) {
+static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, const bool is_dsa, const bool need_wait = true) {
     eka2l1::desktop::emulator *state_ptr = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
     if (!state_ptr) {
         return;
@@ -193,7 +193,9 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     cmd_builder->present(&wait_status);
 
     state.graphics_driver->submit_command_list(*cmd_list);
-    state.graphics_driver->wait_for(&wait_status);
+
+    if (need_wait)
+        state.graphics_driver->wait_for(&wait_status);
 }
 
 
@@ -307,6 +309,10 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     
     QColor default_color = settings.value(BACKGROUND_COLOR_DISPLAY_SETTING_NAME, QColor(0xD0, 0xD0, 0xD0)).value<QColor>();
     emulator_state_.conf.display_background_color = default_color.rgba();
+
+    if (emulator_state_.init_app_launched) {
+        setup_and_switch_to_game_mode();
+    }
 
     connect(ui_->action_about, &QAction::triggered, this, &main_window::on_about_triggered);
     connect(ui_->action_settings, &QAction::triggered, this, &main_window::on_settings_triggered);
@@ -786,7 +792,7 @@ void main_window::setup_screen_draw() {
         eka2l1::epoc::screen *scr = get_current_active_screen();
         if (scr) {
             active_screen_draw_callback_ = scr->add_screen_redraw_callback(&emulator_state_, [this](void *userdata, eka2l1::epoc::screen *scr, const bool is_dsa) {
-                draw_emulator_screen(userdata, scr, is_dsa);
+                draw_emulator_screen(userdata, scr, is_dsa, true);
                 emit status_bar_update(scr->last_fps);
             });
 
@@ -962,7 +968,7 @@ void main_window::resizeEvent(QResizeEvent *event) {
     if (system) {
         eka2l1::epoc::screen *scr = get_current_active_screen();
         if (scr) {
-            draw_emulator_screen(&emulator_state_, scr, true);
+            draw_emulator_screen(&emulator_state_, scr, true, false);
         }
     }
 }
