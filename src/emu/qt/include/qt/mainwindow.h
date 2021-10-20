@@ -21,6 +21,7 @@
 #define MAINWINDOW_H
 
 #include <drivers/input/common.h>
+#include <drivers/graphics/context.h>
 
 #include <QActionGroup>
 #include <QListWidgetItem>

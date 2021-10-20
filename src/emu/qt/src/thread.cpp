@@ -1,7 +1,11 @@
 /*
  * Copyright (c) 2019 EKA2L1 Team.
+ * Copyright 2015 Dolphin Emulator Project.
  * 
- * This file is part of EKA2L1 project
+ * This file is part of EKA2L1 project.
+ * 
+ * A portion of the code is borrowed from MainWindow.cpp in DolphinQt
+ * source folder.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,6 +50,8 @@
 #endif
 
 #include <QApplication>
+#include <QWindow>
+
 #include <qt/mainwindow.h>
 
 static eka2l1::drivers::input_event make_mouse_event_driver(const float x, const float y, const int button, const int action) {
@@ -135,11 +141,10 @@ namespace eka2l1::desktop {
 
         state.window->init("Emulator display", eka2l1::vec2(800, 600), drivers::emu_window_flag_maximum_size);
         state.window->set_userdata(&state);
-        state.window->make_current();
 
         // We got window and context ready (OpenGL, let makes stuff now)
         // TODO: Configurable
-        state.graphics_driver = drivers::create_graphics_driver(drivers::graphic_api::opengl);
+        state.graphics_driver = drivers::create_graphics_driver(drivers::graphic_api::opengl, state.window->get_window_system_info());
         state.symsys->set_graphics_driver(state.graphics_driver.get());
 
         drivers::emu_window *window = state.window;

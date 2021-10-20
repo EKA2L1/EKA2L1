@@ -144,5 +144,5 @@ namespace eka2l1::drivers {
 
     bool init_graphics_library(graphic_api api);
 
-    graphics_driver_ptr create_graphics_driver(const graphic_api api);
+    graphics_driver_ptr create_graphics_driver(const graphic_api api, const window_system_info &info);
 };

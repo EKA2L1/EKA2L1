@@ -31,10 +31,17 @@
 #define IMGUI_IMPL_OPENGL_LOADER_GLAD
 
 namespace eka2l1::drivers {
-    ogl_graphics_driver::ogl_graphics_driver()
+    ogl_graphics_driver::ogl_graphics_driver(const window_system_info &info)
         : shared_graphics_driver(graphic_api::opengl)
         , should_stop(false)
         , is_gles(false) {
+        context_ = graphics::make_gl_context(info, false, true);
+
+        if (!context_) {
+            LOG_ERROR(DRIVER_GRAPHICS, "OGL context failed to create!");
+            return;
+        }
+
         init_graphics_library(eka2l1::drivers::graphic_api::opengl);
         list_queue.max_pending_count_ = 128;
 
@@ -142,6 +149,7 @@ namespace eka2l1::drivers {
     }
 
     void ogl_graphics_driver::bind_swapchain_framebuf() {
+        context_->update();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
@@ -772,6 +780,8 @@ namespace eka2l1::drivers {
     }
 
     void ogl_graphics_driver::display(command_helper &helper) {
+        context_->swap_buffers();
+
         disp_hook_();
         helper.finish(this, 0);
     }

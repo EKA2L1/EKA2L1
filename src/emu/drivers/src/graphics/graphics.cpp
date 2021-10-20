@@ -52,10 +52,10 @@ namespace eka2l1::drivers {
         return false;
     }
 
-    graphics_driver_ptr create_graphics_driver(const graphic_api api) {
+    graphics_driver_ptr create_graphics_driver(const graphic_api api, const window_system_info &info) {
         switch (api) {
         case graphic_api::opengl: {
-            return std::make_unique<ogl_graphics_driver>();
+            return std::make_unique<ogl_graphics_driver>(info);
         }
 
         default:

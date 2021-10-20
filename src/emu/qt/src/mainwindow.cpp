@@ -196,6 +196,7 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     state.graphics_driver->wait_for(&wait_status);
 }
 
+
 main_window::main_window(QApplication &application, QWidget *parent, eka2l1::desktop::emulator &emulator_state)
     : QMainWindow(parent)
     , application_(application)
