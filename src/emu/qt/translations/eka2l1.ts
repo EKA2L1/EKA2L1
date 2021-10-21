@@ -704,321 +704,331 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="401"/>
+        <location filename="../src/settings_dialog.ui" line="396"/>
+        <source>If blurry scaled up phone display is not preferred, this option will disable scaling the emulator display, keeping it at the original size.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="411"/>
         <source>User interface</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="409"/>
+        <location filename="../src/settings_dialog.ui" line="419"/>
         <source>Theme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="417"/>
+        <location filename="../src/settings_dialog.ui" line="427"/>
         <source>Light</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="422"/>
+        <location filename="../src/settings_dialog.ui" line="432"/>
         <source>Dark</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="441"/>
+        <location filename="../src/settings_dialog.ui" line="451"/>
         <source>Language</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="432"/>
+        <location filename="../src/settings_dialog.ui" line="442"/>
         <source>Disable status bar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="453"/>
+        <location filename="../src/settings_dialog.ui" line="399"/>
+        <source>Do not scale phone display to fit emulator window</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="463"/>
         <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="459"/>
+        <location filename="../src/settings_dialog.ui" line="469"/>
         <source>Disable easter egg title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="470"/>
+        <location filename="../src/settings_dialog.ui" line="480"/>
         <source>System</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="476"/>
+        <location filename="../src/settings_dialog.ui" line="486"/>
         <source>Audio</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="490"/>
+        <location filename="../src/settings_dialog.ui" line="500"/>
         <source>Volume</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="513"/>
-        <location filename="../src/settings_dialog.ui" line="751"/>
-        <location filename="../src/settings_dialog.ui" line="1572"/>
+        <location filename="../src/settings_dialog.ui" line="523"/>
+        <location filename="../src/settings_dialog.ui" line="761"/>
+        <location filename="../src/settings_dialog.ui" line="1582"/>
         <source>0</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="525"/>
+        <location filename="../src/settings_dialog.ui" line="535"/>
         <source>Devices</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="542"/>
+        <location filename="../src/settings_dialog.ui" line="552"/>
         <source>Current</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="565"/>
-        <location filename="../src/settings_dialog.ui" line="890"/>
+        <location filename="../src/settings_dialog.ui" line="575"/>
+        <location filename="../src/settings_dialog.ui" line="900"/>
         <source>Rename</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="576"/>
+        <location filename="../src/settings_dialog.ui" line="586"/>
         <source>Check for any unimported devices and correct existing one&apos;s infos.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="579"/>
+        <location filename="../src/settings_dialog.ui" line="589"/>
         <source>Rescan devices</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="586"/>
+        <location filename="../src/settings_dialog.ui" line="596"/>
         <source>Check for faults in current device and fix them so that EKA2L1 can emulate the device.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="589"/>
+        <location filename="../src/settings_dialog.ui" line="599"/>
         <source>Validate current device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="601"/>
+        <location filename="../src/settings_dialog.ui" line="611"/>
         <source>Hardware emulation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="615"/>
+        <location filename="../src/settings_dialog.ui" line="625"/>
         <source>CPU emulator</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="623"/>
+        <location filename="../src/settings_dialog.ui" line="633"/>
         <source>Dynarmic (CPU recompiler)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="628"/>
+        <location filename="../src/settings_dialog.ui" line="638"/>
         <source>Dyncom (CPU interpreter)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="640"/>
+        <location filename="../src/settings_dialog.ui" line="650"/>
         <source>Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="643"/>
+        <location filename="../src/settings_dialog.ui" line="653"/>
         <source>Real-time accuracy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="651"/>
+        <location filename="../src/settings_dialog.ui" line="661"/>
         <source>Low</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="656"/>
+        <location filename="../src/settings_dialog.ui" line="666"/>
         <source>Mid</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="661"/>
+        <location filename="../src/settings_dialog.ui" line="671"/>
         <source>High</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="680"/>
+        <location filename="../src/settings_dialog.ui" line="690"/>
         <source>Properties</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="711"/>
+        <location filename="../src/settings_dialog.ui" line="721"/>
         <source>Check</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="722"/>
+        <location filename="../src/settings_dialog.ui" line="732"/>
         <source>Battery level (0 - 100)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="768"/>
+        <location filename="../src/settings_dialog.ui" line="778"/>
         <source>System language</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="783"/>
+        <location filename="../src/settings_dialog.ui" line="793"/>
         <source>Graphics</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="795"/>
+        <location filename="../src/settings_dialog.ui" line="805"/>
         <source>Screen buffer sync</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="809"/>
+        <location filename="../src/settings_dialog.ui" line="819"/>
         <source>Preferred</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="819"/>
+        <location filename="../src/settings_dialog.ui" line="829"/>
         <source>Enable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="814"/>
+        <location filename="../src/settings_dialog.ui" line="824"/>
         <source>Disable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="791"/>
+        <location filename="../src/settings_dialog.ui" line="801"/>
         <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="839"/>
+        <location filename="../src/settings_dialog.ui" line="849"/>
         <source>Control</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="854"/>
+        <location filename="../src/settings_dialog.ui" line="864"/>
         <source>Profile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="877"/>
+        <location filename="../src/settings_dialog.ui" line="887"/>
         <source>Add</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="903"/>
+        <location filename="../src/settings_dialog.ui" line="913"/>
         <source>Delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="922"/>
+        <location filename="../src/settings_dialog.ui" line="932"/>
         <source>Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="940"/>
+        <location filename="../src/settings_dialog.ui" line="950"/>
         <source>Left softkey</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="978"/>
+        <location filename="../src/settings_dialog.ui" line="988"/>
         <source>Up arrow</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="1010"/>
+        <location filename="../src/settings_dialog.ui" line="1020"/>
         <source>Right softkey</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="1046"/>
+        <location filename="../src/settings_dialog.ui" line="1056"/>
         <source>Left arrow</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="1078"/>
+        <location filename="../src/settings_dialog.ui" line="1088"/>
         <source>Middle softkey</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="1110"/>
+        <location filename="../src/settings_dialog.ui" line="1120"/>
         <source>Right arrow</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="1146"/>
+        <location filename="../src/settings_dialog.ui" line="1156"/>
         <source>Green softkey</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="1178"/>
+        <location filename="../src/settings_dialog.ui" line="1188"/>
         <source>Down arrow</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="1210"/>
+        <location filename="../src/settings_dialog.ui" line="1220"/>
         <source>Red softkey</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="1246"/>
+        <location filename="../src/settings_dialog.ui" line="1256"/>
         <source>1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="1278"/>
+        <location filename="../src/settings_dialog.ui" line="1288"/>
         <source>2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="1310"/>
+        <location filename="../src/settings_dialog.ui" line="1320"/>
         <source>3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="1346"/>
+        <location filename="../src/settings_dialog.ui" line="1356"/>
         <source>4</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="1378"/>
+        <location filename="../src/settings_dialog.ui" line="1388"/>
         <source>5</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="1410"/>
+        <location filename="../src/settings_dialog.ui" line="1420"/>
         <source>6</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="1440"/>
+        <location filename="../src/settings_dialog.ui" line="1450"/>
         <source>7</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="1472"/>
+        <location filename="../src/settings_dialog.ui" line="1482"/>
         <source>8</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="1504"/>
+        <location filename="../src/settings_dialog.ui" line="1514"/>
         <source>9</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="1540"/>
+        <location filename="../src/settings_dialog.ui" line="1550"/>
         <source>*</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="1604"/>
+        <location filename="../src/settings_dialog.ui" line="1614"/>
         <source>#</source>
         <translation type="unfinished"></translation>
     </message>

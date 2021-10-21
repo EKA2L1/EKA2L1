@@ -29,11 +29,11 @@
 
 namespace eka2l1 {
     namespace loader {
-        void peek(void *buf, size_t element_count, size_t element_size, std::istream *file) {
-            size_t crr = file->tellg();
+        void peek(void *buf, size_t element_count, size_t element_size, common::ro_stream *file) {
+            size_t crr = file->tell();
 
             file->read(static_cast<char *>(buf), element_count * element_size);
-            file->seekg(crr);
+            file->seek(crr, common::seek_where::beg);
         }
 
         void sis_parser::parse_field_child(sis_field *field, bool left_type_for_arr) {
@@ -50,7 +50,7 @@ namespace eka2l1 {
         }
 
         sis_parser::sis_parser(const std::string name) {
-            stream = std::make_shared<std::ifstream>(name, std::ifstream::binary);
+            stream = std::make_shared<common::ro_std_file_stream>(name, true);
         }
 
         sis_array sis_parser::parse_array() {
@@ -59,11 +59,11 @@ namespace eka2l1 {
             parse_field_child(&arr);
 
             stream->read(reinterpret_cast<char *>(&arr.element_type), 4);
-            std::uint64_t crr_pos = stream->tellg();
+            std::uint64_t crr_pos = stream->tell();
 
 #define PARSE_ELEMENT_TYPE(element_case, handler_result_type, handler)                                               \
     case sis_field_type::element_case:                                                                               \
-        while ((uint64_t)stream->tellg() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) { \
+        while ((uint64_t)stream->tell() - crr_pos < ((uint64_t)arr.len_low | ((uint64_t)arr.len_high << 32)) - 4) { \
             std::shared_ptr<sis_field> elem = std::make_shared<handler_result_type>(handler(true));                  \
             elem->type = arr.element_type;                                                                           \
             arr.fields.push_back(elem);                                                                              \
@@ -257,7 +257,7 @@ namespace eka2l1 {
             stream->read(reinterpret_cast<char *>(&compressed.uncompressed_size), 8);
 
             // Store the offset, make intepreter do their work
-            compressed.offset = stream->tellg();
+            compressed.offset = stream->tell();
 
             if (compressed.algorithm != sis_compressed_algorithm::deflated) {
                 if (!no_extract) {
@@ -300,7 +300,7 @@ namespace eka2l1 {
 
             if (no_extract) {
                 // Must emit the data
-                stream->seekg(lenseg - 12, std::ios_base::cur);
+                stream->seek(lenseg - 12, common::seek_where::cur);
             }
 
             valid_offset();
@@ -308,8 +308,8 @@ namespace eka2l1 {
             return compressed;
         }
 
-        void sis_parser::switch_istrstream(char *buf, size_t size) {
-            set_alternative_stream(std::make_shared<std::ifstream>("inflatedController.mt", std::ios::binary));
+        void sis_parser::switch_to_buf_stream(char *buf, size_t size) {
+            set_alternative_stream(std::make_shared<common::ro_buf_stream>(reinterpret_cast<std::uint8_t*>(buf), size));
             switch_stream();
         }
 
@@ -318,8 +318,6 @@ namespace eka2l1 {
             sis_contents contents;
 
             parse_field_child(&contents);
-
-            LOG_TRACE(PACKAGE, "{} {}", (int)contents.type, contents.len_high);
 
             int controller_checksum_avail;
             peek(&controller_checksum_avail, 1, 4, stream.get());
@@ -337,21 +335,16 @@ namespace eka2l1 {
 
             sis_compressed compress_data = parse_compressed();
 
-            FILE *ftemp = fopen("inflatedController.mt", "wb");
-            fwrite(compress_data.uncompressed_data.data(), 1, compress_data.uncompressed_size, ftemp);
-            fclose(ftemp);
-
-            switch_istrstream(reinterpret_cast<char *>(compress_data.uncompressed_data.data()),
-                compress_data.uncompressed_size);
+            switch_to_buf_stream(reinterpret_cast<char *>(compress_data.uncompressed_data.data()), compress_data.uncompressed_size);
 
             contents.controller = parse_controller();
 
-            LOG_INFO(LOADER, "Current stream position: {}, compressed data size: {}", stream->tellg(), compress_data.uncompressed_size);
-            assert((uint64_t)stream->tellg() == compress_data.uncompressed_size);
+            LOG_INFO(LOADER, "Current stream position: {}, compressed data size: {}", stream->tell(), compress_data.uncompressed_size);
+            assert((uint64_t)stream->tell() == compress_data.uncompressed_size);
 
             switch_stream();
 
-            LOG_INFO(LOADER, "Pos after reading controller: {}", stream->tellg());
+            LOG_INFO(LOADER, "Pos after reading controller: {}", stream->tell());
 
             contents.data = parse_data();
             valid_offset();
@@ -365,15 +358,15 @@ namespace eka2l1 {
             parse_field_child(&controller, no_type);
 
             controller.raw_data.resize(controller.len_low | (static_cast<std::uint64_t>(controller.len_high) << 32));
-            const std::size_t current_pos = stream->tellg();
+            const std::size_t current_pos = stream->tell();
 
             stream->read(reinterpret_cast<char *>(controller.raw_data.data()), controller.raw_data.size());
-            stream->seekg(current_pos, std::ios_base::beg);
+            stream->seek(current_pos, common::seek_where::beg);
 
             controller.info = parse_info();
             controller.options = parse_supported_options();
             controller.langs = parse_supported_langs();
-            LOG_INFO(LOADER, "Prequisites read position: {}", stream->tellg());
+            LOG_INFO(LOADER, "Prequisites read position: {}", stream->tell());
             controller.prerequisites = parse_prerequisites();
             controller.properties = parse_properties();
 
@@ -452,10 +445,10 @@ namespace eka2l1 {
             parse_field_child(&pre);
             pre.target_devices = parse_array();
 
-            LOG_INFO(LOADER, "Position after reading targets pres: {}", stream->tellg());
+            LOG_INFO(LOADER, "Position after reading targets pres: {}", stream->tell());
             pre.dependencies = parse_array();
 
-            LOG_INFO(LOADER, "Position after reading all pres: {}", stream->tellg());
+            LOG_INFO(LOADER, "Position after reading all pres: {}", stream->tell());
 
             valid_offset();
 
@@ -491,7 +484,7 @@ namespace eka2l1 {
         sis_properties sis_parser::parse_properties() {
             sis_properties properties;
 
-            LOG_INFO(LOADER, "Properties read position: {}", stream->tellg());
+            LOG_INFO(LOADER, "Properties read position: {}", stream->tell());
             parse_field_child(&properties);
             properties.properties = parse_array();
 
@@ -739,11 +732,11 @@ namespace eka2l1 {
         }
 
         void sis_parser::jump_t(uint32_t off) {
-            stream->seekg(off, std::ios::cur);
+            stream->seek(off, common::seek_where::cur);
         }
 
         void sis_parser::valid_offset() {
-            size_t crr_pos = stream->tellg();
+            size_t crr_pos = stream->tell();
 
             if (crr_pos % 4 != 0) {
                 jump_t(4 - crr_pos % 4);
@@ -754,7 +747,7 @@ namespace eka2l1 {
             stream.swap(alternative_stream);
         }
 
-        void sis_parser::set_alternative_stream(std::shared_ptr<std::istream> astream) {
+        void sis_parser::set_alternative_stream(std::shared_ptr<common::ro_stream> astream) {
             if (alternative_stream) {
                 alternative_stream.reset();
             }

@@ -318,7 +318,7 @@
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
           <item row="0" column="0">
-           <layout class="QVBoxLayout" name="emulator_display_layout" stretch="1,1,1,1">
+           <layout class="QVBoxLayout" name="emulator_display_layout" stretch="1,1,1,1,0">
             <item>
              <widget class="QWidget" name="emulator_display_bgc_choose_widget" native="true">
               <property name="sizePolicy">
@@ -387,6 +387,16 @@
               </property>
               <property name="text">
                <string>Allow resizing display to phone screen's true size in pixels</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="emulator_display_disable_content_scale">
+              <property name="toolTip">
+               <string>If blurry scaled up phone display is not preferred, this option will disable scaling the emulator display, keeping it at the original size.</string>
+              </property>
+              <property name="text">
+               <string>Do not scale phone display to fit emulator window</string>
               </property>
              </widget>
             </item>

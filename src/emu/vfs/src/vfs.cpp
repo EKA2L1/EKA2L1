@@ -270,6 +270,42 @@ namespace eka2l1 {
             return u"";
         }
 
+        const wchar_t *translate_mode_w(int mode, const bool reopen = false) {
+            if (mode & READ_MODE) {
+                if (mode & BIN_MODE) {
+                    if (mode & WRITE_MODE) {
+                        return L"rb+";
+                    }
+
+                    return L"rb";
+                } else if (mode & WRITE_MODE) {
+                    return L"r+";
+                }
+
+                return L"r";
+            } else if (mode & WRITE_MODE) {
+                if (mode & BIN_MODE) {
+                    if (reopen)
+                        return L"rb+";
+                    else
+                        return L"wb+";
+                }
+
+                if (reopen)
+                    return L"r+";
+                else
+                    return L"w+";
+            } else if (mode & APPEND_MODE) {
+                if (mode & BIN_MODE) {
+                    return L"ab+";
+                }
+
+                return L"a";
+            }
+
+            return L"";
+        }
+
 #define WARN_CLOSE \
     if (closed)    \
         LOG_WARN(VFS, "File {} closed but operation still continues", common::ucs2_to_utf8(input_name));
@@ -295,8 +331,11 @@ namespace eka2l1 {
             // Disable directory check here
             closed = false;
 
-            const char *cmode = translate_mode(mode);
-            file = fopen(common::ucs2_to_utf8(real_path).c_str(), cmode);
+#if EKA2L1_PLATFORM(WIN32)
+            file = _wfopen(common::ucs2_to_wstr(real_path).c_str(), translate_mode_w(mode));
+#else
+            file = fopen(common::ucs2_to_utf8(real_path).c_str(), translate_mode(mode));
+#endif
 
             physical_path = real_path;
 
@@ -408,10 +447,14 @@ namespace eka2l1 {
             fclose(file);
 
             int err_code = common::resize(common::ucs2_to_utf8(physical_path), new_size);
-            const std::string path_utf8 = common::ucs2_to_utf8(physical_path);
 
             // Reopen the file again...
-            file = fopen(path_utf8.c_str(), translate_mode(fmode, true));
+#if EKA2L1_PLATFORM(WIN32)
+            _wfopen_s(&file, common::ucs2_to_wstr(physical_path).c_str(), translate_mode_w(fmode, true));
+#else
+            file = fopen(common::ucs2_to_utf8(physical_path).c_str(), translate_mode(fmode, true));
+#endif
+
             fseek(file, static_cast<long>(saved_pos), SEEK_SET);
 
             return (err_code != 0) ? false : true;

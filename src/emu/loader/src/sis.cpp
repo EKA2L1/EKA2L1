@@ -22,6 +22,8 @@
 #include <loader/sis_common.h>
 #include <loader/sis_fields.h>
 
+#include <common/buffer.h>
+
 #include <cassert>
 #include <cstdio>
 
@@ -38,20 +40,20 @@ namespace eka2l1 {
 
         // Given a SIS path, identify the EPOC version
         std::optional<sis_type> identify_sis_type(const std::string &path) {
-            FILE *f = fopen(path.c_str(), "rb");
+            common::ro_std_file_stream stream(path, true);
 
-            if (!f) {
+            if (!stream.valid()) {
                 return std::nullopt;
             }
 
             std::uint32_t uid1 = 0;
             std::uint32_t uid2 = 0;
 
-            if (fread(&uid1, 1, 4, f) != 4) {
+            if (stream.read(&uid1, 4) != 4) {
                 return std::nullopt;
             }
 
-            if (fread(&uid2, 1, 4, f) != 4) {
+            if (stream.read(&uid2, 4) != 4) {
                 return std::nullopt;
             }
 

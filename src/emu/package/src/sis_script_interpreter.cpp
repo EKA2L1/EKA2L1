@@ -27,6 +27,7 @@
 #include <common/path.h>
 #include <common/time.h>
 #include <common/types.h>
+#include <common/platform.h>
 
 #include <config/config.h>
 #include <vfs/vfs.h>
@@ -123,10 +124,8 @@ namespace eka2l1 {
 
             LOG_INFO(PACKAGE, "Write to: {}", path);
 
-            FILE *temp = fopen(path.c_str(), "wb");
-            fwrite(data.data(), 1, data.size(), temp);
-
-            fclose(temp);
+            common::wo_std_file_stream stream(path, true);
+            stream.write(data.data(), data.size());
         }
 
         bool ss_interpreter::extract_file(const std::string &path, const uint32_t idx, uint16_t crr_blck_idx) {
@@ -139,8 +138,6 @@ namespace eka2l1 {
                     LOG_WARN(PACKAGE, "Unable to remove {} to extract new file", path);
                 }
             }
-
-            FILE *file = fopen(path.c_str(), "wb");
 
             sis_data_unit *data_unit = reinterpret_cast<sis_data_unit *>(install_data->data_units.fields[crr_blck_idx].get());
             sis_file_data *data = reinterpret_cast<sis_file_data *>(data_unit->data_unit.fields[idx].get());
@@ -170,63 +167,65 @@ namespace eka2l1 {
             std::uint32_t total_inflated_size = 0;
             bool cancel_requested = false;
 
-            while (left > 0) {
-                if (cancel_cb && cancel_cb()) {
-                    cancel_requested = true;
-                    break;
-                }
+            {
+                common::wo_std_file_stream std_fstream(path, true);
 
-                std::fill(temp_chunk.begin(), temp_chunk.end(), 0);
-                int grab = static_cast<int>(left < CHUNK_SIZE ? left : CHUNK_SIZE);
+                while (left > 0) {
+                    if (cancel_cb && cancel_cb()) {
+                        cancel_requested = true;
+                        break;
+                    }
 
-                data_stream->read(&temp_chunk[0], grab);
+                    std::fill(temp_chunk.begin(), temp_chunk.end(), 0);
+                    int grab = static_cast<int>(left < CHUNK_SIZE ? left : CHUNK_SIZE);
 
-                if (!data_stream->valid()) {
-                    LOG_ERROR(PACKAGE, "Stream fail, skipping this file, should report to developers.");
-                    return false;
-                }
+                    data_stream->read(&temp_chunk[0], grab);
 
-                if (compressed.algorithm == sis_compressed_algorithm::deflated) {
-                    uint32_t inflated_size = 0;
-
-                    auto res = flate::inflate_data(&stream, temp_chunk.data(), temp_inflated_chunk.data(), grab, &inflated_size);
-
-                    if (!res) {
-                        LOG_ERROR(PACKAGE, "Decompress failed! Report to developers");
+                    if (!data_stream->valid()) {
+                        LOG_ERROR(PACKAGE, "Stream fail, skipping this file, should report to developers.");
                         return false;
                     }
 
-                    fwrite(temp_inflated_chunk.data(), 1, inflated_size, file);
+                    if (compressed.algorithm == sis_compressed_algorithm::deflated) {
+                        uint32_t inflated_size = 0;
 
-                    total_inflated_size += inflated_size;
-                    extract_target_decomped_size += inflated_size;
-                } else {
-                    fwrite(temp_chunk.data(), 1, grab, file);
-                    extract_target_decomped_size += grab;
-                }
+                        auto res = flate::inflate_data(&stream, temp_chunk.data(), temp_inflated_chunk.data(), grab, &inflated_size);
 
-                left -= grab;
+                        if (!res) {
+                            LOG_ERROR(PACKAGE, "Decompress failed! Report to developers");
+                            return false;
+                        }
 
-                if (progress_changed_cb) {
-                    if (extract_target_accumulated_size != 0) {
-                        progress_changed_cb(extract_target_decomped_size, extract_target_accumulated_size);
+                        std_fstream.write(temp_inflated_chunk.data(), inflated_size);
+
+                        total_inflated_size += inflated_size;
+                        extract_target_decomped_size += inflated_size;
                     } else {
-                        progress_changed_cb(100, 100);
+                        std_fstream.write(temp_chunk.data(), grab);
+                        extract_target_decomped_size += grab;
+                    }
+
+                    left -= grab;
+
+                    if (progress_changed_cb) {
+                        if (extract_target_accumulated_size != 0) {
+                            progress_changed_cb(extract_target_decomped_size, extract_target_accumulated_size);
+                        } else {
+                            progress_changed_cb(100, 100);
+                        }
                     }
                 }
-            }
 
-            if (compressed.algorithm == sis_compressed_algorithm::deflated) {
-                if (!cancel_requested && (total_inflated_size != compressed.uncompressed_size)) {
-                    LOG_ERROR(PACKAGE, "Sanity check failed: Total inflated size not equal to specified uncompress size "
-                                       "in SISCompressed ({} vs {})!",
-                        total_inflated_size, compressed.uncompressed_size);
+                if (compressed.algorithm == sis_compressed_algorithm::deflated) {
+                    if (!cancel_requested && (total_inflated_size != compressed.uncompressed_size)) {
+                        LOG_ERROR(PACKAGE, "Sanity check failed: Total inflated size not equal to specified uncompress size "
+                                           "in SISCompressed ({} vs {})!",
+                            total_inflated_size, compressed.uncompressed_size);
+                    }
+
+                    inflateEnd(&stream);
                 }
-
-                inflateEnd(&stream);
             }
-
-            fclose(file);
 
             if (cancel_requested) {
                 common::remove(path);

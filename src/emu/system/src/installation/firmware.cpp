@@ -245,18 +245,20 @@ namespace eka2l1 {
         if (header.type_ == loader::firmware::FPSX_TYPE_UDA) {
             // Extract the FAT image, with some twists
             // I was using ifstream, but not sure why it fucked up
-            FILE *fat_image_file = fopen(image_path.c_str(), "rb");
+            common::ro_std_file_stream fat_image_file(image_path, true);
             Fat::Image fat_img(
-                fat_image_file,
+                &fat_image_file,
                 // Read hook
                 [](void *userdata, void *buffer, std::uint32_t size) -> std::uint32_t {
-                    return static_cast<std::uint32_t>(fread(buffer, 1, size, reinterpret_cast<FILE *>(userdata)));
+                    common::ro_std_file_stream *stream = reinterpret_cast<common::ro_std_file_stream *>(userdata);
+                    return static_cast<std::uint32_t>(stream->read(buffer, size));
                 },
                 // Seek hook
                 [](void *userdata, std::uint32_t offset, int mode) -> std::uint32_t {
-                    fseek(reinterpret_cast<FILE *>(userdata), offset, (mode == Fat::IMAGE_SEEK_MODE_BEG ? SEEK_SET : (mode == Fat::IMAGE_SEEK_MODE_CUR ? SEEK_CUR : SEEK_END)));
+                    common::ro_std_file_stream *stream = reinterpret_cast<common::ro_std_file_stream *>(userdata);
+                    stream->seek(offset, (mode == Fat::IMAGE_SEEK_MODE_BEG ? common::seek_where::beg : (mode == Fat::IMAGE_SEEK_MODE_CUR ? common::seek_where::cur : common::seek_where::end)));
 
-                    return ftell(reinterpret_cast<FILE *>(userdata));
+                    return static_cast<std::uint32_t>(stream->tell());
                 });
 
             std::string fat_dump_base;
@@ -264,8 +266,6 @@ namespace eka2l1 {
 
             Fat::Entry bootstrap_entry;
             extract_directory(fat_img, bootstrap_entry, fat_dump_base);
-
-            fclose(fat_image_file);
 
             if (progress_cb)
                 progress_cb(1, 1);

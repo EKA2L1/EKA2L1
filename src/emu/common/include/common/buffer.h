@@ -21,6 +21,8 @@
 #pragma once
 
 #include <common/algorithm.h>
+#include <common/platform.h>
+#include <common/cvt.h>
 
 #include <cstdint>
 #include <cstring>
@@ -232,7 +234,11 @@ namespace eka2l1 {
 
         public:
             explicit ro_std_file_stream(const std::string &path, const bool binary) {
+#if EKA2L1_PLATFORM(WIN32)
+                fi_ = _wfopen(common::utf8_to_wstr(path).c_str(), binary ? L"rb" : L"r");
+#else
                 fi_ = fopen(path.c_str(), binary ? "rb" : "r");
+#endif
             }
 
             ~ro_std_file_stream() {
@@ -294,7 +300,11 @@ namespace eka2l1 {
 
         public:
             explicit wo_std_file_stream(const std::string &path, const bool binary)
+#if EKA2L1_PLATFORM(WIN32)
+                : fo_(common::utf8_to_wstr(path), binary ? std::ios_base::binary : std::ios_base::out) {
+#else
                 : fo_(path, binary ? std::ios_base::binary : std::ios_base::out) {
+#endif
             }
 
             std::uint64_t write(const void *buf, const std::uint64_t size) override {
