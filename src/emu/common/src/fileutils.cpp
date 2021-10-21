@@ -150,6 +150,8 @@ namespace eka2l1::common {
 
         if (handle) {
             find_data = reinterpret_cast<void *>(readdir(reinterpret_cast<DIR *>(handle)));
+        } else {
+            find_data = nullptr;
         }
 
         struct dirent *d = reinterpret_cast<decltype(d)>(find_data);
