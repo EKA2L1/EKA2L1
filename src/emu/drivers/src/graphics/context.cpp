@@ -24,6 +24,8 @@
 #include "backend/context_wgl.h"
 #elif EKA2L1_PLATFORM(MACOS)
 #include "backend/context_agl.h"
+#elif EKA2L1_PLATFORM(UNIX)
+#include "backend/context_glx.h"
 #endif
 
 namespace eka2l1::drivers::graphics {
@@ -35,6 +37,8 @@ namespace eka2l1::drivers::graphics {
         return std::make_unique<gl_context_wgl>(system_info, stereo, core);
 #elif EKA2L1_PLATFORM(MACOS)
         return std::make_unique<gl_context_agl>(system_info, stereo, core);
+#elif EKA2L1_PLATFORM(UNIX)
+        return std::make_unique<gl_context_glx>(system_info, stereo, core);
 #else
         return nullptr;
 #endif

@@ -2,6 +2,5 @@
     <qresource prefix="/">
         <file>assets/duck_tank.png</file>
         <file>assets/credits.yml</file>
-        <file>qt/etc/qt.conf</file>
     </qresource>
 </RCC>

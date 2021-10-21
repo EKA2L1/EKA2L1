@@ -11,7 +11,7 @@ if(ANDROID)
     endif()
 endif()
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools REQUIRED)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools Gui REQUIRED)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     set(EXCLUSIVE_QT_COMPONENTS OpenGLWidgets)
@@ -99,6 +99,12 @@ else()
 endif()
 
 target_include_directories(eka2l1_qt PUBLIC include)
+
+if (${QT_VERSION_MAJOR} EQUAL 6)
+    target_include_directories(eka2l1_qt PRIVATE ${Qt6Gui_PRIVATE_INCLUDE_DIRS})
+else()
+    target_include_directories(eka2l1_qt PRIVATE ${Qt5Gui_PRIVATE_INCLUDE_DIRS})
+endif()
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     set(EXCLUSIVE_QT_LIBRARIES
@@ -217,5 +223,18 @@ if (WIN32)
     add_custom_command(
         TARGET eka2l1_qt
         POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/qt.conf.win" "$<TARGET_FILE_DIR:eka2l1_qt>/qt.conf")
+
+    add_custom_command(
+        TARGET eka2l1_qt
+        POST_BUILD
         COMMAND "${WINDEPLOYQT_EXECUTABLE}" --no-compiler-runtime --no-opengl-sw --no-quick --plugindir "$<TARGET_FILE_DIR:eka2l1_qt>/qt/plugins" --release "$<TARGET_FILE:eka2l1_qt>")
+endif()
+
+# This code is taken and modified from RPCS3
+if (UNIX AND NOT APPLE)
+    add_custom_command(
+        TARGET eka2l1_qt
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/eka2l1.desktop" "$<TARGET_FILE_DIR:eka2l1_qt>/eka2l1.desktop")
 endif()

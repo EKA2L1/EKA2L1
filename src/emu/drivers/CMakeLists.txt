@@ -82,6 +82,8 @@ else()
         src/hwrm/backend/vibration_jdk.cpp)
 endif()
 
+find_package(OpenGL REQUIRED)
+
 if(WIN32)
     target_sources(drivers PRIVATE
         src/graphics/backend/context_wgl.cpp
@@ -99,15 +101,17 @@ elseif(HAIKU)
         src/graphics/backend/context_bgl.cpp
         src/graphics/backend/context_bgl.h
     )
-elseif(ENABLE_X11 AND X11_FOUND)
+else()
+    find_package(X11 REQUIRED)
+
     target_sources(drivers PRIVATE
         src/graphics/backend/context_glx.cpp
         src/graphics/backend/context_glx.h
     )
 
-  # GLX has a hard dependency on libGL.
-  # Make sure to link to it if using GLX.
-  target_link_libraries(drivers PUBLIC ${OPENGL_LIBRARIES})
+    # GLX has a hard dependency on libGL.
+    # Make sure to link to it if using GLX.
+    target_link_libraries(drivers PUBLIC ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
 endif()
 
 

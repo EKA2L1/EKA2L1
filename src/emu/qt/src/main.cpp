@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
     qRegisterMetaType<std::vector<std::string>>("std::vector<std::string>");
     qRegisterMetaType<eka2l1::drivers::input_event>("eka2l1::drivers::input_event");
 
-#if EKA2L1_PLATFORM(MACOS)
+#if !EKA2L1_PLATFORM(WIN32)
     QString data_path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/EKA2L1/";
     QDir root_dir = QDir::root();
     root_dir.mkpath(data_path);

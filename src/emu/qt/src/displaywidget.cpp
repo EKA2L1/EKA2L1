@@ -27,6 +27,10 @@
 #include <QMessageBox>
 #include <QGuiApplication>
 
+#if !(defined(WIN32) || defined(__APPLE__) || defined(__HAIKU__))
+#include <qpa/qplatformnativeinterface.h>
+#endif
+
 static eka2l1::drivers::window_system_type get_window_system_type() {
     // Determine WSI type based on Qt platform.
     QString platform_name = QGuiApplication::platformName();
