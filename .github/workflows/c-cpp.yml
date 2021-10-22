@@ -88,14 +88,10 @@ jobs:
           cached: ${{ steps.cache-qt.outputs.cache-hit }}
 
       - name: CMake configure
-        run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DCMAKE_PREFIX_PATH=${{ env.Qt5_DIR }} -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+        run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_SCRIPTING_ABILITY=OFF -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DCMAKE_PREFIX_PATH=${{ env.Qt5_DIR }} -DCMAKE_BUILD_TYPE=${{ matrix.config }}
 
       - name: CMake build
-        run: cmake --build build --config ${{ matrix.config }} --parallel 2
-
-      - name: CTest
-        run: ctest --build-config ${{ matrix.config }} --output-on-failure --parallel 2
-        if: matrix.os != 'macos-latest'             # MacOS tests have some problems.
+        run: cmake --build build --config ${{ matrix.config }} --parallel 2 --target eka2l1_qt
 
       - name: Compute git short sha
         id: git_short_sha
