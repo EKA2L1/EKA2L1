@@ -62,31 +62,33 @@ namespace eka2l1::epoc {
                 return false;
             }
 
-            eka2l1::vec2 abs_pos = winuser->absolute_position();
 
             // If it does not have content drawn to it, it makes no sense to draw the background
             // Else, there's a flag in window server that enables clear on any siutation
-            if (winuser->clear_color_enable && (winuser->has_redraw_content() || auto_clear_)) {
-                auto color_extracted = common::rgba_to_vec(winuser->clear_color);
+            if (winuser->has_redraw_content()) {
+                eka2l1::vec2 abs_pos = winuser->absolute_position();
+                if (winuser->clear_color_enable && auto_clear_) {
+                    auto color_extracted = common::rgba_to_vec(winuser->clear_color);
 
-                if (winuser->display_mode() <= epoc::display_mode::color16mu) {
-                    color_extracted[3] = 255;
+                    if (winuser->display_mode() <= epoc::display_mode::color16mu) {
+                        color_extracted[3] = 255;
+                    }
+
+                    builder_->set_brush_color_detail({ color_extracted[0], color_extracted[1], color_extracted[2], color_extracted[3] });
+                    builder_->draw_rectangle(eka2l1::rect(abs_pos, winuser->size()));
+                } else {
+                    builder_->set_brush_color(eka2l1::vec3(255, 255, 255));
                 }
 
-                builder_->set_brush_color_detail({ color_extracted[0], color_extracted[1], color_extracted[2], color_extracted[3] });
-                builder_->draw_rectangle(eka2l1::rect(abs_pos, winuser->size()));
-            } else {
-                builder_->set_brush_color(eka2l1::vec3(255, 255, 255));
+                // Draw it onto current binding buffer
+                // TODO: We can probably also make use of visible regions and stencil buffer to reduce and provide
+                // more accurate drawing results. I don't want to complicated it more now, since there's transparent region
+                // not implemented (region that is visible even though another window is on top of it)
+                builder_->draw_bitmap(winuser->driver_win_id, 0, eka2l1::rect(abs_pos, { 0, 0 }),
+                    eka2l1::rect({ 0, 0 }, winuser->size()), eka2l1::vec2(0, 0), 0.0f, 0);
+
+                total_redrawed_++;
             }
-
-            // Draw it onto current binding buffer
-            // TODO: We can probably also make use of visible regions and stencil buffer to reduce and provide
-            // more accurate drawing results. I don't want to complicated it more now, since there's transparent region
-            // not implemented (region that is visible even though another window is on top of it)
-            builder_->draw_bitmap(winuser->driver_win_id, 0, eka2l1::rect(abs_pos, { 0, 0 }),
-                eka2l1::rect({ 0, 0 }, winuser->size()), eka2l1::vec2(0, 0), 0.0f, 0);
-
-            total_redrawed_++;
 
             return false;
         }

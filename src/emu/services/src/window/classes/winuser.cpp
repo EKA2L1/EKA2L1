@@ -409,6 +409,7 @@ namespace eka2l1::epoc {
         common::double_linked_queue_element *end = attached_contexts.end();
 
         bool any_flush_performed = false;
+        has_redraw_content(false);
 
         // Set all contexts to be in recording
         do {
