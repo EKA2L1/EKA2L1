@@ -67,6 +67,7 @@ OPTION(audio-master-volume, audio_master_volume, 100)
 OPTION(current-keybind-profile, current_keybind_profile, "default")
 OPTION(screen-buffer-sync, screen_buffer_sync_string, "preferred")
 OPTION(report-mmfdev-underflow, report_mmfdev_underflow, false)
+OPTION(disable-display-content-scale, disable_display_content_scale, false)
 
 #ifdef OPTION
 #undef OPTION

@@ -256,6 +256,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     ui_->system_audio_vol_slider->setValue(configuration_.audio_master_volume);
     ui_->system_audio_current_val_label->setText(QString("%1").arg(configuration_.audio_master_volume));
     ui_->system_screen_buffer_sync_combo->setCurrentIndex(static_cast<int>(configuration_.screen_buffer_sync));
+    ui_->emulator_display_disable_content_scale->setChecked(configuration_.disable_display_content_scale);
 
     QSettings settings;
     ui_->interface_status_bar_checkbox->setChecked(settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
@@ -343,6 +344,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->emulator_display_hide_cursor_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_cursor_visibility_change);
     connect(ui_->emulator_display_true_size_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_true_size_enable_toogled);
     connect(ui_->emulator_display_bgc_pick_btn, &QPushButton::clicked, this, &settings_dialog::on_background_color_pick_button_clicked);
+    connect(ui_->emulator_display_disable_content_scale, &QCheckBox::toggled, this, &settings_dialog::on_disable_scale_display_content_toggled);
 
     connect(ui_->general_clear_ui_config_btn, &QPushButton::clicked, this, &settings_dialog::on_ui_clear_all_configs_clicked);
     connect(ui_->app_config_fps_slider, &QSlider::valueChanged, this, &settings_dialog::on_fps_slider_value_changed);
@@ -1165,4 +1167,8 @@ void settings_dialog::on_screen_buffer_sync_option_changed(int index) {
     if (server) {
         server->set_screen_sync_buffer_option(index);
     }
+}
+
+void settings_dialog::on_disable_scale_display_content_toggled(bool val) {
+    configuration_.disable_display_content_scale = val;
 }
