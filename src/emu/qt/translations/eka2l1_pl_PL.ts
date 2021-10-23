@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/utils.cpp" line="126"/>
       <source>EKA2L1 - Symbian OS emulator</source>
-      <translation type="unfinished">EKA2L1 - Symbian OS emulator</translation>
+      <translation>EKA2L1 - emulator Symbian OS</translation>
     </message>
   </context>
   <context>
@@ -706,12 +706,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="396"/>
       <source>If blurry scaled up screen is not preferred, enable this option will make the phone screen stays at the original size</source>
-      <translation type="unfinished">If blurry scaled up screen is not preferred, enable this option will make the phone screen stays at the original size</translation>
+      <translation>Jeśli nie jest preferowany rozmazany powiększony ekran, włącz tę opcję, aby ekran telefonu pozostał w oryginalnym rozmiarze</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="399"/>
       <source>Disable scaling phone screen to emulator&apos;s window size</source>
-      <translation type="unfinished">Disable scaling phone screen to emulator&apos;s window size</translation>
+      <translation>Wyłącz skalowanie ekranu telefonu to rozmiaru okna emulatora.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="411"/>
@@ -746,12 +746,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="456"/>
       <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
-      <translation type="unfinished">Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</translation>
+      <translation>Włączenie tego sprawi, że okno będzie miało stałą nazwę &quot;EKA2L1&quot;, bez dodatkowych informacji.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="462"/>
       <source>Disable easter egg title</source>
-      <translation type="unfinished">Disable easter egg title</translation>
+      <translation>Wyłącz easter egg w tytule</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="480"/>
