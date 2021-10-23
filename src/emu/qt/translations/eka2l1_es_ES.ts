@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/utils.cpp" line="126"/>
       <source>EKA2L1 - Symbian OS emulator</source>
-      <translation type="unfinished">EKA2L1 - Symbian OS emulator</translation>
+      <translation>EKA2L1 - Emulador Symbian OS</translation>
     </message>
   </context>
   <context>
@@ -706,7 +706,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="396"/>
       <source>If blurry scaled up screen is not preferred, enable this option will make the phone screen stays at the original size</source>
-      <translation type="unfinished">If blurry scaled up screen is not preferred, enable this option will make the phone screen stays at the original size</translation>
+      <translation>Si no desea que la imagen escalada se emborrone, habilitar esta opción mantendrá el tamaño de la pantalla original</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="399"/>
