@@ -168,6 +168,9 @@ if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
         endif()
 endif()
 
+get_target_property(QMAKE_EXE Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
+get_filename_component(QT_BIN_DIR "${QMAKE_EXE}" DIRECTORY)
+
 if(APPLE)
     set_target_properties(eka2l1_qt PROPERTIES
        MACOSX_BUNDLE True
@@ -209,6 +212,19 @@ if(APPLE)
        POST_BUILD COMMAND
        ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/"
        $<TARGET_FILE:eka2l1_qt>)
+
+    if (EKA2L1_DEPLOY_DMG)
+        find_program(MACDEPLOYQT_EXECUTABLE macdeployqt HINTS "${QT_BIN_DIR}")
+
+        add_custom_command(TARGET eka2l1_qt POST_BUILD
+            COMMAND "${MACDEPLOYQT_EXECUTABLE}"
+                "$<TARGET_FILE_DIR:eka2l1_qt>/../.."
+                -dmg
+                -always-overwrite)
+
+        add_custom_command(TARGET eka2l1_qt POST_BUILD
+            COMMAND rm -rf "${CMAKE_BINARY_DIR}/bin/EKA2L1.app")
+    endif()
 endif()
 
 if(QT_VERSION_MAJOR EQUAL 6)
@@ -216,8 +232,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
 endif()
 
 if (WIN32)
-    get_target_property(QMAKE_EXE Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
-    get_filename_component(QT_BIN_DIR "${QMAKE_EXE}" DIRECTORY)
     find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT_BIN_DIR}")
 
     add_custom_command(
