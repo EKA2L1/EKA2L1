@@ -409,7 +409,6 @@ namespace eka2l1::epoc {
         common::double_linked_queue_element *end = attached_contexts.end();
 
         bool any_flush_performed = false;
-        has_redraw_content(false);
 
         // Set all contexts to be in recording
         do {
@@ -433,11 +432,12 @@ namespace eka2l1::epoc {
             any_flush_performed = true;
         } while (ite != end);
 
-        if (any_flush_performed) {
+        if (any_flush_performed && content_changed()) {
             take_action_on_change(ctx.msg->own_thr);
         }
 
         flags &= ~flags_in_redraw;
+        content_changed(false);
 
         // Some rectangles are still not validated. Notify client about them!
         for (std::size_t i = 0; i < redraw_region.rects_.size(); i++) {
