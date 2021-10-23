@@ -706,12 +706,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="396"/>
       <source>If blurry scaled up screen is not preferred, enable this option will make the phone screen stays at the original size</source>
-      <translation type="unfinished">If blurry scaled up screen is not preferred, enable this option will make the phone screen stays at the original size</translation>
+      <translation>Se a tela do desfoque não for preferida, ative esta opção fará com que a tela do telefone permaneça no tamanho original</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="399"/>
       <source>Disable scaling phone screen to emulator&apos;s window size</source>
-      <translation type="unfinished">Disable scaling phone screen to emulator&apos;s window size</translation>
+      <translation>Desativar escala da tela do telefone para emulador&apos;s tamanho da janela</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="411"/>
