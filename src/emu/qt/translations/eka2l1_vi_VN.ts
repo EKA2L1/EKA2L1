@@ -336,159 +336,159 @@
       <translation>Thư mục</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="235"/>
+      <location filename="../src/mainwindow.cpp" line="238"/>
       <source>Clear menu</source>
       <translation>Làm rỗng menu</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="298"/>
+      <location filename="../src/mainwindow.cpp" line="301"/>
       <source>Touchscreen disabled</source>
       <translation>Màn hình cảm ứng bị vô hiệu hóa</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="298"/>
+      <location filename="../src/mainwindow.cpp" line="301"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
       <translation>Một vài nối phím của bạn có liên quan tới các nút nhấn chuột. Vì vậy, màn hình cảm ứng của thiết bị giả lập bị vô hiệu hóa.&lt;br&gt;&lt;br&gt;&lt;b&gt;Mẹo:&lt;/b&gt;&lt;br&gt;Màn hình cảm ứng có thể được bật lại khi bạn nối phím với bàn phím thay vì chuột.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="299"/>
-      <location filename="../src/mainwindow.cpp" line="363"/>
+      <location filename="../src/mainwindow.cpp" line="302"/>
+      <location filename="../src/mainwindow.cpp" line="366"/>
       <source>Don&apos;t show this again</source>
       <translation>Đừng hiện lại lần nữa</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="362"/>
+      <location filename="../src/mainwindow.cpp" line="365"/>
       <source>No device installed</source>
       <translation>Không thiết bị nào được cài đặt</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="362"/>
+      <location filename="../src/mainwindow.cpp" line="365"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
       <translation>Bạn chưa cái đặt một thiết bị nào. Xin lãy cài đặt một thiết bị hoặc làm theo chỉ dẫn cài đặt trên trang Github wiki của EKA2L1.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="643"/>
+      <location filename="../src/mainwindow.cpp" line="646"/>
       <source>Extracting game dump files</source>
       <translation>Giải nén các tệp của game dump</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="664"/>
+      <location filename="../src/mainwindow.cpp" line="667"/>
       <source>Mounting aborted</source>
       <translation>Quá trình nhập bị hủy</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="669"/>
+      <location filename="../src/mainwindow.cpp" line="672"/>
       <source>The ZIP file is corrupted!</source>
       <translation>Tệp ZIP bị hỏng!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="674"/>
+      <location filename="../src/mainwindow.cpp" line="677"/>
       <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
       <translation>Tệp ZIP không có thư mục System trong thư mục mẹ. Thư mục System phải tồn tại trong một game dump.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="680"/>
+      <location filename="../src/mainwindow.cpp" line="683"/>
       <source>The choosen file is not a ZIP file!</source>
       <translation>File được chọn không phải là file ZIP!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="694"/>
+      <location filename="../src/mainwindow.cpp" line="697"/>
       <source>Game card problem</source>
       <translation>Vấn đề về thẻ game</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="694"/>
+      <location filename="../src/mainwindow.cpp" line="697"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
       <translation>Dump của thẻ game có tệp tên chứa chữ in hoa. Nó có thể gây ra vấn đề với giả lập.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="698"/>
+      <location filename="../src/mainwindow.cpp" line="701"/>
       <source>Game card dump folder correction</source>
       <translation>Sửa thư mục dump thẻ game</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="698"/>
+      <location filename="../src/mainwindow.cpp" line="701"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
       <translation>Đường dẫn được chọn có vẻ sai sai.&lt;br&gt;Bạn có muốn giả lập giúp sửa lại nó không?</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="754"/>
+      <location filename="../src/mainwindow.cpp" line="757"/>
       <source>Choose the game card dump folder</source>
       <translation>Chọn thư mục chứa dump thẻ game</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="774"/>
+      <location filename="../src/mainwindow.cpp" line="777"/>
       <source>Choose the game card zip</source>
       <translation>Chọn zip thẻ game</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="852"/>
+      <location filename="../src/mainwindow.cpp" line="856"/>
       <source>Document</source>
       <translation>Tài liệu</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="870"/>
+      <location filename="../src/mainwindow.cpp" line="874"/>
       <source>Choose a language for the package</source>
       <translation>Chọn ngôn ngữ cho gói cài đặt này</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="640"/>
-      <location filename="../src/mainwindow.cpp" line="888"/>
+      <location filename="../src/mainwindow.cpp" line="643"/>
+      <location filename="../src/mainwindow.cpp" line="892"/>
       <source>Cancel</source>
       <translation>Huỷ</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="891"/>
+      <location filename="../src/mainwindow.cpp" line="895"/>
       <source>Installing package progress</source>
       <translation>Tiến trình cài đặt gói</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="915"/>
+      <location filename="../src/mainwindow.cpp" line="919"/>
       <source>Installation aborted</source>
       <translation>Cài đặt bị hủy bỏ</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="915"/>
+      <location filename="../src/mainwindow.cpp" line="919"/>
       <source>The installation has been canceled</source>
       <translation>Việc cài đặt đã bị hủy</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="920"/>
+      <location filename="../src/mainwindow.cpp" line="924"/>
       <source>Installation failed</source>
       <translation>Cài đặt thất bại</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="920"/>
+      <location filename="../src/mainwindow.cpp" line="924"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
       <translation>Lỗi cài đặt ứng dụng ở đường dẫn: %1. Chắc chắn rằng đường đẫn trỏ tới một tệp SIS/SISX hợp lệ.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="927"/>
+      <location filename="../src/mainwindow.cpp" line="931"/>
       <source>Installation success</source>
       <translation>Cài đặt thành công</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="927"/>
+      <location filename="../src/mainwindow.cpp" line="931"/>
       <source>Package has been successfully installed</source>
       <translation>Gói ứng dụng đã được cài đặt thành công</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="948"/>
+      <location filename="../src/mainwindow.cpp" line="952"/>
       <source>Choose the file to install</source>
       <translation>Chọn tệp để cài đặt</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="948"/>
+      <location filename="../src/mainwindow.cpp" line="952"/>
       <source>SIS file (*.sis *.sisx)</source>
       <translation>Tệp SIS (*sis *.sisx)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1112"/>
+      <location filename="../src/mainwindow.cpp" line="1116"/>
       <source>Load theme failed!</source>
       <translation>Nhập giao diện thất bại!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1112"/>
+      <location filename="../src/mainwindow.cpp" line="1116"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
       <translation>Tệp mẫu điệu của giao diện tối không thể được tìm thấy!</translation>
     </message>
@@ -577,11 +577,6 @@
       <location filename="../src/settings_dialog.ui" line="48"/>
       <source>Application</source>
       <translation>Ứng dụng</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="120"/>
-      <source>Time delay (0-500us)</source>
-      <translation>Làm chậm thời gian (0-500us)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="159"/>
@@ -747,6 +742,11 @@
       <location filename="../src/settings_dialog.ui" line="456"/>
       <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
       <translation type="unfinished">Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="120"/>
+      <source>Time delay (0-1000us)</source>
+      <translation type="unfinished">Time delay (0-1000us)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="462"/>
