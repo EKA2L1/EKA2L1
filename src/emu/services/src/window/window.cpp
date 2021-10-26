@@ -1662,8 +1662,6 @@ namespace eka2l1 {
         // Create first screen
         screens = new epoc::screen(0, get_screen_config(0));
         epoc::screen *crr = screens;
-        crr->set_screen_mode(this, get_graphics_driver(), crr->crr_mode);
-
         create_screen_buffer_for_dsa(kern, crr);
 
         // Create other available screens. Plugged in screen later will be created explicitly
@@ -1673,7 +1671,6 @@ namespace eka2l1 {
             crr = crr->next;
 
             if ((crr->size().x != -1) && (crr->size().y != -1)) {
-                crr->set_screen_mode(this, get_graphics_driver(), crr->crr_mode);
                 create_screen_buffer_for_dsa(kern, crr);
             }
         }

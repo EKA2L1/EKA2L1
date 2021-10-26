@@ -29,6 +29,7 @@
 #include <common/flate.h>
 #include <common/log.h>
 #include <common/path.h>
+#include <common/platform.h>
 
 #include <cwctype>
 #include <vfs/vfs.h>
@@ -105,8 +106,8 @@ namespace eka2l1::loader {
             std::vector<char> inflated;
             inflated.resize(0x100000);
 
-            FILE *sis_file = fopen(common::ucs2_to_utf8(path).data(), "rb");
-            fseek(sis_file, file.record.ptr, SEEK_SET);
+            common::ro_std_file_stream sis_file(common::ucs2_to_utf8(path), true);
+            sis_file.seek(file.record.ptr, common::seek_where::beg);
 
             mz_stream stream;
 
@@ -131,12 +132,10 @@ namespace eka2l1::loader {
                 }
 
                 size_t took = left < chunk ? left : chunk;
-                size_t readed = fread(temp.data(), 1, took, sis_file);
+                size_t readed = sis_file.read(temp.data(), took);
 
                 if (readed != took) {
-                    fclose(sis_file);
                     f->close();
-
                     canceled = true;
 
                     break;

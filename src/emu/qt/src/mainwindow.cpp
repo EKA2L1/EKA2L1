@@ -111,7 +111,7 @@ static void mode_change_screen(void *userdata, eka2l1::epoc::screen *scr, const 
     widget->setMinimumSize(new_minsize);
 }
 
-static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, const bool is_dsa) {
+static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, const bool is_dsa, const bool need_wait = true) {
     eka2l1::desktop::emulator *state_ptr = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
     if (!state_ptr) {
         return;
@@ -196,8 +196,11 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     cmd_builder->present(&wait_status);
 
     state.graphics_driver->submit_command_list(*cmd_list);
-    state.graphics_driver->wait_for(&wait_status);
+
+    if (need_wait)
+        state.graphics_driver->wait_for(&wait_status);
 }
+
 
 main_window::main_window(QApplication &application, QWidget *parent, eka2l1::desktop::emulator &emulator_state)
     : QMainWindow(parent)
@@ -784,11 +787,12 @@ void main_window::on_mount_zip_clicked() {
 
 void main_window::setup_screen_draw() {
     eka2l1::system *system = emulator_state_.symsys.get();
+
     if (system) {
         eka2l1::epoc::screen *scr = get_current_active_screen();
         if (scr) {
             active_screen_draw_callback_ = scr->add_screen_redraw_callback(&emulator_state_, [this](void *userdata, eka2l1::epoc::screen *scr, const bool is_dsa) {
-                draw_emulator_screen(userdata, scr, is_dsa);
+                draw_emulator_screen(userdata, scr, is_dsa, true);
                 emit status_bar_update(scr->last_fps);
             });
 
@@ -964,7 +968,7 @@ void main_window::resizeEvent(QResizeEvent *event) {
     if (system) {
         eka2l1::epoc::screen *scr = get_current_active_screen();
         if (scr) {
-            draw_emulator_screen(&emulator_state_, scr, true);
+            draw_emulator_screen(&emulator_state_, scr, true, false);
         }
     }
 }

@@ -1,11 +1,6 @@
 /*
  * Copyright (c) 2019 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project
- * (see bentokun.github.com/EKA2L1).
- * 
- * Initial contributor: pent0
- * Contributors:
+ * Copyright 2018 Dolphin Emulator Project
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -148,6 +143,45 @@ namespace eka2l1::drivers {
 
     enum class window_api {
         glfw
+    };
+
+    enum class window_system_type {
+        headless,
+        windows,
+        macOS,
+        android,
+        x11,
+        wayland,
+        fbDev,
+        haiku,
+    };
+
+    struct window_system_info {
+        window_system_info() = default;
+
+        window_system_info(window_system_type type_, void* display_connection_, void* render_window_, void* render_surface_)
+            : type(type_), display_connection(display_connection_), render_window(render_window_),
+                render_surface(render_surface_) {
+        }
+
+        // Window system type. Determines which GL context or Vulkan WSI is used.
+        window_system_type type = window_system_type::headless;
+
+        // Connection to a display server. This is used on X11 and Wayland platforms.
+        void* display_connection = nullptr;
+
+        // Render window. This is a pointer to the native window handle, which depends
+        // on the platform. e.g. HWND for Windows, Window for X11. If the surface is
+        // set to nullptr, the video backend will run in headless mode.
+        void* render_window = nullptr;
+
+        // Render surface. Depending on the host platform, this may differ from the window.
+        // This is kept seperate as input may require a different handle to rendering, and
+        // during video backend startup the surface pointer may change (MoltenVK).
+        void* render_surface = nullptr;
+
+        // Scale of the render surface. For hidpi systems, this will be >1.
+        float render_surface_scale = 1.0f;
     };
 
     using channel_swizzles = std::array<channel_swizzle, 4>;

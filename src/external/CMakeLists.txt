@@ -94,7 +94,7 @@ if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
             SOURCE_SUBDIR src
             CONFIGURE_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/luajit ${LUA_BINARY_DIR}
             BINARY_DIR "${LUA_BINARY_DIR}/src"
-            BUILD_COMMAND cd ${LUA_BINARY_DIR} && ${CMAKE_MAKE_PROGRAM}
+            BUILD_COMMAND cd ${LUA_BINARY_DIR} && export MACOSX_DEPLOYMENT_TARGET=10.12 && make
             INSTALL_COMMAND ""
             BUILD_BYPRODUCTS "${LUA_BINARY_DIR}/src/libluajit.so"
             BUILD_BYPRODUCTS "${LUA_BINARY_DIR}/src/libluajit.a"

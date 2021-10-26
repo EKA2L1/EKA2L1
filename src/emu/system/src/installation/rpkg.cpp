@@ -31,6 +31,7 @@
 #include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
+#include <common/platform.h>
 #include <common/pystr.h>
 
 #include <algorithm>
@@ -74,10 +75,9 @@ namespace eka2l1::loader {
         std::string dir = eka2l1::file_directory(real_path);
         eka2l1::create_directories(dir);
 
-        FILE *wf
-            = fopen(real_path.c_str(), "wb");
+        common::wo_std_file_stream wf(real_path, true);
 
-        if (!wf) {
+        if (!wf.valid()) {
             LOG_INFO(SYSTEM, "Skipping with real path: {}, dir: {}", real_path, dir);
             return false;
         }
@@ -105,7 +105,7 @@ namespace eka2l1::loader {
                 break;
             }
 
-            if (fwrite(temp.data(), 1, take, wf) != take) {
+            if (wf.write(temp.data(), take) != take) {
                 failed = true;
                 break;
             }
@@ -113,7 +113,6 @@ namespace eka2l1::loader {
             left -= take;
         }
 
-        fclose(wf);
         return !failed;
     }
 

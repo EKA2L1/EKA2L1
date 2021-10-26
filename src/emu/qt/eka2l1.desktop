@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=EKA2L1
+GenericName=Symbian OS emulator
+Comment=An experimental Symbian OS emulator.
+Icon=duck_tank
+TryExec=eka2l1_qt
+Exec=eka2l1_qt %f
+Terminal=false
+Categories=Emulator;Game;
+Keywords=Symbian;
+StartupWMClass=eka2l1

@@ -11,7 +11,7 @@ if(ANDROID)
     endif()
 endif()
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools REQUIRED)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools Gui REQUIRED)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     set(EXCLUSIVE_QT_COMPONENTS OpenGLWidgets)
@@ -100,6 +100,12 @@ endif()
 
 target_include_directories(eka2l1_qt PUBLIC include)
 
+if (${QT_VERSION_MAJOR} EQUAL 6)
+    target_include_directories(eka2l1_qt PRIVATE ${Qt6Gui_PRIVATE_INCLUDE_DIRS})
+else()
+    target_include_directories(eka2l1_qt PRIVATE ${Qt5Gui_PRIVATE_INCLUDE_DIRS})
+endif()
+
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     set(EXCLUSIVE_QT_LIBRARIES
         Qt${QT_VERSION_MAJOR}::OpenGLWidgets)
@@ -162,6 +168,9 @@ if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
         endif()
 endif()
 
+get_target_property(QMAKE_EXE Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
+get_filename_component(QT_BIN_DIR "${QMAKE_EXE}" DIRECTORY)
+
 if(APPLE)
     set_target_properties(eka2l1_qt PROPERTIES
        MACOSX_BUNDLE True
@@ -173,14 +182,17 @@ if(APPLE)
        XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS "--deep --options=runtime"
        OUTPUT_NAME EKA2L1
     )
-    # Copy Qt plugins into the bundle
-    get_target_property(qtcocoa_location Qt5::QCocoaIntegrationPlugin LOCATION)
-    target_sources(eka2l1_qt PRIVATE "${qtcocoa_location}")
-    set_source_files_properties("${qtcocoa_location}" PROPERTIES MACOSX_PACKAGE_LOCATION MacOS/platforms)
 
-    get_target_property(qtmacstyle_location Qt5::QMacStylePlugin LOCATION)
-    target_sources(eka2l1_qt PRIVATE "${qtmacstyle_location}")
-    set_source_files_properties("${qtmacstyle_location}" PROPERTIES MACOSX_PACKAGE_LOCATION MacOS/styles)
+    # Copy Qt plugins into the bundle
+    if (${QT_VERSION_MAJOR} EQUAL 5)
+        get_target_property(qtcocoa_location Qt${QT_VERSION_MAJOR}::QCocoaIntegrationPlugin LOCATION)
+        target_sources(eka2l1_qt PRIVATE "${qtcocoa_location}")
+        set_source_files_properties("${qtcocoa_location}" PROPERTIES MACOSX_PACKAGE_LOCATION MacOS/platforms)
+
+        get_target_property(qtmacstyle_location Qt${QT_VERSION_MAJOR}::QMacStylePlugin LOCATION)
+        target_sources(eka2l1_qt PRIVATE "${qtmacstyle_location}")
+        set_source_files_properties("${qtmacstyle_location}" PROPERTIES MACOSX_PACKAGE_LOCATION MacOS/styles)
+    endif()
 
     # Copy icon into the bundle
     target_sources(eka2l1_qt PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/duck.icns")
@@ -200,6 +212,19 @@ if(APPLE)
        POST_BUILD COMMAND
        ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/"
        $<TARGET_FILE:eka2l1_qt>)
+
+    if (EKA2L1_DEPLOY_DMG)
+        find_program(MACDEPLOYQT_EXECUTABLE macdeployqt HINTS "${QT_BIN_DIR}")
+
+        add_custom_command(TARGET eka2l1_qt POST_BUILD
+            COMMAND "${MACDEPLOYQT_EXECUTABLE}"
+                "$<TARGET_FILE_DIR:eka2l1_qt>/../.."
+                -dmg
+                -always-overwrite)
+
+        add_custom_command(TARGET eka2l1_qt POST_BUILD
+            COMMAND rm -rf "${CMAKE_BINARY_DIR}/bin/EKA2L1.app")
+    endif()
 endif()
 
 if(QT_VERSION_MAJOR EQUAL 6)
@@ -207,12 +232,23 @@ if(QT_VERSION_MAJOR EQUAL 6)
 endif()
 
 if (WIN32)
-    get_target_property(QMAKE_EXE Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
-    get_filename_component(QT_BIN_DIR "${QMAKE_EXE}" DIRECTORY)
     find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT_BIN_DIR}")
 
     add_custom_command(
         TARGET eka2l1_qt
         POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/qt.conf.win" "$<TARGET_FILE_DIR:eka2l1_qt>/qt.conf")
+
+    add_custom_command(
+        TARGET eka2l1_qt
+        POST_BUILD
         COMMAND "${WINDEPLOYQT_EXECUTABLE}" --no-compiler-runtime --no-opengl-sw --no-quick --plugindir "$<TARGET_FILE_DIR:eka2l1_qt>/qt/plugins" --release "$<TARGET_FILE:eka2l1_qt>")
+endif()
+
+# This code is taken and modified from RPCS3
+if (UNIX AND NOT APPLE)
+    add_custom_command(
+        TARGET eka2l1_qt
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/eka2l1.desktop" "$<TARGET_FILE_DIR:eka2l1_qt>/eka2l1.desktop")
 endif()

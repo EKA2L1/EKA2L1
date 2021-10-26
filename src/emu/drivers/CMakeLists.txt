@@ -23,6 +23,7 @@ add_library(drivers
         include/drivers/graphics/buffer.h
         include/drivers/graphics/emu_window.h
         include/drivers/graphics/fb.h
+        include/drivers/graphics/context.h
         include/drivers/graphics/cursor.h
         include/drivers/graphics/graphics.h
         include/drivers/graphics/shader.h
@@ -51,6 +52,7 @@ add_library(drivers
         src/hwrm/backend/vibration_null.cpp
         src/hwrm/vibration.cpp
         src/graphics/buffer.cpp
+        src/graphics/context.cpp
         src/graphics/fb.cpp
         src/graphics/graphics.cpp
         src/graphics/shader.cpp
@@ -79,6 +81,45 @@ else()
         include/drivers/hwrm/backend/vibration_jdk.h
         src/hwrm/backend/vibration_jdk.cpp)
 endif()
+
+if(WIN32)
+    target_sources(drivers PRIVATE
+        src/graphics/backend/context_wgl.cpp
+        src/graphics/backend/context_wgl.h
+    )
+
+    target_link_libraries(drivers PRIVATE opengl32.lib)
+elseif(APPLE)
+    target_sources(drivers PRIVATE
+        src/graphics/backend/context_agl.h
+        src/graphics/backend/context_agl.mm
+    )
+elseif(HAIKU)
+    target_sources(drivers PRIVATE
+        src/graphics/backend/context_bgl.cpp
+        src/graphics/backend/context_bgl.h
+    )
+elseif(ANDROID)
+    target_sources(drivers PRIVATE
+        src/graphics/backend/context_egl.cpp
+        src/graphics/backend/context_egl.h
+        src/graphics/backend/context_egl_android.cpp
+        src/graphics/backend/context_egl_android.h
+    )
+else()
+    find_package(X11 REQUIRED)
+    find_package(OpenGL REQUIRED)
+
+    target_sources(drivers PRIVATE
+        src/graphics/backend/context_glx.cpp
+        src/graphics/backend/context_glx.h
+    )
+
+    # GLX has a hard dependency on libGL.
+    # Make sure to link to it if using GLX.
+    target_link_libraries(drivers PUBLIC ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
+endif()
+
 
 target_link_libraries(drivers PRIVATE common cubeb ffmpeg glad glm)
 if (NOT ANDROID)

@@ -23,6 +23,7 @@
 #include <drivers/graphics/backend/graphics_driver_shared.h>
 #include <drivers/graphics/backend/ogl/shader_ogl.h>
 #include <drivers/graphics/backend/ogl/texture_ogl.h>
+#include <drivers/graphics/context.h>
 
 #include <common/queue.h>
 #include <glad/glad.h>
@@ -53,6 +54,8 @@ namespace eka2l1::drivers {
     };
 
     class ogl_graphics_driver : public shared_graphics_driver {
+        std::unique_ptr<graphics::gl_context> context_;
+
         eka2l1::request_queue<server_graphics_command_list> list_queue;
         std::unique_ptr<ogl_shader> sprite_program;
         std::unique_ptr<ogl_shader> fill_program;
@@ -91,7 +94,9 @@ namespace eka2l1::drivers {
 
         ogl_state backup;
         std::atomic_bool should_stop;
+        std::atomic_bool surface_update_needed;
 
+        void *new_surface;
         bool is_gles;
 
         void do_init();
@@ -117,7 +122,7 @@ namespace eka2l1::drivers {
         void load_gl_state();
 
     public:
-        explicit ogl_graphics_driver();
+        explicit ogl_graphics_driver(const window_system_info &info);
         ~ogl_graphics_driver() override {}
 
         void set_viewport(const eka2l1::rect &viewport) override;
@@ -129,6 +134,7 @@ namespace eka2l1::drivers {
         void abort() override;
         void dispatch(command *cmd) override;
         void bind_swapchain_framebuf() override;
+        void update_surface(void *new_surface) override;
 
         bool is_stricted() const override {
             return is_gles;

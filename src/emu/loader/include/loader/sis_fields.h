@@ -21,13 +21,12 @@
 #pragma once
 
 #include <common/types.h>
+#include <common/buffer.h>
 
 #include <string>
 #include <vector>
 
 #include <memory>
-#include <sstream>
-
 #include <cstdint>
 
 namespace eka2l1 {
@@ -407,17 +406,17 @@ namespace eka2l1 {
         };
 
         class sis_parser {
-            std::shared_ptr<std::istream> stream;
-            std::shared_ptr<std::istream> alternative_stream;
+            std::shared_ptr<common::ro_stream> stream;
+            std::shared_ptr<common::ro_stream> alternative_stream;
 
         private:
             void valid_offset();
-            void switch_istrstream(char *buf, size_t size);
+            void switch_to_buf_stream(char *buf, size_t size);
 
         public:
             // Extensively use for hooking between compressed in-context data
             void switch_stream();
-            void set_alternative_stream(std::shared_ptr<std::istream> astream);
+            void set_alternative_stream(std::shared_ptr<common::ro_stream> astream);
 
             explicit sis_parser(const std::string name);
             sis_header parse_header();

@@ -22,6 +22,7 @@
 
 #include <common/cvt.h>
 #include <common/log.h>
+#include <common/buffer.h>
 
 #include <algorithm>
 #include <cctype>
@@ -31,81 +32,81 @@
 
 namespace eka2l1::loader {
     std::optional<sis_old> parse_sis_old(const std::string &path) {
-        FILE *f = fopen(path.c_str(), "rb");
+        common::ro_std_file_stream stream(path, true);
 
-        if (!f) {
+        if (!stream.valid()) {
             return std::nullopt;
         }
 
         sis_old sold; // Not like trading anything
 
-        if (fread(&sold.header, 1, sizeof(sis_old_header), f) != sizeof(sis_old_header)) {
+        if (stream.read(&sold.header, sizeof(sis_old_header)) != sizeof(sis_old_header)) {
             return std::nullopt;
         }
 
         sold.epoc_ver = (sold.header.uid2 == static_cast<uint32_t>(epoc_sis_type::epocu6)) ? epocver::epocu6 : epocver::epoc6;
-
-        fseek(f, sold.header.file_ptr, SEEK_SET);
+        stream.seek(sold.header.file_ptr, common::seek_where::beg);
 
         for (uint32_t i = 0; i < sold.header.num_files; i++) {
             sis_old_file_record old_file_record;
             sis_old_file old_file;
 
-            if (fread(&old_file_record, 1, sizeof(sis_old_file_record), f) != sizeof(sis_old_file_record)) {
+            if (stream.read(&old_file_record,sizeof(sis_old_file_record)) != sizeof(sis_old_file_record)) {
                 return std::nullopt;
             }
 
-            uint32_t crr = ftell(f);
+            const std::size_t crr = stream.tell();
 
-            fseek(f, old_file_record.source_name_ptr, SEEK_SET);
+            stream.seek(old_file_record.source_name_ptr, common::seek_where::beg);
             old_file.name.resize(old_file_record.source_name_len / 2);
 
             // Unused actually, we currently don't care
             [[maybe_unused]] std::size_t total_size_read = 0;
 
-            total_size_read = fread(old_file.name.data(), 2, old_file_record.source_name_len / 2, f);
+            total_size_read = stream.read(old_file.name.data(), old_file_record.source_name_len);
 
-            fseek(f, old_file_record.des_name_ptr, SEEK_SET);
+            stream.seek(old_file_record.des_name_ptr, common::seek_where::beg);
             old_file.dest.resize(old_file_record.des_name_len / 2);
 
-            total_size_read = fread(old_file.dest.data(), 2, old_file_record.des_name_len / 2, f);
+            total_size_read = stream.read(old_file.dest.data(), old_file_record.des_name_len);
 
             old_file.record = std::move(old_file_record);
             sold.files.push_back(std::move(old_file));
 
             if (sold.epoc_ver != epocver::epoc6) {
-                fseek(f, crr - 12, SEEK_SET);
+                stream.seek(crr - 12, common::seek_where::beg);
             } else {
-                fseek(f, crr, SEEK_SET);
+                stream.seek(crr, common::seek_where::beg);
             }
         }
 
         for (std::uint32_t i = 0; i < sold.header.num_langs; i++) {
             // Read the language
             std::uint16_t lang = 0;
-            fseek(f, sold.header.lang_ptr + i * 2, SEEK_SET);
-            fread(&lang, 2, 1, f);
+
+            stream.seek(sold.header.lang_ptr + i * 2, common::seek_where::beg);
+            stream.read(&lang, 2);
 
             sold.langs.push_back(static_cast<language>(lang));
 
             // Read component name
             std::u16string name;
 
-            fseek(f, sold.header.comp_name_ptr + i * 4, SEEK_SET);
+            stream.seek(sold.header.comp_name_ptr + i * 4, common::seek_where::beg);
 
             // Read only one name
             std::uint32_t name_len = 0;
-            fread(&name_len, 4, 1, f);
+            stream.read(&name_len, 4);
 
             name.resize(name_len / 2);
 
             // Read name offset
-            fseek(f, sold.header.comp_name_ptr + 4 * sold.header.num_langs + i * 4, SEEK_SET);
+            stream.seek(sold.header.comp_name_ptr + 4 * sold.header.num_langs + i * 4, common::seek_where::beg);
             std::uint32_t pkg_name_offset = 0;
 
-            fread(&pkg_name_offset, 4, 1, f);
-            fseek(f, pkg_name_offset, SEEK_SET);
-            fread(&name[0], name_len, 1, f);
+            stream.read(&pkg_name_offset, 4);
+            stream.seek(pkg_name_offset, common::seek_where::beg);
+            stream.read(&name[0], name_len);
 
             sold.comp_names.push_back(name);
         }

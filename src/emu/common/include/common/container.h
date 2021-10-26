@@ -29,6 +29,7 @@
 #include <cstdint>
 #include <cstring>
 #include <functional>
+#include <limits>
 #include <vector>
 
 namespace eka2l1::common {

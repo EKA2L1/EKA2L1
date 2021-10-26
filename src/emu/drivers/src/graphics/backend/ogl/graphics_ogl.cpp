@@ -28,22 +28,64 @@
 #include <drivers/graphics/backend/ogl/graphics_ogl.h>
 #include <glad/glad.h>
 
+#if EKA2L1_PLATFORM(ANDROID)
+#include <EGL/egl.h>
+#endif
+
 #define IMGUI_IMPL_OPENGL_LOADER_GLAD
 
 namespace eka2l1::drivers {
-    ogl_graphics_driver::ogl_graphics_driver()
+    static void gl_post_callback_for_error(const char *name, void *funcptr, int len_args, ...) {
+        GLenum error_code;
+        error_code = glad_glGetError();
+
+        if (error_code != GL_NO_ERROR) {
+            LOG_ERROR(DRIVER_GRAPHICS, "{} encounters error {}", name, error_code);
+        }
+    }
+
+    void init_gl_graphics_library(graphics::gl_context::mode api) {
+        switch (api) {
+            case graphics::gl_context::mode::opengl: {
+                gladLoadGL();
+                break;
+            }
+
+            case graphics::gl_context::mode::opengl_es: {
+#if EKA2L1_PLATFORM(ANDROID)
+                if (!gladLoadGLES2Loader((GLADloadproc) eglGetProcAddress)) {
+                    LOG_CRITICAL(DRIVER_GRAPHICS, "gladLoadGLES2Loader() failed");
+                    return;
+                }
+#endif
+
+                break;
+            }
+
+            default:
+                return;
+        }
+
+        glad_set_post_callback(gl_post_callback_for_error);
+    }
+
+    ogl_graphics_driver::ogl_graphics_driver(const window_system_info &info)
         : shared_graphics_driver(graphic_api::opengl)
         , should_stop(false)
+        , surface_update_needed(false)
+        , new_surface(nullptr)
         , is_gles(false) {
-        init_graphics_library(eka2l1::drivers::graphic_api::opengl);
+        context_ = graphics::make_gl_context(info, false, true);
+
+        if (!context_) {
+            LOG_ERROR(DRIVER_GRAPHICS, "OGL context failed to create!");
+            return;
+        }
+
+        init_gl_graphics_library(context_->gl_mode());
         list_queue.max_pending_count_ = 128;
 
-        const GLubyte *ver_string = glGetString(GL_VERSION);
-        const char *gles_header = "OpenGL ES";
-
-        if (ver_string && (strncmp(reinterpret_cast<const char *>(ver_string), gles_header, strlen(gles_header)) == 0)) {
-            is_gles = true;
-        }
+        is_gles = (context_->gl_mode() == graphics::gl_context::mode::opengl_es);
 
         GLint major_gl = 0;
         glGetIntegerv(GL_MAJOR_VERSION, &major_gl);
@@ -142,7 +184,18 @@ namespace eka2l1::drivers {
     }
 
     void ogl_graphics_driver::bind_swapchain_framebuf() {
+        if (surface_update_needed) {
+            context_->update_surface(new_surface);
+            surface_update_needed = false;
+        }
+
+        context_->update();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    void ogl_graphics_driver::update_surface(void *new_surface_set) {
+        new_surface = new_surface_set;
+        surface_update_needed = true;
     }
 
     void ogl_graphics_driver::draw_rectangle(command_helper &helper) {
@@ -772,6 +825,8 @@ namespace eka2l1::drivers {
     }
 
     void ogl_graphics_driver::display(command_helper &helper) {
+        context_->swap_buffers();
+
         disp_hook_();
         helper.finish(this, 0);
     }

@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <functional>
 #include <stdexcept>
 #include <string>
 
@@ -132,6 +133,22 @@ namespace eka2l1 {
 
     char get_separator(bool symbian_use = false);
     char16_t get_separator_16(bool symbian_use = false);
+
+    template <typename T>
+    std::basic_string<T> transform_separators(std::basic_string<T> path, bool symbian_use, std::function<T(bool)> separator_func) {
+        size_t crr_point = 0;
+        T dsep = separator_func(symbian_use);
+
+        while (crr_point < path.size()) {
+            if (is_separator(path[crr_point])) {
+                path[crr_point] = dsep;
+            }
+
+            crr_point += 1;
+        }
+
+        return path;
+    }
 
     /*! \brief Iterate through components of a path */
     template <typename T>

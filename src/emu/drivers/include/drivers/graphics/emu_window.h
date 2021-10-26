@@ -82,9 +82,12 @@ namespace eka2l1 {
 			*/
             virtual void init(std::string title, vec2 size, const std::uint32_t flags) = 0;
 
-            virtual void make_current() = 0;
-            virtual void done_current() = 0;
-            virtual void swap_buffer() = 0;
+            // Decrapated: Will be removed when glfw is removed
+            // The context should not be tied to a window anymore.
+            virtual void make_current() {}
+            virtual void done_current() {}
+            virtual void swap_buffer() {}
+
             virtual void poll_events() = 0;
             virtual void shutdown() = 0;
             virtual void set_fullscreen(const bool is_fullscreen) = 0;
@@ -107,6 +110,11 @@ namespace eka2l1 {
             virtual bool set_cursor(cursor *cur) = 0;
             virtual void cursor_visiblity(const bool visi) = 0;
             virtual bool cursor_visiblity() = 0;
+
+            virtual window_system_info get_window_system_info() {
+                window_system_info temp;
+                return temp;
+            }
 
             std::function<void(void *, vec2)> resize_hook;
 
@@ -137,6 +145,8 @@ namespace eka2l1 {
             std::function<void(void *)> close_hook;
 
             std::function<void(void *, std::uint32_t)> char_hook;
+
+            std::function<void(void*)> surface_change_hook;
         };
 
         std::unique_ptr<emu_window> new_emu_window(const window_api win_type);

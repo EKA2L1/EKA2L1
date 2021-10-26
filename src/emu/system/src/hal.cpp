@@ -150,8 +150,10 @@ namespace eka2l1::epoc {
                 LOG_WARN(SYSTEM, "Trying to get video info with a different display mode {}", static_cast<int>(mode));
             }
 
+            kernel_system *kern = sys->get_kernel_system();
+
             info.size_in_pixels_ = scr->size();
-            info.size_in_twips_ = info.size_in_pixels_ * epoc::APPROXIMATE_NORMAL_PHONE_TWIPS_MUL;
+            info.size_in_twips_ = info.size_in_pixels_ * epoc::get_approximate_pixel_to_twips_mul(kern->get_epoc_version());
             info.is_mono_ = is_display_mode_mono(mode);
             info.bits_per_pixel_ = get_bpp_from_display_mode(mode);
             info.is_pixel_order_rgb_ = (mode >= epoc::display_mode::color4k);
@@ -361,8 +363,9 @@ namespace eka2l1::epoc {
     }
 
     static void fill_machine_info(eka2l1::system *sys, machine_info_v1 &info) {
-        window_server *winserv = reinterpret_cast<window_server *>(sys->get_kernel_system()->get_by_name<service::server>(
-            eka2l1::get_winserv_name_by_epocver(sys->get_symbian_version_use())));
+        kernel_system *kern = sys->get_kernel_system();
+        window_server *winserv = reinterpret_cast<window_server *>(kern->get_by_name<service::server>(
+            eka2l1::get_winserv_name_by_epocver(kern->get_epoc_version())));
 
         epoc::screen *crr_screen = winserv->get_current_focus_screen();
 
@@ -371,7 +374,7 @@ namespace eka2l1::epoc {
         info.display_id_ = 0;
         info.xy_input_size_pixels_ = crr_screen->size();
         info.display_size_pixels_ = crr_screen->size();
-        info.physical_screen_size_ = info.display_size_pixels_ * epoc::APPROXIMATE_NORMAL_PHONE_TWIPS_MUL; // In twips
+        info.physical_screen_size_ = info.display_size_pixels_ * epoc::get_approximate_pixel_to_twips_mul(kern->get_epoc_version()); // In twips
         info.input_type_ = xy_input_type_pointer;
         info.keyboard_id_ = 0;
         info.keyboard_present_ = 1;

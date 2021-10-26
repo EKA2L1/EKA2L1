@@ -22,6 +22,7 @@
 
 #include <QOpenGLContext>
 #include <QWidget>
+
 #include <drivers/graphics/emu_window.h>
 
 class display_window_widget;
@@ -32,18 +33,12 @@ class display_widget : public QWidget, public eka2l1::drivers::emu_window {
 private:
     void *userdata_;
 
-    QOpenGLContext *display_context_;
-    QOpenGLContext *shared_display_context_;
-
 public:
     explicit display_widget(QWidget *parent = nullptr);
     ~display_widget();
 
     void init(std::string title, eka2l1::vec2 size, const std::uint32_t flags) override;
 
-    void make_current() override;
-    void done_current() override;
-    void swap_buffer() override;
     void poll_events() override;
     void shutdown() override;
     void set_fullscreen(const bool is_fullscreen) override;
@@ -64,9 +59,7 @@ public:
     void cursor_visiblity(const bool visi) override;
     bool cursor_visiblity() override;
 
-    QOpenGLContext *get_parent_context() {
-        return display_context_;
-    }
+    eka2l1::drivers::window_system_info get_window_system_info() override;
 
     QPaintEngine *paintEngine() const override {
         return nullptr;
