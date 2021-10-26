@@ -336,159 +336,159 @@
       <translation>Тэчка</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="235"/>
+      <location filename="../src/mainwindow.cpp" line="238"/>
       <source>Clear menu</source>
       <translation>Ачысціць меню</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="298"/>
+      <location filename="../src/mainwindow.cpp" line="301"/>
       <source>Touchscreen disabled</source>
       <translation>Сэнсарны экран адключаны</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="298"/>
+      <location filename="../src/mainwindow.cpp" line="301"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
       <translation>Некаторыя з вашых бягучых спалучэнняў клавіш звязаныя з кнопкамі мышы. Таму эмуляваны сэнсарны экран адключаны.&lt;br&gt;&lt;br&gt;&lt;b&gt;Заўвага:&lt;/b&gt;&lt;br&gt;Сэнсарны экран можна паўторна ўключыць, падмяніўшы кнопкі мышы клавішамі клавіятуры.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="299"/>
-      <location filename="../src/mainwindow.cpp" line="363"/>
+      <location filename="../src/mainwindow.cpp" line="302"/>
+      <location filename="../src/mainwindow.cpp" line="366"/>
       <source>Don&apos;t show this again</source>
       <translation>Не паказваць гэта зноў</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="362"/>
+      <location filename="../src/mainwindow.cpp" line="365"/>
       <source>No device installed</source>
       <translation>Няма ўсталяваных прылад</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="362"/>
+      <location filename="../src/mainwindow.cpp" line="365"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
       <translation>Вы не ўсталявалі ніводнай прылады. Калі ласка, усталюйце прыладу або прытрымлівайцеся інструкцый з усталёўкі на старонцы EKA2L1 у GitHub wiki.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="643"/>
+      <location filename="../src/mainwindow.cpp" line="646"/>
       <source>Extracting game dump files</source>
       <translation>Выманне файлаў гульнявога дампу</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="664"/>
+      <location filename="../src/mainwindow.cpp" line="667"/>
       <source>Mounting aborted</source>
       <translation>Мантаванне перапынена</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="669"/>
+      <location filename="../src/mainwindow.cpp" line="672"/>
       <source>The ZIP file is corrupted!</source>
       <translation>Файл ZIP пашкоджаны!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="674"/>
+      <location filename="../src/mainwindow.cpp" line="677"/>
       <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
       <translation>ZIP не змяшчае сістэмнай тэчкі ў каранёвай тэчцы. Сістэмная тэчка павінна знаходзіцца ў дампе гульні.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="680"/>
+      <location filename="../src/mainwindow.cpp" line="683"/>
       <source>The choosen file is not a ZIP file!</source>
       <translation>Выбраны файл не з'яўляецца файлам ZIP!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="694"/>
+      <location filename="../src/mainwindow.cpp" line="697"/>
       <source>Game card problem</source>
       <translation>Праблема з гульнявой карткай</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="694"/>
+      <location filename="../src/mainwindow.cpp" line="697"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
       <translation>Дамп гульнявой карткі змяшчае чуллівыя да рэгістра файлы. Гэта можа спрычыніцца праблемам з эмулятарам.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="698"/>
+      <location filename="../src/mainwindow.cpp" line="701"/>
       <source>Game card dump folder correction</source>
       <translation>Выпраўленне тэчкі з дампам гульнявой карткі</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="698"/>
+      <location filename="../src/mainwindow.cpp" line="701"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
       <translation>Здаецца, выбраны шлях няправільны.&lt;br&gt;Вы хочаце, каб эмулятар выправіў яго?</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="754"/>
+      <location filename="../src/mainwindow.cpp" line="757"/>
       <source>Choose the game card dump folder</source>
       <translation>Выберыце тэчку з дампам гульнявой карткі</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="774"/>
+      <location filename="../src/mainwindow.cpp" line="777"/>
       <source>Choose the game card zip</source>
       <translation>Выберыце архіў ZIP з гульнявой карткай</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="852"/>
+      <location filename="../src/mainwindow.cpp" line="856"/>
       <source>Document</source>
       <translation>Дакумент</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="870"/>
+      <location filename="../src/mainwindow.cpp" line="874"/>
       <source>Choose a language for the package</source>
       <translation>Выберыце мову для пакета</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="640"/>
-      <location filename="../src/mainwindow.cpp" line="888"/>
+      <location filename="../src/mainwindow.cpp" line="643"/>
+      <location filename="../src/mainwindow.cpp" line="892"/>
       <source>Cancel</source>
       <translation>Скасаваць</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="891"/>
+      <location filename="../src/mainwindow.cpp" line="895"/>
       <source>Installing package progress</source>
       <translation>Прагрэс усталёўкі пакета</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="915"/>
+      <location filename="../src/mainwindow.cpp" line="919"/>
       <source>Installation aborted</source>
       <translation>Усталёўка перапынена</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="915"/>
+      <location filename="../src/mainwindow.cpp" line="919"/>
       <source>The installation has been canceled</source>
       <translation>Усталёўка скасавана</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="920"/>
+      <location filename="../src/mainwindow.cpp" line="924"/>
       <source>Installation failed</source>
       <translation>Не ўдалося ўсталяваць</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="920"/>
+      <location filename="../src/mainwindow.cpp" line="924"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
       <translation>Не ўдалося ўсталяваць пакет па шляху: %1. Пераканайцеся, што шлях указвае на сапраўдны файл SIS/SISX.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="927"/>
+      <location filename="../src/mainwindow.cpp" line="931"/>
       <source>Installation success</source>
       <translation>Усталёўка паспяховая</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="927"/>
+      <location filename="../src/mainwindow.cpp" line="931"/>
       <source>Package has been successfully installed</source>
       <translation>Пакет паспяхова ўсталяваны</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="948"/>
+      <location filename="../src/mainwindow.cpp" line="952"/>
       <source>Choose the file to install</source>
       <translation>Выберыце файл для ўсталёўкі</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="948"/>
+      <location filename="../src/mainwindow.cpp" line="952"/>
       <source>SIS file (*.sis *.sisx)</source>
       <translation>Файл SIS (*.sis *.sisx)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1112"/>
+      <location filename="../src/mainwindow.cpp" line="1116"/>
       <source>Load theme failed!</source>
       <translation>Не ўдалося загрузіць тэму!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1112"/>
+      <location filename="../src/mainwindow.cpp" line="1116"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
       <translation>Не атрымоўваецца знайсці файл стылю цёмнай тэмы!</translation>
     </message>
@@ -577,11 +577,6 @@
       <location filename="../src/settings_dialog.ui" line="48"/>
       <source>Application</source>
       <translation>Дастасаванне</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="120"/>
-      <source>Time delay (0-500us)</source>
-      <translation>Затрымка часу (0-500us)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="159"/>
@@ -747,6 +742,11 @@
       <location filename="../src/settings_dialog.ui" line="456"/>
       <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
       <translation type="unfinished">Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="120"/>
+      <source>Time delay (0-1000us)</source>
+      <translation type="unfinished">Time delay (0-1000us)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="462"/>
