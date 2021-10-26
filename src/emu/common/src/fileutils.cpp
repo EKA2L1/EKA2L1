@@ -136,6 +136,8 @@ namespace eka2l1::common {
         , eof(false)
         , detail(false)
         , dir_name(name) {
+        dir_name = transform_separators<char>(dir_name, false, get_separator);
+
 #if EKA2L1_PLATFORM(POSIX)
         match_pattern = eka2l1::filename(dir_name);
         dir_name = eka2l1::file_directory(dir_name);
