@@ -94,7 +94,9 @@ namespace eka2l1::drivers {
 
         ogl_state backup;
         std::atomic_bool should_stop;
+        std::atomic_bool surface_update_needed;
 
+        void *new_surface;
         bool is_gles;
 
         void do_init();
@@ -132,6 +134,7 @@ namespace eka2l1::drivers {
         void abort() override;
         void dispatch(command *cmd) override;
         void bind_swapchain_framebuf() override;
+        void update_surface(void *new_surface) override;
 
         bool is_stricted() const override {
             return is_gles;

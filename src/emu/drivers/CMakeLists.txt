@@ -82,8 +82,6 @@ else()
         src/hwrm/backend/vibration_jdk.cpp)
 endif()
 
-find_package(OpenGL REQUIRED)
-
 if(WIN32)
     target_sources(drivers PRIVATE
         src/graphics/backend/context_wgl.cpp
@@ -101,8 +99,16 @@ elseif(HAIKU)
         src/graphics/backend/context_bgl.cpp
         src/graphics/backend/context_bgl.h
     )
+elseif(ANDROID)
+    target_sources(drivers PRIVATE
+        src/graphics/backend/context_egl.cpp
+        src/graphics/backend/context_egl.h
+        src/graphics/backend/context_egl_android.cpp
+        src/graphics/backend/context_egl_android.h
+    )
 else()
     find_package(X11 REQUIRED)
+    find_package(OpenGL REQUIRED)
 
     target_sources(drivers PRIVATE
         src/graphics/backend/context_glx.cpp

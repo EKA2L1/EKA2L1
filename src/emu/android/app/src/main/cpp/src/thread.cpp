@@ -39,29 +39,26 @@ namespace eka2l1::android {
             drivers::emu_window_flag_maximum_size);
         state.window->set_userdata(&state);
 
-        state.window->init_gl();
-
         // We got window and context ready (OpenGL, let makes stuff now)
         // TODO: Configurable
-        state.graphics_driver = drivers::create_graphics_driver(drivers::graphic_api::opengl);
+        state.graphics_driver = drivers::create_graphics_driver(drivers::graphic_api::opengl,
+                state.window->get_window_system_info());
         state.symsys->set_graphics_driver(state.graphics_driver.get());
 
         drivers::emu_window_android *window = state.window.get();
-        state.graphics_driver->set_display_hook([window, &state]() {
-            if (!state.surface_inited) {
-                state.window->init_surface();
-                state.surface_inited = true;
-            }
 
+        window->surface_change_hook = [&state](void *new_surface) {
+            state.graphics_driver->update_surface(new_surface);
+        };
+
+        state.graphics_driver->set_display_hook([window, &state]() {
             window->swap_buffer();
             window->poll_events();
 
             if (state.should_graphics_pause) {
-                window->destroy_surface();
-                state.pause_graphics_sema.wait();
+                state.graphics_driver->update_surface(nullptr);
 
-                window->create_surface();
-                window->make_current();
+                state.pause_graphics_sema.wait();
                 state.pause_sema.notify();
             }
         });
@@ -134,7 +131,8 @@ namespace eka2l1::android {
             cmd_list.get());
 
         while (!state.should_ui_quit) {
-            state.launcher->draw(cmd_builder.get(), state.window->window_width, state.window->window_height);
+            state.launcher->draw(cmd_builder.get(), state.window->window_fb_size().x,
+                    state.window->window_fb_size().y);
 
             int wait_status = -100;
 

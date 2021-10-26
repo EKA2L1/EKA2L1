@@ -27,13 +27,14 @@
 
 namespace eka2l1::drivers::graphics {
     class gl_context {
-    protected:
+    public:
         enum class mode {
             detect,
             opengl,
             opengl_es
         };
 
+    protected:
         mode m_opengl_mode = mode::detect;
 
         // Window dimensions.
@@ -42,9 +43,8 @@ namespace eka2l1::drivers::graphics {
 
         bool m_is_shared = false;
 
-        // A list of desktop OpenGL versions to attempt to create a context for.
-        // (4.6-3.2, geometry shaders is a minimum requirement since we're using core profile).
-        static const std::array<std::pair<int, int>, 9> s_desktop_opengl_versions;
+        // A list of desktop OpenGL versions to attempt to create a context for (4.6-3.0).
+        static const std::array<std::pair<int, int>, 11> s_desktop_opengl_versions;
 
     public:
         virtual ~gl_context() = default;
@@ -57,8 +57,13 @@ namespace eka2l1::drivers::graphics {
         virtual void set_swap_interval(const std::int32_t interval) = 0;
 
         virtual bool is_headless() const = 0;
+        virtual void update_surface(void *new_surface) {}
 
         virtual std::unique_ptr<gl_context> create_shared_context() = 0;
+
+        mode gl_mode() const {
+            return m_opengl_mode;
+        }
     };
 
     std::unique_ptr<gl_context> make_gl_context(const drivers::window_system_info &system_info, const bool stereo = false, const bool core = true);

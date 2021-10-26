@@ -125,6 +125,7 @@ namespace eka2l1::drivers {
             = 0;
 
         virtual void set_viewport(const eka2l1::rect &viewport) = 0;
+        virtual void update_surface(void *surface) = 0;
 
         virtual std::unique_ptr<graphics_command_list> new_command_list() = 0;
 
@@ -141,8 +142,6 @@ namespace eka2l1::drivers {
     };
 
     using graphics_driver_ptr = std::unique_ptr<graphics_driver>;
-
-    bool init_graphics_library(graphic_api api);
 
     graphics_driver_ptr create_graphics_driver(const graphic_api api, const window_system_info &info);
 };

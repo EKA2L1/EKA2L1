@@ -21,9 +21,6 @@
 
 #include <common/vecx.h>
 #include <drivers/graphics/emu_window.h>
-
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
 #include <android/native_window_jni.h>
 
 #include <any>
@@ -32,32 +29,13 @@
 namespace eka2l1 {
     namespace drivers {
         class emu_window_android : public emu_window {
-            vec2 emu_screen_size;
-            vec2 pos_with_title;
-
-            ANativeWindow *render_window;
-            ANativeWindow *host_window;
-            EGLConfig egl_config;
-            EGLSurface egl_surface;
-            EGLContext egl_context;
-            EGLDisplay egl_display;
-
+            eka2l1::vec2 fb_size;
             void *userdata;
-            bool is_fullscreen_now;
-            bool inited;
 
         public:
-            int window_width;
-            int window_height;
-
             explicit emu_window_android();
 
             void surface_changed(ANativeWindow *surf, int width, int height);
-            void init_gl();
-            void init_surface();
-            void create_surface();
-            void destroy_surface();
-
             bool get_mouse_button_hold(const int mouse_btt) override;
 
             void change_title(std::string new_title) override;

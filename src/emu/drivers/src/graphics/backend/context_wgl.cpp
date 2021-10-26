@@ -230,8 +230,7 @@ namespace eka2l1::drivers::graphics {
         // WGL only supports desktop GL, for now.
         m_opengl_mode = mode::opengl;
 
-        if (core)
-        {
+        if (core) {
             // Make the fallback context current, temporarily.
             // This is because we need an active context to use wglCreateContextAttribsARB.
             if (!wglMakeCurrent(m_dc, m_rc)) {
