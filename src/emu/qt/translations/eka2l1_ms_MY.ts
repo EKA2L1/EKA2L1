@@ -336,159 +336,159 @@
       <translation>Fail</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="235"/>
+      <location filename="../src/mainwindow.cpp" line="238"/>
       <source>Clear menu</source>
       <translation>Kosongkan menu</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="298"/>
+      <location filename="../src/mainwindow.cpp" line="301"/>
       <source>Touchscreen disabled</source>
       <translation>Skrin-sentuh nyahaktif</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="298"/>
+      <location filename="../src/mainwindow.cpp" line="301"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
       <translation type="unfinished">Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="299"/>
-      <location filename="../src/mainwindow.cpp" line="363"/>
+      <location filename="../src/mainwindow.cpp" line="302"/>
+      <location filename="../src/mainwindow.cpp" line="366"/>
       <source>Don&apos;t show this again</source>
       <translation>Jangan tunjuk mesej ini lagi</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="362"/>
+      <location filename="../src/mainwindow.cpp" line="365"/>
       <source>No device installed</source>
       <translation>Tiada pemasangan peranti</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="362"/>
+      <location filename="../src/mainwindow.cpp" line="365"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
       <translation>Kamu tiada memasang sebarang peranti. Sila memasang peranti atau ikuti arahan pemasangan di muka surat Github EKA2L1.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="643"/>
+      <location filename="../src/mainwindow.cpp" line="646"/>
       <source>Extracting game dump files</source>
       <translation type="unfinished">Extracting game dump files</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="664"/>
+      <location filename="../src/mainwindow.cpp" line="667"/>
       <source>Mounting aborted</source>
       <translation type="unfinished">Mounting aborted</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="669"/>
+      <location filename="../src/mainwindow.cpp" line="672"/>
       <source>The ZIP file is corrupted!</source>
       <translation>Fail ZIP rosak!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="674"/>
+      <location filename="../src/mainwindow.cpp" line="677"/>
       <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
       <translation type="unfinished">The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="680"/>
+      <location filename="../src/mainwindow.cpp" line="683"/>
       <source>The choosen file is not a ZIP file!</source>
       <translation type="unfinished">The choosen file is not a ZIP file!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="694"/>
+      <location filename="../src/mainwindow.cpp" line="697"/>
       <source>Game card problem</source>
       <translation>Kad permainan bermasalah</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="694"/>
+      <location filename="../src/mainwindow.cpp" line="697"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
       <translation type="unfinished">The game card dump has case-sensitive files. This may cause problems with the emulator.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="698"/>
+      <location filename="../src/mainwindow.cpp" line="701"/>
       <source>Game card dump folder correction</source>
       <translation>Pembetulan fail longgokan kad permainan</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="698"/>
+      <location filename="../src/mainwindow.cpp" line="701"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
       <translation type="unfinished">The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="754"/>
+      <location filename="../src/mainwindow.cpp" line="757"/>
       <source>Choose the game card dump folder</source>
       <translation>Pilih longgokan kad permainan fail</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="774"/>
+      <location filename="../src/mainwindow.cpp" line="777"/>
       <source>Choose the game card zip</source>
       <translation>Pilih kad permainan zip</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="852"/>
+      <location filename="../src/mainwindow.cpp" line="856"/>
       <source>Document</source>
       <translation>Dokumen</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="870"/>
+      <location filename="../src/mainwindow.cpp" line="874"/>
       <source>Choose a language for the package</source>
       <translation>Pilih pakej bahasa</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="640"/>
-      <location filename="../src/mainwindow.cpp" line="888"/>
+      <location filename="../src/mainwindow.cpp" line="643"/>
+      <location filename="../src/mainwindow.cpp" line="892"/>
       <source>Cancel</source>
       <translation>Batal</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="891"/>
+      <location filename="../src/mainwindow.cpp" line="895"/>
       <source>Installing package progress</source>
       <translation>Progres pemasangan pakej</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="915"/>
+      <location filename="../src/mainwindow.cpp" line="919"/>
       <source>Installation aborted</source>
       <translation>Pemasangan ditamatkan</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="915"/>
+      <location filename="../src/mainwindow.cpp" line="919"/>
       <source>The installation has been canceled</source>
       <translation>Pemasangan telah dihentikan</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="920"/>
+      <location filename="../src/mainwindow.cpp" line="924"/>
       <source>Installation failed</source>
       <translation>Pemasangan gagal</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="920"/>
+      <location filename="../src/mainwindow.cpp" line="924"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
       <translation>Pemasangan pakej gagal pada arah: Pastikan arah yang ditujukan sahih fail SIS/SISX.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="927"/>
+      <location filename="../src/mainwindow.cpp" line="931"/>
       <source>Installation success</source>
       <translation>Pemasangan berjaya</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="927"/>
+      <location filename="../src/mainwindow.cpp" line="931"/>
       <source>Package has been successfully installed</source>
       <translation>Pakej telah berjaya dipasang dengan berjaya</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="948"/>
+      <location filename="../src/mainwindow.cpp" line="952"/>
       <source>Choose the file to install</source>
       <translation>Pilih fail untuk dipasang</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="948"/>
+      <location filename="../src/mainwindow.cpp" line="952"/>
       <source>SIS file (*.sis *.sisx)</source>
       <translation>Fail SIS (*.sis *.sisx)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1112"/>
+      <location filename="../src/mainwindow.cpp" line="1116"/>
       <source>Load theme failed!</source>
       <translation>Gagal memuatkan tema!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1112"/>
+      <location filename="../src/mainwindow.cpp" line="1116"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
       <translation>Fail tema gelap tidak ditemui!</translation>
     </message>
@@ -577,11 +577,6 @@
       <location filename="../src/settings_dialog.ui" line="48"/>
       <source>Application</source>
       <translation>Aplikasi</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="120"/>
-      <source>Time delay (0-500us)</source>
-      <translation>Tangguh masa (0-500us)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="159"/>
@@ -747,6 +742,11 @@
       <location filename="../src/settings_dialog.ui" line="456"/>
       <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
       <translation type="unfinished">Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="120"/>
+      <source>Time delay (0-1000us)</source>
+      <translation type="unfinished">Time delay (0-1000us)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="462"/>
