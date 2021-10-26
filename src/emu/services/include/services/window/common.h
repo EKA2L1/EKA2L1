@@ -32,6 +32,7 @@
 
 #include <common/e32inc.h>
 #include <common/vecx.h>
+#include <common/types.h>
 
 #include <drivers/graphics/emu_window.h>
 #include <services/window/keys.h>
@@ -46,8 +47,6 @@ enum {
 };
 
 namespace eka2l1::epoc {
-    static constexpr int APPROXIMATE_NORMAL_PHONE_TWIPS_MUL = 9;
-
     enum {
         base_handle = 0x40000000
     };
@@ -674,4 +673,7 @@ namespace eka2l1::epoc {
 
     std::optional<std::uint32_t> map_button_to_inputcode(button_map &map, int controller_id, int button);
     std::optional<std::uint32_t> map_key_to_inputcode(key_map &map, std::uint32_t keycode);
+
+    // TODO: This should not depends on the version of the system at all. This function is basically stereotyping
+    int get_approximate_pixel_to_twips_mul(const epocver ver);
 }

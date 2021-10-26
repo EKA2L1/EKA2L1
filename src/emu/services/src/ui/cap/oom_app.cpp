@@ -161,8 +161,9 @@ namespace eka2l1 {
     }
 
     std::string oom_ui_app_server::get_layout_buf() {
+        kernel_system *kern = sys->get_kernel_system();
         if (!winsrv) {
-            winsrv = reinterpret_cast<window_server *>(&(*sys->get_kernel_system()->get_by_name<service::server>(
+            winsrv = reinterpret_cast<window_server *>(&(*kern->get_by_name<service::server>(
                 eka2l1::get_winserv_name_by_epocver(sys->get_symbian_version_use()))));
         }
 
@@ -190,7 +191,7 @@ namespace eka2l1 {
             mode_info.dmode = epoc::display_mode::color16ma;
             mode_info.info.orientation = epoc::number_to_orientation(scr_config->modes[i].rotation);
             mode_info.info.pixel_size = scr_config->modes[i].size;
-            mode_info.info.twips_size = mode_info.info.pixel_size * epoc::APPROXIMATE_NORMAL_PHONE_TWIPS_MUL;
+            mode_info.info.twips_size = mode_info.info.pixel_size * epoc::get_approximate_pixel_to_twips_mul(kern->get_epoc_version());
             mode_info.screen_style_hash = calculate_screen_style_hash(scr_config->modes[i].style);
 
             result.append(reinterpret_cast<char *>(&mode_info), sizeof(akn_screen_mode_info));

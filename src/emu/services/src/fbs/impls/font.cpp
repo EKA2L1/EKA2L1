@@ -434,10 +434,12 @@ namespace eka2l1 {
 
         LOG_TRACE(SERVICE_FBS, "Basic information for Typeface support is provided, excluding number of heights and flags");
 
+        const int approxiate_twips_mul = epoc::get_approximate_pixel_to_twips_mul(serv->kern->get_epoc_version());
+
         support->info_.name = info->face_attrib.name.to_std_string(nullptr);
         support->info_.flags = 0;
-        support->max_height_in_twips_ = info->metrics.max_height * epoc::APPROXIMATE_NORMAL_PHONE_TWIPS_MUL;
-        support->min_height_in_twips_ = info->face_attrib.min_size_in_pixels * epoc::APPROXIMATE_NORMAL_PHONE_TWIPS_MUL;
+        support->max_height_in_twips_ = info->metrics.max_height * approxiate_twips_mul;
+        support->min_height_in_twips_ = info->face_attrib.min_size_in_pixels * approxiate_twips_mul;
         support->num_heights_ = 1;
         support->is_scalable_ = info->adapter->vectorizable();
 
@@ -630,7 +632,7 @@ namespace eka2l1 {
         // I don't know why when I tested with eka2, this height starts to be in pixels for pixel opcode.
         // TODO: Find out if spec height is always in twips for eka2.
         if (serv->kern->is_eka1() || is_twips) {
-            spec.height = static_cast<std::int32_t>(static_cast<float>(spec.height) / epoc::APPROXIMATE_NORMAL_PHONE_TWIPS_MUL);
+            spec.height = static_cast<std::int32_t>(static_cast<float>(spec.height) / epoc::get_approximate_pixel_to_twips_mul(serv->kern->get_epoc_version()));
         }
 
         // Observing font plugin on real phone, it seems to clamp the height between 2 to 256.
@@ -762,7 +764,8 @@ namespace eka2l1 {
             return;
         }
 
-        const std::int32_t twips_height = static_cast<std::int32_t>(font->of_info.metrics.max_height * epoc::APPROXIMATE_NORMAL_PHONE_TWIPS_MUL);
+        const std::int32_t twips_height = static_cast<std::int32_t>(font->of_info.metrics.max_height *
+            epoc::get_approximate_pixel_to_twips_mul(serv->kern->get_epoc_version()));
 
         ctx->write_data_to_descriptor_argument<std::int32_t>(1, twips_height);
         ctx->complete(epoc::error_none);

@@ -299,4 +299,23 @@ namespace eka2l1::epoc {
 
         return it->second;
     }
+    
+    int get_approximate_pixel_to_twips_mul(const epocver ver) {
+        switch (ver) {
+        case epocver::epoc6:
+        case epocver::epoc80:
+        case epocver::epoc81a:
+        case epocver::epoc81b:
+            return 15;
+
+        case epocver::epoc93:
+        case epocver::epoc94:
+            return 9;
+
+        default:
+            break;
+        }
+
+        return 8;
+    }
 }
