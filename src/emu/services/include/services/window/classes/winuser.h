@@ -115,6 +115,18 @@ namespace eka2l1::epoc {
             return (flags & flags_faded);
         }
 
+        bool content_changed() const {
+            return (flags & flag_content_changed);
+        }
+
+        void content_changed(const bool changed) {
+            if (changed) {
+                flags |= flag_content_changed;
+            } else {
+                flags &= ~flag_content_changed;
+            }
+        }
+
         bool is_dsa_active() const;
 
         void add_dsa_active(dsa *dsa);

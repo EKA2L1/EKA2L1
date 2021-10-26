@@ -156,7 +156,7 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
 
     src.size = size;
 
-    float mult = static_cast<float>(window_width) / size.x;
+    float mult = state.conf.disable_display_content_scale ? 1.0 : (static_cast<float>(window_width) / size.x);
     float width = size.x * mult;
     float height = size.y * mult;
     std::uint32_t x = 0;
@@ -165,8 +165,11 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
         height = swapchain_size.y;
         mult = height / size.y;
         width = size.x * mult;
-        x = (swapchain_size.x - width) / 2;
     }
+
+    x = (swapchain_size.x - width) / 2;
+    y = (swapchain_size.y - height) / 2;
+
     scr->scale_x = mult;
     scr->scale_y = mult;
     scr->absolute_pos.x = static_cast<int>(x);

@@ -393,10 +393,10 @@
             <item>
              <widget class="QCheckBox" name="emulator_display_disable_content_scale">
               <property name="toolTip">
-               <string>If blurry scaled up phone display is not preferred, this option will disable scaling the emulator display, keeping it at the original size.</string>
+               <string>If blurry scaled up screen is not preferred, enable this option will make the phone screen stays at the original size</string>
               </property>
               <property name="text">
-               <string>Do not scale phone display to fit emulator window</string>
+               <string>Disable scaling phone screen to emulator's window size</string>
               </property>
              </widget>
             </item>
@@ -411,6 +411,20 @@
           <string>User interface</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_4" rowstretch="1,0,0,0">
+          <item row="0" column="0">
+           <layout class="QHBoxLayout" name="interface_language_layout">
+            <item>
+             <widget class="QLabel" name="interface_language_label">
+              <property name="text">
+               <string>Language</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="interface_language_combo"/>
+            </item>
+           </layout>
+          </item>
           <item row="1" column="0">
            <layout class="QHBoxLayout" name="interface_theme_layout">
             <item>
@@ -436,27 +450,6 @@
             </item>
            </layout>
           </item>
-          <item row="2" column="0">
-           <widget class="QCheckBox" name="interface_status_bar_checkbox">
-            <property name="text">
-             <string>Disable status bar</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <layout class="QHBoxLayout" name="interface_language_layout">
-            <item>
-             <widget class="QLabel" name="interface_language_label">
-              <property name="text">
-               <string>Language</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="interface_language_combo"/>
-            </item>
-           </layout>
-          </item>
           <item row="3" column="0">
            <widget class="QCheckBox" name="interface_disable_easter_egg_title_checkbox">
             <property name="toolTip">
@@ -467,6 +460,13 @@
             </property>
             <property name="text">
              <string>Disable easter egg title</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QCheckBox" name="interface_status_bar_checkbox">
+            <property name="text">
+             <string>Disable status bar</string>
             </property>
            </widget>
           </item>

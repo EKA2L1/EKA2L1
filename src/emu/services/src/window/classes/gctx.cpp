@@ -329,7 +329,9 @@ namespace eka2l1::epoc {
             viewport.size = attached_window->size();
 
             cmd_builder->set_viewport(viewport);
+
             attached_window->has_redraw_content(true);
+            attached_window->content_changed(true);
 
             do_submit_clipping();
         } else if (cmd_list) {
