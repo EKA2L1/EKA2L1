@@ -117,7 +117,7 @@
                 <item>
                  <widget class="QLabel" name="app_config_time_delay_label">
                   <property name="text">
-                   <string>Time delay (0-500us)</string>
+                   <string>Time delay (0-1000us)</string>
                   </property>
                  </widget>
                 </item>
@@ -130,7 +130,7 @@
                    </sizepolicy>
                   </property>
                   <property name="maximum">
-                   <number>500</number>
+                   <number>1000</number>
                   </property>
                   <property name="orientation">
                    <enum>Qt::Horizontal</enum>
