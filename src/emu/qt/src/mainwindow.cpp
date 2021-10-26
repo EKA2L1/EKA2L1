@@ -310,10 +310,6 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     QColor default_color = settings.value(BACKGROUND_COLOR_DISPLAY_SETTING_NAME, QColor(0xD0, 0xD0, 0xD0)).value<QColor>();
     emulator_state_.conf.display_background_color = default_color.rgba();
 
-    if (emulator_state_.init_app_launched) {
-        setup_and_switch_to_game_mode();
-    }
-
     connect(ui_->action_about, &QAction::triggered, this, &main_window::on_about_triggered);
     connect(ui_->action_settings, &QAction::triggered, this, &main_window::on_settings_triggered);
     connect(ui_->action_package, &QAction::triggered, this, &main_window::on_package_install_clicked);
@@ -788,6 +784,7 @@ void main_window::on_mount_zip_clicked() {
 
 void main_window::setup_screen_draw() {
     eka2l1::system *system = emulator_state_.symsys.get();
+
     if (system) {
         eka2l1::epoc::screen *scr = get_current_active_screen();
         if (scr) {

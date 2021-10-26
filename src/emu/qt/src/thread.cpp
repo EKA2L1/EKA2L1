@@ -368,6 +368,10 @@ namespace eka2l1::desktop {
 
         std::thread graphics_thread_obj(graphics_driver_thread, std::ref(state));
 
+        if (state.init_app_launched) {
+            state.ui_main->setup_and_switch_to_game_mode();
+        }
+
         const int exec_code = application.exec();
         kill_emulator(state);
 
