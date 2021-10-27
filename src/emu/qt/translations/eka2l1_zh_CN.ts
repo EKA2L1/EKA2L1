@@ -701,7 +701,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="396"/>
       <source>If blurry scaled up screen is not preferred, enable this option will make the phone screen stays at the original size</source>
-      <translation type="unfinished">If blurry scaled up screen is not preferred, enable this option will make the phone screen stays at the original size</translation>
+      <translation>如果不喜欢模糊缩放屏幕，启用此选项将使手机屏幕保持原始大小</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="399"/>
