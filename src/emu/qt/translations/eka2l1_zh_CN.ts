@@ -706,7 +706,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="399"/>
       <source>Disable scaling phone screen to emulator&apos;s window size</source>
-      <translation type="unfinished">Disable scaling phone screen to emulator&apos;s window size</translation>
+      <translation>禁用缩放手机屏幕到模拟器窗口大小</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="411"/>
@@ -746,7 +746,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="120"/>
       <source>Time delay (0-1000us)</source>
-      <translation type="unfinished">Time delay (0-1000us)</translation>
+      <translation>时间延时(0-1000us)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="462"/>
