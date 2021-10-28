@@ -701,12 +701,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="396"/>
       <source>If blurry scaled up screen is not preferred, enable this option will make the phone screen stays at the original size</source>
-      <translation type="unfinished">If blurry scaled up screen is not preferred, enable this option will make the phone screen stays at the original size</translation>
+      <translation>Se non si vuole uno schermo maggiorato e sfocato, abilitando questa opzione lo schermo del telefono rimarrà della dimensione originale</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="399"/>
       <source>Disable scaling phone screen to emulator&apos;s window size</source>
-      <translation type="unfinished">Disable scaling phone screen to emulator&apos;s window size</translation>
+      <translation>Disabilita il ridimensionamento dello schermo del telefono alla dimensione della finestra dell'emulatore</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="411"/>
@@ -746,7 +746,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="120"/>
       <source>Time delay (0-1000us)</source>
-      <translation type="unfinished">Time delay (0-1000us)</translation>
+      <translation>Ritardo (0-1000us)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="462"/>
