@@ -91,35 +91,35 @@ namespace eka2l1::scripting {
 }
 
 extern "C" {
-EKA2L1_EXPORT std::uint8_t symemu_mem_read_byte(const std::uint32_t addr) {
+EKA2L1_EXPORT std::uint8_t eka2l1_mem_read_byte(const std::uint32_t addr) {
     return eka2l1::scripting::read_byte(addr);
 }
 
-EKA2L1_EXPORT std::uint16_t symemu_mem_read_word(const std::uint32_t addr) {
+EKA2L1_EXPORT std::uint16_t eka2l1_mem_read_word(const std::uint32_t addr) {
     return eka2l1::scripting::read_word(addr);
 }
 
-EKA2L1_EXPORT std::uint32_t symemu_mem_read_dword(const std::uint32_t addr) {
+EKA2L1_EXPORT std::uint32_t eka2l1_mem_read_dword(const std::uint32_t addr) {
     return eka2l1::scripting::read_dword(addr);
 }
 
-EKA2L1_EXPORT std::uint64_t symemu_mem_read_qword(const std::uint32_t addr) {
+EKA2L1_EXPORT std::uint64_t eka2l1_mem_read_qword(const std::uint32_t addr) {
     return eka2l1::scripting::read_qword(addr);
 }
 
-EKA2L1_EXPORT std::int32_t symemu_mem_write_byte(const std::uint32_t addr, const std::uint8_t data) {
+EKA2L1_EXPORT std::int32_t eka2l1_mem_write_byte(const std::uint32_t addr, const std::uint8_t data) {
     return eka2l1::scripting::write_byte(addr, data);
 }
 
-EKA2L1_EXPORT std::int32_t symemu_mem_write_word(const std::uint32_t addr, const std::uint16_t data) {
+EKA2L1_EXPORT std::int32_t eka2l1_mem_write_word(const std::uint32_t addr, const std::uint16_t data) {
     return eka2l1::scripting::write_word(addr, data);
 }
 
-EKA2L1_EXPORT std::int32_t symemu_mem_write_dword(const std::uint32_t addr, const std::uint32_t data) {
+EKA2L1_EXPORT std::int32_t eka2l1_mem_write_dword(const std::uint32_t addr, const std::uint32_t data) {
     return eka2l1::scripting::write_dword(addr, data);
 }
 
-EKA2L1_EXPORT std::int32_t symemu_mem_write_qword(const std::uint32_t addr, const std::uint64_t data) {
+EKA2L1_EXPORT std::int32_t eka2l1_mem_write_qword(const std::uint32_t addr, const std::uint64_t data) {
     return eka2l1::scripting::write_qword(addr, data);
 }
 }

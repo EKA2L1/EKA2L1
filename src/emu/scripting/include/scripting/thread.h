@@ -54,13 +54,8 @@ namespace eka2l1::scripting {
         std::uint32_t get_stack_base();
         std::uint32_t get_heap_base();
 
-        std::unique_ptr<scripting::thread> next_in_process();
-        std::unique_ptr<scripting::process> get_owning_process();
-
         kernel::thread *get_thread_handle() {
             return thread_handle;
         }
     };
-
-    std::unique_ptr<eka2l1::scripting::thread> get_current_thread();
 }

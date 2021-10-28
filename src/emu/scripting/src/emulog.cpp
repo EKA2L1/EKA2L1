@@ -21,16 +21,8 @@
 #include <common/log.h>
 #include <common/types.h>
 
-#include <scripting/emulog.h>
-
-namespace eka2l1::scripting {
-    void emulog(const std::string &format) {
-        LOG_INFO(SCRIPTING, "{}", format);
-    }
-}
-
 extern "C" {
-EKA2L1_EXPORT void symemu_log(const char *format) {
+EKA2L1_EXPORT void eka2l1_log(const char *format) {
     LOG_INFO(eka2l1::SCRIPTING, "{}", format);
 }
 }

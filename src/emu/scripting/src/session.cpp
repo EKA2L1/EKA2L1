@@ -28,24 +28,14 @@ namespace eka2l1::scripting {
     session_wrapper::session_wrapper(std::uint64_t handle)
         : ss_(reinterpret_cast<service::session *>(handle)) {
     }
-
-    std::unique_ptr<scripting::server_wrapper> session_wrapper::server() {
-        return std::make_unique<scripting::server_wrapper>(
-            reinterpret_cast<std::uint64_t>(&(*ss_->get_server())));
-    }
-
-    std::unique_ptr<session_wrapper> session_from_handle(const std::uint32_t handle) {
-        return std::make_unique<scripting::session_wrapper>(reinterpret_cast<std::uint64_t>(&(
-            *get_current_instance()->get_kernel_system()->get<service::session>(handle))));
-    }
 }
 
 extern "C" {
-EKA2L1_EXPORT void symemu_free_session(eka2l1::scripting::session_wrapper *ss) {
+EKA2L1_EXPORT void eka2l1_free_session(eka2l1::scripting::session_wrapper *ss) {
     delete ss;
 }
 
-EKA2L1_EXPORT eka2l1::scripting::session_wrapper *symemu_session_from_handle(const std::uint32_t handle) {
+EKA2L1_EXPORT eka2l1::scripting::session_wrapper *eka2l1_session_from_handle(const std::uint32_t handle) {
     eka2l1::kernel_system *kern = eka2l1::scripting::get_current_instance()->get_kernel_system();
     eka2l1::service::session *ss = kern->get<eka2l1::service::session>(handle);
 
@@ -56,7 +46,7 @@ EKA2L1_EXPORT eka2l1::scripting::session_wrapper *symemu_session_from_handle(con
     return new eka2l1::scripting::session_wrapper(reinterpret_cast<std::uint64_t>(ss));
 }
 
-EKA2L1_EXPORT eka2l1::scripting::server_wrapper *symemu_session_server(eka2l1::scripting::session_wrapper *ss) {
+EKA2L1_EXPORT eka2l1::scripting::server_wrapper *eka2l1_session_server(eka2l1::scripting::session_wrapper *ss) {
     eka2l1::service::session *ss_impl = ss->get_session_handle();
     eka2l1::service::server *sv = ss_impl->get_server();
 

@@ -31,11 +31,11 @@ namespace eka2l1::scripting {
 }
 
 extern "C" {
-EKA2L1_EXPORT void symemu_free_server(eka2l1::scripting::server_wrapper *svr) {
+EKA2L1_EXPORT void eka2l1_free_server(eka2l1::scripting::server_wrapper *svr) {
     delete svr;
 }
 
-EKA2L1_EXPORT const char *symemu_server_name(eka2l1::scripting::server_wrapper *sv) {
+EKA2L1_EXPORT const char *eka2l1_server_name(eka2l1::scripting::server_wrapper *sv) {
     std::string data = sv->get_name();
     char *ret_val = new char[data.length() + 1];
 

@@ -1,6 +1,6 @@
-local ipcCtx = require('symemu.ipc.context')
-local kern = require('symemu.kernel')
-local common = require('symemu.common')
+local ipcCtx = require('eka2l1.ipc.context')
+local kern = require('eka2l1.kernel')
+local common = require('eka2l1.common')
 
 events = {}
 
@@ -21,17 +21,17 @@ ffi.cdef([[
     typedef void (__stdcall *ipc_sent_lua_func)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, thread*);
     typedef void (__stdcall *ipc_completed_lua_func)(ipc_msg*);
 
-    void symemu_cpu_register_lib_hook(const char *lib_name, const uint32_t ord, const uint32_t process_uid, breakpoint_hit_lua_func func);
-    void symemu_cpu_register_bkpt_hook(const char *image_name, const uint32_t addr, const uint32_t process_uid, breakpoint_hit_lua_func func);
-    void symemu_register_ipc_sent_hook(const char *server_name, const int opcode, ipc_sent_lua_func func);
-    void symemu_register_ipc_completed_hook(const char *server_name, const int opcode, ipc_completed_lua_func func);
+    void eka2l1_cpu_register_lib_hook(const char *lib_name, const uint32_t ord, const uint32_t process_uid, breakpoint_hit_lua_func func);
+    void eka2l1_cpu_register_bkpt_hook(const char *image_name, const uint32_t addr, const uint32_t process_uid, breakpoint_hit_lua_func func);
+    void eka2l1_register_ipc_sent_hook(const char *server_name, const int opcode, ipc_sent_lua_func func);
+    void eka2l1_register_ipc_completed_hook(const char *server_name, const int opcode, ipc_completed_lua_func func);
 ]])
 
 function events.registerLibraryInvoke(libName, ord, processUid, func)
     local libNameInC = ffi.new("char[?]", #libName)
     ffi.copy(libNameInC, libName)
 
-    ffi.C.symemu_cpu_register_lib_hook(libNameInC, ord, processUid, function ()
+    ffi.C.eka2l1_cpu_register_lib_hook(libNameInC, ord, processUid, function ()
         local ran, errorMsg = pcall(func)
         if not ran then
             common.log('Error running breakpoint script, ' .. errorMsg)
@@ -43,7 +43,7 @@ function events.registerBreakpointInvoke(libName, addr, processUid, func)
     local libNameInC = ffi.new("char[?]", #libName)
     ffi.copy(libNameInC, libName)
 
-    ffi.C.symemu_cpu_register_bkpt_hook(libNameInC, addr, processUid, function ()
+    ffi.C.eka2l1_cpu_register_bkpt_hook(libNameInC, addr, processUid, function ()
         local ran, errorMsg = pcall(func)
         if not ran then
             common.log('Error running breakpoint script, ' .. errorMsg)
@@ -56,7 +56,7 @@ function events.registerIpcInvoke(serverName, opcode, when, func)
     ffi.copy(serverNameInC, serverName)
 
     if when == EVENT_IPC_SEND then
-        ffi.C.symemu_register_ipc_sent_hook(serverNameInC, opcode, function (arg0, arg1, arg2, arg3, flags, reqsts, sender)
+        ffi.C.eka2l1_register_ipc_sent_hook(serverNameInC, opcode, function (arg0, arg1, arg2, arg3, flags, reqsts, sender)
             local ran, retval = pcall(ipcCtx.makeFromValues, opcode, arg0, arg1, arg2, arg3, flags, reqsts, kern.makeThreadFromHandle(sender))
             if not ran then
                 common.log('Fail to create IPC context, ' .. retval)
@@ -69,7 +69,7 @@ function events.registerIpcInvoke(serverName, opcode, when, func)
             end
         end)
     else
-        ffi.C.symemu_register_ipc_completed_hook(serverNameInC, opcode, function (msg)
+        ffi.C.eka2l1_register_ipc_completed_hook(serverNameInC, opcode, function (msg)
             local ran, retval = pcall(ipcCtx.makeFromMessage, kern.makeMessageFromHandle(msg))
             if not ran then
                 common.log('Fail to create IPC context, ' .. retval)

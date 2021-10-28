@@ -24,13 +24,6 @@
 #include <scripting/lua_helper.h>
 #include <scripting/platform.h>
 
-#if !ENABLE_PYTHON_SCRIPTING
-#include <scripting/pybind_stub.h>
-#else
-#include <pybind11/embed.h>
-#include <pybind11/pybind11.h>
-#endif
-
 #include <map>
 #include <memory>
 #include <mutex>
@@ -62,13 +55,12 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::manager {
-    typedef void(__stdcall *ipc_sent_lua_func)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
+    typedef void(__stdcall *ipc_sent_func)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
         std::uint32_t, std::uint32_t, eka2l1::scripting::thread *);
-    typedef void(__stdcall *ipc_completed_lua_func)(eka2l1::scripting::ipc_message_wrapper *);
-    typedef void(__stdcall *breakpoint_hit_lua_func)();
+    typedef void(__stdcall *ipc_completed_func)(eka2l1::scripting::ipc_message_wrapper *);
+    typedef void(__stdcall *breakpoint_hit_func)();
 
-    using breakpoint_hit_func = std::variant<pybind11::function, breakpoint_hit_lua_func>;
-    using ipc_operation_func = std::variant<pybind11::function, void *>;
+    using ipc_operation_func = void*;
     using ipc_operation_func_list = std::vector<ipc_operation_func>;
 
     struct breakpoint_info {
@@ -94,7 +86,7 @@ namespace eka2l1::manager {
         std::map<std::uint32_t, std::uint32_t> source_insts_;
     };
 
-    using script_module = std::variant<pybind11::module, scripting::luacpp_state>;
+    using script_module = scripting::luacpp_state;
 
     /**
      * \brief A manager for all custom Python scripts of EKA2L1 
@@ -119,8 +111,6 @@ namespace eka2l1::manager {
 
         std::map<std::uint64_t, breakpoint_hit_info> last_breakpoint_script_hits;
         breakpoint_info_list breakpoint_wait_patch; ///< Breakpoints that still require patching
-
-        std::unique_ptr<pybind11::scoped_interpreter> interpreter;
 
         std::size_t ipc_send_callback_handle;
         std::size_t ipc_complete_callback_handle;

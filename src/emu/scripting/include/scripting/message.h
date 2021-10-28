@@ -47,6 +47,4 @@ namespace eka2l1::scripting {
             return msg_;
         }
     };
-
-    std::unique_ptr<ipc_message_wrapper> message_from_handle(const int guest_handle);
 }

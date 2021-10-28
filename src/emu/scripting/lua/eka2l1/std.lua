@@ -1,14 +1,14 @@
 std = {}
 
-local kernel = require('symemu.kernel')
+local kernel = require('eka2l1.kernel')
 local bitops = require('bit')
 local ffi = require('ffi')
 
 pcall(ffi.load, 'native-lib', true)
 
 ffi.cdef([[
-    const char *symemu_std_utf16_to_utf8(const char *wstring, const int length);
-    void symemu_free_string(const char* str);
+    const char *eka2l1_std_utf16_to_utf8(const char *wstring, const int length);
+    void eka2l1_free_string(const char* str);
 ]])
 
 DESCRIPTOR_TYPE_BUF_CONST = 0
@@ -109,8 +109,8 @@ end
 setmetatable(descriptor16, { __index = descriptor })
 
 function std.rawUtf16ToString(raw, length)
-    local result = ffi.C.symemu_std_utf16_to_utf8(raw, length)
-    ffi.gc(result, ffi.C.symemu_free_string)
+    local result = ffi.C.eka2l1_std_utf16_to_utf8(raw, length)
+    ffi.gc(result, ffi.C.eka2l1_free_string)
 
     return ffi.string(result)
 end

@@ -39,7 +39,7 @@ set(ASSETS_DIR "${PROJECT_SOURCE_DIR}/src/emu/android/app/src/main/assets")
 if (ENABLE_SCRIPTING)
     message("Enable scripting on Android build")
 
-    target_link_libraries(native-lib PRIVATE -Wl,--whole-archive $<TARGET_FILE:symemu> -Wl,--no-whole-archive)
+    target_link_libraries(native-lib PRIVATE -Wl,--whole-archive $<TARGET_FILE:scripting> -Wl,--no-whole-archive)
 
     add_custom_command(
             TARGET native-lib

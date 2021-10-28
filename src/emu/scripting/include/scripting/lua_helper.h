@@ -27,6 +27,10 @@ namespace eka2l1::scripting {
         lua_State *state_;
 
     public:
+        explicit luacpp_state()
+            : state_(nullptr) {
+        }
+
         explicit luacpp_state(lua_State *state)
             : state_(state) {
         }

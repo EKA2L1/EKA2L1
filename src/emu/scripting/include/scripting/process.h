@@ -20,11 +20,6 @@
 #pragma once
 
 #include <scripting/platform.h>
-
-#if ENABLE_PYTHON_SCRIPTING
-#include <pybind11/pybind11.h>
-#endif
-
 #include <scripting/thread.h>
 
 #include <memory>
@@ -46,10 +41,6 @@ namespace eka2l1::scripting {
 
     public:
         explicit process(uint64_t handle);
-
-#if ENABLE_PYTHON_SCRIPTING
-        pybind11::bytes read_process_memory(const std::uint32_t addr, const size_t size);
-#endif
         void write_process_memory(const std::uint32_t addr, const std::string &buffer);
 
         // Quick quick quick
@@ -67,7 +58,4 @@ namespace eka2l1::scripting {
             return process_handle;
         }
     };
-
-    std::vector<std::unique_ptr<eka2l1::scripting::process>> get_process_list();
-    std::unique_ptr<eka2l1::scripting::process> get_current_process();
 }

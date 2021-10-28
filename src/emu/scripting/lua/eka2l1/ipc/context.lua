@@ -1,8 +1,8 @@
 IpcContext = {}
 
-local kernel = require('symemu.kernel')
-local std = require('symemu.std')
-local common = require('symemu.common')
+local kernel = require('eka2l1.kernel')
+local std = require('eka2l1.std')
+local common = require('eka2l1.common')
 local bitops = require('bit')
 
 IPC_ARGUMENT_TYPE_UNSPECIFIED = 0
