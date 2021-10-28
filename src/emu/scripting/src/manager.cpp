@@ -81,6 +81,18 @@ namespace eka2l1::manager {
         modules.clear();
     }
 
+    script_function *scripts::make_function(void *func_ptr, const script_function::meta_category category) {
+        if (!current_module) {
+            LOG_ERROR(SCRIPTING, "No module is active to make a function!");
+            return nullptr;
+        }
+
+        std::unique_ptr<script_function> func = std::make_unique<script_function>(current_module, func_ptr, category);
+        current_module->functions_.push_back(std::move(func));
+
+        return current_module->functions_.back().get();
+    }
+
     bool scripts::import_module(const std::string &path) {
         const std::string name_full = eka2l1::filename(path);
         const std::string name = eka2l1::replace_extension(name_full, "");
@@ -105,7 +117,7 @@ namespace eka2l1::manager {
                 luaL_openlibs(new_state);
 
                 if (luaL_loadfile(new_state, name_full.c_str()) == LUA_OK) {
-                    modules.emplace(name.c_str(), scripting::luacpp_state(new_state));
+                    modules.emplace(name.c_str(), std::make_shared<script_module>(new_state));
                 } else {
                     LOG_WARN(SCRIPTING, "Fail to load script {}, error {}", name, lua_tostring(new_state, -1));
                     lua_close(new_state);
@@ -123,6 +135,62 @@ namespace eka2l1::manager {
         }
 
         return true;
+    }
+
+    void scripts::unload_module(const std::string &path) {
+        const std::string name_full = eka2l1::filename(path);
+        const std::string name = eka2l1::replace_extension(name_full, "");
+        
+        const std::lock_guard<std::mutex> guard(smutex);
+
+        auto find_result = modules.find(name);
+        if (find_result != modules.end()) {
+            std::shared_ptr<script_module> module = find_result->second;
+            for (std::size_t i = 0; i < module->functions_.size(); i++) {
+                // Delete all references in breakpoint map and IPC map
+                switch (module->functions_[i]->category_) {
+                case script_function::META_CATEGORY_PENDING_PATCH_BREAKPOINT:
+                    for (std::size_t j = 0; j < breakpoint_wait_patch.size(); j++) {
+                        if (breakpoint_wait_patch[j].invoke_ == module->functions_[i].get()) {
+                            breakpoint_wait_patch.erase(breakpoint_wait_patch.begin() + j--);
+                        }
+                    }
+
+                    break;
+
+                case script_function::META_CATEGORY_BREAKPOINT:
+                    for (auto &breakpoint: breakpoints) {
+                        for (std::size_t j = 0; j < breakpoint.second.list_.size(); j++) {
+                            if (breakpoint.second.list_[j].invoke_ == module->functions_[i].get()) {
+                                breakpoint.second.list_.erase(breakpoint.second.list_.begin() + j--);
+                            }
+                        }
+                    }
+
+                    break;
+                
+                case script_function::META_CATEGORY_IPC:
+                    for (auto &opcode_map: ipc_functions) {
+                        for (auto &[identifier, funcs]: opcode_map.second) {
+                            for (std::size_t j = 0; j < funcs.size(); j++) {
+                                if (funcs[j] == module->functions_[i].get()) {
+                                    funcs.erase(funcs.begin() + j--);
+                                }
+                            }
+                        }
+                    }
+
+                default:
+                    break;
+                }
+            }
+
+            if (current_module == find_result->second) {
+                current_module = nullptr;
+            }
+
+            modules.erase(find_result);
+        }
     }
 
     bool scripts::call_module_entry(const std::string &module) {
@@ -163,23 +231,25 @@ namespace eka2l1::manager {
             return false;
         }
 
-        scripting::luacpp_state &state = modules[module];
+        std::shared_ptr<script_module> &state = modules[module];
+        current_module = state;
 
-        if (lua_pcall(state.state_, 0, 1, 0) == LUA_OK) {
-            lua_pop(state.state_, lua_gettop(state.state_));
+        if (lua_pcall(state->lua_state(), 0, 1, 0) == LUA_OK) {
+            lua_pop(state->lua_state(), lua_gettop(state->lua_state()));
         } else {
-            LOG_ERROR(SCRIPTING, "Error executing script entry of {}: {}", module, lua_tostring(state.state_, -1));
+            LOG_ERROR(SCRIPTING, "Error executing script entry of {}: {}", module, lua_tostring(state->lua_state(), -1));
             return false;
         }
 
         return true;
     }
 
-    void scripts::register_ipc(const std::string &server_name, const int opcode, const int invoke_when, ipc_operation_func func) {
-        ipc_functions[server_name][(static_cast<std::uint64_t>(opcode) | (static_cast<std::uint64_t>(invoke_when) << 32))].push_back(func);
+    void scripts::register_ipc(const std::string &server_name, const int opcode, const int invoke_when, void* func) {
+        ipc_functions[server_name][(static_cast<std::uint64_t>(opcode) | (static_cast<std::uint64_t>(invoke_when) << 32))].push_back(make_function(func, script_function::META_CATEGORY_IPC));
     }
 
     void scripts::write_breakpoint_block(kernel::process *pr, const vaddress target) {
+        const std::lock_guard<std::mutex> guard(smutex);
         const vaddress aligned = target & ~1;
 
         if (!pr) {
@@ -252,7 +322,7 @@ namespace eka2l1::manager {
         info.lib_name_ = lib_name_lower;
         info.flags_ = breakpoint_info::FLAG_IS_ORDINAL;
         info.addr_ = ord;
-        info.invoke_ = func;
+        info.invoke_ = make_function(func, script_function::META_CATEGORY_PENDING_PATCH_BREAKPOINT);
         info.attached_process_ = process_uid;
 
         breakpoint_wait_patch.push_back(info);
@@ -265,7 +335,7 @@ namespace eka2l1::manager {
         info.lib_name_ = lib_name_lower;
         info.flags_ = breakpoint_info::FLAG_BASED_IMAGE;
         info.addr_ = addr;
-        info.invoke_ = func;
+        info.invoke_ = make_function(func, script_function::META_CATEGORY_BREAKPOINT);
         info.attached_process_ = process_uid;
 
         if (lib_name_lower == "constantaddr") {
@@ -277,6 +347,7 @@ namespace eka2l1::manager {
     }
 
     void scripts::patch_library_hook(const std::string &name, const std::vector<vaddress> &exports) {
+        const std::lock_guard<std::mutex> guard(smutex);
         const std::string lib_name_lower = common::lowercase_string(name);
 
         for (auto &breakpoint : breakpoint_wait_patch) {
@@ -291,7 +362,9 @@ namespace eka2l1::manager {
     }
 
     void scripts::patch_unrelocated_hook(const std::uint32_t process_uid, const std::string &name, const address new_code_addr) {
+        const std::lock_guard<std::mutex> guard(smutex);
         const std::string lib_name_lower = common::lowercase_string(name);
+
         for (breakpoint_info &breakpoint : breakpoint_wait_patch) {
             if (((breakpoint.attached_process_ == 0) || (breakpoint.attached_process_ == process_uid)) && (breakpoint.lib_name_ == lib_name_lower)
                 && (breakpoint.flags_ & breakpoint_info::FLAG_BASED_IMAGE)) {
@@ -299,6 +372,7 @@ namespace eka2l1::manager {
 
                 patched.addr_ += new_code_addr;
                 patched.flags_ &= ~breakpoint_info::FLAG_BASED_IMAGE;
+                patched.invoke_->category_ = script_function::META_CATEGORY_BREAKPOINT;
 
                 breakpoints[patched.addr_ & ~1].list_.push_back(patched);
             }
@@ -308,14 +382,13 @@ namespace eka2l1::manager {
     void scripts::call_ipc_send(const std::string &server_name, const int opcode, const std::uint32_t arg0, const std::uint32_t arg1,
         const std::uint32_t arg2, const std::uint32_t arg3, const std::uint32_t flags, const std::uint32_t reqsts_addr,
         kernel::thread *callee) {
-        std::lock_guard<std::mutex> guard(smutex);
+        const std::lock_guard<std::mutex> guard(smutex);
 
         eka2l1::system *crr_instance = scripting::get_current_instance();
         eka2l1::scripting::set_current_instance(sys);
 
         for (auto &ipc_func : ipc_functions[server_name][opcode]) {
-            ipc_sent_func sent_func = reinterpret_cast<ipc_sent_func>(ipc_func);
-            sent_func(arg0, arg1, arg2, arg3, flags, reqsts_addr, new scripting::thread(reinterpret_cast<std::uint64_t>(callee)));
+            call<ipc_sent_func>(ipc_func, arg0, arg1, arg2, arg3, flags, reqsts_addr, new scripting::thread(reinterpret_cast<std::uint64_t>(callee)));
         }
 
         scripting::set_current_instance(crr_instance);
@@ -337,6 +410,7 @@ namespace eka2l1::manager {
     }
 
     bool scripts::call_breakpoints(const std::uint32_t addr, const std::uint32_t process_uid) {
+        const std::lock_guard<std::mutex> guard(smutex);
         if (breakpoints.find(addr & ~1) == breakpoints.end()) {
             return false;
         }
@@ -348,7 +422,7 @@ namespace eka2l1::manager {
                 continue;
             }
 
-            info.invoke_();
+            call<breakpoint_hit_func>(info.invoke_);
         }
 
         return true;

@@ -60,8 +60,44 @@ namespace eka2l1::manager {
     typedef void(__stdcall *ipc_completed_func)(eka2l1::scripting::ipc_message_wrapper *);
     typedef void(__stdcall *breakpoint_hit_func)();
 
-    using ipc_operation_func = void*;
-    using ipc_operation_func_list = std::vector<ipc_operation_func>;
+    struct script_module;
+
+    struct script_function {
+        enum meta_category {
+            META_CATEGORY_IPC = 0,
+            META_CATEGORY_PENDING_PATCH_BREAKPOINT = 1,
+            META_CATEGORY_BREAKPOINT = 2
+        };
+
+
+        std::shared_ptr<script_module> parent_; 
+        void* func_;
+        meta_category category_;
+
+        explicit script_function(std::shared_ptr<script_module> parent, void *func, meta_category category)
+            : parent_(parent)
+            , func_(func)
+            , category_(category) {
+        }
+
+        template <typename T>
+        T cast() {
+            return reinterpret_cast<T>(func_);
+        }
+    };
+    
+    struct script_module {
+        scripting::luacpp_state state_;
+        std::vector<std::unique_ptr<script_function>> functions_;
+
+        explicit script_module(lua_State *state)
+            : state_(state) {
+        }
+
+        lua_State *lua_state() {
+            return state_.state_;
+        }
+    };
 
     struct breakpoint_info {
         std::string lib_name_;
@@ -74,19 +110,18 @@ namespace eka2l1::manager {
 
         std::uint8_t flags_;
         std::uint32_t attached_process_;
-        breakpoint_hit_func invoke_;
+        script_function *invoke_;
 
         explicit breakpoint_info();
     };
 
+    using ipc_operation_func_list = std::vector<script_function*>;
     using breakpoint_info_list = std::vector<breakpoint_info>;
 
     struct breakpoint_info_list_record {
         breakpoint_info_list list_;
         std::map<std::uint32_t, std::uint32_t> source_insts_;
     };
-
-    using script_module = scripting::luacpp_state;
 
     /**
      * \brief A manager for all custom Python scripts of EKA2L1 
@@ -100,7 +135,7 @@ namespace eka2l1::manager {
     class scripts {
     private:
         // ================= PYTHON SECTION ========================
-        std::unordered_map<std::string, script_module> modules;
+        std::unordered_map<std::string, std::shared_ptr<script_module>> modules;
         std::unordered_map<std::uint32_t, breakpoint_info_list_record> breakpoints; ///< Breakpoints complete patching
         std::unordered_map<std::string, std::map<std::uint64_t, ipc_operation_func_list>> ipc_functions;
 
@@ -110,6 +145,8 @@ namespace eka2l1::manager {
         };
 
         std::map<std::uint64_t, breakpoint_hit_info> last_breakpoint_script_hits;
+        std::shared_ptr<script_module> current_module;
+
         breakpoint_info_list breakpoint_wait_patch; ///< Breakpoints that still require patching
 
         std::size_t ipc_send_callback_handle;
@@ -131,6 +168,7 @@ namespace eka2l1::manager {
         ~scripts();
 
         bool import_module(const std::string &path);
+        void unload_module(const std::string &path);
 
         void handle_breakpoint(arm::core *running_core, kernel::thread *thr_triggered, const std::uint32_t addr);
         bool last_breakpoint_hit(kernel::thread *thr);
@@ -157,7 +195,7 @@ namespace eka2l1::manager {
          */
         void register_library_hook(const std::string &name, const std::uint32_t ord, const std::uint32_t process_uid, breakpoint_hit_func func);
         void register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid, breakpoint_hit_func func);
-        void register_ipc(const std::string &server_name, const int opcode, const int invoke_when, ipc_operation_func func);
+        void register_ipc(const std::string &server_name, const int opcode, const int invoke_when, void* func);
 
         bool call_breakpoints(const std::uint32_t addr, const std::uint32_t process_uid);
 
@@ -209,5 +247,14 @@ namespace eka2l1::manager {
          * \param new_code_addr     The new code base address of the given image.
          */
         void patch_unrelocated_hook(const std::uint32_t process_uid, const std::string &name, const address new_code_addr);
+
+        script_function *make_function(void *func_ptr, const script_function::meta_category category);
+
+        template <typename T, typename ...Args>
+        void call(script_function *func, Args... args) {
+            current_module = func->parent_;
+            func->cast<T>()(args...);
+            current_module = nullptr;
+        }
     };
 }

@@ -42,13 +42,7 @@ endif()
 
 unset(CMAKE_REQUIRED_QUIET)
 
-# Pybind11
 if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
-    if (NOT ANDROID)
-        option (PYBIND11_TEST "Enable pybind11 tests" OFF)
-        add_subdirectory(pybind11)
-    endif()
-    
     set(LUA_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/luaorg)
 
     add_library(liblua INTERFACE)
@@ -138,11 +132,6 @@ endif()
 
 if (ANDROID)
     add_subdirectory(lunasvg)
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_definitions(-DPy_DEBUG)
-    message("Add debug to prevent crash for PyBind11")
 endif()
 
 option(YAML_CPP_BUILD_TESTS "Enable YAML cpp testing" OFF)

@@ -33,5 +33,5 @@ target_link_libraries(epoc PRIVATE
         pugixml)
 
 if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
-        target_link_libraries(epoc PUBLIC symemu)
+        target_link_libraries(epoc PUBLIC scripting)
 endif()
