@@ -22,4 +22,32 @@
         <item>mid</item>
         <item>high</item>
     </string-array>
+    <string-array name="pref_orientation_entries">
+        <item>@string/pref_orientation_default</item>
+        <item>@string/pref_orientation_auto</item>
+        <item>@string/pref_orientation_port</item>
+        <item>@string/pref_orientation_land</item>
+    </string-array>
+    <string-array name="pref_vk_type_entries">
+        <item>@string/pref_vk_type_custom</item>
+        <item>@string/pref_vk_type_phone</item>
+        <item>@string/pref_vk_type_phone_arrows</item>
+    </string-array>
+    <string-array name="pref_button_shape_entries">
+        <item>@string/pref_button_shape_oval</item>
+        <item>@string/pref_button_shape_rect</item>
+        <item>@string/pref_button_shape_round</item>
+    </string-array>
+    <string-array name="pref_scale_type_entries">
+        <item>@string/pref_screen_scale_type_none</item>
+        <item>@string/pref_screen_scale_type_fit</item>
+        <item>@string/pref_screen_scale_type_fill</item>
+    </string-array>
+    <string-array name="pref_screen_gravity_entries">
+        <item>@string/pref_screen_gravity_left</item>
+        <item>@string/pref_screen_gravity_top</item>
+        <item>@string/pref_screen_gravity_center</item>
+        <item>@string/pref_screen_gravity_right</item>
+        <item>@string/pref_screen_gravity_bottom</item>
+    </string-array>
 </resources>

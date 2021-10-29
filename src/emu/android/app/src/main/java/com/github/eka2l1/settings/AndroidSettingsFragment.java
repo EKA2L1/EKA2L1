@@ -19,6 +19,9 @@
 
 package com.github.eka2l1.settings;
 
+import static com.github.eka2l1.emu.Constants.KEY_RESTART;
+import static com.github.eka2l1.emu.Constants.PREF_THEME;
+
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -42,11 +45,9 @@ public class AndroidSettingsFragment extends PreferenceFragmentCompat {
         PreferenceManager preferenceManager = getPreferenceManager();
         preferenceManager.setPreferenceDataStore(dataStore);
         setPreferencesFromResource(R.xml.preferences_android, rootKey);
-        ListPreference themePreference = findPreference("theme");
+        ListPreference themePreference = findPreference(PREF_THEME);
         themePreference.setOnPreferenceChangeListener((preference, newValue) -> {
-            Bundle result = new Bundle();
-            result.putBoolean("restartNeeded", true);
-            getParentFragmentManager().setFragmentResult("request", result);
+            getParentFragmentManager().setFragmentResult(KEY_RESTART, new Bundle());
             return true;
         });
     }

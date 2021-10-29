@@ -32,5 +32,9 @@
         android:id="@+id/action_save_log"
         android:title="@string/save_log"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_profiles"
+        android:title="@string/profiles"
+        app:showAsAction="never" />
 
 </menu>

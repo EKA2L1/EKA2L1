@@ -80,6 +80,8 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.preference:preference:1.1.1'
     implementation 'com.google.android.material:material:1.4.0'
+    implementation 'com.github.yukuku:ambilwarna:2.0.1'
+    implementation 'com.google.code.gson:gson:2.8.8'
     implementation 'com.github.nikita36078:filepicker:4.3.0'
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
     implementation 'io.reactivex.rxjava2:rxjava:2.2.9'

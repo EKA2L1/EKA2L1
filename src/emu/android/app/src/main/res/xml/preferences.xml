@@ -10,8 +10,5 @@
     <Preference
         android:key="pref_system"
         android:title="@string/pref_system_title" />
-    <Preference
-        android:key="pref_keymapper"
-        android:title="@string/pref_control_key_binding_sect_title" />
 
 </PreferenceScreen>

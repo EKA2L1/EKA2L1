@@ -1,0 +1,25 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_start"
+        android:title="@string/start"
+        app:showAsAction="ifRoom|withText" />
+    <item
+        android:id="@+id/action_reset_settings"
+        android:title="@string/reset_settings"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_reset_layout"
+        android:title="@string/reset_layout"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_load_profile"
+        android:title="@string/load_profile"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_save_profile"
+        android:title="@string/save_profile"
+        app:showAsAction="never" />
+
+</menu>

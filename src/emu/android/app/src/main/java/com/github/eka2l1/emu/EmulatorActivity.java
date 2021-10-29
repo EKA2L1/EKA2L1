@@ -20,10 +20,20 @@
 
 package com.github.eka2l1.emu;
 
+import static com.github.eka2l1.emu.Constants.KEY_APP_NAME;
+import static com.github.eka2l1.emu.Constants.KEY_APP_UID;
+import static com.github.eka2l1.emu.Constants.PREF_ACTIONBAR;
+import static com.github.eka2l1.emu.Constants.PREF_DEFAULT_PROFILE;
+import static com.github.eka2l1.emu.Constants.PREF_KEEP_SCREEN;
+import static com.github.eka2l1.emu.Constants.PREF_STATUSBAR;
+import static com.github.eka2l1.emu.Constants.PREF_THEME;
+import static com.github.eka2l1.emu.Constants.PREF_VIBRATION;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.res.TypedArray;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -51,8 +61,12 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.preference.PreferenceManager;
 
 import com.github.eka2l1.R;
+import com.github.eka2l1.config.ProfileModel;
+import com.github.eka2l1.config.ProfilesManager;
+import com.github.eka2l1.emu.overlay.FixedKeyboard;
 import com.github.eka2l1.emu.overlay.OverlayView;
 import com.github.eka2l1.emu.overlay.VirtualKeyboard;
 import com.github.eka2l1.settings.AppDataStore;
@@ -68,8 +82,10 @@ import java.io.IOException;
 import java.util.Objects;
 
 public class EmulatorActivity extends AppCompatActivity {
-    public static final String APP_UID_KEY = "appUid";
-    public static final String APP_NAME_KEY = "appName";
+    private static final int ORIENTATION_DEFAULT = 0;
+    private static final int ORIENTATION_AUTO = 1;
+    private static final int ORIENTATION_PORTRAIT = 2;
+    private static final int ORIENTATION_LANDSCAPE = 3;
 
     private static Vibrator vibrator;
     @SuppressLint("StaticFieldLeak")
@@ -85,12 +101,13 @@ public class EmulatorActivity extends AppCompatActivity {
     private float displayWidth;
     private float displayHeight;
     private SparseIntArray androidToSymbian;
+    private ProfileModel params;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         AppDataStore dataStore = AppDataStore.getAndroidStore();
-        setTheme(dataStore.getString("theme", "light"));
+        setTheme(dataStore.getString(PREF_THEME, "light"));
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emulator);
         overlayView = findViewById(R.id.overlay);
@@ -108,34 +125,42 @@ public class EmulatorActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         context = this;
 
-        boolean keyboardEnabled = dataStore.getBoolean("enable-virtual-keyboard", true);
-        boolean wakelockEnabled = dataStore.getBoolean("enable-wakelock", false);
+        boolean wakelockEnabled = dataStore.getBoolean(PREF_KEEP_SCREEN, false);
         if (wakelockEnabled) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
-        actionBarEnabled = dataStore.getBoolean("enable-actionbar", true);
-        statusBarEnabled = dataStore.getBoolean("enable-statusbar", false);
-        vibrationEnabled = dataStore.getBoolean("enable-vibration", true);
-
-        if (keyboardEnabled) {
-            keyboard = new VirtualKeyboard(this);
-            overlayView.setOverlay(keyboard);
-            setVirtualKeyboard();
-        }
+        actionBarEnabled = dataStore.getBoolean(PREF_ACTIONBAR, true);
+        statusBarEnabled = dataStore.getBoolean(PREF_STATUSBAR, false);
+        vibrationEnabled = dataStore.getBoolean(PREF_VIBRATION, true);
         if (!actionBarEnabled) {
             getSupportActionBar().hide();
         }
 
         Intent intent = getIntent();
-        uid = intent.getLongExtra(APP_UID_KEY, -1);
-        String name = intent.getStringExtra(APP_NAME_KEY);
+        uid = intent.getLongExtra(KEY_APP_UID, -1);
+        String name = intent.getStringExtra(KEY_APP_NAME);
         setActionBar(name);
         hideSystemUI();
 
         Display display = ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
         displayWidth = display.getWidth();
         displayHeight = display.getHeight();
-        androidToSymbian = KeyMapper.getArrayPref();
+
+        String uidStr = Long.toHexString(uid).toUpperCase();
+        File configDir = new File(Emulator.getConfigsDir(), uidStr);
+        String defProfile = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                .getString(PREF_DEFAULT_PROFILE, null);
+        params = ProfilesManager.loadConfigOrDefault(configDir, defProfile);
+        androidToSymbian = (params.keyMappings != null) ? params.keyMappings : KeyMapper.getDefaultKeyMap();
+
+        if (params.showKeyboard) {
+            setVirtualKeyboard(uidStr);
+        }
+        if (params.showKeyboard && keyboard instanceof FixedKeyboard) {
+            setOrientation(ORIENTATION_PORTRAIT);
+        } else {
+            setOrientation(params.orientation);
+        }
     }
 
     @Override
@@ -143,6 +168,25 @@ public class EmulatorActivity extends AppCompatActivity {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) {
             hideSystemUI();
+        }
+    }
+
+    @SuppressLint("SourceLockedOrientationActivity")
+    private void setOrientation(int orientation) {
+        switch (orientation) {
+            case ORIENTATION_AUTO:
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
+                break;
+            case ORIENTATION_PORTRAIT:
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+                break;
+            case ORIENTATION_LANDSCAPE:
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+                break;
+            case ORIENTATION_DEFAULT:
+            default:
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                break;
         }
     }
 
@@ -270,31 +314,46 @@ public class EmulatorActivity extends AppCompatActivity {
         return toolBarHeight;
     }
 
-    private void setVirtualKeyboard() {
-        int vkAlpha = 0x40000000;
-        keyboard.setColor(VirtualKeyboard.BACKGROUND, vkAlpha | 0xD0D0D0);
-        keyboard.setColor(VirtualKeyboard.FOREGROUND, vkAlpha | 0x000080);
-        keyboard.setColor(VirtualKeyboard.BACKGROUND_SELECTED, vkAlpha | 0x000080);
-        keyboard.setColor(VirtualKeyboard.FOREGROUND_SELECTED, vkAlpha | 0xFFFFFF);
-        keyboard.setColor(VirtualKeyboard.OUTLINE, vkAlpha | 0xFFFFFF);
-        keyboard.setView(overlayView);
+    private void setVirtualKeyboard(String appDirName) {
+        int vkType = params.vkType;
+        if (vkType == VirtualKeyboard.CUSTOMIZABLE_TYPE) {
+            keyboard = new VirtualKeyboard(this);
+        } else if (vkType == VirtualKeyboard.PHONE_DIGITS_TYPE) {
+            keyboard = new FixedKeyboard(this);
+        } else {
+            keyboard = new FixedKeyboard(this);
+        }
+        keyboard.setHideDelay(params.vkHideDelay);
+        keyboard.setHasHapticFeedback(params.vkFeedback);
+        keyboard.setButtonShape(params.vkButtonShape);
 
-        File keylayoutFile = new File(Emulator.getEmulatorDir(), "keylayout");
-        if (keylayoutFile.exists()) {
+        File keyLayoutFile = new File(Emulator.getConfigsDir(),
+                appDirName + Emulator.APP_KEY_LAYOUT_FILE);
+        if (keyLayoutFile.exists()) {
             try {
-                FileInputStream fis = new FileInputStream(keylayoutFile);
+                FileInputStream fis = new FileInputStream(keyLayoutFile);
                 DataInputStream dis = new DataInputStream(fis);
                 keyboard.readLayout(dis);
                 fis.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
             }
         }
+
+        int vkAlpha = params.vkAlpha << 24;
+        keyboard.setColor(VirtualKeyboard.BACKGROUND, vkAlpha | params.vkBgColor);
+        keyboard.setColor(VirtualKeyboard.FOREGROUND, vkAlpha | params.vkFgColor);
+        keyboard.setColor(VirtualKeyboard.BACKGROUND_SELECTED, vkAlpha | params.vkBgColorSelected);
+        keyboard.setColor(VirtualKeyboard.FOREGROUND_SELECTED, vkAlpha | params.vkFgColorSelected);
+        keyboard.setColor(VirtualKeyboard.OUTLINE, vkAlpha | params.vkOutlineColor);
+        overlayView.setOverlay(keyboard);
+        keyboard.setView(overlayView);
+
         keyboard.setLayoutListener(vk -> {
             try {
-                FileOutputStream fos = new FileOutputStream(keylayoutFile);
+                FileOutputStream fos = new FileOutputStream(keyLayoutFile);
                 DataOutputStream dos = new DataOutputStream(fos);
-                keyboard.writeLayout(dos);
+                vk.writeLayout(dos);
                 fos.close();
             } catch (IOException ioe) {
                 ioe.printStackTrace();
@@ -429,7 +488,8 @@ public class EmulatorActivity extends AppCompatActivity {
                     int id = event.getPointerId(index);
                     float x = event.getX(index);
                     float y = event.getY(index);
-                    if ((keyboard == null || !keyboard.pointerPressed(id, x, y)) && id == 0) {
+                    if ((keyboard == null || !keyboard.pointerPressed(id, x, y))
+                            && id == 0 && params.touchInput) {
                         Emulator.touchScreen((int) x, (int) y, 0);
                     }
                     break;
@@ -441,7 +501,8 @@ public class EmulatorActivity extends AppCompatActivity {
                             id = event.getPointerId(p);
                             x = event.getHistoricalX(p, h);
                             y = event.getHistoricalY(p, h);
-                            if ((keyboard == null || !keyboard.pointerDragged(id, x, y)) && id == 0) {
+                            if ((keyboard == null || !keyboard.pointerDragged(id, x, y))
+                                    && id == 0 && params.touchInput) {
                                 Emulator.touchScreen((int) x, (int) y, 1);
                             }
                         }
@@ -450,11 +511,12 @@ public class EmulatorActivity extends AppCompatActivity {
                         id = event.getPointerId(p);
                         x = event.getX(p);
                         y = event.getY(p);
-                        if ((keyboard == null || !keyboard.pointerDragged(id, x, y)) && id == 0) {
+                        if ((keyboard == null || !keyboard.pointerDragged(id, x, y))
+                                && id == 0 && params.touchInput) {
                             Emulator.touchScreen((int) x, (int) y, 1);
                         }
                     }
-                break;
+                    break;
                 case MotionEvent.ACTION_UP:
                     if (keyboard != null) {
                         keyboard.hide();
@@ -464,7 +526,8 @@ public class EmulatorActivity extends AppCompatActivity {
                     id = event.getPointerId(index);
                     x = event.getX(index);
                     y = event.getY(index);
-                    if ((keyboard == null || !keyboard.pointerReleased(id, x, y)) && id == 0) {
+                    if ((keyboard == null || !keyboard.pointerReleased(id, x, y))
+                            && id == 0 && params.touchInput) {
                         Emulator.touchScreen((int) x, (int) y, 2);
                     }
                     break;

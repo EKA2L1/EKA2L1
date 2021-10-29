@@ -8,10 +8,6 @@
         android:title="@string/pref_theme" />
     <SwitchPreferenceCompat
         android:defaultValue="true"
-        android:key="enable-virtual-keyboard"
-        android:title="@string/pref_enable_virtual_keyboard" />
-    <SwitchPreferenceCompat
-        android:defaultValue="true"
         android:key="enable-actionbar"
         android:title="@string/pref_enable_actionbar" />
     <SwitchPreferenceCompat

@@ -46,10 +46,11 @@ import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.ListFragment;
 
 import com.github.eka2l1.R;
+import com.github.eka2l1.config.ConfigFragment;
+import com.github.eka2l1.config.ProfilesFragment;
 import com.github.eka2l1.emu.Emulator;
 import com.github.eka2l1.emu.EmulatorActivity;
 import com.github.eka2l1.info.AboutDialogFragment;
-import com.github.eka2l1.settings.AppSettingsFragment;
 import com.github.eka2l1.settings.SettingsFragment;
 import com.github.eka2l1.util.LogUtils;
 import com.github.eka2l1.util.PickDirResultContract;
@@ -69,6 +70,8 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableSingleObserver;
 import io.reactivex.schedulers.Schedulers;
 
+import static com.github.eka2l1.emu.Constants.*;
+
 public class AppsListFragment extends ListFragment {
     private CompositeDisposable compositeDisposable;
     private AppsListAdapter adapter;
@@ -85,8 +88,8 @@ public class AppsListFragment extends ListFragment {
         super.onCreate(savedInstanceState);
         adapter = new AppsListAdapter(getContext());
         compositeDisposable = new CompositeDisposable();
-        getParentFragmentManager().setFragmentResultListener("request", this, (key, bundle) -> {
-            restartNeeded = bundle.getBoolean("restartNeeded");
+        getParentFragmentManager().setFragmentResultListener(KEY_RESTART, this, (key, bundle) -> {
+            restartNeeded = true;
         });
     }
 
@@ -217,8 +220,8 @@ public class AppsListFragment extends ListFragment {
     public void onListItemClick(@NonNull ListView l, @NonNull View v, int position, long id) {
         AppItem item = adapter.getItem(position);
         Intent intent = new Intent(getContext(), EmulatorActivity.class);
-        intent.putExtra(EmulatorActivity.APP_UID_KEY, item.getUid());
-        intent.putExtra(EmulatorActivity.APP_NAME_KEY, item.getTitle());
+        intent.putExtra(KEY_APP_UID, item.getUid());
+        intent.putExtra(KEY_APP_NAME, item.getTitle());
         startActivity(intent);
     }
 
@@ -280,6 +283,12 @@ public class AppsListFragment extends ListFragment {
                 e.printStackTrace();
                 Toast.makeText(getActivity(), R.string.error, Toast.LENGTH_SHORT).show();
             }
+        } else if (itemId == R.id.action_profiles) {
+            ProfilesFragment profilesFragment = new ProfilesFragment();
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.container, profilesFragment)
+                    .addToBackStack(null)
+                    .commit();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -297,12 +306,14 @@ public class AppsListFragment extends ListFragment {
         int index = info.position;
         AppItem appItem = adapter.getItem(index);
         if (item.getItemId() == R.id.action_context_settings) {
-            AppSettingsFragment appSettingsFragment = new AppSettingsFragment();
+            ConfigFragment configFragment = new ConfigFragment();
             Bundle args = new Bundle();
-            args.putLong(AppSettingsFragment.APP_UID_KEY, appItem.getUid());
-            appSettingsFragment.setArguments(args);
+            args.putLong(KEY_APP_UID, appItem.getUid());
+            args.putString(KEY_APP_NAME, appItem.getTitle());
+            args.putString(KEY_ACTION, ACTION_EDIT);
+            configFragment.setArguments(args);
             getParentFragmentManager().beginTransaction()
-                    .replace(R.id.container, appSettingsFragment)
+                    .replace(R.id.container, configFragment)
                     .addToBackStack(null)
                     .commit();
         }

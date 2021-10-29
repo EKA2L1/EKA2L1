@@ -38,6 +38,8 @@ import androidx.fragment.app.ListFragment;
 import com.github.eka2l1.R;
 import com.github.eka2l1.emu.Emulator;
 
+import static com.github.eka2l1.emu.Constants.KEY_RESTART;
+
 public class PackageListFragment extends ListFragment {
     private AppsListAdapter adapter;
 
@@ -84,10 +86,7 @@ public class PackageListFragment extends ListFragment {
             Emulator.uninstallPackage((int) appItem.getUid(), (int) appItem.getExtIndex());
             preparePackages();
             Toast.makeText(getContext(), R.string.completed, Toast.LENGTH_SHORT).show();
-
-            Bundle result = new Bundle();
-            result.putBoolean("restartNeeded", true);
-            getParentFragmentManager().setFragmentResult("request", result);
+            getParentFragmentManager().setFragmentResult(KEY_RESTART, new Bundle());
         }
         return super.onContextItemSelected(item);
     }

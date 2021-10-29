@@ -33,6 +33,8 @@ import androidx.preference.PreferenceFragmentCompat;
 
 import com.github.eka2l1.R;
 
+import static com.github.eka2l1.emu.Constants.*;
+
 public class SettingsFragment extends PreferenceFragmentCompat {
 
     @Override
@@ -47,10 +49,9 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         ActionBar actionBar = ((AppCompatActivity) requireActivity()).getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle(R.string.settings);
-        setPreferenceClickListener(new AndroidSettingsFragment(), "pref_android");
-        setPreferenceClickListener(new GeneralSettingsFragment(), "pref_general");
-        setPreferenceClickListener(new SystemSettingsFragment(), "pref_system");
-        setPreferenceClickListener(new KeyMapperFragment(), "pref_keymapper");
+        setPreferenceClickListener(new AndroidSettingsFragment(), PREF_ANDROID);
+        setPreferenceClickListener(new GeneralSettingsFragment(), PREF_GENERAL);
+        setPreferenceClickListener(new SystemSettingsFragment(), PREF_SYSTEM);
     }
 
     private void setPreferenceClickListener(Fragment fragment, String preferenceName) {
