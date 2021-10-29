@@ -417,9 +417,23 @@ namespace eka2l1::manager {
                     return (target->get_uid() == process_uid);
                 });
 
-                if (find_res != processes.end()) {
+                if (process_uid != 0) {
+                    auto find_res = std::find_if(processes.begin(), processes.end(), [process_uid](kernel::process *target) {
+                        return (target->get_uid() == process_uid);
+                    });
+
+                    kernel::process *finally = nullptr;
+                    if (find_res != processes.end()) {
+                        finally = *find_res;
+                    }
+
+                    processes.clear();
+                    processes.push_back(finally);
+                }
+
+                for (kernel::process *process: processes) {
                     info.invoke_->category_ = script_function::META_CATEGORY_BREAKPOINT;
-                    info.addr_ = seg->lookup(*find_res, info.addr_);
+                    info.addr_ = seg->lookup(process, info.addr_);
                     info.flags_ = 0;
 
                     if (info.addr_ == 0) {
@@ -463,18 +477,30 @@ namespace eka2l1::manager {
             if (manager) {
                 if (codeseg_ptr seg = manager->load(common::utf8_to_ucs2(lib_name))) {
                     std::vector<kernel::process*> processes = seg->attached_processes();
-                    auto find_res = std::find_if(processes.begin(), processes.end(), [process_uid](kernel::process *target) {
-                        return (target->get_uid() == process_uid);
-                    });
 
-                    if (find_res != processes.end()) {
-                        const address base = seg->get_code_run_addr(*find_res);
+                    if (process_uid != 0) {
+                        auto find_res = std::find_if(processes.begin(), processes.end(), [process_uid](kernel::process *target) {
+                            return (target->get_uid() == process_uid);
+                        });
+
+                        kernel::process *finally = nullptr;
+                        if (find_res != processes.end()) {
+                            finally = *find_res;
+                        }
+
+                        processes.clear();
+                        processes.push_back(finally);
+                    }
+
+                    for (kernel::process *process: processes) {
+                        address base = seg->get_code_run_addr(process);
 
                         if (base == 0) {
-                            LOG_ERROR(SCRIPTING, "Can't retrieve code run address of process base {} with UID", (*find_res)->name(), process_uid);
-                            current_module->functions_.remove(handle);
+                            LOG_ERROR(SCRIPTING, "Can't retrieve code run address of process base {} with UID", process->name(), process_uid);
+                        }
 
-                            return INVALID_HOOK_HANDLE;
+                        if (seg->is_rom()) {
+                            base = 0;
                         }
 
                         info.invoke_->category_ = script_function::META_CATEGORY_BREAKPOINT;

@@ -1,7 +1,9 @@
 kernel = {
 }
 
+local helper = require('eka2l1.helper')
 local ffi = require('ffi')
+
 ffi.cdef([[
     typedef struct codeseg codeseg;
     typedef struct process process;
@@ -70,29 +72,29 @@ ffi.cdef([[
     uint32_t eka2l1_ipc_message_request_status_address(ipc_msg *msg);
 ]])
 
+handle = helper.class(function(self, impl)
+    self.impl = impl
+end)
+
 -- Code segment object implementation
-local codeseg = {}
+kernel.codeseg = helper.class(handle, function(self, impl)
+    handle.init(self, impl)
+    ffi.gc(self.impl, ffi.C.eka2l1_free_codeseg)
+end)
 
-function codeseg:new(o)
-    o = o or {}   -- create object if user does not provide one
-    setmetatable(o, self)
-    self.__index = self
-    return o
-end
-
-function codeseg:codeSize()
+function kernel.codeseg:codeSize()
     return ffi.C.eka2l1_codeseg_code_size(self.impl)
 end
 
-function codeseg:dataSize()
+function kernel.codeseg:dataSize()
     return ffi.C.eka2l1_codeseg_data_size(self.impl)
 end
 
-function codeseg:bssSize()
+function kernel.codeseg:bssSize()
     return ffi.C.eka2l1_codeseg_bss_size(self.impl)
 end
 
-function codeseg:exportCount()
+function kernel.codeseg:exportCount()
     return ffi.C.eka2l1_codeseg_export_count(self.impl)
 end
 
@@ -104,39 +106,34 @@ function kernel.loadCodeseg(path)
         return nil
 	end
 
-    ffi.gc(res, ffi.C.eka2l1_free_codeseg)
-    return codeseg:new{ impl = res }
+    return kernel.codeseg(res)
 end
 
 -- End code segment object implementation
 
 -- Begin process object implementation
-local process = {}
+kernel.process = helper.class(handle, function(self, impl)
+    handle.init(self, impl)
+    ffi.gc(self.impl, ffi.C.eka2l1_free_process)
+end)
 
-function process:new(o)
-    o = o or {}
-    setmetatable(o, self)
-    self.__index = self
-    return o
-end
-
-function process:readByte(addr)
+function kernel.process:readByte(addr)
     return ffi.C.eka2l1_process_read_byte(self.impl, addr)
 end
 
-function process:readWord(addr)
+function kernel.process:readWord(addr)
     return ffi.C.eka2l1_process_read_word(self.impl, addr)
 end
 
-function process:readDword(addr)
+function kernel.process:readDword(addr)
     return ffi.C.eka2l1_process_read_dword(self.impl, addr)
 end
 
-function process:readQword(addr)
+function kernel.process:readQword(addr)
     return ffi.C.eka2l1_process_read_qword(self.impl, addr)
 end
 
-function process:name()
+function kernel.process:name()
     local res = ffi.C.eka2l1_process_name(self.impl)
     local ret = ffi.string(res)
 
@@ -144,7 +141,7 @@ function process:name()
     return ret
 end
 
-function process:executablePath()
+function kernel.process:executablePath()
     local res = ffi.C.eka2l1_process_executable_path(self.impl)
     local ret = ffi.string(res)
 
@@ -152,14 +149,14 @@ function process:executablePath()
     return ret
 end
 
-function process:readMemory(addr, size)
+function kernel.process:readMemory(addr, size)
     local res = ffi.C.eka2l1_process_read_memory(self.impl, addr, size)
     ffi.gc(res, ffi.C.eka2l1_free_string)
 
     return res
 end
 
-function process:writeMemory(addr, buffer)
+function kernel.process:writeMemory(addr, buffer)
     local cbuf = ffi.new('char[?]', #buffer + 1, buffer)
 
     local res = ffi.C.eka2l1_process_write_memory(addr, cbuf, #buffer)
@@ -170,9 +167,7 @@ end
 
 function kernel.getCurrentProcess()
     local primpl = ffi.C.eka2l1_get_current_process()
-    ffi.gc(primpl, ffi.C.eka2l1_free_process);
-
-    return process:new{ impl = primpl }
+    return kernel.process(primpl)
 end
 
 function kernel.getAllProcesses()
@@ -187,8 +182,7 @@ function kernel.getAllProcesses()
     local retarr = {}
 
     for i=1, count do
-        retarr[i] = process:new{ impl = arr[0][i - 1] }
-        ffi.gc(retarr[i].impl, ffi.C.eka2l1_free_process)
+        retarr[i] = kernel.process(arr[0][i - 1])
     end
     
     ffi.C.free(ffi.gc(arr[0], nil))
@@ -197,16 +191,12 @@ end
 -- End process object implementation
 
 -- Begin thread object implementation
-local thread = {}
+kernel.thread = helper.class(handle, function(self, impl)
+    handle.init(self, impl)
+    ffi.gc(self.impl, ffi.C.eka2l1_free_thread)
+end)
 
-function thread:new(o)
-    o = o or {}
-    setmetatable(o, self)
-    self.__index = self
-    return o
-end
-
-function thread:name()
+function kernel.thread:name()
     local cname = ffi.C.eka2l1_thread_name(self.impl)
     local namer = ffi.string(cname)
 
@@ -215,98 +205,83 @@ function thread:name()
     return namer
 end
 
-function thread:stackBase()
+function kernel.thread:stackBase()
     return ffi.C.eka2l1_thread_stack_base(self.impl)
 end
 
-function thread:heapBase()
+function kernel.thread:heapBase()
     return ffi.C.eka2l1_thread_get_heap_base(self.impl)
 end
 
-function thread:getRegister(idx)
+function kernel.thread:getRegister(idx)
     return ffi.C.eka2l1_thread_get_register(self.impl, idx)
 end
 
-function thread:getPc()
+function kernel.thread:getPc()
     return ffi.C.eka2l1_thread_get_pc(self.impl, idx)
 end
 
-function thread:getLr()
+function kernel.thread:getLr()
     return ffi.C.eka2l1_thread_get_lr(self.impl, idx)
 end
 
-function thread:getSp()
+function kernel.thread:getSp()
     return ffi.C.eka2l1_thread_get_sp(self.impl, idx)
 end
 
-function thread:getCpsr()
+function kernel.thread:getCpsr()
     return ffi.C.eka2l1_thread_get_cpsr(self.impl, idx)
 end
 
-function thread:exitReason()
+function kernel.thread:exitReason()
     return ffi.C.eka2l1_thread_get_exit_reason(self.impl)
 end
 
-function thread:currentState()
+function kernel.thread:currentState()
     return ffi.C.eka2l1_thread_current_state(self.impl)
 end
 
-function thread:priority()
+function kernel.thread:priority()
     return ffi.C.eka2l1_thread_priority(self.impl)
 end
 
-function thread:nextInProcess()
+function kernel.thread:nextInProcess()
     local thrimpl = ffi.C.eka2l1_next_thread_in_process(self.impl)
     if thrimpl == nil then
         return nil
     end
 
-    ffi.gc(thrimpl, ffi.C.eka2l1_free_thread)
-    return thread:new{ impl = thrimpl }
+    return kernel.thread(thrimpl)
 end
 
-function thread:ownProcess()
+function kernel.thread:ownProcess()
     local primpl = ffi.C.eka2l1_thread_own_process(self.impl)
     if primpl == nil then
         return nil
     end
 
-    ffi.gc(primpl, ffi.C.eka2l1_free_process)
-    return process:new{ impl = primpl }
+    return kernel.process(primpl)
 end
 
-function process:firstThread()
+function kernel.process:firstThread()
     local thrimpl = ffi.C.eka2l1_process_first_thread(self.impl)
-    ffi.gc(thrimpl, ffi.C.eka2l1_free_thread)
-
-    return thread:new{ impl = thrimpl }
+    return kernel.thread(thrimpl)
 end
 
 function kernel.getCurrentThread()
     local thrimpl = ffi.C.eka2l1_get_current_thread()
-    ffi.gc(thrimpl, ffi.C.eka2l1_free_thread)
-
-    return thread:new{ impl = thrimpl }
-end
-
-function kernel.makeThreadFromHandle(handle)
-    ffi.gc(handle, ffi.C.eka2l1_free_thread)
-    return thread:new{ impl = handle }
+    return kernel.thread(thrimpl)
 end
     
 -- End thread object implementation
 
 -- Begin server object implementation
-local server = {}
+kernel.server = helper.class(handle, function(self, impl)
+    handle.init(self, impl)
+    ffi.gc(self.impl, ffi.C.eka2l1_free_server)
+end)
 
-function server:new(o)
-    o = o or {}
-    setmetatable(o, self)
-    self.__index = self
-    return o
-end
-
-function server:name()
+function kernel.server:name()
     local namec = ffi.C.eka2l1_server_name(self.impl)
     local namer = ffi.string(namec)
 
@@ -317,20 +292,14 @@ end
 -- End server object implementation
 
 -- Begin session object implementation
-local session = {}
+kernel.session = helper.class(handle, function(self, impl)
+    handle.init(self, impl)
+    ffi.gc(self.impl, ffi.C.eka2l1_free_session)
+end)
 
-function session:new(o)
-    o = o or {}
-    setmetatable(o, self)
-    self.__index = self
-    return o
-end
-
-function session:server()
+function kernel.session:server()
     local svimpl = ffi.C.eka2l1_session_server(self.impl)
-    ffi.gc(svimpl, ffi.C.eka2l1_free_server)
-
-    return server:new{ impl = svimpl }
+    return kernel.server(svimpl)
 end
 
 function kernel.sessionFromHandle(handle)
@@ -339,54 +308,40 @@ function kernel.sessionFromHandle(handle)
         return nil
     end
 
-    ffi.gc(ssimpl, ffi.C.eka2l1_free_session)
-    return session:new{ impl = ssimpl }
+    return kernel.session(ssimpl)
 end
 -- End session object implementation
 
 -- Begin IPC message implementation
-local ipcMessage = {}
+kernel.ipcMessage = helper.class(handle, function(self, impl)
+    handle.init(self, impl)
+    ffi.gc(self.impl, ffi.C.eka2l1_free_ipc_msg)
+end)
 
-function ipcMessage:new(o)
-    o = o or {}
-    setmetatable(o, self)
-    self.__index = self
-    return o
-end
-
-function ipcMessage:func()
+function kernel.ipcMessage:func()
     return ffi.C.eka2l1_ipc_message_function(self.impl)
 end
 
-function ipcMessage:flags()
+function kernel.ipcMessage:flags()
     return ffi.C.eka2l1_ipc_message_flags(self.impl)
 end
 
-function ipcMessage:arg(idx)
+function kernel.ipcMessage:arg(idx)
     return ffi.C.eka2l1_ipc_message_arg(self.impl, idx)
 end
 
-function ipcMessage:sender()
+function kernel.ipcMessage:sender()
     local thrimpl = ffi.C.eka2l1_ipc_message_sender(self.impl)
-    ffi.gc(thrimpl, ffi.C.eka2l1_free_thread)
-
-    return thread:new{ impl = thrimpl }
+    return kernel.thread(thrimpl)
 end
 
-function ipcMessage:session()
+function kernel.ipcMessage:session()
     local ssimpl = ffi.C.eka2l1_ipc_message_session_wrapper(self.impl)
-    ffi.gc(ssimpl, ffi.C.eka2l1_free_session)
-
-    return session:new{ impl = ssimpl }
+    return kernel.session(ssimpl)
 end
 
-function ipcMessage:requestStatusAddress()
+function kernel.ipcMessage:requestStatusAddress()
     return ffi.C.eka2l1_ipc_message_request_status_address(self.impl)
-end
-
-function kernel.makeMessageFromHandle(msg)
-    ffi.gc(msg, ffi.C.eka2l1_free_ipc_msg)
-    return ipcMessage:new{ impl = msg }
 end
 -- End IPC message implementation
 

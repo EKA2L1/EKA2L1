@@ -263,6 +263,7 @@ namespace eka2l1::manager {
         void call(script_function *func, Args... args) {
             current_module = func->parent_;
             func->cast<T>()(args...);
+            lua_gc(current_module->lua_state(), LUA_GCCOLLECT, 0);
             current_module = nullptr;
         }
     };

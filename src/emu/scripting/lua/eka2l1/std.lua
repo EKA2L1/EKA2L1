@@ -1,6 +1,7 @@
 std = {}
 
 local kernel = require('eka2l1.kernel')
+local helper = require('eka2l1.helper')
 local bitops = require('bit')
 local ffi = require('ffi')
 
@@ -11,14 +12,12 @@ ffi.cdef([[
     void eka2l1_free_string(const char* str);
 ]])
 
-DESCRIPTOR_TYPE_BUF_CONST = 0
-DESCRIPTOR_TYPE_PTR_CONST = 1
-DESCRIPTOR_TYPE_PTR = 2
-DESCRIPTOR_TYPE_BUF = 3
-DESCRIPTOR_TYPE_BUF_CONST_PTR = 4
-DESCRIPTOR_TYPE_MAX = 5
-
-local descriptor = {}
+std.DESCRIPTOR_TYPE_BUF_CONST = 0
+std.DESCRIPTOR_TYPE_PTR_CONST = 1
+std.DESCRIPTOR_TYPE_PTR = 2
+std.DESCRIPTOR_TYPE_BUF = 3
+std.DESCRIPTOR_TYPE_BUF_CONST_PTR = 4
+std.DESCRIPTOR_TYPE_MAX = 5
 
 function getPtrBufConstAddress(pr, address)
     return address + 4
@@ -41,9 +40,7 @@ function getPtrBufConstPtrAddress(pr, address)
     return realBufAddr + 4
 end
 
-function descriptor:new(pr, addr)
-    local o = {}
-
+std.descriptor = helper.class(function(self, pr, addr)
     local addressLookupTable = {
         [DESCRIPTOR_TYPE_BUF_CONST] = getPtrBufConstAddress,
         [DESCRIPTOR_TYPE_BUF_CONST_PTR] = getPtrBufConstPtrAddress,
@@ -63,50 +60,23 @@ function descriptor:new(pr, addr)
         self.dataAddr = addressLookupTable[self.type](pr, addr)
         self.pr = pr
     end
-    
-    setmetatable(o, self)
-    self.__index = self
+end)
 
-    return o
-end
+std.descriptor8 = helper.class(descriptor, function(self, pr, addr)
+    descriptor.init(self, pr, addr)
+end)
 
-local descriptor8 = {}
-
-function descriptor8:new(pr, addr)
-    local o = descriptor:new(pr, addr)
-
-    setmetatable(o, self)
-    self.__index = self
-
-    return o
-end
-
-setmetatable(descriptor8, { __index = descriptor })
-
-function descriptor8:rawData()
+function std.descriptor8:rawData()
     return self.pr:readMemory(self.dataAddr, self.length)
 end
 
-function descriptor8:__tostring()
+function std.descriptor8:__tostring()
     return ffi.string(self:rawData())
 end
 
-function std.makeDescriptor8(pr, addr)
-    return descriptor8:new(pr, addr)
-end
-
-local descriptor16 = {}
-
-function descriptor16:new(pr, addr)
-    local o = descriptor:new(pr, addr)
-
-    setmetatable(o, self)
-    self.__index = self
-
-    return o
-end
-
-setmetatable(descriptor16, { __index = descriptor })
+std.descriptor16 = helper.class(descriptor, function(self, pr, addr)
+    descriptor.init(self, pr, addr)
+end)
 
 function std.rawUtf16ToString(raw, length)
     local result = ffi.C.eka2l1_std_utf16_to_utf8(raw, length)
@@ -115,42 +85,26 @@ function std.rawUtf16ToString(raw, length)
     return ffi.string(result)
 end
 
-function descriptor16:rawData()
+function std.descriptor16:rawData()
     return self.pr:readMemory(self.dataAddr, self.length * 2)
 end
 
-function descriptor16:__tostring()
+function std.descriptor16:__tostring()
 	return std.rawUtf16ToString(self:rawData(), self.length)
 end
 
-function std.makeDescriptor16(pr, addr)
-    return descriptor16:new(pr, addr)
-end
-
 -- Request status implementation
-local requestStatus = {}
-
-function requestStatus:new(pr, addr)
-    o = {}
-
-    setmetatable(o, self)
-    self.__index = self
+std.requestStatus = helper.class(function(pr, addr)
     self.ownProcess = pr
     self.dataAddr = addr
+end)
 
-    return o
-end
-
-function requestStatus:value()
+function std.requestStatus:value()
     return self.pr:readDword(addr)
 end
 
-function requestStatus:flags()
+function std.requestStatus:flags()
     return self.pr:readDword(addr + 4)
-end
-
-function std.makeRequestStatus(pr, addr)
-    return requestStatus:new(pr, addr)
 end
 -- End request status implementation
 

@@ -57,7 +57,7 @@ function events.registerIpcHook(serverName, opcode, when, func)
 
     if when == events.EVENT_IPC_SEND then
         return ffi.C.eka2l1_register_ipc_sent_hook(serverNameInC, opcode, function (arg0, arg1, arg2, arg3, flags, reqsts, sender)
-            local ran, retval = pcall(ipcCtx.makeFromValues, opcode, arg0, arg1, arg2, arg3, flags, reqsts, kern.makeThreadFromHandle(sender))
+            local ran, retval = pcall(ipcCtx.makeFromValues, opcode, arg0, arg1, arg2, arg3, flags, reqsts, kern.thread(sender))
             if not ran then
                 common.log('Fail to create IPC context, ' .. retval)
                 return
@@ -70,7 +70,7 @@ function events.registerIpcHook(serverName, opcode, when, func)
         end)
     else
         return ffi.C.eka2l1_register_ipc_completed_hook(serverNameInC, opcode, function (msg)
-            local ran, retval = pcall(ipcCtx.makeFromMessage, kern.makeMessageFromHandle(msg))
+            local ran, retval = pcall(ipcCtx.makeFromMessage, kern.message(msg))
             if not ran then
                 common.log('Fail to create IPC context, ' .. retval)
                 return
