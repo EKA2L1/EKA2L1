@@ -35,25 +35,31 @@ EKA2L1_EXPORT const char *eka2l1_std_utf16_to_utf8(const char *wstring, const in
     std::u16string data(reinterpret_cast<const char16_t *>(wstring), length);
     std::string result = eka2l1::common::ucs2_to_utf8(data);
 
-    char *result_raw = new char[result.length()];
+    char *result_raw = new char[result.length() + 1];
+
     std::memcpy(result_raw, result.data(), length);
+    result[result.length()] = '\0';
 
     return result_raw;
 }
 
-EKA2L1_EXPORT void eka2l1_cpu_register_lib_hook(const char *lib_name, const std::uint32_t ord, const std::uint32_t process_uid, eka2l1::manager::breakpoint_hit_func func) {
-    eka2l1::scripting::get_current_instance()->get_scripts()->register_library_hook(lib_name, ord, process_uid, func);
+EKA2L1_EXPORT std::uint32_t eka2l1_cpu_register_lib_hook(const char *lib_name, const std::uint32_t ord, const std::uint32_t process_uid, eka2l1::manager::breakpoint_hit_func func) {
+    return eka2l1::scripting::get_current_instance()->get_scripts()->register_library_hook(lib_name, ord, process_uid, func);
 }
 
-EKA2L1_EXPORT void eka2l1_cpu_register_bkpt_hook(const char *image_name, const std::uint32_t addr, const std::uint32_t process_uid, eka2l1::manager::breakpoint_hit_func func) {
-    eka2l1::scripting::get_current_instance()->get_scripts()->register_breakpoint(image_name, addr, process_uid, func);
+EKA2L1_EXPORT std::uint32_t eka2l1_cpu_register_bkpt_hook(const char *image_name, const std::uint32_t addr, const std::uint32_t process_uid, eka2l1::manager::breakpoint_hit_func func) {
+    return eka2l1::scripting::get_current_instance()->get_scripts()->register_breakpoint(image_name, addr, process_uid, func);
 }
 
-EKA2L1_EXPORT void eka2l1_register_ipc_sent_hook(const char *server_name, const int opcode, eka2l1::manager::ipc_sent_func func) {
-    eka2l1::scripting::get_current_instance()->get_scripts()->register_ipc(server_name, opcode, 0, reinterpret_cast<void *>(func));
+EKA2L1_EXPORT std::uint32_t eka2l1_register_ipc_sent_hook(const char *server_name, const int opcode, eka2l1::manager::ipc_sent_func func) {
+    return eka2l1::scripting::get_current_instance()->get_scripts()->register_ipc(server_name, opcode, 0, reinterpret_cast<void *>(func));
 }
 
-EKA2L1_EXPORT void eka2l1_register_ipc_completed_hook(const char *server_name, const int opcode, eka2l1::manager::ipc_completed_func func) {
-    eka2l1::scripting::get_current_instance()->get_scripts()->register_ipc(server_name, opcode, 2, reinterpret_cast<void *>(func));
+EKA2L1_EXPORT std::uint32_t eka2l1_register_ipc_completed_hook(const char *server_name, const int opcode, eka2l1::manager::ipc_completed_func func) {
+    return eka2l1::scripting::get_current_instance()->get_scripts()->register_ipc(server_name, opcode, 2, reinterpret_cast<void *>(func));
+}
+
+EKA2L1_EXPORT void eka2l1_clear_hook(const std::uint32_t handle) {
+    eka2l1::scripting::get_current_instance()->get_scripts()->remove_function(handle);
 }
 }

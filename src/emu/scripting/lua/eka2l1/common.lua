@@ -9,9 +9,7 @@ ffi.cdef([[
 ]])
 
 function common.log(str)
-	local target = ffi.new("char[?]", #str)
-	ffi.copy(target, str)
-
+	local target = ffi.new("char[?]", #str + 1, str)
     ffi.C.eka2l1_log(target)
 end
 

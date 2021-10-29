@@ -18,10 +18,10 @@
 */
 
 #include <common/algorithm.h>
+#include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
 #include <common/platform.h>
-
 #include <common/path.h>
 
 #include <scripting/instance.h>
@@ -34,6 +34,18 @@
 #include <system/epoc.h>
 
 namespace eka2l1::manager {
+    static void script_file_changed_callback(void *data, common::directory_changes &changes) {
+        scripts *manager = reinterpret_cast<scripts*>(data);
+        for (std::size_t i = 0; i < changes.size(); i++) {
+            if (!(changes[i].change_ & common::directory_change_action_created))
+                manager->unload_module(changes[i].filename_);
+
+            if (!(changes[i].change_ & common::directory_change_action_moved_from) &&
+                !(changes[i].change_ & common::directory_change_action_delete))
+                manager->import_module("scripts/" + changes[i].filename_);
+        }
+    }
+
     breakpoint_info::breakpoint_info()
         : addr_(0)
         , flags_(0)
@@ -81,16 +93,108 @@ namespace eka2l1::manager {
         modules.clear();
     }
 
-    script_function *scripts::make_function(void *func_ptr, const script_function::meta_category category) {
+    script_function *scripts::make_function(void *func_ptr, const script_function::meta_category category, std::size_t *handle) {
         if (!current_module) {
             LOG_ERROR(SCRIPTING, "No module is active to make a function!");
             return nullptr;
         }
 
         std::unique_ptr<script_function> func = std::make_unique<script_function>(current_module, func_ptr, category);
-        current_module->functions_.push_back(std::move(func));
+        script_function *func_data = func.get();
 
-        return current_module->functions_.back().get();
+        if (handle) {
+            *handle = current_module->functions_.add(func);
+        }
+
+        return func_data;
+    }
+
+    bool scripts::remove_function_impl(script_function *target_func) {
+        if (!target_func) {
+            return false;
+        }
+
+        switch (target_func->category_) {
+        case script_function::META_CATEGORY_PENDING_PATCH_BREAKPOINT:
+            for (std::size_t j = 0; j < breakpoint_wait_patch.size(); j++) {
+                if (breakpoint_wait_patch[j].invoke_ == target_func) {
+                    breakpoint_wait_patch.erase(breakpoint_wait_patch.begin() + j--);
+                }
+            }
+
+            break;
+
+        case script_function::META_CATEGORY_BREAKPOINT:
+            for (auto &breakpoint: breakpoints) {
+                for (std::size_t j = 0; j < breakpoint.second.list_.size(); j++) {
+                    if (breakpoint.second.list_[j].invoke_ == target_func) {
+                        breakpoint.second.list_.erase(breakpoint.second.list_.begin() + j--);
+                    }
+                }
+            }
+
+            break;
+        
+        case script_function::META_CATEGORY_IPC:
+            for (auto &opcode_map: ipc_functions) {
+                for (auto &[identifier, funcs]: opcode_map.second) {
+                    for (std::size_t j = 0; j < funcs.size(); j++) {
+                        if (funcs[j] == target_func) {
+                            funcs.erase(funcs.begin() + j--);
+                        }
+                    }
+                }
+            }
+
+        default:
+            LOG_WARN(SCRIPTING, "Script function is not in a recognisable category, no removal!");
+            return false;
+        }
+
+        return true;
+    }
+
+    void scripts::remove_function(const std::uint32_t handle) {
+        if (!current_module) {
+            LOG_ERROR(SCRIPTING, "No module is active to remove a function!");
+            return;
+        }
+
+        std::unique_ptr<script_function> *func_ptr = current_module->functions_.get(static_cast<const std::size_t>(handle));
+        if (!func_ptr) {
+            LOG_ERROR(SCRIPTING, "No function found with handle {}", handle);
+            return;
+        }
+
+        if (remove_function_impl(func_ptr->get())) {
+            current_module->functions_.remove(static_cast<const std::size_t>(handle));
+        }
+    }
+
+    void scripts::import_all_modules() {
+        // Import all scripts
+        std::string cur_dir;
+        get_current_directory(cur_dir);
+
+        common::dir_iterator scripts_dir("scripts/");
+        scripts_dir.detail = true;
+
+        common::dir_entry scripts_entry;
+
+        while (scripts_dir.next_entry(scripts_entry) == 0) {
+            const std::string ext = path_extension(scripts_entry.name);
+
+            if ((scripts_entry.type == common::FILE_REGULAR) && (ext == ".lua")) {
+                auto module_name = filename(scripts_entry.name);
+                import_module("scripts/" + module_name);
+            }
+        }
+
+        set_current_directory(cur_dir);
+
+        // Listen for script change
+        folder_watcher.watch("scripts/", script_file_changed_callback, this, common::directory_change_move | common::directory_change_creation
+            | common::directory_change_last_write);
     }
 
     bool scripts::import_module(const std::string &path) {
@@ -132,6 +236,8 @@ namespace eka2l1::manager {
             if (!eka2l1::set_current_directory(crr_path)) {
                 return false;
             }
+
+            LOG_TRACE(SCRIPTING, "Module {} loaded!", name);
         }
 
         return true;
@@ -140,49 +246,13 @@ namespace eka2l1::manager {
     void scripts::unload_module(const std::string &path) {
         const std::string name_full = eka2l1::filename(path);
         const std::string name = eka2l1::replace_extension(name_full, "");
-        
-        const std::lock_guard<std::mutex> guard(smutex);
 
         auto find_result = modules.find(name);
         if (find_result != modules.end()) {
             std::shared_ptr<script_module> module = find_result->second;
-            for (std::size_t i = 0; i < module->functions_.size(); i++) {
+            for (auto &function: module->functions_) {
                 // Delete all references in breakpoint map and IPC map
-                switch (module->functions_[i]->category_) {
-                case script_function::META_CATEGORY_PENDING_PATCH_BREAKPOINT:
-                    for (std::size_t j = 0; j < breakpoint_wait_patch.size(); j++) {
-                        if (breakpoint_wait_patch[j].invoke_ == module->functions_[i].get()) {
-                            breakpoint_wait_patch.erase(breakpoint_wait_patch.begin() + j--);
-                        }
-                    }
-
-                    break;
-
-                case script_function::META_CATEGORY_BREAKPOINT:
-                    for (auto &breakpoint: breakpoints) {
-                        for (std::size_t j = 0; j < breakpoint.second.list_.size(); j++) {
-                            if (breakpoint.second.list_[j].invoke_ == module->functions_[i].get()) {
-                                breakpoint.second.list_.erase(breakpoint.second.list_.begin() + j--);
-                            }
-                        }
-                    }
-
-                    break;
-                
-                case script_function::META_CATEGORY_IPC:
-                    for (auto &opcode_map: ipc_functions) {
-                        for (auto &[identifier, funcs]: opcode_map.second) {
-                            for (std::size_t j = 0; j < funcs.size(); j++) {
-                                if (funcs[j] == module->functions_[i].get()) {
-                                    funcs.erase(funcs.begin() + j--);
-                                }
-                            }
-                        }
-                    }
-
-                default:
-                    break;
-                }
+                remove_function_impl(function.get());
             }
 
             if (current_module == find_result->second) {
@@ -190,6 +260,7 @@ namespace eka2l1::manager {
             }
 
             modules.erase(find_result);
+            LOG_TRACE(SCRIPTING, "Module {} unloaded!", name);
         }
     }
 
@@ -234,18 +305,24 @@ namespace eka2l1::manager {
         std::shared_ptr<script_module> &state = modules[module];
         current_module = state;
 
-        if (lua_pcall(state->lua_state(), 0, 1, 0) == LUA_OK) {
-            lua_pop(state->lua_state(), lua_gettop(state->lua_state()));
-        } else {
-            LOG_ERROR(SCRIPTING, "Error executing script entry of {}: {}", module, lua_tostring(state->lua_state(), -1));
+        if (lua_pcall(state->lua_state(), 0, 0, 0) != LUA_OK) {
+            LOG_ERROR(SCRIPTING, "Error executing script entry of {}: {}", module, lua_tostring(state->lua_state(), -1));            
             return false;
         }
 
         return true;
     }
 
-    void scripts::register_ipc(const std::string &server_name, const int opcode, const int invoke_when, void* func) {
-        ipc_functions[server_name][(static_cast<std::uint64_t>(opcode) | (static_cast<std::uint64_t>(invoke_when) << 32))].push_back(make_function(func, script_function::META_CATEGORY_IPC));
+    std::uint32_t scripts::register_ipc(const std::string &server_name, const int opcode, const int invoke_when, void* func) {
+        std::size_t handle = 0;
+        script_function *managed_func = make_function(func, script_function::META_CATEGORY_IPC, &handle);
+
+        if (!managed_func) {
+            return INVALID_HOOK_HANDLE;
+        }
+
+        ipc_functions[server_name][(static_cast<std::uint64_t>(opcode) | (static_cast<std::uint64_t>(invoke_when) << 32))].push_back(managed_func);
+        return static_cast<std::uint32_t>(handle);
     }
 
     void scripts::write_breakpoint_block(kernel::process *pr, const vaddress target) {
@@ -315,35 +392,106 @@ namespace eka2l1::manager {
         }
     }
 
-    void scripts::register_library_hook(const std::string &name, const std::uint32_t ord, const std::uint32_t process_uid, breakpoint_hit_func func) {
+    std::uint32_t scripts::register_library_hook(const std::string &name, const std::uint32_t ord, const std::uint32_t process_uid, breakpoint_hit_func func) {
         const std::string lib_name_lower = common::lowercase_string(name);
 
         breakpoint_info info;
+        std::size_t handle = 0;
+
         info.lib_name_ = lib_name_lower;
+        info.invoke_ = make_function(reinterpret_cast<void*>(func), script_function::META_CATEGORY_PENDING_PATCH_BREAKPOINT, &handle);
+
+        if (!info.invoke_) {
+            return INVALID_HOOK_HANDLE;
+        }
+
         info.flags_ = breakpoint_info::FLAG_IS_ORDINAL;
         info.addr_ = ord;
-        info.invoke_ = make_function(func, script_function::META_CATEGORY_PENDING_PATCH_BREAKPOINT);
         info.attached_process_ = process_uid;
 
-        breakpoint_wait_patch.push_back(info);
+        hle::lib_manager *manager = sys->get_lib_manager();
+        if (manager) {
+            if (codeseg_ptr seg = manager->load(common::utf8_to_ucs2(name))) {
+                std::vector<kernel::process*> processes = seg->attached_processes();
+                auto find_res = std::find_if(processes.begin(), processes.end(), [process_uid](kernel::process *target) {
+                    return (target->get_uid() == process_uid);
+                });
+
+                if (find_res != processes.end()) {
+                    info.invoke_->category_ = script_function::META_CATEGORY_BREAKPOINT;
+                    info.addr_ = seg->lookup(*find_res, info.addr_);
+                    info.flags_ = 0;
+
+                    if (info.addr_ == 0) {
+                        LOG_ERROR(SCRIPTING, "Ordinal {} does not exist in library {}", ord, name);
+                        current_module->functions_.remove(handle);
+
+                        return INVALID_HOOK_HANDLE;
+                    }
+                }
+            }
+        }
+
+        if (info.flags_ & breakpoint_info::FLAG_IS_ORDINAL) {
+            breakpoint_wait_patch.push_back(info);
+        } else {
+            breakpoints[info.addr_ & ~1].list_.push_back(std::move(info));
+        }
+
+        return static_cast<std::uint32_t>(handle);
     }
 
-    void scripts::register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid, breakpoint_hit_func func) {
+    std::uint32_t scripts::register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid, breakpoint_hit_func func) {
         const std::string lib_name_lower = common::lowercase_string(lib_name);
+        std::size_t handle = 0;
 
         breakpoint_info info;
         info.lib_name_ = lib_name_lower;
         info.flags_ = breakpoint_info::FLAG_BASED_IMAGE;
         info.addr_ = addr;
-        info.invoke_ = make_function(func, script_function::META_CATEGORY_BREAKPOINT);
+        info.invoke_ = make_function(reinterpret_cast<void*>(func), script_function::META_CATEGORY_BREAKPOINT, &handle);
         info.attached_process_ = process_uid;
+
+        if (!info.invoke_) {
+            return INVALID_HOOK_HANDLE;
+        }
 
         if (lib_name_lower == "constantaddr") {
             info.flags_ = 0;
-            breakpoints[addr & ~1].list_.push_back(std::move(info));
         } else {
-            breakpoint_wait_patch.push_back(info);
+            hle::lib_manager *manager = sys->get_lib_manager();
+            if (manager) {
+                if (codeseg_ptr seg = manager->load(common::utf8_to_ucs2(lib_name))) {
+                    std::vector<kernel::process*> processes = seg->attached_processes();
+                    auto find_res = std::find_if(processes.begin(), processes.end(), [process_uid](kernel::process *target) {
+                        return (target->get_uid() == process_uid);
+                    });
+
+                    if (find_res != processes.end()) {
+                        const address base = seg->get_code_run_addr(*find_res);
+
+                        if (base == 0) {
+                            LOG_ERROR(SCRIPTING, "Can't retrieve code run address of process base {} with UID", (*find_res)->name(), process_uid);
+                            current_module->functions_.remove(handle);
+
+                            return INVALID_HOOK_HANDLE;
+                        }
+
+                        info.invoke_->category_ = script_function::META_CATEGORY_BREAKPOINT;
+                        info.addr_ += base;
+                        info.flags_ = 0;
+                    }
+                }
+            }
         }
+
+        if (info.flags_ & breakpoint_info::FLAG_BASED_IMAGE) {
+            breakpoint_wait_patch.push_back(info);
+        } else {
+            breakpoints[addr & ~1].list_.push_back(std::move(info));
+        }
+
+        return static_cast<std::uint32_t>(handle);
     }
 
     void scripts::patch_library_hook(const std::string &name, const std::vector<vaddress> &exports) {

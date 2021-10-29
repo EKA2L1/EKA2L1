@@ -644,4 +644,13 @@ namespace eka2l1::kernel {
     address codeseg::relocate(kernel::process *pr, const address addr_on_base) {
         return addr_on_base - get_code_base() + get_code_run_addr(pr, nullptr);
     }
+
+    std::vector<kernel::process*> codeseg::attached_processes() const {
+        std::vector<kernel::process*> processes;
+        for (std::size_t i = 0; i < attaches.size(); i++) {
+            processes.push_back(attaches.at(i)->attached_process);
+        }
+
+        return processes;
+    }
 }

@@ -266,6 +266,8 @@ namespace eka2l1::kernel {
             return export_table;
         }
 
+        std::vector<kernel::process*> attached_processes() const;
+
         // Use for patching
         void set_export(const std::uint32_t ordinal, eka2l1::ptr<void> address);
         void set_export_table_fixed(const bool is_fixed);

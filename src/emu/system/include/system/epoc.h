@@ -162,7 +162,6 @@ namespace eka2l1 {
 
         bool pause();
         bool unpause();
-        void load_scripts();
 
         bool set_device(const std::uint8_t idx);
         package::installation_result install_package(std::u16string path, drive_number drv);

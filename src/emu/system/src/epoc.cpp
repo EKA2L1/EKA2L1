@@ -472,8 +472,6 @@ namespace eka2l1 {
         zip_mount_error mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t attrib = io_attrib_none, progress_changed_callback progress_cb = nullptr, cancel_requested_callback cancel_cb = nullptr);
 
         bool reset(const bool lock_sys, const std::int32_t new_index = -1);
-
-        void load_scripts();
         void do_state(common::chunkyseri &seri);
 
         package::installation_result install_package(std::u16string path, drive_number drv);
@@ -487,29 +485,6 @@ namespace eka2l1 {
         void add_new_hal(uint32_t hal_category, hal_instance &hal_com);
         epoc::hal *get_hal(uint32_t category);
     };
-
-    void system_impl::load_scripts() {
-#ifdef ENABLE_SCRIPTING
-        std::string cur_dir;
-        get_current_directory(cur_dir);
-
-        common::dir_iterator scripts_dir(".//scripts//");
-        scripts_dir.detail = true;
-
-        common::dir_entry scripts_entry;
-
-        while (scripts_dir.next_entry(scripts_entry) == 0) {
-            const std::string ext = path_extension(scripts_entry.name);
-
-            if ((scripts_entry.type == common::FILE_REGULAR) && ((ext == ".py") || (ext == ".lua"))) {
-                auto module_name = filename(scripts_entry.name);
-                scripting_->import_module(".//scripts//" + module_name);
-            }
-        }
-
-        set_current_directory(cur_dir);
-#endif
-    }
 
     void system_impl::do_state(common::chunkyseri &seri) {
     }
@@ -533,10 +508,6 @@ namespace eka2l1 {
             disassembler_.get());
 
         epoc::init_panic_descriptions();
-
-#if ENABLE_SCRIPTING == 1
-        load_scripts();
-#endif
     }
 
     system_impl::system_impl(system *parent, system_create_components &param)
@@ -558,10 +529,6 @@ namespace eka2l1 {
         io_ = std::make_unique<io_system>();
         stub_ = std::make_unique<gdbstub>();
         packages_ = std::make_unique<manager::packages>(io_.get(), conf_);
-
-#if ENABLE_SCRIPTING
-        scripting_ = std::make_unique<manager::scripts>(parent);
-#endif
     }
 
     void system_impl::set_graphics_driver(drivers::graphics_driver *graphics_driver) {
@@ -862,6 +829,12 @@ namespace eka2l1 {
             timing_->reset();
         }
 
+#ifdef ENABLE_SCRIPTING
+        if (scripting_) {
+            scripting_.reset();
+        }
+#endif
+
         hals_.clear();
 
         if (index >= 0) {
@@ -902,6 +875,11 @@ namespace eka2l1 {
         // Setup outsiders
         setup_outsider();
         invoke_system_reset_callbacks();
+
+#ifdef ENABLE_SCRIPTING
+        scripting_ = std::make_unique<manager::scripts>(parent_);
+        scripting_->import_all_modules();
+#endif
 
         if (lock_sys) {
             end_access();
@@ -1061,10 +1039,6 @@ namespace eka2l1 {
 
     bool system::reset() {
         return impl->reset(true);
-    }
-
-    void system::load_scripts() {
-        return impl->load_scripts();
     }
 
     package::installation_result system::install_package(std::u16string path, drive_number drv) {

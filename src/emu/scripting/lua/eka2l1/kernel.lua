@@ -97,8 +97,7 @@ function codeseg:exportCount()
 end
 
 function kernel.loadCodeseg(path)
-	local target = ffi.new("char[?]", #path)
-	ffi.copy(target, path)
+	local target = ffi.new("char[?]", #path + 1, path)
 
     local res = ffi.C.eka2l1_load_codeseg(path)
     if res == nil then
@@ -161,8 +160,7 @@ function process:readMemory(addr, size)
 end
 
 function process:writeMemory(addr, buffer)
-    local cbuf = ffi.new('char[?]', #buffer)
-    ffi.copy(cbuf, buffer)
+    local cbuf = ffi.new('char[?]', #buffer + 1, buffer)
 
     local res = ffi.C.eka2l1_process_write_memory(addr, cbuf, #buffer)
     if res == 0 then
