@@ -1,11 +1,28 @@
+--- **Events** module provides abilities to register callbacks at certain events in the emulator.
+---
+--- The current supported callback types are: breakpoint and IPC (Inter-process communication) callback. For breakpoint callback,
+--- it's always preferred to not spend too much time in the callback, which may impact emulated app performance.
+---
+--- Each script is allowed to have a limit of 2^32 callbacks, but the true number depends on the memory of your system and how much the Lua
+--- runner can hold. All callbacks are discarded on script unload.
+---
+-- @module events
+
 local ipcCtx = require('eka2l1.ipc.context')
 local kern = require('eka2l1.kernel')
 local common = require('eka2l1.common')
 
 events = {}
 
+--- Passed to **registerIpcHook**, indicating that IPC callback will be invoked when the client process first
+--- sends message to the server process.
 events.EVENT_IPC_SEND = 0
+
+--- Passed to **registerIpcHook**, indicating that IPC callback will be invoked after the server process finished
+--- processing the request and tell the emulator to notify back to the waiting client.
 events.EVENT_IPC_COMPLETE = 2
+
+--- Constant indicating an invalid handle returned from callback registering.
 events.INVALID_HOOK_HANDLE = 0xFFFFFFFF
 
 local ffi = require("ffi")
@@ -30,6 +47,21 @@ ffi.cdef([[
     void eka2l1_clear_hook(const uint32_t hook_handle);
 ]])
 
+--- Register a callback on library function being called.
+---
+--- This is **registerBreakpointHook** in disguise, but with automated address detection. This is preferred
+--- for the callback to work across many emulated devices, because address of the library function may change,
+--- but the ordinal is consistent.
+---
+--- @param libName Name of the library that contains the target library function.
+--- @param ord The ordinal of the function inside the library.
+--- @param processUid UID3 of the process you want this callback to be triggered on. Use 0 for any active process.
+--- @param func Callback function with no parameter and no return.
+---
+--- @return A handle to this callback (> 0), which can later be used for unregistering. `INVALID_HOOK_HANDLE` on failure.
+---
+--- @see clearHook
+--- @see registerBreakpointHook
 function events.registerLibraryHook(libName, ord, processUid, func)
     local libNameInC = ffi.new("char[?]", #libName + 1, libName)
 
@@ -41,6 +73,24 @@ function events.registerLibraryHook(libName, ord, processUid, func)
     end)
 end
 
+--- Register a callback on a breakpoint.
+---
+--- The address passed to this function should be relative to the original code base address found in
+--- disassemble/image explorer program. The emulator will rebase the address relatively to where the library
+--- is loaded in memory.
+---
+--- In case the breakpoint address is constant and should not be related to any libraries or executables, pass the string "constantaddr"
+--- to the `libName` variable.
+---
+--- @param libName Name of the library that contains the target breakpoint. Use "constantaddr" for no library.
+--- @param addr The address of the breakpoint, relative to the library's original code base address if libName is not "constantaddr"
+--- @param processUid UID3 of the process you want this callback to be triggered on. Use 0 for any active process.
+--- @param func Callback function with no parameter and no return.
+---
+--- @return A handle to this callback (> 0), which can later be used for unregistering. `INVALID_HOOK_HANDLE` on failure.
+---
+--- @see clearHook
+--- @see registerLibraryHook
 function events.registerBreakpointHook(libName, addr, processUid, func)
     local libNameInC = ffi.new("char[?]", #libName + 1, libName)
 
@@ -52,6 +102,24 @@ function events.registerBreakpointHook(libName, addr, processUid, func)
     end)
 end
 
+--- Register a callback on IPC request send/complete.
+---
+--- For IPC send callback, you have the ability to read data the client sent before the request is delivered
+--- to the server process.
+---
+--- For IPC complete callback, you will receive the message context before the request is signaled to be completed to
+--- the client process.
+---
+--- Both the callback will receive an `ipc.context` object as its parameter.
+---
+---@param serverName Name of the server to intercept IPC messages.
+---@param opcode The target message opcode to intercept.
+---@param when The moment to receive the callback. Two options are `EVENT_IPC_SEND` and `EVENT_IPC_COMPLETE`
+---@param func The callback function, with `ipc.context` object as its only parameter.
+---
+--- @return A handle to this callback (> 0), which can later be used for unregistering. `INVALID_HOOK_HANDLE` on failure.
+---
+--- @see clearHook
 function events.registerIpcHook(serverName, opcode, when, func)
     local serverNameInC = ffi.new("char[?]", #serverName + 1, serverName)
 
@@ -84,6 +152,14 @@ function events.registerIpcHook(serverName, opcode, when, func)
     end
 end
 
+--- Unregistering a callback.
+---
+--- This method is safe to call inside a callback. The callback will still continue to do the rest of its job
+--- after the delete.
+---
+--- Note that failure is silent, and may only be reported on the log channel.
+---
+---@param handle The handle retrieved from registering.
 function events.clearHook(handle)
     ffi.C.eka2l1_clear_hook(handle)
 end

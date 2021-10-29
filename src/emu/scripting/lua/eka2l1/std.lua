@@ -1,3 +1,6 @@
+--- **Std** contains standard functions related to Symbian development's data structure.
+--- @module std
+
 std = {}
 
 local kernel = require('eka2l1.kernel')
@@ -19,34 +22,38 @@ std.DESCRIPTOR_TYPE_BUF = 3
 std.DESCRIPTOR_TYPE_BUF_CONST_PTR = 4
 std.DESCRIPTOR_TYPE_MAX = 5
 
-function getPtrBufConstAddress(pr, address)
+function GetPtrBufConstAddress(pr, address)
     return address + 4
 end
 
-function getPtrPtrConstAddress(pr, address)
+function GetPtrPtrConstAddress(pr, address)
     return pr:readDword(address + 4)
 end
 
-function getPtrBufAddress(pr, address)
+function GetPtrBufAddress(pr, address)
     return address + 8
 end
 
-function getPtrPtrAddress(pr, address)
+function GetPtrPtrAddress(pr, address)
     return pr:readDword(address + 8)
 end
 
-function getPtrBufConstPtrAddress(pr, address)
+function GetPtrBufConstPtrAddress(pr, address)
     local realBufAddr = pr:readDword(address + 8)
     return realBufAddr + 4
 end
 
+--- Abstract class which allows the containment of data.
+---
+--- @param pr The process where this descriptor lives on.
+--- @param addr The address of the descriptor in the process's memory.
 std.descriptor = helper.class(function(self, pr, addr)
     local addressLookupTable = {
-        [DESCRIPTOR_TYPE_BUF_CONST] = getPtrBufConstAddress,
-        [DESCRIPTOR_TYPE_BUF_CONST_PTR] = getPtrBufConstPtrAddress,
-        [DESCRIPTOR_TYPE_BUF] = getPtrBufAddress,
-        [DESCRIPTOR_TYPE_PTR] = getPtrPtrAddress,
-        [DESCRIPTOR_TYPE_PTR_CONST] = getPtrPtrConstAddress
+        [std.DESCRIPTOR_TYPE_BUF_CONST] = GetPtrBufConstAddress,
+        [std.DESCRIPTOR_TYPE_BUF_CONST_PTR] = GetPtrBufConstPtrAddress,
+        [std.DESCRIPTOR_TYPE_BUF] = GetPtrBufAddress,
+        [std.DESCRIPTOR_TYPE_PTR] = GetPtrPtrAddress,
+        [std.DESCRIPTOR_TYPE_PTR_CONST] = GetPtrPtrConstAddress
     }
 
     local desword = pr:readDword(addr)
@@ -54,7 +61,7 @@ std.descriptor = helper.class(function(self, pr, addr)
     self.length = bitops.band(desword, 0xFFFFFFF);
     self.type = bitops.band(bitops.rshift(desword, 28), 0xF)
 
-    if self.type >= DESCRIPTOR_TYPE_MAX then
+    if self.type >= std.DESCRIPTOR_TYPE_MAX then
         error('Descriptor type is invalid!')
     else
         self.dataAddr = addressLookupTable[self.type](pr, addr)
@@ -62,10 +69,20 @@ std.descriptor = helper.class(function(self, pr, addr)
     end
 end)
 
-std.descriptor8 = helper.class(descriptor, function(self, pr, addr)
-    descriptor.init(self, pr, addr)
+--- Detailed descriptor that is designed to hold 8-bit data.
+---
+--- This kind of descriptor usually used to hold 8-bit string or binary data, and can be coverted
+--- to string by using **tostring**.
+---
+--- @param pr The process where this descriptor lives on.
+--- @param addr The address of the descriptor in the process's memory.
+std.descriptor8 = helper.class(std.descriptor, function(self, pr, addr)
+    std.descriptor.init(self, pr, addr)
 end)
 
+--- Get the raw data that this descriptor is containing.
+---
+--- @return A raw FFI byte array containing data.
 function std.descriptor8:rawData()
     return self.pr:readMemory(self.dataAddr, self.length)
 end
@@ -74,10 +91,23 @@ function std.descriptor8:__tostring()
     return ffi.string(self:rawData())
 end
 
-std.descriptor16 = helper.class(descriptor, function(self, pr, addr)
-    descriptor.init(self, pr, addr)
+--- Detailed descriptor that is designed to hold 16-bit data.
+---
+--- This kind of descriptor usually used to hold 16-bit Unicode string, and can be coverted
+--- to string by using **tostring**.
+---
+--- @param pr The process where this descriptor lives on.
+--- @param addr The address of the descriptor in the process's memory.
+std.descriptor16 = helper.class(std.descriptor, function(self, pr, addr)
+    std.descriptor.init(self, pr, addr)
 end)
 
+--- Convert a raw 8-bit C FFI byte array into a 16-bit Unicode string/
+---
+--- @param raw The raw byte array to convert.
+--- @param length The number of characters that the result string should produce.
+---
+--- @return Converted `string` object.
 function std.rawUtf16ToString(raw, length)
     local result = ffi.C.eka2l1_std_utf16_to_utf8(raw, length)
     ffi.gc(result, ffi.C.eka2l1_free_string)
@@ -85,6 +115,9 @@ function std.rawUtf16ToString(raw, length)
     return ffi.string(result)
 end
 
+--- Get the raw data that this descriptor is containing.
+---
+--- @return A raw FFI byte array containing data.
 function std.descriptor16:rawData()
     return self.pr:readMemory(self.dataAddr, self.length * 2)
 end
@@ -94,18 +127,36 @@ function std.descriptor16:__tostring()
 end
 
 -- Request status implementation
-std.requestStatus = helper.class(function(pr, addr)
+
+--- Struct holding the status of a request.
+---
+--- On EKA1, this struct simply holds an integer, which contains the result code
+--- of completed operation.
+---
+--- However, on EKA2, 32-bit `flag` bitarray is also added to this struct to tell
+--- the status of the sync object associated with this request
+---
+--- @param pr The process where this request status lives on.
+--- @param addr The address of the request status in the process's memory.
+std.requestStatus = helper.class(function(self, pr, addr)
     self.ownProcess = pr
     self.dataAddr = addr
 end)
 
+--- Retrieve the current value of the request status
+---
+--- @return A 32-bit integer as the status code.
 function std.requestStatus:value()
-    return self.pr:readDword(addr)
+    return self.pr:readDword(self.addr)
 end
 
+--- Retrieve the current flags of the request status
+---
+--- @return A 32-bit integer, which each bit as a flag.
 function std.requestStatus:flags()
-    return self.pr:readDword(addr + 4)
+    return self.pr:readDword(self.addr + 4)
 end
+
 -- End request status implementation
 
 return std
