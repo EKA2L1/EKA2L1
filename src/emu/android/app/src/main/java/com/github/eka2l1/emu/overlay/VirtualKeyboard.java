@@ -31,6 +31,7 @@ import android.view.View;
 import androidx.annotation.NonNull;
 
 import com.github.eka2l1.emu.Emulator;
+import com.github.eka2l1.emu.EmulatorActivity;
 import com.github.eka2l1.emu.Keycode;
 
 import java.io.DataInputStream;
@@ -845,6 +846,7 @@ public class VirtualKeyboard implements Overlay, Runnable {
                 }
                 for (VirtualKey aKeypad : keypad) {
                     if (aKeypad.contains(x, y)) {
+                        vibrate();
                         associatedKeys[pointer] = aKeypad;
                         aKeypad.setSelected(true);
                         Emulator.pressKey(associatedKeys[pointer].getKeyCode(), 0);
@@ -1067,6 +1069,10 @@ public class VirtualKeyboard implements Overlay, Runnable {
         return false;
     }
 
+    private void vibrate() {
+        if (feedback) EmulatorActivity.vibrate(FEEDBACK_DURATION);
+    }
+
     public void setHideDelay(int delay) {
         this.delay = delay;
     }
@@ -1081,10 +1087,6 @@ public class VirtualKeyboard implements Overlay, Runnable {
 
     public void setButtonShape(int shape) {
         this.shape = shape;
-    }
-
-    public void setForceOpacity(boolean forceOpacity) {
-        this.forceOpacity = forceOpacity;
     }
 
     public void setView(View view) {
