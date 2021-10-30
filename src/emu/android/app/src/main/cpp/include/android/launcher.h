@@ -42,6 +42,11 @@ namespace eka2l1::android {
         window_server *winserv;
         fbs_server *fbsserv;
 
+        eka2l1::vecx<std::uint8_t, 3> background_color_;
+        float scale_ratio_;
+        std::uint32_t scale_type_;
+        std::uint32_t gravity_;
+
         void set_language_to_property(const language new_one);
         void set_language_current(const language lang);
 
@@ -68,6 +73,8 @@ namespace eka2l1::android {
         void draw(drivers::graphics_command_list_builder *builder, std::uint32_t width, std::uint32_t height);
         std::vector<std::string> get_language_ids();
         std::vector<std::string> get_language_names();
+        void set_screen_params(std::uint32_t background_color, std::uint32_t scale_ratio,
+                               std::uint32_t scale_type, std::uint32_t gravity);
 
         fbs_server *get_fbs_serv() {
             return fbsserv;

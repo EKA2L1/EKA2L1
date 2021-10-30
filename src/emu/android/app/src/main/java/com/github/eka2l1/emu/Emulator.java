@@ -263,4 +263,6 @@ public class Emulator {
     public static native String[] getLanguageIds();
 
     public static native String[] getLanguageNames();
+
+    public static native void setScreenParams(int backgroundColor, int scaleRatio, int scaleType, int gravity);
 }

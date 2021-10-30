@@ -460,7 +460,9 @@ namespace eka2l1::android {
             builder->backup_state();
             builder->bind_bitmap(0);
 
-            builder->clear({ 0xD0, 0xD0, 0xD0, 0xFF }, drivers::draw_buffer_bit_color_buffer);
+            builder->clear({ background_color_[0], background_color_[1], background_color_[2],
+                               0xFF },
+                drivers::draw_buffer_bit_color_buffer);
             builder->set_cull_mode(false);
             builder->set_depth(false);
             //builder->set_clipping(true);
@@ -473,19 +475,63 @@ namespace eka2l1::android {
                 eka2l1::vec2 size = crr_mode.size;
                 src.size = size;
 
-                float mult = (float)(window_width) / size.x;
-                float width = size.x * mult;
-                float height = size.y * mult;
+                float width = 0;
+                float height = 0;
                 std::uint32_t x = 0;
                 std::uint32_t y = 0;
-                if (height > swapchain_size.y) {
-                    height = swapchain_size.y;
-                    mult = height / size.y;
-                    width = size.x * mult;
-                    x = (swapchain_size.x - width) / 2;
+
+                switch (scale_type_) {
+                    case 0:
+                        // without scaling
+                        width = size.x;
+                        height = size.y;
+                        break;
+                    case 1:
+                        // try to fit in width
+                        width = swapchain_size.x;
+                        height = height * swapchain_size.x / width;
+                        if (height > swapchain_size.y) {
+                            // if height is too big, then fit in height
+                            height = swapchain_size.y;
+                            width = width * swapchain_size.y / height;
+                        }
+                        break;
+                    case 2:
+                        // scaling without preserving the aspect ratio:
+                        // just stretch the picture to full screen
+                        width = swapchain_size.x;
+                        height = swapchain_size.y;
+                        break;
                 }
-                scr->scale_x = mult;
-                scr->scale_y = mult;
+
+                width = width * scale_ratio_ / 100;
+                height = height * scale_ratio_ / 100;
+
+                switch (gravity_) {
+                    case 0: // left
+                        x = 0;
+                        y = (swapchain_size.y - height) / 2;
+                        break;
+                    case 1: // top
+                        x = (swapchain_size.x - width) / 2;
+                        y = 0;
+                        break;
+                    case 2: // center
+                        x = (swapchain_size.x - width) / 2;
+                        y = (swapchain_size.y - height) / 2;
+                        break;
+                    case 3: // right
+                        x = swapchain_size.x - width;
+                        y = (swapchain_size.y - height) / 2;
+                        break;
+                    case 4: // bottom
+                        x = (swapchain_size.x - width) / 2;
+                        y = swapchain_size.y - height;
+                        break;
+                }
+
+                scr->scale_x = width / size.x;
+                scr->scale_y = height / size.y;
                 scr->absolute_pos.x = static_cast<int>(x);
                 scr->absolute_pos.y = static_cast<int>(y);
 
@@ -500,7 +546,8 @@ namespace eka2l1::android {
                 }
 
                 builder->set_texture_filter(scr->screen_texture, filter, filter);
-                builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(scr->ui_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
+                builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0),
+                    static_cast<float>(scr->ui_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
 
                 scr->screen_mutex.unlock();
             }
@@ -535,5 +582,15 @@ namespace eka2l1::android {
             }
         }
         return languages;
+    }
+
+    void launcher::set_screen_params(std::uint32_t background_color, std::uint32_t scale_ratio,
+                                     std::uint32_t scale_type, std::uint32_t gravity) {
+        background_color_[0] = (background_color >> 16) & 0xFF;
+        background_color_[1] = (background_color >> 8) & 0xFF;
+        background_color_[2] = background_color & 0xFF;
+        scale_ratio_ = scale_ratio;
+        scale_type_ = scale_type;
+        gravity_ = gravity;
     }
 }

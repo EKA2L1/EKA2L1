@@ -161,6 +161,8 @@ public class EmulatorActivity extends AppCompatActivity {
         } else {
             setOrientation(params.orientation);
         }
+        Emulator.setScreenParams(params.screenBackgroundColor, params.screenScaleRatio,
+                params.screenScaleType, params.screenGravity);
     }
 
     @Override
