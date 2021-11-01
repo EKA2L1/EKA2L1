@@ -251,4 +251,9 @@ if (UNIX AND NOT APPLE)
         TARGET eka2l1_qt
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/eka2l1.desktop" "$<TARGET_FILE_DIR:eka2l1_qt>/eka2l1.desktop")
+
+    add_custom_command(
+        TARGET eka2l1_qt
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/assets/duck_icon.png" "$<TARGET_FILE_DIR:eka2l1_qt>/duck_icon.png")
 endif()

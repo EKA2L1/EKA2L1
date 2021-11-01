@@ -7,7 +7,7 @@ option(EKA2L1_BUILD_TOOLS "Build EKA2L1's tool" ON)
 option(EKA2L1_BUILD_TESTS "Build EKA2L1's tests" ON)
 option(EKA2L1_ENABLE_SCRIPTING_ABILITY "Enable to script with Python or Lua" ON)
 option(EKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER "Enable EKA2L1 to dump unexpected exception" OFF)
-option(EKA2L1_BUILD_VULKAN_BACKEND "Build Vulkan backend" ON)
+option(EKA2L1_BUILD_VULKAN_BACKEND "Build Vulkan backend" OFF)
 option(EKA2L1_DEPLOY_DMG "Deploy EKA2L1 as .dmg" OFF)
 
 set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
