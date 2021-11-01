@@ -20,14 +20,7 @@
 
 package com.github.eka2l1.emu;
 
-import static com.github.eka2l1.emu.Constants.KEY_APP_NAME;
-import static com.github.eka2l1.emu.Constants.KEY_APP_UID;
-import static com.github.eka2l1.emu.Constants.PREF_ACTIONBAR;
-import static com.github.eka2l1.emu.Constants.PREF_DEFAULT_PROFILE;
-import static com.github.eka2l1.emu.Constants.PREF_KEEP_SCREEN;
-import static com.github.eka2l1.emu.Constants.PREF_STATUSBAR;
-import static com.github.eka2l1.emu.Constants.PREF_THEME;
-import static com.github.eka2l1.emu.Constants.PREF_VIBRATION;
+import static com.github.eka2l1.emu.Constants.*;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -61,7 +54,6 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.preference.PreferenceManager;
 
 import com.github.eka2l1.R;
 import com.github.eka2l1.config.ProfileModel;
@@ -148,8 +140,7 @@ public class EmulatorActivity extends AppCompatActivity {
 
         String uidStr = Long.toHexString(uid).toUpperCase();
         File configDir = new File(Emulator.getConfigsDir(), uidStr);
-        String defProfile = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
-                .getString(PREF_DEFAULT_PROFILE, null);
+        String defProfile = dataStore.getString(PREF_DEFAULT_PROFILE, null);
         params = ProfilesManager.loadConfigOrDefault(configDir, defProfile);
         androidToSymbian = (params.keyMappings != null) ? params.keyMappings : KeyMapper.getDefaultKeyMap();
 

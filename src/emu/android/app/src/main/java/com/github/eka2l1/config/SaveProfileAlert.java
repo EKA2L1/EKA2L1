@@ -34,10 +34,10 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
-import androidx.preference.PreferenceManager;
 
 import com.github.eka2l1.R;
 import com.github.eka2l1.emu.Emulator;
+import com.github.eka2l1.settings.AppDataStore;
 
 import java.io.File;
 import java.io.IOException;
@@ -95,8 +95,9 @@ public class SaveProfileAlert extends DialogFragment {
                 ProfilesManager.save(profile, configPath,
                         cbConfig.isChecked(), cbKeyboard.isChecked());
                 if (cbDefault.isChecked()) {
-                    PreferenceManager.getDefaultSharedPreferences(requireContext())
-                            .edit().putString(PREF_DEFAULT_PROFILE, name).apply();
+                    AppDataStore dataStore = AppDataStore.getAndroidStore();
+                    dataStore.putString(PREF_DEFAULT_PROFILE, name);
+                    dataStore.save();
                 }
                 dismiss();
             } catch (IOException e) {

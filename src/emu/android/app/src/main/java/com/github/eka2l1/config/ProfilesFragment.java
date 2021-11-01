@@ -20,7 +20,6 @@
 
 package com.github.eka2l1.config;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -36,9 +35,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.ListFragment;
-import androidx.preference.PreferenceManager;
 
 import com.github.eka2l1.R;
+import com.github.eka2l1.settings.AppDataStore;
 
 import java.util.ArrayList;
 
@@ -46,15 +45,15 @@ import static com.github.eka2l1.emu.Constants.*;
 
 public class ProfilesFragment extends ListFragment implements AdapterView.OnItemClickListener {
     private ProfilesAdapter adapter;
-    private SharedPreferences preferences;
+    private AppDataStore dataStore;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        dataStore = AppDataStore.getAndroidStore();
         ArrayList<Profile> profiles = ProfilesManager.getProfiles();
         adapter = new ProfilesAdapter(getContext(), profiles);
-        final String def = preferences.getString(PREF_DEFAULT_PROFILE, null);
+        final String def = dataStore.getString(PREF_DEFAULT_PROFILE, null);
         if (def != null) {
             for (int i = profiles.size() - 1; i >= 0; i--) {
                 Profile profile = profiles.get(i);
@@ -84,7 +83,8 @@ public class ProfilesFragment extends ListFragment implements AdapterView.OnItem
             profile.renameTo(newName);
             adapter.notifyDataSetChanged();
             if (adapter.getDefault() == profile) {
-                preferences.edit().putString(PREF_DEFAULT_PROFILE, newName).apply();
+                dataStore.putString(PREF_DEFAULT_PROFILE, newName);
+                dataStore.save();
             }
         });
         getParentFragmentManager().setFragmentResultListener(KEY_PROFILE_CREATED, this, (requestKey, bundle) -> {
@@ -153,7 +153,8 @@ public class ProfilesFragment extends ListFragment implements AdapterView.OnItem
         final Profile profile = adapter.getItem(index);
         int itemId = item.getItemId();
         if (itemId == R.id.action_context_default) {
-            preferences.edit().putString(PREF_DEFAULT_PROFILE, profile.getName()).apply();
+            dataStore.putString(PREF_DEFAULT_PROFILE, profile.getName());
+            dataStore.save();
             adapter.setDefault(profile);
             return true;
         } else if (itemId == R.id.action_context_edit) {

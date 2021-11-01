@@ -35,9 +35,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
-import androidx.preference.PreferenceManager;
 
 import com.github.eka2l1.R;
+import com.github.eka2l1.settings.AppDataStore;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -99,8 +99,7 @@ public class LoadProfileAlert extends DialogFragment {
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, null);
-        final String def = PreferenceManager.getDefaultSharedPreferences(requireContext())
-                .getString(PREF_DEFAULT_PROFILE, null);
+        final String def = AppDataStore.getAndroidStore().getString(PREF_DEFAULT_PROFILE, null);
 
         if (def != null) {
             for (int i = 0, size = profiles.size(); i < size; i++) {

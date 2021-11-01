@@ -49,7 +49,6 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
-import androidx.preference.PreferenceManager;
 
 import com.github.eka2l1.R;
 import com.github.eka2l1.emu.Emulator;
@@ -138,8 +137,7 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
         }
         configDir.mkdirs();
 
-        defProfile = PreferenceManager.getDefaultSharedPreferences(getContext().getApplicationContext())
-                .getString(PREF_DEFAULT_PROFILE, null);
+        defProfile = AppDataStore.getAndroidStore().getString(PREF_DEFAULT_PROFILE, null);
         params = ProfilesManager.loadConfigOrDefault(configDir, defProfile);
         if (!params.isNew && !needShow) {
             startApp();
