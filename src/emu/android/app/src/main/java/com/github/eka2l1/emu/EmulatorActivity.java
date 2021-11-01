@@ -225,7 +225,7 @@ public class EmulatorActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.emulator, menu);
-        if (keyboard != null) {
+        if (keyboard != null && !(keyboard instanceof FixedKeyboard)) {
             inflater.inflate(R.menu.emulator_keys, menu);
         }
         return super.onCreateOptionsMenu(menu);
