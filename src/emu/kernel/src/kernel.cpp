@@ -526,31 +526,36 @@ namespace eka2l1 {
 
     void kernel_system::call_thread_kill_callbacks(kernel::thread *target, const std::string &category, const std::int32_t reason) {
         for (auto &thread_kill_callback_func : thread_kill_callbacks_) {
-            thread_kill_callback_func(target, category, reason);
+            if (thread_kill_callback_func)
+                thread_kill_callback_func(target, category, reason);
         }
     }
 
     void kernel_system::call_process_switch_callbacks(arm::core *run_core, kernel::process *old, kernel::process *new_one) {
         for (auto &process_switch_callback_func : process_switch_callback_funcs_) {
-            process_switch_callback_func(run_core, old, new_one);
+            if (process_switch_callback_func)
+                process_switch_callback_func(run_core, old, new_one);
         }
     }
 
     void kernel_system::run_codeseg_loaded_callback(const std::string &lib_name, kernel::process *attacher, codeseg_ptr target) {
         for (auto &codeseg_loaded_callback_func : codeseg_loaded_callback_funcs_) {
-            codeseg_loaded_callback_func(lib_name, attacher, target);
+            if (codeseg_loaded_callback_func)
+                codeseg_loaded_callback_func(lib_name, attacher, target);
         }
     }
 
     void kernel_system::run_imb_range_callback(kernel::process *caller, address range_addr, const std::size_t range_size) {
         for (auto &imb_range_callback_func : imb_range_callback_funcs_) {
-            imb_range_callback_func(caller, range_addr, range_size);
+            if (imb_range_callback_func)
+                imb_range_callback_func(caller, range_addr, range_size);
         }
     }
 
     void kernel_system::run_uid_of_process_change_callback(kernel::process *aff, kernel::process_uid_type type) {
         for (auto &uid_callback_func : uid_of_process_callback_funcs_) {
-            uid_callback_func(aff, type);
+            if (uid_callback_func)
+                uid_callback_func(aff, type);
         }
     }
 

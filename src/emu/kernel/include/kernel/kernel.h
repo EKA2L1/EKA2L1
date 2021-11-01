@@ -62,6 +62,7 @@
 #include <mutex>
 #include <regex>
 #include <unordered_map>
+#include <type_traits>
 
 namespace eka2l1 {
 #define SYNCHRONIZE_ACCESS const std::lock_guard<std::mutex> guard(kern_lock)
@@ -107,39 +108,39 @@ namespace eka2l1 {
     */
     template <typename T>
     constexpr kernel::object_type get_object_type() {
-        if constexpr (std::is_same_v<T, kernel::process>) {
+        if constexpr (std::is_base_of_v<kernel::process, T>) {
             return kernel::object_type::process;
-        } else if constexpr (std::is_same_v<T, kernel::thread>) {
+        } else if constexpr (std::is_base_of_v<kernel::thread, T>) {
             return kernel::object_type::thread;
-        } else if constexpr (std::is_same_v<T, kernel::chunk>) {
+        } else if constexpr (std::is_base_of_v<kernel::chunk, T>) {
             return kernel::object_type::chunk;
-        } else if constexpr (std::is_same_v<T, kernel::library>) {
+        } else if constexpr (std::is_base_of_v<kernel::library, T>) {
             return kernel::object_type::library;
-        } else if constexpr ((std::is_same_v<T, kernel::mutex>) || (std::is_same_v<T, kernel::legacy::mutex>)) {
+        } else if constexpr ((std::is_base_of_v<kernel::mutex, T>) || (std::is_base_of_v<kernel::legacy::mutex, T>)) {
             return kernel::object_type::mutex;
-        } else if constexpr ((std::is_same_v<T, kernel::semaphore>) || (std::is_same_v<T, kernel::legacy::semaphore>)) {
+        } else if constexpr ((std::is_base_of_v<kernel::semaphore, T>) || (std::is_base_of_v<kernel::legacy::semaphore, T>)) {
             return kernel::object_type::sema;
-        } else if constexpr (std::is_same_v<T, kernel::timer>) {
+        } else if constexpr (std::is_base_of_v<kernel::timer, T>) {
             return kernel::object_type::timer;
-        } else if constexpr (std::is_same_v<T, service::property>) {
+        } else if constexpr (std::is_base_of_v<service::property, T>) {
             return kernel::object_type::prop;
-        } else if constexpr (std::is_same_v<T, service::server>) {
+        } else if constexpr (std::is_base_of_v<service::server, T>) {
             return kernel::object_type::server;
-        } else if constexpr (std::is_same_v<T, service::session>) {
+        } else if constexpr (std::is_base_of_v<service::session, T>) {
             return kernel::object_type::session;
-        } else if constexpr (std::is_same_v<T, kernel::codeseg>) {
+        } else if constexpr (std::is_base_of_v<kernel::codeseg, T>) {
             return kernel::object_type::codeseg;
-        } else if constexpr (std::is_same_v<T, kernel::change_notifier>) {
+        } else if constexpr (std::is_base_of_v<kernel::change_notifier, T>) {
             return kernel::object_type::change_notifier;
-        } else if constexpr (std::is_same_v<T, service::property_reference>) {
+        } else if constexpr (std::is_base_of_v<service::property_reference, T>) {
             return kernel::object_type::prop_ref;
-        } else if constexpr (std::is_same_v<T, kernel::msg_queue>) {
+        } else if constexpr (std::is_base_of_v<kernel::msg_queue, T>) {
             return kernel::object_type::msg_queue;
-        } else if constexpr (std::is_same_v<T, ldd::factory>) {
+        } else if constexpr (std::is_base_of_v<ldd::factory, T>) {
             return kernel::object_type::logical_device;
-        } else if constexpr (std::is_same_v<T, ldd::channel>) {
+        } else if constexpr (std::is_base_of_v<ldd::channel, T>) {
             return kernel::object_type::logical_channel;
-        } else if constexpr (std::is_same_v<T, kernel::undertaker>) {
+        } else if constexpr (std::is_base_of_v<kernel::undertaker, T>) {
             return kernel::object_type::undertaker;
         } else {
             throw std::runtime_error("Unknown kernel object type. Make sure to add new type here");
