@@ -489,11 +489,11 @@ namespace eka2l1::android {
                     case 1:
                         // try to fit in width
                         width = swapchain_size.x;
-                        height = height * swapchain_size.x / width;
+                        height = size.y * swapchain_size.x / size.x;
                         if (height > swapchain_size.y) {
                             // if height is too big, then fit in height
                             height = swapchain_size.y;
-                            width = width * swapchain_size.y / height;
+                            width = size.x * swapchain_size.y / size.y;
                         }
                         break;
                     case 2:
