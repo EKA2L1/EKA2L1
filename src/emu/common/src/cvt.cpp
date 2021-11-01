@@ -17,10 +17,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <common/cvt.h>
+
+#include <common/platform.h>
 
 #include <codecvt>
 #include <locale>
+
+#if EKA2L1_PLATFORM(WIN32)
+#include <Windows.h>
+#endif
 
 namespace eka2l1 {
     namespace common {
@@ -82,6 +87,19 @@ namespace eka2l1 {
             }
 
             return wstr;
+        }
+
+        std::string wstr_to_utf8(const std::wstring &str) {
+#if EKA2L1_PLATFORM(WIN32)
+            int size_needed = WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), NULL, 0, NULL, NULL);
+            std::string result(size_needed, 0);
+
+            WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), result.data(), size_needed, NULL, NULL);
+            return result;
+#else
+            std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+            return converter.to_bytes(str.data(), str.data() + str.size());
+#endif
         }
     }
 }

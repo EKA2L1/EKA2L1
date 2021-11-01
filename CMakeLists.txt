@@ -34,25 +34,6 @@ endif()
 
 if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
     set (ENABLE_SCRIPTING 1)
-
-    # Annoying for other devs working for both android and pc, so disable now. We can live with lua
-    #if (ANDROID OR CI)
-        set(ENABLE_PYTHON_SCRIPTING 0)
-    #else()
-    #    message("Enable scripting with Python with build")
-    #    set(ENABLE_PYTHON_SCRIPTING 1)
-    #endif()
-
-    if (UNIX AND (NOT APPLE))
-        # Pybind11 requires this on
-        if (ENABLE_PYTHON_SCRIPTING)
-            set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-        endif()
-
-        set(CMAKE_CXX_STANDARD_LIBRARIES -ldl)
-    endif()
-else (EKA2L1_ENABLE_SCRIPTING_ABILITY)
-    set (ENABLE_SCRIPTING 0)
 endif(EKA2L1_ENABLE_SCRIPTING_ABILITY)
 
 set (ENABLE_SEH_HANDLER 0)
