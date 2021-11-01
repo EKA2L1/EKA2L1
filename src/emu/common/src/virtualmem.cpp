@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/cvt.h>
 #include <common/platform.h>
 #include <common/virtualmem.h>
 
@@ -179,7 +180,8 @@ namespace eka2l1::common {
             map_type = FILE_MAP_COPY;
         }
 
-        HANDLE file_handle = CreateFileA(file_name.c_str(), desired_access, share_mode,
+        const std::wstring filename_w = common::utf8_to_wstr(file_name);
+        HANDLE file_handle = CreateFileW(filename_w.c_str(), desired_access, share_mode,
             NULL, open_type, NULL, NULL);
 
         if (file_handle == INVALID_HANDLE_VALUE) {
@@ -194,7 +196,7 @@ namespace eka2l1::common {
             map_size = (static_cast<std::size_t>(size_high) << 32) | size_low;
         }
 
-        HANDLE map_file_handle = CreateFileMappingA(file_handle, NULL, page_type,
+        HANDLE map_file_handle = CreateFileMappingW(file_handle, NULL, page_type,
             map_size >> 32, static_cast<DWORD>(map_size), NULL);
 
         if (!map_file_handle || map_file_handle == INVALID_HANDLE_VALUE) {

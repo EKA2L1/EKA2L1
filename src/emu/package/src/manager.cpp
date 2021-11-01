@@ -151,7 +151,15 @@ namespace eka2l1 {
                 return;
             }
 
-            YAML::Node sdb_node = YAML::LoadFile(app_registry_file_path);
+            common::ro_std_file_stream app_registry_stream(app_registry_file_path, true);
+            if (!app_registry_stream.valid()) {
+                return;
+            }
+
+            std::string whole_config(app_registry_stream.size(), ' ');
+            app_registry_stream.read(whole_config.data(), whole_config.size());
+
+            YAML::Node sdb_node = YAML::Load(whole_config);
 
             for (const auto &maybe_app : sdb_node) {
                 const YAML::Node app = maybe_app.second;

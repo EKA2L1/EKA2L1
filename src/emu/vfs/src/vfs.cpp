@@ -558,7 +558,7 @@ namespace eka2l1 {
                 if ((attribute & io_attrib_include_file) && (attribute & io_attrib_allow_uid)) {
                     epoc::uid_type temp_uid;
 
-                    std::ifstream temp_file_holder(eka2l1::add_path(iterator.dir_name, entry.name), std::ios_base::binary);
+                    common::ro_std_file_stream temp_file_holder(eka2l1::add_path(iterator.dir_name, entry.name), true);
                     if (temp_file_holder.read(reinterpret_cast<char *>(&temp_uid), sizeof(temp_uid))) {
                         if (((utype.uid1 != 0) && (utype.uid1 != temp_uid.uid1)) || ((utype.uid2 != 0) && (utype.uid2 != temp_uid.uid2))
                             || ((utype.uid3 != 0) && (utype.uid3 != temp_uid.uid3))) {

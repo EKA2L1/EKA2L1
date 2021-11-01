@@ -18,6 +18,7 @@
  */
 
 #include <common/algorithm.h>
+#include <common/buffer.h>
 #include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
@@ -95,7 +96,16 @@ namespace eka2l1::config {
                     YAML::Node the_node;
 
                     try {
-                        the_node = YAML::LoadFile(eka2l1::add_path(setting_folder.dir_name, setting_entry.name));
+                        common::ro_std_file_stream app_registry_stream(eka2l1::add_path(setting_folder.dir_name, setting_entry.name), true);
+                        if (!app_registry_stream.valid()) {
+                            LOG_ERROR(CONFIG, "Failed to open app settings entry {}", setting_entry.name);
+                            continue;
+                        } else {
+                            std::string whole_config(app_registry_stream.size(), ' ');
+                            app_registry_stream.read(whole_config.data(), whole_config.size());
+
+                            the_node = YAML::Load(whole_config);
+                        }
                     } catch (std::exception &exc) {
                         LOG_ERROR(CONFIG, "Encountering error while loading app setting {}. Error message: {}", fname.std_str(),
                             exc.what());
@@ -146,7 +156,15 @@ namespace eka2l1::config {
         YAML::Node the_node;
 
         try {
-            the_node = YAML::LoadFile(setting_file);
+            common::ro_std_file_stream app_registry_stream(setting_file, true);
+            if (!app_registry_stream.valid()) {
+                return;
+            }
+
+            std::string whole_config(app_registry_stream.size(), ' ');
+            app_registry_stream.read(whole_config.data(), whole_config.size());
+
+            the_node = YAML::Load(whole_config);
         } catch (std::exception &exc) {
             LOG_ERROR(CONFIG, "Encountering error while loading app setting {}. Error message: {}", setting_file,
                 exc.what());

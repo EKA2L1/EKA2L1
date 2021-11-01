@@ -18,6 +18,7 @@
  */
 
 #include <common/algorithm.h>
+#include <common/buffer.h>
 #include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
@@ -119,15 +120,22 @@ namespace eka2l1::config {
         }
         keybind_emitter << YAML::EndSeq;
 
-        std::ofstream keybind_file(file);
-        keybind_file << keybind_emitter.c_str();
-        keybind_file.close();
+        common::wo_std_file_stream keybind_file(file, true);
+        keybind_file.write(keybind_emitter.c_str(), keybind_emitter.size());
     }
 
     void keybind_profile::deserialize(const std::string &file) {
         YAML::Node keybind_node;
         try {
-            keybind_node = YAML::LoadFile(file);
+            common::ro_std_file_stream keybind_stream(file, true);
+            if (!keybind_stream.valid()) {
+                return;
+            }
+
+            std::string whole_config(keybind_stream.size(), ' ');
+            keybind_stream.read(whole_config.data(), whole_config.size());
+
+            keybind_node = YAML::Load(whole_config);
         } catch (...) {
             return;
         }
@@ -161,9 +169,10 @@ namespace eka2l1::config {
 
         emitter << YAML::EndMap;
 
-        std::ofstream file("config.yml");
-        file << emitter.c_str();
-        file.close();
+        {
+            common::wo_std_file_stream file("config.yml", true);
+            file.write(emitter.c_str(), emitter.size());
+        }
 
         if (with_bindings) {
             eka2l1::create_directories("bindings");
@@ -175,7 +184,15 @@ namespace eka2l1::config {
         YAML::Node node;
 
         try {
-            node = YAML::LoadFile("config.yml");
+            common::ro_std_file_stream config_stream("config.yml", true);
+            if (!config_stream.valid()) {
+                return;
+            }
+
+            std::string whole_config(config_stream.size(), ' ');
+            config_stream.read(whole_config.data(), whole_config.size());
+
+            node = YAML::Load(whole_config);
         } catch (...) {
             serialize(false);
             return;

@@ -250,14 +250,16 @@ namespace eka2l1::common {
     std::int32_t directory_watcher_impl::watch(const std::string &folder, directory_watcher_callback callback,
         void *callback_userdata, const std::uint32_t masks) {
         const std::lock_guard<std::mutex> guard(lock_);
-        HANDLE h = FindFirstChangeNotificationA(folder.c_str(), TRUE, FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE);
+        const std::wstring folder_w = common::utf8_to_wstr(folder);
+
+        HANDLE h = FindFirstChangeNotificationW(folder_w.c_str(), TRUE, FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE);
 
         if (!h || h == INVALID_HANDLE_VALUE) {
             LOG_ERROR(COMMON, "Can't create directory watch of folder {}", folder);
             return 0;
         }
 
-        HANDLE dir_handle = CreateFileA(folder.c_str(), GENERIC_READ, FILE_LIST_DIRECTORY,
+        HANDLE dir_handle = CreateFileW(folder_w.c_str(), GENERIC_READ, FILE_LIST_DIRECTORY,
             nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
             nullptr);
 

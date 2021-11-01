@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/buffer.h>
+
 #include <utils/panic.h>
 #include <yaml-cpp/yaml.h>
 
@@ -33,7 +35,15 @@ namespace eka2l1::epoc {
         panic_node.reset();
 
         try {
-            panic_node = YAML::LoadFile("panic.json")["Panic"];
+            common::ro_std_file_stream panic_json_stream("panic.json", true);
+            if (!panic_json_stream.valid()) {
+                return false;
+            }
+
+            std::string whole_config(panic_json_stream.size(), ' ');
+            panic_json_stream.read(whole_config.data(), whole_config.size());
+
+            panic_node = YAML::Load(whole_config)["Panic"];
         } catch (...) {
             return false;
         }

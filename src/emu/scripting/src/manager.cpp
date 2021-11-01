@@ -220,7 +220,12 @@ namespace eka2l1::manager {
                 lua_State *new_state = luaL_newstate();
                 luaL_openlibs(new_state);
 
-                if (luaL_loadfile(new_state, name_full.c_str()) == LUA_OK) {
+                common::ro_std_file_stream script_stream(name_full, true);
+                std::string script_content(script_stream.size(), '0');
+
+                script_stream.read(script_content.data(), script_content.size());
+
+                if (luaL_loadbuffer(new_state, script_content.data(), script_content.size(), name.c_str()) == LUA_OK) {
                     modules.emplace(name.c_str(), std::make_shared<script_module>(new_state));
                 } else {
                     LOG_WARN(SCRIPTING, "Fail to load script {}, error {}", name, lua_tostring(new_state, -1));

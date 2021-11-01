@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/cvt.h>
 #include <common/path.h>
 #include <common/platform.h>
 
@@ -391,7 +392,8 @@ namespace eka2l1 {
 #if EKA2L1_PLATFORM(POSIX)
         mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 #elif EKA2L1_PLATFORM(WIN32)
-        CreateDirectoryA(path.c_str(), NULL);
+        const std::wstring wpath = common::utf8_to_wstr(path);
+        CreateDirectoryW(wpath.c_str(), NULL);
 #endif
     }
 
@@ -402,7 +404,8 @@ namespace eka2l1 {
 
         return res != -1;
 #elif EKA2L1_PLATFORM(WIN32)
-        DWORD dw_attrib = GetFileAttributesA(path.c_str());
+        const std::wstring wpath = common::utf8_to_wstr(path);
+        DWORD dw_attrib = GetFileAttributesW(wpath.c_str());
         return (dw_attrib != INVALID_FILE_ATTRIBUTES);
 #endif
     }
@@ -418,7 +421,8 @@ namespace eka2l1 {
 
         return S_ISDIR(st.st_mode);
 #elif EKA2L1_PLATFORM(WIN32)
-        DWORD dw_attrib = GetFileAttributesA(path.c_str());
+        const std::wstring wpath = common::utf8_to_wstr(path);
+        DWORD dw_attrib = GetFileAttributesW(wpath.c_str());
         return (dw_attrib != INVALID_FILE_ATTRIBUTES && (dw_attrib & FILE_ATTRIBUTE_DIRECTORY));
 #endif
     }
@@ -440,26 +444,34 @@ namespace eka2l1 {
 
     bool set_current_directory(const std::string &path) {
 #if EKA2L1_PLATFORM(WIN32)
-        return SetCurrentDirectory(path.c_str());
+        const std::wstring wpath = common::utf8_to_wstr(path);
+        return SetCurrentDirectoryW(wpath.c_str());
 #else
         return (chdir(path.c_str()) == 0);
 #endif
     }
 
     bool get_current_directory(std::string &path) {
-        char buffer[512];
-
 #if EKA2L1_PLATFORM(WIN32)
-        if (GetCurrentDirectoryA(sizeof(buffer), buffer) == 0) {
+        std::wstring buffer(512, L'0');
+        const DWORD written = GetCurrentDirectoryW(static_cast<DWORD>(buffer.length()), reinterpret_cast<wchar_t*>(buffer.data()));
+
+        if (written == 0) {
             return false;
         }
+
+        buffer.resize(written);
+        path = common::wstr_to_utf8(buffer);
 #else
+        char buffer[512];
+
         if (getcwd(buffer, sizeof(buffer)) == nullptr) {
             return false;
         }
-#endif
 
         path = std::string(buffer);
+#endif
+
         return true;
     }
 }

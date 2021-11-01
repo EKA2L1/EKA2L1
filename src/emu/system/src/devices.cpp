@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/buffer.h>
 #include <config/config.h>
 #include <system/devices.h>
 #include <yaml-cpp/yaml.h>
@@ -154,7 +155,16 @@ namespace eka2l1 {
         }
 
         try {
-            devices_node = std::move(YAML::LoadFile(add_path(conf->storage, "devices.yml")));
+            common::ro_std_file_stream devices_stream(add_path(conf->storage, "devices.yml"), true);
+            if (!devices_stream.valid()) {
+                LOG_ERROR(SYSTEM, "Devices file not found (or is invalid)!");
+                return;
+            }
+
+            std::string whole_config(devices_stream.size(), ' ');
+            devices_stream.read(whole_config.data(), whole_config.size());
+
+            devices_node = YAML::Load(whole_config);
         } catch (YAML::Exception exception) {
             return;
         }
@@ -205,9 +215,9 @@ namespace eka2l1 {
         }
 
         emitter << YAML::EndMap;
-        std::ofstream outdevicefile(add_path(conf->storage, "devices.yml"));
 
-        outdevicefile << emitter.c_str();
+        common::wo_std_file_stream outdevicefile(add_path(conf->storage, "devices.yml"), true);
+        outdevicefile.write(emitter.c_str(), emitter.size());
 
         return;
     }

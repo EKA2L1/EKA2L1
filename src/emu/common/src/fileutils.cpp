@@ -40,18 +40,16 @@
 #include <dirent.h>
 #endif
 
-#if EKA2L1_PLATFORM(UWP)
-#include <common/cvt.h>
-#endif
-
 #include <stack>
 #include <string.h>
 
 namespace eka2l1::common {
     std::int64_t file_size(const std::string &path) {
 #if EKA2L1_PLATFORM(WIN32)
-        WIN32_FIND_DATA data;
-        HANDLE h = FindFirstFileA(path.c_str(), &data);
+        const std::wstring path_w = common::utf8_to_wstr(path);
+
+        WIN32_FIND_DATAW data;
+        HANDLE h = FindFirstFileW(path_w.c_str(), &data);
 
         if (h == INVALID_HANDLE_VALUE) {
             return 0;
@@ -102,7 +100,8 @@ namespace eka2l1::common {
 
     file_type get_file_type(const std::string &path) {
 #if EKA2L1_PLATFORM(WIN32)
-        DWORD h = GetFileAttributesA(path.c_str());
+        const std::wstring path_w = common::utf8_to_wstr(path);
+        DWORD h = GetFileAttributesW(path_w.c_str());
 
         if (h == INVALID_FILE_ATTRIBUTES) {
             return FILE_INVALID;
@@ -163,7 +162,7 @@ namespace eka2l1::common {
             d = reinterpret_cast<decltype(d)>(find_data);
         };
 #elif EKA2L1_PLATFORM(WIN32)
-        find_data = new WIN32_FIND_DATA;
+        find_data = new WIN32_FIND_DATAW;
 
         std::string name_wildcard = name;
 
@@ -171,14 +170,16 @@ namespace eka2l1::common {
             name_wildcard += "\\*";
         }
 
-        handle = reinterpret_cast<void *>(FindFirstFileExA(name_wildcard.c_str(), FindExInfoBasic,
-            reinterpret_cast<LPWIN32_FIND_DATA>(find_data), FindExSearchNameMatch, NULL,
+        const std::wstring name_wildcard_w = common::utf8_to_wstr(name_wildcard);
+
+        handle = reinterpret_cast<void *>(FindFirstFileExW(name_wildcard_w.c_str(), FindExInfoBasic,
+            reinterpret_cast<LPWIN32_FIND_DATAW>(find_data), FindExSearchNameMatch, NULL,
             FIND_FIRST_EX_LARGE_FETCH));
 
         if (handle == INVALID_HANDLE_VALUE) {
             handle = nullptr;
 
-            WIN32_FIND_DATA *find_data_casted = reinterpret_cast<WIN32_FIND_DATA *>(find_data);
+            WIN32_FIND_DATAW *find_data_casted = reinterpret_cast<WIN32_FIND_DATAW *>(find_data);
             delete find_data_casted;
         }
 #endif
@@ -200,8 +201,8 @@ namespace eka2l1::common {
 
     void dir_iterator::cycles_to_next_entry() {
 #if EKA2L1_PLATFORM(WIN32)
-        DWORD result = FindNextFileA(reinterpret_cast<HANDLE>(handle),
-            reinterpret_cast<LPWIN32_FIND_DATA>(find_data));
+        DWORD result = FindNextFileW(reinterpret_cast<HANDLE>(handle),
+            reinterpret_cast<LPWIN32_FIND_DATAW>(find_data));
 
         if (result == 0) {
             result = GetLastError();
@@ -233,9 +234,9 @@ namespace eka2l1::common {
         }
 
 #if EKA2L1_PLATFORM(WIN32)
-        LPWIN32_FIND_DATA fdata_win32 = reinterpret_cast<decltype(fdata_win32)>(find_data);
+        LPWIN32_FIND_DATAW fdata_win32 = reinterpret_cast<decltype(fdata_win32)>(find_data);
 
-        entry.name = fdata_win32->cFileName;
+        entry.name = common::wstr_to_utf8(fdata_win32->cFileName);
 
         if (detail) {
             entry.size = (fdata_win32->nFileSizeLow | (__int64)fdata_win32->nFileSizeHigh << 32);
@@ -243,7 +244,7 @@ namespace eka2l1::common {
         }
 
         cycles_to_next_entry();
-        fdata_win32 = reinterpret_cast<LPWIN32_FIND_DATA>(find_data);
+        fdata_win32 = reinterpret_cast<LPWIN32_FIND_DATAW>(find_data);
 #elif EKA2L1_PLATFORM(POSIX)
         struct dirent *d = reinterpret_cast<decltype(d)>(find_data);
         entry.name = d->d_name;
@@ -275,7 +276,8 @@ namespace eka2l1::common {
         std::u16string path_ucs2 = common::utf8_to_ucs2(path);
         HANDLE h = CreateFile2(path_ucs2.c_str(), GENERIC_WRITE, 0, OPEN_EXISTING, nullptr);
 #else
-        HANDLE h = CreateFileA(path.c_str(), GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
+        const std::wstring path_w = common::utf8_to_wstr(path);
+        HANDLE h = CreateFileW(path_w.c_str(), GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
             nullptr);
 #endif
 
@@ -320,11 +322,13 @@ namespace eka2l1::common {
 
     bool remove(const std::string &path) {
 #if EKA2L1_PLATFORM(WIN32)
-        if (path.back() == '\\' || path.back() == '/') {
-            return RemoveDirectoryA(path.c_str());
+        const std::wstring path_w = common::utf8_to_wstr(path);
+
+        if (path_w.back() == L'\\' || path_w.back() == L'/') {
+            return RemoveDirectoryW(path_w.c_str());
         }
 
-        return DeleteFileA(path.c_str());
+        return DeleteFileW(path_w.c_str());
 #else
         return (::remove(path.c_str()) == 0);
 #endif
@@ -332,7 +336,10 @@ namespace eka2l1::common {
 
     bool move_file(const std::string &path, const std::string &new_path) {
 #if EKA2L1_PLATFORM(WIN32)
-        return MoveFileA(path.c_str(), new_path.c_str());
+        const std::wstring path_s_w = common::utf8_to_wstr(path);
+        const std::wstring path_d_w = common::utf8_to_wstr(new_path);
+
+        return MoveFileW(path_s_w.c_str(), path_d_w.c_str());
 #else
         return (rename(path.c_str(), new_path.c_str()) == 0);
 #endif
@@ -340,7 +347,10 @@ namespace eka2l1::common {
 
     bool copy_file(const std::string &target_file, const std::string &dest, const bool overwrite_if_dest_exists) {
 #if EKA2L1_PLATFORM(WIN32)
-        return CopyFile(target_file.c_str(), dest.c_str(), !overwrite_if_dest_exists);
+        const std::wstring path_s_w = common::utf8_to_wstr(target_file);
+        const std::wstring path_d_w = common::utf8_to_wstr(dest);
+
+        return CopyFileW(path_s_w.c_str(), path_d_w.c_str(), !overwrite_if_dest_exists);
 #else
         if (!eka2l1::exists(target_file)) {
             return false;
@@ -364,8 +374,10 @@ namespace eka2l1::common {
 
     std::uint64_t get_last_modifiy_since_ad(const std::u16string &path) {
 #if EKA2L1_PLATFORM(WIN32)
+        const std::wstring path_w = common::ucs2_to_wstr(path);
+
         WIN32_FILE_ATTRIBUTE_DATA attrib_data;
-        if (GetFileAttributesExW(reinterpret_cast<const LPCWSTR>(path.c_str()), GetFileExInfoStandard, &attrib_data) == false) {
+        if (GetFileAttributesExW(path_w.c_str(), GetFileExInfoStandard, &attrib_data) == false) {
             return 0xFFFFFFFFFFFFFFFF;
         }
 
