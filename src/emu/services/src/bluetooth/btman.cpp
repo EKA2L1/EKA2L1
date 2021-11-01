@@ -21,6 +21,7 @@
 #include <services/bluetooth/protocols/overall.h>
 #include <services/socket/server.h>
 
+#include <config/config.h>
 #include <system/epoc.h>
 #include <utils/err.h>
 
@@ -38,6 +39,12 @@ namespace eka2l1 {
         socket_server *ssock = reinterpret_cast<socket_server *>(kern->get_by_name<service::server>(
             get_socket_server_name_by_epocver(kern->get_epoc_version())));
 
+        config::state *conf = sys->get_config();
+
+        if (conf) {
+            mid_.device_name(common::utf8_to_ucs2(conf->device_display_name));
+        }
+
         if (ssock) {
             epoc::bt::add_bluetooth_stack_protocols(ssock, &mid_, is_oldarch());
         }
@@ -46,6 +53,10 @@ namespace eka2l1 {
     void btman_server::connect(service::ipc_context &context) {
         create_session<btman_client_session>(&context);
         context.complete(epoc::error_none);
+    }
+
+    void btman_server::device_name(const std::u16string &new_name) {
+        mid_.device_name(new_name);
     }
 
     bool btman_server::is_oldarch() {

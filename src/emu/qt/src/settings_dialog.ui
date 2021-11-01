@@ -29,7 +29,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="general_widget">
       <attribute name="title">
@@ -690,41 +690,7 @@
           <string>Properties</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_9">
-          <item row="3" column="0">
-           <layout class="QHBoxLayout" name="system_prop_imei_layout" stretch="1,2,2">
-            <item>
-             <widget class="QLabel" name="system_prop_imei_label">
-              <property name="text">
-               <string notr="true">IMEI</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLineEdit" name="system_prop_imei_edit">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="system_prop_imei_check_btn">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>Check</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item row="1" column="0">
+          <item row="4" column="0">
            <layout class="QHBoxLayout" name="system_prop_batlvl_layout" stretch="1,2,1">
             <item>
              <widget class="QLabel" name="system_prop_bat_label">
@@ -764,7 +730,7 @@
             </item>
            </layout>
           </item>
-          <item row="0" column="0">
+          <item row="3" column="0">
            <layout class="QHBoxLayout" name="system_prop_lang_layout" stretch="1,2">
             <item>
              <widget class="QLabel" name="system_prop_lang_label">
@@ -781,6 +747,73 @@
             </item>
             <item>
              <widget class="QComboBox" name="system_prop_lang_combobox"/>
+            </item>
+           </layout>
+          </item>
+          <item row="6" column="0">
+           <layout class="QHBoxLayout" name="system_prop_imei_layout" stretch="1,2,2">
+            <item>
+             <widget class="QLabel" name="system_prop_imei_label">
+              <property name="text">
+               <string notr="true">IMEI</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="system_prop_imei_edit">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="system_prop_imei_check_btn">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Check</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="0">
+           <layout class="QHBoxLayout" name="system_friendly_phone_name_layout" stretch="1,2">
+            <item>
+             <widget class="QLabel" name="system_friendly_phone_name_label">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</string>
+              </property>
+              <property name="text">
+               <string>Friendly phone name</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="system_friendly_phone_name_edit">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maxLength">
+               <number>30</number>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>

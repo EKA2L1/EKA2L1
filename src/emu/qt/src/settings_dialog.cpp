@@ -38,6 +38,7 @@
 #include <services/window/classes/wingroup.h>
 #include <services/window/screen.h>
 #include <services/window/window.h>
+#include <services/bluetooth/btman.h>
 
 #include <system/devices.h>
 #include <system/epoc.h>
@@ -252,11 +253,12 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
         ui_->system_he_rta_combo->setCurrentIndex(RTA_HIGH_INDEX);
     }
 
-    ui_->system_prop_imei_edit->setText(QString::fromUtf8(configuration_.imei.c_str()));
+    ui_->system_prop_imei_edit->setText(QString::fromStdString(configuration_.imei));
     ui_->system_audio_vol_slider->setValue(configuration_.audio_master_volume);
     ui_->system_audio_current_val_label->setText(QString("%1").arg(configuration_.audio_master_volume));
     ui_->system_screen_buffer_sync_combo->setCurrentIndex(static_cast<int>(configuration_.screen_buffer_sync));
     ui_->emulator_display_disable_content_scale->setChecked(configuration_.disable_display_content_scale);
+    ui_->system_friendly_phone_name_edit->setText(QString::fromStdString(configuration_.device_display_name));
 
     QSettings settings;
     ui_->interface_status_bar_checkbox->setChecked(settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
@@ -373,6 +375,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->system_general_rescan_dvcs_btn, &QPushButton::clicked, this, &settings_dialog::on_device_rescan_requested);
     connect(ui_->system_prop_bat_slider, &QSlider::valueChanged, this, &settings_dialog::on_system_battery_slider_value_moved);
     connect(ui_->system_prop_imei_check_btn, &QPushButton::clicked, this, &settings_dialog::on_check_imei_validity_clicked);
+    connect(ui_->system_friendly_phone_name_edit, &QLineEdit::textEdited, this, &settings_dialog::on_friendly_phone_name_edited);
     connect(ui_->system_audio_vol_slider, &QSlider::valueChanged, this, &settings_dialog::on_master_volume_value_changed);
     connect(ui_->system_screen_buffer_sync_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_screen_buffer_sync_option_changed);
 
@@ -1171,4 +1174,14 @@ void settings_dialog::on_screen_buffer_sync_option_changed(int index) {
 
 void settings_dialog::on_disable_scale_display_content_toggled(bool val) {
     configuration_.disable_display_content_scale = val;
+}
+
+void settings_dialog::on_friendly_phone_name_edited(const QString &text) {
+    configuration_.device_display_name = text.toStdString();
+    eka2l1::kernel_system *kern = system_->get_kernel_system();
+
+    eka2l1::btman_server *serv = kern->get_by_name<eka2l1::btman_server>(eka2l1::get_btman_server_name_by_epocver(kern->get_epoc_version()));
+    if (serv) {
+        serv->device_name(text.toStdU16String());
+    }
 }

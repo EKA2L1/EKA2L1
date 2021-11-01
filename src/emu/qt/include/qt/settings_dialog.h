@@ -112,6 +112,7 @@ private slots:
     void on_device_rename_requested();
     void on_device_rescan_requested();
     void on_device_validate_requested();
+    void on_friendly_phone_name_edited(const QString &text);
     void on_rta_combo_choose(const int index);
     void on_system_language_choose(const int index);
     void on_system_battery_slider_value_moved(int value);

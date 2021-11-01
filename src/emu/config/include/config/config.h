@@ -118,6 +118,7 @@ namespace eka2l1::config {
         std::string mmc_id{ DEFAULT_MMC_ID };
         std::string current_keybind_profile{ "default" };
         std::string screen_buffer_sync_string{ "preferred" };
+        std::string device_display_name{ "EKA2L1" };
 
         screen_buffer_sync_option screen_buffer_sync{ screen_buffer_sync_option_preferred };
 

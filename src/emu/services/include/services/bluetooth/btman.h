@@ -34,6 +34,7 @@ namespace eka2l1 {
     public:
         explicit btman_server(eka2l1::system *sys);
         void connect(service::ipc_context &context) override;
+        void device_name(const std::u16string &new_name);
 
         bool is_oldarch();
     };
