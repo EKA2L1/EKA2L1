@@ -85,6 +85,8 @@ namespace eka2l1::drivers {
         init_gl_graphics_library(context_->gl_mode());
         list_queue.max_pending_count_ = 128;
 
+        context_->set_swap_interval(1);
+
         is_gles = (context_->gl_mode() == graphics::gl_context::mode::opengl_es);
 
         GLint major_gl = 0;
