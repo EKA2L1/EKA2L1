@@ -15,7 +15,6 @@ add_library(drivers
         include/drivers/audio/backend/cubeb/stream_cubeb.h
         include/drivers/audio/backend/ffmpeg/dsp_ffmpeg.h
         include/drivers/audio/backend/ffmpeg/player_ffmpeg.h
-        include/drivers/audio/backend/wmf/player_wmf.h
         include/drivers/audio/backend/dsp_shared.h
         include/drivers/audio/backend/player_shared.h
         include/drivers/hwrm/backend/vibration_null.h
@@ -46,7 +45,6 @@ add_library(drivers
         src/audio/backend/cubeb/stream_cubeb.cpp
         src/audio/backend/ffmpeg/dsp_ffmpeg.cpp
         src/audio/backend/ffmpeg/player_ffmpeg.cpp
-        src/audio/backend/wmf/player_wmf.cpp
         src/audio/backend/dsp_shared.cpp
         src/audio/backend/player_shared.cpp
         src/hwrm/backend/vibration_null.cpp
@@ -84,6 +82,10 @@ endif()
 
 if(WIN32)
     target_sources(drivers PRIVATE
+        include/drivers/audio/backend/wmf/player_wmf.h
+        include/drivers/audio/backend/wmf/wmf_loader.h
+        src/audio/backend/wmf/wmf_loader.cpp
+        src/audio/backend/wmf/player_wmf.cpp
         src/graphics/backend/context_wgl.cpp
         src/graphics/backend/context_wgl.h
     )

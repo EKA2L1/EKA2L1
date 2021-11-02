@@ -20,13 +20,10 @@
 #include <common/platform.h>
 
 #if EKA2L1_PLATFORM(WIN32)
-
-#pragma comment(lib, "Mf.lib")
-#pragma comment(lib, "Mfplat.lib")
-#pragma comment(lib, "Mfreadwrite.lib")
 #pragma comment(lib, "Mfuuid.lib")
 #pragma comment(lib, "Propsys.lib")
 
+#include <drivers/audio/backend/wmf/wmf_loader.h>
 #include <drivers/audio/backend/wmf/player_wmf.h>
 
 #include <common/buffer.h>
@@ -237,7 +234,7 @@ namespace eka2l1::drivers {
     player_wmf::player_wmf(audio_driver *driver)
         : player_shared(driver) {
         // Startup media foundation!
-        MFStartup(MF_VERSION);
+        loader::MFStartup(MF_VERSION, 0);
     }
 
     void player_wmf::get_more_data(player_request_instance &request) {
@@ -321,7 +318,7 @@ namespace eka2l1::drivers {
         IMFMediaType *partial_type = nullptr;
 
         // We want to set our output type to PCM16
-        HRESULT hr = MFCreateMediaType(&partial_type);
+        HRESULT hr = loader::MFCreateMediaType(&partial_type);
 
         if (!SUCCEEDED(hr)) {
             LOG_ERROR(DRIVER_AUD, "Unable to create new media type to specify output stream to PCM16");
@@ -431,7 +428,7 @@ namespace eka2l1::drivers {
     static bool create_source_reader_and_configure(player_wmf_request *request_wmf) {
         const std::u16string url_16 = common::utf8_to_ucs2(request_wmf->url_);
 
-        HRESULT hr = MFCreateSourceReaderFromURL(
+        HRESULT hr = loader::MFCreateSourceReaderFromURL(
             reinterpret_cast<LPCWSTR>(url_16.c_str()), nullptr, &request_wmf->reader_);
 
         if (!SUCCEEDED(hr)) {
@@ -558,7 +555,7 @@ namespace eka2l1::drivers {
         const std::string url_new = eka2l1::file_directory(request_wmf->url_) + eka2l1::filename(request_wmf->url_) + "_temp" + eka2l1::path_extension(request_wmf->url_);
         const std::u16string url_16_new = common::utf8_to_ucs2(url_new);
 
-        HRESULT result = MFCreateSinkWriterFromURL(reinterpret_cast<LPCWSTR>(url_16_new.c_str()), nullptr, nullptr, &request_wmf->writer_);
+        HRESULT result = loader::MFCreateSinkWriterFromURL(reinterpret_cast<LPCWSTR>(url_16_new.c_str()), nullptr, nullptr, &request_wmf->writer_);
         if (result != S_OK) {
             LOG_ERROR(DRIVER_AUD, "Unable to create sink writer to do cropping!");
             return false;
@@ -626,9 +623,9 @@ namespace eka2l1::drivers {
 
         request_wmf->encoding_ = enc;
 
-        if (FAILED(MFTranscodeGetAudioOutputAvailableTypes(codec_guid, MFT_ENUM_FLAG_ALL, nullptr, &request_wmf->output_supported_list_))) {
+        if (FAILED(loader::MFTranscodeGetAudioOutputAvailableTypes(codec_guid, MFT_ENUM_FLAG_ALL, nullptr, &request_wmf->output_supported_list_))) {
             // Create an independent output media type. It seems this format supports anykind of encode we throw it in
-            if (FAILED(MFCreateMediaType(&request_wmf->output_type_))) {
+            if (FAILED(loader::MFCreateMediaType(&request_wmf->output_type_))) {
                 return false;
             }
 
@@ -755,11 +752,11 @@ namespace eka2l1::drivers {
         IMFByteStream *stream = nullptr;
 
         if (request_wmf->custom_stream_) {
-            if (!SUCCEEDED(MFCreateMFByteStreamOnStream(request_wmf->custom_stream_, &stream))) {
+            if (!SUCCEEDED(loader::MFCreateMFByteStreamOnStream(request_wmf->custom_stream_, &stream))) {
                 return false;
             }
 
-            HRESULT hr = MFCreateSourceReaderFromByteStream(stream, nullptr, &request_wmf->reader_);
+            HRESULT hr = loader::MFCreateSourceReaderFromByteStream(stream, nullptr, &request_wmf->reader_);
 
             if (!SUCCEEDED(hr)) {
                 LOG_ERROR(DRIVER_AUD, "Unable to queue new custom stream (can't open source reader)");

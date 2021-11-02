@@ -22,6 +22,10 @@
 #include <drivers/audio/backend/wmf/player_wmf.h>
 #include <drivers/audio/player.h>
 
+#if EKA2L1_PLATFORM(WIN32)
+#include <drivers/audio/backend/wmf/wmf_loader.h>
+#endif
+
 #include <cstring>
 
 namespace eka2l1::drivers {
@@ -66,9 +70,10 @@ namespace eka2l1::drivers {
 
     player_type get_suitable_player_type() {
 #if EKA2L1_PLATFORM(WIN32)
-        return player_type_wmf;
-#else
-        return player_type_ffmpeg;
+        if (loader::init_mf()) {
+            return player_type_wmf;
+        }
 #endif
+        return player_type_ffmpeg;
     }
 }
