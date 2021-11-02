@@ -132,8 +132,8 @@ public class ProfilesManager {
             }
         }
         if (params == null && defProfile != null) {
-            FileUtils.copyFiles(new File(Emulator.getProfilesDir(), defProfile), dir, null);
-            try (FileReader reader = new FileReader(file)) {
+            File defFile = new File(Emulator.getProfilesDir() + defProfile, Emulator.APP_CONFIG_FILE);
+            try (FileReader reader = new FileReader(defFile)) {
                 params = gson.fromJson(reader, ProfileModel.class);
                 params.dir = dir;
             } catch (Exception e) {
@@ -142,7 +142,6 @@ public class ProfilesManager {
         }
         if (params == null) {
             params = new ProfileModel(dir);
-            saveConfig(params);
         }
         return params;
     }

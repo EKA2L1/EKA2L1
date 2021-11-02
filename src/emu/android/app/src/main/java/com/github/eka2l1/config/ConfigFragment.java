@@ -153,7 +153,7 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.activity_config, container, false);
+        View view = inflater.inflate(R.layout.fragment_config, container, false);
         rootContainer = view.findViewById(R.id.configRoot);
         etScreenRefreshRate = view.findViewById(R.id.etScreenRefreshRate);
         etSystemTimeDelay = view.findViewById(R.id.etSystemTimeDelay);

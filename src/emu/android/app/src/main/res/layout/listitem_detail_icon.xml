@@ -14,7 +14,6 @@
         android:layout_marginStart="10dp"
         android:layout_marginTop="0dp"
         android:layout_marginEnd="10dp"
-        android:layout_marginRight="10dp"
         app:srcCompat="@android:drawable/sym_def_app_icon" />
 
     <LinearLayout

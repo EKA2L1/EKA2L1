@@ -37,8 +37,11 @@ import androidx.fragment.app.ListFragment;
 
 import com.github.eka2l1.R;
 import com.github.eka2l1.emu.Emulator;
+import com.github.eka2l1.util.FileUtils;
 
 import static com.github.eka2l1.emu.Constants.KEY_RESTART;
+
+import java.io.File;
 
 public class PackageListFragment extends ListFragment {
     private AppsListAdapter adapter;
@@ -85,6 +88,10 @@ public class PackageListFragment extends ListFragment {
         if (item.getItemId() == R.id.action_context_remove) {
             Emulator.uninstallPackage((int) appItem.getUid(), (int) appItem.getExtIndex());
             preparePackages();
+            String uidStr = Long.toHexString(appItem.getUid()).toUpperCase();
+            File configDir = new File(Emulator.getConfigsDir(), uidStr);
+            FileUtils.deleteDirectory(configDir);
+
             Toast.makeText(getContext(), R.string.completed, Toast.LENGTH_SHORT).show();
             getParentFragmentManager().setFragmentResult(KEY_RESTART, new Bundle());
         }
