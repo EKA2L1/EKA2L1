@@ -97,6 +97,12 @@ jobs:
 
       - name: CMake build
         run: cmake --build build --config ${{ matrix.config }} --parallel 2 --target eka2l1_qt
+      
+      - name: Generate AppImage
+        run: |
+          chmod u+x scripts/generate_appimage.sh
+          ./scripts/generate_appimage.sh
+        if: matrix.os == 'ubuntu-latest'
 
       - name: Compute git short sha
         id: git_short_sha
@@ -106,13 +112,27 @@ jobs:
         with:
           name: eka2l1-${{ steps.git_short_sha.outputs.value }}-${{ matrix.os }}
           path: build/bin
+        if: matrix.os != 'ubuntu-latest'
 
-      - name: Zip Artifacts
+      - uses: actions/upload-artifact@v2
+        with:
+          name: eka2l1-${{ steps.git_short_sha.outputs.value }}-${{ matrix.os }}
+          path: build/eka2l1-qt-x64.AppImage
+        if: matrix.os == 'ubuntu-latest'
+
+      - name: Zip Artifacts (Non-Linux)
         uses: papeloto/action-zip@v1
         with:
           files: build/bin
           dest: ${{ matrix.os }}.zip
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master' && matrix.os != 'ubuntu-latest'
+
+      - name: Zip Artifacts (Linux)
+        uses: papeloto/action-zip@v1
+        with:
+          files: buid/eka2l1-qt-x64.AppImage
+          dest: ${{ matrix.os }}.zip
+        if: github.ref == 'refs/heads/master' && matrix.os == 'ubuntu-latest'
 
       - name: Update the CI tag
         uses: Xotl/cool-github-releases@v1
