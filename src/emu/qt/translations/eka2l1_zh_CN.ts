@@ -904,7 +904,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="798"/>
       <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
-      <translation type="unfinished">The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</translation>
+      <translation>将在模拟器应用或游戏中显示的名称。最多允许30个字符。</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="801"/>
