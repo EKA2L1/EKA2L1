@@ -770,8 +770,8 @@
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="523"/>
-      <location filename="../src/settings_dialog.ui" line="761"/>
-      <location filename="../src/settings_dialog.ui" line="1582"/>
+      <location filename="../src/settings_dialog.ui" line="727"/>
+      <location filename="../src/settings_dialog.ui" line="1615"/>
       <source>0</source>
       <translation type="unfinished">0</translation>
     </message>
@@ -787,7 +787,7 @@
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="575"/>
-      <location filename="../src/settings_dialog.ui" line="900"/>
+      <location filename="../src/settings_dialog.ui" line="933"/>
       <source>Rename</source>
       <translation>Adlandır</translation>
     </message>
@@ -862,351 +862,361 @@
       <translation type="unfinished">Properties</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="721"/>
+      <location filename="../src/settings_dialog.ui" line="781"/>
       <source>Check</source>
       <translation type="unfinished">Check</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="732"/>
+      <location filename="../src/settings_dialog.ui" line="698"/>
       <source>Battery level (0 - 100)</source>
       <translation type="unfinished">Battery level (0 - 100)</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="778"/>
+      <location filename="../src/settings_dialog.ui" line="744"/>
       <source>System language</source>
       <translation type="unfinished">System language</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="793"/>
+      <location filename="../src/settings_dialog.ui" line="826"/>
       <source>Graphics</source>
       <translation type="unfinished">Graphics</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="805"/>
+      <location filename="../src/settings_dialog.ui" line="838"/>
       <source>Screen buffer sync</source>
       <translation type="unfinished">Screen buffer sync</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="819"/>
+      <location filename="../src/settings_dialog.ui" line="852"/>
       <source>Preferred</source>
       <translation type="unfinished">Preferred</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="829"/>
+      <location filename="../src/settings_dialog.ui" line="862"/>
       <source>Enable</source>
       <translation type="unfinished">Enable</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="824"/>
+      <location filename="../src/settings_dialog.ui" line="857"/>
       <source>Disable</source>
       <translation type="unfinished">Disable</translation>
     </message>
     <message>
+      <location filename="../src/settings_dialog.ui" line="798"/>
+      <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
+      <translation type="unfinished">The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</translation>
+    </message>
+    <message>
       <location filename="../src/settings_dialog.ui" line="801"/>
+      <source>Friendly phone name</source>
+      <translation type="unfinished">Friendly phone name</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="834"/>
       <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
       <translation type="unfinished">This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="849"/>
+      <location filename="../src/settings_dialog.ui" line="882"/>
       <source>Control</source>
       <translation>Kontrol</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="864"/>
+      <location filename="../src/settings_dialog.ui" line="897"/>
       <source>Profile</source>
       <translation type="unfinished">Profile</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="887"/>
+      <location filename="../src/settings_dialog.ui" line="920"/>
       <source>Add</source>
       <translation type="unfinished">Add</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="913"/>
+      <location filename="../src/settings_dialog.ui" line="946"/>
       <source>Delete</source>
       <translation type="unfinished">Delete</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="932"/>
+      <location filename="../src/settings_dialog.ui" line="965"/>
       <source>Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</source>
       <translation type="unfinished">Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="950"/>
+      <location filename="../src/settings_dialog.ui" line="983"/>
       <source>Left softkey</source>
       <translation type="unfinished">Left softkey</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="988"/>
+      <location filename="../src/settings_dialog.ui" line="1021"/>
       <source>Up arrow</source>
       <translation type="unfinished">Up arrow</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1020"/>
+      <location filename="../src/settings_dialog.ui" line="1053"/>
       <source>Right softkey</source>
       <translation type="unfinished">Right softkey</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1056"/>
+      <location filename="../src/settings_dialog.ui" line="1089"/>
       <source>Left arrow</source>
       <translation type="unfinished">Left arrow</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1088"/>
+      <location filename="../src/settings_dialog.ui" line="1121"/>
       <source>Middle softkey</source>
       <translation type="unfinished">Middle softkey</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1120"/>
+      <location filename="../src/settings_dialog.ui" line="1153"/>
       <source>Right arrow</source>
       <translation type="unfinished">Right arrow</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1156"/>
+      <location filename="../src/settings_dialog.ui" line="1189"/>
       <source>Green softkey</source>
       <translation type="unfinished">Green softkey</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1188"/>
+      <location filename="../src/settings_dialog.ui" line="1221"/>
       <source>Down arrow</source>
       <translation type="unfinished">Down arrow</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1220"/>
+      <location filename="../src/settings_dialog.ui" line="1253"/>
       <source>Red softkey</source>
       <translation type="unfinished">Red softkey</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1256"/>
+      <location filename="../src/settings_dialog.ui" line="1289"/>
       <source>1</source>
       <translation type="unfinished">1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1288"/>
+      <location filename="../src/settings_dialog.ui" line="1321"/>
       <source>2</source>
       <translation type="unfinished">2</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1320"/>
+      <location filename="../src/settings_dialog.ui" line="1353"/>
       <source>3</source>
       <translation type="unfinished">3</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1356"/>
+      <location filename="../src/settings_dialog.ui" line="1389"/>
       <source>4</source>
       <translation type="unfinished">4</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1388"/>
+      <location filename="../src/settings_dialog.ui" line="1421"/>
       <source>5</source>
       <translation type="unfinished">5</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1420"/>
+      <location filename="../src/settings_dialog.ui" line="1453"/>
       <source>6</source>
       <translation type="unfinished">6</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1450"/>
+      <location filename="../src/settings_dialog.ui" line="1483"/>
       <source>7</source>
       <translation type="unfinished">7</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1482"/>
+      <location filename="../src/settings_dialog.ui" line="1515"/>
       <source>8</source>
       <translation type="unfinished">8</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1514"/>
+      <location filename="../src/settings_dialog.ui" line="1547"/>
       <source>9</source>
       <translation type="unfinished">9</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1550"/>
+      <location filename="../src/settings_dialog.ui" line="1583"/>
       <source>*</source>
       <translation type="unfinished">*</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1614"/>
+      <location filename="../src/settings_dialog.ui" line="1647"/>
       <source>#</source>
       <translation type="unfinished">#</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="408"/>
+      <location filename="../src/settings_dialog.cpp" line="411"/>
       <source>Choose the data folder</source>
       <translation type="unfinished">Choose the data folder</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="410"/>
-      <location filename="../src/settings_dialog.cpp" line="1086"/>
-      <location filename="../src/settings_dialog.cpp" line="1111"/>
+      <location filename="../src/settings_dialog.cpp" line="413"/>
+      <location filename="../src/settings_dialog.cpp" line="1089"/>
+      <location filename="../src/settings_dialog.cpp" line="1114"/>
       <source>Relaunch needed</source>
       <translation type="unfinished">Relaunch needed</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="410"/>
+      <location filename="../src/settings_dialog.cpp" line="413"/>
       <source>This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</source>
       <translation type="unfinished">This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="528"/>
+      <location filename="../src/settings_dialog.cpp" line="531"/>
       <source>Please wait</source>
       <translation type="unfinished">Please wait</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="529"/>
+      <location filename="../src/settings_dialog.cpp" line="532"/>
       <source>Validation is in process. Please do not exit or launch applications until this operation is done.</source>
       <translation type="unfinished">Validation is in process. Please do not exit or launch applications until this operation is done.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="549"/>
+      <location filename="../src/settings_dialog.cpp" line="552"/>
       <source>Validation done!</source>
       <translation type="unfinished">Validation done!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="549"/>
+      <location filename="../src/settings_dialog.cpp" line="552"/>
       <source>The validation has successfully completed!</source>
       <translation type="unfinished">The validation has successfully completed!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="560"/>
+      <location filename="../src/settings_dialog.cpp" line="563"/>
       <source>Enter new device name</source>
       <translation type="unfinished">Enter new device name</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="657"/>
+      <location filename="../src/settings_dialog.cpp" line="660"/>
       <source>Unbind</source>
       <translation type="unfinished">Unbind</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="702"/>
+      <location filename="../src/settings_dialog.cpp" line="705"/>
       <source>Waiting for input</source>
       <translation type="unfinished">Waiting for input</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="717"/>
-      <location filename="../src/settings_dialog.cpp" line="763"/>
+      <location filename="../src/settings_dialog.cpp" line="720"/>
+      <location filename="../src/settings_dialog.cpp" line="766"/>
       <source>Mouse button %1</source>
       <translation type="unfinished">Mouse button %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="719"/>
-      <location filename="../src/settings_dialog.cpp" line="805"/>
+      <location filename="../src/settings_dialog.cpp" line="722"/>
+      <location filename="../src/settings_dialog.cpp" line="808"/>
       <source>Controller %1 : Button %2</source>
       <translation type="unfinished">Controller %1 : Button %2</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="830"/>
-      <location filename="../src/settings_dialog.cpp" line="854"/>
+      <location filename="../src/settings_dialog.cpp" line="833"/>
+      <location filename="../src/settings_dialog.cpp" line="857"/>
       <source>Enter profile name</source>
       <translation type="unfinished">Enter profile name</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="838"/>
+      <location filename="../src/settings_dialog.cpp" line="841"/>
       <source>Profile creation failed</source>
       <translation type="unfinished">Profile creation failed</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="838"/>
-      <location filename="../src/settings_dialog.cpp" line="862"/>
+      <location filename="../src/settings_dialog.cpp" line="841"/>
+      <location filename="../src/settings_dialog.cpp" line="865"/>
       <source>A profile with that name already exists!</source>
       <translation type="unfinished">A profile with that name already exists!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="862"/>
+      <location filename="../src/settings_dialog.cpp" line="865"/>
       <source>Profile rename failed</source>
       <translation type="unfinished">Profile rename failed</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="877"/>
+      <location filename="../src/settings_dialog.cpp" line="880"/>
       <source>Profile deletion failed</source>
       <translation type="unfinished">Profile deletion failed</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="877"/>
+      <location filename="../src/settings_dialog.cpp" line="880"/>
       <source>This is the only profile left!</source>
       <translation type="unfinished">This is the only profile left!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="915"/>
+      <location filename="../src/settings_dialog.cpp" line="918"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
       <translation type="unfinished">&lt;b&gt;Configuration for:&lt;/b&gt; %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="918"/>
-      <location filename="../src/settings_dialog.cpp" line="923"/>
+      <location filename="../src/settings_dialog.cpp" line="921"/>
+      <location filename="../src/settings_dialog.cpp" line="926"/>
       <source>None</source>
       <translation type="unfinished">None</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1013"/>
+      <location filename="../src/settings_dialog.cpp" line="1016"/>
       <source>IMEI sequence contains non-numeric character!</source>
       <translation>IMEI sayısal olmayan karakter içeriyor!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1016"/>
+      <location filename="../src/settings_dialog.cpp" line="1019"/>
       <source>IMEI sequence has invalid sum!</source>
       <translation>IMEI geçersiz sağlama toplamı içeriyor!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1019"/>
+      <location filename="../src/settings_dialog.cpp" line="1022"/>
       <source>IMEI sequence length must be 15!</source>
       <translation>IMEI numarası 15 haneli olmalıdır!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1025"/>
+      <location filename="../src/settings_dialog.cpp" line="1028"/>
       <source>Unidentified error!</source>
       <translation type="unfinished">Unidentified error!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1032"/>
+      <location filename="../src/settings_dialog.cpp" line="1035"/>
       <source>IMEI valid!</source>
       <translation type="unfinished">IMEI valid!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1032"/>
+      <location filename="../src/settings_dialog.cpp" line="1035"/>
       <source>The IMEI sequence is valid!</source>
       <translation type="unfinished">The IMEI sequence is valid!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1035"/>
+      <location filename="../src/settings_dialog.cpp" line="1038"/>
       <source>IMEI invalid!</source>
       <translation type="unfinished">IMEI invalid!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1045"/>
+      <location filename="../src/settings_dialog.cpp" line="1048"/>
       <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
       <translation type="unfinished">Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1047"/>
+      <location filename="../src/settings_dialog.cpp" line="1050"/>
       <source>Cancel closing</source>
       <translation type="unfinished">Cancel closing</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1086"/>
+      <location filename="../src/settings_dialog.cpp" line="1089"/>
       <source>This change will be effective on the next launch of the emulator.</source>
       <translation type="unfinished">This change will be effective on the next launch of the emulator.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1094"/>
+      <location filename="../src/settings_dialog.cpp" line="1097"/>
       <source>Confirmation</source>
       <translation type="unfinished">Confirmation</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1094"/>
+      <location filename="../src/settings_dialog.cpp" line="1097"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
       <translation type="unfinished">Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1111"/>
+      <location filename="../src/settings_dialog.cpp" line="1114"/>
       <source>The language will be updated on the next launch of the emulator.</source>
       <translation type="unfinished">The language will be updated on the next launch of the emulator.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1138"/>
+      <location filename="../src/settings_dialog.cpp" line="1141"/>
       <source>Pick the screen background color</source>
       <translation type="unfinished">Pick the screen background color</translation>
     </message>
