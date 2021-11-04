@@ -26,26 +26,26 @@
 #include <common/linked.h>
 #include <common/region.h>
 
+namespace eka2l1 {
+    struct fbsbitmap;
+
+    namespace drivers {
+        class graphics_command_list_builder;
+    }
+}
+
 namespace eka2l1::epoc {
     struct graphic_context;
     struct window_group;
     struct dsa;
 
-    struct window_user_base : public epoc::window {
-        explicit window_user_base(window_server_client_ptr client, screen *scr, window *parent, const window_kind kind);
+    struct canvas_interface {
         virtual std::uint32_t redraw_priority(int *shift = nullptr) = 0;
         virtual eka2l1::vec2 absolute_position() const = 0;
+        virtual eka2l1::vec2 get_origin() = 0;
     };
 
-    struct window_top_user : public window_user_base {
-        explicit window_top_user(window_server_client_ptr client, screen *scr, window *parent);
-        std::uint32_t redraw_priority(int *shift = nullptr) override;
-
-        eka2l1::vec2 get_origin() override;
-        eka2l1::vec2 absolute_position() const override;
-    };
-
-    struct window_user : public window_user_base {
+    struct canvas_base : public epoc::window, public canvas_interface {
         epoc::display_mode dmode;
         epoc::window_type win_type;
 
@@ -64,10 +64,7 @@ namespace eka2l1::epoc {
         eka2l1::vec2 cursor_pos;
 
         std::uint64_t driver_win_id;
-
-        common::region redraw_region;
         common::region visible_region;
-        eka2l1::rect redraw_rect_curr;
 
         int shadow_height;
 
@@ -81,14 +78,14 @@ namespace eka2l1::epoc {
         // NOTE: If you ever want to access this and call a function that can directly affect this list elements, copy it first
         std::vector<dsa*> directs_;
 
-        void invalidate(const eka2l1::rect &irect);
-        void wipeout();
+        explicit canvas_base(window_server_client_ptr client, screen *scr, window *parent, const epoc::window_type type_of_window, const epoc::display_mode dmode, const std::uint32_t client_handle);
+        ~canvas_base() override;
 
-        explicit window_user(window_server_client_ptr client, screen *scr, window *parent,
-            const epoc::window_type type_of_window, const epoc::display_mode dmode,
-            const std::uint32_t client_handle);
+        virtual void wipeout();
+        virtual bool draw(drivers::graphics_command_list_builder *builder);
 
-        ~window_user() override;
+        virtual void on_activate() = 0;
+        virtual void handle_extent_changed(const bool size_changed, const bool pos_changed) = 0;
 
         epoc::display_mode display_mode() const;
         eka2l1::vec2 absolute_position() const override;
@@ -146,23 +143,75 @@ namespace eka2l1::epoc {
 
         void queue_event(const epoc::event &evt) override;
 
-        // ===================== OPCODE IMPLEMENTATIONS ===========================
-        void begin_redraw(service::ipc_context &context, ws_cmd &cmd);
-        void end_redraw(service::ipc_context &context, ws_cmd &cmd);
         void set_non_fading(service::ipc_context &context, ws_cmd &cmd);
         void set_size(service::ipc_context &context, ws_cmd &cmd);
         void set_transparency_alpha_channel(service::ipc_context &context, ws_cmd &cmd);
+        void activate(service::ipc_context &context, ws_cmd &cmd);
+        void free(service::ipc_context &context, ws_cmd &cmd);
+        void alloc_pointer_buffer(service::ipc_context &context, ws_cmd &cmd);
+
+        epoc::window_group *get_group();
+
+        bool execute_command_detail(service::ipc_context &ctx, ws_cmd &cmd, bool &did);
+        bool execute_command(service::ipc_context &ctx, ws_cmd &cmd) override;
+    };
+
+    struct top_canvas : public epoc::window, public canvas_interface {
+        explicit top_canvas(window_server_client_ptr client, screen *scr, window *parent);
+
+        std::uint32_t redraw_priority(int *shift = nullptr) override;
+        eka2l1::vec2 get_origin() override;
+        eka2l1::vec2 absolute_position() const override;
+    };
+
+    struct blank_canvas : public canvas_base {
+        explicit blank_canvas(window_server_client_ptr client, screen *scr, window *parent,
+            const epoc::display_mode dmode, const std::uint32_t client_handle);
+
+        void on_activate() override {}
+        void handle_extent_changed(const bool size_changed, const bool pos_changed) override {}
+        
+        bool draw(drivers::graphics_command_list_builder *builder) override;
+    };
+
+    // Canvas that data is backed using a bitmap
+    struct bitmap_backed_canvas: public canvas_base {
+        fbsbitmap *bitmap_;
+
+        void create_backed_bitmap();
+
+        void on_activate() override {}
+        void handle_extent_changed(const bool size_changed, const bool pos_changed) override;
+
+        explicit bitmap_backed_canvas(window_server_client_ptr client, screen *scr, window *parent,
+            const epoc::display_mode dmode, const std::uint32_t client_handle);
+
+        ~bitmap_backed_canvas() override;
+
+        void bitmap_handle(service::ipc_context &context, ws_cmd &cmd);
+        bool execute_command(service::ipc_context &context, ws_cmd &cmd) override;
+    };
+
+    struct free_modify_canvas : public canvas_base {
+        common::region redraw_region;
+        eka2l1::rect redraw_rect_curr;
+
+        explicit free_modify_canvas(window_server_client_ptr client, screen *scr, window *parent,
+            const epoc::display_mode dmode, const std::uint32_t client_handle);
+
+        void invalidate(const eka2l1::rect &irect);
+        void on_activate() override;
+        void handle_extent_changed(const bool size_changed, const bool pos_changed) override;
+
+        // ===================== OPCODE IMPLEMENTATIONS ===========================
+        void begin_redraw(service::ipc_context &context, ws_cmd &cmd);
+        void end_redraw(service::ipc_context &context, ws_cmd &cmd);
         bool clear_redraw_store();
         void store_draw_commands(service::ipc_context &context, ws_cmd &cmd);
-        void alloc_pointer_buffer(service::ipc_context &context, ws_cmd &cmd);
-        void free(service::ipc_context &context, ws_cmd &cmd);
         void invalidate(service::ipc_context &context, ws_cmd &cmd);
-        void activate(service::ipc_context &context, ws_cmd &cmd);
         void get_invalid_region_count(service::ipc_context &context, ws_cmd &cmd);
         void get_invalid_region(service::ipc_context &context, ws_cmd &cmd);
 
         bool execute_command(service::ipc_context &context, ws_cmd &cmd) override;
-
-        epoc::window_group *get_group();
     };
 }

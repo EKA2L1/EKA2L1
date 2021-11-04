@@ -230,6 +230,10 @@ namespace eka2l1::epoc {
             return flags_ & FLAG_NEED_RECALC_VISIBLE;
         }
 
+        const bool auto_clear_enabled() const {
+            return flags_ & FLAG_AUTO_CLEAR_BACKGROUND;
+        }
+
         void need_update_visible_regions(const bool value);
 
         void ref_dsa_usage();

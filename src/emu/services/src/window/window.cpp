@@ -178,7 +178,7 @@ namespace eka2l1::epoc {
         }
     }
 
-    std::uint32_t window_server_client::queue_redraw(epoc::window_user *user, const eka2l1::rect &redraw_rect) {
+    std::uint32_t window_server_client::queue_redraw(epoc::canvas_base *user, const eka2l1::rect &redraw_rect) {
         return redraws.queue_event(user, epoc::redraw_event{ user->get_client_handle(), redraw_rect.top, redraw_rect.size + redraw_rect.top },
             user->redraw_priority());
     }
@@ -331,9 +331,31 @@ namespace eka2l1::epoc {
         }
 
         // We have to be child's parent child, which is top user.
-        window_client_obj_ptr win = std::make_unique<epoc::window_user>(this, parent->scr,
-            (parent->type == window_kind::group) ? parent->child : parent, header->win_type,
-            disp, header->client_handle);
+        window_client_obj_ptr win = nullptr;
+        switch (header->win_type) {
+        case epoc::window_type::redraw:
+            win = std::make_unique<epoc::free_modify_canvas>(this, parent->scr, (parent->type == window_kind::group) ? parent->child : parent,
+                disp, header->client_handle);
+
+            break;
+
+        case epoc::window_type::blank:
+            win = std::make_unique<epoc::blank_canvas>(this, parent->scr, (parent->type == window_kind::group) ? parent->child : parent,
+                disp, header->client_handle);
+
+            break;
+
+        case epoc::window_type::backed_up:
+            win = std::make_unique<epoc::bitmap_backed_canvas>(this, parent->scr, (parent->type == window_kind::group) ? parent->child : parent,
+                disp, header->client_handle);
+
+            break;
+
+        default:
+            LOG_ERROR(SERVICE_WINDOW, "Unimplemented window type {}!", static_cast<int>(header->win_type));
+            ctx.complete(epoc::error_not_supported);
+            return;
+        }
 
         ctx.complete(add_object(win));
     }
@@ -690,8 +712,12 @@ namespace eka2l1::epoc {
             }
 
             if (win->type == window_kind::client) {
-                epoc::window_user *user = reinterpret_cast<epoc::window_user *>(win);
-                user->clear_redraw_store();
+                epoc::canvas_base *user = reinterpret_cast<epoc::canvas_base *>(win);
+
+                if (user->win_type == epoc::window_type::redraw) {
+                    epoc::free_modify_canvas *fm_user = reinterpret_cast<epoc::free_modify_canvas*>(win);
+                    fm_user->clear_redraw_store();
+                }
             }
 
             return false;

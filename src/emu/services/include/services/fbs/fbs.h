@@ -68,6 +68,7 @@ namespace eka2l1 {
 
         bool does_client_use_pointer_instead_of_offset(fbscli *cli);
         std::string get_fbs_server_name_by_epocver(const epocver ver);
+        void query_fbs_feature_support(fbs_server *serv, bool &support_current_display_mode, bool &support_dirty_bitmap);
     }
 
     enum fbs_opcode {

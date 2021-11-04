@@ -43,7 +43,7 @@ namespace eka2l1::epoc {
 
     void graphic_context::active(service::ipc_context &context, ws_cmd cmd) {
         const std::uint32_t window_to_attach_handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
-        attached_window = reinterpret_cast<epoc::window_user *>(client->get_object(window_to_attach_handle));
+        attached_window = reinterpret_cast<epoc::canvas_base *>(client->get_object(window_to_attach_handle));
 
         // Attach context with window
         attached_window->attached_contexts.push(&context_attach_link);
@@ -227,8 +227,9 @@ namespace eka2l1::epoc {
         bool stencil_one_for_valid = true;
 
         if (clipping_rect.empty() && clipping_region.empty()) {
-            if (attached_window->flags & epoc::window_user::flags_in_redraw) {
-                the_clip = attached_window->redraw_rect_curr;
+            if (attached_window->flags & epoc::canvas_base::flags_in_redraw) {
+                epoc::free_modify_canvas *attached_fm_window = reinterpret_cast<epoc::free_modify_canvas*>(attached_window);
+                the_clip = attached_fm_window->redraw_rect_curr;
                 use_clipping = true;
             } else {
                 // Developement document says that when not being redrawn, drawing is clipped to non-invalid part.
@@ -240,8 +241,9 @@ namespace eka2l1::epoc {
                 return;
             }
         } else {
-            if (attached_window->flags & epoc::window_user::flags_in_redraw) {
-                clip_region_temp->add_rect(attached_window->redraw_rect_curr);
+            if (attached_window->flags & epoc::canvas_base::flags_in_redraw) {
+                epoc::free_modify_canvas *attached_fm_window = reinterpret_cast<epoc::free_modify_canvas*>(attached_window);
+                clip_region_temp->add_rect(attached_fm_window->redraw_rect_curr);
             } else {
                 clip_region_temp->add_rect(attached_window->bounding_rect());
 
@@ -1035,7 +1037,7 @@ namespace eka2l1::epoc {
 
     graphic_context::graphic_context(window_server_client_ptr client, epoc::window *attach_win)
         : window_client_obj(client, nullptr)
-        , attached_window(reinterpret_cast<epoc::window_user *>(attach_win))
+        , attached_window(reinterpret_cast<epoc::canvas_base *>(attach_win))
         , text_font(nullptr)
         , fill_mode(brush_style::null)
         , line_mode(pen_style::null)

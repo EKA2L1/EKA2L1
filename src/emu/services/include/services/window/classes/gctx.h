@@ -61,7 +61,7 @@ namespace eka2l1::epoc {
     };
 
     struct graphic_context : public window_client_obj {
-        window_user *attached_window;
+        canvas_base *attached_window;
         std::unique_ptr<drivers::graphics_command_list> cmd_list;
         std::unique_ptr<drivers::graphics_command_list_builder> cmd_builder;
 

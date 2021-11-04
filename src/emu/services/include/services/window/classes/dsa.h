@@ -33,10 +33,10 @@ namespace eka2l1::kernel {
 
 namespace eka2l1::epoc {
     struct screen;
-    struct window_user;
+    struct canvas_base;
 
     struct dsa : public window_client_obj {
-        window_user *husband_; ///< Mmmhhh
+        canvas_base *husband_; ///< Mmmhhh
         kernel::msg_queue *dsa_must_abort_queue_; ///< Queue to notify clients that DSA operation must be stopped.
         kernel::msg_queue *dsa_complete_queue_; ///< Queue for client to report completion of a DSA operation.
 

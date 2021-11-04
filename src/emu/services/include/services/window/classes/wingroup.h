@@ -30,12 +30,12 @@ namespace eka2l1::kernel {
 }
 
 namespace eka2l1::epoc {
-    struct window_top_user;
+    struct top_canvas;
     using message_data = std::vector<std::uint8_t>;
 
     struct window_group : public epoc::window {
         std::u16string name;
-        std::unique_ptr<window_top_user> top;
+        std::unique_ptr<top_canvas> top;
         std::queue<message_data> msg_datas;
 
         std::uint8_t last_refresh_rate;

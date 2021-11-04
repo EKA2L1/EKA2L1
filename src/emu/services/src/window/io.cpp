@@ -32,7 +32,7 @@ namespace eka2l1::epoc {
     void window_pointer_focus_walker::process_event_to_target_window(epoc::window *win, epoc::event &evt) {
         assert(win->type == epoc::window_kind::client);
 
-        epoc::window_user *user = reinterpret_cast<epoc::window_user *>(win);
+        epoc::canvas_base *user = reinterpret_cast<epoc::canvas_base *>(win);
         // Stop, we found it!
         // Send it right now
         evt.adv_pointer_evt_.pos = scr_coord_ - user->pos;
@@ -42,7 +42,7 @@ namespace eka2l1::epoc {
         } else {
             // It must be client kind
             assert(user->parent->type == epoc::window_kind::client);
-            evt.adv_pointer_evt_.parent_pos = reinterpret_cast<epoc::window_user *>(user->parent)->pos
+            evt.adv_pointer_evt_.parent_pos = reinterpret_cast<epoc::canvas_base *>(user->parent)->pos
                 + evt.adv_pointer_evt_.pos;
         }
 
@@ -64,7 +64,7 @@ namespace eka2l1::epoc {
             return false;
         }
 
-        epoc::window_user *user = reinterpret_cast<epoc::window_user *>(win);
+        epoc::canvas_base *user = reinterpret_cast<epoc::canvas_base *>(win);
 
         std::optional<eka2l1::rect> contain_area;
         auto contain_rect_this_mode_ite = user->scr->pointer_areas_.find(user->scr->crr_mode);

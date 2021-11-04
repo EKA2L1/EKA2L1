@@ -36,12 +36,10 @@ namespace eka2l1::epoc {
     struct window_drawer_walker : public window_tree_walker {
         drivers::graphics_command_list_builder *builder_;
         std::uint32_t total_redrawed_;
-        bool auto_clear_;
 
-        explicit window_drawer_walker(drivers::graphics_command_list_builder *builder, const bool auto_clear)
+        explicit window_drawer_walker(drivers::graphics_command_list_builder *builder)
             : builder_(builder)
-            , total_redrawed_(0)
-            , auto_clear_(auto_clear) {
+            , total_redrawed_(0) {
         }
 
         bool do_it(window *win) {
@@ -49,46 +47,10 @@ namespace eka2l1::epoc {
                 return false;
             }
 
-            window_user *winuser = reinterpret_cast<window_user *>(win);
+            epoc::canvas_base *cv = reinterpret_cast<epoc::canvas_base*>(win);
 
-            if (!winuser || !winuser->driver_win_id || !winuser->can_be_physically_seen()) {
-                // No need to redraw this window yet. It doesn't even have any content ready.
-                return false;
-            }
-
-            // Check if extent is just invalid
-            if (winuser->size().x == 0 || winuser->size().y == 0) {
-                // No one can see this. Leave it for now.
-                return false;
-            }
-
-
-            // If it does not have content drawn to it, it makes no sense to draw the background
-            // Else, there's a flag in window server that enables clear on any siutation
-            if (winuser->has_redraw_content()) {
-                eka2l1::vec2 abs_pos = winuser->absolute_position();
-                if (winuser->clear_color_enable && auto_clear_) {
-                    auto color_extracted = common::rgba_to_vec(winuser->clear_color);
-
-                    if (winuser->display_mode() <= epoc::display_mode::color16mu) {
-                        color_extracted[3] = 255;
-                    }
-
-                    builder_->set_brush_color_detail({ color_extracted[0], color_extracted[1], color_extracted[2], color_extracted[3] });
-                    builder_->draw_rectangle(eka2l1::rect(abs_pos, winuser->size()));
-                } else {
-                    builder_->set_brush_color(eka2l1::vec3(255, 255, 255));
-                }
-
-                // Draw it onto current binding buffer
-                // TODO: We can probably also make use of visible regions and stencil buffer to reduce and provide
-                // more accurate drawing results. I don't want to complicated it more now, since there's transparent region
-                // not implemented (region that is visible even though another window is on top of it)
-                builder_->draw_bitmap(winuser->driver_win_id, 0, eka2l1::rect(abs_pos, { 0, 0 }),
-                    eka2l1::rect({ 0, 0 }, winuser->size()), eka2l1::vec2(0, 0), 0.0f, 0);
-
+            if (cv->draw(builder_))
                 total_redrawed_++;
-            }
 
             return false;
         }
@@ -103,7 +65,7 @@ namespace eka2l1::epoc {
 
         bool do_it(window *win) {
             if (win->type == window_kind::client) {
-                window_user *user = reinterpret_cast<window_user*>(win);
+                canvas_base *user = reinterpret_cast<canvas_base*>(win);
                 if (user->is_dsa_active()) {
                     std::vector<dsa*> dsa_residents = user->directs_;
 
@@ -219,7 +181,7 @@ namespace eka2l1::epoc {
         // Walk through the window tree in recursive order, and do draw
         // We dont care about visible regions. Nowadays, detect visible region to reduce pixel plotting is
         // just not really worth the time, since GPU draws so fast. Symbian code still has it though.
-        window_drawer_walker adrawwalker(cmd_builder, flags_ & FLAG_AUTO_CLEAR_BACKGROUND);
+        window_drawer_walker adrawwalker(cmd_builder);
         root->walk_tree_back_to_front(&adrawwalker);
 
         // Done! Unbind and submit this to the driver
@@ -560,7 +522,7 @@ namespace eka2l1::epoc {
 
         bool do_it(epoc::window *win) override {
             if (win->type == epoc::window_kind::client) {
-                epoc::window_user *winuser = reinterpret_cast<epoc::window_user*>(win);
+                epoc::canvas_base *winuser = reinterpret_cast<epoc::canvas_base*>(win);
                 
                 winuser->visible_region.make_empty();
 
