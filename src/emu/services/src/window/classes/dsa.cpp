@@ -250,6 +250,11 @@ namespace eka2l1::epoc {
                 cancel(ctx, cmd);
                 break;
 
+            case ws_dsa_old_free:
+                free(ctx, cmd);
+                quit = true;
+                break;
+
             default:
                 LOG_ERROR(SERVICE_WINDOW, "Unimplemented DSA opcode {}", cmd.header.op);
                 break;
@@ -285,6 +290,7 @@ namespace eka2l1::epoc {
 
             case ws_dsa_free:
                 free(ctx, cmd);
+                quit = true;
                 break;
 
             default: {
