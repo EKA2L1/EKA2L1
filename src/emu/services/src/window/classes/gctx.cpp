@@ -26,6 +26,7 @@
 #include <services/window/classes/winuser.h>
 #include <services/window/op.h>
 #include <services/window/opheader.h>
+#include <services/window/util.h>
 #include <services/window/window.h>
 
 #include <system/epoc.h>
@@ -282,28 +283,7 @@ namespace eka2l1::epoc {
                 cmd_builder->clip_rect(the_clip);
             }
         } else {
-            cmd_builder->set_stencil(true);
-
-            // Try to fill region rects with 1 in stencil buffer.
-            // Intentionally let stencil test fail so nothing gets draw. Just need to fill it after all.
-            cmd_builder->set_stencil_pass_condition(drivers::stencil_face::back_and_front, drivers::condition_func::never,
-                1, 0xFF);
-            cmd_builder->set_stencil_action(drivers::stencil_face::back_and_front, drivers::stencil_action::replace,
-                drivers::stencil_action::keep, drivers::stencil_action::keep);
-            cmd_builder->set_stencil_mask(drivers::stencil_face::back_and_front, 0xFF);
-
-            for (std::size_t i = 0; i < the_region->rects_.size(); i++) {
-                if (the_region->rects_[i].valid()) {
-                    cmd_builder->draw_rectangle(the_region->rects_[i]);
-                }
-            }
-
-            // Now set stencil buffer to only pass if value of pixel correspond in stencil buffer is not equal to 1 (invalid region),
-            // or equal to 1 (if valid region)
-            // Also disable writing to stencil buffer
-            cmd_builder->set_stencil_pass_condition(drivers::stencil_face::back_and_front, stencil_one_for_valid ? drivers::condition_func::equal : drivers::condition_func::not_equal, 1, 0xFF);
-            cmd_builder->set_stencil_action(drivers::stencil_face::back_and_front, drivers::stencil_action::keep,
-                drivers::stencil_action::keep, drivers::stencil_action::keep);
+            clip_region(*cmd_builder, *the_region, stencil_one_for_valid);
         }
     }
 

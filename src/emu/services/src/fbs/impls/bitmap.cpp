@@ -148,6 +148,8 @@ namespace eka2l1 {
             if (info.compression != epoc::bitmap_file_no_compression) {
                 // Compressed in RAM!
                 compressed_in_ram_ = true;
+            } else {
+                compressed_in_ram_ = false;
             }
 
             if (data) {
@@ -267,7 +269,7 @@ namespace eka2l1 {
             // copy with compressed data not supported yet
             const int min_byte_width = std::min(byte_width_, dest_byte_width);
 
-            if (compressed_in_ram_) {
+            if (compressed_in_ram_ && (compression_type() != bitmap_file_no_compression)) {
                 bitmap_copy_writer writer(dest, byte_width_, dest_byte_width, min_pixel_height);
                 common::ro_buf_stream source_stream(src, data_size());
 

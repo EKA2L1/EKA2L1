@@ -87,6 +87,8 @@ namespace eka2l1::epoc {
         virtual void on_activate() = 0;
         virtual void handle_extent_changed(const bool size_changed, const bool pos_changed) = 0;
 
+        void prepare_driver_bitmap();
+
         epoc::display_mode display_mode() const;
         eka2l1::vec2 absolute_position() const override;
         eka2l1::vec2 get_origin() override;
@@ -189,6 +191,7 @@ namespace eka2l1::epoc {
         ~bitmap_backed_canvas() override;
 
         void bitmap_handle(service::ipc_context &context, ws_cmd &cmd);
+        void update_screen(service::ipc_context &context, ws_cmd &cmd);
         bool execute_command(service::ipc_context &context, ws_cmd &cmd) override;
     };
 

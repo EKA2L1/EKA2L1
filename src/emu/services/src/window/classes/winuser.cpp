@@ -26,6 +26,7 @@
 #include <services/window/op.h>
 #include <services/window/opheader.h>
 #include <services/window/screen.h>
+#include <services/window/util.h>
 #include <services/window/window.h>
 #include <services/fbs/fbs.h>
 
@@ -149,6 +150,27 @@ namespace eka2l1::epoc {
             drv->submit_command_list(*cmd_list);
 
             driver_win_id = 0;
+        }
+    }
+
+    void canvas_base::prepare_driver_bitmap() {
+        if (resize_needed) {
+            drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
+
+            // Queue a resize command
+            auto cmd_list = drv->new_command_list();
+            auto cmd_builder = drv->new_command_builder(cmd_list.get());
+
+            if (driver_win_id == 0) {
+                driver_win_id = drivers::create_bitmap(drv, abs_rect.size, 32);
+            } else {
+                cmd_builder->resize_bitmap(driver_win_id, abs_rect.size);
+                cmd_builder->bind_bitmap(driver_win_id);
+            }
+
+            drv->submit_command_list(*cmd_list);
+
+            resize_needed = false;
         }
     }
 
@@ -334,8 +356,9 @@ namespace eka2l1::epoc {
 
             std::uint64_t wait_time = 0;
 
-            if (crr - last_draw_ < time_spend_per_frame_us) {
-                wait_time = time_spend_per_frame_us - (crr - last_draw_);
+            if (crr < time_spend_per_frame_us + last_draw_) {
+                // Originally - (crr - last_draw_), but preventing overflow
+                wait_time = time_spend_per_frame_us + last_draw_ - crr;
             } else {
                 wait_time = 0;
             }
@@ -710,7 +733,7 @@ namespace eka2l1::epoc {
     }
         
     bool blank_canvas::draw(drivers::graphics_command_list_builder *builder) {
-        if (!builder || !clear_color_enable) {
+        if (!builder || !clear_color_enable || !can_be_physically_seen()) {
             return false;
         }
     
@@ -791,25 +814,9 @@ namespace eka2l1::epoc {
     }
 
     void free_modify_canvas::end_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
-        drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
         redraw_rect_curr.make_empty();
 
-        if (resize_needed) {
-            // Queue a resize command
-            auto cmd_list = drv->new_command_list();
-            auto cmd_builder = drv->new_command_builder(cmd_list.get());
-
-            if (driver_win_id == 0) {
-                driver_win_id = drivers::create_bitmap(drv, abs_rect.size, 32);
-            } else {
-                cmd_builder->resize_bitmap(driver_win_id, abs_rect.size);
-                cmd_builder->bind_bitmap(driver_win_id);
-            }
-
-            drv->submit_command_list(*cmd_list);
-
-            resize_needed = false;
-        }
+        prepare_driver_bitmap();
 
         common::double_linked_queue_element *ite = attached_contexts.first();
         common::double_linked_queue_element *end = attached_contexts.end();
@@ -985,6 +992,46 @@ namespace eka2l1::epoc {
         ctx.complete(static_cast<int>(bitmap_->id));
     }
 
+    void bitmap_backed_canvas::update_screen(service::ipc_context &ctx, ws_cmd &cmd) {
+        if (!bitmap_) {
+            ctx.complete(epoc::error_none);
+            return;
+        }
+
+        prepare_driver_bitmap();
+
+        epoc::bitmap_cache *cache = client->get_ws().get_bitmap_cache();
+        drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
+
+        auto cmd_list = drv->new_command_list();
+        auto cmd_builder = drv->new_command_builder(cmd_list.get());
+
+        const drivers::handle to_draw_handle = cache->add_or_get(drv, cmd_builder.get(), bitmap_->bitmap_);
+        
+        eka2l1::vec2 to_draw_out_size(common::min<int>(bitmap_->bitmap_->header_.size_pixels.x, size().x),
+            common::min<int>(bitmap_->bitmap_->header_.size_pixels.y, size().y));
+
+        eka2l1::rect draw_rect({ 0, 0 }, to_draw_out_size);
+
+        cmd_builder->bind_bitmap(driver_win_id);
+        cmd_builder->set_clipping(false);
+
+        if (cmd.header.op == EWsWinOpUpdateScreenRegion) {
+            std::optional<common::region> reg_clip = get_region_from_context(ctx, cmd);
+            if (!reg_clip.has_value()) {
+                LOG_WARN(SERVICE_WINDOW, "Update screen with region called but failed to retrieve region struct. Nothing is clipped");
+            } else {
+                clip_region(*cmd_builder, reg_clip.value());
+            }
+        }
+
+        cmd_builder->draw_bitmap(to_draw_handle, 0, draw_rect, draw_rect);
+        drv->submit_command_list(*cmd_list);
+
+        ctx.complete(epoc::error_none);
+        take_action_on_change(ctx.msg->own_thr);
+    }
+
     bool bitmap_backed_canvas::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         bool did_it = false;
         const bool should_flush = canvas_base::execute_command_detail(ctx, cmd, did_it);
@@ -997,6 +1044,11 @@ namespace eka2l1::epoc {
         switch (op) {
         case EWsWinOpBitmapHandle:
             bitmap_handle(ctx, cmd);
+            break;
+
+        case EWsWinOpUpdateScreen:
+        case EWsWinOpUpdateScreenRegion:
+            update_screen(ctx, cmd);
             break;
 
         case EWsWinOpMaintainBackup:

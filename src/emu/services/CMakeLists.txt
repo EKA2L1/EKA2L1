@@ -125,6 +125,7 @@ add_library(epocservs
         include/services/window/keys.h
         include/services/window/scheduler.h
         include/services/window/screen.h
+        include/services/window/util.h
         include/services/window/window.h
         src/allocator.cpp
         src/context.cpp
@@ -260,6 +261,7 @@ add_library(epocservs
         src/window/io.cpp
         src/window/scheduler.cpp
         src/window/screen.cpp
+        src/window/util.cpp
         src/window/window.cpp)
 
 target_include_directories(epocservs PUBLIC include)
