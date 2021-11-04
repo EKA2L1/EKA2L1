@@ -159,6 +159,10 @@ namespace eka2l1 {
                 sr_get_by_number(ctx);
                 return;
 
+            case socket_cn_open_with_cn_type:
+                cn_open(ctx);
+                return;
+
             case socket_cn_get_long_des_setting:
                 cn_get_long_des_setting(ctx);
                 return;
@@ -322,6 +326,18 @@ namespace eka2l1 {
         socket_subsession_instance so_inst = std::make_unique<epoc::socket::socket_socket>(this, sock_impl);
 
         const std::uint32_t id = static_cast<std::uint32_t>(subsessions_.add(so_inst));
+        subsessions_.get(id)->get()->set_id(id);
+
+        // Write the subsession handle
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(3, id);
+        ctx->complete(epoc::error_none);
+    }
+
+    void socket_client_session::cn_open(eka2l1::service::ipc_context *ctx) {
+        // TODO: Implement
+        socket_subsession_instance cn_inst = std::make_unique<epoc::socket::socket_connection_proxy>(this, nullptr);
+
+        const std::uint32_t id = static_cast<std::uint32_t>(subsessions_.add(cn_inst));
         subsessions_.get(id)->get()->set_id(id);
 
         // Write the subsession handle

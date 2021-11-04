@@ -104,8 +104,9 @@ namespace eka2l1 {
         socket_so_ioctl = 0x19,
         socket_so_close = 0x1D,
         socket_hr_open = 0x28,
+        socket_sr_get_by_number = 0x32,
         socket_hr_open_with_connection = 0x3E,
-        socket_sr_get_by_number = 0x3F,
+        socket_cn_open_with_cn_type = 0x3F,
         socket_cn_get_long_des_setting = 0x51
     };
 
@@ -173,6 +174,7 @@ namespace eka2l1 {
         void so_create(service::ipc_context *ctx);
         void pr_find(service::ipc_context *ctx);
         void sr_get_by_number(eka2l1::service::ipc_context *ctx);
+        void cn_open(eka2l1::service::ipc_context *ctx);
         void cn_get_long_des_setting(eka2l1::service::ipc_context *ctx);
     };
 }
