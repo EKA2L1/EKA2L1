@@ -36,7 +36,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Checkable;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ScrollView;
@@ -69,7 +68,7 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
     protected ScrollView rootContainer;
     protected EditText etScreenRefreshRate;
     protected EditText etSystemTimeDelay;
-    protected Checkable cbShouldChildInherit;
+    protected CompoundButton cbShouldChildInherit;
 
     protected EditText etScreenBack;
     protected SeekBar sbScaleRatio;
@@ -82,8 +81,8 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
 
     private View rootInputConfig;
     private View groupVkConfig;
-    protected Checkable cbVKFeedback;
-    protected Checkable cbTouchInput;
+    protected CompoundButton cbVKFeedback;
+    protected CompoundButton cbTouchInput;
 
     private Spinner spVKType;
     private Spinner spButtonsShape;
@@ -103,6 +102,7 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
     private boolean needShow;
     private AppDataStore dataStore;
     private long uid;
+    private boolean compatChanged;
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -189,6 +189,35 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
         view.findViewById(R.id.cmdVKSelBack).setOnClickListener(this);
         view.findViewById(R.id.cmdVKSelFore).setOnClickListener(this);
         view.findViewById(R.id.cmdVKOutline).setOnClickListener(this);
+        etScreenRefreshRate.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (etScreenRefreshRate.isFocused()) compatChanged = true;
+            }
+        });
+        etSystemTimeDelay.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (etSystemTimeDelay.isFocused()) compatChanged = true;
+            }
+        });
+        cbShouldChildInherit.setOnCheckedChangeListener((buttonView, isChecked) -> compatChanged = true);
         sbScaleRatio.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -387,9 +416,9 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
                 params.vkOutlineColor = Integer.parseInt(etVKOutline.getText().toString(), 16);
             } catch (Exception ignored) {
             }
-
             ProfilesManager.saveConfig(params);
-            if (!isProfile) {
+
+            if (!isProfile && compatChanged) {
                 dataStore.putString("fps", etScreenRefreshRate.getText().toString());
                 dataStore.putString("time-delay", etSystemTimeDelay.getText().toString());
                 dataStore.putBoolean("should-child-inherit-setting", cbShouldChildInherit.isChecked());
