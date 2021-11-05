@@ -59,6 +59,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.observers.DisposableCompletableObserver;
 import io.reactivex.schedulers.Schedulers;
 
+import static com.github.eka2l1.emu.Constants.KEY_RESTART;
+
 public class DeviceListFragment extends Fragment {
     private enum INSTALL_MODE {DEVICE_DUMP, FIRMWARE}
 
@@ -113,10 +115,7 @@ public class DeviceListFragment extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 Emulator.setCurrentDevice(position);
-
-                Bundle result = new Bundle();
-                result.putBoolean("restartNeeded", true);
-                getParentFragmentManager().setFragmentResult("request", result);
+                getParentFragmentManager().setFragmentResult(KEY_RESTART, new Bundle());
             }
 
             @Override
@@ -267,10 +266,7 @@ public class DeviceListFragment extends Fragment {
                     public void onComplete() {
                         dialog.cancel();
                         updateDeviceList();
-
-                        Bundle result = new Bundle();
-                        result.putBoolean("restartNeeded", true);
-                        getParentFragmentManager().setFragmentResult("request", result);
+                        getParentFragmentManager().setFragmentResult(KEY_RESTART, new Bundle());
 
                         Toast.makeText(getContext(), R.string.completed, Toast.LENGTH_SHORT).show();
                     }

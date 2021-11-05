@@ -28,6 +28,7 @@ import com.github.eka2l1.BuildConfig;
 import com.github.eka2l1.applist.AppItem;
 import com.github.eka2l1.util.FileUtils;
 import com.github.eka2l1.util.BitmapUtils;
+import com.github.eka2l1.util.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +38,9 @@ import io.reactivex.Completable;
 import io.reactivex.Single;
 
 public class Emulator {
+    public static final String APP_CONFIG_FILE = "/config.json";
+    public static final String APP_KEY_LAYOUT_FILE = "/VirtualKeyboardLayout";
+
     public static final int INSTALL_DEVICE_ERROR_NONE = 0;
     public static final int INSTALL_DEVICE_ERROR_NOT_EXIST = 1;
     public static final int INSTALL_DEVICE_ERROR_INSUFFICENT = 2;
@@ -52,6 +56,8 @@ public class Emulator {
 
     private static String emulatorDir;
     private static String compatDir;
+    private static String configsDir;
+    private static String profilesDir;
     private static boolean init;
     private static boolean load;
 
@@ -62,6 +68,8 @@ public class Emulator {
     public static void initializePath() {
         emulatorDir = Environment.getExternalStorageDirectory() + "/EKA2L1/";
         compatDir = emulatorDir + "compat/";
+        configsDir = emulatorDir + "android/configs/";
+        profilesDir = emulatorDir + "android/profiles/";
     }
 
     public static void initializeFolders(Context context) {
@@ -76,6 +84,15 @@ public class Emulator {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+
+        File configsFolder = new File(configsDir);
+        if (!configsFolder.exists()) {
+            configsFolder.mkdirs();
+        }
+        File profilesFolder = new File(profilesDir);
+        if (!profilesFolder.exists()) {
+            profilesFolder.mkdirs();
         }
 
         boolean shouldUpdate = checkUpdate();
@@ -120,6 +137,14 @@ public class Emulator {
 
     public static String getCompatDir() {
         return compatDir;
+    }
+
+    public static String getProfilesDir() {
+        return profilesDir;
+    }
+
+    public static String getConfigsDir() {
+        return configsDir;
     }
 
     public static Single<ArrayList<AppItem>> getAppsList() {
@@ -238,4 +263,6 @@ public class Emulator {
     public static native String[] getLanguageIds();
 
     public static native String[] getLanguageNames();
+
+    public static native void setScreenParams(int backgroundColor, int scaleRatio, int scaleType, int gravity);
 }

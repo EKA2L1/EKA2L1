@@ -34,6 +34,8 @@ import androidx.preference.PreferenceManager;
 import com.github.eka2l1.R;
 import com.github.eka2l1.emu.Emulator;
 
+import static com.github.eka2l1.emu.Constants.*;
+
 public class SystemSettingsFragment extends PreferenceFragmentCompat {
     private AppDataStore dataStore;
 
@@ -43,14 +45,14 @@ public class SystemSettingsFragment extends PreferenceFragmentCompat {
         PreferenceManager preferenceManager = getPreferenceManager();
         preferenceManager.setPreferenceDataStore(dataStore);
         setPreferencesFromResource(R.xml.preferences_system, rootKey);
-        ListPreference languagePreference = findPreference("language");
+        ListPreference languagePreference = findPreference(PREF_LANGUAGE);
         languagePreference.setEntries(Emulator.getLanguageNames());
         languagePreference.setEntryValues(Emulator.getLanguageIds());
         languagePreference.setOnPreferenceChangeListener((preference, newValue) -> {
             Emulator.setLanguage(Integer.parseInt((String) newValue));
             return true;
         });
-        ListPreference rtosLevelPreference = findPreference("rtos-level");
+        ListPreference rtosLevelPreference = findPreference(PREF_RTOS_LEVEL);
         rtosLevelPreference.setOnPreferenceChangeListener((preference, newValue) -> {
             Emulator.setRtosLevel(rtosLevelPreference.findIndexOfValue((String) newValue));
             return true;

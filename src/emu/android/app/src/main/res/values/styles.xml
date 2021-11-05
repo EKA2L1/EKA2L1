@@ -2,26 +2,41 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorPrimary">@color/dark_color_primary</item>
+        <item name="colorPrimaryDark">@color/dark_color_primary_dark</item>
+        <item name="colorAccent">@color/dark_color_accent</item>
+        <item name="android:colorBackground">@color/dark_color_background</item>
+        <item name="android:windowBackground">@color/dark_color_background</item>
+        <item name="buttonStyle">@style/ButtonStyle</item>
+
+        <!--custom theme attrs-->
+        <item name="bg_config_card">@drawable/bg_config_card_dark</item>
+        <item name="textColorPrimary">@color/dark_color_text_primary</item>
+        <item name="textColorSecondary">@color/dark_color_text_secondary</item>
         <item name="spinnerColor">@color/dark_color_spinner</item>
         <item name="android:navigationBarColor" tools:ignore="NewApi">@android:color/black</item>
     </style>
 
     <style name="AppTheme.Light" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorPrimary">@color/light_color_primary</item>
+        <item name="colorPrimaryDark">@color/light_color_primary_dark</item>
+        <item name="colorAccent">@color/light_color_accent</item>
+        <item name="android:colorBackground">@color/light_color_background</item>
+        <item name="android:windowBackground">@color/light_color_background</item>
+        <item name="buttonStyle">@style/ButtonStyle.Light</item>
+
+        <!--custom theme attrs-->
+        <item name="bg_config_card">@drawable/bg_config_card_light</item>
+        <item name="textColorPrimary">@color/light_color_text_primary</item>
+        <item name="textColorSecondary">@color/light_color_text_secondary</item>
         <item name="spinnerColor">@color/light_color_spinner</item>
     </style>
 
     <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.NoActionBar">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorPrimary">@color/dark_color_primary</item>
+        <item name="colorPrimaryDark">@color/dark_color_primary</item>
         <item name="actionOverflowMenuStyle">@style/AppTheme.OverflowMenu</item>
         <item name="textAppearancePopupMenuHeader">@style/PopupMenuTextAppearanceHeader</item>
         <item name="textAppearanceSmallPopupMenu">@style/PopupMenuTextAppearanceSmall</item>
@@ -48,9 +63,8 @@
 
     <style name="AppTheme.Light.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorPrimary">@color/light_color_primary</item>
+        <item name="colorPrimaryDark">@color/light_color_primary_dark</item>
     </style>
 
     <style name="FilePickerTheme" parent="NNF_BaseTheme">
@@ -80,6 +94,50 @@
 
     <style name="FilePickerAlertDialogTheme.Light" parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="colorAccent">@color/file_picker_accent</item>
+    </style>
+
+    <style name="ConfigTitleTextStyle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">?attr/textColorPrimary</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="SwitchStyle">
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">?textColorSecondary</item>
+        <item name="android:minHeight">40dp</item>
+    </style>
+
+    <style name="EditTextStyle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:minHeight">38dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColorHint">#b0b0b0</item>
+        <item name="android:textColor">?attr/textColorPrimary</item>
+    </style>
+
+    <style name="ButtonStyle.Base" parent="Widget.AppCompat.Button.Colored">
+        <item name="android:minHeight">38dp</item>
+        <item name="android:paddingLeft">6dp</item>
+        <item name="android:paddingRight">6dp</item>
+        <item name="android:elevation" tools:ignore="NewApi">1dp</item>
+    </style>
+
+    <style name="ButtonStyle" parent="ButtonStyle.Base">
+        <item name="android:background">@drawable/bg_button_dark</item>
+    </style>
+
+    <style name="ButtonStyle.Light" parent="ButtonStyle.Base">
+        <item name="android:background">@drawable/bg_button_light</item>
+    </style>
+
+    <style name="ImageButtonStyle" parent="Widget.AppCompat.ImageButton">
+        <item name="android:minHeight">38dp</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:tint">?colorAccent</item>
     </style>
 
 </resources>

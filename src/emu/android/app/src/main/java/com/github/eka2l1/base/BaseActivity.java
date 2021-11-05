@@ -28,13 +28,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.github.eka2l1.R;
 import com.github.eka2l1.settings.AppDataStore;
 
+import static com.github.eka2l1.emu.Constants.PREF_THEME;
+
 @SuppressLint("Registered")
 public class BaseActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         AppDataStore dataStore = AppDataStore.getAndroidStore();
-        String theme = dataStore.getString("theme", "light");
+        String theme = dataStore.getString(PREF_THEME, "light");
         if (theme.equals("dark")) {
             setTheme(R.style.AppTheme);
         } else {

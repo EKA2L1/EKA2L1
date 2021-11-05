@@ -29,6 +29,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -38,11 +39,19 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import com.github.eka2l1.R;
+import com.github.eka2l1.config.ProfileModel;
+import com.github.eka2l1.config.ProfilesManager;
 import com.github.eka2l1.emu.Keycode;
 
+import java.io.File;
+
+import static com.github.eka2l1.emu.Constants.KEY_CONFIG_PATH;
+
 public class KeyMapperFragment extends Fragment implements View.OnClickListener {
+    private final SparseIntArray defaultKeyMap = KeyMapper.getDefaultKeyMap();
     private static final SparseIntArray idToSymbianKey = new SparseIntArray();
     private static SparseIntArray androidToSymbian;
+    private ProfileModel params;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -56,6 +65,15 @@ public class KeyMapperFragment extends Fragment implements View.OnClickListener 
         ActionBar actionBar = ((AppCompatActivity) requireActivity()).getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle(R.string.pref_control_key_binding_sect_title);
+
+        Bundle args = getArguments();
+        String path = args.getString(KEY_CONFIG_PATH);
+        if (path == null) {
+            Toast.makeText(getContext(), "Error", Toast.LENGTH_SHORT).show();
+            getParentFragmentManager().popBackStackImmediate();
+            return;
+        }
+        params = ProfilesManager.loadConfig(new File(path));
 
         setupButton(R.id.virtual_key_left_soft, Keycode.KEY_SOFT_LEFT);
         setupButton(R.id.virtual_key_right_soft, Keycode.KEY_SOFT_RIGHT);
@@ -78,7 +96,8 @@ public class KeyMapperFragment extends Fragment implements View.OnClickListener 
         setupButton(R.id.virtual_key_0, Keycode.KEY_NUM0);
         setupButton(R.id.virtual_key_star, Keycode.KEY_STAR);
         setupButton(R.id.virtual_key_pound, Keycode.KEY_POUND);
-        androidToSymbian = KeyMapper.getArrayPref();
+        SparseIntArray keyMap = params.keyMappings;
+        androidToSymbian = keyMap == null ? defaultKeyMap.clone() : keyMap.clone();
     }
 
     private void setupButton(int resId, int index) {
@@ -111,7 +130,8 @@ public class KeyMapperFragment extends Fragment implements View.OnClickListener 
                     } else {
                         deleteDuplicates(canvasKey);
                         androidToSymbian.put(keyCode, canvasKey);
-                        KeyMapper.saveArrayPref(androidToSymbian);
+                        params.keyMappings = androidToSymbian;
+                        ProfilesManager.saveConfig(params);
 
                         dialog.dismiss();
                         return true;
@@ -140,9 +160,9 @@ public class KeyMapperFragment extends Fragment implements View.OnClickListener 
         if (itemId == android.R.id.home) {
             getParentFragmentManager().popBackStackImmediate();
         } else if (itemId == R.id.action_reset_mapping) {
-            androidToSymbian.clear();
-            KeyMapper.initArray(androidToSymbian);
-            KeyMapper.saveArrayPref(androidToSymbian);
+            androidToSymbian = defaultKeyMap.clone();
+            params.keyMappings = androidToSymbian;
+            ProfilesManager.saveConfig(params);
         }
         return super.onOptionsItemSelected(item);
     }

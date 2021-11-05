@@ -249,3 +249,11 @@ Java_com_github_eka2l1_emu_Emulator_getLanguageNames(
         env->SetObjectArrayElement(jlanguage_names, i, env->NewStringUTF(language_names[i].c_str()));
     return jlanguage_names;
 }
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_github_eka2l1_emu_Emulator_setScreenParams(JNIEnv *env, jclass clazz,
+                                                    jint background_color, jint scale_ratio,
+                                                    jint scale_type, jint gravity) {
+    state->launcher->set_screen_params(background_color, scale_ratio, scale_type, gravity);
+}

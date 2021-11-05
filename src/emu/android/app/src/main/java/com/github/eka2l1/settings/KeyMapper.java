@@ -22,74 +22,11 @@ package com.github.eka2l1.settings;
 import android.util.SparseIntArray;
 import android.view.KeyEvent;
 
-import com.github.eka2l1.emu.Emulator;
 import com.github.eka2l1.emu.Keycode;
 
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
-import org.yaml.snakeyaml.nodes.Tag;
-import org.yaml.snakeyaml.representer.Representer;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-
 public class KeyMapper {
-    static void saveArrayPref(SparseIntArray intArray) {
-        ArrayList<KeyBind> keyBinds = new ArrayList<>();
-        for (int i = 0; i < intArray.size(); i++) {
-            KeyBind bind = new KeyBind(intArray.keyAt(i), intArray.valueAt(i));
-            keyBinds.add(bind);
-        }
-        DumperOptions options = new DumperOptions();
-        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-        Representer representer = new Representer(options);
-        representer.addClassTag(KeyBind.class, Tag.MAP);
-        Yaml yaml = new Yaml(new Constructor(KeyBind.class), representer, options);
-        File configFile = new File(Emulator.getEmulatorDir(), "keybind.yml");
-        try {
-            FileWriter fileWriter = new FileWriter(configFile);
-            yaml.dump(keyBinds, fileWriter);
-            fileWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Emulator.loadConfig();
-    }
-
-    public static SparseIntArray getArrayPref() {
-        SparseIntArray intArray = new SparseIntArray();
-        Yaml yaml = new Yaml();
-        File configFile = new File(Emulator.getEmulatorDir(), "keybind.yml");
-        ArrayList<Object> keyBinds = null;
-        try {
-            FileInputStream fis = new FileInputStream(configFile);
-            keyBinds = yaml.load(fis);
-            fis.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (keyBinds != null) {
-            try {
-                for (Object obj : keyBinds) {
-                    String str = yaml.dump(obj);
-                    KeyBind bind = yaml.loadAs(str, KeyBind.class);
-                    intArray.append(bind.source.data.keycode, bind.target);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                initArray(intArray);
-            }
-        } else {
-            initArray(intArray);
-        }
-        return intArray;
-    }
-
-    static void initArray(SparseIntArray intDict) {
+    public static SparseIntArray getDefaultKeyMap() {
+        SparseIntArray intDict = new SparseIntArray();
         intDict.put(KeyEvent.KEYCODE_0, Keycode.KEY_NUM0);
         intDict.put(KeyEvent.KEYCODE_1, Keycode.KEY_NUM1);
         intDict.put(KeyEvent.KEYCODE_2, Keycode.KEY_NUM2);
@@ -111,42 +48,6 @@ public class KeyMapper {
         intDict.put(KeyEvent.KEYCODE_SOFT_RIGHT, Keycode.KEY_SOFT_RIGHT);
         intDict.put(KeyEvent.KEYCODE_CALL, Keycode.KEY_SEND);
         intDict.put(KeyEvent.KEYCODE_ENDCALL, Keycode.KEY_CLEAR);
-    }
-
-    private static class KeyBind {
-        Source source;
-        int target;
-
-        KeyBind() {
-        }
-
-        KeyBind(int keycode, int target) {
-            this.source = new Source(keycode);
-            this.target = target;
-        }
-    }
-
-    private static class Source {
-        String type;
-        Data data;
-
-        Source() {
-        }
-
-        Source(int keycode) {
-            this.type = "key";
-            this.data = new Data(keycode);
-        }
-    }
-
-    private static class Data {
-        int keycode;
-
-        Data() {
-        }
-
-        Data(int keycode) {
-            this.keycode = keycode;
-        }
+        return intDict;
     }
 }
