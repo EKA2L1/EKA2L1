@@ -225,7 +225,7 @@ namespace eka2l1 {
         std::size_t original_size = dest_size;
         dest_size = 0;
 
-        while ((source_start <= source_end) && (!dest || (dest_start <= dest_end))) {
+        while ((source_start < source_end) && (!dest || (dest_start < dest_end))) {
             std::uint16_t val = *source_start++;
 
             std::uint32_t repeat_count = common::min<std::uint32_t>(static_cast<std::uint32_t>((val >> 12) & 0xF),
