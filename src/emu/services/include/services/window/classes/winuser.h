@@ -41,13 +41,21 @@ namespace eka2l1::epoc {
     struct window_group;
     struct dsa;
 
-    struct canvas_interface {
+    struct canvas_interface : public epoc::window {
         virtual std::uint32_t redraw_priority(int *shift = nullptr) = 0;
         virtual eka2l1::vec2 absolute_position() const = 0;
         virtual eka2l1::vec2 get_origin() = 0;
+
+        explicit canvas_interface(window_server_client_ptr client, screen *scr, window *parent)
+            : window(client, scr, parent) {
+        }
+
+        explicit canvas_interface(window_server_client_ptr client, screen *scr, window *parent, window_kind type)
+            : window(client, scr, parent, type) {
+        }
     };
 
-    struct canvas_base : public epoc::window, public canvas_interface {
+    struct canvas_base : public canvas_interface {
         epoc::display_mode dmode;
         epoc::window_type win_type;
 
@@ -160,7 +168,7 @@ namespace eka2l1::epoc {
         bool execute_command(service::ipc_context &ctx, ws_cmd &cmd) override;
     };
 
-    struct top_canvas : public epoc::window, public canvas_interface {
+    struct top_canvas : public canvas_interface {
         explicit top_canvas(window_server_client_ptr client, screen *scr, window *parent);
 
         std::uint32_t redraw_priority(int *shift = nullptr) override;

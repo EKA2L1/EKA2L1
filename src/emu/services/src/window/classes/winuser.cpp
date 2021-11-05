@@ -47,7 +47,7 @@ namespace eka2l1::epoc {
 
     // ======================= WINDOW TOP USER (CLIENT) ===============================
     top_canvas::top_canvas(window_server_client_ptr client, screen *scr, window *parent)
-        : window(client, scr, parent, window_kind::top_client) {
+        : canvas_interface(client, scr, parent, window_kind::top_client) {
     }
 
     std::uint32_t top_canvas::redraw_priority(int *shift) {
@@ -68,7 +68,7 @@ namespace eka2l1::epoc {
     }
 
     canvas_base::canvas_base(window_server_client_ptr client, screen *scr, window *parent, const epoc::window_type type_of_window, const epoc::display_mode dmode, const std::uint32_t client_handle)
-        : window(client, scr, parent, window_kind::client)
+        : canvas_interface(client, scr, parent, window_kind::client)
         , win_type(type_of_window)
         , pos(0, 0)
         , resize_needed(false)
@@ -83,7 +83,7 @@ namespace eka2l1::epoc {
         , last_draw_(0)
         , last_fps_sync_(0)
         , fps_count_(0) {
-        abs_rect.top = reinterpret_cast<canvas_base *>(parent)->absolute_position();
+        abs_rect.top = reinterpret_cast<canvas_interface *>(parent)->absolute_position();
         abs_rect.size = eka2l1::vec2(0, 0);
 
         if (parent->type != epoc::window_kind::top_client && parent->type != epoc::window_kind::client) {
@@ -309,7 +309,7 @@ namespace eka2l1::epoc {
         }
 
         int shift = 0;
-        int parent_pri = reinterpret_cast<canvas_base *>(parent)->redraw_priority(&shift);
+        int parent_pri = reinterpret_cast<canvas_interface *>(parent)->redraw_priority(&shift);
 
         if (shift > 0) {
             shift--;
