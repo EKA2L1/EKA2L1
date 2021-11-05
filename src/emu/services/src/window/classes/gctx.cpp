@@ -26,6 +26,7 @@
 #include <services/window/classes/winuser.h>
 #include <services/window/op.h>
 #include <services/window/opheader.h>
+#include <services/window/util.h>
 #include <services/window/window.h>
 
 #include <system/epoc.h>
@@ -43,7 +44,7 @@ namespace eka2l1::epoc {
 
     void graphic_context::active(service::ipc_context &context, ws_cmd cmd) {
         const std::uint32_t window_to_attach_handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
-        attached_window = reinterpret_cast<epoc::window_user *>(client->get_object(window_to_attach_handle));
+        attached_window = reinterpret_cast<epoc::canvas_base *>(client->get_object(window_to_attach_handle));
 
         // Attach context with window
         attached_window->attached_contexts.push(&context_attach_link);
@@ -91,6 +92,11 @@ namespace eka2l1::epoc {
             // as before, but not Intel... Note: NVIDIA also
             cmd_builder->resize_bitmap(attached_window->driver_win_id, attached_window->size());
             attached_window->resize_needed = false;
+        }
+
+        if (attached_window->win_type == epoc::window_type::backed_up) {
+            epoc::bitmap_backed_canvas *cv = reinterpret_cast<epoc::bitmap_backed_canvas*>(attached_window);
+            cv->sync_from_bitmap();
         }
 
         cmd_builder->bind_bitmap(attached_window->driver_win_id);
@@ -227,8 +233,9 @@ namespace eka2l1::epoc {
         bool stencil_one_for_valid = true;
 
         if (clipping_rect.empty() && clipping_region.empty()) {
-            if (attached_window->flags & epoc::window_user::flags_in_redraw) {
-                the_clip = attached_window->redraw_rect_curr;
+            if (attached_window->flags & epoc::canvas_base::flags_in_redraw) {
+                epoc::free_modify_canvas *attached_fm_window = reinterpret_cast<epoc::free_modify_canvas*>(attached_window);
+                the_clip = attached_fm_window->redraw_rect_curr;
                 use_clipping = true;
             } else {
                 // Developement document says that when not being redrawn, drawing is clipped to non-invalid part.
@@ -240,8 +247,9 @@ namespace eka2l1::epoc {
                 return;
             }
         } else {
-            if (attached_window->flags & epoc::window_user::flags_in_redraw) {
-                clip_region_temp->add_rect(attached_window->redraw_rect_curr);
+            if (attached_window->flags & epoc::canvas_base::flags_in_redraw) {
+                epoc::free_modify_canvas *attached_fm_window = reinterpret_cast<epoc::free_modify_canvas*>(attached_window);
+                clip_region_temp->add_rect(attached_fm_window->redraw_rect_curr);
             } else {
                 clip_region_temp->add_rect(attached_window->bounding_rect());
 
@@ -280,28 +288,7 @@ namespace eka2l1::epoc {
                 cmd_builder->clip_rect(the_clip);
             }
         } else {
-            cmd_builder->set_stencil(true);
-
-            // Try to fill region rects with 1 in stencil buffer.
-            // Intentionally let stencil test fail so nothing gets draw. Just need to fill it after all.
-            cmd_builder->set_stencil_pass_condition(drivers::stencil_face::back_and_front, drivers::condition_func::never,
-                1, 0xFF);
-            cmd_builder->set_stencil_action(drivers::stencil_face::back_and_front, drivers::stencil_action::replace,
-                drivers::stencil_action::keep, drivers::stencil_action::keep);
-            cmd_builder->set_stencil_mask(drivers::stencil_face::back_and_front, 0xFF);
-
-            for (std::size_t i = 0; i < the_region->rects_.size(); i++) {
-                if (the_region->rects_[i].valid()) {
-                    cmd_builder->draw_rectangle(the_region->rects_[i]);
-                }
-            }
-
-            // Now set stencil buffer to only pass if value of pixel correspond in stencil buffer is not equal to 1 (invalid region),
-            // or equal to 1 (if valid region)
-            // Also disable writing to stencil buffer
-            cmd_builder->set_stencil_pass_condition(drivers::stencil_face::back_and_front, stencil_one_for_valid ? drivers::condition_func::equal : drivers::condition_func::not_equal, 1, 0xFF);
-            cmd_builder->set_stencil_action(drivers::stencil_face::back_and_front, drivers::stencil_action::keep,
-                drivers::stencil_action::keep, drivers::stencil_action::keep);
+            clip_region(*cmd_builder, *the_region, stencil_one_for_valid);
         }
     }
 
@@ -1035,7 +1022,7 @@ namespace eka2l1::epoc {
 
     graphic_context::graphic_context(window_server_client_ptr client, epoc::window *attach_win)
         : window_client_obj(client, nullptr)
-        , attached_window(reinterpret_cast<epoc::window_user *>(attach_win))
+        , attached_window(reinterpret_cast<epoc::canvas_base *>(attach_win))
         , text_font(nullptr)
         , fill_mode(brush_style::null)
         , line_mode(pen_style::null)

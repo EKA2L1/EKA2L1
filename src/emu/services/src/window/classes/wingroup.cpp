@@ -89,7 +89,7 @@ namespace eka2l1::epoc {
         , uid_owner_change_callback_handle(0)
         , uid_owner_change_process(nullptr) {
         // Create window group as child
-        top = std::make_unique<window_top_user>(client, scr, this);
+        top = std::make_unique<top_canvas>(client, scr, this);
         child = top.get();
 
         set_client_handle(client_handle);
@@ -151,15 +151,15 @@ namespace eka2l1::epoc {
         LOG_WARN(SERVICE_WINDOW, "Set cursor text is mostly a stubbed now");
 
         ws_cmd_set_text_cursor *cmd_set = reinterpret_cast<decltype(cmd_set)>(cmd.data_ptr);
-        auto window_user_to_set = reinterpret_cast<window_user *>(client->get_object(cmd_set->win));
+        auto canvas_base_to_set = reinterpret_cast<canvas_base *>(client->get_object(cmd_set->win));
 
-        if (!window_user_to_set || (window_user_to_set->type != window_kind::client)) {
+        if (!canvas_base_to_set || (canvas_base_to_set->type != window_kind::client)) {
             LOG_ERROR(SERVICE_WINDOW, "Window not found or not client kind to set text cursor");
             context.complete(epoc::error_not_found);
             return;
         }
 
-        window_user_to_set->cursor_pos = cmd_set->pos + window_user_to_set->pos;
+        canvas_base_to_set->cursor_pos = cmd_set->pos + canvas_base_to_set->pos;
         context.complete(epoc::error_none);
     }
 

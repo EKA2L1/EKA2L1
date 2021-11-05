@@ -26,13 +26,17 @@
 #include <services/window/op.h>
 #include <services/window/opheader.h>
 #include <services/window/screen.h>
+#include <services/window/util.h>
 #include <services/window/window.h>
+#include <services/fbs/fbs.h>
 
 #include <kernel/kernel.h>
 #include <kernel/timing.h>
 
 #include <common/log.h>
 #include <common/vecx.h>
+
+#include <drivers/itc.h>
 
 #include <utils/err.h>
 
@@ -41,17 +45,12 @@ namespace eka2l1::epoc {
     static constexpr std::uint8_t max_ordpos_pri = 0b1111;
     static constexpr std::uint8_t max_pri_level = (sizeof(std::uint32_t) / bits_per_ordpos) - 1;
 
-    // ======================= WINDOW USER BASE ======================================
-    window_user_base::window_user_base(window_server_client_ptr client, screen *scr, window *parent, const window_kind kind)
-        : window(client, scr, parent, kind) {
-    }
-
     // ======================= WINDOW TOP USER (CLIENT) ===============================
-    window_top_user::window_top_user(window_server_client_ptr client, screen *scr, window *parent)
-        : window_user_base(client, scr, parent, window_kind::top_client) {
+    top_canvas::top_canvas(window_server_client_ptr client, screen *scr, window *parent)
+        : window(client, scr, parent, window_kind::top_client) {
     }
 
-    std::uint32_t window_top_user::redraw_priority(int *shift) {
+    std::uint32_t top_canvas::redraw_priority(int *shift) {
         const std::uint32_t ordinal_pos = std::min<std::uint32_t>(max_ordpos_pri, ordinal_position(false));
         if (shift) {
             *shift = max_pri_level;
@@ -60,16 +59,16 @@ namespace eka2l1::epoc {
         return (ordinal_pos << (max_pri_level * bits_per_ordpos));
     }
 
-    eka2l1::vec2 window_top_user::get_origin() {
+    eka2l1::vec2 top_canvas::get_origin() {
         return { 0, 0 };
     }
 
-    eka2l1::vec2 window_top_user::absolute_position() const {
+    eka2l1::vec2 top_canvas::absolute_position() const {
         return { 0, 0 };
     }
 
-    window_user::window_user(window_server_client_ptr client, screen *scr, window *parent, const epoc::window_type type_of_window, const epoc::display_mode dmode, const std::uint32_t client_handle)
-        : window_user_base(client, scr, parent, window_kind::client)
+    canvas_base::canvas_base(window_server_client_ptr client, screen *scr, window *parent, const epoc::window_type type_of_window, const epoc::display_mode dmode, const std::uint32_t client_handle)
+        : window(client, scr, parent, window_kind::client)
         , win_type(type_of_window)
         , pos(0, 0)
         , resize_needed(false)
@@ -84,7 +83,7 @@ namespace eka2l1::epoc {
         , last_draw_(0)
         , last_fps_sync_(0)
         , fps_count_(0) {
-        abs_rect.top = reinterpret_cast<window_user_base *>(parent)->absolute_position();
+        abs_rect.top = reinterpret_cast<canvas_base *>(parent)->absolute_position();
         abs_rect.size = eka2l1::vec2(0, 0);
 
         if (parent->type != epoc::window_kind::top_client && parent->type != epoc::window_kind::client) {
@@ -92,7 +91,7 @@ namespace eka2l1::epoc {
         } else {
             if (parent->type == epoc::window_kind::client) {
                 // Inherits parent's size
-                epoc::window_user *user = reinterpret_cast<epoc::window_user *>(parent);
+                epoc::canvas_base *user = reinterpret_cast<epoc::canvas_base *>(parent);
                 abs_rect.size = user->abs_rect.size;
             } else {
                 // Going fullscreen
@@ -109,7 +108,7 @@ namespace eka2l1::epoc {
         scr->need_update_visible_regions(true);
     }
 
-    window_user::~window_user() {        
+    canvas_base::~canvas_base() {        
         remove_from_sibling_list();
         wipeout();
 
@@ -120,25 +119,25 @@ namespace eka2l1::epoc {
         client->remove_redraws(this);
     }
 
-    bool window_user::is_dsa_active() const {
+    bool canvas_base::is_dsa_active() const {
         return !directs_.empty();
     }
 
-    void window_user::add_dsa_active(dsa *dsa) {
+    void canvas_base::add_dsa_active(dsa *dsa) {
         auto result = std::find(directs_.begin(), directs_.end(), dsa);
         if (result == directs_.end()) {
             directs_.push_back(dsa);
         }
     }
 
-    void window_user::remove_dsa_active(dsa *dsa) {
+    void canvas_base::remove_dsa_active(dsa *dsa) {
         auto result = std::find(directs_.begin(), directs_.end(), dsa);
         if (result != directs_.end()) {
             directs_.erase(result);
         }
     }
 
-    void window_user::wipeout() {
+    void canvas_base::wipeout() {
         // Remove driver bitmap
         if (driver_win_id) {
             drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
@@ -154,19 +153,40 @@ namespace eka2l1::epoc {
         }
     }
 
-    bool window_user::can_be_physically_seen() const {
+    void canvas_base::prepare_driver_bitmap() {
+        if (resize_needed) {
+            drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
+
+            // Queue a resize command
+            auto cmd_list = drv->new_command_list();
+            auto cmd_builder = drv->new_command_builder(cmd_list.get());
+
+            if (driver_win_id == 0) {
+                driver_win_id = drivers::create_bitmap(drv, abs_rect.size, 32);
+            } else {
+                cmd_builder->resize_bitmap(driver_win_id, abs_rect.size);
+                cmd_builder->bind_bitmap(driver_win_id);
+            }
+
+            drv->submit_command_list(*cmd_list);
+
+            resize_needed = false;
+        }
+    }
+
+    bool canvas_base::can_be_physically_seen() const {
         return is_visible() && !visible_region.empty();
     }
 
-    bool window_user::is_visible() const {
+    bool canvas_base::is_visible() const {
         return ((flags & flags_active) && (flags & flags_visible));
     }
 
-    eka2l1::vec2 window_user::get_origin() {
+    eka2l1::vec2 canvas_base::get_origin() {
         return pos;
     }
 
-    eka2l1::rect window_user::bounding_rect() const {
+    eka2l1::rect canvas_base::bounding_rect() const {
         eka2l1::rect bound;
         bound.top = { 0, 0 };
         bound.size = abs_rect.size;
@@ -174,15 +194,15 @@ namespace eka2l1::epoc {
         return bound;
     }
 
-    eka2l1::rect window_user::absolute_rect() const {
+    eka2l1::rect canvas_base::absolute_rect() const {
         return abs_rect;
     }
 
-    eka2l1::vec2 window_user::size() const {
+    eka2l1::vec2 canvas_base::size() const {
         return abs_rect.size;
     }
 
-    void window_user::queue_event(const epoc::event &evt) {
+    void canvas_base::queue_event(const epoc::event &evt) {
         if (!is_visible()) {
             // TODO: Im not sure... I think it can certainly receive
             LOG_TRACE(SERVICE_WINDOW, "The client window 0x{:X} is not visible, and can't receive any events", id);
@@ -201,7 +221,7 @@ namespace eka2l1::epoc {
 
         bool do_it(epoc::window *win) override {
             if (win->type == window_kind::client) {
-                window_user *user = reinterpret_cast<window_user*>(win);
+                canvas_base *user = reinterpret_cast<canvas_base*>(win);
                 user->recalculate_absolute_position(diff_);
             }
 
@@ -209,7 +229,7 @@ namespace eka2l1::epoc {
         }
     };
 
-    void window_user::recalculate_absolute_position(const eka2l1::vec2 &diff) {
+    void canvas_base::recalculate_absolute_position(const eka2l1::vec2 &diff) {
         if (diff == eka2l1::vec2(0, 0)) {
             return;
         }
@@ -218,7 +238,7 @@ namespace eka2l1::epoc {
         abs_rect.top += diff;
     }
 
-    void window_user::set_extent(const eka2l1::vec2 &top, const eka2l1::vec2 &new_size) {
+    void canvas_base::set_extent(const eka2l1::vec2 &top, const eka2l1::vec2 &new_size) {
         eka2l1::vec2 pos_diff = top - pos;
 
         const bool size_changed = (new_size != abs_rect.size);
@@ -229,20 +249,14 @@ namespace eka2l1::epoc {
 
         pos = top;
 
-        if (size_changed) {
-            redraw_region.make_empty();
-            resize_needed = true;
-
-            // We need to invalidate the whole new window
-            invalidate(bounding_rect());
-        }
+        handle_extent_changed(size_changed, pos_changed);
 
         if (pos_changed) {
             // Change the absolute position of children too!
             window_absolute_postion_change_walker walker(pos_diff);
             walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children);
         }
-        
+
         if (pos_changed || size_changed) {
             // Force a visible region update when the next screen redraw comes
             if (is_visible()) {
@@ -251,8 +265,8 @@ namespace eka2l1::epoc {
         }
     }
 
-    static bool should_purge_window_user(void *win, epoc::event &evt) {
-        epoc::window_user *user = reinterpret_cast<epoc::window_user *>(win);
+    static bool should_purge_canvas_base(void *win, epoc::event &evt) {
+        epoc::canvas_base *user = reinterpret_cast<epoc::canvas_base *>(win);
         if (user->client_handle == evt.handle) {
             return false;
         }
@@ -260,7 +274,7 @@ namespace eka2l1::epoc {
         return true;
     }
 
-    void window_user::set_visible(const bool vis) {
+    void canvas_base::set_visible(const bool vis) {
         bool should_trigger_redraw = false;
         bool current_visible_status = (flags & flags_visible) != 0;
 
@@ -276,7 +290,7 @@ namespace eka2l1::epoc {
             flags |= flags_visible;
         } else {
             // Purge all queued events now that the window is not visible anymore
-            client->walk_event(should_purge_window_user, this);
+            client->walk_event(should_purge_canvas_base, this);
         }
 
         if (should_trigger_redraw) {
@@ -288,14 +302,14 @@ namespace eka2l1::epoc {
         }
     }
 
-    std::uint32_t window_user::redraw_priority(int *child_shift) {
+    std::uint32_t canvas_base::redraw_priority(int *child_shift) {
         int ordpos = ordinal_position(false);
         if (ordpos > max_ordpos_pri) {
             ordpos = max_ordpos_pri;
         }
 
         int shift = 0;
-        int parent_pri = reinterpret_cast<window_user_base *>(parent)->redraw_priority(&shift);
+        int parent_pri = reinterpret_cast<canvas_base *>(parent)->redraw_priority(&shift);
 
         if (shift > 0) {
             shift--;
@@ -308,7 +322,7 @@ namespace eka2l1::epoc {
         return (parent_pri + (ordpos << (bits_per_ordpos * shift)));
     }
 
-    epoc::window_group *window_user::get_group() {
+    epoc::window_group *canvas_base::get_group() {
         epoc::window_group *are_you = reinterpret_cast<epoc::window_group *>(parent);
         while (are_you->type != epoc::window_kind::group) {
             are_you = reinterpret_cast<epoc::window_group *>(are_you->parent);
@@ -317,16 +331,16 @@ namespace eka2l1::epoc {
         return are_you;
     }
 
-    eka2l1::vec2 window_user::absolute_position() const {
+    eka2l1::vec2 canvas_base::absolute_position() const {
         return abs_rect.top;
     }
 
-    epoc::display_mode window_user::display_mode() const {
+    epoc::display_mode canvas_base::display_mode() const {
         // Fallback to screen
         return scr->disp_mode;
     }
 
-    void window_user::take_action_on_change(kernel::thread *drawer) {
+    void canvas_base::take_action_on_change(kernel::thread *drawer) {
         if (scr->need_update_visible_regions()) {
             scr->recalculate_visible_regions();
         }
@@ -342,8 +356,9 @@ namespace eka2l1::epoc {
 
             std::uint64_t wait_time = 0;
 
-            if (crr - last_draw_ < time_spend_per_frame_us) {
-                wait_time = time_spend_per_frame_us - (crr - last_draw_);
+            if (crr < time_spend_per_frame_us + last_draw_) {
+                // Originally - (crr - last_draw_), but preventing overflow
+                wait_time = time_spend_per_frame_us + last_draw_ - crr;
             } else {
                 wait_time = 0;
             }
@@ -364,119 +379,7 @@ namespace eka2l1::epoc {
         }
     }
 
-    void window_user::invalidate(const eka2l1::rect &irect) {
-        if (irect.empty()) {
-            return;
-        }
-
-        if (win_type != window_type::redraw) {
-            return;
-        }
-
-        eka2l1::rect to_queue = irect;
-
-        // Queue invalidate even if there's no change to the invalidated region.
-        redraw_region.add_rect(to_queue);
-
-        if (is_visible()) {
-            client->queue_redraw(this, to_queue);
-            client->trigger_redraw();
-        }
-    }
-
-    void window_user::end_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
-        drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
-        redraw_rect_curr.make_empty();
-
-        if (resize_needed) {
-            // Queue a resize command
-            auto cmd_list = drv->new_command_list();
-            auto cmd_builder = drv->new_command_builder(cmd_list.get());
-
-            if (driver_win_id == 0) {
-                driver_win_id = drivers::create_bitmap(drv, abs_rect.size, 32);
-            } else {
-                cmd_builder->resize_bitmap(driver_win_id, abs_rect.size);
-                cmd_builder->bind_bitmap(driver_win_id);
-            }
-
-            drv->submit_command_list(*cmd_list);
-
-            resize_needed = false;
-        }
-
-        common::double_linked_queue_element *ite = attached_contexts.first();
-        common::double_linked_queue_element *end = attached_contexts.end();
-
-        bool any_flush_performed = false;
-
-        // Set all contexts to be in recording
-        do {
-            if (!ite) {
-                break;
-            }
-
-            epoc::graphic_context *ctx = E_LOFF(ite, epoc::graphic_context, context_attach_link);
-
-            // Flush the queue one time.
-            ctx->flush_queue_to_driver();
-
-            if (ctx->recording) {
-                // Still in active state?
-                ctx->cmd_builder->bind_bitmap(driver_win_id);
-                ctx->flushed = true;
-            }
-
-            ite = ite->next;
-
-            any_flush_performed = true;
-        } while (ite != end);
-
-        if (any_flush_performed && content_changed()) {
-            take_action_on_change(ctx.msg->own_thr);
-        }
-
-        flags &= ~flags_in_redraw;
-        content_changed(false);
-
-        // Some rectangles are still not validated. Notify client about them!
-        for (std::size_t i = 0; i < redraw_region.rects_.size(); i++) {
-            client->queue_redraw(this, redraw_region.rects_[i]);
-        }
-
-        client->trigger_redraw();
-
-        // LOG_DEBUG(SERVICE_WINDOW, "End redraw to window 0x{:X}!", id);
-        ctx.complete(epoc::error_none);
-    }
-
-    void window_user::begin_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
-        // LOG_TRACE(SERVICE_WINDOW, "Begin redraw to window 0x{:X}!", id);
-        if (flags & flags_in_redraw) {
-            ctx.complete(epoc::error_in_use);
-            return;
-        }
-
-        if (cmd.header.cmd_len == 0) {
-            redraw_rect_curr = bounding_rect();
-        } else {
-            redraw_rect_curr = *reinterpret_cast<eka2l1::rect *>(cmd.data_ptr);
-            redraw_rect_curr.transform_from_symbian_rectangle();
-        }
-
-        // Remove the given rect from region need to redraw
-        // In case app try to get the invalid region infos inside a redraw!
-        // Yes. THPS. Get invalid region then forgot to free, leak mem all over. I have pain!!
-        redraw_region.eliminate(redraw_rect_curr);
-
-        // remove all pending redraws. End redraw will report invalidates later
-        client->remove_redraws(this);
-
-        flags |= flags_in_redraw;
-        ctx.complete(epoc::error_none);
-    }
-
-    void window_user::set_non_fading(service::ipc_context &context, ws_cmd &cmd) {
+    void canvas_base::set_non_fading(service::ipc_context &context, ws_cmd &cmd) {
         const std::uint32_t non_fading = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
 
         if (non_fading) {
@@ -488,24 +391,19 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
-    void window_user::set_size(service::ipc_context &context, ws_cmd &cmd) {
-        // refer to window_user::set_extent()
+    void canvas_base::set_size(service::ipc_context &context, ws_cmd &cmd) {
+        // refer to canvas_base::set_extent()
         const object_size new_size = *reinterpret_cast<object_size *>(cmd.data_ptr);
         set_extent(pos, new_size);
         context.complete(epoc::error_none);
     }
 
-    bool window_user::clear_redraw_store() {
-        has_redraw_content(false);
-        return true;
-    }
-
-    void window_user::set_transparency_alpha_channel(service::ipc_context &context, ws_cmd &cmd) {
+    void canvas_base::set_transparency_alpha_channel(service::ipc_context &context, ws_cmd &cmd) {
         flags |= flags_enable_alpha;
         context.complete(epoc::error_none);
     }
 
-    void window_user::free(service::ipc_context &context, ws_cmd &cmd) {
+    void canvas_base::free(service::ipc_context &context, ws_cmd &cmd) {
         // Try to redraw the screen
         on_command_batch_done(context);
         set_visible(false);
@@ -514,12 +412,7 @@ namespace eka2l1::epoc {
         client->delete_object(cmd.obj_handle);
     }
 
-    void window_user::store_draw_commands(service::ipc_context &ctx, ws_cmd &cmd) {
-        LOG_TRACE(SERVICE_WINDOW, "Store draw command stubbed");
-        ctx.complete(epoc::error_none);
-    }
-
-    void window_user::alloc_pointer_buffer(service::ipc_context &context, ws_cmd &cmd) {
+    void canvas_base::alloc_pointer_buffer(service::ipc_context &context, ws_cmd &cmd) {
         ws_cmd_alloc_pointer_buffer *alloc_params = reinterpret_cast<ws_cmd_alloc_pointer_buffer *>(cmd.data_ptr);
 
         if ((alloc_params->max_points >= 100) || (alloc_params->max_points == 0)) {
@@ -534,7 +427,17 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
-    void window_user::invalidate(service::ipc_context &context, ws_cmd &cmd) {
+    bool free_modify_canvas::clear_redraw_store() {
+        has_redraw_content(false);
+        return true;
+    }
+
+    void free_modify_canvas::store_draw_commands(service::ipc_context &ctx, ws_cmd &cmd) {
+        LOG_TRACE(SERVICE_WINDOW, "Store draw command stubbed");
+        ctx.complete(epoc::error_none);
+    }
+
+    void free_modify_canvas::invalidate(service::ipc_context &context, ws_cmd &cmd) {
         eka2l1::rect prototype_irect;
         eka2l1::rect whole_win = bounding_rect();
 
@@ -553,10 +456,13 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
-    void window_user::activate(service::ipc_context &context, ws_cmd &cmd) {
-        flags |= flags_active;
-
+    void free_modify_canvas::on_activate() {
         invalidate(bounding_rect());
+    }
+
+    void canvas_base::activate(service::ipc_context &context, ws_cmd &cmd) {
+        flags |= flags_active;
+        on_activate();
 
         if (is_visible()) {
             scr->need_update_visible_regions(true);
@@ -565,34 +471,59 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
-    void window_user::get_invalid_region_count(service::ipc_context &context, ws_cmd &cmd) {
-        context.complete(static_cast<std::int32_t>(redraw_region.rects_.size()));
-    }
-
-    void window_user::get_invalid_region(service::ipc_context &context, ws_cmd &cmd) {
-        std::int32_t to_get_count = *reinterpret_cast<std::int32_t *>(cmd.data_ptr);
-
-        if (to_get_count < 0) {
-            context.complete(epoc::error_argument);
-            return;
+    bool canvas_base::draw(drivers::graphics_command_list_builder *builder) {
+        if (!builder) {
+            return false;
         }
 
-        to_get_count = common::min<std::int32_t>(to_get_count, static_cast<std::int32_t>(redraw_region.rects_.size()));
-
-        std::vector<eka2l1::rect> transformed;
-        transformed.resize(to_get_count);
-
-        for (std::size_t i = 0; i < to_get_count; i++) {
-            transformed[i] = redraw_region.rects_[i];
-            transformed[i].transform_to_symbian_rectangle();
+        if (!driver_win_id || !can_be_physically_seen()) {
+            // No need to redraw this window yet. It doesn't even have any content ready.
+            return false;
         }
 
-        context.write_data_to_descriptor_argument(reply_slot, reinterpret_cast<std::uint8_t *>(transformed.data()),
-            to_get_count * sizeof(eka2l1::rect));
-        context.complete(epoc::error_none);
+        // Check if extent is just invalid
+        if (size().x == 0 || size().y == 0) {
+            // No one can see this. Leave it for now.
+            return false;
+        }
+
+
+        // If it does not have content drawn to it, it makes no sense to draw the background
+        // Else, there's a flag in window server that enables clear on any siutation
+        if (has_redraw_content()) {
+            eka2l1::vec2 abs_pos = absolute_position();
+            if (clear_color_enable && scr->auto_clear_enabled()) {
+                auto color_extracted = common::rgba_to_vec(clear_color);
+
+                if (display_mode() <= epoc::display_mode::color16mu) {
+                    color_extracted[3] = 255;
+                }
+
+                builder->set_brush_color_detail({ color_extracted[0], color_extracted[1], color_extracted[2], color_extracted[3] });
+                builder->draw_rectangle(eka2l1::rect(abs_pos, size()));
+            } else {
+                builder->set_brush_color(eka2l1::vec3(255, 255, 255));
+            }
+
+            // Draw it onto current binding buffer
+            // TODO: We can probably also make use of visible regions and stencil buffer to reduce and provide
+            // more accurate drawing results. I don't want to complicated it more now, since there's transparent region
+            // not implemented (region that is visible even though another window is on top of it)
+            builder->draw_bitmap(driver_win_id, 0, eka2l1::rect(abs_pos, { 0, 0 }),
+                eka2l1::rect({ 0, 0 }, size()), eka2l1::vec2(0, 0), 0.0f, 0);
+
+            return true;
+        }
+
+        return false;
     }
 
-    bool window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+    bool canvas_base::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+        bool useless = false;
+        return execute_command_detail(ctx, cmd, useless);
+    }
+
+    bool canvas_base::execute_command_detail(service::ipc_context &ctx, ws_cmd &cmd, bool &did_it) {
         bool result = execute_command_for_general_node(ctx, cmd);
         bool quit = false;
         //LOG_TRACE(SERVICE_WINDOW, "Window user op: {}", (int)cmd.header.op);
@@ -602,6 +533,7 @@ namespace eka2l1::epoc {
         }
 
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
+        did_it = true;
 
         switch (op) {
         case EWsWinOpRequiredDisplayMode: {
@@ -726,22 +658,6 @@ namespace eka2l1::epoc {
             activate(ctx, cmd);
             break;
 
-        case EWsWinOpInvalidateFull:
-        case EWsWinOpInvalidate:
-            invalidate(ctx, cmd);
-            break;
-
-        case EWsWinOpBeginRedraw:
-        case EWsWinOpBeginRedrawFull: {
-            begin_redraw(ctx, cmd);
-            break;
-        }
-
-        case EWsWinOpEndRedraw: {
-            end_redraw(ctx, cmd);
-            break;
-        }
-
         case EWsWinOpSetSize:
         case EWsWinOpSetSizeErr: {
             set_size(ctx, cmd);
@@ -779,14 +695,6 @@ namespace eka2l1::epoc {
             ctx.complete(epoc::error_none);
             break;
 
-        case EWsWinOpGetInvalidRegionCount:
-            get_invalid_region_count(ctx, cmd);
-            break;
-
-        case EWsWinOpGetInvalidRegion:
-            get_invalid_region(ctx, cmd);
-            break;
-
         case EWsWinOpSetShape:
             LOG_WARN(SERVICE_WINDOW, "SetShape stubbed");
 
@@ -805,22 +713,398 @@ namespace eka2l1::epoc {
             ctx.complete(epoc::error_none);
             break;
 
-        case EWsWinOpStoreDrawCommands:
-            store_draw_commands(ctx, cmd);
-            break;
-
         case EWsWinOpAllocPointerMoveBuffer:
             alloc_pointer_buffer(ctx, cmd);
             break;
 
         default: {
-            LOG_ERROR(SERVICE_WINDOW, "Unimplemented window user opcode 0x{:X}!", cmd.header.op);
-            ctx.complete(epoc::error_none);
-
+            did_it = false;
             break;
         }
         }
 
         return quit;
+    }
+    
+    blank_canvas::blank_canvas(window_server_client_ptr client, screen *scr, window *parent,
+            const epoc::display_mode dmode, const std::uint32_t client_handle)
+        : canvas_base(client, scr, parent, window_type::blank, dmode, client_handle) {
+
+    }
+        
+    bool blank_canvas::draw(drivers::graphics_command_list_builder *builder) {
+        if (!builder || !clear_color_enable || !can_be_physically_seen()) {
+            return false;
+        }
+    
+        eka2l1::vec2 abs_pos = absolute_position();
+        auto color_extracted = common::rgba_to_vec(clear_color);
+
+        if (display_mode() <= epoc::display_mode::color16mu) {
+            color_extracted[3] = 255;
+        }
+
+        builder->set_brush_color_detail({ color_extracted[0], color_extracted[1], color_extracted[2], color_extracted[3] });
+        builder->draw_rectangle(eka2l1::rect(abs_pos, size()));
+
+        return true;
+    }
+
+    free_modify_canvas::free_modify_canvas(window_server_client_ptr client, screen *scr, window *parent,
+        const epoc::display_mode dmode, const std::uint32_t client_handle)
+        : canvas_base(client, scr, parent, epoc::window_type::redraw, dmode, client_handle) {
+
+    }
+
+    void free_modify_canvas::handle_extent_changed(const bool size_changed, const bool pos_changed) {
+        if (size_changed) {
+            redraw_region.make_empty();
+            resize_needed = true;
+
+            // We need to invalidate the whole new window
+            invalidate(bounding_rect());
+        }
+    }
+
+    void free_modify_canvas::get_invalid_region_count(service::ipc_context &context, ws_cmd &cmd) {
+        context.complete(static_cast<std::int32_t>(redraw_region.rects_.size()));
+    }
+
+    void free_modify_canvas::get_invalid_region(service::ipc_context &context, ws_cmd &cmd) {
+        std::int32_t to_get_count = *reinterpret_cast<std::int32_t *>(cmd.data_ptr);
+
+        if (to_get_count < 0) {
+            context.complete(epoc::error_argument);
+            return;
+        }
+
+        to_get_count = common::min<std::int32_t>(to_get_count, static_cast<std::int32_t>(redraw_region.rects_.size()));
+
+        std::vector<eka2l1::rect> transformed;
+        transformed.resize(to_get_count);
+
+        for (std::size_t i = 0; i < to_get_count; i++) {
+            transformed[i] = redraw_region.rects_[i];
+            transformed[i].transform_to_symbian_rectangle();
+        }
+
+        context.write_data_to_descriptor_argument(reply_slot, reinterpret_cast<std::uint8_t *>(transformed.data()),
+            to_get_count * sizeof(eka2l1::rect));
+        context.complete(epoc::error_none);
+    }
+
+    void free_modify_canvas::invalidate(const eka2l1::rect &irect) {
+        if (irect.empty()) {
+            return;
+        }
+
+        if (win_type != window_type::redraw) {
+            return;
+        }
+
+        eka2l1::rect to_queue = irect;
+
+        // Queue invalidate even if there's no change to the invalidated region.
+        redraw_region.add_rect(to_queue);
+
+        if (is_visible()) {
+            client->queue_redraw(this, to_queue);
+            client->trigger_redraw();
+        }
+    }
+
+    void free_modify_canvas::end_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
+        redraw_rect_curr.make_empty();
+
+        prepare_driver_bitmap();
+
+        common::double_linked_queue_element *ite = attached_contexts.first();
+        common::double_linked_queue_element *end = attached_contexts.end();
+
+        bool any_flush_performed = false;
+
+        // Set all contexts to be in recording
+        do {
+            if (!ite) {
+                break;
+            }
+
+            epoc::graphic_context *ctx = E_LOFF(ite, epoc::graphic_context, context_attach_link);
+
+            // Flush the queue one time.
+            ctx->flush_queue_to_driver();
+
+            if (ctx->recording) {
+                // Still in active state?
+                ctx->cmd_builder->bind_bitmap(driver_win_id);
+                ctx->flushed = true;
+            }
+
+            ite = ite->next;
+
+            any_flush_performed = true;
+        } while (ite != end);
+
+        if (any_flush_performed && content_changed()) {
+            take_action_on_change(ctx.msg->own_thr);
+        }
+
+        flags &= ~flags_in_redraw;
+        content_changed(false);
+
+        // Some rectangles are still not validated. Notify client about them!
+        for (std::size_t i = 0; i < redraw_region.rects_.size(); i++) {
+            client->queue_redraw(this, redraw_region.rects_[i]);
+        }
+
+        client->trigger_redraw();
+
+        // LOG_DEBUG(SERVICE_WINDOW, "End redraw to window 0x{:X}!", id);
+        ctx.complete(epoc::error_none);
+    }
+
+    void free_modify_canvas::begin_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
+        // LOG_TRACE(SERVICE_WINDOW, "Begin redraw to window 0x{:X}!", id);
+        if (flags & flags_in_redraw) {
+            ctx.complete(epoc::error_in_use);
+            return;
+        }
+
+        if (cmd.header.cmd_len == 0) {
+            redraw_rect_curr = bounding_rect();
+        } else {
+            redraw_rect_curr = *reinterpret_cast<eka2l1::rect *>(cmd.data_ptr);
+            redraw_rect_curr.transform_from_symbian_rectangle();
+        }
+
+        // Remove the given rect from region need to redraw
+        // In case app try to get the invalid region infos inside a redraw!
+        // Yes. THPS. Get invalid region then forgot to free, leak mem all over. I have pain!!
+        redraw_region.eliminate(redraw_rect_curr);
+
+        // remove all pending redraws. End redraw will report invalidates later
+        client->remove_redraws(this);
+
+        flags |= flags_in_redraw;
+        ctx.complete(epoc::error_none);
+    }
+
+    bool free_modify_canvas::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+        bool did_it = false;
+        const bool should_flush = canvas_base::execute_command_detail(ctx, cmd, did_it);
+
+        if (did_it) {
+            return should_flush;
+        }
+
+        TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
+
+        switch (op) {
+        case EWsWinOpInvalidateFull:
+        case EWsWinOpInvalidate:
+            invalidate(ctx, cmd);
+            break;
+
+        case EWsWinOpBeginRedraw:
+        case EWsWinOpBeginRedrawFull: {
+            begin_redraw(ctx, cmd);
+            break;
+        }
+
+        case EWsWinOpEndRedraw: {
+            end_redraw(ctx, cmd);
+            break;
+        }
+
+        case EWsWinOpGetInvalidRegionCount:
+            get_invalid_region_count(ctx, cmd);
+            break;
+
+        case EWsWinOpGetInvalidRegion:
+            get_invalid_region(ctx, cmd);
+            break;
+
+        case EWsWinOpStoreDrawCommands:
+            store_draw_commands(ctx, cmd);
+            break;
+
+        default:
+            LOG_WARN(SERVICE_WINDOW, "Unimplemented redraw canvas opcode 0x{:X}!", cmd.header.op);
+            ctx.complete(epoc::error_none);
+
+            break;
+        }
+
+        return false;
+    }
+    
+    bitmap_backed_canvas::bitmap_backed_canvas(window_server_client_ptr client, screen *scr, window *parent,
+        const epoc::display_mode dmode, const std::uint32_t client_handle)
+        : canvas_base(client, scr, parent, window_type::backed_up, dmode, client_handle)
+        , bitmap_(nullptr) {
+    }
+
+    void bitmap_backed_canvas::handle_extent_changed(const bool size_changed, const bool pos_changed) {
+        if (size_changed && bitmap_) {
+            LOG_WARN(SERVICE_WINDOW, "Backed up window size changed but FBS bitmap resize not yet supported!");
+        }
+    }
+
+    bitmap_backed_canvas::~bitmap_backed_canvas() {
+        if (bitmap_) {
+            bitmap_->deref();
+        }
+    }
+
+    void bitmap_backed_canvas::create_backed_bitmap() {
+        fbs_server *serv = client->get_ws().get_fbs_server();
+
+        fbs_bitmap_data_info info;
+        info.comp_ = epoc::bitmap_file_no_compression;
+        info.data_ = nullptr;
+        info.data_size_ = 0;
+        info.dpm_ = display_mode();
+        info.size_ = size();
+
+        bool support_current_display_mode = true;
+        bool support_dirty_bitmap = true;
+
+        query_fbs_feature_support(serv, support_current_display_mode, support_dirty_bitmap);
+
+        bitmap_ = serv->create_bitmap(info, true, support_current_display_mode, support_dirty_bitmap);
+        if (bitmap_) {
+            bitmap_->ref();
+        } else {
+            LOG_ERROR(SERVICE_WINDOW, "Unable to create backed up FBS bitmap for window {}", id);
+        }
+
+        if (driver_win_id) {
+            drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
+            drivers::read_bitmap(drv, driver_win_id, eka2l1::point(0, 0), info.size_, get_bpp_from_display_mode(info.dpm_), bitmap_->bitmap_->data_pointer(serv));
+        }
+    }
+
+    void bitmap_backed_canvas::bitmap_handle(service::ipc_context &ctx, ws_cmd &cmd) {
+        if (!bitmap_) {
+            create_backed_bitmap();
+        }
+
+        if (!bitmap_) {
+            ctx.complete(epoc::error_no_memory);
+            return;
+        }
+
+        ctx.complete(static_cast<int>(bitmap_->id));
+    }
+
+    void bitmap_backed_canvas::take_action_on_change(kernel::thread *drawer) {
+        // Sync back to the bitmap
+        if (!bitmap_) {
+            return;
+        }
+
+        if (bitmap_->bitmap_->compression_type() != epoc::bitmap_file_no_compression) {
+            LOG_ERROR(SERVICE_WINDOW, "Try to sync data back to backed bitmap canvas but compression is required on the bitmap!");
+            return;
+        }
+
+        drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
+        fbs_server *serv = client->get_ws().get_fbs_server();
+
+        bool support_current_display_mode = true;
+        bool support_dirty_bitmap = true;
+
+        query_fbs_feature_support(serv, support_current_display_mode, support_dirty_bitmap);
+
+        eka2l1::vec2 to_sync_size(common::min<int>(bitmap_->bitmap_->header_.size_pixels.x, size().x),
+            common::min<int>(bitmap_->bitmap_->header_.size_pixels.y, size().y));
+
+        drivers::read_bitmap(drv, driver_win_id, eka2l1::point(0, 0), to_sync_size, get_bpp_from_display_mode(
+            support_current_display_mode ? bitmap_->bitmap_->settings_.current_display_mode() : bitmap_->bitmap_->settings_.initial_display_mode()),
+            bitmap_->bitmap_->data_pointer(serv));
+    }
+
+    void bitmap_backed_canvas::sync_from_bitmap(std::optional<common::region> reg_clip) {
+        if (!bitmap_) {
+            return;
+        }
+        
+        prepare_driver_bitmap();
+
+        epoc::bitmap_cache *cache = client->get_ws().get_bitmap_cache();
+        drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
+
+        auto cmd_list = drv->new_command_list();
+        auto cmd_builder = drv->new_command_builder(cmd_list.get());
+
+        const drivers::handle to_draw_handle = cache->add_or_get(drv, cmd_builder.get(), bitmap_->bitmap_);
+
+        eka2l1::vec2 to_draw_out_size(common::min<int>(bitmap_->bitmap_->header_.size_pixels.x, size().x),
+            common::min<int>(bitmap_->bitmap_->header_.size_pixels.y, size().y));
+
+        eka2l1::rect draw_rect({ 0, 0 }, to_draw_out_size);
+
+        cmd_builder->bind_bitmap(driver_win_id);
+        cmd_builder->set_clipping(false);
+
+        if (reg_clip.has_value()) {
+            clip_region(*cmd_builder, reg_clip.value());
+        }
+
+        cmd_builder->draw_bitmap(to_draw_handle, 0, draw_rect, draw_rect);
+        drv->submit_command_list(*cmd_list);
+    }
+
+    void bitmap_backed_canvas::update_screen(service::ipc_context &ctx, ws_cmd &cmd) {
+        if (!bitmap_) {
+            ctx.complete(epoc::error_none);
+            return;
+        }
+
+        std::optional<common::region> reg_clip;
+        
+        if (cmd.header.op == EWsWinOpUpdateScreenRegion) {
+            reg_clip = get_region_from_context(ctx, cmd);
+            if (!reg_clip.has_value()) {
+                LOG_WARN(SERVICE_WINDOW, "Update screen with region called but failed to retrieve region struct. Nothing is clipped");
+            }
+        }
+
+        sync_from_bitmap(reg_clip);
+
+        ctx.complete(epoc::error_none);
+        canvas_base::take_action_on_change(ctx.msg->own_thr);
+    }
+
+    bool bitmap_backed_canvas::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+        bool did_it = false;
+        const bool should_flush = canvas_base::execute_command_detail(ctx, cmd, did_it);
+
+        if (did_it) {
+            return should_flush;
+        }
+
+        TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
+        switch (op) {
+        case EWsWinOpBitmapHandle:
+            bitmap_handle(ctx, cmd);
+            break;
+
+        case EWsWinOpUpdateScreen:
+        case EWsWinOpUpdateScreenRegion:
+            update_screen(ctx, cmd);
+            break;
+
+        case EWsWinOpMaintainBackup:
+            // Ignore, legacy
+            ctx.complete(epoc::error_none);
+            break;
+
+        default:
+            LOG_ERROR(SERVICE_WINDOW, "Unimplemented bitmap backed canavas opcode 0x{:X}!", cmd.header.op);
+            break;
+        }
+
+        return false;
     }
 }

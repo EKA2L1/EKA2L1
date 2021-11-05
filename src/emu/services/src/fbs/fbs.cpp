@@ -55,6 +55,19 @@ namespace eka2l1 {
 
             return "!Fontbitmapserver";
         }
+
+        void query_fbs_feature_support(fbs_server *fbss, bool &support_current_display_mode, bool &support_dirty_bitmap) {
+            support_dirty_bitmap = true;
+            
+            if (fbss->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
+                if (fbss->legacy_level() == FBS_LEGACY_LEVEL_KERNEL_TRANSITION)
+                    support_current_display_mode = true;
+                else
+                    support_current_display_mode = false;
+
+                support_dirty_bitmap = false;
+            }
+        }
     }
 
     fbscli::~fbscli() {
@@ -470,15 +483,9 @@ namespace eka2l1 {
         , glyph_info_for_legacy_return_(nullptr)
         , glyph_info_for_legacy_return_addr_(0) {
         fbs_server *fbss = reinterpret_cast<fbs_server *>(serv);
+        epoc::query_fbs_feature_support(fbss, support_current_display_mode, support_dirty_bitmap);
 
         if (fbss->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
-            if (fbss->legacy_level() == FBS_LEGACY_LEVEL_KERNEL_TRANSITION)
-                support_current_display_mode = true;
-            else
-                support_current_display_mode = false;
-
-            support_dirty_bitmap = false;
-
             glyph_info_for_legacy_return_ = fbss->allocate_general_data<epoc::open_font_glyph_v1_use_for_fbs>();
             glyph_info_for_legacy_return_addr_ = fbss->host_ptr_to_guest_general_data(glyph_info_for_legacy_return_).ptr_address();
         }

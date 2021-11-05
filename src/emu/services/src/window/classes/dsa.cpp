@@ -97,7 +97,7 @@ namespace eka2l1::epoc {
             window_handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
         }
 
-        epoc::window_user *user = reinterpret_cast<epoc::window_user *>(client->get_object(window_handle));
+        epoc::canvas_base *user = reinterpret_cast<epoc::canvas_base *>(client->get_object(window_handle));
 
         // what the fuck msvc
         if ((!user) || (user->type != epoc::window_kind::client)) {
