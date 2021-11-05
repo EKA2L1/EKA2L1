@@ -94,6 +94,11 @@ namespace eka2l1::epoc {
             attached_window->resize_needed = false;
         }
 
+        if (attached_window->win_type == epoc::window_type::backed_up) {
+            epoc::bitmap_backed_canvas *cv = reinterpret_cast<epoc::bitmap_backed_canvas*>(attached_window);
+            cv->sync_from_bitmap();
+        }
+
         cmd_builder->bind_bitmap(attached_window->driver_win_id);
         cmd_builder->set_depth(false);
 

@@ -26,6 +26,8 @@
 #include <common/linked.h>
 #include <common/region.h>
 
+#include <optional>
+
 namespace eka2l1 {
     struct fbsbitmap;
 
@@ -141,7 +143,7 @@ namespace eka2l1::epoc {
         /**
          * @brief Action that this window does when its content is modified.
          */
-        void take_action_on_change(kernel::thread *drawer);
+        virtual void take_action_on_change(kernel::thread *drawer);
 
         void queue_event(const epoc::event &evt) override;
 
@@ -193,6 +195,9 @@ namespace eka2l1::epoc {
         void bitmap_handle(service::ipc_context &context, ws_cmd &cmd);
         void update_screen(service::ipc_context &context, ws_cmd &cmd);
         bool execute_command(service::ipc_context &context, ws_cmd &cmd) override;
+        void take_action_on_change(kernel::thread *drawer) override;
+
+        void sync_from_bitmap(std::optional<common::region> region = std::nullopt);
     };
 
     struct free_modify_canvas : public canvas_base {

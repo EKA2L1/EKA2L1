@@ -668,7 +668,6 @@ namespace eka2l1 {
 
         if (load_options->share && !already_cache) {
             fbss->shared_bitmaps.emplace(cache_info_, bmp);
-            bmp->ref();
         }
 
         // Now writes the bitmap info in
@@ -781,27 +780,31 @@ namespace eka2l1 {
             return false;
         }
 
+        bool no_failure = true;
+
         if (bmp->bitmap_->data_offset_) {
             const std::size_t reserved_bytes = bmp->reserved_height_each_side_ * bmp->bitmap_->byte_width_;
 
             // First, free the bitmap pixels.
             if (bmp->bitmap_->offset_from_me_) {
-                if (!shared_chunk_allocator->free(bmp->bitmap_->data_pointer(this) - reserved_bytes)) {
-                    return false;
-                }
+                shared_chunk_allocator->free(bmp->bitmap_->data_pointer(this) - reserved_bytes);
+                no_failure = true;
             } else {
-                if (!large_chunk_allocator->free(bmp->bitmap_->data_pointer(this) - reserved_bytes)) {
-                    return false;
-                }
+                large_chunk_allocator->free(bmp->bitmap_->data_pointer(this) - reserved_bytes);
+                no_failure = true;
             }
         }
 
         // Free the bitwise bitmap.
         if (!free_general_data(bmp->bitmap_)) {
-            return false;
+            no_failure = true;
         }
 
-        return true;
+        common::erase_elements(shared_bitmaps, [bmp](const std::pair<const eka2l1::fbsbitmap_cache_info, fbsbitmap*> &info) -> bool {
+            return info.second == bmp;
+        });
+
+        return no_failure;
     }
 
     bool fbs_server::is_large_bitmap(const std::uint32_t compressed_size) const {
@@ -928,36 +931,54 @@ namespace eka2l1 {
         const std::uint32_t reserved_each_size = calculate_reserved_each_side(new_size.y);
         bool offset_from_me_now = false;
 
-        if (fbss->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
-            new_bmp = bmp;
+        if ((new_size.x == 0) && (new_size.y == 0)) {
+            if (fbss->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
+                new_bmp = bmp;
 
-            const int dest_byte_width = epoc::get_byte_width(new_size.x, bmp->bitmap_->header_.bit_per_pixels);
-            const int size_total = dest_byte_width * new_size.y;
-            const int size_added_reserve = size_total + reserved_each_size * dest_byte_width * 2;
+                const int dest_byte_width = epoc::get_byte_width(new_size.x, bmp->bitmap_->header_.bit_per_pixels);
+                const int size_total = dest_byte_width * new_size.y;
+                const int size_added_reserve = size_total + reserved_each_size * dest_byte_width * 2;
 
-            if (fbss->is_large_bitmap(size_total)) {
-                dest_data = reinterpret_cast<std::uint8_t *>(fbss->allocate_large_data(size_added_reserve));
-                base = fbss->get_large_chunk_base();
+                if (fbss->is_large_bitmap(size_total)) {
+                    dest_data = reinterpret_cast<std::uint8_t *>(fbss->allocate_large_data(size_added_reserve));
+                    base = fbss->get_large_chunk_base();
+                } else {
+                    dest_data = reinterpret_cast<std::uint8_t *>(fbss->allocate_general_data_impl(size_added_reserve));
+                    base = reinterpret_cast<std::uint8_t *>(new_bmp->bitmap_);
+
+                    offset_from_me_now = true;
+                }
+
+                dest_data += new_bmp->reserved_height_each_side_ * dest_byte_width;
             } else {
-                dest_data = reinterpret_cast<std::uint8_t *>(fbss->allocate_general_data_impl(size_added_reserve));
-                base = reinterpret_cast<std::uint8_t *>(new_bmp->bitmap_);
+                const epoc::display_mode disp_mode = bmp->bitmap_->settings_.current_display_mode();
 
-                offset_from_me_now = true;
+                fbs_bitmap_data_info info;
+                info.size_ = new_size;
+                info.dpm_ = disp_mode;
+
+                new_bmp = fbss->create_bitmap(info, true, support_current_display_mode, support_dirty_bitmap);
+                dest_data = new_bmp->bitmap_->data_pointer(fbss);
             }
 
-            dest_data += new_bmp->reserved_height_each_side_ * dest_byte_width;
+            bmp->bitmap_->copy_to(dest_data, new_size, fbss);
         } else {
-            const epoc::display_mode disp_mode = bmp->bitmap_->settings_.current_display_mode();
+            dest_data = nullptr;
+            base = nullptr;
 
-            fbs_bitmap_data_info info;
-            info.size_ = new_size;
-            info.dpm_ = disp_mode;
+            if (fbss->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
+                new_bmp = bmp;
+                offset_from_me_now = true;
+            } else {
+                const epoc::display_mode disp_mode = bmp->bitmap_->settings_.current_display_mode();
 
-            new_bmp = fbss->create_bitmap(info, true, support_current_display_mode, support_dirty_bitmap);
-            dest_data = new_bmp->bitmap_->data_pointer(fbss);
+                fbs_bitmap_data_info info;
+                info.size_ = new_size;
+                info.dpm_ = disp_mode;
+
+                new_bmp = fbss->create_bitmap(info, false, support_current_display_mode, support_dirty_bitmap);
+            }
         }
-
-        bmp->bitmap_->copy_to(dest_data, new_size, fbss);
 
         if (fbss->legacy_level() <= FBS_LEGACY_LEVEL_EARLY_EKA2) {
             bmp->clean_bitmap = new_bmp;

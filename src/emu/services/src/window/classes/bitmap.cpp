@@ -28,15 +28,9 @@ namespace eka2l1::epoc {
         : window_client_obj(client, nullptr)
         , bitmap_(bmp)
         , parent_(parent) {
-        if (parent_) {
-            parent_->ref();
-        }
     }
 
     wsbitmap::~wsbitmap() {
-        if (parent_) {
-            parent_->deref();
-        }
     }
 
     bool wsbitmap::execute_command(service::ipc_context &context, ws_cmd &cmd) {
