@@ -48,4 +48,15 @@ namespace eka2l1 {
      */
     template <size_t BIT>
     void decompress_rle(common::ro_stream *source, common::wo_stream *dest);
+
+    /**
+     * @brief Decompress RLE compressed data in memory.
+     * 
+     * @param source            Read-only source buffer pointer.
+     * @param souce_size        The size of the source buffer.
+     * @param dest              The destination buffer to extract data to. Can be NULL.
+     * @param dest_size         Size of the destination buffer, on complete the parameter will be filled with the number of bytes decompressed.
+     */
+    template <size_t BIT>
+    void decompress_rle_fast_route(const std::uint8_t *source, const std::size_t source_size, std::uint8_t *dest, std::size_t &dest_size);
 }

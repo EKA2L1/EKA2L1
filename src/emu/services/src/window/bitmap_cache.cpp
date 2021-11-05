@@ -251,25 +251,23 @@ namespace eka2l1::epoc {
                 decompressed.resize(raw_size);
 
                 const std::uint32_t compressed_size = bmp->header_.bitmap_size - bmp->header_.header_len;
-
-                common::wo_buf_stream dest_stream(&decompressed[0], raw_size);
-                common::ro_buf_stream source_stream(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size);
+                std::size_t final_size = raw_size;
 
                 switch (comp) {
                 case bitmap_file_byte_rle_compression:
-                    eka2l1::decompress_rle<8>(&source_stream, &dest_stream);
+                    eka2l1::decompress_rle_fast_route<8>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, &decompressed[0], final_size);
                     break;
 
                 case bitmap_file_twelve_bit_rle_compression:
-                    eka2l1::decompress_rle<12>(&source_stream, &dest_stream);
+                    eka2l1::decompress_rle_fast_route<12>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, &decompressed[0], final_size);
                     break;
 
                 case bitmap_file_sixteen_bit_rle_compression:
-                    eka2l1::decompress_rle<16>(&source_stream, &dest_stream);
+                    eka2l1::decompress_rle_fast_route<16>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, &decompressed[0], final_size);
                     break;
 
                 case bitmap_file_twenty_four_bit_rle_compression:
-                    eka2l1::decompress_rle<24>(&source_stream, &dest_stream);
+                    eka2l1::decompress_rle_fast_route<24>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, &decompressed[0], final_size);
                     break;
 
                 default:

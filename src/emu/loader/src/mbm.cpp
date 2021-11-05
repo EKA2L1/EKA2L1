@@ -159,8 +159,7 @@ namespace eka2l1::loader {
         return result;
     }
 
-    bool mbm_file::read_single_bitmap(const std::size_t index, std::uint8_t *dest,
-        std::size_t &dest_max) {
+    bool mbm_file::read_single_bitmap(const std::size_t index, std::uint8_t *dest, std::size_t &dest_max) {
         if (!is_header_loaded(index)) {
             return false;
         }
@@ -176,57 +175,88 @@ namespace eka2l1::loader {
         std::size_t compressed_size = common::min<std::size_t>(static_cast<std::size_t>(stream->left()),
             static_cast<std::size_t>(single_bm_header.bitmap_size - single_bm_header.header_len));
 
-        common::wo_buf_stream dest_stream(dest, dest_max ? dest_max : 0xFFFFFFFF);
-
-        switch (single_bm_header.compression) {
-        case 0: {
+        if (single_bm_header.compression == 0) {
             dest_max = compressed_size;
 
             if (dest) {
                 stream->read(dest, dest_max);
             }
+        } else {
+            if (compressed_size < common::MB(5)) {
+                std::vector<std::uint8_t> source_data(compressed_size);
+                stream->read(source_data.data(), source_data.size());
 
-            break;
-        }
+                switch (single_bm_header.compression) {
+                case 1: {
+                    eka2l1::decompress_rle_fast_route<8>(source_data.data(), source_data.size(), dest, dest_max);
+                    break;
+                }
 
-        case 1: {
-            eka2l1::decompress_rle<8>(stream, reinterpret_cast<common::wo_stream *>(&dest_stream));
-            dest_max = dest_stream.tell();
+                case 2: {
+                    eka2l1::decompress_rle_fast_route<12>(source_data.data(), source_data.size(), dest, dest_max);
+                    break;
+                }
 
-            break;
-        }
+                case 3: {
+                    eka2l1::decompress_rle_fast_route<16>(source_data.data(), source_data.size(), dest, dest_max);
+                    break;
+                }
 
-        case 2: {
-            eka2l1::decompress_rle<12>(stream, reinterpret_cast<common::wo_stream *>(&dest_stream));
-            dest_max = dest_stream.tell();
+                case 4: {
+                    eka2l1::decompress_rle_fast_route<24>(source_data.data(), source_data.size(), dest, dest_max);
+                    break;
+                }
 
-            break;
-        }
+                default: {
+                    LOG_ERROR(LOADER, "Unsupport RLE compression type {}", single_bm_header.compression);
+                    stream->seek(crr_pos, common::beg);
 
-        case 3: {
-            eka2l1::decompress_rle<16>(stream, reinterpret_cast<common::wo_stream *>(&dest_stream));
-            dest_max = dest_stream.tell();
+                    return false;
+                }
+                }
+            } else {
+                common::wo_buf_stream dest_stream(dest, dest_max ? dest_max : 0xFFFFFFFF);
 
-            break;
-        }
+                switch (single_bm_header.compression) {
+                case 1: {
+                    eka2l1::decompress_rle<8>(stream, reinterpret_cast<common::wo_stream *>(&dest_stream));
+                    dest_max = dest_stream.tell();
 
-        case 4: {
-            eka2l1::decompress_rle<24>(stream, reinterpret_cast<common::wo_stream *>(&dest_stream));
-            dest_max = dest_stream.tell();
+                    break;
+                }
 
-            break;
-        }
+                case 2: {
+                    eka2l1::decompress_rle<12>(stream, reinterpret_cast<common::wo_stream *>(&dest_stream));
+                    dest_max = dest_stream.tell();
 
-        default: {
-            LOG_ERROR(LOADER, "Unsupport RLE compression type {}", single_bm_header.compression);
-            stream->seek(crr_pos, common::beg);
+                    break;
+                }
 
-            return false;
-        }
+                case 3: {
+                    eka2l1::decompress_rle<16>(stream, reinterpret_cast<common::wo_stream *>(&dest_stream));
+                    dest_max = dest_stream.tell();
+
+                    break;
+                }
+
+                case 4: {
+                    eka2l1::decompress_rle<24>(stream, reinterpret_cast<common::wo_stream *>(&dest_stream));
+                    dest_max = dest_stream.tell();
+
+                    break;
+                }
+
+                default: {
+                    LOG_ERROR(LOADER, "Unsupport RLE compression type {}", single_bm_header.compression);
+                    stream->seek(crr_pos, common::beg);
+
+                    return false;
+                }
+                }
+            }
         }
 
         stream->seek(crr_pos, common::beg);
-
         return true;
     }
 

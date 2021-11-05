@@ -345,5 +345,63 @@ namespace eka2l1 {
                 return s;
             }
         };
+
+        class ro_window_ref_stream: public ro_stream {
+        private:
+            ro_stream &ref_;
+            std::size_t start_;
+            std::size_t size_;
+
+        public:
+            explicit ro_window_ref_stream(ro_stream &ref, std::size_t start, std::size_t size)
+                : ref_(ref)
+                , start_(start)
+                , size_(size) {
+                ref_.seek(start, common::seek_where::beg);
+            }
+
+            bool valid() override {
+                return ref_.tell() < start_ + size_;
+            }
+
+            std::uint64_t read(void *buf, const std::uint64_t read_size) override {
+                return ref_.read(buf, read_size);
+            }
+
+            void seek(const std::int64_t amount, common::seek_where wh) override {
+                std::int64_t real_amount = amount;
+
+                switch (wh) {
+                case common::seek_where::beg: {
+                    real_amount += start_;
+                    break;
+                }
+
+                case common::seek_where::cur: {
+                    real_amount += ref_.tell();
+                    break;
+                }
+
+                default: {
+                    real_amount += start_ + size_;
+                    break;
+                }
+                }
+
+                ref_.seek(real_amount, common::seek_where::beg);
+            }
+
+            std::uint64_t left() override {
+                return start_ + size_ - ref_.tell();
+            }
+
+            std::uint64_t tell() const override {
+                return ref_.tell();
+            }
+
+            std::uint64_t size() override {
+                return size_;
+            }
+        };
     }
 }

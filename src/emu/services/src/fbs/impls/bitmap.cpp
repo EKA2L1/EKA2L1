@@ -1229,32 +1229,62 @@ namespace eka2l1 {
 
             if (comp != bitmap_file_no_compression) {
                 decomp_data.resize(byte_width * header.size_pixels.y);
-                common::wo_buf_stream decomp_dest_stream(decomp_data.data(), decomp_data.size());
 
-                switch (comp) {
-                case bitmap_file_byte_rle_compression:
-                    decompress_rle<8>(reinterpret_cast<common::ro_stream *>(&source),
-                        reinterpret_cast<common::wo_stream *>(&decomp_dest_stream));
-                    break;
+                if (header.bitmap_size - header.header_len > common::MB(4)) {
+                    common::wo_buf_stream decomp_dest_stream(decomp_data.data(), decomp_data.size());
 
-                case bitmap_file_twelve_bit_rle_compression:
-                    decompress_rle<12>(reinterpret_cast<common::ro_stream *>(&source),
-                        reinterpret_cast<common::wo_stream *>(&decomp_dest_stream));
-                    break;
+                    switch (comp) {
+                    case bitmap_file_byte_rle_compression:
+                        decompress_rle<8>(reinterpret_cast<common::ro_stream *>(&source),
+                            reinterpret_cast<common::wo_stream *>(&decomp_dest_stream));
+                        break;
 
-                case bitmap_file_sixteen_bit_rle_compression:
-                    decompress_rle<16>(reinterpret_cast<common::ro_stream *>(&source),
-                        reinterpret_cast<common::wo_stream *>(&decomp_dest_stream));
-                    break;
+                    case bitmap_file_twelve_bit_rle_compression:
+                        decompress_rle<12>(reinterpret_cast<common::ro_stream *>(&source),
+                            reinterpret_cast<common::wo_stream *>(&decomp_dest_stream));
+                        break;
 
-                case bitmap_file_twenty_four_bit_rle_compression:
-                    decompress_rle<24>(reinterpret_cast<common::ro_stream *>(&source),
-                        reinterpret_cast<common::wo_stream *>(&decomp_dest_stream));
-                    break;
+                    case bitmap_file_sixteen_bit_rle_compression:
+                        decompress_rle<16>(reinterpret_cast<common::ro_stream *>(&source),
+                            reinterpret_cast<common::wo_stream *>(&decomp_dest_stream));
+                        break;
 
-                default:
-                    LOG_ERROR(SERVICE_FBS, "Unsupported compression type {}", header.compression);
-                    return false;
+                    case bitmap_file_twenty_four_bit_rle_compression:
+                        decompress_rle<24>(reinterpret_cast<common::ro_stream *>(&source),
+                            reinterpret_cast<common::wo_stream *>(&decomp_dest_stream));
+                        break;
+
+                    default:
+                        LOG_ERROR(SERVICE_FBS, "Unsupported compression type {}", header.compression);
+                        return false;
+                    }
+                } else {
+                    std::vector<std::uint8_t> source_data(header.bitmap_size - header.header_len);
+                    source.read(source_data.data(), source_data.size());
+
+                    std::size_t final_size = decomp_data.size();
+
+                    switch (comp) {
+                    case bitmap_file_byte_rle_compression:
+                        decompress_rle_fast_route<8>(source_data.data(), source_data.size(), decomp_data.data(), final_size);
+                        break;
+
+                    case bitmap_file_twelve_bit_rle_compression:
+                        decompress_rle_fast_route<12>(source_data.data(), source_data.size(), decomp_data.data(), final_size);
+                        break;
+
+                    case bitmap_file_sixteen_bit_rle_compression:
+                        decompress_rle_fast_route<16>(source_data.data(), source_data.size(), decomp_data.data(), final_size);
+                        break;
+
+                    case bitmap_file_twenty_four_bit_rle_compression:
+                        decompress_rle_fast_route<24>(source_data.data(), source_data.size(), decomp_data.data(), final_size);
+                        break;
+
+                    default:
+                        LOG_ERROR(SERVICE_FBS, "Unsupported compression type {}", header.compression);
+                        return false;
+                    }
                 }
 
                 decomp_data_source_stream = std::make_unique<common::ro_buf_stream>(decomp_data.data(), decomp_data.size());

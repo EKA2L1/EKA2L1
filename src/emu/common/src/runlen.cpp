@@ -180,6 +180,188 @@ namespace eka2l1 {
         }
     }
 
+    template <>
+    void decompress_rle_fast_route<8>(const std::uint8_t *source, const std::size_t source_size, std::uint8_t *dest, std::size_t &dest_size) {
+        const std::uint8_t *source_start = source;
+        const std::uint8_t *source_end = source_start + source_size;
+
+        std::uint8_t *dest_start = reinterpret_cast<std::uint8_t*>(dest);
+        std::uint8_t *dest_end = dest_start + dest_size;
+
+        dest_size = 0;
+
+        while ((source_start < source_end) && (!dest || (dest_start < dest_end))) {
+            std::int32_t repeat = static_cast<std::int8_t>(*source_start++);
+            if (repeat >= 0) {
+                repeat = common::min<std::int32_t>(repeat, static_cast<std::int32_t>(dest_end - dest_start));
+
+                if (dest_start) {
+                    memset(dest_start, *source_start++, repeat + 1);
+                    dest_start += repeat + 1;
+                }
+                
+                dest_size += repeat + 1;
+            } else {
+                std::int32_t copy_count = common::min<std::int32_t>(-repeat, static_cast<std::int32_t>(dest_end - dest_start));
+                if (dest_start) {
+                    memcpy(dest_start, source_start, copy_count);
+                    dest_start += copy_count;
+                }
+
+                source_start += copy_count;
+                dest_size += copy_count;
+            }
+        }
+    }
+
+    template <>
+    void decompress_rle_fast_route<12>(const std::uint8_t *source, const std::size_t source_size, std::uint8_t *dest, std::size_t &dest_size) {
+        const std::uint16_t *source_start = reinterpret_cast<const std::uint16_t*>(source);
+        const std::uint16_t *source_end = source_start + (source_size + 1) / 2;
+
+        std::uint16_t *dest_start = reinterpret_cast<std::uint16_t*>(dest);
+        std::uint16_t *dest_end = dest_start + ((dest_size + 1) / 2);
+
+        std::size_t original_size = dest_size;
+        dest_size = 0;
+
+        while ((source_start <= source_end) && (!dest || (dest_start <= dest_end))) {
+            std::uint16_t val = *source_start++;
+
+            std::uint32_t repeat_count = common::min<std::uint32_t>(static_cast<std::uint32_t>((val >> 12) & 0xF),
+                static_cast<const std::uint32_t>(dest_end - dest_start));
+            
+            val &= 0x0FFF;
+
+            if (dest) {
+                for (std::uint32_t i = 0; i <= repeat_count; i++) {
+                    *dest_start++ = val;
+                }
+            }
+
+            dest_size += 2 * (repeat_count + 1);
+        }
+    }
+
+    template <>
+    void decompress_rle_fast_route<16>(const std::uint8_t *source, const std::size_t source_size, std::uint8_t *dest, std::size_t &dest_size) {
+        const std::uint8_t *source_start = source;
+        const std::uint8_t *source_end = source_start + source_size;
+
+        std::uint8_t *dest_start = reinterpret_cast<std::uint8_t*>(dest);
+        std::uint8_t *dest_end = dest_start + dest_size;
+
+        dest_size = 0;
+
+        while ((source_start < source_end) && (!dest || (dest_start < dest_end))) {
+            std::int32_t repeat = static_cast<std::int8_t>(*source_start++);
+            if (repeat >= 0) {
+                repeat = common::min<std::int32_t>(repeat, static_cast<std::int32_t>((dest_end - dest_start) / 2));
+
+                if (dest_start) {
+                    const std::uint16_t value_fill = *reinterpret_cast<const std::uint16_t*>(source_start);
+                    for (std::int32_t i = 0; i <= repeat; i++) {
+                        *reinterpret_cast<std::uint16_t*>(dest_start) = value_fill;
+                        dest_start += 2;
+                    }
+                }
+
+                source_start += 2;
+                dest_size += (repeat + 1) * 2;
+            } else {
+                std::int32_t copy_count = common::min<std::int32_t>(-repeat * 2, static_cast<std::int32_t>(dest_end - dest_start));
+                if (dest_start) {
+                    memcpy(dest_start, source_start, copy_count);
+                    dest_start += copy_count;
+                }
+
+                source_start += copy_count;
+                dest_size += copy_count;
+            }
+        }
+    }
+
+    template <>
+    void decompress_rle_fast_route<24>(const std::uint8_t *source, const std::size_t source_size, std::uint8_t *dest, std::size_t &dest_size) {
+        const std::uint8_t *source_start = source;
+        const std::uint8_t *source_end = source_start + source_size;
+
+        std::uint8_t *dest_start = reinterpret_cast<std::uint8_t*>(dest);
+        std::uint8_t *dest_end = dest_start + dest_size;
+
+        dest_size = 0;
+
+        while ((source_start < source_end) && (!dest || (dest_start < dest_end))) {
+            std::int32_t repeat = static_cast<std::int8_t>(*source_start++);
+            if (repeat >= 0) {
+                repeat = common::min<std::int32_t>(repeat, static_cast<std::int32_t>((dest_end - dest_start) / 3));
+
+                if (dest_start) {
+                    std::uint8_t val1 = *source_start++;
+                    std::uint8_t val2 = *source_start++;
+                    std::uint8_t val3 = *source_start++;
+
+                    for (std::int32_t i = 0; i <= repeat; i++) {
+                        *dest_start++ = val1;
+                        *dest_start++ = val2;
+                        *dest_start++ = val3;
+                    }
+                } else {
+                    source_start += 3;
+                }
+                
+                dest_size += (repeat + 1) * 3;
+            } else {
+                std::int32_t copy_count = common::min<std::int32_t>(-repeat * 3, static_cast<std::int32_t>(dest_end - dest_start));
+                if (dest_start) {
+                    memcpy(dest_start, source_start, copy_count);
+                    dest_start += copy_count;
+                }
+
+                source_start += copy_count;
+                dest_size += copy_count;
+            }
+        }
+    }
+
+    template <>
+    void decompress_rle_fast_route<32>(const std::uint8_t *source, const std::size_t source_size, std::uint8_t *dest, std::size_t &dest_size) {
+        const std::uint8_t *source_start = source;
+        const std::uint8_t *source_end = source_start + source_size;
+
+        std::uint8_t *dest_start = reinterpret_cast<std::uint8_t*>(dest);
+        std::uint8_t *dest_end = dest_start + dest_size;
+
+        dest_size = 0;
+
+        while ((source_start < source_end) && (!dest || (dest_start < dest_end))) {
+            std::int32_t repeat = static_cast<std::int8_t>(*source_start++);
+            if (repeat >= 0) {
+                repeat = common::min<std::int32_t>(repeat, static_cast<std::int32_t>((dest_end - dest_start) / 4));
+
+                if (dest_start) {
+                    const std::uint32_t value_fill = *reinterpret_cast<const std::uint32_t*>(source_start);
+                    for (std::int32_t i = 0; i <= repeat; i++) {
+                        *reinterpret_cast<std::uint32_t*>(dest_start) = value_fill;
+                        dest_start += 4;
+                    }
+                }
+
+                source_start += 4;
+                dest_size += (repeat + 1) * 4;
+            } else {
+                std::int32_t copy_count = common::min<std::int32_t>(-repeat * 4, static_cast<std::int32_t>(dest_end - dest_start));
+                if (dest_start) {
+                    memcpy(dest_start, source_start, copy_count);
+                    dest_start += copy_count;
+                }
+
+                source_start += copy_count;
+                dest_size += copy_count;
+            }
+        }
+    }
+
     template bool compress_rle<8>(common::ro_stream *source, common::wo_stream *dest, std::size_t &dest_size);
     template bool compress_rle<16>(common::ro_stream *source, common::wo_stream *dest, std::size_t &dest_size);
     template bool compress_rle<24>(common::ro_stream *source, common::wo_stream *dest, std::size_t &dest_size);
