@@ -128,6 +128,20 @@ namespace eka2l1::manager {
             for (auto &breakpoint: breakpoints) {
                 for (std::size_t j = 0; j < breakpoint.second.list_.size(); j++) {
                     if (breakpoint.second.list_[j].invoke_ == target_func) {
+                        kernel_system *kern = sys->get_kernel_system();
+                        if (!breakpoint.second.source_insts_.empty()) {
+                            for (auto &process_unq: kern->get_process_list()) {
+                                kernel::process *pr = reinterpret_cast<kernel::process*>(process_unq.get());
+                                if ((breakpoint.second.list_[j].attached_process_ == 0) || (pr && (breakpoint.second.list_[j].attached_process_ == pr->get_uid()))) {
+                                    write_back_breakpoint(pr, breakpoint.second.list_[j].addr_);
+                                }
+
+                                if (breakpoint.second.source_insts_.empty()) {
+                                    break;
+                                }
+                            }
+                        }
+
                         breakpoint.second.list_.erase(breakpoint.second.list_.begin() + j--);
                     }
                 }
@@ -331,7 +345,6 @@ namespace eka2l1::manager {
     }
 
     void scripts::write_breakpoint_block(kernel::process *pr, const vaddress target) {
-        const std::lock_guard<std::mutex> guard(smutex);
         const vaddress aligned = target & ~1;
 
         if (!pr) {
@@ -360,6 +373,11 @@ namespace eka2l1::manager {
         } else {
             data[0] = 0xE1200070; // bkpt #0
         }
+
+        kernel_system *kern = sys->get_kernel_system();
+
+        // Must clear cache of all cores, but since we only have one core now...
+        kern->get_cpu()->imb_range((target & ~1), (target & 1) ? 2 : 4);
     }
 
     bool scripts::write_back_breakpoint(kernel::process *pr, const vaddress target) {
@@ -390,6 +408,8 @@ namespace eka2l1::manager {
     }
 
     void scripts::write_breakpoint_blocks(kernel::process *pr) {
+        const std::lock_guard<std::mutex> guard(smutex);
+
         for (const auto &[addr, info] : breakpoints) {
             // The address on the info contains information about Thumb/ARM mode
             if (!info.list_.empty())
@@ -454,7 +474,11 @@ namespace eka2l1::manager {
         if (info.flags_ & breakpoint_info::FLAG_IS_ORDINAL) {
             breakpoint_wait_patch.push_back(info);
         } else {
+            kernel_system *kern = sys->get_kernel_system();
             breakpoints[info.addr_ & ~1].list_.push_back(std::move(info));
+
+            if (kern->crr_process())
+                write_breakpoint_block(kern->crr_process(), info.addr_);
         }
 
         return static_cast<std::uint32_t>(handle);
@@ -519,7 +543,12 @@ namespace eka2l1::manager {
         if (info.flags_ & breakpoint_info::FLAG_BASED_IMAGE) {
             breakpoint_wait_patch.push_back(info);
         } else {
+            kernel_system *kern = sys->get_kernel_system();
+
             breakpoints[addr & ~1].list_.push_back(std::move(info));
+
+            if (kern->crr_process())
+                write_breakpoint_block(kern->crr_process(), addr);
         }
 
         return static_cast<std::uint32_t>(handle);
@@ -554,6 +583,11 @@ namespace eka2l1::manager {
                 patched.invoke_->category_ = script_function::META_CATEGORY_BREAKPOINT;
 
                 breakpoints[patched.addr_ & ~1].list_.push_back(patched);
+
+                kernel_system *kern = sys->get_kernel_system();
+
+                if (kern->crr_process())
+                    write_breakpoint_block(kern->crr_process(), patched.addr_);
             }
         }
     }
@@ -616,10 +650,11 @@ namespace eka2l1::manager {
     }
 
     void scripts::reset_breakpoint_hit(arm::core *running_core, kernel::thread *thr) {
+        const std::lock_guard<std::mutex> guard(smutex);
+
         breakpoint_hit_info &info = last_breakpoint_script_hits[thr->unique_id()];
         write_breakpoint_block(thr->owning_process(), info.addr_);
 
-        running_core->imb_range((info.addr_ & ~1), (info.addr_ & 1) ? 2 : 4);
         info.hit_ = false;
     }
 
