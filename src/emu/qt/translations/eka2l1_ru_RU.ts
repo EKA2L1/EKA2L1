@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/utils.cpp" line="126"/>
       <source>EKA2L1 - Symbian OS emulator</source>
-      <translation type="unfinished">EKA2L1 - Symbian OS emulator</translation>
+      <translation>EKA2L1 - эмулятор Symbian OS</translation>
     </message>
   </context>
   <context>
@@ -746,12 +746,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="120"/>
       <source>Time delay (0-1000us)</source>
-      <translation type="unfinished">Time delay (0-1000us)</translation>
+      <translation>Время задержки (0-1000мкс)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="462"/>
       <source>Disable easter egg title</source>
-      <translation type="unfinished">Disable easter egg title</translation>
+      <translation>Отключить пасхалку в заголовке</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="480"/>
@@ -879,27 +879,27 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="826"/>
       <source>Graphics</source>
-      <translation type="unfinished">Graphics</translation>
+      <translation>Графика</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="838"/>
       <source>Screen buffer sync</source>
-      <translation type="unfinished">Screen buffer sync</translation>
+      <translation>Синхронизация буфера экрана</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="852"/>
       <source>Preferred</source>
-      <translation type="unfinished">Preferred</translation>
+      <translation>Предпочтительно</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="862"/>
       <source>Enable</source>
-      <translation type="unfinished">Enable</translation>
+      <translation>Включить</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="857"/>
       <source>Disable</source>
-      <translation type="unfinished">Disable</translation>
+      <translation>Выключить</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="798"/>
@@ -909,7 +909,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="801"/>
       <source>Friendly phone name</source>
-      <translation type="unfinished">Friendly phone name</translation>
+      <translation>Имя телефона</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="834"/>
