@@ -74,6 +74,8 @@ namespace eka2l1::epoc {
         eka2l1::vec2 cursor_pos;
 
         std::uint64_t driver_win_id;
+        std::uint64_t ping_pong_driver_win_id;
+
         common::region visible_region;
 
         int shadow_height;
@@ -116,6 +118,7 @@ namespace eka2l1::epoc {
          */
         void set_extent(const eka2l1::vec2 &top, const eka2l1::vec2 &size);
         void recalculate_absolute_position(const eka2l1::vec2 &diff);
+        bool scroll(eka2l1::rect clip_space, const eka2l1::vec2 offset, eka2l1::rect source_rect);
 
         bool is_visible() const;
         bool can_be_physically_seen() const;
@@ -161,6 +164,7 @@ namespace eka2l1::epoc {
         void activate(service::ipc_context &context, ws_cmd &cmd);
         void free(service::ipc_context &context, ws_cmd &cmd);
         void alloc_pointer_buffer(service::ipc_context &context, ws_cmd &cmd);
+        void scroll(service::ipc_context &context, ws_cmd &cmd);
 
         epoc::window_group *get_group();
 

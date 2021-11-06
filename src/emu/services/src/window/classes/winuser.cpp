@@ -78,6 +78,7 @@ namespace eka2l1::epoc {
         , cursor_pos(-1, -1)
         , dmode(dmode)
         , driver_win_id(0)
+        , ping_pong_driver_win_id(0)
         , shadow_height(0)
         , max_pointer_buffer_(0)
         , last_draw_(0)
@@ -138,18 +139,37 @@ namespace eka2l1::epoc {
     }
 
     void canvas_base::wipeout() {
+        std::unique_ptr<drivers::graphics_command_list> cmd_list = nullptr;
+        std::unique_ptr<drivers::graphics_command_list_builder> cmd_builder = nullptr;
+
+        drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
+
         // Remove driver bitmap
         if (driver_win_id) {
-            drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
-
             // Queue a resize command
-            auto cmd_list = drv->new_command_list();
-            auto cmd_builder = drv->new_command_builder(cmd_list.get());
+            cmd_list = drv->new_command_list();
+            cmd_builder = drv->new_command_builder(cmd_list.get());
 
             cmd_builder->destroy_bitmap(driver_win_id);
-            drv->submit_command_list(*cmd_list);
-
             driver_win_id = 0;
+        }
+
+        if (ping_pong_driver_win_id) {
+            // Let's just recreate later, just a temp for scrolling
+            drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
+
+            if (!cmd_list)
+                cmd_list = drv->new_command_list();
+             
+            if (!cmd_builder) 
+                cmd_builder = drv->new_command_builder(cmd_list.get());
+
+            cmd_builder->destroy_bitmap(ping_pong_driver_win_id);
+            ping_pong_driver_win_id = 0;
+        }
+
+        if (cmd_list && cmd_builder) {
+            drv->submit_command_list(*cmd_list);
         }
     }
 
@@ -255,6 +275,21 @@ namespace eka2l1::epoc {
             // Change the absolute position of children too!
             window_absolute_postion_change_walker walker(pos_diff);
             walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children);
+        }
+
+        if (size_changed) {
+            if (ping_pong_driver_win_id) {
+                // Let's just recreate later, just a temp for scrolling
+                drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
+
+                auto cmd_list = drv->new_command_list();
+                auto cmd_builder = drv->new_command_builder(cmd_list.get());
+
+                cmd_builder->destroy_bitmap(ping_pong_driver_win_id);
+                drv->submit_command_list(*cmd_list);
+
+                ping_pong_driver_win_id = 0;
+            }
         }
 
         if (pos_changed || size_changed) {
@@ -471,6 +506,66 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
+    bool canvas_base::scroll(eka2l1::rect clip_space, const eka2l1::vec2 offset, eka2l1::rect source_rect) {        
+        if (((offset.x == 0) && (offset.y == 0)) || !driver_win_id) {
+            return false;
+        }
+
+        drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
+
+        auto cmd_list = drv->new_command_list();
+        auto cmd_builder = drv->new_command_builder(cmd_list.get());
+
+        if (!clip_space.empty()) {
+            cmd_builder->set_clipping(true);
+            cmd_builder->clip_rect(clip_space);
+        }
+
+        if (!ping_pong_driver_win_id) {
+            ping_pong_driver_win_id = drivers::create_bitmap(drv, size(), 32);
+        }
+
+        if (source_rect.empty()) {
+            source_rect.top = eka2l1::vec2(0, 0);
+            source_rect.size = size();
+        }
+        
+        eka2l1::rect dest_rect(offset, source_rect.size);
+
+        cmd_builder->bind_bitmap(ping_pong_driver_win_id);
+        cmd_builder->draw_bitmap(driver_win_id, 0, dest_rect, source_rect);
+        cmd_builder->bind_bitmap(driver_win_id);
+        cmd_builder->draw_bitmap(ping_pong_driver_win_id, 0, dest_rect, dest_rect);
+
+        drv->submit_command_list(*cmd_list);
+        return true;
+    }
+
+    void canvas_base::scroll(service::ipc_context &context, ws_cmd &cmd) {
+        eka2l1::rect clip_rect;
+        eka2l1::point offset;
+        eka2l1::rect source_rect;
+
+        ws_cmd_scroll *scroll_data = reinterpret_cast<ws_cmd_scroll*>(cmd.data_ptr);
+        offset = scroll_data->offset;
+
+        if ((cmd.header.op == EWsWinOpScrollClip) || (cmd.header.op == EWsWinOpScrollClipRect)) {
+            clip_rect = scroll_data->clip_rect;
+            clip_rect.transform_from_symbian_rectangle();
+        }
+
+        if ((cmd.header.op == EWsWinOpScrollRect) || (cmd.header.op == EWsWinOpScrollClipRect)) {
+            source_rect = scroll_data->source_rect;
+            source_rect.transform_from_symbian_rectangle();
+        }
+
+        if (scroll(clip_rect, offset, source_rect)) {
+            take_action_on_change(context.msg->own_thr);
+        }
+
+        context.complete(epoc::error_none);
+    }
+
     bool canvas_base::draw(drivers::graphics_command_list_builder *builder) {
         if (!builder) {
             return false;
@@ -492,7 +587,7 @@ namespace eka2l1::epoc {
         // Else, there's a flag in window server that enables clear on any siutation
         if (has_redraw_content()) {
             eka2l1::vec2 abs_pos = absolute_position();
-            if (clear_color_enable && scr->auto_clear_enabled()) {
+            if (clear_color_enable) {
                 auto color_extracted = common::rgba_to_vec(clear_color);
 
                 if (display_mode() <= epoc::display_mode::color16mu) {
@@ -715,6 +810,13 @@ namespace eka2l1::epoc {
 
         case EWsWinOpAllocPointerMoveBuffer:
             alloc_pointer_buffer(ctx, cmd);
+            break;
+
+        case EWsWinOpScroll:
+        case EWsWinOpScrollRect:
+        case EWsWinOpScrollClip:
+        case EWsWinOpScrollClipRect:
+            scroll(ctx, cmd);
             break;
 
         default: {

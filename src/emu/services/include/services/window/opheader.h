@@ -247,4 +247,10 @@ namespace eka2l1 {
         std::uint32_t initial_time;
         std::uint32_t next_time;
     };
+
+    struct ws_cmd_scroll {
+        eka2l1::rect clip_rect;
+        eka2l1::point offset;
+        eka2l1::rect source_rect;
+    };
 }
