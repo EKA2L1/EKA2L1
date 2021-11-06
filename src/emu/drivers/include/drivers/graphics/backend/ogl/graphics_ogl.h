@@ -58,24 +58,28 @@ namespace eka2l1::drivers {
 
         eka2l1::request_queue<server_graphics_command_list> list_queue;
         std::unique_ptr<ogl_shader> sprite_program;
-        std::unique_ptr<ogl_shader> fill_program;
+        std::unique_ptr<ogl_shader> brush_program;
         std::unique_ptr<ogl_shader> mask_program;
+        std::unique_ptr<ogl_shader> pen_program;
 
         GLuint sprite_vao;
         GLuint sprite_vbo;
         GLuint sprite_ibo;
 
-        GLuint fill_vao;
-        GLuint fill_vbo;
+        GLuint brush_vao;
+        GLuint brush_vbo;
+        GLuint pen_vao;
+        GLuint pen_vbo;
+        GLuint pen_ibo;
 
         GLint color_loc;
         GLint proj_loc;
         GLint model_loc;
         GLint flip_loc;
 
-        GLint color_loc_fill;
-        GLint proj_loc_fill;
-        GLint model_loc_fill;
+        GLint color_loc_brush;
+        GLint proj_loc_brush;
+        GLint model_loc_brush;
 
         GLint color_loc_mask;
         GLint proj_loc_mask;
@@ -92,6 +96,13 @@ namespace eka2l1::drivers {
         GLint in_position_loc_mask;
         GLint in_texcoord_loc_mask;
 
+        GLint color_loc_pen;
+        GLint proj_loc_pen;
+        GLint model_loc_pen;
+        GLint point_size_loc_pen;
+        GLint pattern_bytes_loc_pen;
+        GLint viewport_loc_pen;
+
         ogl_state backup;
         std::atomic_bool should_stop;
         std::atomic_bool surface_update_needed;
@@ -99,7 +110,11 @@ namespace eka2l1::drivers {
         void *new_surface;
         bool is_gles;
 
+        float point_size;
+        pen_style line_style;
+
         void do_init();
+        void prepare_draw_lines_shared();
 
         void clear(command_helper &helper);
         void draw_bitmap(command_helper &helper);
@@ -117,6 +132,10 @@ namespace eka2l1::drivers {
         void set_stencil_pass_condition(command_helper &helper);
         void set_stencil_mask(command_helper &helper);
         void display(command_helper &helper);
+        void set_point_size(command_helper &helper);
+        void set_pen_style(command_helper &helper);
+        void draw_line(command_helper &helper);
+        void draw_polygon(command_helper &helper);
 
         void save_gl_state();
         void load_gl_state();

@@ -320,6 +320,8 @@ namespace eka2l1::drivers {
 
         if (h == 0) {
             current_fb_height = swapchain_size.y;
+            current_fb_width = swapchain_size.x;
+
             binding = nullptr;
 
             // bind back to what we used to
@@ -350,6 +352,8 @@ namespace eka2l1::drivers {
             0.0f, -1.0f, 1.0f);
 
         current_fb_height = bmp->tex->get_size().y;
+        current_fb_width = bmp->tex->get_size().x;
+
         set_viewport(eka2l1::rect(eka2l1::vec2(0, 0), bmp->tex->get_size()));
     }
 

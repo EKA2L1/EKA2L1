@@ -56,6 +56,10 @@ namespace eka2l1::drivers {
         graphics_driver_update_bitmap,
         graphics_driver_draw_bitmap,
         graphics_driver_draw_rectangle,
+        graphics_driver_draw_line,
+        graphics_driver_draw_polygon,
+        graphics_driver_set_point_size,
+        graphics_driver_set_pen_style,
         graphics_driver_resize_bitmap,
         graphics_driver_read_bitmap,
 

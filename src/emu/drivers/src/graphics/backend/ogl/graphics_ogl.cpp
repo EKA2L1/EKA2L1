@@ -74,7 +74,9 @@ namespace eka2l1::drivers {
         , should_stop(false)
         , surface_update_needed(false)
         , new_surface(nullptr)
-        , is_gles(false) {
+        , is_gles(false)
+        , point_size(1.0)
+        , line_style(pen_style_none) {
         context_ = graphics::make_gl_context(info, false, true);
 
         if (!context_) {
@@ -124,13 +126,16 @@ namespace eka2l1::drivers {
     static constexpr const char *sprite_norm_v_path = "resources//sprite_norm.vert";
     static constexpr const char *sprite_norm_f_path = "resources//sprite_norm.frag";
     static constexpr const char *sprite_mask_f_path = "resources//sprite_mask.frag";
-    static constexpr const char *fill_v_path = "resources//fill.vert";
-    static constexpr const char *fill_f_path = "resources//fill.frag";
+    static constexpr const char *brush_v_path = "resources//brush.vert";
+    static constexpr const char *brush_f_path = "resources//brush.frag";
+    static constexpr const char *pen_v_path = "resources//pen.vert";
+    static constexpr const char *pen_f_path = "resources//pen.frag";
 
     void ogl_graphics_driver::do_init() {
         sprite_program = std::make_unique<ogl_shader>(sprite_norm_v_path, sprite_norm_f_path);
         mask_program = std::make_unique<ogl_shader>(sprite_norm_v_path, sprite_mask_f_path);
-        fill_program = std::make_unique<ogl_shader>(fill_v_path, fill_f_path);
+        brush_program = std::make_unique<ogl_shader>(brush_v_path, brush_f_path);
+        pen_program = std::make_unique<ogl_shader>(pen_v_path, pen_f_path);
 
         static GLushort indices[] = {
             0, 1, 2,
@@ -149,10 +154,19 @@ namespace eka2l1::drivers {
         glBindVertexArray(0);
 
         // Make fill VAO and VBO
-        glGenVertexArrays(1, &fill_vao);
-        glGenBuffers(1, &fill_vbo);
-        glBindVertexArray(fill_vao);
-        glBindBuffer(GL_ARRAY_BUFFER, fill_vbo);
+        glGenVertexArrays(1, &brush_vao);
+        glGenBuffers(1, &brush_vbo);
+        glBindVertexArray(brush_vao);
+        glBindBuffer(GL_ARRAY_BUFFER, brush_vbo);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid *)0);
+        glBindVertexArray(0);
+
+        // Make pen VAO and VBO
+        glGenVertexArrays(1, &pen_vao);
+        glGenBuffers(1, &pen_vbo);
+        glBindVertexArray(pen_vao);
+        glBindBuffer(GL_ARRAY_BUFFER, pen_vbo);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid *)0);
         glBindVertexArray(0);
@@ -162,6 +176,8 @@ namespace eka2l1::drivers {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+        glGenBuffers(1, &pen_ibo);
+
         color_loc = sprite_program->get_uniform_location("u_color").value_or(-1);
         proj_loc = sprite_program->get_uniform_location("u_proj").value_or(-1);
         model_loc = sprite_program->get_uniform_location("u_model").value_or(-1);
@@ -169,9 +185,9 @@ namespace eka2l1::drivers {
         in_position_loc = sprite_program->get_attrib_location("in_position").value_or(-1);
         in_texcoord_loc = sprite_program->get_attrib_location("in_texcoord").value_or(-1);
 
-        color_loc_fill = fill_program->get_uniform_location("u_color").value_or(-1);
-        proj_loc_fill = fill_program->get_uniform_location("u_proj").value_or(-1);
-        model_loc_fill = fill_program->get_uniform_location("u_model").value_or(-1);
+        color_loc_brush = brush_program->get_uniform_location("u_color").value_or(-1);
+        proj_loc_brush = brush_program->get_uniform_location("u_proj").value_or(-1);
+        model_loc_brush = brush_program->get_uniform_location("u_model").value_or(-1);
 
         color_loc_mask = mask_program->get_uniform_location("u_color").value_or(-1);
         proj_loc_mask = mask_program->get_uniform_location("u_proj").value_or(-1);
@@ -183,6 +199,13 @@ namespace eka2l1::drivers {
         flat_blend_loc_mask = mask_program->get_uniform_location("u_flat").value_or(-1);
         in_position_loc_mask = mask_program->get_attrib_location("in_position").value_or(-1);
         in_texcoord_loc_mask = mask_program->get_attrib_location("in_texcoord").value_or(-1);
+        
+        color_loc_pen = pen_program->get_uniform_location("u_color").value_or(-1);
+        proj_loc_pen = pen_program->get_uniform_location("u_proj").value_or(-1);
+        model_loc_pen = pen_program->get_uniform_location("u_model").value_or(-1);
+        point_size_loc_pen = pen_program->get_uniform_location("u_pointSize").value_or(-1);
+        pattern_bytes_loc_pen = pen_program->get_uniform_location("u_pattern").value_or(-1);
+        viewport_loc_pen = pen_program->get_uniform_location("u_viewport").value_or(-1);
     }
 
     void ogl_graphics_driver::bind_swapchain_framebuf() {
@@ -201,27 +224,27 @@ namespace eka2l1::drivers {
     }
 
     void ogl_graphics_driver::draw_rectangle(command_helper &helper) {
-        if (!fill_program) {
+        if (!brush_program) {
             do_init();
         }
 
-        eka2l1::rect fill_rect;
-        helper.pop(fill_rect);
+        eka2l1::rect brush_rect;
+        helper.pop(brush_rect);
 
-        fill_program->use(this);
+        brush_program->use(this);
 
         // Build model matrix
         glm::mat4 model_matrix = glm::identity<glm::mat4>();
-        model_matrix = glm::translate(model_matrix, { fill_rect.top.x, fill_rect.top.y, 0.0f });
-        model_matrix = glm::scale(model_matrix, { fill_rect.size.x, fill_rect.size.y, 0.0f });
+        model_matrix = glm::translate(model_matrix, { brush_rect.top.x, brush_rect.top.y, 0.0f });
+        model_matrix = glm::scale(model_matrix, { brush_rect.size.x, brush_rect.size.y, 0.0f });
 
-        glUniformMatrix4fv(model_loc_fill, 1, false, glm::value_ptr(model_matrix));
-        glUniformMatrix4fv(proj_loc_fill, 1, false, glm::value_ptr(projection_matrix));
+        glUniformMatrix4fv(model_loc_brush, 1, false, glm::value_ptr(model_matrix));
+        glUniformMatrix4fv(proj_loc_brush, 1, false, glm::value_ptr(projection_matrix));
 
         // Supply brush
-        glUniform4fv(color_loc_fill, 1, brush_color.elements.data());
+        glUniform4fv(color_loc_brush, 1, brush_color.elements.data());
 
-        static GLfloat fill_verts_default[] = {
+        static GLfloat brush_verts_default[] = {
             0.0f,
             1.0f,
             1.0f,
@@ -232,10 +255,10 @@ namespace eka2l1::drivers {
             1.0f,
         };
 
-        glBindVertexArray(fill_vao);
-        glBindBuffer(GL_ARRAY_BUFFER, fill_vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(fill_verts_default), nullptr, GL_STATIC_DRAW);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(fill_verts_default), fill_verts_default, GL_STATIC_DRAW);
+        glBindVertexArray(brush_vao);
+        glBindBuffer(GL_ARRAY_BUFFER, brush_vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(brush_verts_default), nullptr, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(brush_verts_default), brush_verts_default, GL_STATIC_DRAW);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid *)0);
 
@@ -742,6 +765,130 @@ namespace eka2l1::drivers {
         glClear(gl_flags);
     }
 
+    void ogl_graphics_driver::set_point_size(command_helper &helper) {
+        std::uint8_t to_set_point_size = 0;
+        helper.pop(to_set_point_size);
+
+        point_size = static_cast<float>(to_set_point_size);
+    }
+
+    void ogl_graphics_driver::set_pen_style(command_helper &helper) {
+        pen_style to_set_style = pen_style_none;
+        helper.pop(to_set_style);
+
+        line_style = to_set_style;
+    }
+
+    void ogl_graphics_driver::prepare_draw_lines_shared() {
+        std::uint32_t bit_pattern = 0;
+
+        // Taken from techwinder's code in the following link below. Thank you!
+        // https://stackoverflow.com/questions/6017176/gllinestipple-deprecated-in-opengl-3-1
+        switch (line_style) {
+        case pen_style_solid:
+            bit_pattern = 0xFFFF;
+            break;
+
+        case pen_style_dotted:
+            bit_pattern = 0x6666;
+            break;
+
+        case pen_style_dashed:
+            bit_pattern = 0x3F3F;
+            break;
+        
+        case pen_style_dashed_dot:
+            bit_pattern = 0xFF18;
+            break;
+
+        case pen_style_dashed_dot_dot:
+            bit_pattern = 0x7E66;
+            break;
+
+        default:
+            LOG_WARN(DRIVER_GRAPHICS, "Unrecognised pen style {}!", static_cast<int>(line_style));
+            return;
+        }
+
+        pen_program->use(this);
+
+        glUniform1f(point_size_loc_pen, point_size);
+        glUniform1ui(pattern_bytes_loc_pen, bit_pattern);
+        
+        glm::mat4 model_matrix = glm::identity<glm::mat4>();
+
+        glUniformMatrix4fv(model_loc_pen, 1, false, glm::value_ptr(model_matrix));
+        glUniformMatrix4fv(proj_loc_pen, 1, false, glm::value_ptr(projection_matrix));
+        glUniform4fv(color_loc_pen, 1, brush_color.elements.data());
+
+        GLfloat viewport[2] = { static_cast<GLfloat>(current_fb_width), static_cast<GLfloat>(current_fb_height) };
+        glUniform2fv(viewport_loc_pen, 1, viewport);
+    }
+
+    void ogl_graphics_driver::draw_line(command_helper &helper) {
+        if (line_style == pen_style_none) {
+            return;
+        }
+
+        eka2l1::point start;
+        eka2l1::point end;
+
+        helper.pop(start);
+        helper.pop(end);
+
+        prepare_draw_lines_shared();
+
+        GLfloat data_send_array[] = {
+            static_cast<float>(start.x), static_cast<float>(start.y),
+            static_cast<float>(end.x), static_cast<float>(end.y)
+        };
+
+        glBindVertexArray(pen_vao);
+        glBindBuffer(GL_ARRAY_BUFFER, pen_vbo);
+        glEnableVertexAttribArray(0);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(data_send_array), nullptr, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(data_send_array), data_send_array, GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid *)0);
+
+        glDrawArrays(GL_LINES, 0, 2);
+    }
+
+    void ogl_graphics_driver::draw_polygon(command_helper &helper) {
+        if (line_style == pen_style_none) {
+            return;
+        }
+        
+        prepare_draw_lines_shared();
+        
+        std::size_t point_count = 0;
+        eka2l1::point *point_list = nullptr;
+
+        helper.pop(point_count);
+        helper.pop(point_list);
+
+        prepare_draw_lines_shared();
+
+        glBindVertexArray(pen_vao);
+        glBindBuffer(GL_ARRAY_BUFFER, pen_vbo);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_INT, GL_FALSE, 8, (GLvoid *)0);
+        glBufferData(GL_ARRAY_BUFFER, point_count * 8, nullptr, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, point_count * 8, point_list, GL_STATIC_DRAW);
+
+        // Generate indices for force primitive restart
+        // Don't try to recreate buffer (note that nullptr upper is a method of fast clearing)
+        std::vector<std::uint32_t> indicies((point_count - 1) * 2);
+        for (std::size_t i = 0; i < point_count - 1; i++) {
+            indicies[i * 2] = static_cast<std::uint32_t>(i);
+            indicies[i * 2 + 1] = static_cast<std::uint32_t>(i + 1);
+        }
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pen_ibo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicies.size() * sizeof(int), indicies.data(), GL_STATIC_DRAW);
+
+        glDrawElements(GL_LINES, static_cast<GLsizei>(indicies.size()), GL_UNSIGNED_INT, 0);
+    }
+
     void ogl_graphics_driver::save_gl_state() {
         glGetIntegerv(GL_CURRENT_PROGRAM, &backup.last_program);
         glGetIntegerv(GL_TEXTURE_BINDING_2D, &backup.last_texture);
@@ -922,6 +1069,22 @@ namespace eka2l1::drivers {
             draw_rectangle(helper);
             break;
         }
+
+        case graphics_driver_draw_line:
+            draw_line(helper);
+            break;
+
+        case graphics_driver_draw_polygon:
+            draw_polygon(helper);
+            break;
+
+        case graphics_driver_set_point_size:
+            set_point_size(helper);
+            break;
+
+        case graphics_driver_set_pen_style:
+            set_pen_style(helper);
+            break;
 
         default:
             shared_graphics_driver::dispatch(cmd);

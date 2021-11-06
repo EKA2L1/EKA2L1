@@ -62,6 +62,7 @@ namespace eka2l1::drivers {
         bitmap *binding;
         bitmap *get_bitmap(const drivers::handle h);
 
+        int current_fb_width;
         int current_fb_height;
         eka2l1::vec2 swapchain_size;
 

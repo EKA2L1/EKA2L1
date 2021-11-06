@@ -359,4 +359,27 @@ namespace eka2l1::drivers {
         command *cmd = make_command(graphics_driver_set_ortho_size, nullptr, osize);
         get_command_list().add(cmd);
     }
+
+    void server_graphics_command_list_builder::set_point_size(const std::uint8_t value) {
+        command *cmd = make_command(graphics_driver_set_point_size, nullptr, value);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::set_pen_style(const pen_style style) {
+        command *cmd = make_command(graphics_driver_set_pen_style, nullptr, style);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::draw_line(const eka2l1::point &start, const eka2l1::point &end) {
+        command *cmd = make_command(graphics_driver_draw_line, nullptr, start, end);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::draw_polygons(const eka2l1::point *point_list, const std::size_t point_count) {
+        eka2l1::point *point_list_copied = new eka2l1::point[point_count];
+        memcpy(point_list_copied, point_list, point_count * sizeof(eka2l1::point));
+
+        command *cmd = make_command(graphics_driver_draw_polygon, nullptr, point_count, point_list_copied);
+        get_command_list().add(cmd);
+    }
 }

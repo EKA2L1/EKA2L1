@@ -77,6 +77,15 @@ namespace eka2l1::drivers {
         bitmap_draw_flag_flat_blending = 1 << 3
     };
 
+    enum pen_style {
+        pen_style_none = 0,
+        pen_style_solid = 1,
+        pen_style_dotted = 2,
+        pen_style_dashed = 3,
+        pen_style_dashed_dot = 4,
+        pen_style_dashed_dot_dot = 5
+    };
+
     enum class texture_format : std::uint16_t {
         none,
         r,

@@ -431,6 +431,42 @@ namespace eka2l1::drivers {
         virtual void set_swizzle(drivers::handle h, drivers::channel_swizzle r, drivers::channel_swizzle g, drivers::channel_swizzle b,
             drivers::channel_swizzle a)
             = 0;
+
+        /**
+         * @brief Set the size of line drawn.
+         * 
+         * @param value     New point size.
+         */
+        virtual void set_point_size(const std::uint8_t value) = 0;
+
+        /**
+         * @brief Set the style of lines that drawn by draw line or polygon function.
+         * @param style     New line style to set. Width and spacing of pattern are fixed for each style.
+         */
+        virtual void set_pen_style(const pen_style style) = 0;
+
+        /**
+         * @brief Draw a line.
+         * 
+         * If you want to draw multiple lines that are connected together, consider using draw_polygon.
+         * 
+         * This function is optimized for drawing a single line, so it's also advised to use this function
+         * when draw_polygon only contains two points.
+         * 
+         * @param start The starting position of the line in screen coordinate.
+         * @param end The end position of the line in screen coordinate.
+         */
+        virtual void draw_line(const eka2l1::point &start, const eka2l1::point &end) = 0;
+
+        /**
+         * @brief Draw a polygon.
+         * 
+         * If the polygon point count is 2, consider using draw_line.
+         * 
+         * @param point_list    Pointer to the list of point belongs to the polygon
+         * @param point_count   The number of points in the polygon, must be >= 2, else behaviour is relied on the backend.
+         */
+        virtual void draw_polygons(const eka2l1::point *point_list, const std::size_t point_count) = 0;
     };
 
     class server_graphics_command_list_builder : public graphics_command_list_builder {
@@ -538,6 +574,14 @@ namespace eka2l1::drivers {
 
         void set_swizzle(drivers::handle h, drivers::channel_swizzle r, drivers::channel_swizzle g, drivers::channel_swizzle b,
             drivers::channel_swizzle a) override;
+
+        void set_point_size(const std::uint8_t value) override;
+
+        void set_pen_style(const pen_style style) override;
+
+        void draw_line(const eka2l1::point &start, const eka2l1::point &end) override;
+
+        void draw_polygons(const eka2l1::point *point_list, const std::size_t point_count) override;
     };
 
     struct graphics_command_callback_data {
