@@ -163,7 +163,7 @@ namespace eka2l1::epoc {
             float size_length = 0;
 
             for (auto &chr : text) {
-                size_length += characters_[chr].xoff2 - characters_[chr].xoff;
+                size_length += characters_[chr].xadv;
             }
 
             if (alignment == epoc::text_alignment::right) {

@@ -193,7 +193,7 @@ namespace eka2l1::epoc {
         return true;
     }
 
-    bool graphic_context::do_command_set_pen_color() {
+    bool graphic_context::do_command_put_pen() {
         eka2l1::vecx<std::uint8_t, 4> color = common::rgba_to_vec(pen_color);
 
         // Don't bother even sending any draw command
@@ -202,6 +202,10 @@ namespace eka2l1::epoc {
             return false;
 
         case pen_style::solid:
+        case pen_style::dotted:
+        case pen_style::dashed:
+        case pen_style::dot_dot_dash:
+        case pen_style::dot_dash:
             if (epoc::is_display_mode_alpha(attached_window->display_mode())) {
                 if (color[3] == 0) {
                     // Nothing, dont draw
@@ -213,10 +217,14 @@ namespace eka2l1::epoc {
                 cmd_builder->set_brush_color({ color[0], color[1], color[2] });
             }
 
+            // NOTE: Literally same translation for now.
+            cmd_builder->set_point_size(static_cast<std::uint8_t>(pen_size.x));
+            cmd_builder->set_pen_style(static_cast<drivers::pen_style>(line_mode));
+
             break;
 
         default:
-            LOG_WARN(SERVICE_WINDOW, "Unhandled pen style {}", static_cast<std::int32_t>(fill_mode));
+            LOG_WARN(SERVICE_WINDOW, "Unhandled pen style {}", static_cast<std::int32_t>(line_mode));
             return false;
         }
 
@@ -644,16 +652,9 @@ namespace eka2l1::epoc {
     void graphic_context::draw_line(service::ipc_context &context, ws_cmd &cmd) {
         eka2l1::rect area = *reinterpret_cast<eka2l1::rect *>(cmd.data_ptr);
 
-        // Symbian rectangle second vector is the bottom right, not the size
-        area.transform_from_symbian_rectangle();
-
-        if (do_command_set_pen_color()) {
-            // We want to draw the rectangle that backup the real rectangle, to create borders.
-            eka2l1::rect backup_border = area;
-            backup_border.top -= pen_size;
-            backup_border.size += pen_size;
-
-            cmd_builder->draw_rectangle(backup_border);
+        if (do_command_put_pen()) {
+            // It's actually two points
+            cmd_builder->draw_line(area.top, area.size);
         }
 
         context.complete(epoc::error_none);
@@ -670,13 +671,16 @@ namespace eka2l1::epoc {
             return;
         }
 
-        if (do_command_set_pen_color()) {
-            // We want to draw the rectangle that backup the real rectangle, to create borders.
-            eka2l1::rect backup_border = area;
-            backup_border.top -= pen_size;
-            backup_border.size += pen_size * 2;
+        if (do_command_put_pen()) {
+            eka2l1::vec2 point_list[5] = {
+                area.top,
+                area.top + eka2l1::vec2(area.size.x, 0),
+                area.top + area.size,
+                area.top + eka2l1::vec2(0, area.size.y),
+                area.top
+            };
 
-            cmd_builder->draw_rectangle(backup_border);
+            cmd_builder->draw_polygons(point_list, 5);
         }
 
         // Draw the real rectangle! Hurray!
@@ -739,10 +743,11 @@ namespace eka2l1::epoc {
         }
 
         fill_mode = brush_style::null;
-        line_mode = pen_style::null;
+        line_mode = pen_style::solid;
 
         pen_size = { 1, 1 };
-        brush_color = 0;
+        brush_color = 0xFFFFFFFF;
+        pen_color = 0;
 
         clipping_rect.make_empty();
         clipping_region.make_empty();
@@ -1025,8 +1030,8 @@ namespace eka2l1::epoc {
         , attached_window(reinterpret_cast<epoc::canvas_base *>(attach_win))
         , text_font(nullptr)
         , fill_mode(brush_style::null)
-        , line_mode(pen_style::null)
-        , brush_color(0)
+        , line_mode(pen_style::solid)
+        , brush_color(0xFFFFFFFF)
         , pen_color(0)
         , pen_size(1, 1)
         , cmd_list(nullptr)
