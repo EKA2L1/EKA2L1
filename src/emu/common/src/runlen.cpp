@@ -196,11 +196,12 @@ namespace eka2l1 {
                 repeat = common::min<std::int32_t>(repeat, static_cast<std::int32_t>(dest_end - dest_start));
 
                 if (dest_start) {
-                    memset(dest_start, *source_start++, repeat + 1);
+                    memset(dest_start, *source_start, repeat + 1);
                     dest_start += repeat + 1;
                 }
                 
                 dest_size += repeat + 1;
+                source_start++;
             } else {
                 std::int32_t copy_count = common::min<std::int32_t>(-repeat, static_cast<std::int32_t>(dest_end - dest_start));
                 if (dest_start) {
