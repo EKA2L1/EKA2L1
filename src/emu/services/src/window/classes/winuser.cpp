@@ -1100,30 +1100,30 @@ namespace eka2l1::epoc {
     }
 
     void bitmap_backed_canvas::take_action_on_change(kernel::thread *drawer) {
-        // Sync back to the bitmap
-        if (!bitmap_) {
-            return;
-        }
-
-        if (bitmap_->bitmap_->compression_type() != epoc::bitmap_file_no_compression) {
-            LOG_ERROR(SERVICE_WINDOW, "Try to sync data back to backed bitmap canvas but compression is required on the bitmap!");
-            return;
-        }
-
         drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
-        fbs_server *serv = client->get_ws().get_fbs_server();
 
-        bool support_current_display_mode = true;
-        bool support_dirty_bitmap = true;
+        // Sync back to the bitmap
+        if (bitmap_) {
+            if (bitmap_->bitmap_->compression_type() != epoc::bitmap_file_no_compression) {
+                LOG_ERROR(SERVICE_WINDOW, "Try to sync data back to backed bitmap canvas but compression is required on the bitmap!");
+            } else {
+                fbs_server *serv = client->get_ws().get_fbs_server();
 
-        query_fbs_feature_support(serv, support_current_display_mode, support_dirty_bitmap);
+                bool support_current_display_mode = true;
+                bool support_dirty_bitmap = true;
 
-        eka2l1::vec2 to_sync_size(common::min<int>(bitmap_->bitmap_->header_.size_pixels.x, size().x),
-            common::min<int>(bitmap_->bitmap_->header_.size_pixels.y, size().y));
+                query_fbs_feature_support(serv, support_current_display_mode, support_dirty_bitmap);
 
-        drivers::read_bitmap(drv, driver_win_id, eka2l1::point(0, 0), to_sync_size, get_bpp_from_display_mode(
-            support_current_display_mode ? bitmap_->bitmap_->settings_.current_display_mode() : bitmap_->bitmap_->settings_.initial_display_mode()),
-            bitmap_->bitmap_->data_pointer(serv));
+                eka2l1::vec2 to_sync_size(common::min<int>(bitmap_->bitmap_->header_.size_pixels.x, size().x),
+                    common::min<int>(bitmap_->bitmap_->header_.size_pixels.y, size().y));
+
+                drivers::read_bitmap(drv, driver_win_id, eka2l1::point(0, 0), to_sync_size, get_bpp_from_display_mode(
+                    support_current_display_mode ? bitmap_->bitmap_->settings_.current_display_mode() : bitmap_->bitmap_->settings_.initial_display_mode()),
+                    bitmap_->bitmap_->data_pointer(serv));
+            }
+        }
+
+        canvas_base::take_action_on_change(drawer);
     }
 
     void bitmap_backed_canvas::sync_from_bitmap(std::optional<common::region> reg_clip) {
