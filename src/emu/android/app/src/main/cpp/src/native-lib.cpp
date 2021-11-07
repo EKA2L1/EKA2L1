@@ -54,6 +54,7 @@ extern "C" JNIEXPORT jboolean JNICALL
 Java_com_github_eka2l1_emu_Emulator_startNative(
     JNIEnv *env,
     jclass clazz) {
+    eka2l1::common::jni::init_classloader();
     state = std::make_unique<eka2l1::android::emulator>();
     return emulator_entry(*state);
 }
@@ -73,7 +74,6 @@ Java_com_github_eka2l1_emu_Emulator_getApps(
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_github_eka2l1_emu_Emulator_launchApp(JNIEnv *env, jclass clazz, jint uid) {
-    eka2l1::common::jni::init_classloader();
     state->launcher->launch_app(uid);
 }
 

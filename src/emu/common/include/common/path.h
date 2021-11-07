@@ -134,6 +134,9 @@ namespace eka2l1 {
     char get_separator(bool symbian_use = false);
     char16_t get_separator_16(bool symbian_use = false);
 
+    bool is_content_uri(const std::string &path);
+    std::uint32_t open_content_uri(const std::string &path, const std::string &mode);
+
     template <typename T>
     std::basic_string<T> transform_separators(std::basic_string<T> path, bool symbian_use, std::function<T(bool)> separator_func) {
         size_t crr_point = 0;

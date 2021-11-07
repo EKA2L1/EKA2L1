@@ -35,6 +35,10 @@
 #include <Windows.h>
 #endif
 
+#if EKA2L1_PLATFORM(ANDROID)
+#include <common/jniutils.h>
+#endif
+
 namespace eka2l1 {
     char get_separator(bool symbian_use) {
         if (symbian_use) {
@@ -473,5 +477,25 @@ namespace eka2l1 {
 #endif
 
         return true;
+    }
+
+    bool is_content_uri(const std::string &path) {
+        return path.rfind("content://", 0) == 0;
+    }
+
+    std::uint32_t open_content_uri(const std::string &path, const std::string &mode) {
+#if EKA2L1_PLATFORM(ANDROID)
+        JNIEnv *env = common::jni::environment();
+        jclass clazz = common::jni::find_class("com/github/eka2l1/emu/Emulator");
+        jmethodID open_uri_method = env->GetStaticMethodID(clazz,
+            "openContentUri", "(Ljava/lang/String;Ljava/lang/String;)I");
+
+        jstring jfilename = env->NewStringUTF(path.c_str());
+        jstring jmode = env->NewStringUTF(mode.c_str());
+        std::uint32_t fd = env->CallStaticIntMethod(clazz, open_uri_method, jfilename, jmode);
+#else
+        std::uint32_t fd = 0;
+#endif
+        return fd;
     }
 }
