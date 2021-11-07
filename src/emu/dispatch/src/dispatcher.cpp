@@ -154,6 +154,11 @@ namespace eka2l1::epoc {
             dispatcher->update_all_screens(sys);
             break;
 
+        // This affects Window Service's processing state on real phone. Ignore.
+        case epoc::raw_event_type_active:
+        case epoc::raw_event_type_inactive:
+            break;
+
         default:
             LOG_WARN(HLE_DISPATCHER, "Unhandled raw event {}", static_cast<int>(evt.type_));
             break;

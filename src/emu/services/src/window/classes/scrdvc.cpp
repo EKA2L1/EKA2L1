@@ -363,6 +363,11 @@ namespace eka2l1::epoc {
 
             break;
 
+        case ws_sd_op_get_scan_line:
+            LOG_TRACE(SERVICE_WINDOW, "Get scanline stubbed");
+            ctx.complete(epoc::error_none);
+            break;
+
         default: {
             LOG_WARN(SERVICE_WINDOW, "Unimplemented IPC call for screen driver: 0x{:x}", cmd.header.op);
             break;

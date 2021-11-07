@@ -164,7 +164,7 @@ namespace eka2l1 {
 
     enum ws_screen_device_opcode {
         ws_sd_op_setable_bit_flag = 0x80000000,
-        ws_sd_op_set_scan_line = 0x0000,
+        ws_sd_op_get_scan_line = 0x0000,
         ws_sd_op_pixel = 1,
         ws_sd_op_twips_size = 2,
         ws_sd_op_pixel_size = 3,

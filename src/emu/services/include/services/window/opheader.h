@@ -253,4 +253,10 @@ namespace eka2l1 {
         eka2l1::point offset;
         eka2l1::rect source_rect;
     };
+
+    struct ws_cmd_get_scanline {
+        eka2l1::point start_pos;
+        std::int32_t length;
+        epoc::display_mode dmode;
+    };
 }
