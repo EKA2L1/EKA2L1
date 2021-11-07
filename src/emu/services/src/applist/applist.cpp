@@ -635,18 +635,17 @@ namespace eka2l1 {
 
         app_icon_handles handle_result;
 
-        for (std::size_t i = 0; i < reg->app_icons.size() / 2; i++) {
-            if (reg->app_icons[i * 2].bmp_rom_addr_) {
-                handle_result.bmp_handle = reg->app_icons[i * 2].bmp_rom_addr_;
-            } else {
-                handle_result.bmp_handle = reg->app_icons[i * 2].bmp_->id;
-            }
+        // TODO: Iterate and choose right size. But have to do many code....
+        if (reg->app_icons[0].bmp_rom_addr_) {
+            handle_result.bmp_handle = reg->app_icons[0].bmp_rom_addr_;
+        } else {
+            handle_result.bmp_handle = reg->app_icons[0].bmp_->id;
+        }
 
-            if (reg->app_icons[i * 2 + 1].bmp_rom_addr_) {
-                handle_result.mask_bmp_handle = reg->app_icons[i * 2 + 1].bmp_rom_addr_;
-            } else {
-                handle_result.mask_bmp_handle = reg->app_icons[i * 2 + 1].bmp_->id;
-            }
+        if (reg->app_icons[1].bmp_rom_addr_) {
+            handle_result.mask_bmp_handle = reg->app_icons[1].bmp_rom_addr_;
+        } else {
+            handle_result.mask_bmp_handle = reg->app_icons[1].bmp_->id;
         }
 
         if (legacy_level() == APA_LEGACY_LEVEL_OLD) {

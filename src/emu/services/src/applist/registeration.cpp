@@ -803,13 +803,18 @@ namespace eka2l1 {
             return false;
         }
 
-        reg.mandatory_info.long_caption.assign(nullptr, long_cap);
+        if (!long_cap.empty() && long_cap[0] != 0) {
+            reg.mandatory_info.long_caption.assign(nullptr, long_cap);
+        }
 
         if (!read_a_caption(caption_read_stream, short_cap)) {
             return false;
         }
 
-        reg.mandatory_info.short_caption.assign(nullptr, short_cap);
+        if (!short_cap.empty() && short_cap[0] != 0) {
+            reg.mandatory_info.short_caption.assign(nullptr, short_cap);
+        }
+
         return true;
     }
 }
