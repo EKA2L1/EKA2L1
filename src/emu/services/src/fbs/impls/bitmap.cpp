@@ -931,7 +931,7 @@ namespace eka2l1 {
         const std::uint32_t reserved_each_size = calculate_reserved_each_side(new_size.y);
         bool offset_from_me_now = false;
 
-        if ((new_size.x == 0) && (new_size.y == 0)) {
+        if ((new_size.x != 0) && (new_size.y != 0)) {
             if (fbss->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
                 new_bmp = bmp;
 
