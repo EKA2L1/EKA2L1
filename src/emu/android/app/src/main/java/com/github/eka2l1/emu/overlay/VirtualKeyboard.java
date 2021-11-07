@@ -31,7 +31,6 @@ import android.view.View;
 import androidx.annotation.NonNull;
 
 import com.github.eka2l1.emu.Emulator;
-import com.github.eka2l1.emu.EmulatorActivity;
 import com.github.eka2l1.emu.Keycode;
 
 import java.io.DataInputStream;
@@ -1070,7 +1069,7 @@ public class VirtualKeyboard implements Overlay, Runnable {
     }
 
     private void vibrate() {
-        if (feedback) EmulatorActivity.vibrate(FEEDBACK_DURATION);
+        if (feedback) Emulator.vibrate(FEEDBACK_DURATION);
     }
 
     public void setHideDelay(int delay) {

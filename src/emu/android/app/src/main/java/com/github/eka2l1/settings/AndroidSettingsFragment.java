@@ -21,6 +21,7 @@ package com.github.eka2l1.settings;
 
 import static com.github.eka2l1.emu.Constants.KEY_RESTART;
 import static com.github.eka2l1.emu.Constants.PREF_THEME;
+import static com.github.eka2l1.emu.Constants.PREF_VIBRATION;
 
 import android.os.Bundle;
 import android.view.MenuItem;
@@ -33,8 +34,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.ListPreference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
+import androidx.preference.SwitchPreferenceCompat;
 
 import com.github.eka2l1.R;
+import com.github.eka2l1.emu.Emulator;
 
 public class AndroidSettingsFragment extends PreferenceFragmentCompat {
     private AppDataStore dataStore;
@@ -48,6 +51,11 @@ public class AndroidSettingsFragment extends PreferenceFragmentCompat {
         ListPreference themePreference = findPreference(PREF_THEME);
         themePreference.setOnPreferenceChangeListener((preference, newValue) -> {
             getParentFragmentManager().setFragmentResult(KEY_RESTART, new Bundle());
+            return true;
+        });
+        SwitchPreferenceCompat vibrationPreference = findPreference(PREF_VIBRATION);
+        vibrationPreference.setOnPreferenceChangeListener((preference, newValue) -> {
+            Emulator.setVibration((Boolean) newValue);
             return true;
         });
     }

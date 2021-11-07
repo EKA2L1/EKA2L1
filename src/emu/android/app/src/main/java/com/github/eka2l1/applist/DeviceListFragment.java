@@ -48,7 +48,7 @@ import androidx.fragment.app.Fragment;
 
 import com.github.eka2l1.R;
 import com.github.eka2l1.emu.Emulator;
-import com.github.eka2l1.util.PickFileResultContract;
+import com.github.eka2l1.util.FileUtils;
 import com.skydoves.expandablelayout.ExpandableLayout;
 
 import java.util.ArrayList;
@@ -75,13 +75,13 @@ public class DeviceListFragment extends Fragment {
     private boolean firmwareSet, rpkgSet, romSet, needRpkg;
     private ArrayAdapter<String> deviceAdapter;
     private final ActivityResultLauncher<String[]> openVplLauncher = registerForActivityResult(
-            new PickFileResultContract(),
+            FileUtils.getFilePicker(),
             this::onVPLResult);
     private final ActivityResultLauncher<String[]> openRpkgLauncher = registerForActivityResult(
-            new PickFileResultContract(),
+            FileUtils.getFilePicker(),
             this::onRpkgResult);
     private final ActivityResultLauncher<String[]> openRomLauncher = registerForActivityResult(
-            new PickFileResultContract(),
+            FileUtils.getFilePicker(),
             this::onRomResult);
 
     @Override

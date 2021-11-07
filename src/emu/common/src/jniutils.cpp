@@ -28,7 +28,7 @@ namespace eka2l1::common::jni {
 
     void init_classloader() {
         JNIEnv *env = environment();
-        jclass clazz = env->FindClass("com/github/eka2l1/emu/EmulatorActivity");
+        jclass clazz = env->FindClass("com/github/eka2l1/emu/Emulator");
         jclass classloader_class = env->FindClass("java/lang/ClassLoader");
         jmethodID get_classloader_method = env->GetStaticMethodID(clazz, "getAppClassLoader", "()Ljava/lang/ClassLoader;");
         c_classloader = env->NewGlobalRef(env->CallStaticObjectMethod(clazz, get_classloader_method));

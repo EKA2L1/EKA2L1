@@ -20,7 +20,11 @@
 package com.github.eka2l1.util;
 
 import android.content.Context;
+import android.os.Build;
+import android.os.Environment;
 import android.util.Log;
+
+import androidx.activity.result.contract.ActivityResultContract;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -152,5 +156,25 @@ public class FileUtils {
             e.printStackTrace();
         }
         return result;
+    }
+
+    public static boolean isExternalStorageLegacy() {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || Environment.isExternalStorageLegacy();
+    }
+
+    public static ActivityResultContract<String[],String> getFilePicker() {
+        if (isExternalStorageLegacy()) {
+            return new PickFileResultContract();
+        } else {
+            return new SAFFileResultContract();
+        }
+    }
+
+    public static ActivityResultContract<Void,String> getDirPicker() {
+        if (isExternalStorageLegacy()) {
+            return new PickDirResultContract();
+        } else {
+            return new SAFDirResultContract();
+        }
     }
 }

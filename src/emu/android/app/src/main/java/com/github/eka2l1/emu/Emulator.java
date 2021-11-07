@@ -19,13 +19,20 @@
 
 package com.github.eka2l1.emu;
 
+import static com.github.eka2l1.emu.Constants.PREF_VIBRATION;
+
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
+import android.os.Vibrator;
 import android.view.Surface;
 
 import com.github.eka2l1.BuildConfig;
 import com.github.eka2l1.applist.AppItem;
+import com.github.eka2l1.settings.AppDataStore;
 import com.github.eka2l1.util.FileUtils;
 import com.github.eka2l1.util.BitmapUtils;
 import com.github.eka2l1.util.FileUtils;
@@ -54,6 +61,11 @@ public class Emulator {
     public static final int INSTALL_DEVICE_ERROR_ROM_CORRUPTED = 10;
     public static final int INSTALL_DEVICE_ERROR_FPSX_CORRUPTED = 11;
 
+    @SuppressLint("StaticFieldLeak")
+    private static Context context;
+    private static boolean vibrationEnabled;
+    private static Vibrator vibrator;
+
     private static String emulatorDir;
     private static String compatDir;
     private static String configsDir;
@@ -65,14 +77,21 @@ public class Emulator {
         System.loadLibrary("native-lib");
     }
 
-    public static void initializePath() {
-        emulatorDir = Environment.getExternalStorageDirectory() + "/EKA2L1/";
+    public static void initializePath(Context context) {
+        Emulator.context = context;
+        vibrationEnabled = AppDataStore.getAndroidStore().getBoolean(PREF_VIBRATION, true);
+
+        if (FileUtils.isExternalStorageLegacy()) {
+            emulatorDir = Environment.getExternalStorageDirectory() + "/EKA2L1/";
+        } else {
+            emulatorDir = context.getExternalFilesDir(null).getPath() + "/";
+        }
         compatDir = emulatorDir + "compat/";
         configsDir = emulatorDir + "android/configs/";
         profilesDir = emulatorDir + "android/profiles/";
     }
 
-    public static void initializeFolders(Context context) {
+    public static void initializeFolders() {
         File folder = new File(emulatorDir);
         if (!folder.exists()) {
             folder.mkdirs();
@@ -96,9 +115,9 @@ public class Emulator {
         }
 
         boolean shouldUpdate = checkUpdate();
-        updateFolder(context, "resources", shouldUpdate);
-        updateFolder(context, "patch", shouldUpdate);
-        copyFolder(context, "compat", shouldUpdate);
+        updateFolder("resources", shouldUpdate);
+        updateFolder("patch", shouldUpdate);
+        copyFolder("compat", shouldUpdate);
 
         setDirectory(emulatorDir);
     }
@@ -114,7 +133,7 @@ public class Emulator {
         return result;
     }
 
-    private static void updateFolder(Context context, String folderName, boolean shouldUpdate) {
+    private static void updateFolder(String folderName, boolean shouldUpdate) {
         File patchFolder = new File(emulatorDir, folderName);
         if (shouldUpdate || !patchFolder.exists()) {
             if (patchFolder.exists()) {
@@ -124,7 +143,7 @@ public class Emulator {
         }
     }
 
-    private static void copyFolder(Context context, String folderName, boolean shouldUpdate) {
+    private static void copyFolder(String folderName, boolean shouldUpdate) {
         File patchFolder = new File(emulatorDir, folderName);
         if (shouldUpdate || !patchFolder.exists()) {
             FileUtils.copyAssetFolder(context, folderName, emulatorDir + folderName);
@@ -207,6 +226,45 @@ public class Emulator {
             if (!init) {
                 throw new IllegalStateException("Emulator is not initialized");
             }
+        }
+    }
+
+    public static void setVibration(boolean vibrationEnabled) {
+        Emulator.vibrationEnabled = vibrationEnabled;
+    }
+
+    @SuppressLint("unused")
+    public static boolean vibrate(int duration) {
+        if (!vibrationEnabled) {
+            return false;
+        }
+        if (vibrator == null) {
+            vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+        }
+        if (vibrator == null || !vibrator.hasVibrator()) {
+            return false;
+        }
+        vibrator.vibrate(duration);
+        return true;
+    }
+
+    @SuppressLint("unused")
+    public static ClassLoader getAppClassLoader() {
+        return context.getClassLoader();
+    }
+
+    @SuppressLint("unused")
+    public static int openContentUri(String uriString, String mode) {
+        try {
+            Uri uri = Uri.parse(uriString);
+            ParcelFileDescriptor filePfd = context.getContentResolver().openFileDescriptor(uri, mode);
+            if (filePfd == null) {
+                return -1;
+            }
+            return filePfd.detachFd();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
         }
     }
 

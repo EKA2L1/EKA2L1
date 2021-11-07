@@ -52,9 +52,8 @@ import com.github.eka2l1.emu.Emulator;
 import com.github.eka2l1.emu.EmulatorActivity;
 import com.github.eka2l1.info.AboutDialogFragment;
 import com.github.eka2l1.settings.SettingsFragment;
+import com.github.eka2l1.util.FileUtils;
 import com.github.eka2l1.util.LogUtils;
-import com.github.eka2l1.util.PickDirResultContract;
-import com.github.eka2l1.util.PickFileResultContract;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.IOException;
@@ -77,10 +76,10 @@ public class AppsListFragment extends ListFragment {
     private AppsListAdapter adapter;
     private boolean restartNeeded;
     private final ActivityResultLauncher<String[]> openSisLauncher = registerForActivityResult(
-            new PickFileResultContract(),
+            FileUtils.getFilePicker(),
             this::onSisResult);
     private final ActivityResultLauncher<Void> openSDCardLauncher = registerForActivityResult(
-            new PickDirResultContract(),
+            FileUtils.getDirPicker(),
             this::onSDCardResult);
 
     @Override

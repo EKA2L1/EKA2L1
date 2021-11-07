@@ -29,7 +29,8 @@ import android.media.AudioManager;
 import android.os.Bundle;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentManager;
@@ -37,26 +38,32 @@ import androidx.fragment.app.FragmentManager;
 import com.github.eka2l1.applist.AppsListFragment;
 import com.github.eka2l1.base.BaseActivity;
 import com.github.eka2l1.emu.Emulator;
+import com.github.eka2l1.util.FileUtils;
+
+import java.util.Map;
 
 public class MainActivity extends BaseActivity {
 
-    private static final int PERMISSION_REQUEST_CODE = 0;
+    private static final String[] STORAGE_PERMISSIONS = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
+
+    private final ActivityResultLauncher<String[]> permissionsLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestMultiplePermissions(),
+            this::onPermissionResult);
 
     @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Emulator.initializePath();
+        Emulator.initializePath(this);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if (ContextCompat.checkSelfPermission(
+        if (FileUtils.isExternalStorageLegacy() || ContextCompat.checkSelfPermission(
                 this, Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
                 PackageManager.PERMISSION_GRANTED) {
             initialize();
         } else {
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    PERMISSION_REQUEST_CODE);
+            permissionsLauncher.launch(STORAGE_PERMISSIONS);
         }
     }
 
@@ -68,7 +75,7 @@ public class MainActivity extends BaseActivity {
             return;
         }
 
-        Emulator.initializeFolders(this);
+        Emulator.initializeFolders();
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
         AppsListFragment appsListFragment = new AppsListFragment();
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -85,18 +92,13 @@ public class MainActivity extends BaseActivity {
                 .show();
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        if (requestCode == PERMISSION_REQUEST_CODE) {// If request is cancelled, the result arrays are empty.
-            if (grantResults.length > 0 &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Restart to apply theme
-                recreate();
-            } else {
-                Toast.makeText(this, R.string.error, Toast.LENGTH_SHORT).show();
-            }
+    private void onPermissionResult(Map<String, Boolean> status) {
+        if (!status.containsValue(false)) {
+            // Restart to apply theme
+            recreate();
+        } else {
+            Toast.makeText(this, R.string.error, Toast.LENGTH_SHORT).show();
+            finish();
         }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 }

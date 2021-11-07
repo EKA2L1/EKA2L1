@@ -32,7 +32,6 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Process;
-import android.os.Vibrator;
 import android.util.SparseIntArray;
 import android.view.Display;
 import android.view.KeyEvent;
@@ -79,10 +78,6 @@ public class EmulatorActivity extends AppCompatActivity {
     private static final int ORIENTATION_PORTRAIT = 2;
     private static final int ORIENTATION_LANDSCAPE = 3;
 
-    private static Vibrator vibrator;
-    @SuppressLint("StaticFieldLeak")
-    private static Context context;
-    private static boolean vibrationEnabled;
     private Toolbar toolbar;
     private OverlayView overlayView;
     private long uid;
@@ -115,7 +110,6 @@ public class EmulatorActivity extends AppCompatActivity {
 
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        context = this;
 
         boolean wakelockEnabled = dataStore.getBoolean(PREF_KEEP_SCREEN, false);
         if (wakelockEnabled) {
@@ -123,7 +117,6 @@ public class EmulatorActivity extends AppCompatActivity {
         }
         actionBarEnabled = dataStore.getBoolean(PREF_ACTIONBAR, true);
         statusBarEnabled = dataStore.getBoolean(PREF_STATUSBAR, false);
-        vibrationEnabled = dataStore.getBoolean(PREF_VIBRATION, true);
         if (!actionBarEnabled) {
             getSupportActionBar().hide();
         }
@@ -372,26 +365,6 @@ public class EmulatorActivity extends AppCompatActivity {
         if (keyboard != null) {
             keyboard.resize(screen, screen);
         }
-    }
-
-    @SuppressLint("unused")
-    public static boolean vibrate(int duration) {
-        if (!vibrationEnabled) {
-            return false;
-        }
-        if (vibrator == null) {
-            vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-        }
-        if (vibrator == null || !vibrator.hasVibrator()) {
-            return false;
-        }
-        vibrator.vibrate(duration);
-        return true;
-    }
-
-    @SuppressLint("unused")
-    public static ClassLoader getAppClassLoader() {
-        return context.getClassLoader();
     }
 
     private int convertAndroidKeyCode(int keyCode) {
