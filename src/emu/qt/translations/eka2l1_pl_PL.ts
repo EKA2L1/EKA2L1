@@ -485,7 +485,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1116"/>
       <source>Load theme failed!</source>
-      <translation>Ładowanie tematu nie powiodło się!</translation>
+      <translation>Wczytywanie tematu nie powiodło się!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1116"/>
