@@ -16,11 +16,11 @@ void main() {
     vec2 dirvec = (out_lineCurrentProcessingPoint - out_lineStartingPoint) * u_viewport;
     float dist = length(dirvec);
 
-	uint bit_in_pattern = uint(round(dist)) & 15U;
-	uint bit_mask = 1U << bit_in_pattern;
+    uint bit_in_pattern = uint(round(dist)) & 15U;
+    uint bit_mask = 1U << bit_in_pattern;
 
-	if ((u_pattern & bit_mask) == 0U)
-		discard;
+    if ((u_pattern & bit_mask) == 0U)
+        discard;
 
     o_color = u_color / 255.0;
 }
