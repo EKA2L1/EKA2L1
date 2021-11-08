@@ -746,7 +746,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="120"/>
       <source>Time delay (0-1000us)</source>
-      <translation type="unfinished">Time delay (0-1000us)</translation>
+      <translation>Tempo de atraso (0-1000us)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="462"/>
@@ -904,12 +904,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="798"/>
       <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
-      <translation type="unfinished">The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</translation>
+      <translation>O nome que será exibido em aplicativos emulados ou jogos. Permitir no máximo 30 caracteres.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="801"/>
       <source>Friendly phone name</source>
-      <translation type="unfinished">Friendly phone name</translation>
+      <translation>Nome de telefone amigável</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="834"/>
