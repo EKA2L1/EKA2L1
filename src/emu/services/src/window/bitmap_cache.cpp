@@ -314,11 +314,6 @@ namespace eka2l1::epoc {
                 break;
             }
 
-            if ((bmp->header_.size_pixels.x == 212 ) && (bmp->header_.size_pixels.y == 56)) {
-                std::ofstream test("test.bin");
-                test.write(data_pointer, raw_size);
-            }
-
             builder->update_bitmap(driver_textures[idx], data_pointer, raw_size, { 0, 0 }, bmp->header_.size_pixels, pixels_per_line);
             hashes[idx] = hash;
 
