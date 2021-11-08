@@ -1,7 +1,9 @@
-#version 140
+#version 300 es
 
-in vec2 in_position;
-in vec2 in_texcoord;
+precision mediump float;
+
+layout (location = 0) in vec2 in_position;
+layout (location = 1) in vec2 in_texcoord;
 
 out vec2 r_texcoord;
 out vec4 r_color;

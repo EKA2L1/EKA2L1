@@ -1,7 +1,9 @@
+#version 300 es
+
 // Based on: https://stackoverflow.com/questions/6017176/gllinestipple-deprecated-in-opengl-3-1
 // Thanks rabbid76!
 
-#version 140
+precision highp float;
 
 flat in vec2 out_lineStartingPoint;
 in vec2 out_lineCurrentProcessingPoint;
