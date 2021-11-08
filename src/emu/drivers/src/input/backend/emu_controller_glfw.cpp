@@ -50,7 +50,7 @@ namespace eka2l1 {
                         }
                     }
                     gamepad_state &current_pad = gamepads[jid];
-                    for (int i = 0; i < GLFW_GAMEPAD_BUTTON_LAST; i++) {
+                    for (int i = 0; i <= GLFW_GAMEPAD_BUTTON_LAST; i++) {
                         if ((external_gamepad_state.buttons[i] == GLFW_PRESS) != current_pad.button[i]) {
                             current_pad.button[i] = (external_gamepad_state.buttons[i] == GLFW_PRESS) ? true : false;
                             on_button_event(jid, i, external_gamepad_state.buttons[i]);
