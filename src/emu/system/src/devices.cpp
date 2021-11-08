@@ -195,6 +195,9 @@ namespace eka2l1 {
 
             add_new_device(firmcode, model, manufacturer, ver, machine_uid);
         }
+
+        // Save any additions we add it during deserialize
+        save_devices();
     }
 
     void device_manager::save_devices() {
