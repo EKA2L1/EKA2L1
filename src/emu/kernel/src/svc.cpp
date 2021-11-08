@@ -548,6 +548,17 @@ namespace eka2l1::epoc {
     /* TLS */
     /*******************/
 
+    BRIDGE_FUNC(eka2l1::ptr<void>, dll_tls_eka1, kernel::handle h) {
+        kernel::thread *thr = kern->crr_thread();
+        std::optional<kernel::tls_slot> slot = thr->get_tls_slot_no_uid(h);
+
+        if (slot.has_value()) {
+            return slot->pointer;
+        }
+
+        return eka2l1::ptr<void>(0);
+    }
+
     BRIDGE_FUNC(eka2l1::ptr<void>, dll_tls, kernel::handle h, std::int32_t dll_uid) {
         kernel::thread *thr = kern->crr_thread();
         std::optional<kernel::tls_slot> slot = thr->get_tls_slot(h, dll_uid);
@@ -5836,7 +5847,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x73, pop_trap_frame),
         BRIDGE_REGISTER(0x74, active_scheduler),
         BRIDGE_REGISTER(0x75, set_active_scheduler),
-        BRIDGE_REGISTER(0x80, dll_tls),
+        BRIDGE_REGISTER(0x80, dll_tls_eka1),
         BRIDGE_REGISTER(0x81, trap_handler),
         BRIDGE_REGISTER(0x82, set_trap_handler),
         BRIDGE_REGISTER(0x8D, locked_inc_32),
@@ -5947,7 +5958,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x73, pop_trap_frame),
         BRIDGE_REGISTER(0x74, active_scheduler),
         BRIDGE_REGISTER(0x75, set_active_scheduler),
-        BRIDGE_REGISTER(0x80, dll_tls),
+        BRIDGE_REGISTER(0x80, dll_tls_eka1),
         BRIDGE_REGISTER(0x81, trap_handler),
         BRIDGE_REGISTER(0x82, set_trap_handler),
         BRIDGE_REGISTER(0x8D, locked_inc_32),
@@ -6057,7 +6068,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x73, pop_trap_frame),
         BRIDGE_REGISTER(0x74, active_scheduler),
         BRIDGE_REGISTER(0x75, set_active_scheduler),
-        BRIDGE_REGISTER(0x80, dll_tls),
+        BRIDGE_REGISTER(0x80, dll_tls_eka1),
         BRIDGE_REGISTER(0x81, trap_handler),
         BRIDGE_REGISTER(0x82, set_trap_handler),
         BRIDGE_REGISTER(0x8D, locked_inc_32),

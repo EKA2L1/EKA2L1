@@ -355,6 +355,15 @@ namespace eka2l1 {
             cleanup_detachs();
         }
 
+        std::optional<tls_slot> thread::get_tls_slot_no_uid(const std::uint32_t handle) {
+            auto tls_slot_iterator = ldata->tls_slots.find(handle);
+            if (tls_slot_iterator != ldata->tls_slots.end()) {
+                return tls_slot_iterator->second;
+            }
+
+            return std::nullopt;
+        }
+
         std::optional<tls_slot> thread::get_tls_slot(const std::uint32_t handle, const std::uint32_t dll_uid) {
             auto tls_slot_iterator = ldata->tls_slots.find(handle);
             if ((tls_slot_iterator != ldata->tls_slots.end()) && (tls_slot_iterator->second.uid == dll_uid)) {

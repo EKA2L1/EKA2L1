@@ -310,6 +310,7 @@ namespace eka2l1 {
 
             chunk_ptr get_stack_chunk();
 
+            std::optional<tls_slot> get_tls_slot_no_uid(const std::uint32_t handle);
             std::optional<tls_slot> get_tls_slot(const std::uint32_t handle, const std::uint32_t dll_uid);
             bool set_tls_slot(const std::uint32_t handle, const std::uint32_t dll_uid, ptr<void> value);
             void close_tls_slot(const std::uint32_t );
