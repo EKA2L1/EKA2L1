@@ -146,15 +146,6 @@ namespace eka2l1 {
             return pris[idx];
         }
 
-        void thread::push_call(const std::string &func_name,
-            const arm::core::thread_context &ctx) {
-            call_stacks.push({ ctx, func_name });
-        }
-
-        void thread::pop_call() {
-            call_stacks.pop();
-        }
-
         void thread::reset_thread_ctx(const std::uint32_t entry_point, const std::uint32_t stack_top, const std::uint32_t thr_local_data_ptr,
             const bool initial) {
             std::fill(ctx.cpu_registers.begin(), ctx.cpu_registers.end(), 0);
@@ -364,27 +355,45 @@ namespace eka2l1 {
             cleanup_detachs();
         }
 
-        tls_slot *thread::get_tls_slot(uint32_t handle, uint32_t dll_uid) {
-            for (uint32_t i = 0; i < ldata->tls_slots.size(); i++) {
-                if (ldata->tls_slots[i].handle != -1 && ldata->tls_slots[i].handle == handle) {
-                    return &ldata->tls_slots[i];
-                }
+        std::optional<tls_slot> thread::get_tls_slot(const std::uint32_t handle, const std::uint32_t dll_uid) {
+            auto tls_slot_iterator = ldata->tls_slots.find(handle);
+            if ((tls_slot_iterator != ldata->tls_slots.end()) && (tls_slot_iterator->second.uid == dll_uid)) {
+                return tls_slot_iterator->second;
             }
 
-            for (uint32_t i = 0; i < ldata->tls_slots.size(); i++) {
-                if (ldata->tls_slots[i].handle == -1) {
-                    ldata->tls_slots[i].handle = handle;
-                    ldata->tls_slots[i].uid = dll_uid;
-
-                    return &ldata->tls_slots[i];
-                }
-            }
-
-            return nullptr;
+            return std::nullopt;
         }
 
-        void thread::close_tls_slot(tls_slot &slot) {
-            slot.handle = -1;
+        void thread::close_tls_slot(const std::uint32_t handle) {
+            auto tls_slot_iterator = ldata->tls_slots.find(handle);
+            if (tls_slot_iterator != ldata->tls_slots.end()) {
+                ldata->tls_slots.erase(tls_slot_iterator);
+            }
+        }
+
+        bool thread::set_tls_slot(const std::uint32_t handle, const std::uint32_t dll_uid, ptr<void> value) {
+            auto tls_slot_iterator = ldata->tls_slots.find(handle);
+            if ((tls_slot_iterator != ldata->tls_slots.end())) {
+                tls_slot_iterator->second.pointer = value;
+                tls_slot_iterator->second.handle = handle;
+                tls_slot_iterator->second.uid = dll_uid;
+
+                return true;
+            }
+
+            static constexpr const std::size_t MAX_TLS_HOLD = 10000;
+            if (ldata->tls_slots.size() > MAX_TLS_HOLD) {
+                LOG_ERROR(KERNEL, "TLS slot count overloaded (10000 reached and can not grow more!)");
+                return false;
+            }
+
+            tls_slot slot_info;
+            slot_info.handle = handle;
+            slot_info.uid = dll_uid;
+            slot_info.pointer = value;
+
+            ldata->tls_slots.emplace(handle, slot_info);
+            return true;
         }
 
         bool thread::sleep(uint32_t ussecs) {

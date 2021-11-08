@@ -26,6 +26,7 @@
 #include <common/log.h>
 
 #include <algorithm>
+#include <stack>
 
 namespace eka2l1::kernel {
     static constexpr std::uint32_t HANDLE_INDEX_MASK = 0b111111111111111;

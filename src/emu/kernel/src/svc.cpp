@@ -57,10 +57,6 @@ namespace eka2l1::epoc {
         return kern->crr_thread()->get_local_data();
     }
 
-    static eka2l1::kernel::tls_slot *get_tls_slot(kernel_system *kern, address addr) {
-        return kern->crr_thread()->get_tls_slot(addr, addr);
-    }
-
     static codeseg_ptr get_codeseg_from_addr(kernel_system *kern, kernel::process *pr, const std::uint32_t addr,
         const bool ep) {
         hle::lib_manager &mngr = *kern->get_lib_manager();
@@ -554,27 +550,22 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(eka2l1::ptr<void>, dll_tls, kernel::handle h, std::int32_t dll_uid) {
         kernel::thread *thr = kern->crr_thread();
-        kernel::thread_local_data *dat = thr->get_local_data();
+        std::optional<kernel::tls_slot> slot = thr->get_tls_slot(h, dll_uid);
 
-        for (const auto &tls : dat->tls_slots) {
-            if (tls.handle == h) {
-                return tls.pointer;
-            }
+        if (slot.has_value()) {
+            return slot->pointer;
         }
 
         return eka2l1::ptr<void>(0);
     }
 
-    BRIDGE_FUNC(std::int32_t, dll_set_tls, kernel::handle h, std::int32_t dll_uid, eka2l1::ptr<void> data_set) {
-        eka2l1::kernel::tls_slot *slot = get_tls_slot(kern, h);
+    BRIDGE_FUNC(std::int32_t, dll_set_tls, kernel::handle h, std::int32_t dll_uid, eka2l1::ptr<void> data_set) {        
+        kernel::thread *thr = kern->crr_thread();
 
-        if (!slot) {
+        if (!thr->set_tls_slot(h, dll_uid, data_set)) {
             return epoc::error_no_memory;
         }
 
-        slot->pointer = data_set;
-
-        kernel::thread *thr = kern->crr_thread();
         LOG_TRACE(KERNEL, "TLS set for 0x{:x}, ptr: 0x{:x}, thread {}", static_cast<std::uint32_t>(h), data_set.ptr_address(),
             thr->name());
 
@@ -583,7 +574,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, dll_free_tls, kernel::handle h) {
         kernel::thread *thr = kern->crr_thread();
-        thr->close_tls_slot(*thr->get_tls_slot(h, h));
+        thr->close_tls_slot(h);
 
         LOG_TRACE(KERNEL, "TLS slot closed for 0x{:x}, thread {}", static_cast<std::uint32_t>(h), thr->name());
     }

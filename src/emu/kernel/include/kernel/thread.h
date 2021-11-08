@@ -20,12 +20,10 @@
 
 #pragma once
 
-#include <array>
-#include <condition_variable>
 #include <memory>
 #include <optional>
-#include <stack>
 #include <string>
+#include <unordered_map>
 
 #include <cpu/arm_factory.h>
 
@@ -108,8 +106,8 @@ namespace eka2l1 {
         };
 
         struct tls_slot {
-            int handle = -1;
-            int uid = -1;
+            std::uint32_t handle = 0xFFFFFFFF;
+            std::uint32_t uid = 0xFFFFFFFF;
             ptr<void> pointer;
         };
 
@@ -124,13 +122,9 @@ namespace eka2l1 {
             // So this is fine for both mode.
             ptr<void> tls_heap;
 
-            // On real phone this is a RArray.
-            std::array<tls_slot, 50> tls_slots;
-        };
-
-        struct debug_function_trace {
-            arm::core::thread_context ctx;
-            std::string func_name;
+            // Hash map is used here, there will hopefully not be thousand of elements 
+            // and constant complexity, memory is not a worry.
+            std::unordered_map<std::uint32_t, tls_slot> tls_slots;
         };
 
         class thread : public kernel_obj {
@@ -155,9 +149,6 @@ namespace eka2l1 {
 
             thread_state state;
             thread_state backup_state;
-
-            std::mutex mut;
-            std::condition_variable todo;
 
             // Thread context to save when suspend the execution
             arm::core::thread_context ctx;
@@ -184,9 +175,7 @@ namespace eka2l1 {
             chunk_ptr local_data_chunk;
 
             thread_local_data *ldata;
-
             thread_scheduler *scheduler;
-            std::stack<debug_function_trace> call_stacks;
 
             sema_ptr request_sema;
             std::uint32_t flags;
@@ -293,19 +282,6 @@ namespace eka2l1 {
                 return exit_type;
             }
 
-            std::optional<debug_function_trace> get_top_call() {
-                if (call_stacks.size() == 0) {
-                    return std::optional<debug_function_trace>{};
-                }
-
-                return call_stacks.top();
-            }
-
-            void push_call(const std::string &func_name,
-                const arm::core::thread_context &ctx);
-
-            void pop_call();
-
             int get_remaining_screenticks() const {
                 return time;
             }
@@ -334,8 +310,9 @@ namespace eka2l1 {
 
             chunk_ptr get_stack_chunk();
 
-            tls_slot *get_tls_slot(std::uint32_t handle, std::uint32_t dll_uid);
-            void close_tls_slot(tls_slot &slot);
+            std::optional<tls_slot> get_tls_slot(const std::uint32_t handle, const std::uint32_t dll_uid);
+            bool set_tls_slot(const std::uint32_t handle, const std::uint32_t dll_uid, ptr<void> value);
+            void close_tls_slot(const std::uint32_t );
 
             void update_priority();
 
