@@ -171,6 +171,7 @@ namespace eka2l1::kernel {
             codeseg_create_info &info);
 
         virtual ~codeseg() {}
+        int destroy() override;
 
         void queries_call_list(kernel::process *pr, std::vector<std::uint32_t> &call_list);
         void unmark();

@@ -67,6 +67,14 @@ namespace eka2l1::kernel {
         relocation_list = info.relocation_list;
     }
 
+    int codeseg::destroy() {
+        if (code_chunk_shared) {
+            kern->destroy(code_chunk_shared);
+        }
+
+        return 0;
+    }
+
     bool codeseg::eligible_for_codeseg_reuse() {
         mark = true;
 
