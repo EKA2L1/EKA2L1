@@ -21,3 +21,4 @@
 #-renamesourcefileattribute SourceFile
 
 -keep class com.github.eka2l1.emu.Emulator { *; }
+-keep class com.github.eka2l1.util.SparseIntArrayAdapter { *; }
