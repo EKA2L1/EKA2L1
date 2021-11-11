@@ -1,6 +1,4 @@
-#version 300 es
-
-precision mediump float;
+#version 140
 
 uniform vec4 u_color;
 out vec4 o_color;

@@ -1,11 +1,9 @@
-#version 300 es
-
 // Based on: https://stackoverflow.com/questions/6017176/gllinestipple-deprecated-in-opengl-3-1
 // Thanks rabbid76!
 
-precision mediump float;
+#version 140
 
-layout (location = 0) in vec2 in_position;
+in vec2 in_position;
 
 uniform mat4 u_proj;
 uniform mat4 u_model;

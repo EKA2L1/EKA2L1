@@ -1,8 +1,6 @@
-#version 300 es
+#version 140
 
-precision mediump float;
-
-layout (location = 0) in vec2 in_position;
+in vec2 in_position;
 
 uniform mat4 u_proj;
 uniform mat4 u_model;
