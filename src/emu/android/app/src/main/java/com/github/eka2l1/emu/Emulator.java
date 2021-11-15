@@ -70,6 +70,7 @@ public class Emulator {
     private static String compatDir;
     private static String configsDir;
     private static String profilesDir;
+    private static String scriptsDir;
     private static boolean init;
     private static boolean load;
 
@@ -89,6 +90,7 @@ public class Emulator {
         compatDir = emulatorDir + "compat/";
         configsDir = emulatorDir + "android/configs/";
         profilesDir = emulatorDir + "android/profiles/";
+        scriptsDir = emulatorDir + "scripts/";
     }
 
     public static void initializeFolders() {
@@ -113,11 +115,16 @@ public class Emulator {
         if (!profilesFolder.exists()) {
             profilesFolder.mkdirs();
         }
+        File scriptsFolder = new File(scriptsDir);
+        if (!scriptsFolder.exists()) {
+            scriptsFolder.mkdirs();
+        }
 
         boolean shouldUpdate = checkUpdate();
         updateFolder("resources", shouldUpdate);
         updateFolder("patch", shouldUpdate);
         copyFolder("compat", shouldUpdate);
+        copyFolder("scripts", shouldUpdate);
 
         setDirectory(emulatorDir);
     }
