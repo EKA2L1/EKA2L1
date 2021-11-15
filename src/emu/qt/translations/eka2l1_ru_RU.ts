@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/utils.cpp" line="126"/>
       <source>EKA2L1 - Symbian OS emulator</source>
-      <translation type="unfinished">EKA2L1 - Symbian OS emulator</translation>
+      <translation>EKA2L1 - эмулятор Symbian OS</translation>
     </message>
   </context>
   <context>
@@ -701,12 +701,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="396"/>
       <source>If blurry scaled up screen is not preferred, enable this option will make the phone screen stays at the original size</source>
-      <translation type="unfinished">If blurry scaled up screen is not preferred, enable this option will make the phone screen stays at the original size</translation>
+      <translation>Если размытие масштабированного экрана не предпочтительно, включите эту опцию, чтобы экран телефона остался в исходном размере</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="399"/>
       <source>Disable scaling phone screen to emulator&apos;s window size</source>
-      <translation type="unfinished">Disable scaling phone screen to emulator&apos;s window size</translation>
+      <translation>Отключить масштабирование экрана телефона по размеру окна эмулятора</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="411"/>
@@ -741,17 +741,17 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="456"/>
       <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
-      <translation type="unfinished">Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</translation>
+      <translation>Включение этого параметра установит для окна постоянный заголовок &quot;EKA2L1&quot;, без дополнительной информации.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="120"/>
       <source>Time delay (0-1000us)</source>
-      <translation type="unfinished">Time delay (0-1000us)</translation>
+      <translation>Время задержки (0-1000мкс)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="462"/>
       <source>Disable easter egg title</source>
-      <translation type="unfinished">Disable easter egg title</translation>
+      <translation>Отключить пасхалку в заголовке</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="480"/>
@@ -879,44 +879,44 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="826"/>
       <source>Graphics</source>
-      <translation type="unfinished">Graphics</translation>
+      <translation>Графика</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="838"/>
       <source>Screen buffer sync</source>
-      <translation type="unfinished">Screen buffer sync</translation>
+      <translation>Синхронизация буфера экрана</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="852"/>
       <source>Preferred</source>
-      <translation type="unfinished">Preferred</translation>
+      <translation>Предпочтительно</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="862"/>
       <source>Enable</source>
-      <translation type="unfinished">Enable</translation>
+      <translation>Включить</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="857"/>
       <source>Disable</source>
-      <translation type="unfinished">Disable</translation>
+      <translation>Выключить</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="798"/>
       <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
-      <translation type="unfinished">The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</translation>
+      <translation>Имя, отображаемое в эмулированных приложениях или играх. Максимум 30 символов.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="801"/>
       <source>Friendly phone name</source>
-      <translation type="unfinished">Friendly phone name</translation>
+      <translation>Имя телефона</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="834"/>
       <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
-      <translation type="unfinished">This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
-Preferred option will automatically enable this on S60v1/S60v2 devices.</translation>
+      <translation>Это позволяет записывать эмулированные программы и предотвращать мигание в некоторых старых играх S60v1/S60v2.
+Опция "Предпочтительно" автоматически включится на устройствах S60v1/S60v2.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="882"/>

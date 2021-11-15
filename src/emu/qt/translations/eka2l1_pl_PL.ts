@@ -485,7 +485,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1116"/>
       <source>Load theme failed!</source>
-      <translation>Ładowanie tematu nie powiodło się!</translation>
+      <translation>Wczytywanie tematu nie powiodło się!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1116"/>
@@ -904,12 +904,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="798"/>
       <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
-      <translation type="unfinished">The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</translation>
+      <translation>Ta nazwa będzie wyświetlana w emulowanych aplikacjach lub grach. Pozwól na maksymalnie 30 znaków.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="801"/>
       <source>Friendly phone name</source>
-      <translation type="unfinished">Friendly phone name</translation>
+      <translation>Przyjazna nazwa telefonu</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="834"/>

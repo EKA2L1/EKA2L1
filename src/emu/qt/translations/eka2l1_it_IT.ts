@@ -904,12 +904,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="798"/>
       <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
-      <translation type="unfinished">The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</translation>
+      <translation>Nome che verrà visualizzato nelle applicazioni o nei giochi emulati. È consentito un massimo di 30 caratteri.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="801"/>
       <source>Friendly phone name</source>
-      <translation type="unfinished">Friendly phone name</translation>
+      <translation>Nome telefono familiare</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="834"/>

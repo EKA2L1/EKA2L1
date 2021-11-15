@@ -909,7 +909,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="801"/>
       <source>Friendly phone name</source>
-      <translation type="unfinished">Friendly phone name</translation>
+      <translation>友好的手机名称</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="834"/>
