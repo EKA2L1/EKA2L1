@@ -135,9 +135,12 @@ namespace eka2l1::loader {
                 size_t readed = sis_file.read(temp.data(), took);
 
                 if (readed != took) {
-                    f->close();
-                    canceled = true;
+                    if (f->tell() != f->size()) {
+                        // End of file not reached
+                        canceled = true;
+                    }
 
+                    f->close();
                     break;
                 }
 
