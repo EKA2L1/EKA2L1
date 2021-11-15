@@ -222,6 +222,7 @@ namespace eka2l1 {
         void set_default_glyph_bitmap_type(service::ipc_context *ctx);
         void get_default_glyph_bitmap_type(service::ipc_context *ctx);
         void has_character(service::ipc_context *ctx);
+        void add_font_file_store(service::ipc_context *ctx);
 
         fbsbitmap *get_clean_bitmap(fbsbitmap *bmp);
         void load_bitmap_impl(service::ipc_context *ctx, file *source);
