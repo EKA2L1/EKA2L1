@@ -58,7 +58,7 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if (FileUtils.isExternalStorageLegacy() || ContextCompat.checkSelfPermission(
+        if (!FileUtils.isExternalStorageLegacy() || ContextCompat.checkSelfPermission(
                 this, Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
                 PackageManager.PERMISSION_GRANTED) {
             initialize();
