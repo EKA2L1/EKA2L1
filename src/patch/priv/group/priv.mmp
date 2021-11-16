@@ -11,4 +11,5 @@ LIBRARY		    euser.lib
 SOURCE          AudCommon.cpp
 SOURCE		    HwrmBase.cpp
 SOURCE          HwrmVibra.cpp
+SOURCE          HwrmLight.cpp
 SOURCE          Log.cpp

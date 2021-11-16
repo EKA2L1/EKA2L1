@@ -23,6 +23,7 @@
 #include <e32std.h>
 
 _LIT(KMcaCat, "MediaClientAudioStream");
+_LIT(KBacklightCat, "Backlight");
 _LIT(KScdvCat, "SCDV-HLE");
 
 void LogOut(const TDesC &aCategory, const TDesC &aMessage, ...);

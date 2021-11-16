@@ -1,0 +1,11 @@
+EXPORTS
+	NewL__17CBackLightControlP25MBackLightControlObserver @ 1 NONAME R3UNUSED ; CBackLightControl::NewL(MBackLightControlObserver *)
+	BackLightOff__21CBackLightControlImpliUs @ 2 NONAME R3UNUSED ; CBackLightControlImpl::BackLightOff(int)
+	BackLightOn__21CBackLightControlImpliUs @ 3 NONAME R3UNUSED ; CBackLightControlImpl::BackLightOn(int, unsigned short)
+	BackLightChange__21CBackLightControlImpliUs @ 4 NONAME R3UNUSED ; CBackLightControlImpl::BackLightChange(int, unsigned short)
+	BackLightState__21CBackLightControlImpli @ 5 NONAME R3UNUSED ; CBackLightControlImpl::BackLightState(int)
+	NewLC__17CBackLightControlP25MBackLightControlObserver @ 6 NONAME R3UNUSED ; CBackLightControl::NewLC(MBackLightControlObserver *)
+	NewL__17CBackLightControl @ 7 NONAME R3UNUSED ; CBackLightControl::NewL(void)
+	BackLightBlink__21CBackLightControlImpliUsUsUs @ 8 NONAME ; CBackLightControlImpl::BackLightBlink(int, unsigned short, unsigned short, unsigned short)
+	SetScreenBrightness__21CBackLightControlImpliUs @ 9 NONAME R3UNUSED ; CBackLightControlImpl::SetScreenBrightness(int, unsigned short)
+	ScreenBrightness__21CBackLightControlImpl @ 10 NONAME R3UNUSED ; CBackLightControlImpl::ScreenBrightness(void)

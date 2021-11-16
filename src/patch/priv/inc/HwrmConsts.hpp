@@ -43,4 +43,11 @@ enum THWRMVibraServiceOpcode {
     EHWRMVibraRelease = 2004
 };
 
+enum THWRMLightServiceOpcode {
+    EHWRMLightOn = 1000,
+    EHWRMLightOff = 1001,
+    EHWRMLightBlink = 1002,
+    EHWRMLightCleanup = 1003
+};
+
 #endif
