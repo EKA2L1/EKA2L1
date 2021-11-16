@@ -123,8 +123,10 @@ void CMMFMdaOutputBufferQueue::StartTransfer() {
 }
 
 CMMFMdaOutputOpen::CMMFMdaOutputOpen()
-    : CIdle(100)
-    , iIsFixup(EFalse) {
+    : CTimer(CActive::EPriorityStandard)
+    , iIsFixup(EFalse)
+    , iConstructed(EFalse)
+    , iParent(NULL) {
 }
 
 CMMFMdaOutputOpen::~CMMFMdaOutputOpen() {
@@ -132,17 +134,28 @@ CMMFMdaOutputOpen::~CMMFMdaOutputOpen() {
     Deque();
 }
 
-static TInt OpenCompleteCallback(void *aUserdata) {
+void CMMFMdaOutputOpen::RunL() {
     LogOut(KMcaCat, _L("Open complete"));
-
-    CMMFMdaAudioOutputStream *stream = reinterpret_cast<CMMFMdaAudioOutputStream *>(aUserdata);
-    stream->iCallback.MaoscOpenComplete(KErrNone);
-
-    return 0;
+    iParent->iCallback.MaoscOpenComplete(KErrNone);
 }
 
 void CMMFMdaOutputOpen::Open(CMMFMdaAudioOutputStream *stream) {
-    Start(TCallBack(OpenCompleteCallback, stream));
+    iParent = stream;
+
+	if (!iConstructed) {
+		TRAPD(result, ConstructL());
+        if (result != KErrNone) {
+            LogOut(KMcaCat, _L("Error happens during open active object construction (code=%d)!"), result);
+        }
+
+        iConstructed = ETrue;
+    }
+
+    // Give some time for the application to do other things
+    // Case with Magic Broom, initializes more stuffs before Open is called!
+    // If server opcode 2 is not called, Open will not be able to write initial play data.
+    static const TUint32 DelayInitializeCompleteUs = 10000;
+    After(DelayInitializeCompleteUs);
 }
 
 void CMMFMdaOutputOpen::DoCancel() {

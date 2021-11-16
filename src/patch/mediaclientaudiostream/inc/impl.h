@@ -56,15 +56,21 @@ struct CMMFMdaOutputBufferQueue : public CActive {
     virtual void DoCancel();
 };
 
-class CMMFMdaOutputOpen : public CIdle {
+class CMMFMdaAudioOutputStream;
+
+class CMMFMdaOutputOpen : public CTimer {
 protected:
     TBool iIsFixup;
+    TBool iConstructed;
+    CMMFMdaAudioOutputStream *iParent;
 
 public:
     explicit CMMFMdaOutputOpen();
     ~CMMFMdaOutputOpen();
 
     void FixupActiveStatus();
+
+    virtual void RunL();
 
     void Open(CMMFMdaAudioOutputStream *iStream);
     void DoCancel();
