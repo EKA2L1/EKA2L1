@@ -392,7 +392,7 @@ namespace eka2l1::loader {
 
         fname = eka2l1::add_path(common::utf8_to_ucs2(path_base), fname);
 
-        std::ofstream file_out_stream(common::ucs2_to_utf8(fname), std::ios_base::binary);
+        common::wo_std_file_stream file_out_stream(common::ucs2_to_utf8(fname), true);
         stream->seek(entry.address_lin - rom_base, common::seek_where::beg);
 
         static constexpr std::int64_t MAX_CHUNK_SIZE = 0x10000;
