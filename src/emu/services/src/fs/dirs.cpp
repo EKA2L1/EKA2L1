@@ -137,7 +137,7 @@ namespace eka2l1 {
 
         epoc::fs::build_symbian_entry_from_emulator_entry(io, info.value(), entry);
 
-        ctx->write_data_to_descriptor_argument<epoc::fs::entry>(0, entry);
+        ctx->write_data_to_descriptor_argument<epoc::fs::entry>(0, entry, nullptr, true);
         ctx->complete(epoc::error_none);
     }
 
