@@ -219,11 +219,11 @@ namespace eka2l1::common {
         }
 
         template <typename I>
-        std::enable_if_t<std::is_integral_v<I>, I> as_int(const I def_ = 0, int base = 10) const {
+        std::enable_if_t<std::is_integral_v<I>, I> as_int(const I def_ = 0, int base = -1) const {
             // Determine base
             std::basic_string<T> num_str_ = str_;
 
-            if (num_str_.length() >= 2) {
+            if ((num_str_.length() >= 2) && (base == -1)) {
                 auto prefix = num_str_.substr(0, 2);
                 bool prefix_found = false;
 
@@ -248,6 +248,7 @@ namespace eka2l1::common {
                         break;
 
                     default:
+                        base = 10;
                         break;
                     }
                 }
