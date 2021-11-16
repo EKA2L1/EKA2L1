@@ -46,7 +46,7 @@ namespace eka2l1 {
             filename = common::lowercase_string(filename);
         }
 
-        std::ofstream f(filename.c_str(), std::ios_base::binary);
+        common::wo_std_file_stream f(filename, true);
 
         static constexpr std::uint32_t CHUNK_SIZE = 0x10000;
 
@@ -115,56 +115,57 @@ namespace eka2l1 {
         if (header.type_ == loader::firmware::FPSX_TYPE_CORE) {
             const std::string rom_path = eka2l1::add_path(rom_resident_path, "SYM_TEMP.ROM");
             const std::string rom_final_path = eka2l1::add_path(rom_resident_path, "SYM.ROM");
-            std::ofstream rom_stream(rom_path, std::ios_base::binary);
-            std::uint32_t ignore_bootstrap_left = 0xC00;
 
-            for (auto &root : header.btree_.roots_) {
-                if (root.cert_blocks_.size() == 0) {
-                    continue;
-                }
+            {
+                common::wo_std_file_stream rom_stream(rom_path, true);
+                std::uint32_t ignore_bootstrap_left = 0xC00;
 
-                if (root.cert_blocks_[0].btype_ == loader::firmware::BLOCK_TYPE_ROFS_HASH) {
-                    loader::firmware::block_header_rofs_hash &header_rofs = static_cast<decltype(header_rofs)>(*root.cert_blocks_[0].header_);
-
-                    const std::string stt = header_rofs.description_;
-                    bool canceled = false;
-
-                    if (stt.find("CORE") != std::string::npos) {
-                        for (std::size_t i = 0; i < root.code_blocks_.size(); i++) {
-                            if (cancel_cb && cancel_cb()) {
-                                canceled = true;
-                                break;
-                            }
-                            std::uint32_t skip_taken = 0;
-
-                            if (ignore_bootstrap_left != 0) {
-                                if (root.code_blocks_[i].header_->data_size_ <= ignore_bootstrap_left) {
-                                    skip_taken = std::min<std::uint32_t>(ignore_bootstrap_left, root.code_blocks_[i].header_->data_size_);
-
-                                    if (skip_taken == root.code_blocks_[i].header_->data_size_)
-                                        continue;
-                                } else {
-                                    skip_taken = ignore_bootstrap_left;
-                                }
-                            }
-
-                            stream.seek(root.code_blocks_[i].data_offset_in_stream_ + skip_taken, eka2l1::common::seek_where::beg);
-                            buf.resize(root.code_blocks_[i].header_->data_size_ - skip_taken);
-
-                            stream.read(buf.data(), buf.size());
-                            rom_stream.write(buf.data(), buf.size());
-
-                            ignore_bootstrap_left -= skip_taken;
-                        }
+                for (auto &root : header.btree_.roots_) {
+                    if (root.cert_blocks_.size() == 0) {
+                        continue;
                     }
 
-                    if (cancel_cb && cancel_cb()) {
-                        return device_installation_general_failure;
+                    if (root.cert_blocks_[0].btype_ == loader::firmware::BLOCK_TYPE_ROFS_HASH) {
+                        loader::firmware::block_header_rofs_hash &header_rofs = static_cast<decltype(header_rofs)>(*root.cert_blocks_[0].header_);
+
+                        const std::string stt = header_rofs.description_;
+                        bool canceled = false;
+
+                        if (stt.find("CORE") != std::string::npos) {
+                            for (std::size_t i = 0; i < root.code_blocks_.size(); i++) {
+                                if (cancel_cb && cancel_cb()) {
+                                    canceled = true;
+                                    break;
+                                }
+                                std::uint32_t skip_taken = 0;
+
+                                if (ignore_bootstrap_left != 0) {
+                                    if (root.code_blocks_[i].header_->data_size_ <= ignore_bootstrap_left) {
+                                        skip_taken = std::min<std::uint32_t>(ignore_bootstrap_left, root.code_blocks_[i].header_->data_size_);
+
+                                        if (skip_taken == root.code_blocks_[i].header_->data_size_)
+                                            continue;
+                                    } else {
+                                        skip_taken = ignore_bootstrap_left;
+                                    }
+                                }
+
+                                stream.seek(root.code_blocks_[i].data_offset_in_stream_ + skip_taken, eka2l1::common::seek_where::beg);
+                                buf.resize(root.code_blocks_[i].header_->data_size_ - skip_taken);
+
+                                stream.read(buf.data(), buf.size());
+                                rom_stream.write(buf.data(), buf.size());
+
+                                ignore_bootstrap_left -= skip_taken;
+                            }
+                        }
+
+                        if (cancel_cb && cancel_cb()) {
+                            return device_installation_general_failure;
+                        }
                     }
                 }
             }
-
-            rom_stream.close();
 
             int defrag_result = 0;
 
@@ -198,48 +199,49 @@ namespace eka2l1 {
         }
 
         std::string image_path = eka2l1::add_path(rom_resident_path, "TEMP.IMG");
-        std::ofstream rom_stream(image_path, std::ios_base::binary);
+        
+        {
+            common::wo_std_file_stream rom_stream(image_path, true);
 
-        loader::firmware::block_tree_entry *appropiate_block = nullptr;
-        if (header.type_ == loader::firmware::FPSX_TYPE_UDA) {
-            appropiate_block = &header.btree_.roots_[0];
-        } else {
-            appropiate_block = header.find_block_with_description("ROFS");
-            if (!appropiate_block) {
-                appropiate_block = header.find_block_with_description("ROFX");
+            loader::firmware::block_tree_entry *appropiate_block = nullptr;
+            if (header.type_ == loader::firmware::FPSX_TYPE_UDA) {
+                appropiate_block = &header.btree_.roots_[0];
+            } else {
+                appropiate_block = header.find_block_with_description("ROFS");
+                if (!appropiate_block) {
+                    appropiate_block = header.find_block_with_description("ROFX");
+                }
+                if (!appropiate_block) {
+                    appropiate_block = header.find_block_with_description("MCUSW");
+                }
             }
-            if (!appropiate_block) {
-                appropiate_block = header.find_block_with_description("MCUSW");
-            }
-        }
 
-        auto &blocks = appropiate_block->code_blocks_;
-        bool flag = true;
+            auto &blocks = appropiate_block->code_blocks_;
+            bool flag = true;
 
-        for (auto &uda_bin_block : blocks) {
-            if (uda_bin_block.ctype_ == loader::firmware::CONTENT_TYPE_CODE) {
-                stream.seek(uda_bin_block.data_offset_in_stream_, eka2l1::common::seek_where::beg);
-                buf.resize(uda_bin_block.header_->data_size_);
+            for (auto &uda_bin_block : blocks) {
+                if (uda_bin_block.ctype_ == loader::firmware::CONTENT_TYPE_CODE) {
+                    stream.seek(uda_bin_block.data_offset_in_stream_, eka2l1::common::seek_where::beg);
+                    buf.resize(uda_bin_block.header_->data_size_);
 
-                stream.read(buf.data(), buf.size());
+                    stream.read(buf.data(), buf.size());
 
-                if (flag) {
-                    std::uint32_t size_start_write = 0;
-                    while ((size_start_write < buf.size()) && (buf[size_start_write] == 0)) {
-                        size_start_write++;
+                    if (flag) {
+                        std::uint32_t size_start_write = 0;
+                        while ((size_start_write < buf.size()) && (buf[size_start_write] == 0)) {
+                            size_start_write++;
+                        }
+
+                        if (buf.size() != size_start_write) {
+                            rom_stream.write(buf.data() + size_start_write, buf.size() - size_start_write);
+                            flag = false;
+                        }
+                    } else {
+                        rom_stream.write(buf.data(), buf.size());
                     }
-
-                    if (buf.size() != size_start_write) {
-                        rom_stream.write(buf.data() + size_start_write, buf.size() - size_start_write);
-                        flag = false;
-                    }
-                } else {
-                    rom_stream.write(buf.data(), buf.size());
                 }
             }
         }
-
-        rom_stream.close();
 
         // What to do with it now?
         if (header.type_ == loader::firmware::FPSX_TYPE_UDA) {
