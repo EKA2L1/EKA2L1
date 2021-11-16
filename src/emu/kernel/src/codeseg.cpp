@@ -280,7 +280,7 @@ namespace eka2l1::kernel {
 
                         if ((code_base <= val) && (val <= code_base + code_size)) {
                             the_delta = code_delta;
-                        } else if ((data_base <= val) && (val <= data_base + data_size)) {
+                        } else if ((data_base <= val) && (val <= data_base + data_size + bss_size)) {
                             the_delta = data_delta;
                         } else {
                             LOG_ERROR(KERNEL, "Unable to infer the relocation type of offset 0x{:X}", val);
