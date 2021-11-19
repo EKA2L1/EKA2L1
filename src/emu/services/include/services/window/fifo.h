@@ -25,6 +25,7 @@
 
 #include <services/window/common.h>
 #include <utils/reqsts.h>
+#include <utils/err.h>
 
 #include <algorithm>
 #include <array>
