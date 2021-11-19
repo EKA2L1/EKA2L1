@@ -256,6 +256,10 @@ namespace eka2l1::common {
                 if (prefix_found) {
                     num_str_.erase(num_str_.begin(), num_str_.begin() + 2);
                 }
+            } else {
+                // Default the value
+                if (base == -1)
+                    base = 10;
             }
 
             I num_ = 0;
