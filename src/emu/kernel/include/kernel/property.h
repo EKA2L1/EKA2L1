@@ -142,6 +142,7 @@ namespace eka2l1 {
 
         public:
             explicit property_reference(kernel_system *kern, property *prop);
+            ~property_reference() override;
 
             /**
              * \brief       Get the property kernel object.

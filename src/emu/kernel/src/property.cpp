@@ -119,6 +119,8 @@ namespace eka2l1 {
             }
 
             (*subscription_iterator)->complete(epoc::error_cancel);
+            subscription_queue.erase(subscription_iterator);
+
             return true;
         }
 
@@ -132,6 +134,10 @@ namespace eka2l1 {
             : kernel::kernel_obj(kern, "", prop)
             , prop_(prop) {
             obj_type = kernel::object_type::prop_ref;
+        }
+    
+        property_reference::~property_reference() {
+            cancel();
         }
 
         bool property_reference::subscribe(const epoc::notify_info &info) {
