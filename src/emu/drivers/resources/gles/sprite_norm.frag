@@ -1,6 +1,6 @@
 #version 300 es
 
-precision mediump float;
+precision highp float;
 
 uniform sampler2D u_tex;
 uniform vec4 u_color;
