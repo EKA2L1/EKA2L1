@@ -474,38 +474,36 @@ namespace eka2l1 {
             }
 
             std::optional<std::string> exit_description;
-            const std::string exit_category_u8 = common::ucs2_to_utf8(exit_category);
+            const std::string exit_category_u8 = common::ucs2_to_utf8(category);
 
-            if (epoc::is_panic_category_action_default(exit_category_u8)) {
-                exit_description = epoc::get_panic_description(exit_category_u8, reason);
+            exit_description = epoc::get_panic_description(exit_category_u8, reason);
 
-                switch (exit_type) {
-                case kernel::entity_exit_type::panic:
-                    LOG_TRACE(KERNEL, "Thread {} panicked with category: {} and exit code: {} {}", obj_name, exit_category_u8, reason,
-                        exit_description ? (std::string("(") + *exit_description + ")") : "");
+            switch (the_exit_type) {
+            case kernel::entity_exit_type::panic:
+                LOG_TRACE(KERNEL, "Thread {} panicked with category: {} and exit code: {} {}", obj_name, exit_category_u8, reason,
+                    exit_description ? (std::string("(") + *exit_description + ")") : "");
 
-                    // Decide HLE actions to take on this thread.
-                    if (!take_on_panic(category, reason)) {
-                        LOG_INFO(KERNEL, "Panic for the thread is blocked");
-                        return true;
-                    }
-
-                    break;
-
-                case kernel::entity_exit_type::kill:
-                    LOG_TRACE(KERNEL, "Thread {} forcefully killed with category: {} and exit code: {} {}", obj_name, exit_category_u8, reason,
-                        exit_description ? (std::string("(") + *exit_description + ")") : "");
-                    break;
-
-                case kernel::entity_exit_type::terminate:
-                case kernel::entity_exit_type::pending:
-                    LOG_TRACE(KERNEL, "Thread {} terminated peacefully with category: {} and exit code: {}", obj_name, exit_category_u8,
-                        reason, exit_description ? (std::string("(") + *exit_description + ")") : "");
-                    break;
-
-                default:
-                    break;
+                // Decide HLE actions to take on this thread.
+                if (!take_on_panic(category, reason)) {
+                    LOG_INFO(KERNEL, "Panic for the thread is blocked");
+                    return true;
                 }
+
+                break;
+
+            case kernel::entity_exit_type::kill:
+                LOG_TRACE(KERNEL, "Thread {} forcefully killed with category: {} and exit code: {} {}", obj_name, exit_category_u8, reason,
+                    exit_description ? (std::string("(") + *exit_description + ")") : "");
+                break;
+
+            case kernel::entity_exit_type::terminate:
+            case kernel::entity_exit_type::pending:
+                LOG_TRACE(KERNEL, "Thread {} terminated peacefully with category: {} and exit code: {}", obj_name, exit_category_u8,
+                    reason, exit_description ? (std::string("(") + *exit_description + ")") : "");
+                break;
+
+            default:
+                break;
             }
 
             stop();

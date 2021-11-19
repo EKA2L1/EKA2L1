@@ -230,6 +230,7 @@ namespace eka2l1::kernel {
         void kill(const entity_exit_type ext, const std::int32_t reason);
 
         std::string name() const override;
+        std::string raw_name() const;
         void rename(const std::string &new_name) override;
 
         bool set_arg_slot(uint8_t slot, std::uint8_t *data, size_t data_size, const bool is_handle = false);

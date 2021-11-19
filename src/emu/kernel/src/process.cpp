@@ -255,6 +255,10 @@ namespace eka2l1::kernel {
         return org;
     }
 
+    std::string process::raw_name() const {
+        return obj_name;
+    }
+
     void process::rename(const std::string &new_name) {
         kernel_obj::rename(new_name);
         generation_ = refresh_generation();

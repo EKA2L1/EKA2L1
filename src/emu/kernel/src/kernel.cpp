@@ -1246,7 +1246,7 @@ namespace eka2l1 {
             return false;
         }
 
-        return panic_blacklist_.should_be_blocked(thr->owning_process()->name(), thr->name(), category, code);
+        return panic_blacklist_.should_be_blocked(thr->owning_process()->raw_name(), thr->name(), category, code);
     }
 
     address kernel_system::get_exception_handler_guard() {
