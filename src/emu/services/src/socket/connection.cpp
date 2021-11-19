@@ -22,6 +22,7 @@
 #include <services/socket/socket.h>
 
 #include <common/log.h>
+#include <utils/err.h>
 
 namespace eka2l1::epoc::socket {
     connection::connection(protocol *pr, saddress dest)
@@ -48,12 +49,16 @@ namespace eka2l1::epoc::socket {
             switch (ctx->msg->function) {
             default:
                 LOG_ERROR(SERVICE_ESOCK, "Unimplemented socket connection opcode: {}", ctx->msg->function);
+                ctx->complete(epoc::error_none);
+
                 break;
             }
         } else {
             switch (ctx->msg->function) {
             default:
                 LOG_ERROR(SERVICE_ESOCK, "Unimplemented socket connection opcode: {}", ctx->msg->function);
+                ctx->complete(epoc::error_none);
+
                 break;
             }
         }
