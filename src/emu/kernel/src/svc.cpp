@@ -679,7 +679,11 @@ namespace eka2l1::epoc {
         ipc_msg_ptr msg = kern->get_msg(msg_handle);
 
         if (msg->request_sts) {
-            (msg->request_sts.get(msg->own_thr->owning_process()))->set(val, kern->is_eka1());
+            epoc::request_status *status = msg->request_sts.get(msg->own_thr->owning_process());
+
+            if (status)
+                status->set(val, kern->is_eka1());
+
             msg->own_thr->signal_request();
             if (kern->get_config()->log_ipc)
                 LOG_TRACE(KERNEL, "Message completed with code: {}, thread to signal: {}", val, msg->own_thr->name());
