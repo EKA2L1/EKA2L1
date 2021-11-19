@@ -52,6 +52,7 @@
 #include <mem/ptr.h>
 
 #include <cpu/arm_analyser.h>
+#include <config/panic_blacklist.h>
 
 #include <atomic>
 #include <exception>
@@ -342,6 +343,8 @@ namespace eka2l1 {
 
         bool wiping_;
 
+        config::panic_blacklist panic_blacklist_;
+
     protected:
         void setup_new_process(process_ptr pr);
 
@@ -466,6 +469,7 @@ namespace eka2l1 {
         codeseg_ptr pull_codeseg_by_ep(const address ep);
 
         bool map_rom(const mem::vm_address addr, const std::string &path);
+        bool should_panic_be_blocked(kernel::thread *thr, const std::string &category, const std::int32_t code);
 
         epocver get_epoc_version() const {
             return kern_ver_;

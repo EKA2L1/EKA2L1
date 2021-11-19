@@ -1240,6 +1240,14 @@ namespace eka2l1 {
         dll_global_data_last_offset_ += size;
         return true;
     }
+    
+    bool kernel_system::should_panic_be_blocked(kernel::thread *thr, const std::string &category, const std::int32_t code) {
+        if (!thr || !thr->owning_process()) {
+            return false;
+        }
+
+        return panic_blacklist_.should_be_blocked(thr->owning_process()->name(), thr->name(), category, code);
+    }
 
     address kernel_system::get_exception_handler_guard() {
         if (!custom_code_chunk) {

@@ -449,7 +449,7 @@ namespace eka2l1 {
             return scheduler->stop(this);
         }
 
-        void thread::take_on_panic(const std::u16string &category, const std::int32_t code) {
+        bool thread::take_on_panic(const std::u16string &category, const std::int32_t code) {
             const std::u16string CBASE_EUSER_CAT = u"E32USER-CBase";
             if (category == CBASE_EUSER_CAT) {
                 // Active scheduler panic
@@ -463,6 +463,8 @@ namespace eka2l1 {
                     }
                 }
             }
+
+            return !kern->should_panic_be_blocked(this, common::ucs2_to_utf8(category), code);
         }
 
         bool thread::kill(const entity_exit_type the_exit_type, const std::u16string &category,
@@ -470,14 +472,6 @@ namespace eka2l1 {
             if (state == kernel::thread_state::stop) {
                 return false;
             }
-
-            stop();
-
-            exit_reason = reason;
-            exit_type = the_exit_type;
-            exit_category = category;
-
-            do_cleanup();
 
             std::optional<std::string> exit_description;
             const std::string exit_category_u8 = common::ucs2_to_utf8(exit_category);
@@ -491,7 +485,11 @@ namespace eka2l1 {
                         exit_description ? (std::string("(") + *exit_description + ")") : "");
 
                     // Decide HLE actions to take on this thread.
-                    take_on_panic(category, reason);
+                    if (!take_on_panic(category, reason)) {
+                        LOG_INFO(KERNEL, "Panic for the thread is blocked");
+                        return true;
+                    }
+
                     break;
 
                 case kernel::entity_exit_type::kill:
@@ -510,6 +508,13 @@ namespace eka2l1 {
                 }
             }
 
+            stop();
+
+            exit_reason = reason;
+            exit_type = the_exit_type;
+            exit_category = category;
+
+            do_cleanup();
             finish_logons();
 
             kern->complete_undertakers(this);
