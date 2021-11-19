@@ -63,6 +63,7 @@ namespace eka2l1::epoc {
 
     public:
         explicit object_table();
+        ~object_table();
 
         handle add(ref_count_object *obj);
         bool remove(handle obj_handle);

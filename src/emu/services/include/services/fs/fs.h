@@ -59,6 +59,7 @@ namespace eka2l1 {
     static constexpr std::uint32_t DEFAULT_DRIVE_NUM = 0x7FFFFFFF;
 
     class io_system;
+    class fs_server;
 
     struct file;
     using symfile = std::unique_ptr<file>;
@@ -78,6 +79,7 @@ namespace eka2l1 {
     struct fs_node : public epoc::ref_count_object {
         io_component_ptr vfs_node;
         file_attrib *attrib;
+        fs_server *serv;
 
         int mix_mode;
         int open_mode;
@@ -298,6 +300,7 @@ namespace eka2l1 {
 
     class fs_server : public service::typical_server {
         friend struct fs_server_client;
+        friend struct fs_node;
 
         std::unordered_map<std::u16string, file_attrib, fs_path_case_insensitive_hasher> attribs;
         service::property *system_drive_prop;

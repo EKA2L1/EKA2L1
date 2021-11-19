@@ -72,8 +72,11 @@ namespace eka2l1 {
             attrib &= ~io_attrib_include_dir;
         }
 
-        fs_node *node = server<fs_server>()->make_new<fs_node>();
+        fs_server *serv = server<fs_server>();
+        fs_node *node = serv->make_new<fs_node>();
+
         node->vfs_node = ctx->sys->get_io_system()->open_dir(*dir, utype.value(), attrib);
+        node->serv = serv;
 
         if (!node->vfs_node) {
             ctx->complete(epoc::error_path_not_found);

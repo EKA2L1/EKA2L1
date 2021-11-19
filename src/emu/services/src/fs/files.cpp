@@ -73,6 +73,19 @@ namespace eka2l1 {
     }
 
     void fs_node::deref() {
+        if (vfs_node->type == io_component_type::file) {        
+            file *vfs_file = reinterpret_cast<file *>(vfs_node.get());
+            const std::u16string filename = vfs_file->file_name();
+
+            auto ite = serv->attribs.find(filename);
+            if (ite != serv->attribs.end()) {
+                ite->second.decrement_use(process);
+                if (ite->second.use_count == 0) {
+                    serv->attribs.erase(ite);
+                }
+            }
+        }
+
         if (count == 1) {
             vfs_node.reset();
         }
@@ -524,17 +537,6 @@ namespace eka2l1 {
         // Reset its status, so seek back, this is just in case it got used again
         vfs_file->seek(0, file_seek_mode::beg);
 
-        const std::u16string filename = vfs_file->file_name();
-        fs_server *serv = server<fs_server>();
-
-        auto ite = serv->attribs.find(filename);
-        if (ite != serv->attribs.end()) {
-            ite->second.decrement_use(node->process);
-            if (ite->second.use_count == 0) {
-                serv->attribs.erase(ite);
-            }
-        }
-
         obj_table_.remove(*handle_res);
         ctx->complete(epoc::error_none);
     }
@@ -791,6 +793,11 @@ namespace eka2l1 {
     }
 
     int fs_server_client::new_node(io_system *io, kernel::thread *sender, std::u16string name, int org_mode, bool overwrite, bool temporary, bool ignore_caps) {
+        if (name.empty() || (eka2l1::is_separator(name.back()))) {
+            LOG_ERROR(SERVICE_EFSRV, "Path is invalid!");
+            return epoc::error_bad_name;
+        }
+
         int real_mode = org_mode & ~(epoc::fs::file_stream_text | epoc::fs::file_read_async_all | epoc::fs::file_big_size);
         epoc::fs::file_mode share_mode = static_cast<epoc::fs::file_mode>(real_mode & 0b11);
 
@@ -879,6 +886,7 @@ namespace eka2l1 {
         new_node->mix_mode = real_mode;
         new_node->open_mode = access_mode;
         new_node->process = own_pr_uid;
+        new_node->serv = server<fs_server>();
 
         return obj_table_.add(new_node);
     }

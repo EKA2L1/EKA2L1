@@ -26,6 +26,14 @@ namespace eka2l1::epoc {
         : next_instance(1) {
     }
 
+    object_table::~object_table() {
+        for (std::size_t i = 0; i < objects.size(); i++) {
+            if (objects[i]) {
+                objects[i]->deref();
+            }
+        }
+    }
+
     static handle make_handle(const std::uint32_t idx, const std::uint32_t inst) {
         return static_cast<handle>((inst << 16) | (idx));
     }
