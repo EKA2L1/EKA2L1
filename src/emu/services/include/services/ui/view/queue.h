@@ -49,6 +49,7 @@ namespace eka2l1::ui::view {
 
         void queue_event(const view_event &evt, const custom_message &msg = {});
         bool hear(epoc::notify_info info, std::uint8_t *complete_buffer);
+        void cancel();
 
         custom_message current_custom_message() {
             return current_custom_;

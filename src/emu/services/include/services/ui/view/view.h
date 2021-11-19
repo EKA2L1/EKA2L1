@@ -66,20 +66,44 @@ namespace eka2l1 {
 
     class view_session : public service::typical_session {
         epoc::notify_info to_panic_;
+
+        bool outstanding_activation_notify_;
+        bool outstanding_deactivation_notify_;
+
+        ui::view::view_id next_activation_id_;
+        ui::view::view_id next_deactivation_id_;
+
         ui::view::event_queue queue_;
         epoc::uid app_uid_;
+        
+        std::vector<ui::view::view_id> ids_;
+        std::int32_t active_view_id_index_;
 
     public:
         void async_message_for_client_to_panic_with(service::ipc_context *ctx);
         void get_priority(service::ipc_context *ctx);
         void add_view(service::ipc_context *ctx);
+        void remove_view(service::ipc_context *ctx);
         void request_view_event(service::ipc_context *ctx);
-        void active_view(service::ipc_context *ctx, const bool /*should_complete*/);
-        void deactive_view(service::ipc_context *ctx, const bool /*should_complete*/);
+        void request_view_event_cancel(service::ipc_context *ctx);
+        void active_view(service::ipc_context *ctx, const bool should_complete);
+        void deactive_view(service::ipc_context *ctx, const bool should_complete);
         void get_custom_message(service::ipc_context *ctx);
 
         explicit view_session(service::typical_server *server, const kernel::uid session_uid, epoc::version client_version);
         void fetch(service::ipc_context *ctx) override;
+
+        std::optional<ui::view::view_id> active_view();
+
+        void set_active_view(const ui::view::view_id &id);
+        void clear_active_view();
+
+        void on_view_activation(const ui::view::view_id &id);
+        void on_view_deactivation(const ui::view::view_id &id);
+
+        void queue_event(const ui::view::view_event &evt, const ui::view::custom_message &msg = {}) {
+            queue_.queue_event(evt, msg);
+        }
     };
 
     class view_server : public service::typical_server {
@@ -91,7 +115,6 @@ namespace eka2l1 {
         };
 
         ui::view::view_id active_;
-        std::vector<ui::view::view_id> ids_;
 
     public:
         explicit view_server(system *sys);
@@ -103,15 +126,14 @@ namespace eka2l1 {
             return priority_;
         }
 
-        ui::view::view_id active_view() const {
-            return active_;
-        }
+        std::optional<ui::view::view_id> active_view();
+        view_session *active_view_session();
 
-        void set_active(ui::view::view_id new_id) {
-            active_ = new_id;
-        }
+        void make_view_active(view_session *activator, const ui::view::view_id &active_id,
+            const ui::view::custom_message &msg);
+        void deactivate_active_view();
 
-        void deactivate();
-        void add_view(const ui::view::view_id &new_id);
+        void call_activation_listener(const ui::view::view_id id);
+        void call_deactivation_listener(const ui::view::view_id id);
     };
 };

@@ -104,6 +104,13 @@ namespace eka2l1::epoc {
             nof = nof_info;
         }
 
+        /**
+         * \brief Cancel active listener.
+         */
+        void cancel_listener() {
+            nof.complete(epoc::error_cancel);
+        }
+
         /*! \brief Cancel an already-queued event.
          *
          * \params id The id of the event.

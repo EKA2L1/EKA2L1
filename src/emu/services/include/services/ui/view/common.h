@@ -31,6 +31,8 @@ namespace eka2l1::ui::view {
         }
     };
 
+    static const view_id EMPTY_VIEW_ID = view_id{ 0, 0 };
+
     struct view_event {
         enum event_type {
             event_active_view = 0,

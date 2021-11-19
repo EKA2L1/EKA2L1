@@ -211,6 +211,8 @@ namespace eka2l1::epoc {
         void set_keyboard_repeat_rate(service::ipc_context &ctx, ws_cmd &cmd);
         void get_keyboard_repeat_rate(service::ipc_context &ctx, ws_cmd &cmd);
         void get_focus_screen(service::ipc_context &ctx, ws_cmd &cmd);
+        void event_ready_cancel(service::ipc_context &ctx, ws_cmd &cmd);
+        void redraw_ready_cancel(service::ipc_context &ctx, ws_cmd &cmd);
 
     public:
         ~window_server_client();

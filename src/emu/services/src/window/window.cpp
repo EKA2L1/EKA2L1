@@ -905,6 +905,16 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_none);
     }
 
+    void window_server_client::event_ready_cancel(service::ipc_context &ctx, ws_cmd &cmd) {
+        events.cancel_listener();
+        ctx.complete(epoc::error_none);
+    }
+
+    void window_server_client::redraw_ready_cancel(service::ipc_context &ctx, ws_cmd &cmd) {
+        redraws.cancel_listener();
+        ctx.complete(epoc::error_none);
+    }
+
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         // LOG_TRACE(SERVICE_WINDOW, "Window client op: {}", (int)cmd.header.op);
@@ -1108,6 +1118,14 @@ namespace eka2l1::epoc {
 
         case ws_cl_op_get_keyboard_repeat_rate:
             get_keyboard_repeat_rate(ctx, cmd);
+            break;
+
+        case ws_cl_op_redraw_ready_cancel:
+            redraw_ready_cancel(ctx, cmd);
+            break;
+
+        case ws_cl_op_event_ready_cancel:
+            event_ready_cancel(ctx, cmd);
             break;
 
         default:

@@ -82,37 +82,126 @@ namespace eka2l1 {
         return true;
     }
 
-    void view_server::add_view(const ui::view::view_id &new_id) {
-        ids_.push_back(new_id);
-    }
-
-    void view_server::deactivate() {
-        static constexpr std::size_t VIEW_NOT_FOUND = 0xFFFFFFFF;
-
-        // Find the next id to activate
-        std::size_t pos_of_current_view = VIEW_NOT_FOUND;
-        auto ite = std::find(ids_.begin(), ids_.end(), active_);
-
-        if (ite != ids_.end()) {
-            pos_of_current_view = std::distance(ids_.begin(), ite);
+    std::optional<ui::view::view_id> view_server::active_view() {
+        for (auto &[uid, session]: sessions) {
+            view_session *ss = reinterpret_cast<view_session*>(session.get());
+            if (ss) {
+                std::optional<ui::view::view_id> id = ss->active_view();
+                if (id.has_value()) {
+                    return id;
+                }
+            }
         }
 
-        if (ids_.size() == 1) {
-            active_ = ui::view::view_id{ 0, 0 };
-        } else {
-            if ((pos_of_current_view == VIEW_NOT_FOUND) || (pos_of_current_view < (ids_.size() - 1))) {
-                // Choose the lastest added one as active
-                active_ = ids_.back();
-            } else {
-                // The one being activated is already the lastest one. Choose the one before the lastest
-                active_ = ids_[ids_.size() - 2];
+        return std::nullopt;
+    }
+
+    view_session *view_server::active_view_session() {
+        for (auto &[uid, session]: sessions) {
+            view_session *ss = reinterpret_cast<view_session*>(session.get());
+            if (ss && ss->active_view().has_value()) {
+                return ss;
             }
+        }
+
+        return nullptr;
+    }
+
+    void view_server::call_activation_listener(const ui::view::view_id id) {
+        for (auto &[uid, session]: sessions) {
+            view_session *ss = reinterpret_cast<view_session*>(session.get());
+            if (ss) {
+                ss->on_view_activation(id);
+            }
+        }
+    }
+
+    void view_server::call_deactivation_listener(const ui::view::view_id id) {
+        for (auto &[uid, session]: sessions) {
+            view_session *ss = reinterpret_cast<view_session*>(session.get());
+            if (ss) {
+                ss->on_view_deactivation(id);
+            }
+        }
+    }
+
+    void view_server::make_view_active(view_session *activator, const ui::view::view_id &active_id, const ui::view::custom_message &msg) {
+        view_session *deactivate_ss = active_view_session();
+        std::optional<ui::view::view_id> old_id = std::nullopt;
+
+        if (deactivate_ss) {
+            old_id = deactivate_ss->active_view();
+            deactivate_ss->queue_event({
+                ui::view::view_event::event_deactive_view, old_id.value(), active_id, 0, 0 });
+            deactivate_ss->clear_active_view();
+
+            call_deactivation_listener(old_id.value());
+        } else {
+            old_id = ui::view::view_id{ 0, 0 };
+        }
+
+        activator->set_active_view(active_id);
+        activator->queue_event({ ui::view::view_event::event_active_view, active_id, old_id.value(), 0, 0 }, msg);
+
+        call_activation_listener(active_id);
+    }
+
+    void view_server::deactivate_active_view() {
+        view_session *deactivate_ss = active_view_session();
+
+        if (deactivate_ss) {
+            std::optional<ui::view::view_id> old_id = deactivate_ss->active_view();
+            deactivate_ss->queue_event({
+                ui::view::view_event::event_deactive_view, old_id.value(), ui::view::EMPTY_VIEW_ID, 0, 0 });
+            deactivate_ss->clear_active_view();
+
+            call_deactivation_listener(old_id.value());
         }
     }
 
     view_session::view_session(service::typical_server *server, const kernel::uid session_uid, epoc::version client_version)
         : service::typical_session(server, session_uid, client_version)
-        , app_uid_(0) {
+        , outstanding_activation_notify_(false)
+        , outstanding_deactivation_notify_(false)
+        , next_activation_id_(ui::view::EMPTY_VIEW_ID)
+        , next_deactivation_id_(ui::view::EMPTY_VIEW_ID)
+        , app_uid_(0)
+        , active_view_id_index_(-1) {
+    }
+
+    std::optional<ui::view::view_id> view_session::active_view() {
+        if (active_view_id_index_ < 0) {
+            return std::nullopt;
+        }
+
+        return ids_[active_view_id_index_];
+    }
+
+    void view_session::set_active_view(const ui::view::view_id &id) {
+        auto iterator = std::find(ids_.begin(), ids_.end(), id);
+        if (iterator != ids_.end()) {
+            active_view_id_index_ = static_cast<std::int32_t>(std::distance(ids_.begin(), iterator));
+        }
+    }
+
+    void view_session::clear_active_view() {
+        active_view_id_index_ = -1;
+    }
+
+    void view_session::on_view_activation(const ui::view::view_id &id) {
+        if (outstanding_activation_notify_) {
+            if ((next_activation_id_ == ui::view::EMPTY_VIEW_ID) || (next_activation_id_ == id)) {
+                queue_.queue_event({ ui::view::view_event::event_active_notification, id, ui::view::EMPTY_VIEW_ID, 0, 0 });
+            }
+        }
+    }
+
+    void view_session::on_view_deactivation(const ui::view::view_id &id) {
+        if (outstanding_deactivation_notify_) {
+            if ((next_deactivation_id_ == ui::view::EMPTY_VIEW_ID) || (next_deactivation_id_ == id)) {
+                queue_.queue_event({ ui::view::view_event::event_deactive_notification, id, ui::view::EMPTY_VIEW_ID, 0, 0 });
+            }
+        }
     }
 
     void view_session::add_view(service::ipc_context *ctx) {
@@ -132,7 +221,37 @@ namespace eka2l1 {
             }
         }
 
-        server<view_server>()->add_view(id.value());
+        ids_.push_back(id.value());
+        ctx->complete(epoc::error_none);
+    }
+
+    void view_session::remove_view(service::ipc_context *ctx) {
+        std::optional<ui::view::view_id> id = ctx->get_argument_data_from_descriptor<ui::view::view_id>(0);
+
+        if (!id) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        auto iterator = std::find(ids_.begin(), ids_.end(), id.value());
+        if (iterator == ids_.end()) {
+            LOG_ERROR(SERVICE_UI, "View ID can not be found!");
+            ctx->complete(epoc::error_not_found);
+
+            return;
+        }
+
+        const std::int32_t pos_of_del = static_cast<std::int32_t>(std::distance(ids_.begin(), iterator));
+        if (pos_of_del == active_view_id_index_) {
+            LOG_ERROR(SERVICE_UI, "Can't remove active view!");
+            ctx->complete(epoc::error_in_use);
+
+            return;
+        } else if (pos_of_del < active_view_id_index_) {
+            active_view_id_index_--;
+        }
+
+        ids_.erase(iterator);
         ctx->complete(epoc::error_none);
     }
 
@@ -154,7 +273,12 @@ namespace eka2l1 {
         }
     }
 
-    void view_session::active_view(service::ipc_context *ctx, const bool /*should_complete*/) {
+    void view_session::request_view_event_cancel(service::ipc_context *ctx) {
+        queue_.cancel();
+        ctx->complete(epoc::error_none);
+    }
+
+    void view_session::active_view(service::ipc_context *ctx, const bool should_complete) {
         kernel_system *kern = server<view_server>()->get_kernel_object_owner();
 
         std::optional<epoc::uid> custom_message_uid;
@@ -200,25 +324,22 @@ namespace eka2l1 {
             std::copy(custom_message_buf, custom_message_buf + custom_message_size, &custom_message_buf_cop[0]);
         }
 
-        queue_.queue_event({ ui::view::view_event::event_active_view, id.value(), server<view_server>()->active_view(),
-                               custom_message_uid.value(), static_cast<std::int32_t>(custom_message_size) },
-            custom_message_buf_cop);
+        auto iterator = std::find(ids_.begin(), ids_.end(), id.value());
+        if (iterator == ids_.end()) {
+            LOG_ERROR(SERVICE_UI, "View ID can not be found!");
+            ctx->complete(epoc::error_not_found);
 
-        server<view_server>()->set_active(id.value());
+            return;
+        }
+
+        server<view_server>()->make_view_active(this, id.value(), custom_message_buf_cop);
         ctx->complete(epoc::error_none);
     }
 
-    void view_session::deactive_view(service::ipc_context *ctx, const bool /*should_complete*/) {
+    void view_session::deactive_view(service::ipc_context *ctx, const bool should_complete) {
         view_server *svr = server<view_server>();
+        svr->deactivate_active_view();
 
-        const ui::view::view_id view_to_deactivate = svr->active_view();
-
-        // Deactivate view then get the one currently being activated
-        svr->deactivate();
-        const ui::view::view_id view_that_activated = svr->active_view();
-
-        queue_.queue_event({ ui::view::view_event::event_deactive_view, view_to_deactivate, view_that_activated,
-            0, 0 });
         ctx->complete(epoc::error_none);
     }
 
@@ -286,6 +407,10 @@ namespace eka2l1 {
             break;
         }
 
+        case view_opcode_remove_view:
+            remove_view(ctx);
+            break;
+
         case view_opcode_active_view: {
             active_view(ctx, true);
             break;
@@ -314,6 +439,10 @@ namespace eka2l1 {
             ctx->complete(epoc::error_none);
             break;
         }
+
+        case view_opcode_request_view_event_cancel:
+            request_view_event_cancel(ctx);
+            break;
 
         default:
             LOG_ERROR(SERVICE_UI, "Unimplemented view session opcode {}", ctx->msg->function);

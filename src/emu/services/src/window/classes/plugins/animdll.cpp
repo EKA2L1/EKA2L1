@@ -19,6 +19,7 @@
  */
 
 #include <services/window/classes/plugins/animdll.h>
+#include <services/window/window.h>
 #include <services/window/op.h>
 #include <utils/err.h>
 
@@ -44,6 +45,14 @@ namespace eka2l1::epoc {
             LOG_TRACE(SERVICE_WINDOW, "AnimDll command reply stubbed!");
             ctx.complete(epoc::error_none);
 
+            break;
+        }
+
+        case ws_anim_dll_op_free: {
+            ctx.complete(epoc::error_none);
+            client->delete_object(cmd.obj_handle);
+
+            quit = true;
             break;
         }
 

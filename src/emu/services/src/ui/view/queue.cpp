@@ -18,6 +18,7 @@
  */
 
 #include <services/ui/view/queue.h>
+#include <utils/err.h>
 
 namespace eka2l1::ui::view {
     event_queue::event_queue()
@@ -74,5 +75,9 @@ namespace eka2l1::ui::view {
         buffer_ = buffer;
 
         return true;
+    }
+
+    void event_queue::cancel() {
+        nof_info_.complete(epoc::error_cancel);
     }
 }
