@@ -140,7 +140,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="216"/>
       <source>One of the FPSX files provided in the firmware is corrupted!</source>
-      <translation>Jeden z plików FPSX dostarczonych w firmwareze jest uszkodzony!</translation>
+      <translation>Jeden z plików FPSX dostarczonych w firmwarze jest uszkodzony!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="220"/>
