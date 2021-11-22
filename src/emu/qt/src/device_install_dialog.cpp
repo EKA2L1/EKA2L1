@@ -263,7 +263,7 @@ void device_install_dialog::on_install_triggered() {
 
 void device_install_dialog::on_vpl_browse_triggered() {
     QString vpl_file_path = QFileDialog::getOpenFileName(this, tr("Choose VPL file"),
-        QString(), tr("VPL file (*.vpl)"));
+        QString(), tr("VPL file (*.vpl);;All files (*.*)"));
 
     if (!vpl_file_path.isEmpty()) {
         ui->vpl_path_line_edit->setText(vpl_file_path);
@@ -273,7 +273,7 @@ void device_install_dialog::on_vpl_browse_triggered() {
 
 void device_install_dialog::on_rom_browse_triggered() {
     QString rom_file_path = QFileDialog::getOpenFileName(this, tr("Choose the ROM"),
-        QString(), tr("ROM file (*.rom *.ROM)"));
+        QString(), tr("ROM file (*.rom *.ROM);;All files (*.*)"));
 
     if (!rom_file_path.isEmpty()) {
         ui->rom_path_line_edit->setText(rom_file_path);
@@ -298,7 +298,7 @@ void device_install_dialog::on_rom_browse_triggered() {
 
 void device_install_dialog::on_rpkg_browse_triggered() {
     QString rpkg_file_path = QFileDialog::getOpenFileName(this, tr("Choose the RPKG"),
-        QString(), tr("RPKG file (*.rpkg *.RPKG)"));
+        QString(), tr("RPKG file (*.rpkg *.RPKG);;All files (*.*"));
 
     if (!rpkg_file_path.isEmpty()) {
         ui->rpkg_path_line_edit->setText(rpkg_file_path);
