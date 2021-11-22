@@ -69,7 +69,7 @@
                 <item>
                  <widget class="QLabel" name="app_config_fps_name">
                   <property name="text">
-                   <string notr="true">FPS (0-120)</string>
+                   <string notr="true">FPS (1-120)</string>
                   </property>
                  </widget>
                 </item>
@@ -80,6 +80,9 @@
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="minimum">
+                   <number>1</number>
                   </property>
                   <property name="maximum">
                    <number>120</number>

@@ -770,7 +770,7 @@ namespace eka2l1 {
         }
 
         if (!is_it_avail && (existence == exist_mode_neccessary)) {
-            LOG_ERROR(SERVICE_EFSRV, "Trying to open a non-existence file: {} while the open mode requires its availbility!",
+            LOG_ERROR(SERVICE_EFSRV, "Trying to open a non-existent file: {} while the open mode requires its availbility!",
                 name_utf8);
 
             ctx->complete(epoc::error_not_found);

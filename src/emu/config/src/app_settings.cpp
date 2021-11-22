@@ -56,6 +56,9 @@ namespace eka2l1::config {
 
 #include <config/app_settings.inl>
 #undef SETTING
+        if (setting.fps == 0) {
+            setting.fps = 1;
+        }
     }
 
     app_settings::app_settings(config::state *conf)
