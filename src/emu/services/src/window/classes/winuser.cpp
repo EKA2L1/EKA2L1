@@ -623,12 +623,13 @@ namespace eka2l1::epoc {
         bool quit = false;
         //LOG_TRACE(SERVICE_WINDOW, "Window user op: {}", (int)cmd.header.op);
 
+        did_it = true;
+
         if (result) {
             return false;
         }
 
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
-        did_it = true;
 
         switch (op) {
         case EWsWinOpRequiredDisplayMode: {

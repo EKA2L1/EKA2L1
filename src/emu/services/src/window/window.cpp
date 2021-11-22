@@ -543,14 +543,17 @@ namespace eka2l1::epoc {
             // A little sibling
             group = reinterpret_cast<epoc::window_group *>(group->sibling);
         } else {
-            group = get_ws().get_group_from_id(epoc::ws::ANY_UID);
+            group = get_ws().get_starting_group();
         }
 
         const char16_t *win_group_name_ptr = reinterpret_cast<char16_t *>(find_info + 1);
         const std::u16string win_group_name(win_group_name_ptr, find_info->length);
 
         for (; group; group = reinterpret_cast<epoc::window_group *>(group->sibling)) {
-            if (common::compare_ignore_case(group->name.substr(find_info->offset), win_group_name) == 0) {
+            // Whole string should be matched => from position 0
+            if (common::match_wildcard_in_string(
+                common::ucs2_to_wstr(group->name.substr(find_info->offset)),
+                common::ucs2_to_wstr(win_group_name), true) == 0) {
                 ctx.complete(group->id);
                 return;
             }
@@ -592,7 +595,7 @@ namespace eka2l1::epoc {
 
             group = reinterpret_cast<epoc::window_group *>(group->sibling);
         } else {
-            group = get_ws().get_group_from_id(epoc::ws::ANY_UID);
+            group = get_ws().get_starting_group();
         }
 
         for (; group; group = reinterpret_cast<epoc::window_group *>(group->sibling)) {
@@ -620,9 +623,9 @@ namespace eka2l1::epoc {
         std::uint32_t group_id = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
         epoc::window_group *win = get_ws().get_group_from_id(group_id);
 
-        if (!win || win->type != window_kind::group) {
+        if (!win || (win->type != window_kind::group)) {
             LOG_TRACE(SERVICE_WINDOW, "Can't find group with id {}", group_id);
-            ctx.complete(epoc::error_argument);
+            ctx.complete(epoc::error_not_found);
             return;
         }
 
@@ -1761,11 +1764,26 @@ namespace eka2l1 {
 
         while (current) {
             epoc::window_group *group = reinterpret_cast<epoc::window_group *>(current->root->child);
-            while (group && ((id != epoc::ws::ANY_UID) && (group->id != id))) {
+            while (group && (group->id != id)) {
                 group = reinterpret_cast<epoc::window_group *>(group->sibling);
             }
 
-            if (group && ((id == epoc::ws::ANY_UID) || (group->id == id))) {
+            if (group && (group->id == id)) {
+                return group;
+            }
+
+            current = current->next;
+        }
+
+        return nullptr;
+    }
+
+    epoc::window_group *window_server::get_starting_group() {
+        epoc::screen *current = screens;
+
+        while (current) {
+            epoc::window_group *group = reinterpret_cast<epoc::window_group *>(current->root->child);
+            if (group) {
                 return group;
             }
 
