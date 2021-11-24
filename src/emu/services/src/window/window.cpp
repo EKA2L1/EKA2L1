@@ -920,7 +920,7 @@ namespace eka2l1::epoc {
 
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
-        // LOG_TRACE(SERVICE_WINDOW, "Window client op: {}", (int)cmd.header.op);
+        LOG_TRACE(SERVICE_WINDOW, "Window client op: {}", (int)cmd.header.op);
         epoc::version cli_ver = client_version();
 
         // Patching out user opcode.

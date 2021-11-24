@@ -27,6 +27,7 @@ namespace eka2l1 {
 
     class central_repo_server;
     class io_system;
+    class device_manager;
 }
 
 namespace eka2l1::epoc {
@@ -36,6 +37,7 @@ namespace eka2l1::epoc {
         central_repo *theme_rep_{ nullptr };
 
         io_system *io_;
+        device_manager *dvcmngr_;
 
         pid default_skin_pid_{ 0, 0 };
         pid active_skin_pid_{ 0, 0 };
@@ -48,6 +50,8 @@ namespace eka2l1::epoc {
         bool read_active_skin_id();
         bool read_highlight_anim_enabled();
 
+        void set_pid_to_skins_repo(const std::uint32_t key, const epoc::pid pid, const bool uid_only);
+
     public:
         explicit akn_ss_settings(io_system *io, central_repo_server *svr);
 
@@ -58,5 +62,8 @@ namespace eka2l1::epoc {
         pid default_skin_pid() const {
             return default_skin_pid_;
         }
+
+        void active_skin_pid(const epoc::pid pid);
+        void default_skin_pid(const epoc::pid pid);
     };
 }

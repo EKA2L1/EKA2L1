@@ -168,15 +168,13 @@ namespace eka2l1::hle {
     }
 
     static void buildup_import_fixup_table(loader::e32img *img, memory_system *mem, hle::lib_manager &mngr, codeseg_ptr cs) {
-        if (img->epoc_ver <= epocver::eka2) {
+        if (img->epoc_ver < epocver::eka2) {
             std::uint32_t track = 0;
 
             for (auto &ib : img->import_section.imports) {
                 pe_fix_up_iat(mem, mngr, img->header.text_size, ib, track, cs);
             }
-        }
-
-        if (static_cast<int>(img->epoc_ver) >= static_cast<int>(epocver::epoc93)) {
+        } else {
             for (auto &ib : img->import_section.imports) {
                 elf_fix_up_import_dir(mem, mngr, reinterpret_cast<std::uint8_t *>(&img->data[img->header.code_offset]), ib, cs);
             }
@@ -324,8 +322,11 @@ namespace eka2l1::hle {
         case epocver::epoc80:
             return "v80";
 
-        case epocver::epoc93:
-            return "v93";
+        case epocver::epoc93fp1:
+            return "v93fp1";
+            
+        case epocver::epoc93fp2:
+            return "v93fp2";
 
         case epocver::epoc94:
             return "v94";
@@ -1108,7 +1109,8 @@ namespace eka2l1::hle {
             epoc::register_epocv94(*this);
             break;
 
-        case epocver::epoc93:
+        case epocver::epoc93fp1:
+        case epocver::epoc93fp2:
             epoc::register_epocv93(*this);
             break;
 

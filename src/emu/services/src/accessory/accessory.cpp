@@ -60,7 +60,7 @@ namespace eka2l1 {
     bool accessory_single_connection_subsession::fetch(service::ipc_context *ctx) {
         kernel_system *kern = serv_->get_kernel_object_owner();
 
-        if (kern->get_epoc_version() <= epocver::epoc93) {
+        if (kern->get_epoc_version() <= epocver::epoc93fp2) {
             switch (ctx->msg->function) {
             case epoc::acc::opcode_s60v3_notify_new_accessory_connected:
                 notify_new_accessory_connected(ctx);
@@ -95,7 +95,7 @@ namespace eka2l1 {
     void accessory_session::fetch(service::ipc_context *ctx) {
         kernel_system *kern = server<accessory_server>()->get_kernel_object_owner();
 
-        if (kern->get_epoc_version() <= epocver::epoc93) {
+        if (kern->get_epoc_version() <= epocver::epoc93fp2) {
             switch (ctx->msg->function) {
             case epoc::acc::opcode_s60v3_create_accessory_connection_subsession:
                 create_accessory_single_connection_subsession(ctx);

@@ -55,7 +55,7 @@ namespace eka2l1 {
 
     struct ws_cmd_window_group_header {
         uint32_t client_handle;
-        bool focus;
+        std::int32_t focus;
         uint32_t parent_id;
         uint32_t screen_device_handle;
     };

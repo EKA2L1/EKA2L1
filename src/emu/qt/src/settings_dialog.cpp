@@ -461,8 +461,11 @@ static QString epocver_to_symbian_readable_name(const epocver ver) {
     case epocver::epoc81b:
         return QString("S60v2 - 8.1b");
 
-    case epocver::epoc93:
-        return QString("S60v3");
+    case epocver::epoc93fp1:
+        return QString("S60v3 FP1");
+
+    case epocver::epoc93fp2:
+        return QString("S60v3 FP2");
 
     case epocver::epoc94:
         return QString("S60v5");

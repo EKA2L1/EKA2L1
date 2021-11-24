@@ -122,8 +122,11 @@ const char *epocver_to_string(const epocver ver) {
     case epocver::epoc80:
         return "epoc80";
 
-    case epocver::epoc93:
-        return "epoc93";
+    case epocver::epoc93fp1:
+        return "epoc93fp1";
+
+    case epocver::epoc93fp2:
+        return "epoc93fp2";
 
     case epocver::epoc94:
         return "epoc94";
@@ -164,8 +167,13 @@ const epocver string_to_epocver(const char *str) {
         return epocver::epoc81b;
     }
 
-    if (str_std == "epoc93") {
-        return epocver::epoc93;
+    if (str_std == "epoc93fp1") {
+        return epocver::epoc93fp1;
+    }
+
+    // Second string is for compability with previously saved device list.
+    if ((str_std == "epoc93fp2") || (str_std == "epoc93")) {
+        return epocver::epoc93fp2;
     }
 
     if (str_std == "epoc94") {

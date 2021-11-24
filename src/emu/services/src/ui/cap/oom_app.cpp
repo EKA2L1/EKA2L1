@@ -90,7 +90,7 @@ namespace eka2l1 {
     }
 
     void oom_ui_app_session::fetch(service::ipc_context *ctx) {
-        if (ctx->sys->get_symbian_version_use() <= epocver::epoc93) {
+        if (ctx->sys->get_symbian_version_use() <= epocver::epoc93fp2) {
             // Move app in z order does not exist. Forward to other message
             if (ctx->msg->function >= akn_eik_app_ui_move_app_in_z_order) {
                 ctx->msg->function++;

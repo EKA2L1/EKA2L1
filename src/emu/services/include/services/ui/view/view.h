@@ -59,7 +59,9 @@ namespace eka2l1 {
         view_opcode_priority = 21,
         view_opcode_set_background_color = 22,
         view_opcode_current_active_view_id = 23,
-        view_opcode_priority_mirror = 105
+        view_opcode_end_nocap = view_opcode_current_active_view_id,
+        view_opcode_priority_mirror = 105,
+        view_opcode_priority_mirror2 = 112
     };
 
     std::string get_view_server_name_by_epocver(const epocver ver);

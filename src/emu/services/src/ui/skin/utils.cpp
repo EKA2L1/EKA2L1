@@ -18,6 +18,8 @@
  */
 
 #include <common/cvt.h>
+#include <common/path.h>
+#include <common/pystr.h>
 
 #include <services/ui/skin/utils.h>
 #include <vfs/vfs.h>
@@ -26,7 +28,9 @@
 #include <fmt/xchar.h>
 
 namespace eka2l1::epoc {
-    static std::u16string pid_to_string(const epoc::pid skin_pid) {
+    static constexpr char16_t *SKIN_FOLDER = u"\\private\\10207114\\import\\";
+
+    std::u16string pid_to_string(const epoc::pid skin_pid) {
         std::u16string result;
         result += fmt::format(u"{:0>8x}", skin_pid.first);
 
@@ -37,14 +41,78 @@ namespace eka2l1::epoc {
         return result;
     }
 
-    std::optional<std::u16string> find_skin_file(eka2l1::io_system *io, const epoc::pid skin_pid) {
-        const std::u16string skins_folder(u"\\private\\10207114\\import\\");
+    static epoc::pid string_to_pid(const std::string &str) {
+        common::pystr pstr(str);
+        epoc::pid result;
 
-        for (drive_number drv = drive_z; drv >= drive_a; drv--) {
+        if (str.length() == 8) {
+            result.first = pstr.as_int<std::int32_t>(0, 16);            
+        } else {
+            result.first = pstr.substr(0, 8).as_int<std::int32_t>(0, 16);
+            result.second = pstr.substr(8).as_int<std::int32_t>(0, 16);
+        }
+
+        return result;
+    }
+    
+    std::optional<epoc::pid> pick_first_skin(eka2l1::io_system *io) {
+        for (drive_number drv = drive_a; drv <= drive_z; drv++) {
             if (io->get_drive_entry(drv)) {
                 std::u16string skin_folder_path(1, drive_to_char16(drv));
                 skin_folder_path += u":";
-                skin_folder_path += skins_folder;
+                skin_folder_path += SKIN_FOLDER;
+
+                auto dir = io->open_dir(skin_folder_path, {}, io_attrib_include_dir);
+
+                if (!dir) {
+                    // No skin in this drive. Proceed as usual
+                    continue;
+                }
+
+                while (auto entry = dir->get_next_entry()) {
+                    if (entry->type == io_component_type::dir) {
+                        // Check if the name are convertable to hex
+                        if ((entry->name.length() != 8) && (entry->name.length() != 16)) {
+                            continue;
+                        }
+
+                        bool need_skip = false;
+
+                        for (std::size_t i = 0; i < entry->name.length(); i++) {
+                            if (!(((entry->name[i] >= '0') && (entry->name[i] <= '9')) || ((entry->name[i] >= 'a') && (entry->name[i] <= 'f'))
+                                || ((entry->name[i] >= 'A') && (entry->name[i] <= 'F')))) {
+                                need_skip = true;
+                                break;
+                            }
+                        }
+
+                        if (need_skip) {
+                            continue;
+                        }
+
+                        auto dir_skn = io->open_dir(common::utf8_to_ucs2(eka2l1::add_path(entry->full_path, "/*.skn")), {}, io_attrib_include_file);
+                        if (!dir_skn) {
+                            continue;
+                        }
+
+                        if (dir_skn->peek_next_entry().has_value()) {
+                            // Separate this entry name to PID and return
+                            return string_to_pid(entry->name);
+                        }
+                    }
+                }
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    std::optional<std::u16string> find_skin_file(eka2l1::io_system *io, const epoc::pid skin_pid) {
+        for (drive_number drv = drive_a; drv <= drive_z; drv++) {
+            if (io->get_drive_entry(drv)) {
+                std::u16string skin_folder_path(1, drive_to_char16(drv));
+                skin_folder_path += u":";
+                skin_folder_path += SKIN_FOLDER;
                 skin_folder_path += pid_to_string(skin_pid);
 
                 // Add filter to find skn files

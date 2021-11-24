@@ -38,6 +38,15 @@ namespace eka2l1::epoc {
     std::optional<std::u16string> find_skin_file(eka2l1::io_system *io, const epoc::pid skin_pid);
 
     /**
+     * @brief   Search the skin folders, and pick the first skin that's available.
+     * 
+     * @param   io              Pointer to IO system. Must not be null.
+     * 
+     * @returns The PID of the skin picked if there's one available.
+     */
+    std::optional<epoc::pid> pick_first_skin(eka2l1::io_system *io);
+
+    /**
      * \brief Get the path to the resource folder of skin with specified package ID.
      * 
      * \param   io            Pointer to IO system.
@@ -46,4 +55,14 @@ namespace eka2l1::epoc {
      * \returns The path to the resource folder correspond to specified PID, else nullopt.
      */
     std::optional<std::u16string> get_resource_path_of_skin(eka2l1::io_system *io, const epoc::pid skin_pid);
+
+    /**
+     * @brief Produced a string containing the UID and timestamp (if available) in hex format.
+     * 
+     * Both convereted components are connected without a space.
+     * 
+     * @param       skin_pid      The PID to convert.
+     * @returns     A string containg the converted PID.
+     */
+    std::u16string pid_to_string(const epoc::pid skin_pid);
 }

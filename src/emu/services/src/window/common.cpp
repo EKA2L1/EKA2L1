@@ -308,7 +308,8 @@ namespace eka2l1::epoc {
         case epocver::epoc81b:
             return 15;
 
-        case epocver::epoc93:
+        case epocver::epoc93fp1:
+        case epocver::epoc93fp2:
         case epocver::epoc94:
             return 9;
 

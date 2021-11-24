@@ -177,12 +177,6 @@ namespace eka2l1 {
     void fs_server_client::fetch(service::ipc_context *ctx) {
         const epocver version = server<fs_server>()->sys->get_symbian_version_use();
 
-        if (version <= epocver::epoc93) {
-            // FileWriteDirty does not exist
-            if (ctx->msg->function >= epoc::fs_msg_file_write_dirty)
-                ctx->msg->function++;
-        }
-
         if (version < epocver::eka2) {
             if ((ctx->msg->function >= epoc::fs_msg_transition_begin) && (version >= epocver::epoc81a)) {
                 const epoc::fs_message quick_lookup[] = {
@@ -223,6 +217,17 @@ namespace eka2l1 {
                 if (ctx->msg->function > epoc::fs_msg_debug_function) {
                     // No debug function opcode
                     ctx->msg->function -= 1;
+                }
+            }
+        } else {
+            if (version == epocver::epoc93fp2) {
+                // FileWriteDirty does not exist
+                if (ctx->msg->function >= epoc::fs_msg_file_write_dirty)
+                    ctx->msg->function++;
+            } else if (version == epocver::epoc93fp1) {
+                // From SetSystemDrive to FileWriteDirty, does not exist
+                if (ctx->msg->function >= epoc::fs_msg_set_system_drive) {
+                    ctx->msg->function += epoc::fs_msg_file_write_dirty - epoc::fs_msg_set_system_drive + 1;
                 }
             }
         }

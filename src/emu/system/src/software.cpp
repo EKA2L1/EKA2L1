@@ -64,7 +64,8 @@ namespace eka2l1::loader {
             case 9: {
                 switch (minor) {
                 case 3: {
-                    ver = epocver::epoc93;
+                    // Note: This should be detected through SIS!
+                    ver = epocver::epoc93fp2;
                     break;
                 }
 
@@ -102,7 +103,11 @@ namespace eka2l1::loader {
             return epocver::epoc94;
 
         case 3:
-            return epocver::epoc93;
+            if (minor <= 1) {
+                return epocver::epoc93fp1;
+            }
+
+            return epocver::epoc93fp2;
 
         case 2:
             if (minor < 8)
@@ -164,10 +169,10 @@ namespace eka2l1::loader {
     epocver determine_rpkg_symbian_version(const std::string &extracted_path) {
         epocver target_ver = epocver::epoc94;
 
-        if (!determine_rpkg_symbian_version_through_platform_file(extracted_path, target_ver)) {
+        if (!determine_rpkg_symbian_version_through_series60_sis(extracted_path, target_ver)) {
             LOG_WARN(SYSTEM, "First method determining Symbian version failed, second one begins");
 
-            if (!determine_rpkg_symbian_version_through_series60_sis(extracted_path, target_ver)) {
+            if (!determine_rpkg_symbian_version_through_platform_file(extracted_path, target_ver)) {
                 LOG_ERROR(SYSTEM, "Second method determining Symbian version failed! Default version is 9.4!");
                 LOG_INFO(SYSTEM, "You can manually edit the Symbian version in devices.yml after this device successfully installed.");
                 LOG_INFO(SYSTEM, "Contact the developer to help improve the automation this process");

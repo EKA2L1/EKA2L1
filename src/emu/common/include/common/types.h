@@ -62,13 +62,14 @@ enum prot {
 enum class epocver {
     eka1, ///< Mark for EKA1
     epocu6,
-    epoc6, ///< Epoc 6.0
+    epoc6,     ///< S60v1
     epoc80,
     epoc81a,
-    eka2, ///< Mark for EKA2
+    eka2,      ///< Mark for EKA2
     epoc81b,
-    epoc93, ///< Epoc 9.3
-    epoc94, ///< Epoc 9.4
+    epoc93fp1, ///< S60v3 Feature pack 1
+    epoc93fp2, ///< S60v3 Feature pack 2
+    epoc94,    ///< S60v5
     epoc95,
     epoc10,
     epocverend
@@ -116,6 +117,11 @@ enum drive_number {
     drive_count,
     drive_invalid
 };
+
+inline drive_number operator++(drive_number &drv, int) {
+    drv = static_cast<drive_number>(static_cast<int>(drv) + 1);
+    return drv;
+}
 
 inline drive_number operator--(drive_number &drv, int) {
     drv = static_cast<drive_number>(static_cast<int>(drv) - 1);

@@ -40,7 +40,7 @@ namespace eka2l1::epoc {
         dsa_must_abort_queue_ = kern->create<kernel::msg_queue>("DsaAbortQueue", 4, 10);
         dsa_complete_queue_ = kern->create<kernel::msg_queue>("DsaCompleteQueue", 4, 10);
 
-        if ((client->client_version().build <= WS_NEWARCH_VER) && (kern->get_epoc_version() <= epocver::epoc81a)) {
+        if ((client->client_version().build <= WS_NEWARCH_VER) && (kern->get_epoc_version() <= epocver::epoc93fp1)) {
             epoc::chunk_allocator *allocator = client->get_ws().allocator();
 
             sync_status_ = allocator->to_address(allocator->allocate_struct<epoc::request_status>(

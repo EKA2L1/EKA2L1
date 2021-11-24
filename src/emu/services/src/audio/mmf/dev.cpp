@@ -727,7 +727,7 @@ namespace eka2l1 {
     void mmf_dev_server_session::fetch(service::ipc_context *ctx) {
         const epocver ver = server<mmf_dev_server>()->get_kernel_object_owner()->get_epoc_version();
 
-        if (ver == epocver::epoc93) {
+        if ((ver == epocver::epoc93fp1) || (ver == epocver::epoc93fp2)) {
             switch (ctx->msg->function) {
             case epoc::mmf_dev_init0:
                 init0(ctx);

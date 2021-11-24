@@ -363,7 +363,7 @@ namespace eka2l1 {
     void view_session::fetch(service::ipc_context *ctx) {
         kernel_system *kern = server<view_server>()->get_kernel_object_owner();
 
-        if (!kern->is_eka1() && (ctx->msg->function >= view_opcode_set_system_default_view)) {
+        if (!kern->is_eka1() && (ctx->msg->function >= view_opcode_set_system_default_view) && (ctx->msg->function < view_opcode_end_nocap)) {
             // This is moved for capability safety in EKA2...
             ctx->msg->function += 1;
         }
@@ -392,7 +392,8 @@ namespace eka2l1 {
         }
 
         case view_opcode_priority:
-        case view_opcode_priority_mirror: {
+        case view_opcode_priority_mirror:
+        case view_opcode_priority_mirror2: {
             get_priority(ctx);
             break;
         }

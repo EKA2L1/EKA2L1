@@ -210,10 +210,11 @@ namespace eka2l1::epoc {
         client->delete_object(cmd.obj_handle);
     }
 
-    bool window_group::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+    bool window_group::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {        
+        LOG_TRACE(SERVICE_WINDOW, "Window group op: {}", cmd.header.op);
+
         bool result = execute_command_for_general_node(ctx, cmd);
         bool need_free = false;
-        //LOG_TRACE(SERVICE_WINDOW, "Window group op: {}", cmd.header.op);
 
         if (result) {
             return false;

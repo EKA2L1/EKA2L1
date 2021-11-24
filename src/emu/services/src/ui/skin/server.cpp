@@ -173,7 +173,27 @@ namespace eka2l1 {
     }
 
     void akn_skin_server::merge_active_skin(eka2l1::io_system *io) {
-        const epoc::pid skin_pid = settings_->active_skin_pid();
+        epoc::pid skin_pid = settings_->active_skin_pid();
+        if (skin_pid.first == 0) {
+            epoc::pid default_pid = settings_->default_skin_pid();
+            if (default_pid.first == 0) {
+                // Pick one and save to setting
+                std::optional<epoc::pid> picked = epoc::pick_first_skin(io);
+                if (!picked) {
+                    LOG_ERROR(SERVICE_UI, "Unable to pick a skin as default (no skin folder fits requirements)!");
+                    return;
+                }
+
+                settings_->active_skin_pid(picked.value());
+                settings_->default_skin_pid(picked.value());
+
+                skin_pid = picked.value();
+            } else {
+                settings_->active_skin_pid(default_pid);
+                skin_pid = default_pid;
+            }
+        }
+
         const std::optional<std::u16string> skin_path = epoc::find_skin_file(io, skin_pid);
         const std::optional<std::u16string> resource_path = epoc::get_resource_path_of_skin(io, skin_pid);
 

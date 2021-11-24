@@ -20,6 +20,7 @@
 #include <services/centralrepo/centralrepo.h>
 #include <services/ui/skin/common.h>
 #include <services/ui/skin/settings.h>
+#include <services/ui/skin/utils.h>
 
 #include <common/cvt.h>
 #include <common/log.h>
@@ -38,13 +39,14 @@ namespace eka2l1::epoc {
     };
 
     akn_ss_settings::akn_ss_settings(io_system *io, central_repo_server *svr)
-        : io_(io) {
+        : io_(io)
+        , dvcmngr_(nullptr) {
         if (svr) {
-            device_manager *mngr = svr->get_system()->get_device_manager();
+            dvcmngr_ = svr->get_system()->get_device_manager();
 
-            avkon_rep_ = svr->load_repo_with_lookup(io, mngr, AVKON_UID);
-            skins_rep_ = svr->load_repo_with_lookup(io, mngr, PERSONALISATION_UID);
-            theme_rep_ = svr->load_repo_with_lookup(io, mngr, THEMES_UID);
+            avkon_rep_ = svr->load_repo_with_lookup(io, dvcmngr_, AVKON_UID);
+            skins_rep_ = svr->load_repo_with_lookup(io, dvcmngr_, PERSONALISATION_UID);
+            theme_rep_ = svr->load_repo_with_lookup(io, dvcmngr_, THEMES_UID);
 
             if (read_default_skin_id()) {
                 LOG_INFO(SERVICE_UI, "Default skin UID: 0x{:X}, timestamp: {}", default_skin_pid_.first, default_skin_pid_.second);
@@ -171,5 +173,48 @@ namespace eka2l1::epoc {
         }
 
         return true;
+    }
+
+    void akn_ss_settings::set_pid_to_skins_repo(const std::uint32_t key, const epoc::pid id, const bool uid_only) {
+        central_repo_entry *active_skin_entry = skins_rep_->find_entry(key);
+        std::u16string data = epoc::pid_to_string(id);
+
+        if (!active_skin_entry) {
+            eka2l1::central_repo_entry_variant variant;
+
+            if (uid_only) {
+                variant.etype = central_repo_entry_type::integer;
+                variant.intd = id.first;
+            } else {
+                variant.etype = central_repo_entry_type::string;
+                variant.strd.resize(data.size() * 2);
+            }
+ 
+            std::memcpy(variant.strd.data(), data.data(), variant.strd.size());
+
+            skins_rep_->add_new_entry(key, variant);
+        } else {
+            if (uid_only) {
+                active_skin_entry->data.etype = central_repo_entry_type::integer;
+                active_skin_entry->data.intd = id.first;
+            } else {
+                active_skin_entry->data.etype = central_repo_entry_type::string;
+                active_skin_entry->data.strd.resize(data.size() * 2);
+            }
+
+            std::memcpy(active_skin_entry->data.strd.data(), data.data(), active_skin_entry->data.strd.size());
+        }
+
+        skins_rep_->write_changes(io_, dvcmngr_);
+    }
+
+    void akn_ss_settings::active_skin_pid(const epoc::pid id) {
+        active_skin_pid_ = id;
+        set_pid_to_skins_repo(ACTIVE_SKIN_UID_KEY, id, true);
+    }
+
+    void akn_ss_settings::default_skin_pid(const epoc::pid id) {
+        default_skin_pid_ = id;
+        set_pid_to_skins_repo(DEFAULT_SKIN_UID_KEY, id, false);
     }
 }
