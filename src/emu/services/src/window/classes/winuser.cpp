@@ -993,7 +993,7 @@ namespace eka2l1::epoc {
     }
 
     bool free_modify_canvas::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
-        LOG_TRACE(SERVICE_WINDOW, "Redraw canvas opcode {}", cmd.header.op);
+        // LOG_TRACE(SERVICE_WINDOW, "Redraw canvas opcode {}", cmd.header.op);
 
         bool did_it = false;
         const bool should_flush = canvas_base::execute_command_detail(ctx, cmd, did_it);
@@ -1182,7 +1182,7 @@ namespace eka2l1::epoc {
     }
 
     bool bitmap_backed_canvas::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {        
-        LOG_TRACE(SERVICE_WINDOW, "Backed up canvas opcode {}", cmd.header.op);
+        // LOG_TRACE(SERVICE_WINDOW, "Backed up canvas opcode {}", cmd.header.op);
 
         bool did_it = false;
         const bool should_flush = canvas_base::execute_command_detail(ctx, cmd, did_it);
