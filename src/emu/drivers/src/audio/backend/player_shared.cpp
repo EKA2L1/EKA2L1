@@ -34,25 +34,13 @@ namespace eka2l1::drivers {
 
         auto supply_stuff = [&]() {
             while ((frame_copied < size) && (!(request->flags_ & 1))) {
-                if (request->data_.size() == request->data_pointer_)
+                if (request->data_.size() <= request->data_pointer_)
                     get_more_data(request);
 
-                const std::size_t total_frame_left = (request->data_.size() - request->data_pointer_) / request->channels_ / sizeof(std::uint16_t);
+                const std::size_t total_frame_left = (request->data_.size() - request->data_pointer_ + 1) / request->channels_ / sizeof(std::uint16_t);
                 const std::size_t frame_to_copy = std::min<std::size_t>(total_frame_left, size - frame_copied);
 
-                // Copy the frames first
-                if (request->channels_ == 1) {
-                    const std::uint16_t *original_data_u16 = reinterpret_cast<std::uint16_t *>(request->data_.data() + request->data_pointer_);
-
-                    // We have to do something!
-                    for (std::size_t frame_ite = 0; frame_ite < frame_to_copy; frame_ite++) {
-                        data[2 * (frame_ite + frame_copied)] = original_data_u16[frame_ite];
-                        data[2 * (frame_ite + frame_copied) + 1] = original_data_u16[frame_ite];
-                    }
-                } else {
-                    // Well, just copy straight up
-                    std::memcpy(data + frame_copied * 2, request->data_.data() + request->data_pointer_, frame_to_copy * 2 * sizeof(std::uint16_t));
-                }
+                std::memcpy(data + frame_copied * request->channels_, request->data_.data() + request->data_pointer_, frame_to_copy * request->channels_ * sizeof(std::uint16_t));
 
                 request->data_pointer_ += frame_to_copy * request->channels_ * sizeof(std::uint16_t);
                 frame_copied += frame_to_copy;
@@ -120,7 +108,7 @@ namespace eka2l1::drivers {
             request->data_.clear();
 
             // New stream to restart everything
-            output_stream_ = aud_->new_output_stream(request->freq_, 2, [this](std::int16_t *u1, std::size_t u2) {
+            output_stream_ = aud_->new_output_stream(request->freq_, request->channels_, [this](std::int16_t *u1, std::size_t u2) {
                 return data_supply_callback(u1, u2);
             });
 

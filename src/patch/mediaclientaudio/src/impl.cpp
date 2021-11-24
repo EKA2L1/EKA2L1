@@ -280,13 +280,14 @@ CMMFMdaAudioPlayerUtility *CMMFMdaAudioPlayerUtility::NewL(MMdaAudioPlayerCallba
 void CMMFMdaAudioPlayerUtility::OnStateChanged(const TMdaState aCurrentState, const TMdaState aPrevState, const TInt aErr) {
     switch (aCurrentState) {
     case EMdaStateReady:
-        if (aErr != 1)
+        if (aPrevState != EMdaStateIdle) {
+            if (aErr != 1) {
+                iCallback.MapcPlayComplete(aErr);
+            }
+        } else {
             iCallback.MapcInitComplete(aErr, iDuration);
+        }
 
-        break;
-
-    case EMdaStateIdle:
-        iCallback.MapcPlayComplete(aErr);
         break;
 
     default:

@@ -332,6 +332,10 @@ namespace eka2l1::drivers {
         }
 
         if (SUCCEEDED(hr)) {
+            hr = partial_type->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
+        }
+
+        if (SUCCEEDED(hr)) {
             hr = request.reader_->SetCurrentMediaType(
                 (DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, nullptr, partial_type);
         }
