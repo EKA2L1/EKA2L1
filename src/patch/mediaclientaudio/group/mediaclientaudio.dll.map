@@ -196,7 +196,106 @@
 104 150         ; _ZTV24CMdaAudioRecorderUtility
 105 121         ; _ZN24CMdaAudioRecorderUtility9OpenFileLERK7TDesC164TUidS3_S3_7TFourCC
 
-[epoc93]
+[epoc93fp2]
+1 11            ; CMdaAudioPlayerUtility::GetBalance
+2 12            ; CMdaAudioPlayerUtility::GetBitrate
+3 13            ; CMdaAudioPlayerUtility::SetBalance
+4 14            ; CMdaAudioPlayerUtility::GetPosition
+5 15            ; CMdaAudioPlayerUtility::SetPosition
+6 16            ; CMdaAudioPlayerUtility::SetPriority
+34 17           ; CMdaAudioPlayerUtility::NewDesPlayerL
+7 18            ; CMdaAudioPlayerUtility::SetPlayWindow
+35 19           ; CMdaAudioPlayerUtility::NewFilePlayerL
+37 20           ; CMdaAudioPlayerUtility::WillResumePlay
+8 21            ; CMdaAudioPlayerUtility::ClearPlayWindow
+9 22            ; CMdaAudioPlayerUtility::CustomCommandSync (var1)
+10 23           ; CMdaAudioPlayerUtility::CustomCommandSync (var2)
+11 24           ; CMdaAudioPlayerUtility::GetMetadataEntry
+12 25           ; CMdaAudioPlayerUtility::CustomCommandAsync (var1)
+13 26           ; CMdaAudioPlayerUtility::CustomCommandAsync (var2)
+14 27           ; CMdaAudioPlayerUtility::GetDRMCustomCommand
+36 28           ; CMdaAudioPlayerUtility::NewDesPlayerReadOnlyL
+15 29           ; CMdaAudioPlayerUtility::GetAudioLoadingProgressL
+16 30           ; CMdaAudioPlayerUtility::GetNumberOfMetadataEntryL
+17 31           ; CMdaAudioPlayerUtility::RegisterAudioResourceNotification
+18 32           ; CMdaAudioPlayerUtility::RegisterForAudioLoadingNotification
+19 33           ; CMdaAudioPlayerUtility::ControllerImplementationInformation
+20 34           ; CMdaAudioPlayerUtility::CancelRegisterAudioResourceNotification
+21 35           ; CMdaAudioPlayerUtility::NewL
+39 36           ; CMdaAudioPlayerUtiltiy::Close
+22 37           ; CMdaAudioPlayerUtility::Pause
+24 38           ; CMdaAudioPlayerUtility::OpenDesL
+25 39           ; CMdaAudioPlayerUtility::OpenUrlL
+26 40           ; CMdaAudioPlayerUtility::GetVolume
+27 41           ; CMdaAudioPlayerUtility::OpenFileL(RFile)
+28 42           ; CMdaAudioPlayerUtility::OpenFileL(TDesC)
+29 43           ; CMdaAudioPlayerUtility::OpenFileL(TMMSource)
+38 154          ; CMdaAudioPlayerUtility::SetThreadPriority
+40 158          ; CMdaAudioPlayerUtility::UseSharedHeap
+
+45 71           ; CMdaAudioRecorderUtility::SetPriority
+46 162          ; CMdaAudioRecorderUtility::UseSharedHeap
+47 72           ; CMdaAudioRecorderUtility::SourceBitRate
+48 73           ; CMdaAudioRecorderUtility::WillResumePlay
+49 74           ; CMdaAudioRecorderUtility::GetRecordBalance
+50 75           ; CMdaAudioRecorderUtility::SetRecordBalance
+51 76           ; CMdaAudioRecorderUtility::AddMetadataEntry
+52 77           ; CMdaAudioRecorderUtility::GetMetadataEntry
+53 78           ; CMdaAudioRecorderUtility::DestinationFormat
+54 79           ; CMdaAudioRecorderUtility::GetPlaybackBalance
+55 80           ; CMdaAudioRecorderUtility::SetPlaybackBalance
+56 81           ; CMdaAudioRecorderUtility::DestinationBitRate
+57 82           ; CMdaAudioRecorderUtility::GetDRMCustomCommand
+58 83           ; CMdaAudioRecorderUtility::RemoveMetadataEntry
+59 84           ; CMdaAudioRecorderUtility::DestinationDatatype
+60 85           ; CMdaAudioRecorderUtility::GetSupportedBitrates
+61 86           ; CMdaAudioRecorderUtility::ReplaceMetadataEntry
+62 87           ; CMdaAudioRecorderUtility::SetDestinationFormat
+63 88           ; CMdaAudioRecorderUtility::DestinationSampleRate
+64 89           ; CMdaAudioRecorderUtility::SetDestinationBitrate
+65 90           ; CMdaAudioRecorderUtility::SetDestinationDataType
+66 91           ; CMdaAudioRecorderUtility::GetAudioLoadingProgress
+67 92           ; CMdaAudioRecorderUtility::GetSupportedSampleRates
+68 93           ; CMdaAudioRecorderUtility::SetDesinationSampleRate
+69 94           ; CMdaAudioRecorderUtility::GetNumberOfMetadataEntryL
+70 95           ; CMdaAudioRecorderUtility::DestinationNumberOfChannels
+71 96           ; CMdaAudioRecorderUtility::GetSupportedNumberOfChannels
+72 97           ; CMdaAudioRecorderUtility::PlayControllerCustomCommandSync (v1)
+73 98           ; CMdaAudioRecorderUtility::PlayControllerCustomCommandSync (v2)
+74 99           ; CMdaAudioRecorderUtility::SetDestinationNumberOfChannels
+75 100          ; CMdaAudioRecorderUtility::PlayControllerCustomCommandAsync (v1)
+76 101          ; CMdaAudioRecorderUtility::PlayControllerCustomCommandAsync (v2)
+77 102          ; CMdaAudioRecorderUtility::GetSupportedDestinationDataTypes
+78 103          ; CMdaAudioRecorderUtility::RecordControllerCustomCommandSync (v1)
+79 104          ; CMdaAudioRecorderUtility::RecordControllerCustomCommandSync (v2)
+80 105          ; CMdaAudioRecorderUtility::RegisterAudioResourceNotification
+81 106          ; CMdaAudioRecorderUtility::RecordControllerCustomCommandAsync (v1)
+82 107          ; CMdaAudioRecorderUtility::RecordControllerCustomCommandAsync (v2)
+83 108          ; CMdaAudioRecorderUtility::RegisterForAudioLoadingNotification
+84 109          ; CMdaAudioRecorderUtility::CancelRegisterAudioResourceNotification
+85 110          ; CMdaAudioRecorderUtility::AudioPlayControllerImplementationInformation
+86 111          ; CMdaAudioRecorderUtility::AudioRecordControllerImplementationInfo
+87 112          ; CMdaAudioRecorderUtility::NewL
+88 113          ; CMdaAudioRecorderUtility::GetGain 
+89 160          ; CMdaAudioRecorderUtility::Duration
+90 114          ; _ZN24CMdaAudioRecorderUtility8OpenDesLER5TDes8
+91 115          ; _ZN24CMdaAudioRecorderUtility8OpenDesLER5TDes84TUidS2_S2_7TFourCC
+92 116          ; _ZN24CMdaAudioRecorderUtility8OpenUrlLERK7TDesC16i4TUidS3_S3_7TFourCC
+93 117          ; _ZN24CMdaAudioRecorderUtility8OpenUrlLERK7TDesC16iRK6TDesC8
+94 118          ; _ZN24CMdaAudioRecorderUtility9GetVolumeERi
+95 119          ; _ZN24CMdaAudioRecorderUtility9OpenFileLERK5RFile
+96 120          ; _ZN24CMdaAudioRecorderUtility9OpenFileLERK5RFile4TUidS3_S3_7TFourCC
+97 122          ; _ZN24CMdaAudioRecorderUtility9OpenFileLERK9TMMSource
+98 123          ; _ZN24CMdaAudioRecorderUtility9OpenFileLERK9TMMSource4TUidS3_S3_7TFourCC
+99 156          ; _ZNK24CMdaAudioRecorderUtility23SetThreadPriorityRecordERK15TThreadPriority
+100 157         ; _ZNK24CMdaAudioRecorderUtility25SetThreadPriorityPlaybackERK15TThreadPriority
+101 128         ; _ZTI20CMdaAudioClipUtility
+102 135         ; _ZTI24CMdaAudioRecorderUtility
+103 143         ; _ZTV20CMdaAudioClipUtility
+104 150         ; _ZTV24CMdaAudioRecorderUtility
+105 121         ; _ZN24CMdaAudioRecorderUtility9OpenFileLERK7TDesC164TUidS3_S3_7TFourCC
+
+[epoc93fp1]
 1 11            ; CMdaAudioPlayerUtility::GetBalance
 2 12            ; CMdaAudioPlayerUtility::GetBitrate
 3 13            ; CMdaAudioPlayerUtility::SetBalance

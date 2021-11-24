@@ -32,7 +32,24 @@
 11 20           ; CMdaAudioOutputStream::Pause
 12 21           ; CMdaAudioOutputStream::Resume
 
-[epoc93]
+[epoc93fp2]
+1 18            ; CMdaAudioOutputStream::RequestStop
+2 1             ; CMdaAudioOutputStream::SetBalance
+3 2             ; CMdaAudioOutputStream::SetDataType
+9 3             ; CMdaAudioOutputStream::NewL(MMdaAudioOutputStreamCallback&, CMdaServer*)
+10 4            ; CMdaAudioOutputStream::NewL()
+13 5            ; CMdaAudioOutputStream::GetBytes
+14 6            ; CMdaAudioOutputStream::GetBalance
+15 7            ; CMdaAudioOutputStream::DataType
+5 14            ; CMdaAudioOutputStream::WillResumePlay
+7 15            ; CMdaAudioOutputStream::RegisterAudioResourceNof
+8 16            ; CMdaAudioOutputStream::CancelRegister
+6 17            ; CMdaAudioOutputStream::CustomInterface
+4 19            ; CMdaAudioOutputStream::KeepOpenAtEnd
+11 20           ; CMdaAudioOutputStream::Pause
+12 21           ; CMdaAudioOutputStream::Resume
+
+[epoc93fp1]
 1 18            ; CMdaAudioOutputStream::RequestStop
 2 1             ; CMdaAudioOutputStream::SetBalance
 3 2             ; CMdaAudioOutputStream::SetDataType
