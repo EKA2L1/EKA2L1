@@ -113,7 +113,7 @@ namespace eka2l1::epoc {
             LOG_WARN(SERVICE_WINDOW, "Husband window is currently active in a DSA, adding reference");
         }
 
-        LOG_TRACE(SERVICE_WINDOW, "DSA requested for window {}", user->id);
+        // LOG_TRACE(SERVICE_WINDOW, "DSA requested for window {}", user->id);
 
         husband_->add_dsa_active(this);
         husband_->scr->ref_dsa_usage();
