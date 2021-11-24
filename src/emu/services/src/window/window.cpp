@@ -1131,6 +1131,13 @@ namespace eka2l1::epoc {
             event_ready_cancel(ctx, cmd);
             break;
 
+        case ws_cl_op_get_modifier_state:
+        case ws_cl_op_set_modifier_state:
+            // No modifiers (Ctrl, Alt, ...) are considered yet.
+            // Apps known to use this: Frogger (Lonely Cat Games)
+            ctx.complete(epoc::error_none);
+            break;
+
         default:
             LOG_INFO(SERVICE_WINDOW, "Unimplemented ClOp: 0x{:x}", cmd.header.op);
             break;
