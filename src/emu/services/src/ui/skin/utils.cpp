@@ -28,7 +28,7 @@
 #include <fmt/xchar.h>
 
 namespace eka2l1::epoc {
-    static constexpr char16_t *SKIN_FOLDER = u"\\private\\10207114\\import\\";
+    static constexpr const char16_t *SKIN_FOLDER = u"\\private\\10207114\\import\\";
 
     std::u16string pid_to_string(const epoc::pid skin_pid) {
         std::u16string result;
