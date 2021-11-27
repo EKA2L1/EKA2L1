@@ -876,6 +876,8 @@ namespace eka2l1::arm::r12l1 {
                     if ((type == arm::exception_type_access_violation_write) || (type == arm::exception_type_access_violation_read)) {
                         LOG_TRACE(CPU_12L1R, "Failure happens at 0x{:X}, back at 0x{:X}", interpreter_ptr->get_pc(), interpreter_ptr->get_lr());
                     }
+
+                    return false;
                 };
             }
 

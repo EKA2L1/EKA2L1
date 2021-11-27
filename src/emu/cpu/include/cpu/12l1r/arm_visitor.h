@@ -173,6 +173,12 @@ namespace eka2l1::arm::r12l1 {
         bool arm_BKPT();
         bool arm_UDF();
 
+        // Saturated Add/Subtract instructions
+        bool arm_QADD(common::cc_flags cond, reg_index n, reg_index d, reg_index m);
+        bool arm_QSUB(common::cc_flags cond, reg_index n, reg_index d, reg_index m);
+        bool arm_QDADD(common::cc_flags cond, reg_index n, reg_index d, reg_index m);
+        bool arm_QDSUB(common::cc_flags cond, reg_index n, reg_index d, reg_index m);
+
         // VFP
         bool vfp_VMOV_reg(common::cc_flags cond, bool D, std::size_t Vd, bool sz, bool M, std::size_t Vm);
         bool vfp_VMOV_u32_f32(common::cc_flags cond, const std::size_t Vn, reg_index t, bool N);

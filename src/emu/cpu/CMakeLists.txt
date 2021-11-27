@@ -29,6 +29,7 @@ set(SOURCE_12L1R
         src/12l1r/translate/load_store.cpp
         src/12l1r/translate/miscs.cpp
         src/12l1r/translate/multiply.cpp
+        src/12l1r/translate/saturated.cpp
         src/12l1r/translate/status_register_access.cpp
         src/12l1r/translate/synchronization.cpp
         src/12l1r/translate/vfp.cpp
