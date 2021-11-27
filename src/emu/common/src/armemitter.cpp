@@ -1268,6 +1268,22 @@ namespace eka2l1::common::armgen {
         write_reg_store_op(0x80 | (Before << 4) | (Add << 3) | 1, dest, WriteBack, RegList);
     }
 
+    void armx_emitter::QADD(arm_reg rd, arm_reg rm, arm_reg rn) {
+        write32(condition | 0x1000000 | (rn << 16) | (rd << 12) | 0x50 | rm);
+    }
+
+    void armx_emitter::QSUB(arm_reg rd, arm_reg rm, arm_reg rn) {
+        write32(condition | 0x1200000 | (rn << 16) | (rd << 12) | 0x50 | rm);
+    }
+
+    void armx_emitter::QDADD(arm_reg rd, arm_reg rm, arm_reg rn) {
+        write32(condition | 0x1400000 | (rn << 16) | (rd << 12) | 0x50 | rm);
+    }
+
+    void armx_emitter::QDSUB(arm_reg rd, arm_reg rm, arm_reg rn) {
+        write32(condition | 0x1600000 | (rn << 16) | (rd << 12) | 0x50 | rm);
+    }
+
 #undef VA_TO_REGLIST
 
     // NEON Specific

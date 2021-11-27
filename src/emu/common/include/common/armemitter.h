@@ -679,6 +679,11 @@ namespace eka2l1::common::armgen {
         void PLD(arm_reg rd, int offset, bool forWrite = false);
         void SEL(arm_reg rd, arm_reg rn, arm_reg rm);
 
+        void QADD(arm_reg rd, arm_reg rm, arm_reg rn);
+        void QSUB(arm_reg rd, arm_reg rm, arm_reg rn);
+        void QDADD(arm_reg rd, arm_reg rm, arm_reg rn);
+        void QDSUB(arm_reg rd, arm_reg rm, arm_reg rn);
+
         // Packing instructions
         void PKHBT(arm_reg rd, arm_reg rn, arm_reg rm, const int left_shift);
         void PKHTB(arm_reg rd, arm_reg rn, arm_reg rm, const int right_shift_with_32_equals_0);
