@@ -196,7 +196,7 @@ namespace eka2l1 {
 
         core->stop();
 
-        target_to_stop->stop();
+        target_to_stop->kill(kernel::entity_exit_type::terminate, u"KERN-EXEC", 3);
         core->save_context(target_to_stop->get_thread_context());
 
         // Dump thread contexts
