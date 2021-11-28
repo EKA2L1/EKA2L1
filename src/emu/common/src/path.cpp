@@ -26,19 +26,6 @@
 
 #include <common/log.h>
 
-#if EKA2L1_PLATFORM(UNIX) || EKA2L1_PLATFORM(DARWIN)
-#include <sys/stat.h>
-#include <unistd.h>
-#endif
-
-#if EKA2L1_PLATFORM(WIN32)
-#include <Windows.h>
-#endif
-
-#if EKA2L1_PLATFORM(ANDROID)
-#include <common/jniutils.h>
-#endif
-
 namespace eka2l1 {
     char get_separator(bool symbian_use) {
         if (symbian_use) {
@@ -392,110 +379,7 @@ namespace eka2l1 {
         return replace_extension_impl<char16_t>(path, new_ext);
     }
 
-    void create_directory(std::string path) {
-#if EKA2L1_PLATFORM(POSIX)
-        mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-#elif EKA2L1_PLATFORM(WIN32)
-        const std::wstring wpath = common::utf8_to_wstr(path);
-        CreateDirectoryW(wpath.c_str(), NULL);
-#endif
-    }
-
-    bool exists(std::string path) {
-#if EKA2L1_PLATFORM(POSIX)
-        struct stat st;
-        auto res = stat(path.c_str(), &st);
-
-        return res != -1;
-#elif EKA2L1_PLATFORM(WIN32)
-        const std::wstring wpath = common::utf8_to_wstr(path);
-        DWORD dw_attrib = GetFileAttributesW(wpath.c_str());
-        return (dw_attrib != INVALID_FILE_ATTRIBUTES);
-#endif
-    }
-
-    bool is_dir(std::string path) {
-#if EKA2L1_PLATFORM(POSIX)
-        struct stat st;
-        auto res = stat(path.c_str(), &st);
-
-        if (res < 0) {
-            return false;
-        }
-
-        return S_ISDIR(st.st_mode);
-#elif EKA2L1_PLATFORM(WIN32)
-        const std::wstring wpath = common::utf8_to_wstr(path);
-        DWORD dw_attrib = GetFileAttributesW(wpath.c_str());
-        return (dw_attrib != INVALID_FILE_ATTRIBUTES && (dw_attrib & FILE_ATTRIBUTE_DIRECTORY));
-#endif
-    }
-
-    void create_directories(std::string path) {
-        std::string crr_path = "";
-
-        path_iterator ite;
-
-        for (ite = path_iterator(path);
-             ite; ite++) {
-            crr_path = add_path(crr_path, add_path(*ite, "/"));
-
-            if (!is_dir(crr_path)) {
-                create_directory(crr_path);
-            }
-        }
-    }
-
-    bool set_current_directory(const std::string &path) {
-#if EKA2L1_PLATFORM(WIN32)
-        const std::wstring wpath = common::utf8_to_wstr(path);
-        return SetCurrentDirectoryW(wpath.c_str());
-#else
-        return (chdir(path.c_str()) == 0);
-#endif
-    }
-
-    bool get_current_directory(std::string &path) {
-#if EKA2L1_PLATFORM(WIN32)
-        std::wstring buffer(512, L'0');
-        const DWORD written = GetCurrentDirectoryW(static_cast<DWORD>(buffer.length()), reinterpret_cast<wchar_t*>(buffer.data()));
-
-        if (written == 0) {
-            return false;
-        }
-
-        buffer.resize(written);
-        path = common::wstr_to_utf8(buffer);
-#else
-        char buffer[512];
-
-        if (getcwd(buffer, sizeof(buffer)) == nullptr) {
-            return false;
-        }
-
-        path = std::string(buffer);
-#endif
-
-        return true;
-    }
-
     bool is_content_uri(const std::string &path) {
         return path.rfind("content://", 0) == 0;
-    }
-
-    std::uint32_t open_content_uri(const std::string &path, const std::string &mode) {
-#if EKA2L1_PLATFORM(ANDROID)
-        JNIEnv *env = common::jni::environment();
-        jclass clazz = common::jni::find_class("com/github/eka2l1/emu/Emulator");
-        jmethodID open_uri_method = env->GetStaticMethodID(clazz,
-            "openContentUri", "(Ljava/lang/String;Ljava/lang/String;)I");
-
-        jstring jfilename = env->NewStringUTF(path.c_str());
-        jstring jmode = env->NewStringUTF(mode.c_str());
-        std::uint32_t fd = env->CallStaticIntMethod(clazz, open_uri_method, jfilename, jmode);
-#else
-        std::uint32_t fd = 0;
-#endif
-        return fd;
     }
 }

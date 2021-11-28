@@ -22,6 +22,7 @@
 #include <common/buffer.h>
 #include <common/bytepair.h>
 #include <common/cvt.h>
+#include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
 
@@ -424,7 +425,7 @@ namespace eka2l1::loader {
 
     static bool dump_rom_directory(common::ro_stream *stream, rom_dir &dir, std::string base, std::uint32_t rom_base,
         std::size_t &passed_size, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
-        eka2l1::create_directories(base);
+        common::create_directories(base);
 
         for (auto &entry : dir.entries) {
             if (!(entry.attrib & 0x10) && (entry.size != 0)) {

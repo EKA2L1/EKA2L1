@@ -56,6 +56,7 @@ add_library(common
         include/common/time.h
         include/common/types.h
         include/common/unicode.h
+        include/common/url.h
         include/common/region.h
         include/common/virtualmem.h
         include/common/watcher.h
@@ -91,6 +92,7 @@ add_library(common
         src/time.cpp
         src/types.cpp
         src/unicode.cpp
+		src/url.cpp
         src/region.cpp
         src/virtualmem.cpp
         src/watcher.cpp
@@ -100,8 +102,11 @@ add_library(common
 
 if (ANDROID)
     target_sources(common PRIVATE
-        include/common/jniutils.h
-        src/jniutils.cpp
+        include/common/android/storage.h
+        include/common/android/jniutils.h
+        include/common/android/contenturi.h
+        src/android/storage.cpp
+        src/android/jniutils.cpp
         )
 endif()
 

@@ -133,12 +133,16 @@ namespace eka2l1::loader {
     static bool determine_rpkg_symbian_version_through_series60_sis(const std::string &extracted_path, epocver &ver) {
         const std::string sis_path = add_path(extracted_path, "system\\install\\series60v*.sis");
 
-        common::dir_iterator directory(sis_path);
+        auto directory = common::make_directory_iterator(sis_path);
+        if (!directory) {
+            return false;
+        }
+
         common::dir_entry entry;
 
         bool found = false;
 
-        while (directory.next_entry(entry) >= 0) {
+        while (directory->next_entry(entry) >= 0) {
             if (entry.type == common::FILE_DIRECTORY) {
                 continue;
             }
@@ -204,11 +208,11 @@ namespace eka2l1::loader {
         std::string &manufacturer, std::string &firmcode, std::string &model) {
         std::string version_folder = add_path(extracted_path, "resource\\versions\\");
 
-        if (!eka2l1::exists(version_folder)) {
+        if (!common::exists(version_folder)) {
             version_folder = add_path(extracted_path, "system\\versions\\");
         }
 
-        if (!eka2l1::exists(version_folder)) {
+        if (!common::exists(version_folder)) {
             return false;
         }
 

@@ -345,14 +345,18 @@ namespace eka2l1::hle {
     }
 
     void lib_manager::load_patch_libraries(const std::string &patch_folder) {
-        common::dir_iterator iterator(patch_folder);
+        auto iterator = common::make_directory_iterator(patch_folder);
+        if (!iterator) {
+            return;
+        }
+
         common::dir_entry entry;
 
         patches_.clear();
 
         std::vector<std::string> patch_image_paths;
 
-        while (iterator.next_entry(entry) == 0) {
+        while (iterator->next_entry(entry) == 0) {
             if (common::lowercase_string(eka2l1::path_extension(entry.name)) == ".map") {
                 const std::string original_map_name = eka2l1::replace_extension(eka2l1::filename(entry.name), "");
                 const std::string patch_map_path = eka2l1::add_path(patch_folder, entry.name);
@@ -369,7 +373,7 @@ namespace eka2l1::hle {
                     const std::string source_dll_name = eka2l1::replace_extension(original_map_name, "_") + epocver_to_plat_suffix(start_ver) + ".dll";
                     patch_dll_map = eka2l1::add_path(patch_folder, source_dll_name);
 
-                    if (!eka2l1::exists(patch_dll_map)) {
+                    if (!common::exists(patch_dll_map)) {
                         patch_dll_map.clear();
                         start_ver++;
 
@@ -384,7 +388,7 @@ namespace eka2l1::hle {
                     const std::string source_dll_name = eka2l1::replace_extension(original_map_name, "_") + "general.dll";
                     patch_dll_map = eka2l1::add_path(patch_folder, source_dll_name);
 
-                    if (!eka2l1::exists(patch_dll_map)) {
+                    if (!common::exists(patch_dll_map)) {
                         LOG_ERROR(KERNEL, "Can't find suitable patch DLL for map {}", original_map_name);
                         continue;
                     }

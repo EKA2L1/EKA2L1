@@ -22,11 +22,13 @@
 
 #include <android/state.h>
 #include <android/thread.h>
+#include <common/android/storage.h>
+#include <common/fileutils.h>
 #include <common/path.h>
 #include <drivers/audio/audio.h>
 #include <drivers/graphics/graphics.h>
 
-#include <common/jniutils.h>
+#include <common/android/jniutils.h>
 
 ANativeWindow *s_surf;
 std::unique_ptr<eka2l1::android::emulator> state;
@@ -47,7 +49,7 @@ Java_com_github_eka2l1_emu_Emulator_setDirectory(
     env->ReleaseStringUTFChars(path, cstr);
 
     const auto executable_directory = eka2l1::file_directory(cpath);
-    eka2l1::set_current_directory(executable_directory);
+    eka2l1::common::set_current_directory(executable_directory);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
@@ -55,6 +57,8 @@ Java_com_github_eka2l1_emu_Emulator_startNative(
     JNIEnv *env,
     jclass clazz) {
     eka2l1::common::jni::init_classloader();
+    eka2l1::common::android::register_storage_callbacks(env);
+
     state = std::make_unique<eka2l1::android::emulator>();
     return emulator_entry(*state);
 }

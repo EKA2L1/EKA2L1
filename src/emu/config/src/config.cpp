@@ -175,7 +175,7 @@ namespace eka2l1::config {
         }
 
         if (with_bindings) {
-            eka2l1::create_directories("bindings");
+            common::create_directories("bindings");
             keybinds.serialize(fmt::format("bindings/{}.yml", current_keybind_profile));
         }
     }

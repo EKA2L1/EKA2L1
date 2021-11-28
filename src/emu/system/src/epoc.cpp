@@ -298,12 +298,16 @@ namespace eka2l1 {
 
                 std::string rom_drive_name = std::string(1, static_cast<char>(drive_to_char16(romdrv)));
                 std::string root_z_path = add_path(conf_->storage, "drives/" + rom_drive_name + "/");
-                common::dir_iterator ite(root_z_path);
-                ite.detail = true;
+                auto ite = common::make_directory_iterator(root_z_path);
+                if (!ite) {
+                    return false;
+                }
+
+                ite->detail = true;
 
                 common::dir_entry firm_entry;
 
-                while (ite.next_entry(firm_entry) == 0) {
+                while (ite->next_entry(firm_entry) == 0) {
                     if ((firm_entry.type == common::file_type::FILE_DIRECTORY) && (firm_entry.name != ".")
                         && (firm_entry.name != "..")) {
                         const std::string full_entry_path = eka2l1::add_path(root_z_path,
@@ -316,7 +320,7 @@ namespace eka2l1 {
 
                         const std::string rom_directory = eka2l1::add_path(conf_->storage, eka2l1::add_path("roms", firm_name + "\\"));
                         const std::string rom_file = eka2l1::add_path(rom_directory, "SYM.ROM");
-                        if (!eka2l1::exists(rom_file)) {
+                        if (!common::exists(rom_file)) {
                             LOG_ERROR(SYSTEM, "Removing broken device: {} ({})", model, firm_name);
                             eka2l1::common::delete_folder(rom_directory);
                             eka2l1::common::delete_folder(full_entry_path);
@@ -741,18 +745,18 @@ namespace eka2l1 {
         }
 
         std::string current_dir;
-        eka2l1::get_current_directory(current_dir);
+        common::get_current_directory(current_dir);
 
         const std::string temp_folder = eka2l1::absolute_path("cache/temp/", current_dir);
 
         eka2l1::common::delete_folder(temp_folder);
-        eka2l1::create_directories(temp_folder);
+        eka2l1::common::create_directories(temp_folder);
 
         std::uint32_t extracted = 0;
 
         for (std::size_t extracted = 0; extracted < list_files.size(); extracted++) {
             const std::string path_to_file = eka2l1::add_path(temp_folder, list_files[extracted]);
-            eka2l1::create_directories(eka2l1::file_directory(path_to_file));
+            common::create_directories(eka2l1::file_directory(path_to_file));
             callback_data.file_stream_ = std::make_unique<std::ofstream>(path_to_file, std::ios::binary);
 
             if (!mz_zip_reader_extract_to_callback(

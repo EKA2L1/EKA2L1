@@ -120,7 +120,7 @@ namespace eka2l1 {
         // Directly write this
         void extract_file_with_buf(const std::string &path, std::vector<uint8_t> &data) {
             std::string rp = eka2l1::file_directory(path);
-            eka2l1::create_directories(rp);
+            common::create_directories(rp);
 
             LOG_INFO(PACKAGE, "Write to: {}", path);
 
@@ -130,10 +130,10 @@ namespace eka2l1 {
 
         bool ss_interpreter::extract_file(const std::string &path, const uint32_t idx, uint16_t crr_blck_idx) {
             std::string rp = eka2l1::file_directory(path);
-            eka2l1::create_directories(rp);
+            common::create_directories(rp);
 
             // Delete the file, starts over
-            if (common::is_system_case_insensitive() && eka2l1::exists(path)) {
+            if (common::is_system_case_insensitive() && common::exists(path)) {
                 if (!common::remove(path)) {
                     LOG_WARN(PACKAGE, "Unable to remove {} to extract new file", path);
                 }

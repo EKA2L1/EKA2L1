@@ -188,14 +188,17 @@ namespace eka2l1::manager {
     void scripts::import_all_modules() {
         // Import all scripts
         std::string cur_dir;
-        get_current_directory(cur_dir);
+        common::get_current_directory(cur_dir);
 
-        common::dir_iterator scripts_dir("scripts/");
-        scripts_dir.detail = true;
+        auto scripts_dir = common::make_directory_iterator("scripts/");
+        if (!scripts_dir) {
+            return;
+        }
+        scripts_dir->detail = true;
 
         common::dir_entry scripts_entry;
 
-        while (scripts_dir.next_entry(scripts_entry) == 0) {
+        while (scripts_dir->next_entry(scripts_entry) == 0) {
             const std::string ext = path_extension(scripts_entry.name);
 
             if ((scripts_entry.type == common::FILE_REGULAR) && (ext == ".lua")) {
@@ -204,7 +207,7 @@ namespace eka2l1::manager {
             }
         }
 
-        set_current_directory(cur_dir);
+        common::set_current_directory(cur_dir);
 
         // Listen for script change
         folder_watcher.watch("scripts/", script_file_changed_callback, this, common::directory_change_move | common::directory_change_creation
@@ -217,7 +220,7 @@ namespace eka2l1::manager {
 
         if (modules.find(name) == modules.end()) {
             std::string crr_path;
-            if (!eka2l1::get_current_directory(crr_path)) {
+            if (!common::get_current_directory(crr_path)) {
                 LOG_ERROR(SCRIPTING, "Unable to get current directory!");
                 return false;
             }
@@ -225,7 +228,7 @@ namespace eka2l1::manager {
             const std::string &pr_path = eka2l1::absolute_path(eka2l1::file_directory(path), crr_path);
             std::lock_guard<std::mutex> guard(smutex);
 
-            if (!eka2l1::set_current_directory(pr_path)) {
+            if (!common::set_current_directory(pr_path)) {
                 LOG_ERROR(SCRIPTING, "Fail to set current directory to script folder!");
                 return false;
             }
@@ -249,10 +252,10 @@ namespace eka2l1::manager {
 
             if (!call_module_entry(name.c_str())) {
                 // If the module entry failed, we still success, but not execute any futher method
-                return eka2l1::set_current_directory(crr_path);
+                return common::set_current_directory(crr_path);
             }
 
-            if (!eka2l1::set_current_directory(crr_path)) {
+            if (!common::set_current_directory(crr_path)) {
                 return false;
             }
 

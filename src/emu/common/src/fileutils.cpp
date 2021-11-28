@@ -40,8 +40,15 @@
 #include <dirent.h>
 #endif
 
+#if EKA2L1_PLATFORM(ANDROID)
+#include <common/android/contenturi.h>
+#include <common/android/storage.h>
+#endif
+
 #include <stack>
 #include <string.h>
+
+#include <common/pystr.h>
 
 namespace eka2l1::common {
     std::int64_t file_size(const std::string &path) {
@@ -59,14 +66,32 @@ namespace eka2l1::common {
 
         return static_cast<std::int64_t>(data.nFileSizeLow | (__int64)data.nFileSizeHigh << 32);
 #else
-        struct stat64 st;
-        auto res = stat64(path.c_str(), &st);
+#if EKA2L1_PLATFORM(ANDROID)
+        if (is_content_uri(path)) {
+            std::optional<std::string> info = android::get_file_info_as_string(path);
+            if (!info.has_value()) {
+                return 0;
+            }
 
-        if (res == -1) {
-            return res;
+            common::pystr str(info.value());
+            std::vector<common::pystr> parts = str.split('|');
+            if (parts.size() < 2) {
+                return 0;
+            }
+
+            return parts[1].as_int(0, 10);
+        } else
+#endif
+        {
+            struct stat64 st;
+            auto res = stat64(path.c_str(), &st);
+
+            if (res == -1) {
+                return res;
+            }
+
+            return static_cast<std::int64_t>(st.st_size);
         }
-
-        return static_cast<std::int64_t>(st.st_size);
 #endif
     }
 
@@ -109,14 +134,30 @@ namespace eka2l1::common {
 
         return get_file_type_from_attrib_platform_specific(h);
 #else
-        struct stat64 st;
-        auto res = stat64(path.c_str(), &st);
+#if EKA2L1_PLATFORM(ANDROID)
+        if (is_content_uri(path)) {
+            std::optional<std::string> info = android::get_file_info_as_string(path);
+            if (!info.has_value() || info->length() < 1) {
+                return FILE_INVALID;
+            }
 
-        if (res == -1) {
-            return FILE_INVALID;
+            if (info->at(0) == 'D') {
+                return FILE_DIRECTORY;
+            }
+
+            return FILE_REGULAR;
+        } else
+#endif
+        {
+            struct stat64 st;
+            auto res = stat64(path.c_str(), &st);
+
+            if (res == -1) {
+                return FILE_INVALID;
+            }
+
+            return get_file_type_from_attrib_platform_specific(st.st_mode);
         }
-
-        return get_file_type_from_attrib_platform_specific(st.st_mode);
 #endif
     }
 
@@ -130,12 +171,38 @@ namespace eka2l1::common {
         return res == expected;
     }
 
-    dir_iterator::dir_iterator(const std::string &name)
-        : handle(nullptr)
-        , eof(false)
-        , detail(false)
-        , dir_name(name) {
+    struct standard_dir_iterator: public dir_iterator {
+    protected:
+        std::string match_pattern;
+
+    public:
+        void *handle;
+        void *find_data;
+
+        bool eof;
+
+        void cycles_to_next_entry();
+
+    public:
+        explicit standard_dir_iterator(const std::string &name);
+        ~standard_dir_iterator() override;
+
+        bool is_valid() const override;
+
+        /**
+         * \brief Get the next entry of the folder
+         * \returns 0 if success
+         *          -1 if EOF
+         */
+        int next_entry(dir_entry &entry) override;
+    };
+
+    standard_dir_iterator::standard_dir_iterator(const std::string &name)
+        : dir_iterator(name)
+        , handle(nullptr)
+        , eof(false) {
         dir_name = transform_separators<char>(dir_name, false, get_separator);
+        detail = false;
 
 #if EKA2L1_PLATFORM(POSIX)
         match_pattern = eka2l1::filename(dir_name);
@@ -185,7 +252,7 @@ namespace eka2l1::common {
 #endif
     }
 
-    dir_iterator::~dir_iterator() {
+    standard_dir_iterator::~standard_dir_iterator() {
         if (handle) {
 #if EKA2L1_PLATFORM(WIN32)
             FindClose(reinterpret_cast<HANDLE>(handle));
@@ -199,7 +266,7 @@ namespace eka2l1::common {
         }
     }
 
-    void dir_iterator::cycles_to_next_entry() {
+    void standard_dir_iterator::cycles_to_next_entry() {
 #if EKA2L1_PLATFORM(WIN32)
         DWORD result = FindNextFileW(reinterpret_cast<HANDLE>(handle),
             reinterpret_cast<LPWIN32_FIND_DATAW>(find_data));
@@ -220,11 +287,11 @@ namespace eka2l1::common {
 #endif
     }
 
-    bool dir_iterator::is_valid() const {
+    bool standard_dir_iterator::is_valid() const {
         return (handle != nullptr) && (!eof);
     }
 
-    int dir_iterator::next_entry(dir_entry &entry) {
+    int standard_dir_iterator::next_entry(dir_entry &entry) {
         if (eof) {
             return -1;
         }
@@ -268,6 +335,70 @@ namespace eka2l1::common {
 #endif
 
         return 0;
+    }
+
+#if EKA2L1_PLATFORM(ANDROID)
+    static bool parse_uri_entry_info(const std::string &info, dir_entry &entry) {
+        common::pystr infopy(info);
+        std::vector<common::pystr> comps = infopy.split('|');
+        if (comps.size() != 4) {
+            LOG_ERROR(COMMON, "Can't parse URI content entry info: {}", info);
+            return false;
+        }
+        entry.name = comps[2].std_str();
+        entry.size = comps[1].as_int(0, 10);
+        entry.type = FILE_UNKN;
+
+        if (!comps[0].empty()) {
+            entry.type = (comps[0][0] == 'D') ? FILE_DIRECTORY : FILE_REGULAR;
+        }
+
+        return true;
+    }
+
+    // There's sadly no direct C/C++ interface. If we follow the when needed retrieve next model,
+    // IPC + Java layer will create a horrible performance cost. There are better way to do this
+    // though.
+    struct content_uri_dir_iterator: public dir_iterator {
+    private:
+        std::vector<std::string> file_infos_;
+        std::size_t current_index_;
+
+    public:
+        explicit content_uri_dir_iterator(const std::string &name)
+            : dir_iterator(name)
+            , current_index_(0) {
+            file_infos_ = android::list_content_uri(name);
+        }
+
+        ~content_uri_dir_iterator() override = default;
+
+        bool is_valid() const {
+            return (current_index_ < file_infos_.size());
+        }
+
+        int next_entry(dir_entry &entry) {
+            if (current_index_ >= file_infos_.size()) {
+                return -1;
+            }
+
+            if (!parse_uri_entry_info(file_infos_[current_index_++], entry)) {
+                return -2;
+            }
+
+            return 0;
+        }
+    };
+#endif
+
+    std::unique_ptr<dir_iterator> make_directory_iterator(const std::string &path) {
+#if EKA2L1_PLATFORM(ANDROID)
+        if (is_content_uri(path)) {
+            return std::make_unique<content_uri_dir_iterator>(path);
+        }
+#endif
+
+        return std::make_unique<standard_dir_iterator>(path);
     }
 
     int resize(const std::string &path, const std::uint64_t size) {
@@ -330,6 +461,11 @@ namespace eka2l1::common {
 
         return DeleteFileW(path_w.c_str());
 #else
+#if EKA2L1_PLATFORM(ANDROID)
+        if (is_content_uri(path)) {
+            return (android::remove_file(path) == android::storage_error::SUCCESS);
+        } else
+#endif
         return (::remove(path.c_str()) == 0);
 #endif
     }
@@ -341,6 +477,19 @@ namespace eka2l1::common {
 
         return MoveFileW(path_s_w.c_str(), path_d_w.c_str());
 #else
+#if EKA2L1_PLATFORM(ANDROID)
+        if (is_content_uri(path) && is_content_uri(new_path)) {
+            android::content_uri parent(path);
+
+            if (parent.navigate_up()) {
+                return (android::move_file(path, parent.to_string(), new_path)
+                        == android::storage_error::SUCCESS);
+            } else {
+                LOG_ERROR(COMMON, "Failed to navigate up parent content URI to move file!");
+                return false;
+            }
+        } else
+#endif
         return (rename(path.c_str(), new_path.c_str()) == 0);
 #endif
     }
@@ -352,23 +501,30 @@ namespace eka2l1::common {
 
         return CopyFileW(path_s_w.c_str(), path_d_w.c_str(), !overwrite_if_dest_exists);
 #else
-        if (!eka2l1::exists(target_file)) {
-            return false;
+#if EKA2L1_PLATFORM(ANDROID)
+        if (is_content_uri(target_file) && is_content_uri(dest)) {
+            return (android::copy_file(target_file, dest) == android::storage_error::SUCCESS);
+        } else
+#endif
+        {
+            if (!exists(target_file)) {
+                return false;
+            }
+
+            if (exists(dest) && !overwrite_if_dest_exists) {
+                return false;
+            }
+
+            std::ifstream src(target_file, std::ios::binary);
+            std::ofstream dst(dest, std::ios::binary | std::ios::trunc);
+
+            if (src.fail() || dst.fail()) {
+                return false;
+            }
+
+            dst << src.rdbuf();
+            return true;
         }
-
-        if (eka2l1::exists(dest) && !overwrite_if_dest_exists) {
-            return false;
-        }
-
-        std::ifstream src(target_file, std::ios::binary);
-        std::ofstream dst(dest, std::ios::binary | std::ios::trunc);
-
-        if (src.fail() || dst.fail()) {
-            return false;
-        }
-
-        dst << src.rdbuf();
-        return true;
 #endif
     }
 
@@ -388,15 +544,120 @@ namespace eka2l1::common {
             static_cast<std::uint64_t>(last_modify_time.dwLowDateTime) | (static_cast<std::uint64_t>(last_modify_time.dwHighDateTime) << 32));
 #else
         const std::string name_utf8 = common::ucs2_to_utf8(path);
-        struct stat64 st;
-        auto res = stat64(name_utf8.c_str(), &st);
+#if EKA2L1_PLATFORM(ANDROID)
+        if (eka2l1::is_content_uri(name_utf8)) {
+            std::optional<std::string> info = android::get_file_info_as_string(name_utf8);
+            if (!info.has_value()) {
+                return 0;
+            }
 
-        if (res == -1) {
-            return 0xFFFFFFFFFFFFFFFF;
+            common::pystr str(info.value());
+            std::vector<common::pystr> parts = str.split('|');
+            if (parts.size() < 4) {
+                return 0;
+            }
+
+            // TODO: May not be microseconds, but no reason not to use EPOCH ;)
+            return convert_microsecs_epoch_to_0ad(parts[3].as_int(0, 10));
+        } else
+#endif
+        {
+            struct stat64 st;
+            auto res = stat64(name_utf8.c_str(), &st);
+
+            if (res == -1) {
+                return 0xFFFFFFFFFFFFFFFF;
+            }
+
+            return convert_microsecs_epoch_to_0ad(static_cast<std::uint64_t>(st.st_mtime));
+        }
+#endif
+    }
+
+    void create_directory(std::string path) {
+#if EKA2L1_PLATFORM(POSIX)
+#if EKA2L1_PLATFORM(ANDROID)
+        if (is_content_uri(path)) {
+            android::content_uri uri(path);
+            const std::string folder_name = uri.get_last_part();
+
+            if (uri.navigate_up()) {
+                android::create_directory(uri.to_string(), folder_name);
+            } else {
+                LOG_ERROR(COMMON, "Failed to navigate up URI to create directory!");
+            }
+        } else
+#endif
+        mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+#elif EKA2L1_PLATFORM(WIN32)
+        const std::wstring wpath = common::utf8_to_wstr(path);
+        CreateDirectoryW(wpath.c_str(), NULL);
+#endif
+    }
+
+    bool exists(std::string path) {
+#if EKA2L1_PLATFORM(POSIX)
+#if EKA2L1_PLATFORM(ANDROID)
+        if (is_content_uri(path))
+            return android::file_exists(path);
+#endif
+        struct stat st;
+        auto res = stat(path.c_str(), &st);
+
+        return res != -1;
+#elif EKA2L1_PLATFORM(WIN32)
+        const std::wstring wpath = common::utf8_to_wstr(path);
+        DWORD dw_attrib = GetFileAttributesW(wpath.c_str());
+        return (dw_attrib != INVALID_FILE_ATTRIBUTES);
+#endif
+    }
+
+    void create_directories(std::string path) {
+        std::string crr_path = "";
+
+        path_iterator ite;
+
+        for (ite = path_iterator(path);
+             ite; ite++) {
+            crr_path = add_path(crr_path, add_path(*ite, "/"));
+
+            if (get_file_type(crr_path) != file_type::FILE_DIRECTORY) {
+                create_directory(crr_path);
+            }
+        }
+    }
+
+    bool set_current_directory(const std::string &path) {
+#if EKA2L1_PLATFORM(WIN32)
+        const std::wstring wpath = common::utf8_to_wstr(path);
+        return SetCurrentDirectoryW(wpath.c_str());
+#else
+        return (chdir(path.c_str()) == 0);
+#endif
+    }
+
+    bool get_current_directory(std::string &path) {
+#if EKA2L1_PLATFORM(WIN32)
+        std::wstring buffer(512, L'0');
+        const DWORD written = GetCurrentDirectoryW(static_cast<DWORD>(buffer.length()), reinterpret_cast<wchar_t*>(buffer.data()));
+
+        if (written == 0) {
+            return false;
         }
 
-        return convert_microsecs_epoch_to_0ad(static_cast<std::uint64_t>(st.st_mtime));
+        buffer.resize(written);
+        path = common::wstr_to_utf8(buffer);
+#else
+        char buffer[512];
+
+        if (getcwd(buffer, sizeof(buffer)) == nullptr) {
+            return false;
+        }
+
+        path = std::string(buffer);
 #endif
+
+        return true;
     }
 
     bool is_system_case_insensitive() {
@@ -429,16 +690,19 @@ namespace eka2l1::common {
 
             while (!folder_stacks.empty()) {
                 if (!is_measuring)
-                    eka2l1::create_directories(eka2l1::add_path(dest_folder_to_reside, folder_stacks.top()));
+                    create_directories(eka2l1::add_path(dest_folder_to_reside, folder_stacks.top()));
 
                 const std::string top_path = folder_stacks.top();
 
-                common::dir_iterator iterator(add_path(target_folder, top_path));
-                iterator.detail = true;
+                auto iterator = make_directory_iterator(add_path(target_folder, top_path));
+                if (!iterator) {
+                    return false;
+                }
+                iterator->detail = true;
 
                 folder_stacks.pop();
 
-                while (iterator.next_entry(entry) == 0) {
+                while (iterator->next_entry(entry) == 0) {
                     if ((entry.name == ".") || (entry.name == ".."))
                         continue;
 
@@ -450,7 +714,7 @@ namespace eka2l1::common {
                         if (flags & FOLDER_COPY_FLAG_LOWERCASE_NAME) {
                             if (no_copy) {
                                 if (entry.name != lowercased) {
-                                    if (!common::move_file(iterator.dir_name + entry.name, iterator.dir_name + lowercased)) {
+                                    if (!common::move_file(iterator->dir_name + entry.name, iterator->dir_name + lowercased)) {
                                         return false;
                                     }
 
@@ -472,7 +736,7 @@ namespace eka2l1::common {
                             total_size += entry.size;
                         } else {
                             if (!no_copy) {
-                                if (!common::copy_file(iterator.dir_name + entry.name, eka2l1::add_path(dest_folder_to_reside, top_path) + eka2l1::get_separator() + name_to_use, true)) {
+                                if (!common::copy_file(iterator->dir_name + entry.name, eka2l1::add_path(dest_folder_to_reside, top_path) + eka2l1::get_separator() + name_to_use, true)) {
                                     return false;
                                 }
 
@@ -497,17 +761,21 @@ namespace eka2l1::common {
     }
 
     bool delete_folder(const std::string &target_folder) {
-        if (!eka2l1::exists(target_folder)) {
+        if (!exists(target_folder)) {
             return true;
         }
 
-        common::dir_iterator iterator(target_folder);
-        iterator.detail = true;
+        auto iterator = make_directory_iterator(target_folder);
+        if (!iterator) {
+            return false;
+        }
+
+        iterator->detail = true;
 
         common::dir_entry entry;
 
-        while (iterator.next_entry(entry) == 0) {
-            std::string name = add_path(iterator.dir_name, entry.name);
+        while (iterator->next_entry(entry) == 0) {
+            std::string name = add_path(iterator->dir_name, entry.name);
 
             if (entry.type == common::file_type::FILE_DIRECTORY) {
                 if ((entry.name != ".") && (entry.name != "..")) {
@@ -519,5 +787,66 @@ namespace eka2l1::common {
             common::remove(name);
         }
         return common::remove(target_folder);
+    }
+
+    FILE *open_c_file(const std::string &target_file, const char *mode) {
+#if EKA2L1_PLATFORM(ANDROID)
+        if (is_content_uri(target_file)) {
+            android::content_uri uri(target_file);
+            if (!strcmp(mode, "r") || !strcmp(mode, "rb") || !strcmp(mode, "rt")) {
+                int descriptor = android::open_content_uri_fd(target_file, android::open_content_uri_mode::READ);
+                if (descriptor < 0) {
+                    return nullptr;
+                }
+
+                return fdopen(descriptor, mode);
+            } else if (!strcmp(mode, "w") || !strcmp(mode, "wb") || !strcmp(mode, "wt") || !strcmp(mode, "at") || !strcmp(mode, "a")) {
+                if (!android::file_exists(target_file)) {
+                    const std::string filename = uri.get_last_part();
+                    if (uri.can_navigate_up()) {
+                        android::content_uri parent(target_file);
+                        parent.navigate_up();
+
+                        if (android::create_file(parent.to_string(), filename) != android::storage_error::SUCCESS) {
+                            return nullptr;
+                        }
+                    } else {
+                        return nullptr;
+                    }
+                }
+
+                // After creating the file, we can open it?
+                int descriptor = android::open_content_uri_fd(target_file, android::open_content_uri_mode::READ);
+                if (descriptor < 0) {
+                    return nullptr;
+                }
+
+                FILE *result = fdopen(descriptor, mode);
+
+                if (!result) {
+                    return nullptr;
+                }
+
+                if (!strcmp(mode, "a") || !strcmp(mode, "at")) {
+                    fseek(result, 0, SEEK_END);
+                }
+
+                return result;
+            } else {
+                LOG_ERROR(COMMON, "Unsupported file mode {} to open content file {}", mode,
+                          target_file);
+                return nullptr;
+            }
+        }
+#endif
+
+#if EKA2L1_PLATFORM(WIN32)
+        std::wstring target_file_w = common::utf8_to_wstr(target_file);
+        std::wstring target_mode_w = common::utf8_to_wstr(mode);
+
+        return _wfopen(target_file_w.c_str(), target_mode_w.c_str());
+#else
+        return fopen(target_file.c_str(), mode);
+#endif
     }
 }

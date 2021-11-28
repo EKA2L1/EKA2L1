@@ -113,21 +113,6 @@ namespace eka2l1 {
 
     std::u16string replace_extension(const std::u16string &path, const std::u16string &new_ext);
 
-    /*! \brief Create a directory. */
-    void create_directory(std::string path);
-
-    /*! \brief Check if a file or directory exists. */
-    bool exists(std::string path);
-
-    /*! \brief Check if the path points to a directory. */
-    bool is_dir(std::string path);
-
-    /*! \brief Create directories. */
-    void create_directories(std::string path);
-
-    bool set_current_directory(const std::string &path);
-    bool get_current_directory(std::string &path);
-
     bool is_separator(const char sep);
     bool is_separator(const char16_t sep);
 
@@ -135,7 +120,6 @@ namespace eka2l1 {
     char16_t get_separator_16(bool symbian_use = false);
 
     bool is_content_uri(const std::string &path);
-    std::uint32_t open_content_uri(const std::string &path, const std::string &mode);
 
     template <typename T>
     std::basic_string<T> transform_separators(std::basic_string<T> path, bool symbian_use, std::function<T(bool)> separator_func) {

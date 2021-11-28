@@ -330,12 +330,7 @@ namespace eka2l1 {
         void init(const utf16_str &vfs_path, const utf16_str &real_path, const int mode) {
             // Disable directory check here
             closed = false;
-
-#if EKA2L1_PLATFORM(WIN32)
-            file = _wfopen(common::ucs2_to_wstr(real_path).c_str(), translate_mode_w(mode));
-#else
-            file = fopen(common::ucs2_to_utf8(real_path).c_str(), translate_mode(mode));
-#endif
+            file = common::open_c_file(common::ucs2_to_utf8(real_path).c_str(), translate_mode(mode));
 
             physical_path = real_path;
 
@@ -482,7 +477,7 @@ namespace eka2l1 {
         std::regex filter;
         std::string vir_path;
 
-        common::dir_iterator iterator;
+        std::unique_ptr<common::dir_iterator> iterator;
         common::dir_entry entry;
 
         std::optional<entry_info> peek_info;
@@ -498,13 +493,17 @@ namespace eka2l1 {
             const std::uint32_t attrib)
             : directory(attrib)
             , filter(common::wildcard_to_regex_string(common::lowercase_string(filter)))
-            , iterator(phys_path)
             , vir_path(vir_path)
             , utype(type)
             , inst(inst)
             , peeking(false)
             , is_root(false) {
-            iterator.detail = true;
+            iterator = common::make_directory_iterator(phys_path);
+            if (!iterator) {
+                LOG_ERROR(VFS, "Unable to open directory {}", phys_path);
+                return;
+            }
+            iterator->detail = true;
             is_root = eka2l1::relative_path(vir_path).empty();
         }
 
@@ -515,12 +514,12 @@ namespace eka2l1 {
             }
 
             while (true) {
-                if (!iterator.is_valid()) {
+                if (!iterator->is_valid()) {
                     return std::optional<entry_info>{};
                 }
 
                 std::string name = "";
-                int error_code = iterator.next_entry(entry);
+                int error_code = iterator->next_entry(entry);
 
                 if (error_code != 0) {
                     return std::optional<entry_info>{};
@@ -558,7 +557,7 @@ namespace eka2l1 {
                 if ((attribute & io_attrib_include_file) && (attribute & io_attrib_allow_uid)) {
                     epoc::uid_type temp_uid;
 
-                    common::ro_std_file_stream temp_file_holder(eka2l1::add_path(iterator.dir_name, entry.name), true);
+                    common::ro_std_file_stream temp_file_holder(eka2l1::add_path(iterator->dir_name, entry.name), true);
                     if (temp_file_holder.read(reinterpret_cast<char *>(&temp_uid), sizeof(temp_uid))) {
                         if (((utype.uid1 != 0) && (utype.uid1 != temp_uid.uid1)) || ((utype.uid2 != 0) && (utype.uid2 != temp_uid.uid2))
                             || ((utype.uid3 != 0) && (utype.uid3 != temp_uid.uid3))) {
@@ -755,7 +754,7 @@ namespace eka2l1 {
 
         bool exists(const std::u16string &path) override {
             std::optional<std::u16string> real_path = get_real_physical_path(path);
-            return real_path ? eka2l1::exists(common::ucs2_to_utf8(*real_path)) : false;
+            return real_path ? common::exists(common::ucs2_to_utf8(*real_path)) : false;
         }
 
         bool replace(const std::u16string &old_path, const std::u16string &new_path) override {
@@ -777,7 +776,7 @@ namespace eka2l1 {
                 return false;
             }
 
-            eka2l1::create_directories(common::ucs2_to_utf8(*real_path));
+            common::create_directories(common::ucs2_to_utf8(*real_path));
             return true;
         }
 
@@ -788,7 +787,7 @@ namespace eka2l1 {
                 return false;
             }
 
-            eka2l1::create_directory(common::ucs2_to_utf8(*real_path));
+            common::create_directory(common::ucs2_to_utf8(*real_path));
 
             return true;
         }
@@ -865,7 +864,7 @@ namespace eka2l1 {
 
             std::string new_path_utf8 = common::ucs2_to_utf8(*new_path);
 
-            if (!eka2l1::exists(new_path_utf8)) {
+            if (!common::exists(new_path_utf8)) {
                 return std::unique_ptr<directory>(nullptr);
             }
 
@@ -882,7 +881,7 @@ namespace eka2l1 {
 
             std::string real_path_utf8 = common::ucs2_to_utf8(*real_path);
 
-            if (!eka2l1::exists(real_path_utf8)) {
+            if (!common::exists(real_path_utf8)) {
                 return std::nullopt;
             }
 
@@ -940,7 +939,7 @@ namespace eka2l1 {
 
             std::string real_path_utf8 = common::ucs2_to_utf8(*real_path);
 
-            if (!(mode & WRITE_MODE) && (!eka2l1::exists(real_path_utf8) || common::is_file(real_path_utf8, common::FILE_DIRECTORY))) {
+            if (!(mode & WRITE_MODE) && (!common::exists(real_path_utf8) || common::is_file(real_path_utf8, common::FILE_DIRECTORY))) {
                 return nullptr;
             }
 

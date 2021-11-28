@@ -147,7 +147,7 @@ namespace eka2l1 {
 
         void packages::migrate_legacy_registries() {
             const std::string app_registry_file_path = add_path(conf->storage, APP_REGISTRY_FILENAME);
-            if (!eka2l1::exists(app_registry_file_path)) {
+            if (!common::exists(app_registry_file_path)) {
                 return;
             }
 
@@ -186,7 +186,7 @@ namespace eka2l1 {
                 obj.supported_language_ids.push_back(static_cast<std::int32_t>(language::en));
 
                 const std::string bucket_path = get_bucket_stream_path(conf, obj.uid);
-                if (eka2l1::exists(bucket_path)) {
+                if (common::exists(bucket_path)) {
                     std::ifstream bucket_stream(bucket_path);
                     std::string virtual_path;
 

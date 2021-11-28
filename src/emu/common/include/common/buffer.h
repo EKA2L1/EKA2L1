@@ -22,6 +22,7 @@
 
 #include <common/algorithm.h>
 #include <common/platform.h>
+#include <common/fileutils.h>
 #include <common/cvt.h>
 
 #include <cstdint>
@@ -234,11 +235,7 @@ namespace eka2l1 {
 
         public:
             explicit ro_std_file_stream(const std::string &path, const bool binary) {
-#if EKA2L1_PLATFORM(WIN32)
-                fi_ = _wfopen(common::utf8_to_wstr(path).c_str(), binary ? L"rb" : L"r");
-#else
-                fi_ = fopen(path.c_str(), binary ? "rb" : "r");
-#endif
+                fi_ = common::open_c_file(path, binary ? "rb" : "r");
             }
 
             ~ro_std_file_stream() {
@@ -296,36 +293,51 @@ namespace eka2l1 {
         };
 
         class wo_std_file_stream : public common::wo_stream {
-            mutable std::ofstream fo_;
+            mutable FILE *fo_;
 
         public:
             explicit wo_std_file_stream(const std::string &path, const bool binary)
-#if EKA2L1_PLATFORM(WIN32)
-                : fo_(common::utf8_to_wstr(path), binary ? std::ios_base::binary : std::ios_base::out) {
-#else
-                : fo_(path, binary ? std::ios_base::binary : std::ios_base::out) {
-#endif
+                : fo_(nullptr) {
+                fo_ = common::open_c_file(path, binary ? "wb" : "w");
+            }
+
+            ~wo_std_file_stream() {
+                if (fo_) {
+                    fclose(fo_);
+                }
             }
 
             std::uint64_t write(const void *buf, const std::uint64_t size) override {
-                const std::uint64_t pos = fo_.tellp();
-                fo_.write(reinterpret_cast<const char *>(buf), size);
-                const std::uint64_t current_pos = fo_.tellp();
+                if (!fo_) {
+                    return 0;
+                }
+
+                const std::uint64_t pos = ftell(fo_);
+                fwrite(buf, 1, size, fo_);
+                const std::uint64_t current_pos = ftell(fo_);
 
                 return current_pos - pos;
             }
 
             bool write_text(const std::string &str) override {
-                fo_ << str;
-                return fo_.good();
+                if (!fo_) {
+                    return false;
+                }
+
+                fwrite(str.data(), 1, str.size(), fo_);
+                return true;
             }
 
             void seek(const std::int64_t amount, common::seek_where wh) override {
-                fo_.seekp(amount, common::beg ? std::ios::beg : (common::cur ? std::ios::cur : std::ios::end));
+                if (!fo_) {
+                    return;
+                }
+
+                fseek(fo_, amount, common::beg ? SEEK_SET : (common::cur ? SEEK_CUR : SEEK_END));
             }
 
             bool valid() override {
-                return !fo_.fail();
+                return fo_;
             }
 
             std::uint64_t left() override {
@@ -333,10 +345,16 @@ namespace eka2l1 {
             }
 
             std::uint64_t tell() const override {
-                return fo_.tellp();
+                if (!fo_) {
+                    return 0;
+                }
+                return ftell(fo_);
             }
 
             std::uint64_t size() override {
+                if (!fo_) {
+                    return 0;
+                }
                 const std::uint64_t cur_pos = tell();
                 seek(0, common::end);
                 const std::uint64_t s = tell();

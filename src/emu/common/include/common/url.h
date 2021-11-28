@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2021 EKA2L1 Team.
+ * Copyright (c) 2021- EKA2L1 Team.
  *
- * This file is part of EKA2L1 project.
+ * This file is part of EKA2L1 project
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,15 +17,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <common/android/jniutils.h>
-#include <drivers/hwrm/backend/vibration_jdk.h>
-#include <jni.h>
+#pragma once
 
-namespace eka2l1::drivers::hwrm {
-    void vibrator_jdk::vibrate(const std::uint32_t millisecs, const std::int16_t intensity) {
-        JNIEnv *env = common::jni::environment();
-        jclass clazz = common::jni::find_class("com/github/eka2l1/emu/Emulator");
-        jmethodID vibrate_method = env->GetStaticMethodID(clazz, "vibrate", "(I)Z");
-        jboolean result = env->CallStaticBooleanMethod(clazz, vibrate_method, (jint)millisecs);
-    }
+#include <string>
+
+namespace eka2l1::common {
+    std::string uri_encode(const std::string &src);
+    std::string uri_decode(const std::string &src);
 }
