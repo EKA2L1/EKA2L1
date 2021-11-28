@@ -20,6 +20,7 @@
 #include <common/buffer.h>
 #include <common/cvt.h>
 #include <common/path.h>
+#include <common/pystr.h>
 #include <qt/applistwidget.h>
 #include <services/applist/applist.h>
 #include <services/fbs/fbs.h>
@@ -207,7 +208,7 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const
                     data.resize(dest_size);
                     file_mif_parser.read_mif_entry(0, data.data(), dest_size);
 
-                    const std::string cached_path = fmt::format("cache//debinarized_{}.svg", app_name.toStdString());
+                    const std::string cached_path = fmt::format("cache/debinarized_{}.svg", common::pystr(app_name).strip_reserverd().strip().std_str());
 
                     eka2l1::common::ro_buf_stream inside_stream(data.data(), data.size());
                     std::unique_ptr<eka2l1::common::wo_std_file_stream> outfile_stream = std::make_unique<eka2l1::common::wo_std_file_stream>(cached_path, true);
