@@ -452,6 +452,10 @@ namespace eka2l1::epoc {
         pr->set_flags(org_flags ^ new_flags);
     }
 
+    BRIDGE_FUNC(void, process_set_flags_eka1, std::uint32_t clear_mask, std::uint32_t set_mask, kernel::handle h) {
+        process_set_flags(kern, h, clear_mask, set_mask);
+    }
+
     BRIDGE_FUNC(std::int32_t, process_set_priority, kernel::handle h, std::int32_t process_priority) {
         process_ptr pr = kern->get<kernel::process>(h);
 
@@ -5911,6 +5915,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC0000E, logical_channel_do_control_eka1),
         BRIDGE_REGISTER(0xC0001D, process_resume),
         BRIDGE_REGISTER(0xC00024, process_set_priority_eka1),
+        BRIDGE_REGISTER(0xC00026, process_set_flags_eka1),
         BRIDGE_REGISTER(0xC0002B, semaphore_signal_eka1),
         BRIDGE_REGISTER(0xC0002E, server_receive),
         BRIDGE_REGISTER(0xC0002F, server_cancel),
@@ -6021,6 +6026,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC0000E, logical_channel_do_control_eka1),
         BRIDGE_REGISTER(0xC0001D, process_resume),
         BRIDGE_REGISTER(0xC00024, process_set_priority_eka1),
+        BRIDGE_REGISTER(0xC00026, process_set_flags_eka1),
         BRIDGE_REGISTER(0xC0002B, semaphore_signal_eka1),
         BRIDGE_REGISTER(0xC0002E, server_receive),
         BRIDGE_REGISTER(0xC0002F, server_cancel),
@@ -6133,6 +6139,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC0000E, logical_channel_do_control_eka1),
         BRIDGE_REGISTER(0xC0001D, process_resume),
         BRIDGE_REGISTER(0xC00024, process_set_priority_eka1),
+        BRIDGE_REGISTER(0xC00026, process_set_flags_eka1),
         BRIDGE_REGISTER(0xC0002B, semaphore_signal_eka1),
         BRIDGE_REGISTER(0xC0002E, server_receive),
         BRIDGE_REGISTER(0xC0002F, server_cancel),
