@@ -58,7 +58,10 @@ namespace eka2l1::common::android {
 #define CHECK_METHOD_GET_OK(x) if (x == nullptr) return;
 
     void register_storage_callbacks(JNIEnv *env) {
-        emulator_clazz = jni::find_class("com/github/eka2l1/emu/Emulator");
+        jclass temp_clazz = jni::find_class("com/github/eka2l1/emu/Emulator");
+        emulator_clazz = (jclass) env->NewGlobalRef(temp_clazz);  
+        env->DeleteLocalRef(temp_clazz);
+
         open_content_uri_method_id = env->GetStaticMethodID(emulator_clazz, "openContentUri",
                                           "(Ljava/lang/String;Ljava/lang/String;)I");
         CHECK_METHOD_GET_OK(open_content_uri_method_id);
