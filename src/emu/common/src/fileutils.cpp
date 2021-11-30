@@ -490,7 +490,15 @@ namespace eka2l1::common {
             }
         } else
 #endif
-        return (rename(path.c_str(), new_path.c_str()) == 0);
+        {
+            if (rename(path.c_str(), new_path.c_str()) == 0) {
+                return true;
+            } else if (copy_file(path, new_path, true)) {
+                return remove(path);
+            } else {
+                return false;
+            }
+        }
 #endif
     }
 
@@ -507,22 +515,45 @@ namespace eka2l1::common {
         } else
 #endif
         {
-            if (!exists(target_file)) {
+#define BSIZE 16384
+            char buffer[BSIZE];
+
+            // Open input file
+            FILE *input = open_c_file(target_file, "rb");
+            if (!input) {
                 return false;
             }
 
-            if (exists(dest) && !overwrite_if_dest_exists) {
+            // open output file
+            FILE *output = open_c_file(dest, "wb");
+            if (!output) {
+                fclose(input);
                 return false;
             }
 
-            std::ifstream src(target_file, std::ios::binary);
-            std::ofstream dst(dest, std::ios::binary | std::ios::trunc);
+            // copy loop
+            while (!feof(input)) {
+                // read input
+                int rnum = fread(buffer, sizeof(char), BSIZE, input);
+                if (rnum != BSIZE) {
+                    if (ferror(input) != 0) {
+                        fclose(input);
+                        fclose(output);
+                        return false;
+                    }
+                }
 
-            if (src.fail() || dst.fail()) {
-                return false;
+                // write output
+                int wnum = fwrite(buffer, sizeof(char), rnum, output);
+                if (wnum != rnum) {
+                    fclose(input);
+                    fclose(output);
+                    return false;
+                }
             }
-
-            dst << src.rdbuf();
+            // close flushes
+            fclose(input);
+            fclose(output);
             return true;
         }
 #endif
