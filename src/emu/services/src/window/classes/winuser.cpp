@@ -264,12 +264,12 @@ namespace eka2l1::epoc {
         const bool size_changed = (new_size != abs_rect.size);
         const bool pos_changed = (pos_diff != eka2l1::vec2(0, 0));
 
+        handle_extent_changed(new_size, top);
+
         abs_rect.top += pos_diff;
         abs_rect.size = new_size;
 
         pos = top;
-
-        handle_extent_changed(size_changed, pos_changed);
 
         if (pos_changed) {
             // Change the absolute position of children too!
@@ -486,6 +486,10 @@ namespace eka2l1::epoc {
 
         if (!prototype_irect.empty() && whole_win.contains(prototype_irect)) {
             invalidate(prototype_irect);
+
+            if (scr->scr_config.flicker_free) {
+                background_region.add_rect(prototype_irect);
+            }
         }
 
         context.complete(epoc::error_none);
@@ -564,53 +568,6 @@ namespace eka2l1::epoc {
         }
 
         context.complete(epoc::error_none);
-    }
-
-    bool canvas_base::draw(drivers::graphics_command_list_builder *builder) {
-        if (!builder) {
-            return false;
-        }
-
-        if (!driver_win_id || !can_be_physically_seen()) {
-            // No need to redraw this window yet. It doesn't even have any content ready.
-            return false;
-        }
-
-        // Check if extent is just invalid
-        if (size().x == 0 || size().y == 0) {
-            // No one can see this. Leave it for now.
-            return false;
-        }
-
-
-        // If it does not have content drawn to it, it makes no sense to draw the background
-        // Else, there's a flag in window server that enables clear on any siutation
-        if (has_redraw_content()) {
-            eka2l1::vec2 abs_pos = absolute_position();
-            if (clear_color_enable) {
-                auto color_extracted = common::rgba_to_vec(clear_color);
-
-                if (display_mode() <= epoc::display_mode::color16mu) {
-                    color_extracted[3] = 255;
-                }
-
-                builder->set_brush_color_detail({ color_extracted[0], color_extracted[1], color_extracted[2], color_extracted[3] });
-                builder->draw_rectangle(eka2l1::rect(abs_pos, size()));
-            } else {
-                builder->set_brush_color(eka2l1::vec3(255, 255, 255));
-            }
-
-            // Draw it onto current binding buffer
-            // TODO: We can probably also make use of visible regions and stencil buffer to reduce and provide
-            // more accurate drawing results. I don't want to complicated it more now, since there's transparent region
-            // not implemented (region that is visible even though another window is on top of it)
-            builder->draw_bitmap(driver_win_id, 0, eka2l1::rect(abs_pos, { 0, 0 }),
-                eka2l1::rect({ 0, 0 }, size()), eka2l1::vec2(0, 0), 0.0f, 0);
-
-            return true;
-        }
-
-        return false;
     }
 
     bool canvas_base::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -859,13 +816,37 @@ namespace eka2l1::epoc {
 
     }
 
-    void free_modify_canvas::handle_extent_changed(const bool size_changed, const bool pos_changed) {
-        if (size_changed) {
-            redraw_region.make_empty();
+    void free_modify_canvas::handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) {
+        if (new_size != abs_rect.size) {
             resize_needed = true;
 
-            // We need to invalidate the whole new window
-            invalidate(bounding_rect());
+            eka2l1::rect new_bounding_rect(eka2l1::vec2{ 0 , 0 }, new_size);
+
+            // Old WSERV behaviour not using offscreen bitmap will only clear region that is
+            // explicitly invalidated by the window server. This one is, but the one submitted by
+            // invalidate alone can't be considered
+            if ((new_size.x > abs_rect.size.x) || (new_size.y > abs_rect.size.y)) {
+                if (!scr->scr_config.blt_offscreen && !scr->scr_config.flicker_free) {
+                    common::region newly_expanded;
+                    newly_expanded.add_rect(new_bounding_rect);
+                    newly_expanded.eliminate(eka2l1::rect(eka2l1::vec2{ 0, 0 }, abs_rect.size));
+
+                    for (std::size_t i = 0; i < newly_expanded.rects_.size(); i++) {
+                        background_region.add_rect(newly_expanded.rects_[i]);
+                    }
+                }
+    
+                redraw_region.make_empty();
+                invalidate(new_bounding_rect);
+            } else {
+                redraw_region.clip(new_bounding_rect);
+            }
+
+            if (!scr->scr_config.blt_offscreen && scr->scr_config.flicker_free) {
+                // Clear the whole background
+                background_region.make_empty();
+                background_region.add_rect(eka2l1::rect(eka2l1::vec2{ 0, 0 }, new_size));
+            }
         }
     }
 
@@ -992,6 +973,58 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_none);
     }
 
+    bool free_modify_canvas::draw(drivers::graphics_command_list_builder *builder) {
+        if (!builder) {
+            return false;
+        }
+
+        if (!driver_win_id || !can_be_physically_seen()) {
+            // No need to redraw this window yet. It doesn't even have any content ready.
+            return false;
+        }
+
+        // Check if extent is just invalid
+        if (size().x == 0 || size().y == 0) {
+            // No one can see this. Leave it for now.
+            return false;
+        }
+
+        // If it does not have content drawn to it, it makes no sense to draw the background
+        // Else, there's a flag in window server that enables clear on any siutation
+        if (has_redraw_content()) {
+            eka2l1::vec2 abs_pos = absolute_position();
+            if (!scr->scr_config.blt_offscreen && clear_color_enable && !background_region.empty()) {
+                background_region.advance(abs_pos);
+                clip_region(*builder, background_region);
+
+                auto color_extracted = common::rgba_to_vec(clear_color);
+
+                if (display_mode() <= epoc::display_mode::color16mu) {
+                    color_extracted[3] = 255;
+                }
+
+                builder->set_brush_color_detail({ color_extracted[0], color_extracted[1], color_extracted[2], color_extracted[3] });
+                builder->draw_rectangle(eka2l1::rect(abs_pos, size()));
+
+                background_region.make_empty();
+            } else {
+                builder->set_brush_color(eka2l1::vec3(255, 255, 255));
+                builder->set_clipping(false);
+            }
+
+            // Draw it onto current binding buffer
+            // TODO: We can probably also make use of visible regions and stencil buffer to reduce and provide
+            // more accurate drawing results. I don't want to complicated it more now, since there's transparent region
+            // not implemented (region that is visible even though another window is on top of it)
+            builder->draw_bitmap(driver_win_id, 0, eka2l1::rect(abs_pos, { 0, 0 }),
+                eka2l1::rect({ 0, 0 }, size()), eka2l1::vec2(0, 0), 0.0f, 0);
+
+            return true;
+        }
+
+        return false;
+    }
+
     bool free_modify_canvas::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         // LOG_TRACE(SERVICE_WINDOW, "Redraw canvas opcode {}", cmd.header.op);
 
@@ -1049,8 +1082,8 @@ namespace eka2l1::epoc {
         , bitmap_(nullptr) {
     }
 
-    void bitmap_backed_canvas::handle_extent_changed(const bool size_changed, const bool pos_changed) {
-        if (size_changed && bitmap_) {
+    void bitmap_backed_canvas::handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) {
+        if ((abs_rect.size != new_size) && bitmap_) {
             LOG_WARN(SERVICE_WINDOW, "Backed up window size changed but FBS bitmap resize not yet supported!");
         }
     }
@@ -1179,6 +1212,41 @@ namespace eka2l1::epoc {
 
         ctx.complete(epoc::error_none);
         canvas_base::take_action_on_change(ctx.msg->own_thr);
+    }
+
+    bool bitmap_backed_canvas::draw(drivers::graphics_command_list_builder *builder) {
+        if (!builder) {
+            return false;
+        }
+
+        if (!driver_win_id || !can_be_physically_seen()) {
+            // No need to redraw this window yet. It doesn't even have any content ready.
+            return false;
+        }
+
+        // Check if extent is just invalid
+        if (size().x == 0 || size().y == 0) {
+            // No one can see this. Leave it for now.
+            return false;
+        }
+
+        eka2l1::vec2 abs_pos = absolute_position();
+
+        if (!scr->scr_config.blt_offscreen && clear_color_enable) {
+            auto color_extracted = common::rgba_to_vec(clear_color);
+
+            if (display_mode() <= epoc::display_mode::color16mu) {
+                color_extracted[3] = 255;
+            }
+
+            builder->set_brush_color_detail({ color_extracted[0], color_extracted[1], color_extracted[2], color_extracted[3] });
+            builder->draw_rectangle(eka2l1::rect(abs_pos, size()));
+        }
+        
+        builder->draw_bitmap(driver_win_id, 0, eka2l1::rect(abs_pos, { 0, 0 }),
+            eka2l1::rect({ 0, 0 }, size()), eka2l1::vec2(0, 0), 0.0f, 0);
+
+        return true;
     }
 
     bool bitmap_backed_canvas::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {        

@@ -94,10 +94,10 @@ namespace eka2l1::epoc {
         ~canvas_base() override;
 
         virtual void wipeout();
-        virtual bool draw(drivers::graphics_command_list_builder *builder);
+        virtual bool draw(drivers::graphics_command_list_builder *builder) = 0;
 
         virtual void on_activate() = 0;
-        virtual void handle_extent_changed(const bool size_changed, const bool pos_changed) = 0;
+        virtual void handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) = 0;
 
         void prepare_driver_bitmap();
 
@@ -185,7 +185,7 @@ namespace eka2l1::epoc {
             const epoc::display_mode dmode, const std::uint32_t client_handle);
 
         void on_activate() override {}
-        void handle_extent_changed(const bool size_changed, const bool pos_changed) override {}
+        void handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) override {}
         
         bool draw(drivers::graphics_command_list_builder *builder) override;
     };
@@ -197,7 +197,7 @@ namespace eka2l1::epoc {
         void create_backed_bitmap();
 
         void on_activate() override {}
-        void handle_extent_changed(const bool size_changed, const bool pos_changed) override;
+        void handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) override;
 
         explicit bitmap_backed_canvas(window_server_client_ptr client, screen *scr, window *parent,
             const epoc::display_mode dmode, const std::uint32_t client_handle);
@@ -210,10 +210,12 @@ namespace eka2l1::epoc {
         void take_action_on_change(kernel::thread *drawer) override;
 
         void sync_from_bitmap(std::optional<common::region> region = std::nullopt);
+        bool draw(drivers::graphics_command_list_builder *builder) override;
     };
 
     struct free_modify_canvas : public canvas_base {
         common::region redraw_region;
+        common::region background_region;           // Region to paint background on screen
         eka2l1::rect redraw_rect_curr;
 
         explicit free_modify_canvas(window_server_client_ptr client, screen *scr, window *parent,
@@ -221,7 +223,7 @@ namespace eka2l1::epoc {
 
         void invalidate(const eka2l1::rect &irect);
         void on_activate() override;
-        void handle_extent_changed(const bool size_changed, const bool pos_changed) override;
+        void handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) override;
 
         // ===================== OPCODE IMPLEMENTATIONS ===========================
         void begin_redraw(service::ipc_context &context, ws_cmd &cmd);
@@ -233,5 +235,6 @@ namespace eka2l1::epoc {
         void get_invalid_region(service::ipc_context &context, ws_cmd &cmd);
 
         bool execute_command(service::ipc_context &context, ws_cmd &cmd) override;
+        bool draw(drivers::graphics_command_list_builder *builder) override;
     };
 }

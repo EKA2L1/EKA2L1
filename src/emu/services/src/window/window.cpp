@@ -1250,6 +1250,8 @@ namespace eka2l1 {
         }
 
         bool is_auto_clear = false;
+        bool flicker_free = kern->is_eka1() ? false : true;
+        bool blit_offscreen = kern->is_eka1() ? false : true;
 
         common::ini_node_ptr auto_clear_node = ws_config.find("AUTOCLEAR");
         if (auto_clear_node) {
@@ -1259,6 +1261,14 @@ namespace eka2l1 {
             if (auto_clear_pair->get(&auto_clear_value, 1, 0) == 1) {
                 is_auto_clear = (auto_clear_value != 0);
             }
+        }
+
+        if (ws_config.find("FLICKERFREEREDRAW")) {
+            flicker_free = true;
+        }
+        
+        if (ws_config.find("BLTOFFSCREENBITMAP")) {
+            blit_offscreen = true;
         }
 
         common::ini_node *screen_node = nullptr;
@@ -1291,6 +1301,8 @@ namespace eka2l1 {
             scr.screen_number = total_screen - 1;
             scr.disp_mode = scr_mode_global;
             scr.auto_clear = is_auto_clear;
+            scr.flicker_free = flicker_free;
+            scr.blt_offscreen = blit_offscreen;
 
             int total_mode = 0;
             bool one_mode_only = false;

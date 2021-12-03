@@ -76,6 +76,7 @@ namespace eka2l1 {
             return;
         }
 
+        cmd_builder.clear({ 0, 0, 0, 0 }, drivers::draw_buffer_bit_stencil_buffer);
         cmd_builder.set_stencil(true);
 
         // Try to fill region rects with 1 in stencil buffer.

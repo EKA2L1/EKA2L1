@@ -103,7 +103,6 @@ namespace eka2l1::epoc {
         cmd_builder->set_depth(false);
 
         cmd_builder->set_viewport(viewport);
-        cmd_builder->clear({ 0, 0, 0, 0 }, drivers::draw_buffer_bit_stencil_buffer);
 
         // Reset clipping. This is not mentioned in doc but is in official source code.
         // See gc.cpp file. Opcode EWsGcOpActivate
