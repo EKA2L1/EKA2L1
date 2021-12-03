@@ -36,6 +36,15 @@ namespace eka2l1::common {
         }
 
         /**
+         * @brief       Move the region by certain amount of units.
+         * 
+         * @param       amount      The number of X and Y units to move.
+         */
+        void advance(const eka2l1::vec2 &amount);
+
+        void clip(const eka2l1::rect &bounding);
+
+        /**
          * @brief       Check if two regions are identical in terms of rectangles it contains
          * 
          * Note that if your rectangle are splitted to more smaller part, this can't check that. Hence

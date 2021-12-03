@@ -173,4 +173,33 @@ namespace eka2l1::common {
 
         return true;
     }
+
+    void region::advance(const eka2l1::vec2 &amount) {
+        for (std::size_t i = 0; i < rects_.size(); i++) {
+            rects_[i].top += amount;
+        }
+    }
+
+    void region::clip(const eka2l1::rect &bounding) {
+        eka2l1::vec2 top_left = bounding.top;
+        eka2l1::vec2 bottom_right = bounding.bottom_right();
+
+        for (std::size_t i = 0; i < rects_.size(); i++) {
+            if (rects_[i].top.x < top_left.x) {
+                rects_[i].top.x = top_left.x;
+            }
+
+            if (rects_[i].top.y < top_left.y) {
+                rects_[i].top.x = top_left.x;
+            }
+
+            if (rects_[i].bottom_right().x > bottom_right.x) {
+                rects_[i].size.x = bottom_right.x - rects_[i].top.x;
+            }
+            
+            if (rects_[i].bottom_right().y > bottom_right.y) {
+                rects_[i].size.y = bottom_right.y - rects_[i].top.y;
+            }
+        }
+    }
 }

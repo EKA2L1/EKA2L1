@@ -136,6 +136,10 @@ namespace eka2l1 {
             return (x < rhs.x && y < rhs.y);
         }
 
+        bool operator>(const vec2 &rhs) const {
+            return (x > rhs.x && y > rhs.y);
+        }
+
         void operator+=(const vec2 &rhs) {
             x += rhs.x;
             y += rhs.y;
