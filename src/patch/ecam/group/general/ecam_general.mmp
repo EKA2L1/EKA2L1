@@ -1,0 +1,34 @@
+/*
+============================================================================
+ Name		: ecam_general.mmp
+ Author	  : 
+ Copyright   : 
+ Description : This is the project specification file for ecam_general.
+============================================================================
+*/
+
+TARGET		  ecam_general.dll
+TARGETTYPE	  dll
+UID			 0x10003B19 0xee000006
+
+USERINCLUDE	    ..\..\inc
+SYSTEMINCLUDE   \epoc32\include ..\..\..\priv\inc
+
+SOURCEPATH	    ..\..\src
+
+SOURCE          camcappic.cpp
+SOURCE          camcapvid.cpp
+SOURCE          camgeneral.cpp
+SOURCE          camstswatch.cpp
+SOURCE          camviewfinder.cpp
+SOURCE          dispatch.s
+
+nostrictdef
+
+LIBRARY		    euser.lib
+STATICLIBRARY   priv.lib
+
+DEFFILE ..\..\eabi\ecam_general.def
+
+DEBUGGABLE_UDEBONLY
+
