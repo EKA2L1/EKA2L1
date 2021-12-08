@@ -113,7 +113,7 @@ static void mode_change_screen(void *userdata, eka2l1::epoc::screen *scr, const 
 
 static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, const bool is_dsa, const bool need_wait = true) {
     eka2l1::desktop::emulator *state_ptr = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
-    if (!state_ptr) {
+    if (!state_ptr || !state_ptr->graphics_driver) {
         return;
     }
 
