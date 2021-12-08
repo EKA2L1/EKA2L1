@@ -62,7 +62,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="44"/>
       <source>Search</source>
-      <translation>Search</translation>
+      <translation>搜索</translation>
     </message>
   </context>
   <context>
@@ -95,7 +95,7 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="94"/>
       <source>Device dump (RPKG + ROM)</source>
-      <translation>设备转储(RRPKG + ROM)</translation>
+      <translation>设备转储(RPKG + ROM)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="99"/>
@@ -105,7 +105,7 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="125"/>
       <source>Install</source>
-      <translation>Install</translation>
+      <translation>安装</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="138"/>
@@ -233,7 +233,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="73"/>
       <source>Install</source>
-      <translation>Install</translation>
+      <translation>安装</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="96"/>
@@ -258,7 +258,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="132"/>
       <source>About</source>
-      <translation>About</translation>
+      <translation>关于</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="137"/>
@@ -283,7 +283,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="152"/>
       <source>Settings</source>
-      <translation>Settings</translation>
+      <translation>设置</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="160"/>
@@ -503,7 +503,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
       <source>Search</source>
-      <translation>Search</translation>
+      <translation>搜索</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="66"/>
@@ -566,7 +566,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="20"/>
       <source>Settings</source>
-      <translation>Settings</translation>
+      <translation>设置</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="36"/>
@@ -778,7 +778,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="538"/>
       <source>Devices</source>
-      <translation>Devices</translation>
+      <translation>设备</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="555"/>
@@ -789,7 +789,7 @@
       <location filename="../src/settings_dialog.ui" line="578"/>
       <location filename="../src/settings_dialog.ui" line="936"/>
       <source>Rename</source>
-      <translation>Rename</translation>
+      <translation>重命名</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="589"/>
