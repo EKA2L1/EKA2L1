@@ -39,55 +39,55 @@
 .global ECamDuplicate
 
 ECamGetNumberOfCameras:
-    CallHleDispatch 0x50
-
-ECamCreate:
-    CallHleDispatch 0x51
-
-ECamClaim:
-    CallHleDispatch 0x52
-
-ECamRelease:
-    CallHleDispatch 0x53
-
-ECamPowerOn:
-    CallHleDispatch 0x54
-
-ECamPowerOff:
-    CallHleDispatch 0x55
-
-ECamSetParameter:
-    CallHleDispatch 0x56
-
-ECamQueryCameraInfo:
-    CallHleDispatch 0x57
-
-ECamQueryStillImageSize:
-    CallHleDispatch 0x58
-
-ECamTakeImage:
-    CallHleDispatch 0x59
-
-ECamCancelTakeImage:
-    CallHleDispatch 0x5A
-
-ECamReceiveImage:
-    CallHleDispatch 0x5B
-    
-ECamQueryVideoFrameDimension:
-    CallHleDispatch 0x5C
-
-ECamQueryVideoFrameRate:
-    CallHleDispatch 0x5D
-
-ECamTakeVideo:
-    CallHleDispatch 0x5E
-
-ECamReceiveVideoBuffer:
-    CallHleDispatch 0x5F
-
-ECamCancelTakeVideo:
     CallHleDispatch 0x60
 
-ECamDuplicate:
+ECamCreate:
     CallHleDispatch 0x61
+
+ECamClaim:
+    CallHleDispatch 0x62
+
+ECamRelease:
+    CallHleDispatch 0x63
+
+ECamPowerOn:
+    CallHleDispatch 0x64
+
+ECamPowerOff:
+    CallHleDispatch 0x65
+
+ECamSetParameter:
+    CallHleDispatch 0x66
+
+ECamQueryCameraInfo:
+    CallHleDispatch 0x67
+
+ECamQueryStillImageSize:
+    CallHleDispatch 0x68
+
+ECamTakeImage:
+    CallHleDispatch 0x69
+
+ECamCancelTakeImage:
+    CallHleDispatch 0x6A
+
+ECamReceiveImage:
+    CallHleDispatch 0x6B
+    
+ECamQueryVideoFrameDimension:
+    CallHleDispatch 0x6C
+
+ECamQueryVideoFrameRate:
+    CallHleDispatch 0x6D
+
+ECamTakeVideo:
+    CallHleDispatch 0x6E
+
+ECamReceiveVideoBuffer:
+    CallHleDispatch 0x6F
+
+ECamCancelTakeVideo:
+    CallHleDispatch 0x70
+
+ECamDuplicate:
+    CallHleDispatch 0x71

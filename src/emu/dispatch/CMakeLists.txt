@@ -4,6 +4,7 @@ add_library(epocdispatch
         include/dispatch/libraries/sysutils/register.h
         include/dispatch/libraries/register.h
         include/dispatch/audio.h
+        include/dispatch/camera.h
         include/dispatch/def.h
         include/dispatch/dispatcher.h
         include/dispatch/management.h
@@ -12,6 +13,7 @@ add_library(epocdispatch
         src/libraries/sysutils/functions.cpp
         src/libraries/register.cpp
         src/audio.cpp
+        src/camera.cpp
         src/dispatcher.cpp
         src/register.cpp
         src/screen.cpp)

@@ -18,6 +18,7 @@
  */
 
 #include <dispatch/audio.h>
+#include <dispatch/camera.h>
 #include <dispatch/register.h>
 #include <dispatch/screen.h>
 
@@ -60,6 +61,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER(0x50, eaudio_dsp_stream_position),
         BRIDGE_REGISTER_DISPATCHER(0x52, eaudio_dsp_stream_notify_buffer_ready_cancel),
         BRIDGE_REGISTER_DISPATCHER(0x53, eaudio_dsp_stream_reset_stat),
+        BRIDGE_REGISTER_DISPATCHER(0x60, ecam_number_of_cameras),
         BRIDGE_REGISTER_DISPATCHER(0x1000, sysutils::sysstartup_get_state)
     };
 }
