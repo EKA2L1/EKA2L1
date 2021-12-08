@@ -196,11 +196,10 @@ namespace eka2l1 {
 
         core->stop();
 
-        target_to_stop->kill(kernel::entity_exit_type::terminate, u"KERN-EXEC", 3);
         core->save_context(target_to_stop->get_thread_context());
-
-        // Dump thread contexts
         arm::dump_context(target_to_stop->get_thread_context());
+
+        target_to_stop->kill(kernel::entity_exit_type::terminate, u"KERN-EXEC", 3);
     }
 
     bool kernel_system::cpu_exception_handle_unpredictable(arm::core *core, const address occurred) {
