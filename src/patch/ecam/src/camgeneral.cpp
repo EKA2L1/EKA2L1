@@ -64,8 +64,6 @@ void CCameraPlugin::ConstructL(TInt aCameraIndex) {
     iVideoCapture.ConstructL(iDispatchInstance, iObserver, iVersion);
 
     iEventCompleteIdle = CIdle::NewL(EPriorityNormal);
-
-    CActiveScheduler::Add(iEventCompleteIdle);
 }
 
 void CCameraPlugin::ConstructSharedL(TAny *aSharedHandle) {
@@ -76,8 +74,6 @@ void CCameraPlugin::ConstructSharedL(TAny *aSharedHandle) {
     iVideoCapture.ConstructL(iDispatchInstance, iObserver, iVersion);
 
     iEventCompleteIdle = CIdle::NewL(EPriorityNormal);
-
-    CActiveScheduler::Add(iEventCompleteIdle);
 }
 
 void CCameraPlugin::CameraInfo(TCameraInfo &aInfo) const {
