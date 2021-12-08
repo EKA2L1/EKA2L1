@@ -716,7 +716,7 @@ namespace eka2l1 {
         // Work around for Space Impact N-Gage 2.0
         // TODO: Why it is submitting 16 times smaller bytes
         // Maybe on real phone it just requests more each time it nears drain
-        if ((supplied_size * 16) == conf_.buffer_size_) {
+        if (((supplied_size * 16) == conf_.buffer_size_) && (out_stream->format() == drivers::PCM16_FOUR_CC_CODE)) {
             conf_.buffer_size_ = common::clamp<std::int32_t>(MMF_BUFFER_SIZE_MIN, MMF_BUFFER_SIZE_MAX,
                 conf_.buffer_size_ * 16);
         }
