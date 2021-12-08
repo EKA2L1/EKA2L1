@@ -1,0 +1,26 @@
+EXPORTS
+	_ZN7CCamera13NewDuplicateLER15MCameraObserveri @ 1 NONAME
+	_ZN7CCamera16CamerasAvailableEv @ 2 NONAME
+	_ZN7CCamera4NewLER15MCameraObserveri @ 3 NONAME
+	_ZN10TECAMEventC1E4TUidi @ 4 NONAME
+	_ZN10TECAMEventC1Ev @ 5 NONAME
+	_ZN10TECAMEventC2E4TUidi @ 6 NONAME
+	_ZN10TECAMEventC2Ev @ 7 NONAME
+	_ZN7CCamera13NewDuplicateLER16MCameraObserver2i @ 8 NONAME
+	_ZN7CCamera4NewLER16MCameraObserver2ii @ 9 NONAME
+	_ZN11TECAMEvent225IsEventEncapsulationValidERK10TECAMEvent @ 10 NONAME
+	_ZN11TECAMEvent2C1E4TUidii @ 11 NONAME
+	_ZN11TECAMEvent2C2E4TUidii @ 12 NONAME
+	_ZN7CCamera13CameraVersionEv @ 13 NONAME
+	_ZN7CCamera14NewDuplicate2LER15MCameraObserveri @ 14 NONAME ABSENT
+	_ZN7CCamera14NewDuplicate2LER16MCameraObserver2i @ 15 NONAME
+	_ZN7CCamera5New2LER15MCameraObserveri @ 16 NONAME ABSENT
+	_ZN7CCamera5New2LER16MCameraObserver2ii @ 17 NONAME
+	_ZNK11TECAMEvent214EventClassUsedEv @ 18 NONAME
+	_ZN13TReservedInfo21SubscribeReserveInfoLER16MReserveObserveriRP18CCameraStatusWatch @ 19 NONAME
+	_ZN18CCameraStatusWatchD0Ev @ 20 NONAME
+	_ZN18CCameraStatusWatchD1Ev @ 21 NONAME
+	_ZN18CCameraStatusWatchD2Ev @ 22 NONAME
+	_ZTI18CCameraStatusWatch @ 23 NONAME
+	_ZTV18CCameraStatusWatch @ 24 NONAME
+	_ZN7CCameraC2Ev @ 25 NONAME

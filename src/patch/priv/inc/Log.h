@@ -24,6 +24,7 @@
 
 _LIT(KMcaCat, "MediaClientAudioStream");
 _LIT(KBacklightCat, "Backlight");
+_LIT(KCameraCat, "Camera");
 _LIT(KScdvCat, "SCDV-HLE");
 
 void LogOut(const TDesC &aCategory, const TDesC &aMessage, ...);
