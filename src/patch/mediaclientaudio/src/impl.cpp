@@ -271,7 +271,7 @@ CMMFMdaAudioPlayerUtility::CMMFMdaAudioPlayerUtility(MMdaAudioPlayerCallback &aC
 CMMFMdaAudioPlayerUtility *CMMFMdaAudioPlayerUtility::NewL(MMdaAudioPlayerCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref) {
     CMMFMdaAudioPlayerUtility *newUtil = new (ELeave) CMMFMdaAudioPlayerUtility(aCallback, aPriority, aPref);
     CleanupStack::PushL(newUtil);
-    newUtil->ConstructL(EAudioPlayerFlag_StartPreparePlayWhenQueue);
+    newUtil->ConstructL(0);
     CleanupStack::Pop(newUtil);
 
     return newUtil;

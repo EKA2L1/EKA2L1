@@ -15,6 +15,7 @@ add_library(drivers
         include/drivers/audio/backend/cubeb/stream_cubeb.h
         include/drivers/audio/backend/ffmpeg/dsp_ffmpeg.h
         include/drivers/audio/backend/ffmpeg/player_ffmpeg.h
+        include/drivers/audio/backend/minibae/player_minibae.h
         include/drivers/audio/backend/dsp_shared.h
         include/drivers/audio/backend/player_shared.h
         include/drivers/hwrm/backend/vibration_null.h
@@ -45,6 +46,8 @@ add_library(drivers
         src/audio/backend/cubeb/stream_cubeb.cpp
         src/audio/backend/ffmpeg/dsp_ffmpeg.cpp
         src/audio/backend/ffmpeg/player_ffmpeg.cpp
+        src/audio/backend/minibae/player_minibae.cpp
+        src/audio/backend/bae_platimpl.cpp
         src/audio/backend/dsp_shared.cpp
         src/audio/backend/player_shared.cpp
         src/hwrm/backend/vibration_null.cpp
@@ -122,13 +125,18 @@ else()
     target_link_libraries(drivers PUBLIC ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
 endif()
 
+# Make miniBAE build alone so that its include directories don't messed up system headers
+add_library(miniBAE_EMU STATIC ${MINIBAE_SHARED_SOURCES})
+target_include_directories(miniBAE_EMU
+    PRIVATE include/drivers/audio/backend/minibae ${MINIBAE_INTERNAL_INCLUDE_DIRS})
+target_link_libraries(miniBAE_EMU PRIVATE common)
 
-target_link_libraries(drivers PRIVATE common cubeb ffmpeg glad glm)
+target_link_libraries(drivers PRIVATE common cubeb ffmpeg glad glm miniBAE_EMU)
 if (NOT ANDROID)
     target_link_libraries(drivers PRIVATE glfw)
 endif()
 
-target_include_directories(drivers PUBLIC include)
+target_include_directories(drivers PUBLIC include ${MINIBAE_PUBLIC_INCLUDE_DIRS})
 
 if (BUILD_WITH_VULKAN)
     target_link_libraries(drivers PRIVATE Vulkan)

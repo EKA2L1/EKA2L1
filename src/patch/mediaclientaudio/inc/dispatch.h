@@ -31,9 +31,6 @@ typedef unsigned long long TUint64;
 
 extern "C" {
 /// AUDIO PLAYER DISPATCH API
-enum TAudioPlayerFlags {
-    EAudioPlayerFlag_StartPreparePlayWhenQueue = 1 << 0
-};
 
 // Create new audio player instance
 HLE_DISPATCH_FUNC(TAny *, EAudioPlayerNewInstance, TUint32 aInitFlags);

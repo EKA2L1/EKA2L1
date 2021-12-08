@@ -109,12 +109,11 @@ namespace eka2l1::dispatch {
 
         std::uint32_t flags_;
 
-        explicit dsp_epoc_player(std::unique_ptr<drivers::player> &impl, dsp_manager *manager, const std::uint32_t init_flags);
-        ~dsp_epoc_player() override;
+        std::uint32_t stored_repeat_times;
+        std::uint32_t stored_trailing_silence_us;
 
-        bool should_prepare_play_when_queue() const {
-            return flags_ & dsp_epoc_player_flags_prepare_play_when_queue;
-        }
+        explicit dsp_epoc_player(dsp_manager *manager, const std::uint32_t init_flags);
+        ~dsp_epoc_player() override;
 
         void volume(const std::uint32_t volume) override;
         std::uint32_t max_volume() const override;

@@ -32,7 +32,11 @@
 namespace eka2l1::drivers {
     class audio_driver;
 
-    struct player_request_base {
+    struct player_shared : public player {
+    private:
+        audio_driver *aud_;
+
+    protected:
         std::string url_;
 
         std::vector<std::uint8_t> data_;
@@ -52,39 +56,20 @@ namespace eka2l1::drivers {
 
         bool use_push_new_data_;
 
-        explicit player_request_base()
-            : data_pointer_(0)
-            , flags_(0)
-            , repeat_left_(0)
-            , silence_micros_(0)
-            , pos_in_us_(0)
-            , use_push_new_data_(false) {
-        }
-    };
+        virtual bool is_ready_to_play() = 0;
 
-    using player_request_instance = std::unique_ptr<player_request_base>;
-
-    struct player_shared : public player {
-    private:
-        audio_driver *aud_;
-
-    protected:
-        virtual bool is_ready_to_play(player_request_instance &request) = 0;
-
-        std::queue<player_request_instance> requests_;
         std::vector<player_metadata> metadatas_;
-
         std::unique_ptr<audio_output_stream> output_stream_;
 
     public:
         explicit player_shared(audio_driver *driver);
         ~player_shared() override;
 
-        virtual bool make_backend_source(player_request_instance &request) = 0;
+        virtual bool make_backend_source() = 0;
 
-        virtual void reset_request(player_request_instance &request) = 0;
-        virtual void get_more_data(player_request_instance &request) = 0;
-        virtual bool set_position_for_custom_format(player_request_instance &request, const std::uint64_t pos_in_us) = 0;
+        virtual void reset_request() = 0;
+        virtual void get_more_data() = 0;
+        virtual bool set_position_for_custom_format(const std::uint64_t pos_in_us) = 0;
         std::size_t data_supply_callback(std::int16_t *data, std::size_t size);
 
         bool play() override;
@@ -105,8 +90,6 @@ namespace eka2l1::drivers {
         std::uint32_t get_dest_freq() override;
         std::uint32_t get_dest_channel_count() override;
         std::uint32_t get_dest_encoding() override;
-
-        bool prepare_play_newest() override;
 
         bool is_playing() const override {
             return (output_stream_ && output_stream_->is_playing());

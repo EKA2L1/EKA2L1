@@ -36,7 +36,7 @@ namespace eka2l1::drivers {
 
     cubeb_audio_output_stream::cubeb_audio_output_stream(audio_driver *driver, cubeb *context, const std::uint32_t sample_rate,
         const std::uint8_t channels, data_callback callback)
-        : audio_output_stream(driver)
+        : audio_output_stream(driver, sample_rate, channels)
         , stream_(nullptr)
         , callback_(callback)
         , playing_(false)

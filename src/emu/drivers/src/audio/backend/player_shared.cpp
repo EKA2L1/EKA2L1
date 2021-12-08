@@ -28,52 +28,51 @@ namespace eka2l1::drivers {
     std::size_t player_shared::data_supply_callback(std::int16_t *data, std::size_t size) {
         // Get the oldest request
         const std::lock_guard<std::mutex> guard(lock_);
-        player_request_instance &request = requests_.front();
 
         std::size_t frame_copied = 0;
 
         auto supply_stuff = [&]() {
-            while ((frame_copied < size) && (!(request->flags_ & 1))) {
-                if (request->data_.size() <= request->data_pointer_)
-                    get_more_data(request);
+            while ((frame_copied < size) && (!(flags_ & 1))) {
+                if (data_.size() <= data_pointer_)
+                    get_more_data();
 
-                const std::size_t total_frame_left = (request->data_.size() - request->data_pointer_ + 1) / request->channels_ / sizeof(std::uint16_t);
+                const std::size_t total_frame_left = (data_.size() - data_pointer_ + 1) / channels_ / sizeof(std::uint16_t);
                 const std::size_t frame_to_copy = std::min<std::size_t>(total_frame_left, size - frame_copied);
 
-                std::memcpy(data + frame_copied * request->channels_, request->data_.data() + request->data_pointer_, frame_to_copy * request->channels_ * sizeof(std::uint16_t));
+                std::memcpy(data + frame_copied * channels_, data_.data() + data_pointer_, frame_to_copy * channels_ * sizeof(std::uint16_t));
 
-                request->data_pointer_ += frame_to_copy * request->channels_ * sizeof(std::uint16_t);
+                data_pointer_ += frame_to_copy * channels_ * sizeof(std::uint16_t);
                 frame_copied += frame_to_copy;
             }
         };
 
         supply_stuff();
 
-        if ((frame_copied < size) || (request->flags_ & 1)) {
+        if ((frame_copied < size) || (flags_ & 1)) {
             bool no_more_way = false;
 
             // There is no more data for us! Either repeat or kill
-            if (request->repeat_left_ == 0) {
+            if (repeat_left_ == 0) {
                 no_more_way = true;
             } else {
                 // Seek back to do a loop. Intentionally left this so that negative repeat can do infinite loop
-                if (request->repeat_left_ > 0) {
-                    request->repeat_left_ -= 1;
+                if (repeat_left_ > 0) {
+                    repeat_left_ -= 1;
                 }
 
                 // Reset the stream if we are the custom format guy!
-                reset_request(request);
+                reset_request();
 
-                request->data_pointer_ = 0;
-                request->flags_ = 0;
+                data_pointer_ = 0;
+                flags_ = 0;
 
                 // We want to supply silence samples
                 // 1s = 1ms
-                const std::size_t silence_samples = request->freq_ * request->silence_micros_ / 1000000;
-                request->data_.resize(silence_samples * sizeof(std::uint16_t) * request->channels_);
-                std::fill(request->data_.begin(), request->data_.end(), 0);
+                const std::size_t silence_samples = freq_ * silence_micros_ / 1000000;
+                data_.resize(silence_samples * sizeof(std::uint16_t) * channels_);
+                std::fill(data_.begin(), data_.end(), 0);
 
-                request->use_push_new_data_ = true;
+                use_push_new_data_ = true;
                 supply_stuff();
             }
 
@@ -95,20 +94,18 @@ namespace eka2l1::drivers {
         // Reset the request
         {
             const std::lock_guard<std::mutex> guard(lock_);
-            player_request_instance &request = requests_.front();
+            reset_request();
 
-            reset_request(request);
-
-            if (!is_ready_to_play(request)) {
+            if (!is_ready_to_play()) {
                 return false;
             }
 
-            request->data_pointer_ = 0;
-            request->flags_ = 0;
-            request->data_.clear();
+            data_pointer_ = 0;
+            flags_ = 0;
+            data_.clear();
 
             // New stream to restart everything
-            output_stream_ = aud_->new_output_stream(request->freq_, request->channels_, [this](std::int16_t *u1, std::size_t u2) {
+            output_stream_ = aud_->new_output_stream(freq_, channels_, [this](std::int16_t *u1, std::size_t u2) {
                 return data_supply_callback(u1, u2);
             });
 
@@ -139,79 +136,36 @@ namespace eka2l1::drivers {
     }
 
     void player_shared::set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) {
-        const std::lock_guard<std::mutex> guard(lock_);
-        player_request_instance &request = requests_.front();
-
-        request->repeat_left_ = repeat_times;
-        request->silence_micros_ = silence_intervals_micros;
+        repeat_left_ = repeat_times;
+        silence_micros_ = silence_intervals_micros;
     }
 
     void player_shared::set_position(const std::uint64_t pos_in_us) {
         const std::lock_guard<std::mutex> guard(lock_);
-        player_request_instance &request_ref = requests_.back();
-
-        if (!request_ref) {
-            return;
-        }
-
-        set_position_for_custom_format(request_ref, pos_in_us);
+        set_position_for_custom_format(pos_in_us);
     }
 
     bool player_shared::set_dest_freq(const std::uint32_t freq) {
-        const std::lock_guard<std::mutex> guard(lock_);
-        player_request_instance &request_ref = requests_.back();
-
-        if (!request_ref) {
-            return false;
-        }
-
-        request_ref->freq_ = freq;
+        freq_ = freq;
         return true;
     }
 
     bool player_shared::set_dest_channel_count(const std::uint32_t cn) {
-        const std::lock_guard<std::mutex> guard(lock_);
-        player_request_instance &request_ref = requests_.back();
-
-        if (!request_ref) {
-            return false;
-        }
-
-        request_ref->channels_ = cn;
+        channels_ = cn;
         return true;
     }
 
     bool player_shared::set_dest_encoding(const std::uint32_t enc) {
-        const std::lock_guard<std::mutex> guard(lock_);
-        player_request_instance &request_ref = requests_.back();
-
-        if (!request_ref) {
-            return false;
-        }
-
-        request_ref->encoding_ = enc;
+        encoding_ = enc;
         return true;
     }
 
     void player_shared::set_dest_container_format(const std::uint32_t confor) {
-        const std::lock_guard<std::mutex> guard(lock_);
-        player_request_instance &request_ref = requests_.back();
-
-        if (!request_ref) {
-            return;
-        }
-
-        request_ref->format_ = confor;
+        format_ = confor;
     }
 
     bool player_shared::set_volume(const std::uint32_t vol) {
         const std::lock_guard<std::mutex> guard(lock_);
-        player_request_instance &request_ref = requests_.back();
-
-        if (!request_ref) {
-            return false;
-        }
-
         const bool res = player::set_volume(vol);
 
         if (output_stream_ && res) {
@@ -222,50 +176,25 @@ namespace eka2l1::drivers {
     }
 
     std::uint32_t player_shared::get_dest_freq() {
-        const std::lock_guard<std::mutex> guard(lock_);
-        player_request_instance &request_ref = requests_.back();
-
-        if (!request_ref) {
-            return 0;
-        }
-
-        return request_ref->freq_;
+        return freq_;
     }
 
     std::uint32_t player_shared::get_dest_channel_count() {
-        const std::lock_guard<std::mutex> guard(lock_);
-        player_request_instance &request_ref = requests_.back();
-
-        if (!request_ref) {
-            return 0;
-        }
-
-        return request_ref->channels_;
+        return channels_;
     }
 
     std::uint32_t player_shared::get_dest_encoding() {
-        const std::lock_guard<std::mutex> guard(lock_);
-        player_request_instance &request_ref = requests_.back();
-
-        if (!request_ref) {
-            return 0;
-        }
-
-        return request_ref->encoding_;
-    }
-
-    bool player_shared::prepare_play_newest() {
-        player_request_instance &request_ref = requests_.back();
-
-        if (!request_ref) {
-            return false;
-        }
-
-        return make_backend_source(request_ref);
+        return encoding_;
     }
 
     player_shared::player_shared(audio_driver *driver)
-        : aud_(driver) {
+        : aud_(driver)
+        , data_pointer_(0)
+        , flags_(0)
+        , repeat_left_(0)
+        , silence_micros_(0)
+        , pos_in_us_(0)
+        , use_push_new_data_(false) {
     }
 
     player_shared::~player_shared() {

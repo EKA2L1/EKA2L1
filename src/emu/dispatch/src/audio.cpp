@@ -89,10 +89,11 @@ namespace eka2l1::dispatch {
         return out_stream.max_volume();
     }
 
-    dsp_epoc_player::dsp_epoc_player(std::unique_ptr<drivers::player> &impl, dsp_manager *manager, const std::uint32_t init_flags)
+    dsp_epoc_player::dsp_epoc_player(dsp_manager *manager, const std::uint32_t init_flags)
         : dsp_medium(manager, DSP_MEDIUM_TYPE_EPOC_PLAYER)
-        , impl_(std::move(impl))
-        , flags_(init_flags) {
+        , flags_(init_flags)
+        , stored_repeat_times(0)
+        , stored_trailing_silence_us(0) {
     }
 
     dsp_epoc_player::~dsp_epoc_player() {
@@ -100,7 +101,9 @@ namespace eka2l1::dispatch {
 
     void dsp_epoc_player::volume(const std::uint32_t volume) {
         logical_volume_ = volume;
-        impl_->set_volume(logical_volume_);
+        if (impl_) {
+            impl_->set_volume(logical_volume_);
+        }
     }
 
     std::uint32_t dsp_epoc_player::max_volume() const {
@@ -111,16 +114,8 @@ namespace eka2l1::dispatch {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         drivers::audio_driver *aud_driver = sys->get_audio_driver();
 
-        auto player_new = drivers::new_audio_player(aud_driver, drivers::get_suitable_player_type());
-
-        if (!player_new) {
-            LOG_ERROR(HLE_AUD, "Unable to instantiate new audio player!");
-            return 0;
-        }
-
         dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
-        std::unique_ptr<dsp_medium> player_epoc = std::make_unique<dsp_epoc_player>(player_new,
-            &manager, init_flags);
+        std::unique_ptr<dsp_medium> player_epoc = std::make_unique<dsp_epoc_player>(&manager, init_flags);
 
         return manager.add_object(player_epoc);
     }
@@ -172,15 +167,35 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
-        if (!eplayer->impl_->queue_url(common::ucs2_to_utf8(url_str))) {
-            return epoc::error_not_supported;
-        }
+        const std::string url_u8 = common::ucs2_to_utf8(url_str);
 
-        if (eplayer->should_prepare_play_when_queue()) {
-            if (!eplayer->impl_->prepare_play_newest()) {
-                return epoc::error_general;
+        if (!eplayer->impl_ || !eplayer->impl_->open_url(url_u8)) {
+            drivers::audio_driver *driver = sys->get_audio_driver();
+            std::vector<drivers::player_type> types = drivers::get_suitable_player_types(url_u8);
+
+            bool found_good = false;
+
+            for (std::size_t i = 0; i < types.size(); i++) {
+                if (eplayer->impl_ && (eplayer->impl_->get_player_type() == types[i])) {
+                    continue;
+                }
+                auto new_player = drivers::new_audio_player(driver, types[i]);
+                if (new_player && new_player->open_url(url_u8)) {
+                    found_good = true;
+                    eplayer->impl_ = std::move(new_player);
+
+                    break;
+                }
+            }
+
+            if (!found_good) {
+                return epoc::error_not_supported;
             }
         }
+
+        // Restore old stream values
+        eplayer->impl_->set_volume(eplayer->volume());
+        eplayer->impl_->set_repeat(eplayer->stored_repeat_times, eplayer->stored_trailing_silence_us);
 
         // TODO: Return duration
         return epoc::error_none;
@@ -198,15 +213,35 @@ namespace eka2l1::dispatch {
         }
 
         eplayer->custom_stream_ = std::make_unique<epoc::rw_des_stream>(buffer, pr);
-        if (!eplayer->impl_->queue_custom(reinterpret_cast<common::rw_stream *>(eplayer->custom_stream_.get()))) {
-            return epoc::error_not_supported;
-        }
+        common::rw_stream *custom_good_stream = reinterpret_cast<common::rw_stream *>(eplayer->custom_stream_.get());
 
-        if (eplayer->should_prepare_play_when_queue()) {
-            if (!eplayer->impl_->prepare_play_newest()) {
-                return epoc::error_general;
+        if (!eplayer->impl_->open_custom(custom_good_stream)) {
+            drivers::audio_driver *driver = sys->get_audio_driver();
+            std::vector<drivers::player_type> types = drivers::get_suitable_player_types("");
+
+            bool found_good = false;
+
+            for (std::size_t i = 0; i < types.size(); i++) {
+                if (eplayer->impl_ && (eplayer->impl_->get_player_type() == types[i])) {
+                    continue;
+                }
+                auto new_player = drivers::new_audio_player(driver, types[i]);
+                if (new_player && new_player->open_custom(custom_good_stream)) {
+                    found_good = true;
+                    eplayer->impl_ = std::move(new_player);
+                }
+
+                break;
+            }
+
+            if (!found_good) {
+                return epoc::error_not_supported;
             }
         }
+
+        // Restore old stream values
+        eplayer->impl_->set_volume(eplayer->volume());
+        eplayer->impl_->set_repeat(eplayer->stored_repeat_times, eplayer->stored_trailing_silence_us);
 
         // TODO: Return duration
         return epoc::error_none;
@@ -349,7 +384,12 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
-        eplayer->impl_->set_repeat(times, silence_interval_micros);
+        eplayer->stored_repeat_times = times;
+        eplayer->stored_trailing_silence_us = silence_interval_micros;
+
+        if (eplayer->impl_)
+            eplayer->impl_->set_repeat(times, silence_interval_micros);
+
         return epoc::error_none;
     }
 

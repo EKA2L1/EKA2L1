@@ -40,7 +40,6 @@ namespace eka2l1::drivers {
         std::uint32_t master_volume_ = 100;
         std::mutex lock_;
 
-    protected:
         std::size_t add_master_volume_change_callback(master_audio_volume_change_callback callback);
         bool remove_master_volume_change_callback(const std::size_t handle);
 

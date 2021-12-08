@@ -19,6 +19,7 @@
 
 #include <common/platform.h>
 #include <drivers/audio/backend/ffmpeg/player_ffmpeg.h>
+#include <drivers/audio/backend/minibae/player_minibae.h>
 #include <drivers/audio/backend/wmf/player_wmf.h>
 #include <drivers/audio/player.h>
 
@@ -26,6 +27,8 @@
 #include <drivers/audio/backend/wmf/wmf_loader.h>
 #endif
 
+#include <common/algorithm.h>
+#include <common/path.h>
 #include <cstring>
 
 namespace eka2l1::drivers {
@@ -58,6 +61,9 @@ namespace eka2l1::drivers {
         case player_type_wmf:
             return std::make_unique<player_wmf>(aud);
 #endif
+        case player_type_minibae:
+            return std::make_unique<player_minibae>(aud);
+
         case player_type_ffmpeg:
             return std::make_unique<player_ffmpeg>(aud);
 
@@ -67,13 +73,29 @@ namespace eka2l1::drivers {
 
         return nullptr;
     }
+    
+    std::vector<player_type> get_suitable_player_types(const std::string &url) {
+        std::vector<player_type> res;
 
-    player_type get_suitable_player_type() {
+        bool midi_added = false;
+        if (!url.empty() && common::compare_ignore_case(eka2l1::path_extension(url).c_str(), ".mid") == 0) {
+            res.push_back(player_type_minibae);
+            midi_added = true;
+        }
+
 #if EKA2L1_PLATFORM(WIN32)
         if (loader::init_mf()) {
-            return player_type_wmf;
+            res.push_back(player_type_wmf);
+        } else
+#endif  
+        {
+            res.push_back(player_type_ffmpeg);
         }
-#endif
-        return player_type_ffmpeg;
+
+        if (!midi_added) {
+            res.push_back(player_type_minibae);
+        }
+
+        return res;
     }
 }
