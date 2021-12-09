@@ -20,11 +20,7 @@
 #pragma once
 
 #include <common/types.h>
-#include <iostream>
 #include <sstream>
-
-#include <codecvt>
-#include <locale>
 
 namespace eka2l1 {
     namespace common {

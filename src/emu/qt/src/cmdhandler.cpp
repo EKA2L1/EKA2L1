@@ -41,6 +41,8 @@
 #include <utils/apacmd.h>
 #include <vfs/vfs.h>
 
+#include <iostream>
+
 using namespace eka2l1;
 
 bool app_install_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
