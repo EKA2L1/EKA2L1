@@ -47,7 +47,14 @@ namespace eka2l1::drivers {
     enum player_type {
         player_type_wmf = 0,
         player_type_ffmpeg = 1,
-        player_type_minibae = 2
+        player_type_minibae = 2,
+        player_type_tsf = 3
+    };
+
+    enum midi_bank_type : std::uint32_t {
+        MIDI_BANK_TYPE_HSB,
+        MIDI_BANK_TYPE_SF2,
+        MIDI_BANK_TYPE_MAX
     };
 
     struct player {
@@ -146,5 +153,4 @@ namespace eka2l1::drivers {
     };
 
     std::unique_ptr<player> new_audio_player(audio_driver *aud, const player_type type);
-    std::vector<player_type> get_suitable_player_types(const std::string &url);
 }

@@ -20,6 +20,7 @@
 #pragma once
 
 #include <drivers/audio/stream.h>
+#include <drivers/audio/player.h>
 #include <drivers/driver.h>
 
 #include <common/container.h>
@@ -30,12 +31,18 @@
 
 namespace eka2l1::drivers {
     using master_audio_volume_change_callback = std::function<void(const std::uint32_t old, const std::uint32_t newv)>;
+    using bank_change_callback = std::function<void(const midi_bank_type type, const std::string &new_path)>;
 
     class audio_driver : public driver {
         friend struct audio_output_stream;
 
     private:
         common::identity_container<master_audio_volume_change_callback> master_volume_change_callbacks_;
+        common::identity_container<bank_change_callback> bank_change_callbacks_;
+
+        // MIDIs...
+        player_type preferred_midi_backend_;
+        std::array<std::string, MIDI_BANK_TYPE_MAX> midi_banks_;
 
         std::uint32_t master_volume_ = 100;
         std::mutex lock_;
@@ -44,7 +51,7 @@ namespace eka2l1::drivers {
         bool remove_master_volume_change_callback(const std::size_t handle);
 
     public:
-        explicit audio_driver(const std::uint32_t initial_master_volume = 100);
+        explicit audio_driver(const std::uint32_t initial_master_volume = 100, const player_type preferred_midi_backend = player_type_tsf);
         virtual ~audio_driver() {}
 
         void run() override {}
@@ -72,6 +79,15 @@ namespace eka2l1::drivers {
         }
 
         void master_volume(const std::uint32_t value);
+
+        std::vector<player_type> get_suitable_player_types(const std::string &url);
+        void set_preferred_midi_backend(const player_type type);
+
+        std::optional<std::string> get_bank_path(const midi_bank_type type) const;
+        void set_bank_path(const midi_bank_type type, const std::string &path);
+
+        std::size_t add_bank_change_callback(bank_change_callback callback);
+        bool remove_bank_change_callback(const std::size_t handle);
     };
 
     enum class audio_driver_backend {

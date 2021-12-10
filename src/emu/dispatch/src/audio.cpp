@@ -21,6 +21,7 @@
 #include <dispatch/dispatcher.h>
 #include <vfs/vfs.h>
 
+#include <drivers/audio/audio.h>
 #include <system/epoc.h>
 
 #include <kernel/kernel.h>
@@ -171,7 +172,7 @@ namespace eka2l1::dispatch {
 
         if (!eplayer->impl_ || !eplayer->impl_->open_url(url_u8)) {
             drivers::audio_driver *driver = sys->get_audio_driver();
-            std::vector<drivers::player_type> types = drivers::get_suitable_player_types(url_u8);
+            std::vector<drivers::player_type> types = driver->get_suitable_player_types(url_u8);
 
             bool found_good = false;
 
@@ -217,7 +218,7 @@ namespace eka2l1::dispatch {
 
         if (!eplayer->impl_->open_custom(custom_good_stream)) {
             drivers::audio_driver *driver = sys->get_audio_driver();
-            std::vector<drivers::player_type> types = drivers::get_suitable_player_types("");
+            std::vector<drivers::player_type> types = driver->get_suitable_player_types("");
 
             bool found_good = false;
 

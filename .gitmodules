@@ -68,3 +68,6 @@
 [submodule "src/external/miniBAE"]
 	path = src/external/miniBAE
 	url = https://github.com/EKA2L1/miniBAE/
+[submodule "src/external/TinySoundFont"]
+	path = src/external/TinySoundFont
+	url = https://github.com/schellingb/TinySoundFont

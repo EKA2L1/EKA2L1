@@ -69,6 +69,9 @@ OPTION(screen-buffer-sync, screen_buffer_sync_string, "preferred")
 OPTION(report-mmfdev-underflow, report_mmfdev_underflow, false)
 OPTION(disable-display-content-scale, disable_display_content_scale, false)
 OPTION(device-display-name, device_display_name, "EKA2L1")
+OPTION(midi-backend, midi_backend_string, "tsf")
+OPTION(hsb-bank-path, hsb_bank_path, "resources/defaultbank.hsb")
+OPTION(sf2-bank-path, sf2_bank_path, "resources/defaultbank.sf2")
 
 #ifdef OPTION
 #undef OPTION

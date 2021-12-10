@@ -64,6 +64,35 @@ namespace eka2l1::config {
         return nullptr;
     }
 
+    midi_backend get_midi_backend_from_string(std::string str) {
+        str = common::lowercase_string(str);
+
+        if (str == "tsf") {
+            return MIDI_BACKEND_TSF;
+        }
+
+        if (str == "minibae") {
+            return MIDI_BACKEND_MINIBAE;
+        }
+
+        return MIDI_BACKEND_TSF;
+    }
+
+    const char *get_string_from_midi_backend(const midi_backend backend) {
+        switch (backend) {
+        case MIDI_BACKEND_TSF:
+            return "tsf";
+
+        case MIDI_BACKEND_MINIBAE:
+            return "minibae";
+
+        default:
+            break;
+        }
+
+        return nullptr;
+    }
+
     template <typename T, typename Q = T>
     void get_yaml_value(YAML::Node &config_node, const char *key, T *target_val, Q default_val) {
         try {
@@ -159,6 +188,7 @@ namespace eka2l1::config {
     void state::serialize(const bool with_bindings) {
         audio_master_volume = common::clamp(0, 100, audio_master_volume);
         screen_buffer_sync_string = get_string_from_screen_buffer_sync_option(screen_buffer_sync);
+        midi_backend_string = get_string_from_midi_backend(midi_backend);
 
         YAML::Emitter emitter;
         emitter << YAML::BeginMap;
@@ -204,6 +234,15 @@ namespace eka2l1::config {
 
         audio_master_volume = common::clamp(0, 100, audio_master_volume);
         screen_buffer_sync = get_screen_buffer_sync_option_from_string(screen_buffer_sync_string);
+        midi_backend = get_midi_backend_from_string(midi_backend_string);
+
+        if (!eka2l1::exists(hsb_bank_path)) {
+            hsb_bank_path = "resources/defaultbank.hsb";
+        }
+        
+        if (!eka2l1::exists(sf2_bank_path)) {
+            hsb_bank_path = "resources/defaultbank.sf2";
+        }
 
         if (with_bindings)
             keybinds.deserialize(fmt::format("bindings/{}.yml", current_keybind_profile));

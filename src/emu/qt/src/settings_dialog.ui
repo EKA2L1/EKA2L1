@@ -483,48 +483,48 @@
        <string>System</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_6">
-       <item row="3" column="0">
-        <widget class="QGroupBox" name="system_audio_group_box">
+       <item row="2" column="0">
+        <widget class="QGroupBox" name="system_graphics_group_box">
          <property name="title">
-          <string>Audio</string>
+          <string>Graphics</string>
          </property>
-         <layout class="QGridLayout" name="gridLayout_8">
+         <layout class="QGridLayout" name="gridLayout_13">
           <item row="0" column="0">
-           <layout class="QHBoxLayout" name="system_audio_volmod_layout" stretch="1,2,2">
+           <layout class="QHBoxLayout" name="system_screen_buffer_sync_layout" stretch="1,2">
             <item>
-             <widget class="QLabel" name="system_general_vol_slide_label">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
+             <widget class="QLabel" name="system_screen_buffer_sync_label">
+              <property name="toolTip">
+               <string>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
+Preferred option will automatically enable this on S60v1/S60v2 devices.</string>
               </property>
               <property name="text">
-               <string>Volume</string>
+               <string>Screen buffer sync</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QSlider" name="system_audio_vol_slider">
-              <property name="maximum">
-               <number>100</number>
-              </property>
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="system_audio_current_val_label">
+             <widget class="QComboBox" name="system_screen_buffer_sync_combo">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
-              <property name="text">
-               <string>0</string>
-              </property>
+              <item>
+               <property name="text">
+                <string>Preferred</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Disable</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Enable</string>
+               </property>
+              </item>
              </widget>
             </item>
            </layout>
@@ -601,79 +601,6 @@
               <property name="text">
                <string>Validate current device</string>
               </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QGroupBox" name="system_he_checkbox">
-         <property name="title">
-          <string>Hardware emulation</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_7">
-          <item row="1" column="0">
-           <layout class="QHBoxLayout" name="system_he_cpu_layout" stretch="1,2">
-            <item>
-             <widget class="QLabel" name="system_he_cpu_label">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>CPU emulator</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="system_he_cpu_combo">
-              <item>
-               <property name="text">
-                <string>Dynarmic (CPU recompiler)</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Dyncom (CPU interpreter)</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item row="3" column="0">
-           <layout class="QHBoxLayout" name="system_he_rta_layout" stretch="1,2">
-            <item>
-             <widget class="QLabel" name="system_he_rta_label">
-              <property name="toolTip">
-               <string>Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</string>
-              </property>
-              <property name="text">
-               <string>Real-time accuracy</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="system_he_rta_combo">
-              <item>
-               <property name="text">
-                <string>Low</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Mid</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>High</string>
-               </property>
-              </item>
              </widget>
             </item>
            </layout>
@@ -823,48 +750,146 @@
          </layout>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QGroupBox" name="system_graphics_group_box">
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="system_he_checkbox">
          <property name="title">
-          <string>Graphics</string>
+          <string>Hardware emulation</string>
          </property>
-         <layout class="QGridLayout" name="gridLayout_13">
-          <item row="0" column="0">
-           <layout class="QHBoxLayout" name="system_screen_buffer_sync_layout" stretch="1,2">
+         <layout class="QGridLayout" name="gridLayout_7">
+          <item row="1" column="0">
+           <layout class="QHBoxLayout" name="system_he_cpu_layout" stretch="1,2">
             <item>
-             <widget class="QLabel" name="system_screen_buffer_sync_label">
-              <property name="toolTip">
-               <string>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
-Preferred option will automatically enable this on S60v1/S60v2 devices.</string>
-              </property>
-              <property name="text">
-               <string>Screen buffer sync</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="system_screen_buffer_sync_combo">
+             <widget class="QLabel" name="system_he_cpu_label">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="text">
+               <string>CPU emulator</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="system_he_cpu_combo">
               <item>
                <property name="text">
-                <string>Preferred</string>
+                <string>Dynarmic (CPU recompiler)</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>Disable</string>
+                <string>Dyncom (CPU interpreter)</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="3" column="0">
+           <layout class="QHBoxLayout" name="system_he_rta_layout" stretch="1,2">
+            <item>
+             <widget class="QLabel" name="system_he_rta_label">
+              <property name="toolTip">
+               <string>Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</string>
+              </property>
+              <property name="text">
+               <string>Real-time accuracy</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="system_he_rta_combo">
+              <item>
+               <property name="text">
+                <string>Low</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>Enable</string>
+                <string>Mid</string>
                </property>
               </item>
+              <item>
+               <property name="text">
+                <string>High</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QGroupBox" name="system_audio_group_box">
+         <property name="title">
+          <string>Audio</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_8">
+          <item row="1" column="0">
+           <layout class="QHBoxLayout" name="system_audio_midi_backend_layout">
+            <item>
+             <widget class="QLabel" name="system_audio_midi_backend_label">
+              <property name="text">
+               <string>MIDI backend</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="system_audio_midi_backend_combo">
+              <item>
+               <property name="text">
+                <string>TinySoundFont (High-quality, support SF2)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>MiniBAE (Lower-quality, support HSB)</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="0" column="0">
+           <layout class="QHBoxLayout" name="system_audio_volmod_layout" stretch="1,2,2">
+            <item>
+             <widget class="QLabel" name="system_general_vol_slide_label">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Volume</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="system_audio_vol_slider">
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="system_audio_current_val_label">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>0</string>
+              </property>
              </widget>
             </item>
            </layout>

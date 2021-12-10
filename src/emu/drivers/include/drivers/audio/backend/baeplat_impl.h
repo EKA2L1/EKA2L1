@@ -26,4 +26,5 @@ namespace eka2l1::drivers {
 extern "C" {
     void BAE_SetActiveAudioDriver(eka2l1::drivers::audio_driver *driver);
     void BAE_DriverDeactivated(eka2l1::drivers::audio_driver *driver);
+    eka2l1::drivers::audio_driver *BAE_GetActiveAudioDriver();
 }

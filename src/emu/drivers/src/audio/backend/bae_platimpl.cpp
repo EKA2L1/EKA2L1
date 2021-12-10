@@ -336,6 +336,10 @@ void BAE_DriverDeactivated(eka2l1::drivers::audio_driver *driver) {
     global_baedriver = nullptr;
 }
 
+eka2l1::drivers::audio_driver *BAE_GetActiveAudioDriver() {
+    return global_baedriver;
+}
+
 // return 0 if ok, -1 if failed
 int BAE_AquireAudioCard(void *threadContext, unsigned long sampleRate, unsigned long channels, unsigned long bits) {
     if (bits != 16) {
