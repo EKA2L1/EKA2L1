@@ -64,7 +64,7 @@ namespace eka2l1::config {
         return nullptr;
     }
 
-    midi_backend get_midi_backend_from_string(std::string str) {
+    midi_backend_type get_midi_backend_from_string(std::string str) {
         str = common::lowercase_string(str);
 
         if (str == "tsf") {
@@ -78,7 +78,7 @@ namespace eka2l1::config {
         return MIDI_BACKEND_TSF;
     }
 
-    const char *get_string_from_midi_backend(const midi_backend backend) {
+    const char *get_string_from_midi_backend(const midi_backend_type backend) {
         switch (backend) {
         case MIDI_BACKEND_TSF:
             return "tsf";

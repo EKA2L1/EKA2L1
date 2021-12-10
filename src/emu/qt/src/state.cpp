@@ -125,20 +125,20 @@ namespace eka2l1::desktop {
             symsys->mount(drive_z, drive_media::rom,
                 eka2l1::add_path(conf.storage, "/drives/z/"), io_attrib_internal | io_attrib_write_protected);
 
-            drivers::player_type midi_backend_type = drivers::player_type_tsf;
+            drivers::player_type player_be = drivers::player_type_tsf;
             switch (conf.midi_backend) {
             case config::MIDI_BACKEND_MINIBAE:
-                midi_backend_type = drivers::player_type_minibae;
+                player_be = drivers::player_type_minibae;
                 break;
 
             default:
-                midi_backend_type = drivers::player_type_tsf;
+                player_be = drivers::player_type_tsf;
                 break;
             }
 
             // Create audio driver
             audio_driver = drivers::make_audio_driver(drivers::audio_driver_backend::cubeb, conf.audio_master_volume,
-                midi_backend_type);
+                player_be);
 
             if (audio_driver) {
                 audio_driver->set_bank_path(drivers::MIDI_BANK_TYPE_HSB, conf.hsb_bank_path);

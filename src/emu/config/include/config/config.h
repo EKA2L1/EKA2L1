@@ -40,7 +40,7 @@ namespace eka2l1::config {
         screen_buffer_sync_option_on = 2                    ///< Sync is turned on permanently.
     };
 
-    enum midi_backend {
+    enum midi_backend_type {
         MIDI_BACKEND_TSF = 0,
         MIDI_BACKEND_MINIBAE = 1
     };
@@ -129,7 +129,7 @@ namespace eka2l1::config {
         std::string sf2_bank_path{ "resources/defaultbank.sf2" };
 
         screen_buffer_sync_option screen_buffer_sync{ screen_buffer_sync_option_preferred };
-        midi_backend midi_backend{ MIDI_BACKEND_TSF };
+        midi_backend_type midi_backend{ MIDI_BACKEND_TSF };
 
         std::atomic<std::uint32_t> display_background_color{ 0xFFD0D0D0 };
 

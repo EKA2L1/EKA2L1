@@ -1199,7 +1199,7 @@ void settings_dialog::on_friendly_phone_name_edited(const QString &text) {
 
 void settings_dialog::on_audio_midi_backend_changed(int index) {
     eka2l1::drivers::audio_driver *drv = system_->get_audio_driver();
-    configuration_.midi_backend = static_cast<eka2l1::config::midi_backend>(index);
+    configuration_.midi_backend = static_cast<eka2l1::config::midi_backend_type>(index);
 
     if (drv) {
         switch (configuration_.midi_backend) {
