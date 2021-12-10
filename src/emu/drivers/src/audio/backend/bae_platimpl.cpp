@@ -328,6 +328,14 @@ void BAE_SetActiveAudioDriver(eka2l1::drivers::audio_driver *driver) {
     global_baedriver = driver;
 }
 
+void BAE_DriverDeactivated(eka2l1::drivers::audio_driver *driver) {
+    if (global_baedriver == driver) {
+        global_baeout_stream.reset();
+    }
+
+    global_baedriver = nullptr;
+}
+
 // return 0 if ok, -1 if failed
 int BAE_AquireAudioCard(void *threadContext, unsigned long sampleRate, unsigned long channels, unsigned long bits) {
     if (bits != 16) {

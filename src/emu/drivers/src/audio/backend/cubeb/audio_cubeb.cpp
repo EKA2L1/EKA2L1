@@ -21,6 +21,7 @@
 #include <common/platform.h>
 #include <drivers/audio/backend/cubeb/audio_cubeb.h>
 #include <drivers/audio/backend/cubeb/stream_cubeb.h>
+#include <drivers/audio/backend/baeplat_impl.h>
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <objbase.h>
@@ -40,6 +41,8 @@ namespace eka2l1::drivers {
     }
 
     cubeb_audio_driver::~cubeb_audio_driver() {
+        BAE_DriverDeactivated(this);
+        
         if (context_) {
             cubeb_destroy(context_);
         }
