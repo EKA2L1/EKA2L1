@@ -102,7 +102,10 @@ namespace eka2l1::hle {
         codeseg_ptr cs = mngr.load(dll_name);
 
         if (!cs) {
+            // Skip these ordinals
             LOG_TRACE(KERNEL, "Can't find {}", dll_name8);
+            crr_idx += static_cast<std::uint32_t>(import_block.ordinals.size());
+
             return false;
         }
 
