@@ -184,7 +184,7 @@ namespace eka2l1::drivers {
     tsf *player_tsf::load_bank_from_file(const std::string &path) {
         common::ro_std_file_stream stream(path, true);
         if (!stream.valid()) {
-            return false;
+            return nullptr;
         }
 
         tsf_stream tstream;
