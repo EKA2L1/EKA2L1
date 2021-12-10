@@ -75,8 +75,8 @@ namespace eka2l1::drivers {
                     return nullptr;
                 }
 
-                BAEResult result = BAEMixer_Open(mixer_, BAE_RATE_8K, BAE_LINEAR_INTERPOLATION,
-                    BAE_USE_16 | BAE_DISABLE_REVERB, BAE_MAX_VOICES, 0, BAE_MAX_VOICES / 2, 1);
+                BAEResult result = BAEMixer_Open(mixer_, BAE_RATE_44K, BAE_LINEAR_INTERPOLATION,
+                    BAE_USE_16 | BAE_USE_STEREO | BAE_DISABLE_REVERB, BAE_MAX_VOICES, 0, BAE_MAX_VOICES / 2, 1);
 
                 if (result != BAE_NO_ERROR) {
                     LOG_ERROR(DRIVER_AUD, "Failed to open miniBae mixer!");
