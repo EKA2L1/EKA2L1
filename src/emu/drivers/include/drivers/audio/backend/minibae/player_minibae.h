@@ -19,54 +19,51 @@
 
 #pragma once
 
-#include <drivers/audio/backend/player_shared.h>
+#include <drivers/audio/player.h>
+#include <BAE_Source/Common/MiniBAE.h>
 
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-}
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <vector>
 
 namespace eka2l1::drivers {
-    struct player_ffmpeg : public player_shared {
-    private:        
-        AVCodecContext *codec_;
-        AVFormatContext *format_context_;
-        AVPacket packet_;
-
-        AVCodec *output_encoder_;
-        std::uint64_t channel_layout_dest_;
-
-        AVIOContext *custom_io_;
-        std::uint8_t *custom_io_buffer_;
-
-    protected:
-        bool is_ready_to_play() override;
-        void deinit();
-        bool open_ffmpeg_stream();
+    struct player_minibae : public player {
+    private:
+        BAESong song_;
 
     public:
-        explicit player_ffmpeg(audio_driver *driver);
-        ~player_ffmpeg() override;
+        explicit player_minibae(audio_driver *driver);
+        ~player_minibae() override;
 
-        bool make_backend_source() override;
+        void call_song_done();
 
-        void reset_request() override;
-        void get_more_data() override;
+        bool play() override;
+        bool record() override;
+        bool stop() override;
+        bool crop() override;
 
+        bool set_volume(const std::uint32_t vol) override;
         bool open_url(const std::string &url) override;
         bool open_custom(common::rw_stream *stream) override;
 
-        bool set_position_for_custom_format(const std::uint64_t pos_in_us) override;
-
-        bool crop() override;
-        bool record() override;
-
+        bool set_dest_encoding(const std::uint32_t enc) override;
         bool set_dest_freq(const std::uint32_t freq) override;
         bool set_dest_channel_count(const std::uint32_t cn) override;
-        bool set_dest_encoding(const std::uint32_t enc) override;
+        void set_dest_container_format(const std::uint32_t confor) override;
+
+        std::uint32_t get_dest_freq() override;
+        std::uint32_t get_dest_channel_count() override;
+        std::uint32_t get_dest_encoding() override;
+
+        bool is_playing() const override;
+
+        void set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) override;
+        void set_position(const std::uint64_t pos_in_us) override;
 
         player_type get_player_type() const override {
-            return player_type_ffmpeg;
+            return player_type_minibae;
         }
     };
 }

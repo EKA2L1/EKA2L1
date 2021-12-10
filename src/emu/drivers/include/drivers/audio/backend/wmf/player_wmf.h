@@ -40,7 +40,8 @@ namespace eka2l1::drivers {
     class audio_driver;
     class rw_stream_com;
 
-    struct player_wmf_request : public player_request_base {
+    struct player_wmf : public player_shared {
+    private:        
         IMFSourceReader *reader_;
         IMFSinkWriter *writer_;
 
@@ -49,36 +50,28 @@ namespace eka2l1::drivers {
 
         rw_stream_com *custom_stream_;
 
-        explicit player_wmf_request()
-            : reader_(nullptr)
-            , writer_(nullptr)
-            , output_supported_list_(nullptr)
-            , output_type_(nullptr)
-            , custom_stream_(nullptr) {
-        }
-
-        bool set_output_type(IMFMediaType *new_output_type);
-
-        ~player_wmf_request();
-    };
-
-    struct player_wmf : public player_shared {
     protected:
-        bool is_ready_to_play(player_request_instance &request) override;
+        bool is_ready_to_play() override;
+        bool set_output_type(IMFMediaType *new_output_type);
+        bool configure_stream_for_pcm();
+        bool create_source_reader_and_configure();
+
+        void destroy_wmf_objects();
 
     public:
         explicit player_wmf(audio_driver *driver);
+        ~player_wmf() override;
 
-        bool make_backend_source(player_request_instance &request) override;
+        bool make_backend_source() override;
 
-        void reset_request(player_request_instance &request) override;
-        void get_more_data(player_request_instance &request) override;
+        void reset_request() override;
+        void get_more_data() override;
 
-        bool queue_url(const std::string &url) override;
-        bool queue_custom(common::rw_stream *stream) override;
+        bool open_url(const std::string &url) override;
+        bool open_custom(common::rw_stream *stream) override;
 
-        void read_and_transcode(player_request_instance &request, const std::uint32_t out_stream_idx, const std::uint64_t time_stamp_source, const std::uint64_t duration_source);
-        bool set_position_for_custom_format(player_request_instance &request, const std::uint64_t pos_in_us) override;
+        void read_and_transcode(const std::uint32_t out_stream_idx, const std::uint64_t time_stamp_source, const std::uint64_t duration_source);
+        bool set_position_for_custom_format(const std::uint64_t pos_in_us) override;
 
         bool crop() override;
         bool record() override;
@@ -86,6 +79,10 @@ namespace eka2l1::drivers {
         bool set_dest_encoding(const std::uint32_t enc) override;
         bool set_dest_freq(const std::uint32_t freq) override;
         bool set_dest_channel_count(const std::uint32_t cn) override;
+
+        player_type get_player_type() const override {
+            return player_type_wmf;
+        }
     };
 }
 

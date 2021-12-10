@@ -200,7 +200,22 @@ namespace eka2l1::drivers {
         }
     };
 
-    player_wmf_request::~player_wmf_request() {
+    player_wmf::player_wmf(audio_driver *driver)
+        : player_shared(driver)
+        , reader_(nullptr)
+        , writer_(nullptr)
+        , output_supported_list_(nullptr)
+        , output_type_(nullptr)
+        , custom_stream_(nullptr) {
+        // Startup media foundation!
+        loader::MFStartup(MF_VERSION, 0);
+    }
+
+    player_wmf::~player_wmf() {
+        destroy_wmf_objects();
+    }
+
+    void player_wmf::destroy_wmf_objects() {
         if (reader_) {
             SafeRelease(&reader_);
         }
@@ -214,7 +229,7 @@ namespace eka2l1::drivers {
         }
     }
 
-    bool player_wmf_request::set_output_type(IMFMediaType *new_output_type) {
+    bool player_wmf::set_output_type(IMFMediaType *new_output_type) {
         if (!new_output_type) {
             return false;
         }
@@ -231,17 +246,9 @@ namespace eka2l1::drivers {
         return true;
     }
 
-    player_wmf::player_wmf(audio_driver *driver)
-        : player_shared(driver) {
-        // Startup media foundation!
-        loader::MFStartup(MF_VERSION, 0);
-    }
-
-    void player_wmf::get_more_data(player_request_instance &request) {
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(request.get());
-
+    void player_wmf::get_more_data() {
         // Data drain, try to get more
-        if (request_wmf->flags_ & 1) {
+        if (flags_ & 1) {
             output_stream_->stop();
             return;
         }
@@ -250,11 +257,11 @@ namespace eka2l1::drivers {
         IMFSample *samples = nullptr;
 
         // Read from wmf source reader
-        HRESULT hr = request_wmf->reader_->ReadSample(static_cast<DWORD>(MF_SOURCE_READER_FIRST_AUDIO_STREAM), 0,
+        HRESULT hr = reader_->ReadSample(static_cast<DWORD>(MF_SOURCE_READER_FIRST_AUDIO_STREAM), 0,
             nullptr, &stream_flags, nullptr, &samples);
 
         if ((!samples) || (stream_flags & MF_SOURCE_READERF_ENDOFSTREAM)) {
-            request_wmf->flags_ |= 1;
+            flags_ |= 1;
         }
 
         if (samples && SUCCEEDED(hr)) {
@@ -269,13 +276,13 @@ namespace eka2l1::drivers {
 
                 std::size_t start_to_copy = 0;
 
-                if (request_wmf->use_push_new_data_) {
-                    start_to_copy = request_wmf->data_.size();
-                    request_wmf->use_push_new_data_ = false;
+                if (use_push_new_data_) {
+                    start_to_copy = data_.size();
+                    use_push_new_data_ = false;
                 }
 
-                request_wmf->data_.resize(start_to_copy + buffer_length);
-                std::memcpy(request_wmf->data_.data() + start_to_copy, buffer_pointer, buffer_length);
+                data_.resize(start_to_copy + buffer_length);
+                std::memcpy(data_.data() + start_to_copy, buffer_pointer, buffer_length);
 
                 hr = media_buffer->Unlock();
                 SafeRelease(&media_buffer);
@@ -284,37 +291,26 @@ namespace eka2l1::drivers {
             SafeRelease(&samples);
         }
 
-        request_wmf->data_pointer_ = 0;
+        data_pointer_ = 0;
     }
 
-    void player_wmf::reset_request(player_request_instance &request) {
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(request.get());
-
-        if (!request_wmf) {
-            return;
-        }
-
-        if (!request_wmf->reader_) {
-            if (!make_backend_source(request)) {
+    void player_wmf::reset_request() {
+        if (!reader_) {
+            if (!make_backend_source()) {
                 return;
             }
         }
 
         PROPVARIANT var = { 0 };
         var.vt = VT_I8;
-        request_wmf->reader_->SetCurrentPosition(GUID_NULL, var);
+        reader_->SetCurrentPosition(GUID_NULL, var);
     }
 
-    bool player_wmf::is_ready_to_play(player_request_instance &request) {
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(request.get());
-        if (!request || !request_wmf->reader_) {
-            return false;
-        }
-
-        return true;
+    bool player_wmf::is_ready_to_play() {
+        return (reader_ != nullptr);
     }
 
-    static bool configure_stream_for_pcm(player_wmf_request &request) {
+    bool player_wmf::configure_stream_for_pcm() {
         IMFMediaType *partial_type = nullptr;
 
         // We want to set our output type to PCM16
@@ -336,22 +332,22 @@ namespace eka2l1::drivers {
         }
 
         if (SUCCEEDED(hr)) {
-            hr = request.reader_->SetCurrentMediaType(
+            hr = reader_->SetCurrentMediaType(
                 (DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, nullptr, partial_type);
         }
 
         // Set the stream selection to be first one, onlyyyyy
-        hr = request.reader_->SetStreamSelection(MF_SOURCE_READER_ALL_STREAMS, false);
+        hr = reader_->SetStreamSelection(MF_SOURCE_READER_ALL_STREAMS, false);
 
         if (SUCCEEDED(hr)) {
-            hr = request.reader_->SetStreamSelection(MF_SOURCE_READER_FIRST_AUDIO_STREAM, true);
+            hr = reader_->SetStreamSelection(MF_SOURCE_READER_FIRST_AUDIO_STREAM, true);
         }
 
         IMFMediaType *media_type_on_stream = nullptr;
-        request.reader_->GetCurrentMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM, &media_type_on_stream);
+        reader_->GetCurrentMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM, &media_type_on_stream);
 
-        media_type_on_stream->GetUINT32(MF_MT_AUDIO_NUM_CHANNELS, &request.channels_);
-        media_type_on_stream->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &request.freq_);
+        media_type_on_stream->GetUINT32(MF_MT_AUDIO_NUM_CHANNELS, &channels_);
+        media_type_on_stream->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &freq_);
 
         SafeRelease(&partial_type);
         SafeRelease(&media_type_on_stream);
@@ -429,75 +425,78 @@ namespace eka2l1::drivers {
         return true;
     }
 
-    static bool create_source_reader_and_configure(player_wmf_request *request_wmf) {
-        const std::u16string url_16 = common::utf8_to_ucs2(request_wmf->url_);
+    bool player_wmf::create_source_reader_and_configure() {
+        const std::u16string url_16 = common::utf8_to_ucs2(url_);
 
         HRESULT hr = loader::MFCreateSourceReaderFromURL(
-            reinterpret_cast<LPCWSTR>(url_16.c_str()), nullptr, &request_wmf->reader_);
+            reinterpret_cast<LPCWSTR>(url_16.c_str()), nullptr, &reader_);
 
         if (!SUCCEEDED(hr)) {
-            LOG_ERROR(DRIVER_AUD, "Unable to queue new play URL {} (can't open source reader)", request_wmf->url_);
+            LOG_ERROR(DRIVER_AUD, "Unable to queue new play URL {} (can't open source reader)", url_);
             return false;
         }
 
-        if (!configure_stream_for_pcm(*request_wmf)) {
+        if (!configure_stream_for_pcm()) {
             LOG_ERROR(DRIVER_AUD, "Error while configure WMF stream!");
-            SafeRelease(&request_wmf->reader_);
+            SafeRelease(&reader_);
             return false;
         }
 
         return true;
     }
 
-    bool player_wmf::queue_url(const std::string &url) {
-        player_request_instance request = std::make_unique<player_wmf_request>();
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(request.get());
-
-        request_wmf->data_pointer_ = 0;
-        request_wmf->url_ = url;
-
+    bool player_wmf::open_url(const std::string &url) {
         const std::lock_guard<std::mutex> guard(lock_);
-        requests_.push(std::move(request));
+        flags_ |= 1;
 
-        return true;
+        if (output_stream_ && output_stream_->is_playing()) {
+            output_stream_->stop();
+        }
+
+        flags_ &= ~1;
+
+        destroy_wmf_objects();
+
+        data_pointer_ = 0;
+        url_ = url;
+
+        return make_backend_source();
     }
 
-    bool player_wmf::queue_custom(common::rw_stream *lower_stream) {
-        player_request_instance request = std::make_unique<player_wmf_request>();
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(request.get());
+    bool player_wmf::open_custom(common::rw_stream *lower_stream) {
+        const std::lock_guard<std::mutex> guard(lock_);
 
         IMFByteStream *stream = NULL;
+        flags_ |= 1;
+
+        if (output_stream_ && output_stream_->is_playing()) {
+            output_stream_->stop();
+        }
+
+        destroy_wmf_objects();
 
         // Auto release when ref is to 0.
-        request_wmf->custom_stream_ = new rw_stream_com(lower_stream);
-
-        const std::lock_guard<std::mutex> guard(lock_);
-        requests_.push(std::move(request));
-
-        return true;
+        custom_stream_ = new rw_stream_com(lower_stream);
+        return make_backend_source();
     }
 
-    bool player_wmf::set_position_for_custom_format(player_request_instance &request, const std::uint64_t pos_in_us) {
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(request.get());
-
+    bool player_wmf::set_position_for_custom_format(const std::uint64_t pos_in_us) {
         // Time unit in 100 nanoseconds, convert to unit by mul with 10.
         PROPVARIANT time_to_seek = { pos_in_us * 10 };
         time_to_seek.vt = VT_I8;
 
-        HRESULT res = request_wmf->reader_->SetCurrentPosition(GUID_NULL, time_to_seek);
+        HRESULT res = reader_->SetCurrentPosition(GUID_NULL, time_to_seek);
         if (res == S_OK) {
-            request->pos_in_us_ = pos_in_us;
+            pos_in_us_ = pos_in_us;
             return true;
         }
 
         return false;
     }
 
-    void player_wmf::read_and_transcode(player_request_instance &request, const std::uint32_t out_stream_idx, const std::uint64_t time_stamp_source, const std::uint64_t duration_source) {
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(request.get());
-
+    void player_wmf::read_and_transcode(const std::uint32_t out_stream_idx, const std::uint64_t time_stamp_source, const std::uint64_t duration_source) {
         // Seek the source stream to time stamp first
-        if (!set_position_for_custom_format(request, time_stamp_source)) {
+        if (!set_position_for_custom_format(time_stamp_source)) {
             LOG_ERROR(DRIVER_AUD, "Unable to set position to do reading for transcode!");
             return;
         }
@@ -509,7 +508,7 @@ namespace eka2l1::drivers {
             IMFSample *samples = nullptr;
             DWORD stream_flags = 0;
 
-            HRESULT result = request_wmf->reader_->ReadSample(static_cast<DWORD>(MF_SOURCE_READER_FIRST_AUDIO_STREAM), 0,
+            HRESULT result = reader_->ReadSample(static_cast<DWORD>(MF_SOURCE_READER_FIRST_AUDIO_STREAM), 0,
                 nullptr, &stream_flags, &time_stamp_of_reading_sample_in_wm_tu, &samples);
 
             if ((result != S_OK) || !samples || (stream_flags & MF_SOURCE_READERF_ENDOFSTREAM)) {
@@ -517,7 +516,7 @@ namespace eka2l1::drivers {
                 return;
             }
 
-            HRESULT res_err = request_wmf->writer_->WriteSample(static_cast<DWORD>(out_stream_idx), samples);
+            HRESULT res_err = writer_->WriteSample(static_cast<DWORD>(out_stream_idx), samples);
             SafeRelease(&samples);
         }
     }
@@ -553,38 +552,36 @@ namespace eka2l1::drivers {
     }
 
     bool player_wmf::crop() {
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(requests_.front().get());
-
         // Construct an temporary url to write new samples to
-        const std::string url_new = eka2l1::file_directory(request_wmf->url_) + eka2l1::filename(request_wmf->url_) + "_temp" + eka2l1::path_extension(request_wmf->url_);
+        const std::string url_new = eka2l1::file_directory(url_) + eka2l1::filename(url_) + "_temp" + eka2l1::path_extension(url_);
         const std::u16string url_16_new = common::utf8_to_ucs2(url_new);
 
-        HRESULT result = loader::MFCreateSinkWriterFromURL(reinterpret_cast<LPCWSTR>(url_16_new.c_str()), nullptr, nullptr, &request_wmf->writer_);
+        HRESULT result = loader::MFCreateSinkWriterFromURL(reinterpret_cast<LPCWSTR>(url_16_new.c_str()), nullptr, nullptr, &writer_);
         if (result != S_OK) {
             LOG_ERROR(DRIVER_AUD, "Unable to create sink writer to do cropping!");
             return false;
         }
 
         DWORD out_stream_index = 0;
-        bool res = configure_transcode_stream(request_wmf->writer_, request_wmf->reader_, request_wmf->output_type_, &out_stream_index);
+        bool res = configure_transcode_stream(writer_, reader_, output_type_, &out_stream_index);
 
         if (!res) {
             LOG_ERROR(DRIVER_AUD, "Unable to configure sink writer for cropping!");
-            SafeRelease(&request_wmf->writer_);
+            SafeRelease(&writer_);
 
             return false;
         }
 
-        read_and_transcode(requests_.front(), out_stream_index, 0, request_wmf->pos_in_us_);
-        SafeRelease(&request_wmf->writer_);
+        read_and_transcode(out_stream_index, 0, pos_in_us_);
+        SafeRelease(&writer_);
 
         // Recreate reader stream. todo
-        common::move_file(request_wmf->url_, url_new);
-        SafeRelease(&request_wmf->reader_);
+        common::move_file(url_, url_new);
+        SafeRelease(&reader_);
 
-        request_wmf->data_pointer_ = 0;
+        data_pointer_ = 0;
 
-        return create_source_reader_and_configure(request_wmf);
+        return create_source_reader_and_configure();
     }
 
     bool player_wmf::record() {
@@ -606,18 +603,12 @@ namespace eka2l1::drivers {
     }
 
     bool player_wmf::set_dest_encoding(const std::uint32_t enc) {
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(requests_.front().get());
-
-        if (!request_wmf) {
-            return false;
+        if (output_supported_list_) {
+            SafeRelease(&output_supported_list_);
         }
 
-        if (request_wmf->output_supported_list_) {
-            SafeRelease(&request_wmf->output_supported_list_);
-        }
-
-        if (request_wmf->output_type_) {
-            SafeRelease(&request_wmf->output_type_);
+        if (output_type_) {
+            SafeRelease(&output_type_);
         }
 
         GUID codec_guid = four_cc_codec_to_guid(enc);
@@ -625,44 +616,38 @@ namespace eka2l1::drivers {
             return false;
         }
 
-        request_wmf->encoding_ = enc;
+        encoding_ = enc;
 
-        if (FAILED(loader::MFTranscodeGetAudioOutputAvailableTypes(codec_guid, MFT_ENUM_FLAG_ALL, nullptr, &request_wmf->output_supported_list_))) {
+        if (FAILED(loader::MFTranscodeGetAudioOutputAvailableTypes(codec_guid, MFT_ENUM_FLAG_ALL, nullptr, &output_supported_list_))) {
             // Create an independent output media type. It seems this format supports anykind of encode we throw it in
-            if (FAILED(loader::MFCreateMediaType(&request_wmf->output_type_))) {
+            if (FAILED(loader::MFCreateMediaType(&output_type_))) {
                 return false;
             }
 
             // Set default properties
-            request_wmf->output_type_->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, 2);
-            request_wmf->output_type_->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, 16000);
+            output_type_->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, 2);
+            output_type_->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, 16000);
 
             return true;
         }
 
         // Choose the first one
         DWORD elem_count = 0;
-        if (FAILED(request_wmf->output_supported_list_->GetElementCount(&elem_count)) || (elem_count == 0)) {
+        if (FAILED(output_supported_list_->GetElementCount(&elem_count)) || (elem_count == 0)) {
             return false;
         }
 
-        return request_wmf->set_output_type(GetElement<IMFMediaType>(request_wmf->output_supported_list_, 0));
+        return set_output_type(GetElement<IMFMediaType>(output_supported_list_, 0));
     }
 
     bool player_wmf::set_dest_freq(const std::uint32_t freq) {
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(requests_.front().get());
-
-        if (!request_wmf) {
-            return false;
-        }
-
-        if (!request_wmf->output_supported_list_) {
-            if (request_wmf->output_type_) {
-                if (FAILED(request_wmf->output_type_->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, freq))) {
+        if (!output_supported_list_) {
+            if (output_type_) {
+                if (FAILED(output_type_->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, freq))) {
                     return false;
                 }
 
-                request_wmf->freq_ = freq;
+                freq_ = freq;
                 return true;
             }
 
@@ -673,21 +658,21 @@ namespace eka2l1::drivers {
         // Iterate through all output media types.
         // If we found exact, break, else we should find the nearest sample rate that also matches channel count
         DWORD count = 0;
-        if (!SUCCEEDED(request_wmf->output_supported_list_->GetElementCount(&count))) {
+        if (!SUCCEEDED(output_supported_list_->GetElementCount(&count))) {
             return false;
         }
 
         for (DWORD i = 0; i < count; i++) {
-            IMFMediaType *type = GetElement<IMFMediaType>(request_wmf->output_supported_list_, i);
+            IMFMediaType *type = GetElement<IMFMediaType>(output_supported_list_, i);
 
             if (type) {
                 std::uint32_t output_support_freq = 0;
                 std::uint32_t output_support_cn = 0;
 
                 if (SUCCEEDED(type->GetUINT32(MF_MT_AUDIO_NUM_CHANNELS, &output_support_cn)) && SUCCEEDED(type->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &output_support_freq))) {
-                    if ((output_support_freq >= freq) && (output_support_cn == request_wmf->channels_)) {
+                    if ((output_support_freq >= freq) && (output_support_cn == channels_)) {
                         LOG_TRACE(DRIVER_AUD, "Destination sample rate is set to nearest supported: {}", output_support_freq);
-                        return request_wmf->set_output_type(type);
+                        return set_output_type(type);
                     }
                 }
             }
@@ -699,19 +684,13 @@ namespace eka2l1::drivers {
     }
 
     bool player_wmf::set_dest_channel_count(const std::uint32_t cn) {
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(requests_.front().get());
-
-        if (!request_wmf) {
-            return false;
-        }
-
-        if (!request_wmf->output_supported_list_) {
-            if (request_wmf->output_type_) {
-                if (FAILED(request_wmf->output_type_->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, cn))) {
+        if (!output_supported_list_) {
+            if (output_type_) {
+                if (FAILED(output_type_->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, cn))) {
                     return false;
                 }
 
-                request_wmf->channels_ = cn;
+                channels_ = cn;
                 return true;
             }
 
@@ -722,20 +701,20 @@ namespace eka2l1::drivers {
         // Iterate through all output media types.
         // If we found exact, break, else we should find the nearest sample rate that also matches channel count
         DWORD count = 0;
-        if (!SUCCEEDED(request_wmf->output_supported_list_->GetElementCount(&count))) {
+        if (!SUCCEEDED(output_supported_list_->GetElementCount(&count))) {
             return false;
         }
 
         for (DWORD i = 0; i < count; i++) {
-            IMFMediaType *type = GetElement<IMFMediaType>(request_wmf->output_supported_list_, i);
+            IMFMediaType *type = GetElement<IMFMediaType>(output_supported_list_, i);
 
             if (type) {
                 std::uint32_t output_support_freq = 0;
                 std::uint32_t output_support_cn = 0;
 
                 if (SUCCEEDED(type->GetUINT32(MF_MT_AUDIO_NUM_CHANNELS, &output_support_cn)) && SUCCEEDED(type->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &output_support_freq))) {
-                    if ((output_support_freq == request_wmf->channels_) && (output_support_cn == cn)) {
-                        return request_wmf->set_output_type(type);
+                    if ((output_support_freq == channels_) && (output_support_cn == cn)) {
+                        return set_output_type(type);
                     }
                 }
             }
@@ -746,40 +725,34 @@ namespace eka2l1::drivers {
         return false;
     }
 
-    bool player_wmf::make_backend_source(player_request_instance &request) {
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(requests_.front().get());
-
-        if (!request_wmf) {
-            return false;
-        }
-
+    bool player_wmf::make_backend_source() {
         IMFByteStream *stream = nullptr;
 
-        if (request_wmf->custom_stream_) {
-            if (!SUCCEEDED(loader::MFCreateMFByteStreamOnStream(request_wmf->custom_stream_, &stream))) {
+        if (custom_stream_) {
+            if (!SUCCEEDED(loader::MFCreateMFByteStreamOnStream(custom_stream_, &stream))) {
                 return false;
             }
 
-            HRESULT hr = loader::MFCreateSourceReaderFromByteStream(stream, nullptr, &request_wmf->reader_);
+            HRESULT hr = loader::MFCreateSourceReaderFromByteStream(stream, nullptr, &reader_);
 
             if (!SUCCEEDED(hr)) {
                 LOG_ERROR(DRIVER_AUD, "Unable to queue new custom stream (can't open source reader)");
                 return false;
             }
         } else {
-            if (!create_source_reader_and_configure(request_wmf)) {
+            if (!create_source_reader_and_configure()) {
                 return false;
             }
         }
 
-        if (!configure_stream_for_pcm(*request_wmf)) {
+        if (!configure_stream_for_pcm()) {
             LOG_ERROR(DRIVER_AUD, "Error while configure WMF stream!");
-            SafeRelease(&request_wmf->reader_);
+            SafeRelease(&reader_);
             return false;
         }
 
         SafeRelease(&stream);
-        query_wmf_reader_metadata(request_wmf->reader_, metadatas_);
+        query_wmf_reader_metadata(reader_, metadatas_);
 
         return true;
     }

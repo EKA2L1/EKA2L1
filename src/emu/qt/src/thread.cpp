@@ -53,6 +53,7 @@
 #include <QWindow>
 
 #include <qt/mainwindow.h>
+#include <iostream>
 
 static eka2l1::drivers::input_event make_mouse_event_driver(const float x, const float y, const int button, const int action) {
     eka2l1::drivers::input_event evt;

@@ -231,6 +231,23 @@ add_library(sqlite3
 
 target_include_directories(sqlite3 PUBLIC sqlite3)
 
+# miniBae. Later in driver, we will implement the full thing hopefully :D
+file(GLOB MINIBAE_SHARED_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/miniBAE/minibae/BAE_Source/Common/*.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/miniBAE/minibae/BAE_Source/Common/*.h
+)
+
+set(MINIBAE_INTERNAL_INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/miniBAE/minibae/BAE_Source/Common/
+    ${CMAKE_CURRENT_SOURCE_DIR}/miniBAE/minibae/BAE_Source/Platform/
+    CACHE INTERNAL "MiniBAE internal include directories")
+
+set(MINIBAE_PUBLIC_INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/miniBAE/minibae/
+    CACHE INTERNAL "MiniBAE public include directories")
+
+set(MINIBAE_SHARED_SOURCES ${MINIBAE_SHARED_SOURCES} CACHE INTERNAL "MiniBAE source code")
+
 set (capstone_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/capstone/include" PARENT_SCOPE)
 set (YAML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp/include" PARENT_SCOPE)
 set (LIBCXXABI_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libcxxabi/include" PARENT_SCOPE)

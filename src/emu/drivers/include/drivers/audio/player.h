@@ -44,6 +44,12 @@ namespace eka2l1::drivers {
         player_audio_encoding_custom = 2
     };
 
+    enum player_type {
+        player_type_wmf = 0,
+        player_type_ffmpeg = 1,
+        player_type_minibae = 2
+    };
+
     struct player {
     protected:
         std::uint32_t volume_;
@@ -76,8 +82,8 @@ namespace eka2l1::drivers {
          */
         virtual bool crop() = 0;
 
-        virtual bool queue_url(const std::string &url) = 0;
-        virtual bool queue_custom(common::rw_stream *stream) = 0;
+        virtual bool open_url(const std::string &url) = 0;
+        virtual bool open_custom(common::rw_stream *stream) = 0;
 
         virtual std::uint32_t max_volume() const {
             return 100;
@@ -135,15 +141,10 @@ namespace eka2l1::drivers {
         virtual std::uint32_t get_dest_channel_count() = 0;
         virtual std::uint32_t get_dest_encoding() = 0;
 
-        virtual bool prepare_play_newest() = 0;
         virtual bool is_playing() const = 0;
-    };
-
-    enum player_type {
-        player_type_wmf = 0,
-        player_type_ffmpeg = 1
+        virtual player_type get_player_type() const = 0;
     };
 
     std::unique_ptr<player> new_audio_player(audio_driver *aud, const player_type type);
-    player_type get_suitable_player_type();
+    std::vector<player_type> get_suitable_player_types(const std::string &url);
 }

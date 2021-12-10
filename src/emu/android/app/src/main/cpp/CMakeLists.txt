@@ -56,4 +56,5 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E make_directory "${ASSETS_DIR}/patch"
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/bin/patch/" "${ASSETS_DIR}/patch"
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/drivers/resources/gles/" "${ASSETS_DIR}/resources"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/config/compat/" "${ASSETS_DIR}/compat")
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/config/compat/" "${ASSETS_DIR}/compat"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/drivers/resources/defaultbank.hsb" "${ASSETS_DIR}/resources")

@@ -31,8 +31,11 @@ namespace eka2l1::drivers {
         audio_driver *driver_;
         std::size_t grand_volume_change_callback_handle_;
 
+        std::uint32_t sample_rate;
+        std::uint8_t channels;
+
     public:
-        explicit audio_output_stream(audio_driver *driver);
+        explicit audio_output_stream(audio_driver *driver, const std::uint32_t sample_rate, const std::uint8_t channels);
         virtual ~audio_output_stream();
 
         virtual bool start() = 0;
@@ -44,5 +47,13 @@ namespace eka2l1::drivers {
         virtual float get_volume() const = 0;
 
         virtual bool current_frame_position(std::uint64_t *pos) = 0;
+
+        const std::uint8_t get_channels() {
+            return channels;
+        }
+
+        const std::uint32_t get_sample_rate() {
+            return sample_rate;
+        }
     };
 };
