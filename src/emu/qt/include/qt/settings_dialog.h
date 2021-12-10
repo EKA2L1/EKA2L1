@@ -126,6 +126,11 @@ private slots:
     void on_ui_clear_all_configs_clicked();
     void on_ui_language_changed(int index);
     void on_screen_buffer_sync_option_changed(int index);
+    void on_audio_midi_backend_changed(int index);
+    void on_audio_hsb_browse_clicked();
+    void on_audio_sf2_browse_clicked();
+    void on_audio_hsb_reset_clicked();
+    void on_audio_sf2_reset_clicked();
 
 public slots:
     void on_app_launching();

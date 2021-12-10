@@ -95,5 +95,6 @@ namespace eka2l1::drivers {
     };
 
     using audio_driver_instance = std::unique_ptr<audio_driver>;
-    audio_driver_instance make_audio_driver(const audio_driver_backend backend, const std::uint32_t initial_master_vol = 100);
+    audio_driver_instance make_audio_driver(const audio_driver_backend backend, const std::uint32_t initial_master_vol = 100,
+         const player_type preferred_midi_backend = player_type_tsf);
 }

@@ -259,6 +259,9 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     ui_->system_screen_buffer_sync_combo->setCurrentIndex(static_cast<int>(configuration_.screen_buffer_sync));
     ui_->emulator_display_disable_content_scale->setChecked(configuration_.disable_display_content_scale);
     ui_->system_friendly_phone_name_edit->setText(QString::fromStdString(configuration_.device_display_name));
+    ui_->system_audio_midi_backend_combo->setCurrentIndex(static_cast<int>(configuration.midi_backend));
+    ui_->system_audio_midi_hsb_bank_edit->setText(QString::fromStdString(eka2l1::absolute_path(configuration.hsb_bank_path, current_dir)));
+    ui_->system_audio_midi_sf2_bank_edit->setText(QString::fromStdString(eka2l1::absolute_path(configuration.sf2_bank_path, current_dir)));
 
     QSettings settings;
     ui_->interface_status_bar_checkbox->setChecked(settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
@@ -377,6 +380,11 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->system_prop_imei_check_btn, &QPushButton::clicked, this, &settings_dialog::on_check_imei_validity_clicked);
     connect(ui_->system_friendly_phone_name_edit, &QLineEdit::textEdited, this, &settings_dialog::on_friendly_phone_name_edited);
     connect(ui_->system_audio_vol_slider, &QSlider::valueChanged, this, &settings_dialog::on_master_volume_value_changed);
+    connect(ui_->system_audio_midi_backend_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_audio_midi_backend_changed);
+    connect(ui_->system_audio_midi_hsb_bank_browse, &QPushButton::clicked, this, &settings_dialog::on_audio_hsb_browse_clicked);
+    connect(ui_->system_audio_midi_sf2_bank_browse, &QPushButton::clicked, this, &settings_dialog::on_audio_sf2_browse_clicked);
+    connect(ui_->system_audio_midi_hsb_bank_reset, &QPushButton::clicked, this, &settings_dialog::on_audio_hsb_reset_clicked);
+    connect(ui_->system_audio_midi_sf2_bank_reset, &QPushButton::clicked, this, &settings_dialog::on_audio_sf2_reset_clicked);
     connect(ui_->system_screen_buffer_sync_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_screen_buffer_sync_option_changed);
 
     connect(ui_->settings_tab, &QTabWidget::currentChanged, this, &settings_dialog::on_tab_changed);
@@ -1187,4 +1195,95 @@ void settings_dialog::on_friendly_phone_name_edited(const QString &text) {
     if (serv) {
         serv->device_name(text.toStdU16String());
     }
+}
+
+void settings_dialog::on_audio_midi_backend_changed(int index) {
+    eka2l1::drivers::audio_driver *drv = system_->get_audio_driver();
+    configuration_.midi_backend = static_cast<eka2l1::config::midi_backend>(index);
+
+    if (drv) {
+        switch (configuration_.midi_backend) {
+        case eka2l1::config::MIDI_BACKEND_MINIBAE:
+            drv->set_preferred_midi_backend(eka2l1::drivers::player_type::player_type_minibae);
+            break;
+
+        case eka2l1::config::MIDI_BACKEND_TSF:
+            drv->set_preferred_midi_backend(eka2l1::drivers::player_type::player_type_tsf);
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    configuration_.serialize();
+
+    QMessageBox::information(this, tr("Successfully changed"), tr("Next time the application requests to play a new MIDI, "
+        "the choosen backend will be used!"));
+}
+
+void settings_dialog::on_audio_hsb_browse_clicked() {
+    QSettings settings;
+    QVariant last_bank_browse_variant = settings.value(RECENT_BANK_FOLDER_SETTING_NAME);
+    QString last_bank_browse_folder;
+
+    if (last_bank_browse_variant.isValid()) {
+        last_bank_browse_folder = last_bank_browse_variant.toString();
+    }
+
+    QString hsb_path = QFileDialog::getOpenFileName(this, tr("Choose the HSB bank file"), last_bank_browse_folder, "HSB file (*.hsb);;All files (*.*)");
+    if (hsb_path.isEmpty()) {
+        return;
+    }
+
+    eka2l1::drivers::audio_driver *drv = system_->get_audio_driver();
+    configuration_.hsb_bank_path = hsb_path.toStdString();
+
+    drv->set_bank_path(eka2l1::drivers::MIDI_BANK_TYPE_HSB, configuration_.hsb_bank_path);
+    configuration_.serialize();
+
+    ui_->system_audio_midi_hsb_bank_edit->setText(hsb_path);
+}
+
+void settings_dialog::on_audio_sf2_browse_clicked() {
+    QSettings settings;
+    QVariant last_bank_browse_variant = settings.value(RECENT_BANK_FOLDER_SETTING_NAME);
+    QString last_bank_browse_folder;
+
+    if (last_bank_browse_variant.isValid()) {
+        last_bank_browse_folder = last_bank_browse_variant.toString();
+    }
+
+    QString sf2_path = QFileDialog::getOpenFileName(this, tr("Choose the SF2 bank file"), last_bank_browse_folder, "SF2 file (*.sf2);;All files (*.*)");
+    if (sf2_path.isEmpty()) {
+        return;
+    }
+
+    eka2l1::drivers::audio_driver *drv = system_->get_audio_driver();
+    configuration_.sf2_bank_path = sf2_path.toStdString();
+
+    drv->set_bank_path(eka2l1::drivers::MIDI_BANK_TYPE_SF2, configuration_.sf2_bank_path);
+    configuration_.serialize();
+
+    ui_->system_audio_midi_sf2_bank_edit->setText(sf2_path);
+}
+
+void settings_dialog::on_audio_hsb_reset_clicked() {
+    eka2l1::drivers::audio_driver *drv = system_->get_audio_driver();
+    configuration_.hsb_bank_path = "resources/defaultbank.hsb";
+
+    drv->set_bank_path(eka2l1::drivers::MIDI_BANK_TYPE_HSB, configuration_.hsb_bank_path);
+    configuration_.serialize();
+
+    ui_->system_audio_midi_hsb_bank_edit->setText(QString::fromStdString(configuration_.hsb_bank_path));
+}
+
+void settings_dialog::on_audio_sf2_reset_clicked() {
+    eka2l1::drivers::audio_driver *drv = system_->get_audio_driver();
+    configuration_.sf2_bank_path = "resources/defaultbank.sf2";
+
+    drv->set_bank_path(eka2l1::drivers::MIDI_BANK_TYPE_SF2, configuration_.sf2_bank_path);
+    configuration_.serialize();
+
+    ui_->system_audio_midi_sf2_bank_edit->setText(QString::fromStdString(configuration_.sf2_bank_path));
 }

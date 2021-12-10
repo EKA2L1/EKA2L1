@@ -63,6 +63,7 @@ namespace eka2l1::drivers {
                     LOG_ERROR(DRIVER_AUD, "Failed to new miniBae banks!");
                 } else {
                     BAEMixer_UnloadBank(mixer_, current_bank_);
+                    current_bank_ = new_token;
                 }
             }
         }

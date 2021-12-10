@@ -29,7 +29,7 @@ namespace eka2l1::drivers {
         bool init_;
 
     public:
-        explicit cubeb_audio_driver(const std::uint32_t initial_master_volume = 100);
+        explicit cubeb_audio_driver(const std::uint32_t initial_master_volume = 100, const player_type preferred_midi_backend = player_type_tsf);
         ~cubeb_audio_driver() override;
 
         std::unique_ptr<audio_output_stream> new_output_stream(const std::uint32_t sample_rate,

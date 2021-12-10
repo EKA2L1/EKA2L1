@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>702</height>
+    <height>729</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -829,10 +829,95 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</string>
           <string>Audio</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_8">
+          <item row="3" column="0">
+           <layout class="QHBoxLayout" name="system_audio_midi_sf2_bank_layout" stretch="1,2,2,0">
+            <item>
+             <widget class="QLabel" name="system_audio_midi_sf2_bank_label">
+              <property name="text">
+               <string>SF2 bank</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="system_audio_midi_sf2_bank_edit">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="system_audio_midi_sf2_bank_browse">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Browse</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="system_audio_midi_sf2_bank_reset">
+              <property name="text">
+               <string>Reset</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="2" column="0">
+           <layout class="QHBoxLayout" name="system_audio_midi_hsb_bank_layout" stretch="1,2,2,0">
+            <item>
+             <widget class="QLabel" name="system_audio_midi_hsb_bank_label">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="text">
+               <string>HSB bank</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="system_audio_midi_hsb_bank_edit">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="system_audio_midi_hsb_bank_browse">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Browse</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="system_audio_midi_hsb_bank_reset">
+              <property name="text">
+               <string>Reset</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
           <item row="1" column="0">
-           <layout class="QHBoxLayout" name="system_audio_midi_backend_layout">
+           <layout class="QHBoxLayout" name="system_audio_midi_backend_layout" stretch="1,2">
             <item>
              <widget class="QLabel" name="system_audio_midi_backend_label">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="text">
                <string>MIDI backend</string>
               </property>
@@ -840,6 +925,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</string>
             </item>
             <item>
              <widget class="QComboBox" name="system_audio_midi_backend_combo">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <item>
                <property name="text">
                 <string>TinySoundFont (High-quality, support SF2)</string>

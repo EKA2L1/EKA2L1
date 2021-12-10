@@ -28,8 +28,8 @@
 #endif
 
 namespace eka2l1::drivers {
-    cubeb_audio_driver::cubeb_audio_driver(const std::uint32_t initial_master_volume)
-        : audio_driver(initial_master_volume)
+    cubeb_audio_driver::cubeb_audio_driver(const std::uint32_t initial_master_volume, const player_type preferred_midi_backend)
+        : audio_driver(initial_master_volume, preferred_midi_backend)
         , context_(nullptr)
         , init_(false) {
         if (cubeb_init(&context_, "EKA2L1 Audio Driver", nullptr) != CUBEB_OK) {
