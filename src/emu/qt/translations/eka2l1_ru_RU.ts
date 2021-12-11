@@ -650,6 +650,8 @@
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="294"/>
+      <location filename="../src/settings_dialog.ui" line="857"/>
+      <location filename="../src/settings_dialog.ui" line="898"/>
       <source>Browse</source>
       <translation>Обзор</translation>
     </message>
@@ -759,19 +761,19 @@
       <translation>Система</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="489"/>
+      <location filename="../src/settings_dialog.ui" line="829"/>
       <source>Audio</source>
       <translation>Звук</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="503"/>
+      <location filename="../src/settings_dialog.ui" line="959"/>
       <source>Volume</source>
       <translation>Громкость</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="526"/>
-      <location filename="../src/settings_dialog.ui" line="730"/>
-      <location filename="../src/settings_dialog.ui" line="1618"/>
+      <location filename="../src/settings_dialog.ui" line="657"/>
+      <location filename="../src/settings_dialog.ui" line="982"/>
+      <location filename="../src/settings_dialog.ui" line="1734"/>
       <source>0</source>
       <translation type="unfinished">0</translation>
     </message>
@@ -787,7 +789,7 @@
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="578"/>
-      <location filename="../src/settings_dialog.ui" line="936"/>
+      <location filename="../src/settings_dialog.ui" line="1052"/>
       <source>Rename</source>
       <translation>Переименовать</translation>
     </message>
@@ -812,413 +814,464 @@
       <translation>Проверить текущее устройство</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="614"/>
+      <location filename="../src/settings_dialog.ui" line="756"/>
       <source>Hardware emulation</source>
       <translation>Эмуляция оборудования</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="628"/>
+      <location filename="../src/settings_dialog.ui" line="770"/>
       <source>CPU emulator</source>
       <translation>Эмулятор ЦП</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="636"/>
+      <location filename="../src/settings_dialog.ui" line="778"/>
       <source>Dynarmic (CPU recompiler)</source>
       <translation>Dynarmic (рекомпилятор ЦП)</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="641"/>
+      <location filename="../src/settings_dialog.ui" line="783"/>
       <source>Dyncom (CPU interpreter)</source>
       <translation>Dyncom (Интерпретатор ЦП)</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="653"/>
+      <location filename="../src/settings_dialog.ui" line="795"/>
       <source>Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</source>
       <translation>Выберите уровень точности для тайминговых операций.&lt;br&gt;Чем выше уровень, тем больше потребляется мощность процессора, но потенциально ускоряется работа в некоторых приложениях!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="656"/>
+      <location filename="../src/settings_dialog.ui" line="798"/>
       <source>Real-time accuracy</source>
       <translation>Точность в реальном времени</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="664"/>
+      <location filename="../src/settings_dialog.ui" line="806"/>
       <source>Low</source>
       <translation>Низкий</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="669"/>
+      <location filename="../src/settings_dialog.ui" line="811"/>
       <source>Mid</source>
       <translation>Средний</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="674"/>
+      <location filename="../src/settings_dialog.ui" line="816"/>
       <source>High</source>
       <translation>Высокий</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="693"/>
+      <location filename="../src/settings_dialog.ui" line="620"/>
       <source>Properties</source>
       <translation>Параметры</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="784"/>
+      <location filename="../src/settings_dialog.ui" line="711"/>
       <source>Check</source>
       <translation>Проверить</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="701"/>
+      <location filename="../src/settings_dialog.ui" line="628"/>
       <source>Battery level (0 - 100)</source>
       <translation>Уровень батареи (0 - 100)</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="747"/>
+      <location filename="../src/settings_dialog.ui" line="674"/>
       <source>System language</source>
       <translation>Язык системы</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="829"/>
+      <location filename="../src/settings_dialog.ui" line="489"/>
       <source>Graphics</source>
       <translation>Графика</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="841"/>
+      <location filename="../src/settings_dialog.ui" line="501"/>
       <source>Screen buffer sync</source>
       <translation>Синхронизация буфера экрана</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="855"/>
+      <location filename="../src/settings_dialog.ui" line="515"/>
       <source>Preferred</source>
       <translation>Предпочтительно</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="865"/>
+      <location filename="../src/settings_dialog.ui" line="525"/>
       <source>Enable</source>
       <translation>Включить</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="860"/>
+      <location filename="../src/settings_dialog.ui" line="520"/>
       <source>Disable</source>
       <translation>Выключить</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="801"/>
+      <location filename="../src/settings_dialog.ui" line="728"/>
       <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
       <translation>Имя, отображаемое в эмулированных приложениях или играх. Максимум 30 символов.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="804"/>
+      <location filename="../src/settings_dialog.ui" line="731"/>
       <source>Friendly phone name</source>
       <translation>Имя телефона</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="837"/>
+      <location filename="../src/settings_dialog.ui" line="497"/>
       <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
       <translation>Это позволяет записывать эмулированные программы и предотвращать мигание в некоторых старых играх S60v1/S60v2.
 Опция "Предпочтительно" автоматически включится на устройствах S60v1/S60v2.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="885"/>
+      <location filename="../src/settings_dialog.ui" line="837"/>
+      <source>SF2 bank</source>
+      <translation type="unfinished">SF2 bank</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="864"/>
+      <location filename="../src/settings_dialog.ui" line="905"/>
+      <source>Reset</source>
+      <translation>Сброс</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="878"/>
+      <source>HSB bank</source>
+      <translation type="unfinished">HSB bank</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="922"/>
+      <source>MIDI backend</source>
+      <translation type="unfinished">MIDI backend</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="936"/>
+      <source>TinySoundFont (High-quality, support SF2)</source>
+      <translation type="unfinished">TinySoundFont (High-quality, support SF2)</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="941"/>
+      <source>MiniBAE (Lower-quality, support HSB)</source>
+      <translation type="unfinished">MiniBAE (Lower-quality, support HSB)</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="1001"/>
       <source>Control</source>
       <translation>Управление</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="900"/>
+      <location filename="../src/settings_dialog.ui" line="1016"/>
       <source>Profile</source>
       <translation>Профиль</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="923"/>
+      <location filename="../src/settings_dialog.ui" line="1039"/>
       <source>Add</source>
       <translation>Добавить</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="949"/>
+      <location filename="../src/settings_dialog.ui" line="1065"/>
       <source>Delete</source>
       <translation>Удалить</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="968"/>
+      <location filename="../src/settings_dialog.ui" line="1084"/>
       <source>Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</source>
       <translation>Примечание: Одна из привязок связана с кнопкой мыши, функции сенсорного экрана будут отключены.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="986"/>
+      <location filename="../src/settings_dialog.ui" line="1102"/>
       <source>Left softkey</source>
       <translation>Левый софт</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1024"/>
+      <location filename="../src/settings_dialog.ui" line="1140"/>
       <source>Up arrow</source>
       <translation>Стрелка вверх</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1056"/>
+      <location filename="../src/settings_dialog.ui" line="1172"/>
       <source>Right softkey</source>
       <translation>Правый софт</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1092"/>
+      <location filename="../src/settings_dialog.ui" line="1208"/>
       <source>Left arrow</source>
       <translation>Стрелка влево</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1124"/>
+      <location filename="../src/settings_dialog.ui" line="1240"/>
       <source>Middle softkey</source>
       <translation>Средний софт</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1156"/>
+      <location filename="../src/settings_dialog.ui" line="1272"/>
       <source>Right arrow</source>
       <translation>Стрелка вправо</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1192"/>
+      <location filename="../src/settings_dialog.ui" line="1308"/>
       <source>Green softkey</source>
       <translation>Зелёная клавиша</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1224"/>
+      <location filename="../src/settings_dialog.ui" line="1340"/>
       <source>Down arrow</source>
       <translation>Стрелка вниз</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1256"/>
+      <location filename="../src/settings_dialog.ui" line="1372"/>
       <source>Red softkey</source>
       <translation>Красная клавиша</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1292"/>
+      <location filename="../src/settings_dialog.ui" line="1408"/>
       <source>1</source>
       <translation type="unfinished">1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1324"/>
+      <location filename="../src/settings_dialog.ui" line="1440"/>
       <source>2</source>
       <translation type="unfinished">2</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1356"/>
+      <location filename="../src/settings_dialog.ui" line="1472"/>
       <source>3</source>
       <translation type="unfinished">3</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1392"/>
+      <location filename="../src/settings_dialog.ui" line="1508"/>
       <source>4</source>
       <translation type="unfinished">4</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1424"/>
+      <location filename="../src/settings_dialog.ui" line="1540"/>
       <source>5</source>
       <translation type="unfinished">5</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1456"/>
+      <location filename="../src/settings_dialog.ui" line="1572"/>
       <source>6</source>
       <translation type="unfinished">6</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1486"/>
+      <location filename="../src/settings_dialog.ui" line="1602"/>
       <source>7</source>
       <translation type="unfinished">7</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1518"/>
+      <location filename="../src/settings_dialog.ui" line="1634"/>
       <source>8</source>
       <translation type="unfinished">8</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1550"/>
+      <location filename="../src/settings_dialog.ui" line="1666"/>
       <source>9</source>
       <translation type="unfinished">9</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1586"/>
+      <location filename="../src/settings_dialog.ui" line="1702"/>
       <source>*</source>
       <translation type="unfinished">*</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1650"/>
+      <location filename="../src/settings_dialog.ui" line="1766"/>
       <source>#</source>
       <translation type="unfinished">#</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="411"/>
+      <location filename="../src/settings_dialog.cpp" line="419"/>
       <source>Choose the data folder</source>
       <translation>Выберите папку данных</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="413"/>
-      <location filename="../src/settings_dialog.cpp" line="1092"/>
-      <location filename="../src/settings_dialog.cpp" line="1117"/>
+      <location filename="../src/settings_dialog.cpp" line="421"/>
+      <location filename="../src/settings_dialog.cpp" line="1100"/>
+      <location filename="../src/settings_dialog.cpp" line="1125"/>
       <source>Relaunch needed</source>
       <translation>Требуется перезапуск</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="413"/>
+      <location filename="../src/settings_dialog.cpp" line="421"/>
       <source>This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</source>
       <translation>Это изменение требует перезапуска эмулятора.&lt;br&gt;Вы хотите продолжить?</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="534"/>
+      <location filename="../src/settings_dialog.cpp" line="542"/>
       <source>Please wait</source>
       <translation>Пожалуйста, подождите</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="535"/>
+      <location filename="../src/settings_dialog.cpp" line="543"/>
       <source>Validation is in process. Please do not exit or launch applications until this operation is done.</source>
       <translation>Проверка в процессе. Пожалуйста, не выходите или не запускайте приложения, пока операция не будет завершена.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="555"/>
+      <location filename="../src/settings_dialog.cpp" line="563"/>
       <source>Validation done!</source>
       <translation>Проверка выполнена!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="555"/>
+      <location filename="../src/settings_dialog.cpp" line="563"/>
       <source>The validation has successfully completed!</source>
       <translation>Проверка успешно завершена!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="566"/>
+      <location filename="../src/settings_dialog.cpp" line="574"/>
       <source>Enter new device name</source>
       <translation>Введите новое имя устройства</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="663"/>
+      <location filename="../src/settings_dialog.cpp" line="671"/>
       <source>Unbind</source>
       <translation>Отвязать</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="708"/>
+      <location filename="../src/settings_dialog.cpp" line="716"/>
       <source>Waiting for input</source>
       <translation>Ожидание ввода</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="723"/>
-      <location filename="../src/settings_dialog.cpp" line="769"/>
+      <location filename="../src/settings_dialog.cpp" line="731"/>
+      <location filename="../src/settings_dialog.cpp" line="777"/>
       <source>Mouse button %1</source>
       <translation>Кнопка мыши %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="725"/>
-      <location filename="../src/settings_dialog.cpp" line="811"/>
+      <location filename="../src/settings_dialog.cpp" line="733"/>
+      <location filename="../src/settings_dialog.cpp" line="819"/>
       <source>Controller %1 : Button %2</source>
       <translation>Контроллер %1 : Кнопка %2</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="836"/>
-      <location filename="../src/settings_dialog.cpp" line="860"/>
+      <location filename="../src/settings_dialog.cpp" line="844"/>
+      <location filename="../src/settings_dialog.cpp" line="868"/>
       <source>Enter profile name</source>
       <translation>Введите имя профиля</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="844"/>
+      <location filename="../src/settings_dialog.cpp" line="852"/>
       <source>Profile creation failed</source>
       <translation>Ошибка при создании профиля</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="844"/>
-      <location filename="../src/settings_dialog.cpp" line="868"/>
+      <location filename="../src/settings_dialog.cpp" line="852"/>
+      <location filename="../src/settings_dialog.cpp" line="876"/>
       <source>A profile with that name already exists!</source>
       <translation>Профиль с таким именем уже существует!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="868"/>
+      <location filename="../src/settings_dialog.cpp" line="876"/>
       <source>Profile rename failed</source>
       <translation>Ошибка переименования профиля</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="883"/>
+      <location filename="../src/settings_dialog.cpp" line="891"/>
       <source>Profile deletion failed</source>
       <translation>Ошибка удаления профиля</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="883"/>
+      <location filename="../src/settings_dialog.cpp" line="891"/>
       <source>This is the only profile left!</source>
       <translation>Это единственный профиль!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="921"/>
+      <location filename="../src/settings_dialog.cpp" line="929"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
       <translation>&lt;b&gt;Конфигурация для:&lt;/b&gt; %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="924"/>
-      <location filename="../src/settings_dialog.cpp" line="929"/>
+      <location filename="../src/settings_dialog.cpp" line="932"/>
+      <location filename="../src/settings_dialog.cpp" line="937"/>
       <source>None</source>
       <translation>Нет</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1019"/>
+      <location filename="../src/settings_dialog.cpp" line="1027"/>
       <source>IMEI sequence contains non-numeric character!</source>
       <translation>Последовательность IMEI содержит нецифровой символ!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1022"/>
+      <location filename="../src/settings_dialog.cpp" line="1030"/>
       <source>IMEI sequence has invalid sum!</source>
       <translation>Неверная сумма последовательности IMEI!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1025"/>
+      <location filename="../src/settings_dialog.cpp" line="1033"/>
       <source>IMEI sequence length must be 15!</source>
       <translation>Длина последовательности IMEI должна быть 15 символов!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1031"/>
+      <location filename="../src/settings_dialog.cpp" line="1039"/>
       <source>Unidentified error!</source>
       <translation>Неизвестная ошибка!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1038"/>
+      <location filename="../src/settings_dialog.cpp" line="1046"/>
       <source>IMEI valid!</source>
       <translation>Верный IMEI!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1038"/>
+      <location filename="../src/settings_dialog.cpp" line="1046"/>
       <source>The IMEI sequence is valid!</source>
       <translation>Последовательность IMEI верна!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1041"/>
+      <location filename="../src/settings_dialog.cpp" line="1049"/>
       <source>IMEI invalid!</source>
       <translation>Неверный IMEI!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1051"/>
+      <location filename="../src/settings_dialog.cpp" line="1059"/>
       <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
       <translation>Ваш IMEI неверен, потому что: %1.&lt;br&gt;Вы хотите изменить IMEI вместо закрытия? Выбор &quot;Нет&quot; сохранит текущее значение IMEI.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1053"/>
+      <location filename="../src/settings_dialog.cpp" line="1061"/>
       <source>Cancel closing</source>
       <translation>Отменить закрытие</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1092"/>
+      <location filename="../src/settings_dialog.cpp" line="1100"/>
       <source>This change will be effective on the next launch of the emulator.</source>
       <translation>Это изменение вступит в силу при следующем запуске эмулятора.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1100"/>
+      <location filename="../src/settings_dialog.cpp" line="1108"/>
       <source>Confirmation</source>
       <translation>Подтверждение</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1100"/>
+      <location filename="../src/settings_dialog.cpp" line="1108"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
       <translation>Вы уверены, что хотите это сделать? Ваша текущая тема будет сброшена, все окна сообщений, которые были выключены, будут снова включены, и все недавние монтирования будут очищены.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1117"/>
+      <location filename="../src/settings_dialog.cpp" line="1125"/>
       <source>The language will be updated on the next launch of the emulator.</source>
       <translation>Язык будет обновлен при следующем запуске эмулятора.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1144"/>
+      <location filename="../src/settings_dialog.cpp" line="1152"/>
       <source>Pick the screen background color</source>
       <translation>Выберите цвет фона экрана</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.cpp" line="1221"/>
+      <source>Successfully changed</source>
+      <translation type="unfinished">Successfully changed</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.cpp" line="1221"/>
+      <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
+      <translation type="unfinished">Next time the application requests to play a new MIDI, the choosen backend will be used!</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.cpp" line="1234"/>
+      <source>Choose the HSB bank file</source>
+      <translation type="unfinished">Choose the HSB bank file</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.cpp" line="1257"/>
+      <source>Choose the SF2 bank file</source>
+      <translation type="unfinished">Choose the SF2 bank file</translation>
     </message>
   </context>
 </TS>
