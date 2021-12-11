@@ -650,6 +650,8 @@
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="294"/>
+      <location filename="../src/settings_dialog.ui" line="857"/>
+      <location filename="../src/settings_dialog.ui" line="898"/>
       <source>Browse</source>
       <translation>تصفّح</translation>
     </message>
@@ -759,19 +761,19 @@
       <translation>النظام</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="489"/>
+      <location filename="../src/settings_dialog.ui" line="829"/>
       <source>Audio</source>
       <translation>الصوت</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="503"/>
+      <location filename="../src/settings_dialog.ui" line="959"/>
       <source>Volume</source>
       <translation>مستوى الصوت</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="526"/>
-      <location filename="../src/settings_dialog.ui" line="730"/>
-      <location filename="../src/settings_dialog.ui" line="1618"/>
+      <location filename="../src/settings_dialog.ui" line="657"/>
+      <location filename="../src/settings_dialog.ui" line="982"/>
+      <location filename="../src/settings_dialog.ui" line="1734"/>
       <source>0</source>
       <translation type="unfinished">0</translation>
     </message>
@@ -787,7 +789,7 @@
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="578"/>
-      <location filename="../src/settings_dialog.ui" line="936"/>
+      <location filename="../src/settings_dialog.ui" line="1052"/>
       <source>Rename</source>
       <translation>إعادة التسمية</translation>
     </message>
@@ -812,413 +814,464 @@
       <translation>التحقق من صحة الجهاز الحالي</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="614"/>
+      <location filename="../src/settings_dialog.ui" line="756"/>
       <source>Hardware emulation</source>
       <translation>محاكاة العتاد</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="628"/>
+      <location filename="../src/settings_dialog.ui" line="770"/>
       <source>CPU emulator</source>
       <translation>محاكاة المعالج</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="636"/>
+      <location filename="../src/settings_dialog.ui" line="778"/>
       <source>Dynarmic (CPU recompiler)</source>
       <translation>Dynarmic (CPU recompiler)</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="641"/>
+      <location filename="../src/settings_dialog.ui" line="783"/>
       <source>Dyncom (CPU interpreter)</source>
       <translation>Dyncom (CPU interpreter)</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="653"/>
+      <location filename="../src/settings_dialog.ui" line="795"/>
       <source>Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</source>
       <translation>اختر مستوى الدقة لعمليات التوقيت.&lt;br&gt;كلما ارتفع المستوى، كلما استهلكت طاقة وحدة المعالجة المركزية أكثر، ولكن يحتمل أن تكون العملية أسرع في بعض التطبيقات!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="656"/>
+      <location filename="../src/settings_dialog.ui" line="798"/>
       <source>Real-time accuracy</source>
       <translation>الدقة في الوقت الحقيقي</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="664"/>
+      <location filename="../src/settings_dialog.ui" line="806"/>
       <source>Low</source>
       <translation>منخفض</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="669"/>
+      <location filename="../src/settings_dialog.ui" line="811"/>
       <source>Mid</source>
       <translation>متوسط</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="674"/>
+      <location filename="../src/settings_dialog.ui" line="816"/>
       <source>High</source>
       <translation>عالية</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="693"/>
+      <location filename="../src/settings_dialog.ui" line="620"/>
       <source>Properties</source>
       <translation>الخصائص</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="784"/>
+      <location filename="../src/settings_dialog.ui" line="711"/>
       <source>Check</source>
       <translation>تحقق</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="701"/>
+      <location filename="../src/settings_dialog.ui" line="628"/>
       <source>Battery level (0 - 100)</source>
       <translation>مستوى البطارية (0 - 100)</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="747"/>
+      <location filename="../src/settings_dialog.ui" line="674"/>
       <source>System language</source>
       <translation>لغة النظام</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="829"/>
+      <location filename="../src/settings_dialog.ui" line="489"/>
       <source>Graphics</source>
       <translation type="unfinished">Graphics</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="841"/>
+      <location filename="../src/settings_dialog.ui" line="501"/>
       <source>Screen buffer sync</source>
       <translation type="unfinished">Screen buffer sync</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="855"/>
+      <location filename="../src/settings_dialog.ui" line="515"/>
       <source>Preferred</source>
       <translation type="unfinished">Preferred</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="865"/>
+      <location filename="../src/settings_dialog.ui" line="525"/>
       <source>Enable</source>
       <translation type="unfinished">Enable</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="860"/>
+      <location filename="../src/settings_dialog.ui" line="520"/>
       <source>Disable</source>
       <translation type="unfinished">Disable</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="801"/>
+      <location filename="../src/settings_dialog.ui" line="728"/>
       <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
       <translation type="unfinished">The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="804"/>
+      <location filename="../src/settings_dialog.ui" line="731"/>
       <source>Friendly phone name</source>
       <translation type="unfinished">Friendly phone name</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="837"/>
+      <location filename="../src/settings_dialog.ui" line="497"/>
       <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
       <translation type="unfinished">This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="885"/>
+      <location filename="../src/settings_dialog.ui" line="837"/>
+      <source>SF2 bank</source>
+      <translation type="unfinished">SF2 bank</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="864"/>
+      <location filename="../src/settings_dialog.ui" line="905"/>
+      <source>Reset</source>
+      <translation>إعادة تعيين</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="878"/>
+      <source>HSB bank</source>
+      <translation type="unfinished">HSB bank</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="922"/>
+      <source>MIDI backend</source>
+      <translation type="unfinished">MIDI backend</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="936"/>
+      <source>TinySoundFont (High-quality, support SF2)</source>
+      <translation type="unfinished">TinySoundFont (High-quality, support SF2)</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="941"/>
+      <source>MiniBAE (Lower-quality, support HSB)</source>
+      <translation type="unfinished">MiniBAE (Lower-quality, support HSB)</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="1001"/>
       <source>Control</source>
       <translation>التحكم</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="900"/>
+      <location filename="../src/settings_dialog.ui" line="1016"/>
       <source>Profile</source>
       <translation>الملف الشخصي</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="923"/>
+      <location filename="../src/settings_dialog.ui" line="1039"/>
       <source>Add</source>
       <translation>إضافة</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="949"/>
+      <location filename="../src/settings_dialog.ui" line="1065"/>
       <source>Delete</source>
       <translation>حذف</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="968"/>
+      <location filename="../src/settings_dialog.ui" line="1084"/>
       <source>Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</source>
       <translation>ملاحظة: أحد الارتباطات مرتبطة مع زر الماوس، وسيتم تعطيل وظائف شاشة اللمس.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="986"/>
+      <location filename="../src/settings_dialog.ui" line="1102"/>
       <source>Left softkey</source>
       <translation>مفتاح اللمس اليسار</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1024"/>
+      <location filename="../src/settings_dialog.ui" line="1140"/>
       <source>Up arrow</source>
       <translation>السهم للأعلى</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1056"/>
+      <location filename="../src/settings_dialog.ui" line="1172"/>
       <source>Right softkey</source>
       <translation>مفتاح اللمس اليمين</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1092"/>
+      <location filename="../src/settings_dialog.ui" line="1208"/>
       <source>Left arrow</source>
       <translation>السهم الأيسر</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1124"/>
+      <location filename="../src/settings_dialog.ui" line="1240"/>
       <source>Middle softkey</source>
       <translation>مفتاح اللمس الأوسط</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1156"/>
+      <location filename="../src/settings_dialog.ui" line="1272"/>
       <source>Right arrow</source>
       <translation>السهم الأيمن</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1192"/>
+      <location filename="../src/settings_dialog.ui" line="1308"/>
       <source>Green softkey</source>
       <translation>مفتاح اللمس الأخضر</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1224"/>
+      <location filename="../src/settings_dialog.ui" line="1340"/>
       <source>Down arrow</source>
       <translation>‮السهم لأسفل</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1256"/>
+      <location filename="../src/settings_dialog.ui" line="1372"/>
       <source>Red softkey</source>
       <translation>مفتاح اللمس الأحمر</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1292"/>
+      <location filename="../src/settings_dialog.ui" line="1408"/>
       <source>1</source>
       <translation type="unfinished">1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1324"/>
+      <location filename="../src/settings_dialog.ui" line="1440"/>
       <source>2</source>
       <translation type="unfinished">2</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1356"/>
+      <location filename="../src/settings_dialog.ui" line="1472"/>
       <source>3</source>
       <translation type="unfinished">3</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1392"/>
+      <location filename="../src/settings_dialog.ui" line="1508"/>
       <source>4</source>
       <translation type="unfinished">4</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1424"/>
+      <location filename="../src/settings_dialog.ui" line="1540"/>
       <source>5</source>
       <translation type="unfinished">5</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1456"/>
+      <location filename="../src/settings_dialog.ui" line="1572"/>
       <source>6</source>
       <translation type="unfinished">6</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1486"/>
+      <location filename="../src/settings_dialog.ui" line="1602"/>
       <source>7</source>
       <translation type="unfinished">7</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1518"/>
+      <location filename="../src/settings_dialog.ui" line="1634"/>
       <source>8</source>
       <translation type="unfinished">8</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1550"/>
+      <location filename="../src/settings_dialog.ui" line="1666"/>
       <source>9</source>
       <translation type="unfinished">9</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1586"/>
+      <location filename="../src/settings_dialog.ui" line="1702"/>
       <source>*</source>
       <translation type="unfinished">*</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1650"/>
+      <location filename="../src/settings_dialog.ui" line="1766"/>
       <source>#</source>
       <translation type="unfinished">#</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="411"/>
+      <location filename="../src/settings_dialog.cpp" line="419"/>
       <source>Choose the data folder</source>
       <translation>اختر مجلد البيانات</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="413"/>
-      <location filename="../src/settings_dialog.cpp" line="1092"/>
-      <location filename="../src/settings_dialog.cpp" line="1117"/>
+      <location filename="../src/settings_dialog.cpp" line="421"/>
+      <location filename="../src/settings_dialog.cpp" line="1100"/>
+      <location filename="../src/settings_dialog.cpp" line="1125"/>
       <source>Relaunch needed</source>
       <translation>اعادة التشغيل مطلوبة</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="413"/>
+      <location filename="../src/settings_dialog.cpp" line="421"/>
       <source>This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</source>
       <translation>هذا التغيير يتطلب إعادة تشغيل المحاكي.&lt;br&gt;هل تريد المتابعة؟</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="534"/>
+      <location filename="../src/settings_dialog.cpp" line="542"/>
       <source>Please wait</source>
       <translation>يُرجى الانتظار</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="535"/>
+      <location filename="../src/settings_dialog.cpp" line="543"/>
       <source>Validation is in process. Please do not exit or launch applications until this operation is done.</source>
       <translation>التحقق قيد التشغيل. الرجاء عدم الخروج أو تشغيل التطبيقات حتى يتم إنجاز هذه العملية.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="555"/>
+      <location filename="../src/settings_dialog.cpp" line="563"/>
       <source>Validation done!</source>
       <translation>تمت المصادقة!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="555"/>
+      <location filename="../src/settings_dialog.cpp" line="563"/>
       <source>The validation has successfully completed!</source>
       <translation>تمت عملية التحقق بنجاح!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="566"/>
+      <location filename="../src/settings_dialog.cpp" line="574"/>
       <source>Enter new device name</source>
       <translation>أدخل اسم الجهاز الجديد</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="663"/>
+      <location filename="../src/settings_dialog.cpp" line="671"/>
       <source>Unbind</source>
       <translation>إلغاء ربط</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="708"/>
+      <location filename="../src/settings_dialog.cpp" line="716"/>
       <source>Waiting for input</source>
       <translation>في انتظار الإدخال</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="723"/>
-      <location filename="../src/settings_dialog.cpp" line="769"/>
+      <location filename="../src/settings_dialog.cpp" line="731"/>
+      <location filename="../src/settings_dialog.cpp" line="777"/>
       <source>Mouse button %1</source>
       <translation>زر الفأرة %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="725"/>
-      <location filename="../src/settings_dialog.cpp" line="811"/>
+      <location filename="../src/settings_dialog.cpp" line="733"/>
+      <location filename="../src/settings_dialog.cpp" line="819"/>
       <source>Controller %1 : Button %2</source>
       <translation>التحكم %1 : زر %2</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="836"/>
-      <location filename="../src/settings_dialog.cpp" line="860"/>
+      <location filename="../src/settings_dialog.cpp" line="844"/>
+      <location filename="../src/settings_dialog.cpp" line="868"/>
       <source>Enter profile name</source>
       <translation>أدخل اسم الملف الشخصي</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="844"/>
+      <location filename="../src/settings_dialog.cpp" line="852"/>
       <source>Profile creation failed</source>
       <translation>فشل في إنشاء الملف الشخصي</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="844"/>
-      <location filename="../src/settings_dialog.cpp" line="868"/>
+      <location filename="../src/settings_dialog.cpp" line="852"/>
+      <location filename="../src/settings_dialog.cpp" line="876"/>
       <source>A profile with that name already exists!</source>
       <translation>ملف تعريف بهذا الاسم موجود مسبقاً!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="868"/>
+      <location filename="../src/settings_dialog.cpp" line="876"/>
       <source>Profile rename failed</source>
       <translation>فشل إعادة تسمية الملف الشخصي</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="883"/>
+      <location filename="../src/settings_dialog.cpp" line="891"/>
       <source>Profile deletion failed</source>
       <translation>فشل حذف الملف الشخصي</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="883"/>
+      <location filename="../src/settings_dialog.cpp" line="891"/>
       <source>This is the only profile left!</source>
       <translation>هذا هو الملف الشخصي الوحيد المتبقي!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="921"/>
+      <location filename="../src/settings_dialog.cpp" line="929"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
       <translation>&lt;b&gt;تكوين لـ:&lt;/b&gt; %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="924"/>
-      <location filename="../src/settings_dialog.cpp" line="929"/>
+      <location filename="../src/settings_dialog.cpp" line="932"/>
+      <location filename="../src/settings_dialog.cpp" line="937"/>
       <source>None</source>
       <translation>لا شَيْء</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1019"/>
+      <location filename="../src/settings_dialog.cpp" line="1027"/>
       <source>IMEI sequence contains non-numeric character!</source>
       <translation>تسلسل IMEI يحتوي على حرف غير رقمي!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1022"/>
+      <location filename="../src/settings_dialog.cpp" line="1030"/>
       <source>IMEI sequence has invalid sum!</source>
       <translation>تسلسل IMEI غير صالح!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1025"/>
+      <location filename="../src/settings_dialog.cpp" line="1033"/>
       <source>IMEI sequence length must be 15!</source>
       <translation>يجب أن يكون طول تسلسل IMEI 15!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1031"/>
+      <location filename="../src/settings_dialog.cpp" line="1039"/>
       <source>Unidentified error!</source>
       <translation>خطأ غير معروف!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1038"/>
+      <location filename="../src/settings_dialog.cpp" line="1046"/>
       <source>IMEI valid!</source>
       <translation>IMEI صالح!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1038"/>
+      <location filename="../src/settings_dialog.cpp" line="1046"/>
       <source>The IMEI sequence is valid!</source>
       <translation>تسلسل IMEI صالح!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1041"/>
+      <location filename="../src/settings_dialog.cpp" line="1049"/>
       <source>IMEI invalid!</source>
       <translation>IMEI غير صالح!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1051"/>
+      <location filename="../src/settings_dialog.cpp" line="1059"/>
       <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
       <translation>IMEI الخاص بك غير صحيح لأن: %1.&lt;br&gt;هل تريد تحرير IMEI الحالي بدلاً من الإغلاق؟ اختيار &quot;لا&quot; سوف يحفظ قيمة IMEI الحالية.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1053"/>
+      <location filename="../src/settings_dialog.cpp" line="1061"/>
       <source>Cancel closing</source>
       <translation>إلغاء الإغلاق</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1092"/>
+      <location filename="../src/settings_dialog.cpp" line="1100"/>
       <source>This change will be effective on the next launch of the emulator.</source>
       <translation>سيتم تطبيق هذا التغيير عند تشغيل المحاكي في المرة القادمة.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1100"/>
+      <location filename="../src/settings_dialog.cpp" line="1108"/>
       <source>Confirmation</source>
       <translation>تأكيد</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1100"/>
+      <location filename="../src/settings_dialog.cpp" line="1108"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
       <translation>هل أنت متأكد من هذا؟ سيتم إعادة تعيين السمة الحالية الخاصة بك، وسيتم تمكين جميع مربعات الرسائل التي تم تعطيلها، وسيتم مسح جميع التجهيزات الأخيرة.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1117"/>
+      <location filename="../src/settings_dialog.cpp" line="1125"/>
       <source>The language will be updated on the next launch of the emulator.</source>
       <translation>وسيتم تحديث هذه اللغة عند إطلاق المحاكي في المرة القادمة.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1144"/>
+      <location filename="../src/settings_dialog.cpp" line="1152"/>
       <source>Pick the screen background color</source>
       <translation>اختيار لون خلفية الشاشة</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.cpp" line="1221"/>
+      <source>Successfully changed</source>
+      <translation type="unfinished">Successfully changed</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.cpp" line="1221"/>
+      <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
+      <translation type="unfinished">Next time the application requests to play a new MIDI, the choosen backend will be used!</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.cpp" line="1234"/>
+      <source>Choose the HSB bank file</source>
+      <translation type="unfinished">Choose the HSB bank file</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.cpp" line="1257"/>
+      <source>Choose the SF2 bank file</source>
+      <translation type="unfinished">Choose the SF2 bank file</translation>
     </message>
   </context>
 </TS>
