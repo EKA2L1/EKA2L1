@@ -289,7 +289,7 @@ bool mount_card_option_handler(eka2l1::common::arg_parser *parser, void *userdat
 
     io->unmount(drive_e);
 
-    if (eka2l1::is_dir(path)) {
+    if (eka2l1::common::is_dir(path)) {
         io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable | io_attrib_write_protected, common::utf8_to_ucs2(path));
     } else {
         std::cout << "Mounting in progress. Please wait..." << std::endl;
@@ -359,7 +359,7 @@ bool keybind_profile_option_handler(eka2l1::common::arg_parser *parser, void *us
 
     // Check if profile exists
     const std::string profile_path = fmt::format("bindings//{}.yml", profile);
-    if (!eka2l1::exists(profile_path)) {
+    if (!eka2l1::common::exists(profile_path)) {
         *err = "No profile with name {} exists";
         return true;
     }

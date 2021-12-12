@@ -638,7 +638,7 @@ void main_window::mount_game_card_dump(QString mount_path) {
     eka2l1::io_system *io = emulator_state_.symsys->get_io_system();
 
     const std::string path_ext = eka2l1::path_extension(mount_path.toStdString());
-    if (!eka2l1::is_dir(mount_path.toStdString()) && (eka2l1::common::compare_ignore_case(path_ext.c_str(), ".zip") == 0)) {
+    if (!eka2l1::common::is_dir(mount_path.toStdString()) && (eka2l1::common::compare_ignore_case(path_ext.c_str(), ".zip") == 0)) {
         io->unmount(drive_e);
         current_progress_dialog_ = new QProgressDialog(QString{}, tr("Cancel"), 0, 100, this);
 
@@ -1006,12 +1006,16 @@ bool main_window::controller_event_handler(eka2l1::drivers::input_event &event) 
 
 void main_window::make_default_binding_profile() {
     // Create default profile if there is none
-    eka2l1::common::dir_iterator ite("bindings\\");
+    auto ite = eka2l1::common::make_directory_iterator("bindings\\");
+    if (!ite) {
+        return;
+    }
+
     eka2l1::common::dir_entry entry;
 
     int entry_count = 0;
 
-    while (ite.next_entry(entry) >= 0) {
+    while (ite->next_entry(entry) >= 0) {
         if ((entry.name != ".") && (entry.name != ".."))
             entry_count++;
     }

@@ -643,6 +643,37 @@ namespace eka2l1::common {
 #endif
     }
 
+    bool is_dir(std::string path) {
+#if EKA2L1_PLATFORM(POSIX)
+#if EKA2L1_PLATFORM(ANDROID)
+        if (is_content_uri(path)) {
+            std::optional<std::string> info = android::get_file_info_as_string(path);
+            if (!info.has_value() || info->length() < 1) {
+                return false;
+            }
+
+            if (info->at(0) == 'D') {
+                return true;
+            }
+
+            return false;
+        }
+#endif
+        struct stat st;
+        auto res = stat(path.c_str(), &st);
+
+        if (res < 0) {
+            return false;
+        }
+
+        return S_ISDIR(st.st_mode);
+#elif EKA2L1_PLATFORM(WIN32)
+        const std::wstring wpath = common::utf8_to_wstr(path);
+        DWORD dw_attrib = GetFileAttributesW(wpath.c_str());
+        return (dw_attrib != INVALID_FILE_ATTRIBUTES && (dw_attrib & FILE_ATTRIBUTE_DIRECTORY));
+#endif
+    }
+
     void create_directories(std::string path) {
 #if EKA2L1_PLATFORM(ANDROID)
         create_directory(std::move(path));

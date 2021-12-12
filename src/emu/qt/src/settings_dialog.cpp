@@ -229,7 +229,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     ui_->setupUi(this);
 
     std::string current_dir;
-    eka2l1::get_current_directory(current_dir);
+    eka2l1::common::get_current_directory(current_dir);
 
     const std::string storage_abs = eka2l1::absolute_path(configuration_.storage, current_dir);
 
@@ -684,10 +684,14 @@ void settings_dialog::refresh_keybind_buttons() {
 void settings_dialog::refresh_keybind_profiles() {
     ui_->control_profile_combobox->clear();
 
-    eka2l1::common::dir_iterator ite("bindings\\");
+    auto ite = eka2l1::common::make_directory_iterator("bindings\\");
+    if (!ite) {
+        return;
+    }
+
     eka2l1::common::dir_entry entry;
 
-    while (ite.next_entry(entry) >= 0) {
+    while (ite->next_entry(entry) >= 0) {
         if (eka2l1::path_extension(entry.name) == ".yml") {
             const std::string final_name = eka2l1::replace_extension(entry.name, "");
             ui_->control_profile_combobox->addItem(QString::fromUtf8(final_name.c_str()));
@@ -840,7 +844,7 @@ void settings_dialog::on_control_profile_add_clicked() {
     }
 
     std::string path_to_file = fmt::format("bindings\\{}.yml", result.toStdString());
-    if (eka2l1::exists(path_to_file)) {
+    if (eka2l1::common::exists(path_to_file)) {
         QMessageBox::critical(this, tr("Profile creation failed"), tr("A profile with that name already exists!"));
     } else {
         configuration_.serialize();
@@ -864,7 +868,7 @@ void settings_dialog::on_control_profile_rename_clicked() {
     }
 
     std::string path_to_file = fmt::format("bindings\\{}.yml", result.toStdString());
-    if (eka2l1::exists(path_to_file)) {
+    if (eka2l1::common::exists(path_to_file)) {
         QMessageBox::critical(this, tr("Profile rename failed"), tr("A profile with that name already exists!"));
     } else {
         eka2l1::common::move_file(fmt::format("bindings\\{}.yml", configuration_.current_keybind_profile), path_to_file);
