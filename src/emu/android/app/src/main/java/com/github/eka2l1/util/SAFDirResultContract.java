@@ -32,7 +32,8 @@ public class SAFDirResultContract extends ActivityResultContract<Void, String> {
     @Override
     public Intent createIntent(@NonNull Context context, Void input) {
         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        i.addFlags(Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
         return i;
     }
 

@@ -25,6 +25,7 @@
 #include <cstring>
 
 #include <common/log.h>
+#include <common/android/contenturi.h>
 
 namespace eka2l1 {
     char get_separator(bool symbian_use) {
@@ -300,10 +301,20 @@ namespace eka2l1 {
     }
 
     std::string absolute_path(std::string str, std::string current_dir, bool symbian_use) {
+#if EKA2L1_PLATFORM(ANDROID)
+        if (is_content_uri(str)) {
+            return str;
+        }
+#endif
         return absolute_path_impl<char>(str, current_dir, symbian_use, get_separator);
     }
 
     std::u16string absolute_path(std::u16string str, std::u16string current_dir, bool symbian_use) {
+#if EKA2L1_PLATFORM(ANDROID)
+        if (is_content_uri(common::ucs2_to_utf8(str))) {
+            return str;
+        }
+#endif
         return absolute_path_impl<char16_t>(str, current_dir, symbian_use, get_separator_16);
     }
 
@@ -316,10 +327,31 @@ namespace eka2l1 {
     }
 
     std::string add_path(const std::string &path1, const std::string &path2, bool symbian_use) {
+#if EKA2L1_PLATFORM(ANDROID)
+        if (is_content_uri(path1)) {
+            std::string child = path2;
+            std::replace(child.begin(), child.end(), '\\', '/');
+
+            common::android::content_uri root_uri =  common::android::content_uri(path1);
+            common::android::content_uri uri = root_uri.with_root_file_path(child);
+            return uri.to_string();
+        }
+#endif
         return add_path_impl<char>(path1, path2, symbian_use, get_separator);
     }
 
     std::u16string add_path(const std::u16string &path1, const std::u16string &path2, bool symbian_use) {
+#if EKA2L1_PLATFORM(ANDROID)
+        const std::string parent = common::ucs2_to_utf8(path1);
+        if (is_content_uri(parent)) {
+            std::string child = common::ucs2_to_utf8(path2);
+            std::replace(child.begin(), child.end(), '\\', '/');
+
+            common::android::content_uri root_uri = common::android::content_uri(parent);
+            common::android::content_uri uri = root_uri.with_root_file_path(child);
+            return common::utf8_to_ucs2(uri.to_string());
+        }
+#endif
         return add_path_impl<char16_t>(path1, path2, symbian_use, get_separator_16);
     }
 
@@ -332,6 +364,13 @@ namespace eka2l1 {
     }
 
     std::string file_directory(std::string path, bool symbian_use) {
+#if EKA2L1_PLATFORM(ANDROID)
+        if (is_content_uri(path)) {
+            common::android::content_uri uri = common::android::content_uri(path);
+            uri.navigate_up();
+            return uri.to_string();
+        }
+#endif
         return file_directory_impl<char>(path, symbian_use);
     }
 

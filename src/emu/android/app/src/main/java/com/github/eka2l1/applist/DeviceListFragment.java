@@ -22,6 +22,7 @@ package com.github.eka2l1.applist;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.InputType;
@@ -44,6 +45,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.documentfile.provider.DocumentFile;
 import androidx.fragment.app.Fragment;
 
 import com.github.eka2l1.R;
@@ -77,6 +79,9 @@ public class DeviceListFragment extends Fragment {
     private final ActivityResultLauncher<String[]> openVplLauncher = registerForActivityResult(
             FileUtils.getFilePicker(),
             this::onVPLResult);
+    private final ActivityResultLauncher<Void> openVplFolderLauncher = registerForActivityResult(
+            FileUtils.getDirPicker(),
+            this::onVPLFolderResult);
     private final ActivityResultLauncher<String[]> openRpkgLauncher = registerForActivityResult(
             FileUtils.getFilePicker(),
             this::onRpkgResult);
@@ -192,7 +197,11 @@ public class DeviceListFragment extends Fragment {
         Button btROM = view.findViewById(R.id.bt_rom);
         btROM.setOnClickListener(v -> openRomLauncher.launch(new String[]{".ROM", ".rom"}));
         Button btFirmware = view.findViewById(R.id.bt_firmware);
-        btFirmware.setOnClickListener(v -> openVplLauncher.launch(new String[]{".VPL", ".vpl"}));
+        if (FileUtils.isExternalStorageLegacy()) {
+            btFirmware.setOnClickListener(v -> openVplLauncher.launch(new String[]{".VPL", ".vpl"}));
+        } else {
+            btFirmware.setOnClickListener(v -> openVplFolderLauncher.launch(null));
+        }
         Button btInstall = view.findViewById(R.id.bt_device_install);
         btInstall.setOnClickListener(v -> installDevice());
     }
@@ -203,6 +212,34 @@ public class DeviceListFragment extends Fragment {
         }
         tvVPL.setText(path);
         firmwareSet = true;
+    }
+
+    private void onVPLFolderResult(String path) {
+        if (path == null) {
+            return;
+        }
+        Uri uri = Uri.parse(path);
+        DocumentFile root = DocumentFile.fromTreeUri(requireContext(), uri);
+        DocumentFile[] dfList = root.listFiles();
+        ArrayList<String> paths = new ArrayList<>();
+        ArrayList<String> names = new ArrayList<>();
+        for (DocumentFile df : dfList) {
+            String name = df.getName();
+            if (name != null && name.endsWith(".vpl")) {
+                paths.add(df.getUri().toString());
+                names.add(name);
+            }
+        }
+
+        if (paths.size() > 0) {
+            AlertDialog builder = new AlertDialog.Builder(requireContext())
+                    .setItems(names.toArray(new String[0]), (dialogInterface, i) -> {
+                        tvVPL.setText(paths.get(i));
+                        firmwareSet = true;
+                    })
+                    .create();
+            builder.show();
+        }
     }
 
     private void onRpkgResult(String path) {

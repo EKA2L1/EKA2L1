@@ -46,7 +46,7 @@
 #endif
 
 #include <stack>
-#include <string.h>
+#include <cstring>
 
 #include <common/pystr.h>
 
@@ -644,6 +644,9 @@ namespace eka2l1::common {
     }
 
     void create_directories(std::string path) {
+#if EKA2L1_PLATFORM(ANDROID)
+        create_directory(std::move(path));
+#else
         std::string crr_path = "";
 
         path_iterator ite;
@@ -656,6 +659,7 @@ namespace eka2l1::common {
                 create_directory(crr_path);
             }
         }
+#endif
     }
 
     bool set_current_directory(const std::string &path) {
