@@ -244,6 +244,18 @@ public class Emulator {
         });
     }
 
+    public static Completable subscribeInstallApp(String path) {
+        return Completable.create(emitter -> {
+            int installResult = installApp(path);
+
+            if (installResult == 0) {
+                emitter.onComplete();
+            } else {
+                emitter.onError(new IOException(Integer.toString(installResult)));
+            }
+        });
+    }
+
     private static void checkInit() {
         if (!init && load) {
             throw new IllegalStateException("Emulator is not initialized");

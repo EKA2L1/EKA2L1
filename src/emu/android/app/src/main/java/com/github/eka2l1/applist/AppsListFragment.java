@@ -60,12 +60,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.observers.DisposableCompletableObserver;
 import io.reactivex.observers.DisposableSingleObserver;
 import io.reactivex.schedulers.Schedulers;
 
@@ -200,13 +202,24 @@ public class AppsListFragment extends ListFragment {
         mountSdCard(path);
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @SuppressLint("CheckResult")
     private void installApp(String path) {
-        if (Emulator.installApp(path) == 0) {
-            Toast.makeText(getContext(), R.string.completed, Toast.LENGTH_SHORT).show();
-            restart();
-        } else {
-            Toast.makeText(getContext(), R.string.error, Toast.LENGTH_SHORT).show();
-        }
+        Completable completable = Emulator.subscribeInstallApp(path);
+        completable.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(new DisposableCompletableObserver() {
+                    @Override
+                    public void onComplete() {
+                        Toast.makeText(getContext(), R.string.completed, Toast.LENGTH_SHORT).show();
+                        restart();
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+                        Toast.makeText(getContext(), R.string.error, Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void mountSdCard(String path) {
