@@ -949,7 +949,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/settings_dialog.ui" line="941"/>
       <source>MiniBAE (Lower-quality, support HSB)</source>
-      <translation type="unfinished">MiniBAE (Lower-quality, support HSB)</translation>
+      <translation>MiniBAE（低质量，支持HSB）</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1001"/>
@@ -1256,12 +1256,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1221"/>
       <source>Successfully changed</source>
-      <translation type="unfinished">Successfully changed</translation>
+      <translation>修改成功</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1221"/>
       <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
-      <translation type="unfinished">Next time the application requests to play a new MIDI, the choosen backend will be used!</translation>
+      <translation>下次应用程序请求播放新的MIDI时，将使用选择的后端！</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1234"/>
