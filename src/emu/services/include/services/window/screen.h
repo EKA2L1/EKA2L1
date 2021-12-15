@@ -76,6 +76,7 @@ namespace eka2l1::epoc {
         std::unique_ptr<epoc::window> root;
         drivers::handle screen_texture; ///< Server handle to texture of the screen
         drivers::handle dsa_texture;    ///< Texture use for temporary DSA transfer
+
         epoc::display_mode disp_mode;
 
         std::uint64_t last_vsync;

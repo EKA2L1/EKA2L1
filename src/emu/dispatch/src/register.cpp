@@ -28,6 +28,9 @@ namespace eka2l1::dispatch {
     const eka2l1::dispatch::func_map dispatch_funcs = {
         BRIDGE_REGISTER_DISPATCHER(1, update_screen),
         BRIDGE_REGISTER_DISPATCHER(2, fast_blit),
+        BRIDGE_REGISTER_DISPATCHER(3, wait_vsync),
+        BRIDGE_REGISTER_DISPATCHER(4, cancel_wait_vsync),
+        BRIDGE_REGISTER_DISPATCHER(5, flexible_post),
         BRIDGE_REGISTER_DISPATCHER(0x20, eaudio_player_inst),
         BRIDGE_REGISTER_DISPATCHER(0x21, eaudio_player_notify_any_done),
         BRIDGE_REGISTER_DISPATCHER(0x22, eaudio_player_supply_url),

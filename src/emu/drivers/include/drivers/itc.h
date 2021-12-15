@@ -222,6 +222,28 @@ namespace eka2l1::drivers {
             = 0;
 
         /**
+         * @brief Update a texture data region.
+         * 
+         * It's recommended to match data format and data type to the arguments passed in
+         * texture creation.
+         * 
+         * @param h                 The handle to existing bitmap.
+         * @param data              Pointer to bitmap data.
+         * @param size              Size of bitmap data.
+         * @param data_format       The layout format of the data.
+         * @param data_type         Type of each pixel of the data.
+         * @param offset            The offset of the bitmap (pixels).
+         * @param dim               The dimensions of bitmap (pixels).
+         * @param pixels_per_line   Number of pixels per row. Use 0 for default.
+         * 
+         * @returns Handle to the texture.
+         */
+        virtual void update_texture(drivers::handle h, const char *data, const std::size_t size,
+            const texture_format data_format, const texture_data_type data_type,
+            const eka2l1::vec3 &offset, const eka2l1::vec3 &dim, const std::size_t pixels_per_line = 0)
+            = 0;
+
+        /**
          * \brief Draw a bitmap to currently binded bitmap.
          *
          * The only limitation is origin is hard-coded to the center of the bitmap for rotation purpose.
@@ -512,6 +534,10 @@ namespace eka2l1::drivers {
 
         void update_bitmap(drivers::handle h, const char *data, const std::size_t size, const eka2l1::vec2 &offset,
             const eka2l1::vec2 &dim, const std::size_t pixels_per_line = 0) override;
+
+        void update_texture(drivers::handle h, const char *data, const std::size_t size,
+            const texture_format data_format, const texture_data_type data_type,
+            const eka2l1::vec3 &offset, const eka2l1::vec3 &dim, const std::size_t pixels_per_line = 0) override;
 
         void draw_bitmap(drivers::handle h, drivers::handle maskh, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect,
             const eka2l1::vec2 &origin = eka2l1::vec2(0, 0), const float rotation = 0.0f, const std::uint32_t flags = 0) override;

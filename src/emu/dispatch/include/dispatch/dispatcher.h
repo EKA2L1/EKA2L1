@@ -23,6 +23,7 @@
 #include <dispatch/management.h>
 #include <drivers/audio/dsp.h>
 #include <drivers/audio/player.h>
+#include <drivers/itc.h>
 
 #include <utils/des.h>
 #include <utils/reqsts.h>
@@ -45,6 +46,10 @@ namespace eka2l1 {
 
     namespace hle {
         class lib_manager;
+    }
+
+    namespace epoc {
+        struct screen;
     }
 }
 
@@ -179,23 +184,53 @@ namespace eka2l1::dispatch {
         }
     };
 
+    class screen_post_transferer {
+    private:
+        struct screen_post_source_info {
+            drivers::handle transfer_texture_;
+            eka2l1::vec2 transfer_texture_size_;
+            std::int32_t format_;
+        };
+
+        std::vector<screen_post_source_info> infos_;
+        std::vector<epoc::notify_info*> vsync_notifies_;
+        int vsync_notify_event_;
+        
+        std::mutex lock_;
+        ntimer *timing_;
+
+    public:
+        void complete_notify(epoc::notify_info *info);
+
+        void construct(ntimer *timing);
+        void free(drivers::graphics_driver *drv);
+
+        void wait_vsync(epoc::screen *scr, epoc::notify_info &info);
+        void cancel_wait_vsync(const epoc::notify_info &info);
+
+        drivers::handle transfer_data_to_texture(drivers::graphics_driver *drv, drivers::graphics_command_list_builder *builder,
+            std::int32_t screen_index, std::uint8_t *data, eka2l1::vec2 size, std::int32_t format);
+    };
+
     struct dispatcher {
     private:
         kernel::chunk *trampoline_chunk_;
         hle::lib_manager *libmngr_;
         memory_system *mem_;
+        drivers::graphics_driver *graphics_driver_;
 
         std::uint32_t trampoline_allocated_;
+
         dsp_manager dsp_manager_;
+        screen_post_transferer post_transferer_;
 
         void shutdown();
 
     public:
         window_server *winserv_;
-
         ntimer *timing_;
 
-        explicit dispatcher(kernel_system *kern, ntimer *timing);
+        explicit dispatcher(kernel_system *kern, ntimer *timing, drivers::graphics_driver *graphics_driver);
         ~dispatcher();
 
         bool patch_libraries(const std::u16string &path, patch_info *patches,
@@ -206,6 +241,10 @@ namespace eka2l1::dispatch {
 
         dsp_manager &get_dsp_manager() {
             return dsp_manager_;
+        }
+
+        screen_post_transferer &get_screen_post_transferer() {
+            return post_transferer_;
         }
     };
 }

@@ -175,7 +175,7 @@ namespace eka2l1 {
             epoc::init_hal(parent_);
 
             // Initialize HLE finally
-            dispatcher_ = std::make_unique<dispatch::dispatcher>(kern_.get(), timing_.get());
+            dispatcher_ = std::make_unique<dispatch::dispatcher>(kern_.get(), timing_.get(), gdriver);
 
             winserv_ = reinterpret_cast<window_server *>(kern_->get_by_name<service::server>(eka2l1::get_winserv_name_by_epocver(
                 kern_->get_epoc_version())));

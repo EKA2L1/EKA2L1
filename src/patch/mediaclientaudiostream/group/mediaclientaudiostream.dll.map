@@ -1,4 +1,4 @@
-[epoc10]
+[epoc100]
 1 18            ; CMdaAudioOutputStream::RequestStop
 2 1             ; CMdaAudioOutputStream::SetBalance
 3 2             ; CMdaAudioOutputStream::SetDataType

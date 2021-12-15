@@ -29,7 +29,165 @@
 
 #include <fstream>
 
-namespace eka2l1::dispatch {
+namespace eka2l1::dispatch {    
+    void screen_post_transferer::construct(ntimer *timing) {
+        vsync_notify_event_ = timing->register_event("VSyncNotifyEvent", [this](const std::uint64_t data, const int cycles_late) {
+            epoc::notify_info *info = reinterpret_cast<epoc::notify_info*>(data);
+            this->complete_notify(info);
+        });
+
+        timing_ = timing;
+    }
+
+    void screen_post_transferer::complete_notify(epoc::notify_info *info) {
+        const std::lock_guard<std::mutex> guard(lock_);
+
+        auto ite = std::find(vsync_notifies_.begin(), vsync_notifies_.end(), info);
+        if (ite != vsync_notifies_.end()) {
+            vsync_notifies_.erase(ite);
+        }
+
+        info->complete(epoc::error_none);
+        delete info;
+    }
+
+    void screen_post_transferer::wait_vsync(epoc::screen *scr, epoc::notify_info &info) {
+        std::uint64_t next_sync = 0;
+        scr->vsync(timing_, next_sync);
+
+        if (next_sync == 0) {
+            info.complete(epoc::error_none);
+            return;
+        }
+
+        const std::lock_guard<std::mutex> guard(lock_);
+
+        epoc::notify_info *info_copy = new epoc::notify_info;
+        *info_copy = info;
+
+        vsync_notifies_.push_back(info_copy);
+        timing_->schedule_event(static_cast<std::int64_t>(next_sync), vsync_notify_event_,
+            reinterpret_cast<std::uint64_t>(info_copy));
+    }
+
+    void screen_post_transferer::cancel_wait_vsync(const epoc::notify_info &info) {
+        const std::lock_guard<std::mutex> guard(lock_);
+        auto ite = std::find_if(vsync_notifies_.begin(), vsync_notifies_.end(), [=](epoc::notify_info *info_stored) {
+            return (info_stored->requester == info.requester) && (info_stored->sts == info.sts);
+        });
+
+        if (ite != vsync_notifies_.end()) {
+            timing_->unschedule_event(vsync_notify_event_, reinterpret_cast<std::uint64_t>(*ite));
+            (*ite)->complete(epoc::error_cancel);
+
+            vsync_notifies_.erase(ite);
+        }
+    }
+
+    void screen_post_transferer::free(drivers::graphics_driver *drv) {
+        for (std::size_t i = 0; i < vsync_notifies_.size(); i++) {
+            timing_->unschedule_event(vsync_notify_event_, reinterpret_cast<std::uint64_t>(vsync_notifies_[i]));
+            delete vsync_notifies_[i];
+        }
+
+        vsync_notifies_.clear();
+        timing_->remove_event(vsync_notify_event_);
+
+        auto cmd_list = drv->new_command_list();
+        auto cmd_builder = drv->new_command_builder(cmd_list.get());
+        
+        bool need_send_destroy = false;
+
+        for (std::size_t i = 0; i < infos_.size(); i++) {
+            if (infos_[i].transfer_texture_ != 0) {
+                need_send_destroy = true;
+                cmd_builder->destroy(infos_[i].transfer_texture_);
+            }
+        }
+
+        if (need_send_destroy) {
+            drv->submit_command_list(*cmd_list);
+        }
+    }
+
+    drivers::handle screen_post_transferer::transfer_data_to_texture(drivers::graphics_driver *drv, drivers::graphics_command_list_builder *builder,
+        std::int32_t screen_index, std::uint8_t *data, eka2l1::vec2 size, std::int32_t format) {
+        if ((screen_index < 0) || (screen_index > 10) || !drv || !builder) {
+            return 0;
+        }
+
+        if (screen_index >= infos_.size()) {
+            const std::size_t current_size = infos_.size();
+            infos_.resize(screen_index + 1);
+
+            for (std::size_t i = current_size; i < infos_.size(); i++) {
+                infos_[i].transfer_texture_ = 0;
+            }
+        }
+
+        drivers::texture_format data_format = drivers::texture_format::rgba;
+        drivers::texture_format internal_format = drivers::texture_format::rgba;
+        drivers::texture_data_type type = drivers::texture_data_type::ubyte;
+
+        std::size_t line_stride = 0;
+
+        switch (format) {
+        case FORMAT_RGB16_565_LE:
+            data_format = drivers::texture_format::rgb;
+            internal_format = drivers::texture_format::rgb;
+            type = drivers::texture_data_type::ushort_5_6_5;
+            line_stride = ((size.x * 2) + 1) / 4 * 4; 
+
+            break;
+
+        case FORMAT_RGB24_888_LE:
+            data_format = drivers::texture_format::rgb;
+            internal_format = drivers::texture_format::rgb;
+            type = drivers::texture_data_type::ubyte;
+            line_stride = ((size.x * 3) + 1) / 4 * 4; 
+
+            break;
+
+        case FORMAT_RGB32_X888_LE:
+            data_format = drivers::texture_format::rgba;
+            internal_format = drivers::texture_format::rgba;
+            type = drivers::texture_data_type::ubyte;
+            line_stride = (size.x * 4);
+
+            break;
+
+        default:
+            LOG_ERROR(HLE_DISPATCHER, "Unhandled format 0x{:X}!", format);
+            return 0;
+        }
+
+        screen_post_source_info &info = infos_[screen_index];
+        if ((info.transfer_texture_ == 0) || (info.transfer_texture_size_.x > size.x) || (info.transfer_texture_size_.y > size.y)
+            || (info.format_ != format)) {
+            if (info.transfer_texture_ != 0) {
+                builder->destroy(info.transfer_texture_);
+            }
+
+            info.transfer_texture_ = drivers::create_texture(drv, 2, 0, internal_format, data_format, type, nullptr,
+                eka2l1::vec3(size.x, size.y, 0));
+
+            info.transfer_texture_size_ = size;
+            info.format_ = format;
+
+            builder->set_texture_filter(info.transfer_texture_, drivers::filter_option::linear, drivers::filter_option::linear);
+        }
+
+        builder->update_texture(info.transfer_texture_, reinterpret_cast<const char*>(data), line_stride * size.y, data_format, type, eka2l1::vec3(0, 0, 0),
+            eka2l1::vec3(size.x, size.y, 0), 0);
+
+        if (format == FORMAT_RGB32_X888_LE) {
+            builder->set_swizzle(info.transfer_texture_, drivers::channel_swizzle::red, drivers::channel_swizzle::blue,
+                drivers::channel_swizzle::green, drivers::channel_swizzle::one);
+        }
+
+        return info.transfer_texture_;
+    }
+
     BRIDGE_FUNC_DISPATCHER(void, update_screen, const std::uint32_t screen_number, const std::uint32_t num_rects, const eka2l1::rect *rect_list) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         drivers::graphics_driver *driver = sys->get_graphics_driver();
@@ -99,6 +257,69 @@ namespace eka2l1::dispatch {
                 command_builder->bind_bitmap(scr->screen_texture);
                 command_builder->set_clipping(false);
                 command_builder->draw_bitmap(scr->dsa_texture, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), 0, flags);
+                command_builder->bind_bitmap(0);
+
+                driver->submit_command_list(*command_list);
+                scr->fire_screen_redraw_callbacks(true);
+            }
+
+            scr = scr->next;
+        }
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, wait_vsync, const std::int32_t screen_index, eka2l1::ptr<epoc::request_status> sts) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        kernel_system *kern = sys->get_kernel_system();
+
+        epoc::screen *scr = dispatcher->winserv_->get_screens();
+        dispatch::screen_post_transferer &transferer = dispatcher->get_screen_post_transferer();
+
+        while (scr != nullptr) {
+            if (scr->number == screen_index) {
+                transferer.wait_vsync(scr, epoc::notify_info{ sts, kern->crr_thread() });
+                break;
+            }
+
+            scr = scr->next;
+        }
+
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, cancel_wait_vsync, const std::int32_t screen_index, eka2l1::ptr<epoc::request_status> sts) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        kernel_system *kern = sys->get_kernel_system();
+        dispatch::screen_post_transferer &transferer = dispatcher->get_screen_post_transferer();
+
+        transferer.cancel_wait_vsync(epoc::notify_info{ sts, kern->crr_thread() });
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, flexible_post, std::int32_t screen_index, std::uint8_t *data, std::int32_t size_x,
+        std::int32_t size_y, std::int32_t format, posting_info *info) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        drivers::graphics_driver *driver = sys->get_graphics_driver();
+        kernel_system *kern = sys->get_kernel_system();
+
+        epoc::screen *scr = dispatcher->winserv_->get_screens();
+        dispatch::screen_post_transferer &transferer = dispatcher->get_screen_post_transferer();
+
+        posting_info post_info_copy = *info;
+
+        post_info_copy.input_crop.transform_from_symbian_rectangle();
+        post_info_copy.displayed_rect.transform_from_symbian_rectangle();
+        post_info_copy.scale_to_rect.transform_from_symbian_rectangle();
+
+        while (scr != nullptr) {
+            if (scr->number == screen_index) {
+                auto command_list = driver->new_command_list();
+                auto command_builder = driver->new_command_builder(command_list.get());
+
+                drivers::handle temp = transferer.transfer_data_to_texture(driver, command_builder.get(),
+                    screen_index, data, eka2l1::vec2(size_x, size_y), format);
+
+                command_builder->bind_bitmap(scr->screen_texture);
+                command_builder->set_clipping(false);
+                command_builder->draw_bitmap(temp, 0, info->scale_to_rect, info->input_crop, eka2l1::vec2(0, 0), 0, 0);
                 command_builder->bind_bitmap(0);
 
                 driver->submit_command_list(*command_list);

@@ -278,23 +278,37 @@ namespace eka2l1::drivers {
         helper.pop(to_draw);
 
         bitmap *bmp = get_bitmap(to_draw);
+        texture *draw_texture = nullptr;
 
         if (!bmp) {
-            LOG_ERROR(DRIVER_GRAPHICS, "Invalid bitmap handle to draw");
-            return;
+            draw_texture = reinterpret_cast<texture*>(get_graphics_object(to_draw));
+
+            if (!draw_texture) {
+                LOG_ERROR(DRIVER_GRAPHICS, "Invalid bitmap handle to draw");
+                return;
+            }
+        } else {
+            draw_texture = bmp->tex.get();
         }
 
         drivers::handle mask_to_use = 0;
         helper.pop(mask_to_use);
 
         bitmap *mask_bmp = nullptr;
+        texture *mask_draw_texture = nullptr;
 
         if (mask_to_use) {
             mask_bmp = get_bitmap(mask_to_use);
 
             if (!mask_bmp) {
-                LOG_ERROR(DRIVER_GRAPHICS, "Mask handle was provided but invalid!");
-                return;
+                mask_draw_texture = reinterpret_cast<texture*>(get_graphics_object(mask_to_use));
+
+                if (!mask_draw_texture) {
+                    LOG_ERROR(DRIVER_GRAPHICS, "Mask handle was provided but invalid!");
+                    return;
+                }
+            } else {
+                mask_draw_texture = mask_bmp->tex.get();
             }
         }
 
@@ -344,8 +358,8 @@ namespace eka2l1::drivers {
         void *vert_pointer = verts_default;
 
         if (!source_rect.empty()) {
-            const float texel_width = 1.0f / bmp->tex->get_size().x;
-            const float texel_height = 1.0f / bmp->tex->get_size().y;
+            const float texel_width = 1.0f / draw_texture->get_size().x;
+            const float texel_height = 1.0f / draw_texture->get_size().y;
 
             // Bottom left
             verts[0].top[0] = 0.0f;
@@ -382,22 +396,22 @@ namespace eka2l1::drivers {
         glBindBuffer(GL_ARRAY_BUFFER, sprite_vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(verts), nullptr, GL_STATIC_DRAW);
         glBufferData(GL_ARRAY_BUFFER, sizeof(verts), vert_pointer, GL_STATIC_DRAW);
-        glEnableVertexAttribArray(mask_bmp ? in_position_loc_mask : in_position_loc);
+        glEnableVertexAttribArray(mask_draw_texture ? in_position_loc_mask : in_position_loc);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0);
-        glEnableVertexAttribArray(mask_bmp ? in_texcoord_loc_mask : in_texcoord_loc);
+        glEnableVertexAttribArray(mask_draw_texture ? in_texcoord_loc_mask : in_texcoord_loc);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat)));
 
-        if (mask_bmp) {
+        if (mask_draw_texture) {
             glUniform1i(source_loc_mask, 0);
             glUniform1i(mask_loc_mask, 1);
         }
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(bmp->tex->texture_handle()));
+        glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(draw_texture->texture_handle()));
 
-        if (mask_bmp) {
+        if (mask_draw_texture) {
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(mask_bmp->tex->texture_handle()));
+            glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(mask_draw_texture->texture_handle()));
         }
 
         // Build model matrix
@@ -405,11 +419,11 @@ namespace eka2l1::drivers {
         model_matrix = glm::translate(model_matrix, { dest_rect.top.x, dest_rect.top.y, 0.0f });
 
         if (source_rect.size.x == 0) {
-            source_rect.size.x = bmp->tex->get_size().x;
+            source_rect.size.x = draw_texture->get_size().x;
         }
 
         if (source_rect.size.y == 0) {
-            source_rect.size.y = bmp->tex->get_size().y;
+            source_rect.size.y = draw_texture->get_size().y;
         }
 
         if (dest_rect.size.x == 0) {
@@ -426,8 +440,8 @@ namespace eka2l1::drivers {
 
         model_matrix = glm::scale(model_matrix, glm::vec3(dest_rect.size.x, dest_rect.size.y, 1.0f));
 
-        glUniformMatrix4fv((mask_bmp ? model_loc_mask : model_loc), 1, false, glm::value_ptr(model_matrix));
-        glUniformMatrix4fv((mask_bmp ? proj_loc_mask : proj_loc), 1, false, glm::value_ptr(projection_matrix));
+        glUniformMatrix4fv((mask_draw_texture ? model_loc_mask : model_loc), 1, false, glm::value_ptr(model_matrix));
+        glUniformMatrix4fv((mask_draw_texture ? proj_loc_mask : proj_loc), 1, false, glm::value_ptr(projection_matrix));
 
         // Supply brush
         std::uint32_t flags = 0;
@@ -436,14 +450,14 @@ namespace eka2l1::drivers {
         const GLfloat color[] = { 255.0f, 255.0f, 255.0f, 255.0f };
 
         if (flags & bitmap_draw_flag_use_brush) {
-            glUniform4fv((mask_bmp ? color_loc_mask : color_loc), 1, brush_color.elements.data());
+            glUniform4fv((mask_draw_texture ? color_loc_mask : color_loc), 1, brush_color.elements.data());
         } else {
-            glUniform4fv((mask_bmp ? color_loc_mask : color_loc), 1, color);
+            glUniform4fv((mask_draw_texture ? color_loc_mask : color_loc), 1, color);
         }
 
-        glUniform1f((mask_bmp ? flip_loc_mask : flip_loc), (flags & bitmap_draw_flag_no_flip) ? 1.0f : -1.0f);
+        glUniform1f((mask_draw_texture ? flip_loc_mask : flip_loc), (flags & bitmap_draw_flag_no_flip) ? 1.0f : -1.0f);
 
-        if (mask_bmp) {
+        if (mask_draw_texture) {
             glUniform1f(invert_loc_mask, (flags & bitmap_draw_flag_invert_mask) ? 1.0f : 0.0f);
             glUniform1f(flat_blend_loc_mask, (flags & bitmap_draw_flag_flat_blending) ? 1.0f : 0.0f);
         }

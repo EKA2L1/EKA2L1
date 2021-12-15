@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 EKA2L1 Team.
+ * Copyright (c) 2021 EKA2L1 Team.
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -17,17 +17,22 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MEDIA_CLIENT_AUDIO_STREAM_LOG_H_
-#define MEDIA_CLIENT_AUDIO_STREAM_LOG_H_
+#ifndef POSTING_SURFACE_DISPATCH_H_
+#define POSTING_SURFACE_H_
 
 #include <e32std.h>
 
-_LIT(KMcaCat, "MediaClientAudioStream");
-_LIT(KBacklightCat, "Backlight");
-_LIT(KCameraCat, "Camera");
-_LIT(KScdvCat, "SCDV-HLE");
-_LIT(KPostingSurfaceCat, "PostingSurface");
+#define HLE_DISPATCH_FUNC(ret, name, ARGS...) \
+    ret name(const TUint32 func_id, ##ARGS)
 
-void LogOut(const TDesC &aCategory, const TDesC &aMessage, ...);
+#ifndef EKA2
+typedef unsigned long long TUint64;
+#endif
+
+extern "C" {
+HLE_DISPATCH_FUNC(TInt, EScreenAddWaitVSync, TInt aScreenIndex, TRequestStatus *aStatus);
+HLE_DISPATCH_FUNC(void, EScreenCancelWaitVSync, TInt aScreenIndex, TRequestStatus *aStatus);
+HLE_DISPATCH_FUNC(void, EScreenFlexiblePost, TInt32 aScreenIndex, TUint8 *aData, TSize aSize, TInt aFormat, void *aPostingInfo);
+}
 
 #endif

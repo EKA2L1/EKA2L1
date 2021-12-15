@@ -77,6 +77,7 @@ namespace eka2l1::drivers {
         void set_swapchain_size(command_helper &helper);
         void create_bitmap(command_helper &helper);
         void update_bitmap(command_helper &helper);
+        void update_texture(command_helper &helper);
         void read_bitmap(command_helper &helper);
         void bind_bitmap(command_helper &helper);
         void destroy_bitmap(command_helper &helper);

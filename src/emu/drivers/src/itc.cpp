@@ -185,6 +185,14 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
 
+    void server_graphics_command_list_builder::update_texture(drivers::handle h, const char *data, const std::size_t size,
+        const texture_format data_format, const texture_data_type data_type,
+        const eka2l1::vec3 &offset, const eka2l1::vec3 &dim, const std::size_t pixels_per_line) {
+        // Copy data
+        command *cmd = make_command(graphics_driver_update_texture, nullptr, h, make_data_copy(data, size), size, data_format, data_type, offset, dim, pixels_per_line);
+        get_command_list().add(cmd);
+
+    }
     void server_graphics_command_list_builder::draw_bitmap(drivers::handle h, drivers::handle maskh, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect, const eka2l1::vec2 &origin,
         const float rotation, const std::uint32_t flags) {
         command *cmd = make_command(graphics_driver_draw_bitmap, nullptr, h, maskh, dest_rect, source_rect, origin, rotation, flags);

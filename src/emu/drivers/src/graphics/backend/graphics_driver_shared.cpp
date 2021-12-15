@@ -288,6 +288,35 @@ namespace eka2l1::drivers {
         delete data;
     }
 
+    void shared_graphics_driver::update_texture(command_helper &helper) {
+        drivers::handle handle = 0;
+        std::uint8_t *data = nullptr;
+        std::size_t size = 0;
+        drivers::texture_format data_format;
+        drivers::texture_data_type data_type;
+        eka2l1::vec3 offset;
+        eka2l1::vec3 dim;
+        std::size_t pixels_per_line = 0;
+
+        helper.pop(handle);
+        helper.pop(data);
+        helper.pop(size);
+        helper.pop(data_format);
+        helper.pop(data_type);
+        helper.pop(offset);
+        helper.pop(dim);
+        helper.pop(pixels_per_line);
+
+        drivers::texture *obj = reinterpret_cast<drivers::texture*>(get_graphics_object(handle));
+        if (!obj) {
+            return;
+        }
+
+        obj->update_data(this, 0, offset, dim, pixels_per_line, data_format, data_type, data);
+
+        delete data;
+    }
+
     void shared_graphics_driver::create_bitmap(command_helper &helper) {
         eka2l1::vec2 size;
         std::uint32_t bpp = 0;
@@ -899,6 +928,10 @@ namespace eka2l1::drivers {
 
         case graphics_driver_read_bitmap:
             read_bitmap(helper);
+            break;
+
+        case graphics_driver_update_texture:
+            update_texture(helper);
             break;
 
         default:

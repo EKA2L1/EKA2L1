@@ -32,7 +32,7 @@ target_link_libraries(native-lib PRIVATE
         yaml-cpp)
 
 target_include_directories(native-lib PRIVATE include)
-add_dependencies(native-lib scdv mediaclientaudio mediaclientaudiostream)
+add_dependencies(native-lib ecam scdv mediaclientaudio mediaclientaudiostream vibractrl backlightctrl postingsurfacefactory)
 
 set(ASSETS_DIR "${PROJECT_SOURCE_DIR}/src/emu/android/app/src/main/assets")
 

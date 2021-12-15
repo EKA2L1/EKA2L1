@@ -35,6 +35,25 @@ namespace eka2l1::dispatch {
         eka2l1::rect src_blit_rect;
     };
 
+    struct posting_info {
+        eka2l1::rect displayed_rect;
+        eka2l1::rect scale_to_rect;
+        eka2l1::rect input_crop;
+        std::int32_t mirror;
+        std::int32_t rotation;
+        std::int16_t brightness;
+        std::int16_t constrast;
+        std::uint32_t background_rgb; 
+    };
+
+    static constexpr std::uint32_t FORMAT_RGB16_565_LE = 0x01000001;
+    static constexpr std::uint32_t FORMAT_RGB24_888_LE = 0x01000002;
+    static constexpr std::uint32_t FORMAT_RGB32_X888_LE = 0x01000004;
+
     BRIDGE_FUNC_DISPATCHER(void, update_screen, const std::uint32_t screen_number, const std::uint32_t num_rects, const eka2l1::rect *rect_list);
+    BRIDGE_FUNC_DISPATCHER(void, flexible_post, std::int32_t screen_index, std::uint8_t *data, std::int32_t size_x,
+        std::int32_t size_y, std::int32_t format, posting_info *info);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, wait_vsync, const std::int32_t screen_index, eka2l1::ptr<epoc::request_status> sts);
+    BRIDGE_FUNC_DISPATCHER(void, cancel_wait_vsync, const std::int32_t screen_index, eka2l1::ptr<epoc::request_status> sts);
     BRIDGE_FUNC_DISPATCHER(void, fast_blit, fast_blit_info *info);
 }

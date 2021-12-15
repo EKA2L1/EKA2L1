@@ -36,12 +36,13 @@
 namespace eka2l1::dispatch {
     static std::uint32_t MAX_TRAMPOLINE_CHUNK_SIZE = 0x4000;
 
-    dispatcher::dispatcher(kernel_system *kern, ntimer *timing)
+    dispatcher::dispatcher(kernel_system *kern, ntimer *timing, drivers::graphics_driver *graphics_driver)
         : trampoline_chunk_(nullptr)
         , libmngr_(nullptr)
         , mem_(nullptr)
         , trampoline_allocated_(0)
-        , winserv_(nullptr) {
+        , winserv_(nullptr)
+        , graphics_driver_(graphics_driver) {
         trampoline_chunk_ = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr, "DispatcherTrampolines", 0,
             MAX_TRAMPOLINE_CHUNK_SIZE, MAX_TRAMPOLINE_CHUNK_SIZE, prot_read_write_exec, kernel::chunk_type::normal,
             kernel::chunk_access::rom, kernel::chunk_attrib::none);
@@ -53,6 +54,8 @@ namespace eka2l1::dispatch {
         timing_ = timing;
         libmngr_ = kern->get_lib_manager();
         mem_ = kern->get_memory_system();
+
+        post_transferer_.construct(timing_);
     }
 
     dispatcher::~dispatcher() {
@@ -71,6 +74,7 @@ namespace eka2l1::dispatch {
     }
 
     void dispatcher::shutdown() {
+        post_transferer_.free(graphics_driver_);
     }
 
     void dispatcher::update_all_screens(eka2l1::system *sys) {
