@@ -939,12 +939,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/settings_dialog.ui" line="922"/>
       <source>MIDI backend</source>
-      <translation type="unfinished">MIDI backend</translation>
+      <translation>MIDI后端</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="936"/>
       <source>TinySoundFont (High-quality, support SF2)</source>
-      <translation type="unfinished">TinySoundFont (High-quality, support SF2)</translation>
+      <translation>TinySoundFont（高质量，支持SF2）</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="941"/>
