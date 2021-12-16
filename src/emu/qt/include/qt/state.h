@@ -38,6 +38,7 @@
 #include <drivers/graphics/emu_window.h>
 #include <drivers/graphics/graphics.h>
 #include <drivers/input/emu_controller.h>
+#include <drivers/sensor/sensor.h>
 
 namespace eka2l1 {
     namespace drivers {
@@ -58,6 +59,7 @@ namespace eka2l1::desktop {
         std::unique_ptr<system> symsys;
         std::unique_ptr<drivers::graphics_driver> graphics_driver;
         std::unique_ptr<drivers::audio_driver> audio_driver;
+        std::unique_ptr<drivers::sensor_driver> sensor_driver;
         std::unique_ptr<config::app_settings> app_settings;
 
         drivers::emu_window *window;

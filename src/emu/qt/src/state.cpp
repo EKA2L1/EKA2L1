@@ -147,6 +147,14 @@ namespace eka2l1::desktop {
 
             symsys->set_audio_driver(audio_driver.get());
 
+            // Create sensor driver
+            sensor_driver = drivers::sensor_driver::instantiate();
+            if (!sensor_driver) {
+                LOG_WARN(FRONTEND_CMDLINE, "Failed to create sensor driver");
+            }
+
+            symsys->set_sensor_driver(sensor_driver.get());
+
             // Load patch libraries
             kernel_system *kern = symsys->get_kernel_system();
             hle::lib_manager *libmngr = kern->get_lib_manager();

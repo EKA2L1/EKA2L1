@@ -37,6 +37,7 @@ add_library(drivers
         include/drivers/graphics/backend/ogl/shader_ogl.h
         include/drivers/graphics/backend/ogl/texture_ogl.h
         include/drivers/input/emu_controller.h
+        include/drivers/sensor/sensor.h
         src/driver.cpp
         src/itc.cpp
         src/audio/audio.cpp
@@ -67,6 +68,8 @@ add_library(drivers
         src/graphics/backend/ogl/graphics_ogl.cpp
         src/graphics/backend/ogl/texture_ogl.cpp
         src/graphics/backend/ogl/shader_ogl.cpp
+        src/sensor/backend/null/sensor_null.cpp
+        src/sensor/sensor.cpp
         ${DRIVERS_VULKAN_SRC})
 if (NOT ANDROID)
     target_sources(drivers PRIVATE

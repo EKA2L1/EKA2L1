@@ -181,8 +181,8 @@ namespace eka2l1::dispatch {
             eka2l1::vec3(size.x, size.y, 0), 0);
 
         if (format == FORMAT_RGB32_X888_LE) {
-            builder->set_swizzle(info.transfer_texture_, drivers::channel_swizzle::red, drivers::channel_swizzle::blue,
-                drivers::channel_swizzle::green, drivers::channel_swizzle::one);
+            builder->set_swizzle(info.transfer_texture_, drivers::channel_swizzle::blue, drivers::channel_swizzle::green,
+                drivers::channel_swizzle::red, drivers::channel_swizzle::one);
         }
 
         return info.transfer_texture_;

@@ -99,6 +99,7 @@ namespace eka2l1 {
 
         drivers::graphics_driver *gdriver;
         drivers::audio_driver *adriver;
+        drivers::sensor_driver *ssdriver;
 
         std::unique_ptr<memory_system> mem_;
         std::unique_ptr<kernel_system> kern_;
@@ -161,6 +162,7 @@ namespace eka2l1 {
 
         void set_graphics_driver(drivers::graphics_driver *graphics_driver);
         void set_audio_driver(drivers::audio_driver *audio_driver);
+        void set_sensor_driver(drivers::sensor_driver *sensor_driver);
 
         void set_debugger(debugger_base *new_debugger) {
             debugger_ = new_debugger;
@@ -460,6 +462,10 @@ namespace eka2l1 {
             return adriver;
         }
 
+        drivers::sensor_driver *get_sensor_driver() {
+            return ssdriver;
+        }
+
         arm::core *get_cpu() {
             return cpu.get();
         }
@@ -537,6 +543,10 @@ namespace eka2l1 {
 
     void system_impl::set_audio_driver(drivers::audio_driver *aud_driver) {
         adriver = aud_driver;
+    }
+
+    void system_impl::set_sensor_driver(drivers::sensor_driver *sensor_driver) {
+        ssdriver = sensor_driver;
     }
 
     bool system_impl::load(const std::u16string &path, const std::u16string &cmd_arg) {
@@ -932,6 +942,10 @@ namespace eka2l1 {
         return impl->set_audio_driver(adriver);
     }
 
+    void system::set_sensor_driver(drivers::sensor_driver *ssdriver) {
+        return impl->set_sensor_driver(ssdriver);
+    }
+
     void system::set_debugger(debugger_base *new_debugger) {
         return impl->set_debugger(new_debugger);
     }
@@ -1018,6 +1032,10 @@ namespace eka2l1 {
 
     drivers::audio_driver *system::get_audio_driver() {
         return impl->get_audio_driver();
+    }
+
+    drivers::sensor_driver *system::get_sensor_driver() {
+        return impl->get_sensor_driver();
     }
 
     arm::core *system::get_cpu() {

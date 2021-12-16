@@ -39,6 +39,7 @@
 #include <drivers/graphics/emu_window.h>
 #include <drivers/input/emu_controller.h>
 #include <services/window/window.h>
+#include <drivers/sensor/sensor.h>
 
 namespace eka2l1 {
     namespace drivers {
@@ -57,6 +58,7 @@ namespace eka2l1::android {
         std::unique_ptr<system> symsys;
         std::unique_ptr<drivers::graphics_driver> graphics_driver;
         std::unique_ptr<drivers::audio_driver> audio_driver;
+        std::unique_ptr<drivers::sensor_driver> sensor_driver;
         std::unique_ptr<launcher> launcher;
 
         std::shared_ptr<base_logger> logger;

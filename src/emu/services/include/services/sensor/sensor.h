@@ -20,106 +20,52 @@
 
 #pragma once
 
+#include <services/sensor/defs.h>
+#include <drivers/sensor/sensor.h>
+
 #include <kernel/server.h>
 #include <services/framework.h>
-#include <utils/des.h>
-#include <utils/sec.h>
+
+#include <map>
+#include <memory>
 
 namespace eka2l1 {
+    struct sensor_channel {
+    protected:
+        std::unique_ptr<drivers::sensor> controller_;
+        std::size_t new_data_callback_handle_;
 
-    enum sensor_opcode {
-        sensor_query_channels,
-        sensor_open_channel,
-        sensor_close_channel,
-        sensor_start_listening,
-        sensor_stop_listening,
-        sensor_async_channel_data,
-        sensor_get_property,
-        sensor_async_property_data,
-        sensor_stop_property_listening,
-        sensor_get_all_properties
-    };
+    public:
+        explicit sensor_channel(std::unique_ptr<drivers::sensor> &controller);
+        ~sensor_channel();
 
-    constexpr std::uint32_t LOCATION_LENGTH = 16;
-    constexpr std::uint32_t VENDOR_ID_LENGTH = 16;
-    constexpr std::uint32_t PROPERTY_TEXT_BUFFER_LENGTH = 20;
+        bool listen_for_data(const listening_parameters &parameters);
+        void cancel_data_listening();
 
-    constexpr std::uint32_t ACCEL_PROPERTY_COUNT = 3;
+        std::uint32_t data_packet_size() const {
+            return controller_->data_packet_size();
+        }
 
-    struct channel_info {
-        std::uint32_t channel_id;
-        std::uint32_t context_type;
-        std::uint32_t quantity;
-        std::uint32_t channel_type;
-        epoc::buf_static<char, LOCATION_LENGTH> location;
-        epoc::buf_static<char, VENDOR_ID_LENGTH> vendor_id;
-        std::uint32_t data_item_size;
-        std::uint32_t reserved3;
-        std::uint32_t channel_data_type_id;
-        std::uint32_t reserved;
-        std::uint32_t reserved2;
-    };
+        drivers::sensor *get_sensor_controller() {
+            return controller_.get();
+        }
 
-    struct listening_parameters {
-        std::uint32_t desired_buffering_count;
-        std::uint32_t maximum_buffering_count;
-        std::uint32_t buffering_period;
-    };
-
-    struct sensor_property {
-        std::uint32_t property_id;
-        std::int32_t item_index;
-        std::int16_t array_index;
-        std::uint64_t real_value;
-        epoc::buf_static<char, PROPERTY_TEXT_BUFFER_LENGTH> buf_value;
-        std::uint32_t flags;
-        std::uint64_t real_value_max;
-        std::uint64_t real_value_min;
-        std::uint32_t property_type;
-        epoc::security_info sec_info;
-        std::uint32_t reserved;
-        // TODO: This struct shouldn't contain these 24 bytes
-        std::uint64_t reserved2;
-        std::uint64_t reserved3;
-        std::uint64_t reserved4;
-    };
-
-    enum property_types {
-        uninitialized_property,
-        int_property,
-        real_property,
-        buffer_property
-    };
-
-    enum property_array_index {
-        single_property = -1,
-        array_property = -2
-    };
-
-    enum property_ids {
-        data_rate = 0x2,
-        axis_active = 0x1001
-    };
-
-    enum channel_types {
-        accelerometer_xyz_axis_data = 0x1020507E
+        // TODO: Add function for retrieve async data. Once listening is registered, data is regularly
+        // requested through another opcode
     };
 
     class sensor_server : public service::typical_server {
-        bool initialized{ false };
-
-        void init();
-
     public:
-        std::vector<channel_info> channel_infos;
-        std::vector<sensor_property> accel_properties;
-
         explicit sensor_server(eka2l1::system *sys);
-
         void connect(service::ipc_context &context) override;
     };
 
     struct sensor_client_session : public service::typical_session {
+    private:        
+        std::map<std::uint32_t, std::unique_ptr<sensor_channel>> channels_;
+        sensor_channel *get_sensor_channel(const std::uint32_t id);
+
+    public:
         explicit sensor_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
 
         void fetch(service::ipc_context *ctx) override;
