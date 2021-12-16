@@ -727,7 +727,7 @@ namespace eka2l1 {
     void mmf_dev_server_session::fetch(service::ipc_context *ctx) {
         const epocver ver = server<mmf_dev_server>()->get_kernel_object_owner()->get_epoc_version();
 
-        if ((ver == epocver::epoc93fp1) || (ver == epocver::epoc93fp2)) {
+        if ((ver == epocver::epoc93fp1) || (ver == epocver::epoc93fp2) || (ver == epocver::epoc94)) {
             switch (ctx->msg->function) {
             case epoc::mmf_dev_init0:
                 init0(ctx);
@@ -801,6 +801,10 @@ namespace eka2l1 {
                 set_play_balance(ctx);
                 break;
 
+            case epoc::mmf_dev_samples_played:
+                samples_played(ctx);
+                break;
+
                 /*
             case epoc::mmf_dev_get_supported_input_data_types:
                 get_supported_input_data_types(ctx);
@@ -810,9 +814,6 @@ namespace eka2l1 {
                 copy_fourcc_array(ctx);
                 break;
 
-            case epoc::mmf_dev_samples_played:
-                samples_played(ctx);
-                break;
             */
 
             default:

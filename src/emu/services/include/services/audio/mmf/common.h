@@ -119,8 +119,8 @@ namespace eka2l1::epoc {
         /*
         mmf_dev_play_dtmf_string_length = 34,
         mmf_dev_get_supported_input_data_types = 39,
-        mmf_dev_copy_fourcc_array = 41,
-        mmf_dev_samples_played = 43,*/
+        mmf_dev_copy_fourcc_array = 41,*/
+        mmf_dev_samples_played = 42,
         mmf_dev_set_priority_settings = 44
     };
 
