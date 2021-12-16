@@ -158,6 +158,7 @@ namespace eka2l1::arm::r12l1 {
 
         // Miscs instructions
         bool arm_CLZ(common::cc_flags cond, reg_index d, reg_index m);
+        bool arm_SXTH(common::cc_flags cond, reg_index d, std::uint8_t rotate_base_8, reg_index m);
         bool arm_UXTH(common::cc_flags cond, reg_index d, std::uint8_t rotate_base_8, reg_index m);
         bool arm_SEL(common::cc_flags cond, reg_index n, reg_index d, reg_index m);
         bool arm_PKHBT(common::cc_flags cond, reg_index n, reg_index d, std::uint8_t imm5, reg_index m);

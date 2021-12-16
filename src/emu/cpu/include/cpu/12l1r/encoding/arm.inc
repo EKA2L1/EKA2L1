@@ -78,7 +78,7 @@ INST(arm_UDF,           "UDF",                 "111001111111------------1111----
 // Extension instructions
 //INST(arm_SXTB,          "SXTB",                "cccc011010101111ddddrr000111mmmm") // v6
 //INST(arm_SXTB16,        "SXTB16",              "cccc011010001111ddddrr000111mmmm") // v6
-//INST(arm_SXTH,          "SXTH",                "cccc011010111111ddddrr000111mmmm") // v6
+INST(arm_SXTH,          "SXTH",                "cccc011010111111ddddrr000111mmmm") // v6
 //INST(arm_SXTAB,         "SXTAB",               "cccc01101010nnnnddddrr000111mmmm") // v6
 //INST(arm_SXTAB16,       "SXTAB16",             "cccc01101000nnnnddddrr000111mmmm") // v6
 //INST(arm_SXTAH,         "SXTAH",               "cccc01101011nnnnddddrr000111mmmm") // v6
