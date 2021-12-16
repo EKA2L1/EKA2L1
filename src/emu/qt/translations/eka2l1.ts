@@ -198,23 +198,23 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="276"/>
-        <source>ROM file (*.rom *.ROM);;All files (*.*)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/device_install_dialog.cpp" line="301"/>
-        <source>RPKG file (*.rpkg *.RPKG);;All files (*.*</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../src/device_install_dialog.cpp" line="275"/>
         <source>Choose the ROM</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../src/device_install_dialog.cpp" line="276"/>
+        <source>ROM file (*.rom *.ROM);;All files (*.*)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../src/device_install_dialog.cpp" line="300"/>
         <source>Choose the RPKG</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/device_install_dialog.cpp" line="301"/>
+        <source>RPKG file (*.rpkg *.RPKG);;All files (*.*</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -233,6 +233,11 @@
     <message>
         <location filename="../src/mainwindow.ui" line="73"/>
         <source>Install</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="80"/>
+        <source>Mount game card dump</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -273,11 +278,6 @@
     <message>
         <location filename="../src/mainwindow.ui" line="147"/>
         <source>Package manager</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.ui" line="80"/>
-        <source>Mount game card dump</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -367,6 +367,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../src/mainwindow.cpp" line="643"/>
+        <location filename="../src/mainwindow.cpp" line="892"/>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../src/mainwindow.cpp" line="646"/>
         <source>Extracting game dump files</source>
         <translation type="unfinished"></translation>
@@ -429,12 +435,6 @@
     <message>
         <location filename="../src/mainwindow.cpp" line="874"/>
         <source>Choose a language for the package</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.cpp" line="643"/>
-        <location filename="../src/mainwindow.cpp" line="892"/>
-        <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -579,6 +579,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../src/settings_dialog.ui" line="123"/>
+        <source>Time delay (0-1000us)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../src/settings_dialog.ui" line="162"/>
         <source>Save screen scale and rotations</source>
         <translation type="unfinished"></translation>
@@ -716,6 +721,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../src/settings_dialog.ui" line="422"/>
+        <source>Language</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../src/settings_dialog.ui" line="436"/>
         <source>Theme</source>
         <translation type="unfinished"></translation>
@@ -731,23 +741,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="422"/>
-        <source>Language</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="472"/>
-        <source>Disable status bar</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../src/settings_dialog.ui" line="459"/>
         <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="123"/>
-        <source>Time delay (0-1000us)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -756,25 +751,44 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../src/settings_dialog.ui" line="472"/>
+        <source>Disable status bar</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../src/settings_dialog.ui" line="483"/>
         <source>System</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="829"/>
-        <source>Audio</source>
+        <location filename="../src/settings_dialog.ui" line="489"/>
+        <source>Graphics</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="959"/>
-        <source>Volume</source>
+        <location filename="../src/settings_dialog.ui" line="497"/>
+        <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
+Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="657"/>
-        <location filename="../src/settings_dialog.ui" line="982"/>
-        <location filename="../src/settings_dialog.ui" line="1734"/>
-        <source>0</source>
+        <location filename="../src/settings_dialog.ui" line="501"/>
+        <source>Screen buffer sync</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="515"/>
+        <source>Preferred</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="520"/>
+        <source>Disable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="525"/>
+        <source>Enable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -811,6 +825,43 @@
     <message>
         <location filename="../src/settings_dialog.ui" line="602"/>
         <source>Validate current device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="620"/>
+        <source>Properties</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="628"/>
+        <source>Battery level (0 - 100)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="657"/>
+        <location filename="../src/settings_dialog.ui" line="982"/>
+        <location filename="../src/settings_dialog.ui" line="1734"/>
+        <source>0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="674"/>
+        <source>System language</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="711"/>
+        <source>Check</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="728"/>
+        <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="731"/>
+        <source>Friendly phone name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -859,64 +910,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="620"/>
-        <source>Properties</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="711"/>
-        <source>Check</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="628"/>
-        <source>Battery level (0 - 100)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="674"/>
-        <source>System language</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="489"/>
-        <source>Graphics</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="501"/>
-        <source>Screen buffer sync</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="515"/>
-        <source>Preferred</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="525"/>
-        <source>Enable</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="520"/>
-        <source>Disable</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="728"/>
-        <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="731"/>
-        <source>Friendly phone name</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="497"/>
-        <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
-Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
+        <location filename="../src/settings_dialog.ui" line="829"/>
+        <source>Audio</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -948,6 +943,11 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/settings_dialog.ui" line="941"/>
         <source>MiniBAE (Lower-quality, support HSB)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="959"/>
+        <source>Volume</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
