@@ -276,7 +276,9 @@ namespace eka2l1::dispatch {
 
         while (scr != nullptr) {
             if (scr->number == screen_index) {
-                transferer.wait_vsync(scr, epoc::notify_info{ sts, kern->crr_thread() });
+                epoc::notify_info info{ sts, kern->crr_thread() };
+
+                transferer.wait_vsync(scr, info);
                 break;
             }
 
@@ -290,8 +292,9 @@ namespace eka2l1::dispatch {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         kernel_system *kern = sys->get_kernel_system();
         dispatch::screen_post_transferer &transferer = dispatcher->get_screen_post_transferer();
+        epoc::notify_info info{ sts, kern->crr_thread() };
 
-        transferer.cancel_wait_vsync(epoc::notify_info{ sts, kern->crr_thread() });
+        transferer.cancel_wait_vsync(info);
     }
 
     BRIDGE_FUNC_DISPATCHER(void, flexible_post, std::int32_t screen_index, std::uint8_t *data, std::int32_t size_x,
