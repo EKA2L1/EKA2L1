@@ -198,24 +198,24 @@
       <translation>File VPL (*.vpl);;Tutti i file (*.*)</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="276"/>
-      <source>ROM file (*.rom *.ROM);;All files (*.*)</source>
-      <translation>File ROM (*.rom *.ROM);;Tutti i file (*.*)</translation>
-    </message>
-    <message>
-      <location filename="../src/device_install_dialog.cpp" line="301"/>
-      <source>RPKG file (*.rpkg *.RPKG);;All files (*.*</source>
-      <translation>File RPKG (*.rpkg *.RPKG);;Tutti i file (*.*</translation>
-    </message>
-    <message>
       <location filename="../src/device_install_dialog.cpp" line="275"/>
       <source>Choose the ROM</source>
       <translation>Seleziona la ROM</translation>
     </message>
     <message>
+      <location filename="../src/device_install_dialog.cpp" line="276"/>
+      <source>ROM file (*.rom *.ROM);;All files (*.*)</source>
+      <translation>File ROM (*.rom *.ROM);;Tutti i file (*.*)</translation>
+    </message>
+    <message>
       <location filename="../src/device_install_dialog.cpp" line="300"/>
       <source>Choose the RPKG</source>
       <translation>Seleziona il file RPKG</translation>
+    </message>
+    <message>
+      <location filename="../src/device_install_dialog.cpp" line="301"/>
+      <source>RPKG file (*.rpkg *.RPKG);;All files (*.*</source>
+      <translation>File RPKG (*.rpkg *.RPKG);;Tutti i file (*.*</translation>
     </message>
   </context>
   <context>
@@ -234,6 +234,11 @@
       <location filename="../src/mainwindow.ui" line="73"/>
       <source>Install</source>
       <translation>Installa</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.ui" line="80"/>
+      <source>Mount game card dump</source>
+      <translation>Monta il dump di una scheda di gioco</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="96"/>
@@ -274,11 +279,6 @@
       <location filename="../src/mainwindow.ui" line="147"/>
       <source>Package manager</source>
       <translation>Gestore pacchetti</translation>
-    </message>
-    <message>
-      <location filename="../src/mainwindow.ui" line="80"/>
-      <source>Mount game card dump</source>
-      <translation>Monta il dump di una scheda di gioco</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="152"/>
@@ -367,6 +367,12 @@
       <translation>Non hai installato alcun dispositivo. Installane uno seguendo le istruzioni di installazione sulla pagina GitHub di EKA2L1.</translation>
     </message>
     <message>
+      <location filename="../src/mainwindow.cpp" line="643"/>
+      <location filename="../src/mainwindow.cpp" line="892"/>
+      <source>Cancel</source>
+      <translation>Annulla</translation>
+    </message>
+    <message>
       <location filename="../src/mainwindow.cpp" line="646"/>
       <source>Extracting game dump files</source>
       <translation>Estrazione del file dump di gioco</translation>
@@ -430,12 +436,6 @@
       <location filename="../src/mainwindow.cpp" line="874"/>
       <source>Choose a language for the package</source>
       <translation>Scegli una lingua per il pacchetto</translation>
-    </message>
-    <message>
-      <location filename="../src/mainwindow.cpp" line="643"/>
-      <location filename="../src/mainwindow.cpp" line="892"/>
-      <source>Cancel</source>
-      <translation>Annulla</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="895"/>
@@ -579,6 +579,11 @@
       <translation>Applicazione</translation>
     </message>
     <message>
+      <location filename="../src/settings_dialog.ui" line="123"/>
+      <source>Time delay (0-1000us)</source>
+      <translation>Ritardo (0-1000us)</translation>
+    </message>
+    <message>
       <location filename="../src/settings_dialog.ui" line="162"/>
       <source>Save screen scale and rotations</source>
       <translation>Salva scala e rotazione schermo</translation>
@@ -716,6 +721,11 @@
       <translation>Interfaccia utente</translation>
     </message>
     <message>
+      <location filename="../src/settings_dialog.ui" line="422"/>
+      <source>Language</source>
+      <translation>Lingua</translation>
+    </message>
+    <message>
       <location filename="../src/settings_dialog.ui" line="436"/>
       <source>Theme</source>
       <translation>Tema</translation>
@@ -731,24 +741,9 @@
       <translation>Scuro</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="422"/>
-      <source>Language</source>
-      <translation>Lingua</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="472"/>
-      <source>Disable status bar</source>
-      <translation>Disabilita barra di stato</translation>
-    </message>
-    <message>
       <location filename="../src/settings_dialog.ui" line="459"/>
       <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
       <translation>Abilitando questa opzione, il nome della finestra sarà soltanto &quot;EKA2L1&quot;, senza informazioni aggiuntive.</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="123"/>
-      <source>Time delay (0-1000us)</source>
-      <translation>Ritardo (0-1000us)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="465"/>
@@ -756,26 +751,46 @@
       <translation>Disattiva Easter Egg nel titolo</translation>
     </message>
     <message>
+      <location filename="../src/settings_dialog.ui" line="472"/>
+      <source>Disable status bar</source>
+      <translation>Disabilita barra di stato</translation>
+    </message>
+    <message>
       <location filename="../src/settings_dialog.ui" line="483"/>
       <source>System</source>
       <translation>Sistema</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="829"/>
-      <source>Audio</source>
-      <translation>Audio</translation>
+      <location filename="../src/settings_dialog.ui" line="489"/>
+      <source>Graphics</source>
+      <translation>Grafica</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="959"/>
-      <source>Volume</source>
-      <translation>Volume</translation>
+      <location filename="../src/settings_dialog.ui" line="497"/>
+      <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
+Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
+      <translation>Questo permette ai software emulati di avere abilità di registrazione e previene il lampeggiare di alcuni vecchi giochi S60v1/S60v2.
+Per opzione preferita sarà attivo su dispositivi S60v1/S60v2.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="657"/>
-      <location filename="../src/settings_dialog.ui" line="982"/>
-      <location filename="../src/settings_dialog.ui" line="1734"/>
-      <source>0</source>
-      <translation type="unfinished">0</translation>
+      <location filename="../src/settings_dialog.ui" line="501"/>
+      <source>Screen buffer sync</source>
+      <translation>Sincronizzazione buffer schermo</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="515"/>
+      <source>Preferred</source>
+      <translation>Preferiti</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="520"/>
+      <source>Disable</source>
+      <translation>Disattiva</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="525"/>
+      <source>Enable</source>
+      <translation>Attiva</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="538"/>
@@ -812,6 +827,43 @@
       <location filename="../src/settings_dialog.ui" line="602"/>
       <source>Validate current device</source>
       <translation>Convalida il dispositivo corrente</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="620"/>
+      <source>Properties</source>
+      <translation>Propietà</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="628"/>
+      <source>Battery level (0 - 100)</source>
+      <translation>Livello batteria (0 - 100)</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="657"/>
+      <location filename="../src/settings_dialog.ui" line="982"/>
+      <location filename="../src/settings_dialog.ui" line="1734"/>
+      <source>0</source>
+      <translation type="unfinished">0</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="674"/>
+      <source>System language</source>
+      <translation>Lingua di sistema</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="711"/>
+      <source>Check</source>
+      <translation>Verifica</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="728"/>
+      <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
+      <translation>Nome che verrà visualizzato nelle applicazioni o nei giochi emulati. È consentito un massimo di 30 caratteri.</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="731"/>
+      <source>Friendly phone name</source>
+      <translation>Nome telefono familiare</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="756"/>
@@ -859,66 +911,9 @@
       <translation>Alto</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="620"/>
-      <source>Properties</source>
-      <translation>Propietà</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="711"/>
-      <source>Check</source>
-      <translation>Verifica</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="628"/>
-      <source>Battery level (0 - 100)</source>
-      <translation>Livello batteria (0 - 100)</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="674"/>
-      <source>System language</source>
-      <translation>Lingua di sistema</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="489"/>
-      <source>Graphics</source>
-      <translation>Grafica</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="501"/>
-      <source>Screen buffer sync</source>
-      <translation>Sincronizzazione buffer schermo</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="515"/>
-      <source>Preferred</source>
-      <translation>Preferiti</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="525"/>
-      <source>Enable</source>
-      <translation>Attiva</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="520"/>
-      <source>Disable</source>
-      <translation>Disattiva</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="728"/>
-      <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
-      <translation>Nome che verrà visualizzato nelle applicazioni o nei giochi emulati. È consentito un massimo di 30 caratteri.</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="731"/>
-      <source>Friendly phone name</source>
-      <translation>Nome telefono familiare</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="497"/>
-      <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
-Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
-      <translation>Questo permette ai software emulati di avere abilità di registrazione e previene il lampeggiare di alcuni vecchi giochi S60v1/S60v2.
-Per opzione preferita sarà attivo su dispositivi S60v1/S60v2.</translation>
+      <location filename="../src/settings_dialog.ui" line="829"/>
+      <source>Audio</source>
+      <translation>Audio</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="837"/>
@@ -950,6 +945,11 @@ Per opzione preferita sarà attivo su dispositivi S60v1/S60v2.</translation>
       <location filename="../src/settings_dialog.ui" line="941"/>
       <source>MiniBAE (Lower-quality, support HSB)</source>
       <translation type="unfinished">MiniBAE (Lower-quality, support HSB)</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="959"/>
+      <source>Volume</source>
+      <translation>Volume</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1001"/>
