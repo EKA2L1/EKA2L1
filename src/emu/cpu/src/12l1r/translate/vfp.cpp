@@ -693,4 +693,21 @@ namespace eka2l1::arm::r12l1 {
 
         return true;
     }
+
+    bool arm_translate_visitor::vfp_VMSR(common::cc_flags cond, reg_index t) {
+        if (t == 15) {
+            LOG_ERROR(CPU_12L1R, "Undefined behaviour: t=15 in VMSR");
+            return true;
+        }
+
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg source = reg_index_to_gpr(t);
+        source = reg_supplier_.map(source, 0);
+
+        big_block_->VMSR(source);
+        return true;
+    }
 }

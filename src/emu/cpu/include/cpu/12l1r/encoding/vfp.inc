@@ -56,7 +56,7 @@ INST(vfp_VMOV_f64_2u32,    "VMOV (f64 to 2xcore)",    "cccc11000101uuuutttt10110
 //INST(vfp_VDUP,             "VDUP (from core)",        "cccc11101BQ0ddddtttt1011D0E10000") // ASIMD
 
 // Floating-point system register access
-//INST(vfp_VMSR,             "VMSR",                    "cccc111011100001tttt101000010000") // VFPv2
+INST(vfp_VMSR,             "VMSR",                    "cccc111011100001tttt101000010000") // VFPv2
 INST(vfp_VMRS,             "VMRS",                    "cccc111011110001tttt101000010000") // VFPv2
 
 // Extension register load-store instructions

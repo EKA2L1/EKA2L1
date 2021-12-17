@@ -160,6 +160,8 @@ namespace eka2l1::arm::r12l1 {
         bool arm_CLZ(common::cc_flags cond, reg_index d, reg_index m);
         bool arm_SXTH(common::cc_flags cond, reg_index d, std::uint8_t rotate_base_8, reg_index m);
         bool arm_UXTH(common::cc_flags cond, reg_index d, std::uint8_t rotate_base_8, reg_index m);
+        bool arm_SXTB(common::cc_flags cond, reg_index d, std::uint8_t rotate_base_8, reg_index m);
+        bool arm_UXTB(common::cc_flags cond, reg_index d, std::uint8_t rotate_base_8, reg_index m);
         bool arm_SEL(common::cc_flags cond, reg_index n, reg_index d, reg_index m);
         bool arm_PKHBT(common::cc_flags cond, reg_index n, reg_index d, std::uint8_t imm5, reg_index m);
         bool arm_PKHTB(common::cc_flags cond, reg_index n, reg_index d, std::uint8_t imm5, reg_index m);
@@ -212,5 +214,6 @@ namespace eka2l1::arm::r12l1 {
         bool vfp_VLDM_a1(common::cc_flags cond, bool p, bool u, bool D, bool w, reg_index n, std::size_t Vd, std::uint8_t imm8);
         bool vfp_VLDM_a2(common::cc_flags cond, bool p, bool u, bool D, bool w, reg_index n, std::size_t Vd, std::uint8_t imm8);
         bool vfp_VMRS(common::cc_flags cond, reg_index t);
+        bool vfp_VMSR(common::cc_flags cond, reg_index t);
     };
 }
