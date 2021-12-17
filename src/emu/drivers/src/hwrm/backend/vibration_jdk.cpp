@@ -28,4 +28,8 @@ namespace eka2l1::drivers::hwrm {
         jmethodID vibrate_method = env->GetStaticMethodID(clazz, "vibrate", "(I)Z");
         jboolean result = env->CallStaticBooleanMethod(clazz, vibrate_method, (jint)millisecs);
     }
+
+    void vibrator_jdk::stop_vibrate() {
+
+    }
 }

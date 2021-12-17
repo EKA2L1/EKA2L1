@@ -28,5 +28,6 @@ namespace eka2l1::drivers::hwrm {
         }
 
         void vibrate(const std::uint32_t millisecs, const std::int16_t intensity = MIN_INTENSITY - 1) override;
+        void stop_vibrate() override;
     };
 }

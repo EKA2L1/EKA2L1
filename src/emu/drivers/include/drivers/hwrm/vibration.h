@@ -39,6 +39,11 @@ namespace eka2l1::drivers::hwrm {
          *                      Falling out of that range will cause the vibration to vibrates with default intensity.
          */
         virtual void vibrate(const std::uint32_t millisecs, const std::int16_t intensity = MIN_INTENSITY - 1) = 0;
+
+        /**
+         * @brief Stop any current vibration.
+         */
+        virtual void stop_vibrate() = 0;
     };
 
     std::unique_ptr<vibrator> make_suitable_vibrator();
