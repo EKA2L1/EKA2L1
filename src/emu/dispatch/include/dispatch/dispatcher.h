@@ -217,22 +217,20 @@ namespace eka2l1::dispatch {
         kernel::chunk *trampoline_chunk_;
         hle::lib_manager *libmngr_;
         memory_system *mem_;
-        drivers::graphics_driver *graphics_driver_;
 
         std::uint32_t trampoline_allocated_;
 
         dsp_manager dsp_manager_;
         screen_post_transferer post_transferer_;
 
-        void shutdown();
-
     public:
         window_server *winserv_;
         ntimer *timing_;
 
-        explicit dispatcher(kernel_system *kern, ntimer *timing, drivers::graphics_driver *graphics_driver);
+        explicit dispatcher(kernel_system *kern, ntimer *timing);
         ~dispatcher();
 
+        void shutdown(drivers::graphics_driver *driver);
         bool patch_libraries(const std::u16string &path, patch_info *patches,
             const std::size_t patch_count);
 

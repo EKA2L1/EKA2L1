@@ -144,6 +144,9 @@ namespace eka2l1 {
 
         ~system_impl() {
             // Reset dispatchers...
+            if (dispatcher_)
+                dispatcher_->shutdown(gdriver);
+
             dispatcher_.reset();
 
             // We need to clear kernel content second, since some object do references to it,
@@ -177,7 +180,7 @@ namespace eka2l1 {
             epoc::init_hal(parent_);
 
             // Initialize HLE finally
-            dispatcher_ = std::make_unique<dispatch::dispatcher>(kern_.get(), timing_.get(), gdriver);
+            dispatcher_ = std::make_unique<dispatch::dispatcher>(kern_.get(), timing_.get());
 
             winserv_ = reinterpret_cast<window_server *>(kern_->get_by_name<service::server>(eka2l1::get_winserv_name_by_epocver(
                 kern_->get_epoc_version())));
@@ -828,6 +831,10 @@ namespace eka2l1 {
         // Unregister HLE stuffs
         kern_->unregister_ldd_factory_request_callback(ldd_request_load_callback_handle_);
         kern_->unregister_breakpoint_hit_callback(gdb_stub_breakpoint_callback_handle_);
+
+        if (dispatcher_) {
+            dispatcher_->shutdown(gdriver);
+        }
 
         dispatcher_.reset();
 

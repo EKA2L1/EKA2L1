@@ -93,20 +93,22 @@ namespace eka2l1::dispatch {
         vsync_notifies_.clear();
         timing_->remove_event(vsync_notify_event_);
 
-        auto cmd_list = drv->new_command_list();
-        auto cmd_builder = drv->new_command_builder(cmd_list.get());
-        
-        bool need_send_destroy = false;
+        if (drv) {
+            auto cmd_list = drv->new_command_list();
+            auto cmd_builder = drv->new_command_builder(cmd_list.get());
+            
+            bool need_send_destroy = false;
 
-        for (std::size_t i = 0; i < infos_.size(); i++) {
-            if (infos_[i].transfer_texture_ != 0) {
-                need_send_destroy = true;
-                cmd_builder->destroy(infos_[i].transfer_texture_);
+            for (std::size_t i = 0; i < infos_.size(); i++) {
+                if (infos_[i].transfer_texture_ != 0) {
+                    need_send_destroy = true;
+                    cmd_builder->destroy(infos_[i].transfer_texture_);
+                }
             }
-        }
 
-        if (need_send_destroy) {
-            drv->submit_command_list(*cmd_list);
+            if (need_send_destroy) {
+                drv->submit_command_list(*cmd_list);
+            }
         }
     }
 
