@@ -35,6 +35,8 @@ namespace eka2l1::epoc {
         kernel_system *kern_;
 
         void vibrate_with_default_intensity(service::ipc_context &ctx);
+        void vibrate(service::ipc_context &ctx);
+        void stop_vibrate(service::ipc_context &ctx);
         void vibrate_cleanup(service::ipc_context &ctx);
 
         explicit vibration_resource(kernel_system *kern);

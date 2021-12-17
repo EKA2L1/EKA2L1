@@ -43,6 +43,31 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_none);
     }
 
+    void vibration_resource::vibrate(service::ipc_context &ctx) {
+        std::optional<std::uint32_t> duration_in_millis = ctx.get_argument_value<std::uint32_t>(0);
+        std::optional<std::int32_t> intensity = ctx.get_argument_value<std::int32_t>(1);
+        if (!duration_in_millis.has_value() || !intensity.has_value()) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        LOG_INFO(SERVICE_HWRM, "Vibrating the phone for {} milliseconds //-(o_o)-\\", duration_in_millis.value());
+
+        intensity.value() = common::clamp(-100, 100, intensity.value());
+
+        if (viber_)
+            viber_->vibrate(duration_in_millis.value(), intensity.value());
+
+        ctx.complete(epoc::error_none);
+    }
+
+    void vibration_resource::stop_vibrate(service::ipc_context &ctx) {
+        if (viber_)
+            viber_->stop_vibrate();
+
+        ctx.complete(epoc::error_none);
+    }
+
     void vibration_resource::vibrate_cleanup(service::ipc_context &ctx) {
         ctx.complete(epoc::error_none);
     }
@@ -51,6 +76,14 @@ namespace eka2l1::epoc {
         switch (ctx.msg->function) {
         case hwrm_vibrate_start_with_default_intensity:
             vibrate_with_default_intensity(ctx);
+            break;
+
+        case hwrm_vibrate_start:
+            vibrate(ctx);
+            break;
+
+        case hwrm_vibrate_stop:
+            stop_vibrate(ctx);
             break;
 
         case hwrm_vibrate_cleanup:
