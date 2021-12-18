@@ -27,6 +27,8 @@
 #include <common/fileutils.h>
 #include <common/language.h>
 #include <common/path.h>
+#include <common/pystr.h>
+#include <common/fileutils.h>
 #include <loader/mif.h>
 #include <loader/svgb.h>
 #include <services/fbs/fbs.h>
@@ -103,7 +105,7 @@ namespace eka2l1::android {
 
         if (path_ext == u".mif") {
             eka2l1::symfile file_route = io->open_file(reg->icon_file_path, READ_MODE | BIN_MODE);
-            eka2l1::create_directories("cache");
+            eka2l1::common::create_directories("cache");
 
             if (file_route) {
                 eka2l1::ro_file_stream file_route_stream(file_route.get());
@@ -116,10 +118,12 @@ namespace eka2l1::android {
                         data.resize(dest_size);
                         file_mif_parser.read_mif_entry(0, data.data(), dest_size);
 
-                        const std::string cached_path = fmt::format("cache//debinarized_{}.svg", app_name);
+                        const std::string cached_path = fmt::format("cache/debinarized_{}.svg",
+                            common::pystr(app_name).strip_reserverd().strip().std_str());
 
                         eka2l1::common::ro_buf_stream inside_stream(data.data(), data.size());
-                        std::unique_ptr<eka2l1::common::wo_std_file_stream> outfile_stream = std::make_unique<eka2l1::common::wo_std_file_stream>(cached_path, true);
+                        std::unique_ptr<eka2l1::common::wo_std_file_stream> outfile_stream =
+                                std::make_unique<eka2l1::common::wo_std_file_stream>(cached_path, true);
 
                         eka2l1::loader::mif_icon_header header;
                         inside_stream.read(&header, sizeof(eka2l1::loader::mif_icon_header));
@@ -340,7 +344,7 @@ namespace eka2l1::android {
         std::string root_z_path = add_path(conf->storage, "drives/z/");
         std::string rom_resident_path = add_path(conf->storage, "roms/");
 
-        eka2l1::create_directories(rom_resident_path);
+        eka2l1::common::create_directories(rom_resident_path);
 
         bool need_add_rpkg = false;
 
@@ -366,7 +370,7 @@ namespace eka2l1::android {
         if (need_add_rpkg) {
             const std::string rom_directory = add_path(conf->storage, add_path("roms", firmware_code + "\\"));
 
-            eka2l1::create_directories(rom_directory);
+            eka2l1::common::create_directories(rom_directory);
             common::copy_file(rom_path, add_path(rom_directory, "SYM.ROM"), true);
         }
 

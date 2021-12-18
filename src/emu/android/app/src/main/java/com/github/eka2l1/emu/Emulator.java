@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020 EKA2L1 Team
+ * Copyright (c) 2012- PPSSPP Project
  *
  * This file is part of EKA2L1 project.
  *
@@ -22,13 +23,19 @@ package com.github.eka2l1.emu;
 import static com.github.eka2l1.emu.Constants.PREF_VIBRATION;
 
 import android.annotation.SuppressLint;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.os.Vibrator;
+import android.provider.DocumentsContract;
 import android.view.Surface;
+
+import androidx.documentfile.provider.DocumentFile;
 
 import com.github.eka2l1.BuildConfig;
 import com.github.eka2l1.applist.AppItem;
@@ -60,6 +67,20 @@ public class Emulator {
     public static final int INSTALL_DEVICE_ERROR_ROFS_CORRUPTED = 9;
     public static final int INSTALL_DEVICE_ERROR_ROM_CORRUPTED = 10;
     public static final int INSTALL_DEVICE_ERROR_FPSX_CORRUPTED = 11;
+
+    private static final int STORAGE_ERROR_SUCCESS = 0;
+    private static final int STORAGE_ERROR_UNKNOWN = -1;
+    private static final int STORAGE_ERROR_NOT_FOUND = -2;
+    private static final int STORAGE_ERROR_DISK_FULL = -3;
+    private static final int STORAGE_ERROR_ALREADY_EXISTS = -4;
+
+    private static final String[] columns = new String[] {
+        DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+        DocumentsContract.Document.COLUMN_SIZE,
+        DocumentsContract.Document.COLUMN_FLAGS,
+        DocumentsContract.Document.COLUMN_MIME_TYPE,  // check for MIME_TYPE_DIR
+        DocumentsContract.Document.COLUMN_LAST_MODIFIED
+    };
 
     @SuppressLint("StaticFieldLeak")
     private static Context context;
@@ -223,6 +244,18 @@ public class Emulator {
         });
     }
 
+    public static Completable subscribeInstallApp(String path) {
+        return Completable.create(emitter -> {
+            int installResult = installApp(path);
+
+            if (installResult == 0) {
+                emitter.onComplete();
+            } else {
+                emitter.onError(new IOException(Integer.toString(installResult)));
+            }
+        });
+    }
+
     private static void checkInit() {
         if (!init && load) {
             throw new IllegalStateException("Emulator is not initialized");
@@ -260,7 +293,6 @@ public class Emulator {
         return context.getClassLoader();
     }
 
-    @SuppressLint("unused")
     public static int openContentUri(String uriString, String mode) {
         try {
             Uri uri = Uri.parse(uriString);
@@ -272,6 +304,215 @@ public class Emulator {
         } catch (Exception e) {
             e.printStackTrace();
             return -1;
+        }
+    }
+
+    public static int contentUriCreateDirectory(String rootTreeUri, String dirName) {
+        try {
+            Uri uri = Uri.parse(rootTreeUri);
+            DocumentFile documentFile = DocumentFile.fromTreeUri(context, uri);
+            if (documentFile != null) {
+                DocumentFile createdDir = documentFile.createDirectory(dirName);
+                return createdDir != null ? STORAGE_ERROR_SUCCESS : STORAGE_ERROR_UNKNOWN;
+            } else {
+                return STORAGE_ERROR_UNKNOWN;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return STORAGE_ERROR_UNKNOWN;
+        }
+    }
+
+    public static int contentUriCreateFile(String rootTreeUri, String fileName) {
+        try {
+            Uri uri = Uri.parse(rootTreeUri);
+            DocumentFile documentFile = DocumentFile.fromTreeUri(context, uri);
+            if (documentFile != null) {
+                // TODO: Check the file extension and choose MIME type appropriately.
+                DocumentFile createdFile = documentFile.createFile("application/octet-stream", fileName);
+                return createdFile != null ? STORAGE_ERROR_SUCCESS : STORAGE_ERROR_UNKNOWN;
+            } else {
+                return STORAGE_ERROR_UNKNOWN;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return STORAGE_ERROR_UNKNOWN;
+        }
+    }
+
+    // NOTE: The destination is the parent directory! This means that contentUriCopyFile
+    // cannot rename things as part of the operation.
+    public static int contentUriMoveFile(String srcFileUri, String srcParentDirUri, String dstParentDirUri) {
+        try {
+            Uri srcUri = Uri.parse(srcFileUri);
+            Uri srcParentUri = Uri.parse(srcParentDirUri);
+            Uri dstParentUri = Uri.parse(dstParentDirUri);
+            return DocumentsContract.moveDocument(context.getContentResolver(), srcUri,
+                    srcParentUri, dstParentUri) != null ? STORAGE_ERROR_SUCCESS : STORAGE_ERROR_UNKNOWN;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return STORAGE_ERROR_UNKNOWN;
+        }
+    }
+
+    public static int contentUriCopyFile(String srcFileUri, String dstParentDirUri) {
+        try {
+            Uri srcUri = Uri.parse(srcFileUri);
+            Uri dstParentUri = Uri.parse(dstParentDirUri);
+            return DocumentsContract.copyDocument(context.getContentResolver(), srcUri,
+                    dstParentUri) != null ? STORAGE_ERROR_SUCCESS : STORAGE_ERROR_UNKNOWN;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return STORAGE_ERROR_UNKNOWN;
+        }
+    }
+
+    public static int contentUriRemoveFile(String fileName) {
+        try {
+            Uri uri = Uri.parse(fileName);
+            DocumentFile documentFile = DocumentFile.fromSingleUri(context, uri);
+            if (documentFile != null) {
+                return documentFile.delete() ? STORAGE_ERROR_SUCCESS : STORAGE_ERROR_UNKNOWN;
+            } else {
+                return STORAGE_ERROR_UNKNOWN;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return STORAGE_ERROR_UNKNOWN;
+        }
+    }
+
+    public static int contentUriRenameFileTo(String fileUri, String newName) {
+        try {
+            Uri uri = Uri.parse(fileUri);
+            // Due to a design flaw, we can't use DocumentFile.renameTo().
+            // Instead we use the DocumentsContract API directly.
+            // See https://stackoverflow.com/questions/37168200/android-5-0-new-sd-card-access-api-documentfile-renameto-unsupportedoperation.
+            Uri newUri = DocumentsContract.renameDocument(context.getContentResolver(), uri, newName);
+            return STORAGE_ERROR_SUCCESS;
+        } catch (Exception e) {
+            // TODO: More detailed exception processing.
+            e.printStackTrace();
+            return STORAGE_ERROR_UNKNOWN;
+        }
+    }
+
+    private static String cursorToString(Cursor c) {
+        final int flags = c.getInt(2);
+        // Filter out any virtual or partial nonsense.
+        // There's a bunch of potentially-interesting flags here btw,
+        // to figure out how to set access flags better, etc.
+        if ((flags & (DocumentsContract.Document.FLAG_PARTIAL |
+                DocumentsContract.Document.FLAG_VIRTUAL_DOCUMENT)) != 0) {
+            return null;
+        }
+
+        final String mimeType = c.getString(3);
+        final boolean isDirectory = mimeType.equals(DocumentsContract.Document.MIME_TYPE_DIR);
+        final String documentName = c.getString(0);
+        final long size = c.getLong(1);
+        final long lastModified = c.getLong(4);
+
+        String str = "F|";
+        if (isDirectory) {
+            str = "D|";
+        }
+        return str + size + "|" + documentName + "|" + lastModified;
+    }
+
+    public static String contentUriGetFileInfo(String fileName) {
+        Cursor c = null;
+        try {
+            Uri uri = Uri.parse(fileName);
+            final ContentResolver resolver = context.getContentResolver();
+            c = resolver.query(uri, columns, null, null, null);
+            if (c.moveToNext()) {
+                String str = cursorToString(c);
+                return str;
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+        }
+    }
+
+    private static void closeQuietly(AutoCloseable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (RuntimeException rethrown) {
+                throw rethrown;
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    public static boolean contentUriFileExists(String fileUri) {
+        Cursor c = null;
+        try {
+            Uri uri = Uri.parse(fileUri);
+            c = context.getContentResolver().query(uri, new String[]
+                    { DocumentsContract.Document.COLUMN_DOCUMENT_ID },
+                    null, null, null);
+            return c.getCount() > 0;
+        } catch (Exception e) {
+            // Log.w(TAG, "Failed query: " + e);
+            return false;
+        } finally {
+            closeQuietly(c);
+        }
+    }
+
+    public static boolean isExternalStoragePreservedLegacy() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // In 29 and later, we can check whether we got preserved storage legacy.
+            return Environment.isExternalStorageLegacy();
+        } else {
+            // In 28 and earlier, we won't call this - we'll still request an exception.
+            return false;
+        }
+    }
+
+    // TODO: Maybe add a cheaper version that doesn't extract all the file information?
+    // TODO: Replace with a proper query:
+    // * https://stackoverflow.com/questions/42186820/documentfile-is-very-slow
+    public static String[] listContentUriDir(String uriString) {
+        Cursor c = null;
+        try {
+            Uri uri = Uri.parse(uriString);
+            final ContentResolver resolver = context.getContentResolver();
+            final Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(
+                    uri, DocumentsContract.getDocumentId(uri));
+            final ArrayList<String> listing = new ArrayList<>();
+            c = resolver.query(childrenUri, columns, null, null, null);
+            while (c.moveToNext()) {
+                String str = cursorToString(c);
+                if (str != null) {
+                    listing.add(str);
+                }
+            }
+            // Is ArrayList weird or what?
+            String[] strings = new String[listing.size()];
+            return listing.toArray(strings);
+        }
+        catch (IllegalArgumentException e) {
+            // Due to sloppy exception handling in resolver.query, we get this wrapping
+            // a FileNotFoundException if the directory doesn't exist.
+            return new String[]{};
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return new String[]{};
+        } finally {
+            if (c != null) {
+                c.close();
+            }
         }
     }
 

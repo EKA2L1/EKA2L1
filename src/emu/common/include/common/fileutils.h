@@ -24,6 +24,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <memory>
 #include <string>
 
 namespace eka2l1::common {
@@ -33,6 +34,12 @@ namespace eka2l1::common {
         FILE_DEVICE,
         FILE_REGULAR,
         FILE_DIRECTORY
+    };
+
+    enum file_open_mode {
+        FILE_OPEN_MODE_READ = 1 << 0,
+        FILE_OPEN_MODE_WRITE = 1 << 1,
+        FILE_OPEN_MODE_APPEND = 1 << 2
     };
 
     enum folder_copy_flags {
@@ -91,6 +98,31 @@ namespace eka2l1::common {
 
     bool is_system_case_insensitive();
 
+    /*! \brief Create a directory. */
+    void create_directory(std::string path);
+
+    /*! \brief Check if a file or directory exists. */
+    bool exists(std::string path);
+
+    /*! \brief Check if the path points to a directory. */
+    bool is_dir(std::string path);
+
+    /*! \brief Create directories. */
+    void create_directories(std::string path);
+
+    bool set_current_directory(const std::string &path);
+    bool get_current_directory(std::string &path);
+
+    /**
+     * @brief Open a C API file, handling through platform-specific API.
+     * 
+     * @param target_file       The path to the file for opening, in UTF-8.
+     * @param mode              Open mode in string. This is the same as the one to be passed in fopen.
+     * 
+     * @returns Handle to the C file on success, else null.
+     */
+    FILE *open_c_file(const std::string &target_file, const char *mode);
+
     struct dir_entry {
         file_type type;
         std::size_t size;
@@ -104,32 +136,34 @@ namespace eka2l1::common {
      * Born to be portable later
      */
     struct dir_iterator {
-    protected:
-        std::string match_pattern;
-
     public:
-        void *handle;
-        void *find_data;
-
-        bool eof;
-
-        void cycles_to_next_entry();
-
         std::string dir_name;
-
-    public:
         bool detail;
 
-        explicit dir_iterator(const std::string &name);
-        ~dir_iterator();
+        explicit dir_iterator(const std::string &dir)
+            : dir_name(dir) {
+        }
 
-        bool is_valid() const;
+        virtual ~dir_iterator() = default;
+        virtual bool is_valid() const = 0;
 
         /**
          * \brief Get the next entry of the folder
          * \returns 0 if success
          *          -1 if EOF
          */
-        int next_entry(dir_entry &entry);
+        virtual int next_entry(dir_entry &entry) = 0;
     };
+
+    /**
+     * @brief Create a directory iterator that is suitable for the path format and the platform
+     *        the program is running.
+     *
+     * Note that you still have to check if the iterator is valid even if the instance is not null,
+     * by using the is_valid method.
+     *
+     * @param path The path to the folder we want to open the directory iterator.
+     * @return Instance of the suitable directory iterator on success.
+     */
+    std::unique_ptr<dir_iterator> make_directory_iterator(const std::string &path);
 }

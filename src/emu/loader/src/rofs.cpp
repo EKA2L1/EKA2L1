@@ -18,11 +18,12 @@
  */
 
 #include <common/buffer.h>
+#include <common/fileutils.h>
 #include <common/log.h>
+#include <common/path.h>
 #include <loader/rofs.h>
 
 #include <common/cvt.h>
-#include <common/path.h>
 
 namespace eka2l1::loader {
     bool rofs_entry::read(common::ro_stream &stream, const int version) {
@@ -165,7 +166,7 @@ namespace eka2l1::loader {
     static bool extract_directory(common::ro_stream &stream, const std::string &base,
         const int version, const int file_offset, const std::uint32_t offset,
         progress_changed_callback progress_cb, cancel_requested_callback cancel_cb, std::size_t &max_pos) {
-        eka2l1::create_directories(base);
+        common::create_directories(base);
         stream.seek(offset - file_offset, common::seek_where::beg);
 
         // Read directory entry

@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <common/jniutils.h>
+#include <common/android/jniutils.h>
 #include <common/log.h>
 
 namespace eka2l1::common::jni {

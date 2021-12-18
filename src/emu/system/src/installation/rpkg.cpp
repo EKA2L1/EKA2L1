@@ -73,7 +73,7 @@ namespace eka2l1::loader {
         std::string real_path = add_path(add_path(devices_rom_path, "/temp/"), file_full_relative);
 
         std::string dir = eka2l1::file_directory(real_path);
-        eka2l1::create_directories(dir);
+        common::create_directories(dir);
 
         common::wo_std_file_stream wf(real_path, true);
 
@@ -176,7 +176,7 @@ namespace eka2l1::loader {
         }
 
         const std::string rom_path = add_path(rom_resident_path, firmcode_low + "\\");
-        eka2l1::create_directories(rom_path);
+        common::create_directories(rom_path);
 
         eka2l1::common::copy_file(path, eka2l1::add_path(rom_path, "SYM.ROM"), true);
 
@@ -189,7 +189,7 @@ namespace eka2l1::loader {
 
     device_installation_error install_rpkg(device_manager *dvcmngr, const std::string &path, const std::string &devices_rom_path,
         std::string &firmware_code_ret, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
-        FILE *f = fopen(path.data(), "rb");
+        FILE *f = common::open_c_file(path.data(), "rb");
 
         if (!f) {
             return device_installation_not_exist;

@@ -79,17 +79,21 @@ namespace eka2l1::config {
     static const char *COMPAT_DIR_PATH = "compat//";
 
     bool app_settings::load_all_settings() {
-        if (!eka2l1::exists(COMPAT_DIR_PATH)) {
-            eka2l1::create_directories(COMPAT_DIR_PATH);
+        if (!common::exists(COMPAT_DIR_PATH)) {
+            common::create_directories(COMPAT_DIR_PATH);
             return true;
         }
 
-        common::dir_iterator setting_folder(COMPAT_DIR_PATH);
-        setting_folder.detail = true;
+        auto setting_folder = common::make_directory_iterator(COMPAT_DIR_PATH);
+        if (!setting_folder) {
+            return false;
+        }
+
+        setting_folder->detail = true;
 
         common::dir_entry setting_entry;
 
-        while (setting_folder.next_entry(setting_entry) == 0) {
+        while (setting_folder->next_entry(setting_entry) == 0) {
             if ((setting_entry.type == common::FILE_REGULAR) && common::lowercase_string(eka2l1::path_extension(setting_entry.name)) == ".yml") {
                 const common::pystr fname = eka2l1::replace_extension(eka2l1::filename(setting_entry.name), "");
                 const epoc::uid uid = fname.as_int<std::uint32_t>(0, 16);
@@ -99,7 +103,7 @@ namespace eka2l1::config {
                     YAML::Node the_node;
 
                     try {
-                        common::ro_std_file_stream app_registry_stream(eka2l1::add_path(setting_folder.dir_name, setting_entry.name), true);
+                        common::ro_std_file_stream app_registry_stream(eka2l1::add_path(setting_folder->dir_name, setting_entry.name), true);
                         if (!app_registry_stream.valid()) {
                             LOG_ERROR(CONFIG, "Failed to open app settings entry {}", setting_entry.name);
                             continue;
@@ -151,7 +155,7 @@ namespace eka2l1::config {
     void app_settings::update_setting(const epoc::uid app_uid) {
         const std::string setting_file = eka2l1::add_path(COMPAT_DIR_PATH, fmt::format("{:X}.yml", app_uid));
 
-        if (!eka2l1::exists(setting_file)) {
+        if (!common::exists(setting_file)) {
             return;
         }
 

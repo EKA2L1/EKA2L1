@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <common/jniutils.h>
+#include <common/android/jniutils.h>
 #include <drivers/hwrm/backend/vibration_jdk.h>
 #include <jni.h>
 

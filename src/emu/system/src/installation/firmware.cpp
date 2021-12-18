@@ -70,7 +70,7 @@ namespace eka2l1 {
     }
 
     static void extract_directory(Fat::Image &img, Fat::Entry mee, std::string dir_path) {
-        eka2l1::create_directories(dir_path);
+        common::create_directories(dir_path);
 
         while (img.get_next_entry(mee)) {
             if (mee.entry.file_attributes & (int)Fat::EntryAttribute::DIRECTORY) {
@@ -199,7 +199,7 @@ namespace eka2l1 {
         }
 
         std::string image_path = eka2l1::add_path(rom_resident_path, "TEMP.IMG");
-        
+
         {
             common::wo_std_file_stream rom_stream(image_path, true);
 
@@ -292,7 +292,7 @@ namespace eka2l1 {
         const std::string &rom_resident_path, device_firmware_choose_variant_callback choose_callback,
         progress_changed_callback progress_callback, cancel_requested_callback cancel_callback) {
         std::string cur_dir;
-        if (!eka2l1::get_current_directory(cur_dir)) {
+        if (!common::get_current_directory(cur_dir)) {
             LOG_ERROR(SYSTEM, "Can't get current directory!");
             return device_installation_general_failure;
         }
@@ -300,8 +300,14 @@ namespace eka2l1 {
         const std::string full_vpl = eka2l1::absolute_path(vpl_path, cur_dir);
         const std::string full_folder = eka2l1::file_directory(full_vpl);
 
+        common::ro_std_file_stream doc_stream(full_vpl, true);
+
+        std::vector<std::uint8_t> temp_buf;
+        temp_buf.resize(doc_stream.size());
+        doc_stream.read(temp_buf.data(), temp_buf.size());
+
         pugi::xml_document document;
-        const pugi::xml_parse_result parse_result = document.load_file(full_vpl.c_str());
+        const pugi::xml_parse_result parse_result = document.load_buffer(temp_buf.data(), temp_buf.size());
 
         if (!parse_result) {
             LOG_ERROR(SYSTEM, "VPL file parse failed, description: {}", parse_result.description());
@@ -395,7 +401,7 @@ namespace eka2l1 {
                 }
 
                 const std::string full_fpsx_path = eka2l1::add_path(full_folder, fname.first_child().value());
-                if (!eka2l1::exists(full_fpsx_path)) {
+                if (!common::exists(full_fpsx_path)) {
                     continue;
                 }
 
@@ -483,7 +489,7 @@ namespace eka2l1 {
         }
 
         const std::string target_rom_path = eka2l1::add_path(rom_resident_path, firmcode_low + "\\SYM.ROM");
-        eka2l1::create_directories(eka2l1::file_directory(target_rom_path));
+        common::create_directories(eka2l1::file_directory(target_rom_path));
         common::move_file(current_temp_rom, target_rom_path);
 
         if (progress_callback) {
