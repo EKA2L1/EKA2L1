@@ -329,8 +329,7 @@ namespace eka2l1 {
     std::string add_path(const std::string &path1, const std::string &path2, bool symbian_use) {
 #if EKA2L1_PLATFORM(ANDROID)
         if (is_content_uri(path1)) {
-            std::string child = path2;
-            std::replace(child.begin(), child.end(), '\\', '/');
+            std::string child = add_path_impl<char>("", path2, symbian_use, get_separator);
 
             common::android::content_uri root_uri =  common::android::content_uri(path1);
             common::android::content_uri uri = root_uri.with_root_file_path(child);
@@ -345,7 +344,7 @@ namespace eka2l1 {
         const std::string parent = common::ucs2_to_utf8(path1);
         if (is_content_uri(parent)) {
             std::string child = common::ucs2_to_utf8(path2);
-            std::replace(child.begin(), child.end(), '\\', '/');
+            child = add_path_impl<char>("", child, symbian_use, get_separator);
 
             common::android::content_uri root_uri = common::android::content_uri(parent);
             common::android::content_uri uri = root_uri.with_root_file_path(child);

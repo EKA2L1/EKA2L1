@@ -676,21 +676,39 @@ namespace eka2l1::common {
 
     void create_directories(std::string path) {
 #if EKA2L1_PLATFORM(ANDROID)
-        create_directory(std::move(path));
-#else
-        std::string crr_path = "";
+        if (is_content_uri(path)) {
+            android::content_uri uri = android::content_uri(path);
+            android::content_uri root = uri.with_root_file_path("");
+            std::string diff;
+            if (!root.compute_path_to(uri, diff)) {
+                return;
+            }
 
-        path_iterator ite;
+            std::vector<common::pystr> parts = common::pystr(diff).split('/');
+            android::content_uri cur_uri = android::content_uri(root);
+            for (auto &part : parts) {
+                cur_uri = cur_uri.with_component(part.std_str());
+                std::string uri_path = cur_uri.to_string();
+                if (!android::file_exists(uri_path)) {
+                    create_directory(uri_path);
+                }
+            }
+        } else
+#endif
+        {
+            std::string crr_path;
 
-        for (ite = path_iterator(path);
-             ite; ite++) {
-            crr_path = add_path(crr_path, add_path(*ite, "/"));
+            path_iterator ite;
 
-            if (get_file_type(crr_path) != file_type::FILE_DIRECTORY) {
-                create_directory(crr_path);
+            for (ite = path_iterator(path);
+                 ite; ite++) {
+                crr_path = add_path(crr_path, add_path(*ite, "/"));
+
+                if (get_file_type(crr_path) != file_type::FILE_DIRECTORY) {
+                    create_directory(crr_path);
+                }
             }
         }
-#endif
     }
 
     bool set_current_directory(const std::string &path) {
