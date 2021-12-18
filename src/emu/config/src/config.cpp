@@ -236,11 +236,11 @@ namespace eka2l1::config {
         screen_buffer_sync = get_screen_buffer_sync_option_from_string(screen_buffer_sync_string);
         midi_backend = get_midi_backend_from_string(midi_backend_string);
 
-        if (!eka2l1::exists(hsb_bank_path)) {
+        if (!eka2l1::common::exists(hsb_bank_path)) {
             hsb_bank_path = "resources/defaultbank.hsb";
         }
         
-        if (!eka2l1::exists(sf2_bank_path)) {
+        if (!eka2l1::common::exists(sf2_bank_path)) {
             hsb_bank_path = "resources/defaultbank.sf2";
         }
 
