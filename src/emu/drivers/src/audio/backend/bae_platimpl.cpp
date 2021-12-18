@@ -33,6 +33,7 @@
 #include <common/platform.h>
 #include <common/cvt.h>
 #include <common/log.h>
+#include <common/path.h>
 
 #include <fcntl.h>
 
@@ -40,6 +41,10 @@
 #include <Windows.h>
 #include <io.h>
 #else
+#if EKA2L1_PLATFORM(ANDROID)
+#include <common/android/storage.h>
+#endif
+
 #include <pthread.h>
 #include <unistd.h>
 #include <sys/uio.h>
@@ -178,8 +183,7 @@ void BAE_CopyFileNameNative(void *fileNameSource, void *fileNameDest) {
 }
 
 long BAE_FileCreate(void *fileName) {
-    // TODO! Transition to open C file
-    FILE *f = fopen(reinterpret_cast<const char*>(fileName), "wb");
+    FILE *f = eka2l1::common::open_c_file(reinterpret_cast<const char*>(fileName), "wb");
     if (!f) {
         return -1;
     }
@@ -199,6 +203,12 @@ long BAE_FileOpenForRead(void *fileName) {
     std::wstring name_unicode = eka2l1::common::utf8_to_wstr(fname_casted);
     return _wopen(name_unicode.c_str(), _O_RDONLY | _O_BINARY, _S_IREAD);
 #elif EKA2L1_PLATFORM(POSIX)
+#if EKA2L1_PLATFORM(ANDROID)
+    if (eka2l1::is_content_uri(fname_casted)) {
+        return eka2l1::common::android::open_content_uri_fd(fname_casted, eka2l1::common::android::open_content_uri_mode::READ);
+    }
+#endif
+
     return open(fname_casted, O_RDONLY);
 #endif
 }
@@ -210,6 +220,12 @@ long BAE_FileOpenForWrite(void *fileName) {
     std::wstring name_unicode = eka2l1::common::utf8_to_wstr(fname_casted);
     return _wopen(name_unicode.c_str(), _O_WRONLY | _O_BINARY, _S_IWRITE);
 #elif EKA2L1_PLATFORM(POSIX)
+#if EKA2L1_PLATFORM(ANDROID)
+    if (eka2l1::is_content_uri(fname_casted)) {
+        return eka2l1::common::android::open_content_uri_fd(fname_casted, eka2l1::common::android::open_content_uri_mode::READ_WRITE);
+    }
+#endif
+
     return open(fname_casted, O_WRONLY | O_CREAT | O_TRUNC, 0600);
 #endif
 }
@@ -221,6 +237,12 @@ long BAE_FileOpenForReadWrite(void *fileName) {
     std::wstring name_unicode = eka2l1::common::utf8_to_wstr(fname_casted);
     return _wopen(name_unicode.c_str(), _O_RDWR | _O_BINARY, _S_IREAD | _S_IWRITE);
 #elif EKA2L1_PLATFORM(POSIX)
+#if EKA2L1_PLATFORM(ANDROID)
+    if (eka2l1::is_content_uri(fname_casted)) {
+        return eka2l1::common::android::open_content_uri_fd(fname_casted, eka2l1::common::android::open_content_uri_mode::READ_WRITE);
+    }
+#endif
+
     return open(fname_casted, O_RDWR);
 #endif
 }
