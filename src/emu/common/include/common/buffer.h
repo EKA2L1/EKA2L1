@@ -333,7 +333,7 @@ namespace eka2l1 {
                     return;
                 }
 
-                fseek(fo_, amount, common::beg ? SEEK_SET : (common::cur ? SEEK_CUR : SEEK_END));
+                fseek(fo_, static_cast<long>(amount), common::beg ? SEEK_SET : (common::cur ? SEEK_CUR : SEEK_END));
             }
 
             bool valid() override {
