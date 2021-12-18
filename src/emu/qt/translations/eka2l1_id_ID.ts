@@ -105,7 +105,7 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="125"/>
       <source>Install</source>
-      <translation>Instal</translation>
+      <translation>Pasang</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="138"/>
@@ -115,7 +115,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="117"/>
       <source>Choose the firmware variant to install</source>
-      <translation>Pilih varian firmware untuk dipasang</translation>
+      <translation>Pilih ragam firmware untuk dipasang</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="199"/>
@@ -233,7 +233,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="73"/>
       <source>Install</source>
-      <translation>Instal</translation>
+      <translation>Pasang</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="80"/>
@@ -929,7 +929,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="878"/>
       <source>HSB bank</source>
-      <translation type="unfinished">HSB bank</translation>
+      <translation>Bank HSB</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="922"/>
@@ -944,7 +944,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="941"/>
       <source>MiniBAE (Lower-quality, support HSB)</source>
-      <translation type="unfinished">MiniBAE (Lower-quality, support HSB)</translation>
+      <translation>MiniBAE (Mutu rendah, mendukung HSB)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="959"/>
@@ -979,7 +979,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1102"/>
       <source>Left softkey</source>
-      <translation>Kunci digital kiri</translation>
+      <translation>Tombol kiri digital</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1140"/>
@@ -989,7 +989,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1172"/>
       <source>Right softkey</source>
-      <translation type="unfinished">Right softkey</translation>
+      <translation>Tombol kanan digital</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1208"/>
@@ -999,7 +999,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1240"/>
       <source>Middle softkey</source>
-      <translation type="unfinished">Middle softkey</translation>
+      <translation>Tombol tengah digital</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1272"/>
@@ -1009,7 +1009,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1308"/>
       <source>Green softkey</source>
-      <translation type="unfinished">Green softkey</translation>
+      <translation>Tombol hijau digital</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1340"/>
@@ -1019,7 +1019,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1372"/>
       <source>Red softkey</source>
-      <translation type="unfinished">Red softkey</translation>
+      <translation>Tombol merah digital</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1408"/>
@@ -1256,7 +1256,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="1221"/>
       <source>Successfully changed</source>
-      <translation type="unfinished">Successfully changed</translation>
+      <translation>Berhasil diubah</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1221"/>
@@ -1266,12 +1266,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="1234"/>
       <source>Choose the HSB bank file</source>
-      <translation type="unfinished">Choose the HSB bank file</translation>
+      <translation>Pilih berkas bank HSB</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1257"/>
       <source>Choose the SF2 bank file</source>
-      <translation type="unfinished">Choose the SF2 bank file</translation>
+      <translation>Pilih berkas bank SF2</translation>
     </message>
   </context>
 </TS>
