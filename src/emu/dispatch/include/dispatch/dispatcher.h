@@ -20,7 +20,10 @@
 #pragma once
 
 #include <cstdint>
+
 #include <dispatch/management.h>
+#include <dispatch/libraries/gles/egl.h>
+
 #include <drivers/audio/dsp.h>
 #include <drivers/audio/player.h>
 #include <drivers/itc.h>
@@ -222,6 +225,7 @@ namespace eka2l1::dispatch {
 
         dsp_manager dsp_manager_;
         screen_post_transferer post_transferer_;
+        egl_controller egl_controller_;
 
     public:
         window_server *winserv_;
@@ -243,6 +247,10 @@ namespace eka2l1::dispatch {
 
         screen_post_transferer &get_screen_post_transferer() {
             return post_transferer_;
+        }
+
+        egl_controller &get_egl_controller() {
+            return egl_controller_;
         }
     };
 }

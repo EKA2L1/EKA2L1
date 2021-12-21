@@ -1,5 +1,8 @@
 
 add_library(epocdispatch
+        include/dispatch/libraries/gles/def.h
+        include/dispatch/libraries/gles/egl.h
+        include/dispatch/libraries/gles/gles1.h
         include/dispatch/libraries/sysutils/functions.h
         include/dispatch/libraries/sysutils/register.h
         include/dispatch/libraries/register.h
@@ -10,6 +13,9 @@ add_library(epocdispatch
         include/dispatch/management.h
         include/dispatch/register.h
         include/dispatch/screen.h
+        src/libraries/gles/def.cpp
+        src/libraries/gles/egl.cpp
+        src/libraries/gles/gles1.cpp
         src/libraries/sysutils/functions.cpp
         src/libraries/register.cpp
         src/audio.cpp
@@ -29,4 +35,5 @@ target_link_libraries(epocdispatch PRIVATE
         epoc
         epockern
         epocpkg
-        epocservs)
+        epocservs
+        glm)

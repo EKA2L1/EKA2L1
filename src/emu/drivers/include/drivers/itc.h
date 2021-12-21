@@ -187,9 +187,9 @@ namespace eka2l1::drivers {
 
         /**
           * \brief Clear the binding bitmap with color.
-          * \params color A RGBA vector 4 color
+          * \params clear_parameters The first four float is color buffer value, the next two floats are depth and stencil.
           */
-        virtual void clear(vecx<std::uint8_t, 4> color, const std::uint8_t clear_bitarr) = 0;
+        virtual void clear(vecx<float, 6> clear_parameters, const std::uint8_t clear_bitarr) = 0;
 
         /**
          * \brief Set a bitmap to be current.
@@ -519,7 +519,7 @@ namespace eka2l1::drivers {
           * \brief Clear the binding bitmap with color.
           * \params color A RGBA vector 4 color
           */
-        void clear(vecx<std::uint8_t, 4> color, const std::uint8_t clear_bitarr) override;
+        void clear(vecx<float, 6> clear_parameters, const std::uint8_t clear_bitarr) override;
 
         /**
          * \brief Set a bitmap to be current.

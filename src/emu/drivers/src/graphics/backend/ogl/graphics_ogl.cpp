@@ -748,31 +748,35 @@ namespace eka2l1::drivers {
     }
 
     void ogl_graphics_driver::clear(command_helper &helper) {
-        std::uint32_t color_to_clear;
+        float color_to_clear[6];
         std::uint8_t clear_bits = 0;
 
-        helper.pop(color_to_clear);
+        helper.pop(color_to_clear[0]);
+        helper.pop(color_to_clear[1]);
+        helper.pop(color_to_clear[2]);
+        helper.pop(color_to_clear[3]);
+        helper.pop(color_to_clear[4]);
+        helper.pop(color_to_clear[5]);
         helper.pop(clear_bits);
 
-        eka2l1::vecx<std::uint8_t, 4> color_converted = common::rgba_to_vec(color_to_clear);
         std::uint32_t gl_flags = 0;
 
         if (clear_bits & draw_buffer_bit_color_buffer) {
-            glClearColor(color_converted[0] / 255.0f, color_converted[1] / 255.0f, color_converted[2] / 255.0f, color_converted[3] / 255.0f);
+            glClearColor(color_to_clear[0], color_to_clear[1], color_to_clear[2], color_to_clear[3]);
             gl_flags |= GL_COLOR_BUFFER_BIT;
         }
 
         if (clear_bits & draw_buffer_bit_depth_buffer) {
 #ifdef EKA2L1_PLATFORM_ANDROID
-            glClearDepthf(color_converted[0]);
+            glClearDepthf(color_to_clear[4]);
 #else
-            glClearDepth(color_converted[0]);
+            glClearDepth(color_to_clear[4]);
 #endif
             gl_flags |= GL_DEPTH_BUFFER_BIT;
         }
 
         if (clear_bits & draw_buffer_bit_stencil_buffer) {
-            glClearStencil((color_to_clear & 0xFF000000) >> 24);
+            glClearStencil(static_cast<GLint>(color_to_clear[5] * 255.0f));
             gl_flags |= GL_STENCIL_BUFFER_BIT;
         }
 

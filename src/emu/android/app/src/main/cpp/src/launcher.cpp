@@ -464,8 +464,7 @@ namespace eka2l1::android {
             builder->backup_state();
             builder->bind_bitmap(0);
 
-            builder->clear({ background_color_[0], background_color_[1], background_color_[2],
-                               0xFF },
+            builder->clear({ background_color_[0] / 255.0f, background_color_[1] / 255.0f, background_color_[2] / 255.0f, 1.0f, 0.0f, 0.0f },
                 drivers::draw_buffer_bit_color_buffer);
             builder->set_cull_mode(false);
             builder->set_depth(false);

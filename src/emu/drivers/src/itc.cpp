@@ -166,8 +166,8 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
 
-    void server_graphics_command_list_builder::clear(vecx<std::uint8_t, 4> color, const std::uint8_t clear_bitarr) {
-        command *cmd = make_command(graphics_driver_clear, nullptr, color[0], color[1], color[2], color[3], clear_bitarr);
+    void server_graphics_command_list_builder::clear(vecx<float, 6> color, const std::uint8_t clear_bitarr) {
+        command *cmd = make_command(graphics_driver_clear, nullptr, color[0], color[1], color[2], color[3], color[4], color[5], clear_bitarr);
         get_command_list().add(cmd);
     }
 
