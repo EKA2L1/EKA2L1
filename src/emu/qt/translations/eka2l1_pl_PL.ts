@@ -195,7 +195,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="266"/>
       <source>VPL file (*.vpl);;All files (*.*)</source>
-      <translation type="unfinished">VPL file (*.vpl);;All files (*.*)</translation>
+      <translation>Plik VPL (*.vpl);;Wszystkie pliki (*.*)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="275"/>
@@ -205,7 +205,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="276"/>
       <source>ROM file (*.rom *.ROM);;All files (*.*)</source>
-      <translation type="unfinished">ROM file (*.rom *.ROM);;All files (*.*)</translation>
+      <translation>Plik ROM (*.rom *.ROM);;Wszystkie pliki (*.*)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="300"/>
@@ -215,7 +215,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="301"/>
       <source>RPKG file (*.rpkg *.RPKG);;All files (*.*</source>
-      <translation type="unfinished">RPKG file (*.rpkg *.RPKG);;All files (*.*</translation>
+      <translation>Plik RPKG (*.rpkg *.RPKG);;Wszystkie pliki (*.*)</translation>
     </message>
   </context>
   <context>
@@ -918,7 +918,7 @@ Preferowana opcja automatycznie włączy to na urządzeniach S60v1/S60v2.</trans
     <message>
       <location filename="../src/settings_dialog.ui" line="837"/>
       <source>SF2 bank</source>
-      <translation type="unfinished">SF2 bank</translation>
+      <translation>Baza dźwięków SF2</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="864"/>
@@ -929,22 +929,22 @@ Preferowana opcja automatycznie włączy to na urządzeniach S60v1/S60v2.</trans
     <message>
       <location filename="../src/settings_dialog.ui" line="878"/>
       <source>HSB bank</source>
-      <translation type="unfinished">HSB bank</translation>
+      <translation>Baza dźwięków HSB</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="922"/>
       <source>MIDI backend</source>
-      <translation type="unfinished">MIDI backend</translation>
+      <translation>Backend MIDI</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="936"/>
       <source>TinySoundFont (High-quality, support SF2)</source>
-      <translation type="unfinished">TinySoundFont (High-quality, support SF2)</translation>
+      <translation>TinySoundFont (wysoka jakość, wspiera SF2)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="941"/>
       <source>MiniBAE (Lower-quality, support HSB)</source>
-      <translation type="unfinished">MiniBAE (Lower-quality, support HSB)</translation>
+      <translation>MiniBAE (niższa jakość, wspiera HSB)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="959"/>
@@ -1256,22 +1256,22 @@ Preferowana opcja automatycznie włączy to na urządzeniach S60v1/S60v2.</trans
     <message>
       <location filename="../src/settings_dialog.cpp" line="1221"/>
       <source>Successfully changed</source>
-      <translation type="unfinished">Successfully changed</translation>
+      <translation>Pomyślnie zmieniono</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1221"/>
       <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
-      <translation type="unfinished">Next time the application requests to play a new MIDI, the choosen backend will be used!</translation>
+      <translation>Następnym razem, gdy aplikacja chce zagrać nowe MIDI, wybrany backend zostanie użyty!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1234"/>
       <source>Choose the HSB bank file</source>
-      <translation type="unfinished">Choose the HSB bank file</translation>
+      <translation>Wybierz plik bazy dźwięków HSB</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1257"/>
       <source>Choose the SF2 bank file</source>
-      <translation type="unfinished">Choose the SF2 bank file</translation>
+      <translation>Wybierz plik bazy dźwięków SF2</translation>
     </message>
   </context>
 </TS>
