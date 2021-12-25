@@ -81,11 +81,11 @@ namespace eka2l1 {
 
         // Try to fill region rects with 1 in stencil buffer.
         // Intentionally let stencil test fail so nothing gets draw. Just need to fill it after all.
-        cmd_builder.set_stencil_pass_condition(drivers::stencil_face::back_and_front, drivers::condition_func::never,
+        cmd_builder.set_stencil_pass_condition(drivers::rendering_face::back_and_front, drivers::condition_func::never,
             1, 0xFF);
-        cmd_builder.set_stencil_action(drivers::stencil_face::back_and_front, drivers::stencil_action::replace,
+        cmd_builder.set_stencil_action(drivers::rendering_face::back_and_front, drivers::stencil_action::replace,
             drivers::stencil_action::keep, drivers::stencil_action::keep);
-        cmd_builder.set_stencil_mask(drivers::stencil_face::back_and_front, 0xFF);
+        cmd_builder.set_stencil_mask(drivers::rendering_face::back_and_front, 0xFF);
 
         for (std::size_t i = 0; i < region.rects_.size(); i++) {
             if (region.rects_[i].valid()) {
@@ -96,8 +96,8 @@ namespace eka2l1 {
         // Now set stencil buffer to only pass if value of pixel correspond in stencil buffer is not equal to 1 (invalid region),
         // or equal to 1 (if valid region)
         // Also disable writing to stencil buffer
-        cmd_builder.set_stencil_pass_condition(drivers::stencil_face::back_and_front, stencil_one_for_valid ? drivers::condition_func::equal : drivers::condition_func::not_equal, 1, 0xFF);
-        cmd_builder.set_stencil_action(drivers::stencil_face::back_and_front, drivers::stencil_action::keep,
+        cmd_builder.set_stencil_pass_condition(drivers::rendering_face::back_and_front, stencil_one_for_valid ? drivers::condition_func::equal : drivers::condition_func::not_equal, 1, 0xFF);
+        cmd_builder.set_stencil_action(drivers::rendering_face::back_and_front, drivers::stencil_action::keep,
             drivers::stencil_action::keep, drivers::stencil_action::keep);
     }
 }

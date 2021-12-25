@@ -363,7 +363,7 @@ namespace eka2l1::drivers {
          * @param on_stencil_pass_depth_fail        Action to take on stencil test passes but depth test fails.
          * @param on_both_stencil_depth_pass        Action to take when both stencil and depth test pass.
          */
-        virtual void set_stencil_action(const stencil_face face_operate_on, const stencil_action on_stencil_fail,
+        virtual void set_stencil_action(const rendering_face face_operate_on, const stencil_action on_stencil_fail,
             const stencil_action on_stencil_pass_depth_fail, const stencil_action on_both_stencil_depth_pass)
             = 0;
 
@@ -375,7 +375,7 @@ namespace eka2l1::drivers {
          * @param cond_func_ref_value       The value argument to be used in the function.
          * @param mask                      The mask that is AND to both value in stencil buffer with the ref value.
          */
-        virtual void set_stencil_pass_condition(const stencil_face face_operate_on, const condition_func cond_func,
+        virtual void set_stencil_pass_condition(const rendering_face face_operate_on, const condition_func cond_func,
             const int cond_func_ref_value, const std::uint32_t mask)
             = 0;
 
@@ -385,7 +385,7 @@ namespace eka2l1::drivers {
          * @param face_operate_on       The face to set this mask to
          * @param mask                  The mask to set.
          */
-        virtual void set_stencil_mask(const stencil_face face_operate_on, const std::uint32_t mask) = 0;
+        virtual void set_stencil_mask(const rendering_face face_operate_on, const std::uint32_t mask) = 0;
 
         /**
          * \brief Save state to temporary storage.
@@ -489,6 +489,23 @@ namespace eka2l1::drivers {
          * @param point_count   The number of points in the polygon, must be >= 2, else behaviour is relied on the backend.
          */
         virtual void draw_polygons(const eka2l1::point *point_list, const std::size_t point_count) = 0;
+
+        /**
+         * @brief Set the face to be culled.
+         * 
+         * Default face to be culled depends on the backend, which usually is back. In addition, culling is off by default, and
+         * only applies when it's enabled through set_cull_mode.
+         * 
+         * @param face The face to be culled.
+         */
+        virtual void set_cull_face(const rendering_face face) = 0;
+
+        /**
+         * @brief Set the rule of vertices direction to determine which face is in the front and which face is the back.
+         * 
+         * @param rule The rule to set.
+         */
+        virtual void set_front_face_rule(const rendering_face_determine_rule rule) = 0;
     };
 
     class server_graphics_command_list_builder : public graphics_command_list_builder {
@@ -571,13 +588,13 @@ namespace eka2l1::drivers {
             const blend_factor rgb_frag_output_factor, const blend_factor rgb_current_factor,
             const blend_factor a_frag_output_factor, const blend_factor a_current_factor) override;
 
-        void set_stencil_action(const stencil_face face_operate_on, const stencil_action on_stencil_fail,
+        void set_stencil_action(const rendering_face face_operate_on, const stencil_action on_stencil_fail,
             const stencil_action on_stencil_pass_depth_fail, const stencil_action on_both_stencil_depth_pass) override;
 
-        void set_stencil_pass_condition(const stencil_face face_operate_on, const condition_func cond_func,
+        void set_stencil_pass_condition(const rendering_face face_operate_on, const condition_func cond_func,
             const int cond_func_ref_value, const std::uint32_t mask) override;
 
-        void set_stencil_mask(const stencil_face face_operate_on, const std::uint32_t mask) override;
+        void set_stencil_mask(const rendering_face face_operate_on, const std::uint32_t mask) override;
 
         void attach_descriptors(drivers::handle h, const int stride, const bool instance_move,
             const attribute_descriptor *descriptors, const int descriptor_count) override;
@@ -608,6 +625,10 @@ namespace eka2l1::drivers {
         void draw_line(const eka2l1::point &start, const eka2l1::point &end) override;
 
         void draw_polygons(const eka2l1::point *point_list, const std::size_t point_count) override;
+
+        void set_cull_face(const rendering_face face) override;
+
+        void set_front_face_rule(const rendering_face_determine_rule rule) override;
     };
 
     struct graphics_command_callback_data {

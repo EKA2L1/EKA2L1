@@ -22,9 +22,13 @@
 #include <dispatch/libraries/gles/def.h>
 #include <dispatch/def.h>
 
+#include <common/container.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include <tuple>
 
 namespace eka2l1 {
     class system;
@@ -32,6 +36,17 @@ namespace eka2l1 {
 
 namespace eka2l1::dispatch {
     #define FIXED_32_TO_FLOAT(x) (float)(x) / 65536.0f
+
+    enum {
+        GLES1_UNINITIALIZED_DRIVER_HANDLE = 0xFFFFFFFFFFFFFFFF
+    };
+
+    enum gles1_object_type {
+        GLES1_OBJECT_TEXTURE,
+        GLES1_OBJECT_BUFFER
+    };
+
+    using gles1_driver_object = std::pair<gles1_object_type, drivers::handle>;
 
     struct egl_context_es1 : public egl_context {
         std::unique_ptr<drivers::graphics_command_list> command_list_;
@@ -46,9 +61,20 @@ namespace eka2l1::dispatch {
         std::stack<glm::mat4> texture_mat_stack_;
 
         std::uint32_t active_mat_stack_;
+        std::uint32_t binded_texture_handle_;
+        std::uint32_t binded_array_buffer_handle_;
+        std::uint32_t binded_element_array_buffer_handle_;
+
+        drivers::rendering_face active_cull_face_;
+        drivers::rendering_face_determine_rule active_front_face_rule_;
+
+        common::identity_container<gles1_driver_object> objects_;
 
         explicit egl_context_es1();
+
         glm::mat4 &active_matrix();
+        drivers::handle *binded_texture_driver_handle();
+        drivers::handle *binded_buffer_driver_handle(const bool is_array_buffer);
 
         void free(drivers::graphics_driver *driver, drivers::graphics_command_list_builder &builder) override;
         egl_context_type context_type() const override {
@@ -82,4 +108,15 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_DISPATCHER(void, gl_rotatex_emu, std::uint32_t angles, std::uint32_t x, std::uint32_t y, std::uint32_t z);
     BRIDGE_FUNC_DISPATCHER(void, gl_frustumf_emu, float left, float right, float bottom, float top, float near, float far);
     BRIDGE_FUNC_DISPATCHER(void, gl_frustumx_emu, std::uint32_t left, std::uint32_t right, std::uint32_t bottom, std::uint32_t top, std::uint32_t near, std::uint32_t far);
+    BRIDGE_FUNC_DISPATCHER(void, gl_cull_face_emu, std::uint32_t mode);
+    BRIDGE_FUNC_DISPATCHER(void, gl_scissor_emu, std::int32_t x, std::int32_t y, std::int32_t width, std::int32_t height);
+    BRIDGE_FUNC_DISPATCHER(void, gl_front_face_emu, std::uint32_t mode);
+    BRIDGE_FUNC_DISPATCHER(void, gl_front_face_emu, std::uint32_t mode);
+    BRIDGE_FUNC_DISPATCHER(bool, gl_is_texture_emu, std::uint32_t name);
+    BRIDGE_FUNC_DISPATCHER(bool, gl_is_buffer_emu, std::uint32_t name);
+    BRIDGE_FUNC_DISPATCHER(void, gl_gen_textures_emu, std::int32_t n, std::uint32_t *texs);
+    BRIDGE_FUNC_DISPATCHER(void, gl_gen_buffers_emu, std::int32_t n, std::uint32_t *buffers);
+    BRIDGE_FUNC_DISPATCHER(void, gl_delete_textures_emu, std::int32_t n, std::uint32_t *texs);
+    BRIDGE_FUNC_DISPATCHER(void, gl_bind_texture_emu, std::uint32_t target, std::uint32_t name);
+    BRIDGE_FUNC_DISPATCHER(void, gl_bind_buffer_emu, std::uint32_t target, std::uint32_t name);
 }

@@ -19,14 +19,29 @@
 
 #include <dispatch/libraries/gles/gles1.h>
 #include <dispatch/dispatcher.h>
+#include <drivers/graphics/graphics.h>
 #include <system/epoc.h>
 #include <kernel/kernel.h>
 
 namespace eka2l1::dispatch {
+    static bool is_gles1_driver_object_free(gles1_driver_object &obj) {
+        return obj.second == 0;
+    }
+
+    void free_gles1_driver_object_from_container(gles1_driver_object &obj) {
+        obj.second = 0;
+    }
+
     egl_context_es1::egl_context_es1()
         : clear_depth_(0.0f)
         , clear_stencil_(0)
-        , active_mat_stack_(GL_MODELVIEW_EMU) {
+        , active_mat_stack_(GL_MODELVIEW_EMU)
+        , active_cull_face_(drivers::rendering_face::back)
+        , active_front_face_rule_(drivers::rendering_face_determine_rule::vertices_counter_clockwise)
+        , objects_(is_gles1_driver_object_free, free_gles1_driver_object_from_container)
+        , binded_texture_handle_(0)
+        , binded_array_buffer_handle_(0)
+        , binded_element_array_buffer_handle_(0) {
         clear_color_[0] = 0.0f;
         clear_color_[1] = 0.0f;
         clear_color_[2] = 0.0f;
@@ -53,6 +68,28 @@ namespace eka2l1::dispatch {
         }
 
         return model_view_mat_stack_.top();
+    }
+
+    drivers::handle *egl_context_es1::binded_texture_driver_handle() {
+        if (binded_texture_handle_ == 0) {
+            return &surface_fb_;
+        }
+
+        auto *obj = objects_.get(binded_texture_handle_);
+        if (!obj || obj->first != GLES1_OBJECT_TEXTURE) {
+            return nullptr;
+        }
+
+        return &(obj->second);
+    }
+
+    drivers::handle *egl_context_es1::binded_buffer_driver_handle(const bool is_array_buffer) {
+        gles1_driver_object *obj = objects_.get(is_array_buffer ? binded_array_buffer_handle_ : binded_element_array_buffer_handle_);
+        if (!obj) {
+            return nullptr;
+        }
+
+        return (&obj->second);
     }
 
     egl_context_es1 *get_es1_active_context(system *sys) {
@@ -446,5 +483,217 @@ namespace eka2l1::dispatch {
 
         ctx->active_matrix() *= glm::frustum(FIXED_32_TO_FLOAT(left), FIXED_32_TO_FLOAT(right), FIXED_32_TO_FLOAT(bottom), FIXED_32_TO_FLOAT(top),
             FIXED_32_TO_FLOAT(near), FIXED_32_TO_FLOAT(far));
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_cull_face_emu, std::uint32_t mode) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        switch (mode) {
+        case GL_BACK_EMU:
+            ctx->active_cull_face_ = drivers::rendering_face::back;
+            break;
+
+        case GL_FRONT_EMU:
+            ctx->active_cull_face_ = drivers::rendering_face::front;
+            break;
+
+        case GL_FRONT_AND_BACK_EMU:
+            ctx->active_cull_face_ = drivers::rendering_face::back_and_front;
+            break;
+
+        default:
+            controller.push_error(ctx, GL_INVALID_VALUE);
+            return;
+        }
+
+        ctx->command_builder_->set_cull_face(ctx->active_cull_face_);
+    }
+    
+    BRIDGE_FUNC_DISPATCHER(void, gl_scissor_emu, std::int32_t x, std::int32_t y, std::int32_t width, std::int32_t height) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        // Emulator graphics abstraction use top-left as origin.
+        ctx->command_builder_->clip_rect(eka2l1::rect(eka2l1::vec2(x, ctx->dimension_.y - y), eka2l1::vec2(width, height)));
+    }
+    
+    BRIDGE_FUNC_DISPATCHER(void, gl_front_face_emu, std::uint32_t mode) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        switch (mode) {
+        case GL_CLOCKWISE_EMU:
+            ctx->active_front_face_rule_ = drivers::rendering_face_determine_rule::vertices_clockwise;
+            break;
+
+        case GL_COUNTER_CLOCKWISE_EMU:
+            ctx->active_front_face_rule_ = drivers::rendering_face_determine_rule::vertices_counter_clockwise;
+            break;
+
+        default:
+            controller.push_error(ctx, GL_INVALID_VALUE);
+            return;
+        }
+
+        ctx->command_builder_->set_front_face_rule(ctx->active_front_face_rule_);
+    }
+    
+    BRIDGE_FUNC_DISPATCHER(bool, gl_is_texture_emu, std::uint32_t name) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return false;
+        }
+
+        gles1_driver_object *obj = ctx->objects_.get(name);
+        return obj && (obj->first == GLES1_OBJECT_TEXTURE);
+    }
+
+    BRIDGE_FUNC_DISPATCHER(bool, gl_is_buffer_emu, std::uint32_t name) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return false;
+        }
+
+        gles1_driver_object *obj = ctx->objects_.get(name);
+        return obj && (obj->first == GLES1_OBJECT_BUFFER);
+    }
+    
+    static void gen_gles1_objects_generic(system *sys, gles1_object_type obj_type, std::int32_t n, std::uint32_t *texs) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if (n < 0 || !texs) {
+            controller.push_error(ctx, GL_INVALID_VALUE);
+            return;
+        }
+
+        if (n == 0) {
+            return;
+        }
+
+        gles1_driver_object stub_obj;
+
+        for (std::int32_t i = 0; i < n; i++) {
+            stub_obj.first = obj_type;
+            stub_obj.second = static_cast<kernel::handle>(GLES1_UNINITIALIZED_DRIVER_HANDLE);
+
+            texs[i] = static_cast<std::uint32_t>(ctx->objects_.add(stub_obj));
+        }
+    }
+
+    static void delete_gles1_objects_generic(system *sys, gles1_object_type obj_type, std::int32_t n, std::uint32_t *names) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+        drivers::graphics_driver *drv = sys->get_graphics_driver();
+
+        if (n < 0 || !names) {
+            controller.push_error(ctx, GL_INVALID_VALUE);
+            return;
+        }
+
+        if (n == 0) {
+            return;
+        }
+
+        bool need_free = false;
+
+        auto cmd_list = drv->new_command_list();
+        auto cmd_builder = drv->new_command_builder(cmd_list.get());
+
+        for (std::int32_t i = 0; i < n; i++) {
+            auto *obj = ctx->objects_.get(names[i]);
+            if (obj && (obj->first == obj_type)) {
+                if (obj->second != GLES1_UNINITIALIZED_DRIVER_HANDLE) {
+                    cmd_builder->destroy(obj->second);
+                    need_free = true;
+                }
+
+                ctx->objects_.remove(names[i]);
+            }
+        }
+
+        if (need_free) {
+            drv->submit_command_list(*cmd_list);
+        }
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_gen_textures_emu, std::int32_t n, std::uint32_t *texs) {
+        gen_gles1_objects_generic(sys, GLES1_OBJECT_TEXTURE, n, texs);
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_gen_buffers_emu, std::int32_t n, std::uint32_t *buffers) {
+        gen_gles1_objects_generic(sys, GLES1_OBJECT_BUFFER, n, buffers);
+    }
+    
+    BRIDGE_FUNC_DISPATCHER(void, gl_delete_textures_emu, std::int32_t n, std::uint32_t *texs) {
+        delete_gles1_objects_generic(sys, GLES1_OBJECT_TEXTURE, n, texs);
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_delete_buffers_emu, std::int32_t n, std::uint32_t *buffers) {
+        delete_gles1_objects_generic(sys, GLES1_OBJECT_BUFFER, n, buffers);
+    }
+    
+    BRIDGE_FUNC_DISPATCHER(void, gl_bind_texture_emu, std::uint32_t target, std::uint32_t name) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if (target != GL_TEXTURE_2D_EMU) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        ctx->binded_texture_handle_ = name;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_bind_buffer_emu, std::uint32_t target, std::uint32_t name) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        switch (target) {
+        case GL_ARRAY_BUFFER_EMU:
+            ctx->binded_array_buffer_handle_ = name;
+            break;
+
+        case GL_ELEMENT_ARRAY_BUFFER_EMU:
+            ctx->binded_element_array_buffer_handle_ = name;
+            break;
+
+        default:
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
     }
 }

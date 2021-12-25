@@ -136,6 +136,8 @@ namespace eka2l1::drivers {
         void set_pen_style(command_helper &helper);
         void draw_line(command_helper &helper);
         void draw_polygon(command_helper &helper);
+        void set_cull_face(command_helper &helper);
+        void set_front_face_rule(command_helper &helper);
 
         void save_gl_state();
         void load_gl_state();

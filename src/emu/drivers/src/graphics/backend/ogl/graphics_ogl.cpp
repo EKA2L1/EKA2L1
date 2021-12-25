@@ -623,15 +623,15 @@ namespace eka2l1::drivers {
             blend_factor_to_gl_enum(a_frag_out_factor), blend_factor_to_gl_enum(a_current_factor));
     }
 
-    static const GLint stencil_face_to_gl_enum(const stencil_face face) {
+    static const GLint rendering_face_to_gl_enum(const rendering_face face) {
         switch (face) {
-        case stencil_face::back:
+        case rendering_face::back:
             return GL_BACK;
 
-        case stencil_face::front:
+        case rendering_face::front:
             return GL_FRONT;
 
-        case stencil_face::back_and_front:
+        case rendering_face::back_and_front:
             return GL_FRONT_AND_BACK;
 
         default:
@@ -675,7 +675,7 @@ namespace eka2l1::drivers {
     }
 
     void ogl_graphics_driver::set_stencil_action(command_helper &helper) {
-        stencil_face face_to_operate = stencil_face::back_and_front;
+        rendering_face face_to_operate = rendering_face::back_and_front;
         stencil_action on_stencil_fail = stencil_action::keep;
         stencil_action on_stencil_pass_depth_fail = stencil_action::keep;
         stencil_action on_stencil_depth_pass = stencil_action::replace;
@@ -685,7 +685,7 @@ namespace eka2l1::drivers {
         helper.pop(on_stencil_pass_depth_fail);
         helper.pop(on_stencil_depth_pass);
 
-        glStencilOpSeparate(stencil_face_to_gl_enum(face_to_operate), stencil_action_to_gl_enum(on_stencil_fail),
+        glStencilOpSeparate(rendering_face_to_gl_enum(face_to_operate), stencil_action_to_gl_enum(on_stencil_fail),
             stencil_action_to_gl_enum(on_stencil_pass_depth_fail), stencil_action_to_gl_enum(on_stencil_depth_pass));
     }
 
@@ -724,7 +724,7 @@ namespace eka2l1::drivers {
 
     void ogl_graphics_driver::set_stencil_pass_condition(command_helper &helper) {
         condition_func pass_func = condition_func::always;
-        stencil_face face_to_operate = stencil_face::back_and_front;
+        rendering_face face_to_operate = rendering_face::back_and_front;
         std::int32_t ref_value = 0;
         std::uint32_t mask = 0xFF;
 
@@ -733,18 +733,18 @@ namespace eka2l1::drivers {
         helper.pop(ref_value);
         helper.pop(mask);
 
-        glStencilFuncSeparate(stencil_face_to_gl_enum(face_to_operate), condition_func_to_gl_enum(pass_func),
+        glStencilFuncSeparate(rendering_face_to_gl_enum(face_to_operate), condition_func_to_gl_enum(pass_func),
             ref_value, mask);
     }
 
     void ogl_graphics_driver::set_stencil_mask(command_helper &helper) {
-        stencil_face face_to_operate = stencil_face::back_and_front;
+        rendering_face face_to_operate = rendering_face::back_and_front;
         std::uint32_t mask = 0xFF;
 
         helper.pop(face_to_operate);
         helper.pop(mask);
 
-        glStencilMaskSeparate(stencil_face_to_gl_enum(face_to_operate), mask);
+        glStencilMaskSeparate(rendering_face_to_gl_enum(face_to_operate), mask);
     }
 
     void ogl_graphics_driver::clear(command_helper &helper) {
@@ -905,6 +905,39 @@ namespace eka2l1::drivers {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicies.size() * sizeof(int), indicies.data(), GL_STATIC_DRAW);
 
         glDrawElements(GL_LINES, static_cast<GLsizei>(indicies.size()), GL_UNSIGNED_INT, 0);
+    }
+
+    void ogl_graphics_driver::set_cull_face(command_helper &helper) {
+        rendering_face face_to_cull = rendering_face::back;
+        helper.pop(face_to_cull);
+
+        switch (face_to_cull) {
+        case rendering_face::back:
+            glCullFace(GL_BACK);
+            break;
+
+        case rendering_face::front:
+            glCullFace(GL_FRONT);
+            break;
+
+        case rendering_face::back_and_front:
+            glCullFace(GL_FRONT_AND_BACK);
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    void ogl_graphics_driver::set_front_face_rule(command_helper &helper) {
+        rendering_face_determine_rule rule = rendering_face_determine_rule::vertices_counter_clockwise;
+        helper.pop(rule);
+
+        if (rule == rendering_face_determine_rule::vertices_counter_clockwise) {
+            glFrontFace(GL_CCW);
+        } else {
+            glFrontFace(GL_CW);
+        }
     }
 
     void ogl_graphics_driver::save_gl_state() {
@@ -1102,6 +1135,14 @@ namespace eka2l1::drivers {
 
         case graphics_driver_set_pen_style:
             set_pen_style(helper);
+            break;
+
+        case graphics_driver_cull_face:
+            set_cull_face(helper);
+            break;
+
+        case graphics_driver_set_front_face_rule:
+            set_front_face_rule(helper);
             break;
 
         default:

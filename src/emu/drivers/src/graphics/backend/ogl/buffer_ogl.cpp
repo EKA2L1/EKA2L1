@@ -157,7 +157,9 @@ namespace eka2l1::drivers {
         hint_gl_ = get_trait_from_buffer_hint(hint);
         usage_hint_gl_ = get_usage_hint(use_hint);
 
-        glGenBuffers(1, &buffer_);
+        if (!buffer_) {
+            glGenBuffers(1, &buffer_);
+        }
 
         // Prealloc data first
         bind(driver);

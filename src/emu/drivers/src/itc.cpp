@@ -297,21 +297,21 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
 
-    void server_graphics_command_list_builder::set_stencil_action(const stencil_face face_operate_on, const stencil_action on_stencil_fail,
+    void server_graphics_command_list_builder::set_stencil_action(const rendering_face face_operate_on, const stencil_action on_stencil_fail,
         const stencil_action on_stencil_pass_depth_fail, const stencil_action on_both_stencil_depth_pass) {
         command *cmd = make_command(graphics_driver_stencil_set_action, nullptr, face_operate_on, on_stencil_fail,
             on_stencil_pass_depth_fail, on_both_stencil_depth_pass);
         get_command_list().add(cmd);
     }
 
-    void server_graphics_command_list_builder::set_stencil_pass_condition(const stencil_face face_operate_on, const condition_func cond_func,
+    void server_graphics_command_list_builder::set_stencil_pass_condition(const rendering_face face_operate_on, const condition_func cond_func,
         const int cond_func_ref_value, const std::uint32_t mask) {
         command *cmd = make_command(graphics_driver_stencil_pass_condition, nullptr, face_operate_on, cond_func,
             cond_func_ref_value, mask);
         get_command_list().add(cmd);
     }
 
-    void server_graphics_command_list_builder::set_stencil_mask(const stencil_face face_operate_on, const std::uint32_t mask) {
+    void server_graphics_command_list_builder::set_stencil_mask(const rendering_face face_operate_on, const std::uint32_t mask) {
         command *cmd = make_command(graphics_driver_stencil_set_mask, nullptr, face_operate_on, mask);
         get_command_list().add(cmd);
     }
@@ -389,6 +389,16 @@ namespace eka2l1::drivers {
         memcpy(point_list_copied, point_list, point_count * sizeof(eka2l1::point));
 
         command *cmd = make_command(graphics_driver_draw_polygon, nullptr, point_count, point_list_copied);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::set_cull_face(const rendering_face face) {
+        command *cmd = make_command(graphics_driver_cull_face, nullptr, face);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::set_front_face_rule(const rendering_face_determine_rule rule) {
+        command *cmd = make_command(graphics_driver_set_front_face_rule, nullptr, rule);
         get_command_list().add(cmd);
     }
 }

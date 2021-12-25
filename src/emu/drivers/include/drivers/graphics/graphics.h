@@ -43,9 +43,10 @@ namespace eka2l1::drivers {
         graphics_driver_stencil_pass_condition,
         graphics_driver_stencil_set_action,
         graphics_driver_stencil_set_mask,
-        graphics_driver_set_back_face_rule,
+        graphics_driver_set_front_face_rule,
         graphics_driver_set_swapchain_size,
         graphics_driver_set_ortho_size,
+        graphics_driver_cull_face,
 
         // Mode 0: Immediate - Draw direct 2D elements to screen
         graphics_driver_clear,

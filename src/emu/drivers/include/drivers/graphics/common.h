@@ -133,10 +133,15 @@ namespace eka2l1::drivers {
         set_to_zero,
     };
 
-    enum class stencil_face {
-        back,
-        front,
-        back_and_front
+    enum class rendering_face {
+        back = 0x1,
+        front = 0x2,
+        back_and_front = back | front
+    };
+
+    enum class rendering_face_determine_rule {
+        vertices_clockwise,
+        vertices_counter_clockwise
     };
 
     enum class condition_func {

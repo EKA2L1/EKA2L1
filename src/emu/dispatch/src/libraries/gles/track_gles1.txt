@@ -26,6 +26,17 @@ glRotatef
 glRotatex
 glFrustumf
 glFrustumx
+glCullFace
+glScissor
+glFrontFace
+glIsTexture
+glIsBuffer
+glDeleteTextures
+glDeleteBuffers
+glGenTextures
+glGenBuffers
+glBindTexture
+glBindBuffer
 
 List:
 
@@ -57,7 +68,6 @@ eglWaitNative
 glActiveTexture
 glAlphaFunc
 glAlphaFuncx
-glBindTexture
 glBlendFunc
 glClientActiveTexture
 glColor4f
@@ -68,8 +78,6 @@ glCompressedTexImage2D
 glCompressedTexSubImage2D
 glCopyTexImage2D
 glCopyTexSubImage2D
-glCullFace
-glDeleteTextures
 glDepthFunc
 glDepthMask
 glDepthRangef
@@ -86,8 +94,6 @@ glFogf
 glFogfv
 glFogx
 glFogxv
-glFrontFace
-glGenTextures
 glGetIntegerv
 glHint
 glLightModelf
@@ -105,8 +111,6 @@ glMaterialf
 glMaterialfv
 glMaterialx
 glMaterialxv
-glMultMatrixf
-glMultMatrixx
 glMultiTexCoord4f
 glMultiTexCoord4x
 glNormal3f
@@ -121,7 +125,6 @@ glQueryMatrixxOES
 glReadPixels
 glSampleCoverage
 glSampleCoveragex
-glScissor
 glShadeModel
 glStencilFunc
 glStencilMask
@@ -138,14 +141,10 @@ glTexSubImage2D
 glVertexPointer
 glViewport
 eglSwapInterval
-glBindBuffer
 glBufferData
-glBufferSubData
 glClipPlanef
 glClipPlanex
 glColor4ub
-glDeleteBuffers
-glGenBuffers
 glGetBooleanv
 glGetBufferParameteriv
 glGetClipPlanef
@@ -163,9 +162,7 @@ glGetTexEnvxv
 glGetTexParameterfv
 glGetTexParameteriv
 glGetTexParameterxv
-glIsBuffer
 glIsEnabled
-glIsTexture
 glPointParameterf
 glPointParameterfv
 glPointParameterx
