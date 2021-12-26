@@ -564,17 +564,38 @@ namespace eka2l1::drivers {
         std::size_t pixels_per_line = 0;
         helper.pop(pixels_per_line);
 
-        auto obj = make_texture(this);
+        drivers::handle h = 0;
+        helper.pop(h);
+
+        drivers::texture *obj = nullptr;
+        drivers::texture_ptr obj_inst = nullptr;
+
+        if (h != 0) {
+            obj = reinterpret_cast<drivers::texture*>(get_graphics_object(h));
+            if (!obj) {
+                LOG_ERROR(DRIVER_GRAPHICS, "Texture object with handle {} does not exist!", h);
+                return;
+            }
+        } else {
+            obj_inst = make_texture(this);
+            obj = obj_inst.get();
+        }
+
         obj->create(this, static_cast<int>(dim), static_cast<int>(mip_level), eka2l1::vec3(width, height, depth),
             internal_format, data_format, data_type, data, pixels_per_line);
 
-        std::unique_ptr<graphics_object> obj_casted = std::move(obj);
-        drivers::handle res = append_graphics_object(obj_casted);
+        if (obj_inst) {
+            std::unique_ptr<graphics_object> obj_casted = std::move(obj_inst);
+            drivers::handle res = append_graphics_object(obj_casted);
 
-        drivers::handle *store = nullptr;
-        helper.pop(store);
+            drivers::handle *store = nullptr;
+            helper.pop(store);
 
-        *store = res;
+            *store = res;
+        } else {
+            std::uint8_t *data_org = reinterpret_cast<std::uint8_t*>(data);
+            delete data_org;
+        }
 
         helper.finish(this, 0);
     }

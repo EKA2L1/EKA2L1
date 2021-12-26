@@ -506,6 +506,26 @@ namespace eka2l1::drivers {
          * @param rule The rule to set.
          */
         virtual void set_front_face_rule(const rendering_face_determine_rule rule) = 0;
+
+        /**
+         * @brief Recreate an existing texture.
+         * 
+         * No failure is reported to the client.
+         * 
+         * @param h                 Handle to the existing texture.
+         * @param dim               Total dimensions of this texture.
+         * @param mip_levels        Total mips that the data contains.
+         * @param internal_format   Format stored inside GPU.
+         * @param data_format       The format of the given data.
+         * @param data_type         Format of the data.
+         * @param data              Pointer to the data to upload.
+         * @param size              Dimension size of the texture.
+         * @param data_size         Data size.
+         * @param pixels_per_line   Number of pixels per row. Use 0 for default.
+         */
+        virtual void recreate_texture(drivers::handle h, const std::uint8_t dim, const std::uint8_t mip_levels,
+            drivers::texture_format internal_format, drivers::texture_format data_format, drivers::texture_data_type data_type,
+            const void *data, const std::size_t data_size, const eka2l1::vec3 &size, const std::size_t pixels_per_line = 0) = 0;
     };
 
     class server_graphics_command_list_builder : public graphics_command_list_builder {
@@ -629,6 +649,10 @@ namespace eka2l1::drivers {
         void set_cull_face(const rendering_face face) override;
 
         void set_front_face_rule(const rendering_face_determine_rule rule) override;
+
+        void recreate_texture(drivers::handle h, const std::uint8_t dim, const std::uint8_t mip_levels,
+            drivers::texture_format internal_format, drivers::texture_format data_format, drivers::texture_data_type data_type,
+            const void *data, const std::size_t data_size, const eka2l1::vec3 &size, const std::size_t pixels_per_line = 0) override;
     };
 
     struct graphics_command_callback_data {

@@ -24,24 +24,25 @@
 #include <kernel/kernel.h>
 
 namespace eka2l1::dispatch {
-    static bool is_gles1_driver_object_free(gles1_driver_object &obj) {
-        return obj.second == 0;
-    }
-
-    void free_gles1_driver_object_from_container(gles1_driver_object &obj) {
-        obj.second = 0;
+    gles_texture_unit::gles_texture_unit()
+        : index_(0)
+        , binded_texture_handle_(0) {
+        texture_mat_stack_.push(glm::identity<glm::mat4>());
     }
 
     egl_context_es1::egl_context_es1()
         : clear_depth_(0.0f)
         , clear_stencil_(0)
+        , active_texture_unit_(0)
         , active_mat_stack_(GL_MODELVIEW_EMU)
+        , binded_array_buffer_handle_(0)
+        , binded_element_array_buffer_handle_(0)
         , active_cull_face_(drivers::rendering_face::back)
         , active_front_face_rule_(drivers::rendering_face_determine_rule::vertices_counter_clockwise)
-        , objects_(is_gles1_driver_object_free, free_gles1_driver_object_from_container)
-        , binded_texture_handle_(0)
-        , binded_array_buffer_handle_(0)
-        , binded_element_array_buffer_handle_(0) {
+        , state_statuses_(0)
+        , alpha_test_ref_(0)
+        , alpha_test_func_(GL_ALWAYS_EMU)
+        , shade_model_(GL_SMOOTH_EMU) {
         clear_color_[0] = 0.0f;
         clear_color_[1] = 0.0f;
         clear_color_[2] = 0.0f;
@@ -49,7 +50,10 @@ namespace eka2l1::dispatch {
 
         model_view_mat_stack_.push(glm::identity<glm::mat4>());
         proj_mat_stack_.push(glm::identity<glm::mat4>());
-        texture_mat_stack_.push(glm::identity<glm::mat4>());
+
+        for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
+            texture_units_[i].index_ = i;
+        }
     }
 
     glm::mat4 &egl_context_es1::active_matrix() {
@@ -61,7 +65,7 @@ namespace eka2l1::dispatch {
             return proj_mat_stack_.top();
 
         case GL_TEXTURE_EMU:
-            return texture_mat_stack_.top();
+            return texture_units_[active_texture_unit_].texture_mat_stack_.top();
 
         default:
             break;
@@ -70,26 +74,76 @@ namespace eka2l1::dispatch {
         return model_view_mat_stack_.top();
     }
 
-    drivers::handle *egl_context_es1::binded_texture_driver_handle() {
-        if (binded_texture_handle_ == 0) {
-            return &surface_fb_;
-        }
-
-        auto *obj = objects_.get(binded_texture_handle_);
-        if (!obj || obj->first != GLES1_OBJECT_TEXTURE) {
+    gles1_driver_texture *egl_context_es1::binded_texture() {
+        if (texture_units_[active_texture_unit_].binded_texture_handle_ == 0) {
             return nullptr;
         }
 
-        return &(obj->second);
+        auto *obj = objects_.get(texture_units_[active_texture_unit_].binded_texture_handle_);
+        if (!obj || (*obj)->object_type() != GLES1_OBJECT_TEXTURE) {
+            return nullptr;
+        }
+
+        return reinterpret_cast<gles1_driver_texture*>(obj->get());
     }
 
-    drivers::handle *egl_context_es1::binded_buffer_driver_handle(const bool is_array_buffer) {
-        gles1_driver_object *obj = objects_.get(is_array_buffer ? binded_array_buffer_handle_ : binded_element_array_buffer_handle_);
-        if (!obj) {
+    drivers::handle egl_context_es1::binded_texture_driver_handle() {
+        if (!texture_units_[active_texture_unit_].binded_texture_handle_) {
+            return surface_fb_;
+        }
+
+        auto tex = binded_texture();
+        if (tex) {
+            return tex->handle_value();
+        }
+
+        return 0;
+    }
+
+    gles1_driver_buffer *egl_context_es1::binded_buffer(const bool is_array_buffer) {
+        auto *obj = objects_.get(is_array_buffer ? binded_array_buffer_handle_ : binded_element_array_buffer_handle_);
+        if (!obj || (*obj)->object_type() != GLES1_OBJECT_BUFFER) {
             return nullptr;
         }
 
-        return (&obj->second);
+        return reinterpret_cast<gles1_driver_buffer*>(obj->get());
+    }
+
+    void egl_context_es1::return_handle_to_pool(const gles1_object_type type, const drivers::handle h) {
+        switch (type) {
+        case GLES1_OBJECT_BUFFER:
+            buffer_pools_.push(h);
+            break;
+
+        case GLES1_OBJECT_TEXTURE:
+            texture_pools_.push(h);
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    gles1_driver_object::gles1_driver_object(egl_context_es1 *ctx)
+        : context_(ctx)
+        , driver_handle_(0) {
+    }
+
+    gles1_driver_object::~gles1_driver_object() {
+        if (driver_handle_ != 0) {
+            if (context_) {
+                context_->return_handle_to_pool(object_type(), driver_handle_);
+            }
+        }
+    }
+
+    gles1_driver_texture::gles1_driver_texture(egl_context_es1 *ctx)
+        : gles1_driver_object(ctx)
+        , internal_format_(0) {
+    }
+
+    gles1_driver_buffer::gles1_driver_buffer(egl_context_es1 *ctx)
+        : gles1_driver_object(ctx) {
     }
 
     egl_context_es1 *get_es1_active_context(system *sys) {
@@ -237,14 +291,17 @@ namespace eka2l1::dispatch {
             ctx->proj_mat_stack_.push(ctx->proj_mat_stack_.top());
             break;
 
-        case GL_TEXTURE_EMU:
-            if (ctx->texture_mat_stack_.size() >= GL_MAXIMUM_TEXTURE_MATRIX_STACK_SIZE) {
+        case GL_TEXTURE_EMU: {
+            auto &ss = ctx->texture_units_[ctx->active_texture_unit_].texture_mat_stack_;
+
+            if (ss.size() >= GL_MAXIMUM_TEXTURE_MATRIX_STACK_SIZE) {
                 controller.push_error(ctx, GL_STACK_OVERFLOW);
                 return;
             }
 
-            ctx->texture_mat_stack_.push(ctx->texture_mat_stack_.top());
+            ss.push(ss.top());
             break;
+        }
         }
     }
 
@@ -277,12 +334,12 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_TEXTURE_EMU:
-            if (ctx->texture_mat_stack_.size() == 1) {
+            if (ctx->texture_units_[ctx->active_texture_unit_].texture_mat_stack_.size() == 1) {
                 controller.push_error(ctx, GL_STACK_UNDERFLOW);
                 return;
             }
 
-            ctx->texture_mat_stack_.pop();
+            ctx->texture_units_[ctx->active_texture_unit_].texture_mat_stack_.pop();
             break;
         }
     }
@@ -557,8 +614,8 @@ namespace eka2l1::dispatch {
             return false;
         }
 
-        gles1_driver_object *obj = ctx->objects_.get(name);
-        return obj && (obj->first == GLES1_OBJECT_TEXTURE);
+        gles1_driver_object_instance *obj = ctx->objects_.get(name);
+        return obj && ((*obj)->object_type() == GLES1_OBJECT_TEXTURE);
     }
 
     BRIDGE_FUNC_DISPATCHER(bool, gl_is_buffer_emu, std::uint32_t name) {
@@ -567,8 +624,8 @@ namespace eka2l1::dispatch {
             return false;
         }
 
-        gles1_driver_object *obj = ctx->objects_.get(name);
-        return obj && (obj->first == GLES1_OBJECT_BUFFER);
+        gles1_driver_object_instance *obj = ctx->objects_.get(name);
+        return obj && ((*obj)->object_type() == GLES1_OBJECT_BUFFER);
     }
     
     static void gen_gles1_objects_generic(system *sys, gles1_object_type obj_type, std::int32_t n, std::uint32_t *texs) {
@@ -589,12 +646,21 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        gles1_driver_object stub_obj;
+        gles1_driver_object_instance stub_obj;
 
         for (std::int32_t i = 0; i < n; i++) {
-            stub_obj.first = obj_type;
-            stub_obj.second = static_cast<kernel::handle>(GLES1_UNINITIALIZED_DRIVER_HANDLE);
+            switch (obj_type) {
+            case GLES1_OBJECT_TEXTURE:
+                stub_obj = std::make_unique<gles1_driver_texture>(ctx);
+                break;
 
+            case GLES1_OBJECT_BUFFER:
+                stub_obj = std::make_unique<gles1_driver_buffer>(ctx);
+                break;
+
+            default:
+                break;
+            }
             texs[i] = static_cast<std::uint32_t>(ctx->objects_.add(stub_obj));
         }
     }
@@ -618,25 +684,11 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        bool need_free = false;
-
-        auto cmd_list = drv->new_command_list();
-        auto cmd_builder = drv->new_command_builder(cmd_list.get());
-
         for (std::int32_t i = 0; i < n; i++) {
             auto *obj = ctx->objects_.get(names[i]);
-            if (obj && (obj->first == obj_type)) {
-                if (obj->second != GLES1_UNINITIALIZED_DRIVER_HANDLE) {
-                    cmd_builder->destroy(obj->second);
-                    need_free = true;
-                }
-
+            if (obj && ((*obj)->object_type() == obj_type)) {
                 ctx->objects_.remove(names[i]);
             }
-        }
-
-        if (need_free) {
-            drv->submit_command_list(*cmd_list);
         }
     }
 
@@ -670,7 +722,7 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        ctx->binded_texture_handle_ = name;
+        ctx->texture_units_[ctx->active_texture_unit_].binded_texture_handle_ = name;
     }
 
     BRIDGE_FUNC_DISPATCHER(void, gl_bind_buffer_emu, std::uint32_t target, std::uint32_t name) {
@@ -695,5 +747,368 @@ namespace eka2l1::dispatch {
             controller.push_error(ctx, GL_INVALID_ENUM);
             return;
         }
+    }
+
+    static inline std::uint32_t is_format_and_data_type_ok(const std::uint32_t format, const std::uint32_t data_type) {
+        if ((format != GL_ALPHA_EMU) && (format != GL_RGB_EMU) && (format != GL_RGBA_EMU) && (format != GL_LUMINANCE_EMU)
+            && (format != GL_LUMINANCE_ALPHA_EMU)) {
+            return GL_INVALID_ENUM;
+        }
+
+        if ((data_type != GL_UNSIGNED_BYTE_EMU) && (data_type != GL_UNSIGNED_SHORT_4_4_4_4_EMU) && (data_type != GL_UNSIGNED_SHORT_5_5_5_1_EMU)
+            && (data_type != GL_UNSIGNED_SHORT_5_6_5_EMU)) {
+            return GL_INVALID_ENUM;
+        }
+
+        if ((data_type == GL_UNSIGNED_SHORT_5_6_5_EMU) && (format != GL_RGB_EMU)) {
+            return GL_INVALID_OPERATION;
+        }
+
+        if (((data_type == GL_UNSIGNED_SHORT_5_5_5_1_EMU) || (data_type == GL_UNSIGNED_SHORT_4_4_4_4_EMU)) && (format != GL_RGBA_EMU)) {
+            return GL_INVALID_OPERATION;
+        }
+
+        return 0;
+    }
+
+    static bool is_valid_gl_emu_func(const std::uint32_t func) {
+        return ((func == GL_NEVER_EMU) || (func == GL_ALWAYS_EMU) || (func == GL_GREATER_EMU) || (func == GL_GEQUAL_EMU) ||
+            (func == GL_LESS_EMU) || (func == GL_LEQUAL_EMU) || (func == GL_EQUAL_EMU) || (func == GL_NOTEQUAL_EMU));
+    }
+    
+    BRIDGE_FUNC_DISPATCHER(void, gl_alpha_func_emu, std::uint32_t func, float ref) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if (!is_valid_gl_emu_func(func)) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        ctx->alpha_test_func_ = func;
+        ctx->alpha_test_ref_ = ref;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_alpha_func_x_emu, std::uint32_t func, std::uint32_t ref) {
+        gl_alpha_func_emu(sys, 0, func, FIXED_32_TO_FLOAT(ref));
+    }
+
+    // This will only works on GLES1, they don't have swizzle masks yet.
+    static void get_data_type_to_upload(drivers::texture_format &internal_out, drivers::texture_format &format_out, drivers::texture_data_type &type_out,
+        drivers::channel_swizzles &swizzles_out, const std::uint32_t format, const std::uint32_t data_type) {
+        switch (format) {
+        case GL_RGB_EMU:
+            format_out = drivers::texture_format::rgb;
+            internal_out = format_out;
+            swizzles_out = { drivers::channel_swizzle::red, drivers::channel_swizzle::green, drivers::channel_swizzle::blue, drivers::channel_swizzle::one };
+            break;
+
+        case GL_RGBA_EMU:
+            format_out = drivers::texture_format::rgb;
+            internal_out = format_out;
+            swizzles_out = { drivers::channel_swizzle::red, drivers::channel_swizzle::green, drivers::channel_swizzle::blue, drivers::channel_swizzle::one };
+
+        case GL_ALPHA_EMU:
+            format_out = drivers::texture_format::r;
+            internal_out = drivers::texture_format::r8;
+            swizzles_out = { drivers::channel_swizzle::zero, drivers::channel_swizzle::zero, drivers::channel_swizzle::zero, drivers::channel_swizzle::red };
+            break;
+
+        case GL_LUMINANCE_EMU:
+            format_out = drivers::texture_format::r;
+            internal_out = drivers::texture_format::r8;
+            swizzles_out = { drivers::channel_swizzle::red, drivers::channel_swizzle::red, drivers::channel_swizzle::red, drivers::channel_swizzle::one };
+            break;
+            
+        case GL_LUMINANCE_ALPHA_EMU:
+            format_out = drivers::texture_format::rg;
+            internal_out = drivers::texture_format::rg8;
+            swizzles_out = { drivers::channel_swizzle::red, drivers::channel_swizzle::red, drivers::channel_swizzle::red, drivers::channel_swizzle::green };
+            break;
+
+        default:
+            break;
+        }
+
+        switch (data_type) {
+        case GL_UNSIGNED_BYTE_EMU:
+            type_out = drivers::texture_data_type::ubyte;
+            break;
+
+        case GL_UNSIGNED_SHORT_4_4_4_4_EMU:
+            type_out = drivers::texture_data_type::ushort_4_4_4_4;
+            break;
+
+        case GL_UNSIGNED_SHORT_5_5_5_1_EMU:
+            type_out = drivers::texture_data_type::ushort_5_5_5_1;
+            break;
+
+        case GL_UNSIGNED_SHORT_5_6_5_EMU:
+            type_out = drivers::texture_data_type::ushort_5_6_5;
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    static std::uint32_t calculate_possible_upload_size(const eka2l1::vec2 size, const std::uint32_t format, const std::uint32_t data_type) {
+        if ((format == GL_LUMINANCE_ALPHA_EMU) || (format == GL_LUMINANCE_EMU) || (format == GL_ALPHA_EMU)) {
+            return size.x * size.y;
+        }
+
+        if (format == GL_RGB_EMU) {
+            if (data_type == GL_UNSIGNED_BYTE_EMU) {
+                return size.x * size.y * 3;
+            } else {
+                return size.x * size.y * 2;
+            }
+        } else {
+            if (format == GL_RGBA_EMU) {
+                if (data_type == GL_UNSIGNED_BYTE_EMU) {
+                    return size.x * size.y * 4;
+                } else {
+                    return size.x * size.y * 2;
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_tex_image_2d_emu, std::uint32_t target, std::int32_t level, std::int32_t internal_format,
+        std::int32_t width, std::int32_t height, std::int32_t border, std::uint32_t format, std::uint32_t data_type,
+        void *data_pixels) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if (target != GL_TEXTURE_2D_EMU) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        if ((level < 0) || (level > GLES1_EMU_MAX_TEXTURE_MIP_LEVEL) || (width < 0) || (height < 0) || (width > GLES1_EMU_MAX_TEXTURE_SIZE)
+            || (height > GLES1_EMU_MAX_TEXTURE_SIZE) || !data_pixels) {
+            controller.push_error(ctx, GL_INVALID_VALUE);
+        }
+
+        if (internal_format != format) {
+            controller.push_error(ctx, GL_INVALID_OPERATION);
+            return;
+        }
+
+        const std::uint32_t error = is_format_and_data_type_ok(format, data_type);
+        if (error != 0) {
+            controller.push_error(ctx, error);
+            return;
+        }
+
+        gles1_driver_texture *tex = ctx->binded_texture();
+        if (!tex) {
+            controller.push_error(ctx, GL_INVALID_OPERATION);
+            return;
+        }
+
+        bool need_reinstantiate = true;
+
+        drivers::texture_format internal_format_driver;
+        drivers::texture_format format_driver;
+        drivers::texture_data_type dtype;
+        drivers::channel_swizzles swizzles;
+
+        get_data_type_to_upload(internal_format_driver, format_driver, dtype, swizzles, format, data_type);
+
+        // TODO: border is ignored!
+        if (!tex->handle_value()) {
+            if (!ctx->texture_pools_.empty()) {
+                tex->assign_handle(ctx->texture_pools_.top());
+                ctx->texture_pools_.pop();
+            } else {
+                drivers::graphics_driver *drv = sys->get_graphics_driver();
+                drivers::handle new_h = drivers::create_texture(drv, 2, static_cast<std::uint8_t>(level), internal_format_driver,
+                    format_driver, dtype, data_pixels, eka2l1::vec3(width, height, 0));
+
+                if (!new_h) {
+                    controller.push_error(ctx, GL_INVALID_OPERATION);
+                    return;
+                }
+
+                need_reinstantiate = false;
+                tex->assign_handle(new_h);
+            }
+        }
+
+        if (need_reinstantiate) {
+            const std::size_t needed_size = calculate_possible_upload_size(eka2l1::vec2(width, height), format, data_type);
+            ctx->command_builder_->recreate_texture(tex->handle_value(), 2, static_cast<std::uint8_t>(level), internal_format_driver,
+                format_driver, dtype, data_pixels, needed_size, eka2l1::vec3(width, height, 0));
+        }
+
+        tex->set_internal_format(format);
+        tex->set_size(eka2l1::vec2(width, height));
+
+        ctx->command_builder_->set_swizzle(tex->handle_value(), swizzles[0], swizzles[1], swizzles[2], swizzles[3]);
+    }
+    
+    BRIDGE_FUNC_DISPATCHER(void, gl_tex_sub_image_2d_emu, std::uint32_t target, std::int32_t level, std::int32_t xoffset,
+        std::int32_t yoffset, std::int32_t width, std::int32_t height, std::uint32_t format, std::uint32_t data_type,
+        void *data_pixels) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if (target != GL_TEXTURE_2D_EMU) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        if ((level < 0) || (level > GLES1_EMU_MAX_TEXTURE_MIP_LEVEL) || (width < 0) || (height < 0) || (width > GLES1_EMU_MAX_TEXTURE_SIZE)
+            || (height > GLES1_EMU_MAX_TEXTURE_SIZE) || !data_pixels) {
+            controller.push_error(ctx, GL_INVALID_VALUE);
+        }
+
+        const std::uint32_t error = is_format_and_data_type_ok(format, data_type);
+        if (error != 0) {
+            controller.push_error(ctx, error);
+            return;
+        }
+
+        gles1_driver_texture *tex = ctx->binded_texture();
+        if (!tex || !tex->handle_value()) {
+            controller.push_error(ctx, GL_INVALID_OPERATION);
+            return;
+        }
+
+        if ((xoffset < 0) || (yoffset < 0) || (xoffset + width > tex->size().x) || (yoffset + height > tex->size().y)) {
+            controller.push_error(ctx, GL_INVALID_VALUE);
+            return;
+        }
+
+        // On GLES3 this is true, unsure with GLES1, but still put here for our ease.
+        if (tex->internal_format() != format) {
+            LOG_ERROR(HLE_GLES1, "Internal format and format passed to texture update does not match!");
+            controller.push_error(ctx, GL_INVALID_OPERATION);
+
+            return;
+        }
+
+        bool need_reinstantiate = true;
+
+        drivers::texture_format internal_format_driver;
+        drivers::texture_format format_driver;
+        drivers::texture_data_type dtype;
+        drivers::channel_swizzles swizzles;
+
+        get_data_type_to_upload(internal_format_driver, format_driver, dtype, swizzles, format, data_type);
+
+        const std::size_t needed_size = calculate_possible_upload_size(eka2l1::vec2(width, height), format, data_type);
+        ctx->command_builder_->update_texture(tex->handle_value(), reinterpret_cast<const char*>(data_pixels), needed_size, format_driver,
+            dtype, eka2l1::vec3(xoffset, yoffset, 0), eka2l1::vec3(width, height, 0));
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_shade_model_emu, std::uint32_t model) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if ((model != GL_FLAT_EMU) && (model != GL_SMOOTH_EMU)) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        ctx->shade_model_ = model;
+    }
+    
+    BRIDGE_FUNC_DISPATCHER(void, gl_normal_3f_emu, float nx, float ny, float nz) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        ctx->normal_uniforms_[0] = nx;
+        ctx->normal_uniforms_[1] = ny;
+        ctx->normal_uniforms_[2] = nz;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_normal_3x_emu, std::uint32_t nx, std::uint32_t ny, std::uint32_t nz) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        ctx->normal_uniforms_[0] = FIXED_32_TO_FLOAT(nx);
+        ctx->normal_uniforms_[1] = FIXED_32_TO_FLOAT(ny);
+        ctx->normal_uniforms_[2] = FIXED_32_TO_FLOAT(nz);
+    }
+    
+    BRIDGE_FUNC_DISPATCHER(void, gl_color_4f_emu, float red, float green, float blue, float alpha) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        ctx->color_uniforms_[0] = red;
+        ctx->color_uniforms_[1] = green;
+        ctx->color_uniforms_[2] = blue;
+        ctx->color_uniforms_[3] = alpha;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_color_4x_emu, std::uint32_t red, std::uint32_t green, std::uint32_t blue, std::uint32_t alpha) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        ctx->color_uniforms_[0] = FIXED_32_TO_FLOAT(red);
+        ctx->color_uniforms_[1] = FIXED_32_TO_FLOAT(green);
+        ctx->color_uniforms_[2] = FIXED_32_TO_FLOAT(blue);
+        ctx->color_uniforms_[3] = FIXED_32_TO_FLOAT(alpha);
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_color_4ub_emu, std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        ctx->color_uniforms_[0] = red / 255.0f;
+        ctx->color_uniforms_[1] = green / 255.0f;
+        ctx->color_uniforms_[2] = blue / 255.0f;
+        ctx->color_uniforms_[3] = alpha / 255.0f;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_active_texture_emu, std::uint32_t unit) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if ((unit < GL_TEXTURE0_EMU) && (unit >= GL_TEXTURE0_EMU + GLES1_EMU_MAX_TEXTURE_COUNT)) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        ctx->active_texture_unit_ = unit - GL_TEXTURE0_EMU;
     }
 }

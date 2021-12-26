@@ -91,6 +91,7 @@ namespace eka2l1::drivers {
         r,
         r8,
         rg,
+        rg8,
         rgb,
         bgr,
         bgra,
@@ -105,6 +106,7 @@ namespace eka2l1::drivers {
         ushort,
         ushort_4_4_4_4,
         ushort_5_6_5,
+        ushort_5_5_5_1,
         uint_24_8
     };
 

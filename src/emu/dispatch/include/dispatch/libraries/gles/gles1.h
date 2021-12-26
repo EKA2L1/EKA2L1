@@ -28,6 +28,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <memory>
+#include <optional>
+#include <stack>
 #include <tuple>
 
 namespace eka2l1 {
@@ -38,7 +41,9 @@ namespace eka2l1::dispatch {
     #define FIXED_32_TO_FLOAT(x) (float)(x) / 65536.0f
 
     enum {
-        GLES1_UNINITIALIZED_DRIVER_HANDLE = 0xFFFFFFFFFFFFFFFF
+        GLES1_EMU_MAX_TEXTURE_SIZE = 4096,
+        GLES1_EMU_MAX_TEXTURE_MIP_LEVEL = 10,
+        GLES1_EMU_MAX_TEXTURE_COUNT = 16
     };
 
     enum gles1_object_type {
@@ -46,7 +51,85 @@ namespace eka2l1::dispatch {
         GLES1_OBJECT_BUFFER
     };
 
-    using gles1_driver_object = std::pair<gles1_object_type, drivers::handle>;
+    struct egl_context_es1;
+
+    struct gles1_driver_object {
+    protected:
+        egl_context_es1 *context_;
+        drivers::handle driver_handle_;
+
+    public:
+        explicit gles1_driver_object(egl_context_es1 *ctx);
+        virtual ~gles1_driver_object();
+
+        void assign_handle(const drivers::handle h) {
+            driver_handle_ = h;
+        }
+
+        drivers::handle handle_value() const {
+            return driver_handle_;
+        }
+
+        virtual gles1_object_type object_type() const = 0;
+    };
+
+    struct gles1_driver_texture : public gles1_driver_object {
+    private:
+        std::uint32_t internal_format_;
+        eka2l1::vec2 size_;
+
+    public:
+        explicit gles1_driver_texture(egl_context_es1 *ctx);
+
+        void set_internal_format(const std::uint32_t format) {
+            internal_format_ = format;
+        }
+
+        std::uint32_t internal_format() const {
+            return internal_format_;
+        }
+
+        void set_size(const eka2l1::vec2 size) {
+            size_ = size;
+        }
+
+        eka2l1::vec2 size() const {
+            return size_;
+        }
+
+        gles1_object_type object_type() const override {
+            return GLES1_OBJECT_TEXTURE;
+        }
+    };
+
+    struct gles1_driver_buffer : public gles1_driver_object {
+    public:
+        explicit gles1_driver_buffer(egl_context_es1 *ctx);
+
+        gles1_object_type object_type() const override {
+            return GLES1_OBJECT_BUFFER;
+        }
+    };
+
+    struct gles1_vertex_attribs {
+        std::int32_t size_;
+        std::uint32_t data_type_;
+        std::int32_t stride_;
+        std::uint32_t offset_;
+
+        bool is_active_ { false };
+    };
+
+    struct gles_texture_unit {
+        std::size_t index_;
+
+        std::stack<glm::mat4> texture_mat_stack_;
+        std::uint32_t binded_texture_handle_;
+
+        explicit gles_texture_unit();
+    };
+
+    using gles1_driver_object_instance = std::unique_ptr<gles1_driver_object>;
 
     struct egl_context_es1 : public egl_context {
         std::unique_ptr<drivers::graphics_command_list> command_list_;
@@ -58,25 +141,48 @@ namespace eka2l1::dispatch {
 
         std::stack<glm::mat4> model_view_mat_stack_;
         std::stack<glm::mat4> proj_mat_stack_;
-        std::stack<glm::mat4> texture_mat_stack_;
 
+        gles_texture_unit texture_units_[GLES1_EMU_MAX_TEXTURE_COUNT];
+
+        std::uint32_t active_texture_unit_;
         std::uint32_t active_mat_stack_;
-        std::uint32_t binded_texture_handle_;
         std::uint32_t binded_array_buffer_handle_;
         std::uint32_t binded_element_array_buffer_handle_;
 
         drivers::rendering_face active_cull_face_;
         drivers::rendering_face_determine_rule active_front_face_rule_;
 
-        common::identity_container<gles1_driver_object> objects_;
+        common::identity_container<gles1_driver_object_instance> objects_;
+
+        std::stack<drivers::handle> texture_pools_;
+        std::stack<drivers::handle> buffer_pools_;
+        
+        enum {
+            STATE_ALPHA_TEST = 1 << 0
+        };
+
+        // Order: Vertex, color, coordinates, normals
+        gles1_vertex_attribs attribs_[4];
+
+        float color_uniforms_[4];
+        float normal_uniforms_[3];
+
+        std::uint32_t state_statuses_;
+
+        float alpha_test_ref_;
+        std::uint32_t alpha_test_func_;
+        std::uint32_t shade_model_;
 
         explicit egl_context_es1();
-
         glm::mat4 &active_matrix();
-        drivers::handle *binded_texture_driver_handle();
-        drivers::handle *binded_buffer_driver_handle(const bool is_array_buffer);
+
+        gles1_driver_texture *binded_texture();
+        gles1_driver_buffer *binded_buffer(const bool is_array_buffer);
+        drivers::handle binded_texture_driver_handle();
 
         void free(drivers::graphics_driver *driver, drivers::graphics_command_list_builder &builder) override;
+        void return_handle_to_pool(const gles1_object_type type, const drivers::handle h);
+
         egl_context_type context_type() const override {
             return EGL_GLES1_CONTEXT;
         }
@@ -119,4 +225,19 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_DISPATCHER(void, gl_delete_textures_emu, std::int32_t n, std::uint32_t *texs);
     BRIDGE_FUNC_DISPATCHER(void, gl_bind_texture_emu, std::uint32_t target, std::uint32_t name);
     BRIDGE_FUNC_DISPATCHER(void, gl_bind_buffer_emu, std::uint32_t target, std::uint32_t name);
+    BRIDGE_FUNC_DISPATCHER(void, gl_tex_image_2d_emu, std::uint32_t target, std::int32_t level, std::int32_t internal_format,
+        std::int32_t width, std::int32_t height, std::int32_t border, std::uint32_t format, std::uint32_t data_type,
+        void *data_pixels);
+    BRIDGE_FUNC_DISPATCHER(void, gl_tex_sub_image_2d_emu, std::uint32_t target, std::int32_t level, std::int32_t xoffset,
+        std::int32_t yoffset, std::int32_t width, std::int32_t height, std::uint32_t format, std::uint32_t data_type,
+        void *data_pixels);
+    BRIDGE_FUNC_DISPATCHER(void, gl_alpha_func_emu, std::uint32_t func, float ref);
+    BRIDGE_FUNC_DISPATCHER(void, gl_alpha_func_x_emu, std::uint32_t func, std::uint32_t ref);
+    BRIDGE_FUNC_DISPATCHER(void, gl_normal_3f_emu, float nx, float ny, float nz);
+    BRIDGE_FUNC_DISPATCHER(void, gl_normal_3x_emu, std::uint32_t nx, std::uint32_t ny, std::uint32_t nz);
+    BRIDGE_FUNC_DISPATCHER(void, gl_color_4f_emu, float red, float green, float blue, float alpha);
+    BRIDGE_FUNC_DISPATCHER(void, gl_color_4x_emu, std::uint32_t red, std::uint32_t green, std::uint32_t blue, std::uint32_t alpha);
+    BRIDGE_FUNC_DISPATCHER(void, gl_color_4ub_emu, std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha);
+    BRIDGE_FUNC_DISPATCHER(void, gl_shade_model_emu, std::uint32_t model);
+    BRIDGE_FUNC_DISPATCHER(void, gl_active_texture_emu, std::uint32_t unit);
 }

@@ -49,6 +49,9 @@ namespace eka2l1::drivers {
         case texture_format::rg:
             return GL_RG;
 
+        case texture_format::rg8:
+            return GL_RG8;
+
         case texture_format::rgb:
             return GL_RGB;
 
@@ -93,6 +96,9 @@ namespace eka2l1::drivers {
 
         case texture_data_type::ushort_5_6_5:
             return GL_UNSIGNED_SHORT_5_6_5;
+
+        case texture_data_type::ushort_5_5_5_1:
+            return GL_UNSIGNED_SHORT_5_5_5_1;
 
         default:
             break;
