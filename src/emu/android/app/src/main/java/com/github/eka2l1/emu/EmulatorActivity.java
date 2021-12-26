@@ -337,6 +337,10 @@ public class EmulatorActivity extends AppCompatActivity {
 
         keyboard.setLayoutListener(vk -> {
             try {
+                File parentFile = new File(Emulator.getConfigsDir(), appDirName);
+                if (!parentFile.exists()) {
+                    parentFile.mkdirs();
+                }
                 FileOutputStream fos = new FileOutputStream(keyLayoutFile);
                 DataOutputStream dos = new DataOutputStream(fos);
                 vk.writeLayout(dos);
