@@ -125,6 +125,9 @@ namespace eka2l1::dispatch {
 
         std::stack<glm::mat4> texture_mat_stack_;
         std::uint32_t binded_texture_handle_;
+        
+        gles1_vertex_attribs coord_attrib_;
+        float coord_uniforms_[4];
 
         explicit gles_texture_unit();
     };
@@ -145,6 +148,7 @@ namespace eka2l1::dispatch {
         gles_texture_unit texture_units_[GLES1_EMU_MAX_TEXTURE_COUNT];
 
         std::uint32_t active_texture_unit_;
+        std::uint32_t active_client_texture_unit_;
         std::uint32_t active_mat_stack_;
         std::uint32_t binded_array_buffer_handle_;
         std::uint32_t binded_element_array_buffer_handle_;
@@ -158,16 +162,21 @@ namespace eka2l1::dispatch {
         std::stack<drivers::handle> buffer_pools_;
         
         enum {
-            STATE_ALPHA_TEST = 1 << 0
+            STATE_ALPHA_TEST = 1 << 0,
+            STATE_CLIENT_VERTEX_ARRAY = 1 << 1,
+            STATE_CLIENT_COLOR_ARRAY = 1 << 2,
+            STATE_CLIENT_NORMAL_ARRAY = 1 << 3,
+            STATE_CLIENT_TEXCOORD_ARRAY = 1 << 4
         };
 
-        // Order: Vertex, color, coordinates, normals
-        gles1_vertex_attribs attribs_[4];
+        gles1_vertex_attribs vertex_attrib_;
+        gles1_vertex_attribs color_attrib_;
+        gles1_vertex_attribs normal_attrib_;
 
         float color_uniforms_[4];
         float normal_uniforms_[3];
 
-        std::uint32_t state_statuses_;
+        std::uint64_t state_statuses_;
 
         float alpha_test_ref_;
         std::uint32_t alpha_test_func_;
@@ -240,4 +249,9 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_DISPATCHER(void, gl_color_4ub_emu, std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha);
     BRIDGE_FUNC_DISPATCHER(void, gl_shade_model_emu, std::uint32_t model);
     BRIDGE_FUNC_DISPATCHER(void, gl_active_texture_emu, std::uint32_t unit);
+    BRIDGE_FUNC_DISPATCHER(void, gl_client_active_texture_emu, std::uint32_t unit);
+    BRIDGE_FUNC_DISPATCHER(void, gl_multi_tex_coord_4f_emu, std::uint32_t unit, float s, float t, float r, float q);
+    BRIDGE_FUNC_DISPATCHER(void, gl_multi_tex_coord_4x_emu, std::uint32_t unit, std::uint32_t s, std::uint32_t t, std::uint32_t r, std::uint32_t q);
+    BRIDGE_FUNC_DISPATCHER(void, gl_enable_client_state_emu, std::uint32_t state);
+    BRIDGE_FUNC_DISPATCHER(void, gl_disable_client_state_emu, std::uint32_t state);
 }

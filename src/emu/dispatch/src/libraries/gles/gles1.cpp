@@ -1111,4 +1111,125 @@ namespace eka2l1::dispatch {
 
         ctx->active_texture_unit_ = unit - GL_TEXTURE0_EMU;
     }
+    
+    BRIDGE_FUNC_DISPATCHER(void, gl_client_active_texture_emu, std::uint32_t unit) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if ((unit < GL_TEXTURE0_EMU) && (unit >= GL_TEXTURE0_EMU + GLES1_EMU_MAX_TEXTURE_COUNT)) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        ctx->active_client_texture_unit_ = unit - GL_TEXTURE0_EMU;
+    }
+    
+    BRIDGE_FUNC_DISPATCHER(void, gl_multi_tex_coord_4f_emu, std::uint32_t unit, float s, float t, float r, float q) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if ((unit < GL_TEXTURE0_EMU) && (unit >= GL_TEXTURE0_EMU + GLES1_EMU_MAX_TEXTURE_COUNT)) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        ctx->texture_units_[unit].coord_uniforms_[0] = s;
+        ctx->texture_units_[unit].coord_uniforms_[1] = t;
+        ctx->texture_units_[unit].coord_uniforms_[2] = r;
+        ctx->texture_units_[unit].coord_uniforms_[3] = q;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_multi_tex_coord_4x_emu, std::uint32_t unit, std::uint32_t s, std::uint32_t t, std::uint32_t r, std::uint32_t q) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if ((unit < GL_TEXTURE0_EMU) && (unit >= GL_TEXTURE0_EMU + GLES1_EMU_MAX_TEXTURE_COUNT)) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        ctx->texture_units_[unit].coord_uniforms_[0] = FIXED_32_TO_FLOAT(s);
+        ctx->texture_units_[unit].coord_uniforms_[1] = FIXED_32_TO_FLOAT(t);
+        ctx->texture_units_[unit].coord_uniforms_[2] = FIXED_32_TO_FLOAT(r);
+        ctx->texture_units_[unit].coord_uniforms_[3] = FIXED_32_TO_FLOAT(q);
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_enable_client_state_emu, std::uint32_t state) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        switch (state) {
+        case GL_VERTEX_ARRAY_EMU:
+            ctx->state_statuses_ |= egl_context_es1::STATE_CLIENT_VERTEX_ARRAY;
+            break;
+
+        case GL_COLOR_ARRAY_EMU:
+            ctx->state_statuses_ |= egl_context_es1::STATE_CLIENT_COLOR_ARRAY;
+            break;
+
+        case GL_NORMAL_ARRAY_EMU:
+            ctx->state_statuses_ |= egl_context_es1::STATE_CLIENT_NORMAL_ARRAY;
+            break;
+
+        case GL_TEXTURE_COORD_ARRAY_EMU:
+            ctx->state_statuses_ |= egl_context_es1::STATE_CLIENT_TEXCOORD_ARRAY;
+            break;
+
+        default:
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_disable_client_state_emu, std::uint32_t state) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        switch (state) {
+        case GL_VERTEX_ARRAY_EMU:
+            ctx->state_statuses_ &= ~egl_context_es1::STATE_CLIENT_VERTEX_ARRAY;
+            break;
+
+        case GL_COLOR_ARRAY_EMU:
+            ctx->state_statuses_ &= ~egl_context_es1::STATE_CLIENT_COLOR_ARRAY;
+            break;
+
+        case GL_NORMAL_ARRAY_EMU:
+            ctx->state_statuses_ &= ~egl_context_es1::STATE_CLIENT_NORMAL_ARRAY;
+            break;
+
+        case GL_TEXTURE_COORD_ARRAY_EMU:
+            ctx->state_statuses_ &= ~egl_context_es1::STATE_CLIENT_TEXCOORD_ARRAY;
+            break;
+
+        default:
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+    }
 }

@@ -48,6 +48,11 @@ glColor4x
 glColor4ub
 glShadeModel
 glActiveTexture
+glClientActiveTexture
+glMultiTexCoord4f
+glMultiTexCoord4x
+glEnableClientState
+glDisableClientState
 
 glBufferData
 glColorPointer
@@ -90,18 +95,15 @@ eglTerminate
 eglWaitGL
 eglWaitNative
 glBlendFunc
-glClientActiveTexture
 glColorMask
 glDepthFunc
 glDepthMask
 glDepthRangef
 glDepthRangex
 glDisable
-glDisableClientState
 glDrawArrays
 glDrawElements
 glEnable
-glEnableClientState
 glFinish
 glFlush
 glFogf
@@ -125,8 +127,6 @@ glMaterialf
 glMaterialfv
 glMaterialx
 glMaterialxv
-glMultiTexCoord4f
-glMultiTexCoord4x
 glPixelStorei
 glPointSize
 glPointSizex
