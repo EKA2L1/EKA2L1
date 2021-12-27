@@ -934,12 +934,12 @@ A opção de preferência ativará isso automaticamente em dispositivos S60v1/S6
     <message>
       <location filename="../src/settings_dialog.ui" line="922"/>
       <source>MIDI backend</source>
-      <translation type="unfinished">MIDI backend</translation>
+      <translation>Administração de MIDI</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="936"/>
       <source>TinySoundFont (High-quality, support SF2)</source>
-      <translation type="unfinished">TinySoundFont (High-quality, support SF2)</translation>
+      <translation>TinySoundFont (High-quality support SF2)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="941"/>
@@ -1256,22 +1256,22 @@ A opção de preferência ativará isso automaticamente em dispositivos S60v1/S6
     <message>
       <location filename="../src/settings_dialog.cpp" line="1221"/>
       <source>Successfully changed</source>
-      <translation type="unfinished">Successfully changed</translation>
+      <translation>Alterado com sucesso</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1221"/>
       <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
-      <translation type="unfinished">Next time the application requests to play a new MIDI, the choosen backend will be used!</translation>
+      <translation>Na próxima vez que os pedidos de aplicação para reproduzir um novo MIDI, o backend escolhido será usado!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1234"/>
       <source>Choose the HSB bank file</source>
-      <translation type="unfinished">Choose the HSB bank file</translation>
+      <translation>Escolha o arquivo torrent</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1257"/>
       <source>Choose the SF2 bank file</source>
-      <translation type="unfinished">Choose the SF2 bank file</translation>
+      <translation>Escolha o arquivo de banco SF2</translation>
     </message>
   </context>
 </TS>
