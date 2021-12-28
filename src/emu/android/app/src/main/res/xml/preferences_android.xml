@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <ListPreference
         android:defaultValue="light"
         android:entries="@array/pref_theme_entries"
@@ -22,4 +23,8 @@
         android:defaultValue="true"
         android:key="enable-vibration"
         android:title="@string/pref_enable_vibration" />
+    <Preference
+        android:key="emulator-dir"
+        android:title="@string/pref_emulator_dir"
+        tools:summary="/sdcard/EKA2L1" />
 </PreferenceScreen>

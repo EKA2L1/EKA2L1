@@ -40,11 +40,13 @@ public class Constants {
     public static final String KEY_APP_NAME = "appName";
 
     public static final String PREF_DEFAULT_PROFILE = "default_profile";
+    public static final String PREF_STORAGE_WARNING_SHOWN = "storage-warning-shown";
     public static final String PREF_KEEP_SCREEN = "enable-wakelock";
     public static final String PREF_STATUSBAR = "enable-statusbar";
     public static final String PREF_THEME = "theme";
     public static final String PREF_ACTIONBAR = "enable-actionbar";
     public static final String PREF_VIBRATION = "enable-vibration";
+    public static final String PREF_EMULATOR_DIR = "emulator-dir";
     public static final String PREF_LANGUAGE = "language";
     public static final String PREF_RTOS_LEVEL = "rtos-level";
     public static final String PREF_ANDROID = "pref_android";

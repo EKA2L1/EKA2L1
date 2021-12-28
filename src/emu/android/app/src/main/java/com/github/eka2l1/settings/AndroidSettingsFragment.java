@@ -20,6 +20,7 @@
 package com.github.eka2l1.settings;
 
 import static com.github.eka2l1.emu.Constants.KEY_RESTART;
+import static com.github.eka2l1.emu.Constants.PREF_EMULATOR_DIR;
 import static com.github.eka2l1.emu.Constants.PREF_THEME;
 import static com.github.eka2l1.emu.Constants.PREF_VIBRATION;
 
@@ -32,6 +33,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.ListPreference;
+import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.preference.SwitchPreferenceCompat;
@@ -58,6 +60,8 @@ public class AndroidSettingsFragment extends PreferenceFragmentCompat {
             Emulator.setVibration((Boolean) newValue);
             return true;
         });
+        Preference emulatorDirPreference = findPreference(PREF_EMULATOR_DIR);
+        emulatorDirPreference.setSummary(Emulator.getEmulatorDir());
     }
 
     @Override

@@ -35,6 +35,7 @@ import android.os.Vibrator;
 import android.provider.DocumentsContract;
 import android.view.Surface;
 
+import androidx.annotation.RequiresApi;
 import androidx.documentfile.provider.DocumentFile;
 
 import com.github.eka2l1.BuildConfig;
@@ -42,7 +43,6 @@ import com.github.eka2l1.applist.AppItem;
 import com.github.eka2l1.settings.AppDataStore;
 import com.github.eka2l1.util.FileUtils;
 import com.github.eka2l1.util.BitmapUtils;
-import com.github.eka2l1.util.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -342,6 +342,7 @@ public class Emulator {
 
     // NOTE: The destination is the parent directory! This means that contentUriCopyFile
     // cannot rename things as part of the operation.
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public static int contentUriMoveFile(String srcFileUri, String srcParentDirUri, String dstParentDirUri) {
         try {
             Uri srcUri = Uri.parse(srcFileUri);
@@ -355,6 +356,7 @@ public class Emulator {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public static int contentUriCopyFile(String srcFileUri, String dstParentDirUri) {
         try {
             Uri srcUri = Uri.parse(srcFileUri);

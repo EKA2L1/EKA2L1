@@ -19,6 +19,8 @@
 
 package com.github.eka2l1;
 
+import static com.github.eka2l1.emu.Constants.PREF_STORAGE_WARNING_SHOWN;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
@@ -38,6 +40,7 @@ import androidx.fragment.app.FragmentManager;
 import com.github.eka2l1.applist.AppsListFragment;
 import com.github.eka2l1.base.BaseActivity;
 import com.github.eka2l1.emu.Emulator;
+import com.github.eka2l1.settings.AppDataStore;
 import com.github.eka2l1.util.FileUtils;
 
 import java.util.Map;
@@ -75,6 +78,19 @@ public class MainActivity extends BaseActivity {
             return;
         }
 
+        AppDataStore dataStore = AppDataStore.getAndroidStore();
+        boolean warningShown = dataStore.getBoolean(PREF_STORAGE_WARNING_SHOWN, false);
+        if (!FileUtils.isExternalStorageLegacy() && !warningShown) {
+            showScopedStorageDialog();
+            dataStore.putBoolean(PREF_STORAGE_WARNING_SHOWN, true);
+            dataStore.save();
+            return;
+        }
+
+        showAppList();
+    }
+
+    private void showAppList() {
         Emulator.initializeFolders();
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
         AppsListFragment appsListFragment = new AppsListFragment();
@@ -89,6 +105,16 @@ public class MainActivity extends BaseActivity {
                 .setCancelable(false)
                 .setMessage(R.string.opengl_required)
                 .setPositiveButton(android.R.string.ok, (d, w) -> finish())
+                .show();
+    }
+
+    private void showScopedStorageDialog() {
+        String message = getString(R.string.scoped_storage_warning) + Emulator.getEmulatorDir();
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.warning)
+                .setCancelable(false)
+                .setMessage(message)
+                .setPositiveButton(android.R.string.ok, (d, w) -> showAppList())
                 .show();
     }
 
