@@ -17,6 +17,8 @@
     <string name="rename">Nimeä uudelleen</string>
     <string name="save_log">Tallenna loki</string>
     <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
+    <string name="warning">Warning</string>
+    <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
     <string name="install">Asenna</string>
     <string name="device_dump">Device dump</string>
     <string name="path_to_rpkg">Polku RPKG:hen</string>
@@ -52,6 +54,7 @@
     <string name="pref_enable_statusbar">Ota käyttöön tilapalkki</string>
     <string name="pref_wakelock">Pidä näyttö päällä</string>
     <string name="pref_enable_vibration">Ota värinä käyttöön</string>
+    <string name="pref_emulator_dir">Working directory</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Ota käyttöön lähimmän naapurin suodatus</string>
     <string name="pref_system_language_option_name">Kieli</string>
     <string name="pref_system_real_time_accuracy_str">Reaaliaikainen tarkkuus</string>
@@ -62,6 +65,7 @@
     <string name="pref_system_setting_inheritance_option_name">Perintöasetus</string>
     <string name="emulated_screen_rotation_item_name">Kierto</string>
     <string name="emulated_screen_refresh_rate_item_name">Virkistystaajuus</string>
+    <string name="pref_device_display_name">Friendly phone name</string>
     <string name="action_context_delete">Delete</string>
     <string name="action_context_rename">Nimeä uudelleen</string>
     <string name="start">Start</string>
