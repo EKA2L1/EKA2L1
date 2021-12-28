@@ -17,6 +17,8 @@
     <string name="rename">Adlandır</string>
     <string name="save_log">Günlüğü kaydet</string>
     <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
+    <string name="warning">Warning</string>
+    <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
     <string name="install">Kur</string>
     <string name="device_dump">Cihaz dökümü</string>
     <string name="path_to_rpkg">RPKG Yolu</string>
@@ -52,6 +54,7 @@
     <string name="pref_enable_statusbar">Bildirim çubuğunu etkinleştir</string>
     <string name="pref_wakelock">Ekranı açık tut</string>
     <string name="pref_enable_vibration">Titreşimi etkinleştir</string>
+    <string name="pref_emulator_dir">Working directory</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">En yakın komşu süzgecini etkinleştir</string>
     <string name="pref_system_language_option_name">Dil</string>
     <string name="pref_system_real_time_accuracy_str">Gerçek zamanlı doğruluk</string>
@@ -62,6 +65,7 @@
     <string name="pref_system_setting_inheritance_option_name">Devralmayı ayarlama</string>
     <string name="emulated_screen_rotation_item_name">Döndürme</string>
     <string name="emulated_screen_refresh_rate_item_name">Yenileme hızı</string>
+    <string name="pref_device_display_name">Friendly phone name</string>
     <string name="action_context_delete">Delete</string>
     <string name="action_context_rename">Adlandır</string>
     <string name="start">Start</string>
