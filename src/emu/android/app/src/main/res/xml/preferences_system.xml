@@ -15,6 +15,10 @@
         android:key="imei"
         android:title="@string/pref_hal_imei_option_name" />
     <EditTextPreference
+        android:defaultValue="00000000-00000000-00000000-00000000"
+        android:key="mmc-id"
+        android:title="@string/pref_mmc_id" />
+    <EditTextPreference
         android:defaultValue="EKA2L1"
         android:key="device-display-name"
         android:title="@string/pref_device_display_name" />
