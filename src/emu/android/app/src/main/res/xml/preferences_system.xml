@@ -14,4 +14,8 @@
         android:defaultValue="540806859904945"
         android:key="imei"
         android:title="@string/pref_hal_imei_option_name" />
+    <EditTextPreference
+        android:defaultValue="EKA2L1"
+        android:key="device-display-name"
+        android:title="@string/pref_device_display_name" />
 </PreferenceScreen>
