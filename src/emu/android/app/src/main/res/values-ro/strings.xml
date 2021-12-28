@@ -17,6 +17,8 @@
     <string name="rename">Redenumire</string>
     <string name="save_log">Salvează jurnal</string>
     <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
+    <string name="warning">Warning</string>
+    <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
     <string name="install">Instalează</string>
     <string name="device_dump">Device dump</string>
     <string name="path_to_rpkg">Calea către RPKG</string>
@@ -52,6 +54,7 @@
     <string name="pref_enable_statusbar">Activaţi bara de stare</string>
     <string name="pref_wakelock">Păstraţi ecranul pornit</string>
     <string name="pref_enable_vibration">Activare vibrații</string>
+    <string name="pref_emulator_dir">Working directory</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Enable nearest neighbor filtering</string>
     <string name="pref_system_language_option_name">Language</string>
     <string name="pref_system_real_time_accuracy_str">Real-time accuracy</string>
@@ -62,6 +65,7 @@
     <string name="pref_system_setting_inheritance_option_name">Setting inheritance</string>
     <string name="emulated_screen_rotation_item_name">Rotation</string>
     <string name="emulated_screen_refresh_rate_item_name">Refresh rate</string>
+    <string name="pref_device_display_name">Friendly phone name</string>
     <string name="action_context_delete">Delete</string>
     <string name="action_context_rename">Redenumire</string>
     <string name="start">Start</string>
