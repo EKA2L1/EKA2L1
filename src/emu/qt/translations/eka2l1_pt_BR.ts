@@ -918,7 +918,7 @@ A opção de preferência ativará isso automaticamente em dispositivos S60v1/S6
     <message>
       <location filename="../src/settings_dialog.ui" line="837"/>
       <source>SF2 bank</source>
-      <translation type="unfinished">SF2 bank</translation>
+      <translation>Banco SF2</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="864"/>
@@ -929,7 +929,7 @@ A opção de preferência ativará isso automaticamente em dispositivos S60v1/S6
     <message>
       <location filename="../src/settings_dialog.ui" line="878"/>
       <source>HSB bank</source>
-      <translation type="unfinished">HSB bank</translation>
+      <translation>Banco HSB</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="922"/>
@@ -944,7 +944,7 @@ A opção de preferência ativará isso automaticamente em dispositivos S60v1/S6
     <message>
       <location filename="../src/settings_dialog.ui" line="941"/>
       <source>MiniBAE (Lower-quality, support HSB)</source>
-      <translation type="unfinished">MiniBAE (Lower-quality, support HSB)</translation>
+      <translation>MiniBAE (Baixa qualidade, suporte HSB)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="959"/>
