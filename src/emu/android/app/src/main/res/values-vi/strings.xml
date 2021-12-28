@@ -17,6 +17,8 @@
     <string name="rename">Đổi tên</string>
     <string name="save_log">Lưu log</string>
     <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
+    <string name="warning">Warning</string>
+    <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
     <string name="install">Cài đặt</string>
     <string name="device_dump">Dump của thiết bị</string>
     <string name="path_to_rpkg">Đường dẫn tới RPKG</string>
@@ -52,6 +54,7 @@
     <string name="pref_enable_statusbar">Bật thanh trạng thái</string>
     <string name="pref_wakelock">Giữ màn hình bật</string>
     <string name="pref_enable_vibration">Bật rung</string>
+    <string name="pref_emulator_dir">Working directory</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Bật màng lọc hàng xóm gần nhất</string>
     <string name="pref_system_language_option_name">Ngôn ngữ</string>
     <string name="pref_system_real_time_accuracy_str">Độ chính xác về thời gian thực</string>
@@ -62,6 +65,7 @@
     <string name="pref_system_setting_inheritance_option_name">Kế thừa hiệu chỉnh</string>
     <string name="emulated_screen_rotation_item_name">Xoay màn hình</string>
     <string name="emulated_screen_refresh_rate_item_name">Tần số làm mới</string>
+    <string name="pref_device_display_name">Friendly phone name</string>
     <string name="action_context_delete">Xóa</string>
     <string name="action_context_rename">Đổi tên</string>
     <string name="start">Start</string>
