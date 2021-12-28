@@ -17,6 +17,8 @@
     <string name="rename">Umbenennen</string>
     <string name="save_log">Protokoll speichern</string>
     <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
+    <string name="warning">Warning</string>
+    <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
     <string name="install">Installieren</string>
     <string name="device_dump">Dumping des Geräts</string>
     <string name="path_to_rpkg">Pfad zu RPKG</string>
@@ -52,6 +54,7 @@
     <string name="pref_enable_statusbar">Statusleiste einschalten</string>
     <string name="pref_wakelock">Bildschirm eingeschaltet lassen</string>
     <string name="pref_enable_vibration">Vibration einschalten</string>
+    <string name="pref_emulator_dir">Working directory</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Aktivieren der Nächste-Nachbarn-Filterung</string>
     <string name="pref_system_language_option_name">Sprache</string>
     <string name="pref_system_real_time_accuracy_str">Echtzeit-Genauigkeit</string>
@@ -62,6 +65,7 @@
     <string name="pref_system_setting_inheritance_option_name">Vererbung einstellen</string>
     <string name="emulated_screen_rotation_item_name">Bildschirmausrichtung</string>
     <string name="emulated_screen_refresh_rate_item_name">Bildwiederholrate</string>
+    <string name="pref_device_display_name">Friendly phone name</string>
     <string name="action_context_delete">Löschen</string>
     <string name="action_context_rename">Umbenennen</string>
     <string name="start">Start</string>
