@@ -174,23 +174,20 @@ namespace eka2l1::dispatch {
             drivers::audio_driver *driver = sys->get_audio_driver();
             std::vector<drivers::player_type> types = driver->get_suitable_player_types(url_u8);
 
-            bool found_good = false;
-
             for (std::size_t i = 0; i < types.size(); i++) {
                 if (eplayer->impl_ && (eplayer->impl_->get_player_type() == types[i])) {
                     continue;
                 }
                 auto new_player = drivers::new_audio_player(driver, types[i]);
-                if (new_player && new_player->open_url(url_u8)) {
-                    found_good = true;
-                    eplayer->impl_ = std::move(new_player);
+                if (new_player) {
+                    bool open_res = new_player->open_url(url_u8);
+                    
+                    if (!eplayer->impl_ || open_res)
+                        eplayer->impl_ = std::move(new_player);
 
-                    break;
+                    if (open_res)
+                        break;
                 }
-            }
-
-            if (!found_good) {
-                return epoc::error_not_supported;
             }
         }
 
@@ -216,27 +213,24 @@ namespace eka2l1::dispatch {
         eplayer->custom_stream_ = std::make_unique<epoc::rw_des_stream>(buffer, pr);
         common::rw_stream *custom_good_stream = reinterpret_cast<common::rw_stream *>(eplayer->custom_stream_.get());
 
-        if (!eplayer->impl_->open_custom(custom_good_stream)) {
+        if (!eplayer->impl_ || !eplayer->impl_->open_custom(custom_good_stream)) {
             drivers::audio_driver *driver = sys->get_audio_driver();
             std::vector<drivers::player_type> types = driver->get_suitable_player_types("");
-
-            bool found_good = false;
 
             for (std::size_t i = 0; i < types.size(); i++) {
                 if (eplayer->impl_ && (eplayer->impl_->get_player_type() == types[i])) {
                     continue;
                 }
                 auto new_player = drivers::new_audio_player(driver, types[i]);
-                if (new_player && new_player->open_custom(custom_good_stream)) {
-                    found_good = true;
-                    eplayer->impl_ = std::move(new_player);
+                if (new_player) {
+                    const bool open_res = new_player->open_custom(custom_good_stream);
+                    if (open_res || !eplayer->impl_) {
+                        eplayer->impl_ = std::move(new_player);
+                    }
+
+                    if (open_res)
+                        break;
                 }
-
-                break;
-            }
-
-            if (!found_good) {
-                return epoc::error_not_supported;
             }
         }
 

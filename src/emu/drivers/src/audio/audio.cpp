@@ -39,10 +39,8 @@ namespace eka2l1::drivers {
     std::vector<player_type> audio_driver::get_suitable_player_types(const std::string &url) {
         std::vector<player_type> res;
 
-        bool midi_added = false;
         if (!url.empty() && common::compare_ignore_case(eka2l1::path_extension(url).c_str(), ".mid") == 0) {
             res.push_back(preferred_midi_backend_);
-            midi_added = true;
         }
 
 #if EKA2L1_PLATFORM(WIN32)
@@ -52,10 +50,6 @@ namespace eka2l1::drivers {
 #endif  
         {
             res.push_back(player_type_ffmpeg);
-        }
-
-        if (!midi_added) {
-            res.push_back(preferred_midi_backend_);
         }
 
         return res;
