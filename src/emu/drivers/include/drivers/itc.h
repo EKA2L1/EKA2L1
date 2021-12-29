@@ -107,14 +107,15 @@ namespace eka2l1::drivers {
      * \brief Create a new buffer.
      *
      * \param driver           The driver associated with the buffer.
+     * \param initial_data     The initial data to supply to the buffer.
      * \param initial_size     The size of the buffer. Later resize won't keep the buffer data.
      * \param hint             Usage hint of the buffer.
      * \param upload_hint      Upload frequency and target hint for the buffer.
      *
      * \returns Handle to the buffer.
      */
-    drivers::handle create_buffer(graphics_driver *driver, const std::size_t initial_size, const buffer_hint hint,
-        const buffer_upload_hint upload_hint);
+    drivers::handle create_buffer(graphics_driver *driver, const void *initial_data, const std::size_t initial_size,
+        const buffer_hint hint, const buffer_upload_hint upload_hint);
 
     /**
      * @brief Read bitmap data from a region into memory buffer.
@@ -526,6 +527,18 @@ namespace eka2l1::drivers {
         virtual void recreate_texture(drivers::handle h, const std::uint8_t dim, const std::uint8_t mip_levels,
             drivers::texture_format internal_format, drivers::texture_format data_format, drivers::texture_data_type data_type,
             const void *data, const std::size_t data_size, const eka2l1::vec3 &size, const std::size_t pixels_per_line = 0) = 0;
+
+        /**
+         * @brief Recreate an existing buffer. 
+         * 
+         * @param h                 Handle to an existing buffer.
+         * @param initial_data      The initial data of the buffer. This is copied in this function.
+         * @param initial_size      The size of the initial data.
+         * @param hint              A hint on the buffer's intended usage.
+         * @param upload_hint       A hint on the buffer's upload behaviour.
+         */
+        virtual void recreate_buffer(drivers::handle h, const void *initial_data, const std::size_t initial_size,
+            const buffer_hint hint, const buffer_upload_hint upload_hint) = 0;
     };
 
     class server_graphics_command_list_builder : public graphics_command_list_builder {
@@ -653,6 +666,9 @@ namespace eka2l1::drivers {
         void recreate_texture(drivers::handle h, const std::uint8_t dim, const std::uint8_t mip_levels,
             drivers::texture_format internal_format, drivers::texture_format data_format, drivers::texture_data_type data_type,
             const void *data, const std::size_t data_size, const eka2l1::vec3 &size, const std::size_t pixels_per_line = 0) override;
+
+        void recreate_buffer(drivers::handle h, const void *initial_data, const std::size_t initial_size,
+            const buffer_hint hint, const buffer_upload_hint upload_hint) override;
     };
 
     struct graphics_command_callback_data {

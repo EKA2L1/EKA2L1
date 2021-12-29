@@ -69,6 +69,10 @@ namespace eka2l1::drivers {
     }
 
     static void *make_data_copy(const void *source, const std::size_t size) {
+        if (!source) {
+            return nullptr;
+        }
+
         std::uint8_t *copy = new std::uint8_t[size];
         std::copy(reinterpret_cast<const std::uint8_t *>(source), reinterpret_cast<const std::uint8_t *>(source) + size, copy);
 
@@ -100,11 +104,11 @@ namespace eka2l1::drivers {
         return handle_num;
     }
 
-    drivers::handle create_buffer(graphics_driver *driver, const std::size_t initial_size, const buffer_hint hint,
+    drivers::handle create_buffer(graphics_driver *driver, const void *initial_data, const std::size_t initial_size, const buffer_hint hint,
         const buffer_upload_hint upload_hint) {
         drivers::handle handle_num = 0;
 
-        if (send_sync_command(driver, graphics_driver_create_buffer, initial_size, hint, upload_hint, &handle_num) != 0) {
+        if (send_sync_command(driver, graphics_driver_create_buffer, make_data_copy(initial_data, initial_size), initial_size, hint, upload_hint, 0, &handle_num) != 0) {
             return 0;
         }
 
@@ -424,6 +428,12 @@ namespace eka2l1::drivers {
             break;
         }
 
+        get_command_list().add(cmd);
+    }
+    
+    void server_graphics_command_list_builder::recreate_buffer(drivers::handle h, const void *initial_data, const std::size_t initial_size, const buffer_hint hint,
+        const buffer_upload_hint upload_hint) {
+        command *cmd = make_command(graphics_driver_create_buffer, nullptr, make_data_copy(initial_data, initial_size), initial_size, hint, upload_hint, h);
         get_command_list().add(cmd);
     }
 }

@@ -593,32 +593,55 @@ namespace eka2l1::drivers {
 
             *store = res;
         } else {
-            std::uint8_t *data_org = reinterpret_cast<std::uint8_t*>(data);
-            delete data_org;
+            if (data != nullptr) {
+                std::uint8_t *data_org = reinterpret_cast<std::uint8_t*>(data);
+                delete data_org;
+            }
         }
 
         helper.finish(this, 0);
     }
 
     void shared_graphics_driver::create_buffer(command_helper &helper) {
+        void *initial_data = nullptr;
         std::size_t initial_size = 0;
         buffer_hint hint = buffer_hint::none;
         buffer_upload_hint upload_hint = static_cast<buffer_upload_hint>(0);
+        drivers::handle existing_handle = 0;
 
+        helper.pop(initial_data);
         helper.pop(initial_size);
         helper.pop(hint);
         helper.pop(upload_hint);
+        helper.pop(existing_handle);
 
-        auto obj = make_buffer(this);
-        obj->create(this, initial_size, hint, upload_hint);
+        drivers::buffer *obj = nullptr;
+        std::unique_ptr<drivers::buffer> obj_inst = nullptr;
 
-        std::unique_ptr<graphics_object> obj_casted = std::move(obj);
-        drivers::handle res = append_graphics_object(obj_casted);
+        if (existing_handle != 0) {
+            obj = reinterpret_cast<drivers::buffer*>(get_graphics_object(existing_handle));
+            if (!obj) {
+                return;
+            }
+        } else {    
+            obj_inst = make_buffer(this);
+            obj = obj_inst.get();
+        }
 
-        drivers::handle *store = nullptr;
-        helper.pop(store);
+        obj->create(this, initial_data, initial_size, hint, upload_hint);
 
-        *store = res;
+        if (obj_inst) {
+            std::unique_ptr<graphics_object> obj_casted = std::move(obj_inst);
+            drivers::handle res = append_graphics_object(obj_casted);
+
+            drivers::handle *store = nullptr;
+            helper.pop(store);
+
+            *store = res;
+        } else if ((initial_data != nullptr) && (existing_handle)) {
+            std::uint8_t *data_casted = reinterpret_cast<std::uint8_t*>(initial_data);
+            delete data_casted;
+        }
 
         helper.finish(this, 0);
     }

@@ -53,12 +53,20 @@ glMultiTexCoord4f
 glMultiTexCoord4x
 glEnableClientState
 glDisableClientState
-
 glBufferData
+glBufferSubData
 glColorPointer
 glTexCoordPointer
 glVertexPointer
 glNormalPointer
+glMaterialf
+glMaterialfv
+glMaterialx
+glMaterialxv
+glFogf
+glFogfv
+glFogx
+glFogxv
 
 Stubbed to ignore:
 
@@ -106,10 +114,6 @@ glDrawElements
 glEnable
 glFinish
 glFlush
-glFogf
-glFogfv
-glFogx
-glFogxv
 glGetIntegerv
 glHint
 glLightModelf
@@ -123,10 +127,6 @@ glLightxv
 glLineWidth
 glLineWidthx
 glLogicOp
-glMaterialf
-glMaterialfv
-glMaterialx
-glMaterialxv
 glPixelStorei
 glPointSize
 glPointSizex

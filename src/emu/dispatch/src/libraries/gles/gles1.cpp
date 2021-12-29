@@ -39,14 +39,35 @@ namespace eka2l1::dispatch {
         , binded_element_array_buffer_handle_(0)
         , active_cull_face_(drivers::rendering_face::back)
         , active_front_face_rule_(drivers::rendering_face_determine_rule::vertices_counter_clockwise)
-        , state_statuses_(0)
-        , alpha_test_ref_(0)
-        , alpha_test_func_(GL_ALWAYS_EMU)
-        , shade_model_(GL_SMOOTH_EMU) {
+        , material_shininess_(0.0f)
+        , fog_density_(1.0f)
+        , fog_start_(0.0f)
+        , fog_end_(1.0f)
+        , vertex_statuses_(0)
+        , fragment_statuses_(0)
+        , alpha_test_ref_(0) {
         clear_color_[0] = 0.0f;
         clear_color_[1] = 0.0f;
         clear_color_[2] = 0.0f;
         clear_color_[3] = 0.0f;
+
+        material_ambient_[0] = 0.2f;
+        material_ambient_[1] = 0.2f;
+        material_ambient_[2] = 0.2f;
+        material_ambient_[3] = 1.0f;
+
+        material_diffuse_[0] = 0.8f;
+        material_diffuse_[1] = 0.8f;
+        material_diffuse_[2] = 0.8f;
+        material_diffuse_[3] = 1.0f;
+
+        material_specular_[0] = material_specular_[1] = material_specular_[2] = material_emission_[0]
+            = material_emission_[1] = material_emission_[2] = 0.0f;
+
+        material_specular_[3] = material_emission_[3] = 1.0f;
+
+        // Fog
+        fog_color_[0] = fog_color_[1] = fog_color_[2] = fog_color_[3] = 0.0f;
 
         model_view_mat_stack_.push(glm::identity<glm::mat4>());
         proj_mat_stack_.push(glm::identity<glm::mat4>());
@@ -54,6 +75,9 @@ namespace eka2l1::dispatch {
         for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
             texture_units_[i].index_ = i;
         }
+
+        fragment_statuses_ |= ((GL_ALWAYS_EMU - GL_NEVER_EMU) << FRAGMENT_STATE_ALPHA_TEST_FUNC_POS) & FRAGMENT_STATE_ALPHA_FUNC_MASK;
+        fragment_statuses_ |= FRAGMENT_STATE_FOG_MODE_EXP;
     }
 
     glm::mat4 &egl_context_es1::active_matrix() {
@@ -143,7 +167,8 @@ namespace eka2l1::dispatch {
     }
 
     gles1_driver_buffer::gles1_driver_buffer(egl_context_es1 *ctx)
-        : gles1_driver_object(ctx) {
+        : gles1_driver_object(ctx)
+        , data_size_(0) {
     }
 
     egl_context_es1 *get_es1_active_context(system *sys) {
@@ -790,7 +815,9 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        ctx->alpha_test_func_ = func;
+        ctx->fragment_statuses_ = ((func - GL_NEVER_EMU) << egl_context_es1::FRAGMENT_STATE_ALPHA_TEST_FUNC_POS)
+            | egl_context_es1::FRAGMENT_STATE_ALPHA_FUNC_MASK;
+
         ctx->alpha_test_ref_ = ref;
     }
 
@@ -1029,12 +1056,14 @@ namespace eka2l1::dispatch {
         dispatcher *dp = sys->get_dispatcher();
         dispatch::egl_controller &controller = dp->get_egl_controller();
 
-        if ((model != GL_FLAT_EMU) && (model != GL_SMOOTH_EMU)) {
+        if (model == GL_FLAT_EMU) {
+            ctx->fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_SHADE_MODEL_FLAT;
+        } else if (model == GL_SMOOTH_EMU) {
+            ctx->fragment_statuses_ &= ~egl_context_es1::FRAGMENT_STATE_SHADE_MODEL_FLAT;
+        } else {
             controller.push_error(ctx, GL_INVALID_ENUM);
             return;
         }
-
-        ctx->shade_model_ = model;
     }
     
     BRIDGE_FUNC_DISPATCHER(void, gl_normal_3f_emu, float nx, float ny, float nz) {
@@ -1180,19 +1209,19 @@ namespace eka2l1::dispatch {
 
         switch (state) {
         case GL_VERTEX_ARRAY_EMU:
-            ctx->state_statuses_ |= egl_context_es1::STATE_CLIENT_VERTEX_ARRAY;
+            ctx->vertex_statuses_ |= egl_context_es1::VERTEX_STATE_CLIENT_VERTEX_ARRAY;
             break;
 
         case GL_COLOR_ARRAY_EMU:
-            ctx->state_statuses_ |= egl_context_es1::STATE_CLIENT_COLOR_ARRAY;
+            ctx->vertex_statuses_ |= egl_context_es1::VERTEX_STATE_CLIENT_COLOR_ARRAY;
             break;
 
         case GL_NORMAL_ARRAY_EMU:
-            ctx->state_statuses_ |= egl_context_es1::STATE_CLIENT_NORMAL_ARRAY;
+            ctx->vertex_statuses_ |= egl_context_es1::VERTEX_STATE_CLIENT_NORMAL_ARRAY;
             break;
 
         case GL_TEXTURE_COORD_ARRAY_EMU:
-            ctx->state_statuses_ |= egl_context_es1::STATE_CLIENT_TEXCOORD_ARRAY;
+            ctx->vertex_statuses_ |= egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY;
             break;
 
         default:
@@ -1212,24 +1241,383 @@ namespace eka2l1::dispatch {
 
         switch (state) {
         case GL_VERTEX_ARRAY_EMU:
-            ctx->state_statuses_ &= ~egl_context_es1::STATE_CLIENT_VERTEX_ARRAY;
+            ctx->vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_CLIENT_VERTEX_ARRAY;
             break;
 
         case GL_COLOR_ARRAY_EMU:
-            ctx->state_statuses_ &= ~egl_context_es1::STATE_CLIENT_COLOR_ARRAY;
+            ctx->vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_CLIENT_COLOR_ARRAY;
             break;
 
         case GL_NORMAL_ARRAY_EMU:
-            ctx->state_statuses_ &= ~egl_context_es1::STATE_CLIENT_NORMAL_ARRAY;
+            ctx->vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_CLIENT_NORMAL_ARRAY;
             break;
 
         case GL_TEXTURE_COORD_ARRAY_EMU:
-            ctx->state_statuses_ &= ~egl_context_es1::STATE_CLIENT_TEXCOORD_ARRAY;
+            ctx->vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY;
             break;
 
         default:
             controller.push_error(ctx, GL_INVALID_ENUM);
             return;
+        }
+    }
+    
+    BRIDGE_FUNC_DISPATCHER(void, gl_buffer_data_emu, std::uint32_t target, std::int32_t size, const void *data, std::uint32_t usage) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        gles1_driver_buffer *buffer = ctx->binded_buffer(target == GL_VERTEX_ARRAY_EMU);
+        if (!buffer) {
+            controller.push_error(ctx, GL_INVALID_OPERATION);
+            return;
+        }
+
+        if (size < 0) {
+            controller.push_error(ctx, GL_INVALID_VALUE);
+            return;
+        }
+
+        drivers::buffer_hint the_hint;
+        drivers::buffer_upload_hint upload_hint;
+
+        switch (target) {
+        case GL_VERTEX_ARRAY_EMU:
+            the_hint = drivers::buffer_hint::vertex_buffer;
+            break;
+
+        case GL_ELEMENT_ARRAY_BUFFER_EMU:
+            the_hint = drivers::buffer_hint::index_buffer;
+            break;
+
+        default:
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        switch (usage) {
+        case GL_STATIC_DRAW_EMU:
+            upload_hint = drivers::buffer_upload_static;
+            break;
+
+        case GL_DYNAMIC_DRAW_EMU:
+            upload_hint = drivers::buffer_upload_dynamic;
+            break;
+
+        default:
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        bool need_reinstantiate = true;
+
+        if (buffer->handle_value() == 0) {
+            if (!ctx->buffer_pools_.empty()) {
+                buffer->assign_handle(ctx->buffer_pools_.top());
+                ctx->buffer_pools_.pop();
+            } else {
+                drivers::graphics_driver *drv = sys->get_graphics_driver();
+                drivers::handle new_h = drivers::create_buffer(drv, data, size, the_hint, upload_hint);
+
+                if (!new_h) {
+                    controller.push_error(ctx, GL_INVALID_OPERATION);
+                    return;
+                }
+
+                need_reinstantiate = false;
+                buffer->assign_handle(new_h);
+            }
+        }
+
+        if (need_reinstantiate) {
+            ctx->command_builder_->recreate_buffer(buffer->handle_value(), data, size, the_hint, upload_hint);
+        }
+
+        buffer->assign_data_size(static_cast<std::uint32_t>(size));
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_buffer_sub_data_emu, std::uint32_t target, std::int32_t offset, std::int32_t size, const void *data) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        gles1_driver_buffer *buffer = ctx->binded_buffer(target == GL_VERTEX_ARRAY_EMU);
+        if (!buffer || !buffer->handle_value()) {
+            controller.push_error(ctx, GL_INVALID_OPERATION);
+            return;
+        }
+
+        if ((size < 0) || (offset < 0) || (offset + size >= buffer->data_size())) {
+            controller.push_error(ctx, GL_INVALID_VALUE);
+            return;
+        }
+
+        std::uint32_t size_upload_casted = static_cast<std::uint32_t>(size);
+        ctx->command_builder_->update_buffer_data(buffer->handle_value(), static_cast<std::size_t>(offset), 1,
+            &data, &size_upload_casted);
+    }
+
+    static void assign_vertex_attrib_gles1(gles1_vertex_attrib &attrib, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset) {
+        attrib.data_type_ = type;
+        attrib.offset_ = static_cast<std::uint32_t>(offset);
+        attrib.size_ = size;
+        attrib.stride_ = stride;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_color_pointer_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        assign_vertex_attrib_gles1(ctx->color_attrib_, size, type, stride, offset);
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_normal_pointer_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        assign_vertex_attrib_gles1(ctx->normal_attrib_, size, type, stride, offset);
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_vertex_pointer_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        assign_vertex_attrib_gles1(ctx->vertex_attrib_, size, type, stride, offset);
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_texcoord_pointer_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        assign_vertex_attrib_gles1(ctx->texture_units_[ctx->active_client_texture_unit_].coord_attrib_, size, type, stride, offset);
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_material_f, std::uint32_t target, std::uint32_t pname, const float pvalue) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if (target != GL_FRONT_AND_BACK_EMU) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        if (pname == GL_SHININESS_EMU) {
+            if ((pvalue < 0.0f) || (pvalue > 128.0f)) {
+                controller.push_error(ctx, GL_INVALID_VALUE);
+                return;
+            }
+
+            ctx->material_shininess_ = pvalue;
+        } else {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+        }
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_material_x, std::uint32_t target, std::uint32_t pname, const std::uint32_t pvalue) {
+        gl_material_f(sys, 0, target, pname, FIXED_32_TO_FLOAT(pvalue));
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_material_fv, std::uint32_t target, std::uint32_t pname, const float *pvalue) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if (target != GL_FRONT_AND_BACK_EMU) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        float *dest_params = nullptr;
+        float *dest_params_2 = nullptr;
+
+        switch (pname) {
+        case GL_AMBIENT_EMU:
+            dest_params = ctx->material_ambient_;
+            break;
+
+        case GL_DIFFUSE_EMU:
+            dest_params = ctx->material_diffuse_;
+            break;
+
+        case GL_SPECULAR_EMU:
+            dest_params = ctx->material_specular_;
+            break;
+
+        case GL_EMISSION_EMU:
+            dest_params = ctx->material_emission_;
+            break;
+
+        case GL_AMBIENT_AND_DIFFUSE_EMU:
+            dest_params = ctx->material_ambient_;
+            dest_params_2 = ctx->material_diffuse_;
+
+            break;
+
+        default:
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        if (dest_params) {
+            std::memcpy(dest_params, pvalue, 4 * sizeof(float));
+        }
+
+        if (dest_params_2) {
+            std::memcpy(dest_params_2, pvalue, 4 * sizeof(float));
+        }
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_material_fx, std::uint32_t target, std::uint32_t pname, const std::uint32_t *pvalue) {
+        float converted[4];
+        converted[0] = FIXED_32_TO_FLOAT(pvalue[0]);
+        converted[1] = FIXED_32_TO_FLOAT(pvalue[1]);
+        converted[2] = FIXED_32_TO_FLOAT(pvalue[2]);
+        converted[3] = FIXED_32_TO_FLOAT(pvalue[3]);
+
+        gl_material_fv(sys, 0, target, pname, converted);
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_fog_f, std::uint32_t target, const float param) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        switch (target) {
+        case GL_FOG_START_EMU:
+            ctx->fog_start_ = param;
+            break;
+
+        case GL_FOG_END_EMU:
+            ctx->fog_end_ = param;
+            break;
+
+        case GL_FOG_DENSITY_EMU:
+            ctx->fog_density_ = param;
+            break;
+
+        default:
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_fog_x, std::uint32_t target, const std::uint32_t param) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        switch (target) {
+        case GL_FOG_MODE_EMU:
+            ctx->fragment_statuses_ &= ~egl_context_es1::FRAGMENT_STATE_FOG_MODE_MASK;
+            if (param == GL_LINEAR_EMU) {
+                ctx->fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_FOG_MODE_LINEAR;
+            } else if (param == GL_EXP_EMU) {
+                ctx->fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_FOG_MODE_EXP;
+            } else if (param == GL_EXP2_EMU) {
+                ctx->fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_FOG_MODE_EXP2;
+            } else {
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            break;
+
+        case GL_FOG_START_EMU:
+            ctx->fog_start_ = FIXED_32_TO_FLOAT(param);
+            break;
+
+        case GL_FOG_END_EMU:
+            ctx->fog_end_ = FIXED_32_TO_FLOAT(param);
+            break;
+
+        case GL_FOG_DENSITY_EMU:
+            ctx->fog_density_ = FIXED_32_TO_FLOAT(param);
+            break;
+
+        default:
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_fog_fv, std::uint32_t target, const float *param) {
+        if ((target == GL_FOG_START_EMU) || (target == GL_FOG_END_EMU) || (target == GL_FOG_DENSITY_EMU)) {
+            gl_fog_f(sys, 0, target, *param);
+            return;
+        }
+        
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if (target == GL_FOG_COLOR_EMU) {
+            ctx->fog_color_[0] = param[0];
+            ctx->fog_color_[1] = param[1];
+            ctx->fog_color_[2] = param[2];
+            ctx->fog_color_[3] = param[3];
+        } else {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+        }
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_fog_xv, std::uint32_t target, const std::uint32_t *param) {
+        if ((target == GL_FOG_MODE_EMU) || (target == GL_FOG_START_EMU) || (target == GL_FOG_END_EMU) || (target == GL_FOG_DENSITY_EMU)) {
+            gl_fog_x(sys, 0, target, *param);
+            return;
+        }
+        
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if (target == GL_FOG_COLOR_EMU) {
+            ctx->fog_color_[0] = FIXED_32_TO_FLOAT(param[0]);
+            ctx->fog_color_[1] = FIXED_32_TO_FLOAT(param[1]);
+            ctx->fog_color_[2] = FIXED_32_TO_FLOAT(param[2]);
+            ctx->fog_color_[3] = FIXED_32_TO_FLOAT(param[3]);
+        } else {
+            controller.push_error(ctx, GL_INVALID_ENUM);
         }
     }
 }

@@ -65,7 +65,7 @@ namespace eka2l1::drivers {
             const attribute_descriptor *descriptors, const int total)
             = 0;
 
-        virtual bool create(graphics_driver *driver, const std::size_t initial_size, const buffer_hint hint, const buffer_upload_hint use_hint) = 0;
+        virtual bool create(graphics_driver *driver, const void *data, const std::size_t initial_size, const buffer_hint hint, const buffer_upload_hint use_hint) = 0;
         virtual void update_data(graphics_driver *driver, const void *data, const std::size_t offset, const std::size_t size) = 0;
     };
 

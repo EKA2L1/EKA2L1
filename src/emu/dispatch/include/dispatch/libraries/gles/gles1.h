@@ -41,9 +41,12 @@ namespace eka2l1::dispatch {
     #define FIXED_32_TO_FLOAT(x) (float)(x) / 65536.0f
 
     enum {
+        // Most GLES1 Symbian phone seems to only supported up to 2 slots (even iPhone 3G is so).
+        // But be three for safety. Always feel 2 is too limited.
         GLES1_EMU_MAX_TEXTURE_SIZE = 4096,
         GLES1_EMU_MAX_TEXTURE_MIP_LEVEL = 10,
-        GLES1_EMU_MAX_TEXTURE_COUNT = 16
+        GLES1_EMU_MAX_TEXTURE_COUNT = 3,
+        GLES1_EMU_MAX_LIGHT = 8
     };
 
     enum gles1_object_type {
@@ -103,15 +106,26 @@ namespace eka2l1::dispatch {
     };
 
     struct gles1_driver_buffer : public gles1_driver_object {
+    private:
+        std::uint32_t data_size_;
+
     public:
         explicit gles1_driver_buffer(egl_context_es1 *ctx);
+
+        void assign_data_size(const std::uint32_t data_size) {
+            data_size_ = data_size;
+        }
+
+        const std::uint32_t data_size() const {
+            return data_size_;
+        }
 
         gles1_object_type object_type() const override {
             return GLES1_OBJECT_BUFFER;
         }
     };
 
-    struct gles1_vertex_attribs {
+    struct gles1_vertex_attrib {
         std::int32_t size_;
         std::uint32_t data_type_;
         std::int32_t stride_;
@@ -120,13 +134,62 @@ namespace eka2l1::dispatch {
         bool is_active_ { false };
     };
 
+    struct gles_texture_env_info {
+        enum environment_mode {
+            ENV_MODE_ADD = 0,
+            ENV_MODE_MODULATE = 1,
+            ENV_MODE_DECAL = 2,
+            ENV_MODE_BLEND = 3,
+            ENV_MODE_REPLACE = 4,
+            ENV_MODE_COMBINE = 5
+        };
+
+        enum source_combine_function {
+            SOURCE_COMBINE_REPLACE = 0,
+            SOURCE_COMBINE_MODULATE = 1,
+            SOURCE_COMBINE_ADD = 2,
+            SOURCE_COMBINE_ADD_SIGNED = 3,
+            SOURCE_COMBINE_INTERPOLATE = 4,
+            SOURCE_COMBINE_SUBTRACT = 5,
+            SOURCE_COMBINE_DOT3 = 6
+        };
+
+        enum source_type {
+            SOURCE_TYPE_CURRENT_TEXTURE = 0,
+            SOURCE_TYPE_TEXTURE_STAGE_0 = 0,
+            SOURCE_TYPE_TEXTURE_STAGE_1 = 1,
+            SOURCE_TYPE_TEXTURE_STAGE_2 = 2,
+            SOURCE_TYPE_CONSTANT = 3,
+            SOURCE_TYPE_PRIM_COLOR = 4,
+            SOURCE_TYPE_PREVIOUS = 5
+        };
+
+        std::uint64_t env_mode_ : 3;
+        std::uint64_t src0_rgb_ : 3;
+        std::uint64_t src1_rgb_ : 3;
+        std::uint64_t src2_rgb_ : 3;
+        std::uint64_t src0_a_ : 3;
+        std::uint64_t src1_a_ : 3;
+        std::uint64_t src2_a_ : 3;
+        std::uint64_t src0_rgb_op_ : 2;
+        std::uint64_t src1_rgb_op_ : 2;
+        std::uint64_t src2_rgb_op_ : 2;
+        std::uint64_t src0_a_op_ : 2;
+        std::uint64_t src1_a_op_ : 2;
+        std::uint64_t src2_a_op_ : 2;
+        std::uint64_t combine_rgb_func_ : 3;
+        std::uint64_t combine_a_func_ : 3;
+    };
+
     struct gles_texture_unit {
         std::size_t index_;
 
         std::stack<glm::mat4> texture_mat_stack_;
         std::uint32_t binded_texture_handle_;
         
-        gles1_vertex_attribs coord_attrib_;
+        gles1_vertex_attrib coord_attrib_;
+        gles_texture_env_info env_info_;
+
         float coord_uniforms_[4];
 
         explicit gles_texture_unit();
@@ -162,25 +225,47 @@ namespace eka2l1::dispatch {
         std::stack<drivers::handle> buffer_pools_;
         
         enum {
-            STATE_ALPHA_TEST = 1 << 0,
-            STATE_CLIENT_VERTEX_ARRAY = 1 << 1,
-            STATE_CLIENT_COLOR_ARRAY = 1 << 2,
-            STATE_CLIENT_NORMAL_ARRAY = 1 << 3,
-            STATE_CLIENT_TEXCOORD_ARRAY = 1 << 4
+            FRAGMENT_STATE_ALPHA_TEST = 1 << 0,
+            FRAGMENT_STATE_ALPHA_TEST_FUNC_POS = 1 << 1,
+            FRAGMENT_STATE_ALPHA_FUNC_MASK = 0b1110,
+            FRAGMENT_STATE_SHADE_MODEL_FLAT = 1 << 4,
+            FRAGMENT_STATE_FOG_ENABLE = 1 << 5,
+            FRAGMENT_STATE_FOG_MODE_POS = 1 << 6,
+            FRAGMENT_STATE_FOG_MODE_MASK = 0b11000000,
+            FRAGMENT_STATE_FOG_MODE_LINEAR = 0b00000000,
+            FRAGMENT_STATE_FOG_MODE_EXP = 0b01000000,
+            FRAGMENT_STATE_FOG_MODE_EXP2 = 0b10000000,
+
+            VERTEX_STATE_CLIENT_VERTEX_ARRAY = 1 << 0,
+            VERTEX_STATE_CLIENT_COLOR_ARRAY = 1 << 1,
+            VERTEX_STATE_CLIENT_NORMAL_ARRAY = 1 << 2,
+            VERTEX_STATE_CLIENT_TEXCOORD_ARRAY = 1 << 3
         };
 
-        gles1_vertex_attribs vertex_attrib_;
-        gles1_vertex_attribs color_attrib_;
-        gles1_vertex_attribs normal_attrib_;
+        gles1_vertex_attrib vertex_attrib_;
+        gles1_vertex_attrib color_attrib_;
+        gles1_vertex_attrib normal_attrib_;
 
         float color_uniforms_[4];
         float normal_uniforms_[3];
 
-        std::uint64_t state_statuses_;
+        // Material
+        float material_ambient_[4];
+        float material_diffuse_[4];
+        float material_specular_[4];
+        float material_emission_[4];
+        float material_shininess_;
+
+        // Fog
+        float fog_density_;
+        float fog_start_;
+        float fog_end_;
+        float fog_color_[4];
+
+        std::uint64_t vertex_statuses_;
+        std::uint64_t fragment_statuses_;
 
         float alpha_test_ref_;
-        std::uint32_t alpha_test_func_;
-        std::uint32_t shade_model_;
 
         explicit egl_context_es1();
         glm::mat4 &active_matrix();
@@ -254,4 +339,18 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_DISPATCHER(void, gl_multi_tex_coord_4x_emu, std::uint32_t unit, std::uint32_t s, std::uint32_t t, std::uint32_t r, std::uint32_t q);
     BRIDGE_FUNC_DISPATCHER(void, gl_enable_client_state_emu, std::uint32_t state);
     BRIDGE_FUNC_DISPATCHER(void, gl_disable_client_state_emu, std::uint32_t state);
+    BRIDGE_FUNC_DISPATCHER(void, gl_buffer_data_emu, std::uint32_t target, std::int32_t size, const void *data, std::uint32_t usage);
+    BRIDGE_FUNC_DISPATCHER(void, gl_buffer_sub_data_emu, std::uint32_t target, std::int32_t offset, std::int32_t size, const void *data);
+    BRIDGE_FUNC_DISPATCHER(void, gl_color_pointer_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset);
+    BRIDGE_FUNC_DISPATCHER(void, gl_normal_pointer_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset);
+    BRIDGE_FUNC_DISPATCHER(void, gl_vertex_pointer_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset);
+    BRIDGE_FUNC_DISPATCHER(void, gl_texcoord_pointer_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset);
+    BRIDGE_FUNC_DISPATCHER(void, gl_material_f, std::uint32_t target, std::uint32_t pname, const float pvalue);
+    BRIDGE_FUNC_DISPATCHER(void, gl_material_x, std::uint32_t target, std::uint32_t pname, const std::uint32_t pvalue);
+    BRIDGE_FUNC_DISPATCHER(void, gl_material_fv, std::uint32_t target, std::uint32_t pname, const float *pvalue);
+    BRIDGE_FUNC_DISPATCHER(void, gl_material_fx, std::uint32_t target, std::uint32_t pname, const std::uint32_t *pvalue);
+    BRIDGE_FUNC_DISPATCHER(void, gl_fog_f, std::uint32_t target, const float param);
+    BRIDGE_FUNC_DISPATCHER(void, gl_fog_x, std::uint32_t target, const std::uint32_t param);
+    BRIDGE_FUNC_DISPATCHER(void, gl_fog_fv, std::uint32_t target, const float *param);
+    BRIDGE_FUNC_DISPATCHER(void, gl_fog_xv, std::uint32_t target, const std::uint32_t *param);
 }

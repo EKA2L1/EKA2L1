@@ -152,7 +152,7 @@ namespace eka2l1::drivers {
         }
     }
 
-    bool ogl_buffer::create(graphics_driver *driver, const std::size_t initial_size, const buffer_hint hint, const buffer_upload_hint use_hint) {
+    bool ogl_buffer::create(graphics_driver *driver, const void *data, const std::size_t initial_size, const buffer_hint hint, const buffer_upload_hint use_hint) {
         hint_ = hint;
         hint_gl_ = get_trait_from_buffer_hint(hint);
         usage_hint_gl_ = get_usage_hint(use_hint);
@@ -163,7 +163,7 @@ namespace eka2l1::drivers {
 
         // Prealloc data first
         bind(driver);
-        glBufferData(hint_gl_, initial_size, nullptr, usage_hint_gl_);
+        glBufferData(hint_gl_, initial_size, data, usage_hint_gl_);
         unbind(driver);
 
         size_ = initial_size;
