@@ -119,14 +119,10 @@ namespace eka2l1::drivers {
         void clear(command_helper &helper);
         void draw_bitmap(command_helper &helper);
         void draw_rectangle(command_helper &helper);
-        void set_clipping(command_helper &helper);
         void clip_rect(command_helper &helper);
         void draw_indexed(command_helper &helper);
         void set_viewport(command_helper &helper);
-        void set_depth(command_helper &helper);
-        void set_stencil(command_helper &helper);
-        void set_blend(command_helper &helper);
-        void set_cull(command_helper &helper);
+        void set_feature(command_helper &helper);
         void blend_formula(command_helper &helper);
         void set_stencil_action(command_helper &helper);
         void set_stencil_pass_condition(command_helper &helper);
@@ -138,6 +134,7 @@ namespace eka2l1::drivers {
         void draw_polygon(command_helper &helper);
         void set_cull_face(command_helper &helper);
         void set_front_face_rule(command_helper &helper);
+        void set_color_mask(command_helper &helper);
 
         void save_gl_state();
         void load_gl_state();

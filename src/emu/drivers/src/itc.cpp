@@ -165,11 +165,6 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
 
-    void server_graphics_command_list_builder::set_clipping(const bool enabled) {
-        command *cmd = make_command(graphics_driver_set_clipping, nullptr, enabled);
-        get_command_list().add(cmd);
-    }
-
     void server_graphics_command_list_builder::clear(vecx<float, 6> color, const std::uint8_t clear_bitarr) {
         command *cmd = make_command(graphics_driver_clear, nullptr, color[0], color[1], color[2], color[3], color[4], color[5], clear_bitarr);
         get_command_list().add(cmd);
@@ -272,25 +267,9 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
 
-    void server_graphics_command_list_builder::create_single_set_command(const std::uint16_t op, const bool enable) {
-        command *cmd = make_command(op, nullptr, enable);
+    void server_graphics_command_list_builder::set_feature(drivers::graphics_feature feature, const bool enable) {
+        command *cmd = make_command(drivers::graphics_driver_set_feature, nullptr, feature, enable);
         get_command_list().add(cmd);
-    }
-
-    void server_graphics_command_list_builder::set_depth(const bool enable) {
-        create_single_set_command(graphics_driver_set_depth, enable);
-    }
-
-    void server_graphics_command_list_builder::set_stencil(const bool enable) {
-        create_single_set_command(graphics_driver_set_stencil, enable);
-    }
-
-    void server_graphics_command_list_builder::set_cull_mode(const bool enable) {
-        create_single_set_command(graphics_driver_set_cull, enable);
-    }
-
-    void server_graphics_command_list_builder::set_blend_mode(const bool enable) {
-        create_single_set_command(graphics_driver_set_blend, enable);
     }
 
     void server_graphics_command_list_builder::blend_formula(const blend_equation rgb_equation, const blend_equation a_equation,
@@ -434,6 +413,11 @@ namespace eka2l1::drivers {
     void server_graphics_command_list_builder::recreate_buffer(drivers::handle h, const void *initial_data, const std::size_t initial_size, const buffer_hint hint,
         const buffer_upload_hint upload_hint) {
         command *cmd = make_command(graphics_driver_create_buffer, nullptr, make_data_copy(initial_data, initial_size), initial_size, hint, upload_hint, h);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::set_color_mask(const std::uint8_t mask) {
+        command *cmd = make_command(graphics_driver_set_color_mask, nullptr, mask);
         get_command_list().add(cmd);
     }
 }

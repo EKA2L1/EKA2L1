@@ -182,11 +182,6 @@ namespace eka2l1::drivers {
         virtual void clip_rect(eka2l1::rect &rect) = 0;
 
         /**
-         * \brief Enable/disable clipping (scissor).
-         */
-        virtual void set_clipping(const bool enabled) = 0;
-
-        /**
           * \brief Clear the binding bitmap with color.
           * \params clear_parameters The first four float is color buffer value, the next two floats are depth and stencil.
           */
@@ -325,17 +320,9 @@ namespace eka2l1::drivers {
         virtual void set_viewport(const eka2l1::rect &viewport_rect) = 0;
 
         /**
-         * \brief Enable/disable depth test.
-         *
-         * \param enable True if the depth test is suppose to be enable.
+         * \brief Enable/disable a graphic feature.
          */
-        virtual void set_depth(const bool enable) = 0;
-
-        virtual void set_stencil(const bool enable) = 0;
-
-        virtual void set_cull_mode(const bool enable) = 0;
-
-        virtual void set_blend_mode(const bool enable) = 0;
+        virtual void set_feature(drivers::graphics_feature feature, const bool enabled) = 0;
 
         /**
          * \brief Fill a blend formula.
@@ -539,14 +526,19 @@ namespace eka2l1::drivers {
          */
         virtual void recreate_buffer(drivers::handle h, const void *initial_data, const std::size_t initial_size,
             const buffer_hint hint, const buffer_upload_hint upload_hint) = 0;
+
+        /**
+         * @brief Set the mask for color outputted in the fragment shader stage.
+         * 
+         * @param mask 8-bit integer with the first 4 least significant bits, each bit set represnenting which color component can be written.
+         */
+        virtual void set_color_mask(const std::uint8_t mask) = 0;
     };
 
     class server_graphics_command_list_builder : public graphics_command_list_builder {
         command_list &get_command_list() {
             return reinterpret_cast<server_graphics_command_list *>(list_)->list_;
         }
-
-        void create_single_set_command(const std::uint16_t op, const bool enable);
 
     public:
         explicit server_graphics_command_list_builder(graphics_command_list *list);
@@ -559,11 +551,6 @@ namespace eka2l1::drivers {
          * Use in drawing window rect or invalidate a specific region of an window.
          */
         void clip_rect(eka2l1::rect &rect) override;
-
-        /**
-         * \brief Enable/disable clipping (scissor).
-         */
-        void set_clipping(const bool enabled) override;
 
         /**
           * \brief Clear the binding bitmap with color.
@@ -609,13 +596,7 @@ namespace eka2l1::drivers {
 
         void set_viewport(const eka2l1::rect &viewport_rect) override;
 
-        void set_depth(const bool enable) override;
-
-        void set_stencil(const bool enable) override;
-
-        void set_cull_mode(const bool enable) override;
-
-        void set_blend_mode(const bool enable) override;
+        void set_feature(drivers::graphics_feature feature, const bool enabled) override;
 
         void blend_formula(const blend_equation rgb_equation, const blend_equation a_equation,
             const blend_factor rgb_frag_output_factor, const blend_factor rgb_current_factor,
@@ -669,6 +650,8 @@ namespace eka2l1::drivers {
 
         void recreate_buffer(drivers::handle h, const void *initial_data, const std::size_t initial_size,
             const buffer_hint hint, const buffer_upload_hint upload_hint) override;
+
+        void set_color_mask(const std::uint8_t mask) override;
     };
 
     struct graphics_command_callback_data {

@@ -33,12 +33,8 @@ namespace eka2l1::drivers {
     enum graphics_driver_opcode : std::uint16_t {
         // Mode -1: Miscs
         graphics_driver_clip_rect,
-        graphics_driver_set_clipping,
+        graphics_driver_set_feature,
         graphics_driver_set_viewport,
-        graphics_driver_set_blend,
-        graphics_driver_set_depth,
-        graphics_driver_set_stencil,
-        graphics_driver_set_cull,
         graphics_driver_blend_formula,
         graphics_driver_stencil_pass_condition,
         graphics_driver_stencil_set_action,
@@ -81,6 +77,7 @@ namespace eka2l1::drivers {
         graphics_driver_attach_descriptors,
         graphics_driver_display,
         graphics_driver_set_swizzle,
+        graphics_driver_set_color_mask,
         graphics_driver_backup_state, // Backup all possible state to a struct
         graphics_driver_restore_state // Restore previously backup data
     };

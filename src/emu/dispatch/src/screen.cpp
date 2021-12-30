@@ -257,7 +257,7 @@ namespace eka2l1::dispatch {
                 eka2l1::rect dest_rect = source_rect;
 
                 command_builder->bind_bitmap(scr->screen_texture);
-                command_builder->set_clipping(false);
+                command_builder->set_feature(drivers::graphics_feature::clipping, false);
                 command_builder->draw_bitmap(scr->dsa_texture, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), 0, flags);
                 command_builder->bind_bitmap(0);
 
@@ -323,7 +323,7 @@ namespace eka2l1::dispatch {
                     screen_index, data, eka2l1::vec2(size_x, size_y), format);
 
                 command_builder->bind_bitmap(scr->screen_texture);
-                command_builder->set_clipping(false);
+                command_builder->set_feature(drivers::graphics_feature::clipping, false);
                 command_builder->draw_bitmap(temp, 0, info->scale_to_rect, info->input_crop, eka2l1::vec2(0, 0), 0, 0);
                 command_builder->bind_bitmap(0);
 

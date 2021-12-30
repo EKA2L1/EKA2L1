@@ -67,13 +67,28 @@ glFogf
 glFogfv
 glFogx
 glFogxv
+glColorMask
+glBlendFunc
+glStencilMask
 
-Stubbed to ignore:
+glTexEnvf
+glTexEnvfv
+glTexEnvx
+glTexEnvxv
+glTexEnvi
+glTexEnviv
+
+In the eyes:
+
+glCopyTexImage2D
+glCopyTexSubImage2D
+
+Stubbed to ignore (for now. Tadum!):
 
 glCompressedTexImage2D
 glCompressedTexSubImage2D
-glCopyTexImage2D
-glCopyTexSubImage2D
+glHint
+glLogicOp
 
 List:
 
@@ -102,8 +117,6 @@ eglSwapBuffers
 eglTerminate
 eglWaitGL
 eglWaitNative
-glBlendFunc
-glColorMask
 glDepthFunc
 glDepthMask
 glDepthRangef
@@ -115,7 +128,6 @@ glEnable
 glFinish
 glFlush
 glGetIntegerv
-glHint
 glLightModelf
 glLightModelfv
 glLightModelx
@@ -126,7 +138,6 @@ glLightx
 glLightxv
 glLineWidth
 glLineWidthx
-glLogicOp
 glPixelStorei
 glPointSize
 glPointSizex
@@ -137,12 +148,7 @@ glReadPixels
 glSampleCoverage
 glSampleCoveragex
 glStencilFunc
-glStencilMask
 glStencilOp
-glTexEnvf
-glTexEnvfv
-glTexEnvx
-glTexEnvxv
 glTexParameterf
 glTexParameterx
 glViewport
@@ -172,8 +178,6 @@ glPointParameterfv
 glPointParameterx
 glPointParameterxv
 glPointSizePointerOES
-glTexEnvi
-glTexEnviv
 glTexParameterfv
 glTexParameteri
 glTexParameteriv

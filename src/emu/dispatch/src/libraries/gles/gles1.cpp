@@ -26,7 +26,9 @@
 namespace eka2l1::dispatch {
     gles_texture_unit::gles_texture_unit()
         : index_(0)
-        , binded_texture_handle_(0) {
+        , binded_texture_handle_(0)
+        , alpha_scale_(1)
+        , rgb_scale_(1) {
         texture_mat_stack_.push(glm::identity<glm::mat4>());
     }
 
@@ -39,12 +41,16 @@ namespace eka2l1::dispatch {
         , binded_element_array_buffer_handle_(0)
         , active_cull_face_(drivers::rendering_face::back)
         , active_front_face_rule_(drivers::rendering_face_determine_rule::vertices_counter_clockwise)
+        , source_blend_factor_(drivers::blend_factor::one)
+        , dest_blend_factor_(drivers::blend_factor::zero)
         , material_shininess_(0.0f)
         , fog_density_(1.0f)
         , fog_start_(0.0f)
         , fog_end_(1.0f)
         , vertex_statuses_(0)
         , fragment_statuses_(0)
+        , color_mask_(0b1111)
+        , stencil_mask_(0xFFFFFFFF)
         , alpha_test_ref_(0) {
         clear_color_[0] = 0.0f;
         clear_color_[1] = 0.0f;
@@ -1408,7 +1414,7 @@ namespace eka2l1::dispatch {
         assign_vertex_attrib_gles1(ctx->texture_units_[ctx->active_client_texture_unit_].coord_attrib_, size, type, stride, offset);
     }
 
-    BRIDGE_FUNC_DISPATCHER(void, gl_material_f, std::uint32_t target, std::uint32_t pname, const float pvalue) {
+    BRIDGE_FUNC_DISPATCHER(void, gl_material_f_emu, std::uint32_t target, std::uint32_t pname, const float pvalue) {
         egl_context_es1 *ctx = get_es1_active_context(sys);
         if (!ctx) {
             return;
@@ -1434,11 +1440,11 @@ namespace eka2l1::dispatch {
         }
     }
 
-    BRIDGE_FUNC_DISPATCHER(void, gl_material_x, std::uint32_t target, std::uint32_t pname, const std::uint32_t pvalue) {
-        gl_material_f(sys, 0, target, pname, FIXED_32_TO_FLOAT(pvalue));
+    BRIDGE_FUNC_DISPATCHER(void, gl_material_x_emu, std::uint32_t target, std::uint32_t pname, const std::uint32_t pvalue) {
+        gl_material_f_emu(sys, 0, target, pname, FIXED_32_TO_FLOAT(pvalue));
     }
 
-    BRIDGE_FUNC_DISPATCHER(void, gl_material_fv, std::uint32_t target, std::uint32_t pname, const float *pvalue) {
+    BRIDGE_FUNC_DISPATCHER(void, gl_material_fv_emu, std::uint32_t target, std::uint32_t pname, const float *pvalue) {
         egl_context_es1 *ctx = get_es1_active_context(sys);
         if (!ctx) {
             return;
@@ -1492,17 +1498,17 @@ namespace eka2l1::dispatch {
         }
     }
 
-    BRIDGE_FUNC_DISPATCHER(void, gl_material_fx, std::uint32_t target, std::uint32_t pname, const std::uint32_t *pvalue) {
+    BRIDGE_FUNC_DISPATCHER(void, gl_material_fx_emu, std::uint32_t target, std::uint32_t pname, const std::uint32_t *pvalue) {
         float converted[4];
         converted[0] = FIXED_32_TO_FLOAT(pvalue[0]);
         converted[1] = FIXED_32_TO_FLOAT(pvalue[1]);
         converted[2] = FIXED_32_TO_FLOAT(pvalue[2]);
         converted[3] = FIXED_32_TO_FLOAT(pvalue[3]);
 
-        gl_material_fv(sys, 0, target, pname, converted);
+        gl_material_fv_emu(sys, 0, target, pname, converted);
     }
 
-    BRIDGE_FUNC_DISPATCHER(void, gl_fog_f, std::uint32_t target, const float param) {
+    BRIDGE_FUNC_DISPATCHER(void, gl_fog_f_emu, std::uint32_t target, const float param) {
         egl_context_es1 *ctx = get_es1_active_context(sys);
         if (!ctx) {
             return;
@@ -1530,7 +1536,7 @@ namespace eka2l1::dispatch {
         }
     }
 
-    BRIDGE_FUNC_DISPATCHER(void, gl_fog_x, std::uint32_t target, const std::uint32_t param) {
+    BRIDGE_FUNC_DISPATCHER(void, gl_fog_x_emu, std::uint32_t target, const std::uint32_t param) {
         egl_context_es1 *ctx = get_es1_active_context(sys);
         if (!ctx) {
             return;
@@ -1573,9 +1579,9 @@ namespace eka2l1::dispatch {
         }
     }
 
-    BRIDGE_FUNC_DISPATCHER(void, gl_fog_fv, std::uint32_t target, const float *param) {
+    BRIDGE_FUNC_DISPATCHER(void, gl_fog_fv_emu, std::uint32_t target, const float *param) {
         if ((target == GL_FOG_START_EMU) || (target == GL_FOG_END_EMU) || (target == GL_FOG_DENSITY_EMU)) {
-            gl_fog_f(sys, 0, target, *param);
+            gl_fog_f_emu(sys, 0, target, *param);
             return;
         }
         
@@ -1597,9 +1603,9 @@ namespace eka2l1::dispatch {
         }
     }
 
-    BRIDGE_FUNC_DISPATCHER(void, gl_fog_xv, std::uint32_t target, const std::uint32_t *param) {
+    BRIDGE_FUNC_DISPATCHER(void, gl_fog_xv_emu, std::uint32_t target, const std::uint32_t *param) {
         if ((target == GL_FOG_MODE_EMU) || (target == GL_FOG_START_EMU) || (target == GL_FOG_END_EMU) || (target == GL_FOG_DENSITY_EMU)) {
-            gl_fog_x(sys, 0, target, *param);
+            gl_fog_x_emu(sys, 0, target, *param);
             return;
         }
         
@@ -1618,6 +1624,435 @@ namespace eka2l1::dispatch {
             ctx->fog_color_[3] = FIXED_32_TO_FLOAT(param[3]);
         } else {
             controller.push_error(ctx, GL_INVALID_ENUM);
+        }
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, gl_color_mask_emu, std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        ctx->color_mask_ = 0;
+        if (red) ctx->color_mask_ |= 1;
+        if (green) ctx->color_mask_ |= 2;
+        if (blue) ctx->color_mask_ |= 4;
+        if (alpha) ctx->color_mask_ |= 8;
+
+        ctx->command_builder_->set_color_mask(ctx->color_mask_);
+    }
+
+    static bool convert_gl_factor_to_driver_enum(const std::uint32_t value, drivers::blend_factor &dest) {
+        switch (value) {
+        case GL_ONE_EMU:
+            dest = drivers::blend_factor::one;
+            break;
+
+        case GL_ZERO_EMU:
+            dest = drivers::blend_factor::zero;
+            break;
+
+        case GL_SRC_ALPHA_EMU:
+            dest = drivers::blend_factor::frag_out_alpha;
+            break;
+
+        case GL_ONE_MINUS_SRC_ALPHA_EMU:
+            dest = drivers::blend_factor::one_minus_frag_out_alpha;
+            break;
+
+        case GL_DST_ALPHA_EMU:
+            dest = drivers::blend_factor::current_alpha;
+            break;
+
+        case GL_ONE_MINUS_DST_ALPHA_EMU:
+            dest = drivers::blend_factor::one_minus_current_alpha;
+            break;
+
+        case GL_SRC_COLOR_EMU:
+            dest = drivers::blend_factor::frag_out_color;
+            break;
+
+        case GL_ONE_MINUS_SRC_COLOR_EMU:
+            dest = drivers::blend_factor::one_minus_frag_out_color;
+            break;
+
+        case GL_DST_COLOR:
+            dest = drivers::blend_factor::current_color;
+            break;
+
+        case GL_ONE_MINUS_DST_COLOR:
+            dest = drivers::blend_factor::one_minus_current_color;
+            break;
+
+        case GL_SRC_ALPHA_SATURATE_EMU:
+            dest = drivers::blend_factor::frag_out_alpha_saturate;
+            break;
+
+        default:
+            return false;
+        }
+
+        return true;
+    }
+    
+    BRIDGE_FUNC_DISPATCHER(void, gl_blend_func_emu, std::uint32_t source_factor, std::uint32_t dest_factor) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        drivers::blend_factor source_factor_driver;
+        drivers::blend_factor dest_factor_driver;
+
+        if (!convert_gl_factor_to_driver_enum(source_factor, source_factor_driver) || !convert_gl_factor_to_driver_enum(dest_factor, dest_factor_driver)) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        ctx->source_blend_factor_ = source_factor_driver;
+        ctx->dest_blend_factor_ = dest_factor_driver;
+
+        ctx->command_builder_->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add, source_factor_driver, dest_factor_driver,
+            source_factor_driver, dest_factor_driver);
+    }
+    
+    BRIDGE_FUNC_DISPATCHER(void, gl_stencil_mask_emu, std::uint32_t mask) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        ctx->stencil_mask_ = mask;
+        ctx->command_builder_->set_stencil_mask(drivers::rendering_face::back_and_front, mask);
+    }
+
+    static bool convert_gl_texenv_operand_to_our_enum(std::uint32_t value, gles_texture_env_info::source_operand &op, const bool is_for_alpha) {
+        switch (value) {
+        case GL_SRC_ALPHA_EMU:
+            op = gles_texture_env_info::SOURCE_OPERAND_ALPHA;
+            break;
+
+        case GL_ONE_MINUS_SRC_ALPHA_EMU:
+            op = gles_texture_env_info::SOURCE_OPERAND_ONE_MINUS_ALPHA;
+            break;
+
+        case GL_SRC_COLOR_EMU:
+            if (is_for_alpha) {
+                return false;
+            }
+
+            op = gles_texture_env_info::SOURCE_OPERAND_COLOR;
+            break;
+
+        case GL_ONE_MINUS_SRC_COLOR_EMU:
+            if (is_for_alpha) {
+                return false;
+            }
+
+            op = gles_texture_env_info::SOURCE_OPERAND_ONE_MINUS_COLOR;
+            break;
+
+        default:
+            return false;
+        }
+
+        return true;
+    }
+
+    static bool convert_gl_texenv_src_to_our_enum(std::uint32_t value, gles_texture_env_info::source_type &tt) {
+        switch (value) {
+        case GL_TEXTURE_EMU:
+            tt = gles_texture_env_info::SOURCE_TYPE_CURRENT_TEXTURE;
+            break;
+
+        case GL_CONSTANT_EMU:
+            tt = gles_texture_env_info::SOURCE_TYPE_CONSTANT;
+            break;
+
+        case GL_PRIMARY_COLOR_EMU:
+            tt = gles_texture_env_info::SOURCE_TYPE_PRIM_COLOR;
+            break;
+
+        case GL_PREVIOUS_EMU:
+            tt = gles_texture_env_info::SOURCE_TYPE_PREVIOUS;
+            break;
+
+        case GL_TEXTURE0_EMU:
+            tt = gles_texture_env_info::SOURCE_TYPE_TEXTURE_STAGE_0;
+            break;
+
+        case GL_TEXTURE1_EMU:
+            tt = gles_texture_env_info::SOURCE_TYPE_TEXTURE_STAGE_1;
+            break;
+
+        case GL_TEXTURE2_EMU:
+            tt = gles_texture_env_info::SOURCE_TYPE_TEXTURE_STAGE_2;
+            break;
+
+        default:
+            return false;
+        }
+
+        return true;
+    }
+    
+    BRIDGE_FUNC_DISPATCHER(void, gl_tex_envi_emu, std::uint32_t target, std::uint32_t name, std::int32_t param) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if (target != GL_TEX_ENV_EMU) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        gles_texture_unit &unit = ctx->texture_units_[ctx->active_texture_unit_];
+        gles_texture_env_info &info = unit.env_info_;
+
+        switch (name) {
+        case GL_TEX_ENV_MODE_EMU:
+            switch (param) {
+            case GL_ADD_EMU:
+                info.env_mode_ = gles_texture_env_info::ENV_MODE_ADD;
+                break;
+
+            case GL_BLEND_EMU:
+                info.env_mode_ = gles_texture_env_info::ENV_MODE_BLEND;
+                break;
+
+            case GL_DECAL_EMU:
+                info.env_mode_ = gles_texture_env_info::ENV_MODE_DECAL;
+                break;
+
+            case GL_MODULATE_EMU:
+                info.env_mode_ = gles_texture_env_info::ENV_MODE_MODULATE;
+                break;
+
+            case GL_REPLACE_EMU:
+                info.env_mode_ = gles_texture_env_info::ENV_MODE_REPLACE;
+                break;
+
+            case GL_COMBINE_EMU:
+                info.env_mode_ = gles_texture_env_info::ENV_MODE_COMBINE;
+                break;
+
+            default:
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            break;
+
+        case GL_COMBINE_RGB_EMU:
+        case GL_COMBINE_ALPHA_EMU: {
+            gles_texture_env_info::source_combine_function function;
+            switch (param) {
+            case GL_REPLACE_EMU:
+                function = gles_texture_env_info::SOURCE_COMBINE_REPLACE;
+                break;
+
+            case GL_MODULATE_EMU:
+                function = gles_texture_env_info::SOURCE_COMBINE_MODULATE;
+                break;
+
+            case GL_ADD_EMU:
+                function = gles_texture_env_info::SOURCE_COMBINE_ADD;
+                break;
+
+            case GL_ADD_SIGNED_EMU:
+                function = gles_texture_env_info::SOURCE_COMBINE_ADD_SIGNED;
+                break;
+
+            case GL_INTERPOLATE_EMU:
+                function = gles_texture_env_info::SOURCE_COMBINE_INTERPOLATE;
+                break;
+
+            case GL_SUBTRACT_EMU:
+                function = gles_texture_env_info::SOURCE_COMBINE_SUBTRACT;
+                break;
+
+            case GL_DOT3_RGB_EMU:
+                function = gles_texture_env_info::SOURCE_COMBINE_DOT3_RGB;
+                break;
+
+            case GL_DOT3_RGBA_EMU:
+                function = gles_texture_env_info::SOURCE_COMBINE_DOT3_RGBA;
+                break;
+
+            default:
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            if (name == GL_COMBINE_RGB_EMU) {
+                info.combine_rgb_func_ = function;
+            } else {
+                info.combine_a_func_ = function;
+            }
+
+            break;
+        }
+
+        case GL_SRC0_ALPHA_EMU: {
+            gles_texture_env_info::source_type type;
+            if (!convert_gl_texenv_src_to_our_enum(param, type)) {
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            info.src0_a_ = type;
+            break;
+        }
+
+        case GL_SRC0_RGB_EMU: {
+            gles_texture_env_info::source_type type;
+            if (!convert_gl_texenv_src_to_our_enum(param, type)) {
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            info.src0_rgb_ = type;
+            break;
+        }
+
+        case GL_SRC1_ALPHA_EMU: {
+            gles_texture_env_info::source_type type;
+            if (!convert_gl_texenv_src_to_our_enum(param, type)) {
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            info.src1_a_ = type;
+            break;
+        }
+
+        case GL_SRC1_RGB_EMU: {
+            gles_texture_env_info::source_type type;
+            if (!convert_gl_texenv_src_to_our_enum(param, type)) {
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            info.src1_rgb_ = type;
+            break;
+        }
+
+        case GL_SRC2_ALPHA_EMU: {
+            gles_texture_env_info::source_type type;
+            if (!convert_gl_texenv_src_to_our_enum(param, type)) {
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            info.src2_a_ = type;
+            break;
+        }
+
+        case GL_SRC2_RGB_EMU: {
+            gles_texture_env_info::source_type type;
+            if (!convert_gl_texenv_src_to_our_enum(param, type)) {
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            info.src2_rgb_ = type;
+            break;
+        }
+
+        case GL_OPERAND0_RGB_EMU: {
+            gles_texture_env_info::source_operand operand;
+            if (!convert_gl_texenv_operand_to_our_enum(param, operand, false)) {
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            info.src0_rgb_op_ = operand;
+            break;
+        }
+
+        case GL_OPERAND0_ALPHA_EMU: {
+            gles_texture_env_info::source_operand operand;
+            if (!convert_gl_texenv_operand_to_our_enum(param, operand, true)) {
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            info.src0_a_op_ = operand;
+            break;
+        }
+        
+        case GL_OPERAND1_RGB_EMU: {
+            gles_texture_env_info::source_operand operand;
+            if (!convert_gl_texenv_operand_to_our_enum(param, operand, false)) {
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            info.src1_rgb_op_ = operand;
+            break;
+        }
+
+        case GL_OPERAND1_ALPHA_EMU: {
+            gles_texture_env_info::source_operand operand;
+            if (!convert_gl_texenv_operand_to_our_enum(param, operand, true)) {
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            info.src1_a_op_ = operand;
+            break;
+        }
+        
+        case GL_OPERAND2_RGB_EMU: {
+            gles_texture_env_info::source_operand operand;
+            if (!convert_gl_texenv_operand_to_our_enum(param, operand, false)) {
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            info.src2_rgb_op_ = operand;
+            break;
+        }
+
+        case GL_OPERAND2_ALPHA_EMU: {
+            gles_texture_env_info::source_operand operand;
+            if (!convert_gl_texenv_operand_to_our_enum(param, operand, true)) {
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            info.src2_a_op_ = operand;
+            break;
+        }
+
+        case GL_RGB_SCALE_EMU:
+            if ((param != 1) && (param != 2) && (param != 4)) {
+                controller.push_error(ctx, GL_INVALID_VALUE);
+                return;
+            }
+
+            unit.rgb_scale_ = static_cast<std::uint8_t>(param);
+            break;
+
+        case GL_ALPHA_SCALE_EMU:
+            if ((param != 1) && (param != 2) && (param != 4)) {
+                controller.push_error(ctx, GL_INVALID_VALUE);
+                return;
+            }
+
+            unit.alpha_scale_ = static_cast<std::uint8_t>(param);
+            break;
+
+        default:
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
         }
     }
 }

@@ -468,17 +468,6 @@ namespace eka2l1::drivers {
         glBindVertexArray(0);
     }
 
-    void ogl_graphics_driver::set_clipping(command_helper &helper) {
-        bool enable = false;
-        helper.pop(enable);
-
-        if (enable) {
-            glEnable(GL_SCISSOR_TEST);
-        } else {
-            glDisable(GL_SCISSOR_TEST);
-        }
-    }
-
     void ogl_graphics_driver::clip_rect(command_helper &helper) {
         eka2l1::rect clip_rect;
         helper.pop(clip_rect);
@@ -524,31 +513,44 @@ namespace eka2l1::drivers {
         glViewport(viewport.top.x, current_fb_height - (viewport.top.y + viewport.size.y), viewport.size.x, viewport.size.y);
     }
 
-    static void set_one(command_helper &helper, GLenum to_set) {
+    void ogl_graphics_driver::set_feature(command_helper &helper) {
+        drivers::graphics_feature feature;
         bool enable = true;
+
+        helper.pop(feature);
         helper.pop(enable);
 
-        if (enable) {
-            glEnable(to_set);
-        } else {
-            glDisable(to_set);
+        GLenum translated_feature;
+        switch (feature) {
+        case drivers::graphics_feature::blend:
+            translated_feature = GL_BLEND;
+            break;
+
+        case drivers::graphics_feature::clipping:
+            translated_feature = GL_SCISSOR_TEST;
+            break;
+
+        case drivers::graphics_feature::cull:
+            translated_feature = GL_CULL_FACE;
+            break;
+
+        case drivers::graphics_feature::depth_test:
+            translated_feature = GL_DEPTH_TEST;
+            break;
+
+        case drivers::graphics_feature::stencil_test:
+            translated_feature = GL_STENCIL_TEST;
+            break;
+
+        default:
+            return;
         }
-    }
 
-    void ogl_graphics_driver::set_depth(command_helper &helper) {
-        set_one(helper, GL_DEPTH_TEST);
-    }
-
-    void ogl_graphics_driver::set_stencil(command_helper &helper) {
-        set_one(helper, GL_STENCIL_TEST);
-    }
-
-    void ogl_graphics_driver::set_blend(command_helper &helper) {
-        set_one(helper, GL_BLEND);
-    }
-
-    void ogl_graphics_driver::set_cull(command_helper &helper) {
-        set_one(helper, GL_CULL_FACE);
+        if (enable) {
+            glEnable(translated_feature);
+        } else {
+            glDisable(translated_feature);
+        }
     }
 
     void ogl_graphics_driver::set_viewport(command_helper &helper) {
@@ -595,6 +597,21 @@ namespace eka2l1::drivers {
 
         case blend_factor::one_minus_current_alpha:
             return GL_ONE_MINUS_DST_ALPHA;
+
+        case blend_factor::frag_out_color:
+            return GL_SRC_COLOR;
+
+        case blend_factor::one_minus_frag_out_color:
+            return GL_ONE_MINUS_SRC_COLOR;
+
+        case blend_factor::current_color:
+            return GL_DST_COLOR;
+
+        case blend_factor::one_minus_current_color:
+            return GL_ONE_MINUS_DST_COLOR;
+
+        case blend_factor::frag_out_alpha_saturate:
+            return GL_SRC_ALPHA_SATURATE;
 
         default:
             break;
@@ -940,6 +957,13 @@ namespace eka2l1::drivers {
         }
     }
 
+    void ogl_graphics_driver::set_color_mask(command_helper &helper) {
+        std::uint8_t dat = 0;
+        helper.pop(dat);
+
+        glColorMask(dat & 1, dat & 2, dat & 4, dat & 8);
+    }
+
     void ogl_graphics_driver::save_gl_state() {
         glGetIntegerv(GL_CURRENT_PROGRAM, &backup.last_program);
         glGetIntegerv(GL_TEXTURE_BINDING_2D, &backup.last_texture);
@@ -1040,11 +1064,6 @@ namespace eka2l1::drivers {
             break;
         }
 
-        case graphics_driver_set_clipping: {
-            set_clipping(helper);
-            break;
-        }
-
         case graphics_driver_clip_rect: {
             clip_rect(helper);
             break;
@@ -1070,14 +1089,10 @@ namespace eka2l1::drivers {
             break;
         }
 
-        case graphics_driver_set_depth: {
-            set_depth(helper);
+        case graphics_driver_set_feature: {
+            set_feature(helper);
             break;
         }
-
-        case graphics_driver_set_stencil:
-            set_stencil(helper);
-            break;
 
         case graphics_driver_stencil_set_action:
             set_stencil_action(helper);
@@ -1090,16 +1105,6 @@ namespace eka2l1::drivers {
         case graphics_driver_stencil_set_mask:
             set_stencil_mask(helper);
             break;
-
-        case graphics_driver_set_blend: {
-            set_blend(helper);
-            break;
-        }
-
-        case graphics_driver_set_cull: {
-            set_cull(helper);
-            break;
-        }
 
         case graphics_driver_clear: {
             clear(helper);
@@ -1143,6 +1148,10 @@ namespace eka2l1::drivers {
 
         case graphics_driver_set_front_face_rule:
             set_front_face_rule(helper);
+            break;
+
+        case graphics_driver_set_color_mask:
+            set_color_mask(helper);
             break;
 
         default:

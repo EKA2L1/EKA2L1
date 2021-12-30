@@ -151,7 +151,8 @@ namespace eka2l1::dispatch {
             SOURCE_COMBINE_ADD_SIGNED = 3,
             SOURCE_COMBINE_INTERPOLATE = 4,
             SOURCE_COMBINE_SUBTRACT = 5,
-            SOURCE_COMBINE_DOT3 = 6
+            SOURCE_COMBINE_DOT3_RGB = 6,
+            SOURCE_COMBINE_DOT3_RGBA = 7
         };
 
         enum source_type {
@@ -162,6 +163,13 @@ namespace eka2l1::dispatch {
             SOURCE_TYPE_CONSTANT = 3,
             SOURCE_TYPE_PRIM_COLOR = 4,
             SOURCE_TYPE_PREVIOUS = 5
+        };
+
+        enum source_operand {
+            SOURCE_OPERAND_COLOR = 0,
+            SOURCE_OPERAND_ONE_MINUS_COLOR = 1,
+            SOURCE_OPERAND_ALPHA = 2,
+            SOURCE_OPERAND_ONE_MINUS_ALPHA = 3
         };
 
         std::uint64_t env_mode_ : 3;
@@ -189,6 +197,9 @@ namespace eka2l1::dispatch {
         
         gles1_vertex_attrib coord_attrib_;
         gles_texture_env_info env_info_;
+
+        std::uint8_t alpha_scale_;
+        std::uint8_t rgb_scale_;
 
         float coord_uniforms_[4];
 
@@ -218,6 +229,8 @@ namespace eka2l1::dispatch {
 
         drivers::rendering_face active_cull_face_;
         drivers::rendering_face_determine_rule active_front_face_rule_;
+        drivers::blend_factor source_blend_factor_;
+        drivers::blend_factor dest_blend_factor_;
 
         common::identity_container<gles1_driver_object_instance> objects_;
 
@@ -264,6 +277,9 @@ namespace eka2l1::dispatch {
 
         std::uint64_t vertex_statuses_;
         std::uint64_t fragment_statuses_;
+
+        std::uint8_t color_mask_;
+        std::uint32_t stencil_mask_;
 
         float alpha_test_ref_;
 
@@ -345,12 +361,16 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_DISPATCHER(void, gl_normal_pointer_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset);
     BRIDGE_FUNC_DISPATCHER(void, gl_vertex_pointer_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset);
     BRIDGE_FUNC_DISPATCHER(void, gl_texcoord_pointer_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset);
-    BRIDGE_FUNC_DISPATCHER(void, gl_material_f, std::uint32_t target, std::uint32_t pname, const float pvalue);
-    BRIDGE_FUNC_DISPATCHER(void, gl_material_x, std::uint32_t target, std::uint32_t pname, const std::uint32_t pvalue);
-    BRIDGE_FUNC_DISPATCHER(void, gl_material_fv, std::uint32_t target, std::uint32_t pname, const float *pvalue);
-    BRIDGE_FUNC_DISPATCHER(void, gl_material_fx, std::uint32_t target, std::uint32_t pname, const std::uint32_t *pvalue);
-    BRIDGE_FUNC_DISPATCHER(void, gl_fog_f, std::uint32_t target, const float param);
-    BRIDGE_FUNC_DISPATCHER(void, gl_fog_x, std::uint32_t target, const std::uint32_t param);
-    BRIDGE_FUNC_DISPATCHER(void, gl_fog_fv, std::uint32_t target, const float *param);
-    BRIDGE_FUNC_DISPATCHER(void, gl_fog_xv, std::uint32_t target, const std::uint32_t *param);
+    BRIDGE_FUNC_DISPATCHER(void, gl_material_f_emu, std::uint32_t target, std::uint32_t pname, const float pvalue);
+    BRIDGE_FUNC_DISPATCHER(void, gl_material_x_emu, std::uint32_t target, std::uint32_t pname, const std::uint32_t pvalue);
+    BRIDGE_FUNC_DISPATCHER(void, gl_material_fv_emu, std::uint32_t target, std::uint32_t pname, const float *pvalue);
+    BRIDGE_FUNC_DISPATCHER(void, gl_material_fx_emu, std::uint32_t target, std::uint32_t pname, const std::uint32_t *pvalue);
+    BRIDGE_FUNC_DISPATCHER(void, gl_fog_f_emu, std::uint32_t target, const float param);
+    BRIDGE_FUNC_DISPATCHER(void, gl_fog_x_emu, std::uint32_t target, const std::uint32_t param);
+    BRIDGE_FUNC_DISPATCHER(void, gl_fog_fv_emu, std::uint32_t target, const float *param);
+    BRIDGE_FUNC_DISPATCHER(void, gl_fog_xv_emu, std::uint32_t target, const std::uint32_t *param);
+    BRIDGE_FUNC_DISPATCHER(void, gl_color_mask_emu, std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha);
+    BRIDGE_FUNC_DISPATCHER(void, gl_blend_func_emu, std::uint32_t source_factor, std::uint32_t dest_factor);
+    BRIDGE_FUNC_DISPATCHER(void, gl_stencil_mask_emu, std::uint32_t mask);
+    BRIDGE_FUNC_DISPATCHER(void, gl_tex_envi_emu, std::uint32_t target, std::uint32_t name, std::int32_t param);
 }

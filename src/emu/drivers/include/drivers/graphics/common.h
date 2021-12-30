@@ -61,7 +61,12 @@ namespace eka2l1::drivers {
         frag_out_alpha = 2,
         one_minus_frag_out_alpha = 3,
         current_alpha = 4,
-        one_minus_current_alpha = 5
+        one_minus_current_alpha = 5,
+        frag_out_color = 6,
+        one_minus_frag_out_color = 7,
+        current_color = 8,
+        one_minus_current_color = 9,
+        frag_out_alpha_saturate = 10
     };
 
     enum draw_buffer_bits {
@@ -155,6 +160,14 @@ namespace eka2l1::drivers {
         equal,
         not_equal,
         always
+    };
+
+    enum class graphics_feature {
+        depth_test = 0,
+        stencil_test = 1,
+        clipping = 2,
+        blend = 3,
+        cull = 4
     };
 
     enum class window_api {
