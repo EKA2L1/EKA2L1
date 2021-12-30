@@ -214,8 +214,8 @@
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="301"/>
-      <source>RPKG file (*.rpkg *.RPKG);;All files (*.*</source>
-      <translation>RPKG文件 (*.rpkg *.RPKG);所有文件 (*.*</translation>
+      <source>RPKG file (*.rpkg *.RPKG);;All files (*.*)</source>
+      <translation type="unfinished">RPKG file (*.rpkg *.RPKG);;All files (*.*)</translation>
     </message>
   </context>
   <context>
