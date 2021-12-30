@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/utils.cpp" line="126"/>
       <source>EKA2L1 - Symbian OS emulator</source>
-      <translation type="unfinished">EKA2L1 - Symbian OS emulator</translation>
+      <translation>EKA2L1 - Giả lập Symbian</translation>
     </message>
   </context>
   <context>
@@ -195,7 +195,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="266"/>
       <source>VPL file (*.vpl);;All files (*.*)</source>
-      <translation type="unfinished">VPL file (*.vpl);;All files (*.*)</translation>
+      <translation>Tệp VPL (*.vpl);;Tất cả tệp tin (*.*)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="275"/>
@@ -205,7 +205,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="276"/>
       <source>ROM file (*.rom *.ROM);;All files (*.*)</source>
-      <translation type="unfinished">ROM file (*.rom *.ROM);;All files (*.*)</translation>
+      <translation>Tệp ROM (*.rom *.ROM);;Tất cả tệp tin (*.*)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="300"/>
@@ -214,8 +214,8 @@
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="301"/>
-      <source>RPKG file (*.rpkg *.RPKG);;All files (*.*</source>
-      <translation type="unfinished">RPKG file (*.rpkg *.RPKG);;All files (*.*</translation>
+      <source>RPKG file (*.rpkg *.RPKG);;All files (*.*)</source>
+      <translation>Tệp RPKG (*.rpkg *.RPKG);;Tất cả tệp tin (*.*)</translation>
     </message>
   </context>
   <context>
@@ -581,7 +581,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="123"/>
       <source>Time delay (0-1000us)</source>
-      <translation type="unfinished">Time delay (0-1000us)</translation>
+      <translation>Đỗ trễ thời gian (0-1000us)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="162"/>
@@ -678,12 +678,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="352"/>
       <source>Background color</source>
-      <translation type="unfinished">Background color</translation>
+      <translation>Màu nền</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="365"/>
       <source>Pick</source>
-      <translation type="unfinished">Pick</translation>
+      <translation>Chọn</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="375"/>
@@ -698,22 +698,22 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="389"/>
       <source>By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</source>
-      <translation type="unfinished">By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</translation>
+      <translation>Mặc định, trình giả lập chỉ cho phép điều chỉnh cửa sổ hiện giả lập với chiều to nhỏ nhất là độ phân giải gốc của màn hình thiết bị điện thoại đang , nhân với độ phóng to của hệ thống đang chạy giả lập, để phù hợp với mắt hầu hết người dùng.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="392"/>
       <source>Allow resizing display to phone screen&apos;s true size in pixels</source>
-      <translation type="unfinished">Allow resizing display to phone screen&apos;s true size in pixels</translation>
+      <translation>Cho phép điều chỉnh lại độ lớn của cửa sổ hiển thị tới độ phân giải thực sự của màn hình điện thoại</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="399"/>
       <source>If blurry scaled up screen is not preferred, enable this option will make the phone screen stays at the original size</source>
-      <translation type="unfinished">If blurry scaled up screen is not preferred, enable this option will make the phone screen stays at the original size</translation>
+      <translation>Nếu mà hình hiển thị được phóng to quá mờ, không hợp ý, hãy bật lựa chọn này để màn hình điện thoại được hiển thị ở độ phân giải gốc</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="402"/>
       <source>Disable scaling phone screen to emulator&apos;s window size</source>
-      <translation type="unfinished">Disable scaling phone screen to emulator&apos;s window size</translation>
+      <translation>Vô hiệu hóa phóng to màn hình điện thoại vừa vặn với cửa sổ giả lập</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="414"/>
@@ -743,12 +743,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="459"/>
       <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
-      <translation type="unfinished">Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</translation>
+      <translation>Bật cái này sẽ khiến cửa sổ luôn có tiêu đề &quot;EKA2L1&quot;, không thêm thông tin nào khác.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="465"/>
       <source>Disable easter egg title</source>
-      <translation type="unfinished">Disable easter egg title</translation>
+      <translation>Tắt tên cửa sổ easter egg</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="472"/>
@@ -763,34 +763,34 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="489"/>
       <source>Graphics</source>
-      <translation type="unfinished">Graphics</translation>
+      <translation>Đồ họa</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="497"/>
       <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
-      <translation type="unfinished">This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
-Preferred option will automatically enable this on S60v1/S60v2 devices.</translation>
+      <translation>Cái này cho phép các chương trình giả lập có khả năng ghi màn hình, và tránh màn hình nhấp nháy ở một số trò chơi S60v1/S60v2.
+Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu hóa tự động trên các thiết bị S60v1/S60v2.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="501"/>
       <source>Screen buffer sync</source>
-      <translation type="unfinished">Screen buffer sync</translation>
+      <translation>Đồng bộ bộ nhớ màn hình</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="515"/>
       <source>Preferred</source>
-      <translation type="unfinished">Preferred</translation>
+      <translation>Tự quyết định</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="520"/>
       <source>Disable</source>
-      <translation type="unfinished">Disable</translation>
+      <translation>Vô hiệu hóa</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="525"/>
       <source>Enable</source>
-      <translation type="unfinished">Enable</translation>
+      <translation>Kích hoạt</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="538"/>
@@ -858,12 +858,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="728"/>
       <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
-      <translation type="unfinished">The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</translation>
+      <translation>Tên mà sẽ được hiển thị trong các chương trình hoặc trò chơi được giả lập. Cho phép tối đa 30 kí tự.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="731"/>
       <source>Friendly phone name</source>
-      <translation type="unfinished">Friendly phone name</translation>
+      <translation>Tên điện thoại thân thiện</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="756"/>
@@ -918,7 +918,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="837"/>
       <source>SF2 bank</source>
-      <translation type="unfinished">SF2 bank</translation>
+      <translation>SF2 bank</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="864"/>
@@ -929,7 +929,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="878"/>
       <source>HSB bank</source>
-      <translation type="unfinished">HSB bank</translation>
+      <translation>HSB bank</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="922"/>
@@ -939,12 +939,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="936"/>
       <source>TinySoundFont (High-quality, support SF2)</source>
-      <translation type="unfinished">TinySoundFont (High-quality, support SF2)</translation>
+      <translation>TinySoundFont (chất lượng cao, hỗ trợ SF2)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="941"/>
       <source>MiniBAE (Lower-quality, support HSB)</source>
-      <translation type="unfinished">MiniBAE (Lower-quality, support HSB)</translation>
+      <translation>MiniBAE (chất lược thấp hơn, hỗ trợ HSB)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="959"/>
@@ -1251,27 +1251,27 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="1152"/>
       <source>Pick the screen background color</source>
-      <translation type="unfinished">Pick the screen background color</translation>
+      <translation>Hãy chọn màu nền màn hình</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1221"/>
       <source>Successfully changed</source>
-      <translation type="unfinished">Successfully changed</translation>
+      <translation>Đã sửa thành công</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1221"/>
       <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
-      <translation type="unfinished">Next time the application requests to play a new MIDI, the choosen backend will be used!</translation>
+      <translation>Lần tới chương trình yêu cầu chơi một bản MIDI mới, phần backend vừa chọn sẽ được sử dụng!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1234"/>
       <source>Choose the HSB bank file</source>
-      <translation type="unfinished">Choose the HSB bank file</translation>
+      <translation>Chọn tệp HSB bank</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1257"/>
       <source>Choose the SF2 bank file</source>
-      <translation type="unfinished">Choose the SF2 bank file</translation>
+      <translation>Chọn tệp SF2 bank</translation>
     </message>
   </context>
 </TS>
