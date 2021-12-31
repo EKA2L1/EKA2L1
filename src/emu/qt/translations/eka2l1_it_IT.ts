@@ -215,7 +215,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="301"/>
       <source>RPKG file (*.rpkg *.RPKG);;All files (*.*)</source>
-      <translation type="unfinished">RPKG file (*.rpkg *.RPKG);;All files (*.*)</translation>
+      <translation>File RPKG (*.rpkg *.RPKG);;Tutti i file (*.*)</translation>
     </message>
   </context>
   <context>
@@ -918,7 +918,7 @@ Per opzione preferita sarà attivo su dispositivi S60v1/S60v2.</translation>
     <message>
       <location filename="../src/settings_dialog.ui" line="837"/>
       <source>SF2 bank</source>
-      <translation type="unfinished">SF2 bank</translation>
+      <translation>SF2 bank</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="864"/>
@@ -929,7 +929,7 @@ Per opzione preferita sarà attivo su dispositivi S60v1/S60v2.</translation>
     <message>
       <location filename="../src/settings_dialog.ui" line="878"/>
       <source>HSB bank</source>
-      <translation type="unfinished">HSB bank</translation>
+      <translation>HSB bank</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="922"/>
