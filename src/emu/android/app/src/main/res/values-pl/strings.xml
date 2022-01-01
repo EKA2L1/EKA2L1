@@ -17,8 +17,8 @@
     <string name="rename">Zmień nazwę</string>
     <string name="save_log">Zapisz log</string>
     <string name="opengl_required">Aplikacja wymaga OpenGL ES 3.0+.</string>
-    <string name="warning">Warning</string>
-    <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
+    <string name="warning">Uwaga</string>
+    <string name="scoped_storage_warning">Twoje dane użytkownika są przechowywane w lokalizacji która <b>zostanie usunięta</b> kiedy odinstalujesz aplikację:\n</string>
     <string name="install">Zainstaluj</string>
     <string name="device_dump">Zrzut urządzenia</string>
     <string name="path_to_rpkg">Ścieżka do RPKG</string>
@@ -54,7 +54,7 @@
     <string name="pref_enable_statusbar">Wyłącz pasek statusu</string>
     <string name="pref_wakelock">Pozostaw ekran włączony</string>
     <string name="pref_enable_vibration">Włącz wibracje</string>
-    <string name="pref_emulator_dir">Working directory</string>
+    <string name="pref_emulator_dir">Katalog roboczy</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Włącz filtrowanie najbliższego sąsiada</string>
     <string name="pref_system_language_option_name">Język</string>
     <string name="pref_system_real_time_accuracy_str">Dokładność w czasie rzeczywistym</string>
