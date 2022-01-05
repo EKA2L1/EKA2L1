@@ -710,29 +710,29 @@ namespace eka2l1::loader {
 
     static bool svgb_decode_visibility(svgb_decode_state &state, const svg_attr *attr, const svg_element *elem, common::ro_stream &in, common::wo_stream &out) {
         static const std::string values[] = { "visible", "hidden" };
-        return svgb_decode_css_enum(state, attr, in, out, values, COUNT(values), nullptr);
+        return svgb_decode_css_enum(state, attr, in, out, values, COUNT(values), "");
     }
 
     static bool svgb_decode_font_style(svgb_decode_state &state, const svg_attr *attr, const svg_element *elem, common::ro_stream &in, common::wo_stream &out) {
         static const std::string values[] = { "normal", "italic", "oblique", "inherit" };
-        return svgb_decode_css_enum(state, attr, in, out, values, COUNT(values), nullptr);
+        return svgb_decode_css_enum(state, attr, in, out, values, COUNT(values), "");
     }
 
     static bool svgb_decode_font_weight(svgb_decode_state &state, const svg_attr *attr, const svg_element *elem, common::ro_stream &in, common::wo_stream &out) {
         static const std::string values[] = { "normal", "bold", "bolder", "lighter",
             "100", "200", "300", "400", "500", "600", "700", "800", "900",
             "inherit" };
-        return svgb_decode_css_enum(state, attr, in, out, values, COUNT(values), nullptr);
+        return svgb_decode_css_enum(state, attr, in, out, values, COUNT(values), "");
     }
 
     static bool svgb_decode_text_anchor(svgb_decode_state &state, const svg_attr *attr, const svg_element *elem, common::ro_stream &in, common::wo_stream &out) {
         static const std::string values[] = { "start", "middle", "end" };
-        return svgb_decode_css_enum(state, attr, in, out, values, COUNT(values), nullptr);
+        return svgb_decode_css_enum(state, attr, in, out, values, COUNT(values), "");
     }
 
     static bool svgb_decode_text_decor(svgb_decode_state &state, const svg_attr *attr, const svg_element *elem, common::ro_stream &in, common::wo_stream &out) {
         static const std::string values[] = { "none", "underline", "overline", "line-through" };
-        return svgb_decode_css_enum(state, attr, in, out, values, COUNT(values), nullptr);
+        return svgb_decode_css_enum(state, attr, in, out, values, COUNT(values), "");
     }
 
     /**
