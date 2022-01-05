@@ -121,14 +121,14 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
 
       - name: Zip Artifacts (Non-Linux)
-        uses: papeloto/action-zip@v1
+        uses: vimtor/action-zip@v1
         with:
           files: build/bin
           dest: ${{ matrix.os }}.zip
         if: github.ref == 'refs/heads/master' && matrix.os != 'ubuntu-latest'
 
       - name: Zip Artifacts (Linux)
-        uses: papeloto/action-zip@v1
+        uses: vimtor/action-zip@v1
         with:
           files: build/eka2l1-qt-x64.AppImage
           dest: ${{ matrix.os }}.zip
