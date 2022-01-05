@@ -140,6 +140,12 @@ namespace eka2l1 {
             }
 
             sis_data_unit *data_unit = reinterpret_cast<sis_data_unit *>(install_data->data_units.fields[crr_blck_idx].get());
+
+            if (data_unit->data_unit.fields.empty()) {
+                // Stub sis without file data
+                return true;
+            }
+
             sis_file_data *data = reinterpret_cast<sis_file_data *>(data_unit->data_unit.fields[idx].get());
 
             sis_compressed compressed = data->raw_data;
