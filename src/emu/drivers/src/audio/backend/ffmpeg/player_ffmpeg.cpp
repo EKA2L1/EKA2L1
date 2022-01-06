@@ -28,15 +28,14 @@ extern "C" {
 
 namespace eka2l1::drivers {
     void player_ffmpeg::deinit() {
-        av_free_packet(&packet_);
         avformat_free_context(format_context_);
+
+        if (custom_io_buffer_) {
+            av_freep(&custom_io_buffer_);
+        }
 
         if (custom_io_) {
             avio_context_free(&custom_io_);
-        }
-
-        if (custom_io_buffer_) {
-            av_free(custom_io_buffer_);
         }
 
         codec_ = nullptr;
@@ -50,8 +49,6 @@ namespace eka2l1::drivers {
             return false;
         }
 
-        av_init_packet(&packet_);
-
         // Trying to get stream audio codec
         if (!format_context_->audio_codec) {
             // Getting it ourself smh
@@ -63,7 +60,6 @@ namespace eka2l1::drivers {
                 if (!format) {
                     LOG_ERROR(DRIVER_AUD, "Error while finding responsible audio decoder of input {}", url_);
                     avformat_free_context(format_context_);
-                    av_free_packet(&packet_);
 
                     return false;
                 }
@@ -92,8 +88,6 @@ namespace eka2l1::drivers {
             LOG_ERROR(DRIVER_AUD, "Unable to open codec of stream url {}", url_);
 
             avformat_free_context(format_context_);
-            av_free_packet(&packet_);
-
             return false;
         }
 
@@ -269,7 +263,7 @@ namespace eka2l1::drivers {
             0, the_stream, ffmpeg_custom_rw_io_read, ffmpeg_custom_rw_io_write, ffmpeg_custom_rw_io_seek);
 
         if (!custom_io_) {
-            av_free(custom_io_buffer_);
+            av_freep(&custom_io_buffer_);
             return false;
         }
 
@@ -387,18 +381,18 @@ namespace eka2l1::drivers {
 
         if (custom_io_) {
             format_context_->pb = custom_io_;
+            format_context_->flags |= AVFMT_FLAG_CUSTOM_IO;
+
             url_ = "Dummy";
         }
 
         auto do_free_custom = [&]() {
-            if (custom_io_) {
-                avio_context_free(&custom_io_);
-                custom_io_ = nullptr;
+            if (custom_io_buffer_) {
+                av_freep(&custom_io_buffer_);
             }
 
-            if (custom_io_buffer_) {
-                av_free(custom_io_buffer_);
-                custom_io_buffer_ = nullptr;
+            if (custom_io_) {
+                avio_context_free(&custom_io_);
             }
         };
 
@@ -412,10 +406,13 @@ namespace eka2l1::drivers {
             return false;
         }
 
+        // The open input above already freed the custom IO buffer
+        custom_io_buffer_ = nullptr;
+
         if (!open_ffmpeg_stream()) {
             format_context_ = nullptr;
             do_free_custom();
-
+    
             return false;
         }
 
@@ -430,6 +427,7 @@ namespace eka2l1::drivers {
         , channel_layout_dest_(0)
         , custom_io_(nullptr)
         , custom_io_buffer_(nullptr) {
+        av_init_packet(&packet_);
     }
 
     player_ffmpeg::~player_ffmpeg() {
