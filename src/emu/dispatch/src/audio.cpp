@@ -108,7 +108,10 @@ namespace eka2l1::dispatch {
     }
 
     std::uint32_t dsp_epoc_player::max_volume() const {
-        return impl_->max_volume();
+        if (impl_) {
+            return impl_->max_volume();
+        }
+        return 0;
     }
 
     BRIDGE_FUNC_DISPATCHER(eka2l1::ptr<void>, eaudio_player_inst, const std::uint32_t init_flags) {
