@@ -180,6 +180,12 @@ namespace eka2l1::epoc {
 
         // Start to render these texts.
         for (auto &chr : text) {
+            if ((chr >= 0x200c && chr <= 0x200f) || (chr >= 0x202a && chr <= 0x202e) || (chr >= 0xfffe && chr <= 0xffff)) {
+                // Skip control characters
+                // TODO: Handle them properly
+                continue;
+            }
+
             eka2l1::rect source_rect;
             adapter::character_info &info = characters_[chr];
 
