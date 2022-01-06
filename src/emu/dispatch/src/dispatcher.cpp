@@ -41,7 +41,8 @@ namespace eka2l1::dispatch {
         , libmngr_(nullptr)
         , mem_(nullptr)
         , trampoline_allocated_(0)
-        , winserv_(nullptr) {
+        , winserv_(nullptr)
+        , egl_controller_(nullptr) {
         trampoline_chunk_ = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr, "DispatcherTrampolines", 0,
             MAX_TRAMPOLINE_CHUNK_SIZE, MAX_TRAMPOLINE_CHUNK_SIZE, prot_read_write_exec, kernel::chunk_type::normal,
             kernel::chunk_access::rom, kernel::chunk_attrib::none);
@@ -58,6 +59,10 @@ namespace eka2l1::dispatch {
     }
 
     dispatcher::~dispatcher() {
+    }
+    
+    void dispatcher::set_graphics_driver(drivers::graphics_driver *driver) {
+        egl_controller_.set_graphics_driver(driver);
     }
 
     void dispatcher::resolve(eka2l1::system *sys, const std::uint32_t function_ord) {

@@ -176,7 +176,8 @@ namespace eka2l1::dispatch {
             info.transfer_texture_size_ = size;
             info.format_ = format;
 
-            builder->set_texture_filter(info.transfer_texture_, drivers::filter_option::linear, drivers::filter_option::linear);
+            builder->set_texture_filter(info.transfer_texture_, true, drivers::filter_option::linear);
+            builder->set_texture_filter(info.transfer_texture_, false, drivers::filter_option::linear);
         }
 
         builder->update_texture(info.transfer_texture_, reinterpret_cast<const char*>(data), line_stride * size.y, data_format, type, eka2l1::vec3(0, 0, 0),

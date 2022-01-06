@@ -371,8 +371,20 @@ namespace eka2l1::drivers {
             bmp->init_fb(this);
         }
 
+        drivers::handle rh = 0;
+        helper.pop(rh);
+
+        drivers::framebuffer_bind_type bind_type = framebuffer_bind_read_draw;
+        if ((rh != 0) && (rh != h)) {
+            bitmap *bmp_read = get_bitmap(rh);
+            if (bmp_read) {
+                bmp_read->fb->bind(this, framebuffer_bind_read);
+                bind_type = framebuffer_bind_draw;
+            }
+        }
+
         // Bind the framebuffer
-        bmp->fb->bind(this, framebuffer_bind_read_draw);
+        bmp->fb->bind(this, bind_type);
         binding = bmp;
 
         // Build projection matrixx
@@ -495,23 +507,48 @@ namespace eka2l1::drivers {
         brush_color = { r, g, b, a };
     }
 
+    void shared_graphics_driver::create_module(command_helper &helper) {
+        const char *data = nullptr;
+        std::size_t data_size = 0;
+        drivers::shader_module_type mod_type = drivers::shader_module_type::vertex;
+
+        helper.pop(data);
+        helper.pop(data_size);
+
+        auto obj = make_shader_module(this);
+        if (!obj->create(this, data, data_size, mod_type)) {
+            LOG_ERROR(DRIVER_GRAPHICS, "Fail to create shader module!");
+            helper.finish(this, -1);
+            return;
+        }
+
+        std::unique_ptr<graphics_object> obj_casted = std::move(obj);
+        drivers::handle res = append_graphics_object(obj_casted);
+
+        drivers::handle *store = nullptr;
+        helper.pop(store);
+
+        *store = res;
+        helper.finish(this, 0);
+    }
+
     void shared_graphics_driver::create_program(command_helper &helper) {
-        char *vert_data = nullptr;
-        char *frag_data = nullptr;
+        drivers::handle vert_module_handle = 0;
+        drivers::handle frag_module_handle = 0;
         void **metadata = nullptr;
 
-        std::size_t vert_size = 0;
-        std::size_t frag_size = 0;
-
-        helper.pop(vert_data);
-        helper.pop(frag_data);
-        helper.pop(vert_size);
-        helper.pop(frag_size);
+        helper.pop(vert_module_handle);
+        helper.pop(frag_module_handle);
         helper.pop(metadata);
 
-        auto obj = make_shader(this);
-        if (!obj->create(this, vert_data, vert_size, frag_data, frag_size)) {
-            LOG_ERROR(DRIVER_GRAPHICS, "Fail to create shader");
+        auto obj = make_shader_program(this);
+
+        shader_module *vert_module_obj = reinterpret_cast<shader_module*>(get_graphics_object(vert_module_handle));
+        shader_module *frag_module_obj = reinterpret_cast<shader_module*>(get_graphics_object(frag_module_handle));
+
+        if (!obj->create(this, vert_module_obj, frag_module_obj)) {
+            LOG_ERROR(DRIVER_GRAPHICS, "Fail to create shader program!");
+            helper.finish(this, -1);
             return;
         }
 
@@ -650,35 +687,13 @@ namespace eka2l1::drivers {
         drivers::handle num;
         helper.pop(num);
 
-        shader *shobj = reinterpret_cast<shader *>(get_graphics_object(num));
+        shader_program *shobj = reinterpret_cast<shader_program *>(get_graphics_object(num));
 
         if (!shobj) {
             return;
         }
 
         shobj->use(this);
-    }
-
-    void shared_graphics_driver::set_uniform(command_helper &helper) {
-        drivers::handle num;
-        drivers::shader_set_var_type var_type;
-        std::uint8_t *data = nullptr;
-        int binding = 0;
-
-        helper.pop(num);
-        helper.pop(var_type);
-        helper.pop(data);
-        helper.pop(binding);
-
-        shader *shobj = reinterpret_cast<shader *>(get_graphics_object(num));
-
-        if (!shobj) {
-            return;
-        }
-
-        shobj->set(this, binding, var_type, data);
-
-        delete data;
     }
 
     void shared_graphics_driver::set_swizzle(command_helper &helper) {
@@ -775,7 +790,7 @@ namespace eka2l1::drivers {
         delete data;
     }
 
-    void shared_graphics_driver::attach_descriptors(drivers::handle h, const int stride, const bool instance_move,
+    void shared_graphics_driver::attach_descriptors(drivers::handle h,const bool instance_move,
         const attribute_descriptor *descriptors, const int descriptor_count) {
         buffer *bufobj = reinterpret_cast<buffer *>(get_graphics_object(h));
 
@@ -783,23 +798,21 @@ namespace eka2l1::drivers {
             return;
         }
 
-        bufobj->attach_descriptors(this, stride, instance_move, descriptors, descriptor_count);
+        bufobj->attach_descriptors(this, instance_move, descriptors, descriptor_count);
     }
 
     void shared_graphics_driver::attach_descriptors(command_helper &helper) {
         drivers::handle h = 0;
-        int stride = 0;
         bool instance_move = false;
         attribute_descriptor *descriptors = nullptr;
         int descriptor_count = 0;
 
         helper.pop(h);
-        helper.pop(stride);
         helper.pop(instance_move);
         helper.pop(descriptors);
         helper.pop(descriptor_count);
 
-        attach_descriptors(h, stride, instance_move, descriptors, descriptor_count);
+        attach_descriptors(h, instance_move, descriptors, descriptor_count);
 
         delete descriptors;
     }
@@ -813,12 +826,12 @@ namespace eka2l1::drivers {
 
     void shared_graphics_driver::set_filter(command_helper &helper) {
         drivers::handle h = 0;
-        drivers::filter_option min = drivers::filter_option::linear;
-        drivers::filter_option mag = drivers::filter_option::linear;
+        bool is_min = false;
+        drivers::filter_option filter = drivers::filter_option::linear;
 
         helper.pop(h);
-        helper.pop(min);
-        helper.pop(mag);
+        helper.pop(is_min);
+        helper.pop(filter);
 
         texture *texobj = nullptr;
 
@@ -839,8 +852,65 @@ namespace eka2l1::drivers {
             return;
         }
 
-        texobj->set_filter_minmag(false, min);
-        texobj->set_filter_minmag(true, mag);
+        texobj->set_filter_minmag(is_min, filter);
+    }
+
+    void shared_graphics_driver::set_texture_wrap(command_helper &helper) {
+        drivers::handle h = 0;
+        drivers::addressing_direction dir = drivers::addressing_direction::s;
+        drivers::addressing_option mode = drivers::addressing_option::repeat;
+
+        helper.pop(h);
+        helper.pop(dir);
+        helper.pop(mode);
+
+        texture *texobj = nullptr;
+
+        if (h & HANDLE_BITMAP) {
+            // Bind bitmap as texture
+            bitmap *b = get_bitmap(h);
+
+            if (!b) {
+                return;
+            }
+
+            texobj = b->tex.get();
+        } else {
+            texobj = reinterpret_cast<texture *>(get_graphics_object(h));
+        }
+
+        if (!texobj) {
+            return;
+        }
+
+        texobj->set_addressing_mode(dir, mode);
+    }
+
+    void shared_graphics_driver::generate_mips(command_helper &helper) {
+        drivers::handle h = 0;
+
+        helper.pop(h);
+
+        texture *texobj = nullptr;
+
+        if (h & HANDLE_BITMAP) {
+            // Bind bitmap as texture
+            bitmap *b = get_bitmap(h);
+
+            if (!b) {
+                return;
+            }
+
+            texobj = b->tex.get();
+        } else {
+            texobj = reinterpret_cast<texture *>(get_graphics_object(h));
+        }
+
+        if (!texobj) {
+            return;
+        }
+
+        texobj->generate_mips();
     }
 
     void shared_graphics_driver::set_swapchain_size(command_helper &helper) {
@@ -906,7 +976,11 @@ namespace eka2l1::drivers {
             break;
         }
 
-        case graphics_driver_create_program: {
+        case graphics_driver_create_shader_module:
+            create_module(helper);
+            break;
+
+        case graphics_driver_create_shader_program: {
             create_program(helper);
             break;
         }
@@ -918,11 +992,6 @@ namespace eka2l1::drivers {
 
         case graphics_driver_create_buffer: {
             create_buffer(helper);
-            break;
-        }
-
-        case graphics_driver_set_uniform: {
-            set_uniform(helper);
             break;
         }
 
@@ -976,6 +1045,14 @@ namespace eka2l1::drivers {
 
         case graphics_driver_update_texture:
             update_texture(helper);
+            break;
+
+        case graphics_driver_set_texture_wrap:
+            set_texture_wrap(helper);
+            break;
+
+        case graphics_driver_generate_mips:
+            generate_mips(helper);
             break;
 
         default:

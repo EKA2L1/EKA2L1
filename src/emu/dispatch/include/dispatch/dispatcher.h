@@ -22,7 +22,7 @@
 #include <cstdint>
 
 #include <dispatch/management.h>
-#include <dispatch/libraries/gles/egl.h>
+#include <dispatch/libraries/egl/def.h>
 
 #include <drivers/audio/dsp.h>
 #include <drivers/audio/player.h>
@@ -234,7 +234,9 @@ namespace eka2l1::dispatch {
         explicit dispatcher(kernel_system *kern, ntimer *timing);
         ~dispatcher();
 
+        void set_graphics_driver(drivers::graphics_driver *driver);
         void shutdown(drivers::graphics_driver *driver);
+
         bool patch_libraries(const std::u16string &path, patch_info *patches,
             const std::size_t patch_count);
 

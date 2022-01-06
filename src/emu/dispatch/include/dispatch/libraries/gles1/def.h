@@ -19,10 +19,12 @@
 
 #pragma once
 
-#include <dispatch/libraries/gles/def.h>
+#include <dispatch/libraries/egl/def.h>
+#include <dispatch/libraries/gles1/consts.h>
 #include <dispatch/def.h>
 
 #include <common/container.h>
+#include <common/vecx.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -39,15 +41,6 @@ namespace eka2l1 {
 
 namespace eka2l1::dispatch {
     #define FIXED_32_TO_FLOAT(x) (float)(x) / 65536.0f
-
-    enum {
-        // Most GLES1 Symbian phone seems to only supported up to 2 slots (even iPhone 3G is so).
-        // But be three for safety. Always feel 2 is too limited.
-        GLES1_EMU_MAX_TEXTURE_SIZE = 4096,
-        GLES1_EMU_MAX_TEXTURE_MIP_LEVEL = 10,
-        GLES1_EMU_MAX_TEXTURE_COUNT = 3,
-        GLES1_EMU_MAX_LIGHT = 8
-    };
 
     enum gles1_object_type {
         GLES1_OBJECT_TEXTURE,
@@ -79,6 +72,12 @@ namespace eka2l1::dispatch {
     struct gles1_driver_texture : public gles1_driver_object {
     private:
         std::uint32_t internal_format_;
+        std::uint32_t min_filter_;
+        std::uint32_t mag_filter_;
+        std::uint32_t wrap_s_;
+        std::uint32_t wrap_t_;
+        bool auto_regen_mipmap_;
+
         eka2l1::vec2 size_;
 
     public:
@@ -94,6 +93,46 @@ namespace eka2l1::dispatch {
 
         void set_size(const eka2l1::vec2 size) {
             size_ = size;
+        }
+
+        void set_min_filter(const std::uint32_t min_filter) {
+            min_filter_ = min_filter;
+        }
+
+        std::uint32_t get_min_filter() const {
+            return min_filter_;
+        }
+
+        void set_mag_filter(const std::uint32_t mag_filter) {
+            mag_filter_ = mag_filter;
+        }
+
+        std::uint32_t get_mag_filter() const {
+            return mag_filter_;
+        }
+
+        void set_wrap_s(const std::uint32_t wrap_s) {
+            wrap_s_ = wrap_s;
+        }
+
+        std::uint32_t get_wrap_s() const {
+            return wrap_s_;
+        }
+
+        void set_wrap_t(const std::uint32_t wrap_t) {
+            wrap_t_ = wrap_t;
+        }
+
+        std::uint32_t get_wrap_t() const {
+            return wrap_t_;
+        }
+
+        bool auto_regenerate_mipmap() const {
+            return auto_regen_mipmap_;
+        }
+
+        void set_auto_regenerate_mipmap(const bool opt) {
+            auto_regen_mipmap_ = opt;
         }
 
         eka2l1::vec2 size() const {
@@ -157,12 +196,12 @@ namespace eka2l1::dispatch {
 
         enum source_type {
             SOURCE_TYPE_CURRENT_TEXTURE = 0,
-            SOURCE_TYPE_TEXTURE_STAGE_0 = 0,
-            SOURCE_TYPE_TEXTURE_STAGE_1 = 1,
-            SOURCE_TYPE_TEXTURE_STAGE_2 = 2,
-            SOURCE_TYPE_CONSTANT = 3,
-            SOURCE_TYPE_PRIM_COLOR = 4,
-            SOURCE_TYPE_PREVIOUS = 5
+            SOURCE_TYPE_TEXTURE_STAGE_0 = 1,
+            SOURCE_TYPE_TEXTURE_STAGE_1 = 2,
+            SOURCE_TYPE_TEXTURE_STAGE_2 = 3,
+            SOURCE_TYPE_CONSTANT = 4,
+            SOURCE_TYPE_PRIM_COLOR = 5,
+            SOURCE_TYPE_PREVIOUS = 6
         };
 
         enum source_operand {
@@ -202,16 +241,27 @@ namespace eka2l1::dispatch {
         std::uint8_t rgb_scale_;
 
         float coord_uniforms_[4];
+        float env_colors_[4];
 
         explicit gles_texture_unit();
+    };
+
+    struct gles1_light_info {
+        float ambient_[4];
+        float diffuse_[4];
+        float specular_[4];
+        float position_or_dir_[4];
+        float spot_dir_[3];
+        float spot_exponent_;
+        float spot_cutoff_;
+        float attenuatation_[3];
+
+        explicit gles1_light_info();
     };
 
     using gles1_driver_object_instance = std::unique_ptr<gles1_driver_object>;
 
     struct egl_context_es1 : public egl_context {
-        std::unique_ptr<drivers::graphics_command_list> command_list_;
-        std::unique_ptr<drivers::server_graphics_command_list_builder> command_builder_;
-
         float clear_color_[4];
         float clear_depth_;
         std::int32_t clear_stencil_;
@@ -248,16 +298,55 @@ namespace eka2l1::dispatch {
             FRAGMENT_STATE_FOG_MODE_LINEAR = 0b00000000,
             FRAGMENT_STATE_FOG_MODE_EXP = 0b01000000,
             FRAGMENT_STATE_FOG_MODE_EXP2 = 0b10000000,
+            FRAGMENT_STATE_LIGHTING_ENABLE = 1 << 8,
+            FRAGMENT_STATE_LIGHT0_ON = 1 << 9,
+            FRAGMENT_STATE_LIGHT1_ON = 1 << 10,
+            FRAGMENT_STATE_LIGHT2_ON = 1 << 11,
+            FRAGMENT_STATE_LIGHT3_ON = 1 << 12,
+            FRAGMENT_STATE_LIGHT4_ON = 1 << 13,
+            FRAGMENT_STATE_LIGHT5_ON = 1 << 14,
+            FRAGMENT_STATE_LIGHT6_ON = 1 << 15,
+            FRAGMENT_STATE_LIGHT7_ON = 1 << 16,
+            FRAGMENT_STATE_LIGHT_TWO_SIDE = 1 << 17,
+            FRAGMENT_STATE_LIGHT_RELATED_MASK = 0b111111111000000000,
+            FRAGMENT_STATE_TEXTURE_ENABLE = 1 << 18,
+            FRAGMENT_STATE_CLIP_PLANE_BIT_POS = 19,
+            FRAGMENT_STATE_CLIP_PLANE0_ENABLE = 1 << 19,
+            FRAGMENT_STATE_CLIP_PLANE1_ENABLE = 1 << 20,
+            FRAGMENT_STATE_CLIP_PLANE2_ENABLE = 1 << 21,
+            FRAGMENT_STATE_CLIP_PLANE3_ENABLE = 1 << 22,
+            FRAGMENT_STATE_CLIP_PLANE4_ENABLE = 1 << 23,
+            FRAGMENT_STATE_CLIP_PLANE5_ENABLE = 1 << 24,
 
             VERTEX_STATE_CLIENT_VERTEX_ARRAY = 1 << 0,
             VERTEX_STATE_CLIENT_COLOR_ARRAY = 1 << 1,
             VERTEX_STATE_CLIENT_NORMAL_ARRAY = 1 << 2,
-            VERTEX_STATE_CLIENT_TEXCOORD_ARRAY = 1 << 3
+            VERTEX_STATE_CLIENT_TEXCOORD_ARRAY = 1 << 3,
+            VERTEX_STATE_CLIENT_ARRAY_MASK = 0b1111,
+            VERTEX_STATE_NORMAL_ENABLE_RESCALE = 1 << 4,
+            VERTEX_STATE_NORMAL_ENABLE_NORMALIZE = 1 << 5,
+
+            NON_SHADER_STATE_BLEND_ENABLE = 1 << 0,
+            NON_SHADER_STATE_COLOR_LOGIC_OP_ENABLE = 1 << 1,
+            NON_SHADER_STATE_CULL_FACE_ENABLE = 1 << 2,
+            NON_SHADER_STATE_COLOR_MATERIAL_ENABLE = 1 << 3,
+            NON_SHADER_STATE_DEPTH_TEST_ENABLE = 1 << 4,
+            NON_SHADER_STATE_STENCIL_TEST_ENABLE = 1 << 5,
+            NON_SHADER_STATE_LINE_SMOOTH = 1 << 6,
+            NON_SHADER_STATE_DITHER = 1 << 7,
+            NON_SHADER_STATE_SCISSOR_ENABLE = 1 << 8,
+            NON_SHADER_STATE_POLYGON_OFFSET_FILL = 1 << 9,
+            NON_SHADER_STATE_MULTISAMPLE = 1 << 10,
+            NON_SHADER_STATE_SAMPLE_ALPHA_TO_COVERAGE = 1 << 11,
+            NON_SHADER_STATE_SAMPLE_ALPHA_TO_ONE = 1 << 12,
+            NON_SHADER_STATE_SAMPLE_COVERAGE = 1 << 13
         };
 
         gles1_vertex_attrib vertex_attrib_;
         gles1_vertex_attrib color_attrib_;
         gles1_vertex_attrib normal_attrib_;
+
+        bool attrib_changed_;
 
         float color_uniforms_[4];
         float normal_uniforms_[3];
@@ -275,13 +364,31 @@ namespace eka2l1::dispatch {
         float fog_end_;
         float fog_color_[4];
 
+        // Lights
+        gles1_light_info lights_[8];
+        float global_ambient_[4];
+
+        // Viewport
+        eka2l1::rect viewport_bl_;
+        eka2l1::rect scissor_bl_;
+
+        // Clip planes
+        float clip_planes_[GLES1_EMU_MAX_CLIP_PLANE][4];
+
         std::uint64_t vertex_statuses_;
         std::uint64_t fragment_statuses_;
+        std::uint64_t non_shader_statuses_;
 
         std::uint8_t color_mask_;
         std::uint32_t stencil_mask_;
+        std::uint32_t depth_mask_;
+
+        std::uint32_t depth_func_;
 
         float alpha_test_ref_;
+
+        drivers::handle index_buffer_temp_;
+        std::size_t index_buffer_temp_size_;
 
         explicit egl_context_es1();
         glm::mat4 &active_matrix();
@@ -299,78 +406,4 @@ namespace eka2l1::dispatch {
     };
 
     egl_context_es1 *get_es1_active_context(system *sys);
-
-    BRIDGE_FUNC_DISPATCHER(void, gl_clear_color_emu, float red, float green, float blue, float alpha);
-    BRIDGE_FUNC_DISPATCHER(void, gl_clear_colorx_emu, std::int32_t red, std::int32_t green, std::int32_t blue, std::int32_t alpha);
-    BRIDGE_FUNC_DISPATCHER(void, gl_clear_depthf_emu, float depth);
-    BRIDGE_FUNC_DISPATCHER(void, gl_clear_depthx_emu, std::int32_t depth);
-    BRIDGE_FUNC_DISPATCHER(void, gl_clear_stencil, std::int32_t s);
-    BRIDGE_FUNC_DISPATCHER(void, gl_clear_emu, std::uint32_t bits);
-    BRIDGE_FUNC_DISPATCHER(void, gl_matrix_mode_emu, std::uint32_t mode);
-    BRIDGE_FUNC_DISPATCHER(void, gl_push_matrix_emu);
-    BRIDGE_FUNC_DISPATCHER(void, gl_pop_matrix_emu);
-    BRIDGE_FUNC_DISPATCHER(void, gl_load_identity_emu, float *mat);
-    BRIDGE_FUNC_DISPATCHER(void, gl_load_matrixf_emu, std::uint32_t *mat);
-    BRIDGE_FUNC_DISPATCHER(std::uint32_t, gl_get_error_emu);
-    BRIDGE_FUNC_DISPATCHER(void, gl_orthof_emu, float left, float right, float bottom, float top, float near, float far);
-    BRIDGE_FUNC_DISPATCHER(void, gl_orthox_emu, std::uint32_t left, std::uint32_t right, std::uint32_t bottom, std::uint32_t top, std::uint32_t near, std::uint32_t far);
-    BRIDGE_FUNC_DISPATCHER(void, gl_mult_matrixf_emu, float *m);
-    BRIDGE_FUNC_DISPATCHER(void, gl_mult_matrixx_emu, std::uint32_t *m);
-    BRIDGE_FUNC_DISPATCHER(void, gl_scalef_emu, float x, float y, float z);
-    BRIDGE_FUNC_DISPATCHER(void, gl_scalex_emu, std::uint32_t x, std::uint32_t y, std::uint32_t z);
-    BRIDGE_FUNC_DISPATCHER(void, gl_translatef_emu, float x, float y, float z);
-    BRIDGE_FUNC_DISPATCHER(void, gl_translatex_emu, std::uint32_t x, std::uint32_t y, std::uint32_t z);
-    BRIDGE_FUNC_DISPATCHER(void, gl_rotatef_emu, float angles, float x, float y, float z);
-    BRIDGE_FUNC_DISPATCHER(void, gl_rotatex_emu, std::uint32_t angles, std::uint32_t x, std::uint32_t y, std::uint32_t z);
-    BRIDGE_FUNC_DISPATCHER(void, gl_frustumf_emu, float left, float right, float bottom, float top, float near, float far);
-    BRIDGE_FUNC_DISPATCHER(void, gl_frustumx_emu, std::uint32_t left, std::uint32_t right, std::uint32_t bottom, std::uint32_t top, std::uint32_t near, std::uint32_t far);
-    BRIDGE_FUNC_DISPATCHER(void, gl_cull_face_emu, std::uint32_t mode);
-    BRIDGE_FUNC_DISPATCHER(void, gl_scissor_emu, std::int32_t x, std::int32_t y, std::int32_t width, std::int32_t height);
-    BRIDGE_FUNC_DISPATCHER(void, gl_front_face_emu, std::uint32_t mode);
-    BRIDGE_FUNC_DISPATCHER(void, gl_front_face_emu, std::uint32_t mode);
-    BRIDGE_FUNC_DISPATCHER(bool, gl_is_texture_emu, std::uint32_t name);
-    BRIDGE_FUNC_DISPATCHER(bool, gl_is_buffer_emu, std::uint32_t name);
-    BRIDGE_FUNC_DISPATCHER(void, gl_gen_textures_emu, std::int32_t n, std::uint32_t *texs);
-    BRIDGE_FUNC_DISPATCHER(void, gl_gen_buffers_emu, std::int32_t n, std::uint32_t *buffers);
-    BRIDGE_FUNC_DISPATCHER(void, gl_delete_textures_emu, std::int32_t n, std::uint32_t *texs);
-    BRIDGE_FUNC_DISPATCHER(void, gl_bind_texture_emu, std::uint32_t target, std::uint32_t name);
-    BRIDGE_FUNC_DISPATCHER(void, gl_bind_buffer_emu, std::uint32_t target, std::uint32_t name);
-    BRIDGE_FUNC_DISPATCHER(void, gl_tex_image_2d_emu, std::uint32_t target, std::int32_t level, std::int32_t internal_format,
-        std::int32_t width, std::int32_t height, std::int32_t border, std::uint32_t format, std::uint32_t data_type,
-        void *data_pixels);
-    BRIDGE_FUNC_DISPATCHER(void, gl_tex_sub_image_2d_emu, std::uint32_t target, std::int32_t level, std::int32_t xoffset,
-        std::int32_t yoffset, std::int32_t width, std::int32_t height, std::uint32_t format, std::uint32_t data_type,
-        void *data_pixels);
-    BRIDGE_FUNC_DISPATCHER(void, gl_alpha_func_emu, std::uint32_t func, float ref);
-    BRIDGE_FUNC_DISPATCHER(void, gl_alpha_func_x_emu, std::uint32_t func, std::uint32_t ref);
-    BRIDGE_FUNC_DISPATCHER(void, gl_normal_3f_emu, float nx, float ny, float nz);
-    BRIDGE_FUNC_DISPATCHER(void, gl_normal_3x_emu, std::uint32_t nx, std::uint32_t ny, std::uint32_t nz);
-    BRIDGE_FUNC_DISPATCHER(void, gl_color_4f_emu, float red, float green, float blue, float alpha);
-    BRIDGE_FUNC_DISPATCHER(void, gl_color_4x_emu, std::uint32_t red, std::uint32_t green, std::uint32_t blue, std::uint32_t alpha);
-    BRIDGE_FUNC_DISPATCHER(void, gl_color_4ub_emu, std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha);
-    BRIDGE_FUNC_DISPATCHER(void, gl_shade_model_emu, std::uint32_t model);
-    BRIDGE_FUNC_DISPATCHER(void, gl_active_texture_emu, std::uint32_t unit);
-    BRIDGE_FUNC_DISPATCHER(void, gl_client_active_texture_emu, std::uint32_t unit);
-    BRIDGE_FUNC_DISPATCHER(void, gl_multi_tex_coord_4f_emu, std::uint32_t unit, float s, float t, float r, float q);
-    BRIDGE_FUNC_DISPATCHER(void, gl_multi_tex_coord_4x_emu, std::uint32_t unit, std::uint32_t s, std::uint32_t t, std::uint32_t r, std::uint32_t q);
-    BRIDGE_FUNC_DISPATCHER(void, gl_enable_client_state_emu, std::uint32_t state);
-    BRIDGE_FUNC_DISPATCHER(void, gl_disable_client_state_emu, std::uint32_t state);
-    BRIDGE_FUNC_DISPATCHER(void, gl_buffer_data_emu, std::uint32_t target, std::int32_t size, const void *data, std::uint32_t usage);
-    BRIDGE_FUNC_DISPATCHER(void, gl_buffer_sub_data_emu, std::uint32_t target, std::int32_t offset, std::int32_t size, const void *data);
-    BRIDGE_FUNC_DISPATCHER(void, gl_color_pointer_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset);
-    BRIDGE_FUNC_DISPATCHER(void, gl_normal_pointer_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset);
-    BRIDGE_FUNC_DISPATCHER(void, gl_vertex_pointer_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset);
-    BRIDGE_FUNC_DISPATCHER(void, gl_texcoord_pointer_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset);
-    BRIDGE_FUNC_DISPATCHER(void, gl_material_f_emu, std::uint32_t target, std::uint32_t pname, const float pvalue);
-    BRIDGE_FUNC_DISPATCHER(void, gl_material_x_emu, std::uint32_t target, std::uint32_t pname, const std::uint32_t pvalue);
-    BRIDGE_FUNC_DISPATCHER(void, gl_material_fv_emu, std::uint32_t target, std::uint32_t pname, const float *pvalue);
-    BRIDGE_FUNC_DISPATCHER(void, gl_material_fx_emu, std::uint32_t target, std::uint32_t pname, const std::uint32_t *pvalue);
-    BRIDGE_FUNC_DISPATCHER(void, gl_fog_f_emu, std::uint32_t target, const float param);
-    BRIDGE_FUNC_DISPATCHER(void, gl_fog_x_emu, std::uint32_t target, const std::uint32_t param);
-    BRIDGE_FUNC_DISPATCHER(void, gl_fog_fv_emu, std::uint32_t target, const float *param);
-    BRIDGE_FUNC_DISPATCHER(void, gl_fog_xv_emu, std::uint32_t target, const std::uint32_t *param);
-    BRIDGE_FUNC_DISPATCHER(void, gl_color_mask_emu, std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha);
-    BRIDGE_FUNC_DISPATCHER(void, gl_blend_func_emu, std::uint32_t source_factor, std::uint32_t dest_factor);
-    BRIDGE_FUNC_DISPATCHER(void, gl_stencil_mask_emu, std::uint32_t mask);
-    BRIDGE_FUNC_DISPATCHER(void, gl_tex_envi_emu, std::uint32_t target, std::uint32_t name, std::int32_t param);
 }

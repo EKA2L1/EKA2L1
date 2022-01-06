@@ -57,10 +57,11 @@ namespace eka2l1::drivers {
         std::unique_ptr<graphics::gl_context> context_;
 
         eka2l1::request_queue<server_graphics_command_list> list_queue;
-        std::unique_ptr<ogl_shader> sprite_program;
-        std::unique_ptr<ogl_shader> brush_program;
-        std::unique_ptr<ogl_shader> mask_program;
-        std::unique_ptr<ogl_shader> pen_program;
+
+        std::unique_ptr<ogl_shader_program> sprite_program;
+        std::unique_ptr<ogl_shader_program> brush_program;
+        std::unique_ptr<ogl_shader_program> mask_program;
+        std::unique_ptr<ogl_shader_program> pen_program;
 
         GLuint sprite_vao;
         GLuint sprite_vbo;
@@ -121,12 +122,14 @@ namespace eka2l1::drivers {
         void draw_rectangle(command_helper &helper);
         void clip_rect(command_helper &helper);
         void draw_indexed(command_helper &helper);
+        void draw_array(command_helper &helper);
         void set_viewport(command_helper &helper);
         void set_feature(command_helper &helper);
         void blend_formula(command_helper &helper);
         void set_stencil_action(command_helper &helper);
         void set_stencil_pass_condition(command_helper &helper);
         void set_stencil_mask(command_helper &helper);
+        void set_depth_mask(command_helper &helper);
         void display(command_helper &helper);
         void set_point_size(command_helper &helper);
         void set_pen_style(command_helper &helper);
@@ -135,6 +138,9 @@ namespace eka2l1::drivers {
         void set_cull_face(command_helper &helper);
         void set_front_face_rule(command_helper &helper);
         void set_color_mask(command_helper &helper);
+        void set_depth_func(command_helper &helper);
+        void set_uniform(command_helper &helper);
+        void set_texture_for_shader(command_helper &helper);
 
         void save_gl_state();
         void load_gl_state();

@@ -21,6 +21,7 @@
 #include <drivers/graphics/backend/ogl/shader_ogl.h>
 #include <glad/glad.h>
 
+#include <common/buffer.h>
 #include <common/log.h>
 
 #include <fstream>
@@ -77,106 +78,116 @@ namespace eka2l1::drivers {
         }
     }
 
-    ogl_shader::ogl_shader(const std::string &vert_path,
-        const std::string &frag_path) {
-        std::ifstream vert_file(vert_path, std::ios_base::binary);
-        std::ifstream frag_file(frag_path, std::ios_base::binary);
-
-        std::stringstream vertex_stream, fragment_stream;
-
-        vertex_stream << vert_file.rdbuf();
-        fragment_stream << frag_file.rdbuf();
-
-        vert_file.close();
-        frag_file.close();
-
-        std::string vertex_code = vertex_stream.str();
-        std::string fragment_code = fragment_stream.str();
-
-        create(nullptr, vertex_code.data(), vertex_code.size(), fragment_code.data(),
-            fragment_code.size());
+    ogl_shader_module::ogl_shader_module()
+        : shader(0) {
     }
 
-    ogl_shader::ogl_shader(const char *vert_data, const std::size_t vert_size,
-        const char *frag_data, const std::size_t frag_size) {
-        create(nullptr, vert_data, vert_size, frag_data, frag_size);
+    ogl_shader_module::ogl_shader_module(const std::string &path, const shader_module_type type)
+        : shader(0) {
+        common::ro_std_file_stream stream(path, std::ios_base::binary);
+        
+        std::string whole_code;
+        whole_code.resize(stream.size());
+
+        stream.read(whole_code.data(), whole_code.size());
+
+        create(nullptr, whole_code.data(), whole_code.size(), type);
     }
 
-    ogl_shader::~ogl_shader() {
-        if (metadata) {
-            delete metadata;
-        }
-
-        if (program != 0) {
-            glDeleteProgram(program);
-        }
+    ogl_shader_module::ogl_shader_module(const char *data, const std::size_t size, const shader_module_type type)
+        : shader(0) {
+        create(nullptr, data, size, type);
     }
 
-    bool ogl_shader::create(graphics_driver *driver, const char *vert_data, const std::size_t vert_size,
-        const char *frag_data, const std::size_t frag_size) {
-        metadata = nullptr;
+    ogl_shader_module::~ogl_shader_module() {
+        if (shader)
+            glDeleteShader(shader);
+    }
 
-        std::uint32_t vert = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vert, 1, &vert_data, nullptr);
-        glCompileShader(vert);
+    bool ogl_shader_module::create(graphics_driver *driver, const char *data, const std::size_t size, const shader_module_type type) {
+        shader = glCreateShader(((type == shader_module_type::vertex) ? GL_VERTEX_SHADER :
+            ((type == shader_module_type::fragment) ? GL_FRAGMENT_SHADER : GL_GEOMETRY_SHADER)));
+
+        glShaderSource(shader, 1, &data, nullptr);
+        glCompileShader(shader);
 
         int success;
         char error[512] = { '\0' };
 
-        glGetShaderiv(vert, GL_COMPILE_STATUS, &success);
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
 
         if (!success) {
-            glGetShaderInfoLog(vert, 512, nullptr, error);
-            LOG_ERROR(DRIVER_GRAPHICS, "Error while compiling vertex shader: {}, abort", error);
+            glGetShaderInfoLog(shader, 512, nullptr, error);
+            LOG_ERROR(DRIVER_GRAPHICS, "Error while compiling shader: {}, abort", error);
 
-            glDeleteShader(vert);
+            glDeleteShader(shader);
             return false;
         }
 
-        std::uint32_t frag = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(frag, 1, &frag_data, nullptr);
-        glCompileShader(frag);
-
-        glGetShaderiv(frag, GL_COMPILE_STATUS, &success);
+        glDeleteShader(shader);
 
         if (!success) {
-            glGetShaderInfoLog(frag, 512, nullptr, error);
-            LOG_ERROR(DRIVER_GRAPHICS, "Error while compiling fragment shader: {}, abort", error);
-
-            glDeleteShader(vert);
-            glDeleteShader(frag);
-
             return false;
+        }
+
+        return true;
+    }
+
+    ogl_shader_program::ogl_shader_program()
+        : program(0)
+        , metadata(0) {
+    }
+
+    ogl_shader_program::~ogl_shader_program() {
+        if (metadata) {
+            delete metadata;
+        }
+
+        if (program) {
+            glDeleteProgram(program);
+        }
+    }
+
+    bool ogl_shader_program::create(graphics_driver *driver, shader_module *vertex_module, shader_module *fragment_module) {
+        ogl_shader_module *ogl_vertex_module = reinterpret_cast<ogl_shader_module*>(vertex_module);
+        ogl_shader_module *ogl_fragment_module = reinterpret_cast<ogl_shader_module*>(fragment_module);
+
+        if (!ogl_vertex_module || !ogl_fragment_module) {
+            return false;
+        }
+
+        if (program) {
+            glDeleteProgram(program);
         }
 
         program = glCreateProgram();
-        glAttachShader(program, vert);
-        glAttachShader(program, frag);
+        glAttachShader(program, ogl_vertex_module->shader_handle());
+        glAttachShader(program, ogl_fragment_module->shader_handle());
+
+        GLint success = 0;
 
         glLinkProgram(program);
         glGetProgramiv(program, GL_LINK_STATUS, &success);
 
         if (!success) {
+            char error[512] = { '\0' };
+
             glGetProgramInfoLog(program, 512, nullptr, error);
             LOG_ERROR(DRIVER_GRAPHICS, "Error while linking shader program: {}", error);
-        }
 
-        glDeleteShader(vert);
-        glDeleteShader(frag);
-
-        if (!success) {
+            glDeleteProgram(program);
             return false;
         }
 
         return true;
     }
 
-    bool ogl_shader::use(graphics_driver *driver) {
+    bool ogl_shader_program::use(graphics_driver *driver) {
         glUseProgram(program);
         return true;
     }
 
-    std::optional<int> ogl_shader::get_uniform_location(const std::string &name) {
+    std::optional<int> ogl_shader_program::get_uniform_location(const std::string &name) {
         const auto res = glGetUniformLocation(program, name.c_str());
 
         if (res == -1) {
@@ -186,7 +197,7 @@ namespace eka2l1::drivers {
         return res;
     }
 
-    std::optional<int> ogl_shader::get_attrib_location(const std::string &name) {
+    std::optional<int> ogl_shader_program::get_attrib_location(const std::string &name) {
         const auto res = glGetAttribLocation(program, name.c_str());
 
         if (res == -1) {
@@ -196,46 +207,7 @@ namespace eka2l1::drivers {
         return res;
     }
 
-    bool ogl_shader::set(graphics_driver *driver, const std::string &name, const shader_set_var_type var_type, const void *data) {
-        const auto loc = glGetUniformLocation(program, name.c_str());
-
-        if (loc == -1) {
-            return false;
-        }
-
-        return set(driver, loc, var_type, data);
-    }
-
-    bool ogl_shader::set(graphics_driver *driver, const int binding, const shader_set_var_type var_type, const void *data) {
-        switch (var_type) {
-        case shader_set_var_type::integer: {
-            glUniform1i(binding, *reinterpret_cast<const GLint *>(data));
-            return true;
-        }
-
-        case shader_set_var_type::mat4: {
-            glUniformMatrix4fv(binding, 1, GL_FALSE, reinterpret_cast<const GLfloat *>(data));
-            return true;
-        }
-
-        case shader_set_var_type::vec3: {
-            glUniform3fv(binding, 1, reinterpret_cast<const GLfloat *>(data));
-            return true;
-        }
-
-        case shader_set_var_type::vec4: {
-            glUniform4fv(binding, 1, reinterpret_cast<const GLfloat *>(data));
-            return true;
-        }
-
-        default:
-            break;
-        }
-
-        return false;
-    }
-
-    void *ogl_shader::get_metadata() {
+    void *ogl_shader_program::get_metadata() {
         if (!metadata) {
             std::vector<std::uint8_t> data;
             build_metadata(program, data);

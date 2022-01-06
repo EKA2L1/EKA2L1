@@ -189,7 +189,7 @@ namespace eka2l1::drivers {
         unbind(driver);
     }
 
-    void ogl_buffer::attach_descriptors(graphics_driver *driver, const int stride, const bool instance_move,
+    void ogl_buffer::attach_descriptors(graphics_driver *driver, const bool instance_move,
         const attribute_descriptor *descriptors, const int total) {
         if (hint_ != buffer_hint::vertex_buffer) {
             return;
@@ -212,7 +212,7 @@ namespace eka2l1::drivers {
             glEnableVertexAttribArray(descriptor.location);
 
             std::uint64_t offset_descriptor = descriptor.offset;
-            glVertexAttribPointer(descriptor.location, comp_count, data_type, false, stride, (GLvoid *)offset_descriptor);
+            glVertexAttribPointer(descriptor.location, comp_count, data_type, false, descriptor.stride, (GLvoid *)offset_descriptor);
         }
 
         unbind(driver);

@@ -88,13 +88,22 @@ namespace eka2l1::drivers {
 
         return handle_num;
     }
+    
+    drivers::handle create_shader_module(graphics_driver *driver, const char *data, const std::size_t size, const shader_module_type mtype) {
+        drivers::handle handle_num = 0;
 
-    drivers::handle create_program(graphics_driver *driver, const char *vert_data, const std::size_t vert_size,
-        const char *frag_data, const std::size_t frag_size, shader_metadata *metadata) {
+        if (send_sync_command(driver, graphics_driver_create_shader_module, data, size, mtype, &handle_num) != 0) {
+            return 0;
+        }
+
+        return handle_num;
+    }
+
+    drivers::handle create_shader_program(graphics_driver *driver, drivers::handle vert_mod, drivers::handle frag_mod, shader_program_metadata *&metadata) {
         drivers::handle handle_num = 0;
         std::uint8_t *metadata_ptr = nullptr;
 
-        if (send_sync_command(driver, graphics_driver_create_program, vert_data, frag_data, vert_size, frag_size, &metadata_ptr, &handle_num) != 0) {
+        if (send_sync_command(driver, graphics_driver_create_shader_program, vert_mod, frag_mod, &metadata_ptr, &handle_num) != 0) {
             return 0;
         }
 
@@ -199,7 +208,12 @@ namespace eka2l1::drivers {
     }
 
     void server_graphics_command_list_builder::bind_bitmap(const drivers::handle h) {
-        command *cmd = make_command(graphics_driver_bind_bitmap, nullptr, h);
+        command *cmd = make_command(graphics_driver_bind_bitmap, nullptr, h, 0);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::bind_bitmap(const drivers::handle draw_handle, const drivers::handle read_handle) {
+        command *cmd = make_command(graphics_driver_bind_bitmap, nullptr, draw_handle, read_handle);
         get_command_list().add(cmd);
     }
 
@@ -220,11 +234,11 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
 
-    void server_graphics_command_list_builder::set_uniform(drivers::handle h, const int binding, const drivers::shader_set_var_type var_type,
+    void server_graphics_command_list_builder::set_dynamic_uniform(const int binding, const drivers::shader_set_var_type var_type,
         const void *data, const std::size_t data_size) {
         const void *uniform_data = make_data_copy(data, data_size);
 
-        command *cmd = make_command(graphics_driver_set_uniform, nullptr, h, var_type, uniform_data, binding);
+        command *cmd = make_command(graphics_driver_set_uniform, nullptr, var_type, uniform_data, binding);
         get_command_list().add(cmd);
     }
 
@@ -238,7 +252,12 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
 
-    void server_graphics_command_list_builder::bind_buffer(drivers::handle h) {
+    void server_graphics_command_list_builder::draw_arrays(const graphics_primitive_mode prim_mode, const std::int32_t first, const std::int32_t count, const std::int32_t instance_count) {
+        command *cmd = make_command(graphics_driver_draw_array, nullptr, prim_mode, first, count, instance_count);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::set_buffer_active(drivers::handle h) {
         command *cmd = make_command(graphics_driver_bind_buffer, nullptr, h);
         get_command_list().add(cmd);
     }
@@ -309,10 +328,10 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
 
-    void server_graphics_command_list_builder::attach_descriptors(drivers::handle h, const int stride, const bool instance_move,
+    void server_graphics_command_list_builder::attach_descriptors(drivers::handle h, const bool instance_move,
         const attribute_descriptor *descriptors, const int descriptor_count) {
         void *des = make_data_copy(descriptors, descriptor_count * sizeof(attribute_descriptor));
-        command *cmd = make_command(graphics_driver_attach_descriptors, nullptr, h, stride, instance_move, des, descriptor_count);
+        command *cmd = make_command(graphics_driver_attach_descriptors, nullptr, h, instance_move, des, descriptor_count);
         get_command_list().add(cmd);
     }
 
@@ -331,8 +350,18 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
 
-    void server_graphics_command_list_builder::set_texture_filter(drivers::handle h, const drivers::filter_option min, const drivers::filter_option mag) {
-        command *cmd = make_command(graphics_driver_set_texture_filter, nullptr, h, min, mag);
+    void server_graphics_command_list_builder::set_texture_filter(drivers::handle h, const bool is_min, const drivers::filter_option mag) {
+        command *cmd = make_command(graphics_driver_set_texture_filter, nullptr, h, is_min, mag);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::set_texture_addressing_mode(drivers::handle h, const drivers::addressing_direction dir, const drivers::addressing_option opt) {
+        command *cmd = make_command(graphics_driver_set_texture_wrap, nullptr, h, dir, opt);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::regenerate_mips(drivers::handle h) {
+        command *cmd = make_command(graphics_driver_generate_mips, nullptr, h);
         get_command_list().add(cmd);
     }
 
@@ -385,6 +414,16 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
 
+    void server_graphics_command_list_builder::set_depth_mask(const std::uint32_t mask) {
+        command *cmd = make_command(graphics_driver_depth_set_mask, nullptr, mask);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::set_depth_pass_condition(const condition_func func) {
+        command *cmd = make_command(graphics_driver_set_depth_func, nullptr, func);
+        get_command_list().add(cmd);
+    }
+
     void server_graphics_command_list_builder::recreate_texture(drivers::handle h, const std::uint8_t dim, const std::uint8_t mip_levels,
         drivers::texture_format internal_format, drivers::texture_format data_format, drivers::texture_data_type data_type,
         const void *data, const std::size_t data_size, const eka2l1::vec3 &size, const std::size_t pixels_per_line) {
@@ -418,6 +457,11 @@ namespace eka2l1::drivers {
 
     void server_graphics_command_list_builder::set_color_mask(const std::uint8_t mask) {
         command *cmd = make_command(graphics_driver_set_color_mask, nullptr, mask);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::set_texture_for_shader(const int texture_slot, const int shader_binding, const drivers::shader_module_type module) {
+        command *cmd = make_command(graphics_driver_set_texture_for_shader, nullptr, texture_slot, shader_binding, module);
         get_command_list().add(cmd);
     }
 }

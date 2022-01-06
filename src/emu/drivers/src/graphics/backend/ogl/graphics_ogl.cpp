@@ -132,10 +132,24 @@ namespace eka2l1::drivers {
     static constexpr const char *pen_f_path = "resources//pen.frag";
 
     void ogl_graphics_driver::do_init() {
-        sprite_program = std::make_unique<ogl_shader>(sprite_norm_v_path, sprite_norm_f_path);
-        mask_program = std::make_unique<ogl_shader>(sprite_norm_v_path, sprite_mask_f_path);
-        brush_program = std::make_unique<ogl_shader>(brush_v_path, brush_f_path);
-        pen_program = std::make_unique<ogl_shader>(pen_v_path, pen_f_path);
+        auto sprite_norm_vertex_module = std::make_unique<ogl_shader_module>(sprite_norm_v_path, shader_module_type::vertex);        
+        auto brush_vertex_module = std::make_unique<ogl_shader_module>(brush_v_path, shader_module_type::vertex);
+        auto pen_vertex_module = std::make_unique<ogl_shader_module>(pen_v_path, shader_module_type::vertex);
+
+        auto sprite_norm_fragment_module = std::make_unique<ogl_shader_module>(sprite_norm_f_path, shader_module_type::fragment);
+        auto sprite_mask_fragment_module = std::make_unique<ogl_shader_module>(sprite_mask_f_path, shader_module_type::fragment);
+        auto brush_fragment_module = std::make_unique<ogl_shader_module>(brush_f_path, shader_module_type::fragment);
+        auto pen_fragment_module = std::make_unique<ogl_shader_module>(pen_f_path, shader_module_type::fragment);
+
+        sprite_program = std::make_unique<ogl_shader_program>();
+        mask_program = std::make_unique<ogl_shader_program>();
+        brush_program = std::make_unique<ogl_shader_program>();
+        pen_program = std::make_unique<ogl_shader_program>();
+
+        sprite_program->create(this, sprite_norm_vertex_module.get(), sprite_norm_fragment_module.get());
+        mask_program->create(this, sprite_norm_vertex_module.get(), sprite_mask_fragment_module.get());
+        brush_program->create(this, brush_vertex_module.get(), brush_fragment_module.get());
+        pen_program->create(this, pen_vertex_module.get(), pen_fragment_module.get());
 
         static GLushort indices[] = {
             0, 1, 2,
@@ -509,6 +523,24 @@ namespace eka2l1::drivers {
         }
     }
 
+    void ogl_graphics_driver::draw_array(command_helper &helper) {
+        graphics_primitive_mode prim_mode = graphics_primitive_mode::triangles;
+        std::int32_t first = 0;
+        std::int32_t count = 0;
+        std::int32_t instance_count = 0;
+
+        helper.pop(prim_mode);
+        helper.pop(first);
+        helper.pop(count);
+        helper.pop(instance_count);
+
+        if (instance_count == 0) {
+            glDrawArrays(prim_mode_to_gl_enum(prim_mode), first, count);
+        } else {
+            glDrawArraysInstanced(prim_mode_to_gl_enum(prim_mode), first, count, instance_count);
+        }
+    }
+
     void ogl_graphics_driver::set_viewport(const eka2l1::rect &viewport) {
         glViewport(viewport.top.x, current_fb_height - (viewport.top.y + viewport.size.y), viewport.size.x, viewport.size.y);
     }
@@ -764,6 +796,13 @@ namespace eka2l1::drivers {
         glStencilMaskSeparate(rendering_face_to_gl_enum(face_to_operate), mask);
     }
 
+    void ogl_graphics_driver::set_depth_mask(command_helper &helper) {
+        std::uint32_t mask = 0xFF;
+        helper.pop(mask);
+
+        glDepthMask(mask);
+    }
+
     void ogl_graphics_driver::clear(command_helper &helper) {
         float color_to_clear[6];
         std::uint8_t clear_bits = 0;
@@ -946,6 +985,13 @@ namespace eka2l1::drivers {
         }
     }
 
+    void ogl_graphics_driver::set_depth_func(command_helper &helper) {
+        condition_func func = condition_func::always;
+        helper.pop(func);
+
+        glDepthFunc(condition_func_to_gl_enum(func));
+    }
+
     void ogl_graphics_driver::set_front_face_rule(command_helper &helper) {
         rendering_face_determine_rule rule = rendering_face_determine_rule::vertices_counter_clockwise;
         helper.pop(rule);
@@ -962,6 +1008,55 @@ namespace eka2l1::drivers {
         helper.pop(dat);
 
         glColorMask(dat & 1, dat & 2, dat & 4, dat & 8);
+    }
+
+    void ogl_graphics_driver::set_uniform(command_helper &helper) {
+        drivers::shader_set_var_type var_type;
+        const void *data = nullptr;
+        int binding = 0;
+
+        helper.pop(var_type);
+        helper.pop(data);
+        helper.pop(binding);
+
+        switch (var_type) {
+        case shader_set_var_type::integer: {
+            glUniform1i(binding, *reinterpret_cast<const GLint *>(data));
+            return;
+        }
+
+        case shader_set_var_type::mat4: {
+            glUniformMatrix4fv(binding, 1, GL_FALSE, reinterpret_cast<const GLfloat *>(data));
+            return;
+        }
+
+        case shader_set_var_type::vec3: {
+            glUniform3fv(binding, 1, reinterpret_cast<const GLfloat *>(data));
+            return;
+        }
+
+        case shader_set_var_type::vec4: {
+            glUniform4fv(binding, 1, reinterpret_cast<const GLfloat *>(data));
+            return;
+        }
+
+        default:
+            break;
+        }
+
+        LOG_ERROR(DRIVER_GRAPHICS, "Unable to set GL uniform!");
+    }
+
+    void ogl_graphics_driver::set_texture_for_shader(command_helper &helper) {
+        std::int32_t texture_slot = 0;
+        std::int32_t shader_binding = 0;
+        drivers::shader_module_type mtype = drivers::shader_module_type::fragment;
+
+        helper.pop(texture_slot);
+        helper.pop(shader_binding);
+        helper.pop(mtype);
+
+        glUniform1i(shader_binding, texture_slot);
     }
 
     void ogl_graphics_driver::save_gl_state() {
@@ -1074,6 +1169,10 @@ namespace eka2l1::drivers {
             break;
         }
 
+        case graphics_driver_draw_array:
+            draw_array(helper);
+            break;
+
         case graphics_driver_backup_state: {
             save_gl_state();
             break;
@@ -1152,6 +1251,14 @@ namespace eka2l1::drivers {
 
         case graphics_driver_set_color_mask:
             set_color_mask(helper);
+            break;
+
+        case graphics_driver_set_depth_func:
+            set_depth_func(helper);
+            break;
+
+        case graphics_driver_set_texture_for_shader:
+            set_texture_for_shader(helper);
             break;
 
         default:

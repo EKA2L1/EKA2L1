@@ -521,7 +521,7 @@ namespace eka2l1::epoc {
         auto cmd_builder = drv->new_command_builder(cmd_list.get());
 
         if (!clip_space.empty()) {
-            cmd_builder->set_clipping(true);
+            cmd_builder->set_feature(drivers::graphics_feature::clipping, true);
             cmd_builder->clip_rect(clip_space);
         }
 
@@ -1009,7 +1009,7 @@ namespace eka2l1::epoc {
                 background_region.make_empty();
             } else {
                 builder->set_brush_color(eka2l1::vec3(255, 255, 255));
-                builder->set_clipping(false);
+                builder->set_feature(drivers::graphics_feature::clipping, false);
             }
 
             // Draw it onto current binding buffer
@@ -1183,7 +1183,7 @@ namespace eka2l1::epoc {
         eka2l1::rect draw_rect({ 0, 0 }, to_draw_out_size);
 
         cmd_builder->bind_bitmap(driver_win_id);
-        cmd_builder->set_clipping(false);
+        cmd_builder->set_feature(drivers::graphics_feature::clipping, false);
 
         if (reg_clip.has_value()) {
             clip_region(*cmd_builder, reg_clip.value());

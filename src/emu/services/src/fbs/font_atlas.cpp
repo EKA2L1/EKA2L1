@@ -173,7 +173,7 @@ namespace eka2l1::epoc {
             }
         }
 
-        builder->set_blend_mode(true);
+        builder->set_feature(drivers::graphics_feature::blend, true);
         builder->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
             drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
             drivers::blend_factor::one, drivers::blend_factor::one);
@@ -207,7 +207,7 @@ namespace eka2l1::epoc {
             cur_pos.x += static_cast<int>(std::round(info.xadv));
         }
 
-        builder->set_blend_mode(false);
+        builder->set_feature(drivers::graphics_feature::blend, false);
 
         return true;
     }

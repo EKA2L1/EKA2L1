@@ -5,31 +5,27 @@ namespace eka2l1::drivers {
         switch (format) {
         case data_format::byte:
             return GL_UNSIGNED_BYTE;
-            break;
 
         case data_format::sbyte:
             return GL_BYTE;
-            break;
 
         case data_format::sword:
             return GL_SHORT;
-            break;
 
         case data_format::word:
             return GL_UNSIGNED_SHORT;
-            break;
 
         case data_format::uint:
             return GL_UNSIGNED_INT;
-            break;
 
         case data_format::sint:
             return GL_INT;
-            break;
 
         case data_format::sfloat:
             return GL_FLOAT;
-            break;
+
+        case data_format::fixed:
+            return GL_FIXED;
 
         default:
             break;
@@ -114,6 +110,51 @@ namespace eka2l1::drivers {
 
         case filter_option::nearest:
             return GL_NEAREST;
+
+        case filter_option::linear_mipmap_linear:
+            return GL_LINEAR_MIPMAP_LINEAR;
+
+        case filter_option::linear_mipmap_nearest:
+            return GL_LINEAR_MIPMAP_NEAREST;
+
+        case filter_option::nearest_mipmap_linear:
+            return GL_NEAREST_MIPMAP_LINEAR;
+
+        case filter_option::nearest_mipmap_nearest:
+            return GL_NEAREST_MIPMAP_NEAREST;
+
+        default:
+            break;
+        }
+
+        return 0;
+    }
+    
+    GLenum to_tex_parameter_enum(const addressing_direction dir) {
+        switch (dir) {
+        case addressing_direction::s:
+            return GL_TEXTURE_WRAP_S;
+
+        case addressing_direction::t:
+            return GL_TEXTURE_WRAP_T;
+
+        case addressing_direction::r:
+            return GL_TEXTURE_WRAP_R;
+
+        default:
+            break;
+        }
+
+        return 0;
+    }
+
+    GLint to_tex_wrapping_enum(const addressing_option opt) {
+        switch (opt) {
+        case addressing_option::clamp_to_edge:
+            return GL_CLAMP_TO_EDGE;
+
+        case addressing_option::repeat:
+            return GL_REPEAT;
 
         default:
             break;

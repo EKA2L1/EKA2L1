@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 EKA2L1 Team.
+ * Copyright (c) 2022 EKA2L1 Team.
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -19,11 +19,11 @@
 
 #pragma once
 
-#include <dispatch/libraries/gles/def.h>
-#include <dispatch/def.h>
+#include <dispatch/libraries/gles1/def.h>
+#include <string>
 
 namespace eka2l1::dispatch {
-    BRIDGE_FUNC_DISPATCHER(egl_display, egl_get_display_emu, std::int32_t display_index);
-    BRIDGE_FUNC_DISPATCHER(egl_display, egl_get_current_display_emu, std::int32_t display_index);
-    BRIDGE_FUNC_DISPATCHER(void, egl_swap_buffers_emu);
+    std::string generate_gl_vertex_shader(const std::uint64_t vertex_statuses, const std::uint32_t active_texs);
+    std::string generate_gl_fragment_shader(const std::uint64_t fragment_statuses, const std::uint32_t active_texs,
+        gles_texture_env_info *tex_env_infos);
 }

@@ -36,6 +36,8 @@ namespace eka2l1::drivers {
         graphics_driver_set_feature,
         graphics_driver_set_viewport,
         graphics_driver_blend_formula,
+        graphics_driver_depth_pass_condition,
+        graphics_driver_depth_set_mask,
         graphics_driver_stencil_pass_condition,
         graphics_driver_stencil_set_action,
         graphics_driver_stencil_set_mask,
@@ -62,15 +64,20 @@ namespace eka2l1::drivers {
         graphics_driver_read_bitmap,
 
         // Mode 1: Advance - Lower access to functions
-        graphics_driver_create_program,
+        graphics_driver_create_shader_module,
+        graphics_driver_create_shader_program,
         graphics_driver_create_texture,
         graphics_driver_create_buffer,
         graphics_driver_destroy_object,
         graphics_driver_set_texture_filter,
+        graphics_driver_set_texture_wrap,
+        graphics_driver_generate_mips,
         graphics_driver_use_program,
         graphics_driver_set_uniform,
         graphics_driver_bind_texture,
         graphics_driver_bind_buffer,
+        graphics_driver_set_texture_for_shader,
+        graphics_driver_draw_array,
         graphics_driver_draw_indexed,
         graphics_driver_update_buffer,
         graphics_driver_set_state,
@@ -78,6 +85,7 @@ namespace eka2l1::drivers {
         graphics_driver_display,
         graphics_driver_set_swizzle,
         graphics_driver_set_color_mask,
+        graphics_driver_set_depth_func,
         graphics_driver_backup_state, // Backup all possible state to a struct
         graphics_driver_restore_state // Restore previously backup data
     };
@@ -123,7 +131,7 @@ namespace eka2l1::drivers {
             const eka2l1::vec2 &dim, const void *data, const std::size_t pixels_per_line = 0)
             = 0;
 
-        virtual void attach_descriptors(drivers::handle h, const int stride, const bool instance_move, const attribute_descriptor *descriptors,
+        virtual void attach_descriptors(drivers::handle h, const bool instance_move, const attribute_descriptor *descriptors,
             const int descriptor_count)
             = 0;
 

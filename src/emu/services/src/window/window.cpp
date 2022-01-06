@@ -1990,6 +1990,15 @@ namespace eka2l1 {
         server::disconnect(ctx);
     }
 
+    epoc::window_server_client *window_server::get_client(const std::uint64_t unique_id) {
+        auto ite = clients.find(unique_id);
+        if (ite == clients.end()) {
+            return nullptr;
+        }
+
+        return ite->second.get();
+    }
+
     void window_server::init(service::ipc_context &ctx) {
         if (!loaded) {
             do_base_init();

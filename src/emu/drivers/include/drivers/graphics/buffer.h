@@ -47,6 +47,7 @@ namespace eka2l1::drivers {
         int location;
         int offset;
         int format;
+        int stride;
 
         void set_format(const int comp_count, const data_format dform) {
             format = (comp_count & 0b1111) | (static_cast<int>(dform) << 4);
@@ -61,7 +62,7 @@ namespace eka2l1::drivers {
         virtual void unbind(graphics_driver *driver) = 0;
 
         // Only support with buffer hinted as vertex
-        virtual void attach_descriptors(graphics_driver *driver, const int stride, const bool instance_move,
+        virtual void attach_descriptors(graphics_driver *driver, const bool instance_move,
             const attribute_descriptor *descriptors, const int total)
             = 0;
 

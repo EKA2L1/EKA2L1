@@ -32,17 +32,18 @@ namespace eka2l1::drivers {
 
     enum class shader_set_var_type {
         integer,
+        real,
         vec3,
         vec4,
         mat4
     };
 
-    struct shader_metadata {
+    struct shader_program_metadata {
         const std::uint8_t *metadata_;
 
     public:
-        explicit shader_metadata() = default;
-        explicit shader_metadata(const std::uint8_t *metadata);
+        explicit shader_program_metadata() = default;
+        explicit shader_program_metadata(const std::uint8_t *metadata);
 
         const bool is_available() const {
             return metadata_;
@@ -55,18 +56,25 @@ namespace eka2l1::drivers {
         const std::int32_t get_attribute_binding(const char *name) const;
     };
 
-    class shader : public graphics_object {
+    class shader_module : public graphics_object {
     public:
-        virtual ~shader() {
+        virtual ~shader_module() {
         }
 
-        virtual bool create(graphics_driver *driver, const char *vert_data, const std::size_t vert_size,
-            const char *frag_data, const std::size_t frag_size)
-            = 0;
+        virtual bool create(graphics_driver *driver, const char *data, const std::size_t size, const shader_module_type type) = 0;
+    };
 
-        virtual bool set(graphics_driver *driver, const int binding, const shader_set_var_type var_type, const void *data) = 0;
+    using shader_module_instance = std::shared_ptr<shader_module>;
 
+    class shader_program: public graphics_object {
+    public:
+        virtual ~shader_program() {
+            
+        }
+
+        virtual bool create(graphics_driver *driver, shader_module *vertex_module, shader_module *fragment_module) = 0;
         virtual bool use(graphics_driver *driver) = 0;
+
         virtual std::optional<int> get_uniform_location(const std::string &name) = 0;
         virtual std::optional<int> get_attrib_location(const std::string &name) = 0;
 
@@ -80,5 +88,6 @@ namespace eka2l1::drivers {
         }
     };
 
-    std::unique_ptr<shader> make_shader(graphics_driver *driver);
+    std::unique_ptr<shader_module> make_shader_module(graphics_driver *driver);
+    std::unique_ptr<shader_program> make_shader_program(graphics_driver *driver);
 }

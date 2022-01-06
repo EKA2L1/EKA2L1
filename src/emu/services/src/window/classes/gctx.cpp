@@ -100,7 +100,7 @@ namespace eka2l1::epoc {
         }
 
         cmd_builder->bind_bitmap(attached_window->driver_win_id);
-        cmd_builder->set_depth(false);
+        cmd_builder->set_feature(drivers::graphics_feature::depth_test, false);
 
         cmd_builder->set_viewport(viewport);
 
@@ -248,8 +248,8 @@ namespace eka2l1::epoc {
                 // Developement document says that when not being redrawn, drawing is clipped to non-invalid part.
                 // But so far, I have not been able to see any open source code points to that being true. Even simple test can prove that's false.
                 // So for now, we let drawing happens on the window with no restrictions. Invalid region will still be invalidated.
-                cmd_builder->set_clipping(false);
-                cmd_builder->set_stencil(false);
+                cmd_builder->set_feature(drivers::graphics_feature::clipping, false);
+                cmd_builder->set_feature(drivers::graphics_feature::stencil_test, false);
 
                 return;
             }
@@ -289,7 +289,7 @@ namespace eka2l1::epoc {
         }
 
         if (use_clipping) {
-            cmd_builder->set_clipping(true);
+            cmd_builder->set_feature(drivers::graphics_feature::clipping, true);
 
             if (the_clip.valid()) {
                 cmd_builder->clip_rect(the_clip);
@@ -306,8 +306,8 @@ namespace eka2l1::epoc {
             // Unbind current bitmap
             cmd_builder->bind_bitmap(0);
 
-            cmd_builder->set_clipping(false);
-            cmd_builder->set_stencil(false);
+            cmd_builder->set_feature(drivers::graphics_feature::clipping, false);
+            cmd_builder->set_feature(drivers::graphics_feature::stencil_test, false);
 
             driver->submit_command_list(*cmd_list);
 
@@ -316,7 +316,7 @@ namespace eka2l1::epoc {
             cmd_builder = driver->new_command_builder(cmd_list.get());
 
             cmd_builder->bind_bitmap(attached_window->driver_win_id);
-            cmd_builder->set_depth(false);
+            cmd_builder->set_feature(drivers::graphics_feature::depth_test, false);
 
             eka2l1::rect viewport;
             viewport.top = { 0, 0 };
@@ -470,7 +470,7 @@ namespace eka2l1::epoc {
             flags |= drivers::bitmap_draw_flag_flat_blending;
         }
 
-        cmd_builder->set_blend_mode(true);
+        cmd_builder->set_feature(drivers::graphics_feature::blend, true);
 
         // For non alpha blending we always want to take color buffer's alpha.
         cmd_builder->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
@@ -487,7 +487,7 @@ namespace eka2l1::epoc {
 
         cmd_builder->draw_bitmap(bmp_driver_handle, bmp_mask_driver_handle, dest_rect, source_rect, eka2l1::vec2(0, 0),
             0.0f, flags);
-        cmd_builder->set_blend_mode(false);
+        cmd_builder->set_feature(drivers::graphics_feature::blend, false);
 
         if (swizzle_alteration) {
             cmd_builder->set_swizzle(bmp_mask_driver_handle, drivers::channel_swizzle::red, drivers::channel_swizzle::green,

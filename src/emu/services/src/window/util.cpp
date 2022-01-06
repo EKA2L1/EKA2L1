@@ -70,14 +70,14 @@ namespace eka2l1 {
         if (region.rects_.size() == 1) {
             eka2l1::rect rect_clip = region.rects_[0];
 
-            cmd_builder.set_clipping(true);
+            cmd_builder.set_feature(drivers::graphics_feature::clipping, true);
             cmd_builder.clip_rect(rect_clip);
 
             return;
         }
 
         cmd_builder.clear({ 0, 0, 0, 0 }, drivers::draw_buffer_bit_stencil_buffer);
-        cmd_builder.set_stencil(true);
+        cmd_builder.set_feature(drivers::graphics_feature::stencil_test, true);
 
         // Try to fill region rects with 1 in stencil buffer.
         // Intentionally let stencil test fail so nothing gets draw. Just need to fill it after all.

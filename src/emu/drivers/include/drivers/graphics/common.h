@@ -36,7 +36,13 @@ namespace eka2l1::drivers {
     };
 
     enum class graphics_primitive_mode : std::uint8_t {
-        triangles
+        points,
+        lines,
+        line_loop,
+        line_strip,
+        triangles,
+        triangle_strip,
+        triangle_fan
     };
 
     enum class data_format {
@@ -46,7 +52,8 @@ namespace eka2l1::drivers {
         sword = 3,
         sfloat = 4,
         uint = 5,
-        sint = 6
+        sint = 6,
+        fixed = 7
     };
 
     enum class blend_equation {
@@ -117,7 +124,22 @@ namespace eka2l1::drivers {
 
     enum class filter_option {
         linear,
-        nearest
+        nearest,
+        nearest_mipmap_nearest,
+        nearest_mipmap_linear,
+        linear_mipmap_nearest,
+        linear_mipmap_linear
+    };
+
+    enum class addressing_option {
+        clamp_to_edge,
+        repeat
+    };
+
+    enum class addressing_direction {
+        s,
+        t,
+        r
     };
 
     enum class channel_swizzle : std::uint32_t {
@@ -167,7 +189,20 @@ namespace eka2l1::drivers {
         stencil_test = 1,
         clipping = 2,
         blend = 3,
-        cull = 4
+        cull = 4,
+        line_smooth = 5,
+        multisample = 6,
+        polygon_offset_fill = 7,
+        sample_alpha_to_coverage = 8,
+        sample_alpha_to_one = 9,
+        sample_coverage = 10,
+        dither = 11
+    };
+
+    enum class shader_module_type {
+        vertex,
+        fragment,
+        geometry
     };
 
     enum class window_api {

@@ -130,6 +130,18 @@ namespace eka2l1::drivers {
         unbind(nullptr);
     }
 
+    void ogl_texture::set_addressing_mode(const addressing_direction dir, const addressing_option op) {
+        bind(nullptr, 0);
+        glTexParameteri(GL_TEXTURE_2D, to_tex_parameter_enum(dir), to_tex_wrapping_enum(op));
+        unbind(nullptr);
+    }
+
+    void ogl_texture::generate_mips() {
+        bind(nullptr, 0);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        unbind(nullptr);
+    }
+
     static GLint translate_hal_swizzle_to_gl_swizzle(channel_swizzle swizz) {
         switch (swizz) {
         case channel_swizzle::red:

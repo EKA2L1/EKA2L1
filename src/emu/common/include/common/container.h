@@ -40,7 +40,7 @@ namespace eka2l1::common {
 
     template <typename T>
     void default_data_free_func(T &data) {
-        data = nullptr;
+        data = 0;
     }
 
     template <typename T>

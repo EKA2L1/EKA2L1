@@ -440,6 +440,7 @@ namespace eka2l1 {
         epoc::window_group *get_starting_group();
 
         epoc::config::screen *get_current_focus_screen_config();
+        epoc::window_server_client *get_client(const std::uint64_t unique_id);
 
         /**
          * \brief Get the number of window groups running in the server
