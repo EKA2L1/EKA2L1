@@ -97,7 +97,6 @@ glTexParameteri
 glTexParameteriv
 glTexParameterxv
 glDrawArrays
-
 glDrawElements
 
 eglChooseConfig
@@ -110,13 +109,13 @@ eglGetError
 eglCreateContext
 eglMakeCurrent
 
-In the eyes:
-
-1。
-
 eglDestroyContext
 eglDestroySurface
 eglSwapBuffers
+
+In the eyes:
+
+1。
 
 eglCopyBuffers
 eglGetConfigAttrib

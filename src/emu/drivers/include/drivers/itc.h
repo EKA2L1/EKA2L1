@@ -95,7 +95,7 @@ namespace eka2l1::drivers {
      * @return A valid handle on success.
      */
     drivers::handle create_shader_program(graphics_driver *driver, drivers::handle vertex_module,
-        drivers::handle fragment_module, shader_program_metadata *&metadata);
+        drivers::handle fragment_module, shader_program_metadata *metadata);
 
     /**
      * \brief Create a new texture.

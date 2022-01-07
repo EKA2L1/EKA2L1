@@ -20,6 +20,7 @@
 #include <dispatch/dispatcher.h>
 #include <dispatch/libraries/register.h>
 #include <dispatch/libraries/sysutils/register.h>
+#include <dispatch/libraries/gles1/register.h>
 
 #include <kernel/kernel.h>
 
@@ -28,6 +29,9 @@ namespace eka2l1::dispatch::libraries {
         if (kern->get_epoc_version() <= epocver::epoc81a) {
             disp->patch_libraries(u"Z:\\System\\Libs\\SysUtil.dll", SYSUTILS_PATCH_EPOCV81A_INFOS,
                 SYSUTILS_PATCH_EPOCV81A_COUNT);
+        } else if (kern->get_epoc_version() >= epocver::epoc93fp1) {
+            disp->patch_libraries(u"Z:\\Sys\\Bin\\libgles_cm.dll", LIBGLES_CM_PATCH_INFOS,
+                LIBGLES_CM_PATCH_COUNT);
         }
     }
 }

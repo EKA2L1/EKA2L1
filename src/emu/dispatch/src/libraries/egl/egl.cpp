@@ -51,7 +51,7 @@ namespace eka2l1::dispatch {
         controller.push_egl_error(crr_thread->unique_id(), error);
     }
 
-    BRIDGE_FUNC_DISPATCHER(std::int32_t, egl_get_error) {
+    BRIDGE_FUNC_LIBRARY(std::int32_t, egl_get_error) {
         dispatcher *dp = sys->get_dispatcher();
         kernel_system *kern = sys->get_kernel_system();
         kernel::thread *crr_thread = kern->crr_thread();
@@ -60,22 +60,22 @@ namespace eka2l1::dispatch {
         return controller.pop_egl_error(crr_thread->unique_id());
     }
 
-    BRIDGE_FUNC_DISPATCHER(egl_display, egl_get_display_emu, std::int32_t display_index) {
+    BRIDGE_FUNC_LIBRARY(egl_display, egl_get_display_emu, std::int32_t display_index) {
         dispatcher *dp = sys->get_dispatcher();
 
         if (display_index == 0) {
-            return static_cast<egl_display>(dp->winserv_->get_current_focus_screen()->scr_config.screen_number);
+            return static_cast<egl_display>(dp->winserv_->get_current_focus_screen()->scr_config.screen_number + 1);
         }
 
         epoc::screen *scr = dp->winserv_->get_screen(display_index);
         if (scr) {
-            return static_cast<egl_display>(display_index);
+            return static_cast<egl_display>(display_index + 1);
         }
 
         return 0;
     }
 
-    BRIDGE_FUNC_DISPATCHER(egl_boolean, egl_initialize_emu, egl_display display, std::int32_t *major, std::int32_t *minor) {
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_initialize_emu, egl_display display, std::int32_t *major, std::int32_t *minor) {
         if (major) {
             *major = EGL_MAJOR_VERSION_EMU;
         }
@@ -87,7 +87,7 @@ namespace eka2l1::dispatch {
         return EGL_TRUE;
     }
     
-    BRIDGE_FUNC_DISPATCHER(egl_boolean, egl_get_configs_emu, egl_display display, egl_config *configs, std::int32_t config_array_size, std::int32_t *config_total_size) {        
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_get_configs_emu, egl_display display, egl_config *configs, std::int32_t config_array_size, std::int32_t *config_total_size) {        
         if (!config_total_size) {
             egl_push_error(sys, EGL_BAD_PARAMETER_EMU);
             return EGL_FALSE;
@@ -105,7 +105,7 @@ namespace eka2l1::dispatch {
         return EGL_TRUE;
     }
     
-    BRIDGE_FUNC_DISPATCHER(egl_boolean, egl_choose_config_emu, egl_display display, std::int32_t *attrib_lists, egl_config *configs, std::int32_t config_array_size, std::int32_t *num_config_choosen) {
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_choose_config_emu, egl_display display, std::int32_t *attrib_lists, egl_config *configs, std::int32_t config_array_size, std::int32_t *num_config_choosen) {
         if (!attrib_lists) {
             egl_push_error(sys, EGL_BAD_ATTRIBUTE_EMU);
             return EGL_FALSE;
@@ -195,11 +195,13 @@ namespace eka2l1::dispatch {
         return EGL_TRUE;
     }
 
-    BRIDGE_FUNC_DISPATCHER(egl_surface_handle, egl_create_window_surface_emu, egl_display display, egl_config choosen_config, utils::window_client_interface *win, std::int32_t *additional_attribs) {
+    BRIDGE_FUNC_LIBRARY(egl_surface_handle, egl_create_window_surface_emu, egl_display display, std::uint32_t choosen_config_value, utils::window_client_interface *win, std::int32_t *additional_attribs) {
         drivers::graphics_driver *driver = sys->get_graphics_driver();
         kernel_system *kern = sys->get_kernel_system();
         dispatcher *dp = sys->get_dispatcher();
         dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        egl_config choosen_config(choosen_config_value);
 
         if (choosen_config.get_surface_type() != egl_config::EGL_SURFACE_TYPE_WINDOW) {
             egl_push_error(sys, EGL_BAD_CONFIG);
@@ -252,13 +254,15 @@ namespace eka2l1::dispatch {
         return result_handle;
     }
 
-    BRIDGE_FUNC_DISPATCHER(egl_surface_handle, egl_create_pbuffer_surface_emu, egl_display display, egl_config choosen_config, std::int32_t *additional_attribs) {
+    BRIDGE_FUNC_LIBRARY(egl_surface_handle, egl_create_pbuffer_surface_emu, egl_display display, std::uint32_t choosen_config_value, std::int32_t *additional_attribs) {
         if (!additional_attribs) {
             // I... Need .. To .. know .. the ... width... and ... weight .. of the surface !!!
             // ps: (given up on the three dots at the end)
             egl_push_error(sys, EGL_BAD_PARAMETER_EMU);
             return EGL_NO_SURFACE_EMU;
         }
+
+        egl_config choosen_config(choosen_config_value);
 
         if (choosen_config.get_surface_type() != egl_config::EGL_SURFACE_TYPE_PBUFFER) {
             egl_push_error(sys, EGL_BAD_CONFIG);
@@ -273,7 +277,7 @@ namespace eka2l1::dispatch {
         dispatcher *dp = sys->get_dispatcher();
         dispatch::egl_controller &controller = dp->get_egl_controller();
 
-        epoc::screen *backed_screen = dp->winserv_->get_screen(display);
+        epoc::screen *backed_screen = dp->winserv_->get_screen(display - 1);
         if (!backed_screen) {
             egl_push_error(sys, EGL_BAD_DISPLAY_EMU);
             return EGL_NO_SURFACE_EMU;
@@ -324,7 +328,7 @@ namespace eka2l1::dispatch {
         return result_handle;
     }
     
-    BRIDGE_FUNC_DISPATCHER(egl_context_handle, egl_create_context_emu, egl_display display, egl_config choosen_config, egl_context_handle shared_context, std::int32_t *additional_attribs_) {
+    BRIDGE_FUNC_LIBRARY(egl_context_handle, egl_create_context_emu, egl_display display, std::uint32_t choosen_config_value, egl_context_handle shared_context, std::int32_t *additional_attribs_) {
         if (shared_context) {
             LOG_ERROR(HLE_DISPATCHER, "Shared context is not yet supported!");
             egl_push_error(sys, EGL_BAD_PARAMETER_EMU);
@@ -332,6 +336,7 @@ namespace eka2l1::dispatch {
             return EGL_NO_CONTEXT_EMU;
         }
 
+        egl_config choosen_config(choosen_config_value);
         egl_context_instance context_inst = nullptr;
 
         switch (choosen_config.get_target_context_version()) {
@@ -360,7 +365,7 @@ namespace eka2l1::dispatch {
         return hh;
     }
 
-    BRIDGE_FUNC_DISPATCHER(egl_boolean, egl_make_current_emu, egl_display display, egl_surface_handle read_surface, egl_surface_handle write_surface, egl_context_handle context) {
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_make_current_emu, egl_display display, egl_surface_handle read_surface, egl_surface_handle write_surface, egl_context_handle context) {
         dispatcher *dp = sys->get_dispatcher();
         dispatch::egl_controller &controller = dp->get_egl_controller();
         kernel_system *kern = sys->get_kernel_system();
@@ -384,8 +389,31 @@ namespace eka2l1::dispatch {
             return EGL_FALSE;
         }
 
+        if (context_real->read_surface_ != read_surface_real) {
+            if (context_real->read_surface_) {
+                context_real->read_surface_->bounded_context_ = nullptr;
+
+                if (context_real->read_surface_->dead_pending_) {
+                    context_real->command_builder_->destroy_bitmap(context_real->read_surface_->handle_);
+                    controller.remove_managed_surface_from_management(context_real->read_surface_);
+                }
+            }
+        }
+
+        if (context_real->draw_surface_ != write_surface_real) {
+            if (context_real->draw_surface_) {
+                context_real->draw_surface_->bounded_context_ = nullptr;
+                if ((context_real->read_surface_ != context_real->draw_surface_) && (context_real->draw_surface_->dead_pending_))
+                    context_real->command_builder_->destroy_bitmap(context_real->draw_surface_->handle_);
+                    controller.remove_managed_surface_from_management(context_real->draw_surface_);
+            }
+        }
+
         context_real->read_surface_ = read_surface_real;
         context_real->draw_surface_ = write_surface_real;
+
+        read_surface_real->bounded_context_ = context_real;
+        write_surface_real->bounded_context_ = context_real;
 
         drivers::graphics_driver *driver = sys->get_graphics_driver();
         if (!context_real->command_list_) {
@@ -394,6 +422,64 @@ namespace eka2l1::dispatch {
         }
 
         context_real->command_builder_->bind_bitmap(write_surface_real->handle_, read_surface_real->handle_);
+        return EGL_TRUE;
+    }
+
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_destroy_context_emu, egl_display display, egl_context_handle handle) {
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+        
+        controller.remove_context(handle);
+        return EGL_TRUE;
+    }
+
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_destroy_surface_emu, egl_display display, egl_surface_handle handle) {
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        controller.destroy_managed_surface(handle);
+        return EGL_TRUE;
+    }
+    
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_swap_buffers_emu, egl_display display, egl_surface_handle handle) {
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        egl_surface *surface = controller.get_managed_surface(handle);
+        if (!surface) {
+            egl_push_error(sys, EGL_BAD_SURFACE_EMU);
+            return EGL_FALSE;
+        }
+
+        drivers::graphics_driver *drv = sys->get_graphics_driver();
+
+        if (surface->backed_window_) {
+            egl_context *ctx = surface->bounded_context_;
+            if (ctx) {
+                if (!surface->backed_window_->driver_win_id) {
+                    surface->backed_window_->driver_win_id = drivers::create_bitmap(drv, surface->backed_window_->size(), 32);
+                }
+
+                eka2l1::rect draw_rect(eka2l1::vec2(0, 0), surface->dimension_);
+
+                ctx->command_builder_->set_feature(drivers::graphics_feature::clipping, false);
+                ctx->command_builder_->set_feature(drivers::graphics_feature::depth_test, false);
+
+                ctx->command_builder_->bind_bitmap(surface->backed_window_->driver_win_id);
+                ctx->command_builder_->draw_bitmap(surface->handle_, 0, draw_rect, draw_rect);
+            }
+        }
+
+        if (surface->bounded_context_) {
+            drv->submit_command_list(*surface->bounded_context_->command_list_);
+
+            surface->bounded_context_->command_list_ = drv->new_command_list();
+            surface->bounded_context_->command_builder_ = drv->new_command_builder(surface->bounded_context_->command_list_.get());
+
+            surface->bounded_context_->init_context_state(*surface->bounded_context_->command_builder_);
+        }
+
+        surface->backed_window_->take_action_on_change(sys->get_kernel_system()->crr_thread());
         return EGL_TRUE;
     }
 }

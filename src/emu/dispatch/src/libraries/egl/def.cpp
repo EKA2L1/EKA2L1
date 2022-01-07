@@ -26,7 +26,8 @@ namespace eka2l1::dispatch {
     egl_context::egl_context()
         : draw_surface_(nullptr)
         , read_surface_(nullptr)
-        , associated_thread_uid_(0) {
+        , associated_thread_uid_(0)
+        , dead_pending_(false) {
     }
 
     egl_surface::egl_surface(epoc::canvas_base *backed_window, epoc::screen *screen, eka2l1::vec2 dim,
@@ -35,7 +36,10 @@ namespace eka2l1::dispatch {
         , surface_type_(surface_type)
         , backed_screen_(screen)
         , backed_window_(backed_window)
-        , dimension_(dim) {
+        , dimension_(dim)
+        , associated_thread_uid_(0)
+        , dead_pending_(false)
+        , bounded_context_(nullptr) {
     }
 
     void egl_context::free(drivers::graphics_driver *driver, drivers::graphics_command_list_builder &builder) {
@@ -74,14 +78,47 @@ namespace eka2l1::dispatch {
 
     bool egl_controller::make_current(kernel::uid thread_id, const egl_context_handle handle) {
         auto *context_ptr = contexts_.get(handle);
-        if (!context_ptr) {
-            return false;
-        }
+        egl_context *context_to_set = (context_ptr ? (*context_ptr).get() : nullptr);
 
         auto ite = active_context_.find(thread_id);
-        if ((ite != active_context_.end()) && (ite->second != (*context_ptr).get())) {
-            LOG_ERROR(HLE_DISPATCHER, "Another context is currentlty active!");
-            return false;
+        if ((ite != active_context_.end()) && (ite->second != context_to_set)) {
+            if (ite->second->draw_surface_ && ite->second->draw_surface_->dead_pending_) {
+                ite->second->command_builder_->destroy_bitmap(ite->second->draw_surface_->handle_);
+
+                for (auto &var: dsurfaces_) {
+                    if (var.get() == ite->second->draw_surface_) {
+                        // Free slot
+                        var = nullptr;
+                    }
+                }
+            }
+
+            if ((ite->second->draw_surface_ != ite->second->read_surface_) && ite->second->read_surface_ && ite->second->read_surface_->dead_pending_) {
+                ite->second->command_builder_->destroy_bitmap(ite->second->read_surface_->handle_);
+
+                for (auto &var: dsurfaces_) {
+                    if (var.get() == ite->second->read_surface_) {
+                        // Free slot
+                        var = nullptr;
+                    }
+                }
+            }
+
+            if (ite->second->dead_pending_) {
+                ite->second->free(driver_, *ite->second->command_builder_);
+            }
+
+            // Submit pending works...
+            driver_->submit_command_list(*ite->second->command_list_);
+
+            if (ite->second->dead_pending_) {
+                for (auto &var: contexts_) {
+                    if (var.get() == ite->second) {
+                        // Free slot
+                        var = nullptr;
+                    }
+                }
+            }
         }
 
         active_context_.emplace(thread_id, context_ptr->get());
@@ -116,16 +153,39 @@ namespace eka2l1::dispatch {
 
     void egl_controller::destroy_managed_surface(const std::uint32_t handle) {
         egl_surface_instance *inst = dsurfaces_.get(handle);
+        
         if (inst) {
-            if ((*inst)->handle_) {        
-                auto cmd_list = driver_->new_command_list();
-                auto cmd_builder = driver_->new_command_builder(cmd_list.get());
+            bool can_del_imm = true;
 
-                cmd_builder->destroy_bitmap((*inst)->handle_);
-                driver_->submit_command_list(*cmd_list);
+            for (auto ite = active_context_.begin(); ite != active_context_.end(); ) {
+                if ((ite->second->draw_surface_ == inst->get()) || (ite->second->read_surface_ == inst->get())) {
+                    inst->get()->dead_pending_ = true;
+                    can_del_imm = false;
+
+                    break;
+                }
             }
 
-            dsurfaces_.remove(static_cast<std::size_t>(handle));
+            if (can_del_imm) {
+                if ((*inst)->handle_) {        
+                    auto cmd_list = driver_->new_command_list();
+                    auto cmd_builder = driver_->new_command_builder(cmd_list.get());
+
+                    cmd_builder->destroy_bitmap((*inst)->handle_);
+                    driver_->submit_command_list(*cmd_list);
+                }
+
+                dsurfaces_.remove(static_cast<std::size_t>(handle));
+            }
+        }
+    }
+
+    void egl_controller::remove_managed_surface_from_management(const egl_surface *surface) {
+        for (auto &var: dsurfaces_) {
+            if (var.get() == surface) {
+                var = nullptr;
+                break;
+            }
         }
     }
 
@@ -144,16 +204,26 @@ namespace eka2l1::dispatch {
             return;
         }
 
+        bool can_del_imm = true;
+
         for (auto ite = active_context_.begin(); ite != active_context_.end(); ) {
             if (ite->second == context_ptr->get()) {
-                LOG_ERROR(HLE_DISPATCHER, "Active context is cleared for thread {}!", ite->first);
-                active_context_.erase(ite++);
-            } else {
-                ite++;
+                ite->second->dead_pending_ = true;
+                can_del_imm = false;
+
+                break;
             }
         }
 
-        contexts_.remove(static_cast<std::size_t>(handle));
+        if (can_del_imm) {
+            auto list = driver_->new_command_list();
+            auto builder = driver_->new_command_builder(list.get());
+
+            context_ptr->get()->free(driver_, *builder);
+            driver_->submit_command_list(*list);
+
+            contexts_.remove(static_cast<std::size_t>(handle));
+        }
     }
 
     void egl_controller::push_error(kernel::uid thread_id, const std::uint32_t error) {
@@ -209,6 +279,15 @@ namespace eka2l1::dispatch {
         es1_shaderman_.set_graphics_driver(driver);
     }
 
+    egl_context *egl_controller::current_context(kernel::uid thread_id) {
+        auto ite = active_context_.find(thread_id);
+        if (ite == active_context_.end()) {
+            return nullptr;
+        }
+
+        return ite->second;
+    }
+
     void egl_config::set_buffer_size(const std::uint8_t buffer_size) {
         config_ &= ~0b110;
         config_ |= ((((buffer_size >> 3) - 1) & 0b11) << 1);
@@ -224,7 +303,7 @@ namespace eka2l1::dispatch {
     }
 
     egl_config::surface_type egl_config::get_surface_type() const {
-        return static_cast<surface_type>((config_ >> 1) & 0b11);
+        return static_cast<surface_type>(config_ & 0b1);
     }
 
     egl_config::target_context_version egl_config::get_target_context_version() {

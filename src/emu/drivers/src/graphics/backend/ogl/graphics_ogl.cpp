@@ -493,6 +493,24 @@ namespace eka2l1::drivers {
         switch (prim_mode) {
         case graphics_primitive_mode::triangles:
             return GL_TRIANGLES;
+        
+        case graphics_primitive_mode::line_loop:
+            return GL_LINE_LOOP;
+
+        case graphics_primitive_mode::line_strip:
+            return GL_LINE_STRIP;
+
+        case graphics_primitive_mode::lines:
+            return GL_LINES;
+
+        case graphics_primitive_mode::points:
+            return GL_POINTS;
+
+        case graphics_primitive_mode::triangle_fan:
+            return GL_TRIANGLE_FAN;
+
+        case graphics_primitive_mode::triangle_strip:
+            return GL_TRIANGLE_STRIP;
 
         default:
             break;
@@ -1022,21 +1040,35 @@ namespace eka2l1::drivers {
         switch (var_type) {
         case shader_set_var_type::integer: {
             glUniform1i(binding, *reinterpret_cast<const GLint *>(data));
+            delete data;
+
             return;
         }
 
+        case shader_set_var_type::real:
+            glUniform1f(binding, *reinterpret_cast<const GLfloat*>(data));
+            delete data;
+
+            return;
+
         case shader_set_var_type::mat4: {
             glUniformMatrix4fv(binding, 1, GL_FALSE, reinterpret_cast<const GLfloat *>(data));
+            delete data;
+
             return;
         }
 
         case shader_set_var_type::vec3: {
             glUniform3fv(binding, 1, reinterpret_cast<const GLfloat *>(data));
+            delete data;
+
             return;
         }
 
         case shader_set_var_type::vec4: {
             glUniform4fv(binding, 1, reinterpret_cast<const GLfloat *>(data));
+            delete data;
+
             return;
         }
 
@@ -1259,6 +1291,14 @@ namespace eka2l1::drivers {
 
         case graphics_driver_set_texture_for_shader:
             set_texture_for_shader(helper);
+            break;
+
+        case graphics_driver_set_uniform:
+            set_uniform(helper);
+            break;
+
+        case graphics_driver_depth_set_mask:
+            set_depth_mask(helper);
             break;
 
         default:

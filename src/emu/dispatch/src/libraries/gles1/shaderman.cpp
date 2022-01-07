@@ -164,25 +164,25 @@ namespace eka2l1::dispatch {
             }
         }
 
-        drivers::shader_program_metadata *metadata = nullptr;
-        drivers::handle program_handle = drivers::create_shader_program(driver_, vert_module, fragment_module, metadata);
+        drivers::shader_program_metadata metadata(nullptr);
+        drivers::handle program_handle = drivers::create_shader_program(driver_, vert_module, fragment_module, &metadata);
         if (!program_handle) {
             LOG_ERROR(HLE_DISPATCHER, "Fail to create GLES1 shader program!");
             return 0;
         }
 
         std::unique_ptr<gles1_shader_variables_info> info_inst = nullptr;
-        if (metadata) {
+        if (metadata.is_available()) {
             info_inst = std::make_unique<gles1_shader_variables_info>();
 
-            info_inst->view_model_mat_loc_ = metadata->get_uniform_binding("uViewModelMat");
-            info_inst->proj_mat_loc_ = metadata->get_uniform_binding("uProjMat");
+            info_inst->view_model_mat_loc_ = metadata.get_uniform_binding("uViewModelMat");
+            info_inst->proj_mat_loc_ = metadata.get_uniform_binding("uProjMat");
 
             if ((vertex_statuses & egl_context_es1::VERTEX_STATE_CLIENT_COLOR_ARRAY) == 0)
-                info_inst->color_loc_ = metadata->get_uniform_binding("uColor");
+                info_inst->color_loc_ = metadata.get_uniform_binding("uColor");
 
             if ((vertex_statuses & egl_context_es1::VERTEX_STATE_CLIENT_NORMAL_ARRAY) == 0)
-                info_inst->normal_loc_ = metadata->get_uniform_binding("uNormal");
+                info_inst->normal_loc_ = metadata.get_uniform_binding("uNormal");
 
             std::string texcoordname = "uTexCoord0";
             std::string texviewname = "uTexture0";
@@ -193,11 +193,11 @@ namespace eka2l1::dispatch {
             for (std::uint32_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
                 if (active_texs & (1 << i)) {
                     if ((vertex_statuses & egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY) == 0)
-                        info_inst->texcoord_loc_[i] = metadata->get_uniform_binding(texcoordname.c_str());
+                        info_inst->texcoord_loc_[i] = metadata.get_uniform_binding(texcoordname.c_str());
         
-                    info_inst->texture_mat_loc_[i] = metadata->get_uniform_binding(texture_mat_name.c_str());
-                    info_inst->texview_loc_[i] = metadata->get_uniform_binding(texviewname.c_str());
-                    info_inst->texenv_color_loc_[i] = metadata->get_uniform_binding(texenv_color_name.c_str());
+                    info_inst->texture_mat_loc_[i] = metadata.get_uniform_binding(texture_mat_name.c_str());
+                    info_inst->texview_loc_[i] = metadata.get_uniform_binding(texviewname.c_str());
+                    info_inst->texenv_color_loc_[i] = metadata.get_uniform_binding(texenv_color_name.c_str());
                 }
 
                 texcoordname.back()++;
@@ -208,30 +208,30 @@ namespace eka2l1::dispatch {
 
             for (std::uint32_t i = 0; i < GLES1_EMU_MAX_CLIP_PLANE; i++) {
                 if (fragment_statuses & (1 << (egl_context_es1::FRAGMENT_STATE_CLIP_PLANE_BIT_POS + i))) {
-                    info_inst->clip_plane_loc_[i] = metadata->get_uniform_binding(clip_plane_name.c_str());
+                    info_inst->clip_plane_loc_[i] = metadata.get_uniform_binding(clip_plane_name.c_str());
                 }
 
                 clip_plane_name.back()++;
             }
 
-            info_inst->material_ambient_loc_ = metadata->get_uniform_binding("uMaterialAmbient");
-            info_inst->material_diffuse_loc_ = metadata->get_uniform_binding("uMaterialDiffuse");
-            info_inst->material_specular_loc_ = metadata->get_uniform_binding("uMaterialSpecular");
-            info_inst->material_emission_loc_ = metadata->get_uniform_binding("uMaterialEmission");
-            info_inst->material_shininess_loc_ = metadata->get_uniform_binding("uMaterialShininess");
-            info_inst->global_ambient_loc_ = metadata->get_uniform_binding("uGlobalAmbient");
+            info_inst->material_ambient_loc_ = metadata.get_uniform_binding("uMaterialAmbient");
+            info_inst->material_diffuse_loc_ = metadata.get_uniform_binding("uMaterialDiffuse");
+            info_inst->material_specular_loc_ = metadata.get_uniform_binding("uMaterialSpecular");
+            info_inst->material_emission_loc_ = metadata.get_uniform_binding("uMaterialEmission");
+            info_inst->material_shininess_loc_ = metadata.get_uniform_binding("uMaterialShininess");
+            info_inst->global_ambient_loc_ = metadata.get_uniform_binding("uGlobalAmbient");
 
             if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_ALPHA_TEST)
-                info_inst->alpha_test_ref_loc_ = metadata->get_uniform_binding("uAlphaTestRef");
+                info_inst->alpha_test_ref_loc_ = metadata.get_uniform_binding("uAlphaTestRef");
 
             if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_FOG_ENABLE) {
-                info_inst->fog_color_loc_ = metadata->get_uniform_binding("uFogColor");
+                info_inst->fog_color_loc_ = metadata.get_uniform_binding("uFogColor");
 
                 if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_FOG_MODE_LINEAR) {
-                    info_inst->fog_start_loc_ = metadata->get_uniform_binding("uFogStart");
-                    info_inst->fog_end_loc_ = metadata->get_uniform_binding("uFogEnd");
+                    info_inst->fog_start_loc_ = metadata.get_uniform_binding("uFogStart");
+                    info_inst->fog_end_loc_ = metadata.get_uniform_binding("uFogEnd");
                 } else {
-                    info_inst->fog_density_loc_ = metadata->get_uniform_binding("uFogDensity");
+                    info_inst->fog_density_loc_ = metadata.get_uniform_binding("uFogDensity");
                 }
             }
 
@@ -243,7 +243,7 @@ namespace eka2l1::dispatch {
                 std::string light_spot_dir_name = "uLight0.mSpotDir";
                 std::string light_spot_cutoff_name = "uLight0.mSpotCutoff";
                 std::string light_spot_exponent_name = "uLight0.mSpotExponent";
-                std::string light_attenuation_name = "uLight0.mAttenuatation";
+                std::string light_attenuation_name = "uLight0.mAttenuation";
 
                 for (std::uint32_t i = 0, mask = egl_context_es1::FRAGMENT_STATE_LIGHT0_ON; i < GLES1_EMU_MAX_LIGHT; i++, mask <<= 1) {
                     if (fragment_statuses & mask) {
@@ -258,20 +258,22 @@ namespace eka2l1::dispatch {
                         light_spot_exponent_name[6] = new_light_index_c;
                         light_attenuation_name[6] = new_light_index_c;
 
-                        info_inst->light_dir_or_pos_loc_[i] = metadata->get_uniform_binding(light_variable_pos_or_dir_name.c_str());
-                        info_inst->light_ambient_loc_[i] = metadata->get_uniform_binding(light_ambient_name.c_str());
-                        info_inst->light_diffuse_loc_[i] = metadata->get_uniform_binding(light_diffuse_name.c_str());
-                        info_inst->light_specular_loc_[i] = metadata->get_uniform_binding(light_specular_name.c_str());
-                        info_inst->light_spot_dir_loc_[i] = metadata->get_uniform_binding(light_spot_dir_name.c_str());
-                        info_inst->light_spot_cutoff_loc_[i] = metadata->get_uniform_binding(light_spot_cutoff_name.c_str());
-                        info_inst->light_spot_exponent_loc_[i] = metadata->get_uniform_binding(light_spot_exponent_name.c_str());
-                        info_inst->light_attenuatation_vec_loc_[i] = metadata->get_uniform_binding(light_attenuation_name.c_str());
+                        info_inst->light_dir_or_pos_loc_[i] = metadata.get_uniform_binding(light_variable_pos_or_dir_name.c_str());
+                        info_inst->light_ambient_loc_[i] = metadata.get_uniform_binding(light_ambient_name.c_str());
+                        info_inst->light_diffuse_loc_[i] = metadata.get_uniform_binding(light_diffuse_name.c_str());
+                        info_inst->light_specular_loc_[i] = metadata.get_uniform_binding(light_specular_name.c_str());
+                        info_inst->light_spot_dir_loc_[i] = metadata.get_uniform_binding(light_spot_dir_name.c_str());
+                        info_inst->light_spot_cutoff_loc_[i] = metadata.get_uniform_binding(light_spot_cutoff_name.c_str());
+                        info_inst->light_spot_exponent_loc_[i] = metadata.get_uniform_binding(light_spot_exponent_name.c_str());
+                        info_inst->light_attenuatation_vec_loc_[i] = metadata.get_uniform_binding(light_attenuation_name.c_str());
                     }
                 }
             }
         }
 
+        info = info_inst.get();
         program_cache_[vert_module][fragment_module] = { program_handle, std::move(info_inst) };
+
         return program_handle;
     }
 }

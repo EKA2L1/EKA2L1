@@ -3181,7 +3181,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, hle_dispatch_2) {
-        const std::uint32_t *ordinal = eka2l1::ptr<std::uint32_t>(kern->get_cpu()->get_pc()).get(kern->crr_process());
+        const std::uint32_t *ordinal = eka2l1::ptr<std::uint32_t>(kern->get_cpu()->get_pc() + 4).get(kern->crr_process());
         dispatcher_do_resolve(kern->get_system(), *ordinal);
     }
 

@@ -43,6 +43,7 @@ namespace eka2l1::dispatch {
     #define FIXED_32_TO_FLOAT(x) (float)(x) / 65536.0f
 
     enum gles1_object_type {
+        GLES1_OBJECT_UNDEFINED,
         GLES1_OBJECT_TEXTURE,
         GLES1_OBJECT_BUFFER
     };
@@ -66,7 +67,9 @@ namespace eka2l1::dispatch {
             return driver_handle_;
         }
 
-        virtual gles1_object_type object_type() const = 0;
+        virtual gles1_object_type object_type() const {
+            return GLES1_OBJECT_UNDEFINED;
+        }
     };
 
     struct gles1_driver_texture : public gles1_driver_object {
@@ -397,7 +400,7 @@ namespace eka2l1::dispatch {
         gles1_driver_buffer *binded_buffer(const bool is_array_buffer);
         drivers::handle binded_texture_driver_handle();
 
-        void free(drivers::graphics_driver *driver, drivers::graphics_command_list_builder &builder) override;
+        void init_context_state(drivers::graphics_command_list_builder &builder) override;
         void return_handle_to_pool(const gles1_object_type type, const drivers::handle h);
 
         egl_context_type context_type() const override {

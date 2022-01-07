@@ -99,7 +99,7 @@ namespace eka2l1::drivers {
         return handle_num;
     }
 
-    drivers::handle create_shader_program(graphics_driver *driver, drivers::handle vert_mod, drivers::handle frag_mod, shader_program_metadata *&metadata) {
+    drivers::handle create_shader_program(graphics_driver *driver, drivers::handle vert_mod, drivers::handle frag_mod, shader_program_metadata *metadata) {
         drivers::handle handle_num = 0;
         std::uint8_t *metadata_ptr = nullptr;
 
@@ -107,7 +107,7 @@ namespace eka2l1::drivers {
             return 0;
         }
 
-        if (metadata)
+        if (metadata_ptr && metadata)
             metadata->metadata_ = metadata_ptr;
 
         return handle_num;
@@ -117,7 +117,7 @@ namespace eka2l1::drivers {
         const buffer_upload_hint upload_hint) {
         drivers::handle handle_num = 0;
 
-        if (send_sync_command(driver, graphics_driver_create_buffer, make_data_copy(initial_data, initial_size), initial_size, hint, upload_hint, 0, &handle_num) != 0) {
+        if (send_sync_command(driver, graphics_driver_create_buffer, make_data_copy(initial_data, initial_size), initial_size, hint, upload_hint, static_cast<drivers::handle>(0), &handle_num) != 0) {
             return 0;
         }
 
@@ -131,21 +131,21 @@ namespace eka2l1::drivers {
 
         switch (dim) {
         case 1:
-            if (send_sync_command(driver, graphics_driver_create_texture, dim, mip_levels, internal_format, data_format, data_type, data, size.x, pixels_per_line, 0, &handle_num) != 0) {
+            if (send_sync_command(driver, graphics_driver_create_texture, dim, mip_levels, internal_format, data_format, data_type, data, size.x, pixels_per_line, static_cast<drivers::handle>(0), &handle_num) != 0) {
                 return 0;
             }
 
             break;
 
         case 2:
-            if (send_sync_command(driver, graphics_driver_create_texture, dim, mip_levels, internal_format, data_format, data_type, data, size.x, size.y, pixels_per_line, 0, &handle_num) != 0) {
+            if (send_sync_command(driver, graphics_driver_create_texture, dim, mip_levels, internal_format, data_format, data_type, data, size.x, size.y, pixels_per_line, static_cast<drivers::handle>(0), &handle_num) != 0) {
                 return 0;
             }
 
             break;
 
         case 3:
-            if (send_sync_command(driver, graphics_driver_create_texture, dim, mip_levels, internal_format, data_format, data_type, data, size.x, size.y, size.z, pixels_per_line, 0, &handle_num) != 0) {
+            if (send_sync_command(driver, graphics_driver_create_texture, dim, mip_levels, internal_format, data_format, data_type, data, size.x, size.y, size.z, pixels_per_line, static_cast<drivers::handle>(0), &handle_num) != 0) {
                 return 0;
             }
 
@@ -451,7 +451,7 @@ namespace eka2l1::drivers {
     
     void server_graphics_command_list_builder::recreate_buffer(drivers::handle h, const void *initial_data, const std::size_t initial_size, const buffer_hint hint,
         const buffer_upload_hint upload_hint) {
-        command *cmd = make_command(graphics_driver_create_buffer, nullptr, make_data_copy(initial_data, initial_size), initial_size, hint, upload_hint, h);
+        command *cmd = make_command(graphics_driver_create_buffer, nullptr, make_data_copy(initial_data, initial_size), initial_size, hint, upload_hint, h, &h);
         get_command_list().add(cmd);
     }
 

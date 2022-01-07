@@ -298,6 +298,10 @@ namespace eka2l1::dispatch {
         epoc::canvas_base *backed_window_;
 
         eka2l1::vec2 dimension_;
+        kernel::uid associated_thread_uid_;
+        bool dead_pending_;
+
+        egl_context *bounded_context_;
 
         explicit egl_surface(epoc::canvas_base *backed_window, epoc::screen *screen, eka2l1::vec2 dim,
             drivers::handle h, egl_config::surface_type surface_type);
@@ -311,11 +315,13 @@ namespace eka2l1::dispatch {
         egl_surface *draw_surface_;
 
         kernel::uid associated_thread_uid_;
+        bool dead_pending_;
 
         explicit egl_context();
 
         virtual void free(drivers::graphics_driver *driver, drivers::graphics_command_list_builder &builder);
         virtual egl_context_type context_type() const = 0;
+        virtual void init_context_state(drivers::graphics_command_list_builder &builder) = 0;
     };
 
     using egl_context_instance = std::unique_ptr<egl_context>;
@@ -348,6 +354,7 @@ namespace eka2l1::dispatch {
 
         std::uint32_t add_managed_surface(egl_surface_instance &inst);
         void destroy_managed_surface(const std::uint32_t handle);
+        void remove_managed_surface_from_management(const egl_surface *surface);
 
         egl_surface *get_managed_surface(const std::uint32_t managed_handle);
 

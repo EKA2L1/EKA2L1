@@ -25,13 +25,16 @@
 #include <utils/guest/window.h>
 
 namespace eka2l1::dispatch {
-    BRIDGE_FUNC_DISPATCHER(egl_display, egl_get_display_emu, std::int32_t display_index);
-    BRIDGE_FUNC_DISPATCHER(egl_boolean, egl_initialize_emu, egl_display display, std::int32_t *major, std::int32_t *minor);
-    BRIDGE_FUNC_DISPATCHER(egl_boolean, egl_get_configs_emu, egl_display display, egl_config *configs, std::int32_t config_array_size, std::int32_t *config_total_size);
-    BRIDGE_FUNC_DISPATCHER(egl_boolean, egl_choose_config_emu, egl_display display, std::int32_t *attrib_lists, egl_config *configs, std::int32_t config_array_size, std::int32_t *num_config_choosen);
-    BRIDGE_FUNC_DISPATCHER(egl_surface_handle, egl_create_window_surface_emu, egl_display display, egl_config choosen_config, utils::window_client_interface *win, std::int32_t *additional_attribs);
-    BRIDGE_FUNC_DISPATCHER(egl_surface_handle, egl_create_pbuffer_surface_emu, egl_display display, egl_config choosen_config, std::int32_t *additional_attribs);
-    BRIDGE_FUNC_DISPATCHER(egl_context_handle, egl_create_context_emu, egl_display display, egl_config choosen_config, egl_context_handle shared_context, std::int32_t *additional_attribs_);
-    BRIDGE_FUNC_DISPATCHER(egl_boolean, egl_make_current_emu, egl_display display, egl_surface_handle read_surface, egl_surface_handle write_surface, egl_context_handle context);
-    BRIDGE_FUNC_DISPATCHER(std::int32_t, egl_get_error);
+    BRIDGE_FUNC_LIBRARY(egl_display, egl_get_display_emu, std::int32_t display_index);
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_initialize_emu, egl_display display, std::int32_t *major, std::int32_t *minor);
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_get_configs_emu, egl_display display, egl_config *configs, std::int32_t config_array_size, std::int32_t *config_total_size);
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_choose_config_emu, egl_display display, std::int32_t *attrib_lists, egl_config *configs, std::int32_t config_array_size, std::int32_t *num_config_choosen);
+    BRIDGE_FUNC_LIBRARY(egl_surface_handle, egl_create_window_surface_emu, egl_display display, std::uint32_t choosen_config_value, utils::window_client_interface *win, std::int32_t *additional_attribs);
+    BRIDGE_FUNC_LIBRARY(egl_surface_handle, egl_create_pbuffer_surface_emu, egl_display display, std::uint32_t choosen_config_value, std::int32_t *additional_attribs);
+    BRIDGE_FUNC_LIBRARY(egl_context_handle, egl_create_context_emu, egl_display display, std::uint32_t choosen_config_value, egl_context_handle shared_context, std::int32_t *additional_attribs_);
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_make_current_emu, egl_display display, egl_surface_handle read_surface, egl_surface_handle write_surface, egl_context_handle context);
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_destroy_context_emu, egl_display display, egl_context_handle handle);
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_destroy_surface_emu, egl_display display, egl_surface_handle handle);
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_swap_buffers_emu, egl_display display, egl_surface_handle handle);
+    BRIDGE_FUNC_LIBRARY(std::int32_t, egl_get_error);
 }

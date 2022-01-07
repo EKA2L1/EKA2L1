@@ -124,8 +124,6 @@ namespace eka2l1::drivers {
             return false;
         }
 
-        glDeleteShader(shader);
-
         if (!success) {
             return false;
         }

@@ -514,6 +514,7 @@ namespace eka2l1::drivers {
 
         helper.pop(data);
         helper.pop(data_size);
+        helper.pop(mod_type);
 
         auto obj = make_shader_module(this);
         if (!obj->create(this, data, data_size, mod_type)) {
@@ -675,12 +676,12 @@ namespace eka2l1::drivers {
             helper.pop(store);
 
             *store = res;
+
+            helper.finish(this, 0);
         } else if ((initial_data != nullptr) && (existing_handle)) {
             std::uint8_t *data_casted = reinterpret_cast<std::uint8_t*>(initial_data);
             delete data_casted;
         }
-
-        helper.finish(this, 0);
     }
 
     void shared_graphics_driver::use_program(command_helper &helper) {

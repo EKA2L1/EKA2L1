@@ -135,12 +135,13 @@ namespace eka2l1::dispatch {
                 + trampoline_allocated_);
 
             start_base[0] = 0xEFC10001;
-            start_base[1] = patches[i].dispatch_number_;
+            start_base[1] = 0xE12FFF1E;     // BX LR
+            start_base[2] = patches[i].dispatch_number_;
 
             // TODO!!! Export table is fixed as a whole, not as an individual, this is bad for HLEing only some functions!
             seg->set_export(patches[i].ordinal_number_, entryentry);
 
-            trampoline_allocated_ += 8;
+            trampoline_allocated_ += 12;
         }
 
         return true;

@@ -28,6 +28,9 @@ namespace eka2l1::dispatch {
         std::string out_decl = "";
         std::string main_body = "";
 
+        input_decl += "#version 140\n"
+            "#extension GL_ARB_explicit_attrib_location : require\n";
+
         input_decl += "layout (location = 0) in vec4 inPosition;\n";
 
         uni_decl += "uniform mat4 uViewModelMat;\n"
@@ -37,7 +40,7 @@ namespace eka2l1::dispatch {
 
         main_body += "void main() {\n"
                      "\tgl_Position = uProjMat * uViewModelMat * inPosition;\n"
-                     "\tmMyPos = uViewModelMat * inPosition\n";
+                     "\tmMyPos = uViewModelMat * inPosition;\n";
 
         if (vertex_statuses & egl_context_es1::VERTEX_STATE_CLIENT_COLOR_ARRAY) {
             input_decl += "layout (location = 1) in vec4 inColor;\n";
@@ -50,10 +53,10 @@ namespace eka2l1::dispatch {
         out_decl += "out vec4 mColor;\n";
 
         if (vertex_statuses & egl_context_es1::VERTEX_STATE_CLIENT_NORMAL_ARRAY) {
-            input_decl += "layout (location = 2) in vec4 inNormal;\n";
+            input_decl += "layout (location = 2) in vec3 inNormal;\n";
             main_body += "\tmNormal = inNormal;\n";
         } else {
-            input_decl += "uniform vec4 uNormal;\n";
+            input_decl += "uniform vec3 uNormal;\n";
             main_body += "\tmNormal = uNormal;\n";
         }
 
@@ -72,7 +75,7 @@ namespace eka2l1::dispatch {
             main_body += "\tmNormal = normalize(mNormal);\n";
         }
 
-        out_decl += "out vec4 mNormal;\n";
+        out_decl += "out vec3 mNormal;\n";
 
         if (vertex_statuses & egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY) {
             for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
@@ -211,8 +214,9 @@ namespace eka2l1::dispatch {
         std::string main_body = "";
         std::string external_func = "";
 
+        input_decl += "#version 140\n";
         input_decl += "in vec4 mColor;\n"
-                    "in vec4 mNormal;\n"
+                    "in vec3 mNormal;\n"
                     "in vec4 mMyPos;\n";
 
         uni_decl += "uniform vec4 uMaterialAmbient;\n"
@@ -298,7 +302,7 @@ namespace eka2l1::dispatch {
             "struct TLightInfo {\n"
             "\tvec4 mDirOrPosition;\n"
             "\tvec4 mAmbient;\n"
-            "\tvec4 mDiffiuse;\n"
+            "\tvec4 mDiffuse;\n"
             "\tvec4 mSpecular;\n"
             "\tvec3 mSpotDir;\n"
             "\tfloat mSpotCutoff;\n"
@@ -308,28 +312,28 @@ namespace eka2l1::dispatch {
 
         external_func +=
             "vec4 calculateLight(TLightInfo info, vec3 normal) {\n"
-            "\tvec3 lightDir = vec4(0.0);\n"
+            "\tvec3 lightDir = vec3(0.0);\n"
             "\tfloat attenuation = 1.0;\n"
             "\tif (info.mDirOrPosition.w == 0.0) {\n"
             "\t\tlightDir = normalize(info.mDirOrPosition.xyz);\n"
             "\t} else {\n"
             "\t\tlightDir = normalize(info.mDirOrPosition.xyz - mMyPos.xyz);\n"
             "\t\tfloat dist = length(info.mDirOrPosition.xyz - mMyPos.xyz);\n"
-            "\t\tattenuation = 1.0 / (info.mAttenuation.x + dist * info.mAttenuation.y + dist * dist * info.mAttenuation.z;\n"
+            "\t\tattenuation = 1.0 / (info.mAttenuation.x + dist * info.mAttenuation.y + dist * dist * info.mAttenuation.z);\n"
             "\t}\n"
-            "\tvec4 ambient = info.mAmbient * uMaterialAmbient;\n";
-            "\tvec4 diffuse = info.mDiffuse * max(dot(normal, lightDir), 0.0) * uMaterialDiffuse;\n";
-            "\tfloat shinyExp = pow(max(dot(normal, normalize(lightDir + vec3(0.0, 0.0, 1.0)), 0.0), uMaterialShininess);\n"
+            "\tvec4 ambient = info.mAmbient * uMaterialAmbient;\n"
+            "\tvec4 diffuse = info.mDiffuse * max(dot(normal, lightDir), 0.0) * uMaterialDiffuse;\n"
+            "\tfloat shinyExp = pow(max(dot(normal, normalize(lightDir + vec3(0.0, 0.0, 1.0))), 0.0), uMaterialShininess);\n"
             "\tif (uMaterialShininess == 0.0) shinyExp = 1.0;\n"
             "\tvec4 specular = info.mSpecular * shinyExp * uMaterialSpecular;\n"
             "\tfloat spotAngle = max(dot(lightDir, normalize(info.mSpotDir)), 0.0);\n"
             "\tfloat spotConstant = 1.0;\n"
             "\tif ((info.mDirOrPosition.w == 0.0) || (info.mSpotCutoff == 180.0)) spotConstant = 1.0;\n"
             "\telse {\n"
-            "\t\tif (spotAngle < cos(radians(info.mSpotCutoff)) spotConstant = 0.0;\n"
+            "\t\tif (spotAngle < cos(radians(info.mSpotCutoff))) spotConstant = 0.0;\n"
             "\t\telse spotConstant = pow(spotAngle, info.mSpotExponent);\n"
             "\t}\n"
-            "\treturn attenuation * spotConstant * (ambient + diffuse + specular);";
+            "\treturn attenuation * spotConstant * (ambient + diffuse + specular);\n"
             "}\n";
 
         main_body += "\toColor += uMaterialEmission;\n"
