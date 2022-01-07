@@ -81,11 +81,7 @@ namespace eka2l1 {
 
         template <typename arg>
         constexpr std::tuple<arg_layout, layout_args_state> add_arg_to_layout(const layout_args_state &state) {
-            if constexpr (std::is_same_v<arg, float>) {
-                return add_to_stack<arg>(state);
-            } else {
-                return add_to_gpr_or_stack<arg>(state);
-            }
+            return add_to_gpr_or_stack<arg>(state);
         }
 
         template <typename... args>
