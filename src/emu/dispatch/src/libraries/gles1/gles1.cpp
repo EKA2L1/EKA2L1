@@ -140,8 +140,14 @@ namespace eka2l1::dispatch {
         position_or_dir_[0] = position_or_dir_[1] = position_or_dir_[3] = 0.0f;
         position_or_dir_[2] = 1.0f;
 
+        position_or_dir_transformed_[0] = position_or_dir_transformed_[1] = position_or_dir_transformed_[3] = 0.0f;
+        position_or_dir_transformed_[2] = 1.0f; 
+
         spot_dir_[0] = spot_dir_[1] = 0.0f;
         spot_dir_[2] = -1.0f;
+
+        spot_dir_transformed_[0] = spot_dir_transformed_[1] = 0.0f;
+        spot_dir_transformed_[2] = -1.0f;
 
         attenuatation_[0] = 1.0f;
         attenuatation_[1] = attenuatation_[2] = 0.0f;
@@ -149,7 +155,7 @@ namespace eka2l1::dispatch {
 
     egl_context_es1::egl_context_es1()
         : egl_context()
-        , clear_depth_(0.0f)
+        , clear_depth_(1.0f)
         , clear_stencil_(0)
         , active_texture_unit_(0)
         , active_mat_stack_(GL_MODELVIEW_EMU)
@@ -172,10 +178,11 @@ namespace eka2l1::dispatch {
         , color_mask_(0b1111)
         , stencil_mask_(0xFFFFFFFF)
         , depth_mask_(0xFFFFFFFF)
-        , depth_func_(GL_ALWAYS_EMU)
+        , depth_func_(GL_LESS_EMU)
         , alpha_test_ref_(0)
         , index_buffer_temp_(0)
-        , index_buffer_temp_size_(0) {
+        , index_buffer_temp_size_(0)
+        , input_desc_(0) {
         clear_color_[0] = 0.0f;
         clear_color_[1] = 0.0f;
         clear_color_[2] = 0.0f;
@@ -209,7 +216,11 @@ namespace eka2l1::dispatch {
         // Clip planes
         for (std::size_t i = 0; i < GLES1_EMU_MAX_CLIP_PLANE; i++) {
             clip_planes_[i][0] = clip_planes_[i][1] = clip_planes_[i][2] = clip_planes_[i][3] = 0.0f;
+            clip_planes_transformed_[i][0] = clip_planes_transformed_[i][1] = clip_planes_transformed_[i][2] = clip_planes_transformed_[i][3] = 0.0f;
         }
+
+        // Uniforms
+        color_uniforms_[0] = color_uniforms_[1] = color_uniforms_[2] = color_uniforms_[3] = 1.0f;
 
         // Attribs
         vertex_attrib_.size_ = 4;
@@ -237,6 +248,36 @@ namespace eka2l1::dispatch {
 
         fragment_statuses_ |= ((GL_ALWAYS_EMU - GL_NEVER_EMU) << FRAGMENT_STATE_ALPHA_TEST_FUNC_POS) & FRAGMENT_STATE_ALPHA_FUNC_MASK;
         fragment_statuses_ |= FRAGMENT_STATE_FOG_MODE_EXP;
+    }
+
+    void egl_context_es1::free(drivers::graphics_driver *driver, drivers::graphics_command_list_builder &builder) {
+        if (index_buffer_temp_) {
+            builder.destroy(index_buffer_temp_);
+        }
+
+        if (input_desc_) {
+            builder.destroy(input_desc_);
+        }
+
+        if (vertex_attrib_.in_house_buffer_) {
+            builder.destroy(vertex_attrib_.in_house_buffer_);
+        }
+        
+        if (color_attrib_.in_house_buffer_) {
+            builder.destroy(color_attrib_.in_house_buffer_);
+        }
+        
+        if (normal_attrib_.in_house_buffer_) {
+            builder.destroy(normal_attrib_.in_house_buffer_);
+        }
+
+        for (int i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
+            if (texture_units_[i].coord_attrib_.in_house_buffer_) {
+                builder.destroy(texture_units_[i].coord_attrib_.in_house_buffer_);
+            }
+        }
+
+        egl_context::free(driver, builder);
     }
 
     void egl_context_es1::init_context_state(drivers::graphics_command_list_builder &builder) {
@@ -267,10 +308,10 @@ namespace eka2l1::dispatch {
         builder.set_feature(drivers::graphics_feature::sample_coverage, non_shader_statuses_ & NON_SHADER_STATE_SAMPLE_COVERAGE);
         builder.set_feature(drivers::graphics_feature::stencil_test, non_shader_statuses_ & NON_SHADER_STATE_STENCIL_TEST_ENABLE);
 
-        builder.clip_rect(eka2l1::rect(eka2l1::vec2(scissor_bl_.top.x, draw_surface_->dimension_.y - scissor_bl_.top.y),
+        builder.clip_rect(eka2l1::rect(eka2l1::vec2(scissor_bl_.top.x, draw_surface_->dimension_.y - (scissor_bl_.top.y + scissor_bl_.size.y)),
             scissor_bl_.size));
 
-        builder.set_viewport(eka2l1::rect(eka2l1::vec2(viewport_bl_.top.x, draw_surface_->dimension_.y - viewport_bl_.top.y),
+        builder.set_viewport(eka2l1::rect(eka2l1::vec2(viewport_bl_.top.x, draw_surface_->dimension_.y - (viewport_bl_.top.y + viewport_bl_.size.y)),
             viewport_bl_.size));
     }
 
@@ -449,21 +490,21 @@ namespace eka2l1::dispatch {
         eka2l1::vecx<float, 6> clear_parameters;
 
         std::uint32_t flags_driver = 0;
-        if (bits & GL_DEPTH_BUFFER_BIT_EMU) {
-            flags_driver |= drivers::draw_buffer_bit_depth_buffer;
+        if (bits & GL_COLOR_BUFFER_BIT_EMU) {
+            flags_driver |= drivers::draw_buffer_bit_color_buffer;
 
             clear_parameters[0] = ctx->clear_color_[0];
-            clear_parameters[1] = ctx->clear_color_[0];
-            clear_parameters[2] = ctx->clear_color_[0];
-            clear_parameters[3] = ctx->clear_color_[0];
+            clear_parameters[1] = ctx->clear_color_[1];
+            clear_parameters[2] = ctx->clear_color_[2];
+            clear_parameters[3] = ctx->clear_color_[3];
         }
 
-        if (bits & GL_STENCIL_BUFFER_BIT_EMU) {
-            flags_driver |= drivers::draw_buffer_bit_stencil_buffer;
+        if (bits & GL_DEPTH_BUFFER_BIT_EMU) {
+            flags_driver |= drivers::draw_buffer_bit_depth_buffer;
             clear_parameters[4] = ctx->clear_depth_;
         }
 
-        if (bits & GL_COLOR_BUFFER_BIT_EMU) {
+        if (bits & GL_STENCIL_BUFFER_BIT_EMU) {
             flags_driver |= drivers::draw_buffer_bit_stencil_buffer;
             clear_parameters[5] = ctx->clear_stencil_ / 255.0f;
         }
@@ -735,7 +776,7 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        ctx->active_matrix() = glm::rotate(ctx->active_matrix(), angles, glm::vec3(x, y, z));
+        ctx->active_matrix() = glm::rotate(ctx->active_matrix(), glm::radians(angles), glm::vec3(x, y, z));
     }
 
     BRIDGE_FUNC_LIBRARY(void, gl_rotatex_emu, std::uint32_t angles, std::uint32_t x, std::uint32_t y, std::uint32_t z) {
@@ -744,7 +785,7 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        ctx->active_matrix() = glm::rotate(ctx->active_matrix(), FIXED_32_TO_FLOAT(angles), glm::vec3(FIXED_32_TO_FLOAT(x), FIXED_32_TO_FLOAT(y), FIXED_32_TO_FLOAT(z)));
+        ctx->active_matrix() = glm::rotate(ctx->active_matrix(), glm::radians(FIXED_32_TO_FLOAT(angles)), glm::vec3(FIXED_32_TO_FLOAT(x), FIXED_32_TO_FLOAT(y), FIXED_32_TO_FLOAT(z)));
     }
     
     BRIDGE_FUNC_LIBRARY(void, gl_frustumf_emu, float left, float right, float bottom, float top, float near, float far) {
@@ -806,7 +847,7 @@ namespace eka2l1::dispatch {
         ctx->scissor_bl_.top = eka2l1::vec2(x, y);
         ctx->scissor_bl_.size = eka2l1::vec2(width, height);
 
-        ctx->command_builder_->clip_rect(eka2l1::rect(eka2l1::vec2(x, ctx->draw_surface_->dimension_.y - y), eka2l1::vec2(width, height)));
+        ctx->command_builder_->clip_rect(eka2l1::rect(eka2l1::vec2(x, ctx->draw_surface_->dimension_.y - (y + height)), eka2l1::vec2(width, height)));
     }
     
     BRIDGE_FUNC_LIBRARY(void, gl_front_face_emu, std::uint32_t mode) {
@@ -1492,22 +1533,7 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        drivers::buffer_hint the_hint;
         drivers::buffer_upload_hint upload_hint;
-
-        switch (target) {
-        case GL_ARRAY_BUFFER_EMU:
-            the_hint = drivers::buffer_hint::vertex_buffer;
-            break;
-
-        case GL_ELEMENT_ARRAY_BUFFER_EMU:
-            the_hint = drivers::buffer_hint::index_buffer;
-            break;
-
-        default:
-            controller.push_error(ctx, GL_INVALID_ENUM);
-            return;
-        }
 
         switch (usage) {
         case GL_STATIC_DRAW_EMU:
@@ -1531,7 +1557,7 @@ namespace eka2l1::dispatch {
                 ctx->buffer_pools_.pop();
             } else {
                 drivers::graphics_driver *drv = sys->get_graphics_driver();
-                drivers::handle new_h = drivers::create_buffer(drv, data, size, the_hint, upload_hint);
+                drivers::handle new_h = drivers::create_buffer(drv, data, size, upload_hint);
 
                 if (!new_h) {
                     controller.push_error(ctx, GL_INVALID_OPERATION);
@@ -1544,7 +1570,7 @@ namespace eka2l1::dispatch {
         }
 
         if (need_reinstantiate) {
-            ctx->command_builder_->recreate_buffer(buffer->handle_value(), data, size, the_hint, upload_hint);
+            ctx->command_builder_->recreate_buffer(buffer->handle_value(), data, size, upload_hint);
         }
 
         buffer->assign_data_size(static_cast<std::uint32_t>(size));
@@ -1565,7 +1591,7 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        if ((size < 0) || (offset < 0) || (offset + size >= buffer->data_size())) {
+        if ((size < 0) || (offset < 0) || (offset + size >= static_cast<std::int32_t>(buffer->data_size()))) {
             controller.push_error(ctx, GL_INVALID_VALUE);
             return;
         }
@@ -1600,7 +1626,7 @@ namespace eka2l1::dispatch {
         return true;
     }
 
-    static bool assign_vertex_attrib_gles1(gles1_vertex_attrib &attrib, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset) {
+    static bool assign_vertex_attrib_gles1(gles1_vertex_attrib &attrib, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset, std::uint32_t buffer_obj) {
         drivers::data_format temp;
         if (!gl_enum_to_drivers_data_format(type, temp)) {
             return false;
@@ -1610,6 +1636,7 @@ namespace eka2l1::dispatch {
         attrib.offset_ = static_cast<std::uint32_t>(offset);
         attrib.size_ = size;
         attrib.stride_ = stride;
+        attrib.buffer_obj_ = buffer_obj;
 
         return true;
     }
@@ -1628,7 +1655,7 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        if (!assign_vertex_attrib_gles1(ctx->color_attrib_, size, type, stride, offset)) {
+        if (!assign_vertex_attrib_gles1(ctx->color_attrib_, size, type, stride, offset, ctx->binded_array_buffer_handle_)) {
             controller.push_error(ctx, GL_INVALID_ENUM);
             return;
         }
@@ -1650,7 +1677,7 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        if (!assign_vertex_attrib_gles1(ctx->normal_attrib_, 3, type, stride, offset)) {
+        if (!assign_vertex_attrib_gles1(ctx->normal_attrib_, 3, type, stride, offset, ctx->binded_array_buffer_handle_)) {
             controller.push_error(ctx, GL_INVALID_ENUM);
             return;
         }
@@ -1672,7 +1699,7 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        if (!assign_vertex_attrib_gles1(ctx->vertex_attrib_, size, type, stride, offset)) {
+        if (!assign_vertex_attrib_gles1(ctx->vertex_attrib_, size, type, stride, offset, ctx->binded_array_buffer_handle_)) {
             controller.push_error(ctx, GL_INVALID_ENUM);
             return;
         }
@@ -1694,7 +1721,7 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        if (!assign_vertex_attrib_gles1(ctx->texture_units_[ctx->active_client_texture_unit_].coord_attrib_, size, type, stride, offset)) {
+        if (!assign_vertex_attrib_gles1(ctx->texture_units_[ctx->active_client_texture_unit_].coord_attrib_, size, type, stride, offset, ctx->binded_array_buffer_handle_)) {
             controller.push_error(ctx, GL_INVALID_ENUM);
             return;
         }
@@ -2530,13 +2557,29 @@ namespace eka2l1::dispatch {
             std::memcpy(info.specular_, param, 4 * sizeof(float));
             break;
 
-        case GL_POSITION_EMU:
+        case GL_POSITION_EMU: {
             std::memcpy(info.position_or_dir_, param, 4 * sizeof(float));
-            break;
+            glm::vec4 transformed_pos = glm::make_vec4(info.position_or_dir_) * ctx->model_view_mat_stack_.top();
 
-        case GL_SPOT_DIRECTION_EMU:
-            std::memcpy(info.spot_dir_, param, 3 * sizeof(float));
+            info.position_or_dir_transformed_[0] = transformed_pos.x;
+            info.position_or_dir_transformed_[1] = transformed_pos.y;
+            info.position_or_dir_transformed_[2] = transformed_pos.z;
+            info.position_or_dir_transformed_[3] = transformed_pos.w;
+            
             break;
+        }
+
+        case GL_SPOT_DIRECTION_EMU: {
+            std::memcpy(info.spot_dir_, param, 3 * sizeof(float));
+
+            glm::vec3 transformed_spot_dir = glm::make_vec3(info.spot_dir_) * glm::mat3(ctx->model_view_mat_stack_.top());
+
+            info.spot_dir_transformed_[0] = transformed_spot_dir.x;
+            info.spot_dir_transformed_[1] = transformed_spot_dir.y;
+            info.spot_dir_transformed_[2] = transformed_spot_dir.z;
+            
+            break;
+        }
 
         default:
             controller.push_error(ctx, GL_INVALID_ENUM);
@@ -2603,18 +2646,35 @@ namespace eka2l1::dispatch {
             info.specular_[3] = FIXED_32_TO_FLOAT(param[3]);
             break;
 
-        case GL_POSITION_EMU:
+        case GL_POSITION_EMU: {
             info.position_or_dir_[0] = FIXED_32_TO_FLOAT(param[0]);
             info.position_or_dir_[1] = FIXED_32_TO_FLOAT(param[1]);
             info.position_or_dir_[2] = FIXED_32_TO_FLOAT(param[2]);
             info.position_or_dir_[3] = FIXED_32_TO_FLOAT(param[3]);
-            break;
+            
+            glm::vec4 transformed_pos = glm::make_vec4(info.position_or_dir_) * ctx->model_view_mat_stack_.top();
 
-        case GL_SPOT_DIRECTION_EMU:
+            info.position_or_dir_transformed_[0] = transformed_pos.x;
+            info.position_or_dir_transformed_[1] = transformed_pos.y;
+            info.position_or_dir_transformed_[2] = transformed_pos.z;
+            info.position_or_dir_transformed_[3] = transformed_pos.w;
+            
+            break;
+        }
+
+        case GL_SPOT_DIRECTION_EMU: {
             info.spot_dir_[0] = FIXED_32_TO_FLOAT(param[0]);
             info.spot_dir_[1] = FIXED_32_TO_FLOAT(param[1]);
             info.spot_dir_[2] = FIXED_32_TO_FLOAT(param[2]);
+            
+            glm::vec3 transformed_spot_dir = glm::make_vec3(info.spot_dir_) * glm::mat3(ctx->model_view_mat_stack_.top());
+
+            info.spot_dir_transformed_[0] = transformed_spot_dir.x;
+            info.spot_dir_transformed_[1] = transformed_spot_dir.y;
+            info.spot_dir_transformed_[2] = transformed_spot_dir.z;
+            
             break;
+        }
 
         default:
             controller.push_error(ctx, GL_INVALID_ENUM);
@@ -2783,7 +2843,7 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_COLOR_MATERIAL_EMU:
-            ctx->non_shader_statuses_ |= egl_context_es1::NON_SHADER_STATE_COLOR_MATERIAL_ENABLE;
+            ctx->fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_COLOR_MATERIAL_ENABLE;
             break;
 
         case GL_DEPTH_TEST_EMU:
@@ -2951,7 +3011,7 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_COLOR_MATERIAL_EMU:
-            ctx->non_shader_statuses_ &= ~egl_context_es1::NON_SHADER_STATE_COLOR_MATERIAL_ENABLE;
+            ctx->fragment_statuses_ &= ~egl_context_es1::FRAGMENT_STATE_COLOR_MATERIAL_ENABLE;
             break;
 
         case GL_DEPTH_TEST_EMU:
@@ -3079,6 +3139,12 @@ namespace eka2l1::dispatch {
         }
 
         std::memcpy(ctx->clip_planes_[plane - GL_CLIP_PLANE0_EMU], eq, 4 * sizeof(float));
+
+        glm::vec4 transformed = glm::make_vec4(ctx->clip_planes_[plane - GL_CLIP_PLANE0_EMU]) * glm::inverse(ctx->model_view_mat_stack_.top());
+        ctx->clip_planes_transformed_[plane - GL_CLIP_PLANE0_EMU][0] = transformed.x;
+        ctx->clip_planes_transformed_[plane - GL_CLIP_PLANE0_EMU][1] = transformed.y;
+        ctx->clip_planes_transformed_[plane - GL_CLIP_PLANE0_EMU][2] = transformed.z;
+        ctx->clip_planes_transformed_[plane - GL_CLIP_PLANE0_EMU][3] = transformed.w;
     }
 
     BRIDGE_FUNC_LIBRARY(void, gl_clip_plane_x_emu, std::uint32_t plane, std::uint32_t *eq) {
@@ -3101,6 +3167,12 @@ namespace eka2l1::dispatch {
         ctx->clip_planes_[plane_index][1] = FIXED_32_TO_FLOAT(eq[1]);
         ctx->clip_planes_[plane_index][2] = FIXED_32_TO_FLOAT(eq[2]);
         ctx->clip_planes_[plane_index][3] = FIXED_32_TO_FLOAT(eq[3]); 
+
+        glm::vec4 transformed = glm::make_vec4(ctx->clip_planes_[plane - GL_CLIP_PLANE0_EMU]) * glm::inverse(ctx->model_view_mat_stack_.top());
+        ctx->clip_planes_transformed_[plane - GL_CLIP_PLANE0_EMU][0] = transformed.x;
+        ctx->clip_planes_transformed_[plane - GL_CLIP_PLANE0_EMU][1] = transformed.y;
+        ctx->clip_planes_transformed_[plane - GL_CLIP_PLANE0_EMU][2] = transformed.z;
+        ctx->clip_planes_transformed_[plane - GL_CLIP_PLANE0_EMU][3] = transformed.w;
     }
     
     BRIDGE_FUNC_LIBRARY(void, gl_viewport_emu, std::int32_t x, std::int32_t y, std::int32_t width, std::int32_t height) {
@@ -3112,7 +3184,7 @@ namespace eka2l1::dispatch {
         ctx->viewport_bl_.top = eka2l1::vec2(x, y);
         ctx->viewport_bl_.size = eka2l1::vec2(width, height);
 
-        ctx->command_builder_->set_viewport(eka2l1::rect(eka2l1::vec2(x, ctx->draw_surface_->dimension_.y - y),
+        ctx->command_builder_->set_viewport(eka2l1::rect(eka2l1::vec2(x, ctx->draw_surface_->dimension_.y - (y + height)),
             eka2l1::vec2(width, height)));
     }
 
@@ -3321,10 +3393,10 @@ namespace eka2l1::dispatch {
                 }
             }
             
-            for (std::uint32_t i = 0; i < GLES1_EMU_MAX_CLIP_PLANE; i++) {
+            for (std::uint8_t i = 0; i < GLES1_EMU_MAX_CLIP_PLANE; i++) {
                 if (ctx->fragment_statuses_ & (1 << (egl_context_es1::FRAGMENT_STATE_CLIP_PLANE_BIT_POS + i))) {
                     ctx->command_builder_->set_dynamic_uniform(var_info->clip_plane_loc_[i], drivers::shader_set_var_type::vec4,
-                        ctx->clip_planes_[i], 16);
+                        ctx->clip_planes_transformed_[i], 16);
                 }
             }
 
@@ -3369,7 +3441,7 @@ namespace eka2l1::dispatch {
                 for (std::uint32_t i = 0, mask = egl_context_es1::FRAGMENT_STATE_LIGHT0_ON; i < GLES1_EMU_MAX_LIGHT; i++, mask <<= 1) {
                     if (ctx->fragment_statuses_ & mask) {
                         ctx->command_builder_->set_dynamic_uniform(var_info->light_dir_or_pos_loc_[i], drivers::shader_set_var_type::vec4,
-                            ctx->lights_[i].position_or_dir_, 16);
+                            ctx->lights_[i].position_or_dir_transformed_, 16);
                         ctx->command_builder_->set_dynamic_uniform(var_info->light_ambient_loc_[i], drivers::shader_set_var_type::vec4,
                             ctx->lights_[i].ambient_, 16);
                         ctx->command_builder_->set_dynamic_uniform(var_info->light_diffuse_loc_[i], drivers::shader_set_var_type::vec4,
@@ -3377,7 +3449,7 @@ namespace eka2l1::dispatch {
                         ctx->command_builder_->set_dynamic_uniform(var_info->light_specular_loc_[i], drivers::shader_set_var_type::vec4,
                             ctx->lights_[i].specular_, 16);
                         ctx->command_builder_->set_dynamic_uniform(var_info->light_spot_dir_loc_[i], drivers::shader_set_var_type::vec3,
-                            ctx->lights_[i].spot_dir_, 12);
+                            ctx->lights_[i].spot_dir_transformed_, 12);
                         ctx->command_builder_->set_dynamic_uniform(var_info->light_spot_cutoff_loc_[i], drivers::shader_set_var_type::real,
                             &ctx->lights_[i].spot_cutoff_, 4);
                         ctx->command_builder_->set_dynamic_uniform(var_info->light_spot_exponent_loc_[i], drivers::shader_set_var_type::real,
@@ -3394,15 +3466,125 @@ namespace eka2l1::dispatch {
         return true;
     }
 
-    static void prepare_vertex_buffer_and_descriptors(gles1_driver_buffer *vertex_buffer_managed, egl_context_es1 *ctx, const std::uint32_t active_texs) {
+    static std::uint32_t retrieve_buffer_size_attrib_es1(const std::uint32_t type, const std::uint32_t comp_count, const std::uint32_t estvcount) {
+        std::uint32_t bytes_per_comp = 0;
+        switch (type) {
+        case GL_BYTE_EMU:
+            bytes_per_comp = 1;
+            break;
+
+        case GL_SHORT_EMU:
+            bytes_per_comp = 2;
+            break;
+
+        case GL_FLOAT_EMU:
+            bytes_per_comp = 4;
+            break;
+
+        case GL_FIXED_EMU:
+            bytes_per_comp = 4;
+            break;
+
+        default:
+            return 0;
+        }
+
+        return bytes_per_comp * comp_count * estvcount;
+    }
+
+    static void prepare_vertex_buffer_and_descriptors(egl_context_es1 *ctx, drivers::graphics_driver *drv, kernel::process *crr_process, const std::uint32_t vcount, const std::uint32_t active_texs) {
+        auto update_cpu_buffer_data = [&](gles1_vertex_attrib &attrib) -> bool {
+            if (attrib.buffer_obj_ != 0) {
+                return true;
+            }
+
+            std::uint8_t *data = eka2l1::ptr<std::uint8_t>(attrib.offset_).get(crr_process);
+            if (!data) {
+                LOG_WARN(HLE_DISPATCHER, "Invalid pointer to CPU buffer data for attribute!");
+                return false;
+            }
+
+            // For elements draw this will doom (we don't know how many vertices to be exact at that situation)
+            const std::uint32_t est_buf_size = retrieve_buffer_size_attrib_es1(attrib.data_type_, attrib.size_, vcount);
+
+            if (!attrib.in_house_buffer_) {
+                attrib.in_house_buffer_ = drivers::create_buffer(drv, data, est_buf_size, static_cast<drivers::buffer_upload_hint>(drivers::buffer_upload_dynamic | drivers::buffer_upload_draw));
+            } else {
+                std::uint32_t size_casted = static_cast<std::uint32_t>(est_buf_size);
+                const void *data_casted = data;
+
+                ctx->command_builder_->update_buffer_data(attrib.in_house_buffer_, 0, 1, &data_casted, &size_casted);
+            }
+
+            return true;
+        };
+
+        if (!update_cpu_buffer_data(ctx->vertex_attrib_)) {
+            return;
+        }
+
+        if (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_COLOR_ARRAY) {
+            update_cpu_buffer_data(ctx->color_attrib_);
+        }
+
+        if (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_NORMAL_ARRAY) {
+            update_cpu_buffer_data(ctx->normal_attrib_);
+        }
+
+        if (active_texs && (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY)) {
+            for (std::int32_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
+                if (active_texs & (1 << i)) {
+                    update_cpu_buffer_data(ctx->texture_units_[i].coord_attrib_);
+                }
+            }
+        }
+
         if (ctx->attrib_changed_) {
+            std::vector<drivers::handle> vertex_buffers_alloc;
+
+            auto retrieve_vertex_buffer_slot = [&](gles1_vertex_attrib attrib, std::uint32_t &res) -> bool {
+                drivers::handle buffer_handle_drv = 0;
+                if (attrib.buffer_obj_ == 0) {
+                    buffer_handle_drv = attrib.in_house_buffer_;
+                } else {
+                    auto *buffer_inst_ptr = ctx->objects_.get(attrib.buffer_obj_);
+                    if (!buffer_inst_ptr || ((*buffer_inst_ptr)->object_type() != GLES1_OBJECT_BUFFER)) {
+                        return false;
+                    }
+
+                    gles1_driver_buffer *buffer = reinterpret_cast<gles1_driver_buffer*>((*buffer_inst_ptr).get());
+                    buffer_handle_drv = buffer->handle_value();
+                }
+
+                auto ite = std::find(vertex_buffers_alloc.begin(), vertex_buffers_alloc.end(), buffer_handle_drv);
+                if (ite != vertex_buffers_alloc.end()) {
+                    res = static_cast<std::uint32_t>(std::distance(vertex_buffers_alloc.begin(), ite));
+                    return true;
+                }
+
+                vertex_buffers_alloc.push_back(buffer_handle_drv);
+                res = static_cast<std::uint32_t>(vertex_buffers_alloc.size() - 1);
+
+                return true;
+            };
+
             // Remade and attach descriptors
-            std::vector<drivers::attribute_descriptor> descs;
+            std::vector<drivers::input_descriptor> descs;
             drivers::data_format temp_format;
 
-            drivers::attribute_descriptor temp_desc;
+            drivers::input_descriptor temp_desc;
+            if (!retrieve_vertex_buffer_slot(ctx->vertex_attrib_, temp_desc.buffer_slot)) {
+                LOG_WARN(HLE_DISPATCHER, "Vertex attribute not bound to a valid buffer, draw call skipping!");
+                return;
+            }
+
             temp_desc.location = 0;
-            temp_desc.offset = ctx->vertex_attrib_.offset_;
+
+            if (ctx->vertex_attrib_.buffer_obj_ != 0)
+                temp_desc.offset = ctx->vertex_attrib_.offset_;
+            else
+                temp_desc.offset = 0;
+
             temp_desc.stride = ctx->vertex_attrib_.stride_;
 
             gl_enum_to_drivers_data_format(ctx->vertex_attrib_.data_type_, temp_format);
@@ -3411,32 +3593,49 @@ namespace eka2l1::dispatch {
             descs.push_back(temp_desc);
 
             if (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_COLOR_ARRAY) {
-                temp_desc.location = 1;
-                temp_desc.offset = ctx->color_attrib_.offset_;
-                temp_desc.stride = ctx->color_attrib_.stride_;
+                if (retrieve_vertex_buffer_slot(ctx->color_attrib_, temp_desc.buffer_slot)) {
+                    temp_desc.location = 1;
+                    if (ctx->color_attrib_.buffer_obj_ != 0)
+                        temp_desc.offset = ctx->color_attrib_.offset_;
+                    else
+                        temp_desc.offset = 0;
 
-                gl_enum_to_drivers_data_format(ctx->color_attrib_.data_type_, temp_format);
-                temp_desc.set_format(ctx->color_attrib_.size_, temp_format);
+                    temp_desc.stride = ctx->color_attrib_.stride_;
 
-                descs.push_back(temp_desc);
+                    gl_enum_to_drivers_data_format(ctx->color_attrib_.data_type_, temp_format);
+                    temp_desc.set_format(ctx->color_attrib_.size_, temp_format);
+
+                    descs.push_back(temp_desc);
+                }
             }
 
             if (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_NORMAL_ARRAY) {
-                temp_desc.location = 2;
-                temp_desc.offset = ctx->normal_attrib_.offset_;
-                temp_desc.stride = ctx->normal_attrib_.stride_;
+                if (retrieve_vertex_buffer_slot(ctx->normal_attrib_, temp_desc.buffer_slot)) {
+                    temp_desc.location = 2;
 
-                gl_enum_to_drivers_data_format(ctx->normal_attrib_.data_type_, temp_format);
-                temp_desc.set_format(ctx->normal_attrib_.size_, temp_format);
+                    if (ctx->normal_attrib_.buffer_obj_ != 0)
+                        temp_desc.offset = ctx->normal_attrib_.offset_;
+                    else
+                        temp_desc.offset = 0;
+                    temp_desc.stride = ctx->normal_attrib_.stride_;
 
-                descs.push_back(temp_desc);
+                    gl_enum_to_drivers_data_format(ctx->normal_attrib_.data_type_, temp_format);
+                    temp_desc.set_format(ctx->normal_attrib_.size_, temp_format);
+
+                    descs.push_back(temp_desc);
+                }
             }
 
             if (active_texs && (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY)) {
                 for (std::int32_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
-                    if (active_texs & (1 << i)) {
+                    if (active_texs & (1 << i) && retrieve_vertex_buffer_slot(ctx->texture_units_[i].coord_attrib_, temp_desc.buffer_slot)) {
                         temp_desc.location = 3 + i;
-                        temp_desc.offset = ctx->texture_units_[i].coord_attrib_.offset_;
+
+                        if (ctx->texture_units_[i].coord_attrib_.buffer_obj_ != 0)
+                            temp_desc.offset = ctx->texture_units_[i].coord_attrib_.offset_;
+                        else
+                            temp_desc.offset = 0;
+
                         temp_desc.stride = ctx->texture_units_[i].coord_attrib_.stride_;
 
                         gl_enum_to_drivers_data_format(ctx->texture_units_[i].coord_attrib_.data_type_, temp_format);
@@ -3447,11 +3646,17 @@ namespace eka2l1::dispatch {
                 }
             }
 
-            ctx->command_builder_->attach_descriptors(vertex_buffer_managed->handle_value(), false, descs.data(), static_cast<int>(descs.size()));
+            if (!ctx->input_desc_) {
+                ctx->input_desc_ = drivers::create_input_descriptors(drv, descs.data(), static_cast<std::uint32_t>(descs.size()));
+            } else {
+                ctx->command_builder_->update_input_descriptors(ctx->input_desc_, descs.data(), static_cast<std::uint32_t>(descs.size()));
+            }
+
+            ctx->command_builder_->set_vertex_buffers(vertex_buffers_alloc.data(), 0, static_cast<std::uint32_t>(vertex_buffers_alloc.size()));
             ctx->attrib_changed_ = false;
         }
 
-        ctx->command_builder_->set_buffer_active(vertex_buffer_managed->handle_value());
+        ctx->command_builder_->bind_input_descriptors(ctx->input_desc_);
     }
 
     static std::uint32_t retrieve_active_textures_bitarr(egl_context_es1 *ctx) {
@@ -3468,15 +3673,14 @@ namespace eka2l1::dispatch {
         return arr;
     }
 
-    static bool prepare_gles1_draw(egl_context_es1 *ctx, dispatch::egl_controller &controller) {
-        gles1_driver_buffer *vertex_buffer_managed = ctx->binded_buffer(true);
-        if (!vertex_buffer_managed || ((ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_VERTEX_ARRAY) == 0)) {
+    static bool prepare_gles1_draw(egl_context_es1 *ctx, drivers::graphics_driver *drv, kernel::process *crr_process, const std::uint32_t vcount, dispatch::egl_controller &controller) {
+        if ((ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_VERTEX_ARRAY) == 0) {
             // No drawing needed?
             return true;
         }
 
         std::uint32_t active_textures_bitarr = retrieve_active_textures_bitarr(ctx);
-        prepare_vertex_buffer_and_descriptors(vertex_buffer_managed, ctx, active_textures_bitarr);
+        prepare_vertex_buffer_and_descriptors(ctx, drv, crr_process, vcount, active_textures_bitarr);
 
         if (!prepare_shader_program_for_draw(controller, ctx, active_textures_bitarr)) {
             return false;
@@ -3540,6 +3744,7 @@ namespace eka2l1::dispatch {
 
         dispatcher *dp = sys->get_dispatcher();
         dispatch::egl_controller &controller = dp->get_egl_controller();
+        drivers::graphics_driver *drv = sys->get_graphics_driver();
 
         drivers::graphics_primitive_mode prim_mode_drv;
         if (!convert_gl_enum_to_primitive_mode(mode, prim_mode_drv)) {
@@ -3552,7 +3757,7 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        if (!prepare_gles1_draw(ctx, controller)) {
+        if (!prepare_gles1_draw(ctx, drv, sys->get_kernel_system()->crr_process(), count, controller)) {
             LOG_ERROR(HLE_DISPATCHER, "Error while preparing GLES1 draw. This should not happen!");
             return;
         }
@@ -3582,7 +3787,7 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        if (!prepare_gles1_draw(ctx, controller)) {
+        if (!prepare_gles1_draw(ctx, drv, sys->get_kernel_system()->crr_process(), count, controller)) {
             LOG_ERROR(HLE_DISPATCHER, "Error while preparing GLES1 draw. This should not happen!");
             return;
         }
@@ -3620,12 +3825,11 @@ namespace eka2l1::dispatch {
             }
 
             if (!ctx->index_buffer_temp_) {
-                ctx->index_buffer_temp_ = drivers::create_buffer(drv, indicies_data_raw, size_ibuffer,
-                    drivers::buffer_hint::index_buffer, static_cast<drivers::buffer_upload_hint>(drivers::buffer_upload_dynamic | drivers::buffer_upload_draw));
+                ctx->index_buffer_temp_ = drivers::create_buffer(drv, indicies_data_raw, size_ibuffer, static_cast<drivers::buffer_upload_hint>(drivers::buffer_upload_dynamic | drivers::buffer_upload_draw));
                 ctx->index_buffer_temp_size_ = size_ibuffer;
             } else {
                 if (ctx->index_buffer_temp_size_ < static_cast<std::size_t>(size_ibuffer)) {
-                    ctx->command_builder_->recreate_buffer(ctx->index_buffer_temp_, indicies_data_raw, size_ibuffer, drivers::buffer_hint::index_buffer,
+                    ctx->command_builder_->recreate_buffer(ctx->index_buffer_temp_, indicies_data_raw, size_ibuffer,
                         static_cast<drivers::buffer_upload_hint>(drivers::buffer_upload_dynamic | drivers::buffer_upload_draw));
                     ctx->index_buffer_temp_size_ = size_ibuffer;
                 } else {
@@ -3635,10 +3839,10 @@ namespace eka2l1::dispatch {
                 }
             }
 
-            ctx->command_builder_->set_buffer_active(ctx->index_buffer_temp_);
+            ctx->command_builder_->set_index_buffer(ctx->index_buffer_temp_);
             indices_ptr = 0;
         } else {
-            ctx->command_builder_->set_buffer_active(binded_elem_buffer_managed->handle_value());
+            ctx->command_builder_->set_index_buffer(binded_elem_buffer_managed->handle_value());
         }
 
         ctx->command_builder_->draw_indexed(prim_mode_drv, count, index_format_drv, 0, indices_ptr);

@@ -113,11 +113,20 @@ namespace eka2l1::drivers {
         return handle_num;
     }
 
-    drivers::handle create_buffer(graphics_driver *driver, const void *initial_data, const std::size_t initial_size, const buffer_hint hint,
-        const buffer_upload_hint upload_hint) {
+    drivers::handle create_buffer(graphics_driver *driver, const void *initial_data, const std::size_t initial_size, const buffer_upload_hint upload_hint) {
         drivers::handle handle_num = 0;
 
-        if (send_sync_command(driver, graphics_driver_create_buffer, make_data_copy(initial_data, initial_size), initial_size, hint, upload_hint, static_cast<drivers::handle>(0), &handle_num) != 0) {
+        if (send_sync_command(driver, graphics_driver_create_buffer, make_data_copy(initial_data, initial_size), initial_size, upload_hint, static_cast<drivers::handle>(0), &handle_num) != 0) {
+            return 0;
+        }
+
+        return handle_num;
+    }
+    
+    drivers::handle create_input_descriptors(graphics_driver *driver, input_descriptor *descriptors, const std::uint32_t count) {
+        drivers::handle handle_num = 0;
+
+        if (send_sync_command(driver, graphics_driver_create_input_descriptor, descriptors, count, static_cast<drivers::handle>(0), &handle_num) != 0) {
             return 0;
         }
 
@@ -257,8 +266,13 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
 
-    void server_graphics_command_list_builder::set_buffer_active(drivers::handle h) {
-        command *cmd = make_command(graphics_driver_bind_buffer, nullptr, h);
+    void server_graphics_command_list_builder::set_vertex_buffers(drivers::handle *h, const std::uint32_t starting_slot, const std::uint32_t count) {
+        command *cmd = make_command(graphics_driver_bind_vertex_buffers, nullptr, make_data_copy(h, sizeof(drivers::handle) * count), starting_slot, count);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::set_index_buffer(drivers::handle h) {
+        command *cmd = make_command(graphics_driver_bind_index_buffer, nullptr, h);
         get_command_list().add(cmd);
     }
 
@@ -325,13 +339,6 @@ namespace eka2l1::drivers {
 
     void server_graphics_command_list_builder::load_backup_state() {
         command *cmd = make_command(graphics_driver_restore_state, nullptr);
-        get_command_list().add(cmd);
-    }
-
-    void server_graphics_command_list_builder::attach_descriptors(drivers::handle h, const bool instance_move,
-        const attribute_descriptor *descriptors, const int descriptor_count) {
-        void *des = make_data_copy(descriptors, descriptor_count * sizeof(attribute_descriptor));
-        command *cmd = make_command(graphics_driver_attach_descriptors, nullptr, h, instance_move, des, descriptor_count);
         get_command_list().add(cmd);
     }
 
@@ -449,9 +456,8 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
     
-    void server_graphics_command_list_builder::recreate_buffer(drivers::handle h, const void *initial_data, const std::size_t initial_size, const buffer_hint hint,
-        const buffer_upload_hint upload_hint) {
-        command *cmd = make_command(graphics_driver_create_buffer, nullptr, make_data_copy(initial_data, initial_size), initial_size, hint, upload_hint, h, &h);
+    void server_graphics_command_list_builder::recreate_buffer(drivers::handle h, const void *initial_data, const std::size_t initial_size, const buffer_upload_hint upload_hint) {
+        command *cmd = make_command(graphics_driver_create_buffer, nullptr, make_data_copy(initial_data, initial_size), initial_size, upload_hint, h, &h);
         get_command_list().add(cmd);
     }
 
@@ -462,6 +468,16 @@ namespace eka2l1::drivers {
 
     void server_graphics_command_list_builder::set_texture_for_shader(const int texture_slot, const int shader_binding, const drivers::shader_module_type module) {
         command *cmd = make_command(graphics_driver_set_texture_for_shader, nullptr, texture_slot, shader_binding, module);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::update_input_descriptors(drivers::handle h, input_descriptor *descriptors, const std::uint32_t count) {
+        command *cmd = make_command(graphics_driver_create_buffer, nullptr, make_data_copy(descriptors, count * sizeof(input_descriptor)), count, h, &h);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::bind_input_descriptors(drivers::handle h) {
+        command *cmd = make_command(graphics_driver_bind_input_descriptor, nullptr, h);
         get_command_list().add(cmd);
     }
 }

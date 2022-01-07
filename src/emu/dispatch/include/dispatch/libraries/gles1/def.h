@@ -172,8 +172,9 @@ namespace eka2l1::dispatch {
         std::uint32_t data_type_;
         std::int32_t stride_;
         std::uint32_t offset_;
+        std::uint32_t buffer_obj_ = 0;
 
-        bool is_active_ { false };
+        drivers::handle in_house_buffer_ = 0;
     };
 
     struct gles_texture_env_info {
@@ -259,6 +260,9 @@ namespace eka2l1::dispatch {
         float spot_cutoff_;
         float attenuatation_[3];
 
+        float position_or_dir_transformed_[4];
+        float spot_dir_transformed_[3];
+
         explicit gles1_light_info();
     };
 
@@ -296,7 +300,7 @@ namespace eka2l1::dispatch {
             FRAGMENT_STATE_ALPHA_FUNC_MASK = 0b1110,
             FRAGMENT_STATE_SHADE_MODEL_FLAT = 1 << 4,
             FRAGMENT_STATE_FOG_ENABLE = 1 << 5,
-            FRAGMENT_STATE_FOG_MODE_POS = 1 << 6,
+            FRAGMENT_STATE_FOG_MODE_POS = 6,
             FRAGMENT_STATE_FOG_MODE_MASK = 0b11000000,
             FRAGMENT_STATE_FOG_MODE_LINEAR = 0b00000000,
             FRAGMENT_STATE_FOG_MODE_EXP = 0b01000000,
@@ -320,6 +324,7 @@ namespace eka2l1::dispatch {
             FRAGMENT_STATE_CLIP_PLANE3_ENABLE = 1 << 22,
             FRAGMENT_STATE_CLIP_PLANE4_ENABLE = 1 << 23,
             FRAGMENT_STATE_CLIP_PLANE5_ENABLE = 1 << 24,
+            FRAGMENT_STATE_COLOR_MATERIAL_ENABLE = 1 << 25,
 
             VERTEX_STATE_CLIENT_VERTEX_ARRAY = 1 << 0,
             VERTEX_STATE_CLIENT_COLOR_ARRAY = 1 << 1,
@@ -332,7 +337,6 @@ namespace eka2l1::dispatch {
             NON_SHADER_STATE_BLEND_ENABLE = 1 << 0,
             NON_SHADER_STATE_COLOR_LOGIC_OP_ENABLE = 1 << 1,
             NON_SHADER_STATE_CULL_FACE_ENABLE = 1 << 2,
-            NON_SHADER_STATE_COLOR_MATERIAL_ENABLE = 1 << 3,
             NON_SHADER_STATE_DEPTH_TEST_ENABLE = 1 << 4,
             NON_SHADER_STATE_STENCIL_TEST_ENABLE = 1 << 5,
             NON_SHADER_STATE_LINE_SMOOTH = 1 << 6,
@@ -348,6 +352,7 @@ namespace eka2l1::dispatch {
         gles1_vertex_attrib vertex_attrib_;
         gles1_vertex_attrib color_attrib_;
         gles1_vertex_attrib normal_attrib_;
+        drivers::handle input_desc_;
 
         bool attrib_changed_;
 
@@ -377,6 +382,7 @@ namespace eka2l1::dispatch {
 
         // Clip planes
         float clip_planes_[GLES1_EMU_MAX_CLIP_PLANE][4];
+        float clip_planes_transformed_[GLES1_EMU_MAX_CLIP_PLANE][4];
 
         std::uint64_t vertex_statuses_;
         std::uint64_t fragment_statuses_;
@@ -401,6 +407,7 @@ namespace eka2l1::dispatch {
         drivers::handle binded_texture_driver_handle();
 
         void init_context_state(drivers::graphics_command_list_builder &builder) override;
+        void free(drivers::graphics_driver *driver, drivers::graphics_command_list_builder &builder) override;
         void return_handle_to_pool(const gles1_object_type type, const drivers::handle h);
 
         egl_context_type context_type() const override {

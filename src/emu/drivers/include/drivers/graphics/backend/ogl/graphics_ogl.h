@@ -23,6 +23,7 @@
 #include <drivers/graphics/backend/graphics_driver_shared.h>
 #include <drivers/graphics/backend/ogl/shader_ogl.h>
 #include <drivers/graphics/backend/ogl/texture_ogl.h>
+#include <drivers/graphics/backend/ogl/input_desc_ogl.h>
 #include <drivers/graphics/context.h>
 
 #include <common/queue.h>
@@ -108,6 +109,11 @@ namespace eka2l1::drivers {
         std::atomic_bool should_stop;
         std::atomic_bool surface_update_needed;
 
+        input_descriptors_ogl *active_input_descriptors_;
+
+        GLuint vbo_slots_[GL_BACKEND_MAX_VBO_SLOTS];
+        GLuint index_buffer_current_;
+
         void *new_surface;
         bool is_gles;
 
@@ -141,6 +147,9 @@ namespace eka2l1::drivers {
         void set_depth_func(command_helper &helper);
         void set_uniform(command_helper &helper);
         void set_texture_for_shader(command_helper &helper);
+        void bind_vertex_buffers(command_helper &helper);
+        void bind_index_buffer(command_helper &helper);
+        void bind_input_descriptors(command_helper &helper);
 
         void save_gl_state();
         void load_gl_state();

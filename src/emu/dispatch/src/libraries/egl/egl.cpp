@@ -180,7 +180,7 @@ namespace eka2l1::dispatch {
 
         std::uint32_t current_fill_index = 0;
 
-        for (std::size_t i = 0; i < EGL_EMU_CONFIG_LIST_VALS_LENGTH; i++) {
+        for (std::int32_t i = 0; i < EGL_EMU_CONFIG_LIST_VALS_LENGTH; i++) {
             egl_config config_parser(EGL_EMU_CONFIG_LIST_VALS[i]);
             if (config_parser.get_surface_type() == type) {
                 if ((total_color_bits_provided == -1) || (config_parser.buffer_size() >= total_color_bits_provided)) {
@@ -464,9 +464,10 @@ namespace eka2l1::dispatch {
 
                 ctx->command_builder_->set_feature(drivers::graphics_feature::clipping, false);
                 ctx->command_builder_->set_feature(drivers::graphics_feature::depth_test, false);
+                ctx->command_builder_->set_feature(drivers::graphics_feature::cull, false);
 
                 ctx->command_builder_->bind_bitmap(surface->backed_window_->driver_win_id);
-                ctx->command_builder_->draw_bitmap(surface->handle_, 0, draw_rect, draw_rect);
+                ctx->command_builder_->draw_bitmap(surface->handle_, 0, draw_rect, draw_rect, eka2l1::vec2(0, 0), 0.0f, drivers::bitmap_draw_flag_no_flip);
             }
         }
 

@@ -88,7 +88,6 @@ namespace eka2l1::drivers {
         void create_buffer(command_helper &helper);
         void use_program(command_helper &helper);
         void bind_texture(command_helper &helper);
-        void bind_buffer(command_helper &helper);
         void update_buffer(command_helper &helper);
         void attach_descriptors(command_helper &helper);
         void destroy_object(command_helper &helper);
@@ -98,6 +97,7 @@ namespace eka2l1::drivers {
         void set_ortho_size(command_helper &helper);
         void set_texture_wrap(command_helper &helper);
         void generate_mips(command_helper &helper);
+        void create_input_descriptors(command_helper &helper);
 
     public:
         explicit shared_graphics_driver(const graphic_api gr_api);
@@ -106,9 +106,6 @@ namespace eka2l1::drivers {
 
         void update_bitmap(drivers::handle h, const std::size_t size, const eka2l1::vec2 &offset, const eka2l1::vec2 &dim,
             const void *data, const std::size_t pixels_per_line = 0) override;
-
-        void attach_descriptors(drivers::handle h, const bool instance_move, const attribute_descriptor *descriptors,
-            const int descriptor_count) override;
 
         virtual void dispatch(command *cmd);
 

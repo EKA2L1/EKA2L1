@@ -45,7 +45,7 @@ namespace eka2l1::drivers {
         triangle_fan
     };
 
-    enum class data_format {
+    enum class data_format : std::uint8_t {
         byte = 0,
         sbyte = 1,
         word = 2,

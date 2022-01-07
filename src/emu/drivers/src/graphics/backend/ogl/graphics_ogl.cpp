@@ -26,6 +26,7 @@
 
 #include <drivers/graphics/backend/ogl/common_ogl.h>
 #include <drivers/graphics/backend/ogl/graphics_ogl.h>
+#include <drivers/graphics/backend/ogl/buffer_ogl.h>
 #include <glad/glad.h>
 
 #if EKA2L1_PLATFORM(ANDROID)
@@ -76,7 +77,9 @@ namespace eka2l1::drivers {
         , new_surface(nullptr)
         , is_gles(false)
         , point_size(1.0)
-        , line_style(pen_style_none) {
+        , line_style(pen_style_none)
+        , active_input_descriptors_(nullptr)
+        , index_buffer_current_(0) {
         context_ = graphics::make_gl_context(info, false, true);
 
         if (!context_) {
@@ -150,6 +153,10 @@ namespace eka2l1::drivers {
         mask_program->create(this, sprite_norm_vertex_module.get(), sprite_mask_fragment_module.get());
         brush_program->create(this, brush_vertex_module.get(), brush_fragment_module.get());
         pen_program->create(this, pen_vertex_module.get(), pen_fragment_module.get());
+
+        for (int i = 0; i < GL_BACKEND_MAX_VBO_SLOTS; i++) {
+            vbo_slots_[i] = 0;
+        }
 
         static GLushort indices[] = {
             0, 1, 2,
@@ -534,6 +541,12 @@ namespace eka2l1::drivers {
 
         std::uint64_t index_off_64 = index_off;
 
+        if (active_input_descriptors_) {
+            active_input_descriptors_->activate(vbo_slots_);
+        }
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_current_);
+
         if (vert_off == 0) {
             glDrawElements(prim_mode_to_gl_enum(prim_mode), count, data_format_to_gl_enum(val_type), reinterpret_cast<GLvoid *>(index_off_64));
         } else {
@@ -551,6 +564,10 @@ namespace eka2l1::drivers {
         helper.pop(first);
         helper.pop(count);
         helper.pop(instance_count);
+
+        if (active_input_descriptors_) {
+            active_input_descriptors_->activate(vbo_slots_);
+        }
 
         if (instance_count == 0) {
             glDrawArrays(prim_mode_to_gl_enum(prim_mode), first, count);
@@ -1091,6 +1108,59 @@ namespace eka2l1::drivers {
         glUniform1i(shader_binding, texture_slot);
     }
 
+    void ogl_graphics_driver::bind_vertex_buffers(command_helper &helper) {
+        drivers::handle *arr = 0;
+        std::uint32_t starting_slots = 0;
+        std::uint32_t count = 0;
+
+        helper.pop(arr);
+        helper.pop(starting_slots);
+        helper.pop(count);
+
+        if (starting_slots + count >= GL_BACKEND_MAX_VBO_SLOTS) {
+            LOG_ERROR(DRIVER_GRAPHICS, "Slot to bind VBO exceed maximum (startSlot={}, count={})", starting_slots, count);
+            delete arr;
+
+            return;
+        }
+
+        for (std::uint32_t i = 0; i < count; i++) {
+            ogl_buffer *bufobj = reinterpret_cast<ogl_buffer *>(get_graphics_object(arr[i]));
+
+            if (!bufobj) {
+                continue;
+            }
+
+            vbo_slots_[starting_slots + i] = bufobj->buffer_handle();
+        }
+
+        delete arr;
+    }
+
+    void ogl_graphics_driver::bind_index_buffer(command_helper &helper) {
+        drivers::handle h = 0;
+        helper.pop(h);
+
+        ogl_buffer *bufobj = reinterpret_cast<ogl_buffer *>(get_graphics_object(h));
+        if (!bufobj) {
+            return;
+        }
+
+        index_buffer_current_ = bufobj->buffer_handle();
+    }
+
+    void ogl_graphics_driver::bind_input_descriptors(command_helper &helper) {
+        drivers::handle h = 0;
+        helper.pop(h);
+
+        input_descriptors_ogl *descs = reinterpret_cast<input_descriptors_ogl *>(get_graphics_object(h));
+        if (!descs) {
+            return;
+        }
+
+        active_input_descriptors_ = descs;
+    }
+
     void ogl_graphics_driver::save_gl_state() {
         glGetIntegerv(GL_CURRENT_PROGRAM, &backup.last_program);
         glGetIntegerv(GL_TEXTURE_BINDING_2D, &backup.last_texture);
@@ -1299,6 +1369,18 @@ namespace eka2l1::drivers {
 
         case graphics_driver_depth_set_mask:
             set_depth_mask(helper);
+            break;
+
+        case graphics_driver_bind_vertex_buffers:
+            bind_vertex_buffers(helper);
+            break;
+
+        case graphics_driver_bind_index_buffer:
+            bind_index_buffer(helper);
+            break;
+
+        case graphics_driver_bind_input_descriptor:
+            bind_input_descriptors(helper);
             break;
 
         default:

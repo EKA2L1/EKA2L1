@@ -230,10 +230,10 @@ namespace eka2l1::dispatch {
                      "\toColor = mColor;\n"
                      "\tfloat tempResult = 0.0;\n";
 
-        for (std::size_t i = 0; i < GLES1_EMU_MAX_CLIP_PLANE; i++) {
-            if (fragment_statuses & (1 << (i + egl_context_es1::FRAGMENT_STATE_CLIP_PLANE0_ENABLE))) {
+        for (std::uint8_t i = 0; i < GLES1_EMU_MAX_CLIP_PLANE; i++) {
+            if (fragment_statuses & (1 << (i + egl_context_es1::FRAGMENT_STATE_CLIP_PLANE_BIT_POS))) {
                 uni_decl += fmt::format("uniform vec4 uClipPlane{};\n", i);
-                main_body += fmt::format("\tvec4 uClipDistResult{} = dot(mMyPos, uClipPlane{});\n"
+                main_body += fmt::format("\tfloat uClipDistResult{} = dot(mMyPos, uClipPlane{});\n"
                     "\tif (uClipDistResult{} < 0.0) discard;\n", i, i, i);
             }
         }
@@ -296,59 +296,72 @@ namespace eka2l1::dispatch {
             }
         }
 
-        // Apply lights
-        uni_decl +=
-            "\n"
-            "struct TLightInfo {\n"
-            "\tvec4 mDirOrPosition;\n"
-            "\tvec4 mAmbient;\n"
-            "\tvec4 mDiffuse;\n"
-            "\tvec4 mSpecular;\n"
-            "\tvec3 mSpotDir;\n"
-            "\tfloat mSpotCutoff;\n"
-            "\tfloat mSpotExponent;\n"
-            "\tvec3 mAttenuation;\n"
-            "};\n";
-
-        external_func +=
-            "vec4 calculateLight(TLightInfo info, vec3 normal) {\n"
-            "\tvec3 lightDir = vec3(0.0);\n"
-            "\tfloat attenuation = 1.0;\n"
-            "\tif (info.mDirOrPosition.w == 0.0) {\n"
-            "\t\tlightDir = normalize(info.mDirOrPosition.xyz);\n"
-            "\t} else {\n"
-            "\t\tlightDir = normalize(info.mDirOrPosition.xyz - mMyPos.xyz);\n"
-            "\t\tfloat dist = length(info.mDirOrPosition.xyz - mMyPos.xyz);\n"
-            "\t\tattenuation = 1.0 / (info.mAttenuation.x + dist * info.mAttenuation.y + dist * dist * info.mAttenuation.z);\n"
-            "\t}\n"
-            "\tvec4 ambient = info.mAmbient * uMaterialAmbient;\n"
-            "\tvec4 diffuse = info.mDiffuse * max(dot(normal, lightDir), 0.0) * uMaterialDiffuse;\n"
-            "\tfloat shinyExp = pow(max(dot(normal, normalize(lightDir + vec3(0.0, 0.0, 1.0))), 0.0), uMaterialShininess);\n"
-            "\tif (uMaterialShininess == 0.0) shinyExp = 1.0;\n"
-            "\tvec4 specular = info.mSpecular * shinyExp * uMaterialSpecular;\n"
-            "\tfloat spotAngle = max(dot(lightDir, normalize(info.mSpotDir)), 0.0);\n"
-            "\tfloat spotConstant = 1.0;\n"
-            "\tif ((info.mDirOrPosition.w == 0.0) || (info.mSpotCutoff == 180.0)) spotConstant = 1.0;\n"
-            "\telse {\n"
-            "\t\tif (spotAngle < cos(radians(info.mSpotCutoff))) spotConstant = 0.0;\n"
-            "\t\telse spotConstant = pow(spotAngle, info.mSpotExponent);\n"
-            "\t}\n"
-            "\treturn attenuation * spotConstant * (ambient + diffuse + specular);\n"
-            "}\n";
-
-        main_body += "\toColor += uMaterialEmission;\n"
-                    "\toColor += uMaterialAmbient * uGlobalAmbient;\n";
 
         if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_LIGHTING_ENABLE) {
+            // Apply lights
+            uni_decl +=
+                "\n"
+                "struct TLightInfo {\n"
+                "\tvec4 mDirOrPosition;\n"
+                "\tvec4 mAmbient;\n"
+                "\tvec4 mDiffuse;\n"
+                "\tvec4 mSpecular;\n"
+                "\tvec3 mSpotDir;\n"
+                "\tfloat mSpotCutoff;\n"
+                "\tfloat mSpotExponent;\n"
+                "\tvec3 mAttenuation;\n"
+                "};\n";
+
+            external_func +=
+                "vec4 calculateLight(TLightInfo info, vec3 normal, vec4 explicitAmbient, vec4 explicitDiffuse) {\n"
+                "\tvec3 lightDir = vec3(0.0);\n"
+                "\tfloat attenuation = 1.0;\n"
+                "\tif (info.mDirOrPosition.w == 0.0) {\n"
+                "\t\tlightDir = normalize(info.mDirOrPosition.xyz);\n"
+                "\t} else {\n"
+                "\t\tlightDir = normalize(info.mDirOrPosition.xyz - mMyPos.xyz);\n"
+                "\t\tfloat dist = length(info.mDirOrPosition.xyz - mMyPos.xyz);\n"
+                "\t\tattenuation = 1.0 / (info.mAttenuation.x + dist * info.mAttenuation.y + dist * dist * info.mAttenuation.z);\n"
+                "\t}\n"
+                "\tvec4 ambient = info.mAmbient * explicitAmbient;\n"
+                "\tvec4 diffuse = info.mDiffuse * max(dot(normal, lightDir), 0.0) * explicitDiffuse;\n"
+                "\tfloat shinyExp = pow(max(dot(normal, normalize(lightDir + vec3(0.0, 0.0, 1.0))), 0.0), uMaterialShininess);\n"
+                "\tif (uMaterialShininess == 0.0) shinyExp = 1.0;\n"
+                "\tvec4 specular = info.mSpecular * shinyExp * uMaterialSpecular;\n"
+                "\tfloat spotAngle = max(dot(lightDir, normalize(info.mSpotDir)), 0.0);\n"
+                "\tfloat spotConstant = 1.0;\n"
+                "\tif ((info.mDirOrPosition.w == 0.0) || (info.mSpotCutoff == 180.0)) spotConstant = 1.0;\n"
+                "\telse {\n"
+                "\t\tif (spotAngle < cos(radians(info.mSpotCutoff))) spotConstant = 0.0;\n"
+                "\t\telse spotConstant = pow(spotAngle, info.mSpotExponent);\n"
+                "\t}\n"
+                "\treturn attenuation * spotConstant * (ambient + diffuse + specular);\n"
+                "}\n";
+
+            main_body += "\tvec4 gActualMaterialAmbient;\n"
+                        "\tvec4 gActualMaterialDiffuse;\n";
+
+            if ((fragment_statuses & egl_context_es1::FRAGMENT_STATE_COLOR_MATERIAL_ENABLE) || ((fragment_statuses & egl_context_es1::FRAGMENT_STATE_TEXTURE_ENABLE) && (active_texs != 0))) {
+                // Texture or previous computed color is used instead of specified material...
+                main_body += "\tgActualMaterialAmbient = oColor;\n"
+                            "\tgActualMaterialDiffuse = oColor;\n";
+            } else {
+                main_body += "\tgActualMaterialAmbient = uMaterialAmbient;\n"
+                            "\tgActualMaterialDiffuse = uMaterialDiffuse;\n";
+            }
+
+            main_body += "\t// Clear color to make way for lighting\n"
+                        "\toColor = vec4(0.0);\n";
+
             for (std::size_t i = 0, mask = egl_context_es1::FRAGMENT_STATE_LIGHT0_ON; i < GLES1_EMU_MAX_LIGHT; i++, mask <<= 1) {
                 if (fragment_statuses & mask) {
                     uni_decl += fmt::format("uniform TLightInfo uLight{};\n", i);
                     main_body += fmt::format("\toColor += calculateLight(uLight{}, ", i);
 
                     if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_LIGHT_TWO_SIDE) {
-                        main_body += "gl_FrontFacing ? mNormal : -mNormal);\n";
+                        main_body += "gl_FrontFacing ? mNormal : -mNormal, gActualMaterialAmbient, gActualMaterialDiffuse);\n";
                     } else {
-                        main_body += "mNormal);\n";
+                        main_body += "mNormal, gActualMaterialAmbient, gActualMaterialDiffuse);\n";
                     }
                 }
             }

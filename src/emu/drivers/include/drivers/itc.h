@@ -24,6 +24,7 @@
 #include <drivers/driver.h>
 #include <drivers/graphics/buffer.h>
 #include <drivers/graphics/common.h>
+#include <drivers/graphics/input_desc.h>
 #include <drivers/graphics/shader.h>
 #include <drivers/graphics/texture.h>
 
@@ -122,13 +123,20 @@ namespace eka2l1::drivers {
      * \param driver           The driver associated with the buffer.
      * \param initial_data     The initial data to supply to the buffer.
      * \param initial_size     The size of the buffer. Later resize won't keep the buffer data.
-     * \param hint             Usage hint of the buffer.
      * \param upload_hint      Upload frequency and target hint for the buffer.
      *
      * \returns Handle to the buffer.
      */
-    drivers::handle create_buffer(graphics_driver *driver, const void *initial_data, const std::size_t initial_size,
-        const buffer_hint hint, const buffer_upload_hint upload_hint);
+    drivers::handle create_buffer(graphics_driver *driver, const void *initial_data, const std::size_t initial_size, const buffer_upload_hint upload_hint);
+
+    /**
+     * @brief Create input layout descriptors for input vertex data.
+     * 
+     * @brief driver            The driver associated with the input descriptor.
+     * @brief descriptors       The layout infos.
+     * @brief count             Number of descriptor provided.
+     */
+    drivers::handle create_input_descriptors(graphics_driver *driver, input_descriptor *descriptors, const std::uint32_t count);
 
     /**
      * @brief Read bitmap data from a region into memory buffer.
@@ -325,11 +333,15 @@ namespace eka2l1::drivers {
             const drivers::shader_module_type module) = 0;
 
         /**
-         * \brief Set a buffer active to its traits.
+         * \brief Set vertex buffers to their slots
          *
-         * \param h     Handle to the buffer.
+         * \param h                     Handle to the array of buffer handle.
+         * \param starting_slots        The starting slot index to set these buffers.
+         * \param count                 The number of buffers to set.
          */
-        virtual void set_buffer_active(drivers::handle h) = 0;
+        virtual void set_vertex_buffers(drivers::handle *h, const std::uint32_t starting_slots, const std::uint32_t count) = 0;
+
+        virtual void set_index_buffer(drivers::handle h) = 0;
 
         /**
          * @brief Draw array of vertices.
@@ -447,19 +459,6 @@ namespace eka2l1::drivers {
          * \brief Load state from previously saved temporary storage.
          */
         virtual void load_backup_state() = 0;
-
-        /**
-         * \brief Attach descriptors and its layout to a buffer that is used as vertex.
-         *
-         * \param h                 The handle to the buffer.
-         * \brief instance_move     Add the vertex cursor with the stride for each instance if true.
-         * \param descriptors       Pointer to the descriptors.
-         *                          This is copied and doesn't need to exist after calling this function.
-         * \param descriptor_count  The number of descriptors that we want to be attached.
-         */
-        virtual void attach_descriptors(drivers::handle h, const bool instance_move,
-            const attribute_descriptor *descriptors, const int descriptor_count)
-            = 0;
 
         /**
          * \brief Present swapchain to screen.
@@ -590,8 +589,18 @@ namespace eka2l1::drivers {
          * @param hint              A hint on the buffer's intended usage.
          * @param upload_hint       A hint on the buffer's upload behaviour.
          */
-        virtual void recreate_buffer(drivers::handle h, const void *initial_data, const std::size_t initial_size,
-            const buffer_hint hint, const buffer_upload_hint upload_hint) = 0;
+        virtual void recreate_buffer(drivers::handle h, const void *initial_data, const std::size_t initial_size, const buffer_upload_hint upload_hint) = 0;
+
+        /**
+         * @brief Update the existing input descriptors.
+         * 
+         * @param h                 Handle to an existing input descriptors.
+         * @brief descriptors       The layout infos.
+         * @brief count             Number of descriptor provided.
+         */
+        virtual void update_input_descriptors(drivers::handle h, input_descriptor *descriptors, const std::uint32_t count) = 0;
+
+        virtual void bind_input_descriptors(drivers::handle h) = 0;
 
         /**
          * @brief Set the mask for color outputted in the fragment shader stage.
@@ -657,7 +666,8 @@ namespace eka2l1::drivers {
         void set_texture_for_shader(const int texture_slot, const int shader_binding, const drivers::shader_module_type module) override;
         void regenerate_mips(drivers::handle h) override;
 
-        void set_buffer_active(drivers::handle h) override;
+        void set_vertex_buffers(drivers::handle *h, const std::uint32_t starting_slots, const std::uint32_t count) override;
+        void set_index_buffer(drivers::handle h) override;
 
         void update_buffer_data(drivers::handle h, const std::size_t offset, const int chunk_count, const void **chunk_ptr, const std::uint32_t *chunk_size) override;
 
@@ -682,9 +692,6 @@ namespace eka2l1::drivers {
 
         void set_depth_mask(const std::uint32_t mask) override;
         void set_depth_pass_condition(const condition_func cond_func) override;
-
-        void attach_descriptors(drivers::handle h, const bool instance_move, const attribute_descriptor *descriptors,
-            const int descriptor_count) override;
 
         void backup_state() override;
 
@@ -722,8 +729,9 @@ namespace eka2l1::drivers {
             drivers::texture_format internal_format, drivers::texture_format data_format, drivers::texture_data_type data_type,
             const void *data, const std::size_t data_size, const eka2l1::vec3 &size, const std::size_t pixels_per_line = 0) override;
 
-        void recreate_buffer(drivers::handle h, const void *initial_data, const std::size_t initial_size,
-            const buffer_hint hint, const buffer_upload_hint upload_hint) override;
+        void recreate_buffer(drivers::handle h, const void *initial_data, const std::size_t initial_size, const buffer_upload_hint upload_hint) override;
+        void update_input_descriptors(drivers::handle h, input_descriptor *descriptors, const std::uint32_t count) override;
+        virtual void bind_input_descriptors(drivers::handle h) override;
 
         void set_color_mask(const std::uint8_t mask) override;
     };

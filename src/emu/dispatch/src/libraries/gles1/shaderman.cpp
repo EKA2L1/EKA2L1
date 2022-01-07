@@ -206,7 +206,7 @@ namespace eka2l1::dispatch {
                 texenv_color_name.back()++;
             }
 
-            for (std::uint32_t i = 0; i < GLES1_EMU_MAX_CLIP_PLANE; i++) {
+            for (std::uint8_t i = 0; i < GLES1_EMU_MAX_CLIP_PLANE; i++) {
                 if (fragment_statuses & (1 << (egl_context_es1::FRAGMENT_STATE_CLIP_PLANE_BIT_POS + i))) {
                     info_inst->clip_plane_loc_[i] = metadata.get_uniform_binding(clip_plane_name.c_str());
                 }

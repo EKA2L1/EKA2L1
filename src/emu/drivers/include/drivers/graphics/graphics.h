@@ -75,17 +75,19 @@ namespace eka2l1::drivers {
         graphics_driver_use_program,
         graphics_driver_set_uniform,
         graphics_driver_bind_texture,
-        graphics_driver_bind_buffer,
+        graphics_driver_bind_vertex_buffers,
+        graphics_driver_bind_index_buffer,
         graphics_driver_set_texture_for_shader,
         graphics_driver_draw_array,
         graphics_driver_draw_indexed,
         graphics_driver_update_buffer,
         graphics_driver_set_state,
-        graphics_driver_attach_descriptors,
         graphics_driver_display,
         graphics_driver_set_swizzle,
         graphics_driver_set_color_mask,
         graphics_driver_set_depth_func,
+        graphics_driver_create_input_descriptor,
+        graphics_driver_bind_input_descriptor,
         graphics_driver_backup_state, // Backup all possible state to a struct
         graphics_driver_restore_state // Restore previously backup data
     };
@@ -129,10 +131,6 @@ namespace eka2l1::drivers {
 
         virtual void update_bitmap(drivers::handle h, const std::size_t size, const eka2l1::vec2 &offset,
             const eka2l1::vec2 &dim, const void *data, const std::size_t pixels_per_line = 0)
-            = 0;
-
-        virtual void attach_descriptors(drivers::handle h, const bool instance_move, const attribute_descriptor *descriptors,
-            const int descriptor_count)
             = 0;
 
         virtual void set_viewport(const eka2l1::rect &viewport) = 0;

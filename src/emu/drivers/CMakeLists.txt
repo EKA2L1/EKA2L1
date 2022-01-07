@@ -27,6 +27,7 @@ add_library(drivers
         include/drivers/graphics/context.h
         include/drivers/graphics/cursor.h
         include/drivers/graphics/graphics.h
+        include/drivers/graphics/input_desc.h
         include/drivers/graphics/shader.h
         include/drivers/graphics/texture.h
         include/drivers/graphics/backend/graphics_driver_shared.h
@@ -34,6 +35,7 @@ add_library(drivers
         include/drivers/graphics/backend/ogl/common_ogl.h
         include/drivers/graphics/backend/ogl/fb_ogl.h
         include/drivers/graphics/backend/ogl/graphics_ogl.h
+        include/drivers/graphics/backend/ogl/input_desc_ogl.h
         include/drivers/graphics/backend/ogl/shader_ogl.h
         include/drivers/graphics/backend/ogl/texture_ogl.h
         include/drivers/input/emu_controller.h
@@ -59,6 +61,7 @@ add_library(drivers
         src/graphics/context.cpp
         src/graphics/fb.cpp
         src/graphics/graphics.cpp
+        src/graphics/input_desc.cpp
         src/graphics/shader.cpp
         src/graphics/texture.cpp
         src/graphics/backend/graphics_driver_shared.cpp
@@ -66,6 +69,7 @@ add_library(drivers
         src/graphics/backend/ogl/common_ogl.cpp
         src/graphics/backend/ogl/fb_ogl.cpp
         src/graphics/backend/ogl/graphics_ogl.cpp
+        src/graphics/backend/ogl/input_desc_ogl.cpp
         src/graphics/backend/ogl/texture_ogl.cpp
         src/graphics/backend/ogl/shader_ogl.cpp
         src/sensor/backend/null/sensor_null.cpp

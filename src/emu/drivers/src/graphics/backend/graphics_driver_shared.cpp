@@ -643,13 +643,11 @@ namespace eka2l1::drivers {
     void shared_graphics_driver::create_buffer(command_helper &helper) {
         void *initial_data = nullptr;
         std::size_t initial_size = 0;
-        buffer_hint hint = buffer_hint::none;
         buffer_upload_hint upload_hint = static_cast<buffer_upload_hint>(0);
         drivers::handle existing_handle = 0;
 
         helper.pop(initial_data);
         helper.pop(initial_size);
-        helper.pop(hint);
         helper.pop(upload_hint);
         helper.pop(existing_handle);
 
@@ -666,7 +664,7 @@ namespace eka2l1::drivers {
             obj = obj_inst.get();
         }
 
-        obj->create(this, initial_data, initial_size, hint, upload_hint);
+        obj->create(this, initial_data, initial_size, upload_hint);
 
         if (obj_inst) {
             std::unique_ptr<graphics_object> obj_casted = std::move(obj_inst);
@@ -680,6 +678,46 @@ namespace eka2l1::drivers {
             helper.finish(this, 0);
         } else if ((initial_data != nullptr) && (existing_handle)) {
             std::uint8_t *data_casted = reinterpret_cast<std::uint8_t*>(initial_data);
+            delete data_casted;
+        }
+    }
+
+    void shared_graphics_driver::create_input_descriptors(command_helper &helper) {
+        drivers::input_descriptor *descs = nullptr;
+        std::uint32_t count = 0;
+        drivers::handle existing_handle = 0;
+
+        helper.pop(descs);
+        helper.pop(count);
+        helper.pop(existing_handle);
+
+        drivers::input_descriptors *obj = nullptr;
+        std::unique_ptr<drivers::input_descriptors> obj_inst = nullptr;
+
+        if (existing_handle != 0) {
+            obj = reinterpret_cast<drivers::input_descriptors*>(get_graphics_object(existing_handle));
+            if (!obj) {
+                return;
+            }
+        } else {    
+            obj_inst = make_input_descriptors(this);
+            obj = obj_inst.get();
+        }
+
+        obj->modify(this, descs, count);
+
+        if (obj_inst) {
+            std::unique_ptr<graphics_object> obj_casted = std::move(obj_inst);
+            drivers::handle res = append_graphics_object(obj_casted);
+
+            drivers::handle *store = nullptr;
+            helper.pop(store);
+
+            *store = res;
+
+            helper.finish(this, 0);
+        } else if ((descs != nullptr) && (existing_handle)) {
+            std::uint8_t *data_casted = reinterpret_cast<std::uint8_t*>(descs);
             delete data_casted;
         }
     }
@@ -755,20 +793,6 @@ namespace eka2l1::drivers {
         texobj->bind(this, binding);
     }
 
-    void shared_graphics_driver::bind_buffer(command_helper &helper) {
-        drivers::handle num = 0;
-
-        helper.pop(num);
-
-        buffer *bufobj = reinterpret_cast<buffer *>(get_graphics_object(num));
-
-        if (!bufobj) {
-            return;
-        }
-
-        bufobj->bind(this);
-    }
-
     void shared_graphics_driver::update_buffer(command_helper &helper) {
         drivers::handle num = 0;
         std::uint8_t *data = nullptr;
@@ -789,33 +813,6 @@ namespace eka2l1::drivers {
         bufobj->update_data(this, data, offset, size);
 
         delete data;
-    }
-
-    void shared_graphics_driver::attach_descriptors(drivers::handle h,const bool instance_move,
-        const attribute_descriptor *descriptors, const int descriptor_count) {
-        buffer *bufobj = reinterpret_cast<buffer *>(get_graphics_object(h));
-
-        if (!bufobj) {
-            return;
-        }
-
-        bufobj->attach_descriptors(this, instance_move, descriptors, descriptor_count);
-    }
-
-    void shared_graphics_driver::attach_descriptors(command_helper &helper) {
-        drivers::handle h = 0;
-        bool instance_move = false;
-        attribute_descriptor *descriptors = nullptr;
-        int descriptor_count = 0;
-
-        helper.pop(h);
-        helper.pop(instance_move);
-        helper.pop(descriptors);
-        helper.pop(descriptor_count);
-
-        attach_descriptors(h, instance_move, descriptors, descriptor_count);
-
-        delete descriptors;
     }
 
     void shared_graphics_driver::destroy_object(command_helper &helper) {
@@ -1006,18 +1003,8 @@ namespace eka2l1::drivers {
             break;
         }
 
-        case graphics_driver_bind_buffer: {
-            bind_buffer(helper);
-            break;
-        }
-
         case graphics_driver_update_buffer: {
             update_buffer(helper);
-            break;
-        }
-
-        case graphics_driver_attach_descriptors: {
-            attach_descriptors(helper);
             break;
         }
 
@@ -1054,6 +1041,10 @@ namespace eka2l1::drivers {
 
         case graphics_driver_generate_mips:
             generate_mips(helper);
+            break;
+
+        case graphics_driver_create_input_descriptor:
+            create_input_descriptors(helper);
             break;
 
         default:
