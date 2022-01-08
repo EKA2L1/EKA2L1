@@ -271,11 +271,14 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
-        if (!eplayer->impl_->stop()) {
-            return epoc::error_general;
+        if (eplayer->impl_) {
+            if (!eplayer->impl_->stop()) {
+                return epoc::error_general;
+            }
+
+            manager.audio_renderer_semaphore()->free();
         }
 
-        manager.audio_renderer_semaphore()->free();
         return epoc::error_none;
     }
 
