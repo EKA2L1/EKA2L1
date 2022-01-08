@@ -2559,7 +2559,7 @@ namespace eka2l1::dispatch {
 
         case GL_POSITION_EMU: {
             std::memcpy(info.position_or_dir_, param, 4 * sizeof(float));
-            glm::vec4 transformed_pos = glm::make_vec4(info.position_or_dir_) * ctx->model_view_mat_stack_.top();
+            glm::vec4 transformed_pos = ctx->model_view_mat_stack_.top() * glm::make_vec4(info.position_or_dir_);
 
             info.position_or_dir_transformed_[0] = transformed_pos.x;
             info.position_or_dir_transformed_[1] = transformed_pos.y;
@@ -2572,7 +2572,7 @@ namespace eka2l1::dispatch {
         case GL_SPOT_DIRECTION_EMU: {
             std::memcpy(info.spot_dir_, param, 3 * sizeof(float));
 
-            glm::vec3 transformed_spot_dir = glm::make_vec3(info.spot_dir_) * glm::mat3(ctx->model_view_mat_stack_.top());
+            glm::vec3 transformed_spot_dir = (glm::mat3(ctx->model_view_mat_stack_.top()) * glm::make_vec3(info.spot_dir_)) * glm::vec3(-1);
 
             info.spot_dir_transformed_[0] = transformed_spot_dir.x;
             info.spot_dir_transformed_[1] = transformed_spot_dir.y;
@@ -2652,7 +2652,7 @@ namespace eka2l1::dispatch {
             info.position_or_dir_[2] = FIXED_32_TO_FLOAT(param[2]);
             info.position_or_dir_[3] = FIXED_32_TO_FLOAT(param[3]);
             
-            glm::vec4 transformed_pos = glm::make_vec4(info.position_or_dir_) * ctx->model_view_mat_stack_.top();
+            glm::vec4 transformed_pos = ctx->model_view_mat_stack_.top() * glm::make_vec4(info.position_or_dir_);
 
             info.position_or_dir_transformed_[0] = transformed_pos.x;
             info.position_or_dir_transformed_[1] = transformed_pos.y;
@@ -2667,7 +2667,7 @@ namespace eka2l1::dispatch {
             info.spot_dir_[1] = FIXED_32_TO_FLOAT(param[1]);
             info.spot_dir_[2] = FIXED_32_TO_FLOAT(param[2]);
             
-            glm::vec3 transformed_spot_dir = glm::make_vec3(info.spot_dir_) * glm::mat3(ctx->model_view_mat_stack_.top());
+            glm::vec3 transformed_spot_dir = (glm::mat3(ctx->model_view_mat_stack_.top()) * glm::make_vec3(info.spot_dir_)) * glm::vec3(-1);
 
             info.spot_dir_transformed_[0] = transformed_spot_dir.x;
             info.spot_dir_transformed_[1] = transformed_spot_dir.y;
@@ -3140,7 +3140,7 @@ namespace eka2l1::dispatch {
 
         std::memcpy(ctx->clip_planes_[plane - GL_CLIP_PLANE0_EMU], eq, 4 * sizeof(float));
 
-        glm::vec4 transformed = glm::make_vec4(ctx->clip_planes_[plane - GL_CLIP_PLANE0_EMU]) * glm::inverse(ctx->model_view_mat_stack_.top());
+        glm::vec4 transformed = glm::inverse(glm::transpose(ctx->model_view_mat_stack_.top())) * glm::make_vec4(ctx->clip_planes_[plane - GL_CLIP_PLANE0_EMU]);
         ctx->clip_planes_transformed_[plane - GL_CLIP_PLANE0_EMU][0] = transformed.x;
         ctx->clip_planes_transformed_[plane - GL_CLIP_PLANE0_EMU][1] = transformed.y;
         ctx->clip_planes_transformed_[plane - GL_CLIP_PLANE0_EMU][2] = transformed.z;
