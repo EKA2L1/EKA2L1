@@ -9,7 +9,7 @@ uniform mat4 u_proj;
 uniform mat4 u_model;
 uniform float u_pointSize;
 
-flat out vec2 out_lineStartPoint;
+flat out vec2 out_lineStartingPoint;
 out vec2 out_lineCurrentProcessingPoint;
 
 void main() {
@@ -19,6 +19,6 @@ void main() {
 
     // Flat will keep the original value non-interpolated, and the other one will be interpolated
     // and will give out current position of fragment processing.
-    out_lineStartPoint = gl_Position.xy / gl_Position.w;
-    out_lineCurrentProcessingPoint = out_lineStartPoint;
+    out_lineStartingPoint = gl_Position.xy / gl_Position.w;
+    out_lineCurrentProcessingPoint = out_lineStartingPoint;
 }

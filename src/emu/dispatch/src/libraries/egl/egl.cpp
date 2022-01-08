@@ -468,6 +468,8 @@ namespace eka2l1::dispatch {
 
                 ctx->command_builder_->bind_bitmap(surface->backed_window_->driver_win_id);
                 ctx->command_builder_->draw_bitmap(surface->handle_, 0, draw_rect, draw_rect, eka2l1::vec2(0, 0), 0.0f, drivers::bitmap_draw_flag_no_flip);
+
+                surface->backed_window_->has_redraw_content(true);
             }
         }
 
@@ -480,7 +482,9 @@ namespace eka2l1::dispatch {
             surface->bounded_context_->init_context_state(*surface->bounded_context_->command_builder_);
         }
 
-        surface->backed_window_->take_action_on_change(sys->get_kernel_system()->crr_thread());
+        if (surface->backed_window_)
+            surface->backed_window_->take_action_on_change(sys->get_kernel_system()->crr_thread());
+
         return EGL_TRUE;
     }
 }
