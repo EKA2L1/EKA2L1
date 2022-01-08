@@ -548,7 +548,8 @@ namespace eka2l1::android {
                     std::swap(src.size.x, src.size.y);
                 }
 
-                builder->set_texture_filter(scr->screen_texture, filter, filter);
+                builder->set_texture_filter(scr->screen_texture, false, filter);
+                builder->set_texture_filter(scr->screen_texture, true, filter);
                 builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0),
                     static_cast<float>(scr->ui_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
 
