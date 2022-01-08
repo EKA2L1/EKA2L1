@@ -323,6 +323,7 @@ namespace eka2l1::dispatch {
         virtual void free(drivers::graphics_driver *driver, drivers::graphics_command_list_builder &builder);
         virtual egl_context_type context_type() const = 0;
         virtual void init_context_state(drivers::graphics_command_list_builder &builder) = 0;
+        virtual void on_surface_changed(egl_surface *prev_read, egl_surface *prev_draw) {}
     };
 
     using egl_context_instance = std::unique_ptr<egl_context>;

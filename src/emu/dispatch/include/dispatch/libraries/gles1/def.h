@@ -409,6 +409,7 @@ namespace eka2l1::dispatch {
         void init_context_state(drivers::graphics_command_list_builder &builder) override;
         void free(drivers::graphics_driver *driver, drivers::graphics_command_list_builder &builder) override;
         void return_handle_to_pool(const gles1_object_type type, const drivers::handle h);
+        void on_surface_changed(egl_surface *prev_read, egl_surface *prev_draw) override;
 
         egl_context_type context_type() const override {
             return EGL_GLES1_CONTEXT;

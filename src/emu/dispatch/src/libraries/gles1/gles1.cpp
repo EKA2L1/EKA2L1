@@ -284,6 +284,12 @@ namespace eka2l1::dispatch {
         egl_context::free(driver, builder);
     }
 
+    void egl_context_es1::on_surface_changed(egl_surface *prev_read, egl_surface *prev_draw) {
+        // Rebind viewport
+        viewport_bl_.top = eka2l1::vec2(0, 0);
+        viewport_bl_.size = draw_surface_->dimension_;
+    }
+
     void egl_context_es1::init_context_state(drivers::graphics_command_list_builder &builder) {
         builder.bind_bitmap(draw_surface_->handle_, read_surface_->handle_);
         builder.set_cull_face(active_cull_face_);
@@ -3807,11 +3813,6 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        if (!prepare_gles1_draw(ctx, drv, sys->get_kernel_system()->crr_process(), count, controller)) {
-            LOG_ERROR(HLE_DISPATCHER, "Error while preparing GLES1 draw. This should not happen!");
-            return;
-        }
-
         drivers::data_format index_format_drv;
         std::size_t size_ibuffer = 0;
 
@@ -3830,13 +3831,41 @@ namespace eka2l1::dispatch {
             controller.push_error(ctx, GL_INVALID_ENUM);
             return;
         }
+
+        kernel_system *kern = sys->get_kernel_system();
+        const void *indicies_data_raw = nullptr;
+
+        std::int32_t total_vert = count;
+
+        if (ctx->binded_element_array_buffer_handle_ == 0) {
+            indicies_data_raw =  kern->crr_process()->get_ptr_on_addr_space(indices_ptr);
+            
+            if (indicies_data_raw) {
+                std::int32_t max_vert_index = 0;
+                for (std::int32_t i = 0; i < count; i++) {
+                    std::int32_t index = 0;
+                    if (index_type == GL_UNSIGNED_BYTE_EMU) {
+                        index = static_cast<std::int32_t>((reinterpret_cast<const std::uint8_t*>(indicies_data_raw))[i]);
+                    } else {
+                        index = static_cast<std::int32_t>((reinterpret_cast<const std::uint16_t*>(indicies_data_raw))[i]);
+                    }
+
+                    max_vert_index = common::max(index, max_vert_index);
+                }
+
+                total_vert = max_vert_index + 1;
+            }
+        }
+
+        if (!prepare_gles1_draw(ctx, drv, sys->get_kernel_system()->crr_process(), total_vert, controller)) {
+            LOG_ERROR(HLE_DISPATCHER, "Error while preparing GLES1 draw. This should not happen!");
+            return;
+        }
         
         gles1_driver_buffer *binded_elem_buffer_managed = ctx->binded_buffer(false);
 
         if (!binded_elem_buffer_managed) {
             // Upload it to a temp buffer (sadly!)
-            kernel_system *kern = sys->get_kernel_system();
-            const void *indicies_data_raw = kern->crr_process()->get_ptr_on_addr_space(indices_ptr);
             if (!indicies_data_raw) {
                 LOG_ERROR(HLE_DISPATCHER, "Interpreting indices pointer as a real pointer, but invalid!");
                 controller.push_error(ctx, GL_INVALID_OPERATION);

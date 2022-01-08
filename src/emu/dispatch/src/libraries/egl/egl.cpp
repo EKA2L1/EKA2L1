@@ -409,8 +409,12 @@ namespace eka2l1::dispatch {
             }
         }
 
+        egl_surface *prev_read = context_real->read_surface_;
+        egl_surface *prev_write = context_real->draw_surface_;
+
         context_real->read_surface_ = read_surface_real;
         context_real->draw_surface_ = write_surface_real;
+        context_real->on_surface_changed(prev_read, prev_write);
 
         read_surface_real->bounded_context_ = context_real;
         write_surface_real->bounded_context_ = context_real;
