@@ -472,7 +472,7 @@ namespace eka2l1::drivers {
     }
 
     void server_graphics_command_list_builder::update_input_descriptors(drivers::handle h, input_descriptor *descriptors, const std::uint32_t count) {
-        command *cmd = make_command(graphics_driver_create_buffer, nullptr, make_data_copy(descriptors, count * sizeof(input_descriptor)), count, h, &h);
+        command *cmd = make_command(graphics_driver_create_input_descriptor, nullptr, make_data_copy(descriptors, count * sizeof(input_descriptor)), count, h, &h);
         get_command_list().add(cmd);
     }
 

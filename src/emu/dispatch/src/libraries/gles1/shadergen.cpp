@@ -83,7 +83,7 @@ namespace eka2l1::dispatch {
                     uni_decl += fmt::format("uniform mat4 uTextureMat{};\n", i);
                     input_decl += fmt::format("layout (location = {}) in vec4 inTexCoord{};\n", 3 + i, i);
                     out_decl += fmt::format("out vec4 mTexCoord{};\n", i); 
-                    main_body += fmt::format("\tmTexCoord{} = inTexCoord{} * uTextureMat;\n", i, i);
+                    main_body += fmt::format("\tmTexCoord{} = uTextureMat{} * inTexCoord{};\n", i, i, i);
                 }
             }
         } else {
@@ -92,7 +92,7 @@ namespace eka2l1::dispatch {
                     uni_decl += fmt::format("uniform mat4 uTextureMat{};\n", i);
                     input_decl += fmt::format("uniform vec4 uTexCoord{};\n", i);
                     out_decl += fmt::format("out vec4 mTexCoord{};\n", i); 
-                    main_body += fmt::format("\tmTexCoord{} = uTexCoord{} * uTextureMat;\n", i, i);
+                    main_body += fmt::format("\tmTexCoord{} = uTextureMat{} * uTexCoord{};\n", i, i, i);
                 }
             }
         }
@@ -252,21 +252,21 @@ namespace eka2l1::dispatch {
                     if (tex_env_infos[i].env_mode_ != gles_texture_env_info::ENV_MODE_COMBINE) {
                         switch (tex_env_infos[i].env_mode_) {
                         case gles_texture_env_info::ENV_MODE_REPLACE:
-                            main_body += fmt::format("\toColor = texture(uTexture{}, uTexCoord{});\n", ++last_active_tex, i, i);
+                            main_body += fmt::format("\toColor = texture(uTexture{}, mTexCoord{}.xy);\n", ++last_active_tex, i, i);
                             break;
 
                         case gles_texture_env_info::ENV_MODE_ADD:
-                            main_body += fmt::format("\tvec4 pixelTex{} = texture(uTexture{}, uTexCoord{});\n", i, i, i);
+                            main_body += fmt::format("\tvec4 pixelTex{} = texture(uTexture{}, mTexCoord{}.xy);\n", i, i, i);
                             main_body += fmt::format("\toColor.rgb += pixelTex{}.rgb;\n", i);
                             main_body += fmt::format("\toColor.a *= pixelTex{}.a;\n", i);
                             break;
 
                         case gles_texture_env_info::ENV_MODE_MODULATE:
-                            main_body += fmt::format("\toColor *= texture(uTexture{}, uTexCoord{});\n", i, i);
+                            main_body += fmt::format("\toColor *= texture(uTexture{}, mTexCoord{}.xy);\n", i, i);
                             break;
 
                         case gles_texture_env_info::ENV_MODE_BLEND:
-                            main_body += fmt::format("\tvec4 pixelTex{} = texture(uTexture{}, uTexCoord{});\n", i, i, i);
+                            main_body += fmt::format("\tvec4 pixelTex{} = texture(uTexture{}, mTexCoord{}.xy);\n", i, i, i);
                             main_body += fmt::format("\toColor.rgb = oColor.rgb * (vec3(1.0) - pixelTex{}.rgb) + uTextureEnvColor{}.rgb * pixelTex{}.rgb;\n", i, i, i);
                             main_body += fmt::format("\toColor.a *= pixelTex.a;\n");
                             break;
@@ -280,7 +280,7 @@ namespace eka2l1::dispatch {
                         }
                     } else {
                         // Get the pixel sample first...
-                        main_body += fmt::format("\tvec4 pixelTex{} = texture(uTexture{}, uTexCoord{});\n", i, i, i);
+                        main_body += fmt::format("\tvec4 pixelTex{} = texture(uTexture{}, mTexCoord{}.xy);\n", i, i, i);
 
                         main_body += generate_tex_env_combine_statement(generate_tex_env_source(i, tex_env_infos[i].src0_rgb_, tex_env_infos[i].src0_rgb_op_, true),
                             generate_tex_env_source(i, tex_env_infos[i].src1_rgb_, tex_env_infos[i].src1_rgb_op_, true),
@@ -375,7 +375,7 @@ namespace eka2l1::dispatch {
         if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_FOG_ENABLE) {
             uni_decl += "uniform vec4 uFogColor;\n";
 
-            switch ((fragment_statuses & egl_context_es1::FRAGMENT_STATE_FOG_MODE_MASK) >> egl_context_es1::FRAGMENT_STATE_FOG_MODE_POS) {
+            switch (fragment_statuses & egl_context_es1::FRAGMENT_STATE_FOG_MODE_MASK) {
             case egl_context_es1::FRAGMENT_STATE_FOG_MODE_LINEAR: {
                 uni_decl += "uniform float uFogStart;\n";
                 uni_decl += "uniform float uFogEnd;\n";
@@ -402,7 +402,7 @@ namespace eka2l1::dispatch {
         }
 
         if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_ALPHA_TEST) {
-            const std::uint32_t value = (fragment_statuses & egl_context_es1::FRAGMENT_STATE_ALPHA_TEST_FUNC_POS)
+            const std::uint32_t value = (fragment_statuses & egl_context_es1::FRAGMENT_STATE_ALPHA_FUNC_MASK)
                 >> egl_context_es1::FRAGMENT_STATE_ALPHA_TEST_FUNC_POS;
 
             uni_decl += "uniform float uAlphaTestRef;\n";

@@ -255,6 +255,7 @@ namespace eka2l1::dispatch {
 
     using egl_display = std::uint32_t;
     using egl_boolean = std::uint32_t;
+    using gl_fixed = std::int32_t;
 
     struct egl_config {
         enum surface_type {

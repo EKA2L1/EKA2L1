@@ -296,7 +296,7 @@ namespace eka2l1::dispatch {
         
         enum {
             FRAGMENT_STATE_ALPHA_TEST = 1 << 0,
-            FRAGMENT_STATE_ALPHA_TEST_FUNC_POS = 1 << 1,
+            FRAGMENT_STATE_ALPHA_TEST_FUNC_POS = 1,
             FRAGMENT_STATE_ALPHA_FUNC_MASK = 0b1110,
             FRAGMENT_STATE_SHADE_MODEL_FLAT = 1 << 4,
             FRAGMENT_STATE_FOG_ENABLE = 1 << 5,
