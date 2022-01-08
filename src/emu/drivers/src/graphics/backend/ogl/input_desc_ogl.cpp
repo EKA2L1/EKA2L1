@@ -21,6 +21,8 @@
 #include <drivers/graphics/backend/ogl/input_desc_ogl.h>
 #include <glad/glad.h>
 
+#include <cstring>
+
 namespace eka2l1::drivers {
     input_descriptors_ogl::input_descriptors_ogl()
         : vao_(0) {

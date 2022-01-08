@@ -1048,7 +1048,7 @@ namespace eka2l1::drivers {
 
     void ogl_graphics_driver::set_uniform(command_helper &helper) {
         drivers::shader_set_var_type var_type;
-        const void *data = nullptr;
+        std::uint8_t *data = nullptr;
         int binding = 0;
 
         helper.pop(var_type);
