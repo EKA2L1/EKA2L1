@@ -29,12 +29,22 @@ namespace eka2l1::drivers {
     struct input_descriptor {
         int location;
         int offset;
-        int format;
+        int format = 0;
         int stride;
         std::uint32_t buffer_slot;
 
         void set_format(const int comp_count, const data_format dform) {
-            format = (comp_count & 0b1111) | (static_cast<int>(dform) << 4);
+            format &= ~0b111111111111;
+            format |= (comp_count & 0b1111) | (static_cast<int>(dform) << 4);
+        }
+
+        void set_normalized(const bool norm) {
+            format &= ~(1 << 12);
+            if (norm) format |= 1 << 12;
+        }
+
+        bool is_normalized() const {
+            return format & (1 << 12);
         }
     };
 

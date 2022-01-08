@@ -81,7 +81,7 @@ namespace eka2l1::drivers {
                 glEnableVertexAttribArray(inputs_[i].location);
 
                 std::uint64_t offset_descriptor = inputs_[i].offset;
-                glVertexAttribPointer(inputs_[i].location, comp_count, data_type, false, inputs_[i].stride, (GLvoid *)offset_descriptor);
+                glVertexAttribPointer(inputs_[i].location, comp_count, data_type, inputs_[i].is_normalized(), inputs_[i].stride, (GLvoid *)offset_descriptor);
                 
                 inputs_[i].set_updated(true);
                 cache_change = true;

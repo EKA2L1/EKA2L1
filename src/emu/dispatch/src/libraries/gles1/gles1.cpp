@@ -1625,6 +1625,14 @@ namespace eka2l1::dispatch {
             res = drivers::data_format::fixed;
             break;
 
+        case GL_UNSIGNED_BYTE_EMU:
+            res = drivers::data_format::byte;
+            break;
+
+        case GL_UNSIGNED_SHORT_EMU:
+            res = drivers::data_format::word;
+            break;
+
         default:
             return false;
         }
@@ -3477,10 +3485,12 @@ namespace eka2l1::dispatch {
         std::uint32_t bytes_per_comp = 0;
         switch (type) {
         case GL_BYTE_EMU:
+        case GL_UNSIGNED_BYTE_EMU:
             bytes_per_comp = 1;
             break;
 
         case GL_SHORT_EMU:
+        case GL_UNSIGNED_SHORT_EMU:
             bytes_per_comp = 2;
             break;
 
@@ -3608,6 +3618,7 @@ namespace eka2l1::dispatch {
                         temp_desc.offset = 0;
 
                     temp_desc.stride = ctx->color_attrib_.stride_;
+                    temp_desc.set_normalized(true);
 
                     gl_enum_to_drivers_data_format(ctx->color_attrib_.data_type_, temp_format);
                     temp_desc.set_format(ctx->color_attrib_.size_, temp_format);
@@ -3615,6 +3626,8 @@ namespace eka2l1::dispatch {
                     descs.push_back(temp_desc);
                 }
             }
+
+            temp_desc.set_normalized(false);
 
             if (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_NORMAL_ARRAY) {
                 if (retrieve_vertex_buffer_slot(ctx->normal_attrib_, temp_desc.buffer_slot)) {
