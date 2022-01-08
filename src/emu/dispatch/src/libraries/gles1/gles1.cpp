@@ -2564,7 +2564,7 @@ namespace eka2l1::dispatch {
             info.position_or_dir_transformed_[0] = transformed_pos.x;
             info.position_or_dir_transformed_[1] = transformed_pos.y;
             info.position_or_dir_transformed_[2] = transformed_pos.z;
-            info.position_or_dir_transformed_[3] = transformed_pos.w;
+            info.position_or_dir_transformed_[3] = info.position_or_dir_[3];
             
             break;
         }
@@ -2657,7 +2657,7 @@ namespace eka2l1::dispatch {
             info.position_or_dir_transformed_[0] = transformed_pos.x;
             info.position_or_dir_transformed_[1] = transformed_pos.y;
             info.position_or_dir_transformed_[2] = transformed_pos.z;
-            info.position_or_dir_transformed_[3] = transformed_pos.w;
+            info.position_or_dir_transformed_[3] = info.position_or_dir_[3];
             
             break;
         }
