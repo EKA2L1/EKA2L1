@@ -83,7 +83,7 @@ namespace eka2l1::dispatch {
             std::string source_shader;
             switch (driver_->get_current_api()) {
             case drivers::graphic_api::opengl:
-                source_shader = generate_gl_vertex_shader(vertex_statuses, active_texs);
+                source_shader = generate_gl_vertex_shader(vertex_statuses, active_texs, driver_->is_stricted());
                 break;
 
             default:
@@ -127,7 +127,7 @@ namespace eka2l1::dispatch {
             std::string source_shader;
             switch (driver_->get_current_api()) {
             case drivers::graphic_api::opengl:
-                source_shader = generate_gl_fragment_shader(cleansed_fragment_statuses, active_texs, tex_env_infos);
+                source_shader = generate_gl_fragment_shader(cleansed_fragment_statuses, active_texs, tex_env_infos, driver_->is_stricted());
                 break;
 
             default:

@@ -23,7 +23,7 @@
 #include <string>
 
 namespace eka2l1::dispatch {
-    std::string generate_gl_vertex_shader(const std::uint64_t vertex_statuses, const std::uint32_t active_texs);
+    std::string generate_gl_vertex_shader(const std::uint64_t vertex_statuses, const std::uint32_t active_texs, const bool is_es);
     std::string generate_gl_fragment_shader(const std::uint64_t fragment_statuses, const std::uint32_t active_texs,
-        gles_texture_env_info *tex_env_infos);
+        gles_texture_env_info *tex_env_infos, const bool is_es);
 }

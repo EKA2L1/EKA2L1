@@ -22,14 +22,19 @@
 #include <common/log.h>
 
 namespace eka2l1::dispatch {
-    std::string generate_gl_vertex_shader(const std::uint64_t vertex_statuses, const std::uint32_t active_texs) {
+    std::string generate_gl_vertex_shader(const std::uint64_t vertex_statuses, const std::uint32_t active_texs, const bool is_es) {
         std::string input_decl = "";
         std::string uni_decl = "";
         std::string out_decl = "";
         std::string main_body = "";
 
-        input_decl += "#version 140\n"
-            "#extension GL_ARB_explicit_attrib_location : require\n";
+        if (is_es) {
+            input_decl += "#version 300 es\n"
+                          "precision mediump float;\n";
+        } else {
+            input_decl += "#version 140\n"
+                "#extension GL_ARB_explicit_attrib_location : require\n";
+        }
 
         input_decl += "layout (location = 0) in vec4 inPosition;\n";
 
@@ -208,13 +213,19 @@ namespace eka2l1::dispatch {
     }
 
     std::string generate_gl_fragment_shader(const std::uint64_t fragment_statuses, const std::uint32_t active_texs,
-        gles_texture_env_info *tex_env_infos) {
+        gles_texture_env_info *tex_env_infos, const bool is_es) {
         std::string input_decl = "";
         std::string uni_decl = "";
         std::string main_body = "";
         std::string external_func = "";
 
-        input_decl += "#version 140\n";
+        if (is_es) {
+            input_decl += "#version 300 es\n"
+                          "precision mediump float;\n";
+        } else {
+            input_decl += "#version 140\n";
+        }
+
         input_decl += "in vec4 mColor;\n"
                     "in vec3 mNormal;\n"
                     "in vec4 mMyPos;\n";
