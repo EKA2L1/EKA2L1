@@ -384,6 +384,9 @@ namespace eka2l1::dispatch {
         float clip_planes_[GLES1_EMU_MAX_CLIP_PLANE][4];
         float clip_planes_transformed_[GLES1_EMU_MAX_CLIP_PLANE][4];
 
+        // Lines
+        float line_width_;
+
         std::uint64_t vertex_statuses_;
         std::uint64_t fragment_statuses_;
         std::uint64_t non_shader_statuses_;

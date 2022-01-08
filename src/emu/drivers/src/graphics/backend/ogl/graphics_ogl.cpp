@@ -76,6 +76,7 @@ namespace eka2l1::drivers {
         , surface_update_needed(false)
         , new_surface(nullptr)
         , is_gles(false)
+        , support_line_width_(true)
         , point_size(1.0)
         , line_style(pen_style_none)
         , active_input_descriptors_(nullptr)
@@ -1161,6 +1162,27 @@ namespace eka2l1::drivers {
         active_input_descriptors_ = descs;
     }
 
+    void ogl_graphics_driver::set_line_width(command_helper &helper) {
+        if (!support_line_width_) {
+            return;
+        }
+
+        float w = 0;
+        helper.pop(w);
+
+        GLint range[2];
+        glGetIntegerv(GL_SMOOTH_LINE_WIDTH_RANGE, range);
+
+        if (range[1] >= w) {
+            glad_glLineWidth(w);
+
+            if (glGetError() == GL_INVALID_VALUE) {
+                LOG_INFO(DRIVER_GRAPHICS, "OpenGL driver does not support line width feature. Disabled from now on.");
+                support_line_width_ = false;
+            }
+        }
+    }
+
     void ogl_graphics_driver::save_gl_state() {
         glGetIntegerv(GL_CURRENT_PROGRAM, &backup.last_program);
         glGetIntegerv(GL_TEXTURE_BINDING_2D, &backup.last_texture);
@@ -1381,6 +1403,10 @@ namespace eka2l1::drivers {
 
         case graphics_driver_bind_input_descriptor:
             bind_input_descriptors(helper);
+            break;
+
+        case graphics_driver_set_line_width:
+            set_line_width(helper);
             break;
 
         default:

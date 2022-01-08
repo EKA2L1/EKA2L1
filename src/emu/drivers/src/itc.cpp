@@ -480,4 +480,9 @@ namespace eka2l1::drivers {
         command *cmd = make_command(graphics_driver_bind_input_descriptor, nullptr, h);
         get_command_list().add(cmd);
     }
+
+    void server_graphics_command_list_builder::set_line_width(const float width) {
+        command *cmd = make_command(graphics_driver_set_line_width, nullptr, width);
+        get_command_list().add(cmd);
+    }
 }

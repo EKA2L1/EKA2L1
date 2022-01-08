@@ -116,6 +116,7 @@ namespace eka2l1::drivers {
 
         void *new_surface;
         bool is_gles;
+        bool support_line_width_;
 
         float point_size;
         pen_style line_style;
@@ -150,6 +151,7 @@ namespace eka2l1::drivers {
         void bind_vertex_buffers(command_helper &helper);
         void bind_index_buffer(command_helper &helper);
         void bind_input_descriptors(command_helper &helper);
+        void set_line_width(command_helper &helper);
 
         void save_gl_state();
         void load_gl_state();

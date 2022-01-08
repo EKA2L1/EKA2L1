@@ -176,6 +176,7 @@ namespace eka2l1::dispatch {
         , fog_end_(1.0f)
         , viewport_bl_(eka2l1::vec2(0, 0), eka2l1::vec2(0, 0))
         , scissor_bl_(eka2l1::vec2(0, 0), eka2l1::vec2(0, 0))
+        , line_width_(1.0f)
         , vertex_statuses_(0)
         , fragment_statuses_(0)
         , non_shader_statuses_(0)
@@ -304,6 +305,8 @@ namespace eka2l1::dispatch {
         builder.set_depth_mask(depth_mask_);
         builder.blend_formula(drivers::blend_equation::add, drivers::blend_equation::add, source_blend_factor_, dest_blend_factor_,
             source_blend_factor_, dest_blend_factor_);
+
+        builder.set_line_width(line_width_);
 
         builder.set_feature(drivers::graphics_feature::blend, non_shader_statuses_ & NON_SHADER_STATE_BLEND_ENABLE);
         builder.set_feature(drivers::graphics_feature::clipping, non_shader_statuses_ & NON_SHADER_STATE_SCISSOR_ENABLE);
@@ -3895,5 +3898,305 @@ namespace eka2l1::dispatch {
         }
 
         ctx->command_builder_->draw_indexed(prim_mode_drv, count, index_format_drv, 0, indices_ptr);
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, gl_hint_emu) {
+        // Empty intentionally.
+    }
+    
+    BRIDGE_FUNC_LIBRARY(void, gl_line_width_emu, float width) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if (width < 0) {
+            controller.push_error(ctx, GL_INVALID_VALUE);
+            return;
+        }
+
+        ctx->line_width_ = width;
+        ctx->command_builder_->set_line_width(width);
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, gl_line_widthx_emu, gl_fixed width) {
+        gl_line_width_emu(sys, FIXED_32_TO_FLOAT(width));
+    }
+
+    static std::uint32_t driver_blend_factor_to_gl_enum(const drivers::blend_factor factor) {
+        switch (factor) {
+        case drivers::blend_factor::current_alpha:
+            return GL_DST_ALPHA_EMU;
+
+        case drivers::blend_factor::current_color:
+            return GL_DST_COLOR;
+
+        case drivers::blend_factor::frag_out_alpha:
+            return GL_SRC_ALPHA_EMU;
+
+        case drivers::blend_factor::frag_out_alpha_saturate:
+            return GL_SRC_ALPHA_SATURATE_EMU;
+
+        case drivers::blend_factor::frag_out_color:
+            return GL_SRC_COLOR_EMU;
+
+        case drivers::blend_factor::one:
+            return GL_ONE_EMU;
+
+        case drivers::blend_factor::one_minus_current_alpha:
+            return GL_ONE_MINUS_DST_ALPHA_EMU;
+
+        case drivers::blend_factor::one_minus_current_color:
+            return GL_ONE_MINUS_DST_COLOR;
+
+        case drivers::blend_factor::one_minus_frag_out_alpha:
+            return GL_ONE_MINUS_SRC_ALPHA_EMU;
+
+        case drivers::blend_factor::one_minus_frag_out_color:
+            return GL_ONE_MINUS_SRC_COLOR_EMU;
+
+        default:
+            break;
+        }
+
+        return GL_ONE_EMU;
+    }
+    
+    BRIDGE_FUNC_LIBRARY(void, gl_get_integerv_emu, std::uint32_t pname, std::int32_t *params) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+        
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+        drivers::graphics_driver *drv = sys->get_graphics_driver();
+        
+        if (!params) {
+            controller.push_error(ctx, GL_INVALID_VALUE);
+            return;
+        }
+
+        switch (pname) {
+        case GL_ACTIVE_TEXTURE_EMU:
+            *params = static_cast<std::int32_t>(ctx->active_texture_unit_ + GL_TEXTURE0_EMU);
+            break;
+
+        case GL_CLIENT_ACTIVE_TEXTURE_EMU:
+            *params = static_cast<std::int32_t>(ctx->active_client_texture_unit_ + GL_TEXTURE0_EMU);
+            break;
+
+        case GL_ALPHA_TEST_EMU:
+            if (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_ALPHA_TEST)
+                *params = 1;
+            else
+                *params = 0;
+
+            break;
+
+        case GL_ALPHA_TEST_FUNC_EMU:
+            *params = static_cast<std::int32_t>(((ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_ALPHA_FUNC_MASK)
+                >> egl_context_es1::FRAGMENT_STATE_ALPHA_TEST_FUNC_POS) + GL_NEVER_EMU);
+            break;
+
+        case GL_ALPHA_TEST_REF_EMU:
+            *params = static_cast<std::int32_t>(ctx->alpha_test_ref_);
+            break;
+
+        case GL_ARRAY_BUFFER_BINDING_EMU:
+            *params = ctx->binded_array_buffer_handle_;
+            break;
+
+        case GL_BLEND_EMU:
+            if (ctx->fragment_statuses_ & egl_context_es1::NON_SHADER_STATE_BLEND_ENABLE)
+                *params = 1;
+            else
+                *params = 0;
+
+            break;
+
+        case GL_BLEND_DST_EMU:
+            *params = driver_blend_factor_to_gl_enum(ctx->dest_blend_factor_);
+            break;
+
+        case GL_BLEND_SRC_EMU:
+            *params = driver_blend_factor_to_gl_enum(ctx->source_blend_factor_);
+            break;
+
+        case GL_CLIP_PLANE0_EMU:
+        case GL_CLIP_PLANE1_EMU:
+        case GL_CLIP_PLANE2_EMU:
+        case GL_CLIP_PLANE3_EMU:
+        case GL_CLIP_PLANE4_EMU:
+        case GL_CLIP_PLANE5_EMU:
+            *params = (ctx->fragment_statuses_ & (1 << (egl_context_es1::FRAGMENT_STATE_CLIP_PLANE_BIT_POS +
+                pname - GL_CLIP_PLANE0_EMU))) ? 1 : 0;
+            break;
+
+        case GL_COLOR_ARRAY_EMU:
+            if (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_COLOR_ARRAY)
+                *params = 1;
+            else
+                *params = 0;
+
+            break;
+
+        case GL_COLOR_ARRAY_BUFFER_BINDING_EMU:
+            *params = static_cast<std::int32_t>(ctx->color_attrib_.buffer_obj_);
+            break;
+
+        case GL_COLOR_ARRAY_SIZE_EMU:
+            *params = ctx->color_attrib_.size_;
+            break;
+
+        case GL_COLOR_ARRAY_STRIDE_EMU:
+            *params = ctx->color_attrib_.stride_;
+            break;
+
+        case GL_COLOR_ARRAY_TYPE_EMU:
+            *params = static_cast<std::int32_t>(ctx->color_attrib_.data_type_);
+            break;
+
+        case GL_COLOR_CLEAR_VALUE_EMU:
+            params[0] = static_cast<std::int32_t>(ctx->clear_color_[0] * 255);
+            params[1] = static_cast<std::int32_t>(ctx->clear_color_[1] * 255);
+            params[2] = static_cast<std::int32_t>(ctx->clear_color_[2] * 255);
+            params[3] = static_cast<std::int32_t>(ctx->clear_color_[3] * 255);
+            break;
+
+        case GL_COLOR_LOGIC_OP_EMU:
+            *params = (ctx->non_shader_statuses_ & egl_context_es1::NON_SHADER_STATE_COLOR_LOGIC_OP_ENABLE) ? 1 : 0;
+            break;
+
+        case GL_COLOR_MATERIAL_EMU:
+            *params = (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_COLOR_MATERIAL_ENABLE) ? 1 : 0;
+            break;
+
+        case GL_COLOR_WRITEMASK_EMU:
+            params[0] = (ctx->color_mask_ & 1) ? 1 : 0;
+            params[1] = (ctx->color_mask_ & 2) ? 1 : 0;
+            params[2] = (ctx->color_mask_ & 4) ? 1 : 0;
+            params[3] = (ctx->color_mask_ & 8) ? 1 : 0;
+
+            break;
+
+        case GL_CULL_FACE_EMU:
+            *params = (ctx->non_shader_statuses_ & egl_context_es1::NON_SHADER_STATE_CULL_FACE_ENABLE);
+            break;
+
+        case GL_CULL_FACE_MODE_EMU:
+            *params = (ctx->active_cull_face_ == drivers::rendering_face::front) ? GL_FRONT_EMU : GL_BACK_EMU;
+            break;
+
+        case GL_CURRENT_COLOR_EMU:
+            params[0] = static_cast<std::int32_t>(ctx->color_uniforms_[0] * 255);
+            params[1] = static_cast<std::int32_t>(ctx->color_uniforms_[1] * 255);
+            params[2] = static_cast<std::int32_t>(ctx->color_uniforms_[2] * 255);
+            params[3] = static_cast<std::int32_t>(ctx->color_uniforms_[3] * 255);
+            break;
+
+        case GL_CURRENT_NORMAL_EMU:
+            params[0] = static_cast<std::int32_t>(ctx->normal_uniforms_[0]);
+            params[1] = static_cast<std::int32_t>(ctx->normal_uniforms_[1]);
+            params[2] = static_cast<std::int32_t>(ctx->normal_uniforms_[2]);
+
+            break;
+
+        case GL_CURRENT_TEXTURE_COORDS_EMU:
+            params[0] = static_cast<std::int32_t>(ctx->texture_units_[ctx->active_texture_unit_].coord_uniforms_[0]);
+            params[1] = static_cast<std::int32_t>(ctx->texture_units_[ctx->active_texture_unit_].coord_uniforms_[1]);
+            params[2] = static_cast<std::int32_t>(ctx->texture_units_[ctx->active_texture_unit_].coord_uniforms_[2]);
+            params[3] = static_cast<std::int32_t>(ctx->texture_units_[ctx->active_texture_unit_].coord_uniforms_[3]);
+            break;
+
+        case GL_MATRIX_MODE_EMU:
+            *params = ctx->active_mat_stack_;
+            break;
+
+        case GL_DEPTH_CLEAR_EMU:
+            *params = static_cast<std::int32_t>(ctx->clear_depth_ * 255);
+            break;
+
+        case GL_NORMAL_ARRAY_EMU:
+            *params = (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_NORMAL_ARRAY) ? 1 : 0;
+            break;
+
+        case GL_NORMAL_ARRAY_BUFFER_BINDING_EMU:
+            *params = ctx->normal_attrib_.buffer_obj_;
+            break;
+
+        case GL_NORMAL_ARRAY_STRIDE_EMU:
+            *params = ctx->normal_attrib_.stride_;
+            break;
+        
+        case GL_NORMAL_ARRAY_TYPE_EMU:
+            *params = static_cast<std::int32_t>(ctx->normal_attrib_.data_type_);
+            break;
+
+        case GL_NORMAL_ARRAY_POINTER_EMU:
+            *params = static_cast<std::int32_t>(ctx->normal_attrib_.offset_);
+            break;
+
+        case GL_TEXTURE_COORD_ARRAY_EMU:
+            *params = (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY) ? 1 : 0;
+            break;
+
+        case GL_VERTEX_ARRAY_BUFFER_BINDING_EMU:
+            *params = ctx->vertex_attrib_.buffer_obj_;
+            break;
+
+        case GL_VERTEX_ARRAY_STRIDE_EMU:
+            *params = ctx->vertex_attrib_.stride_;
+            break;
+
+        case GL_VERTEX_ARRAY_SIZE_EMU:
+            *params = ctx->vertex_attrib_.size_;
+            break;
+        
+        case GL_VERTEX_ARRAY_TYPE_EMU:
+            *params = static_cast<std::int32_t>(ctx->vertex_attrib_.data_type_);
+            break;
+
+        case GL_VERTEX_ARRAY_POINTER_EMU:
+            *params = static_cast<std::int32_t>(ctx->vertex_attrib_.offset_);
+            break;
+
+        case GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING_EMU:
+            *params = ctx->texture_units_[ctx->active_texture_unit_].coord_attrib_.buffer_obj_;
+            break;
+
+        case GL_MAX_CLIP_PLANES_EMU:
+            *params = GLES1_EMU_MAX_CLIP_PLANE;
+            break;
+
+        case GL_MAX_LIGHTS_EMU:
+            *params = GLES1_EMU_MAX_LIGHT;
+            break;
+
+        case GL_MAX_TEXTURE_SIZE_EMU:
+            *params = GLES1_EMU_MAX_TEXTURE_SIZE;
+            break;
+
+        case GL_MAX_TEXTURE_UNITS_EMU:
+            *params = GLES1_EMU_MAX_TEXTURE_COUNT;
+            break;
+
+        case GL_RESCALE_NORMAL_EMU:
+            *params = (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_NORMAL_ENABLE_RESCALE) ? 1 : 0;
+            break;
+
+        case GL_NORMALIZE_EMU:
+            *params = (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_NORMAL_ENABLE_NORMALIZE) ? 1 : 0;
+            break;
+
+        default:
+            LOG_TRACE(HLE_DISPATCHER, "Unhandled integer attribute 0x{:X}!", pname);
+            controller.push_error(ctx, GL_INVALID_ENUM);
+
+            return;
+        }
     }
 }

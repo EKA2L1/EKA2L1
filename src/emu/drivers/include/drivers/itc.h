@@ -608,6 +608,8 @@ namespace eka2l1::drivers {
          * @param mask 8-bit integer with the first 4 least significant bits, each bit set represnenting which color component can be written.
          */
         virtual void set_color_mask(const std::uint8_t mask) = 0;
+
+        virtual void set_line_width(const float width) = 0;
     };
 
     class server_graphics_command_list_builder : public graphics_command_list_builder {
@@ -734,6 +736,7 @@ namespace eka2l1::drivers {
         virtual void bind_input_descriptors(drivers::handle h) override;
 
         void set_color_mask(const std::uint8_t mask) override;
+        void set_line_width(const float width) override;
     };
 
     struct graphics_command_callback_data {
