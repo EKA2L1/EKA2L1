@@ -137,7 +137,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER(0x1142, gl_gen_textures_emu),
         BRIDGE_REGISTER_DISPATCHER(0x1143, gl_get_error_emu),
         BRIDGE_REGISTER_DISPATCHER(0x1144, gl_get_integerv_emu),
-        //BRIDGE_REGISTER_DISPATCHER(0x1145, gl_get_string_emu),
+        BRIDGE_REGISTER_DISPATCHER(0x1145, gl_get_string_emu),
         BRIDGE_REGISTER_DISPATCHER(0x1146, gl_hint_emu),
         BRIDGE_REGISTER_DISPATCHER(0x1147, gl_light_model_f_emu),
         BRIDGE_REGISTER_DISPATCHER(0x1148, gl_light_model_fv_emu),

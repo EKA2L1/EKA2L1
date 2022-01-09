@@ -3903,6 +3903,22 @@ namespace eka2l1::dispatch {
         ctx->command_builder_->draw_indexed(prim_mode_drv, count, index_format_drv, 0, indices_ptr);
     }
 
+    BRIDGE_FUNC_LIBRARY(address, gl_get_string_emu, std::uint32_t pname) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return 0;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        address res = dp->retrieve_static_string(pname);
+        if (res == 0) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+        }
+        return res;
+    }
+
     BRIDGE_FUNC_LIBRARY(void, gl_hint_emu) {
         // Empty intentionally.
     }

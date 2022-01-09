@@ -68,6 +68,7 @@ namespace eka2l1::dispatch {
         // Add static strings
         add_static_string(GLES1_STATIC_STRING_KEY_VENDOR, GLES1_STATIC_STRING_VENDOR);
         add_static_string(GLES1_STATIC_STRING_KEY_RENDERER, GLES1_STATIC_STRING_RENDERER);
+        add_static_string(GLES1_STATIC_STRING_KEY_EXTENSIONS, GLES1_STATIC_STRING_EXTENSIONS);
     }
 
     dispatcher::~dispatcher() {

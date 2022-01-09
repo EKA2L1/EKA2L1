@@ -12,11 +12,13 @@ namespace eka2l1::dispatch {
     };
 
     enum gles1_static_string_key {
-        GLES1_STATIC_STRING_KEY_VENDOR,
+        GLES1_STATIC_STRING_KEY_VENDOR = 0x1F00,
         GLES1_STATIC_STRING_KEY_RENDERER,
-        GLES1_STATIC_STRING_KEY_VERSION
+        GLES1_STATIC_STRING_KEY_VERSION,
+        GLES1_STATIC_STRING_KEY_EXTENSIONS
     };
 
     static constexpr const char *GLES1_STATIC_STRING_VENDOR = "EKA2L1";
     static constexpr const char *GLES1_STATIC_STRING_RENDERER = "EKA2L1";
+    static constexpr const char *GLES1_STATIC_STRING_EXTENSIONS = "";
 }
