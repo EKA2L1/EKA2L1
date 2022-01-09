@@ -5581,6 +5581,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x4E, dll_tls),
         BRIDGE_REGISTER(0x4F, hal_function),
         BRIDGE_REGISTER(0x52, process_command_line_length),
+        BRIDGE_REGISTER(0x54, get_inactivity_time),
         BRIDGE_REGISTER(0x55, clear_inactivity_time),
         BRIDGE_REGISTER(0x56, debug_print),
         BRIDGE_REGISTER(0x5A, exception_handler),
