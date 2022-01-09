@@ -10,4 +10,13 @@ namespace eka2l1::dispatch {
         GLES1_EMU_MAX_LIGHT = 8,
         GLES1_EMU_MAX_CLIP_PLANE = 6
     };
+
+    enum gles1_static_string_key {
+        GLES1_STATIC_STRING_KEY_VENDOR,
+        GLES1_STATIC_STRING_KEY_RENDERER,
+        GLES1_STATIC_STRING_KEY_VERSION
+    };
+
+    static constexpr const char *GLES1_STATIC_STRING_VENDOR = "EKA2L1";
+    static constexpr const char *GLES1_STATIC_STRING_RENDERER = "EKA2L1";
 }

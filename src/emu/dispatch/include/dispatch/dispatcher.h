@@ -34,6 +34,7 @@
 #include <atomic>
 #include <memory>
 #include <vector>
+#include <map>
 
 // Foward declarations
 namespace eka2l1 {
@@ -218,14 +219,20 @@ namespace eka2l1::dispatch {
     struct dispatcher {
     private:
         kernel::chunk *trampoline_chunk_;
+        kernel::chunk *static_data_chunk_;
+
         hle::lib_manager *libmngr_;
         memory_system *mem_;
+        kernel_system *kern_;
 
         std::uint32_t trampoline_allocated_;
+        std::uint32_t static_data_allocated_;
 
         dsp_manager dsp_manager_;
         screen_post_transferer post_transferer_;
         egl_controller egl_controller_;
+
+        std::map<std::uint32_t, address> static_string_addrs_;
 
     public:
         window_server *winserv_;
@@ -254,5 +261,8 @@ namespace eka2l1::dispatch {
         egl_controller &get_egl_controller() {
             return egl_controller_;
         }
+
+        address add_static_string(const std::uint32_t key, const std::string &value);
+        address retrieve_static_string(const std::uint32_t key);
     };
 }
