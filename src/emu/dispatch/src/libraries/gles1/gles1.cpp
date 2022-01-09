@@ -1363,6 +1363,10 @@ namespace eka2l1::dispatch {
                 internal_format_driver = drivers::texture_format::etc2_rgb8;
                 break;
 
+            case GL_COMPRESSED_RGBA_PVRTC_4BPPV1_EMU:
+                internal_format_driver = drivers::texture_format::pvrtc_4bppv1_rgba;
+                break;
+
             default:
                 LOG_ERROR(HLE_DISPATCHER, "Unrecognised internal format 0x{:X} for compressed texture!", internal_format);
                 controller.push_error(ctx, GL_INVALID_ENUM);

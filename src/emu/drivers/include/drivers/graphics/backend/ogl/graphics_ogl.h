@@ -55,7 +55,8 @@ namespace eka2l1::drivers {
     };
 
     enum ogl_driver_feature {
-        OGL_FEATURE_SUPPORT_ETC2 = 1 << 0
+        OGL_FEATURE_SUPPORT_ETC2 = 1 << 0,
+        OGL_FEATURE_SUPPORT_PVRTC = 1 << 1
     };
 
     class ogl_graphics_driver : public shared_graphics_driver {

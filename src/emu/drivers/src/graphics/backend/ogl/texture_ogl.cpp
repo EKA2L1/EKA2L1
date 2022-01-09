@@ -28,6 +28,7 @@
 #include <cassert>
 
 void decompressBlockETC2(unsigned int block_part1, unsigned int block_part2, std::uint8_t *img, int width, int height, int startx, int starty);
+uint32_t PVRTDecompressPVRTC(const void *compressedData, uint32_t do2bitMode, uint32_t xDim, uint32_t yDim, uint32_t doPvrtType, uint8_t *outResultImage);
 
 namespace eka2l1::drivers {
     static GLint to_gl_tex_dim(const int dim) {
@@ -89,12 +90,21 @@ namespace eka2l1::drivers {
         std::vector<std::uint8_t> converted_data;
         if (tex_data_type == drivers::texture_data_type::compressed) {
             ogl_graphics_driver *ogl_driver = reinterpret_cast<ogl_graphics_driver*>(driver);
-            if (!ogl_driver->get_supported_feature(OGL_FEATURE_SUPPORT_ETC2)) {
+            if (internal_format == drivers::texture_format::etc2_rgb8 && !ogl_driver->get_supported_feature(OGL_FEATURE_SUPPORT_ETC2)) {
                 converted_data_type = drivers::texture_data_type::ubyte;
                 converted_internal_format = drivers::texture_format::rgb;
                 converted_format = drivers::texture_format::rgb;
 
                 decode_rgb_etc2_texture(converted_data, reinterpret_cast<std::uint8_t*>(data), size.x, size.y);
+
+                data = converted_data.data();
+            } else if (internal_format == drivers::texture_format::pvrtc_4bppv1_rgba && !ogl_driver->get_supported_feature(OGL_FEATURE_SUPPORT_PVRTC)) {
+                converted_data_type = drivers::texture_data_type::ubyte;
+                converted_internal_format = drivers::texture_format::rgba;
+                converted_format = drivers::texture_format::rgba;
+
+                converted_data.resize(4 * size.x * size.y);
+                PVRTDecompressPVRTC(data, 1, size.x, size.y, 0, converted_data.data());
 
                 data = converted_data.data();
             }

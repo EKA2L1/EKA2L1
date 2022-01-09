@@ -71,6 +71,7 @@ add_library(drivers
         src/graphics/backend/ogl/fb_ogl.cpp
         src/graphics/backend/ogl/graphics_ogl.cpp
         src/graphics/backend/ogl/input_desc_ogl.cpp
+        src/graphics/backend/ogl/pvrt-dec.cpp
         src/graphics/backend/ogl/texture_ogl.cpp
         src/graphics/backend/ogl/shader_ogl.cpp
         src/sensor/backend/null/sensor_null.cpp
