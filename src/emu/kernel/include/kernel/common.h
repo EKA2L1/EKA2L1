@@ -24,7 +24,7 @@
 
 #include <cstdint>
 #include <functional>
-#include <map>
+#include <unordered_map>
 #include <string>
 
 namespace eka2l1 {
@@ -45,7 +45,7 @@ namespace eka2l1::hle {
         std::string name;
     };
 
-    using func_map = std::map<uint32_t, eka2l1::hle::epoc_import_func>;
+    using func_map = std::unordered_map<uint32_t, eka2l1::hle::epoc_import_func>;
 }
 
 namespace eka2l1::service {
