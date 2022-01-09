@@ -157,25 +157,24 @@ namespace eka2l1::dispatch {
             }
         }
 
-        if (surface_type == -1) {
-            egl_push_error(sys, EGL_BAD_ATTRIBUTE_EMU);
-            return EGL_FALSE;
-        }
-
         egl_config::surface_type type;
-        switch (surface_type) {
-        case EGL_PBUFFER_BIT_EMU:
-            type = egl_config::EGL_SURFACE_TYPE_PBUFFER;
-            break;
-
-        case EGL_WINDOW_BIT_EMU:
+        if (surface_type == -1) {
             type = egl_config::EGL_SURFACE_TYPE_WINDOW;
-            break;
+        } else {
+            switch (surface_type) {
+            case EGL_PBUFFER_BIT_EMU:
+                type = egl_config::EGL_SURFACE_TYPE_PBUFFER;
+                break;
 
-        default:
-            // This is not a fail. We don't support it now.
-            *num_config_choosen = 0;
-            return EGL_TRUE;
+            case EGL_WINDOW_BIT_EMU:
+                type = egl_config::EGL_SURFACE_TYPE_WINDOW;
+                break;
+
+            default:
+                // This is not a fail. We don't support it now.
+                *num_config_choosen = 0;
+                return EGL_TRUE;
+            }
         }
 
         std::uint32_t current_fill_index = 0;
@@ -319,8 +318,10 @@ namespace eka2l1::dispatch {
             return EGL_NO_SURFACE_EMU;
         }
 
-        egl_surface_handle result_handle = controller.add_managed_surface(std::make_unique<egl_surface>(nullptr,
-            backed_screen, dim, hh, egl_config::EGL_SURFACE_TYPE_PBUFFER));
+        std::unique_ptr<egl_surface> result_surface = std::make_unique<egl_surface>(nullptr,
+            backed_screen, dim, hh, egl_config::EGL_SURFACE_TYPE_PBUFFER);
+
+        egl_surface_handle result_handle = controller.add_managed_surface(result_surface);
 
         if (result_handle == EGL_NO_SURFACE_EMU) {
             egl_push_error(sys, EGL_BAD_CONFIG);
