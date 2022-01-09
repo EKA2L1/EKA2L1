@@ -243,8 +243,10 @@ namespace eka2l1::dispatch {
             return EGL_NO_SURFACE_EMU;
         }
 
-        egl_surface_handle result_handle = controller.add_managed_surface(std::make_unique<egl_surface>(canvas,
-            canvas->scr, canvas->size(), hh, egl_config::EGL_SURFACE_TYPE_WINDOW));
+        std::unique_ptr<egl_surface> result_surface = std::make_unique<egl_surface>(canvas,
+            canvas->scr, canvas->size(), hh, egl_config::EGL_SURFACE_TYPE_WINDOW);
+
+        egl_surface_handle result_handle = controller.add_managed_surface(result_surface);
 
         if (result_handle == EGL_NO_SURFACE_EMU) {
             egl_push_error(sys, EGL_BAD_CONFIG);

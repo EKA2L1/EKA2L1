@@ -200,7 +200,7 @@ namespace eka2l1::drivers {
          * 
          * If the height is negative, the clip will use left-hand coordinates.
          */
-        virtual void clip_rect(eka2l1::rect &rect) = 0;
+        virtual void clip_rect(const eka2l1::rect &rect) = 0;
 
         /**
           * \brief Clear the binding bitmap with color.
@@ -627,7 +627,7 @@ namespace eka2l1::drivers {
          *
          * Use in drawing window rect or invalidate a specific region of an window.
          */
-        void clip_rect(eka2l1::rect &rect) override;
+        void clip_rect(const eka2l1::rect &rect) override;
 
         /**
           * \brief Clear the binding bitmap with color.

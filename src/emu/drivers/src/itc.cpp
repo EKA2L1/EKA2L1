@@ -176,7 +176,7 @@ namespace eka2l1::drivers {
         : graphics_command_list_builder(cmd_list) {
     }
 
-    void server_graphics_command_list_builder::clip_rect(eka2l1::rect &rect) {
+    void server_graphics_command_list_builder::clip_rect(const eka2l1::rect &rect) {
         command *cmd = make_command(graphics_driver_clip_rect, nullptr, rect.top.x, rect.top.y,
             rect.size.x, rect.size.y);
 

@@ -321,11 +321,14 @@ namespace eka2l1::dispatch {
         builder.set_feature(drivers::graphics_feature::sample_coverage, non_shader_statuses_ & NON_SHADER_STATE_SAMPLE_COVERAGE);
         builder.set_feature(drivers::graphics_feature::stencil_test, non_shader_statuses_ & NON_SHADER_STATE_STENCIL_TEST_ENABLE);
 
-        builder.clip_rect(eka2l1::rect(eka2l1::vec2(scissor_bl_.top.x, draw_surface_->dimension_.y - (scissor_bl_.top.y + scissor_bl_.size.y)),
-            scissor_bl_.size));
+        eka2l1::rect clip_rect_transformed(eka2l1::vec2(scissor_bl_.top.x, draw_surface_->dimension_.y - (scissor_bl_.top.y + scissor_bl_.size.y)),
+            scissor_bl_.size);
+            
+        eka2l1::rect viewport_transformed(eka2l1::vec2(viewport_bl_.top.x, draw_surface_->dimension_.y - (viewport_bl_.top.y + viewport_bl_.size.y)),
+            viewport_bl_.size);
 
-        builder.set_viewport(eka2l1::rect(eka2l1::vec2(viewport_bl_.top.x, draw_surface_->dimension_.y - (viewport_bl_.top.y + viewport_bl_.size.y)),
-            viewport_bl_.size));
+        builder.clip_rect(clip_rect_transformed);
+        builder.set_viewport(viewport_transformed);
     }
 
     glm::mat4 &egl_context_es1::active_matrix() {

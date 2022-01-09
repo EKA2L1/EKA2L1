@@ -403,6 +403,7 @@ namespace eka2l1::dispatch {
         std::size_t index_buffer_temp_size_;
 
         explicit egl_context_es1();
+
         glm::mat4 &active_matrix();
 
         gles1_driver_texture *binded_texture();

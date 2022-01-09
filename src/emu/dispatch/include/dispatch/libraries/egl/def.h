@@ -359,6 +359,7 @@ namespace eka2l1::dispatch {
         bool dead_pending_;
 
         explicit egl_context();
+        virtual ~egl_context() = default;
 
         virtual void free(drivers::graphics_driver *driver, drivers::graphics_command_list_builder &builder);
         virtual egl_context_type context_type() const = 0;
