@@ -135,26 +135,26 @@ namespace eka2l1::drivers {
 
     drivers::handle create_texture(graphics_driver *driver, const std::uint8_t dim, const std::uint8_t mip_levels,
         drivers::texture_format internal_format, drivers::texture_format data_format, drivers::texture_data_type data_type,
-        const void *data, const eka2l1::vec3 &size, const std::size_t pixels_per_line) {
+        const void *data, const std::size_t data_size, const eka2l1::vec3 &size, const std::size_t pixels_per_line) {
         drivers::handle handle_num = 0;
 
         switch (dim) {
         case 1:
-            if (send_sync_command(driver, graphics_driver_create_texture, dim, mip_levels, internal_format, data_format, data_type, data, size.x, pixels_per_line, static_cast<drivers::handle>(0), &handle_num) != 0) {
+            if (send_sync_command(driver, graphics_driver_create_texture, dim, mip_levels, internal_format, data_format, data_type, data, data_size, size.x, pixels_per_line, static_cast<drivers::handle>(0), &handle_num) != 0) {
                 return 0;
             }
 
             break;
 
         case 2:
-            if (send_sync_command(driver, graphics_driver_create_texture, dim, mip_levels, internal_format, data_format, data_type, data, size.x, size.y, pixels_per_line, static_cast<drivers::handle>(0), &handle_num) != 0) {
+            if (send_sync_command(driver, graphics_driver_create_texture, dim, mip_levels, internal_format, data_format, data_type, data, data_size, size.x, size.y, pixels_per_line, static_cast<drivers::handle>(0), &handle_num) != 0) {
                 return 0;
             }
 
             break;
 
         case 3:
-            if (send_sync_command(driver, graphics_driver_create_texture, dim, mip_levels, internal_format, data_format, data_type, data, size.x, size.y, size.z, pixels_per_line, static_cast<drivers::handle>(0), &handle_num) != 0) {
+            if (send_sync_command(driver, graphics_driver_create_texture, dim, mip_levels, internal_format, data_format, data_type, data, data_size, size.x, size.y, size.z, pixels_per_line, static_cast<drivers::handle>(0), &handle_num) != 0) {
                 return 0;
             }
 
@@ -202,11 +202,11 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
 
-    void server_graphics_command_list_builder::update_texture(drivers::handle h, const char *data, const std::size_t size,
+    void server_graphics_command_list_builder::update_texture(drivers::handle h, const char *data, const std::size_t size, const std::uint8_t lvl,
         const texture_format data_format, const texture_data_type data_type,
         const eka2l1::vec3 &offset, const eka2l1::vec3 &dim, const std::size_t pixels_per_line) {
         // Copy data
-        command *cmd = make_command(graphics_driver_update_texture, nullptr, h, make_data_copy(data, size), size, data_format, data_type, offset, dim, pixels_per_line);
+        command *cmd = make_command(graphics_driver_update_texture, nullptr, h, make_data_copy(data, size), size, lvl, data_format, data_type, offset, dim, pixels_per_line);
         get_command_list().add(cmd);
 
     }
@@ -438,15 +438,15 @@ namespace eka2l1::drivers {
 
         switch (dim) {
         case 1:
-            cmd = make_command(graphics_driver_create_texture, nullptr, dim, mip_levels, internal_format, data_format, data_type, make_data_copy(data, data_size), size.x, pixels_per_line, h);
+            cmd = make_command(graphics_driver_create_texture, nullptr, dim, mip_levels, internal_format, data_format, data_type, make_data_copy(data, data_size), data_size, size.x, pixels_per_line, h);
             break;
 
         case 2:
-            cmd = make_command(graphics_driver_create_texture, nullptr, dim, mip_levels, internal_format, data_format, data_type, make_data_copy(data, data_size), size.x, size.y, pixels_per_line, h);
+            cmd = make_command(graphics_driver_create_texture, nullptr, dim, mip_levels, internal_format, data_format, data_type, make_data_copy(data, data_size), data_size, size.x, size.y, pixels_per_line, h);
             break;
 
         case 3:
-            cmd = make_command(graphics_driver_create_texture, nullptr, dim, mip_levels, internal_format, data_format, data_type, make_data_copy(data, data_size), size.x, size.y, size.z, pixels_per_line, h);
+            cmd = make_command(graphics_driver_create_texture, nullptr, dim, mip_levels, internal_format, data_format, data_type, make_data_copy(data, data_size), data_size, size.x, size.y, size.z, pixels_per_line, h);
             break;
 
         default:
@@ -483,6 +483,11 @@ namespace eka2l1::drivers {
 
     void server_graphics_command_list_builder::set_line_width(const float width) {
         command *cmd = make_command(graphics_driver_set_line_width, nullptr, width);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::set_texture_max_mip(drivers::handle h, const std::uint32_t max_mip) {
+        command *cmd = make_command(graphics_driver_set_max_mip_level, nullptr, h, max_mip);
         get_command_list().add(cmd);
     }
 }

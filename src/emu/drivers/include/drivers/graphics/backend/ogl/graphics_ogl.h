@@ -54,6 +54,10 @@ namespace eka2l1::drivers {
         GLboolean last_enable_scissor_test;
     };
 
+    enum ogl_driver_feature {
+        OGL_FEATURE_SUPPORT_ETC2 = 1 << 0
+    };
+
     class ogl_graphics_driver : public shared_graphics_driver {
         std::unique_ptr<graphics::gl_context> context_;
 
@@ -121,6 +125,8 @@ namespace eka2l1::drivers {
         float point_size;
         pen_style line_style;
 
+        std::uint32_t feature_flags_;
+
         void do_init();
         void prepare_draw_lines_shared();
 
@@ -173,6 +179,10 @@ namespace eka2l1::drivers {
 
         bool is_stricted() const override {
             return is_gles;
+        }
+
+        bool get_supported_feature(const std::uint32_t feature_mask) const {
+            return feature_flags_ & feature_mask;
         }
     };
 }

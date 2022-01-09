@@ -72,6 +72,7 @@ namespace eka2l1::drivers {
         graphics_driver_set_texture_filter,
         graphics_driver_set_texture_wrap,
         graphics_driver_generate_mips,
+        graphics_driver_set_max_mip_level,
         graphics_driver_use_program,
         graphics_driver_set_uniform,
         graphics_driver_bind_texture,

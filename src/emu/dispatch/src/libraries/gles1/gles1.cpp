@@ -25,7 +25,101 @@
 #include <system/epoc.h>
 #include <kernel/kernel.h>
 
+#include <vector>
+
 namespace eka2l1::dispatch {
+    static bool decompress_palette_data(std::vector<std::uint8_t> &dest, std::vector<std::size_t> &out_size, std::uint8_t *source, std::int32_t width,
+        std::int32_t height, std::uint32_t source_format, std::int32_t mip_count, drivers::texture_format &dest_format,
+        drivers::texture_data_type &dest_data_type, std::uint32_t &dest_format_gl) {
+        std::uint8_t bytes_per_pixel = 0;
+
+        switch (source_format) {
+        case GL_PALETTE4_R5_G6_B5_OES_EMU:
+        case GL_PALETTE8_R5_G6_B5_OES_EMU:
+            dest_format = drivers::texture_format::rgb;
+            dest_data_type = drivers::texture_data_type::ushort_5_6_5;
+            dest_format_gl = GL_RGB_EMU;
+            bytes_per_pixel = 2;
+            break;
+
+        case GL_PALETTE4_RGB5_A1_OES_EMU:
+        case GL_PALETTE8_RGB5_A1_OES_EMU:
+            dest_format = drivers::texture_format::rgba;
+            dest_data_type = drivers::texture_data_type::ushort_5_5_5_1;
+            bytes_per_pixel = 2;
+            dest_format_gl = GL_RGBA_EMU;
+            break;
+
+        case GL_PALETTE4_RGB8_OES_EMU:
+        case GL_PALETTE8_RGB8_OES_EMU:
+            dest_format = drivers::texture_format::rgb;
+            dest_data_type = drivers::texture_data_type::ubyte;
+            bytes_per_pixel = 3;
+            dest_format_gl = GL_RGB_EMU;
+            break;
+        
+        case GL_PALETTE4_RGBA8_OES_EMU:
+        case GL_PALETTE8_RGBA8_OES_EMU:
+            dest_format = drivers::texture_format::rgba;
+            dest_data_type = drivers::texture_data_type::ubyte;
+            bytes_per_pixel = 4;
+            dest_format_gl = GL_RGBA_EMU;
+            break;
+
+        case GL_PALETTE4_RGBA4_OES_EMU:
+        case GL_PALETTE8_RGBA4_OES_EMU:
+            dest_format = drivers::texture_format::rgba;
+            dest_data_type = drivers::texture_data_type::ushort_4_4_4_4;
+            bytes_per_pixel = 2;
+            dest_format_gl = GL_RGBA_EMU;
+            break;
+
+        default:
+            return false;
+        }
+
+        dest.clear();
+        out_size.clear();
+
+        std::uint8_t palette_bits = 8;
+
+        if ((source_format >= GL_PALETTE4_RGB8_OES_EMU) && (source_format <= GL_PALETTE4_RGB5_A1_OES_EMU)) {
+            palette_bits = 4;
+        }
+
+        while ((mip_count > 0) && (height > 0) && (width > 0)) {
+            const std::size_t prev_size = dest.size();
+            const std::size_t calculated_size = width * height * bytes_per_pixel;
+
+            out_size.push_back(calculated_size);
+            dest.resize(dest.size() + calculated_size);
+            
+            std::uint8_t *current_dest = dest.data() + prev_size;
+
+            std::uint8_t *source_start = source + (1 << palette_bits) * bytes_per_pixel;
+            for (std::int32_t y = 0; y < height; y++) {
+                for (std::int32_t x = 0; x < width / (8 / palette_bits); x++) {
+                    const std::int32_t current_pixel_idx = y * width + x;
+                    const std::int32_t current_ptr_pixel_idx = current_pixel_idx * bytes_per_pixel;
+                    const std::uint8_t indicies = source_start[current_pixel_idx];
+
+                    if (palette_bits == 8) {
+                        std::memcpy(current_dest + current_ptr_pixel_idx, source + indicies * bytes_per_pixel, bytes_per_pixel);
+                    } else {
+                        std::memcpy(current_dest + current_ptr_pixel_idx * 2, source + (indicies & 0xF) * bytes_per_pixel, bytes_per_pixel);
+                        std::memcpy(current_dest + current_ptr_pixel_idx * 2 + bytes_per_pixel, source + ((indicies & 0xF0) >> 4) * bytes_per_pixel, bytes_per_pixel);
+                    }
+                }
+            }
+
+            mip_count--;
+            width /= 2;
+            height /= 2;
+        }
+
+        return true;
+    }
+
     static bool convert_gl_factor_to_driver_enum(const std::uint32_t value, drivers::blend_factor &dest) {
         switch (value) {
         case GL_ONE_EMU:
@@ -419,6 +513,7 @@ namespace eka2l1::dispatch {
         , mag_filter_(GL_LINEAR_EMU)
         , wrap_s_(GL_REPEAT_EMU)
         , wrap_t_(GL_REPEAT_EMU)
+        , mip_count_(0)
         , auto_regen_mipmap_(false) {
     }
 
@@ -970,7 +1065,7 @@ namespace eka2l1::dispatch {
 
         for (std::int32_t i = 0; i < n; i++) {
             auto *obj = ctx->objects_.get(names[i]);
-            if (obj && ((*obj)->object_type() == obj_type)) {
+            if (obj && *obj && ((*obj)->object_type() == obj_type)) {
                 ctx->objects_.remove(names[i]);
             }
         }
@@ -1169,6 +1264,153 @@ namespace eka2l1::dispatch {
         return 0;
     }
 
+    BRIDGE_FUNC_LIBRARY(void, gl_compressed_tex_image_2d_emu, std::uint32_t target, std::int32_t level, std::int32_t internal_format,
+        std::int32_t width, std::int32_t height, std::int32_t border, std::uint32_t image_size, void *data_pixels) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if (target != GL_TEXTURE_2D_EMU) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        if ((width < 0) || (height < 0) || (width > GLES1_EMU_MAX_TEXTURE_SIZE) || (height > GLES1_EMU_MAX_TEXTURE_SIZE) || !data_pixels) {
+            controller.push_error(ctx, GL_INVALID_VALUE);
+        }
+
+        gles1_driver_texture *tex = ctx->binded_texture();
+        if (!tex) {
+            controller.push_error(ctx, GL_INVALID_OPERATION);
+            return;
+        }
+
+        bool need_reinstantiate = true;
+
+        drivers::texture_format internal_format_driver;
+
+        if ((internal_format >= GL_PALETTE4_RGBA8_OES_EMU) && (internal_format <= GL_PALETTE8_RGB5_A1_OES_EMU)) {
+            if (level > 0) {
+                controller.push_error(ctx, GL_INVALID_ENUM);
+            } else {
+                level = (-level) + 1;
+
+                if (level > GLES1_EMU_MAX_TEXTURE_MIP_LEVEL) {
+                    controller.push_error(ctx, GL_INVALID_VALUE);
+                }
+            }
+
+            std::vector<std::uint8_t> decompressed_data;
+            std::vector<std::size_t> out_size;
+
+            std::uint32_t format_gl = 0;
+            drivers::texture_data_type dtype;
+    
+            if (!decompress_palette_data(decompressed_data, out_size, reinterpret_cast<std::uint8_t*>(data_pixels), width, height, level, internal_format,
+                internal_format_driver, dtype, format_gl)) {
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            std::uint8_t *data_to_pass = decompressed_data.data();
+
+            // TODO: border is ignored!
+            if (!tex->handle_value()) {
+                if (!ctx->texture_pools_.empty()) {
+                    tex->assign_handle(ctx->texture_pools_.top());
+                    ctx->texture_pools_.pop();
+                } else {
+                    drivers::graphics_driver *drv = sys->get_graphics_driver();
+                    drivers::handle new_h = drivers::create_texture(drv, 2, 0, internal_format_driver,
+                        internal_format_driver, dtype, data_to_pass, out_size[0], eka2l1::vec3(width, height, 0));
+
+                    if (!new_h) {
+                        controller.push_error(ctx, GL_INVALID_OPERATION);
+                        return;
+                    }
+
+                    need_reinstantiate = false;
+                    tex->assign_handle(new_h);
+                }
+            }
+
+            if (need_reinstantiate) {
+                ctx->command_builder_->recreate_texture(tex->handle_value(), 2, 0, internal_format_driver,
+                    internal_format_driver, dtype, data_to_pass, out_size[0], eka2l1::vec3(width, height, 0));
+            }
+
+            data_to_pass += out_size[0];
+
+            for (std::size_t i = 1; i < out_size.size(); i++) {
+                width /= 2;
+                height /= 2;
+
+                ctx->command_builder_->recreate_texture(tex->handle_value(), 2, static_cast<std::uint8_t>(i), internal_format_driver,
+                    internal_format_driver, dtype, data_to_pass, out_size[i], eka2l1::vec3(width, height, 0));            
+            }
+
+            tex->set_mip_count(static_cast<std::uint32_t>(level));
+            ctx->command_builder_->set_texture_max_mip(tex->handle_value(), static_cast<std::uint32_t>(level));
+        } else {
+            // Pass to driver as normal
+            switch (internal_format) {
+            case GL_ETC1_RGB8_OES_EMU:
+                // Backwards compatible!!!
+                internal_format_driver = drivers::texture_format::etc2_rgb8;
+                break;
+
+            default:
+                LOG_ERROR(HLE_DISPATCHER, "Unrecognised internal format 0x{:X} for compressed texture!", internal_format);
+                controller.push_error(ctx, GL_INVALID_ENUM);
+
+                return;
+            }
+
+            if (level < 0) {
+                controller.push_error(ctx, GL_INVALID_VALUE);
+                return;
+            }
+            
+            if (!tex->handle_value()) {
+                if (!ctx->texture_pools_.empty()) {
+                    tex->assign_handle(ctx->texture_pools_.top());
+                    ctx->texture_pools_.pop();
+                } else {
+                    drivers::graphics_driver *drv = sys->get_graphics_driver();
+                    drivers::handle new_h = drivers::create_texture(drv, 2, static_cast<std::uint8_t>(level), internal_format_driver,
+                        internal_format_driver, drivers::texture_data_type::compressed, data_pixels, image_size, eka2l1::vec3(width, height, 0));
+
+                    if (!new_h) {
+                        controller.push_error(ctx, GL_INVALID_OPERATION);
+                        return;
+                    }
+
+                    need_reinstantiate = false;
+                    tex->assign_handle(new_h);
+                }
+            }
+
+            if (need_reinstantiate) {
+                ctx->command_builder_->recreate_texture(tex->handle_value(), 2, static_cast<std::uint8_t>(level), internal_format_driver,
+                    internal_format_driver, drivers::texture_data_type::compressed, data_pixels, image_size, eka2l1::vec3(width, height, 0));
+            }
+
+            tex->set_mip_count(common::max(tex->get_mip_count(), static_cast<std::uint32_t>(level)));
+            ctx->command_builder_->set_texture_max_mip(tex->handle_value(), tex->get_mip_count());
+        }
+
+        tex->set_internal_format(internal_format);
+        tex->set_size(eka2l1::vec2(width, height));
+
+        if (tex->auto_regenerate_mipmap()) {
+            ctx->command_builder_->regenerate_mips(tex->handle_value());
+        }
+    }
+
     BRIDGE_FUNC_LIBRARY(void, gl_tex_image_2d_emu, std::uint32_t target, std::int32_t level, std::int32_t internal_format,
         std::int32_t width, std::int32_t height, std::int32_t border, std::uint32_t format, std::uint32_t data_type,
         void *data_pixels) {
@@ -1224,7 +1466,7 @@ namespace eka2l1::dispatch {
             } else {
                 drivers::graphics_driver *drv = sys->get_graphics_driver();
                 drivers::handle new_h = drivers::create_texture(drv, 2, static_cast<std::uint8_t>(level), internal_format_driver,
-                    format_driver, dtype, data_pixels, eka2l1::vec3(width, height, 0));
+                    format_driver, dtype, data_pixels, 0, eka2l1::vec3(width, height, 0));
 
                 if (!new_h) {
                     controller.push_error(ctx, GL_INVALID_OPERATION);
@@ -1244,11 +1486,13 @@ namespace eka2l1::dispatch {
 
         tex->set_internal_format(format);
         tex->set_size(eka2l1::vec2(width, height));
+        tex->set_mip_count(common::max(tex->get_mip_count(), static_cast<std::uint32_t>(level)));
 
         if (tex->auto_regenerate_mipmap()) {
             ctx->command_builder_->regenerate_mips(tex->handle_value());
         }
 
+        ctx->command_builder_->set_texture_max_mip(tex->handle_value(), tex->get_mip_count());
         ctx->command_builder_->set_swizzle(tex->handle_value(), swizzles[0], swizzles[1], swizzles[2], swizzles[3]);
     }
     
@@ -1308,8 +1552,8 @@ namespace eka2l1::dispatch {
         get_data_type_to_upload(internal_format_driver, format_driver, dtype, swizzles, format, data_type);
 
         const std::size_t needed_size = calculate_possible_upload_size(eka2l1::vec2(width, height), format, data_type);
-        ctx->command_builder_->update_texture(tex->handle_value(), reinterpret_cast<const char*>(data_pixels), needed_size, format_driver,
-            dtype, eka2l1::vec3(xoffset, yoffset, 0), eka2l1::vec3(width, height, 0));
+        ctx->command_builder_->update_texture(tex->handle_value(), reinterpret_cast<const char*>(data_pixels), needed_size,
+            static_cast<std::uint8_t>(level), format_driver, dtype, eka2l1::vec3(xoffset, yoffset, 0), eka2l1::vec3(width, height, 0));
    
         if (tex->auto_regenerate_mipmap()) {
             ctx->command_builder_->regenerate_mips(tex->handle_value());
@@ -1818,6 +2062,10 @@ namespace eka2l1::dispatch {
         case GL_EMISSION_EMU:
             dest_params = ctx->material_emission_;
             break;
+
+        case GL_SHININESS_EMU:
+            ctx->material_shininess_ = *pvalue;
+            return;
 
         case GL_AMBIENT_AND_DIFFUSE_EMU:
             dest_params = ctx->material_ambient_;
@@ -3219,9 +3467,11 @@ namespace eka2l1::dispatch {
         switch (param) {
         case GL_REPEAT_EMU:
             res = drivers::addressing_option::repeat;
+            break;
 
         case GL_CLAMP_TO_EDGE_EMU:
             res = drivers::addressing_option::clamp_to_edge;
+            break;
 
         default:
             return false;

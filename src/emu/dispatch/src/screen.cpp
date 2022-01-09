@@ -170,7 +170,7 @@ namespace eka2l1::dispatch {
                 builder->destroy(info.transfer_texture_);
             }
 
-            info.transfer_texture_ = drivers::create_texture(drv, 2, 0, internal_format, data_format, type, nullptr,
+            info.transfer_texture_ = drivers::create_texture(drv, 2, 0, internal_format, data_format, type, nullptr, 0,
                 eka2l1::vec3(size.x, size.y, 0));
 
             info.transfer_texture_size_ = size;
@@ -180,7 +180,7 @@ namespace eka2l1::dispatch {
             builder->set_texture_filter(info.transfer_texture_, false, drivers::filter_option::linear);
         }
 
-        builder->update_texture(info.transfer_texture_, reinterpret_cast<const char*>(data), line_stride * size.y, data_format, type, eka2l1::vec3(0, 0, 0),
+        builder->update_texture(info.transfer_texture_, reinterpret_cast<const char*>(data), line_stride * size.y, 0, data_format, type, eka2l1::vec3(0, 0, 0),
             eka2l1::vec3(size.x, size.y, 0), 0);
 
         if (format == FORMAT_RGB32_X888_LE) {

@@ -98,6 +98,7 @@ namespace eka2l1::drivers {
         void set_texture_wrap(command_helper &helper);
         void generate_mips(command_helper &helper);
         void create_input_descriptors(command_helper &helper);
+        void set_max_mip_level(command_helper &helper);
 
     public:
         explicit shared_graphics_driver(const graphic_api gr_api);

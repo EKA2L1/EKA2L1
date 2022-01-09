@@ -67,6 +67,7 @@ add_library(drivers
         src/graphics/backend/graphics_driver_shared.cpp
         src/graphics/backend/ogl/buffer_ogl.cpp
         src/graphics/backend/ogl/common_ogl.cpp
+        src/graphics/backend/ogl/etcdec.cxx
         src/graphics/backend/ogl/fb_ogl.cpp
         src/graphics/backend/ogl/graphics_ogl.cpp
         src/graphics/backend/ogl/input_desc_ogl.cpp

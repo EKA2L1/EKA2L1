@@ -109,7 +109,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER(0x1126, gl_color_4x_emu),
         BRIDGE_REGISTER_DISPATCHER(0x1127, gl_color_mask_emu),
         BRIDGE_REGISTER_DISPATCHER(0x1128, gl_color_pointer_emu),
-        //BRIDGE_REGISTER_DISPATCHER(0x1129, gl_compressed_tex_image_2d_emu),
+        BRIDGE_REGISTER_DISPATCHER(0x1129, gl_compressed_tex_image_2d_emu),
         //BRIDGE_REGISTER_DISPATCHER(0x112A, gl_compressed_tex_sub_image_2d_emu),
         //BRIDGE_REGISTER_DISPATCHER(0x112B, gl_copy_tex_image_2d),
         //BRIDGE_REGISTER_DISPATCHER(0x112C, gl_copy_tex_sub_image_2d),

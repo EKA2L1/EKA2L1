@@ -110,10 +110,12 @@ namespace eka2l1::drivers {
         rgba,
         rgba4,
         depth_stencil,
-        depth24_stencil8
+        depth24_stencil8,
+        etc2_rgb8
     };
 
     enum class texture_data_type : std::uint16_t {
+        compressed,
         ubyte,
         ushort,
         ushort_4_4_4_4,

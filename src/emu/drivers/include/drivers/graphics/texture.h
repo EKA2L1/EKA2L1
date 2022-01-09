@@ -37,22 +37,17 @@ namespace eka2l1::drivers {
         texture() {}
 
         virtual bool create(graphics_driver *driver, const int dim, const int miplvl, const vec3 &size, const texture_format internal_format,
-            const texture_format format, const texture_data_type data_type, void *data, const std::size_t pixels_per_line = 0)
+            const texture_format format, const texture_data_type data_type, void *data, const std::size_t data_size, const std::size_t pixels_per_line = 0)
             = 0;
 
         virtual ~texture(){};
         virtual std::uint64_t texture_handle() = 0;
 
-        virtual bool tex(graphics_driver *driver, const bool is_first) = 0;
-
-        virtual void change_size(const vec3 &new_size) = 0;
-        virtual void change_data(const texture_data_type data_type, void *data) = 0;
-        virtual void change_texture_format(const texture_format format) = 0;
-
         virtual void set_filter_minmag(const bool min, const filter_option op) = 0;
         virtual void set_addressing_mode(const addressing_direction dir, const addressing_option op) = 0;
         virtual void set_channel_swizzle(channel_swizzles swizz) = 0;
         virtual void generate_mips() = 0;
+        virtual void set_max_mip_level(const std::uint32_t max_mip) = 0;
 
         virtual void bind(graphics_driver *driver, const int binding) = 0;
         virtual void unbind(graphics_driver *driver) = 0;
@@ -61,11 +56,9 @@ namespace eka2l1::drivers {
         virtual texture_format get_format() const = 0;
         virtual texture_data_type get_data_type() const = 0;
         virtual int get_total_dimensions() const = 0;
-        virtual void *get_data_ptr() const = 0;
-        virtual int get_mip_level() const = 0;
 
         virtual void update_data(graphics_driver *driver, const int mip_lvl, const vec3 &offset, const vec3 &size, const std::size_t byte_width,
-            const texture_format data_format, const texture_data_type data_type, const void *data)
+            const texture_format data_format, const texture_data_type data_type, const void *data, const std::size_t data_size)
             = 0;
     };
 

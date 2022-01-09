@@ -80,7 +80,8 @@ namespace eka2l1::drivers {
         , point_size(1.0)
         , line_style(pen_style_none)
         , active_input_descriptors_(nullptr)
-        , index_buffer_current_(0) {
+        , index_buffer_current_(0)
+        , feature_flags_(0) {
         context_ = graphics::make_gl_context(info, false, true);
 
         if (!context_) {
@@ -96,7 +97,9 @@ namespace eka2l1::drivers {
         is_gles = (context_->gl_mode() == graphics::gl_context::mode::opengl_es);
 
         GLint major_gl = 0;
+        GLint minor_gl = 0;
         glGetIntegerv(GL_MAJOR_VERSION, &major_gl);
+        glGetIntegerv(GL_MINOR_VERSION, &minor_gl);
 
         if (!is_gles && (major_gl < 4)) {
             std::vector<std::string> GL_REQUIRED_EXTENSIONS = {
@@ -123,6 +126,25 @@ namespace eka2l1::drivers {
                 for (const auto &ext_left : GL_REQUIRED_EXTENSIONS) {
                     LOG_ERROR(DRIVER_GRAPHICS, "- {}", ext_left);
                 }
+            }
+        } else {
+            if ((minor_gl >= 3) || is_gles) {
+                feature_flags_ |= OGL_FEATURE_SUPPORT_ETC2;
+            } else {
+                std::int32_t ext_count = 0;
+                glGetIntegerv(GL_NUM_EXTENSIONS, &ext_count);
+
+                for (std::int32_t i = 0; i < ext_count; i++) {
+                    const GLubyte *next_extension = glGetStringi(GL_EXTENSIONS, i);
+                    if (strcmp(reinterpret_cast<const char*>(next_extension), "GL_ARB_ES3_compatibility") == 0) {
+                        feature_flags_ |= OGL_FEATURE_SUPPORT_ETC2;
+                        break;
+                    }
+                }
+            }
+
+            if ((feature_flags_ & OGL_FEATURE_SUPPORT_ETC2) == 0) {
+                LOG_INFO(DRIVER_GRAPHICS, "Your GPU does not support ETC2 texture, GLES1 and GLES2's ETC1/2 texture will be decompressed on the CPU.");
             }
         }
     }

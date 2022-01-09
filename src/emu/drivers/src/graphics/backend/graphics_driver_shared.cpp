@@ -91,7 +91,7 @@ namespace eka2l1::drivers {
 
         translate_bpp_to_format(bpp, internal_format, data_format, data_type, driver->is_stricted());
 
-        texture->create(driver, 2, 0, eka2l1::vec3(size.x, size.y, 0), internal_format, data_format, data_type, nullptr);
+        texture->create(driver, 2, 0, eka2l1::vec3(size.x, size.y, 0), internal_format, data_format, data_type, nullptr, 0);
         texture->set_filter_minmag(false, drivers::filter_option::linear);
         texture->set_filter_minmag(true, drivers::filter_option::linear);
 
@@ -223,7 +223,7 @@ namespace eka2l1::drivers {
         translate_bpp_to_format(bmp->bpp, internal_format, data_format, data_type, is_stricted());
 
         bmp->tex->update_data(this, 0, eka2l1::vec3(offset.x, offset.y, 0), eka2l1::vec3(dim.x, dim.y, 0), pixels_per_line,
-            data_format, data_type, data);
+            data_format, data_type, data, 0);
 
         if (bmp->bpp == 12) {
             bmp->tex->set_channel_swizzle({ channel_swizzle::green, channel_swizzle::blue,
@@ -292,6 +292,7 @@ namespace eka2l1::drivers {
         drivers::handle handle = 0;
         std::uint8_t *data = nullptr;
         std::size_t size = 0;
+        std::uint8_t lvl = 0;
         drivers::texture_format data_format;
         drivers::texture_data_type data_type;
         eka2l1::vec3 offset;
@@ -301,6 +302,7 @@ namespace eka2l1::drivers {
         helper.pop(handle);
         helper.pop(data);
         helper.pop(size);
+        helper.pop(lvl);
         helper.pop(data_format);
         helper.pop(data_type);
         helper.pop(offset);
@@ -312,7 +314,7 @@ namespace eka2l1::drivers {
             return;
         }
 
-        obj->update_data(this, 0, offset, dim, pixels_per_line, data_format, data_type, data);
+        obj->update_data(this, static_cast<int>(lvl), offset, dim, pixels_per_line, data_format, data_type, data, size);
 
         delete data;
     }
@@ -575,6 +577,7 @@ namespace eka2l1::drivers {
         drivers::texture_format data_format = drivers::texture_format::none;
         drivers::texture_data_type data_type = drivers::texture_data_type::ubyte;
         void *data = nullptr;
+        std::size_t data_size = 0;
 
         helper.pop(dim);
         helper.pop(mip_level);
@@ -582,6 +585,7 @@ namespace eka2l1::drivers {
         helper.pop(data_format);
         helper.pop(data_type);
         helper.pop(data);
+        helper.pop(data_size);
 
         std::uint32_t width = 0;
         std::uint32_t height = 0;
@@ -620,7 +624,7 @@ namespace eka2l1::drivers {
         }
 
         obj->create(this, static_cast<int>(dim), static_cast<int>(mip_level), eka2l1::vec3(width, height, depth),
-            internal_format, data_format, data_type, data, pixels_per_line);
+            internal_format, data_format, data_type, data, data_size, pixels_per_line);
 
         if (obj_inst) {
             std::unique_ptr<graphics_object> obj_casted = std::move(obj_inst);
@@ -884,6 +888,35 @@ namespace eka2l1::drivers {
         texobj->set_addressing_mode(dir, mode);
     }
 
+    void shared_graphics_driver::set_max_mip_level(command_helper &helper) {
+        drivers::handle h = 0;
+        std::uint32_t max_mip = 0;
+
+        helper.pop(h);
+        helper.pop(max_mip);
+
+        texture *texobj = nullptr;
+
+        if (h & HANDLE_BITMAP) {
+            // Bind bitmap as texture
+            bitmap *b = get_bitmap(h);
+
+            if (!b) {
+                return;
+            }
+
+            texobj = b->tex.get();
+        } else {
+            texobj = reinterpret_cast<texture *>(get_graphics_object(h));
+        }
+
+        if (!texobj) {
+            return;
+        }
+
+        texobj->set_max_mip_level(max_mip);
+    }
+
     void shared_graphics_driver::generate_mips(command_helper &helper) {
         drivers::handle h = 0;
 
@@ -1045,6 +1078,10 @@ namespace eka2l1::drivers {
 
         case graphics_driver_create_input_descriptor:
             create_input_descriptors(helper);
+            break;
+
+        case graphics_driver_set_max_mip_level:
+            set_max_mip_level(helper);
             break;
 
         default:
