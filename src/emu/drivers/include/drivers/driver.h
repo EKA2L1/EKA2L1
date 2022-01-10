@@ -96,8 +96,10 @@ namespace eka2l1::drivers {
 
         template <typename T>
         void finish(T *drv, const int code) {
-            *todo_->status_ = code;
-            drv->cond_.notify_all();
+            if (todo_->status_) {
+                *todo_->status_ = code;
+                drv->cond_.notify_all();
+            }
         }
 
         bool push_string(const std::u16string &data) {

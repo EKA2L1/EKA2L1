@@ -55,7 +55,8 @@ namespace eka2l1::desktop {
         , init_fullscreen(false)
         , init_app_launched(false)
         , winserv(nullptr)
-        , sys_reset_cbh(0) {
+        , sys_reset_cbh(0)
+        , present_status(0) {
     }
 
     void emulator::stage_one() {

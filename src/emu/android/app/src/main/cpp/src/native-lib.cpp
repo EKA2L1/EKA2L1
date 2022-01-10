@@ -78,6 +78,16 @@ Java_com_github_eka2l1_emu_Emulator_getApps(
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_github_eka2l1_emu_Emulator_launchApp(JNIEnv *env, jclass clazz, jint uid) {
+    // Draw the screen's backdrop first. Black is boring
+    auto cmd_list = state->graphics_driver->new_command_list();
+    auto cmd_builder = state->graphics_driver->new_command_builder(cmd_list.get());
+
+    state->launcher->draw(cmd_builder.get(), nullptr, state->window->window_fb_size().x,
+                         state->window->window_fb_size().y);
+    cmd_builder->present(nullptr);
+    state->graphics_driver->submit_command_list(*cmd_list);
+
+    // Launch the real app...
     state->launcher->launch_app(uid);
 }
 

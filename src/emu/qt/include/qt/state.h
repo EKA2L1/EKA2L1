@@ -86,6 +86,7 @@ namespace eka2l1::desktop {
         std::size_t sys_reset_cbh;
 
         main_window *ui_main;
+        int present_status;
 
         explicit emulator();
 

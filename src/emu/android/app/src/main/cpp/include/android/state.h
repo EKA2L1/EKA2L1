@@ -72,6 +72,7 @@ namespace eka2l1::android {
         std::atomic<bool> surface_inited;
         std::atomic<bool> should_ui_quit;
         std::atomic<bool> stage_two_inited;
+        std::vector<std::size_t> screen_change_handles;
 
         bool first_time;
 
@@ -81,6 +82,7 @@ namespace eka2l1::android {
 
         config::state conf;
         window_server *winserv;
+        int present_status;
 
         std::mutex input_mutex;
 

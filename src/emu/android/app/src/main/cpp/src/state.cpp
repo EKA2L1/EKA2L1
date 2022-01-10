@@ -51,7 +51,8 @@ namespace eka2l1::android {
         , should_graphics_pause(false)
         , surface_inited(false)
         , first_time(true)
-        , winserv(nullptr) {
+        , winserv(nullptr)
+        , present_status(0) {
     }
 
     void emulator::stage_one() {

@@ -116,6 +116,9 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     if (!state_ptr || !state_ptr->graphics_driver) {
         return;
     }
+    
+    if (need_wait)
+        state_ptr->graphics_driver->wait_for(&state_ptr->present_status);
 
     eka2l1::desktop::emulator &state = *state_ptr;
 
@@ -193,15 +196,11 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
 
     cmd_builder->load_backup_state();
 
-    int wait_status = -100;
+    state_ptr->present_status = -100;
 
     // Submit, present, and wait for the presenting
-    cmd_builder->present(&wait_status);
-
+    cmd_builder->present(&state_ptr->present_status);
     state.graphics_driver->submit_command_list(*cmd_list);
-
-    if (need_wait)
-        state.graphics_driver->wait_for(&wait_status);
 }
 
 
