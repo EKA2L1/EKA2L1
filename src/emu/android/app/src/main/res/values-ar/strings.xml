@@ -17,6 +17,8 @@
     <string name="rename">إعادة التسمية</string>
     <string name="save_log">سجلات الحفظ</string>
     <string name="opengl_required">يتطلب التطبيق OpenGL ES 3.0+.</string>
+    <string name="warning">Warning</string>
+    <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
     <string name="install">تثبيت</string>
     <string name="device_dump">Dump الجهاز</string>
     <string name="path_to_rpkg">المسار إلى RPKG</string>
@@ -52,6 +54,7 @@
     <string name="pref_enable_statusbar">تمكين شريط الحالة</string>
     <string name="pref_wakelock">إبقاء الشاشة فعالة</string>
     <string name="pref_enable_vibration">تمكين الإهتزاز</string>
+    <string name="pref_emulator_dir">Working directory</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">تفعيل تصفية أقرب جار</string>
     <string name="pref_system_language_option_name">اللغة</string>
     <string name="pref_system_real_time_accuracy_str">الدقة في الوقت الحقيقي</string>
@@ -62,6 +65,7 @@
     <string name="pref_system_setting_inheritance_option_name">توريث الاعدادات</string>
     <string name="emulated_screen_rotation_item_name">التدوير</string>
     <string name="emulated_screen_refresh_rate_item_name">معدل التحديث</string>
+    <string name="pref_device_display_name">Friendly phone name</string>
     <string name="action_context_delete">حذف</string>
     <string name="action_context_rename">إعادة التسمية</string>
     <string name="start">Start</string>

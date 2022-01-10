@@ -62,7 +62,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="44"/>
       <source>Search</source>
-      <translation>Search</translation>
+      <translation>搜索</translation>
     </message>
   </context>
   <context>
@@ -95,7 +95,7 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="94"/>
       <source>Device dump (RPKG + ROM)</source>
-      <translation>设备转储(RRPKG + ROM)</translation>
+      <translation>设备转储(RPKG + ROM)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="99"/>
@@ -105,7 +105,7 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="125"/>
       <source>Install</source>
-      <translation>Install</translation>
+      <translation>安装</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="138"/>
@@ -198,24 +198,24 @@
       <translation>VPL文件 (*.vpl);;所有文件 (*.*)</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="276"/>
-      <source>ROM file (*.rom *.ROM);;All files (*.*)</source>
-      <translation>ROM文件 (*.rom *.ROM);;所有文件 (*.*)</translation>
-    </message>
-    <message>
-      <location filename="../src/device_install_dialog.cpp" line="301"/>
-      <source>RPKG file (*.rpkg *.RPKG);;All files (*.*</source>
-      <translation>RPKG文件 (*.rpkg *.RPKG);所有文件 (*.*</translation>
-    </message>
-    <message>
       <location filename="../src/device_install_dialog.cpp" line="275"/>
       <source>Choose the ROM</source>
       <translation>选择ROM</translation>
     </message>
     <message>
+      <location filename="../src/device_install_dialog.cpp" line="276"/>
+      <source>ROM file (*.rom *.ROM);;All files (*.*)</source>
+      <translation>ROM文件 (*.rom *.ROM);;所有文件 (*.*)</translation>
+    </message>
+    <message>
       <location filename="../src/device_install_dialog.cpp" line="300"/>
       <source>Choose the RPKG</source>
       <translation>选择RPKG文件</translation>
+    </message>
+    <message>
+      <location filename="../src/device_install_dialog.cpp" line="301"/>
+      <source>RPKG file (*.rpkg *.RPKG);;All files (*.*)</source>
+      <translation type="unfinished">RPKG file (*.rpkg *.RPKG);;All files (*.*)</translation>
     </message>
   </context>
   <context>
@@ -233,7 +233,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="73"/>
       <source>Install</source>
-      <translation>Install</translation>
+      <translation>安装</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.ui" line="80"/>
+      <source>Mount game card dump</source>
+      <translation>挂载游戏卡转储</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="96"/>
@@ -258,7 +263,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="132"/>
       <source>About</source>
-      <translation>About</translation>
+      <translation>关于</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="137"/>
@@ -276,14 +281,9 @@
       <translation>包管理器</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="80"/>
-      <source>Mount game card dump</source>
-      <translation>挂载游戏卡转储</translation>
-    </message>
-    <message>
       <location filename="../src/mainwindow.ui" line="152"/>
       <source>Settings</source>
-      <translation>Settings</translation>
+      <translation>设置</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="160"/>
@@ -367,6 +367,12 @@
       <translation>您尚未安装任何设备，请安装设备或在GitHub上查询EKA2L1项目中的Wiki说明页</translation>
     </message>
     <message>
+      <location filename="../src/mainwindow.cpp" line="643"/>
+      <location filename="../src/mainwindow.cpp" line="892"/>
+      <source>Cancel</source>
+      <translation>取消</translation>
+    </message>
+    <message>
       <location filename="../src/mainwindow.cpp" line="646"/>
       <source>Extracting game dump files</source>
       <translation>提取游戏转储文件</translation>
@@ -430,12 +436,6 @@
       <location filename="../src/mainwindow.cpp" line="874"/>
       <source>Choose a language for the package</source>
       <translation>选择软件包的语言</translation>
-    </message>
-    <message>
-      <location filename="../src/mainwindow.cpp" line="643"/>
-      <location filename="../src/mainwindow.cpp" line="892"/>
-      <source>Cancel</source>
-      <translation>取消</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="895"/>
@@ -503,7 +503,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
       <source>Search</source>
-      <translation>Search</translation>
+      <translation>搜索</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="66"/>
@@ -566,7 +566,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="20"/>
       <source>Settings</source>
-      <translation>Settings</translation>
+      <translation>设置</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="36"/>
@@ -577,6 +577,11 @@
       <location filename="../src/settings_dialog.ui" line="48"/>
       <source>Application</source>
       <translation>应用</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="123"/>
+      <source>Time delay (0-1000us)</source>
+      <translation>时间延时(0-1000us)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="162"/>
@@ -650,6 +655,8 @@
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="294"/>
+      <location filename="../src/settings_dialog.ui" line="857"/>
+      <location filename="../src/settings_dialog.ui" line="898"/>
       <source>Browse</source>
       <translation>浏览</translation>
     </message>
@@ -714,6 +721,11 @@
       <translation>用户界面</translation>
     </message>
     <message>
+      <location filename="../src/settings_dialog.ui" line="422"/>
+      <source>Language</source>
+      <translation>语言</translation>
+    </message>
+    <message>
       <location filename="../src/settings_dialog.ui" line="436"/>
       <source>Theme</source>
       <translation>主题</translation>
@@ -729,29 +741,19 @@
       <translation>深色</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="422"/>
-      <source>Language</source>
-      <translation>语言</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="472"/>
-      <source>Disable status bar</source>
-      <translation>隐藏状态栏</translation>
-    </message>
-    <message>
       <location filename="../src/settings_dialog.ui" line="459"/>
       <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
       <translation>启用此选项将使窗口具有 &quot;EKA2L1&quot;的常量名，但没有附加信息。</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="123"/>
-      <source>Time delay (0-1000us)</source>
-      <translation>时间延时(0-1000us)</translation>
-    </message>
-    <message>
       <location filename="../src/settings_dialog.ui" line="465"/>
       <source>Disable easter egg title</source>
       <translation>禁用彩蛋标题</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="472"/>
+      <source>Disable status bar</source>
+      <translation>隐藏状态栏</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="483"/>
@@ -760,25 +762,40 @@
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="489"/>
-      <source>Audio</source>
-      <translation>音频</translation>
+      <source>Graphics</source>
+      <translation>图像</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="503"/>
-      <source>Volume</source>
-      <translation>音量</translation>
+      <location filename="../src/settings_dialog.ui" line="497"/>
+      <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
+Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
+      <translation>这允许模拟软件具有录制能力，并防止在一些旧的S60v1/S60v2游戏中闪屏。
+首选选项将在S60v1/S60v2设备上自动启用此选项。</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="526"/>
-      <location filename="../src/settings_dialog.ui" line="730"/>
-      <location filename="../src/settings_dialog.ui" line="1618"/>
-      <source>0</source>
-      <translation type="unfinished">0</translation>
+      <location filename="../src/settings_dialog.ui" line="501"/>
+      <source>Screen buffer sync</source>
+      <translation>屏幕缓冲同步</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="515"/>
+      <source>Preferred</source>
+      <translation>首选</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="520"/>
+      <source>Disable</source>
+      <translation>禁用</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="525"/>
+      <source>Enable</source>
+      <translation>启用</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="538"/>
       <source>Devices</source>
-      <translation>Devices</translation>
+      <translation>设备</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="555"/>
@@ -787,9 +804,9 @@
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="578"/>
-      <location filename="../src/settings_dialog.ui" line="936"/>
+      <location filename="../src/settings_dialog.ui" line="1052"/>
       <source>Rename</source>
-      <translation>Rename</translation>
+      <translation>重命名</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="589"/>
@@ -812,413 +829,449 @@
       <translation>验证当前设备</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="614"/>
-      <source>Hardware emulation</source>
-      <translation>硬件模拟</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="628"/>
-      <source>CPU emulator</source>
-      <translation>CPU模拟器</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="636"/>
-      <source>Dynarmic (CPU recompiler)</source>
-      <translation>动态(CPU重新编译)</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="641"/>
-      <source>Dyncom (CPU interpreter)</source>
-      <translation>Dyncom(CPU解释器)</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="653"/>
-      <source>Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</source>
-      <translation>选择计时操作的精确度。级别越高，CPU功耗越大，但在一些应用中操作可能更快！</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="656"/>
-      <source>Real-time accuracy</source>
-      <translation>实时精度</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="664"/>
-      <source>Low</source>
-      <translation>低</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="669"/>
-      <source>Mid</source>
-      <translation>中</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="674"/>
-      <source>High</source>
-      <translation>高</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="693"/>
+      <location filename="../src/settings_dialog.ui" line="620"/>
       <source>Properties</source>
       <translation>属性</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="784"/>
-      <source>Check</source>
-      <translation>检查</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="701"/>
+      <location filename="../src/settings_dialog.ui" line="628"/>
       <source>Battery level (0 - 100)</source>
       <translation>电池电量(0 - 100)</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="747"/>
+      <location filename="../src/settings_dialog.ui" line="657"/>
+      <location filename="../src/settings_dialog.ui" line="982"/>
+      <location filename="../src/settings_dialog.ui" line="1734"/>
+      <source>0</source>
+      <translation type="unfinished">0</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="674"/>
       <source>System language</source>
       <translation>系统语言</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="829"/>
-      <source>Graphics</source>
-      <translation>图像</translation>
+      <location filename="../src/settings_dialog.ui" line="711"/>
+      <source>Check</source>
+      <translation>检查</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="841"/>
-      <source>Screen buffer sync</source>
-      <translation>屏幕缓冲同步</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="855"/>
-      <source>Preferred</source>
-      <translation>首选</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="865"/>
-      <source>Enable</source>
-      <translation>启用</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="860"/>
-      <source>Disable</source>
-      <translation>禁用</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="801"/>
+      <location filename="../src/settings_dialog.ui" line="728"/>
       <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
       <translation>将在模拟器应用或游戏中显示的名称。最多允许30个字符。</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="804"/>
+      <location filename="../src/settings_dialog.ui" line="731"/>
       <source>Friendly phone name</source>
       <translation>友好的手机名称</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="837"/>
-      <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
-Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
-      <translation>这允许模拟软件具有录制能力，并防止在一些旧的S60v1/S60v2游戏中闪屏。
-首选选项将在S60v1/S60v2设备上自动启用此选项。</translation>
+      <location filename="../src/settings_dialog.ui" line="756"/>
+      <source>Hardware emulation</source>
+      <translation>硬件模拟</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="885"/>
+      <location filename="../src/settings_dialog.ui" line="770"/>
+      <source>CPU emulator</source>
+      <translation>CPU模拟器</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="778"/>
+      <source>Dynarmic (CPU recompiler)</source>
+      <translation>动态(CPU重新编译)</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="783"/>
+      <source>Dyncom (CPU interpreter)</source>
+      <translation>Dyncom(CPU解释器)</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="795"/>
+      <source>Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</source>
+      <translation>选择计时操作的精确度。级别越高，CPU功耗越大，但在一些应用中操作可能更快！</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="798"/>
+      <source>Real-time accuracy</source>
+      <translation>实时精度</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="806"/>
+      <source>Low</source>
+      <translation>低</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="811"/>
+      <source>Mid</source>
+      <translation>中</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="816"/>
+      <source>High</source>
+      <translation>高</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="829"/>
+      <source>Audio</source>
+      <translation>音频</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="837"/>
+      <source>SF2 bank</source>
+      <translation type="unfinished">SF2 bank</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="864"/>
+      <location filename="../src/settings_dialog.ui" line="905"/>
+      <source>Reset</source>
+      <translation>重置</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="878"/>
+      <source>HSB bank</source>
+      <translation type="unfinished">HSB bank</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="922"/>
+      <source>MIDI backend</source>
+      <translation>MIDI后端</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="936"/>
+      <source>TinySoundFont (High-quality, support SF2)</source>
+      <translation>TinySoundFont（高质量，支持SF2）</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="941"/>
+      <source>MiniBAE (Lower-quality, support HSB)</source>
+      <translation>MiniBAE（低质量，支持HSB）</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="959"/>
+      <source>Volume</source>
+      <translation>音量</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="1001"/>
       <source>Control</source>
       <translation>控制</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="900"/>
+      <location filename="../src/settings_dialog.ui" line="1016"/>
       <source>Profile</source>
       <translation>配置</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="923"/>
+      <location filename="../src/settings_dialog.ui" line="1039"/>
       <source>Add</source>
       <translation>添加</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="949"/>
+      <location filename="../src/settings_dialog.ui" line="1065"/>
       <source>Delete</source>
       <translation>删除</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="968"/>
+      <location filename="../src/settings_dialog.ui" line="1084"/>
       <source>Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</source>
       <translation>注意：其中一个绑定与鼠标按钮相关联，触摸屏功能将被禁用。</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="986"/>
+      <location filename="../src/settings_dialog.ui" line="1102"/>
       <source>Left softkey</source>
       <translation>左软键</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1024"/>
+      <location filename="../src/settings_dialog.ui" line="1140"/>
       <source>Up arrow</source>
       <translation>上方向键</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1056"/>
+      <location filename="../src/settings_dialog.ui" line="1172"/>
       <source>Right softkey</source>
       <translation>右软键</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1092"/>
+      <location filename="../src/settings_dialog.ui" line="1208"/>
       <source>Left arrow</source>
       <translation>左方向键</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1124"/>
+      <location filename="../src/settings_dialog.ui" line="1240"/>
       <source>Middle softkey</source>
       <translation>中软键</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1156"/>
+      <location filename="../src/settings_dialog.ui" line="1272"/>
       <source>Right arrow</source>
       <translation>右方向键</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1192"/>
+      <location filename="../src/settings_dialog.ui" line="1308"/>
       <source>Green softkey</source>
       <translation>绿软键</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1224"/>
+      <location filename="../src/settings_dialog.ui" line="1340"/>
       <source>Down arrow</source>
       <translation>下方向键</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1256"/>
+      <location filename="../src/settings_dialog.ui" line="1372"/>
       <source>Red softkey</source>
       <translation>红软键</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1292"/>
+      <location filename="../src/settings_dialog.ui" line="1408"/>
       <source>1</source>
       <translation type="unfinished">1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1324"/>
+      <location filename="../src/settings_dialog.ui" line="1440"/>
       <source>2</source>
       <translation type="unfinished">2</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1356"/>
+      <location filename="../src/settings_dialog.ui" line="1472"/>
       <source>3</source>
       <translation type="unfinished">3</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1392"/>
+      <location filename="../src/settings_dialog.ui" line="1508"/>
       <source>4</source>
       <translation type="unfinished">4</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1424"/>
+      <location filename="../src/settings_dialog.ui" line="1540"/>
       <source>5</source>
       <translation type="unfinished">5</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1456"/>
+      <location filename="../src/settings_dialog.ui" line="1572"/>
       <source>6</source>
       <translation type="unfinished">6</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1486"/>
+      <location filename="../src/settings_dialog.ui" line="1602"/>
       <source>7</source>
       <translation type="unfinished">7</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1518"/>
+      <location filename="../src/settings_dialog.ui" line="1634"/>
       <source>8</source>
       <translation type="unfinished">8</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1550"/>
+      <location filename="../src/settings_dialog.ui" line="1666"/>
       <source>9</source>
       <translation type="unfinished">9</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1586"/>
+      <location filename="../src/settings_dialog.ui" line="1702"/>
       <source>*</source>
       <translation type="unfinished">*</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1650"/>
+      <location filename="../src/settings_dialog.ui" line="1766"/>
       <source>#</source>
       <translation type="unfinished">#</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="411"/>
+      <location filename="../src/settings_dialog.cpp" line="419"/>
       <source>Choose the data folder</source>
       <translation>选择数据文件夹</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="413"/>
-      <location filename="../src/settings_dialog.cpp" line="1092"/>
-      <location filename="../src/settings_dialog.cpp" line="1117"/>
+      <location filename="../src/settings_dialog.cpp" line="421"/>
+      <location filename="../src/settings_dialog.cpp" line="1100"/>
+      <location filename="../src/settings_dialog.cpp" line="1125"/>
       <source>Relaunch needed</source>
       <translation>需要重启</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="413"/>
+      <location filename="../src/settings_dialog.cpp" line="421"/>
       <source>This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</source>
       <translation>此更改需要重新启动模拟器。&lt;br&gt;您要继续吗？</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="534"/>
+      <location filename="../src/settings_dialog.cpp" line="542"/>
       <source>Please wait</source>
       <translation>请稍候</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="535"/>
+      <location filename="../src/settings_dialog.cpp" line="543"/>
       <source>Validation is in process. Please do not exit or launch applications until this operation is done.</source>
       <translation>验证正在进行中。请在此操作完成之前不要退出或启动应用程序。</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="555"/>
+      <location filename="../src/settings_dialog.cpp" line="563"/>
       <source>Validation done!</source>
       <translation>验证完成！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="555"/>
+      <location filename="../src/settings_dialog.cpp" line="563"/>
       <source>The validation has successfully completed!</source>
       <translation>验证已成功完成！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="566"/>
+      <location filename="../src/settings_dialog.cpp" line="574"/>
       <source>Enter new device name</source>
       <translation>输入新设备名称</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="663"/>
+      <location filename="../src/settings_dialog.cpp" line="671"/>
       <source>Unbind</source>
       <translation>解除绑定</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="708"/>
+      <location filename="../src/settings_dialog.cpp" line="716"/>
       <source>Waiting for input</source>
       <translation>等待输入</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="723"/>
-      <location filename="../src/settings_dialog.cpp" line="769"/>
+      <location filename="../src/settings_dialog.cpp" line="731"/>
+      <location filename="../src/settings_dialog.cpp" line="777"/>
       <source>Mouse button %1</source>
       <translation>鼠标按键 %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="725"/>
-      <location filename="../src/settings_dialog.cpp" line="811"/>
+      <location filename="../src/settings_dialog.cpp" line="733"/>
+      <location filename="../src/settings_dialog.cpp" line="819"/>
       <source>Controller %1 : Button %2</source>
       <translation>控制器 %1 ：按钮 %2</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="836"/>
-      <location filename="../src/settings_dialog.cpp" line="860"/>
+      <location filename="../src/settings_dialog.cpp" line="844"/>
+      <location filename="../src/settings_dialog.cpp" line="868"/>
       <source>Enter profile name</source>
       <translation>输入配置名称</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="844"/>
+      <location filename="../src/settings_dialog.cpp" line="852"/>
       <source>Profile creation failed</source>
       <translation>配置创建失败</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="844"/>
-      <location filename="../src/settings_dialog.cpp" line="868"/>
+      <location filename="../src/settings_dialog.cpp" line="852"/>
+      <location filename="../src/settings_dialog.cpp" line="876"/>
       <source>A profile with that name already exists!</source>
       <translation>同名配置已存在！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="868"/>
+      <location filename="../src/settings_dialog.cpp" line="876"/>
       <source>Profile rename failed</source>
       <translation>配置重命名失败</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="883"/>
+      <location filename="../src/settings_dialog.cpp" line="891"/>
       <source>Profile deletion failed</source>
       <translation>配置删除失败</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="883"/>
+      <location filename="../src/settings_dialog.cpp" line="891"/>
       <source>This is the only profile left!</source>
       <translation>这是仅剩的配置！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="921"/>
+      <location filename="../src/settings_dialog.cpp" line="929"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
       <translation>&lt;b&gt;配置为：&lt;/b&gt; %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="924"/>
-      <location filename="../src/settings_dialog.cpp" line="929"/>
+      <location filename="../src/settings_dialog.cpp" line="932"/>
+      <location filename="../src/settings_dialog.cpp" line="937"/>
       <source>None</source>
       <translation>无</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1019"/>
+      <location filename="../src/settings_dialog.cpp" line="1027"/>
       <source>IMEI sequence contains non-numeric character!</source>
       <translation>IMEI序列包含非数字字符！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1022"/>
+      <location filename="../src/settings_dialog.cpp" line="1030"/>
       <source>IMEI sequence has invalid sum!</source>
       <translation>IMEI序列值无效！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1025"/>
+      <location filename="../src/settings_dialog.cpp" line="1033"/>
       <source>IMEI sequence length must be 15!</source>
       <translation>IMEI序列长度必须为15！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1031"/>
+      <location filename="../src/settings_dialog.cpp" line="1039"/>
       <source>Unidentified error!</source>
       <translation>未定义的错误！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1038"/>
+      <location filename="../src/settings_dialog.cpp" line="1046"/>
       <source>IMEI valid!</source>
       <translation>IMEI有效！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1038"/>
+      <location filename="../src/settings_dialog.cpp" line="1046"/>
       <source>The IMEI sequence is valid!</source>
       <translation>IMEI序列有效！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1041"/>
+      <location filename="../src/settings_dialog.cpp" line="1049"/>
       <source>IMEI invalid!</source>
       <translation>IMEI无效！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1051"/>
+      <location filename="../src/settings_dialog.cpp" line="1059"/>
       <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
       <translation>您的IMEI无效，因为：%1。&lt;br&gt;您想要编辑当前IMEI而不是关闭吗？选择&quot;没有&quot;将保存当前IMEI值。</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1053"/>
+      <location filename="../src/settings_dialog.cpp" line="1061"/>
       <source>Cancel closing</source>
       <translation>取消关闭</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1092"/>
+      <location filename="../src/settings_dialog.cpp" line="1100"/>
       <source>This change will be effective on the next launch of the emulator.</source>
       <translation>此更改将在下次启动模拟器时生效。</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1100"/>
+      <location filename="../src/settings_dialog.cpp" line="1108"/>
       <source>Confirmation</source>
       <translation>确认</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1100"/>
+      <location filename="../src/settings_dialog.cpp" line="1108"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
       <translation>您确定要这样做吗？ 您当前的主题将被重置，所有已被禁用的消息框将被重新启用，所有最近的挂载将被清除。</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1117"/>
+      <location filename="../src/settings_dialog.cpp" line="1125"/>
       <source>The language will be updated on the next launch of the emulator.</source>
       <translation>此语言将在下次启动模拟器时更新。</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1144"/>
+      <location filename="../src/settings_dialog.cpp" line="1152"/>
       <source>Pick the screen background color</source>
       <translation>选取屏幕背景颜色</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.cpp" line="1221"/>
+      <source>Successfully changed</source>
+      <translation>修改成功</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.cpp" line="1221"/>
+      <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
+      <translation>下次应用程序请求播放新的MIDI时，将使用选择的后端！</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.cpp" line="1234"/>
+      <source>Choose the HSB bank file</source>
+      <translation type="unfinished">Choose the HSB bank file</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.cpp" line="1257"/>
+      <source>Choose the SF2 bank file</source>
+      <translation type="unfinished">Choose the SF2 bank file</translation>
     </message>
   </context>
 </TS>

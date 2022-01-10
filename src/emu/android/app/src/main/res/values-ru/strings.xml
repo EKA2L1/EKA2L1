@@ -17,6 +17,8 @@
     <string name="rename">Переименовать</string>
     <string name="save_log">Сохранить лог</string>
     <string name="opengl_required">Приложение требует OpenGL ES 3.0+.</string>
+    <string name="warning">Внимание</string>
+    <string name="scoped_storage_warning">Ваши пользовательские данные хранятся в папке, которая <b>будет удалена</b> при удалении приложения:\n</string>
     <string name="install">Установить</string>
     <string name="device_dump">Дамп устройства</string>
     <string name="path_to_rpkg">Путь к RPKG</string>
@@ -52,6 +54,7 @@
     <string name="pref_enable_statusbar">Включить статусбар</string>
     <string name="pref_wakelock">Не отключать экран</string>
     <string name="pref_enable_vibration">Включить вибрацию</string>
+    <string name="pref_emulator_dir">Рабочая папка</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Включить фильтрацию методом ближайшего соседа</string>
     <string name="pref_system_language_option_name">Язык</string>
     <string name="pref_system_real_time_accuracy_str">Точность в реальном времени</string>
@@ -62,6 +65,7 @@
     <string name="pref_system_setting_inheritance_option_name">Наследование настроек</string>
     <string name="emulated_screen_rotation_item_name">Поворот экрана</string>
     <string name="emulated_screen_refresh_rate_item_name">Частота обновления</string>
+    <string name="pref_device_display_name">Имя телефона</string>
     <string name="action_context_delete">Удалить</string>
     <string name="action_context_rename">Переименовать</string>
     <string name="start">Пуск</string>
