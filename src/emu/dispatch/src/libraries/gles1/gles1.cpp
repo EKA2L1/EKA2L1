@@ -22,6 +22,7 @@
 
 #include <dispatch/dispatcher.h>
 #include <drivers/graphics/graphics.h>
+#include <services/window/screen.h>
 #include <system/epoc.h>
 #include <kernel/kernel.h>
 
@@ -423,6 +424,21 @@ namespace eka2l1::dispatch {
 
         builder.clip_rect(clip_rect_transformed);
         builder.set_viewport(viewport_transformed);
+        
+        // Some games have 0 alphas in some situation!
+        // TODO: This is hack definitely. So removal is ideal.
+        switch (draw_surface_->backed_screen_->disp_mode) {
+        case epoc::display_mode::color16m:
+        case epoc::display_mode::color16mu:
+        case epoc::display_mode::color16ma:
+            builder.set_swizzle(draw_surface_->handle_, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
+                drivers::channel_swizzle::blue, drivers::channel_swizzle::one);
+
+            break;
+
+        default:
+            break;
+        }
     }
 
     glm::mat4 &egl_context_es1::active_matrix() {

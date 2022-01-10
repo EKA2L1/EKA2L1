@@ -71,6 +71,9 @@ namespace eka2l1::drivers {
 
         case texture_format::etc2_rgb8:
             return GL_COMPRESSED_RGB8_ETC2;
+        
+        case texture_format::pvrtc_4bppv1_rgba:
+            return GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
 
         default:
             break;

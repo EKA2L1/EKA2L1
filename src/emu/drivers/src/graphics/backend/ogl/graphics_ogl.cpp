@@ -130,23 +130,39 @@ namespace eka2l1::drivers {
         } else {
             if ((minor_gl >= 3) || is_gles) {
                 feature_flags_ |= OGL_FEATURE_SUPPORT_ETC2;
-            } else {
-                std::int32_t ext_count = 0;
-                glGetIntegerv(GL_NUM_EXTENSIONS, &ext_count);
-
-                for (std::int32_t i = 0; i < ext_count; i++) {
-                    const GLubyte *next_extension = glGetStringi(GL_EXTENSIONS, i);
-                    if (strcmp(reinterpret_cast<const char*>(next_extension), "GL_ARB_ES3_compatibility") == 0) {
-                        feature_flags_ |= OGL_FEATURE_SUPPORT_ETC2;
-                        break;
-                    }
-                }
-            }
-
-            if ((feature_flags_ & OGL_FEATURE_SUPPORT_ETC2) == 0) {
-                LOG_INFO(DRIVER_GRAPHICS, "Your GPU does not support ETC2 texture, GLES1 and GLES2's ETC1/2 texture will be decompressed on the CPU.");
             }
         }
+
+        std::int32_t ext_count = 0;
+        glGetIntegerv(GL_NUM_EXTENSIONS, &ext_count);
+
+        for (std::int32_t i = 0; i < ext_count; i++) {
+            const GLubyte *next_extension = glGetStringi(GL_EXTENSIONS, i);
+            if (strcmp(reinterpret_cast<const char*>(next_extension), "GL_ARB_ES3_compatibility") == 0) {
+                feature_flags_ |= OGL_FEATURE_SUPPORT_ETC2;
+                break;
+            }
+
+            if (strcmp(reinterpret_cast<const char*>(next_extension), "GL_IMG_texture_compression_pvrtc") == 0) {
+                feature_flags_ |= OGL_FEATURE_SUPPORT_PVRTC;
+            }
+        }
+
+        std::string feature = "";
+
+        if (feature_flags_ & OGL_FEATURE_SUPPORT_ETC2) {
+            feature += "ETC2Dec;";
+        }
+
+        if (feature_flags_ & OGL_FEATURE_SUPPORT_PVRTC) {
+            feature += "PVRTDec;";
+        }
+
+        if (!feature.empty()) {
+            feature.pop_back();
+        }
+
+        LOG_TRACE(DRIVER_GRAPHICS, "Supported features (for optimization): {}", feature);
     }
 
     static constexpr const char *sprite_norm_v_path = "resources//sprite_norm.vert";

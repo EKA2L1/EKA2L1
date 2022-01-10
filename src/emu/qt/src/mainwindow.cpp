@@ -145,6 +145,7 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     cmd_builder->clear({ color_clear[2] / 255.0f, color_clear[1] / 255.0f, color_clear[0] / 255.0f, color_clear[3] / 255.0f, 0.0f, 0.0f }, eka2l1::drivers::draw_buffer_bit_color_buffer);
     cmd_builder->set_feature(eka2l1::drivers::graphics_feature::cull, false);
     cmd_builder->set_feature(eka2l1::drivers::graphics_feature::depth_test, false);
+    cmd_builder->set_feature(eka2l1::drivers::graphics_feature::blend, false);
     cmd_builder->set_viewport(viewport);
 
     auto &crr_mode = scr->current_mode();

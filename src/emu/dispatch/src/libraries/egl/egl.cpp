@@ -472,6 +472,7 @@ namespace eka2l1::dispatch {
                 ctx->command_builder_->set_feature(drivers::graphics_feature::clipping, false);
                 ctx->command_builder_->set_feature(drivers::graphics_feature::depth_test, false);
                 ctx->command_builder_->set_feature(drivers::graphics_feature::cull, false);
+                ctx->command_builder_->set_feature(drivers::graphics_feature::blend, false);
 
                 ctx->command_builder_->bind_bitmap(surface->backed_window_->driver_win_id);
                 ctx->command_builder_->draw_bitmap(surface->handle_, 0, draw_rect, draw_rect, eka2l1::vec2(0, 0), 0.0f, drivers::bitmap_draw_flag_no_flip);
