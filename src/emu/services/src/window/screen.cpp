@@ -173,6 +173,9 @@ namespace eka2l1::epoc {
             cmd_builder->bind_bitmap(screen_texture);
         }
 
+        cmd_builder->clear(eka2l1::vecx<float, 6>({ 0.0, 0.0, 0.0, 1.0, 1.0, 0.0 }), drivers::draw_buffer_bit_color_buffer | drivers::draw_buffer_bit_depth_buffer
+            | drivers::draw_buffer_bit_stencil_buffer);
+
         cmd_builder->set_feature(drivers::graphics_feature::blend, true);
         cmd_builder->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
             drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
