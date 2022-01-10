@@ -3907,10 +3907,13 @@ namespace eka2l1::dispatch {
 
                     gl_enum_to_drivers_data_format(ctx->normal_attrib_.data_type_, temp_format);
                     temp_desc.set_format(ctx->normal_attrib_.size_, temp_format);
+                    temp_desc.set_normalized(true);
 
                     descs.push_back(temp_desc);
                 }
             }
+
+            temp_desc.set_normalized(false);
 
             if (active_texs && (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY)) {
                 for (std::int32_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {

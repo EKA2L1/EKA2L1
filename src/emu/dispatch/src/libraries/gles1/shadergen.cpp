@@ -30,7 +30,7 @@ namespace eka2l1::dispatch {
 
         if (is_es) {
             input_decl += "#version 300 es\n"
-                          "precision mediump float;\n";
+                          "precision highp float;\n";
         } else {
             input_decl += "#version 140\n"
                 "#extension GL_ARB_explicit_attrib_location : require\n";
@@ -73,7 +73,7 @@ namespace eka2l1::dispatch {
             main_body += "\tfloat lenRescale = length(vec3(modelViewTrInv[2]));\n"
                          "\tfloat rescale = 1.0;\n"
                          "\tif (lenRescale > 0.0) rescale = 1.0 / lenRescale;\n"
-                         "\tmNormal *= lenRescale;\n";
+                         "\tmNormal *= rescale;\n";
         }
 
         if (vertex_statuses & egl_context_es1::VERTEX_STATE_NORMAL_ENABLE_NORMALIZE) {

@@ -1193,7 +1193,7 @@ namespace eka2l1::drivers {
         helper.pop(w);
 
         GLint range[2];
-        glGetIntegerv(GL_SMOOTH_LINE_WIDTH_RANGE, range);
+        glGetIntegerv(GL_ALIASED_LINE_WIDTH_RANGE, range);
 
         if (range[1] >= w) {
             glad_glLineWidth(w);
