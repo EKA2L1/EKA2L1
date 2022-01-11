@@ -43,8 +43,10 @@ namespace eka2l1::dispatch {
     }
 
     void egl_context::free(drivers::graphics_driver *driver, drivers::graphics_command_list_builder &builder) {
-        if (command_list_)
+        if (command_list_) {
             driver->submit_command_list(*command_list_);
+            command_list_ = nullptr;
+        }
     }
 
     egl_controller::egl_controller(drivers::graphics_driver *driver)
@@ -81,7 +83,7 @@ namespace eka2l1::dispatch {
         egl_context *context_to_set = (context_ptr ? (*context_ptr).get() : nullptr);
 
         auto ite = active_context_.find(thread_id);
-        if ((ite != active_context_.end()) && (ite->second != context_to_set)) {
+        if ((ite != active_context_.end()) && ite->second && (ite->second != context_to_set)) {
             if (ite->second->draw_surface_ && ite->second->draw_surface_->dead_pending_) {
                 ite->second->command_builder_->destroy_bitmap(ite->second->draw_surface_->handle_);
 
@@ -104,12 +106,24 @@ namespace eka2l1::dispatch {
                 }
             }
 
-            if (ite->second->dead_pending_) {
-                ite->second->free(driver_, *ite->second->command_builder_);
+            if (ite->second->draw_surface_) {
+                ite->second->draw_surface_->bounded_context_ = nullptr;
             }
 
-            // Submit pending works...
-            driver_->submit_command_list(*ite->second->command_list_);
+            if (ite->second->read_surface_) {
+                ite->second->read_surface_->bounded_context_ = nullptr;
+            }
+
+            ite->second->draw_surface_ = nullptr;
+            ite->second->read_surface_ = nullptr;
+
+            if (ite->second->dead_pending_) {
+                ite->second->free(driver_, *ite->second->command_builder_);
+            } else {    
+                // Submit pending works...
+                driver_->submit_command_list(*ite->second->command_list_);
+                ite->second->command_list_ = nullptr;
+            }
 
             if (ite->second->dead_pending_) {
                 for (auto &var: contexts_) {
@@ -121,8 +135,10 @@ namespace eka2l1::dispatch {
             }
         }
 
-        active_context_.emplace(thread_id, context_ptr->get());
-        (*context_ptr)->associated_thread_uid_ = thread_id;
+        active_context_[thread_id] = context_to_set;
+
+        if (context_to_set)
+            context_to_set->associated_thread_uid_ = thread_id;
 
         return true;
     }
@@ -206,7 +222,7 @@ namespace eka2l1::dispatch {
 
         bool can_del_imm = true;
 
-        for (auto ite = active_context_.begin(); ite != active_context_.end(); ) {
+        for (auto ite = active_context_.begin(); ite != active_context_.end(); ite++) {
             if (ite->second == context_ptr->get()) {
                 ite->second->dead_pending_ = true;
                 can_del_imm = false;

@@ -376,59 +376,53 @@ namespace eka2l1::dispatch {
         egl_surface *read_surface_real = controller.get_managed_surface(read_surface);
         egl_surface *write_surface_real = controller.get_managed_surface(write_surface);
 
-        if (!read_surface_real || !write_surface_real) {
-            egl_push_error(sys, EGL_BAD_SURFACE_EMU);
-            return EGL_FALSE;
-        }
-
         egl_context *context_real = controller.get_context(context);
-        if (!context_real) {
-            egl_push_error(sys, EGL_BAD_CONTEXT_EMU);
-            return EGL_FALSE;
-        }
 
         if (!controller.make_current(kern->crr_thread()->unique_id(), context)) {
             egl_push_error(sys, EGL_BAD_CONTEXT_EMU);
             return EGL_FALSE;
         }
 
-        if (context_real->read_surface_ != read_surface_real) {
-            if (context_real->read_surface_) {
-                context_real->read_surface_->bounded_context_ = nullptr;
+        if (context_real) {
+            if (context_real->read_surface_ != read_surface_real) {
+                if (context_real->read_surface_) {
+                    context_real->read_surface_->bounded_context_ = nullptr;
 
-                if (context_real->read_surface_->dead_pending_) {
-                    context_real->command_builder_->destroy_bitmap(context_real->read_surface_->handle_);
-                    controller.remove_managed_surface_from_management(context_real->read_surface_);
+                    if (context_real->read_surface_->dead_pending_) {
+                        context_real->command_builder_->destroy_bitmap(context_real->read_surface_->handle_);
+                        controller.remove_managed_surface_from_management(context_real->read_surface_);
+                    }
                 }
             }
-        }
 
-        if (context_real->draw_surface_ != write_surface_real) {
-            if (context_real->draw_surface_) {
-                context_real->draw_surface_->bounded_context_ = nullptr;
-                if ((context_real->read_surface_ != context_real->draw_surface_) && (context_real->draw_surface_->dead_pending_))
-                    context_real->command_builder_->destroy_bitmap(context_real->draw_surface_->handle_);
-                    controller.remove_managed_surface_from_management(context_real->draw_surface_);
+            if (context_real->draw_surface_ != write_surface_real) {
+                if (context_real->draw_surface_) {
+                    context_real->draw_surface_->bounded_context_ = nullptr;
+                    if ((context_real->read_surface_ != context_real->draw_surface_) && (context_real->draw_surface_->dead_pending_))
+                        context_real->command_builder_->destroy_bitmap(context_real->draw_surface_->handle_);
+                        controller.remove_managed_surface_from_management(context_real->draw_surface_);
+                }
             }
+
+            egl_surface *prev_read = context_real->read_surface_;
+            egl_surface *prev_write = context_real->draw_surface_;
+
+            context_real->read_surface_ = read_surface_real;
+            context_real->draw_surface_ = write_surface_real;
+            context_real->on_surface_changed(prev_read, prev_write);
+
+            read_surface_real->bounded_context_ = context_real;
+            write_surface_real->bounded_context_ = context_real;
+
+            drivers::graphics_driver *driver = sys->get_graphics_driver();
+            if (!context_real->command_list_) {
+                context_real->command_list_ = driver->new_command_list();
+                context_real->command_builder_ = driver->new_command_builder(context_real->command_list_.get());
+            }
+
+            context_real->command_builder_->bind_bitmap(write_surface_real->handle_, read_surface_real->handle_);
         }
 
-        egl_surface *prev_read = context_real->read_surface_;
-        egl_surface *prev_write = context_real->draw_surface_;
-
-        context_real->read_surface_ = read_surface_real;
-        context_real->draw_surface_ = write_surface_real;
-        context_real->on_surface_changed(prev_read, prev_write);
-
-        read_surface_real->bounded_context_ = context_real;
-        write_surface_real->bounded_context_ = context_real;
-
-        drivers::graphics_driver *driver = sys->get_graphics_driver();
-        if (!context_real->command_list_) {
-            context_real->command_list_ = driver->new_command_list();
-            context_real->command_builder_ = driver->new_command_builder(context_real->command_list_.get());
-        }
-
-        context_real->command_builder_->bind_bitmap(write_surface_real->handle_, read_surface_real->handle_);
         return EGL_TRUE;
     }
 
@@ -482,7 +476,10 @@ namespace eka2l1::dispatch {
         }
 
         if (surface->bounded_context_) {
-            drv->submit_command_list(*surface->bounded_context_->command_list_);
+            if (surface->bounded_context_->command_list_)
+                drv->submit_command_list(*surface->bounded_context_->command_list_);
+            else
+                LOG_TRACE(KERNEL, "Temp!!!");
 
             surface->bounded_context_->command_list_ = drv->new_command_list();
             surface->bounded_context_->command_builder_ = drv->new_command_builder(surface->bounded_context_->command_list_.get());
