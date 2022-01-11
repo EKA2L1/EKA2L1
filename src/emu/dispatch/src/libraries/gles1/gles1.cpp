@@ -287,7 +287,9 @@ namespace eka2l1::dispatch {
         , polygon_offset_factor_(0.0f)
         , polygon_offset_units_(0.0f)
         , pack_alignment_(4)
-        , unpack_alignment_(4) {
+        , unpack_alignment_(4)
+        , depth_range_min_(0.0f)
+        , depth_range_max_(1.0f) {
         clear_color_[0] = 0.0f;
         clear_color_[1] = 0.0f;
         clear_color_[2] = 0.0f;
@@ -448,6 +450,10 @@ namespace eka2l1::dispatch {
             command_builder_->set_depth_pass_condition(func);
         }
 
+        if (state_change_tracker_ & STATE_CHANGED_DEPTH_RANGE) {
+            command_builder_->set_depth_range(depth_range_min_, depth_range_max_);
+        }
+
         state_change_tracker_ = 0;
     }
 
@@ -468,6 +474,7 @@ namespace eka2l1::dispatch {
 
         builder.set_line_width(line_width_);
         builder.set_depth_bias(polygon_offset_units_, 1.0, polygon_offset_factor_);
+        builder.set_depth_range(depth_range_min_, depth_range_max_);
 
         builder.set_feature(drivers::graphics_feature::blend, non_shader_statuses_ & NON_SHADER_STATE_BLEND_ENABLE);
         builder.set_feature(drivers::graphics_feature::clipping, non_shader_statuses_ & NON_SHADER_STATE_SCISSOR_ENABLE);
@@ -4624,5 +4631,23 @@ namespace eka2l1::dispatch {
             controller.push_error(ctx, GL_INVALID_ENUM);
             return;
         }
+    }
+    
+    BRIDGE_FUNC_LIBRARY(void, gl_depth_rangef_emu, float near, float far) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        if ((ctx->depth_range_max_ != far) || (ctx->depth_range_min_ != near)) {
+            ctx->state_change_tracker_ |= egl_context_es1::STATE_CHANGED_DEPTH_RANGE;
+        }
+
+        ctx->depth_range_min_ = near;
+        ctx->depth_range_max_ = far;
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, gl_depth_rangex_emu, gl_fixed near, gl_fixed far) {
+        gl_depth_rangef_emu(sys, FIXED_32_TO_FLOAT(near), FIXED_32_TO_FLOAT(far));
     }
 }

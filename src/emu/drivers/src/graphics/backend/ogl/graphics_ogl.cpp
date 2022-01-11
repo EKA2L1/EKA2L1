@@ -1261,6 +1261,16 @@ namespace eka2l1::drivers {
         glPolygonOffset(slope_factor, constant_factor);
     }
 
+    void ogl_graphics_driver::set_depth_range(command_helper &helper) {
+        float min = 0.0f;
+        float max = 1.0f;
+
+        helper.pop(min);
+        helper.pop(max);
+
+        glDepthRange(static_cast<double>(min), static_cast<double>(max));
+    }
+
     void ogl_graphics_driver::save_gl_state() {
         glGetIntegerv(GL_CURRENT_PROGRAM, &backup.last_program);
         glGetIntegerv(GL_TEXTURE_BINDING_2D, &backup.last_texture);
@@ -1489,6 +1499,10 @@ namespace eka2l1::drivers {
 
         case graphics_driver_set_depth_bias:
             set_depth_bias(helper);
+            break;
+
+        case graphics_driver_set_depth_range:
+            set_depth_range(helper);
             break;
 
         default:

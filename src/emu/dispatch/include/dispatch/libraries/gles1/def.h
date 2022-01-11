@@ -368,7 +368,8 @@ namespace eka2l1::dispatch {
             STATE_CHANGED_BLEND_FACTOR = 1 << 7,
             STATE_CHANGED_LINE_WIDTH = 1 << 8,
             STATE_CHANGED_DEPTH_MASK = 1 << 9,
-            STATE_CHANGED_DEPTH_PASS_COND = 1 << 10
+            STATE_CHANGED_DEPTH_PASS_COND = 1 << 10,
+            STATE_CHANGED_DEPTH_RANGE = 1 << 11
         };
 
         gles1_vertex_attrib vertex_attrib_;
@@ -429,6 +430,9 @@ namespace eka2l1::dispatch {
 
         std::uint32_t pack_alignment_;
         std::uint32_t unpack_alignment_;
+
+        float depth_range_min_;
+        float depth_range_max_;
 
         explicit egl_context_es1();
 

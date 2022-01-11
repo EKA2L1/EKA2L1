@@ -616,6 +616,8 @@ namespace eka2l1::drivers {
         virtual void set_line_width(const float width) = 0;
 
         virtual void set_depth_bias(float constant_factor, float clamp, float slope_factor) = 0;
+
+        virtual void set_depth_range(const float min, const float max) = 0;
     };
 
     class server_graphics_command_list_builder : public graphics_command_list_builder {
@@ -747,6 +749,7 @@ namespace eka2l1::drivers {
         void set_line_width(const float width) override;
         void set_texture_max_mip(drivers::handle h, const std::uint32_t max_mip) override;
         void set_depth_bias(float constant_factor, float clamp, float slope_factor) override;
+        void set_depth_range(const float min, const float max) override;
     };
 
     struct graphics_command_callback_data {

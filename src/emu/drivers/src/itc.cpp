@@ -497,4 +497,9 @@ namespace eka2l1::drivers {
         command *cmd = make_command(graphics_driver_set_depth_bias, nullptr, constant_factor, clamp, slope_factor);
         get_command_list().add(cmd);
     }
+
+    void server_graphics_command_list_builder::set_depth_range(const float min, const float max) {
+        command *cmd = make_command(graphics_driver_set_depth_range, nullptr, min, max);
+        get_command_list().add(cmd);
+    }
 }

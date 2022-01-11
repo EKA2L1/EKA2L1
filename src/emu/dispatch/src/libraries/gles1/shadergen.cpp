@@ -275,11 +275,13 @@ namespace eka2l1::dispatch {
                         case gles_texture_env_info::ENV_MODE_BLEND:
                             main_body += fmt::format("\tvec4 pixelTex{} = texture(uTexture{}, mTexCoord{}.xy);\n", i, i, i);
                             main_body += fmt::format("\toColor.rgb = oColor.rgb * (vec3(1.0) - pixelTex{}.rgb) + uTextureEnvColor{}.rgb * pixelTex{}.rgb;\n", i, i, i);
-                            main_body += fmt::format("\toColor.a *= pixelTex.a;\n");
+                            main_body += fmt::format("\toColor.a *= pixelTex{}.a;\n", i);
                             break;
 
                         case gles_texture_env_info::ENV_MODE_DECAL:
-                            LOG_WARN(HLE_DISPATCHER, "Decal texture environment mode is not yet to be supported!");
+                            main_body += fmt::format("\tvec4 pixelTex{} = texture(uTexture{}, mTexCoord{}.xy);\n", i, i, i);
+                            main_body += fmt::format("\toColor.rgb = oColor.rgb * (vec3(1.0) - pixelTex{}.a) + pixelTex{}.rgb * pixelTex{}.a;\n", i, i, i);
+                            main_body += fmt::format("\toColor.a = pixelTex{}.a;\n", i);
                             break;
 
                         default:
