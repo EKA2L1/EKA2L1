@@ -90,7 +90,7 @@ namespace eka2l1::epoc {
          * \param   bmp     The pointer to bitwise bitmap.
          * \returns Handle to driver's texture associated with this bitmap.
          */
-        drivers::handle add_or_get(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder,
+        drivers::handle add_or_get(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder,
             epoc::bitwise_bitmap *bmp);
 
         /**

@@ -62,8 +62,7 @@ namespace eka2l1::epoc {
 
     struct graphic_context : public window_client_obj {
         canvas_base *attached_window;
-        std::unique_ptr<drivers::graphics_command_list> cmd_list;
-        std::unique_ptr<drivers::graphics_command_list_builder> cmd_builder;
+        drivers::graphics_command_builder cmd_builder;
 
         common::double_linked_queue_element context_attach_link;
         fbsfont *text_font;

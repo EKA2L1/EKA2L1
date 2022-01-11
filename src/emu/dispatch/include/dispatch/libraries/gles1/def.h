@@ -442,8 +442,8 @@ namespace eka2l1::dispatch {
         gles1_driver_buffer *binded_buffer(const bool is_array_buffer);
         drivers::handle binded_texture_driver_handle();
 
-        void init_context_state(drivers::graphics_command_list_builder &builder) override;
-        void free(drivers::graphics_driver *driver, drivers::graphics_command_list_builder &builder) override;
+        void init_context_state() override;
+        void free(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) override;
         void return_handle_to_pool(const gles1_object_type type, const drivers::handle h);
         void on_surface_changed(egl_surface *prev_read, egl_surface *prev_draw) override;
         void flush_stage_changes();

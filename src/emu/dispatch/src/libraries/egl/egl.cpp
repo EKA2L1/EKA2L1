@@ -389,7 +389,7 @@ namespace eka2l1::dispatch {
                     context_real->read_surface_->bounded_context_ = nullptr;
 
                     if (context_real->read_surface_->dead_pending_) {
-                        context_real->command_builder_->destroy_bitmap(context_real->read_surface_->handle_);
+                        context_real->cmd_builder_.destroy_bitmap(context_real->read_surface_->handle_);
                         controller.remove_managed_surface_from_management(context_real->read_surface_);
                     }
                 }
@@ -399,7 +399,7 @@ namespace eka2l1::dispatch {
                 if (context_real->draw_surface_) {
                     context_real->draw_surface_->bounded_context_ = nullptr;
                     if ((context_real->read_surface_ != context_real->draw_surface_) && (context_real->draw_surface_->dead_pending_))
-                        context_real->command_builder_->destroy_bitmap(context_real->draw_surface_->handle_);
+                        context_real->cmd_builder_.destroy_bitmap(context_real->draw_surface_->handle_);
                         controller.remove_managed_surface_from_management(context_real->draw_surface_);
                 }
             }
@@ -414,13 +414,7 @@ namespace eka2l1::dispatch {
             read_surface_real->bounded_context_ = context_real;
             write_surface_real->bounded_context_ = context_real;
 
-            drivers::graphics_driver *driver = sys->get_graphics_driver();
-            if (!context_real->command_list_) {
-                context_real->command_list_ = driver->new_command_list();
-                context_real->command_builder_ = driver->new_command_builder(context_real->command_list_.get());
-            }
-
-            context_real->command_builder_->bind_bitmap(write_surface_real->handle_, read_surface_real->handle_);
+            context_real->cmd_builder_.bind_bitmap(write_surface_real->handle_, read_surface_real->handle_);
         }
 
         return EGL_TRUE;
@@ -463,26 +457,23 @@ namespace eka2l1::dispatch {
 
                 eka2l1::rect draw_rect(eka2l1::vec2(0, 0), surface->dimension_);
 
-                ctx->command_builder_->set_feature(drivers::graphics_feature::clipping, false);
-                ctx->command_builder_->set_feature(drivers::graphics_feature::depth_test, false);
-                ctx->command_builder_->set_feature(drivers::graphics_feature::cull, false);
-                ctx->command_builder_->set_feature(drivers::graphics_feature::blend, false);
+                ctx->cmd_builder_.set_feature(drivers::graphics_feature::clipping, false);
+                ctx->cmd_builder_.set_feature(drivers::graphics_feature::depth_test, false);
+                ctx->cmd_builder_.set_feature(drivers::graphics_feature::cull, false);
+                ctx->cmd_builder_.set_feature(drivers::graphics_feature::blend, false);
 
-                ctx->command_builder_->bind_bitmap(surface->backed_window_->driver_win_id);
-                ctx->command_builder_->draw_bitmap(surface->handle_, 0, draw_rect, draw_rect, eka2l1::vec2(0, 0), 0.0f, drivers::bitmap_draw_flag_no_flip);
+                ctx->cmd_builder_.bind_bitmap(surface->backed_window_->driver_win_id);
+                ctx->cmd_builder_.draw_bitmap(surface->handle_, 0, draw_rect, draw_rect, eka2l1::vec2(0, 0), 0.0f, drivers::bitmap_draw_flag_no_flip);
 
                 surface->backed_window_->has_redraw_content(true);
             }
         }
 
         if (surface->bounded_context_) {
-            if (surface->bounded_context_->command_list_)
-                drv->submit_command_list(*surface->bounded_context_->command_list_);
+            drivers::command_list retrieved = surface->bounded_context_->cmd_builder_.retrieve_command_list();
+            drv->submit_command_list(retrieved);
 
-            surface->bounded_context_->command_list_ = drv->new_command_list();
-            surface->bounded_context_->command_builder_ = drv->new_command_builder(surface->bounded_context_->command_list_.get());
-
-            surface->bounded_context_->init_context_state(*surface->bounded_context_->command_builder_);
+            surface->bounded_context_->init_context_state();
         }
 
         if (surface->backed_window_)

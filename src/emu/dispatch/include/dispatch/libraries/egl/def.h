@@ -367,8 +367,7 @@ namespace eka2l1::dispatch {
     };
 
     struct egl_context {
-        std::unique_ptr<drivers::graphics_command_list> command_list_;
-        std::unique_ptr<drivers::graphics_command_list_builder> command_builder_;
+        drivers::graphics_command_builder cmd_builder_;
 
         egl_surface *read_surface_;
         egl_surface *draw_surface_;
@@ -379,9 +378,9 @@ namespace eka2l1::dispatch {
         explicit egl_context();
         virtual ~egl_context() = default;
 
-        virtual void free(drivers::graphics_driver *driver, drivers::graphics_command_list_builder &builder);
+        virtual void free(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder);
         virtual egl_context_type context_type() const = 0;
-        virtual void init_context_state(drivers::graphics_command_list_builder &builder) = 0;
+        virtual void init_context_state() = 0;
         virtual void on_surface_changed(egl_surface *prev_read, egl_surface *prev_draw) {}
     };
 

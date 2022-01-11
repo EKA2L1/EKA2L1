@@ -268,48 +268,37 @@ namespace eka2l1::drivers {
         }
     }
 
-    void shared_graphics_driver::update_bitmap(command_helper &helper) {
-        drivers::handle handle = 0;
-        std::uint8_t *data = nullptr;
-        std::size_t size = 0;
+    void shared_graphics_driver::update_bitmap(command &cmd) {
+        drivers::handle handle = cmd.data_[0];
+        std::uint8_t *data = reinterpret_cast<std::uint8_t*>(cmd.data_[1]);
+        std::size_t size = static_cast<std::size_t>(cmd.data_[2]);
         eka2l1::vec2 offset;
         eka2l1::vec2 dim;
-        std::size_t pixels_per_line = 0;
+        std::size_t pixels_per_line = static_cast<std::size_t>(cmd.data_[5]);
 
-        helper.pop(handle);
-        helper.pop(data);
-        helper.pop(size);
-        helper.pop(offset);
-        helper.pop(dim);
-        helper.pop(pixels_per_line);
+        unpack_u64_to_2u32(cmd.data_[3], offset.x, offset.y);
+        unpack_u64_to_2u32(cmd.data_[4], dim.x, dim.y);
 
         update_bitmap(handle, size, offset, dim, data, pixels_per_line);
 
         delete data;
     }
 
-    void shared_graphics_driver::update_texture(command_helper &helper) {
-        drivers::handle handle = 0;
-        std::uint8_t *data = nullptr;
-        std::size_t size = 0;
-        std::uint8_t lvl = 0;
-        drivers::texture_format data_format;
-        drivers::texture_data_type data_type;
+    void shared_graphics_driver::update_texture(command &cmd) {
+        drivers::handle handle = cmd.data_[0];
+        std::uint8_t *data = reinterpret_cast<std::uint8_t*>(cmd.data_[1]);
+        std::size_t size = static_cast<std::size_t>(cmd.data_[2]);
+        std::uint8_t lvl = static_cast<std::uint8_t>(cmd.data_[3]);
+        drivers::texture_format data_format = static_cast<drivers::texture_format>(cmd.data_[3] >> 8);
+        drivers::texture_data_type data_type = static_cast<drivers::texture_data_type>(cmd.data_[3] >> 24);
         eka2l1::vec3 offset;
         eka2l1::vec3 dim;
-        std::size_t pixels_per_line = 0;
-        std::uint32_t unpack_alignment = 4;
+        std::size_t pixels_per_line = cmd.data_[7];
+        std::uint32_t unpack_alignment = static_cast<std::uint32_t>(cmd.data_[8]);
 
-        helper.pop(handle);
-        helper.pop(data);
-        helper.pop(size);
-        helper.pop(lvl);
-        helper.pop(data_format);
-        helper.pop(data_type);
-        helper.pop(offset);
-        helper.pop(dim);
-        helper.pop(pixels_per_line);
-        helper.pop(unpack_alignment);
+        unpack_u64_to_2u32(cmd.data_[4], offset.x, offset.y);
+        unpack_u64_to_2u32(cmd.data_[5], offset.z, dim.x);
+        unpack_u64_to_2u32(cmd.data_[6], dim.y, dim.z);
 
         drivers::texture *obj = reinterpret_cast<drivers::texture*>(get_graphics_object(handle));
         if (!obj) {
@@ -321,14 +310,12 @@ namespace eka2l1::drivers {
         delete data;
     }
 
-    void shared_graphics_driver::create_bitmap(command_helper &helper) {
+    void shared_graphics_driver::create_bitmap(command &cmd) {
         eka2l1::vec2 size;
-        std::uint32_t bpp = 0;
-        drivers::handle *result = nullptr;
+        std::uint32_t bpp = static_cast<std::uint32_t>(cmd.data_[1]);
+        drivers::handle *result = reinterpret_cast<drivers::handle*>(cmd.data_[2]);
 
-        helper.pop(size);
-        helper.pop(bpp);
-        helper.pop(result);
+        unpack_u64_to_2u32(cmd.data_[0], size.x, size.y);
 
         // Find free slot
         auto slot_free = std::find(bmp_textures.begin(), bmp_textures.end(), nullptr);
@@ -344,12 +331,11 @@ namespace eka2l1::drivers {
         *result |= HANDLE_BITMAP;
 
         // Notify
-        helper.finish(this, 0);
+        finish(cmd.status_, 0);
     }
 
-    void shared_graphics_driver::bind_bitmap(command_helper &helper) {
-        drivers::handle h = 0;
-        helper.pop(h);
+    void shared_graphics_driver::bind_bitmap(command &cmd) {
+        drivers::handle h = cmd.data_[0];
 
         if (h == 0) {
             current_fb_height = swapchain_size.y;
@@ -375,8 +361,7 @@ namespace eka2l1::drivers {
             bmp->init_fb(this);
         }
 
-        drivers::handle rh = 0;
-        helper.pop(rh);
+        drivers::handle rh = cmd.data_[1];
 
         drivers::framebuffer_bind_type bind_type = framebuffer_bind_read_draw;
         if ((rh != 0) && (rh != h)) {
@@ -402,24 +387,22 @@ namespace eka2l1::drivers {
         set_viewport(eka2l1::rect(eka2l1::vec2(0, 0), bmp->tex->get_size()));
     }
 
-    void shared_graphics_driver::read_bitmap(command_helper &helper) {
-        drivers::handle handle = 0;
-        helper.pop(handle);
+    void shared_graphics_driver::read_bitmap(command &cmd) {
+        drivers::handle handle = cmd.data_[0];
         
         bitmap *bmp = get_bitmap(handle);
 
         if (!bmp) {
-            helper.finish(this, 0);
+            finish(cmd.status_, 0);
             return;
         }
 
         eka2l1::point pos(0, 0);
         eka2l1::object_size size(0, 0);
-        std::uint32_t bpp = 0;
+        std::uint32_t bpp = static_cast<std::uint32_t>(cmd.data_[3]);
 
-        helper.pop(pos);
-        helper.pop(size);
-        helper.pop(bpp);
+        unpack_u64_to_2u32(cmd.data_[1], pos.x, pos.y);
+        unpack_u64_to_2u32(cmd.data_[2], size.x, size.y);
 
         texture_format target_format = texture_format::rgba;
         texture_data_type target_data_type = texture_data_type::ubyte;
@@ -442,16 +425,15 @@ namespace eka2l1::drivers {
 
         default:
             LOG_ERROR(DRIVER_GRAPHICS, "Unsupported BPP type to read format from (value={})", bpp);
-            helper.finish(this, 0);
+            finish(cmd.status_, 0);
 
             return;
         }
 
-        std::uint8_t *ptr = nullptr;
-        helper.pop(ptr);
+        std::uint8_t *ptr = reinterpret_cast<std::uint8_t*>(cmd.data_[4]);
 
         if (!ptr) {
-            helper.finish(this, 0);
+            finish(cmd.status_, 0);
             return;
         }
 
@@ -463,13 +445,12 @@ namespace eka2l1::drivers {
         bmp->fb->bind(this, drivers::framebuffer_bind_read_draw);
         const bool res = bmp->fb->read(target_format, target_data_type, pos, size, ptr);
         bmp->fb->unbind(this);
-        
-        helper.finish(this, res);
+
+        finish(cmd.status_, res);
     }
 
-    void shared_graphics_driver::destroy_bitmap(command_helper &helper) {
-        drivers::handle h = 0;
-        helper.pop(h);
+    void shared_graphics_driver::destroy_bitmap(command &cmd) {
+        drivers::handle h = cmd.data_[0];
 
         if ((h & ~HANDLE_BITMAP) > bmp_textures.size()) {
             LOG_ERROR(DRIVER_GRAPHICS, "Invalid bitmap handle to destroy");
@@ -479,9 +460,8 @@ namespace eka2l1::drivers {
         bmp_textures[(h & ~HANDLE_BITMAP) - 1].reset();
     }
 
-    void shared_graphics_driver::resize_bitmap(command_helper &helper) {
-        drivers::handle h = 0;
-        helper.pop(h);
+    void shared_graphics_driver::resize_bitmap(command &cmd) {
+        drivers::handle h = cmd.data_[0];
 
         bitmap *bmp = get_bitmap(h);
 
@@ -491,60 +471,45 @@ namespace eka2l1::drivers {
         }
 
         vec2 new_size = { 0, 0 };
-        helper.pop(new_size);
+        unpack_u64_to_2u32(cmd.data_[1], new_size.x, new_size.y);
 
         // Change texture size
         bmp->resize(this, new_size);
     }
 
-    void shared_graphics_driver::set_brush_color(command_helper &helper) {
-        float r = 0.0f;
-        float g = 0.0f;
-        float b = 0.0f;
-        float a = 0.0f;
+    void shared_graphics_driver::set_brush_color(command &cmd) {
+        std::uint32_t r,g,b,a;
+        unpack_u64_to_2u32(cmd.data_[0], r, g);
+        unpack_u64_to_2u32(cmd.data_[1], b, a);
 
-        helper.pop(r);
-        helper.pop(g);
-        helper.pop(b);
-        helper.pop(a);
-
-        brush_color = { r, g, b, a };
+        brush_color = { static_cast<float>(r), static_cast<float>(g), static_cast<float>(b), static_cast<float>(a) };
     }
 
-    void shared_graphics_driver::create_module(command_helper &helper) {
-        const char *data = nullptr;
-        std::size_t data_size = 0;
-        drivers::shader_module_type mod_type = drivers::shader_module_type::vertex;
-
-        helper.pop(data);
-        helper.pop(data_size);
-        helper.pop(mod_type);
+    void shared_graphics_driver::create_module(command &cmd) {
+        const char *data = reinterpret_cast<const char*>(cmd.data_[0]);
+        std::size_t data_size = static_cast<std::size_t>(cmd.data_[1]);
+        drivers::shader_module_type mod_type = static_cast<drivers::shader_module_type>(cmd.data_[2]);
 
         auto obj = make_shader_module(this);
         if (!obj->create(this, data, data_size, mod_type)) {
             LOG_ERROR(DRIVER_GRAPHICS, "Fail to create shader module!");
-            helper.finish(this, -1);
+            finish(cmd.status_, -1);
             return;
         }
 
         std::unique_ptr<graphics_object> obj_casted = std::move(obj);
         drivers::handle res = append_graphics_object(obj_casted);
 
-        drivers::handle *store = nullptr;
-        helper.pop(store);
-
+        drivers::handle *store = reinterpret_cast<drivers::handle*>(cmd.data_[3]);
         *store = res;
-        helper.finish(this, 0);
+
+        finish(cmd.status_, 0);
     }
 
-    void shared_graphics_driver::create_program(command_helper &helper) {
-        drivers::handle vert_module_handle = 0;
-        drivers::handle frag_module_handle = 0;
-        void **metadata = nullptr;
-
-        helper.pop(vert_module_handle);
-        helper.pop(frag_module_handle);
-        helper.pop(metadata);
+    void shared_graphics_driver::create_program(command &cmd) {
+        drivers::handle vert_module_handle = static_cast<drivers::handle>(cmd.data_[0]);
+        drivers::handle frag_module_handle = static_cast<drivers::handle>(cmd.data_[1]);
+        void **metadata = reinterpret_cast<void**>(cmd.data_[2]);
 
         auto obj = make_shader_program(this);
 
@@ -553,7 +518,7 @@ namespace eka2l1::drivers {
 
         if (!obj->create(this, vert_module_obj, frag_module_obj)) {
             LOG_ERROR(DRIVER_GRAPHICS, "Fail to create shader program!");
-            helper.finish(this, -1);
+            finish(cmd.status_, -1);
             return;
         }
 
@@ -564,55 +529,30 @@ namespace eka2l1::drivers {
         std::unique_ptr<graphics_object> obj_casted = std::move(obj);
         drivers::handle res = append_graphics_object(obj_casted);
 
-        drivers::handle *store = nullptr;
-        helper.pop(store);
+        drivers::handle *store = reinterpret_cast<drivers::handle*>(cmd.data_[3]);
 
         *store = res;
-        helper.finish(this, 0);
+        finish(cmd.status_, 0);
     }
 
-    void shared_graphics_driver::create_texture(command_helper &helper) {
-        std::uint8_t dim = 0;
-        std::uint8_t mip_level = 0;
+    void shared_graphics_driver::create_texture(command &cmd) {
+        std::uint8_t dim = static_cast<std::uint8_t>(cmd.data_[0]);
+        std::uint8_t mip_level = static_cast<std::uint8_t>(cmd.data_[0] >> 8);
 
-        drivers::texture_format internal_format = drivers::texture_format::none;
-        drivers::texture_format data_format = drivers::texture_format::none;
-        drivers::texture_data_type data_type = drivers::texture_data_type::ubyte;
-        void *data = nullptr;
-        std::size_t data_size = 0;
+        drivers::texture_format internal_format = static_cast<drivers::texture_format>(cmd.data_[0] >> 16);
+        drivers::texture_format data_format = static_cast<drivers::texture_format>(cmd.data_[0] >> 32);
+        drivers::texture_data_type data_type = static_cast<drivers::texture_data_type>(cmd.data_[0] >> 48);
+        void *data = reinterpret_cast<void*>(cmd.data_[1]);
+        std::size_t data_size = static_cast<std::size_t>(cmd.data_[2]);
 
-        helper.pop(dim);
-        helper.pop(mip_level);
-        helper.pop(internal_format);
-        helper.pop(data_format);
-        helper.pop(data_type);
-        helper.pop(data);
-        helper.pop(data_size);
+        std::size_t pixels_per_line = static_cast<std::size_t>(cmd.data_[3]);
+        std::uint32_t alignment = static_cast<std::uint32_t>(cmd.data_[4]);
 
-        std::uint32_t width = 0;
-        std::uint32_t height = 0;
-        std::uint32_t depth = 0;
+        std::int32_t width, height, depth, temp;
+        unpack_u64_to_2u32(cmd.data_[5], width, height);
+        unpack_u64_to_2u32(cmd.data_[6], depth, temp);
 
-        if (dim >= 1) {
-            helper.pop(width);
-
-            if (dim >= 2) {
-                helper.pop(height);
-
-                if (dim == 3) {
-                    helper.pop(depth);
-                }
-            }
-        }
-
-        std::size_t pixels_per_line = 0;
-        std::uint32_t alignment = 4;
-
-        helper.pop(pixels_per_line);
-        helper.pop(alignment);
-
-        drivers::handle h = 0;
-        helper.pop(h);
+        drivers::handle h = static_cast<drivers::handle>(cmd.data_[7]);
 
         drivers::texture *obj = nullptr;
         drivers::texture_ptr obj_inst = nullptr;
@@ -635,9 +575,7 @@ namespace eka2l1::drivers {
             std::unique_ptr<graphics_object> obj_casted = std::move(obj_inst);
             drivers::handle res = append_graphics_object(obj_casted);
 
-            drivers::handle *store = nullptr;
-            helper.pop(store);
-
+            drivers::handle *store = reinterpret_cast<drivers::handle*>(cmd.data_[8]);
             *store = res;
         } else {
             if (data != nullptr) {
@@ -646,19 +584,14 @@ namespace eka2l1::drivers {
             }
         }
 
-        helper.finish(this, 0);
+        finish(cmd.status_, 0);
     }
 
-    void shared_graphics_driver::create_buffer(command_helper &helper) {
-        void *initial_data = nullptr;
-        std::size_t initial_size = 0;
-        buffer_upload_hint upload_hint = static_cast<buffer_upload_hint>(0);
-        drivers::handle existing_handle = 0;
-
-        helper.pop(initial_data);
-        helper.pop(initial_size);
-        helper.pop(upload_hint);
-        helper.pop(existing_handle);
+    void shared_graphics_driver::create_buffer(command &cmd) {
+        void *initial_data = reinterpret_cast<void*>(cmd.data_[0]);
+        std::size_t initial_size = static_cast<std::size_t>(cmd.data_[1]);
+        buffer_upload_hint upload_hint = static_cast<buffer_upload_hint>(cmd.data_[2]);
+        drivers::handle existing_handle = static_cast<drivers::handle>(cmd.data_[3]);
 
         drivers::buffer *obj = nullptr;
         std::unique_ptr<drivers::buffer> obj_inst = nullptr;
@@ -679,26 +612,20 @@ namespace eka2l1::drivers {
             std::unique_ptr<graphics_object> obj_casted = std::move(obj_inst);
             drivers::handle res = append_graphics_object(obj_casted);
 
-            drivers::handle *store = nullptr;
-            helper.pop(store);
-
+            drivers::handle *store = reinterpret_cast<drivers::handle*>(cmd.data_[4]);
             *store = res;
 
-            helper.finish(this, 0);
+            finish(cmd.status_, 0);
         } else if ((initial_data != nullptr) && (existing_handle)) {
             std::uint8_t *data_casted = reinterpret_cast<std::uint8_t*>(initial_data);
             delete data_casted;
         }
     }
 
-    void shared_graphics_driver::create_input_descriptors(command_helper &helper) {
-        drivers::input_descriptor *descs = nullptr;
-        std::uint32_t count = 0;
-        drivers::handle existing_handle = 0;
-
-        helper.pop(descs);
-        helper.pop(count);
-        helper.pop(existing_handle);
+    void shared_graphics_driver::create_input_descriptors(command &cmd) {
+        drivers::input_descriptor *descs = reinterpret_cast<drivers::input_descriptor*>(cmd.data_[0]);
+        std::uint32_t count = static_cast<std::uint32_t>(cmd.data_[1]);
+        drivers::handle existing_handle = static_cast<drivers::handle>(cmd.data_[2]);
 
         drivers::input_descriptors *obj = nullptr;
         std::unique_ptr<drivers::input_descriptors> obj_inst = nullptr;
@@ -719,22 +646,18 @@ namespace eka2l1::drivers {
             std::unique_ptr<graphics_object> obj_casted = std::move(obj_inst);
             drivers::handle res = append_graphics_object(obj_casted);
 
-            drivers::handle *store = nullptr;
-            helper.pop(store);
-
+            drivers::handle *store = reinterpret_cast<drivers::handle*>(cmd.data_[3]);
             *store = res;
 
-            helper.finish(this, 0);
+            finish(cmd.status_, 0);
         } else if ((descs != nullptr) && (existing_handle)) {
             std::uint8_t *data_casted = reinterpret_cast<std::uint8_t*>(descs);
             delete data_casted;
         }
     }
 
-    void shared_graphics_driver::use_program(command_helper &helper) {
-        drivers::handle num;
-        helper.pop(num);
-
+    void shared_graphics_driver::use_program(command &cmd) {
+        drivers::handle num = static_cast<drivers::handle>(cmd.data_[0]);
         shader_program *shobj = reinterpret_cast<shader_program *>(get_graphics_object(num));
 
         if (!shobj) {
@@ -744,18 +667,15 @@ namespace eka2l1::drivers {
         shobj->use(this);
     }
 
-    void shared_graphics_driver::set_swizzle(command_helper &helper) {
-        drivers::handle num = 0;
+    void shared_graphics_driver::set_swizzle(command &cmd) {
+        drivers::handle num = static_cast<drivers::handle>(cmd.data_[0]);
         drivers::channel_swizzle r = drivers::channel_swizzle::red;
         drivers::channel_swizzle g = drivers::channel_swizzle::green;
         drivers::channel_swizzle b = drivers::channel_swizzle::blue;
         drivers::channel_swizzle a = drivers::channel_swizzle::alpha;
 
-        helper.pop(num);
-        helper.pop(r);
-        helper.pop(g);
-        helper.pop(b);
-        helper.pop(a);
+        unpack_u64_to_2u32(cmd.data_[1], r, g);
+        unpack_u64_to_2u32(cmd.data_[2], b, a);
 
         texture *target = nullptr;
 
@@ -774,12 +694,9 @@ namespace eka2l1::drivers {
         target->set_channel_swizzle({ r, g, b, a });
     }
 
-    void shared_graphics_driver::bind_texture(command_helper &helper) {
-        drivers::handle num = 0;
-        int binding = 0;
-
-        helper.pop(num);
-        helper.pop(binding);
+    void shared_graphics_driver::bind_texture(command &cmd) {
+        drivers::handle num = static_cast<drivers::handle>(cmd.data_[0]);
+        int binding = static_cast<int>(cmd.data_[1]);
 
         if (num & HANDLE_BITMAP) {
             // Bind bitmap as texture
@@ -802,16 +719,11 @@ namespace eka2l1::drivers {
         texobj->bind(this, binding);
     }
 
-    void shared_graphics_driver::update_buffer(command_helper &helper) {
-        drivers::handle num = 0;
-        std::uint8_t *data = nullptr;
-        std::size_t offset = 0;
-        std::size_t size = 0;
-
-        helper.pop(num);
-        helper.pop(data);
-        helper.pop(offset);
-        helper.pop(size);
+    void shared_graphics_driver::update_buffer(command &cmd) {
+        drivers::handle num = static_cast<drivers::handle>(cmd.data_[0]);
+        std::uint8_t *data = reinterpret_cast<std::uint8_t*>(cmd.data_[1]);
+        std::size_t offset = static_cast<std::size_t>(cmd.data_[2]);
+        std::size_t size = static_cast<std::size_t>(cmd.data_[3]);
 
         buffer *bufobj = reinterpret_cast<buffer *>(get_graphics_object(num));
 
@@ -824,21 +736,17 @@ namespace eka2l1::drivers {
         delete data;
     }
 
-    void shared_graphics_driver::destroy_object(command_helper &helper) {
-        drivers::handle h = 0;
-        helper.pop(h);
-
+    void shared_graphics_driver::destroy_object(command &cmd) {
+        drivers::handle h = static_cast<drivers::handle>(cmd.data_[0]);
         delete_graphics_object(h);
     }
 
-    void shared_graphics_driver::set_filter(command_helper &helper) {
-        drivers::handle h = 0;
+    void shared_graphics_driver::set_filter(command &cmd) {
+        drivers::handle h = static_cast<drivers::handle>(cmd.data_[0]);
         bool is_min = false;
         drivers::filter_option filter = drivers::filter_option::linear;
 
-        helper.pop(h);
-        helper.pop(is_min);
-        helper.pop(filter);
+        unpack_u64_to_2u32(cmd.data_[1], is_min, filter);
 
         texture *texobj = nullptr;
 
@@ -862,14 +770,12 @@ namespace eka2l1::drivers {
         texobj->set_filter_minmag(is_min, filter);
     }
 
-    void shared_graphics_driver::set_texture_wrap(command_helper &helper) {
-        drivers::handle h = 0;
+    void shared_graphics_driver::set_texture_wrap(command &cmd) {
+        drivers::handle h = static_cast<drivers::handle>(cmd.data_[0]);
         drivers::addressing_direction dir = drivers::addressing_direction::s;
         drivers::addressing_option mode = drivers::addressing_option::repeat;
 
-        helper.pop(h);
-        helper.pop(dir);
-        helper.pop(mode);
+        unpack_u64_to_2u32(cmd.data_[1], dir, mode);
 
         texture *texobj = nullptr;
 
@@ -893,12 +799,9 @@ namespace eka2l1::drivers {
         texobj->set_addressing_mode(dir, mode);
     }
 
-    void shared_graphics_driver::set_max_mip_level(command_helper &helper) {
-        drivers::handle h = 0;
-        std::uint32_t max_mip = 0;
-
-        helper.pop(h);
-        helper.pop(max_mip);
+    void shared_graphics_driver::set_max_mip_level(command &cmd) {
+        drivers::handle h = static_cast<drivers::handle>(cmd.data_[0]);
+        std::uint32_t max_mip = static_cast<std::uint32_t>(cmd.data_[1]);
 
         texture *texobj = nullptr;
 
@@ -922,11 +825,8 @@ namespace eka2l1::drivers {
         texobj->set_max_mip_level(max_mip);
     }
 
-    void shared_graphics_driver::generate_mips(command_helper &helper) {
-        drivers::handle h = 0;
-
-        helper.pop(h);
-
+    void shared_graphics_driver::generate_mips(command &cmd) {
+        drivers::handle h = static_cast<drivers::handle>(cmd.data_[0]);
         texture *texobj = nullptr;
 
         if (h & HANDLE_BITMAP) {
@@ -949,9 +849,9 @@ namespace eka2l1::drivers {
         texobj->generate_mips();
     }
 
-    void shared_graphics_driver::set_swapchain_size(command_helper &helper) {
+    void shared_graphics_driver::set_swapchain_size(command &cmd) {
         eka2l1::vec2 size;
-        helper.pop(size);
+        unpack_u64_to_2u32(cmd.data_[0], size.x, size.y);
 
         swapchain_size = size;
 
@@ -964,133 +864,131 @@ namespace eka2l1::drivers {
             0.0f, -1.0f, 1.0f);
     }
 
-    void shared_graphics_driver::set_ortho_size(command_helper &helper) {
+    void shared_graphics_driver::set_ortho_size(command &cmd) {
         eka2l1::vec2 size;
-        helper.pop(size);
+        unpack_u64_to_2u32(cmd.data_[0], size.x, size.y);
 
         projection_matrix = glm::identity<glm::mat4>();
         projection_matrix = glm::ortho(0.0f, static_cast<float>(size.x), static_cast<float>(size.y),
             0.0f, -1.0f, 1.0f);
     }
 
-    void shared_graphics_driver::dispatch(command *cmd) {
-        command_helper helper(cmd);
-
-        switch (cmd->opcode_) {
+    void shared_graphics_driver::dispatch(command &cmd) {
+        switch (cmd.opcode_) {
         case graphics_driver_create_bitmap: {
-            create_bitmap(helper);
+            create_bitmap(cmd);
             break;
         }
 
         case graphics_driver_bind_bitmap: {
-            bind_bitmap(helper);
+            bind_bitmap(cmd);
             break;
         }
 
         case graphics_driver_update_bitmap: {
-            update_bitmap(helper);
+            update_bitmap(cmd);
             break;
         }
 
         case graphics_driver_resize_bitmap: {
-            resize_bitmap(helper);
+            resize_bitmap(cmd);
             break;
         }
 
         case graphics_driver_destroy_bitmap: {
-            destroy_bitmap(helper);
+            destroy_bitmap(cmd);
             break;
         }
 
         case graphics_driver_destroy_object: {
-            destroy_object(helper);
+            destroy_object(cmd);
             break;
         }
 
         case graphics_driver_set_brush_color: {
-            set_brush_color(helper);
+            set_brush_color(cmd);
             break;
         }
 
         case graphics_driver_create_shader_module:
-            create_module(helper);
+            create_module(cmd);
             break;
 
         case graphics_driver_create_shader_program: {
-            create_program(helper);
+            create_program(cmd);
             break;
         }
 
         case graphics_driver_create_texture: {
-            create_texture(helper);
+            create_texture(cmd);
             break;
         }
 
         case graphics_driver_create_buffer: {
-            create_buffer(helper);
+            create_buffer(cmd);
             break;
         }
 
         case graphics_driver_use_program: {
-            use_program(helper);
+            use_program(cmd);
             break;
         }
 
         case graphics_driver_bind_texture: {
-            bind_texture(helper);
+            bind_texture(cmd);
             break;
         }
 
         case graphics_driver_update_buffer: {
-            update_buffer(helper);
+            update_buffer(cmd);
             break;
         }
 
         case graphics_driver_set_texture_filter: {
-            set_filter(helper);
+            set_filter(cmd);
             break;
         }
 
         case graphics_driver_set_swapchain_size: {
-            set_swapchain_size(helper);
+            set_swapchain_size(cmd);
             break;
         }
 
         case graphics_driver_set_ortho_size:
-            set_ortho_size(helper);
+            set_ortho_size(cmd);
             break;
 
         case graphics_driver_set_swizzle: {
-            set_swizzle(helper);
+            set_swizzle(cmd);
             break;
         }
 
         case graphics_driver_read_bitmap:
-            read_bitmap(helper);
+            read_bitmap(cmd);
             break;
 
         case graphics_driver_update_texture:
-            update_texture(helper);
+            update_texture(cmd);
             break;
 
         case graphics_driver_set_texture_wrap:
-            set_texture_wrap(helper);
+            set_texture_wrap(cmd);
             break;
 
         case graphics_driver_generate_mips:
-            generate_mips(helper);
+            generate_mips(cmd);
             break;
 
         case graphics_driver_create_input_descriptor:
-            create_input_descriptors(helper);
+            create_input_descriptors(cmd);
             break;
 
         case graphics_driver_set_max_mip_level:
-            set_max_mip_level(helper);
+            set_max_mip_level(cmd);
             break;
 
         default:
-            LOG_ERROR(DRIVER_GRAPHICS, "Unimplemented opcode {} for graphics driver", cmd->opcode_);
+            LOG_ERROR(DRIVER_GRAPHICS, "Unimplemented opcode {} for graphics driver", cmd.opcode_);
             break;
         }
     }

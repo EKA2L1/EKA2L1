@@ -121,10 +121,7 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
         state_ptr->graphics_driver->wait_for(&state_ptr->present_status);
 
     eka2l1::desktop::emulator &state = *state_ptr;
-
-    std::unique_ptr<eka2l1::drivers::graphics_command_list> cmd_list = state.graphics_driver->new_command_list();
-    std::unique_ptr<eka2l1::drivers::graphics_command_list_builder> cmd_builder = state.graphics_driver->new_command_builder(
-        cmd_list.get());
+    eka2l1::drivers::graphics_command_builder builder;
 
     eka2l1::rect viewport;
     eka2l1::rect src;
@@ -137,19 +134,18 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
 
     eka2l1::vec2 swapchain_size(window_width, window_height);
     viewport.size = swapchain_size;
-    cmd_builder->set_swapchain_size(swapchain_size);
-
-    cmd_builder->backup_state();
+    builder.set_swapchain_size(swapchain_size);
+    builder.backup_state();
 
     eka2l1::vecx<std::uint8_t, 4> color_clear = eka2l1::common::rgba_to_vec(state.conf.display_background_color.load());
 
     // The format that is stored is same as how it's present in HTML ARGB (from lowest to highest bytes)
     // The normal one that emulator assumes is ABGR (from lowest to highest bytes too)
-    cmd_builder->clear({ color_clear[2] / 255.0f, color_clear[1] / 255.0f, color_clear[0] / 255.0f, color_clear[3] / 255.0f, 0.0f, 0.0f }, eka2l1::drivers::draw_buffer_bit_color_buffer);
-    cmd_builder->set_feature(eka2l1::drivers::graphics_feature::cull, false);
-    cmd_builder->set_feature(eka2l1::drivers::graphics_feature::depth_test, false);
-    cmd_builder->set_feature(eka2l1::drivers::graphics_feature::blend, false);
-    cmd_builder->set_viewport(viewport);
+    builder.clear({ color_clear[2] / 255.0f, color_clear[1] / 255.0f, color_clear[0] / 255.0f, color_clear[3] / 255.0f, 0.0f, 0.0f }, eka2l1::drivers::draw_buffer_bit_color_buffer);
+    builder.set_feature(eka2l1::drivers::graphics_feature::cull, false);
+    builder.set_feature(eka2l1::drivers::graphics_feature::depth_test, false);
+    builder.set_feature(eka2l1::drivers::graphics_feature::blend, false);
+    builder.set_viewport(viewport);
 
     auto &crr_mode = scr->current_mode();
 
@@ -189,18 +185,20 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
         std::swap(src.size.x, src.size.y);
     }
 
-    cmd_builder->set_texture_filter(scr->screen_texture, false, filter);
-    cmd_builder->set_texture_filter(scr->screen_texture, true, filter);
+    builder.set_texture_filter(scr->screen_texture, false, filter);
+    builder.set_texture_filter(scr->screen_texture, true, filter);
 
-    cmd_builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(scr->ui_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
+    builder.draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(scr->ui_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
 
-    cmd_builder->load_backup_state();
+    builder.load_backup_state();
 
     state_ptr->present_status = -100;
 
     // Submit, present, and wait for the presenting
-    cmd_builder->present(&state_ptr->present_status);
-    state.graphics_driver->submit_command_list(*cmd_list);
+    builder.present(&state_ptr->present_status);
+
+    eka2l1::drivers::command_list retrieved = builder.retrieve_command_list();
+    state.graphics_driver->submit_command_list(retrieved);
 }
 
 

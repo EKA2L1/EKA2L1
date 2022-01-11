@@ -62,7 +62,7 @@ namespace eka2l1 {
         return return_result;
     }
 
-    void clip_region(drivers::graphics_command_list_builder &cmd_builder, const common::region &region, const bool stencil_one_for_valid) {
+    void clip_region(drivers::graphics_command_builder &cmd_builder, const common::region &region, const bool stencil_one_for_valid) {
         if (region.empty()) {
             return;
         }

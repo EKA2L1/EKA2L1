@@ -53,11 +53,11 @@ namespace eka2l1::epoc {
 
     void font_atlas::free(drivers::graphics_driver *driver) {
         if (atlas_handle_) {
-            auto cmd_list = driver->new_command_list();
-            auto cmd_builder = driver->new_command_builder(cmd_list.get());
+            drivers::graphics_command_builder builder;
+            builder.destroy_bitmap(atlas_handle_);
 
-            cmd_builder->destroy_bitmap(atlas_handle_);
-            driver->submit_command_list(*cmd_list);
+            drivers::command_list retrieved = builder.retrieve_command_list();
+            driver->submit_command_list(retrieved);
 
             atlas_handle_ = 0;
             atlas_data_.reset();
@@ -72,7 +72,7 @@ namespace eka2l1::epoc {
         return common::align(ESTIMATE_MAX_CHAR_IN_ATLAS_WIDTH * size_, 1024);
     }
 
-    bool font_atlas::draw_text(const std::u16string &text, const eka2l1::rect &text_box, const epoc::text_alignment alignment, drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder) {
+    bool font_atlas::draw_text(const std::u16string &text, const eka2l1::rect &text_box, const epoc::text_alignment alignment, drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) {
         const int width = get_atlas_width();
 
         if (!atlas_data_) {
@@ -97,7 +97,7 @@ namespace eka2l1::epoc {
             }
 
             atlas_handle_ = drivers::create_bitmap(driver, { width, width }, 8);
-            builder->update_bitmap(atlas_handle_, reinterpret_cast<const char *>(atlas_data_.get()),
+            builder.update_bitmap(atlas_handle_, reinterpret_cast<const char *>(atlas_data_.get()),
                 width * width, { 0, 0 }, { width, width });
         }
 
@@ -150,7 +150,7 @@ namespace eka2l1::epoc {
                     characters_.emplace(to_rast[i], cinfos[i]);
                 }
 
-                builder->update_bitmap(atlas_handle_, reinterpret_cast<const char *>(atlas_data_.get()),
+                builder.update_bitmap(atlas_handle_, reinterpret_cast<const char *>(atlas_data_.get()),
                     width * width, { 0, 0 }, { width, width });
             }
         }
@@ -173,8 +173,8 @@ namespace eka2l1::epoc {
             }
         }
 
-        builder->set_feature(drivers::graphics_feature::blend, true);
-        builder->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
+        builder.set_feature(drivers::graphics_feature::blend, true);
+        builder.blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
             drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
             drivers::blend_factor::one, drivers::blend_factor::one);
 
@@ -199,7 +199,7 @@ namespace eka2l1::epoc {
             dest_rect.size.y = static_cast<int>(info.yoff2 - info.yoff);
 
             if ((dest_rect.size.x != 0) && (dest_rect.size.y != 0) && (source_rect.size.x != 0) && (source_rect.size.y != 0)) {
-                builder->draw_bitmap(atlas_handle_, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), 0.0f,
+                builder.draw_bitmap(atlas_handle_, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), 0.0f,
                     drivers::bitmap_draw_flag_use_brush);
             }
 
@@ -207,7 +207,7 @@ namespace eka2l1::epoc {
             cur_pos.x += static_cast<int>(std::round(info.xadv));
         }
 
-        builder->set_feature(drivers::graphics_feature::blend, false);
+        builder.set_feature(drivers::graphics_feature::blend, false);
 
         return true;
     }

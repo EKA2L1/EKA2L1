@@ -140,18 +140,14 @@ namespace eka2l1::drivers {
         virtual void set_viewport(const eka2l1::rect &viewport) = 0;
         virtual void update_surface(void *surface) = 0;
 
-        virtual std::unique_ptr<graphics_command_list> new_command_list() = 0;
-
-        virtual std::unique_ptr<graphics_command_list_builder> new_command_builder(graphics_command_list *list) = 0;
-
         /**
          * \brief Submit a command list.
          * 
          * The list object will be copied within the function, and can be safely delete after.
          *
-         * \param command_list     Command list to submit.
+         * \param cmd_list     Command list to submit.
          */
-        virtual void submit_command_list(graphics_command_list &command_list) = 0;
+        virtual void submit_command_list(command_list &cmd_list) = 0;
     };
 
     using graphics_driver_ptr = std::unique_ptr<graphics_driver>;

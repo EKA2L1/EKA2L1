@@ -54,16 +54,17 @@ namespace eka2l1::epoc {
         if (!drv) {
             return;
         }
-        auto llist = drv->new_command_list();
-        auto builder = drv->new_command_builder(llist.get());
+
+        drivers::graphics_command_builder builder;
 
         for (const auto tex_handle : driver_textures) {
             if (tex_handle) {
-                builder->destroy_bitmap(tex_handle);
+                builder.destroy_bitmap(tex_handle);
             }
         }
 
-        drv->submit_command_list(*llist);
+        eka2l1::drivers::command_list retrieved = builder.retrieve_command_list();
+        drv->submit_command_list(retrieved);
     }
 
     bool is_palette_bitmap(epoc::bitwise_bitmap *bw_bmp) {
@@ -185,7 +186,7 @@ namespace eka2l1::epoc {
         return oldest_timestamp_idx;
     }
 
-    drivers::handle bitmap_cache::add_or_get(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder,
+    drivers::handle bitmap_cache::add_or_get(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder,
         epoc::bitwise_bitmap *bmp) {
         if (!fbss_) {
             server_ptr ss = kern->get_by_name<service::server>(epoc::get_fbs_server_name_by_epocver(
@@ -233,7 +234,7 @@ namespace eka2l1::epoc {
 
         if (should_recreate) {
             if (driver_textures[idx])
-                builder->destroy_bitmap(driver_textures[idx]);
+                builder.destroy_bitmap(driver_textures[idx]);
 
             driver_textures[idx] = drivers::create_bitmap(driver, bmp->header_.size_pixels, suit_bpp);
         }
@@ -314,7 +315,7 @@ namespace eka2l1::epoc {
                 break;
             }
 
-            builder->update_bitmap(driver_textures[idx], data_pointer, raw_size, { 0, 0 }, bmp->header_.size_pixels, pixels_per_line);
+            builder.update_bitmap(driver_textures[idx], data_pointer, raw_size, { 0, 0 }, bmp->header_.size_pixels, pixels_per_line);
             hashes[idx] = hash;
 
             epoc::display_mode dsp = bmp->settings_.current_display_mode();
@@ -323,7 +324,7 @@ namespace eka2l1::epoc {
             }
 
             if (dsp == epoc::display_mode::color16mu) {
-                builder->set_swizzle(driver_textures[idx], drivers::channel_swizzle::red, drivers::channel_swizzle::green,
+                builder.set_swizzle(driver_textures[idx], drivers::channel_swizzle::red, drivers::channel_swizzle::green,
                     drivers::channel_swizzle::blue, drivers::channel_swizzle::one);
             }
         }

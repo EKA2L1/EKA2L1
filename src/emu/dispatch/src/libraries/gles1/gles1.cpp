@@ -357,30 +357,30 @@ namespace eka2l1::dispatch {
         fragment_statuses_ |= FRAGMENT_STATE_FOG_MODE_EXP;
     }
 
-    void egl_context_es1::free(drivers::graphics_driver *driver, drivers::graphics_command_list_builder &builder) {
+    void egl_context_es1::free(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) {
         if (index_buffer_temp_) {
-            builder.destroy(index_buffer_temp_);
+            cmd_builder_.destroy(index_buffer_temp_);
         }
 
         if (input_desc_) {
-            builder.destroy(input_desc_);
+            cmd_builder_.destroy(input_desc_);
         }
 
         if (vertex_attrib_.in_house_buffer_) {
-            builder.destroy(vertex_attrib_.in_house_buffer_);
+            cmd_builder_.destroy(vertex_attrib_.in_house_buffer_);
         }
         
         if (color_attrib_.in_house_buffer_) {
-            builder.destroy(color_attrib_.in_house_buffer_);
+            cmd_builder_.destroy(color_attrib_.in_house_buffer_);
         }
         
         if (normal_attrib_.in_house_buffer_) {
-            builder.destroy(normal_attrib_.in_house_buffer_);
+            cmd_builder_.destroy(normal_attrib_.in_house_buffer_);
         }
 
         for (int i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
             if (texture_units_[i].coord_attrib_.in_house_buffer_) {
-                builder.destroy(texture_units_[i].coord_attrib_.in_house_buffer_);
+                cmd_builder_.destroy(texture_units_[i].coord_attrib_.in_house_buffer_);
             }
         }
 
@@ -400,100 +400,100 @@ namespace eka2l1::dispatch {
         }
 
         if (state_change_tracker_ & STATE_CHANGED_CULL_FACE) {
-            command_builder_->set_cull_face(active_cull_face_);
+            cmd_builder_.set_cull_face(active_cull_face_);
         }
 
         if (state_change_tracker_ & STATE_CHANGED_SCISSOR_RECT) {
-            command_builder_->clip_rect(scissor_bl_);
+            cmd_builder_.clip_rect(scissor_bl_);
         }
 
         if (state_change_tracker_ & STATE_CHANGED_FRONT_FACE_RULE) {
-            command_builder_->set_front_face_rule(active_front_face_rule_);
+            cmd_builder_.set_front_face_rule(active_front_face_rule_);
         }
 
         if (state_change_tracker_ & STATE_CHANGED_VIEWPORT_RECT) {
             eka2l1::rect viewport_transformed(eka2l1::vec2(viewport_bl_.top.x, draw_surface_->dimension_.y - (viewport_bl_.top.y + viewport_bl_.size.y)),
                 viewport_bl_.size);
 
-            command_builder_->set_viewport(viewport_transformed);
+            cmd_builder_.set_viewport(viewport_transformed);
         }
 
         if (state_change_tracker_ & STATE_CHANGED_COLOR_MASK) {
-            command_builder_->set_color_mask(color_mask_);
+            cmd_builder_.set_color_mask(color_mask_);
         }
 
         if (state_change_tracker_ & STATE_CHANGED_DEPTH_BIAS) {    
-            command_builder_->set_depth_bias(polygon_offset_units_, 1.0, polygon_offset_factor_);
+            cmd_builder_.set_depth_bias(polygon_offset_units_, 1.0, polygon_offset_factor_);
         }
 
         if (state_change_tracker_ & STATE_CHANGED_STENCIL_MASK) {
-            command_builder_->set_stencil_mask(drivers::rendering_face::back_and_front, stencil_mask_);
+            cmd_builder_.set_stencil_mask(drivers::rendering_face::back_and_front, stencil_mask_);
         }
 
         if (state_change_tracker_ & STATE_CHANGED_BLEND_FACTOR) {
-            command_builder_->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add, source_blend_factor_, dest_blend_factor_,
+            cmd_builder_.blend_formula(drivers::blend_equation::add, drivers::blend_equation::add, source_blend_factor_, dest_blend_factor_,
                 source_blend_factor_, dest_blend_factor_);
         }
 
         if (state_change_tracker_ & STATE_CHANGED_LINE_WIDTH) {    
-            command_builder_->set_line_width(line_width_);
+            cmd_builder_.set_line_width(line_width_);
         }
 
         if (state_change_tracker_ & STATE_CHANGED_DEPTH_MASK) {    
-            command_builder_->set_depth_mask(depth_mask_);
+            cmd_builder_.set_depth_mask(depth_mask_);
         }
 
         if (state_change_tracker_ & STATE_CHANGED_DEPTH_PASS_COND) {
             drivers::condition_func func;
             cond_func_from_gl_enum(depth_func_, func);
 
-            command_builder_->set_depth_pass_condition(func);
+            cmd_builder_.set_depth_pass_condition(func);
         }
 
         if (state_change_tracker_ & STATE_CHANGED_DEPTH_RANGE) {
-            command_builder_->set_depth_range(depth_range_min_, depth_range_max_);
+            cmd_builder_.set_depth_range(depth_range_min_, depth_range_max_);
         }
 
         state_change_tracker_ = 0;
     }
 
-    void egl_context_es1::init_context_state(drivers::graphics_command_list_builder &builder) {
-        builder.bind_bitmap(draw_surface_->handle_, read_surface_->handle_);
-        builder.set_cull_face(active_cull_face_);
-        builder.set_front_face_rule(active_front_face_rule_);
-        builder.set_color_mask(color_mask_);
-        builder.set_stencil_mask(drivers::rendering_face::back_and_front, stencil_mask_);
+    void egl_context_es1::init_context_state() {
+        cmd_builder_.bind_bitmap(draw_surface_->handle_, read_surface_->handle_);
+        cmd_builder_.set_cull_face(active_cull_face_);
+        cmd_builder_.set_front_face_rule(active_front_face_rule_);
+        cmd_builder_.set_color_mask(color_mask_);
+        cmd_builder_.set_stencil_mask(drivers::rendering_face::back_and_front, stencil_mask_);
 
         drivers::condition_func func;
         cond_func_from_gl_enum(depth_func_, func);
 
-        builder.set_depth_pass_condition(func);
-        builder.set_depth_mask(depth_mask_);
-        builder.blend_formula(drivers::blend_equation::add, drivers::blend_equation::add, source_blend_factor_, dest_blend_factor_,
+        cmd_builder_.set_depth_pass_condition(func);
+        cmd_builder_.set_depth_mask(depth_mask_);
+        cmd_builder_.blend_formula(drivers::blend_equation::add, drivers::blend_equation::add, source_blend_factor_, dest_blend_factor_,
             source_blend_factor_, dest_blend_factor_);
 
-        builder.set_line_width(line_width_);
-        builder.set_depth_bias(polygon_offset_units_, 1.0, polygon_offset_factor_);
-        builder.set_depth_range(depth_range_min_, depth_range_max_);
+        cmd_builder_.set_line_width(line_width_);
+        cmd_builder_.set_depth_bias(polygon_offset_units_, 1.0, polygon_offset_factor_);
+        cmd_builder_.set_depth_range(depth_range_min_, depth_range_max_);
 
-        builder.set_feature(drivers::graphics_feature::blend, non_shader_statuses_ & NON_SHADER_STATE_BLEND_ENABLE);
-        builder.set_feature(drivers::graphics_feature::clipping, non_shader_statuses_ & NON_SHADER_STATE_SCISSOR_ENABLE);
-        builder.set_feature(drivers::graphics_feature::cull, non_shader_statuses_ & NON_SHADER_STATE_CULL_FACE_ENABLE);
-        builder.set_feature(drivers::graphics_feature::depth_test, non_shader_statuses_ & NON_SHADER_STATE_DEPTH_TEST_ENABLE);
-        builder.set_feature(drivers::graphics_feature::dither, non_shader_statuses_ & NON_SHADER_STATE_DITHER);
-        builder.set_feature(drivers::graphics_feature::line_smooth, non_shader_statuses_ & NON_SHADER_STATE_LINE_SMOOTH);
-        builder.set_feature(drivers::graphics_feature::multisample, non_shader_statuses_ & NON_SHADER_STATE_MULTISAMPLE);
-        builder.set_feature(drivers::graphics_feature::polygon_offset_fill, non_shader_statuses_ & NON_SHADER_STATE_POLYGON_OFFSET_FILL);
-        builder.set_feature(drivers::graphics_feature::sample_alpha_to_coverage, non_shader_statuses_ & NON_SHADER_STATE_SAMPLE_ALPHA_TO_COVERAGE);
-        builder.set_feature(drivers::graphics_feature::sample_alpha_to_one, non_shader_statuses_ & NON_SHADER_STATE_SAMPLE_ALPHA_TO_ONE);
-        builder.set_feature(drivers::graphics_feature::sample_coverage, non_shader_statuses_ & NON_SHADER_STATE_SAMPLE_COVERAGE);
-        builder.set_feature(drivers::graphics_feature::stencil_test, non_shader_statuses_ & NON_SHADER_STATE_STENCIL_TEST_ENABLE);
+        cmd_builder_.set_feature(drivers::graphics_feature::blend, non_shader_statuses_ & NON_SHADER_STATE_BLEND_ENABLE);
+        cmd_builder_.set_feature(drivers::graphics_feature::clipping, non_shader_statuses_ & NON_SHADER_STATE_SCISSOR_ENABLE);
+        cmd_builder_.set_feature(drivers::graphics_feature::cull, non_shader_statuses_ & NON_SHADER_STATE_CULL_FACE_ENABLE);
+        cmd_builder_.set_feature(drivers::graphics_feature::depth_test, non_shader_statuses_ & NON_SHADER_STATE_DEPTH_TEST_ENABLE);
+        cmd_builder_.set_feature(drivers::graphics_feature::dither, non_shader_statuses_ & NON_SHADER_STATE_DITHER);
+        cmd_builder_.set_feature(drivers::graphics_feature::line_smooth, non_shader_statuses_ & NON_SHADER_STATE_LINE_SMOOTH);
+        cmd_builder_.set_feature(drivers::graphics_feature::multisample, non_shader_statuses_ & NON_SHADER_STATE_MULTISAMPLE);
+        cmd_builder_.set_feature(drivers::graphics_feature::polygon_offset_fill, non_shader_statuses_ & NON_SHADER_STATE_POLYGON_OFFSET_FILL);
+        cmd_builder_.set_feature(drivers::graphics_feature::sample_alpha_to_coverage, non_shader_statuses_ & NON_SHADER_STATE_SAMPLE_ALPHA_TO_COVERAGE);
+        cmd_builder_.set_feature(drivers::graphics_feature::sample_alpha_to_one, non_shader_statuses_ & NON_SHADER_STATE_SAMPLE_ALPHA_TO_ONE);
+        cmd_builder_.set_feature(drivers::graphics_feature::sample_coverage, non_shader_statuses_ & NON_SHADER_STATE_SAMPLE_COVERAGE);
+        cmd_builder_.set_feature(drivers::graphics_feature::stencil_test, non_shader_statuses_ & NON_SHADER_STATE_STENCIL_TEST_ENABLE);
 
         eka2l1::rect viewport_transformed(eka2l1::vec2(viewport_bl_.top.x, draw_surface_->dimension_.y - (viewport_bl_.top.y + viewport_bl_.size.y)),
             viewport_bl_.size);
             
-        builder.clip_rect(scissor_bl_);
-        builder.set_viewport(viewport_transformed);
+        cmd_builder_.clip_rect(scissor_bl_);
+        cmd_builder_.set_viewport(viewport_transformed);
         
         // Some games have 0 alphas in some situation!
         // TODO: This is hack definitely. So removal is ideal.
@@ -501,7 +501,7 @@ namespace eka2l1::dispatch {
         case epoc::display_mode::color16m:
         case epoc::display_mode::color16mu:
         case epoc::display_mode::color16ma:
-            builder.set_swizzle(draw_surface_->handle_, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
+            cmd_builder_.set_swizzle(draw_surface_->handle_, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
                 drivers::channel_swizzle::blue, drivers::channel_swizzle::one);
 
             break;
@@ -684,6 +684,10 @@ namespace eka2l1::dispatch {
             return;
         }
 
+        if (bits == 0) {
+            return;
+        }
+
         eka2l1::vecx<float, 6> clear_parameters;
 
         std::uint32_t flags_driver = 0;
@@ -707,7 +711,15 @@ namespace eka2l1::dispatch {
         }
 
         ctx->flush_stage_changes();
-        ctx->command_builder_->clear(clear_parameters, flags_driver);
+        ctx->cmd_builder_.clear(clear_parameters, flags_driver);
+
+        if (ctx->cmd_builder_.need_flush()) {
+            drivers::graphics_driver *drv = sys->get_graphics_driver();
+            drivers::command_list retrieved = ctx->cmd_builder_.retrieve_command_list();
+            drv->submit_command_list(retrieved);
+
+            ctx->init_context_state();
+        }
     }
     
     BRIDGE_FUNC_LIBRARY(void, gl_matrix_mode_emu, std::uint32_t mode) {
@@ -1427,7 +1439,7 @@ namespace eka2l1::dispatch {
             }
 
             if (need_reinstantiate) {
-                ctx->command_builder_->recreate_texture(tex->handle_value(), 2, 0, internal_format_driver,
+                ctx->cmd_builder_.recreate_texture(tex->handle_value(), 2, 0, internal_format_driver,
                     internal_format_driver, dtype, data_to_pass, out_size[0], eka2l1::vec3(width, height, 0),
                     0, ctx->unpack_alignment_);
             }
@@ -1438,12 +1450,12 @@ namespace eka2l1::dispatch {
                 width /= 2;
                 height /= 2;
 
-                ctx->command_builder_->recreate_texture(tex->handle_value(), 2, static_cast<std::uint8_t>(i), internal_format_driver,
+                ctx->cmd_builder_.recreate_texture(tex->handle_value(), 2, static_cast<std::uint8_t>(i), internal_format_driver,
                     internal_format_driver, dtype, data_to_pass, out_size[i], eka2l1::vec3(width, height, 0), 0, ctx->unpack_alignment_);            
             }
 
             tex->set_mip_count(static_cast<std::uint32_t>(level));
-            ctx->command_builder_->set_texture_max_mip(tex->handle_value(), static_cast<std::uint32_t>(level));
+            ctx->cmd_builder_.set_texture_max_mip(tex->handle_value(), static_cast<std::uint32_t>(level));
         } else {
             // Pass to driver as normal
             switch (internal_format) {
@@ -1489,20 +1501,20 @@ namespace eka2l1::dispatch {
             }
 
             if (need_reinstantiate) {
-                ctx->command_builder_->recreate_texture(tex->handle_value(), 2, static_cast<std::uint8_t>(level), internal_format_driver,
+                ctx->cmd_builder_.recreate_texture(tex->handle_value(), 2, static_cast<std::uint8_t>(level), internal_format_driver,
                     internal_format_driver, drivers::texture_data_type::compressed, data_pixels, image_size, eka2l1::vec3(width, height, 0),
                     0, ctx->unpack_alignment_);
             }
 
             tex->set_mip_count(common::max(tex->get_mip_count(), static_cast<std::uint32_t>(level)));
-            ctx->command_builder_->set_texture_max_mip(tex->handle_value(), tex->get_mip_count());
+            ctx->cmd_builder_.set_texture_max_mip(tex->handle_value(), tex->get_mip_count());
         }
 
         tex->set_internal_format(internal_format);
         tex->set_size(eka2l1::vec2(width, height));
 
         if (tex->auto_regenerate_mipmap()) {
-            ctx->command_builder_->regenerate_mips(tex->handle_value());
+            ctx->cmd_builder_.regenerate_mips(tex->handle_value());
         }
     }
 
@@ -1575,7 +1587,7 @@ namespace eka2l1::dispatch {
 
         if (need_reinstantiate) {
             const std::size_t needed_size = calculate_possible_upload_size(eka2l1::vec2(width, height), format, data_type);
-            ctx->command_builder_->recreate_texture(tex->handle_value(), 2, static_cast<std::uint8_t>(level), internal_format_driver,
+            ctx->cmd_builder_.recreate_texture(tex->handle_value(), 2, static_cast<std::uint8_t>(level), internal_format_driver,
                 format_driver, dtype, data_pixels, needed_size, eka2l1::vec3(width, height, 0), 0, ctx->unpack_alignment_);
         }
 
@@ -1584,11 +1596,11 @@ namespace eka2l1::dispatch {
         tex->set_mip_count(common::max(tex->get_mip_count(), static_cast<std::uint32_t>(level)));
 
         if (tex->auto_regenerate_mipmap()) {
-            ctx->command_builder_->regenerate_mips(tex->handle_value());
+            ctx->cmd_builder_.regenerate_mips(tex->handle_value());
         }
 
-        ctx->command_builder_->set_texture_max_mip(tex->handle_value(), tex->get_mip_count());
-        ctx->command_builder_->set_swizzle(tex->handle_value(), swizzles[0], swizzles[1], swizzles[2], swizzles[3]);
+        ctx->cmd_builder_.set_texture_max_mip(tex->handle_value(), tex->get_mip_count());
+        ctx->cmd_builder_.set_swizzle(tex->handle_value(), swizzles[0], swizzles[1], swizzles[2], swizzles[3]);
     }
     
     BRIDGE_FUNC_LIBRARY(void, gl_tex_sub_image_2d_emu, std::uint32_t target, std::int32_t level, std::int32_t xoffset,
@@ -1647,12 +1659,12 @@ namespace eka2l1::dispatch {
         get_data_type_to_upload(internal_format_driver, format_driver, dtype, swizzles, format, data_type);
 
         const std::size_t needed_size = calculate_possible_upload_size(eka2l1::vec2(width, height), format, data_type);
-        ctx->command_builder_->update_texture(tex->handle_value(), reinterpret_cast<const char*>(data_pixels), needed_size,
+        ctx->cmd_builder_.update_texture(tex->handle_value(), reinterpret_cast<const char*>(data_pixels), needed_size,
             static_cast<std::uint8_t>(level), format_driver, dtype, eka2l1::vec3(xoffset, yoffset, 0), eka2l1::vec3(width, height, 0),
             0, ctx->unpack_alignment_);
 
         if (tex->auto_regenerate_mipmap()) {
-            ctx->command_builder_->regenerate_mips(tex->handle_value());
+            ctx->cmd_builder_.regenerate_mips(tex->handle_value());
         }
     }
 
@@ -1928,7 +1940,7 @@ namespace eka2l1::dispatch {
         }
 
         if (need_reinstantiate) {
-            ctx->command_builder_->recreate_buffer(buffer->handle_value(), data, size, upload_hint);
+            ctx->cmd_builder_.recreate_buffer(buffer->handle_value(), data, size, upload_hint);
         }
 
         buffer->assign_data_size(static_cast<std::uint32_t>(size));
@@ -1955,7 +1967,7 @@ namespace eka2l1::dispatch {
         }
 
         std::uint32_t size_upload_casted = static_cast<std::uint32_t>(size);
-        ctx->command_builder_->update_buffer_data(buffer->handle_value(), static_cast<std::size_t>(offset), 1,
+        ctx->cmd_builder_.update_buffer_data(buffer->handle_value(), static_cast<std::size_t>(offset), 1,
             &data, &size_upload_casted);
     }
 
@@ -3181,7 +3193,7 @@ namespace eka2l1::dispatch {
 
         case GL_BLEND_EMU:
             ctx->non_shader_statuses_ |= egl_context_es1::NON_SHADER_STATE_BLEND_ENABLE;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::blend, true);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::blend, true);
 
             break;
 
@@ -3215,7 +3227,7 @@ namespace eka2l1::dispatch {
 
         case GL_CULL_FACE_EMU:
             ctx->non_shader_statuses_ |= egl_context_es1::NON_SHADER_STATE_CULL_FACE_ENABLE;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::cull, true);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::cull, true);
 
             break;
 
@@ -3225,13 +3237,13 @@ namespace eka2l1::dispatch {
 
         case GL_DEPTH_TEST_EMU:
             ctx->non_shader_statuses_ |= egl_context_es1::NON_SHADER_STATE_DEPTH_TEST_ENABLE;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::depth_test, true);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::depth_test, true);
 
             break;
 
         case GL_STENCIL_TEST_EMU:
             ctx->non_shader_statuses_ |= egl_context_es1::NON_SHADER_STATE_STENCIL_TEST_ENABLE;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::stencil_test, true);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::stencil_test, true);
 
             break;
 
@@ -3277,43 +3289,43 @@ namespace eka2l1::dispatch {
 
         case GL_LINE_SMOOTH_EMU:
             ctx->non_shader_statuses_ |= egl_context_es1::NON_SHADER_STATE_LINE_SMOOTH;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::line_smooth, true);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::line_smooth, true);
 
             break;
 
         case GL_DITHER_EMU:
             ctx->non_shader_statuses_ |= egl_context_es1::NON_SHADER_STATE_DITHER;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::dither, true);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::dither, true);
 
             break;
 
         case GL_SCISSOR_TEST_EMU:
             ctx->non_shader_statuses_ |= egl_context_es1::NON_SHADER_STATE_SCISSOR_ENABLE;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::clipping, true);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::clipping, true);
 
             break;
 
         case GL_SAMPLE_COVERAGE_EMU:
             ctx->non_shader_statuses_ |= egl_context_es1::NON_SHADER_STATE_SAMPLE_COVERAGE;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::sample_coverage, true);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::sample_coverage, true);
 
             break;
 
         case GL_MULTISAMPLE_EMU:
             ctx->non_shader_statuses_ |= egl_context_es1::NON_SHADER_STATE_MULTISAMPLE;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::multisample, true);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::multisample, true);
 
             break;
 
         case GL_SAMPLE_ALPHA_TO_COVERAGE_EMU:
             ctx->non_shader_statuses_ |= egl_context_es1::NON_SHADER_STATE_SAMPLE_ALPHA_TO_COVERAGE;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::sample_alpha_to_coverage, true);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::sample_alpha_to_coverage, true);
 
             break;
 
         case GL_SAMPLE_ALPHA_TO_ONE_EMU:
             ctx->non_shader_statuses_ |= egl_context_es1::NON_SHADER_STATE_SAMPLE_ALPHA_TO_ONE;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::sample_alpha_to_one, true);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::sample_alpha_to_one, true);
 
         case GL_TEXTURE_2D_EMU:
             ctx->fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_TEXTURE_ENABLE;
@@ -3349,7 +3361,7 @@ namespace eka2l1::dispatch {
 
         case GL_BLEND_EMU:
             ctx->non_shader_statuses_ &= ~egl_context_es1::NON_SHADER_STATE_BLEND_ENABLE;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::blend, false);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::blend, false);
 
             break;
 
@@ -3383,7 +3395,7 @@ namespace eka2l1::dispatch {
 
         case GL_CULL_FACE_EMU:
             ctx->non_shader_statuses_ &= ~egl_context_es1::NON_SHADER_STATE_CULL_FACE_ENABLE;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::cull, false);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::cull, false);
 
             break;
 
@@ -3393,13 +3405,13 @@ namespace eka2l1::dispatch {
 
         case GL_DEPTH_TEST_EMU:
             ctx->non_shader_statuses_ &= ~egl_context_es1::NON_SHADER_STATE_DEPTH_TEST_ENABLE;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::depth_test, false);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::depth_test, false);
 
             break;
 
         case GL_STENCIL_TEST_EMU:
             ctx->non_shader_statuses_ &= ~egl_context_es1::NON_SHADER_STATE_STENCIL_TEST_ENABLE;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::stencil_test, false);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::stencil_test, false);
 
             break;
 
@@ -3445,43 +3457,43 @@ namespace eka2l1::dispatch {
 
         case GL_LINE_SMOOTH_EMU:
             ctx->non_shader_statuses_ &= ~egl_context_es1::NON_SHADER_STATE_LINE_SMOOTH;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::line_smooth, false);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::line_smooth, false);
 
             break;
 
         case GL_DITHER_EMU:
             ctx->non_shader_statuses_ &= ~egl_context_es1::NON_SHADER_STATE_DITHER;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::dither, false);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::dither, false);
 
             break;
 
         case GL_SCISSOR_TEST_EMU:
             ctx->non_shader_statuses_ &= ~egl_context_es1::NON_SHADER_STATE_SCISSOR_ENABLE;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::clipping, false);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::clipping, false);
 
             break;
 
         case GL_SAMPLE_COVERAGE_EMU:
             ctx->non_shader_statuses_ &= ~egl_context_es1::NON_SHADER_STATE_SAMPLE_COVERAGE;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::sample_coverage, false);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::sample_coverage, false);
 
             break;
 
         case GL_MULTISAMPLE_EMU:
             ctx->non_shader_statuses_ &= ~egl_context_es1::NON_SHADER_STATE_MULTISAMPLE;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::multisample, false);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::multisample, false);
 
             break;
 
         case GL_SAMPLE_ALPHA_TO_COVERAGE_EMU:
             ctx->non_shader_statuses_ &= ~egl_context_es1::NON_SHADER_STATE_SAMPLE_ALPHA_TO_COVERAGE;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::sample_alpha_to_coverage, false);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::sample_alpha_to_coverage, false);
 
             break;
 
         case GL_SAMPLE_ALPHA_TO_ONE_EMU:
             ctx->non_shader_statuses_ &= ~egl_context_es1::NON_SHADER_STATE_SAMPLE_ALPHA_TO_ONE;
-            ctx->command_builder_->set_feature(drivers::graphics_feature::sample_alpha_to_one, false);
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::sample_alpha_to_one, false);
             break;
 
         case GL_TEXTURE_2D_EMU:
@@ -3620,7 +3632,7 @@ namespace eka2l1::dispatch {
             }
 
             tex->set_mag_filter(param);
-            ctx->command_builder_->set_texture_filter(tex->handle_value(), false, opt);
+            ctx->cmd_builder_.set_texture_filter(tex->handle_value(), false, opt);
 
             break;
         }
@@ -3658,7 +3670,7 @@ namespace eka2l1::dispatch {
             }
 
             tex->set_min_filter(param);
-            ctx->command_builder_->set_texture_filter(tex->handle_value(), true, opt);
+            ctx->cmd_builder_.set_texture_filter(tex->handle_value(), true, opt);
 
             break;
         }
@@ -3671,7 +3683,7 @@ namespace eka2l1::dispatch {
             }
 
             tex->set_wrap_s(param);
-            ctx->command_builder_->set_texture_addressing_mode(tex->handle_value(), drivers::addressing_direction::s,
+            ctx->cmd_builder_.set_texture_addressing_mode(tex->handle_value(), drivers::addressing_direction::s,
                 opt);
 
             break;
@@ -3685,7 +3697,7 @@ namespace eka2l1::dispatch {
             }
 
             tex->set_wrap_t(param);
-            ctx->command_builder_->set_texture_addressing_mode(tex->handle_value(), drivers::addressing_direction::t,
+            ctx->cmd_builder_.set_texture_addressing_mode(tex->handle_value(), drivers::addressing_direction::t,
                 opt);
 
             break;
@@ -3737,81 +3749,81 @@ namespace eka2l1::dispatch {
             return false;
         }
 
-        ctx->command_builder_->use_program(program);
+        ctx->cmd_builder_.use_program(program);
 
         if (var_info) {
             // Not binded by uniform buffer/constant buffer
-            ctx->command_builder_->set_dynamic_uniform(var_info->view_model_mat_loc_, drivers::shader_set_var_type::mat4,
+            ctx->cmd_builder_.set_dynamic_uniform(var_info->view_model_mat_loc_, drivers::shader_set_var_type::mat4,
                 glm::value_ptr(ctx->model_view_mat_stack_.top()), 64);
 
-            ctx->command_builder_->set_dynamic_uniform(var_info->proj_mat_loc_, drivers::shader_set_var_type::mat4,
+            ctx->cmd_builder_.set_dynamic_uniform(var_info->proj_mat_loc_, drivers::shader_set_var_type::mat4,
                 glm::value_ptr(ctx->proj_mat_stack_.top()), 64);
 
             if ((ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_COLOR_ARRAY) == 0) {
-                ctx->command_builder_->set_dynamic_uniform(var_info->color_loc_, drivers::shader_set_var_type::vec4,
+                ctx->cmd_builder_.set_dynamic_uniform(var_info->color_loc_, drivers::shader_set_var_type::vec4,
                     ctx->color_uniforms_, 16);
             }
 
             if ((ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_NORMAL_ARRAY) == 0) {
-                ctx->command_builder_->set_dynamic_uniform(var_info->normal_loc_, drivers::shader_set_var_type::vec3,
+                ctx->cmd_builder_.set_dynamic_uniform(var_info->normal_loc_, drivers::shader_set_var_type::vec3,
                     ctx->normal_uniforms_, 12);
             }
 
             for (std::uint32_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
                 if (active_texs & (1 << i)) {
                     if ((ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY) == 0)
-                        ctx->command_builder_->set_dynamic_uniform(var_info->texcoord_loc_[i], drivers::shader_set_var_type::vec4,
+                        ctx->cmd_builder_.set_dynamic_uniform(var_info->texcoord_loc_[i], drivers::shader_set_var_type::vec4,
                             ctx->texture_units_[i].coord_uniforms_, 16);
 
-                    ctx->command_builder_->set_dynamic_uniform(var_info->texture_mat_loc_[i], drivers::shader_set_var_type::mat4,
+                    ctx->cmd_builder_.set_dynamic_uniform(var_info->texture_mat_loc_[i], drivers::shader_set_var_type::mat4,
                         glm::value_ptr(ctx->texture_units_[i].texture_mat_stack_.top()), 64);
 
-                    ctx->command_builder_->set_texture_for_shader(i, var_info->texview_loc_[i], drivers::shader_module_type::fragment);
-                    ctx->command_builder_->set_dynamic_uniform(var_info->texenv_color_loc_[i], drivers::shader_set_var_type::vec4,
+                    ctx->cmd_builder_.set_texture_for_shader(i, var_info->texview_loc_[i], drivers::shader_module_type::fragment);
+                    ctx->cmd_builder_.set_dynamic_uniform(var_info->texenv_color_loc_[i], drivers::shader_set_var_type::vec4,
                         ctx->texture_units_[i].env_colors_, 16);
                 }
             }
             
             for (std::uint8_t i = 0; i < GLES1_EMU_MAX_CLIP_PLANE; i++) {
                 if (ctx->fragment_statuses_ & (1 << (egl_context_es1::FRAGMENT_STATE_CLIP_PLANE_BIT_POS + i))) {
-                    ctx->command_builder_->set_dynamic_uniform(var_info->clip_plane_loc_[i], drivers::shader_set_var_type::vec4,
+                    ctx->cmd_builder_.set_dynamic_uniform(var_info->clip_plane_loc_[i], drivers::shader_set_var_type::vec4,
                         ctx->clip_planes_transformed_[i], 16);
                 }
             }
 
-            ctx->command_builder_->set_dynamic_uniform(var_info->material_ambient_loc_, drivers::shader_set_var_type::vec4,
+            ctx->cmd_builder_.set_dynamic_uniform(var_info->material_ambient_loc_, drivers::shader_set_var_type::vec4,
                 ctx->material_ambient_, 16);
 
-            ctx->command_builder_->set_dynamic_uniform(var_info->material_diffuse_loc_, drivers::shader_set_var_type::vec4,
+            ctx->cmd_builder_.set_dynamic_uniform(var_info->material_diffuse_loc_, drivers::shader_set_var_type::vec4,
                 ctx->material_diffuse_, 16);
             
-            ctx->command_builder_->set_dynamic_uniform(var_info->material_specular_loc_, drivers::shader_set_var_type::vec4,
+            ctx->cmd_builder_.set_dynamic_uniform(var_info->material_specular_loc_, drivers::shader_set_var_type::vec4,
                 ctx->material_specular_, 16);
 
-            ctx->command_builder_->set_dynamic_uniform(var_info->material_emission_loc_, drivers::shader_set_var_type::vec4,
+            ctx->cmd_builder_.set_dynamic_uniform(var_info->material_emission_loc_, drivers::shader_set_var_type::vec4,
                 ctx->material_emission_, 16);
 
-            ctx->command_builder_->set_dynamic_uniform(var_info->material_shininess_loc_, drivers::shader_set_var_type::real,
+            ctx->cmd_builder_.set_dynamic_uniform(var_info->material_shininess_loc_, drivers::shader_set_var_type::real,
                 &ctx->material_shininess_, 4);
 
-            ctx->command_builder_->set_dynamic_uniform(var_info->global_ambient_loc_, drivers::shader_set_var_type::vec4,
+            ctx->cmd_builder_.set_dynamic_uniform(var_info->global_ambient_loc_, drivers::shader_set_var_type::vec4,
                 ctx->global_ambient_, 16);
 
             if (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_ALPHA_TEST)
-                ctx->command_builder_->set_dynamic_uniform(var_info->alpha_test_ref_loc_, drivers::shader_set_var_type::real,
+                ctx->cmd_builder_.set_dynamic_uniform(var_info->alpha_test_ref_loc_, drivers::shader_set_var_type::real,
                     &ctx->alpha_test_ref_, 4);
 
             if (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_FOG_ENABLE) {
-                ctx->command_builder_->set_dynamic_uniform(var_info->fog_color_loc_, drivers::shader_set_var_type::vec4,
+                ctx->cmd_builder_.set_dynamic_uniform(var_info->fog_color_loc_, drivers::shader_set_var_type::vec4,
                     ctx->fog_color_, 16);
 
                 if (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_FOG_MODE_LINEAR) {
-                    ctx->command_builder_->set_dynamic_uniform(var_info->fog_start_loc_, drivers::shader_set_var_type::real,
+                    ctx->cmd_builder_.set_dynamic_uniform(var_info->fog_start_loc_, drivers::shader_set_var_type::real,
                         &ctx->fog_start_, 4);
-                    ctx->command_builder_->set_dynamic_uniform(var_info->fog_end_loc_, drivers::shader_set_var_type::real,
+                    ctx->cmd_builder_.set_dynamic_uniform(var_info->fog_end_loc_, drivers::shader_set_var_type::real,
                         &ctx->fog_end_, 4);
                 } else {
-                    ctx->command_builder_->set_dynamic_uniform(var_info->fog_density_loc_, drivers::shader_set_var_type::real,
+                    ctx->cmd_builder_.set_dynamic_uniform(var_info->fog_density_loc_, drivers::shader_set_var_type::real,
                         &ctx->fog_density_, 4);
                 }
             }
@@ -3819,21 +3831,21 @@ namespace eka2l1::dispatch {
             if (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHTING_ENABLE) {
                 for (std::uint32_t i = 0, mask = egl_context_es1::FRAGMENT_STATE_LIGHT0_ON; i < GLES1_EMU_MAX_LIGHT; i++, mask <<= 1) {
                     if (ctx->fragment_statuses_ & mask) {
-                        ctx->command_builder_->set_dynamic_uniform(var_info->light_dir_or_pos_loc_[i], drivers::shader_set_var_type::vec4,
+                        ctx->cmd_builder_.set_dynamic_uniform(var_info->light_dir_or_pos_loc_[i], drivers::shader_set_var_type::vec4,
                             ctx->lights_[i].position_or_dir_transformed_, 16);
-                        ctx->command_builder_->set_dynamic_uniform(var_info->light_ambient_loc_[i], drivers::shader_set_var_type::vec4,
+                        ctx->cmd_builder_.set_dynamic_uniform(var_info->light_ambient_loc_[i], drivers::shader_set_var_type::vec4,
                             ctx->lights_[i].ambient_, 16);
-                        ctx->command_builder_->set_dynamic_uniform(var_info->light_diffuse_loc_[i], drivers::shader_set_var_type::vec4,
+                        ctx->cmd_builder_.set_dynamic_uniform(var_info->light_diffuse_loc_[i], drivers::shader_set_var_type::vec4,
                             ctx->lights_[i].diffuse_, 16);
-                        ctx->command_builder_->set_dynamic_uniform(var_info->light_specular_loc_[i], drivers::shader_set_var_type::vec4,
+                        ctx->cmd_builder_.set_dynamic_uniform(var_info->light_specular_loc_[i], drivers::shader_set_var_type::vec4,
                             ctx->lights_[i].specular_, 16);
-                        ctx->command_builder_->set_dynamic_uniform(var_info->light_spot_dir_loc_[i], drivers::shader_set_var_type::vec3,
+                        ctx->cmd_builder_.set_dynamic_uniform(var_info->light_spot_dir_loc_[i], drivers::shader_set_var_type::vec3,
                             ctx->lights_[i].spot_dir_transformed_, 12);
-                        ctx->command_builder_->set_dynamic_uniform(var_info->light_spot_cutoff_loc_[i], drivers::shader_set_var_type::real,
+                        ctx->cmd_builder_.set_dynamic_uniform(var_info->light_spot_cutoff_loc_[i], drivers::shader_set_var_type::real,
                             &ctx->lights_[i].spot_cutoff_, 4);
-                        ctx->command_builder_->set_dynamic_uniform(var_info->light_spot_exponent_loc_[i], drivers::shader_set_var_type::real,
+                        ctx->cmd_builder_.set_dynamic_uniform(var_info->light_spot_exponent_loc_[i], drivers::shader_set_var_type::real,
                             &ctx->lights_[i].spot_exponent_, 4);
-                        ctx->command_builder_->set_dynamic_uniform(var_info->light_attenuatation_vec_loc_[i], drivers::shader_set_var_type::vec3,
+                        ctx->cmd_builder_.set_dynamic_uniform(var_info->light_attenuatation_vec_loc_[i], drivers::shader_set_var_type::vec3,
                             ctx->lights_[i].attenuatation_, 12);
                     }
                 }
@@ -3898,7 +3910,7 @@ namespace eka2l1::dispatch {
                 std::uint32_t size_casted = static_cast<std::uint32_t>(est_buf_size);
                 const void *data_casted = data;
 
-                ctx->command_builder_->update_buffer_data(attrib.in_house_buffer_, 0, 1, &data_casted, &size_casted);
+                ctx->cmd_builder_.update_buffer_data(attrib.in_house_buffer_, 0, 1, &data_casted, &size_casted);
             }
 
             return true;
@@ -4044,14 +4056,14 @@ namespace eka2l1::dispatch {
             if (!ctx->input_desc_) {
                 ctx->input_desc_ = drivers::create_input_descriptors(drv, descs.data(), static_cast<std::uint32_t>(descs.size()));
             } else {
-                ctx->command_builder_->update_input_descriptors(ctx->input_desc_, descs.data(), static_cast<std::uint32_t>(descs.size()));
+                ctx->cmd_builder_.update_input_descriptors(ctx->input_desc_, descs.data(), static_cast<std::uint32_t>(descs.size()));
             }
 
-            ctx->command_builder_->set_vertex_buffers(vertex_buffers_alloc.data(), 0, static_cast<std::uint32_t>(vertex_buffers_alloc.size()));
+            ctx->cmd_builder_.set_vertex_buffers(vertex_buffers_alloc.data(), 0, static_cast<std::uint32_t>(vertex_buffers_alloc.size()));
             ctx->attrib_changed_ = false;
         }
 
-        ctx->command_builder_->bind_input_descriptors(ctx->input_desc_);
+        ctx->cmd_builder_.bind_input_descriptors(ctx->input_desc_);
     }
 
     static std::uint32_t retrieve_active_textures_bitarr(egl_context_es1 *ctx) {
@@ -4085,7 +4097,7 @@ namespace eka2l1::dispatch {
                 auto *obj = ctx->objects_.get(ctx->texture_units_[i].binded_texture_handle_);
 
                 if (obj)
-                    ctx->command_builder_->bind_texture((*obj)->handle_value(), i);
+                    ctx->cmd_builder_.bind_texture((*obj)->handle_value(), i);
             }
         }
 
@@ -4159,7 +4171,14 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        ctx->command_builder_->draw_arrays(prim_mode_drv, first_index, count, false);
+        ctx->cmd_builder_.draw_arrays(prim_mode_drv, first_index, count, false);
+ 
+        if (ctx->cmd_builder_.need_flush()) {
+            drivers::command_list retrieved = ctx->cmd_builder_.retrieve_command_list();
+            drv->submit_command_list(retrieved);
+
+            ctx->init_context_state();
+        }
     }
 
     BRIDGE_FUNC_LIBRARY(void, gl_draw_elements_emu, std::uint32_t mode, std::int32_t count, const std::uint32_t index_type,
@@ -4249,23 +4268,30 @@ namespace eka2l1::dispatch {
                 ctx->index_buffer_temp_size_ = size_ibuffer;
             } else {
                 if (ctx->index_buffer_temp_size_ < static_cast<std::size_t>(size_ibuffer)) {
-                    ctx->command_builder_->recreate_buffer(ctx->index_buffer_temp_, indicies_data_raw, size_ibuffer,
+                    ctx->cmd_builder_.recreate_buffer(ctx->index_buffer_temp_, indicies_data_raw, size_ibuffer,
                         static_cast<drivers::buffer_upload_hint>(drivers::buffer_upload_dynamic | drivers::buffer_upload_draw));
                     ctx->index_buffer_temp_size_ = size_ibuffer;
                 } else {
                     std::uint32_t size_casted = static_cast<std::uint32_t>(size_ibuffer);
-                    ctx->command_builder_->update_buffer_data(ctx->index_buffer_temp_, 0, 1,
+                    ctx->cmd_builder_.update_buffer_data(ctx->index_buffer_temp_, 0, 1,
                         &indicies_data_raw, &size_casted);
                 }
             }
 
-            ctx->command_builder_->set_index_buffer(ctx->index_buffer_temp_);
+            ctx->cmd_builder_.set_index_buffer(ctx->index_buffer_temp_);
             indices_ptr = 0;
         } else {
-            ctx->command_builder_->set_index_buffer(binded_elem_buffer_managed->handle_value());
+            ctx->cmd_builder_.set_index_buffer(binded_elem_buffer_managed->handle_value());
         }
 
-        ctx->command_builder_->draw_indexed(prim_mode_drv, count, index_format_drv, 0, indices_ptr);
+        ctx->cmd_builder_.draw_indexed(prim_mode_drv, count, index_format_drv, 0, indices_ptr);
+
+        if (ctx->cmd_builder_.need_flush()) {
+            drivers::command_list retrieved = ctx->cmd_builder_.retrieve_command_list();
+            drv->submit_command_list(retrieved);
+
+            ctx->init_context_state();
+        }
     }
 
     BRIDGE_FUNC_LIBRARY(address, gl_get_string_emu, std::uint32_t pname) {

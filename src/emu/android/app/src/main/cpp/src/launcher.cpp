@@ -448,7 +448,7 @@ namespace eka2l1::android {
         }
     }
 
-    void launcher::draw(drivers::graphics_command_list_builder *builder, epoc::screen *scr,
+    void launcher::draw(drivers::graphics_command_builder &builder, epoc::screen *scr,
                         std::uint32_t window_width, std::uint32_t window_height) {
         eka2l1::rect viewport;
         eka2l1::rect src;
@@ -458,17 +458,17 @@ namespace eka2l1::android {
 
         eka2l1::vec2 swapchain_size(window_width, window_height);
         viewport.size = swapchain_size;
-        builder->set_swapchain_size(swapchain_size);
+        builder.set_swapchain_size(swapchain_size);
 
-        builder->backup_state();
-        builder->bind_bitmap(0);
+        builder.backup_state();
+        builder.bind_bitmap(0);
 
-        builder->clear({ background_color_[0] / 255.0f, background_color_[1] / 255.0f, background_color_[2] / 255.0f, 1.0f, 0.0f, 0.0f },
+        builder.clear({ background_color_[0] / 255.0f, background_color_[1] / 255.0f, background_color_[2] / 255.0f, 1.0f, 0.0f, 0.0f },
             drivers::draw_buffer_bit_color_buffer);
-        builder->set_feature(drivers::graphics_feature::cull, false);
-        builder->set_feature(drivers::graphics_feature::depth_test, false);
+        builder.set_feature(drivers::graphics_feature::cull, false);
+        builder.set_feature(drivers::graphics_feature::depth_test, false);
         //builder->set_clipping(true);
-        builder->set_viewport(viewport);
+        builder.set_viewport(viewport);
 
         if (scr) {
             auto &crr_mode = scr->current_mode();
@@ -546,13 +546,13 @@ namespace eka2l1::android {
                 std::swap(src.size.x, src.size.y);
             }
 
-            builder->set_texture_filter(scr->screen_texture, false, filter);
-            builder->set_texture_filter(scr->screen_texture, true, filter);
-            builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0),
+            builder.set_texture_filter(scr->screen_texture, false, filter);
+            builder.set_texture_filter(scr->screen_texture, true, filter);
+            builder.draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0),
                                  static_cast<float>(scr->ui_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
         }
 
-        builder->load_backup_state();
+        builder.load_backup_state();
     }
 
     std::vector<std::string> launcher::get_language_ids() {

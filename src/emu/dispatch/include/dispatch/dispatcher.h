@@ -212,7 +212,7 @@ namespace eka2l1::dispatch {
         void wait_vsync(epoc::screen *scr, epoc::notify_info &info);
         void cancel_wait_vsync(const epoc::notify_info &info);
 
-        drivers::handle transfer_data_to_texture(drivers::graphics_driver *drv, drivers::graphics_command_list_builder *builder,
+        drivers::handle transfer_data_to_texture(drivers::graphics_driver *drv, drivers::graphics_command_builder &builder,
             std::int32_t screen_index, std::uint8_t *data, eka2l1::vec2 size, std::int32_t format);
     };
 

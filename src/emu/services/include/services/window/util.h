@@ -27,10 +27,10 @@
 
 namespace eka2l1 {
     namespace drivers {
-        class graphics_command_list_builder;
+        class graphics_command_builder;
     }
 
     std::optional<common::region> get_region_from_context(service::ipc_context &ctx, ws_cmd &cmd);
-    void clip_region(drivers::graphics_command_list_builder &builder, const common::region &region,
+    void clip_region(drivers::graphics_command_builder &builder, const common::region &region,
         const bool stencil_one_for_valid = true);
 }

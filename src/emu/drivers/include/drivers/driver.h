@@ -21,170 +21,77 @@
 #pragma once
 
 #include <common/queue.h>
-#include <condition_variable>
+
+namespace eka2l1 {
+    class graphics_driver;
+}
 
 namespace eka2l1::drivers {
-    static constexpr std::uint32_t MAX_COMMAND_DATA_SIZE = 80;
-
     /**
      * \brief Represent a command for driver.
      */
     struct command {
-        std::uint16_t opcode_;
-        std::uint8_t data_[MAX_COMMAND_DATA_SIZE];
-
-        command *next_;
+        std::uint32_t opcode_;
+        std::uint64_t data_[10];
         int *status_;
 
         explicit command()
             : opcode_(0)
             , data_()
-            , next_(nullptr)
             , status_(nullptr) {
         }
 
         explicit command(const std::uint16_t opcode, int *status = nullptr)
             : opcode_(opcode)
             , data_()
-            , next_(nullptr)
             , status_(status) {
         }
     };
-
-    struct command_helper {
-        std::uint16_t cursor_;
-        command *todo_;
-
-        explicit command_helper(command *todo)
-            : cursor_(0)
-            , todo_(todo) {
-        }
-
-        bool push(const std::uint8_t *data, const std::uint16_t data_size) {
-            if (cursor_ + data_size > MAX_COMMAND_DATA_SIZE) {
-                // Data full, abort
-                return false;
-            }
-
-            std::copy(data, data + data_size, todo_->data_ + cursor_);
-            cursor_ += data_size;
-
-            return true;
-        }
-
-        bool pop(std::uint8_t *dest, const std::uint16_t dest_size) {
-            if (cursor_ + dest_size > MAX_COMMAND_DATA_SIZE) {
-                // Not possible to pop, abort
-                return false;
-            }
-
-            std::copy(todo_->data_ + cursor_, todo_->data_ + cursor_ + dest_size, dest);
-
-            cursor_ += dest_size;
-            return true;
-        }
-
-        template <typename T>
-        bool push(const T &data) {
-            return push(reinterpret_cast<const std::uint8_t *>(&data), sizeof(T));
-        }
-
-        template <typename T>
-        bool pop(T &dest) {
-            return pop(reinterpret_cast<std::uint8_t *>(&dest), sizeof(T));
-        }
-
-        template <typename T>
-        void finish(T *drv, const int code) {
-            if (todo_->status_) {
-                *todo_->status_ = code;
-                drv->cond_.notify_all();
-            }
-        }
-
-        bool push_string(const std::u16string &data) {
-            // Alloc memory for the string
-            std::uint16_t length = static_cast<std::uint16_t>(data.length());
-
-            if (!push(length)) {
-                return false;
-            }
-
-            char16_t *dat = new char16_t[length];
-            std::copy(data.data(), data.data() + length, dat);
-
-            if (!push(dat)) {
-                return false;
-            }
-
-            return true;
-        }
-
-        bool pop_string(std::u16string &dat) {
-            std::uint16_t length = 0;
-            if (!pop(length)) {
-                return false;
-            }
-
-            dat.resize(length);
-            char16_t *ptr = nullptr;
-
-            if (!pop(ptr)) {
-                return false;
-            }
-
-            std::copy(ptr, ptr + length, &dat[0]);
-            delete ptr;
-
-            return true;
-        }
-    };
-
-    template <typename Head, typename... Args>
-    inline void push_arguments(command_helper &helper, Head arg1, Args... args) {
-        helper.push(arg1);
-
-        if constexpr (sizeof...(Args) > 0) {
-            push_arguments(helper, args...);
-        }
-    }
-
-    template <typename... Args>
-    command *make_command(const std::uint16_t opcode, int *status, Args... arguments) {
-        command *cmd = new command(opcode, status);
-        command_helper helper(cmd);
-
-        if constexpr (sizeof...(Args) > 0)
-            push_arguments(helper, arguments...);
-
-        return cmd;
-    }
 
     /**
      * \brief A linked list of command.
      */
     struct command_list {
-        command *first_;
-        command *last_;
+        command *base_;
 
-        explicit command_list()
-            : first_(nullptr) {
+        std::size_t size_;
+        std::size_t max_cap_;
+
+        explicit command_list(std::size_t max_cap = 0)
+            : base_(nullptr)
+            , size_(0)
+            , max_cap_(max_cap) {
         }
 
         bool empty() const {
-            return !first_;
+            return (size_ == 0);
         }
 
-        void add(command *cmd_) {
-            if (first_ == nullptr) {
-                first_ = cmd_;
-                last_ = cmd_;
-
-                return;
+        command *retrieve_next() {
+            if (!max_cap_) {
+                return nullptr;
             }
 
-            last_->next_ = cmd_;
-            last_ = cmd_;
+            if (!base_) {
+                renew();
+            }
+
+            command *res = base_ + size_;
+            res->status_ = nullptr;
+
+            size_++;
+
+            return res;
+        }
+
+        void renew() {
+            if (max_cap_ == 0) {
+                return;
+            }
+            // NOTE: After command all iterated, the base will be deleted.
+            // No memory leak!
+            base_ = new command[max_cap_];
+            size_ = 0;
         }
     };
 
@@ -208,6 +115,13 @@ namespace eka2l1::drivers {
 
             std::unique_lock<std::mutex> ulock(mut_);
             cond_.wait(ulock, [&]() { return *status != -100; });
+        }
+
+        void finish(int *status, const int code) {
+            if (status) {
+                *status = code;
+                cond_.notify_all();
+            }
         }
     };
 }

@@ -283,13 +283,14 @@ namespace eka2l1::drivers {
         surface_update_needed = true;
     }
 
-    void ogl_graphics_driver::draw_rectangle(command_helper &helper) {
+    void ogl_graphics_driver::draw_rectangle(command &cmd) {
         if (!brush_program) {
             do_init();
         }
 
         eka2l1::rect brush_rect;
-        helper.pop(brush_rect);
+        unpack_u64_to_2u32(cmd.data_[0], brush_rect.top.x, brush_rect.top.y);
+        unpack_u64_to_2u32(cmd.data_[1], brush_rect.size.x, brush_rect.size.y);
 
         brush_program->use(this);
 
@@ -328,14 +329,13 @@ namespace eka2l1::drivers {
         glBindVertexArray(0);
     }
 
-    void ogl_graphics_driver::draw_bitmap(command_helper &helper) {
+    void ogl_graphics_driver::draw_bitmap(command &cmd) {
         if (!sprite_program) {
             do_init();
         }
 
         // Get bitmap to draw
-        drivers::handle to_draw = 0;
-        helper.pop(to_draw);
+        drivers::handle to_draw = static_cast<drivers::handle>(cmd.data_[0]);
 
         bitmap *bmp = get_bitmap(to_draw);
         texture *draw_texture = nullptr;
@@ -351,8 +351,7 @@ namespace eka2l1::drivers {
             draw_texture = bmp->tex.get();
         }
 
-        drivers::handle mask_to_use = 0;
-        helper.pop(mask_to_use);
+        drivers::handle mask_to_use = static_cast<drivers::handle>(cmd.data_[1]);
 
         bitmap *mask_bmp = nullptr;
         texture *mask_draw_texture = nullptr;
@@ -373,7 +372,8 @@ namespace eka2l1::drivers {
         }
 
         eka2l1::rect dest_rect;
-        helper.pop(dest_rect);
+        unpack_u64_to_2u32(cmd.data_[2], dest_rect.top.x, dest_rect.top.y);
+        unpack_u64_to_2u32(cmd.data_[3], dest_rect.size.x, dest_rect.size.y);
 
         if (mask_bmp) {
             mask_program->use(this);
@@ -383,13 +383,14 @@ namespace eka2l1::drivers {
 
         // Build texcoords
         eka2l1::rect source_rect;
-        helper.pop(source_rect);
+        unpack_u64_to_2u32(cmd.data_[4], source_rect.top.x, source_rect.top.y);
+        unpack_u64_to_2u32(cmd.data_[5], source_rect.size.x, source_rect.size.y);
 
         eka2l1::vec2 origin = eka2l1::vec2(0, 0);
-        helper.pop(origin);
+        unpack_u64_to_2u32(cmd.data_[6], origin.x, origin.y);
 
-        float rotation = 0.0f;
-        helper.pop(rotation);
+        std::uint32_t rot_f32 = static_cast<std::uint32_t>(cmd.data_[7]);
+        float rotation = *reinterpret_cast<float*>(&rot_f32);
 
         struct sprite_vertex {
             float top[2];
@@ -504,8 +505,7 @@ namespace eka2l1::drivers {
         glUniformMatrix4fv((mask_draw_texture ? proj_loc_mask : proj_loc), 1, false, glm::value_ptr(projection_matrix));
 
         // Supply brush
-        std::uint32_t flags = 0;
-        helper.pop(flags);
+        std::uint32_t flags = static_cast<std::uint32_t>(cmd.data_[7] >> 32);
 
         const GLfloat color[] = { 255.0f, 255.0f, 255.0f, 255.0f };
 
@@ -528,9 +528,10 @@ namespace eka2l1::drivers {
         glBindVertexArray(0);
     }
 
-    void ogl_graphics_driver::clip_rect(command_helper &helper) {
+    void ogl_graphics_driver::clip_rect(command &cmd) {
         eka2l1::rect clip_rect;
-        helper.pop(clip_rect);
+        unpack_u64_to_2u32(cmd.data_[0], clip_rect.top.x, clip_rect.top.y);
+        unpack_u64_to_2u32(cmd.data_[1], clip_rect.size.x, clip_rect.size.y);
 
         glScissor(clip_rect.top.x, (clip_rect.size.y > 0) ? (current_fb_height - (clip_rect.top.y - clip_rect.size.y)) : clip_rect.top.y, clip_rect.size.x, common::abs(clip_rect.size.y));
     }
@@ -565,18 +566,15 @@ namespace eka2l1::drivers {
         return GL_INVALID_ENUM;
     }
 
-    void ogl_graphics_driver::draw_indexed(command_helper &helper) {
+    void ogl_graphics_driver::draw_indexed(command &cmd) {
         graphics_primitive_mode prim_mode = graphics_primitive_mode::triangles;
         int count = 0;
         data_format val_type = data_format::word;
         int index_off = 0;
-        int vert_off = 0;
+        int vert_off = static_cast<int>(cmd.data_[2]);
 
-        helper.pop(prim_mode);
-        helper.pop(count);
-        helper.pop(val_type);
-        helper.pop(index_off);
-        helper.pop(vert_off);
+        unpack_u64_to_2u32(cmd.data_[0], prim_mode, count);
+        unpack_u64_to_2u32(cmd.data_[1], val_type, index_off);
 
         std::uint64_t index_off_64 = index_off;
 
@@ -593,16 +591,14 @@ namespace eka2l1::drivers {
         }
     }
 
-    void ogl_graphics_driver::draw_array(command_helper &helper) {
+    void ogl_graphics_driver::draw_array(command &cmd) {
         graphics_primitive_mode prim_mode = graphics_primitive_mode::triangles;
         std::int32_t first = 0;
         std::int32_t count = 0;
         std::int32_t instance_count = 0;
 
-        helper.pop(prim_mode);
-        helper.pop(first);
-        helper.pop(count);
-        helper.pop(instance_count);
+        unpack_u64_to_2u32(cmd.data_[0], prim_mode, first);
+        unpack_u64_to_2u32(cmd.data_[1], count, instance_count);
 
         if (active_input_descriptors_) {
             active_input_descriptors_->activate(vbo_slots_);
@@ -619,12 +615,11 @@ namespace eka2l1::drivers {
         glViewport(viewport.top.x, current_fb_height - (viewport.top.y + viewport.size.y), viewport.size.x, viewport.size.y);
     }
 
-    void ogl_graphics_driver::set_feature(command_helper &helper) {
+    void ogl_graphics_driver::set_feature(command &cmd) {
         drivers::graphics_feature feature;
         bool enable = true;
 
-        helper.pop(feature);
-        helper.pop(enable);
+        unpack_u64_to_2u32(cmd.data_[0], feature, enable);
 
         GLenum translated_feature;
         switch (feature) {
@@ -653,6 +648,9 @@ namespace eka2l1::drivers {
             break;
 
         case drivers::graphics_feature::sample_alpha_to_one:
+            if (is_gles)
+                return;
+
             translated_feature = GL_SAMPLE_ALPHA_TO_ONE;
             break;
 
@@ -665,10 +663,16 @@ namespace eka2l1::drivers {
             break;
 
         case drivers::graphics_feature::line_smooth:
+            if (is_gles)
+                return;
+
             translated_feature = GL_LINE_SMOOTH;
             break;
 
         case drivers::graphics_feature::multisample:
+            if (is_gles)
+                return;
+
             translated_feature = GL_MULTISAMPLE;
             break;
 
@@ -687,9 +691,10 @@ namespace eka2l1::drivers {
         }
     }
 
-    void ogl_graphics_driver::set_viewport(command_helper &helper) {
+    void ogl_graphics_driver::set_viewport(command &cmd) {
         eka2l1::rect viewport;
-        helper.pop(viewport);
+        unpack_u64_to_2u32(cmd.data_[0], viewport.top.x, viewport.top.y);
+        unpack_u64_to_2u32(cmd.data_[1], viewport.size.x, viewport.size.y);
 
         set_viewport(viewport);
     }
@@ -754,7 +759,7 @@ namespace eka2l1::drivers {
         return GL_INVALID_ENUM;
     }
 
-    void ogl_graphics_driver::blend_formula(command_helper &helper) {
+    void ogl_graphics_driver::blend_formula(command &cmd) {
         blend_equation rgb_equation = blend_equation::add;
         blend_equation a_equation = blend_equation::add;
         blend_factor rgb_frag_out_factor = blend_factor::one;
@@ -762,12 +767,9 @@ namespace eka2l1::drivers {
         blend_factor a_frag_out_factor = blend_factor::one;
         blend_factor a_current_factor = blend_factor::zero;
 
-        helper.pop(rgb_equation);
-        helper.pop(a_equation);
-        helper.pop(rgb_frag_out_factor);
-        helper.pop(rgb_current_factor);
-        helper.pop(a_frag_out_factor);
-        helper.pop(a_current_factor);
+        unpack_u64_to_2u32(cmd.data_[0], rgb_equation, a_equation);
+        unpack_u64_to_2u32(cmd.data_[1], rgb_frag_out_factor, rgb_current_factor);
+        unpack_u64_to_2u32(cmd.data_[2], a_frag_out_factor, a_current_factor);
 
         glBlendEquationSeparate(blend_equation_to_gl_enum(rgb_equation), blend_equation_to_gl_enum(a_equation));
         glBlendFuncSeparate(blend_factor_to_gl_enum(rgb_frag_out_factor), blend_factor_to_gl_enum(rgb_current_factor),
@@ -825,16 +827,14 @@ namespace eka2l1::drivers {
         return GL_KEEP;
     }
 
-    void ogl_graphics_driver::set_stencil_action(command_helper &helper) {
+    void ogl_graphics_driver::set_stencil_action(command &cmd) {
         rendering_face face_to_operate = rendering_face::back_and_front;
         stencil_action on_stencil_fail = stencil_action::keep;
         stencil_action on_stencil_pass_depth_fail = stencil_action::keep;
         stencil_action on_stencil_depth_pass = stencil_action::replace;
 
-        helper.pop(face_to_operate);
-        helper.pop(on_stencil_fail);
-        helper.pop(on_stencil_pass_depth_fail);
-        helper.pop(on_stencil_depth_pass);
+        unpack_u64_to_2u32(cmd.data_[0], face_to_operate, on_stencil_fail);
+        unpack_u64_to_2u32(cmd.data_[1], on_stencil_pass_depth_fail, on_stencil_depth_pass);
 
         glStencilOpSeparate(rendering_face_to_gl_enum(face_to_operate), stencil_action_to_gl_enum(on_stencil_fail),
             stencil_action_to_gl_enum(on_stencil_pass_depth_fail), stencil_action_to_gl_enum(on_stencil_depth_pass));
@@ -873,49 +873,39 @@ namespace eka2l1::drivers {
         return GL_NEVER;
     }
 
-    void ogl_graphics_driver::set_stencil_pass_condition(command_helper &helper) {
+    void ogl_graphics_driver::set_stencil_pass_condition(command &cmd) {
         condition_func pass_func = condition_func::always;
         rendering_face face_to_operate = rendering_face::back_and_front;
         std::int32_t ref_value = 0;
         std::uint32_t mask = 0xFF;
 
-        helper.pop(face_to_operate);
-        helper.pop(pass_func);
-        helper.pop(ref_value);
-        helper.pop(mask);
+        unpack_u64_to_2u32(cmd.data_[0], pass_func, face_to_operate);
+        unpack_u64_to_2u32(cmd.data_[1], ref_value, mask);
 
         glStencilFuncSeparate(rendering_face_to_gl_enum(face_to_operate), condition_func_to_gl_enum(pass_func),
             ref_value, mask);
     }
 
-    void ogl_graphics_driver::set_stencil_mask(command_helper &helper) {
+    void ogl_graphics_driver::set_stencil_mask(command &cmd) {
         rendering_face face_to_operate = rendering_face::back_and_front;
         std::uint32_t mask = 0xFF;
 
-        helper.pop(face_to_operate);
-        helper.pop(mask);
-
+        unpack_u64_to_2u32(cmd.data_[0], face_to_operate, mask);
         glStencilMaskSeparate(rendering_face_to_gl_enum(face_to_operate), mask);
     }
 
-    void ogl_graphics_driver::set_depth_mask(command_helper &helper) {
-        std::uint32_t mask = 0xFF;
-        helper.pop(mask);
-
+    void ogl_graphics_driver::set_depth_mask(command &cmd) {
+        std::uint32_t mask = static_cast<std::uint32_t>(cmd.data_[0]);
         glDepthMask(mask);
     }
 
-    void ogl_graphics_driver::clear(command_helper &helper) {
+    void ogl_graphics_driver::clear(command &cmd) {
         float color_to_clear[6];
-        std::uint8_t clear_bits = 0;
+        std::uint8_t clear_bits = static_cast<std::uint8_t>(cmd.data_[3]);
 
-        helper.pop(color_to_clear[0]);
-        helper.pop(color_to_clear[1]);
-        helper.pop(color_to_clear[2]);
-        helper.pop(color_to_clear[3]);
-        helper.pop(color_to_clear[4]);
-        helper.pop(color_to_clear[5]);
-        helper.pop(clear_bits);
+        unpack_to_two_floats(cmd.data_[0], color_to_clear[0], color_to_clear[1]);
+        unpack_to_two_floats(cmd.data_[1], color_to_clear[2], color_to_clear[3]);
+        unpack_to_two_floats(cmd.data_[2], color_to_clear[4], color_to_clear[5]);
 
         std::uint32_t gl_flags = 0;
 
@@ -941,17 +931,13 @@ namespace eka2l1::drivers {
         glClear(gl_flags);
     }
 
-    void ogl_graphics_driver::set_point_size(command_helper &helper) {
-        std::uint8_t to_set_point_size = 0;
-        helper.pop(to_set_point_size);
-
+    void ogl_graphics_driver::set_point_size(command &cmd) {
+        std::uint8_t to_set_point_size = static_cast<std::uint8_t>(cmd.data_[0]);
         point_size = static_cast<float>(to_set_point_size);
     }
 
-    void ogl_graphics_driver::set_pen_style(command_helper &helper) {
-        pen_style to_set_style = pen_style_none;
-        helper.pop(to_set_style);
-
+    void ogl_graphics_driver::set_pen_style(command &cmd) {
+        pen_style to_set_style = static_cast<pen_style>(cmd.data_[0]);
         line_style = to_set_style;
     }
 
@@ -1001,16 +987,16 @@ namespace eka2l1::drivers {
         glUniform2fv(viewport_loc_pen, 1, viewport);
     }
 
-    void ogl_graphics_driver::draw_line(command_helper &helper) {
+    void ogl_graphics_driver::draw_line(command &cmd) {
         if (line_style == pen_style_none) {
             return;
         }
 
         eka2l1::point start;
         eka2l1::point end;
-
-        helper.pop(start);
-        helper.pop(end);
+        
+        unpack_u64_to_2u32(cmd.data_[0], start.x, start.y);
+        unpack_u64_to_2u32(cmd.data_[1], end.x, end.y);
 
         prepare_draw_lines_shared();
 
@@ -1029,20 +1015,15 @@ namespace eka2l1::drivers {
         glDrawArrays(GL_LINES, 0, 2);
     }
 
-    void ogl_graphics_driver::draw_polygon(command_helper &helper) {
+    void ogl_graphics_driver::draw_polygon(command &cmd) {
         if (line_style == pen_style_none) {
             return;
         }
-        
-        prepare_draw_lines_shared();
-        
-        std::size_t point_count = 0;
-        eka2l1::point *point_list = nullptr;
-
-        helper.pop(point_count);
-        helper.pop(point_list);
 
         prepare_draw_lines_shared();
+        
+        std::size_t point_count = static_cast<std::size_t>(cmd.data_[0]);
+        eka2l1::point *point_list = reinterpret_cast<eka2l1::point*>(cmd.data_[1]);
 
         glBindVertexArray(pen_vao);
         glBindBuffer(GL_ARRAY_BUFFER, pen_vbo);
@@ -1063,11 +1044,12 @@ namespace eka2l1::drivers {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicies.size() * sizeof(int), indicies.data(), GL_STATIC_DRAW);
 
         glDrawElements(GL_LINES, static_cast<GLsizei>(indicies.size()), GL_UNSIGNED_INT, 0);
+
+        delete point_list;
     }
 
-    void ogl_graphics_driver::set_cull_face(command_helper &helper) {
-        rendering_face face_to_cull = rendering_face::back;
-        helper.pop(face_to_cull);
+    void ogl_graphics_driver::set_cull_face(command &cmd) {
+        rendering_face face_to_cull = static_cast<rendering_face>(cmd.data_[0]);
 
         switch (face_to_cull) {
         case rendering_face::back:
@@ -1087,17 +1069,13 @@ namespace eka2l1::drivers {
         }
     }
 
-    void ogl_graphics_driver::set_depth_func(command_helper &helper) {
-        condition_func func = condition_func::always;
-        helper.pop(func);
-
+    void ogl_graphics_driver::set_depth_func(command &cmd) {
+        condition_func func = static_cast<condition_func>(cmd.data_[0]);
         glDepthFunc(condition_func_to_gl_enum(func));
     }
 
-    void ogl_graphics_driver::set_front_face_rule(command_helper &helper) {
-        rendering_face_determine_rule rule = rendering_face_determine_rule::vertices_counter_clockwise;
-        helper.pop(rule);
-
+    void ogl_graphics_driver::set_front_face_rule(command &cmd) {
+        rendering_face_determine_rule rule = static_cast<rendering_face_determine_rule>(cmd.data_[0]);
         if (rule == rendering_face_determine_rule::vertices_counter_clockwise) {
             glFrontFace(GL_CCW);
         } else {
@@ -1105,21 +1083,17 @@ namespace eka2l1::drivers {
         }
     }
 
-    void ogl_graphics_driver::set_color_mask(command_helper &helper) {
-        std::uint8_t dat = 0;
-        helper.pop(dat);
-
+    void ogl_graphics_driver::set_color_mask(command &cmd) {
+        std::uint64_t dat = cmd.data_[0];
         glColorMask(dat & 1, dat & 2, dat & 4, dat & 8);
     }
 
-    void ogl_graphics_driver::set_uniform(command_helper &helper) {
+    void ogl_graphics_driver::set_uniform(command &cmd) {
         drivers::shader_set_var_type var_type;
-        std::uint8_t *data = nullptr;
+        std::uint8_t *data = reinterpret_cast<std::uint8_t*>(cmd.data_[1]);
         int binding = 0;
 
-        helper.pop(var_type);
-        helper.pop(data);
-        helper.pop(binding);
+        unpack_u64_to_2u32(cmd.data_[0], binding, var_type);
 
         switch (var_type) {
         case shader_set_var_type::integer: {
@@ -1163,26 +1137,21 @@ namespace eka2l1::drivers {
         LOG_ERROR(DRIVER_GRAPHICS, "Unable to set GL uniform!");
     }
 
-    void ogl_graphics_driver::set_texture_for_shader(command_helper &helper) {
+    void ogl_graphics_driver::set_texture_for_shader(command &cmd) {
         std::int32_t texture_slot = 0;
         std::int32_t shader_binding = 0;
-        drivers::shader_module_type mtype = drivers::shader_module_type::fragment;
+        drivers::shader_module_type mtype = static_cast<drivers::shader_module_type>(cmd.data_[1]);
 
-        helper.pop(texture_slot);
-        helper.pop(shader_binding);
-        helper.pop(mtype);
-
+        unpack_u64_to_2u32(cmd.data_[0], texture_slot, shader_binding);
         glUniform1i(shader_binding, texture_slot);
     }
 
-    void ogl_graphics_driver::bind_vertex_buffers(command_helper &helper) {
-        drivers::handle *arr = 0;
+    void ogl_graphics_driver::bind_vertex_buffers(command &cmd) {
+        drivers::handle *arr = reinterpret_cast<drivers::handle*>(cmd.data_[0]);
         std::uint32_t starting_slots = 0;
         std::uint32_t count = 0;
 
-        helper.pop(arr);
-        helper.pop(starting_slots);
-        helper.pop(count);
+        unpack_u64_to_2u32(cmd.data_[1], starting_slots, count);
 
         if (starting_slots + count >= GL_BACKEND_MAX_VBO_SLOTS) {
             LOG_ERROR(DRIVER_GRAPHICS, "Slot to bind VBO exceed maximum (startSlot={}, count={})", starting_slots, count);
@@ -1204,10 +1173,8 @@ namespace eka2l1::drivers {
         delete arr;
     }
 
-    void ogl_graphics_driver::bind_index_buffer(command_helper &helper) {
-        drivers::handle h = 0;
-        helper.pop(h);
-
+    void ogl_graphics_driver::bind_index_buffer(command &cmd) {
+        drivers::handle h = static_cast<drivers::handle>(cmd.data_[0]);
         ogl_buffer *bufobj = reinterpret_cast<ogl_buffer *>(get_graphics_object(h));
         if (!bufobj) {
             return;
@@ -1216,10 +1183,8 @@ namespace eka2l1::drivers {
         index_buffer_current_ = bufobj->buffer_handle();
     }
 
-    void ogl_graphics_driver::bind_input_descriptors(command_helper &helper) {
-        drivers::handle h = 0;
-        helper.pop(h);
-
+    void ogl_graphics_driver::bind_input_descriptors(command &cmd) {
+        drivers::handle h = static_cast<drivers::handle>(cmd.data_[0]);
         input_descriptors_ogl *descs = reinterpret_cast<input_descriptors_ogl *>(get_graphics_object(h));
         if (!descs) {
             return;
@@ -1228,13 +1193,13 @@ namespace eka2l1::drivers {
         active_input_descriptors_ = descs;
     }
 
-    void ogl_graphics_driver::set_line_width(command_helper &helper) {
+    void ogl_graphics_driver::set_line_width(command &cmd) {
         if (!support_line_width_) {
             return;
         }
 
-        float w = 0;
-        helper.pop(w);
+        std::uint32_t w_32 = static_cast<std::uint32_t>(cmd.data_[0]);
+        float w = *reinterpret_cast<float*>(&w_32);
 
         GLint range[2];
         glGetIntegerv(GL_ALIASED_LINE_WIDTH_RANGE, range);
@@ -1249,26 +1214,29 @@ namespace eka2l1::drivers {
         }
     }
 
-    void ogl_graphics_driver::set_depth_bias(command_helper &helper) {
+    void ogl_graphics_driver::set_depth_bias(command &cmd) {
         float constant_factor = 0.0f;
         float clamp = 0.0f;
         float slope_factor = 0.0f;
+        float temp = 0;
 
-        helper.pop(constant_factor);
-        helper.pop(clamp);
-        helper.pop(slope_factor);
+        unpack_to_two_floats(cmd.data_[0], constant_factor, slope_factor);
+        unpack_to_two_floats(cmd.data_[1], clamp, temp);
 
         glPolygonOffset(slope_factor, constant_factor);
     }
 
-    void ogl_graphics_driver::set_depth_range(command_helper &helper) {
+    void ogl_graphics_driver::set_depth_range(command &cmd) {
         float min = 0.0f;
         float max = 1.0f;
 
-        helper.pop(min);
-        helper.pop(max);
+        unpack_to_two_floats(cmd.data_[0], min, max);
 
-        glDepthRange(static_cast<double>(min), static_cast<double>(max));
+        if (is_gles) {
+            glDepthRangef(min, max);
+        } else {
+            glDepthRange(static_cast<double>(min), static_cast<double>(max));
+        }
     }
 
     void ogl_graphics_driver::save_gl_state() {
@@ -1343,46 +1311,43 @@ namespace eka2l1::drivers {
             backup.last_scissor[3]);
     }
 
-    std::unique_ptr<graphics_command_list> ogl_graphics_driver::new_command_list() {
-        return std::make_unique<server_graphics_command_list>();
+    void ogl_graphics_driver::submit_command_list(command_list &list) {
+        if ((list.size_ == 0) || !list.base_) {
+            if (list.base_) {
+                delete list.base_;
+            }
+
+            return;
+        }
+        list_queue.push(list);
     }
 
-    std::unique_ptr<graphics_command_list_builder> ogl_graphics_driver::new_command_builder(graphics_command_list *list) {
-        return std::make_unique<server_graphics_command_list_builder>(list);
-    }
-
-    void ogl_graphics_driver::submit_command_list(graphics_command_list &command_list) {
-        list_queue.push(static_cast<server_graphics_command_list &>(command_list));
-    }
-
-    void ogl_graphics_driver::display(command_helper &helper) {
+    void ogl_graphics_driver::display(command &cmd) {
         context_->swap_buffers();
 
         disp_hook_();
-        helper.finish(this, 0);
+        finish(cmd.status_, 0);
     }
 
-    void ogl_graphics_driver::dispatch(command *cmd) {
-        command_helper helper(cmd);
-
-        switch (cmd->opcode_) {
+    void ogl_graphics_driver::dispatch(command &cmd) {
+        switch (cmd.opcode_) {
         case graphics_driver_draw_bitmap: {
-            draw_bitmap(helper);
+            draw_bitmap(cmd);
             break;
         }
 
         case graphics_driver_clip_rect: {
-            clip_rect(helper);
+            clip_rect(cmd);
             break;
         }
 
         case graphics_driver_draw_indexed: {
-            draw_indexed(helper);
+            draw_indexed(cmd);
             break;
         }
 
         case graphics_driver_draw_array:
-            draw_array(helper);
+            draw_array(cmd);
             break;
 
         case graphics_driver_backup_state: {
@@ -1396,113 +1361,113 @@ namespace eka2l1::drivers {
         }
 
         case graphics_driver_blend_formula: {
-            blend_formula(helper);
+            blend_formula(cmd);
             break;
         }
 
         case graphics_driver_set_feature: {
-            set_feature(helper);
+            set_feature(cmd);
             break;
         }
 
         case graphics_driver_stencil_set_action:
-            set_stencil_action(helper);
+            set_stencil_action(cmd);
             break;
 
         case graphics_driver_stencil_pass_condition:
-            set_stencil_pass_condition(helper);
+            set_stencil_pass_condition(cmd);
             break;
 
         case graphics_driver_stencil_set_mask:
-            set_stencil_mask(helper);
+            set_stencil_mask(cmd);
             break;
 
         case graphics_driver_clear: {
-            clear(helper);
+            clear(cmd);
             break;
         }
 
         case graphics_driver_set_viewport: {
-            set_viewport(helper);
+            set_viewport(cmd);
             break;
         }
 
         case graphics_driver_display: {
-            display(helper);
+            display(cmd);
             break;
         }
 
         case graphics_driver_draw_rectangle: {
-            draw_rectangle(helper);
+            draw_rectangle(cmd);
             break;
         }
 
         case graphics_driver_draw_line:
-            draw_line(helper);
+            draw_line(cmd);
             break;
 
         case graphics_driver_draw_polygon:
-            draw_polygon(helper);
+            draw_polygon(cmd);
             break;
 
         case graphics_driver_set_point_size:
-            set_point_size(helper);
+            set_point_size(cmd);
             break;
 
         case graphics_driver_set_pen_style:
-            set_pen_style(helper);
+            set_pen_style(cmd);
             break;
 
         case graphics_driver_cull_face:
-            set_cull_face(helper);
+            set_cull_face(cmd);
             break;
 
         case graphics_driver_set_front_face_rule:
-            set_front_face_rule(helper);
+            set_front_face_rule(cmd);
             break;
 
         case graphics_driver_set_color_mask:
-            set_color_mask(helper);
+            set_color_mask(cmd);
             break;
 
         case graphics_driver_set_depth_func:
-            set_depth_func(helper);
+            set_depth_func(cmd);
             break;
 
         case graphics_driver_set_texture_for_shader:
-            set_texture_for_shader(helper);
+            set_texture_for_shader(cmd);
             break;
 
         case graphics_driver_set_uniform:
-            set_uniform(helper);
+            set_uniform(cmd);
             break;
 
         case graphics_driver_depth_set_mask:
-            set_depth_mask(helper);
+            set_depth_mask(cmd);
             break;
 
         case graphics_driver_bind_vertex_buffers:
-            bind_vertex_buffers(helper);
+            bind_vertex_buffers(cmd);
             break;
 
         case graphics_driver_bind_index_buffer:
-            bind_index_buffer(helper);
+            bind_index_buffer(cmd);
             break;
 
         case graphics_driver_bind_input_descriptor:
-            bind_input_descriptors(helper);
+            bind_input_descriptors(cmd);
             break;
 
         case graphics_driver_set_line_width:
-            set_line_width(helper);
+            set_line_width(cmd);
             break;
 
         case graphics_driver_set_depth_bias:
-            set_depth_bias(helper);
+            set_depth_bias(cmd);
             break;
 
         case graphics_driver_set_depth_range:
-            set_depth_range(helper);
+            set_depth_range(cmd);
             break;
 
         default:
@@ -1513,25 +1478,18 @@ namespace eka2l1::drivers {
 
     void ogl_graphics_driver::run() {
         while (!should_stop) {
-            std::optional<server_graphics_command_list> list = list_queue.pop();
+            std::optional<command_list> list = list_queue.pop();
 
             if (!list) {
                 LOG_ERROR(DRIVER_GRAPHICS, "Corrupted graphics command list! Emulation halt.");
                 break;
             }
 
-            command *cmd = list->list_.first_;
-            command *next = nullptr;
-
-            while (cmd) {
-                dispatch(cmd);
-                next = cmd->next_;
-
-                // TODO: If any command list requires not rebuilding the buffer, dont delete the command.
-                // For now, not likely
-                delete cmd;
-                cmd = next;
+            for (std::size_t i = 0; i < list->size_; i++) {
+                dispatch(list->base_[i]);
             }
+
+            delete list->base_;
         }
     }
 

@@ -42,11 +42,9 @@ namespace eka2l1::dispatch {
         , bounded_context_(nullptr) {
     }
 
-    void egl_context::free(drivers::graphics_driver *driver, drivers::graphics_command_list_builder &builder) {
-        if (command_list_) {
-            driver->submit_command_list(*command_list_);
-            command_list_ = nullptr;
-        }
+    void egl_context::free(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) {
+        drivers::command_list retrieved = builder.retrieve_command_list();
+        driver->submit_command_list(retrieved);
     }
 
     egl_controller::egl_controller(drivers::graphics_driver *driver)
@@ -55,26 +53,25 @@ namespace eka2l1::dispatch {
     }
 
     egl_controller::~egl_controller() {
-        auto cmd_list = driver_->new_command_list();
-        auto cmd_builder = driver_->new_command_builder(cmd_list.get());
-
+        drivers::graphics_command_builder cmd_builder;
         bool freed_once = false;
 
         for (auto &ctx: contexts_) {
             if (ctx) {
-                ctx->free(driver_, *cmd_builder);
+                ctx->free(driver_, cmd_builder);
                 freed_once = true;
             }
         }
 
         for (auto &surface: dsurfaces_) {
             if (surface) {
-                cmd_builder->destroy_bitmap(surface->handle_);
+                cmd_builder.destroy_bitmap(surface->handle_);
             }
         }
 
         if (freed_once) {
-            driver_->submit_command_list(*cmd_list);
+            drivers::command_list list = cmd_builder.retrieve_command_list();
+            driver_->submit_command_list(list);
         }
     }
 
@@ -85,7 +82,7 @@ namespace eka2l1::dispatch {
         auto ite = active_context_.find(thread_id);
         if ((ite != active_context_.end()) && ite->second && (ite->second != context_to_set)) {
             if (ite->second->draw_surface_ && ite->second->draw_surface_->dead_pending_) {
-                ite->second->command_builder_->destroy_bitmap(ite->second->draw_surface_->handle_);
+                ite->second->cmd_builder_.destroy_bitmap(ite->second->draw_surface_->handle_);
 
                 for (auto &var: dsurfaces_) {
                     if (var.get() == ite->second->draw_surface_) {
@@ -96,7 +93,7 @@ namespace eka2l1::dispatch {
             }
 
             if ((ite->second->draw_surface_ != ite->second->read_surface_) && ite->second->read_surface_ && ite->second->read_surface_->dead_pending_) {
-                ite->second->command_builder_->destroy_bitmap(ite->second->read_surface_->handle_);
+                ite->second->cmd_builder_.destroy_bitmap(ite->second->read_surface_->handle_);
 
                 for (auto &var: dsurfaces_) {
                     if (var.get() == ite->second->read_surface_) {
@@ -118,11 +115,11 @@ namespace eka2l1::dispatch {
             ite->second->read_surface_ = nullptr;
 
             if (ite->second->dead_pending_) {
-                ite->second->free(driver_, *ite->second->command_builder_);
+                ite->second->free(driver_, ite->second->cmd_builder_);
             } else {    
                 // Submit pending works...
-                driver_->submit_command_list(*ite->second->command_list_);
-                ite->second->command_list_ = nullptr;
+                drivers::command_list list = ite->second->cmd_builder_.retrieve_command_list();
+                driver_->submit_command_list(list);
             }
 
             if (ite->second->dead_pending_) {
@@ -183,12 +180,12 @@ namespace eka2l1::dispatch {
             }
 
             if (can_del_imm) {
-                if ((*inst)->handle_) {        
-                    auto cmd_list = driver_->new_command_list();
-                    auto cmd_builder = driver_->new_command_builder(cmd_list.get());
+                if ((*inst)->handle_) {
+                    drivers::graphics_command_builder builder;
+                    builder.destroy_bitmap((*inst)->handle_);
 
-                    cmd_builder->destroy_bitmap((*inst)->handle_);
-                    driver_->submit_command_list(*cmd_list);
+                    drivers::command_list retrieved = builder.retrieve_command_list();
+                    driver_->submit_command_list(retrieved);
                 }
 
                 dsurfaces_.remove(static_cast<std::size_t>(handle));
@@ -232,11 +229,11 @@ namespace eka2l1::dispatch {
         }
 
         if (can_del_imm) {
-            auto list = driver_->new_command_list();
-            auto builder = driver_->new_command_builder(list.get());
+            drivers::graphics_command_builder builder;
+            context_ptr->get()->free(driver_, builder);
 
-            context_ptr->get()->free(driver_, *builder);
-            driver_->submit_command_list(*list);
+            drivers::command_list retrieved = builder.retrieve_command_list();
+            driver_->submit_command_list(retrieved);
 
             contexts_.remove(static_cast<std::size_t>(handle));
         }

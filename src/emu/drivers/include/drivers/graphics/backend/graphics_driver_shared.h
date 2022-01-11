@@ -74,31 +74,31 @@ namespace eka2l1::drivers {
         graphics_object *get_graphics_object(const drivers::handle num);
 
         // Implementations
-        void set_swapchain_size(command_helper &helper);
-        void create_bitmap(command_helper &helper);
-        void update_bitmap(command_helper &helper);
-        void update_texture(command_helper &helper);
-        void read_bitmap(command_helper &helper);
-        void bind_bitmap(command_helper &helper);
-        void destroy_bitmap(command_helper &helper);
-        void set_brush_color(command_helper &helper);
-        void create_module(command_helper &helper);
-        void create_program(command_helper &helper);
-        void create_texture(command_helper &helper);
-        void create_buffer(command_helper &helper);
-        void use_program(command_helper &helper);
-        void bind_texture(command_helper &helper);
-        void update_buffer(command_helper &helper);
-        void attach_descriptors(command_helper &helper);
-        void destroy_object(command_helper &helper);
-        void set_filter(command_helper &helper);
-        void resize_bitmap(command_helper &helper);
-        void set_swizzle(command_helper &helper);
-        void set_ortho_size(command_helper &helper);
-        void set_texture_wrap(command_helper &helper);
-        void generate_mips(command_helper &helper);
-        void create_input_descriptors(command_helper &helper);
-        void set_max_mip_level(command_helper &helper);
+        void set_swapchain_size(command &cmd);
+        void create_bitmap(command &cmd);
+        void update_bitmap(command &cmd);
+        void update_texture(command &cmd);
+        void read_bitmap(command &cmd);
+        void bind_bitmap(command &cmd);
+        void destroy_bitmap(command &cmd);
+        void set_brush_color(command &cmd);
+        void create_module(command &cmd);
+        void create_program(command &cmd);
+        void create_texture(command &cmd);
+        void create_buffer(command &cmd);
+        void use_program(command &cmd);
+        void bind_texture(command &cmd);
+        void update_buffer(command &cmd);
+        void attach_descriptors(command &cmd);
+        void destroy_object(command &cmd);
+        void set_filter(command &cmd);
+        void resize_bitmap(command &cmd);
+        void set_swizzle(command &cmd);
+        void set_ortho_size(command &cmd);
+        void set_texture_wrap(command &cmd);
+        void generate_mips(command &cmd);
+        void create_input_descriptors(command &cmd);
+        void set_max_mip_level(command &cmd);
 
     public:
         explicit shared_graphics_driver(const graphic_api gr_api);
@@ -108,7 +108,7 @@ namespace eka2l1::drivers {
         void update_bitmap(drivers::handle h, const std::size_t size, const eka2l1::vec2 &offset, const eka2l1::vec2 &dim,
             const void *data, const std::size_t pixels_per_line = 0) override;
 
-        virtual void dispatch(command *cmd);
+        virtual void dispatch(command &cmd);
 
         virtual void bind_swapchain_framebuf() = 0;
     };
