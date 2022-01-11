@@ -137,19 +137,18 @@ namespace eka2l1::android {
                     // submit request is too fast)
                     state_ptr->graphics_driver->wait_for(&state_ptr->present_status);
 
-                    auto cmd_list = state_ptr->graphics_driver->new_command_list();
-                    auto cmd_builder = state_ptr->graphics_driver->new_command_builder(cmd_list.get());
-
-                    state_ptr->launcher->draw(cmd_builder.get(), scr, state_ptr->window->window_fb_size().x,
+                    drivers::graphics_command_builder builder;
+                    state_ptr->launcher->draw(builder, scr, state_ptr->window->window_fb_size().x,
                                               state_ptr->window->window_fb_size().y);
 
                     // Submit, present, and wait for the presenting
                     // Don't wait for present to be done, let the game during this time to do
                     // something meaningful. (Callback tied to draw thread)
                     state_ptr->present_status = -100;
-                    cmd_builder->present(&state_ptr->present_status);
+                    builder.present(&state_ptr->present_status);
 
-                    state_ptr->graphics_driver->submit_command_list(*cmd_list);
+                    drivers::command_list retrieved = builder.retrieve_command_list();
+                    state_ptr->graphics_driver->submit_command_list(retrieved);
                 });
 
                 state.screen_change_handles.push_back(change_handle);
