@@ -532,7 +532,7 @@ namespace eka2l1::drivers {
         eka2l1::rect clip_rect;
         helper.pop(clip_rect);
 
-        glScissor(clip_rect.top.x, (clip_rect.size.y < 0) ? (current_fb_height - (clip_rect.top.y - clip_rect.size.y)) : clip_rect.top.y, clip_rect.size.x, common::abs(clip_rect.size.y));
+        glScissor(clip_rect.top.x, (clip_rect.size.y > 0) ? (current_fb_height - (clip_rect.top.y - clip_rect.size.y)) : clip_rect.top.y, clip_rect.size.x, common::abs(clip_rect.size.y));
     }
 
     static GLenum prim_mode_to_gl_enum(const graphics_primitive_mode prim_mode) {
@@ -646,6 +646,34 @@ namespace eka2l1::drivers {
 
         case drivers::graphics_feature::stencil_test:
             translated_feature = GL_STENCIL_TEST;
+            break;
+
+        case drivers::graphics_feature::sample_coverage:
+            translated_feature = GL_SAMPLE_COVERAGE;
+            break;
+
+        case drivers::graphics_feature::sample_alpha_to_one:
+            translated_feature = GL_SAMPLE_ALPHA_TO_ONE;
+            break;
+
+        case drivers::graphics_feature::sample_alpha_to_coverage:
+            translated_feature = GL_SAMPLE_ALPHA_TO_COVERAGE;
+            break;
+
+        case drivers::graphics_feature::polygon_offset_fill:
+            translated_feature = GL_POLYGON_OFFSET_FILL;
+            break;
+
+        case drivers::graphics_feature::line_smooth:
+            translated_feature = GL_LINE_SMOOTH;
+            break;
+
+        case drivers::graphics_feature::multisample:
+            translated_feature = GL_MULTISAMPLE;
+            break;
+
+        case drivers::graphics_feature::dither:
+            translated_feature = GL_DITHER;
             break;
 
         default:
@@ -1221,6 +1249,18 @@ namespace eka2l1::drivers {
         }
     }
 
+    void ogl_graphics_driver::set_depth_bias(command_helper &helper) {
+        float constant_factor = 0.0f;
+        float clamp = 0.0f;
+        float slope_factor = 0.0f;
+
+        helper.pop(constant_factor);
+        helper.pop(clamp);
+        helper.pop(slope_factor);
+
+        glPolygonOffset(slope_factor, constant_factor);
+    }
+
     void ogl_graphics_driver::save_gl_state() {
         glGetIntegerv(GL_CURRENT_PROGRAM, &backup.last_program);
         glGetIntegerv(GL_TEXTURE_BINDING_2D, &backup.last_texture);
@@ -1445,6 +1485,10 @@ namespace eka2l1::drivers {
 
         case graphics_driver_set_line_width:
             set_line_width(helper);
+            break;
+
+        case graphics_driver_set_depth_bias:
+            set_depth_bias(helper);
             break;
 
         default:

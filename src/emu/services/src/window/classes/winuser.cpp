@@ -521,6 +521,8 @@ namespace eka2l1::epoc {
         auto cmd_builder = drv->new_command_builder(cmd_list.get());
 
         if (!clip_space.empty()) {
+            clip_space.size.y *= -1;
+
             cmd_builder->set_feature(drivers::graphics_feature::clipping, true);
             cmd_builder->clip_rect(clip_space);
         }

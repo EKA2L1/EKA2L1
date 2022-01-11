@@ -292,6 +292,7 @@ namespace eka2l1::epoc {
             cmd_builder->set_feature(drivers::graphics_feature::clipping, true);
 
             if (the_clip.valid()) {
+                the_clip.size.y *= -1;
                 cmd_builder->clip_rect(the_clip);
             }
         } else {

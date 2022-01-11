@@ -23,7 +23,8 @@ namespace eka2l1::drivers {
         ~ogl_texture() override;
 
         bool create(graphics_driver *driver, const int dim, const int miplvl, const vec3 &size, const texture_format internal_format,
-            const texture_format format, const texture_data_type data_type, void *data, const std::size_t data_size, const std::size_t pixels_per_line = 0) override;
+            const texture_format format, const texture_data_type data_type, void *data, const std::size_t data_size,
+            const std::size_t pixels_per_line = 0, const std::uint32_t unpack_alignment = 4) override;
 
         void set_filter_minmag(const bool min, const filter_option op) override;
         void set_addressing_mode(const addressing_direction dir, const addressing_option op) override;
@@ -35,7 +36,7 @@ namespace eka2l1::drivers {
         void unbind(graphics_driver *driver) override;
 
         void update_data(graphics_driver *driver, const int mip_lvl, const vec3 &offset, const vec3 &size, const std::size_t byte_width,
-            const texture_format data_format, const texture_data_type data_type, const void *data, const std::size_t data_size) override;
+            const texture_format data_format, const texture_data_type data_type, const void *data, const std::size_t data_size, const std::uint32_t unpack_alignment) override;
 
         vec2 get_size() const override {
             return tex_size;

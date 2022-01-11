@@ -69,6 +69,7 @@ namespace eka2l1 {
 
         if (region.rects_.size() == 1) {
             eka2l1::rect rect_clip = region.rects_[0];
+            rect_clip.size.y *= -1;
 
             cmd_builder.set_feature(drivers::graphics_feature::clipping, true);
             cmd_builder.clip_rect(rect_clip);

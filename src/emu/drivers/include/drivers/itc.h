@@ -115,7 +115,8 @@ namespace eka2l1::drivers {
      */
     drivers::handle create_texture(graphics_driver *driver, const std::uint8_t dim, const std::uint8_t mip_levels,
         drivers::texture_format internal_format, drivers::texture_format data_format, drivers::texture_data_type data_type,
-        const void *data, const std::size_t total_data_size, const eka2l1::vec3 &size, const std::size_t pixels_per_line = 0);
+        const void *data, const std::size_t total_data_size, const eka2l1::vec3 &size, const std::size_t pixels_per_line = 0,
+        const std::uint32_t unpack_alignment = 4);
 
     /**
      * \brief Create a new buffer.
@@ -259,8 +260,8 @@ namespace eka2l1::drivers {
          */
         virtual void update_texture(drivers::handle h, const char *data, const std::size_t size,
             const std::uint8_t level, const texture_format data_format, const texture_data_type data_type,
-            const eka2l1::vec3 &offset, const eka2l1::vec3 &dim, const std::size_t pixels_per_line = 0)
-            = 0;
+            const eka2l1::vec3 &offset, const eka2l1::vec3 &dim, const std::size_t pixels_per_line = 0,
+            const std::uint32_t unpack_alignment = 4) = 0;
 
         /**
          * \brief Draw a bitmap to currently binded bitmap.
@@ -580,7 +581,8 @@ namespace eka2l1::drivers {
          */
         virtual void recreate_texture(drivers::handle h, const std::uint8_t dim, const std::uint8_t mip_levels,
             drivers::texture_format internal_format, drivers::texture_format data_format, drivers::texture_data_type data_type,
-            const void *data, const std::size_t data_size, const eka2l1::vec3 &size, const std::size_t pixels_per_line = 0) = 0;
+            const void *data, const std::size_t data_size, const eka2l1::vec3 &size, const std::size_t pixels_per_line = 0,
+            const std::uint32_t unpack_alignment = 4) = 0;
 
         /**
          * @brief Recreate an existing buffer. 
@@ -612,6 +614,8 @@ namespace eka2l1::drivers {
         virtual void set_color_mask(const std::uint8_t mask) = 0;
 
         virtual void set_line_width(const float width) = 0;
+
+        virtual void set_depth_bias(float constant_factor, float clamp, float slope_factor) = 0;
     };
 
     class server_graphics_command_list_builder : public graphics_command_list_builder {
@@ -654,7 +658,8 @@ namespace eka2l1::drivers {
 
         void update_texture(drivers::handle h, const char *data, const std::size_t size,
             const std::uint8_t level, const texture_format data_format, const texture_data_type data_type,
-            const eka2l1::vec3 &offset, const eka2l1::vec3 &dim, const std::size_t pixels_per_line = 0) override;
+            const eka2l1::vec3 &offset, const eka2l1::vec3 &dim, const std::size_t pixels_per_line = 0,
+            const std::uint32_t unpack_alignment = 4) override;
 
         void draw_bitmap(drivers::handle h, drivers::handle maskh, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect,
             const eka2l1::vec2 &origin = eka2l1::vec2(0, 0), const float rotation = 0.0f, const std::uint32_t flags = 0) override;
@@ -731,7 +736,8 @@ namespace eka2l1::drivers {
 
         void recreate_texture(drivers::handle h, const std::uint8_t dim, const std::uint8_t mip_levels,
             drivers::texture_format internal_format, drivers::texture_format data_format, drivers::texture_data_type data_type,
-            const void *data, const std::size_t data_size, const eka2l1::vec3 &size, const std::size_t pixels_per_line = 0) override;
+            const void *data, const std::size_t data_size, const eka2l1::vec3 &size, const std::size_t pixels_per_line = 0,
+            const std::uint32_t unpack_alignment = 4) override;
 
         void recreate_buffer(drivers::handle h, const void *initial_data, const std::size_t initial_size, const buffer_upload_hint upload_hint) override;
         void update_input_descriptors(drivers::handle h, input_descriptor *descriptors, const std::uint32_t count) override;
@@ -740,6 +746,7 @@ namespace eka2l1::drivers {
         void set_color_mask(const std::uint8_t mask) override;
         void set_line_width(const float width) override;
         void set_texture_max_mip(drivers::handle h, const std::uint32_t max_mip) override;
+        void set_depth_bias(float constant_factor, float clamp, float slope_factor) override;
     };
 
     struct graphics_command_callback_data {

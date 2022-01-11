@@ -90,6 +90,7 @@ namespace eka2l1::drivers {
         graphics_driver_set_line_width,
         graphics_driver_create_input_descriptor,
         graphics_driver_bind_input_descriptor,
+        graphics_driver_set_depth_bias,
         graphics_driver_backup_state, // Backup all possible state to a struct
         graphics_driver_restore_state // Restore previously backup data
     };

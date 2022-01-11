@@ -478,8 +478,6 @@ namespace eka2l1::dispatch {
         if (surface->bounded_context_) {
             if (surface->bounded_context_->command_list_)
                 drv->submit_command_list(*surface->bounded_context_->command_list_);
-            else
-                LOG_TRACE(KERNEL, "Temp!!!");
 
             surface->bounded_context_->command_list_ = drv->new_command_list();
             surface->bounded_context_->command_builder_ = drv->new_command_builder(surface->bounded_context_->command_list_.get());
@@ -489,6 +487,40 @@ namespace eka2l1::dispatch {
 
         if (surface->backed_window_)
             surface->backed_window_->take_action_on_change(sys->get_kernel_system()->crr_thread());
+
+        return EGL_TRUE;
+    }
+    
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_query_surface_emu, egl_display display, egl_surface_handle handle, std::uint32_t attribute, std::int32_t *value) {
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        egl_surface *surface = controller.get_managed_surface(handle);
+        if (!surface) {
+            egl_push_error(sys, EGL_BAD_SURFACE_EMU);
+            return EGL_FALSE;
+        }
+
+        if (!value) {
+            egl_push_error(sys, EGL_BAD_PARAMETER_EMU);
+            return EGL_FALSE;
+        }
+
+        switch (attribute) {
+        case EGL_WIDTH_EMU:
+            *value = surface->dimension_.x;
+            break;
+
+        case EGL_HEIGHT_EMU:
+            *value = surface->dimension_.y;
+            break;
+
+        default:
+            LOG_ERROR(HLE_DISPATCHER, "Unrecognised/unhandled attribute to query 0x{:X}", attribute);
+            egl_push_error(sys, EGL_BAD_ATTRIBUTE_EMU);
+
+            return EGL_FALSE;
+        }
 
         return EGL_TRUE;
     }

@@ -250,12 +250,8 @@ namespace eka2l1::dispatch {
         }
 
         if ((fragment_statuses & egl_context_es1::FRAGMENT_STATE_TEXTURE_ENABLE) && (active_texs != 0)) {
-            std::size_t last_active_tex = 0;
-
             for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
                 if (active_texs & (1 << i)) {
-                    last_active_tex = i;
-
                     uni_decl += fmt::format("uniform sampler2D uTexture{};\n", i);
                     uni_decl += fmt::format("uniform vec4 uTextureEnvColor{};\n", i);
                     input_decl += fmt::format("in vec4 mTexCoord{};\n", i);
@@ -263,7 +259,7 @@ namespace eka2l1::dispatch {
                     if (tex_env_infos[i].env_mode_ != gles_texture_env_info::ENV_MODE_COMBINE) {
                         switch (tex_env_infos[i].env_mode_) {
                         case gles_texture_env_info::ENV_MODE_REPLACE:
-                            main_body += fmt::format("\toColor = texture(uTexture{}, mTexCoord{}.xy);\n", ++last_active_tex, i, i);
+                            main_body += fmt::format("\toColor = texture(uTexture{}, mTexCoord{}.xy);\n", i, i, i);
                             break;
 
                         case gles_texture_env_info::ENV_MODE_ADD:

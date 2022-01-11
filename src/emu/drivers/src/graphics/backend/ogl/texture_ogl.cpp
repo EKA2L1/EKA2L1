@@ -66,7 +66,8 @@ namespace eka2l1::drivers {
     }
 
     bool ogl_texture::create(graphics_driver *driver, const int dim, const int miplvl, const vec3 &size, const texture_format internal_format,
-        const texture_format format, const texture_data_type data_type, void *data, const std::size_t total_size, const std::size_t ppl) {
+        const texture_format format, const texture_data_type data_type, void *data, const std::size_t total_size, const std::size_t ppl,
+        const std::uint32_t unpack_alignment) {
         glGenTextures(1, &texture);
 
         dimensions = dim;
@@ -82,6 +83,7 @@ namespace eka2l1::drivers {
         bool res = true;
 
         glPixelStorei(GL_UNPACK_ROW_LENGTH, static_cast<GLint>(pixels_per_line));
+        glPixelStorei(GL_UNPACK_ALIGNMENT, static_cast<GLint>(unpack_alignment));
 
         drivers::texture_format converted_internal_format = internal_format;
         drivers::texture_format converted_format = format;
@@ -269,9 +271,11 @@ namespace eka2l1::drivers {
     }
 
     void ogl_texture::update_data(graphics_driver *driver, const int mip_lvl, const vec3 &offset, const vec3 &size, const std::size_t pixels_per_line,
-        const texture_format data_format, const texture_data_type data_type, const void *data, const std::size_t data_size) {
+        const texture_format data_format, const texture_data_type data_type, const void *data, const std::size_t data_size, const std::uint32_t alg) {
         bind(driver, 0);
+
         glPixelStorei(GL_UNPACK_ROW_LENGTH, static_cast<GLint>(pixels_per_line));
+        glPixelStorei(GL_UNPACK_ALIGNMENT, static_cast<GLint>(alg));
 
         drivers::texture_format converted_format = data_format;
         drivers::texture_data_type converted_data_type = data_type;

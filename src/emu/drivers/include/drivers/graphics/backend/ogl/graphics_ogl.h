@@ -160,6 +160,7 @@ namespace eka2l1::drivers {
         void bind_index_buffer(command_helper &helper);
         void bind_input_descriptors(command_helper &helper);
         void set_line_width(command_helper &helper);
+        void set_depth_bias(command_helper &helper);
 
         void save_gl_state();
         void load_gl_state();

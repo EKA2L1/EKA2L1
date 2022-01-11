@@ -137,4 +137,8 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_LIBRARY(void, gl_hint_emu);
     BRIDGE_FUNC_LIBRARY(void, gl_line_width_emu, float width);
     BRIDGE_FUNC_LIBRARY(void, gl_line_widthx_emu, gl_fixed width);
+    BRIDGE_FUNC_LIBRARY(void, gl_finish_emu);
+    BRIDGE_FUNC_LIBRARY(void, gl_polygon_offset_emu, float factors, float units);
+    BRIDGE_FUNC_LIBRARY(void, gl_polygon_offsetx_emu, gl_fixed factors, gl_fixed units);
+    BRIDGE_FUNC_LIBRARY(void, gl_pixel_storei_emu, std::uint32_t pname, std::int32_t param);
 }

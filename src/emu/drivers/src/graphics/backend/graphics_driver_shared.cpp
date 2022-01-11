@@ -223,7 +223,7 @@ namespace eka2l1::drivers {
         translate_bpp_to_format(bmp->bpp, internal_format, data_format, data_type, is_stricted());
 
         bmp->tex->update_data(this, 0, eka2l1::vec3(offset.x, offset.y, 0), eka2l1::vec3(dim.x, dim.y, 0), pixels_per_line,
-            data_format, data_type, data, 0);
+            data_format, data_type, data, 0, 4);
 
         if (bmp->bpp == 12) {
             bmp->tex->set_channel_swizzle({ channel_swizzle::green, channel_swizzle::blue,
@@ -298,6 +298,7 @@ namespace eka2l1::drivers {
         eka2l1::vec3 offset;
         eka2l1::vec3 dim;
         std::size_t pixels_per_line = 0;
+        std::uint32_t unpack_alignment = 4;
 
         helper.pop(handle);
         helper.pop(data);
@@ -308,13 +309,14 @@ namespace eka2l1::drivers {
         helper.pop(offset);
         helper.pop(dim);
         helper.pop(pixels_per_line);
+        helper.pop(unpack_alignment);
 
         drivers::texture *obj = reinterpret_cast<drivers::texture*>(get_graphics_object(handle));
         if (!obj) {
             return;
         }
 
-        obj->update_data(this, static_cast<int>(lvl), offset, dim, pixels_per_line, data_format, data_type, data, size);
+        obj->update_data(this, static_cast<int>(lvl), offset, dim, pixels_per_line, data_format, data_type, data, size, unpack_alignment);
 
         delete data;
     }
@@ -604,7 +606,10 @@ namespace eka2l1::drivers {
         }
 
         std::size_t pixels_per_line = 0;
+        std::uint32_t alignment = 4;
+
         helper.pop(pixels_per_line);
+        helper.pop(alignment);
 
         drivers::handle h = 0;
         helper.pop(h);
@@ -624,7 +629,7 @@ namespace eka2l1::drivers {
         }
 
         obj->create(this, static_cast<int>(dim), static_cast<int>(mip_level), eka2l1::vec3(width, height, depth),
-            internal_format, data_format, data_type, data, data_size, pixels_per_line);
+            internal_format, data_format, data_type, data, data_size, pixels_per_line, alignment);
 
         if (obj_inst) {
             std::unique_ptr<graphics_object> obj_casted = std::move(obj_inst);

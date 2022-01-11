@@ -356,7 +356,19 @@ namespace eka2l1::dispatch {
             NON_SHADER_STATE_MULTISAMPLE = 1 << 10,
             NON_SHADER_STATE_SAMPLE_ALPHA_TO_COVERAGE = 1 << 11,
             NON_SHADER_STATE_SAMPLE_ALPHA_TO_ONE = 1 << 12,
-            NON_SHADER_STATE_SAMPLE_COVERAGE = 1 << 13
+            NON_SHADER_STATE_SAMPLE_COVERAGE = 1 << 13,
+
+            STATE_CHANGED_CULL_FACE = 1 << 0,
+            STATE_CHANGED_SCISSOR_RECT = 1 << 1,
+            STATE_CHANGED_VIEWPORT_RECT = 1 << 2,
+            STATE_CHANGED_FRONT_FACE_RULE = 1 << 3,
+            STATE_CHANGED_COLOR_MASK = 1 << 4,
+            STATE_CHANGED_DEPTH_BIAS = 1 << 5,
+            STATE_CHANGED_STENCIL_MASK = 1 << 6,
+            STATE_CHANGED_BLEND_FACTOR = 1 << 7,
+            STATE_CHANGED_LINE_WIDTH = 1 << 8,
+            STATE_CHANGED_DEPTH_MASK = 1 << 9,
+            STATE_CHANGED_DEPTH_PASS_COND = 1 << 10
         };
 
         gles1_vertex_attrib vertex_attrib_;
@@ -400,17 +412,23 @@ namespace eka2l1::dispatch {
         std::uint64_t vertex_statuses_;
         std::uint64_t fragment_statuses_;
         std::uint64_t non_shader_statuses_;
+        std::uint64_t state_change_tracker_;
 
         std::uint8_t color_mask_;
         std::uint32_t stencil_mask_;
         std::uint32_t depth_mask_;
-
         std::uint32_t depth_func_;
 
         float alpha_test_ref_;
 
         drivers::handle index_buffer_temp_;
         std::size_t index_buffer_temp_size_;
+
+        float polygon_offset_factor_;
+        float polygon_offset_units_;
+
+        std::uint32_t pack_alignment_;
+        std::uint32_t unpack_alignment_;
 
         explicit egl_context_es1();
 
@@ -424,6 +442,7 @@ namespace eka2l1::dispatch {
         void free(drivers::graphics_driver *driver, drivers::graphics_command_list_builder &builder) override;
         void return_handle_to_pool(const gles1_object_type type, const drivers::handle h);
         void on_surface_changed(egl_surface *prev_read, egl_surface *prev_draw) override;
+        void flush_stage_changes();
 
         egl_context_type context_type() const override {
             return EGL_GLES1_CONTEXT;

@@ -37,7 +37,8 @@ namespace eka2l1::drivers {
         texture() {}
 
         virtual bool create(graphics_driver *driver, const int dim, const int miplvl, const vec3 &size, const texture_format internal_format,
-            const texture_format format, const texture_data_type data_type, void *data, const std::size_t data_size, const std::size_t pixels_per_line = 0)
+            const texture_format format, const texture_data_type data_type, void *data, const std::size_t data_size, const std::size_t pixels_per_line = 0,
+            const std::uint32_t unpack_alignment = 4)
             = 0;
 
         virtual ~texture(){};
@@ -58,7 +59,7 @@ namespace eka2l1::drivers {
         virtual int get_total_dimensions() const = 0;
 
         virtual void update_data(graphics_driver *driver, const int mip_lvl, const vec3 &offset, const vec3 &size, const std::size_t byte_width,
-            const texture_format data_format, const texture_data_type data_type, const void *data, const std::size_t data_size)
+            const texture_format data_format, const texture_data_type data_type, const void *data, const std::size_t data_size, const std::uint32_t unpack_alignment)
             = 0;
     };
 
