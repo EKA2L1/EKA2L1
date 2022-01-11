@@ -524,4 +524,9 @@ namespace eka2l1::dispatch {
 
         return EGL_TRUE;
     }
+    
+    BRIDGE_FUNC_LIBRARY(std::int32_t, egl_wait_native_emu, std::int32_t engine) {
+        // Nothing
+        return EGL_TRUE;
+    }
 }

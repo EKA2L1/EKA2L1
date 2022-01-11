@@ -3838,32 +3838,36 @@ namespace eka2l1::dispatch {
         return true;
     }
 
-    static std::uint32_t retrieve_buffer_size_attrib_es1(const std::uint32_t type, const std::uint32_t comp_count, const std::uint32_t estvcount) {
-        std::uint32_t bytes_per_comp = 0;
-        switch (type) {
-        case GL_BYTE_EMU:
-        case GL_UNSIGNED_BYTE_EMU:
-            bytes_per_comp = 1;
-            break;
+    static std::uint32_t retrieve_buffer_size_attrib_es1(const gles1_vertex_attrib &attrib, const std::uint32_t estvcount) {
+        std::uint32_t stride = attrib.stride_;
+        if (!stride) {
+            switch (attrib.data_type_) {
+            case GL_BYTE_EMU:
+            case GL_UNSIGNED_BYTE_EMU:
+                stride = 1;
+                break;
 
-        case GL_SHORT_EMU:
-        case GL_UNSIGNED_SHORT_EMU:
-            bytes_per_comp = 2;
-            break;
+            case GL_SHORT_EMU:
+            case GL_UNSIGNED_SHORT_EMU:
+                stride = 2;
+                break;
 
-        case GL_FLOAT_EMU:
-            bytes_per_comp = 4;
-            break;
+            case GL_FLOAT_EMU:
+                stride = 4;
+                break;
 
-        case GL_FIXED_EMU:
-            bytes_per_comp = 4;
-            break;
+            case GL_FIXED_EMU:
+                stride = 4;
+                break;
 
-        default:
-            return 0;
+            default:
+                return 0;
+            }
+
+            stride *= attrib.size_;
         }
 
-        return bytes_per_comp * comp_count * estvcount;
+        return stride * estvcount;
     }
 
     static void prepare_vertex_buffer_and_descriptors(egl_context_es1 *ctx, drivers::graphics_driver *drv, kernel::process *crr_process, const std::uint32_t vcount, const std::uint32_t active_texs) {
@@ -3879,7 +3883,7 @@ namespace eka2l1::dispatch {
             }
 
             // For elements draw this will doom (we don't know how many vertices to be exact at that situation)
-            const std::uint32_t est_buf_size = retrieve_buffer_size_attrib_es1(attrib.data_type_, attrib.size_, vcount);
+            const std::uint32_t est_buf_size = retrieve_buffer_size_attrib_es1(attrib, vcount);
 
             if (!attrib.in_house_buffer_) {
                 attrib.in_house_buffer_ = drivers::create_buffer(drv, data, est_buf_size, static_cast<drivers::buffer_upload_hint>(drivers::buffer_upload_dynamic | drivers::buffer_upload_draw));
@@ -3963,6 +3967,10 @@ namespace eka2l1::dispatch {
 
             gl_enum_to_drivers_data_format(ctx->vertex_attrib_.data_type_, temp_format);
             temp_desc.set_format(ctx->vertex_attrib_.size_, temp_format);
+
+            if (ctx->vertex_attrib_.data_type_ == GL_FIXED_EMU) {
+                temp_desc.set_normalized(true);
+            }
 
             descs.push_back(temp_desc);
 

@@ -92,7 +92,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER(0x1115, egl_swap_buffers_emu),
         //BRIDGE_REGISTER_DISPATCHER(0x1116, egl_terminate_emu),
         //BRIDGE_REGISTER_DISPATCHER(0x1117, egl_wait_gl_emu),
-        //BRIDGE_REGISTER_DISPATCHER(0x1118, egl_wait_native_emu),
+        BRIDGE_REGISTER_DISPATCHER(0x1118, egl_wait_native_emu),
         BRIDGE_REGISTER_DISPATCHER(0x1119, gl_active_texture_emu),
         BRIDGE_REGISTER_DISPATCHER(0x111A, gl_alpha_func_emu),
         BRIDGE_REGISTER_DISPATCHER(0x111B, gl_alpha_func_x_emu),
