@@ -195,6 +195,11 @@ namespace eka2l1::android {
                 conf.serialize();
             }
 
+            // Copy additional DLLs
+            std::vector<std::tuple<std::u16string, std::string, epocver>> dlls_need_to_copy = {
+                { u"Z:\\sys\\bin\\goommonitor.dll", "patch\\goommonitor_general.dll", epocver::epoc94 }
+            };
+
             for (std::size_t i = 0; i < dlls_need_to_copy.size(); i++) {
                 epocver ver_required = std::get<2>(dlls_need_to_copy[i]);
                 if (symsys->get_symbian_version_use() < ver_required) {
