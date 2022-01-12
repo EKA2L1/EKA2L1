@@ -40,7 +40,7 @@ namespace eka2l1 {
     void goom_monitor_session::request_free_memory(service::ipc_context *ctx) {
         std::optional<std::uint32_t> bytes_requested = ctx->get_argument_value<std::uint32_t>(0);
         if (bytes_requested.has_value()) {
-            LOG_TRACE(SERVICE_GOOMMONITOR, "Application requested to have {}B of free memory!");
+            LOG_TRACE(SERVICE_GOOMMONITOR, "Application requested to have {}B of free memory!", bytes_requested.value());
         }
 
         ctx->complete(epoc::error_none);

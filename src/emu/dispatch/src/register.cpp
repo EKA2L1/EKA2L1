@@ -87,7 +87,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER(0x1110, egl_initialize_emu),
         BRIDGE_REGISTER_DISPATCHER(0x1111, egl_make_current_emu),
         //BRIDGE_REGISTER_DISPATCHER(0x1112, egl_query_context_emu),
-        //BRIDGE_REGISTER_DISPATCHER(0x1113, egl_query_string_emu),
+        BRIDGE_REGISTER_DISPATCHER(0x1113, egl_query_string_emu),
         BRIDGE_REGISTER_DISPATCHER(0x1114, egl_query_surface_emu),
         BRIDGE_REGISTER_DISPATCHER(0x1115, egl_swap_buffers_emu),
         //BRIDGE_REGISTER_DISPATCHER(0x1116, egl_terminate_emu),

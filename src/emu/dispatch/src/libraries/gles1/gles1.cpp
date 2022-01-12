@@ -4325,6 +4325,11 @@ namespace eka2l1::dispatch {
         dispatcher *dp = sys->get_dispatcher();
         dispatch::egl_controller &controller = dp->get_egl_controller();
 
+        if ((pname != GL_EXTENSIONS) && (pname != GL_VENDOR) && (pname != GL_RENDERER) && (pname != GL_VERSION)) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return 0;
+        }
+
         address res = dp->retrieve_static_string(pname);
         if (res == 0) {
             controller.push_error(ctx, GL_INVALID_ENUM);

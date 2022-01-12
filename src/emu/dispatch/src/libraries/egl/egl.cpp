@@ -517,4 +517,25 @@ namespace eka2l1::dispatch {
         // Nothing
         return EGL_TRUE;
     }
+    
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_query_string_emu, egl_display display, std::uint32_t param) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return 0;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if ((param != EGL_EXTENSIONS_EMU) && (param != EGL_VENDOR_EMU) && (param != EGL_VERSION_EMU)) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return 0;
+        }
+
+        address res = dp->retrieve_static_string(param);
+        if (res == 0) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+        }
+        return res;
+    }
 }

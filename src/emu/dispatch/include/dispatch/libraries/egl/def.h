@@ -69,6 +69,9 @@ namespace eka2l1::dispatch {
         EGL_GREEN_SIZE_EMU = 0x3023,
         EGL_SURFACE_TYPE_EMU = 0x3033,
         EGL_RED_SIZE_EMU = 0x3024,
+        EGL_VENDOR_EMU = 0x3053,
+        EGL_VERSION_EMU = 0x3054,
+        EGL_EXTENSIONS_EMU = 0x3055,
         EGL_HEIGHT_EMU = 0x3056,
         EGL_WIDTH_EMU = 0x3057,
         GL_NO_ERROR = 0,
@@ -310,6 +313,10 @@ namespace eka2l1::dispatch {
         GL_MAXIMUM_PROJECTION_MATRIX_STACK_SIZE = 2,
         GL_MAXIMUM_TEXTURE_MATRIX_STACK_SIZE = 2
     };
+
+    static constexpr const char *EGL_STATIC_STRING_VENDOR = "EKA2L1";
+    static constexpr const char *EGL_STATIC_STRING_VERSION = "1.4";
+    static constexpr const char *EGL_STATIC_STRING_EXTENSION = "";
 
     using egl_display = std::uint32_t;
     using egl_boolean = std::uint32_t;
