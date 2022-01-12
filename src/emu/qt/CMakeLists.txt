@@ -135,7 +135,7 @@ set_target_properties(eka2l1_qt PROPERTIES OUTPUT_NAME eka2l1_qt
         RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin"
         RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_BINARY_DIR}/bin")
 
-add_dependencies(eka2l1_qt ecam scdv mediaclientaudio mediaclientaudiostream vibractrl backlightctrl postingsurfacefactory)
+add_dependencies(eka2l1_qt ecam scdv mediaclientaudio mediaclientaudiostream vibractrl backlightctrl postingsurfacefactory goommonitor)
 
 add_custom_command(
         TARGET eka2l1_qt
