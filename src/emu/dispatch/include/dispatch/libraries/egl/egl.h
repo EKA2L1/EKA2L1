@@ -39,5 +39,7 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_LIBRARY(egl_boolean, egl_query_surface_emu, egl_display display, egl_surface_handle handle, std::uint32_t attribute, std::int32_t *value);
     BRIDGE_FUNC_LIBRARY(std::int32_t, egl_get_error);
     BRIDGE_FUNC_LIBRARY(std::int32_t, egl_wait_native_emu, std::int32_t engine);
-    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_query_string_emu, egl_display display, std::uint32_t param);
+    BRIDGE_FUNC_LIBRARY(std::int32_t, egl_wait_gl_emu);
+    BRIDGE_FUNC_LIBRARY(address, egl_query_string_emu, egl_display display, std::uint32_t param);
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_get_config_attrib_emu, egl_display display, std::uint32_t config, std::uint32_t attribute, std::uint32_t *value);
 }

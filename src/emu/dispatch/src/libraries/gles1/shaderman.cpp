@@ -77,8 +77,9 @@ namespace eka2l1::dispatch {
         }
 
         drivers::handle vert_module = 0;
+        std::uint64_t vertex_hash = vertex_statuses | (static_cast<std::uint64_t>(active_texs) << egl_context_es1::VERTEX_STATE_REVERSED_BITS_POS);
 
-        auto vert_cache_ite = vertex_cache_.find(vertex_statuses);
+        auto vert_cache_ite = vertex_cache_.find(vertex_hash);
         if (vert_cache_ite == vertex_cache_.end()) {
             std::string source_shader;
             switch (driver_->get_current_api()) {
@@ -99,7 +100,7 @@ namespace eka2l1::dispatch {
                 return 0;
             }
 
-            vertex_cache_.emplace(vertex_statuses, vert_module);
+            vertex_cache_.emplace(vertex_hash, vert_module);
         } else {
             vert_module = vert_cache_ite->second;
         }

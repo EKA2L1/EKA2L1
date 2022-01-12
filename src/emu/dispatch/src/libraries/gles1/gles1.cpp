@@ -1513,9 +1513,9 @@ namespace eka2l1::dispatch {
 
             std::uint32_t format_gl = 0;
             drivers::texture_data_type dtype;
-    
-            if (!decompress_palette_data(decompressed_data, out_size, reinterpret_cast<std::uint8_t*>(data_pixels), width, height, level, internal_format,
-                internal_format_driver, dtype, format_gl)) {
+
+            if (!decompress_palette_data(decompressed_data, out_size, reinterpret_cast<std::uint8_t*>(data_pixels), width, height, internal_format,
+                level, internal_format_driver, dtype, format_gl)) {
                 controller.push_error(ctx, GL_INVALID_ENUM);
                 return;
             }
@@ -3432,6 +3432,8 @@ namespace eka2l1::dispatch {
             ctx->non_shader_statuses_ |= egl_context_es1::NON_SHADER_STATE_SAMPLE_ALPHA_TO_ONE;
             ctx->cmd_builder_.set_feature(drivers::graphics_feature::sample_alpha_to_one, true);
 
+            break;
+
         case GL_TEXTURE_2D_EMU:
             ctx->fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_TEXTURE_ENABLE;
             break;
@@ -3442,6 +3444,12 @@ namespace eka2l1::dispatch {
 
         case GL_RESCALE_NORMAL_EMU:
             ctx->vertex_statuses_ |= egl_context_es1::VERTEX_STATE_NORMAL_ENABLE_RESCALE;
+            break;
+
+        case GL_POLYGON_OFFSET_FILL_EMU:
+            ctx->non_shader_statuses_ |= egl_context_es1::NON_SHADER_STATE_POLYGON_OFFSET_FILL;
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::polygon_offset_fill, true);
+
             break;
 
         default:
@@ -3611,6 +3619,12 @@ namespace eka2l1::dispatch {
 
         case GL_RESCALE_NORMAL_EMU:
             ctx->vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_NORMAL_ENABLE_RESCALE;
+            break;
+
+        case GL_POLYGON_OFFSET_FILL_EMU:
+            ctx->non_shader_statuses_ &= ~egl_context_es1::NON_SHADER_STATE_POLYGON_OFFSET_FILL;
+            ctx->cmd_builder_.set_feature(drivers::graphics_feature::polygon_offset_fill, false);
+
             break;
 
         default:
@@ -4702,5 +4716,198 @@ namespace eka2l1::dispatch {
 
     BRIDGE_FUNC_LIBRARY(void, gl_depth_rangex_emu, gl_fixed near, gl_fixed far) {
         gl_depth_rangef_emu(sys, FIXED_32_TO_FLOAT(near), FIXED_32_TO_FLOAT(far));
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, gl_get_tex_parameter_iv_emu, std::uint32_t target, std::uint32_t pname, std::uint32_t *param) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+        
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if (target != GL_TEXTURE_2D_EMU) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        gles1_driver_texture *tex = ctx->binded_texture();
+        if (!tex) {
+            controller.push_error(ctx, GL_INVALID_OPERATION);
+            return;
+        }
+
+        switch (pname) {
+        case GL_TEXTURE_MIN_FILTER_EMU:
+            *param = tex->get_min_filter();
+            break;
+
+        case GL_TEXTURE_MAG_FILTER_EMU:
+            *param = tex->get_mag_filter();
+            break;
+
+        case GL_TEXTURE_WRAP_S_EMU:
+            *param = tex->get_wrap_s();
+            break;
+
+        case GL_TEXTURE_WRAP_T_EMU:
+            *param = tex->get_wrap_t();
+            break;
+
+        case GL_GENERATE_MIPMAP_EMU:
+            *param = (tex->auto_regenerate_mipmap() ? 1 : 0);
+            break;
+
+        default:
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+    }
+    
+    BRIDGE_FUNC_LIBRARY(void, gl_get_tex_parameter_fv_emu, std::uint32_t target, std::uint32_t pname, float *param) {
+        std::uint32_t value_real = 0;
+        gl_get_tex_parameter_iv_emu(sys, target, pname, &value_real);
+
+        *param = static_cast<float>(value_real);
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, gl_get_tex_parameter_xv_emu, std::uint32_t target, std::uint32_t pname, gl_fixed *param) {
+        std::uint32_t value_real = 0;
+        gl_get_tex_parameter_iv_emu(sys, target, pname, &value_real);
+
+        *param = static_cast<gl_fixed>(value_real);
+    }
+
+    BRIDGE_FUNC_LIBRARY(std::int32_t, gl_is_enabled_emu, std::uint32_t cap) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return 0;
+        }
+        
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        switch (cap) {
+        case GL_ALPHA_TEST_EMU:
+            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_ALPHA_TEST) ? 1 : 0;
+
+        case GL_BLEND_EMU:
+            return (ctx->non_shader_statuses_ & egl_context_es1::NON_SHADER_STATE_BLEND_ENABLE) ? 1 : 0;
+
+        case GL_COLOR_LOGIC_OP_EMU:
+            return (ctx->non_shader_statuses_ & egl_context_es1::NON_SHADER_STATE_COLOR_LOGIC_OP_ENABLE) ? 1 : 0;
+
+        case GL_CLIP_PLANE0_EMU:
+            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_CLIP_PLANE0_ENABLE) ? 1 : 0;
+
+        case GL_CLIP_PLANE1_EMU:
+            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_CLIP_PLANE1_ENABLE) ? 1 : 0;
+
+        case GL_CLIP_PLANE2_EMU:
+            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_CLIP_PLANE2_ENABLE) ? 1 : 0;
+
+        case GL_CLIP_PLANE3_EMU:
+            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_CLIP_PLANE3_ENABLE) ? 1 : 0;
+
+        case GL_CLIP_PLANE4_EMU:
+            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_CLIP_PLANE4_ENABLE) ? 1 : 0;
+
+        case GL_CLIP_PLANE5_EMU:
+            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_CLIP_PLANE5_ENABLE) ? 1 : 0;
+
+        case GL_CULL_FACE_EMU:
+            return (ctx->non_shader_statuses_ & egl_context_es1::NON_SHADER_STATE_CULL_FACE_ENABLE) ? 1 : 0;
+
+        case GL_COLOR_MATERIAL_EMU:
+            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_COLOR_MATERIAL_ENABLE) ? 1 : 0;
+
+        case GL_DEPTH_TEST_EMU:
+            return (ctx->non_shader_statuses_ & egl_context_es1::NON_SHADER_STATE_DEPTH_TEST_ENABLE) ? 1 : 0;
+
+        case GL_STENCIL_TEST_EMU:
+            return (ctx->non_shader_statuses_ & egl_context_es1::NON_SHADER_STATE_STENCIL_TEST_ENABLE) ? 1 : 0;
+
+        case GL_FOG_EMU:
+            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_FOG_ENABLE) ? 1 : 0;
+
+        case GL_LIGHTING_EMU:
+            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHTING_ENABLE) ? 1 : 0;
+
+        case GL_LIGHT0_EMU:
+            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHT0_ON) ? 1 : 0;
+
+        case GL_LIGHT1_EMU:
+            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHT1_ON) ? 1 : 0;
+
+        case GL_LIGHT2_EMU:
+            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHT2_ON) ? 1 : 0;
+
+        case GL_LIGHT3_EMU:
+            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHT3_ON) ? 1 : 0;
+
+        case GL_LIGHT4_EMU:
+            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHT4_ON) ? 1 : 0;
+
+        case GL_LIGHT5_EMU:
+            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHT5_ON) ? 1 : 0;
+
+        case GL_LIGHT6_EMU:
+            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHT6_ON) ? 1 : 0;
+        
+        case GL_LIGHT7_EMU:
+            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHT7_ON) ? 1 : 0;
+
+        case GL_LINE_SMOOTH_EMU:
+            return (ctx->non_shader_statuses_ & egl_context_es1::NON_SHADER_STATE_LINE_SMOOTH) ? 1 : 0;
+
+        case GL_DITHER_EMU:
+            return (ctx->non_shader_statuses_ & egl_context_es1::NON_SHADER_STATE_DITHER) ? 1 : 0;
+
+        case GL_SCISSOR_TEST_EMU:
+            return (ctx->non_shader_statuses_ & egl_context_es1::NON_SHADER_STATE_SCISSOR_ENABLE) ? 1 : 0;
+
+        case GL_SAMPLE_COVERAGE_EMU:
+            return (ctx->non_shader_statuses_ & egl_context_es1::NON_SHADER_STATE_SAMPLE_COVERAGE) ? 1 : 0;
+
+        case GL_MULTISAMPLE_EMU:
+            return (ctx->non_shader_statuses_ & egl_context_es1::NON_SHADER_STATE_MULTISAMPLE) ? 1 : 0;
+
+        case GL_SAMPLE_ALPHA_TO_COVERAGE_EMU:
+            return (ctx->non_shader_statuses_ & egl_context_es1::NON_SHADER_STATE_SAMPLE_ALPHA_TO_COVERAGE) ? 1 : 0;
+
+        case GL_SAMPLE_ALPHA_TO_ONE_EMU:
+            return (ctx->non_shader_statuses_ & egl_context_es1::NON_SHADER_STATE_SAMPLE_ALPHA_TO_ONE) ? 1 : 0;
+
+        case GL_TEXTURE_2D_EMU:
+            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_TEXTURE_ENABLE) ? 1 : 0;
+
+        case GL_NORMALIZE_EMU:
+            return (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_NORMAL_ENABLE_NORMALIZE) ? 1 : 0;
+
+        case GL_RESCALE_NORMAL_EMU:
+            return (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_NORMAL_ENABLE_RESCALE) ? 1 : 0;
+
+        case GL_POLYGON_OFFSET_FILL_EMU:
+            return (ctx->non_shader_statuses_ & egl_context_es1::NON_SHADER_STATE_POLYGON_OFFSET_FILL) ? 1 : 0;
+
+        case GL_VERTEX_ARRAY_EMU:
+            return (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_VERTEX_ARRAY) ? 1 : 0;
+
+        case GL_COLOR_ARRAY_EMU:
+            return (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_COLOR_ARRAY) ? 1 : 0;
+
+        case GL_NORMAL_ARRAY_EMU:
+            return (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_NORMAL_ARRAY) ? 1 : 0;
+
+        case GL_TEXTURE_COORD_ARRAY_EMU:
+            return (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY) ? 1 : 0;
+
+        default:
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            break;
+        }
+
+        return 0;
     }
 }

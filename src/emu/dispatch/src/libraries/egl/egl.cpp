@@ -40,6 +40,11 @@ namespace eka2l1::dispatch {
         0b1011, 0b1101, 0b1111,
     };
 
+    static const std::uint32_t RED_SIZE_CONFIG_LOOKUP_TABLE[3] = { 5, 8, 8 };
+    static const std::uint32_t GREEN_SIZE_CONFIG_LOOKUP_TABLE[3] = { 6, 8, 8 };
+    static const std::uint32_t BLUE_SIZE_CONFIG_LOOKUP_TABLE[3] = { 5, 8, 8 };
+    static const std::uint32_t ALPHA_SIZE_CONFIG_LOOKUP_TABLE[3] = { 0, 0, 8 };
+
     static constexpr std::uint32_t EGL_EMU_CONFIG_LIST_VALS_LENGTH = sizeof(EGL_EMU_CONFIG_LIST_VALS) / sizeof(std::uint32_t);
 
     static void egl_push_error(system *sys, const std::int32_t error) {
@@ -518,24 +523,97 @@ namespace eka2l1::dispatch {
         return EGL_TRUE;
     }
     
-    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_query_string_emu, egl_display display, std::uint32_t param) {
-        egl_context_es1 *ctx = get_es1_active_context(sys);
-        if (!ctx) {
-            return 0;
-        }
-
+    BRIDGE_FUNC_LIBRARY(std::int32_t, egl_wait_gl_emu) {
+        return EGL_TRUE;
+    }
+    
+    BRIDGE_FUNC_LIBRARY(address, egl_query_string_emu, egl_display display, std::uint32_t param) {
         dispatcher *dp = sys->get_dispatcher();
         dispatch::egl_controller &controller = dp->get_egl_controller();
 
         if ((param != EGL_EXTENSIONS_EMU) && (param != EGL_VENDOR_EMU) && (param != EGL_VERSION_EMU)) {
-            controller.push_error(ctx, GL_INVALID_ENUM);
+            egl_push_error(sys, EGL_BAD_PARAMETER_EMU);
             return 0;
         }
 
         address res = dp->retrieve_static_string(param);
         if (res == 0) {
-            controller.push_error(ctx, GL_INVALID_ENUM);
+            egl_push_error(sys, EGL_BAD_PARAMETER_EMU);
         }
         return res;
+    }
+    
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_get_config_attrib_emu, egl_display display, std::uint32_t config, std::uint32_t attribute, std::uint32_t *value) {
+        if (!value) {
+            egl_push_error(sys, EGL_BAD_PARAMETER_EMU);
+            return 0;
+        }
+
+        egl_config parser(config);
+
+        switch (attribute) {
+        case EGL_RENDERABLE_TYPE_EMU:
+            if (parser.get_target_context_version() == egl_config::EGL_TARGET_CONTEXT_ES11) {
+                *value = EGL_OPENGL_ES1_BIT;
+            } else {
+                *value = EGL_OPENGL_ES2_BIT;
+            }
+
+            break;
+
+        case EGL_RED_SIZE_EMU:
+            *value = RED_SIZE_CONFIG_LOOKUP_TABLE[parser.buffer_size() / 8 - 1];
+            break;
+            
+        case EGL_GREEN_SIZE_EMU:
+            *value = GREEN_SIZE_CONFIG_LOOKUP_TABLE[parser.buffer_size() / 8 - 1];
+            break;
+
+        case EGL_BLUE_SIZE_EMU:
+            *value = BLUE_SIZE_CONFIG_LOOKUP_TABLE[parser.buffer_size() / 8 - 1];
+            break;
+
+        case EGL_ALPHA_SIZE_EMU:
+            *value = ALPHA_SIZE_CONFIG_LOOKUP_TABLE[parser.buffer_size() / 8 - 1];
+            break;
+
+        case EGL_CONFIG_CAVEAT_EMU:
+            *value = EGL_NONE_EMU;
+            break;
+
+        // Depth stencil surface is in D24S8 format.
+        case EGL_DEPTH_SIZE_EMU:
+            *value = 24;
+            break;
+
+        case EGL_STENCIL_SIZE_EMU:
+            *value = 8;
+            break;
+        
+        case EGL_SURFACE_TYPE_EMU:
+            switch (parser.get_surface_type()) {
+            case egl_config::EGL_SURFACE_TYPE_PBUFFER:
+                *value = EGL_PBUFFER_BIT_EMU;
+                break;
+
+            case egl_config::EGL_SURFACE_TYPE_WINDOW:
+                *value = EGL_WINDOW_BIT_EMU;
+                break;
+
+            default:
+                *value = EGL_WINDOW_BIT_EMU;
+                break;
+            }
+
+            break;
+
+        default:
+            LOG_ERROR(HLE_DISPATCHER, "Unhandled config attribute getter 0x{:X}", attribute);
+            egl_push_error(sys, EGL_BAD_ATTRIBUTE_EMU);
+
+            return 0;
+        }
+
+        return 1;
     }
 }

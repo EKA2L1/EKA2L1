@@ -68,7 +68,8 @@ namespace eka2l1::drivers {
     bool ogl_texture::create(graphics_driver *driver, const int dim, const int miplvl, const vec3 &size, const texture_format internal_format,
         const texture_format format, const texture_data_type data_type, void *data, const std::size_t total_size, const std::size_t ppl,
         const std::uint32_t unpack_alignment) {
-        glGenTextures(1, &texture);
+        if (!texture)
+            glGenTextures(1, &texture);
 
         dimensions = dim;
         tex_size = size;

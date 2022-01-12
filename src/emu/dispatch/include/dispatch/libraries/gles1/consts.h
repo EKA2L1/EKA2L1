@@ -20,5 +20,6 @@ namespace eka2l1::dispatch {
 
     static constexpr const char *GLES1_STATIC_STRING_VENDOR = "IMAGINATION TECHNOLOGIES";
     static constexpr const char *GLES1_STATIC_STRING_RENDERER = "POWERVR";
+    static constexpr const char *GLES1_STATIC_STRING_VERSION = "1.1.0 POWERVR (EKA2L1 IMPLEMENTATION)";
     static constexpr const char *GLES1_STATIC_STRING_EXTENSIONS = "";
 }

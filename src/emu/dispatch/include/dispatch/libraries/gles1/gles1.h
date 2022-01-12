@@ -143,4 +143,8 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_LIBRARY(void, gl_pixel_storei_emu, std::uint32_t pname, std::int32_t param);
     BRIDGE_FUNC_LIBRARY(void, gl_depth_rangef_emu, float near, float far);
     BRIDGE_FUNC_LIBRARY(void, gl_depth_rangex_emu, gl_fixed near, gl_fixed far);
+    BRIDGE_FUNC_LIBRARY(void, gl_get_tex_parameter_iv_emu, std::uint32_t target, std::uint32_t pname, std::uint32_t *param);
+    BRIDGE_FUNC_LIBRARY(void, gl_get_tex_parameter_fv_emu, std::uint32_t target, std::uint32_t pname, float *param);
+    BRIDGE_FUNC_LIBRARY(void, gl_get_tex_parameter_xv_emu, std::uint32_t target, std::uint32_t pname, gl_fixed *param);
+    BRIDGE_FUNC_LIBRARY(std::int32_t, gl_is_enabled_emu, std::uint32_t cap);
 }

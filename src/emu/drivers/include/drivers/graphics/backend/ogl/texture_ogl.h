@@ -14,7 +14,7 @@ namespace eka2l1::drivers {
         texture_data_type tex_data_type;
         std::size_t pixels_per_line;
 
-        std::uint32_t texture;
+        std::uint32_t texture{ 0 };
         int last_tex{ 0 };
         int last_active{ 0 };
 
