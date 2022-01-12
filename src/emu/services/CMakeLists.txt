@@ -57,6 +57,7 @@ add_library(epocservs
         include/services/featmgr/featmgr.h
         include/services/fs/sec.h
         include/services/fs/fs.h
+        include/services/goommonitor/goommonitor.h
         include/services/hwrm/def.h
         include/services/hwrm/hwrm.h
         include/services/hwrm/op.h
@@ -183,6 +184,7 @@ add_library(epocservs
         src/fs/fs.cpp
         src/fs/parser.cpp
         src/fs/std.cpp
+        src/goommonitor/goommonitor.cpp
         src/hwrm/hwrm.cpp
         src/hwrm/light/light_data.cpp
         src/hwrm/light/light.cpp

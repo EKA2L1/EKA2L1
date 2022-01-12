@@ -74,6 +74,7 @@ LOGCLASS(SERVICE_HWRM, "Service.HWRM", "HWRM service")
 LOGCLASS(SERVICE_WINDOW, "Service.Window", "Window service")
 LOGCLASS(SERVICE_MMFAUD, "Service.MMFAudio", "MMF Audio service")
 LOGCLASS(SERVICE_INSTALL, "Service.Install", "Install service")
+LOGCLASS(SERVICE_GOOMMONITOR, "Service.GOOMMonitor", "Global out-of-memory monitor service")
 
 LOGCLASS(DRIVER_AUD, "Driver.Audio", "Audio driver")
 LOGCLASS(DRIVER_GRAPHICS, "Driver.Graphics", "Graphics driver")

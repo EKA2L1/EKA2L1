@@ -36,6 +36,7 @@
 #include <services/fbs/fbs.h>
 #include <services/featmgr/featmgr.h>
 #include <services/fs/fs.h>
+#include <services/goommonitor/goommonitor.h>
 #include <services/hwrm/hwrm.h>
 #include <services/internet/connmonitor.h>
 #include <services/internet/nifman.h>
@@ -214,6 +215,7 @@ namespace eka2l1 {
 
             CREATE_SERVER(sys, system_agent_server);
             CREATE_SERVER(sys, unipertar_server);
+            CREATE_SERVER(sys, goom_monitor_server);
 
             // MMF server family
             {
