@@ -156,8 +156,8 @@ namespace eka2l1::drivers {
     bool read_bitmap(graphics_driver *driver, drivers::handle h, const eka2l1::point &pos, const eka2l1::object_size &size,
         const std::uint32_t bpp, std::uint8_t *buffer_ptr);
 
-    static constexpr std::size_t MAX_THRESHOLD_TO_FLUSH = 2000;
-    static constexpr std::size_t MAX_CAP_COMMAND_COUNT = 2500;
+    static constexpr std::size_t MAX_THRESHOLD_TO_FLUSH = 12000;
+    static constexpr std::size_t MAX_CAP_COMMAND_COUNT = 12800;
 
     #define PACK_2U32_TO_U64(a, b) (static_cast<std::uint64_t>(b) << 32) | static_cast<std::uint32_t>(a)
 

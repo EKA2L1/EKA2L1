@@ -183,8 +183,6 @@ namespace eka2l1::dispatch {
         std::int32_t stride_;
         std::uint32_t offset_;
         std::uint32_t buffer_obj_ = 0;
-
-        drivers::handle in_house_buffer_ = 0;
     };
 
     struct gles_texture_env_info {
@@ -274,6 +272,36 @@ namespace eka2l1::dispatch {
         float spot_dir_transformed_[3];
 
         explicit gles1_light_info();
+    };
+
+    // General idea from PPSSPP (thanks!)
+    struct gles1_buffer_pusher {
+    public:
+        static constexpr std::uint8_t MAX_BUFFER_SLOT = 4;
+
+    private:
+        drivers::handle buffers_[MAX_BUFFER_SLOT];
+        std::size_t used_size_[MAX_BUFFER_SLOT];
+        std::uint8_t *data_[MAX_BUFFER_SLOT];
+
+        std::uint8_t current_buffer_;
+        std::size_t size_per_buffer_;
+
+    public:
+        explicit gles1_buffer_pusher();
+
+        bool is_initialized() const {
+            return (size_per_buffer_ != 0);
+        }
+
+        void initialize(drivers::graphics_driver *drv, const std::size_t size_per_buffer);
+        void free(drivers::graphics_command_builder &builder);
+        void done_frame();
+
+        drivers::handle push_buffer(const std::uint8_t *data, const std::size_t buffer_size, std::size_t &buffer_offset);
+        drivers::handle push_buffer(const std::uint8_t *data, const gles1_vertex_attrib &attrib, const std::size_t vert_count, std::size_t &buffer_offset);
+
+        void flush(drivers::graphics_command_builder &builder);
     };
 
     using gles1_driver_object_instance = std::unique_ptr<gles1_driver_object>;
@@ -422,9 +450,6 @@ namespace eka2l1::dispatch {
 
         float alpha_test_ref_;
 
-        drivers::handle index_buffer_temp_;
-        std::size_t index_buffer_temp_size_;
-
         float polygon_offset_factor_;
         float polygon_offset_units_;
 
@@ -433,6 +458,10 @@ namespace eka2l1::dispatch {
 
         float depth_range_min_;
         float depth_range_max_;
+
+        // Vertex and index buffers
+        gles1_buffer_pusher vertex_buffer_pusher_;
+        gles1_buffer_pusher index_buffer_pusher_;
 
         explicit egl_context_es1();
 
@@ -446,7 +475,8 @@ namespace eka2l1::dispatch {
         void free(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) override;
         void return_handle_to_pool(const gles1_object_type type, const drivers::handle h);
         void on_surface_changed(egl_surface *prev_read, egl_surface *prev_draw) override;
-        void flush_stage_changes();
+        void flush_to_driver(drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) override;
+        void flush_state_changes();
 
         egl_context_type context_type() const override {
             return EGL_GLES1_CONTEXT;

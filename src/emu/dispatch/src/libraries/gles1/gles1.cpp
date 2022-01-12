@@ -215,6 +215,116 @@ namespace eka2l1::dispatch {
         return true;
     }
 
+    gles1_buffer_pusher::gles1_buffer_pusher() {
+        for (std::size_t i = 0; i < MAX_BUFFER_SLOT; i++) {
+            buffers_[i] = 0;
+            used_size_[i] = 0;
+            data_[i] = nullptr;
+        }
+
+        current_buffer_ = 0;
+        size_per_buffer_ = 0;
+    }
+
+    void gles1_buffer_pusher::initialize(drivers::graphics_driver *drv, const std::size_t size_per_buffer) {
+        if (!size_per_buffer) {
+            return;
+        }
+        size_per_buffer_ = size_per_buffer;
+        for (std::uint8_t i = 0; i < MAX_BUFFER_SLOT; i++) {
+            buffers_[i] = drivers::create_buffer(drv, nullptr, size_per_buffer, static_cast<drivers::buffer_upload_hint>(drivers::buffer_upload_dynamic | drivers::buffer_upload_draw));
+            data_[i] = new std::uint8_t[size_per_buffer];
+            used_size_[i] = 0;
+        }
+    }
+
+    void gles1_buffer_pusher::free(drivers::graphics_command_builder &builder) {
+        for (std::uint8_t i = 0; i < MAX_BUFFER_SLOT; i++) {
+            builder.destroy(buffers_[i]);
+            delete data_[i];
+        }
+    }
+
+    void gles1_buffer_pusher::flush(drivers::graphics_command_builder &builder) {
+        for (std::uint8_t i = 0; i <= current_buffer_; i++) {
+            if (i == MAX_BUFFER_SLOT) {
+                break;
+            }
+
+            const void *buffer_data_casted = data_[i];
+            const std::uint32_t buffer_size = static_cast<std::uint32_t>(used_size_[i]);
+
+            if (buffer_size == 0) {
+                continue;
+            }
+
+            builder.update_buffer_data(buffers_[i], 0, 1, &buffer_data_casted, &buffer_size);
+            used_size_[i] = 0;
+        }
+
+        // Move on, these others might still be used
+        current_buffer_++;
+
+        if (current_buffer_ >= MAX_BUFFER_SLOT) {
+            // Force return...
+            current_buffer_ = 0;
+        }
+    }
+
+    void gles1_buffer_pusher::done_frame() {
+        current_buffer_ = 0;
+    }
+    
+    drivers::handle gles1_buffer_pusher::push_buffer(const std::uint8_t *data, const gles1_vertex_attrib &attrib, const std::size_t vert_count, std::size_t &buffer_offset) {
+        std::uint32_t stride = attrib.stride_;
+        if (!stride) {
+            switch (attrib.data_type_) {
+            case GL_BYTE_EMU:
+            case GL_UNSIGNED_BYTE_EMU:
+                stride = 1;
+                break;
+
+            case GL_SHORT_EMU:
+            case GL_UNSIGNED_SHORT_EMU:
+                stride = 2;
+                break;
+
+            case GL_FLOAT_EMU:
+                stride = 4;
+                break;
+
+            case GL_FIXED_EMU:
+                stride = 4;
+                break;
+
+            default:
+                return 0;
+            }
+
+            stride *= attrib.size_;
+        }
+
+        std::size_t total_buffer_size = stride * vert_count;
+        return push_buffer(data, total_buffer_size, buffer_offset);
+    }
+
+    drivers::handle gles1_buffer_pusher::push_buffer(const std::uint8_t *data_source, const std::size_t total_buffer_size, std::size_t &buffer_offset) {
+        if (used_size_[current_buffer_] + total_buffer_size > size_per_buffer_) {
+            current_buffer_++;
+        }
+
+        if (current_buffer_ == MAX_BUFFER_SLOT) {
+            // No more slots, require flushing
+            return 0;
+        }
+
+        buffer_offset = used_size_[current_buffer_];
+        std::memcpy(data_[current_buffer_] + buffer_offset, data_source, total_buffer_size);
+
+        used_size_[current_buffer_] += (((total_buffer_size + 3) / 4) * 4);
+        return buffers_[current_buffer_];
+    }
+
     gles_texture_unit::gles_texture_unit()
         : index_(0)
         , binded_texture_handle_(0)
@@ -281,8 +391,6 @@ namespace eka2l1::dispatch {
         , depth_mask_(0xFFFFFFFF)
         , depth_func_(GL_LESS_EMU)
         , alpha_test_ref_(0)
-        , index_buffer_temp_(0)
-        , index_buffer_temp_size_(0)
         , input_desc_(0)
         , polygon_offset_factor_(0.0f)
         , polygon_offset_units_(0.0f)
@@ -358,33 +466,34 @@ namespace eka2l1::dispatch {
     }
 
     void egl_context_es1::free(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) {
-        if (index_buffer_temp_) {
-            cmd_builder_.destroy(index_buffer_temp_);
-        }
-
         if (input_desc_) {
             cmd_builder_.destroy(input_desc_);
         }
 
-        if (vertex_attrib_.in_house_buffer_) {
-            cmd_builder_.destroy(vertex_attrib_.in_house_buffer_);
-        }
-        
-        if (color_attrib_.in_house_buffer_) {
-            cmd_builder_.destroy(color_attrib_.in_house_buffer_);
-        }
-        
-        if (normal_attrib_.in_house_buffer_) {
-            cmd_builder_.destroy(normal_attrib_.in_house_buffer_);
-        }
-
-        for (int i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
-            if (texture_units_[i].coord_attrib_.in_house_buffer_) {
-                cmd_builder_.destroy(texture_units_[i].coord_attrib_.in_house_buffer_);
-            }
-        }
+        vertex_buffer_pusher_.free(builder);
+        index_buffer_pusher_.free(builder);
 
         egl_context::free(driver, builder);
+    }
+
+    void egl_context_es1::flush_to_driver(drivers::graphics_driver *drv, const bool is_frame_swap_flush) {
+        drivers::graphics_command_builder transfer_builder;
+        vertex_buffer_pusher_.flush(transfer_builder);
+        index_buffer_pusher_.flush(transfer_builder);
+
+        drivers::command_list retrieved = transfer_builder.retrieve_command_list();
+        drv->submit_command_list(retrieved);
+
+        flush_state_changes();
+        retrieved = cmd_builder_.retrieve_command_list();
+
+        drv->submit_command_list(retrieved);
+        init_context_state();
+
+        if (is_frame_swap_flush) {
+            vertex_buffer_pusher_.done_frame();
+            index_buffer_pusher_.done_frame();
+        }
     }
 
     void egl_context_es1::on_surface_changed(egl_surface *prev_read, egl_surface *prev_draw) {
@@ -393,7 +502,7 @@ namespace eka2l1::dispatch {
         viewport_bl_.size = draw_surface_->dimension_;
     }
 
-    void egl_context_es1::flush_stage_changes() {
+    void egl_context_es1::flush_state_changes() {
         // Beside texture parameters still being submitted directly. This is the best for now. 
         if (state_change_tracker_ == 0) {
             return;
@@ -710,15 +819,11 @@ namespace eka2l1::dispatch {
             clear_parameters[5] = ctx->clear_stencil_ / 255.0f;
         }
 
-        ctx->flush_stage_changes();
+        ctx->flush_state_changes();
         ctx->cmd_builder_.clear(clear_parameters, flags_driver);
 
         if (ctx->cmd_builder_.need_flush()) {
-            drivers::graphics_driver *drv = sys->get_graphics_driver();
-            drivers::command_list retrieved = ctx->cmd_builder_.retrieve_command_list();
-            drv->submit_command_list(retrieved);
-
-            ctx->init_context_state();
+            ctx->flush_to_driver(sys->get_graphics_driver());
         }
     }
     
@@ -3857,93 +3962,40 @@ namespace eka2l1::dispatch {
         return true;
     }
 
-    static std::uint32_t retrieve_buffer_size_attrib_es1(const gles1_vertex_attrib &attrib, const std::uint32_t estvcount) {
-        std::uint32_t stride = attrib.stride_;
-        if (!stride) {
-            switch (attrib.data_type_) {
-            case GL_BYTE_EMU:
-            case GL_UNSIGNED_BYTE_EMU:
-                stride = 1;
-                break;
-
-            case GL_SHORT_EMU:
-            case GL_UNSIGNED_SHORT_EMU:
-                stride = 2;
-                break;
-
-            case GL_FLOAT_EMU:
-                stride = 4;
-                break;
-
-            case GL_FIXED_EMU:
-                stride = 4;
-                break;
-
-            default:
-                return 0;
-            }
-
-            stride *= attrib.size_;
-        }
-
-        return stride * estvcount;
-    }
-
     static void prepare_vertex_buffer_and_descriptors(egl_context_es1 *ctx, drivers::graphics_driver *drv, kernel::process *crr_process, const std::uint32_t vcount, const std::uint32_t active_texs) {
-        auto update_cpu_buffer_data = [&](gles1_vertex_attrib &attrib) -> bool {
-            if (attrib.buffer_obj_ != 0) {
-                return true;
-            }
-
-            std::uint8_t *data = eka2l1::ptr<std::uint8_t>(attrib.offset_).get(crr_process);
-            if (!data) {
-                LOG_WARN(HLE_DISPATCHER, "Invalid pointer to CPU buffer data for attribute!");
-                return false;
-            }
-
-            // For elements draw this will doom (we don't know how many vertices to be exact at that situation)
-            const std::uint32_t est_buf_size = retrieve_buffer_size_attrib_es1(attrib, vcount);
-
-            if (!attrib.in_house_buffer_) {
-                attrib.in_house_buffer_ = drivers::create_buffer(drv, data, est_buf_size, static_cast<drivers::buffer_upload_hint>(drivers::buffer_upload_dynamic | drivers::buffer_upload_draw));
-            } else {
-                std::uint32_t size_casted = static_cast<std::uint32_t>(est_buf_size);
-                const void *data_casted = data;
-
-                ctx->cmd_builder_.update_buffer_data(attrib.in_house_buffer_, 0, 1, &data_casted, &size_casted);
-            }
-
-            return true;
-        };
-
-        if (!update_cpu_buffer_data(ctx->vertex_attrib_)) {
-            return;
-        }
-
-        if (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_COLOR_ARRAY) {
-            update_cpu_buffer_data(ctx->color_attrib_);
-        }
-
-        if (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_NORMAL_ARRAY) {
-            update_cpu_buffer_data(ctx->normal_attrib_);
-        }
-
-        if (active_texs && (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY)) {
-            for (std::int32_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
-                if (active_texs & (1 << i)) {
-                    update_cpu_buffer_data(ctx->texture_units_[i].coord_attrib_);
-                }
-            }
-        }
-
         if (ctx->attrib_changed_) {
             std::vector<drivers::handle> vertex_buffers_alloc;
+            bool can_turn_off_change = true;
 
-            auto retrieve_vertex_buffer_slot = [&](gles1_vertex_attrib attrib, std::uint32_t &res) -> bool {
+            auto retrieve_vertex_buffer_slot = [&](gles1_vertex_attrib attrib, std::uint32_t &res, int &offset) -> bool {
                 drivers::handle buffer_handle_drv = 0;
                 if (attrib.buffer_obj_ == 0) {
-                    buffer_handle_drv = attrib.in_house_buffer_;
+                    std::uint8_t *data_raw = eka2l1::ptr<std::uint8_t>(attrib.offset_).get(crr_process);
+                    if (!data_raw) {
+                        LOG_ERROR(HLE_DISPATCHER, "Unable to retrieve raw pointer of non-buffer binded attribute!");
+                        return false;
+                    }
+
+                    if (!ctx->vertex_buffer_pusher_.is_initialized()) {
+                        ctx->vertex_buffer_pusher_.initialize(drv, common::MB(1));
+                    }
+
+                    std::size_t offset_big = 0;
+                    buffer_handle_drv = ctx->vertex_buffer_pusher_.push_buffer(data_raw, attrib, vcount, offset_big);
+
+                    offset = static_cast<int>(offset_big);
+
+                    if (buffer_handle_drv == 0) {
+                        // Buffers are full, need flushing all
+                        ctx->flush_to_driver(drv);
+                        buffer_handle_drv = ctx->vertex_buffer_pusher_.push_buffer(data_raw, attrib, vcount, offset_big);
+                    }
+
+                    if (can_turn_off_change) {
+                        can_turn_off_change = false;
+                    }
                 } else {
+                    offset = static_cast<int>(attrib.offset_);
                     auto *buffer_inst_ptr = ctx->objects_.get(attrib.buffer_obj_);
                     if (!buffer_inst_ptr || ((*buffer_inst_ptr)->object_type() != GLES1_OBJECT_BUFFER)) {
                         return false;
@@ -3970,18 +4022,12 @@ namespace eka2l1::dispatch {
             drivers::data_format temp_format;
 
             drivers::input_descriptor temp_desc;
-            if (!retrieve_vertex_buffer_slot(ctx->vertex_attrib_, temp_desc.buffer_slot)) {
+            if (!retrieve_vertex_buffer_slot(ctx->vertex_attrib_, temp_desc.buffer_slot, temp_desc.offset)) {
                 LOG_WARN(HLE_DISPATCHER, "Vertex attribute not bound to a valid buffer, draw call skipping!");
                 return;
             }
 
             temp_desc.location = 0;
-
-            if (ctx->vertex_attrib_.buffer_obj_ != 0)
-                temp_desc.offset = ctx->vertex_attrib_.offset_;
-            else
-                temp_desc.offset = 0;
-
             temp_desc.stride = ctx->vertex_attrib_.stride_;
 
             gl_enum_to_drivers_data_format(ctx->vertex_attrib_.data_type_, temp_format);
@@ -3994,13 +4040,8 @@ namespace eka2l1::dispatch {
             descs.push_back(temp_desc);
 
             if (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_COLOR_ARRAY) {
-                if (retrieve_vertex_buffer_slot(ctx->color_attrib_, temp_desc.buffer_slot)) {
+                if (retrieve_vertex_buffer_slot(ctx->color_attrib_, temp_desc.buffer_slot, temp_desc.offset)) {
                     temp_desc.location = 1;
-                    if (ctx->color_attrib_.buffer_obj_ != 0)
-                        temp_desc.offset = ctx->color_attrib_.offset_;
-                    else
-                        temp_desc.offset = 0;
-
                     temp_desc.stride = ctx->color_attrib_.stride_;
                     temp_desc.set_normalized(true);
 
@@ -4014,13 +4055,8 @@ namespace eka2l1::dispatch {
             temp_desc.set_normalized(false);
 
             if (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_NORMAL_ARRAY) {
-                if (retrieve_vertex_buffer_slot(ctx->normal_attrib_, temp_desc.buffer_slot)) {
+                if (retrieve_vertex_buffer_slot(ctx->normal_attrib_, temp_desc.buffer_slot, temp_desc.offset)) {
                     temp_desc.location = 2;
-
-                    if (ctx->normal_attrib_.buffer_obj_ != 0)
-                        temp_desc.offset = ctx->normal_attrib_.offset_;
-                    else
-                        temp_desc.offset = 0;
                     temp_desc.stride = ctx->normal_attrib_.stride_;
 
                     gl_enum_to_drivers_data_format(ctx->normal_attrib_.data_type_, temp_format);
@@ -4035,14 +4071,8 @@ namespace eka2l1::dispatch {
 
             if (active_texs && (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY)) {
                 for (std::int32_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
-                    if (active_texs & (1 << i) && retrieve_vertex_buffer_slot(ctx->texture_units_[i].coord_attrib_, temp_desc.buffer_slot)) {
+                    if (active_texs & (1 << i) && retrieve_vertex_buffer_slot(ctx->texture_units_[i].coord_attrib_, temp_desc.buffer_slot, temp_desc.offset)) {
                         temp_desc.location = 3 + i;
-
-                        if (ctx->texture_units_[i].coord_attrib_.buffer_obj_ != 0)
-                            temp_desc.offset = ctx->texture_units_[i].coord_attrib_.offset_;
-                        else
-                            temp_desc.offset = 0;
-
                         temp_desc.stride = ctx->texture_units_[i].coord_attrib_.stride_;
 
                         gl_enum_to_drivers_data_format(ctx->texture_units_[i].coord_attrib_.data_type_, temp_format);
@@ -4060,7 +4090,9 @@ namespace eka2l1::dispatch {
             }
 
             ctx->cmd_builder_.set_vertex_buffers(vertex_buffers_alloc.data(), 0, static_cast<std::uint32_t>(vertex_buffers_alloc.size()));
-            ctx->attrib_changed_ = false;
+
+            if (can_turn_off_change)
+                ctx->attrib_changed_ = false;
         }
 
         ctx->cmd_builder_.bind_input_descriptors(ctx->input_desc_);
@@ -4081,8 +4113,6 @@ namespace eka2l1::dispatch {
     }
 
     static bool prepare_gles1_draw(egl_context_es1 *ctx, drivers::graphics_driver *drv, kernel::process *crr_process, const std::uint32_t vcount, dispatch::egl_controller &controller) {
-        ctx->flush_stage_changes();
-
         if ((ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_VERTEX_ARRAY) == 0) {
             // No drawing needed?
             return true;
@@ -4090,6 +4120,8 @@ namespace eka2l1::dispatch {
 
         std::uint32_t active_textures_bitarr = retrieve_active_textures_bitarr(ctx);
         prepare_vertex_buffer_and_descriptors(ctx, drv, crr_process, vcount, active_textures_bitarr);
+
+        ctx->flush_state_changes();
 
         // Active textures
         for (std::int32_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
@@ -4174,10 +4206,7 @@ namespace eka2l1::dispatch {
         ctx->cmd_builder_.draw_arrays(prim_mode_drv, first_index, count, false);
  
         if (ctx->cmd_builder_.need_flush()) {
-            drivers::command_list retrieved = ctx->cmd_builder_.retrieve_command_list();
-            drv->submit_command_list(retrieved);
-
-            ctx->init_context_state();
+            ctx->flush_to_driver(drv);
         }
     }
 
@@ -4223,13 +4252,13 @@ namespace eka2l1::dispatch {
         }
 
         kernel_system *kern = sys->get_kernel_system();
-        const void *indicies_data_raw = nullptr;
+        const std::uint8_t *indicies_data_raw = nullptr;
 
         std::int32_t total_vert = count;
 
         if (ctx->binded_element_array_buffer_handle_ == 0) {
-            indicies_data_raw =  kern->crr_process()->get_ptr_on_addr_space(indices_ptr);
-            
+            indicies_data_raw = reinterpret_cast<const std::uint8_t*>(kern->crr_process()->get_ptr_on_addr_space(indices_ptr));
+ 
             if (indicies_data_raw) {
                 std::int32_t max_vert_index = 0;
                 for (std::int32_t i = 0; i < count; i++) {
@@ -4247,11 +4276,6 @@ namespace eka2l1::dispatch {
             }
         }
 
-        if (!prepare_gles1_draw(ctx, drv, sys->get_kernel_system()->crr_process(), total_vert, controller)) {
-            LOG_ERROR(HLE_DISPATCHER, "Error while preparing GLES1 draw. This should not happen!");
-            return;
-        }
-        
         gles1_driver_buffer *binded_elem_buffer_managed = ctx->binded_buffer(false);
 
         if (!binded_elem_buffer_managed) {
@@ -4263,34 +4287,32 @@ namespace eka2l1::dispatch {
                 return;
             }
 
-            if (!ctx->index_buffer_temp_) {
-                ctx->index_buffer_temp_ = drivers::create_buffer(drv, indicies_data_raw, size_ibuffer, static_cast<drivers::buffer_upload_hint>(drivers::buffer_upload_dynamic | drivers::buffer_upload_draw));
-                ctx->index_buffer_temp_size_ = size_ibuffer;
-            } else {
-                if (ctx->index_buffer_temp_size_ < static_cast<std::size_t>(size_ibuffer)) {
-                    ctx->cmd_builder_.recreate_buffer(ctx->index_buffer_temp_, indicies_data_raw, size_ibuffer,
-                        static_cast<drivers::buffer_upload_hint>(drivers::buffer_upload_dynamic | drivers::buffer_upload_draw));
-                    ctx->index_buffer_temp_size_ = size_ibuffer;
-                } else {
-                    std::uint32_t size_casted = static_cast<std::uint32_t>(size_ibuffer);
-                    ctx->cmd_builder_.update_buffer_data(ctx->index_buffer_temp_, 0, 1,
-                        &indicies_data_raw, &size_casted);
-                }
+            if (!ctx->index_buffer_pusher_.is_initialized()) {
+                ctx->index_buffer_pusher_.initialize(drv, common::KB(512));
             }
 
-            ctx->cmd_builder_.set_index_buffer(ctx->index_buffer_temp_);
-            indices_ptr = 0;
+            std::size_t offset_bytes = 0;
+            drivers::handle to_bind = ctx->index_buffer_pusher_.push_buffer(indicies_data_raw, size_ibuffer, offset_bytes);
+            if (to_bind == 0) {
+                ctx->flush_to_driver(drv);
+                to_bind = ctx->index_buffer_pusher_.push_buffer(indicies_data_raw, size_ibuffer, offset_bytes);
+            }
+
+            ctx->cmd_builder_.set_index_buffer(to_bind);
+            indices_ptr = static_cast<std::uint32_t>(offset_bytes);
         } else {
             ctx->cmd_builder_.set_index_buffer(binded_elem_buffer_managed->handle_value());
         }
 
-        ctx->cmd_builder_.draw_indexed(prim_mode_drv, count, index_format_drv, 0, indices_ptr);
+        if (!prepare_gles1_draw(ctx, drv, sys->get_kernel_system()->crr_process(), total_vert, controller)) {
+            LOG_ERROR(HLE_DISPATCHER, "Error while preparing GLES1 draw. This should not happen!");
+            return;
+        }
+
+        ctx->cmd_builder_.draw_indexed(prim_mode_drv, count, index_format_drv, static_cast<int>(indices_ptr), 0);
 
         if (ctx->cmd_builder_.need_flush()) {
-            drivers::command_list retrieved = ctx->cmd_builder_.retrieve_command_list();
-            drv->submit_command_list(retrieved);
-
-            ctx->init_context_state();
+            ctx->flush_to_driver(drv);
         }
     }
 

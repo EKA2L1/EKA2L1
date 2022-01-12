@@ -470,10 +470,7 @@ namespace eka2l1::dispatch {
         }
 
         if (surface->bounded_context_) {
-            drivers::command_list retrieved = surface->bounded_context_->cmd_builder_.retrieve_command_list();
-            drv->submit_command_list(retrieved);
-
-            surface->bounded_context_->init_context_state();
+            surface->bounded_context_->flush_to_driver(drv, true);
         }
 
         if (surface->backed_window_)

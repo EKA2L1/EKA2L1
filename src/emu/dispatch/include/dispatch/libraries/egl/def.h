@@ -379,6 +379,7 @@ namespace eka2l1::dispatch {
         virtual ~egl_context() = default;
 
         virtual void free(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder);
+        virtual void flush_to_driver(drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) = 0;
         virtual egl_context_type context_type() const = 0;
         virtual void init_context_state() = 0;
         virtual void on_surface_changed(egl_surface *prev_read, egl_surface *prev_draw) {}
