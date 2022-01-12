@@ -195,6 +195,19 @@ namespace eka2l1::android {
                 conf.serialize();
             }
 
+            for (std::size_t i = 0; i < dlls_need_to_copy.size(); i++) {
+                epocver ver_required = std::get<2>(dlls_need_to_copy[i]);
+                if (symsys->get_symbian_version_use() < ver_required) {
+                    continue;
+                }
+
+                std::u16string org_file_path = std::get<0>(dlls_need_to_copy[i]);
+                auto where_to_copy = io->get_raw_path(eka2l1::file_directory(org_file_path));
+                if (where_to_copy.has_value()) {
+                    common::copy_file(std::get<1>(dlls_need_to_copy[i]), common::ucs2_to_utf8(where_to_copy.value()), true);
+                }
+            }
+
             manager::packages *pkgmngr = symsys->get_packages();
 
             pkgmngr->load_registries();
