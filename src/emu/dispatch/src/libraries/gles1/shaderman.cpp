@@ -79,6 +79,15 @@ namespace eka2l1::dispatch {
         drivers::handle vert_module = 0;
         std::uint64_t vertex_hash = vertex_statuses | (static_cast<std::uint64_t>(active_texs) << egl_context_es1::VERTEX_STATE_REVERSED_BITS_POS);
 
+        if (active_texs != 0) {
+            // Clean texcoord bits of unused textures...
+            for (std::uint8_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
+                if ((active_texs & (1 << i)) == 0) {
+                    vertex_hash &= ~(1 << (egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY_POS + i));
+                }
+            }
+        }
+
         auto vert_cache_ite = vertex_cache_.find(vertex_hash);
         if (vert_cache_ite == vertex_cache_.end()) {
             std::string source_shader;
@@ -114,7 +123,7 @@ namespace eka2l1::dispatch {
         XXH64_reset(reinterpret_cast<XXH64_state_t*>(fragment_status_hasher_), 0xD00D1E61E51ULL);
         XXH64_update(reinterpret_cast<XXH64_state_t*>(fragment_status_hasher_), &cleansed_fragment_statuses, sizeof(std::uint64_t));
 
-        if ((fragment_statuses & egl_context_es1::FRAGMENT_STATE_TEXTURE_ENABLE) && (active_texs != 0)) {
+        if (active_texs != 0) {
             for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
                 if (active_texs & (1 << i)) {
                     XXH64_update(reinterpret_cast<XXH64_state_t*>(fragment_status_hasher_), tex_env_infos + i, sizeof(gles_texture_env_info));
@@ -193,7 +202,7 @@ namespace eka2l1::dispatch {
 
             for (std::uint32_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
                 if (active_texs & (1 << i)) {
-                    if ((vertex_statuses & egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY) == 0)
+                    if ((vertex_statuses & (1 << (static_cast<std::uint8_t>(i) + egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY_POS))) == 0)
                         info_inst->texcoord_loc_[i] = metadata.get_uniform_binding(texcoordname.c_str());
         
                     info_inst->texture_mat_loc_[i] = metadata.get_uniform_binding(texture_mat_name.c_str());
@@ -228,7 +237,7 @@ namespace eka2l1::dispatch {
             if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_FOG_ENABLE) {
                 info_inst->fog_color_loc_ = metadata.get_uniform_binding("uFogColor");
 
-                if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_FOG_MODE_LINEAR) {
+                if ((fragment_statuses & egl_context_es1::FRAGMENT_STATE_FOG_MODE_MASK) == egl_context_es1::FRAGMENT_STATE_FOG_MODE_LINEAR) {
                     info_inst->fog_start_loc_ = metadata.get_uniform_binding("uFogStart");
                     info_inst->fog_end_loc_ = metadata.get_uniform_binding("uFogEnd");
                 } else {

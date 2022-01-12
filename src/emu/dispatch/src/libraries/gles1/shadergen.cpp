@@ -82,21 +82,16 @@ namespace eka2l1::dispatch {
 
         out_decl += "out vec3 mNormal;\n";
 
-        if (vertex_statuses & egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY) {
-            for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
-                if (active_texs & (1 << i)) {
-                    uni_decl += fmt::format("uniform mat4 uTextureMat{};\n", i);
+        for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
+            out_decl += fmt::format("out vec4 mTexCoord{};\n", i);
+            uni_decl += fmt::format("uniform mat4 uTextureMat{};\n", i);
+            
+            if (active_texs & (1 << i)) {
+                if (vertex_statuses & (1 << (egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY_POS + static_cast<std::uint8_t>(i)))) {
                     input_decl += fmt::format("layout (location = {}) in vec4 inTexCoord{};\n", 3 + i, i);
-                    out_decl += fmt::format("out vec4 mTexCoord{};\n", i); 
                     main_body += fmt::format("\tmTexCoord{} = uTextureMat{} * inTexCoord{};\n", i, i, i);
-                }
-            }
-        } else {
-            for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
-                if (active_texs & (1 << i)) {
-                    uni_decl += fmt::format("uniform mat4 uTextureMat{};\n", i);
-                    input_decl += fmt::format("uniform vec4 uTexCoord{};\n", i);
-                    out_decl += fmt::format("out vec4 mTexCoord{};\n", i); 
+                } else {
+                    uni_decl += fmt::format("uniform vec4 uTexCoord{};\n", i);
                     main_body += fmt::format("\tmTexCoord{} = uTextureMat{} * uTexCoord{};\n", i, i, i);
                 }
             }
@@ -249,7 +244,7 @@ namespace eka2l1::dispatch {
             }
         }
 
-        if ((fragment_statuses & egl_context_es1::FRAGMENT_STATE_TEXTURE_ENABLE) && (active_texs != 0)) {
+        if (active_texs != 0) {
             for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
                 if (active_texs & (1 << i)) {
                     uni_decl += fmt::format("uniform sampler2D uTexture{};\n", i);
@@ -354,7 +349,7 @@ namespace eka2l1::dispatch {
             main_body += "\tvec4 gActualMaterialAmbient;\n"
                         "\tvec4 gActualMaterialDiffuse;\n";
 
-            if ((fragment_statuses & egl_context_es1::FRAGMENT_STATE_COLOR_MATERIAL_ENABLE) || ((fragment_statuses & egl_context_es1::FRAGMENT_STATE_TEXTURE_ENABLE) && (active_texs != 0))) {
+            if ((fragment_statuses & egl_context_es1::FRAGMENT_STATE_COLOR_MATERIAL_ENABLE) || (active_texs != 0)) {
                 // Texture or previous computed color is used instead of specified material...
                 main_body += "\tgActualMaterialAmbient = oColor;\n"
                             "\tgActualMaterialDiffuse = oColor;\n";

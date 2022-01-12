@@ -329,7 +329,8 @@ namespace eka2l1::dispatch {
         : index_(0)
         , binded_texture_handle_(0)
         , alpha_scale_(1)
-        , rgb_scale_(1) {
+        , rgb_scale_(1)
+        , texturing_enabled_(false) {
         texture_mat_stack_.push(glm::identity<glm::mat4>());
 
         env_info_.env_mode_ = gles_texture_env_info::ENV_MODE_MODULATE;
@@ -1947,7 +1948,9 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_TEXTURE_COORD_ARRAY_EMU:
-            ctx->vertex_statuses_ |= egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY;
+            ctx->vertex_statuses_ |= (1 << (egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY_POS +
+                static_cast<std::uint8_t>(ctx->active_client_texture_unit_)));
+
             break;
 
         default:
@@ -1979,7 +1982,8 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_TEXTURE_COORD_ARRAY_EMU:
-            ctx->vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY;
+            ctx->vertex_statuses_ &= ~(1 << (egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY_POS +
+                static_cast<std::uint8_t>(ctx->active_client_texture_unit_)));
             break;
 
         default:
@@ -3435,7 +3439,7 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_TEXTURE_2D_EMU:
-            ctx->fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_TEXTURE_ENABLE;
+            ctx->texture_units_[ctx->active_texture_unit_].texturing_enabled_ = true;
             break;
 
         case GL_NORMALIZE_EMU:
@@ -3610,7 +3614,7 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_TEXTURE_2D_EMU:
-            ctx->fragment_statuses_ &= ~egl_context_es1::FRAGMENT_STATE_TEXTURE_ENABLE;
+            ctx->texture_units_[ctx->active_texture_unit_].texturing_enabled_ = false;
             break;
 
         case GL_NORMALIZE_EMU:
@@ -3888,9 +3892,11 @@ namespace eka2l1::dispatch {
                     ctx->normal_uniforms_, 12);
             }
 
-            for (std::uint32_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
+            std::uint64_t coordarray_mask = egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD0_ARRAY;
+
+            for (std::uint32_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++, coordarray_mask <<= 1) {
                 if (active_texs & (1 << i)) {
-                    if ((ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY) == 0)
+                    if ((ctx->vertex_statuses_ & coordarray_mask) == 0)
                         ctx->cmd_builder_.set_dynamic_uniform(var_info->texcoord_loc_[i], drivers::shader_set_var_type::vec4,
                             ctx->texture_units_[i].coord_uniforms_, 16);
 
@@ -3936,7 +3942,9 @@ namespace eka2l1::dispatch {
                 ctx->cmd_builder_.set_dynamic_uniform(var_info->fog_color_loc_, drivers::shader_set_var_type::vec4,
                     ctx->fog_color_, 16);
 
-                if (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_FOG_MODE_LINEAR) {
+                std::uint64_t fog_mode = (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_FOG_MODE_MASK);
+
+                if (fog_mode == egl_context_es1::FRAGMENT_STATE_FOG_MODE_LINEAR) {
                     ctx->cmd_builder_.set_dynamic_uniform(var_info->fog_start_loc_, drivers::shader_set_var_type::real,
                         &ctx->fog_start_, 4);
                     ctx->cmd_builder_.set_dynamic_uniform(var_info->fog_end_loc_, drivers::shader_set_var_type::real,
@@ -3991,7 +3999,7 @@ namespace eka2l1::dispatch {
                     }
 
                     if (!ctx->vertex_buffer_pusher_.is_initialized()) {
-                        ctx->vertex_buffer_pusher_.initialize(drv, common::MB(1));
+                        ctx->vertex_buffer_pusher_.initialize(drv, common::MB(4));
                     }
 
                     std::size_t offset_big = 0;
@@ -4083,9 +4091,10 @@ namespace eka2l1::dispatch {
 
             temp_desc.set_normalized(false);
 
-            if (active_texs && (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY)) {
+            if (active_texs) {
                 for (std::int32_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
-                    if (active_texs & (1 << i) && retrieve_vertex_buffer_slot(ctx->texture_units_[i].coord_attrib_, temp_desc.buffer_slot, temp_desc.offset)) {
+                    if ((active_texs & (1 << i)) && (ctx->vertex_statuses_ & (1 << (egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY_POS + static_cast<std::uint8_t>(i))))
+                        && retrieve_vertex_buffer_slot(ctx->texture_units_[i].coord_attrib_, temp_desc.buffer_slot, temp_desc.offset)) {
                         temp_desc.location = 3 + i;
                         temp_desc.stride = ctx->texture_units_[i].coord_attrib_.stride_;
 
@@ -4114,12 +4123,13 @@ namespace eka2l1::dispatch {
 
     static std::uint32_t retrieve_active_textures_bitarr(egl_context_es1 *ctx) {
         std::uint32_t arr = 0;
-        if (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_TEXTURE_ENABLE) {
-            for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
-                auto *inst = ctx->objects_.get(ctx->texture_units_[i].binded_texture_handle_);
-                if (inst && (*inst).get()) {
-                    arr |= (1 << i);
-                }
+        for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
+            if (!ctx->texture_units_[i].texturing_enabled_) {
+                continue;
+            }
+            auto *inst = ctx->objects_.get(ctx->texture_units_[i].binded_texture_handle_);
+            if (inst && (*inst).get()) {
+                arr |= (1 << i);
             }
         }
 
@@ -4191,7 +4201,7 @@ namespace eka2l1::dispatch {
         return true;
     }
     
-    BRIDGE_FUNC_LIBRARY(void, gl_draw_arrays_emu, std::uint32_t mode, std::int32_t first_index, const std::int32_t count) {
+    BRIDGE_FUNC_LIBRARY(void, gl_draw_arrays_emu, std::uint32_t mode, std::int32_t first_index, std::int32_t count) {
         egl_context_es1 *ctx = get_es1_active_context(sys);
         if (!ctx) {
             return;
@@ -4212,7 +4222,7 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        if (!prepare_gles1_draw(ctx, drv, sys->get_kernel_system()->crr_process(), count, controller)) {
+        if (!prepare_gles1_draw(ctx, drv, sys->get_kernel_system()->crr_process(), count + first_index, controller)) {
             LOG_ERROR(HLE_DISPATCHER, "Error while preparing GLES1 draw. This should not happen!");
             return;
         }
@@ -4302,7 +4312,7 @@ namespace eka2l1::dispatch {
             }
 
             if (!ctx->index_buffer_pusher_.is_initialized()) {
-                ctx->index_buffer_pusher_.initialize(drv, common::KB(512));
+                ctx->index_buffer_pusher_.initialize(drv, common::MB(2));
             }
 
             std::size_t offset_bytes = 0;
@@ -4591,9 +4601,13 @@ namespace eka2l1::dispatch {
             *params = static_cast<std::int32_t>(ctx->normal_attrib_.offset_);
             break;
 
-        case GL_TEXTURE_COORD_ARRAY_EMU:
-            *params = (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY) ? 1 : 0;
+        case GL_TEXTURE_COORD_ARRAY_EMU: {
+            std::uint64_t mask = 1 << (egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY_POS +
+                static_cast<std::uint8_t>(ctx->active_client_texture_unit_));
+
+            *params = (ctx->vertex_statuses_ & mask) ? 1 : 0;
             break;
+        }
 
         case GL_VERTEX_ARRAY_BUFFER_BINDING_EMU:
             *params = ctx->vertex_attrib_.buffer_obj_;
@@ -4880,7 +4894,7 @@ namespace eka2l1::dispatch {
             return (ctx->non_shader_statuses_ & egl_context_es1::NON_SHADER_STATE_SAMPLE_ALPHA_TO_ONE) ? 1 : 0;
 
         case GL_TEXTURE_2D_EMU:
-            return (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_TEXTURE_ENABLE) ? 1 : 0;
+            return static_cast<std::int32_t>(ctx->texture_units_[ctx->active_texture_unit_].texturing_enabled_);
 
         case GL_NORMALIZE_EMU:
             return (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_NORMAL_ENABLE_NORMALIZE) ? 1 : 0;
@@ -4900,8 +4914,11 @@ namespace eka2l1::dispatch {
         case GL_NORMAL_ARRAY_EMU:
             return (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_NORMAL_ARRAY) ? 1 : 0;
 
-        case GL_TEXTURE_COORD_ARRAY_EMU:
-            return (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY) ? 1 : 0;
+        case GL_TEXTURE_COORD_ARRAY_EMU: {
+            std::uint64_t mask = 1 << (egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY_POS +
+                static_cast<std::uint8_t>(ctx->active_client_texture_unit_));
+            return (ctx->vertex_statuses_ & mask) ? 1 : 0;
+        }
 
         default:
             controller.push_error(ctx, GL_INVALID_ENUM);
