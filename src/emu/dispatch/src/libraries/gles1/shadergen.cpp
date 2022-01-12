@@ -379,18 +379,19 @@ namespace eka2l1::dispatch {
         if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_FOG_ENABLE) {
             uni_decl += "uniform vec4 uFogColor;\n";
 
+            // Must negate z. So the original formula got reversed a bit
             switch (fragment_statuses & egl_context_es1::FRAGMENT_STATE_FOG_MODE_MASK) {
             case egl_context_es1::FRAGMENT_STATE_FOG_MODE_LINEAR: {
                 uni_decl += "uniform float uFogStart;\n";
                 uni_decl += "uniform float uFogEnd;\n";
 
-                main_body += "\tfloat fogF = (uFogEnd - mMyPos.z) / (uFogEnd - uFogStart);\n";
+                main_body += "\tfloat fogF = (uFogEnd + mMyPos.z) / (uFogEnd - uFogStart);\n";
                 break;
             }
 
             case egl_context_es1::FRAGMENT_STATE_FOG_MODE_EXP: {
                 uni_decl += "uniform float uFogDensity;\n";
-                main_body += "\tfloat fogF = exp(-(uFogDensity * mMyPos.z));\n";
+                main_body += "\tfloat fogF = exp(uFogDensity * mMyPos.z);\n";
 
                 break;
             }
