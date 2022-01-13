@@ -80,6 +80,7 @@ namespace eka2l1 {
         apa_capability caps;
 
         std::u16string rsc_path;
+        std::uint64_t last_rsc_modified{ 0 };
         std::u16string localised_info_rsc_path;
         std::uint32_t localised_info_rsc_id{ 1 };
 
@@ -186,9 +187,10 @@ namespace eka2l1 {
         std::vector<apa_app_registry> regs;
 
         std::uint32_t flags{ 0 };
+        std::uint32_t avail_drives_{ 0 };
 
-        std::vector<std::int64_t> watchs_;
-        std::size_t drive_change_handle_;
+        std::vector<std::size_t> poll_events_;
+        std::size_t drive_change_handle_{ 0 };
 
         fbs_server *fbsserv;
 
@@ -207,17 +209,12 @@ namespace eka2l1 {
         bool load_registry_oldarch(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
             const language ideal_lang = language::en);
 
-        void on_register_directory_changes(eka2l1::io_system *io, const std::u16string &base, drive_number land_drive,
-            common::directory_changes &changes);
-
         void on_drive_change(void *userdata, drive_number drv, drive_action act);
 
         void remove_registries_on_drive(const drive_number drv);
 
-        void rescan_registries_on_drive_oldarch(eka2l1::io_system *io, const drive_number num);
-        void rescan_registries_on_drive_newarch(eka2l1::io_system *io, const drive_number num);
-
-        void rescan_registries(eka2l1::io_system *io);
+        bool rescan_registries_on_drive_oldarch(eka2l1::io_system *io, const drive_number num);
+        bool rescan_registries_on_drive_newarch(eka2l1::io_system *io, const drive_number num);
 
         /*! \brief Get the number of screen shared for an app. 
          * 
@@ -299,6 +296,8 @@ namespace eka2l1 {
         std::optional<apa_app_masked_icon_bitmap> get_icon(apa_app_registry &registry, const std::int8_t index);
 
         std::mutex list_access_mut_;
+
+        bool rescan_registries(eka2l1::io_system *io);
 
         /**
          * \brief Get an app registeration
