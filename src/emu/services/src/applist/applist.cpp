@@ -404,7 +404,18 @@ namespace eka2l1 {
             }
         }
 
-        for (std::uint8_t i = 0; i < 27; i++) {
+        // Delete entries that no longer exist...
+        std::size_t prev = regs.size();
+
+        common::erase_elements(regs, [io](const apa_app_registry &reg) {
+            return !io->exist(reg.rsc_path);
+        });
+
+        if (prev != regs.size()) {
+            global_modified = true;
+        }
+
+        for (std::uint8_t i = 0; i < drive_count; i++) {
             if (avail_drives_ & (1 << i)) {
                 drive_number drv = static_cast<drive_number>(static_cast<int>(drive_a) + i);
                 bool drv_modified = false;

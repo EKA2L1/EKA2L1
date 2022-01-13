@@ -460,14 +460,27 @@ void main_window::on_settings_triggered() {
     }
 }
 
+void main_window::force_refresh_applist() {
+    // Try to refersh app lists
+    if (applist_ && applist_->lister_->rescan_registries(applist_->io_)) {
+        applist_->reload_whole_list();
+    }
+}
+
 void main_window::on_package_manager_triggered() {
     if (emulator_state_.symsys) {
         eka2l1::manager::packages *pkgmngr = emulator_state_.symsys->get_packages();
         if (pkgmngr) {
             package_manager_dialog *mgdiag = new package_manager_dialog(this, pkgmngr);
+            connect(mgdiag, &package_manager_dialog::package_uninstalled, this, &main_window::on_package_uninstalled);
+
             mgdiag->exec();
         }
     }
+}
+
+void main_window::on_package_uninstalled() {
+    force_refresh_applist();
 }
 
 void main_window::on_device_set_requested(const int index) {
@@ -938,10 +951,7 @@ void main_window::spawn_package_install_camper(QString package_file_path) {
             }
 
             if (install_future.result() == eka2l1::package::installation_result_success) {
-                // Try to refersh app lists
-                if (applist_ && applist_->lister_->rescan_registries(applist_->io_)) {
-                    applist_->reload_whole_list();
-                }
+                force_refresh_applist();
             }
         }
     }
