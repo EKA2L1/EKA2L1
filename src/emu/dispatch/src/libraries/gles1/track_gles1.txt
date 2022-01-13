@@ -98,7 +98,18 @@ glTexParameteriv
 glTexParameterxv
 glDrawArrays
 glDrawElements
+glCompressedTexImage2D
+glFinish
+glDepthRangef
+glDepthRangex
+glGetIntegerv
+glLineWidth
+glLineWidthx
+glPixelStorei
+glTexParameterf
+glTexParameterx
 
+eglSwapInterval
 eglChooseConfig
 eglGetDisplay
 eglGetConfigs
@@ -111,6 +122,8 @@ eglMakeCurrent
 eglDestroyContext
 eglDestroySurface
 eglSwapBuffers
+eglQueryString
+eglWaitNative
 
 In the eyes:
 
@@ -124,10 +137,8 @@ eglGetCurrentSurface
 eglGetProcAddress
 eglQueryContext
 eglQuerySurface
-eglQueryString
 eglTerminate
 eglWaitGL
-eglWaitNative
 eglCreatePixmapSurface
 
 2 。
@@ -138,21 +149,13 @@ glCopyTexSubImage2D
 
 Stubbed to ignore (for now. Tadum!):
 
-glCompressedTexImage2D
 glCompressedTexSubImage2D
 glHint
 glLogicOp
 
 List:
 
-glDepthRangef
-glDepthRangex
-glFinish
 glFlush
-glGetIntegerv
-glLineWidth
-glLineWidthx
-glPixelStorei
 glPointSize
 glPointSizex
 glPolygonOffset
@@ -163,9 +166,6 @@ glSampleCoverage
 glSampleCoveragex
 glStencilFunc
 glStencilOp
-glTexParameterf
-glTexParameterx
-eglSwapInterval
 glGetBooleanv
 glGetBufferParameteriv
 glGetClipPlanef

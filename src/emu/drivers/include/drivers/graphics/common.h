@@ -112,7 +112,8 @@ namespace eka2l1::drivers {
         depth_stencil,
         depth24_stencil8,
         etc2_rgb8,
-        pvrtc_4bppv1_rgba
+        pvrtc_4bppv1_rgba,
+        pvrtc_2bppv1_rgba
     };
 
     enum class texture_data_type : std::uint16_t {
