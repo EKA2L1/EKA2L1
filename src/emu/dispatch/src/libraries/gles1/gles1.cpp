@@ -339,7 +339,26 @@ namespace eka2l1::dispatch {
         , texturing_enabled_(false) {
         texture_mat_stack_.push(glm::identity<glm::mat4>());
 
+        // Default all to modulates
         env_info_.env_mode_ = gles_texture_env_info::ENV_MODE_MODULATE;
+        env_info_.src0_rgb_ = gles_texture_env_info::SOURCE_TYPE_PREVIOUS;
+        env_info_.src0_a_ = gles_texture_env_info::SOURCE_TYPE_PREVIOUS;
+        env_info_.src1_rgb_ = gles_texture_env_info::SOURCE_TYPE_CURRENT_TEXTURE;
+        env_info_.src1_a_ = gles_texture_env_info::SOURCE_TYPE_CURRENT_TEXTURE;
+        env_info_.src2_rgb_ = gles_texture_env_info::SOURCE_TYPE_CONSTANT;
+        env_info_.src2_a_ = gles_texture_env_info::SOURCE_TYPE_CONSTANT;
+
+        env_info_.src0_rgb_op_ = gles_texture_env_info::SOURCE_OPERAND_COLOR;
+        env_info_.src1_rgb_op_ = gles_texture_env_info::SOURCE_OPERAND_COLOR;
+        env_info_.src2_rgb_op_ = gles_texture_env_info::SOURCE_OPERAND_COLOR;
+
+        env_info_.src0_a_op_ = gles_texture_env_info::SOURCE_OPERAND_ALPHA;
+        env_info_.src1_a_op_ = gles_texture_env_info::SOURCE_OPERAND_ALPHA;
+        env_info_.src2_a_op_ = gles_texture_env_info::SOURCE_OPERAND_ALPHA;
+
+        env_info_.combine_rgb_func_ = gles_texture_env_info::SOURCE_COMBINE_MODULATE;
+        env_info_.combine_a_func_ = gles_texture_env_info::SOURCE_COMBINE_MODULATE;
+
         env_colors_[0] = env_colors_[1] = env_colors_[2] = env_colors_[3] = 0.0f;
     }
 
@@ -1905,6 +1924,8 @@ namespace eka2l1::dispatch {
             controller.push_error(ctx, GL_INVALID_ENUM);
             return;
         }
+
+        unit -= GL_TEXTURE0_EMU;
 
         ctx->texture_units_[unit].coord_uniforms_[0] = s;
         ctx->texture_units_[unit].coord_uniforms_[1] = t;
