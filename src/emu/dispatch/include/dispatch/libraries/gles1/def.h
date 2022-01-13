@@ -301,7 +301,7 @@ namespace eka2l1::dispatch {
         void done_frame();
 
         drivers::handle push_buffer(const std::uint8_t *data, const std::size_t buffer_size, std::size_t &buffer_offset);
-        drivers::handle push_buffer(const std::uint8_t *data, const gles1_vertex_attrib &attrib, const std::size_t vert_count, std::size_t &buffer_offset);
+        drivers::handle push_buffer(const std::uint8_t *data, const gles1_vertex_attrib &attrib, const std::int32_t first_index, const std::size_t vert_count, std::size_t &buffer_offset);
 
         void flush(drivers::graphics_command_builder &builder);
     };
@@ -417,6 +417,7 @@ namespace eka2l1::dispatch {
         drivers::handle input_desc_;
 
         bool attrib_changed_;
+        std::int32_t previous_first_index_;
 
         float color_uniforms_[4];
         float normal_uniforms_[3];
