@@ -55,15 +55,24 @@ void CMdaAudioOutputStream::Open(TMdaPackage *aPackage) {
     TMdaAudioDataSettings *settings = reinterpret_cast<TMdaAudioDataSettings *>(aPackage);
 
     // Try to set audio properties
-    TInt realFreq = ConvertFreqEnumToNumber(settings->iSampleRate);
-    TInt numChannels = ConvertChannelEnumToNum(settings->iChannels);
+    TInt realFreq = 0;
+    TInt numChannels = 0;
 
-    if (realFreq == -1) {
-        realFreq = settings->iSampleRate;
-    }
+    if (settings) {
+        realFreq = ConvertFreqEnumToNumber(settings->iSampleRate);
+        numChannels = ConvertChannelEnumToNum(settings->iChannels);
 
-    if (numChannels == -1) {
-        numChannels = settings->iChannels;
+        if (realFreq == -1) {
+            realFreq = settings->iSampleRate;
+        }
+
+        if (numChannels == -1) {
+            numChannels = settings->iChannels;
+        }
+    } else {
+        // Default properties...
+        realFreq = 8000;
+        numChannels = 1;
     }
 
     const TInt result = iProperties->SetAudioPropertiesRaw(realFreq, numChannels);
