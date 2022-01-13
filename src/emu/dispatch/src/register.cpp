@@ -43,6 +43,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER(0x27, eaudio_player_play),
         BRIDGE_REGISTER_DISPATCHER(0x28, eaudio_player_stop),
         BRIDGE_REGISTER_DISPATCHER(0x2A, eaudio_player_cancel_notify_done),
+        BRIDGE_REGISTER_DISPATCHER(0x2C, eaudio_player_set_position),
         BRIDGE_REGISTER_DISPATCHER(0x30, eaudio_player_set_repeats),
         BRIDGE_REGISTER_DISPATCHER(0x31, eaudio_player_destroy),
         BRIDGE_REGISTER_DISPATCHER(0x32, eaudio_player_get_dest_sample_rate),
