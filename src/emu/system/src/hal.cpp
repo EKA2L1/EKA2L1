@@ -105,11 +105,18 @@ namespace eka2l1::epoc {
             return epoc::error_none;
         }
 
+        int hardware_floating_point(int *a1, int *a2, const std::uint16_t device_num) {
+            // Can handle NEON also
+            *a1 = floating_point_type_vfpv3;
+            return epoc::error_none;
+        }
+
         explicit kern_hal(eka2l1::system *sys)
             : hal(sys) {
             REGISTER_HAL_FUNC(kernel_hal_memory_info, kern_hal, memory_info);
             REGISTER_HAL_FUNC(kernel_hal_page_size_in_bytes, kern_hal, page_size);
             REGISTER_HAL_FUNC(kernel_hal_tick_period, kern_hal, tick_period);
+            REGISTER_HAL_FUNC(kernel_hal_hardware_floating_point, kern_hal, hardware_floating_point);
         }
     };
 
