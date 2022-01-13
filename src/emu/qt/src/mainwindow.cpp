@@ -936,6 +936,13 @@ void main_window::spawn_package_install_camper(QString package_file_path) {
                     break;
                 }
             }
+
+            if (install_future.result() == eka2l1::package::installation_result_success) {
+                // Try to refersh app lists
+                if (applist_ && applist_->lister_->rescan_registries(applist_->io_)) {
+                    applist_->reload_whole_list();
+                }
+            }
         }
     }
 }
