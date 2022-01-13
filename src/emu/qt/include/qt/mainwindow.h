@@ -130,6 +130,7 @@ private slots:
     void on_another_rotation_triggered(QAction *action);
     void on_pause_toggled(bool checked);
     void on_package_uninstalled();
+    void on_refresh_app_list_requested();
 
     int on_package_install_language_choose(const int *languages, const int language_count);
 
