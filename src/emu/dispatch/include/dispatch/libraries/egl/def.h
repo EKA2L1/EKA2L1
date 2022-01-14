@@ -83,6 +83,8 @@ namespace eka2l1::dispatch {
         EGL_EXTENSIONS_EMU = 0x3055,
         EGL_HEIGHT_EMU = 0x3056,
         EGL_WIDTH_EMU = 0x3057,
+        EGL_DRAW_EMU = 0x3059,
+        EGL_READ_EMU = 0x305A,
         GL_NO_ERROR = 0,
         GL_ZERO_EMU = 0,
         GL_ONE_EMU = 1,
@@ -300,6 +302,12 @@ namespace eka2l1::dispatch {
         GL_DEPTH_CLEAR_EMU = 0x0B73,
         GL_MATRIX_MODE_EMU = 0x0BA0,
         GL_VIEWPORT_EMU = 0x0BA2,
+        GL_MODELVIEW_STACK_DEPTH_EMU = 0x0BA3,
+        GL_PROJECTION_STACK_DEPTH_EMU = 0xBA4,
+        GL_TEXTURE_STACK_DEPTH_EMU = 0xBA5,
+        GL_MODELVIEW_MATRIX_EMU = 0xBA6,
+        GL_PROJECTION_MATRIX_EMU = 0xBA7,
+        GL_TEXTURE_MATRIX_EMU = 0xBA8,
         GL_VENDOR = 0x1F00,
         GL_RENDERER = 0x1F01,
         GL_VERSION = 0x1F02,
@@ -363,6 +371,9 @@ namespace eka2l1::dispatch {
         EGL_GLES2_CONTEXT
     };
 
+    using egl_context_handle = std::uint32_t;
+    using egl_surface_handle = std::uint32_t;
+
     struct egl_context;
 
     struct egl_surface {
@@ -388,7 +399,12 @@ namespace eka2l1::dispatch {
         egl_surface *read_surface_;
         egl_surface *draw_surface_;
 
+        egl_surface_handle read_surface_handle_;
+        egl_surface_handle draw_surface_handle_;
+
         kernel::uid associated_thread_uid_;
+        egl_context_handle my_id_;
+
         bool dead_pending_;
 
         explicit egl_context();
@@ -403,9 +419,6 @@ namespace eka2l1::dispatch {
 
     using egl_context_instance = std::unique_ptr<egl_context>;
     using egl_surface_instance = std::unique_ptr<egl_surface>;
-    using egl_context_handle = std::uint32_t;
-    using egl_surface_handle = std::uint32_t;
-
     struct egl_controller {
     private:
         common::identity_container<egl_context_instance> contexts_;

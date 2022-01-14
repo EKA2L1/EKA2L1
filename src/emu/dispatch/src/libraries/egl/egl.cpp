@@ -414,6 +414,9 @@ namespace eka2l1::dispatch {
 
             context_real->read_surface_ = read_surface_real;
             context_real->draw_surface_ = write_surface_real;
+            context_real->read_surface_handle_ = read_surface;
+            context_real->draw_surface_handle_ = write_surface;
+
             context_real->on_surface_changed(prev_read, prev_write);
 
             read_surface_real->bounded_context_ = context_real;
@@ -615,5 +618,54 @@ namespace eka2l1::dispatch {
         }
 
         return 1;
+    }
+    
+    BRIDGE_FUNC_LIBRARY(egl_context_handle, egl_get_current_context_emu) {
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        egl_context *crr = controller.current_context(sys->get_kernel_system()->crr_thread()->unique_id());
+        if (!crr) {
+            return EGL_NO_CONTEXT_EMU;
+        }
+
+        return crr->my_id_;
+    }
+
+    BRIDGE_FUNC_LIBRARY(egl_display, egl_get_current_display_emu) {
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        egl_context *crr = controller.current_context(sys->get_kernel_system()->crr_thread()->unique_id());
+        if (!crr) {
+            return 0;
+        }
+
+        if (crr->draw_surface_) {
+            return static_cast<egl_display>(crr->draw_surface_->backed_screen_->number + 1);
+        }
+
+        return 0;
+    }
+
+    BRIDGE_FUNC_LIBRARY(egl_surface_handle, egl_get_current_surface_emu, std::uint32_t which) {
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        egl_context *crr = controller.current_context(sys->get_kernel_system()->crr_thread()->unique_id());
+        if (!crr) {
+            return 0;
+        }
+
+        if (which == EGL_DRAW_EMU) {
+            return crr->draw_surface_handle_;
+        }
+
+        if (which == EGL_READ_EMU) {
+            return crr->read_surface_handle_;
+        }
+
+        egl_push_error(sys, EGL_BAD_PARAMETER_EMU);
+        return 0;
     }
 }

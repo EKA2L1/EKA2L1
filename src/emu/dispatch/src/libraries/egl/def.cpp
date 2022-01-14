@@ -26,7 +26,10 @@ namespace eka2l1::dispatch {
     egl_context::egl_context()
         : draw_surface_(nullptr)
         , read_surface_(nullptr)
+        , read_surface_handle_(0)
+        , draw_surface_handle_(0)
         , associated_thread_uid_(0)
+        , my_id_(0)
         , dead_pending_(false) {
     }
 
@@ -150,7 +153,13 @@ namespace eka2l1::dispatch {
     }
 
     egl_context_handle egl_controller::add_context(egl_context_instance &instance) {
-        return static_cast<egl_context_handle>(contexts_.add(instance));
+        egl_context *instance_ptr = instance.get();
+        const egl_context_handle hh = static_cast<egl_context_handle>(contexts_.add(instance));
+        if (hh != 0) {
+            instance_ptr->my_id_ = hh;
+        }
+
+        return hh;
     }
 
     egl_context *egl_controller::get_context(const egl_context_handle handle) {

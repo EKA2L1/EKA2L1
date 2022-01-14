@@ -323,6 +323,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     connect(ui_->action_pause, &QAction::toggled, this, &main_window::on_pause_toggled);
     connect(ui_->action_restart, &QAction::triggered, this, &main_window::on_restart_requested);
     connect(ui_->action_package_manager, &QAction::triggered, this, &main_window::on_package_manager_triggered);
+    connect(ui_->action_refresh_app_list, &QAction::triggered, this, &main_window::on_refresh_app_list_requested);
 
     connect(rotate_group_, &QActionGroup::triggered, this, &main_window::on_another_rotation_triggered);
 
@@ -460,14 +461,27 @@ void main_window::on_settings_triggered() {
     }
 }
 
+void main_window::force_refresh_applist() {
+    // Try to refersh app lists
+    if (applist_ && applist_->lister_->rescan_registries(applist_->io_)) {
+        applist_->reload_whole_list();
+    }
+}
+
 void main_window::on_package_manager_triggered() {
     if (emulator_state_.symsys) {
         eka2l1::manager::packages *pkgmngr = emulator_state_.symsys->get_packages();
         if (pkgmngr) {
             package_manager_dialog *mgdiag = new package_manager_dialog(this, pkgmngr);
+            connect(mgdiag, &package_manager_dialog::package_uninstalled, this, &main_window::on_package_uninstalled);
+
             mgdiag->exec();
         }
     }
+}
+
+void main_window::on_package_uninstalled() {
+    force_refresh_applist();
 }
 
 void main_window::on_device_set_requested(const int index) {
@@ -936,6 +950,10 @@ void main_window::spawn_package_install_camper(QString package_file_path) {
                     break;
                 }
             }
+
+            if (install_future.result() == eka2l1::package::installation_result_success) {
+                force_refresh_applist();
+            }
         }
     }
 }
@@ -1139,6 +1157,10 @@ void main_window::force_update_display_minimum_size() {
 
 void main_window::on_window_title_setting_changed() {
     setWindowTitle(get_emulator_window_title());
+}
+
+void main_window::on_refresh_app_list_requested() {
+    force_refresh_applist();
 }
 
 void main_window::save_ui_layouts() {

@@ -238,6 +238,13 @@ namespace eka2l1::epoc {
         hal_category_keyboard = 9
     };
 
+    enum floating_point_type {
+        floating_point_type_none = 0,
+        floating_point_type_vfpv2 = 1,
+        floating_point_type_vfpv3 = 2,
+        floating_point_type_vfpv3d16 = 3
+    };
+
     /*! \brief A HAL function. Each function has minimum of 0 arg and maximum of 2 args. */
     using hal_func = std::function<int(int *, int *, std::uint16_t)>;
     using hal_cagetory_funcs = std::unordered_map<uint32_t, hal_func>;

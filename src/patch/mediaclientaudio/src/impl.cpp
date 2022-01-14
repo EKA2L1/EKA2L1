@@ -342,8 +342,11 @@ void CMMFMdaAudioRecorderUtility::OnStateChanged(const TMdaState aCurrentState, 
         return;
     }
 
-    // TODO: no nullptr? Haha hehe
-    iObserver.MoscoStateChangeEvent(NULL, prevTrans, currentTrans, aError);
+    TInt realError = aError;
+    if (aError == 1)
+        realError = 0;
+
+    iObserver.MoscoStateChangeEvent(this, prevTrans, currentTrans, realError);
 }
 
 TInt CMMFMdaAudioRecorderUtility::SetDestCodec(TFourCC aDestCodec) {

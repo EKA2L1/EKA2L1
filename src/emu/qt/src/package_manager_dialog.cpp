@@ -124,9 +124,10 @@ void package_manager_dialog::on_package_uninstall_requested() {
     if (pkg) {
         if (!packages_->uninstall_package(*pkg)) {
             QMessageBox::critical(this, tr("Uninstall failed!"), tr("Failed to uninstall the package"));
+        } else {
+            refresh_package_manager_items();
+            emit package_uninstalled();
         }
-
-        refresh_package_manager_items();
     }
 }
 
