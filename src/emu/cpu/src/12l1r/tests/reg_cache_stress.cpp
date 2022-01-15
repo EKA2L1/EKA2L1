@@ -1,4 +1,4 @@
-#include <Catch2/catch.hpp>
+#include <catch2/catch.hpp>
 #include "test_cpu.h"
 
 TEST_CASE("use_full_regs", "reg_cache_stress") {
