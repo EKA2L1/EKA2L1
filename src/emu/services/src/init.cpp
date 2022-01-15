@@ -134,6 +134,7 @@ namespace eka2l1::epoc {
         auto lang = epoc::locale_language{ epoc::lang_english, 0, 0, 0, 0, 0, 0, 0 };
         auto locale = epoc::get_locale_info();
         auto &dvcs = sys->get_device_manager()->get_devices();
+        kernel_system *kern = sys->get_kernel_system();
 
         if (dvcs.size() > cfg->device) {
             auto &dvc = dvcs[cfg->device];
@@ -144,6 +145,13 @@ namespace eka2l1::epoc {
                 lang.language = static_cast<epoc::language>(cfg->language);
             }
         }
+
+        address am_pm_names_addr[] = {
+            kern->put_global_kernel_string("am"),
+            kern->put_global_kernel_string("pm"),
+        };
+
+        lang.am_pm_table = eka2l1::ptr<char>(kern->put_static_array(am_pm_names_addr, 2));
 
         // Unknown key, testing show that this prop return 65535 most of times
         // The prop belongs to HAL server, but the key usuage is unknown. (TODO)

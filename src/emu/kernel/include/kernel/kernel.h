@@ -315,6 +315,8 @@ namespace eka2l1 {
 
         std::unique_ptr<std::locale> locale_;
         chunk_ptr global_data_chunk_;
+        chunk_ptr static_data_chunk_;
+        std::size_t static_data_chunk_cursor_;
 
         common::identity_container<ipc_send_callback> ipc_send_callbacks_;
         common::identity_container<ipc_complete_callback> ipc_complete_callbacks_;
@@ -351,6 +353,7 @@ namespace eka2l1 {
         void setup_nanokern_controller();
         void setup_custom_code();
         void setup_stub_io_mapping(const address addr);
+        void setup_custom_static_data_chunk();
 
         bool cpu_exception_handle_unpredictable(arm::core *core, const address occurred);
         bool cpu_handle_access_violation(arm::core *core, const address occurred, const bool read);
@@ -493,6 +496,10 @@ namespace eka2l1 {
         void install_memory(memory_system *mem);
 
         eka2l1::ptr<kernel_global_data> get_global_user_data_pointer();
+
+        address put_global_kernel_string(const std::string &variable);
+        address put_static_array(address *addrs, const std::size_t addr_count);
+        address put_global_kernel_binary(const std::uint8_t *bin, const std::size_t bin_count);
 
         /**
          * @brief Get the currently active CPU.
