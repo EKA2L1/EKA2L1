@@ -21,11 +21,11 @@ set(SOURCE_12L1R
         include/cpu/12l1r/reg_loc.h
         include/cpu/12l1r/thumb_visitor.h
         include/cpu/12l1r/visit_session.h
-		src/12l1r/tests/imb_range.cpp
-		src/12l1r/tests/reg_cache_stress.cpp
-		src/12l1r/tests/test_cpu.cpp
-		src/12l1r/tests/test_cpu.h
-		src/12l1r/tests/test_entry.cpp
+        src/12l1r/tests/imb_range.cpp
+        src/12l1r/tests/reg_cache_stress.cpp
+        src/12l1r/tests/test_cpu.cpp
+        src/12l1r/tests/test_cpu.h
+        src/12l1r/tests/test_entry.cpp
         src/12l1r/translate/branch.cpp
         src/12l1r/translate/data_processing.cpp
         src/12l1r/translate/extension.cpp
@@ -88,8 +88,7 @@ add_library(cpu
         ${SOURCE_DYNCOM})
 
 if (ARCHITECTURE_ARM32)
-    target_sources(cpu PRIVATE
-            ${SOURCE_12L1R}))
+    target_sources(cpu PRIVATE ${SOURCE_12L1R})
     target_link_libraries(cpu PRIVATE Catch2)
 else()
     target_sources(cpu PRIVATE
