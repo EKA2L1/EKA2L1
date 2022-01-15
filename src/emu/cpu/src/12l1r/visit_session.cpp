@@ -192,10 +192,13 @@ namespace eka2l1::arm::r12l1 {
 
         // Load the address
         big_block_->LDR(final_addr, ALWAYS_SCRATCH1, offsetof(tlb_entry, host_base));
+        big_block_->CMP(final_addr, 0);
+        common::armgen::fixup_branch tlb_miss_2 = big_block_->B_CC(common::CC_EQ);
         big_block_->ANDI2R(ALWAYS_SCRATCH2, base, CPAGE_MASK, ALWAYS_SCRATCH1);
         big_block_->ADD(final_addr, final_addr, ALWAYS_SCRATCH2);
 
         big_block_->set_jump_target(tlb_miss);
+        big_block_->set_jump_target(tlb_miss_2);
         return final_addr;
     }
 
@@ -296,6 +299,9 @@ namespace eka2l1::arm::r12l1 {
 
         auto emit_addr_modification = [&](const bool ignore_base) {
             // Decrement or increment guest base and host base
+            if (!ignore_base) {
+                big_block_->CMP(base, 0);
+            }
             if (add) {
                 if (!ignore_base) {
                     big_block_->set_cc(common::CC_NEQ);
@@ -421,6 +427,7 @@ namespace eka2l1::arm::r12l1 {
                             // By doing this we just gonna jump to after the branch
                             big_block_->MOV(backback, common::armgen::R15);
                             big_block_->B(lookup_route);
+                            big_block_->NOP();
 
                             big_block_->set_jump_target(done_refresh);
                         }

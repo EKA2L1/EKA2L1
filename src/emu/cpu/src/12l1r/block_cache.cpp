@@ -90,39 +90,25 @@ namespace eka2l1::arm::r12l1 {
     }
 
     void block_cache::flush_range(const vaddress range_start, const vaddress range_end, const asid aid) {
-        // Borrow PPSSPP algorithm. Thank you :D
-        bool all_done = false;
+        // TODO: This will cover all blocks, but kind of slow...
+        for (auto next = blocks_.begin(); next != blocks_.end(); ) {
+            std::unique_ptr<translated_block> &next_block = next->second;
 
-        do {
-            auto next = blocks_.lower_bound(std::make_pair(range_start, aid));
-            auto last = blocks_.upper_bound(std::make_pair(range_end, aid));
-
-            bool any_flush = false;
-
-            for (; next != last; ++next) {
-                std::unique_ptr<translated_block> &next_block = next->second;
-
-                if (next_block->address_space() == aid) {
-                    if ((range_start >= next_block->current_address()) || (range_end <= next_block->start_address())) {
-                        continue;
-                    }
-
-                    if (invalidate_callback_) {
-                        invalidate_callback_(next_block.get());
-                    }
-
-                    blocks_.erase(next);
-
-                    // Our iterator is now invalid.  Break and search again.
-                    // Most of the time there shouldn't be a bunch of matching blocks.
-                    any_flush = true;
-                    break;
+            if (next_block->address_space() == aid) {
+                if ((range_start >= next_block->current_address()) || (range_end <= next_block->start_address())) {
+                    ++next;
+                    continue;
                 }
-            }
 
-            if (!any_flush)
-                all_done = true;
-        } while (!all_done);
+                if (invalidate_callback_) {
+                    invalidate_callback_(next_block.get());
+                }
+
+                blocks_.erase(next++);
+            } else {
+                ++next;
+            }
+        }
     }
 
     void block_cache::flush_all() {
