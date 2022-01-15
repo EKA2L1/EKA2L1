@@ -178,7 +178,7 @@ namespace eka2l1::dispatch {
     void egl_controller::destroy_managed_surface(const std::uint32_t handle) {
         egl_surface_instance *inst = dsurfaces_.get(handle);
         
-        if (inst) {
+        if (inst && inst->get()) {
             bool can_del_imm = true;
 
             for (auto ite = active_context_.begin(); ite != active_context_.end(); ) {

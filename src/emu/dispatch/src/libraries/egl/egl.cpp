@@ -25,9 +25,13 @@
 #include <system/epoc.h>
 #include <services/window/window.h>
 #include <services/window/classes/winuser.h>
+#include <services/fbs/bitmap.h>
+#include <services/fbs/fbs.h>
 
 #include <drivers/itc.h>
 #include <drivers/graphics/graphics.h>
+
+#include <utils/guest/fbs.h>
 
 namespace eka2l1::dispatch {
     // First bit is surface type, and second bit is buffer size bits
@@ -667,5 +671,100 @@ namespace eka2l1::dispatch {
 
         egl_push_error(sys, EGL_BAD_PARAMETER_EMU);
         return 0;
+    }
+
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_copy_buffers_emu, egl_display display, egl_surface_handle handle, void *native_pixmap) {
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if (!native_pixmap) {
+            egl_push_error(sys, EGL_BAD_NATIVE_PIXMAP_EMU);
+            return EGL_FALSE;
+        }
+
+        egl_surface *surface = controller.get_managed_surface(handle);
+        if (!surface) {
+            egl_push_error(sys, EGL_BAD_SURFACE_EMU);
+            return EGL_FALSE;
+        }
+
+        // Try to grab the bitwise bitmap
+        kernel_system *kern = sys->get_kernel_system();
+        fbs_server *fbss = kern->get_by_name<fbs_server>(epoc::get_fbs_server_name_by_epocver(kern->get_epoc_version()));
+
+        utils::fbs_bitmap *guest_bmp_ptr = reinterpret_cast<utils::fbs_bitmap*>(native_pixmap);
+        epoc::bitwise_bitmap *bbmp = guest_bmp_ptr->bitwise_bitmap_addr_.cast<epoc::bitwise_bitmap>().get(kern->crr_process());
+
+        if (!bbmp) {
+            egl_push_error(sys, EGL_BAD_NATIVE_PIXMAP_EMU);
+            return EGL_FALSE;
+        }
+
+        std::uint8_t *bbmp_data_ptr = bbmp->data_pointer(fbss);
+        if (!bbmp_data_ptr) {
+            egl_push_error(sys, EGL_BAD_NATIVE_PIXMAP_EMU);
+            return EGL_FALSE;
+        }
+
+        drivers::graphics_driver *drv = sys->get_graphics_driver();
+        if (surface->bounded_context_) {
+            surface->bounded_context_->flush_to_driver(drv, true);
+        }
+
+        eka2l1::object_size size_to_read = bbmp->header_.size_pixels;
+
+        if (surface->dimension_.x < size_to_read.y) {
+            size_to_read.x = surface->dimension_.x;
+        }
+        if (surface->dimension_.y < size_to_read.y) {
+            size_to_read.y = surface->dimension_.y;
+        }
+
+        if (!drivers::read_bitmap(drv, surface->handle_, eka2l1::point(0, 0), size_to_read, bbmp->header_.bit_per_pixels,
+            bbmp_data_ptr)) {
+            LOG_ERROR(HLE_DISPATCHER, "Failed to syncrhonize EGL bitmap data to guest bitmap!");
+            return EGL_FALSE;
+        }
+
+        // TODO: Make a surface cache associated with the bitmap address, so that when GDI calls try to 
+        // draw these, we can use it. Maybe also for upscaling.
+        std::uint32_t byte_width = bbmp->byte_width_;
+
+        // Symbian bitmap stores things a bit different. Need to flip. Plus maybe color transformation
+        switch (bbmp->header_.bit_per_pixels) {
+        case 32: {
+            std::uint32_t *data_u32 = reinterpret_cast<std::uint32_t*>(bbmp_data_ptr);
+            std::uint32_t word_width = byte_width / 4;
+            for (int lc = 0; lc < size_to_read.y / 2; lc++) {
+                for (int x = 0; x < size_to_read.x; x++) {
+                    int temp = (data_u32[lc * word_width + x] & 0xFF00FF00) | ((data_u32[lc * word_width + x] & 0xFF) << 16)
+                        | (((data_u32[lc * word_width + x] & 0xFF0000) >> 16));
+
+                    int revl = (size_to_read.y - lc - 1);
+
+                    data_u32[lc * word_width + x] = (data_u32[revl * word_width + x] & 0xFF00FF00) | ((data_u32[revl * word_width + x] & 0xFF) << 16)
+                        | (((data_u32[revl * word_width + x] & 0xFF0000) >> 16));
+
+                    data_u32[revl * word_width + x] = temp;
+                }
+            }
+
+            if (size_to_read.y & 1) {
+                int y = size_to_read.y / 2;
+                for (int x = 0; x < size_to_read.x; x++) {
+                    data_u32[y * word_width + x] = (data_u32[y * word_width + x] & 0xFF00FF00) | ((data_u32[y * word_width + x] & 0xFF) << 16) |
+                        (((data_u32[y * word_width + x] & 0xFF0000) >> 16));
+                }
+            }
+
+            break;
+        }
+
+        default:
+            LOG_WARN(HLE_DISPATCHER, "Unhandle FBSBMP transformation from GLES1 surface for bpp={}", bbmp->header_.bit_per_pixels);
+            break;
+        }
+
+        return EGL_TRUE;
     }
 }
