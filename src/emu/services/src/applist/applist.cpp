@@ -95,8 +95,6 @@ namespace eka2l1 {
             } else {
                 return false;
             }
-        } else {
-            return false;
         }
 
         eka2l1::ro_file_stream std_rsc_raw(f.get());
