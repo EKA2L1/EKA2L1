@@ -350,6 +350,14 @@ namespace eka2l1::drivers {
         LOG_ERROR(DRIVER_AUD, "Set position is not yet supported with TSF driver!");
     }
 
+    std::uint64_t player_tsf::position() const {
+        std::uint64_t pos_in_frames = 0;
+        if (!output_ || !output_->current_frame_position(&pos_in_frames)) {
+            return 0;
+        }
+        return pos_in_frames * output_->get_channels() * 1000000ULL / output_->get_sample_rate();
+    }
+
     bool player_tsf::set_dest_encoding(const std::uint32_t enc) {
         return false;
     }

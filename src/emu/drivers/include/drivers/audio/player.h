@@ -138,6 +138,7 @@ namespace eka2l1::drivers {
 
         virtual void set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) = 0;
         virtual void set_position(const std::uint64_t pos_in_us) = 0;
+        virtual std::uint64_t position() const = 0;
 
         virtual bool set_dest_freq(const std::uint32_t freq) = 0;
         virtual bool set_dest_channel_count(const std::uint32_t cn) = 0;

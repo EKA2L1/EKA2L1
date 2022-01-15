@@ -280,6 +280,17 @@ namespace eka2l1::drivers {
 
         BAESong_SetMicrosecondPosition(song_, static_cast<unsigned long>(pos_in_us));
     }
+    
+    std::uint64_t player_minibae::position() const {
+        if (!song_) {
+            return 0;
+        }
+
+        unsigned long value = 0;
+        BAESong_GetMicrosecondPosition(song_, &value);
+
+        return static_cast<std::uint64_t>(value);
+    }
 
     bool player_minibae::set_dest_encoding(const std::uint32_t enc) {
         return false;
