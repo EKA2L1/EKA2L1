@@ -224,10 +224,14 @@ TInt CMMFMdaAudioUtility::GetVolume() {
 
 TTimeIntervalMicroSeconds CMMFMdaAudioUtility::CurrentPosition() {
 #ifdef EKA2
-    return EAudioPlayerGetCurrentPlayPos(0, iDispatchInstance);
+    TUint64 result = 0;
+    EAudioPlayerGetCurrentPlayPos(0, iDispatchInstance, result);
+
+    return result;
 #else
-    return TTimeIntervalMicroSeconds(MakeSoftwareInt64FromHardwareUint64(EAudioPlayerGetCurrentPlayPos(
-        0, iDispatchInstance)));
+    TUint64 result = 0;
+    EAudioPlayerGetCurrentPlayPos(0, iDispatchInstance, result);
+    return TTimeIntervalMicroSeconds(MakeSoftwareInt64FromHardwareUint64(result));
 #endif
 }
 

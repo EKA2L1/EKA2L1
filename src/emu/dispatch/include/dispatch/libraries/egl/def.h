@@ -64,6 +64,7 @@ namespace eka2l1::dispatch {
         EGL_BAD_CONFIG = 0x3005,
         EGL_BAD_CONTEXT_EMU = 0x3006,
         EGL_BAD_DISPLAY_EMU = 0x3008,
+        EGL_BAD_NATIVE_PIXMAP_EMU = 0x300A,
         EGL_BAD_NATIVE_WINDOW_EMU = 0x300B,
         EGL_BAD_PARAMETER_EMU = 0x300C,
         EGL_BAD_SURFACE_EMU = 0x300D,
