@@ -231,7 +231,7 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const
                         }
 
                         if (renderer) {
-                            final_pixmap = QPixmap(renderer->defaultSize());
+                            final_pixmap = QPixmap(ICON_GRID_SIZE);
                             final_pixmap.fill(Qt::transparent);
 
                             QPainter painter(&final_pixmap);
@@ -321,7 +321,7 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const
         final_icon = QIcon(":/assets/duck_tank.png");
     } else {
         if ((final_pixmap.size().width() < ICON_GRID_SIZE.width()) && (final_pixmap.size().height() < ICON_GRID_SIZE.height())) {
-            QPoint position_to_draw = QPoint(((64 - final_pixmap.size().width()) / 2), ((64 - final_pixmap.size().height()) / 2));
+            QRect position_to_draw = QRect(0, 0, ICON_GRID_SIZE.width(), ICON_GRID_SIZE.height());
             QPixmap another_pixmap(ICON_GRID_SIZE);
             another_pixmap.fill(Qt::transparent);
 
