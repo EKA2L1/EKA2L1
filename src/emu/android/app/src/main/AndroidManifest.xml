@@ -9,14 +9,16 @@
     <uses-feature android:glEsVersion="0x00030000" android:required="true" />
 
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_ducky"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_ducky_round"
         android:supportsRtl="true"
+        android:hasFragileUserData="true"
+        android:preserveLegacyExternalStorage="true"
         android:requestLegacyExternalStorage="true"
         android:theme="@style/AppTheme"
-        tools:targetApi="q">
+        tools:targetApi="r">
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"

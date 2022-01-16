@@ -10,12 +10,12 @@ def getGitHash = { ->
 }
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
 
     defaultConfig {
         applicationId "com.github.eka2l1"
         minSdkVersion 21
-        targetSdkVersion 29
+        targetSdkVersion 30
         versionCode 9
         versionName "0.0.7"
         ndkVersion = '21.3.6528147'
