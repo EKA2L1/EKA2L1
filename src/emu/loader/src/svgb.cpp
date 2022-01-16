@@ -533,6 +533,10 @@ namespace eka2l1::loader {
     static bool svgb_decode_href(svgb_decode_state &state, const svg_attr *attr, const svg_element *elem, common::ro_stream &in, common::wo_stream &out) {
         std::optional<std::string> str = read_svgb_string_from_stream(in);
         if (str.has_value()) {
+            if (str == "\0") {
+                return true;
+            }
+
             xml_write_attr_no_esc(out, attr->name_, str.value());
 
             // Next comes another string, usually the same as the first one
