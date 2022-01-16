@@ -215,7 +215,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="301"/>
       <source>RPKG file (*.rpkg *.RPKG);;All files (*.*)</source>
-      <translation type="unfinished">RPKG file (*.rpkg *.RPKG);;All files (*.*)</translation>
+      <translation>Berkas RPKG (*.rpkg *.RPKG);;Semua berkas (*.*)</translation>
     </message>
   </context>
   <context>
