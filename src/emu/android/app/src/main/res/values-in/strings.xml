@@ -54,7 +54,7 @@
     <string name="pref_enable_statusbar">Hidupkan bilah status</string>
     <string name="pref_wakelock">Layar tetap menyala</string>
     <string name="pref_enable_vibration">Aktifkan getaran</string>
-    <string name="pref_emulator_dir">Working directory</string>
+    <string name="pref_emulator_dir">Direktori yang berjalan</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Aktifkan tapisan Nearest Neighbor</string>
     <string name="pref_system_language_option_name">Bahasa</string>
     <string name="pref_system_real_time_accuracy_str">Akurasi waktu-nyata</string>
@@ -112,9 +112,9 @@
     <string name="pref_screen_gravity_top">Atas</string>
     <string name="pref_screen_scale_type">Scale type</string>
     <string name="pref_screen_scale_type_fill">Fill window (ignore aspect ratio)</string>
-    <string name="pref_screen_scale_type_fit">Fit to window</string>
+    <string name="pref_screen_scale_type_fit">Paskan ke layar</string>
     <string name="pref_screen_scale_type_none">Seaslinya</string>
-    <string name="default_label">"%s (default)"</string>
+    <string name="default_label">"%s (bawaan)"</string>
     <string name="not_saved_exists">Sudah ada</string>
     <string name="error_name">Ketik nama!</string>
     <string name="set_as_default">Set as default</string>
