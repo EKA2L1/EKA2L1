@@ -109,6 +109,8 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool arm_translate_visitor::arm_BLX_imm(bool H, std::uint32_t imm24) {
+        condition_passed(common::CC_AL, true);
+
         // Write to LR first
         const vaddress next_instr_addr = crr_block_->current_address() + 4;
         common::armgen::arm_reg lr_reg_mapped = reg_supplier_.map(common::armgen::R14,
