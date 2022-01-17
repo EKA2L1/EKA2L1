@@ -500,6 +500,26 @@ namespace eka2l1::dispatch {
         vertex_buffer_pusher_.free(builder);
         index_buffer_pusher_.free(builder);
 
+        for (auto &obj: objects_) {
+            if (obj) {
+                obj.reset();
+            }
+        }
+
+        while (!texture_pools_.empty()) {
+            drivers::handle h = texture_pools_.top();
+            builder.destroy(h);
+
+            texture_pools_.pop();
+        }
+        
+        while (!buffer_pools_.empty()) {
+            drivers::handle h = buffer_pools_.top();
+            builder.destroy(h);
+
+            buffer_pools_.pop();
+        }
+
         egl_context::free(driver, builder);
     }
 
@@ -670,25 +690,21 @@ namespace eka2l1::dispatch {
             return nullptr;
         }
 
-        auto *obj = objects_.get(texture_units_[active_texture_unit_].binded_texture_handle_);
-        if (!obj || (*obj)->object_type() != GLES1_OBJECT_TEXTURE) {
-            return nullptr;
+        std::uint32_t handle = texture_units_[active_texture_unit_].binded_texture_handle_;
+
+        auto *obj = objects_.get(handle);
+        if (!obj || !obj->get() || (*obj)->object_type() != GLES1_OBJECT_TEXTURE) {
+            if (!obj->get()) {
+                // The capacity is still enough. Someone has deleted the texture that should not be ! (yes, Pet Me by mBounce)
+                LOG_WARN(HLE_DISPATCHER, "Texture name {} was previously deleted, generate a new one"
+                    " (only because the slot is empty)!", handle);
+                *obj = std::make_unique<gles1_driver_texture>(this);
+            } else {
+                return nullptr;
+            }
         }
 
         return reinterpret_cast<gles1_driver_texture*>(obj->get());
-    }
-
-    drivers::handle egl_context_es1::binded_texture_driver_handle() {
-        if (!texture_units_[active_texture_unit_].binded_texture_handle_) {
-            return draw_surface_->handle_;
-        }
-
-        auto tex = binded_texture();
-        if (tex) {
-            return tex->handle_value();
-        }
-
-        return 0;
     }
 
     gles1_driver_buffer *egl_context_es1::binded_buffer(const bool is_array_buffer) {
@@ -720,10 +736,18 @@ namespace eka2l1::dispatch {
         , driver_handle_(0) {
     }
 
-    gles1_driver_object::~gles1_driver_object() {
+    gles1_driver_texture::~gles1_driver_texture() {
         if (driver_handle_ != 0) {
             if (context_) {
-                context_->return_handle_to_pool(object_type(), driver_handle_);
+                context_->return_handle_to_pool(GLES1_OBJECT_TEXTURE, driver_handle_);
+            }
+        }
+    }
+    
+    gles1_driver_buffer::~gles1_driver_buffer() {
+        if (driver_handle_ != 0) {
+            if (context_) {
+                context_->return_handle_to_pool(GLES1_OBJECT_BUFFER, driver_handle_);
             }
         }
     }
