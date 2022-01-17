@@ -57,7 +57,7 @@ namespace eka2l1::dispatch {
 
     public:
         explicit gles1_driver_object(egl_context_es1 *ctx);
-        virtual ~gles1_driver_object();
+        virtual ~gles1_driver_object() = default;
 
         void assign_handle(const drivers::handle h) {
             driver_handle_ = h;
@@ -87,6 +87,7 @@ namespace eka2l1::dispatch {
 
     public:
         explicit gles1_driver_texture(egl_context_es1 *ctx);
+        ~gles1_driver_texture() override;
 
         void set_internal_format(const std::uint32_t format) {
             internal_format_ = format;
@@ -163,6 +164,7 @@ namespace eka2l1::dispatch {
 
     public:
         explicit gles1_driver_buffer(egl_context_es1 *ctx);
+        ~gles1_driver_buffer() override;
 
         void assign_data_size(const std::uint32_t data_size) {
             data_size_ = data_size;

@@ -529,6 +529,16 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</string>
             </item>
            </layout>
           </item>
+          <item row="1" column="0">
+            <widget class="QCheckBox" name="system_enable_hw_gles1_checkbox">
+              <property name="toolTip">
+                <string>Allow the emulator to perform native GPU acceleration for Symbian's GLES1 API.</string>
+              </property>
+              <property name="text">
+                <string>Enable GPU accelerated GLES1</string>
+              </property>
+            </widget>
+          </item>
          </layout>
         </widget>
        </item>

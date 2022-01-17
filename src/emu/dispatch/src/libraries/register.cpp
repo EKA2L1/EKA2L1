@@ -23,6 +23,7 @@
 #include <dispatch/libraries/gles1/register.h>
 
 #include <kernel/kernel.h>
+#include <config/config.h>
 
 namespace eka2l1::dispatch::libraries {
     void register_functions(kernel_system *kern, dispatcher *disp) {
@@ -30,8 +31,11 @@ namespace eka2l1::dispatch::libraries {
             disp->patch_libraries(u"Z:\\System\\Libs\\SysUtil.dll", SYSUTILS_PATCH_EPOCV81A_INFOS,
                 SYSUTILS_PATCH_EPOCV81A_COUNT);
         } else if (kern->get_epoc_version() >= epocver::epoc93fp1) {
-            disp->patch_libraries(u"Z:\\Sys\\Bin\\libgles_cm.dll", LIBGLES_CM_PATCH_INFOS,
-                LIBGLES_CM_PATCH_COUNT);
+            config::state *conf = kern->get_config();
+
+            if (conf->enable_hw_gles1)
+                disp->patch_libraries(u"Z:\\Sys\\Bin\\libgles_cm.dll", LIBGLES_CM_PATCH_INFOS,
+                    LIBGLES_CM_PATCH_COUNT);
         }
     }
 }

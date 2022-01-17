@@ -72,6 +72,7 @@ OPTION(device-display-name, device_display_name, "EKA2L1")
 OPTION(midi-backend, midi_backend_string, "tsf")
 OPTION(hsb-bank-path, hsb_bank_path, "resources/defaultbank.hsb")
 OPTION(sf2-bank-path, sf2_bank_path, "resources/defaultbank.sf2")
+OPTION(enable-hw-gles1, enable_hw_gles1, true)
 
 #ifdef OPTION
 #undef OPTION

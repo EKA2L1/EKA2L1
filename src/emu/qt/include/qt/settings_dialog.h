@@ -96,6 +96,7 @@ private slots:
     void on_btrace_enable_toggled(bool val);
     void on_cursor_visibility_change(bool val);
     void on_status_bar_visibility_change(bool val);
+    void on_enable_hw_gles1_toggled(bool val);
     void on_data_path_browse_clicked();
     void on_tab_changed(int index);
     void on_true_size_enable_toogled(bool val);
