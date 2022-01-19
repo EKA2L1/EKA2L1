@@ -92,7 +92,10 @@ namespace eka2l1 {
         seri.absorb(support_being_asked_to_create_new_file);
         seri.absorb(is_hidden);
         seri.absorb(launch_in_background);
-        epoc::absorb_des_string(group_name.to_std_string(nullptr), seri, true);
+
+        std::u16string name_got = group_name.to_std_string(nullptr);
+        epoc::absorb_des_string(name_got, seri, true);
+
         seri.absorb(flags);
     }
 }
