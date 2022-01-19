@@ -262,6 +262,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     ui_->system_audio_midi_backend_combo->setCurrentIndex(static_cast<int>(configuration.midi_backend));
     ui_->system_audio_midi_hsb_bank_edit->setText(QString::fromStdString(eka2l1::absolute_path(configuration.hsb_bank_path, current_dir)));
     ui_->system_audio_midi_sf2_bank_edit->setText(QString::fromStdString(eka2l1::absolute_path(configuration.sf2_bank_path, current_dir)));
+    ui_->system_enable_hw_gles1_checkbox->setChecked(configuration.enable_hw_gles1);
 
     QSettings settings;
     ui_->interface_status_bar_checkbox->setChecked(settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
@@ -386,6 +387,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->system_audio_midi_hsb_bank_reset, &QPushButton::clicked, this, &settings_dialog::on_audio_hsb_reset_clicked);
     connect(ui_->system_audio_midi_sf2_bank_reset, &QPushButton::clicked, this, &settings_dialog::on_audio_sf2_reset_clicked);
     connect(ui_->system_screen_buffer_sync_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_screen_buffer_sync_option_changed);
+    connect(ui_->system_enable_hw_gles1_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_enable_hw_gles1_toggled);
 
     connect(ui_->settings_tab, &QTabWidget::currentChanged, this, &settings_dialog::on_tab_changed);
     connect(ui_->control_profile_add_btn, &QPushButton::clicked, this, &settings_dialog::on_control_profile_add_clicked);
@@ -1290,4 +1292,9 @@ void settings_dialog::on_audio_sf2_reset_clicked() {
     configuration_.serialize();
 
     ui_->system_audio_midi_sf2_bank_edit->setText(QString::fromStdString(configuration_.sf2_bank_path));
+}
+
+void settings_dialog::on_enable_hw_gles1_toggled(bool val) {
+    configuration_.enable_hw_gles1 = val;
+    QMessageBox::information(this, tr("Emulator reset needed"), tr("This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator."));
 }

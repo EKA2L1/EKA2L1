@@ -34,10 +34,10 @@
 
 namespace eka2l1::epoc {
     struct window_drawer_walker : public window_tree_walker {
-        drivers::graphics_command_list_builder *builder_;
+        drivers::graphics_command_builder &builder_;
         std::uint32_t total_redrawed_;
 
-        explicit window_drawer_walker(drivers::graphics_command_list_builder *builder)
+        explicit window_drawer_walker(drivers::graphics_command_builder &builder)
             : builder_(builder)
             , total_redrawed_(0) {
         }
@@ -164,28 +164,35 @@ namespace eka2l1::epoc {
         }
     }
 
-    bool screen::redraw(drivers::graphics_command_list_builder *cmd_builder, const bool need_bind) {
+    bool screen::redraw(drivers::graphics_command_builder &builder, const bool need_bind) {
         if (need_update_visible_regions()) {
             recalculate_visible_regions();
         }
 
         if (need_bind) {
-            cmd_builder->bind_bitmap(screen_texture);
+            builder.bind_bitmap(screen_texture);
         }
 
-        cmd_builder->set_blend_mode(true);
-        cmd_builder->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
+        builder.set_feature(eka2l1::drivers::graphics_feature::cull, false);
+        builder.set_feature(eka2l1::drivers::graphics_feature::depth_test, false);
+        builder.set_feature(eka2l1::drivers::graphics_feature::blend, false);
+
+        builder.clear(eka2l1::vecx<float, 6>({ 0.0, 0.0, 0.0, 1.0, 1.0, 0.0 }), drivers::draw_buffer_bit_color_buffer | drivers::draw_buffer_bit_depth_buffer
+            | drivers::draw_buffer_bit_stencil_buffer);
+
+        builder.set_feature(drivers::graphics_feature::blend, true);
+        builder.blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
             drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
             drivers::blend_factor::one, drivers::blend_factor::one);
 
         // Walk through the window tree in recursive order, and do draw
         // We dont care about visible regions. Nowadays, detect visible region to reduce pixel plotting is
         // just not really worth the time, since GPU draws so fast. Symbian code still has it though.
-        window_drawer_walker adrawwalker(cmd_builder);
+        window_drawer_walker adrawwalker(builder);
         root->walk_tree_back_to_front(&adrawwalker);
 
         // Done! Unbind and submit this to the driver
-        cmd_builder->bind_bitmap(0);
+        builder.bind_bitmap(0);
 
         return adrawwalker.total_redrawed_;
     }
@@ -196,10 +203,11 @@ namespace eka2l1::epoc {
         }
 
         // Make command list first, and bind our screen bitmap
-        auto cmd_list = driver->new_command_list();
-        auto cmd_builder = driver->new_command_builder(cmd_list.get());
-        const bool performed = redraw(cmd_builder.get(), true);
-        driver->submit_command_list(*cmd_list);
+        drivers::graphics_command_builder builder;
+        const bool performed = redraw(builder, true);
+    
+        eka2l1::drivers::command_list retrieved = builder.retrieve_command_list();
+        driver->submit_command_list(retrieved);
 
         if (performed && sync_screen_buffer) {
             sync_screen_buffer_data(driver);
@@ -210,18 +218,18 @@ namespace eka2l1::epoc {
 
     void screen::deinit(drivers::graphics_driver *driver) {
         // Make command list first, and bind our screen bitmap
-        auto cmd_list = driver->new_command_list();
-        auto cmd_builder = driver->new_command_builder(cmd_list.get());
+        drivers::graphics_command_builder builder;
 
         if (dsa_texture) {
-            cmd_builder->destroy_bitmap(dsa_texture);
+            builder.destroy_bitmap(dsa_texture);
         }
 
         if (screen_texture) {
-            cmd_builder->destroy_bitmap(screen_texture);
+            builder.destroy_bitmap(screen_texture);
         }
 
-        driver->submit_command_list(*cmd_list);
+        eka2l1::drivers::command_list retrieved = builder.retrieve_command_list();
+        driver->submit_command_list(retrieved);
     }
 
     const void screen::get_max_num_colors(int &colors, int &greys) const {
@@ -235,23 +243,23 @@ namespace eka2l1::epoc {
 
     void screen::resize(drivers::graphics_driver *driver, const eka2l1::vec2 &new_size) {
         // Make command list first, and bind our screen bitmap
-        auto cmd_list = driver->new_command_list();
-        auto cmd_builder = driver->new_command_builder(cmd_list.get());
-
+        drivers::graphics_command_builder builder;
         bool need_bind = true;
 
         if (!screen_texture) {
             // Create new one!
             screen_texture = drivers::create_bitmap(driver, new_size, 32);
         } else {
-            cmd_builder->bind_bitmap(screen_texture);
-            cmd_builder->resize_bitmap(screen_texture, new_size);
+            builder.bind_bitmap(screen_texture);
+            builder.resize_bitmap(screen_texture, new_size);
 
             need_bind = false;
         }
 
-        const bool performed = redraw(cmd_builder.get(), need_bind);
-        driver->submit_command_list(*cmd_list);
+        const bool performed = redraw(builder, need_bind);
+
+        eka2l1::drivers::command_list retrieved = builder.retrieve_command_list();
+        driver->submit_command_list(retrieved);
 
         if (performed && sync_screen_buffer) {
             sync_screen_buffer_data(driver);
@@ -318,11 +326,15 @@ namespace eka2l1::epoc {
                 serv->set_focus_screen(new_focus_screen);
 
                 alternative_focus->gain_focus();
+
+                serv->send_focus_group_change_events(new_focus_screen);
                 new_focus_screen->fire_focus_change_callbacks(focus_change_target);
 
                 refresh_rate = alternative_focus->last_refresh_rate;
             } else if (focus && is_me_currently_focus) {
                 focus->gain_focus();
+
+                serv->send_focus_group_change_events(this);
                 fire_focus_change_callbacks(focus_change_target);
 
                 refresh_rate = focus->last_refresh_rate;
@@ -527,7 +539,11 @@ namespace eka2l1::epoc {
                 winuser->visible_region.make_empty();
 
                 if (!visible_left_region_.empty() && winuser->is_visible()) {
-                    winuser->visible_region.add_rect(winuser->abs_rect);
+                    if (winuser->flags & epoc::window::flag_shape_region) {
+                        winuser->visible_region = winuser->shape_region;
+                    } else {
+                        winuser->visible_region.add_rect(winuser->abs_rect);
+                    }
 
                     // The region that window can render is the region intersects with the current available left region
                     // Eliminating the intersected region that is reserved for this window, we got the next region left to go on.

@@ -32,7 +32,7 @@ namespace eka2l1 {
     struct fbsbitmap;
 
     namespace drivers {
-        class graphics_command_list_builder;
+        class graphics_command_builder;
     }
 }
 
@@ -77,6 +77,7 @@ namespace eka2l1::epoc {
         std::uint64_t ping_pong_driver_win_id;
 
         common::region visible_region;
+        common::region shape_region;
 
         int shadow_height;
 
@@ -94,7 +95,7 @@ namespace eka2l1::epoc {
         ~canvas_base() override;
 
         virtual void wipeout();
-        virtual bool draw(drivers::graphics_command_list_builder *builder) = 0;
+        virtual bool draw(drivers::graphics_command_builder &builder) = 0;
 
         virtual void on_activate() = 0;
         virtual void handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) = 0;
@@ -165,6 +166,7 @@ namespace eka2l1::epoc {
         void free(service::ipc_context &context, ws_cmd &cmd);
         void alloc_pointer_buffer(service::ipc_context &context, ws_cmd &cmd);
         void scroll(service::ipc_context &context, ws_cmd &cmd);
+        void set_shape(service::ipc_context &context, ws_cmd &cmd);
 
         epoc::window_group *get_group();
 
@@ -187,7 +189,7 @@ namespace eka2l1::epoc {
         void on_activate() override {}
         void handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) override {}
         
-        bool draw(drivers::graphics_command_list_builder *builder) override;
+        bool draw(drivers::graphics_command_builder &builder) override;
     };
 
     // Canvas that data is backed using a bitmap
@@ -210,7 +212,7 @@ namespace eka2l1::epoc {
         void take_action_on_change(kernel::thread *drawer) override;
 
         void sync_from_bitmap(std::optional<common::region> region = std::nullopt);
-        bool draw(drivers::graphics_command_list_builder *builder) override;
+        bool draw(drivers::graphics_command_builder &builder) override;
     };
 
     struct free_modify_canvas : public canvas_base {
@@ -235,6 +237,6 @@ namespace eka2l1::epoc {
         void get_invalid_region(service::ipc_context &context, ws_cmd &cmd);
 
         bool execute_command(service::ipc_context &context, ws_cmd &cmd) override;
-        bool draw(drivers::graphics_command_list_builder *builder) override;
+        bool draw(drivers::graphics_command_builder &builder) override;
     };
 }

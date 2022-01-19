@@ -24,6 +24,10 @@
 #include <utils/des.h>
 
 namespace eka2l1 {
+    namespace common {
+        class chunkyseri;
+    }
+
     enum data_type_priority {
         data_type_priority_last_resort = -20000,
         data_type_priority_low = -10000,
@@ -55,7 +59,7 @@ namespace eka2l1 {
          *
          * This was used during EKA1.
         */
-        enum class embeddability {
+        enum class embeddability : std::int32_t {
             not_embeddable,
             embeddable,
             embeddable_only,
@@ -66,7 +70,7 @@ namespace eka2l1 {
         /**
          * \brief The attribute of the capability.
          */
-        enum capability_attrib {
+        enum capability_attrib :  std::int32_t {
             built_as_dll = 1,
             control_panel_item = 2,
             non_native = 4
@@ -91,6 +95,7 @@ namespace eka2l1 {
 
         explicit apa_capability() {}
         bool internalize(common::ro_stream &stream);
+        void do_it(common::chunkyseri &seri);
     };
 
     static_assert(sizeof(apa_capability) == 64);

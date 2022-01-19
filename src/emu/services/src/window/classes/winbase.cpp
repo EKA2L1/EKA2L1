@@ -101,6 +101,9 @@ namespace eka2l1::epoc {
     }
 
     void window::set_position(const int new_pos) {
+        if (!parent) {
+            return;
+        }
         if (check_order_change(new_pos)) {
             move_window(parent, new_pos);
 
@@ -117,8 +120,12 @@ namespace eka2l1::epoc {
         // The window that will be previous sibling of our future window.
         window **prev = &new_parent->child;
 
-        // Iterates until finding a younger window
-        while (*prev != nullptr && priority < (*prev)->priority) {
+        // Iterates until finding a younger window.
+        // Priority sorted from largest to lowest, seems to not be like Symbian.
+        // However, ordinal position is from smallest to largest.
+        // References TCoeWinPriority for information.
+        // https://github.com/SymbianSource/oss.FCL.sf.mw.classicui/blob/dcea899751dfa099dcca7a5508cf32eab64afa7a/lafagnosticuifoundation/cone/inc/COEDEF.H
+        while (*prev != nullptr && priority > (*prev)->priority) {
             prev = &((*prev)->sibling);
         }
 
@@ -149,28 +156,23 @@ namespace eka2l1::epoc {
         window *cur = parent->child;
         window *prev = nullptr;
 
-        // If the current window is the head: iterates to next child right away.
-        // Iterates until we meet a window that has smaller or equal priority then us.
-        while (cur == this || (cur != nullptr && priority < cur->priority)) {
+        // Iterate to the same priority group
+        while ((cur == this) || ((cur != nullptr) && (priority > cur->priority))) {
             prev = cur;
             cur = cur->sibling;
         }
 
         if (prev == this) {
             cur = this;
-        } else if (cur == nullptr || (cur->sibling == this && priority > cur->sibling->priority)) {
-            // If there is no window that has smaller priority then us, we need to order this at the end
-            // of the list. That means there is some order change
-            //
-            // Case 2: this window is the next sibling of the current. if the priority of the current window is larger
-            // then it's in the wrong order and really can't do a position check (since priority not equal).
+        } else if (cur == nullptr || ((cur->sibling == this) && (priority < cur->priority))) {
+            // We are far too behind, should be in the front
             return true;
         }
 
         // Traverse and find our current window, and see if we need to change order
         int pos = new_pos;
 
-        while (pos-- != 0 && cur->sibling != nullptr && priority == cur->sibling->priority) {
+        while ((pos-- != 0) && (cur->sibling != nullptr) && (priority == cur->sibling->priority)) {
             cur = cur->sibling;
         }
 
@@ -349,7 +351,6 @@ namespace eka2l1::epoc {
         case EWsWinOpSetOrdinalPosition: {
             const int position = *reinterpret_cast<int *>(cmd.data_ptr);
             set_position(position);
-
             ctx.complete(epoc::error_none);
 
             return true;
@@ -366,6 +367,14 @@ namespace eka2l1::epoc {
             return true;
         }
 
+        case EWsWinOpSetOrdinalPriorityAdjust: {
+            priority = *reinterpret_cast<std::int32_t*>(cmd.data_ptr);
+            set_position(0);
+
+            ctx.complete(epoc::error_none);
+            return true;
+        }
+
         case EWsWinOpIdentifier: {
             ctx.complete(static_cast<int>(id));
             return true;
@@ -377,9 +386,20 @@ namespace eka2l1::epoc {
             nof.when = ctrl;
             nof.user = this;
 
-            client->add_event_notifier<epoc::event_error_msg_user>(nof);
             ctx.complete(epoc::error_none);
 
+            return true;
+        }
+        
+        case EWsWinOpEnableFocusChangeEvents: {
+            if (!focus_group_change_event_handle) {
+                epoc::event_focus_group_change_user evt;
+                evt.user = this;
+
+                focus_group_change_event_handle = client->add_event_notifier<epoc::event_focus_group_change_user>(evt);
+            }
+
+            ctx.complete(epoc::error_none);
             return true;
         }
 

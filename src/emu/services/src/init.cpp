@@ -36,6 +36,7 @@
 #include <services/fbs/fbs.h>
 #include <services/featmgr/featmgr.h>
 #include <services/fs/fs.h>
+#include <services/goommonitor/goommonitor.h>
 #include <services/hwrm/hwrm.h>
 #include <services/internet/connmonitor.h>
 #include <services/internet/nifman.h>
@@ -133,6 +134,7 @@ namespace eka2l1::epoc {
         auto lang = epoc::locale_language{ epoc::lang_english, 0, 0, 0, 0, 0, 0, 0 };
         auto locale = epoc::get_locale_info();
         auto &dvcs = sys->get_device_manager()->get_devices();
+        kernel_system *kern = sys->get_kernel_system();
 
         if (dvcs.size() > cfg->device) {
             auto &dvc = dvcs[cfg->device];
@@ -143,6 +145,13 @@ namespace eka2l1::epoc {
                 lang.language = static_cast<epoc::language>(cfg->language);
             }
         }
+
+        address am_pm_names_addr[] = {
+            kern->put_global_kernel_string("am"),
+            kern->put_global_kernel_string("pm"),
+        };
+
+        lang.am_pm_table = eka2l1::ptr<char>(kern->put_static_array(am_pm_names_addr, 2));
 
         // Unknown key, testing show that this prop return 65535 most of times
         // The prop belongs to HAL server, but the key usuage is unknown. (TODO)
@@ -214,6 +223,7 @@ namespace eka2l1 {
 
             CREATE_SERVER(sys, system_agent_server);
             CREATE_SERVER(sys, unipertar_server);
+            CREATE_SERVER(sys, goom_monitor_server);
 
             // MMF server family
             {

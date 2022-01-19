@@ -37,6 +37,12 @@ namespace eka2l1 {
         auto dir = ctx->get_argument_value<std::u16string>(0);
         std::optional<epoc::uid_type> utype = ctx->get_argument_data_from_descriptor<epoc::uid_type>(2);
 
+        if (!dir.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        dir.value() = get_full_symbian_path(ss_path, dir.value());
         LOG_TRACE(SERVICE_EFSRV, "Opening directory: {}", common::ucs2_to_utf8(*dir));
 
         if (!dir || !utype.has_value()) {

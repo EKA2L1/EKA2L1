@@ -35,7 +35,7 @@ namespace eka2l1::epoc {
         epoc::canvas_base *user = reinterpret_cast<epoc::canvas_base *>(win);
         // Stop, we found it!
         // Send it right now
-        evt.adv_pointer_evt_.pos = scr_coord_ - user->pos;
+        evt.adv_pointer_evt_.pos = scr_coord_ - user->abs_rect.top;
 
         if (user->parent->type == epoc::window_kind::top_client) {
             evt.adv_pointer_evt_.parent_pos = scr_coord_;
@@ -90,11 +90,8 @@ namespace eka2l1::epoc {
                 continue;
             }
 
-            eka2l1::rect window_rect{ user->pos, user->size() };
-            evt.type = epoc::event_code::touch;
-
             if (!sent_to_highest_z) {
-                if (window_rect.contains(evt.adv_pointer_evt_.pos)) {
+                if (user->visible_region.contains(evt.adv_pointer_evt_.pos)) {
                     scr_coord_ = evt.adv_pointer_evt_.pos;
 
                     process_event_to_target_window(win, evt);

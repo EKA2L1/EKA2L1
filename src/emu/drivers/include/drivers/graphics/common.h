@@ -36,17 +36,24 @@ namespace eka2l1::drivers {
     };
 
     enum class graphics_primitive_mode : std::uint8_t {
-        triangles
+        points,
+        lines,
+        line_loop,
+        line_strip,
+        triangles,
+        triangle_strip,
+        triangle_fan
     };
 
-    enum class data_format {
+    enum class data_format : std::uint8_t {
         byte = 0,
         sbyte = 1,
         word = 2,
         sword = 3,
         sfloat = 4,
         uint = 5,
-        sint = 6
+        sint = 6,
+        fixed = 7
     };
 
     enum class blend_equation {
@@ -61,7 +68,12 @@ namespace eka2l1::drivers {
         frag_out_alpha = 2,
         one_minus_frag_out_alpha = 3,
         current_alpha = 4,
-        one_minus_current_alpha = 5
+        one_minus_current_alpha = 5,
+        frag_out_color = 6,
+        one_minus_frag_out_color = 7,
+        current_color = 8,
+        one_minus_current_color = 9,
+        frag_out_alpha_saturate = 10
     };
 
     enum draw_buffer_bits {
@@ -91,26 +103,47 @@ namespace eka2l1::drivers {
         r,
         r8,
         rg,
+        rg8,
         rgb,
         bgr,
         bgra,
         rgba,
         rgba4,
         depth_stencil,
-        depth24_stencil8
+        depth24_stencil8,
+        etc2_rgb8,
+        pvrtc_4bppv1_rgba,
+        pvrtc_2bppv1_rgba
     };
 
     enum class texture_data_type : std::uint16_t {
+        compressed,
         ubyte,
         ushort,
         ushort_4_4_4_4,
         ushort_5_6_5,
+        ushort_5_5_5_1,
         uint_24_8
     };
 
     enum class filter_option {
         linear,
-        nearest
+        nearest,
+        nearest_mipmap_nearest,
+        nearest_mipmap_linear,
+        linear_mipmap_nearest,
+        linear_mipmap_linear
+    };
+
+    enum class addressing_option {
+        clamp_to_edge,
+        repeat
+    };
+
+    enum class addressing_direction {
+        s,
+        t,
+        r
     };
 
     enum class channel_swizzle : std::uint32_t {
@@ -133,10 +166,15 @@ namespace eka2l1::drivers {
         set_to_zero,
     };
 
-    enum class stencil_face {
-        back,
-        front,
-        back_and_front
+    enum class rendering_face {
+        back = 0x1,
+        front = 0x2,
+        back_and_front = back | front
+    };
+
+    enum class rendering_face_determine_rule {
+        vertices_clockwise,
+        vertices_counter_clockwise
     };
 
     enum class condition_func {
@@ -148,6 +186,27 @@ namespace eka2l1::drivers {
         equal,
         not_equal,
         always
+    };
+
+    enum class graphics_feature {
+        depth_test = 0,
+        stencil_test = 1,
+        clipping = 2,
+        blend = 3,
+        cull = 4,
+        line_smooth = 5,
+        multisample = 6,
+        polygon_offset_fill = 7,
+        sample_alpha_to_coverage = 8,
+        sample_alpha_to_one = 9,
+        sample_coverage = 10,
+        dither = 11
+    };
+
+    enum class shader_module_type {
+        vertex,
+        fragment,
+        geometry
     };
 
     enum class window_api {

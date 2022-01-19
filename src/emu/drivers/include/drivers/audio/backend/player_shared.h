@@ -87,6 +87,7 @@ namespace eka2l1::drivers {
         bool set_volume(const std::uint32_t vol) override;
         void set_dest_container_format(const std::uint32_t confor) override;
 
+        std::uint64_t position() const override;
         std::uint32_t get_dest_freq() override;
         std::uint32_t get_dest_channel_count() override;
         std::uint32_t get_dest_encoding() override;

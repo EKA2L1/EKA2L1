@@ -65,6 +65,8 @@ namespace eka2l1::epoc {
         // The priority of the window.
         std::int32_t priority{ 0 };
         std::uint32_t client_handle{ 0 };
+        
+        ws::uid focus_group_change_event_handle{ 0 };
 
         window_kind type;
 
@@ -85,7 +87,8 @@ namespace eka2l1::epoc {
             flag_winmode_fixed = 1 << 13,
             flag_visiblity_event_report = 1 << 14,
             flag_has_redraw_content = 1 << 15,
-            flag_content_changed = 1 << 16
+            flag_content_changed = 1 << 16,
+            flag_shape_region = 1 << 17,            // Only support region and square on the emulator, others are too complicated
         };
 
         std::uint32_t flags;
@@ -205,6 +208,7 @@ namespace eka2l1::epoc {
             , child(nullptr)
             , flags(flags_visible) {
             set_parent(parent);
+            set_position(0);
         }
 
         explicit window(window_server_client_ptr client, screen *scr, window *parent, window_kind type)
@@ -215,6 +219,7 @@ namespace eka2l1::epoc {
             , child(nullptr)
             , flags(flags_visible) {
             set_parent(parent);
+            set_position(0);
         }
 
         ~window() override;

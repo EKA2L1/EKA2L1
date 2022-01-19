@@ -87,7 +87,8 @@ namespace eka2l1::epoc {
         : window(client, scr, parent, window_kind::group)
         , last_refresh_rate(60)
         , uid_owner_change_callback_handle(0)
-        , uid_owner_change_process(nullptr) {
+        , uid_owner_change_process(nullptr)
+        , screen_change_event_handle(0) {
         // Create window group as child
         top = std::make_unique<top_canvas>(client, scr, this);
         child = top.get();
@@ -230,12 +231,14 @@ namespace eka2l1::epoc {
             break;
 
         case EWsWinOpEnableScreenChangeEvents: {
-            epoc::event_screen_change_user evt;
-            evt.user = this;
+            if (!screen_change_event_handle) {
+                epoc::event_screen_change_user evt;
+                evt.user = this;
 
-            client->add_event_notifier<epoc::event_screen_change_user>(evt);
+                screen_change_event_handle = client->add_event_notifier<epoc::event_screen_change_user>(evt);
+            }
+
             ctx.complete(epoc::error_none);
-
             break;
         }
 

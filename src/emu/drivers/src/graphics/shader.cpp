@@ -25,10 +25,10 @@
 #include <cstring>
 
 namespace eka2l1::drivers {
-    std::unique_ptr<shader> make_shader(graphics_driver *driver) {
+    std::unique_ptr<shader_module> make_shader_module(graphics_driver *driver) {
         switch (driver->get_current_api()) {
         case graphic_api::opengl: {
-            return std::make_unique<ogl_shader>();
+            return std::make_unique<ogl_shader_module>();
         }
 
         default:
@@ -38,15 +38,28 @@ namespace eka2l1::drivers {
         return nullptr;
     }
 
-    shader_metadata::shader_metadata(const std::uint8_t *metadata)
+    std::unique_ptr<shader_program> make_shader_program(graphics_driver *driver) {
+        switch (driver->get_current_api()) {
+        case graphic_api::opengl: {
+            return std::make_unique<ogl_shader_program>();
+        }
+
+        default:
+            break;
+        }
+
+        return nullptr;
+    }
+
+    shader_program_metadata::shader_program_metadata(const std::uint8_t *metadata)
         : metadata_(metadata) {
     }
 
-    const std::uint16_t shader_metadata::get_attribute_count() const {
+    const std::uint16_t shader_program_metadata::get_attribute_count() const {
         return reinterpret_cast<const std::uint16_t *>(metadata_)[2];
     }
 
-    const std::uint16_t shader_metadata::get_uniform_count() const {
+    const std::uint16_t shader_program_metadata::get_uniform_count() const {
         return reinterpret_cast<const std::uint16_t *>(metadata_)[3];
     }
 
@@ -67,11 +80,11 @@ namespace eka2l1::drivers {
         return -1;
     }
 
-    const std::int32_t shader_metadata::get_uniform_binding(const char *name) const {
+    const std::int32_t shader_program_metadata::get_uniform_binding(const char *name) const {
         return search_binding(metadata_, name, reinterpret_cast<const std::uint16_t *>(metadata_)[1], get_uniform_count());
     }
 
-    const std::int32_t shader_metadata::get_attribute_binding(const char *name) const {
+    const std::int32_t shader_program_metadata::get_attribute_binding(const char *name) const {
         return search_binding(metadata_, name, reinterpret_cast<const std::uint16_t *>(metadata_)[0], get_attribute_count());
     }
 }

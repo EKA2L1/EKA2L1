@@ -24,6 +24,7 @@
 #include <drivers/driver.h>
 #include <drivers/graphics/buffer.h>
 #include <drivers/graphics/common.h>
+#include <drivers/graphics/input_desc.h>
 #include <drivers/graphics/shader.h>
 #include <drivers/graphics/texture.h>
 
@@ -71,18 +72,31 @@ namespace eka2l1::drivers {
       */
     drivers::handle create_bitmap(graphics_driver *driver, const eka2l1::vec2 &size, const std::uint32_t bpp);
 
-    /** \brief Create a new shader program.
+    /** \brief Create a new shader module.
       *
       * \param driver      The driver associated with the program. 
-      * \param vert_data   Pointer to the vertex shader code.
-      * \param vert_size   Size of vertex shader code.
-      * \param frag_size   Size of fragment shader code.
+      * \param data        Pointer to the vertex/fragment shader code.
+      * \param size        Size of vertex/fragment shader code in bytes.
+      * \param type        The type of the shader module.
       * \param metadata    Pointer to metadata struct. Some API may provide this.
       *
       * \returns Handle to the program.
       */
-    drivers::handle create_program(graphics_driver *driver, const char *vert_data, const std::size_t vert_size,
-        const char *frag_data, const std::size_t frag_size, shader_metadata *metadata = nullptr);
+    drivers::handle create_shader_module(graphics_driver *driver, const char *data, const std::size_t size,
+        drivers::shader_module_type type);
+
+    /**
+     * @brief Create a shader program from existing shader modules.
+     * 
+     * @param driver            The driver associated with the program. 
+     * @param vertex_module     Handle to the vertex shader module created.
+     * @param fragment_module   Handle to the fragment shader module created.
+     * @param metadata          If this is not null, the metadata object is filled with this shader program's metadata.
+     * 
+     * @return A valid handle on success.
+     */
+    drivers::handle create_shader_program(graphics_driver *driver, drivers::handle vertex_module,
+        drivers::handle fragment_module, shader_program_metadata *metadata);
 
     /**
      * \brief Create a new texture.
@@ -101,20 +115,29 @@ namespace eka2l1::drivers {
      */
     drivers::handle create_texture(graphics_driver *driver, const std::uint8_t dim, const std::uint8_t mip_levels,
         drivers::texture_format internal_format, drivers::texture_format data_format, drivers::texture_data_type data_type,
-        const void *data, const eka2l1::vec3 &size, const std::size_t pixels_per_line = 0);
+        const void *data, const std::size_t total_data_size, const eka2l1::vec3 &size, const std::size_t pixels_per_line = 0,
+        const std::uint32_t unpack_alignment = 4);
 
     /**
      * \brief Create a new buffer.
      *
      * \param driver           The driver associated with the buffer.
+     * \param initial_data     The initial data to supply to the buffer.
      * \param initial_size     The size of the buffer. Later resize won't keep the buffer data.
-     * \param hint             Usage hint of the buffer.
      * \param upload_hint      Upload frequency and target hint for the buffer.
      *
      * \returns Handle to the buffer.
      */
-    drivers::handle create_buffer(graphics_driver *driver, const std::size_t initial_size, const buffer_hint hint,
-        const buffer_upload_hint upload_hint);
+    drivers::handle create_buffer(graphics_driver *driver, const void *initial_data, const std::size_t initial_size, const buffer_upload_hint upload_hint);
+
+    /**
+     * @brief Create input layout descriptors for input vertex data.
+     * 
+     * @brief driver            The driver associated with the input descriptor.
+     * @brief descriptors       The layout infos.
+     * @brief count             Number of descriptor provided.
+     */
+    drivers::handle create_input_descriptors(graphics_driver *driver, input_descriptor *descriptors, const std::uint32_t count);
 
     /**
      * @brief Read bitmap data from a region into memory buffer.
@@ -133,39 +156,52 @@ namespace eka2l1::drivers {
     bool read_bitmap(graphics_driver *driver, drivers::handle h, const eka2l1::point &pos, const eka2l1::object_size &size,
         const std::uint32_t bpp, std::uint8_t *buffer_ptr);
 
-    struct graphics_command_list {
-        virtual ~graphics_command_list() {
-        }
+    static constexpr std::size_t MAX_THRESHOLD_TO_FLUSH = 12000;
+    static constexpr std::size_t MAX_CAP_COMMAND_COUNT = 12800;
 
-        virtual bool empty() const = 0;
-        virtual void clear() = 0;
-    };
+    #define PACK_2U32_TO_U64(a, b) (static_cast<std::uint64_t>(b) << 32) | static_cast<std::uint32_t>(a)
 
-    struct server_graphics_command_list : public graphics_command_list {
+    template <typename T, typename R>
+    void unpack_u64_to_2u32(const std::uint64_t source, T &a, R &b) {
+        a = static_cast<T>(source);
+        b = static_cast<R>(source >> 32);
+    }
+
+    std::uint64_t pack_from_two_floats(const float f1, const float f2);
+    void unpack_to_two_floats(const std::uint64_t source, float &f1, float &f2);
+
+    class graphics_command_builder {
+    protected:
         command_list list_;
 
-        ~server_graphics_command_list() override {
-        }
-
-        void clear() override;
-
-        bool empty() const override {
-            return list_.empty();
-        }
-    };
-
-    class graphics_command_list_builder {
-    protected:
-        graphics_command_list *list_;
-
     public:
-        explicit graphics_command_list_builder(graphics_command_list *list)
-            : list_(list) {
+        explicit graphics_command_builder()
+            : list_(MAX_CAP_COMMAND_COUNT) {
         }
 
-        virtual ~graphics_command_list_builder() {}
+        ~graphics_command_builder() {
+            if (list_.base_) {
+                delete list_.base_;
+            }
+        }
 
-        virtual void set_brush_color_detail(const eka2l1::vecx<int, 4> &color) = 0;
+        bool is_empty() const {
+            return list_.size_ == 0;
+        }
+
+        bool need_flush() const {
+            return (list_.size_ >= MAX_THRESHOLD_TO_FLUSH);
+        }
+
+        command_list retrieve_command_list() {
+            command_list copy = list_;
+            list_.base_ = nullptr;
+            list_.size_ = 0;
+
+            return copy;
+        }
+
+        void set_brush_color_detail(const eka2l1::vecx<int, 4> &color);
 
         void set_brush_color(const eka2l1::vec3 &color) {
             set_brush_color_detail({ color.x, color.y, color.z, 255 });
@@ -178,29 +214,26 @@ namespace eka2l1::drivers {
          * 
          * If the height is negative, the clip will use left-hand coordinates.
          */
-        virtual void clip_rect(eka2l1::rect &rect) = 0;
-
-        /**
-         * \brief Enable/disable clipping (scissor).
-         */
-        virtual void set_clipping(const bool enabled) = 0;
+        void clip_rect(const eka2l1::rect &rect);
 
         /**
           * \brief Clear the binding bitmap with color.
-          * \params color A RGBA vector 4 color
+          * \params clear_parameters The first four float is color buffer value, the next two floats are depth and stencil.
           */
-        virtual void clear(vecx<std::uint8_t, 4> color, const std::uint8_t clear_bitarr) = 0;
+        void clear(vecx<float, 6> clear_parameters, const std::uint8_t clear_bitarr);
 
         /**
-         * \brief Set a bitmap to be current.
+         * \brief Set a bitmap to be current read/draw buffer.
          *
          * Binding a bitmap results in draw operations being done within itself.
          *
          * \param handle Handle to the bitmap.
          */
-        virtual void bind_bitmap(const drivers::handle handle) = 0;
+        void bind_bitmap(const drivers::handle handle);
 
-        virtual void resize_bitmap(drivers::handle h, const eka2l1::vec2 &new_size) = 0;
+        void bind_bitmap(const drivers::handle draw_handle, const drivers::handle read_handle);
+
+        void resize_bitmap(drivers::handle h, const eka2l1::vec2 &new_size);
 
         /**
          * \brief Update a bitmap' data region.
@@ -217,9 +250,8 @@ namespace eka2l1::drivers {
          * 
          * \returns Handle to the texture.
          */
-        virtual void update_bitmap(drivers::handle h, const char *data, const std::size_t size,
-            const eka2l1::vec2 &offset, const eka2l1::vec2 &dim, const std::size_t pixels_per_line = 0)
-            = 0;
+        void update_bitmap(drivers::handle h, const char *data, const std::size_t size,
+            const eka2l1::vec2 &offset, const eka2l1::vec2 &dim, const std::size_t pixels_per_line = 0);
 
         /**
          * @brief Update a texture data region.
@@ -238,10 +270,10 @@ namespace eka2l1::drivers {
          * 
          * @returns Handle to the texture.
          */
-        virtual void update_texture(drivers::handle h, const char *data, const std::size_t size,
-            const texture_format data_format, const texture_data_type data_type,
-            const eka2l1::vec3 &offset, const eka2l1::vec3 &dim, const std::size_t pixels_per_line = 0)
-            = 0;
+        void update_texture(drivers::handle h, const char *data, const std::size_t size,
+            const std::uint8_t level, const texture_format data_format, const texture_data_type data_type,
+            const eka2l1::vec3 &offset, const eka2l1::vec3 &dim, const std::size_t pixels_per_line = 0,
+            const std::uint32_t unpack_alignment = 4);
 
         /**
          * \brief Draw a bitmap to currently binded bitmap.
@@ -256,26 +288,40 @@ namespace eka2l1::drivers {
          * \param rotation     The rotation in degrees.
          * \param flags        Drawing flags.
          */
-        virtual void draw_bitmap(drivers::handle h, drivers::handle maskh, const eka2l1::rect &dest_rect,
+        void draw_bitmap(drivers::handle h, drivers::handle maskh, const eka2l1::rect &dest_rect,
             const eka2l1::rect &source_rect, const eka2l1::vec2 &origin = eka2l1::vec2(0, 0),
-            const float rotation = 0.0f, const std::uint32_t flags = 0)
-            = 0;
+            const float rotation = 0.0f, const std::uint32_t flags = 0);
 
         /**
          * \brief Draw a rectangle with brush color.
          * 
          * \param target_rect The destination rectangle.
          */
-        virtual void draw_rectangle(const eka2l1::rect &target_rect) = 0;
+        void draw_rectangle(const eka2l1::rect &target_rect);
 
         /**
          * \brief Use a shader program.
          */
-        virtual void use_program(drivers::handle h) = 0;
+        void use_program(drivers::handle h);
 
-        virtual void set_uniform(drivers::handle h, const int binding, const drivers::shader_set_var_type var_type,
-            const void *data, const std::size_t data_size)
-            = 0;
+        /**
+         * @brief Set the standalone uniform value for the current active program.
+         * 
+         * These uniforms are declared globally, and do not belong in any buffer objects in the linked program.
+         * Note that for now only a number of backends support this (OpenGL and OpenGLES). Preferred option
+         * is to store uniform data inside a buffer block.
+         * 
+         * Backend that does not support this will either ignore or additionally prints out some warning log
+         * in the console. Some backends may emulate this. A shader program may support dynamic uniforms if
+         * metadata is attached.
+         * 
+         * @param binding       The identifier of the variable in the linked program.
+         * @param var_type      The variable type for uploading data.
+         * @param data          The data to set to the uniform variable.
+         * @param data_size     The size of the data buffer in bytes.
+         */
+        void set_dynamic_uniform(const int binding, const drivers::shader_set_var_type var_type,
+            const void *data, const std::size_t data_size);
 
         /**
          * \brief Bind a texture or bitmap (as texture) to a binding slot.
@@ -283,14 +329,42 @@ namespace eka2l1::drivers {
          * \param h       Handle to the texture.
          * \param binding Number of slot to bind.
          */
-        virtual void bind_texture(drivers::handle h, const int binding) = 0;
+        void bind_texture(drivers::handle h, const int binding);
 
         /**
-         * \brief Bind a buffer.
-         *
-         * \param h     Handle to the buffer.
+         * @brief Set which texture in a slot that the specified active shader module will use.
+         * 
+         * Note for some backends, the binding might be shared between programs, making the module specification
+         * useless.
+         * 
+         * @param texture_slot          Texture slot to bind to shader.
+         * @param shader_binding        The target binding of the shader variable.
+         * @param module                The module that the texture variable is active on.
          */
-        virtual void bind_buffer(drivers::handle h) = 0;
+        void set_texture_for_shader(const int texture_slot, const int shader_binding,
+            const drivers::shader_module_type module);
+
+        /**
+         * \brief Set vertex buffers to their slots
+         *
+         * \param h                     Handle to the array of buffer handle.
+         * \param starting_slots        The starting slot index to set these buffers.
+         * \param count                 The number of buffers to set.
+         */
+        void set_vertex_buffers(drivers::handle *h, const std::uint32_t starting_slots, const std::uint32_t count);
+
+        void set_index_buffer(drivers::handle h);
+
+        /**
+         * @brief Draw array of vertices.
+         * 
+         * @param prim_mode         The primitive mode used to draw the vertices data.
+         * @param first             The starting index of the vertices data.
+         * @param count             Number of vertices to be drawn.
+         * @param instance_count    Number of instance.
+         */
+        void draw_arrays(const graphics_primitive_mode prim_mode, const std::int32_t first,
+            const std::int32_t count, const std::int32_t instance_count);
 
         /**
          * \brief Draw indexed vertices.
@@ -301,7 +375,7 @@ namespace eka2l1::drivers {
          * \param index_off   Offset to beginning taking the index data from.
          * \param vert_base   Offset to beginning taking the vertex data from.
          */
-        virtual void draw_indexed(const graphics_primitive_mode prim_mode, const int count, const data_format index_type, const int index_off, const int vert_base) = 0;
+        void draw_indexed(const graphics_primitive_mode prim_mode, const int count, const data_format index_type, const int index_off, const int vert_base);
 
         /**
          * \brief Update buffer data, with provided chunks.
@@ -314,27 +388,19 @@ namespace eka2l1::drivers {
          * \param chunk_ptr         Pointer to all chunks.
          * \param chunk_size        Pointer to size of all chunks.
          */
-        virtual void update_buffer_data(drivers::handle h, const std::size_t offset, const int chunk_count, const void **chunk_ptr, const std::uint32_t *chunk_size) = 0;
+        void update_buffer_data(drivers::handle h, const std::size_t offset, const int chunk_count, const void **chunk_ptr, const std::uint32_t *chunk_size);
 
         /**
          * \brief Set current viewport.
          * 
          * \param viewport_rect     The rectangle to set viewport to
          */
-        virtual void set_viewport(const eka2l1::rect &viewport_rect) = 0;
+        void set_viewport(const eka2l1::rect &viewport_rect);
 
         /**
-         * \brief Enable/disable depth test.
-         *
-         * \param enable True if the depth test is suppose to be enable.
+         * \brief Enable/disable a graphic feature.
          */
-        virtual void set_depth(const bool enable) = 0;
-
-        virtual void set_stencil(const bool enable) = 0;
-
-        virtual void set_cull_mode(const bool enable) = 0;
-
-        virtual void set_blend_mode(const bool enable) = 0;
+        void set_feature(drivers::graphics_feature feature, const bool enabled);
 
         /**
          * \brief Fill a blend formula.
@@ -350,10 +416,9 @@ namespace eka2l1::drivers {
          * \param a_frag_output_factor      The factor with alpha fragment output.
          * \param a_current_factor          The factor with current pixel's alpha inside color buffer.
          */
-        virtual void blend_formula(const blend_equation rgb_equation, const blend_equation a_equation,
+        void blend_formula(const blend_equation rgb_equation, const blend_equation a_equation,
             const blend_factor rgb_frag_output_factor, const blend_factor rgb_current_factor,
-            const blend_factor a_frag_output_factor, const blend_factor a_current_factor)
-            = 0;
+            const blend_factor a_frag_output_factor, const blend_factor a_current_factor);
 
         /**
          * @brief Set action to the write for a pixel to stencil buffer on circumstances.
@@ -363,9 +428,8 @@ namespace eka2l1::drivers {
          * @param on_stencil_pass_depth_fail        Action to take on stencil test passes but depth test fails.
          * @param on_both_stencil_depth_pass        Action to take when both stencil and depth test pass.
          */
-        virtual void set_stencil_action(const stencil_face face_operate_on, const stencil_action on_stencil_fail,
-            const stencil_action on_stencil_pass_depth_fail, const stencil_action on_both_stencil_depth_pass)
-            = 0;
+        void set_stencil_action(const rendering_face face_operate_on, const stencil_action on_stencil_fail,
+            const stencil_action on_stencil_pass_depth_fail, const stencil_action on_both_stencil_depth_pass);
 
         /**
          * @brief Set stencil pass condition.
@@ -375,9 +439,8 @@ namespace eka2l1::drivers {
          * @param cond_func_ref_value       The value argument to be used in the function.
          * @param mask                      The mask that is AND to both value in stencil buffer with the ref value.
          */
-        virtual void set_stencil_pass_condition(const stencil_face face_operate_on, const condition_func cond_func,
-            const int cond_func_ref_value, const std::uint32_t mask)
-            = 0;
+        void set_stencil_pass_condition(const rendering_face face_operate_on, const condition_func cond_func,
+            const int cond_func_ref_value, const std::uint32_t mask);
 
         /**
          * @brief Set the value to AND with each value be written to stencil buffer.
@@ -385,47 +448,42 @@ namespace eka2l1::drivers {
          * @param face_operate_on       The face to set this mask to
          * @param mask                  The mask to set.
          */
-        virtual void set_stencil_mask(const stencil_face face_operate_on, const std::uint32_t mask) = 0;
+        void set_stencil_mask(const rendering_face face_operate_on, const std::uint32_t mask);
+
+        /**
+         * @brief Set the value to AND with each value that will be written to depth buffer.
+         *
+         * @param mask                  The mask to set.
+         */
+        void set_depth_mask(const std::uint32_t mask);
+
+        void set_depth_pass_condition(const condition_func func);
 
         /**
          * \brief Save state to temporary storage.
          */
-        virtual void backup_state() = 0;
+        void backup_state();
 
         /**
          * \brief Load state from previously saved temporary storage.
          */
-        virtual void load_backup_state() = 0;
-
-        /**
-         * \brief Attach descriptors and its layout to a buffer that is used as vertex.
-         *
-         * \param h                 The handle to the buffer.
-         * \brief stride            The total of bytes a vertex/instance consists of.
-         * \brief instance_move     Add the vertex cursor with the stride for each instance if true.
-         * \param descriptors       Pointer to the descriptors.
-         *                          This is copied and doesn't need to exist after calling this function.
-         * \param descriptor_count  The number of descriptors that we want to be attached.
-         */
-        virtual void attach_descriptors(drivers::handle h, const int stride, const bool instance_move,
-            const attribute_descriptor *descriptors, const int descriptor_count)
-            = 0;
+        void load_backup_state();
 
         /**
          * \brief Present swapchain to screen.
          */
-        virtual void present(int *status) = 0;
+        void present(int *status);
 
         /**
          * \brief Destroy an object.
          *
          * \param h Handle to the object.
          */
-        virtual void destroy(drivers::handle h) = 0;
+        void destroy(drivers::handle h);
 
-        virtual void destroy_bitmap(drivers::handle h) = 0;
+        void destroy_bitmap(drivers::handle h);
 
-        virtual void set_swapchain_size(const eka2l1::vec2 &swsize) = 0;
+        void set_swapchain_size(const eka2l1::vec2 &swsize);
 
         /**
          * @brief Set the size of the display in ortho matrix.
@@ -435,10 +493,16 @@ namespace eka2l1::drivers {
          * 
          * @param osize     Size to set in the ortho matrix.
          */
-        virtual void set_ortho_size(const eka2l1::vec2 &osize) = 0;
+        void set_ortho_size(const eka2l1::vec2 &osize);
 
         // TODO: Document
-        virtual void set_texture_filter(drivers::handle h, const drivers::filter_option min, const drivers::filter_option mag) = 0;
+        void set_texture_filter(drivers::handle h, const bool is_min, const drivers::filter_option mag);
+
+        void set_texture_addressing_mode(drivers::handle h, const drivers::addressing_direction dir, const drivers::addressing_option opt);
+
+        void set_texture_max_mip(drivers::handle h, const std::uint32_t max_mip);
+
+        void regenerate_mips(drivers::handle h);
 
         /**
          * \brief Set channel swizzlings of an image.
@@ -450,22 +514,21 @@ namespace eka2l1::drivers {
          * \param b Swizzling of third channel.
          * \param a Swizzling of fourth channel.
          */
-        virtual void set_swizzle(drivers::handle h, drivers::channel_swizzle r, drivers::channel_swizzle g, drivers::channel_swizzle b,
-            drivers::channel_swizzle a)
-            = 0;
+        void set_swizzle(drivers::handle h, drivers::channel_swizzle r, drivers::channel_swizzle g, drivers::channel_swizzle b,
+            drivers::channel_swizzle a);
 
         /**
          * @brief Set the size of line drawn.
          * 
          * @param value     New point size.
          */
-        virtual void set_point_size(const std::uint8_t value) = 0;
+        void set_point_size(const std::uint8_t value);
 
         /**
          * @brief Set the style of lines that drawn by draw line or polygon function.
          * @param style     New line style to set. Width and spacing of pattern are fixed for each style.
          */
-        virtual void set_pen_style(const pen_style style) = 0;
+        void set_pen_style(const pen_style style);
 
         /**
          * @brief Draw a line.
@@ -478,7 +541,7 @@ namespace eka2l1::drivers {
          * @param start The starting position of the line in screen coordinate.
          * @param end The end position of the line in screen coordinate.
          */
-        virtual void draw_line(const eka2l1::point &start, const eka2l1::point &end) = 0;
+        void draw_line(const eka2l1::point &start, const eka2l1::point &end);
 
         /**
          * @brief Draw a polygon.
@@ -488,130 +551,79 @@ namespace eka2l1::drivers {
          * @param point_list    Pointer to the list of point belongs to the polygon
          * @param point_count   The number of points in the polygon, must be >= 2, else behaviour is relied on the backend.
          */
-        virtual void draw_polygons(const eka2l1::point *point_list, const std::size_t point_count) = 0;
-    };
-
-    class server_graphics_command_list_builder : public graphics_command_list_builder {
-        command_list &get_command_list() {
-            return reinterpret_cast<server_graphics_command_list *>(list_)->list_;
-        }
-
-        void create_single_set_command(const std::uint16_t op, const bool enable);
-
-    public:
-        explicit server_graphics_command_list_builder(graphics_command_list *list);
-
-        void set_brush_color_detail(const eka2l1::vecx<int, 4> &color) override;
+        void draw_polygons(const eka2l1::point *point_list, const std::size_t point_count);
 
         /**
-         * \brief Set scissor rectangle, allow redraw only in specified area if clipping is enabled.
-         *
-         * Use in drawing window rect or invalidate a specific region of an window.
+         * @brief Set the face to be culled.
+         * 
+         * Default face to be culled depends on the backend, which usually is back. In addition, culling is off by default, and
+         * only applies when it's enabled through set_cull_mode.
+         * 
+         * @param face The face to be culled.
          */
-        void clip_rect(eka2l1::rect &rect) override;
+        void set_cull_face(const rendering_face face);
 
         /**
-         * \brief Enable/disable clipping (scissor).
+         * @brief Set the rule of vertices direction to determine which face is in the front and which face is the back.
+         * 
+         * @param rule The rule to set.
          */
-        void set_clipping(const bool enabled) override;
+        void set_front_face_rule(const rendering_face_determine_rule rule);
 
         /**
-          * \brief Clear the binding bitmap with color.
-          * \params color A RGBA vector 4 color
-          */
-        void clear(vecx<std::uint8_t, 4> color, const std::uint8_t clear_bitarr) override;
-
-        /**
-         * \brief Set a bitmap to be current.
-         *
-         * Binding a bitmap results in draw operations being done within itself.
-         *
-         * \param handle Handle to the bitmap.
+         * @brief Recreate an existing texture.
+         * 
+         * No failure is reported to the client.
+         * 
+         * @param h                 Handle to the existing texture.
+         * @param dim               Total dimensions of this texture.
+         * @param mip_levels        Total mips that the data contains.
+         * @param internal_format   Format stored inside GPU.
+         * @param data_format       The format of the given data.
+         * @param data_type         Format of the data.
+         * @param data              Pointer to the data to upload.
+         * @param size              Dimension size of the texture.
+         * @param data_size         Data size.
+         * @param pixels_per_line   Number of pixels per row. Use 0 for default.
          */
-        void bind_bitmap(const drivers::handle handle) override;
+        void recreate_texture(drivers::handle h, const std::uint8_t dim, const std::uint8_t mip_levels,
+            drivers::texture_format internal_format, drivers::texture_format data_format, drivers::texture_data_type data_type,
+            const void *data, const std::size_t data_size, const eka2l1::vec3 &size, const std::size_t pixels_per_line = 0,
+            const std::uint32_t unpack_alignment = 4);
 
-        void resize_bitmap(drivers::handle h, const eka2l1::vec2 &new_size) override;
+        /**
+         * @brief Recreate an existing buffer. 
+         * 
+         * @param h                 Handle to an existing buffer.
+         * @param initial_data      The initial data of the buffer. This is copied in this function.
+         * @param initial_size      The size of the initial data.
+         * @param hint              A hint on the buffer's intended usage.
+         * @param upload_hint       A hint on the buffer's upload behaviour.
+         */
+        void recreate_buffer(drivers::handle h, const void *initial_data, const std::size_t initial_size, const buffer_upload_hint upload_hint);
 
-        void update_bitmap(drivers::handle h, const char *data, const std::size_t size, const eka2l1::vec2 &offset,
-            const eka2l1::vec2 &dim, const std::size_t pixels_per_line = 0) override;
+        /**
+         * @brief Update the existing input descriptors.
+         * 
+         * @param h                 Handle to an existing input descriptors.
+         * @brief descriptors       The layout infos.
+         * @brief count             Number of descriptor provided.
+         */
+        void update_input_descriptors(drivers::handle h, input_descriptor *descriptors, const std::uint32_t count);
 
-        void update_texture(drivers::handle h, const char *data, const std::size_t size,
-            const texture_format data_format, const texture_data_type data_type,
-            const eka2l1::vec3 &offset, const eka2l1::vec3 &dim, const std::size_t pixels_per_line = 0) override;
+        void bind_input_descriptors(drivers::handle h);
 
-        void draw_bitmap(drivers::handle h, drivers::handle maskh, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect,
-            const eka2l1::vec2 &origin = eka2l1::vec2(0, 0), const float rotation = 0.0f, const std::uint32_t flags = 0) override;
+        /**
+         * @brief Set the mask for color outputted in the fragment shader stage.
+         * 
+         * @param mask 8-bit integer with the first 4 least significant bits, each bit set represnenting which color component can be written.
+         */
+        void set_color_mask(const std::uint8_t mask);
 
-        void draw_rectangle(const eka2l1::rect &target_rect) override;
+        void set_line_width(const float width);
 
-        void use_program(drivers::handle h) override;
+        void set_depth_bias(float constant_factor, float clamp, float slope_factor);
 
-        void set_uniform(drivers::handle h, const int binding, const drivers::shader_set_var_type var_type,
-            const void *data, const std::size_t data_size) override;
-
-        void bind_texture(drivers::handle h, const int binding) override;
-
-        void bind_buffer(drivers::handle h) override;
-
-        void update_buffer_data(drivers::handle h, const std::size_t offset, const int chunk_count, const void **chunk_ptr, const std::uint32_t *chunk_size) override;
-
-        void draw_indexed(const graphics_primitive_mode prim_mode, const int count, const data_format index_type, const int index_off, const int vert_base) override;
-
-        void set_viewport(const eka2l1::rect &viewport_rect) override;
-
-        void set_depth(const bool enable) override;
-
-        void set_stencil(const bool enable) override;
-
-        void set_cull_mode(const bool enable) override;
-
-        void set_blend_mode(const bool enable) override;
-
-        void blend_formula(const blend_equation rgb_equation, const blend_equation a_equation,
-            const blend_factor rgb_frag_output_factor, const blend_factor rgb_current_factor,
-            const blend_factor a_frag_output_factor, const blend_factor a_current_factor) override;
-
-        void set_stencil_action(const stencil_face face_operate_on, const stencil_action on_stencil_fail,
-            const stencil_action on_stencil_pass_depth_fail, const stencil_action on_both_stencil_depth_pass) override;
-
-        void set_stencil_pass_condition(const stencil_face face_operate_on, const condition_func cond_func,
-            const int cond_func_ref_value, const std::uint32_t mask) override;
-
-        void set_stencil_mask(const stencil_face face_operate_on, const std::uint32_t mask) override;
-
-        void attach_descriptors(drivers::handle h, const int stride, const bool instance_move,
-            const attribute_descriptor *descriptors, const int descriptor_count) override;
-
-        void backup_state() override;
-
-        void load_backup_state() override;
-
-        void present(int *status) override;
-
-        void destroy(drivers::handle h) override;
-
-        void destroy_bitmap(drivers::handle h) override;
-
-        void set_swapchain_size(const eka2l1::vec2 &swsize) override;
-
-        void set_ortho_size(const eka2l1::vec2 &osize) override;
-
-        void set_texture_filter(drivers::handle h, const drivers::filter_option min, const drivers::filter_option mag) override;
-
-        void set_swizzle(drivers::handle h, drivers::channel_swizzle r, drivers::channel_swizzle g, drivers::channel_swizzle b,
-            drivers::channel_swizzle a) override;
-
-        void set_point_size(const std::uint8_t value) override;
-
-        void set_pen_style(const pen_style style) override;
-
-        void draw_line(const eka2l1::point &start, const eka2l1::point &end) override;
-
-        void draw_polygons(const eka2l1::point *point_list, const std::size_t point_count) override;
-    };
-
-    struct graphics_command_callback_data {
-        drivers::graphics_command_list_builder *builder_;
-        void *userdata_;
+        void set_depth_range(const float min, const float max);
     };
 }

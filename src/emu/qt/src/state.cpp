@@ -55,7 +55,8 @@ namespace eka2l1::desktop {
         , init_fullscreen(false)
         , init_app_launched(false)
         , winserv(nullptr)
-        , sys_reset_cbh(0) {
+        , sys_reset_cbh(0)
+        , present_status(0) {
     }
 
     void emulator::stage_one() {
@@ -200,6 +201,29 @@ namespace eka2l1::desktop {
 
                 conf.mtm_reset_2 = true;
                 conf.serialize();
+            }
+
+            // Copy additional DLLs
+            std::vector<std::tuple<std::u16string, std::string, epocver>> dlls_need_to_copy = {
+                { u"Z:\\sys\\bin\\goommonitor.dll", "patch\\goommonitor_general.dll", epocver::epoc94 }
+            };
+
+            for (std::size_t i = 0; i < dlls_need_to_copy.size(); i++) {
+                epocver ver_required = std::get<2>(dlls_need_to_copy[i]);
+                if (symsys->get_symbian_version_use() < ver_required) {
+                    continue;
+                }
+
+                std::u16string org_file_path = std::get<0>(dlls_need_to_copy[i]);
+                auto where_to_copy = io->get_raw_path(org_file_path);
+
+                if (where_to_copy.has_value()) {
+                    std::string where_to_copy_u8 = common::ucs2_to_utf8(where_to_copy.value());
+                    if (common::exists(where_to_copy_u8)) {
+                        common::move_file(where_to_copy_u8, where_to_copy_u8 + ".bak");
+                    }
+                    common::copy_file(std::get<1>(dlls_need_to_copy[i]), where_to_copy_u8, true);
+                }
             }
 
             manager::packages *pkgmngr = symsys->get_packages();

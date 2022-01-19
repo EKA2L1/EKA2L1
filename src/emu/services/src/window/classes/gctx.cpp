@@ -54,19 +54,10 @@ namespace eka2l1::epoc {
         context.complete(attached_window->scr->number);
 
         if (no_building()) {
-            cmd_list = nullptr;
-            cmd_builder = nullptr;
-
             return;
         }
 
         drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
-
-        // Make new command list
-        if (!cmd_list) {
-            cmd_list = drv->new_command_list();
-            cmd_builder = drv->new_command_builder(cmd_list.get());
-        }
 
         // Add first command list, binding our window bitmap
         if (attached_window->driver_win_id == 0) {
@@ -90,7 +81,7 @@ namespace eka2l1::epoc {
         if (attached_window->resize_needed) {
             // Try to resize our bitmap. My NVIDIA did forgive me if texture has same spec
             // as before, but not Intel... Note: NVIDIA also
-            cmd_builder->resize_bitmap(attached_window->driver_win_id, attached_window->size());
+            cmd_builder.resize_bitmap(attached_window->driver_win_id, attached_window->size());
             attached_window->resize_needed = false;
         }
 
@@ -99,10 +90,10 @@ namespace eka2l1::epoc {
             cv->sync_from_bitmap();
         }
 
-        cmd_builder->bind_bitmap(attached_window->driver_win_id);
-        cmd_builder->set_depth(false);
+        cmd_builder.bind_bitmap(attached_window->driver_win_id);
+        cmd_builder.set_feature(drivers::graphics_feature::depth_test, false);
 
-        cmd_builder->set_viewport(viewport);
+        cmd_builder.set_viewport(viewport);
 
         // Reset clipping. This is not mentioned in doc but is in official source code.
         // See gc.cpp file. Opcode EWsGcOpActivate
@@ -113,9 +104,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h, const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect) {
-        if (cmd_builder)
-            cmd_builder->draw_bitmap(h, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), 0.0f, 0);
-
+        cmd_builder.draw_bitmap(h, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), 0.0f, 0);
         ctx.complete(epoc::error_none);
     }
 
@@ -125,44 +114,38 @@ namespace eka2l1::epoc {
         // Complete it first, cause we gonna open up the kernel
         ctx.complete(epoc::error_none);
 
-        if (cmd_builder) {
-            eka2l1::rect area(top_left, bottom_right - top_left);
-            if (fill_surrounding) {
-                // The effective box colour depends on the drawing mode. As the document says
-                if (do_command_set_brush_color()) {
-                    cmd_builder->draw_rectangle(area);
-                }
+        eka2l1::rect area(top_left, bottom_right - top_left);
+        if (fill_surrounding) {
+            // The effective box colour depends on the drawing mode. As the document says
+            if (do_command_set_brush_color()) {
+                cmd_builder.draw_rectangle(area);
             }
-
-            // TODO: Pen outline >_<
-            eka2l1::vecx<std::uint8_t, 4> color;
-            color = common::rgba_to_vec(pen_color);
-            cmd_builder->set_brush_color({ color[0], color[1], color[2] });
-
-            // Add the baseline offset. Where text will sit on.
-            area.top.y += baseline_offset;
-
-            if (align == epoc::text_alignment::right) {
-                area.top.x -= margin;
-            } else {
-                area.top.x += margin;
-            }
-
-            kernel_system *kern = client->get_ws().get_kernel_system();
-
-            kern->unlock();
-            text_font->atlas.draw_text(text, area, align, client->get_ws().get_graphics_driver(),
-                cmd_builder.get());
-
-            kern->lock();
         }
+
+        // TODO: Pen outline >_<
+        eka2l1::vecx<std::uint8_t, 4> color;
+        color = common::rgba_to_vec(pen_color);
+        cmd_builder.set_brush_color({ color[0], color[1], color[2] });
+
+        // Add the baseline offset. Where text will sit on.
+        area.top.y += baseline_offset;
+
+        if (align == epoc::text_alignment::right) {
+            area.top.x -= margin;
+        } else {
+            area.top.x += margin;
+        }
+
+        kernel_system *kern = client->get_ws().get_kernel_system();
+
+        kern->unlock();
+        text_font->atlas.draw_text(text, area, align, client->get_ws().get_graphics_driver(),
+            cmd_builder);
+
+        kern->lock();
     }
 
     bool graphic_context::do_command_set_brush_color() {
-        if (!cmd_builder) {
-            return false;
-        }
-
         eka2l1::vecx<std::uint8_t, 4> color = common::rgba_to_vec(brush_color);
 
         // Don't bother even sending any draw command
@@ -177,9 +160,9 @@ namespace eka2l1::epoc {
                     return false;
                 }
 
-                cmd_builder->set_brush_color_detail({ color[0], color[1], color[2], color[3] });
+                cmd_builder.set_brush_color_detail({ color[0], color[1], color[2], color[3] });
             } else {
-                cmd_builder->set_brush_color({ color[0], color[1], color[2] });
+                cmd_builder.set_brush_color({ color[0], color[1], color[2] });
             }
 
             break;
@@ -211,14 +194,14 @@ namespace eka2l1::epoc {
                     return false;
                 }
 
-                cmd_builder->set_brush_color_detail({ color[0], color[1], color[2], color[3] });
+                cmd_builder.set_brush_color_detail({ color[0], color[1], color[2], color[3] });
             } else {
-                cmd_builder->set_brush_color({ color[0], color[1], color[2] });
+                cmd_builder.set_brush_color({ color[0], color[1], color[2] });
             }
 
             // NOTE: Literally same translation for now.
-            cmd_builder->set_point_size(static_cast<std::uint8_t>(pen_size.x));
-            cmd_builder->set_pen_style(static_cast<drivers::pen_style>(line_mode));
+            cmd_builder.set_point_size(static_cast<std::uint8_t>(pen_size.x));
+            cmd_builder.set_pen_style(static_cast<drivers::pen_style>(line_mode));
 
             break;
 
@@ -248,8 +231,8 @@ namespace eka2l1::epoc {
                 // Developement document says that when not being redrawn, drawing is clipped to non-invalid part.
                 // But so far, I have not been able to see any open source code points to that being true. Even simple test can prove that's false.
                 // So for now, we let drawing happens on the window with no restrictions. Invalid region will still be invalidated.
-                cmd_builder->set_clipping(false);
-                cmd_builder->set_stencil(false);
+                cmd_builder.set_feature(drivers::graphics_feature::clipping, false);
+                cmd_builder.set_feature(drivers::graphics_feature::stencil_test, false);
 
                 return;
             }
@@ -289,13 +272,14 @@ namespace eka2l1::epoc {
         }
 
         if (use_clipping) {
-            cmd_builder->set_clipping(true);
+            cmd_builder.set_feature(drivers::graphics_feature::clipping, true);
 
             if (the_clip.valid()) {
-                cmd_builder->clip_rect(the_clip);
+                the_clip.size.y *= -1;
+                cmd_builder.clip_rect(the_clip);
             }
         } else {
-            clip_region(*cmd_builder, *the_region, stencil_one_for_valid);
+            clip_region(cmd_builder, *the_region, stencil_one_for_valid);
         }
     }
 
@@ -304,32 +288,27 @@ namespace eka2l1::epoc {
             drivers::graphics_driver *driver = client->get_ws().get_graphics_driver();
 
             // Unbind current bitmap
-            cmd_builder->bind_bitmap(0);
+            cmd_builder.bind_bitmap(0);
 
-            cmd_builder->set_clipping(false);
-            cmd_builder->set_stencil(false);
+            cmd_builder.set_feature(drivers::graphics_feature::clipping, false);
+            cmd_builder.set_feature(drivers::graphics_feature::stencil_test, false);
 
-            driver->submit_command_list(*cmd_list);
+            drivers::command_list retrieved = cmd_builder.retrieve_command_list();
+            driver->submit_command_list(retrieved);
 
-            // Renew this so that the graphic context can continue
-            cmd_list = driver->new_command_list();
-            cmd_builder = driver->new_command_builder(cmd_list.get());
-
-            cmd_builder->bind_bitmap(attached_window->driver_win_id);
-            cmd_builder->set_depth(false);
+            cmd_builder.bind_bitmap(attached_window->driver_win_id);
+            cmd_builder.set_feature(drivers::graphics_feature::depth_test, false);
 
             eka2l1::rect viewport;
             viewport.top = { 0, 0 };
             viewport.size = attached_window->size();
 
-            cmd_builder->set_viewport(viewport);
+            cmd_builder.set_viewport(viewport);
 
             attached_window->has_redraw_content(true);
             attached_window->content_changed(true);
 
             do_submit_clipping();
-        } else if (cmd_list) {
-            cmd_list->clear();
         }
     }
 
@@ -366,7 +345,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::submit_queue_commands(kernel::thread *rq) {
-        if (cmd_list && !flushed) {
+        if (!cmd_builder.is_empty() && !flushed) {
             flush_queue_to_driver();
 
             // Content of the window changed, so call the handler
@@ -398,7 +377,7 @@ namespace eka2l1::epoc {
         // This call maybe unsafe, as someone may delete our thread before request complete! :((
         // TODO: Safer condition for unlocking.
         kern->unlock();
-        drivers::handle h = cacher->add_or_get(driver, cmd_builder.get(), bmp);
+        drivers::handle h = cacher->add_or_get(driver, cmd_builder, bmp);
         kern->lock();
 
         return h;
@@ -470,10 +449,10 @@ namespace eka2l1::epoc {
             flags |= drivers::bitmap_draw_flag_flat_blending;
         }
 
-        cmd_builder->set_blend_mode(true);
+        cmd_builder.set_feature(drivers::graphics_feature::blend, true);
 
         // For non alpha blending we always want to take color buffer's alpha.
-        cmd_builder->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
+        cmd_builder.blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
             drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
             (alpha_blending ? drivers::blend_factor::frag_out_alpha : drivers::blend_factor::one),
             (alpha_blending ? drivers::blend_factor::one_minus_frag_out_alpha : drivers::blend_factor::one));
@@ -481,16 +460,16 @@ namespace eka2l1::epoc {
         bool swizzle_alteration = false;
         if (!alpha_blending && !epoc::is_display_mode_alpha(mask_bitmap->settings_.current_display_mode())) {
             swizzle_alteration = true;
-            cmd_builder->set_swizzle(bmp_mask_driver_handle, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
+            cmd_builder.set_swizzle(bmp_mask_driver_handle, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
                 drivers::channel_swizzle::blue, drivers::channel_swizzle::red);
         }
 
-        cmd_builder->draw_bitmap(bmp_driver_handle, bmp_mask_driver_handle, dest_rect, source_rect, eka2l1::vec2(0, 0),
+        cmd_builder.draw_bitmap(bmp_driver_handle, bmp_mask_driver_handle, dest_rect, source_rect, eka2l1::vec2(0, 0),
             0.0f, flags);
-        cmd_builder->set_blend_mode(false);
+        cmd_builder.set_feature(drivers::graphics_feature::blend, false);
 
         if (swizzle_alteration) {
-            cmd_builder->set_swizzle(bmp_mask_driver_handle, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
+            cmd_builder.set_swizzle(bmp_mask_driver_handle, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
                 drivers::channel_swizzle::blue, drivers::channel_swizzle::alpha);
         }
     }
@@ -528,6 +507,15 @@ namespace eka2l1::epoc {
 
         eka2l1::rect source_rect = blt_cmd->source_rect;
         source_rect.transform_from_symbian_rectangle();
+
+        // Clip the size
+        if (source_rect.size.x > bmp->header_.size_pixels.x) {
+            source_rect.size.x = bmp->header_.size_pixels.x;
+        }
+        
+        if (source_rect.size.y > bmp->header_.size_pixels.y) {
+            source_rect.size.y = bmp->header_.size_pixels.y;
+        }
 
         eka2l1::rect dest_rect;
         dest_rect.size = source_rect.size;
@@ -606,8 +594,8 @@ namespace eka2l1::epoc {
             // The source rect given by the command is too large.
             // By default, the extra space should be filled with white. We will do that by drawing
             // a white rectangle
-            cmd_builder->set_brush_color({ 255, 255, 255 });
-            cmd_builder->draw_rectangle(dest_rect);
+            cmd_builder.set_brush_color({ 255, 255, 255 });
+            cmd_builder.draw_rectangle(dest_rect);
 
             source_rect.size.y = bmp->header_.size_pixels.y;
             dest_rect.size.y = source_rect.size.y;
@@ -653,7 +641,7 @@ namespace eka2l1::epoc {
 
         if (do_command_put_pen()) {
             // It's actually two points
-            cmd_builder->draw_line(area.top, area.size);
+            cmd_builder.draw_line(area.top, area.size);
         }
 
         context.complete(epoc::error_none);
@@ -679,12 +667,12 @@ namespace eka2l1::epoc {
                 area.top
             };
 
-            cmd_builder->draw_polygons(point_list, 5);
+            cmd_builder.draw_polygons(point_list, 5);
         }
 
         // Draw the real rectangle! Hurray!
         if (do_command_set_brush_color()) {
-            cmd_builder->draw_rectangle(area);
+            cmd_builder.draw_rectangle(area);
         }
 
         context.complete(epoc::error_none);
@@ -702,7 +690,7 @@ namespace eka2l1::epoc {
         fill_mode = brush_style::solid;
 
         if (do_command_set_brush_color()) {
-            cmd_builder->draw_rectangle(area);
+            cmd_builder.draw_rectangle(area);
         }
 
         fill_mode = previous_brush_type;
@@ -726,7 +714,7 @@ namespace eka2l1::epoc {
         fill_mode = brush_style::solid;
 
         if (do_command_set_brush_color()) {
-            cmd_builder->draw_rectangle(area);
+            cmd_builder.draw_rectangle(area);
         }
 
         fill_mode = previous_brush_type;
@@ -1032,8 +1020,6 @@ namespace eka2l1::epoc {
         , line_mode(pen_style::solid)
         , brush_color(0xFFFFFFFF)
         , pen_color(0)
-        , pen_size(1, 1)
-        , cmd_list(nullptr)
-        , cmd_builder(nullptr) {
+        , pen_size(1, 1) {
     }
 }

@@ -66,6 +66,9 @@ private slots:
     void on_package_uninstall_requested();
     void on_package_list_file_requested();
 
+signals:
+    void package_uninstalled();
+
 public:
     explicit package_manager_dialog(QWidget *parent, eka2l1::manager::packages *packages);
     ~package_manager_dialog();

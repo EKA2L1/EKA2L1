@@ -12,11 +12,9 @@ namespace eka2l1::drivers {
         texture_format internal_format;
         texture_format format;
         texture_data_type tex_data_type;
-        void *tex_data;
-        int mip_level;
         std::size_t pixels_per_line;
 
-        std::uint32_t texture;
+        std::uint32_t texture{ 0 };
         int last_tex{ 0 };
         int last_active{ 0 };
 
@@ -24,23 +22,21 @@ namespace eka2l1::drivers {
         ogl_texture() {}
         ~ogl_texture() override;
 
-        bool tex(graphics_driver *driver, const bool is_first = false) override;
-
         bool create(graphics_driver *driver, const int dim, const int miplvl, const vec3 &size, const texture_format internal_format,
-            const texture_format format, const texture_data_type data_type, void *data, const std::size_t pixels_per_line = 0) override;
-
-        void change_size(const vec3 &new_size) override;
-        void change_data(const texture_data_type data_type, void *data) override;
-        void change_texture_format(const texture_format format) override;
+            const texture_format format, const texture_data_type data_type, void *data, const std::size_t data_size,
+            const std::size_t pixels_per_line = 0, const std::uint32_t unpack_alignment = 4) override;
 
         void set_filter_minmag(const bool min, const filter_option op) override;
+        void set_addressing_mode(const addressing_direction dir, const addressing_option op) override;
         void set_channel_swizzle(channel_swizzles swizz) override;
+        void generate_mips() override;
+        void set_max_mip_level(const std::uint32_t max_mip) override;
 
         void bind(graphics_driver *driver, const int binding) override;
         void unbind(graphics_driver *driver) override;
 
         void update_data(graphics_driver *driver, const int mip_lvl, const vec3 &offset, const vec3 &size, const std::size_t byte_width,
-            const texture_format data_format, const texture_data_type data_type, const void *data) override;
+            const texture_format data_format, const texture_data_type data_type, const void *data, const std::size_t data_size, const std::uint32_t unpack_alignment) override;
 
         vec2 get_size() const override {
             return tex_size;
@@ -54,16 +50,8 @@ namespace eka2l1::drivers {
             return tex_data_type;
         }
 
-        int get_mip_level() const override {
-            return mip_level;
-        }
-
         int get_total_dimensions() const override {
             return dimensions;
-        }
-
-        void *get_data_ptr() const override {
-            return tex_data;
         }
 
         std::uint64_t texture_handle() override {

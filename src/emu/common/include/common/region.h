@@ -35,6 +35,8 @@ namespace eka2l1::common {
             rects_.clear();
         }
 
+        bool contains(const eka2l1::point &p);
+
         /**
          * @brief       Move the region by certain amount of units.
          * 
@@ -57,6 +59,8 @@ namespace eka2l1::common {
          * @returns     True if new rectangle create modification to the region.
          */
         bool add_rect(const eka2l1::rect &rect);
+
+        bool add_region(const region &rg);
 
         /**
          * @brief       Get the rectangle that bound the whole region.

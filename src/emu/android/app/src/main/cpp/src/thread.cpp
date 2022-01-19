@@ -27,12 +27,12 @@ std::unique_ptr<std::thread> gr_thread_obj;
 
 namespace eka2l1::android {
     static constexpr const char *os_thread_name = "Symbian OS thread";
-    static constexpr const char *ui_thread_name = "UI thread";
     static constexpr const char *graphics_driver_thread_name = "Graphics thread";
 
     static int graphics_driver_thread_initialization(emulator &state) {
         // Halloween decoration breath of the graphics
         eka2l1::common::set_thread_name(graphics_driver_thread_name);
+        eka2l1::common::set_thread_priority(eka2l1::common::thread_priority_high);
 
         state.window = std::make_unique<drivers::emu_window_android>();
         state.window->init("Hello there", eka2l1::vec2(0, 0),
@@ -93,68 +93,6 @@ namespace eka2l1::android {
         }
     }
 
-    static int ui_thread_initialization(emulator &state) {
-        // Breath of the UI
-        eka2l1::common::set_thread_name(ui_thread_name);
-
-        // Now wait for the graphics thread before starting anything
-        state.graphics_sema.wait();
-
-        return 0;
-    }
-
-    static int ui_thread_deinitialization(emulator &state) {
-        // Build a last command list to destroy resources
-        std::unique_ptr<drivers::graphics_command_list> cmd_list = state.graphics_driver->new_command_list();
-        std::unique_ptr<drivers::graphics_command_list_builder> cmd_builder = state.graphics_driver->new_command_builder(
-            cmd_list.get());
-
-        // Submit destroy to driver. UI thread resources
-        state.graphics_driver->submit_command_list(*cmd_list);
-
-        // Make the graphics driver abort
-        state.graphics_driver->abort();
-
-        return 0;
-    }
-
-    void ui_thread(emulator &state) {
-        int result = ui_thread_initialization(state);
-
-        if (result != 0) {
-            LOG_ERROR(FRONTEND_CMDLINE, "UI thread initialization failed with code {}", result);
-            return;
-        }
-
-        std::unique_ptr<drivers::graphics_command_list> cmd_list = state.graphics_driver->new_command_list();
-        std::unique_ptr<drivers::graphics_command_list_builder> cmd_builder = state.graphics_driver->new_command_builder(
-            cmd_list.get());
-
-        while (!state.should_ui_quit) {
-            state.launcher->draw(cmd_builder.get(), state.window->window_fb_size().x,
-                    state.window->window_fb_size().y);
-
-            int wait_status = -100;
-
-            // Submit, present, and wait for the presenting
-            cmd_builder->present(&wait_status);
-
-            state.graphics_driver->submit_command_list(*cmd_list);
-            state.graphics_driver->wait_for(&wait_status);
-
-            // Recreate the list and builder
-            cmd_list = state.graphics_driver->new_command_list();
-            cmd_builder = state.graphics_driver->new_command_builder(cmd_list.get());
-        }
-
-        result = ui_thread_deinitialization(state);
-
-        if (result != 0) {
-            LOG_ERROR(FRONTEND_CMDLINE, "UI thread deinitialization failed with code {}", result);
-            return;
-        }
-    }
-
     void os_thread(emulator &state) {
         eka2l1::common::set_thread_name(os_thread_name);
         eka2l1::common::set_thread_priority(eka2l1::common::thread_priority_high);
@@ -183,15 +121,52 @@ namespace eka2l1::android {
         //state.graphics_sema.notify();
     }
 
+    void register_screen_draw_events(emulator &state) {
+        if (state.winserv) {
+            // TODO: Clean these handles up somewhere (+ threads too!)
+            eka2l1::epoc::screen *screens = state.winserv->get_screens();
+            while (screens) {
+                std::size_t change_handle = screens->add_screen_redraw_callback(&state, [](void *userdata,
+                                                                                           eka2l1::epoc::screen *scr, const bool is_dsa) {
+                    emulator *state_ptr = reinterpret_cast<emulator*>(userdata);
+                    if (!state_ptr->graphics_driver) {
+                        return;
+                    }
+
+                    // Check if previous presenting is done yet (to prevent input delay because frame
+                    // submit request is too fast)
+                    state_ptr->graphics_driver->wait_for(&state_ptr->present_status);
+
+                    drivers::graphics_command_builder builder;
+                    state_ptr->launcher->draw(builder, scr, state_ptr->window->window_fb_size().x,
+                                              state_ptr->window->window_fb_size().y);
+
+                    // Submit, present, and wait for the presenting
+                    // Don't wait for present to be done, let the game during this time to do
+                    // something meaningful. (Callback tied to draw thread)
+                    state_ptr->present_status = -100;
+                    builder.present(&state_ptr->present_status);
+
+                    drivers::command_list retrieved = builder.retrieve_command_list();
+                    state_ptr->graphics_driver->submit_command_list(retrieved);
+                });
+
+                state.screen_change_handles.push_back(change_handle);
+                screens = screens->next;
+            }
+        }
+    }
+
     bool emulator_entry(emulator &state) {
         state.stage_one();
 
         const bool result = state.stage_two();
 
         // Instantiate UI and High-level interface threads
-        ui_thread_obj = std::make_unique<std::thread>(ui_thread, std::ref(state));
-        if (result)
+        if (result) {
+            register_screen_draw_events(state);
             os_thread_obj = std::make_unique<std::thread>(os_thread, std::ref(state));
+        }
 
         // Run graphics driver on main entry.
         gr_thread_obj = std::make_unique<std::thread>(graphics_driver_thread, std::ref(state));

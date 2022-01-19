@@ -79,13 +79,14 @@
      <property name="title">
       <string>Mount game card dump</string>
      </property>
-     <addaction name="separator"/>
+      <addaction name="separator"/>
      <addaction name="action_mount_game_card_folder"/>
      <addaction name="action_mount_game_card_zip"/>
     </widget>
     <addaction name="menu_install"/>
     <addaction name="action_package_manager"/>
     <addaction name="separator"/>
+    <addaction name="action_refresh_app_list"/>
     <addaction name="menu_mount_game_card_dump"/>
     <addaction name="action_mount_recent_dumps"/>
     <addaction name="separator"/>
@@ -252,6 +253,11 @@
   <action name="action_mount_game_card_zip">
    <property name="text">
     <string notr="true">Zip</string>
+   </property>
+  </action>
+  <action name="action_refresh_app_list">
+   <property name="text">
+    <string>Refresh app list</string>
    </property>
   </action>
  </widget>

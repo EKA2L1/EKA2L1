@@ -91,6 +91,17 @@ namespace eka2l1::common {
         return true;
     }
 
+    bool region::add_region(const region &rg) {
+        bool modded = false;
+        for (std::size_t i = 0; i < rg.rects_.size(); i++) {
+            if (add_rect(rg.rects_[i])) {
+                modded = true;
+            }
+        }
+
+        return modded;
+    }
+
     void region::eliminate(const eka2l1::rect &rect) {
         if (rect.empty()) {
             return;
@@ -201,5 +212,15 @@ namespace eka2l1::common {
                 rects_[i].size.y = bottom_right.y - rects_[i].top.y;
             }
         }
+    }
+
+    bool region::contains(const eka2l1::point &p) {
+        for (std::size_t i = 0; i < rects_.size(); i++) {
+            if (rects_[i].contains(p)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -18,6 +18,7 @@
  */
 
 #include <common/buffer.h>
+#include <common/chunkyseri.h>
 #include <services/applist/common.h>
 
 namespace eka2l1 {
@@ -82,5 +83,19 @@ namespace eka2l1 {
         }
 
         return true;
+    }
+
+    void apa_capability::do_it(common::chunkyseri &seri) {
+        std::uint32_t version = 4;
+        seri.absorb(version);
+        seri.absorb(ability);
+        seri.absorb(support_being_asked_to_create_new_file);
+        seri.absorb(is_hidden);
+        seri.absorb(launch_in_background);
+
+        std::u16string name_got = group_name.to_std_string(nullptr);
+        epoc::absorb_des_string(name_got, seri, true);
+
+        seri.absorb(flags);
     }
 }

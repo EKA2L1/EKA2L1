@@ -31,6 +31,10 @@
 
 namespace eka2l1 {
     class fbs_server;
+
+    namespace epoc {
+        struct screen;
+    }
 }
 
 namespace eka2l1::android {
@@ -70,7 +74,8 @@ namespace eka2l1::android {
         void set_language(std::uint32_t language_id);
         void set_rtos_level(std::uint32_t level);
         void update_app_setting(std::uint32_t uid);
-        void draw(drivers::graphics_command_list_builder *builder, std::uint32_t width, std::uint32_t height);
+        void draw(drivers::graphics_command_builder &builder, epoc::screen *scr,
+                  std::uint32_t width, std::uint32_t height);
         std::vector<std::string> get_language_ids();
         std::vector<std::string> get_language_names();
         void set_screen_params(std::uint32_t background_color, std::uint32_t scale_ratio,

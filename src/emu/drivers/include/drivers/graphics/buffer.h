@@ -27,12 +27,6 @@
 namespace eka2l1::drivers {
     class graphics_driver;
 
-    enum class buffer_hint {
-        none = 0,
-        vertex_buffer = 1,
-        index_buffer = 2
-    };
-
     enum buffer_upload_hint : std::uint16_t {
         buffer_upload_stream = 1 << 0,
         buffer_upload_static = 1 << 1,
@@ -43,16 +37,6 @@ namespace eka2l1::drivers {
         buffer_upload_copy = 1 << 12
     };
 
-    struct attribute_descriptor {
-        int location;
-        int offset;
-        int format;
-
-        void set_format(const int comp_count, const data_format dform) {
-            format = (comp_count & 0b1111) | (static_cast<int>(dform) << 4);
-        }
-    };
-
     class buffer : public graphics_object {
     public:
         virtual ~buffer(){};
@@ -60,12 +44,7 @@ namespace eka2l1::drivers {
         virtual void bind(graphics_driver *driver) = 0;
         virtual void unbind(graphics_driver *driver) = 0;
 
-        // Only support with buffer hinted as vertex
-        virtual void attach_descriptors(graphics_driver *driver, const int stride, const bool instance_move,
-            const attribute_descriptor *descriptors, const int total)
-            = 0;
-
-        virtual bool create(graphics_driver *driver, const std::size_t initial_size, const buffer_hint hint, const buffer_upload_hint use_hint) = 0;
+        virtual bool create(graphics_driver *driver, const void *data, const std::size_t initial_size, const buffer_upload_hint use_hint) = 0;
         virtual void update_data(graphics_driver *driver, const void *data, const std::size_t offset, const std::size_t size) = 0;
     };
 

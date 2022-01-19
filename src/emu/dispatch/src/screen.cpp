@@ -94,27 +94,27 @@ namespace eka2l1::dispatch {
         timing_->remove_event(vsync_notify_event_);
 
         if (drv) {
-            auto cmd_list = drv->new_command_list();
-            auto cmd_builder = drv->new_command_builder(cmd_list.get());
+            drivers::graphics_command_builder builder;
             
             bool need_send_destroy = false;
 
             for (std::size_t i = 0; i < infos_.size(); i++) {
                 if (infos_[i].transfer_texture_ != 0) {
                     need_send_destroy = true;
-                    cmd_builder->destroy(infos_[i].transfer_texture_);
+                    builder.destroy(infos_[i].transfer_texture_);
                 }
             }
 
             if (need_send_destroy) {
-                drv->submit_command_list(*cmd_list);
+                drivers::command_list retrieved = builder.retrieve_command_list();
+                drv->submit_command_list(retrieved);
             }
         }
     }
 
-    drivers::handle screen_post_transferer::transfer_data_to_texture(drivers::graphics_driver *drv, drivers::graphics_command_list_builder *builder,
+    drivers::handle screen_post_transferer::transfer_data_to_texture(drivers::graphics_driver *drv, drivers::graphics_command_builder &builder,
         std::int32_t screen_index, std::uint8_t *data, eka2l1::vec2 size, std::int32_t format) {
-        if ((screen_index < 0) || (screen_index > 10) || !drv || !builder) {
+        if ((screen_index < 0) || (screen_index > 10) || !drv) {
             return 0;
         }
 
@@ -167,23 +167,24 @@ namespace eka2l1::dispatch {
         if ((info.transfer_texture_ == 0) || (info.transfer_texture_size_.x > size.x) || (info.transfer_texture_size_.y > size.y)
             || (info.format_ != format)) {
             if (info.transfer_texture_ != 0) {
-                builder->destroy(info.transfer_texture_);
+                builder.destroy(info.transfer_texture_);
             }
 
-            info.transfer_texture_ = drivers::create_texture(drv, 2, 0, internal_format, data_format, type, nullptr,
+            info.transfer_texture_ = drivers::create_texture(drv, 2, 0, internal_format, data_format, type, nullptr, 0,
                 eka2l1::vec3(size.x, size.y, 0));
 
             info.transfer_texture_size_ = size;
             info.format_ = format;
 
-            builder->set_texture_filter(info.transfer_texture_, drivers::filter_option::linear, drivers::filter_option::linear);
+            builder.set_texture_filter(info.transfer_texture_, true, drivers::filter_option::linear);
+            builder.set_texture_filter(info.transfer_texture_, false, drivers::filter_option::linear);
         }
 
-        builder->update_texture(info.transfer_texture_, reinterpret_cast<const char*>(data), line_stride * size.y, data_format, type, eka2l1::vec3(0, 0, 0),
+        builder.update_texture(info.transfer_texture_, reinterpret_cast<const char*>(data), line_stride * size.y, 0, data_format, type, eka2l1::vec3(0, 0, 0),
             eka2l1::vec3(size.x, size.y, 0), 0);
 
         if (format == FORMAT_RGB32_X888_LE) {
-            builder->set_swizzle(info.transfer_texture_, drivers::channel_swizzle::blue, drivers::channel_swizzle::green,
+            builder.set_swizzle(info.transfer_texture_, drivers::channel_swizzle::blue, drivers::channel_swizzle::green,
                 drivers::channel_swizzle::red, drivers::channel_swizzle::one);
         }
 
@@ -228,10 +229,8 @@ namespace eka2l1::dispatch {
                     scr->dsa_texture = bitmap_handle;
                 }
 
-                auto command_list = driver->new_command_list();
-                auto command_builder = driver->new_command_builder(command_list.get());
-
-                command_builder->update_bitmap(scr->dsa_texture, reinterpret_cast<const char *>(scr->screen_buffer_ptr()),
+                drivers::graphics_command_builder builder;
+                builder.update_bitmap(scr->dsa_texture, reinterpret_cast<const char *>(scr->screen_buffer_ptr()),
                     buffer_size, { 0, 0 }, screen_size);
 
                 // NOTE: This is a hack for some apps that dont fill alpha
@@ -240,7 +239,7 @@ namespace eka2l1::dispatch {
                 case epoc::display_mode::color16m:
                 case epoc::display_mode::color16mu:
                 case epoc::display_mode::color16ma:
-                    command_builder->set_swizzle(scr->dsa_texture, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
+                    builder.set_swizzle(scr->dsa_texture, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
                         drivers::channel_swizzle::blue, drivers::channel_swizzle::one);
 
                     break;
@@ -256,12 +255,14 @@ namespace eka2l1::dispatch {
                 eka2l1::rect source_rect { eka2l1::vec2(0, 0), mode_info.size };
                 eka2l1::rect dest_rect = source_rect;
 
-                command_builder->bind_bitmap(scr->screen_texture);
-                command_builder->set_clipping(false);
-                command_builder->draw_bitmap(scr->dsa_texture, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), 0, flags);
-                command_builder->bind_bitmap(0);
+                builder.bind_bitmap(scr->screen_texture);
+                builder.set_feature(drivers::graphics_feature::clipping, false);
+                builder.draw_bitmap(scr->dsa_texture, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), 0, flags);
+                builder.bind_bitmap(0);
 
-                driver->submit_command_list(*command_list);
+                drivers::command_list retrieved = builder.retrieve_command_list();
+                driver->submit_command_list(retrieved);
+
                 scr->fire_screen_redraw_callbacks(true);
             }
 
@@ -314,20 +315,20 @@ namespace eka2l1::dispatch {
         post_info_copy.displayed_rect.transform_from_symbian_rectangle();
         post_info_copy.scale_to_rect.transform_from_symbian_rectangle();
 
+        drivers::graphics_command_builder builder;
+
         while (scr != nullptr) {
             if (scr->number == screen_index) {
-                auto command_list = driver->new_command_list();
-                auto command_builder = driver->new_command_builder(command_list.get());
-
-                drivers::handle temp = transferer.transfer_data_to_texture(driver, command_builder.get(),
+                drivers::handle temp = transferer.transfer_data_to_texture(driver, builder,
                     screen_index, data, eka2l1::vec2(size_x, size_y), format);
 
-                command_builder->bind_bitmap(scr->screen_texture);
-                command_builder->set_clipping(false);
-                command_builder->draw_bitmap(temp, 0, info->scale_to_rect, info->input_crop, eka2l1::vec2(0, 0), 0, 0);
-                command_builder->bind_bitmap(0);
+                builder.bind_bitmap(scr->screen_texture);
+                builder.set_feature(drivers::graphics_feature::clipping, false);
+                builder.draw_bitmap(temp, 0, info->scale_to_rect, info->input_crop, eka2l1::vec2(0, 0), 0, 0);
+                builder.bind_bitmap(0);
 
-                driver->submit_command_list(*command_list);
+                drivers::command_list retrieved = builder.retrieve_command_list();
+                driver->submit_command_list(retrieved);
                 scr->fire_screen_redraw_callbacks(true);
             }
 

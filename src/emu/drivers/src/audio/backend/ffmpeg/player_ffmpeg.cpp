@@ -28,7 +28,9 @@ extern "C" {
 
 namespace eka2l1::drivers {
     void player_ffmpeg::deinit() {
-        avformat_free_context(format_context_);
+        if (format_context_) {
+            avformat_free_context(format_context_);
+        }
 
         if (custom_io_buffer_) {
             av_freep(&custom_io_buffer_);
@@ -38,7 +40,9 @@ namespace eka2l1::drivers {
             avio_context_free(&custom_io_);
         }
 
-        codec_ = nullptr;
+        if (codec_) {
+            avcodec_free_context(&codec_);
+        }
     }
 
     bool player_ffmpeg::open_ffmpeg_stream() {
@@ -49,42 +53,32 @@ namespace eka2l1::drivers {
             return false;
         }
 
-        // Trying to get stream audio codec
-        if (!format_context_->audio_codec) {
-            // Getting it ourself smh
-            format_context_->audio_codec = avcodec_find_decoder(format_context_->audio_codec_id);
+        int best_stream_index = av_find_best_stream(format_context_, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
 
-            if (!format_context_->audio_codec) {
-                AVOutputFormat *format = av_guess_format(nullptr, url_.c_str(), nullptr);
+        if (best_stream_index < 0) {
+            LOG_ERROR(DRIVER_AUD, "Unable to retrieve best audio stream!");
+            return false;
+        }
 
-                if (!format) {
-                    LOG_ERROR(DRIVER_AUD, "Error while finding responsible audio decoder of input {}", url_);
-                    avformat_free_context(format_context_);
+        AVStream *stream = format_context_->streams[best_stream_index];
+        const AVCodec *nice_codec = avcodec_find_decoder(stream->codecpar->codec_id);
 
-                    return false;
-                }
-
-                format_context_->audio_codec_id = format->audio_codec;
-                format_context_->audio_codec = avcodec_find_decoder(format_context_->audio_codec_id);
-            }
+        if (!nice_codec) {
+            LOG_ERROR(DRIVER_AUD, "Unable to get stream codec!");
+            return false;
         }
 
         // Trying to open decoder now
-        AVCodecContext *preallocated_context = nullptr;
-
-        // Iterate all stream to find first audio stream to get context
-        for (std::uint32_t i = 0; i < format_context_->nb_streams; i++) {
-            preallocated_context = format_context_->streams[i]->codec;
-
-            if (preallocated_context->codec_type == AVMEDIA_TYPE_AUDIO) {
-                break;
-            }
+        if (!codec_) {
+            codec_ = avcodec_alloc_context3(nice_codec);
         }
 
-        // Open the context
-        codec_ = preallocated_context;
+        if (avcodec_parameters_to_context(codec_, format_context_->streams[best_stream_index]->codecpar) < 0) {
+            LOG_ERROR(DRIVER_AUD, "Fail to set stream parameters to codec!");
+            return false;
+        }
 
-        if (avcodec_open2(codec_, format_context_->audio_codec, nullptr) < 0) {
+        if (avcodec_open2(codec_, nice_codec, nullptr) < 0) {
             LOG_ERROR(DRIVER_AUD, "Unable to open codec of stream url {}", url_);
 
             avformat_free_context(format_context_);
@@ -142,11 +136,11 @@ namespace eka2l1::drivers {
         // Send packet to decoder
         if (avcodec_send_packet(codec_, &packet_) >= 0) {
             AVFrame *frame = av_frame_alloc();
+            int err = avcodec_receive_frame(codec_, frame);
 
-            if (avcodec_receive_frame(codec_, frame) < 0) {
-                LOG_ERROR(DRIVER_AUD, "Error while decoding a frame!");
+            if (err < 0) {
+                LOG_ERROR(DRIVER_AUD, "Error while decoding a frame err={}!", err);
                 av_frame_free(&frame);
-                flags_ |= 1;
                 return;
             }
 
@@ -177,9 +171,9 @@ namespace eka2l1::drivers {
                 }
 
                 std::uint8_t *output = data_.data() + base_ptr;
-                const std::uint8_t *source = frame->data[0];
+                const std::uint8_t **source = const_cast<const std::uint8_t**>(frame->extended_data);
 
-                const int result = swr_convert(swr, &output, frame->nb_samples, &source, frame->nb_samples);
+                const int result = swr_convert(swr, &output, frame->nb_samples, source, frame->nb_samples);
                 swr_free(&swr);
 
                 if (result < 0) {
@@ -356,7 +350,7 @@ namespace eka2l1::drivers {
             return false;
         }
 
-        AVCodec *new_codec = avcodec_find_encoder(codec_id);
+        const AVCodec *new_codec = avcodec_find_encoder(codec_id);
         if (!new_codec) {
             LOG_ERROR(DRIVER_AUD, "Unable to find new encoder for codec id {}", codec_id);
             return false;
@@ -377,7 +371,9 @@ namespace eka2l1::drivers {
     }
 
     bool player_ffmpeg::make_backend_source() {
-        format_context_ = avformat_alloc_context();
+        if (format_context_) {
+            avformat_free_context(format_context_);
+        }
 
         if (custom_io_) {
             format_context_->pb = custom_io_;

@@ -28,13 +28,8 @@
 namespace eka2l1::drivers {
     class ogl_buffer : public buffer {
         GLuint buffer_;
-        GLuint descriptor_;
-
         GLuint last_buffer_;
-        GLuint last_descriptor_;
 
-        buffer_hint hint_;
-        GLenum hint_gl_;
         GLenum usage_hint_gl_;
 
         std::size_t size_;
@@ -46,10 +41,11 @@ namespace eka2l1::drivers {
         void bind(graphics_driver *driver) override;
         void unbind(graphics_driver *driver) override;
 
-        void attach_descriptors(graphics_driver *driver, const int stride, const bool instance_move,
-            const attribute_descriptor *descriptors, const int total) override;
+        GLuint buffer_handle() const {
+            return buffer_;
+        }
 
-        bool create(graphics_driver *driver, const std::size_t initial_size, const buffer_hint hint, const buffer_upload_hint use_hint) override;
+        bool create(graphics_driver *driver, const void *initial_data, const std::size_t initial_size, const buffer_upload_hint use_hint) override;
         void update_data(graphics_driver *driver, const void *data, const std::size_t offset, const std::size_t size) override;
     };
 }

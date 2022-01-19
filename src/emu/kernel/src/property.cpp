@@ -59,6 +59,8 @@ namespace eka2l1 {
                 LOG_WARN(KERNEL, "Property trying to alloc more then 512 bytes, limited to 512 bytes");
                 data_len = 512;
             }
+
+            bindata.resize(data_len);
         }
 
         bool property::set_int(int val) {

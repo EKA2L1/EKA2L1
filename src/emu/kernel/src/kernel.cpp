@@ -81,6 +81,8 @@ namespace eka2l1 {
         , kern_ver_(epocver::epoc94)
         , lang_(language::en)
         , global_data_chunk_(nullptr)
+        , static_data_chunk_(nullptr)
+        , static_data_chunk_cursor_(0)
         , dll_global_data_chunk_(nullptr)
         , dll_global_data_last_offset_(0)
         , inactivity_starts_(0)
@@ -164,6 +166,8 @@ namespace eka2l1 {
         dll_global_data_chunk_ = nullptr;
         custom_code_chunk = nullptr;
         global_data_chunk_ = nullptr;
+        static_data_chunk_ = nullptr;
+        static_data_chunk_cursor_ = 0;
 
         dll_global_data_offset_.clear();
 
@@ -482,6 +486,50 @@ namespace eka2l1 {
         }
 
         return global_data_chunk_->base(nullptr).cast<kernel_global_data>();
+    }
+
+    void kernel_system::setup_custom_static_data_chunk() {
+        if (static_data_chunk_) {
+            return;
+        }
+        static constexpr std::uint32_t STATIC_DATA_CHUNK_SIZE = 0x20000;
+        static_data_chunk_ = create<kernel::chunk>(mem_, nullptr, "Global static kernel data", 0, STATIC_DATA_CHUNK_SIZE,
+            STATIC_DATA_CHUNK_SIZE, prot_read_write, kernel::chunk_type::normal, kernel::chunk_access::rom,
+            kernel::chunk_attrib::none, 0x00);
+        static_data_chunk_cursor_ = 0;
+    }
+
+    address kernel_system::put_global_kernel_string(const std::string &variable) {
+        if (!static_data_chunk_) {
+            setup_custom_static_data_chunk();
+        }
+
+        std::uint8_t *data = reinterpret_cast<std::uint8_t*>(static_data_chunk_->host_base()) + static_data_chunk_cursor_;
+        std::memcpy(data, variable.data(), variable.length());
+        data[variable.length()] = '\0';
+
+        address returnee = static_cast<address>(static_data_chunk_->base(nullptr).ptr_address() + static_data_chunk_cursor_);
+        static_data_chunk_cursor_ = common::align(static_data_chunk_cursor_ + variable.length() + 1, 4);
+
+        return returnee;
+    }
+
+    address kernel_system::put_static_array(address *addrs, const std::size_t addr_count) {
+        return put_global_kernel_binary(reinterpret_cast<std::uint8_t*>(addrs), addr_count * sizeof(address));
+    }
+
+    address kernel_system::put_global_kernel_binary(const std::uint8_t *bin, const std::size_t bin_count) {
+        if (!static_data_chunk_) {
+            setup_custom_static_data_chunk();
+        }
+        
+        std::uint8_t *data = reinterpret_cast<std::uint8_t*>(static_data_chunk_->host_base()) + static_data_chunk_cursor_;
+        std::memcpy(data, bin, bin_count);
+
+        address returnee = static_cast<address>(static_data_chunk_->base(nullptr).ptr_address() + static_data_chunk_cursor_);
+        static_data_chunk_cursor_ = common::align(static_data_chunk_cursor_ + bin_count, 4);
+
+        return returnee;
     }
 
     kernel::thread *kernel_system::crr_thread() {

@@ -1,5 +1,11 @@
 
 add_library(epocdispatch
+        include/dispatch/libraries/egl/def.h
+        include/dispatch/libraries/egl/egl.h
+        include/dispatch/libraries/gles1/def.h
+        include/dispatch/libraries/gles1/gles1.h
+        include/dispatch/libraries/gles1/shadergen.h
+        include/dispatch/libraries/gles1/shaderman.h
         include/dispatch/libraries/sysutils/functions.h
         include/dispatch/libraries/sysutils/register.h
         include/dispatch/libraries/register.h
@@ -10,6 +16,11 @@ add_library(epocdispatch
         include/dispatch/management.h
         include/dispatch/register.h
         include/dispatch/screen.h
+        src/libraries/egl/def.cpp
+        src/libraries/egl/egl.cpp
+        src/libraries/gles1/gles1.cpp
+        src/libraries/gles1/shadergen.cpp
+        src/libraries/gles1/shaderman.cpp
         src/libraries/sysutils/functions.cpp
         src/libraries/register.cpp
         src/audio.cpp
@@ -29,4 +40,6 @@ target_link_libraries(epocdispatch PRIVATE
         epoc
         epockern
         epocpkg
-        epocservs)
+        epocservs
+        glm
+        xxHash)

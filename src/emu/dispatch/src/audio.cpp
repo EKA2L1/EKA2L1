@@ -496,6 +496,36 @@ namespace eka2l1::dispatch {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_set_position, eka2l1::ptr<void> handle, std::uint64_t pos_in_micros) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
+        dsp_epoc_player *eplayer = manager.get_object<dsp_epoc_player>(handle.ptr_address());
+
+        if (!eplayer) {
+            return epoc::error_bad_handle;
+        }
+
+        eplayer->impl_->set_position(pos_in_micros);
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_get_position, eka2l1::ptr<void> handle, std::uint64_t *pos_get) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
+        dsp_epoc_player *eplayer = manager.get_object<dsp_epoc_player>(handle.ptr_address());
+
+        if (!eplayer) {
+            return epoc::error_bad_handle;
+        }
+
+        if (!pos_get) {
+            return epoc::error_argument;
+        }
+
+        *pos_get = eplayer->impl_->position();
+        return epoc::error_none;
+    }
+
     // DSP streams
     BRIDGE_FUNC_DISPATCHER(eka2l1::ptr<void>, eaudio_dsp_out_stream_create, void *) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();

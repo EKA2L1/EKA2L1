@@ -259,4 +259,9 @@ namespace eka2l1 {
         std::int32_t length;
         epoc::display_mode dmode;
     };
+
+    struct ws_cmd_graphic_drawer_graphic_id {
+        std::int32_t id;
+        std::int32_t is_uid;
+    };
 }

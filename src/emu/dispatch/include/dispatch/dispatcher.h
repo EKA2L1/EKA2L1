@@ -20,7 +20,10 @@
 #pragma once
 
 #include <cstdint>
+
 #include <dispatch/management.h>
+#include <dispatch/libraries/egl/def.h>
+
 #include <drivers/audio/dsp.h>
 #include <drivers/audio/player.h>
 #include <drivers/itc.h>
@@ -31,6 +34,7 @@
 #include <atomic>
 #include <memory>
 #include <vector>
+#include <map>
 
 // Foward declarations
 namespace eka2l1 {
@@ -208,20 +212,27 @@ namespace eka2l1::dispatch {
         void wait_vsync(epoc::screen *scr, epoc::notify_info &info);
         void cancel_wait_vsync(const epoc::notify_info &info);
 
-        drivers::handle transfer_data_to_texture(drivers::graphics_driver *drv, drivers::graphics_command_list_builder *builder,
+        drivers::handle transfer_data_to_texture(drivers::graphics_driver *drv, drivers::graphics_command_builder &builder,
             std::int32_t screen_index, std::uint8_t *data, eka2l1::vec2 size, std::int32_t format);
     };
 
     struct dispatcher {
     private:
         kernel::chunk *trampoline_chunk_;
+        kernel::chunk *static_data_chunk_;
+
         hle::lib_manager *libmngr_;
         memory_system *mem_;
+        kernel_system *kern_;
 
         std::uint32_t trampoline_allocated_;
+        std::uint32_t static_data_allocated_;
 
         dsp_manager dsp_manager_;
         screen_post_transferer post_transferer_;
+        egl_controller egl_controller_;
+
+        std::map<std::uint32_t, address> static_string_addrs_;
 
     public:
         window_server *winserv_;
@@ -230,7 +241,9 @@ namespace eka2l1::dispatch {
         explicit dispatcher(kernel_system *kern, ntimer *timing);
         ~dispatcher();
 
+        void set_graphics_driver(drivers::graphics_driver *driver);
         void shutdown(drivers::graphics_driver *driver);
+
         bool patch_libraries(const std::u16string &path, patch_info *patches,
             const std::size_t patch_count);
 
@@ -244,5 +257,12 @@ namespace eka2l1::dispatch {
         screen_post_transferer &get_screen_post_transferer() {
             return post_transferer_;
         }
+
+        egl_controller &get_egl_controller() {
+            return egl_controller_;
+        }
+
+        address add_static_string(const std::uint32_t key, const std::string &value);
+        address retrieve_static_string(const std::uint32_t key);
     };
 }

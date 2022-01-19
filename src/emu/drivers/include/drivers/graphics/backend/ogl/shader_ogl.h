@@ -6,29 +6,35 @@
 #include <string>
 
 namespace eka2l1::drivers {
-    class ogl_shader : public shader {
+    class ogl_shader_module : public shader_module {
+    private:
+        std::uint32_t shader;
+
+    public:
+        ~ogl_shader_module() override;
+
+        explicit ogl_shader_module();
+        explicit ogl_shader_module(const std::string &path, const shader_module_type type);
+        explicit ogl_shader_module(const char *data, const std::size_t size, const shader_module_type type);
+
+        bool create(graphics_driver *driver, const char *data, const std::size_t size, const shader_module_type type) override;
+
+        std::uint32_t shader_handle() const {
+            return shader;
+        }
+    };
+
+    class ogl_shader_program: public shader_program {
+    protected:
         std::uint32_t program;
         std::uint8_t *metadata;
 
     public:
-        ogl_shader()
-            : program(0) {}
+        explicit ogl_shader_program();
+        ~ogl_shader_program() override;
 
-        ~ogl_shader() override;
-
-        explicit ogl_shader(const std::string &vert_path,
-            const std::string &frag_path);
-
-        explicit ogl_shader(const char *vert_data, const std::size_t vert_size,
-            const char *frag_data, const std::size_t frag_size);
-
-        bool create(graphics_driver *driver, const char *vert_data, const std::size_t vert_size,
-            const char *frag_data, const std::size_t frag_size) override;
-
+        bool create(graphics_driver *driver, shader_module *vertex_module, shader_module *fragment_module) override;
         bool use(graphics_driver *driver) override;
-
-        bool set(graphics_driver *driver, const int binding, const shader_set_var_type var_type, const void *data) override;
-        bool set(graphics_driver *driver, const std::string &name, const shader_set_var_type var_type, const void *data);
 
         std::uint32_t program_handle() const {
             return program;

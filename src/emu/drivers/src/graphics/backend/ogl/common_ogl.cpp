@@ -5,31 +5,27 @@ namespace eka2l1::drivers {
         switch (format) {
         case data_format::byte:
             return GL_UNSIGNED_BYTE;
-            break;
 
         case data_format::sbyte:
             return GL_BYTE;
-            break;
 
         case data_format::sword:
             return GL_SHORT;
-            break;
 
         case data_format::word:
             return GL_UNSIGNED_SHORT;
-            break;
 
         case data_format::uint:
             return GL_UNSIGNED_INT;
-            break;
 
         case data_format::sint:
             return GL_INT;
-            break;
 
         case data_format::sfloat:
             return GL_FLOAT;
-            break;
+
+        case data_format::fixed:
+            return GL_FIXED;
 
         default:
             break;
@@ -48,6 +44,9 @@ namespace eka2l1::drivers {
 
         case texture_format::rg:
             return GL_RG;
+
+        case texture_format::rg8:
+            return GL_RG8;
 
         case texture_format::rgb:
             return GL_RGB;
@@ -69,6 +68,12 @@ namespace eka2l1::drivers {
 
         case texture_format::depth_stencil:
             return GL_DEPTH_STENCIL;
+
+        case texture_format::etc2_rgb8:
+            return GL_COMPRESSED_RGB8_ETC2;
+        
+        case texture_format::pvrtc_4bppv1_rgba:
+            return GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
 
         default:
             break;
@@ -94,6 +99,9 @@ namespace eka2l1::drivers {
         case texture_data_type::ushort_5_6_5:
             return GL_UNSIGNED_SHORT_5_6_5;
 
+        case texture_data_type::ushort_5_5_5_1:
+            return GL_UNSIGNED_SHORT_5_5_5_1;
+
         default:
             break;
         }
@@ -108,6 +116,51 @@ namespace eka2l1::drivers {
 
         case filter_option::nearest:
             return GL_NEAREST;
+
+        case filter_option::linear_mipmap_linear:
+            return GL_LINEAR_MIPMAP_LINEAR;
+
+        case filter_option::linear_mipmap_nearest:
+            return GL_LINEAR_MIPMAP_NEAREST;
+
+        case filter_option::nearest_mipmap_linear:
+            return GL_NEAREST_MIPMAP_LINEAR;
+
+        case filter_option::nearest_mipmap_nearest:
+            return GL_NEAREST_MIPMAP_NEAREST;
+
+        default:
+            break;
+        }
+
+        return 0;
+    }
+    
+    GLenum to_tex_parameter_enum(const addressing_direction dir) {
+        switch (dir) {
+        case addressing_direction::s:
+            return GL_TEXTURE_WRAP_S;
+
+        case addressing_direction::t:
+            return GL_TEXTURE_WRAP_T;
+
+        case addressing_direction::r:
+            return GL_TEXTURE_WRAP_R;
+
+        default:
+            break;
+        }
+
+        return 0;
+    }
+
+    GLint to_tex_wrapping_enum(const addressing_option opt) {
+        switch (opt) {
+        case addressing_option::clamp_to_edge:
+            return GL_CLAMP_TO_EDGE;
+
+        case addressing_option::repeat:
+            return GL_REPEAT;
 
         default:
             break;

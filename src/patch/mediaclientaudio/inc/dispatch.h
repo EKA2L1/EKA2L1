@@ -42,7 +42,7 @@ HLE_DISPATCH_FUNC(TInt, EAudioPlayerCancelNotifyAnyDone, TAny *aInstance);
 
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerSupplyUrl, TAny *aInstance, const TUint16 *aUrl, const TUint aUrlLength);
 
-HLE_DISPATCH_FUNC(TUint64, EAudioPlayerGetCurrentPlayPos, TAny *aInstance);
+HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetCurrentPlayPos, TAny *aInstance, TUint64 &aPosition);
 
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetCurrentPlayPos, TAny *aInstance, TInt64 aMicroseconds);
 

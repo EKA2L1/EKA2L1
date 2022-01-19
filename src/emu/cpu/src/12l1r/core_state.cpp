@@ -25,7 +25,7 @@ namespace eka2l1::arm::r12l1 {
         : cpsr_(0)
         , fpscr_(0)
         , ticks_left_(0)
-        , should_break_(0)
+        , should_break_(1)
         , current_aid_(0)
         , exclusive_state_(0)
         , entries_(nullptr) {

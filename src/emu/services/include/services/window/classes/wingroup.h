@@ -42,6 +42,7 @@ namespace eka2l1::epoc {
         std::size_t uid_owner_change_callback_handle;
 
         kernel::process *uid_owner_change_process;
+        ws::uid screen_change_event_handle;
 
         bool can_receive_focus() {
             return flags & flag_focus_receiveable;

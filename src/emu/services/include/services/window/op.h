@@ -242,6 +242,38 @@ namespace eka2l1 {
         ws_dsa_old_cancel = 5
     };
 
+    enum ws_sprite_op {
+        ws_sprite_free = 0,
+        ws_sprite_set_position = 1,
+        ws_sprite_update_member = 2,
+        ws_sprite_update_member2 = 3,
+        ws_sprite_activate = 4,
+        ws_sprite_append_member = 5
+    };
+
+    enum ws_click_op {
+        ws_click_free = 0,
+        ws_click_is_loaded = 1,
+        ws_click_unload = 2,
+        ws_click_load = 3,
+        ws_click_command_reply = 4,
+        ws_click_set_key_click = 5,
+        ws_click_set_pen_click = 6,
+        ws_click_key_click_enabled = 7,
+        ws_click_pen_click_enabled = 8
+    };
+
+    enum ws_graphic_drawer_opcode {
+        ws_graphic_drawer_free = 0,
+        ws_graphic_drawer_send_msg = 1,
+        ws_graphic_drawer_get_graphic_id = 2,
+        ws_graphic_drawer_share_globally = 3,
+        ws_graphic_drawer_unshare_globally = 4,
+        ws_graphic_drawer_share = 5,
+        ws_graphic_drawer_unshare = 6,
+        ws_graphic_drawer_send_sync = 7
+    };
+
 #define OPCODE_NAME(aaaprefix, aname, aversion) aaaprefix##_##aversion##_##aname
 #define OPCODE(aprefix, aname, aversion, val) \
     OPCODE_NAME(aprefix, aname, aversion) = val,
@@ -427,18 +459,6 @@ enum TWsWindowOpcodes {
     EWsWinOpOverrideEffectBuf,
     EWsWinOpOverrideEffectIPC,
     EWsWinOpTestLowPriorityRedraw = 0x2000, //Specific opcode for testing redraw queue priorities
-};
-
-enum TWsClickOpcodes {
-    EWsClickOpFree = 0x0000,
-    EWsClickOpIsLoaded,
-    EWsClickOpUnLoad,
-    EWsClickOpLoad,
-    EWsClickOpCommandReply,
-    EWsClickOpSetKeyClick,
-    EWsClickOpSetPenClick,
-    EWsClickOpKeyClickEnabled,
-    EWsClickOpPenClickEnabled,
 };
 
 enum THotKey {

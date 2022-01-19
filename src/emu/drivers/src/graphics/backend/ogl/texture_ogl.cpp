@@ -20,9 +20,15 @@
 
 #include <drivers/graphics/backend/ogl/common_ogl.h>
 #include <drivers/graphics/backend/ogl/texture_ogl.h>
+#include <drivers/graphics/backend/ogl/graphics_ogl.h>
+
 #include <glad/glad.h>
 
+#include <common/bytes.h>
 #include <cassert>
+
+void decompressBlockETC2(unsigned int block_part1, unsigned int block_part2, std::uint8_t *img, int width, int height, int startx, int starty);
+uint32_t PVRTDecompressPVRTC(const void *compressedData, uint32_t do2bitMode, uint32_t xDim, uint32_t yDim, uint32_t doPvrtType, uint8_t *outResultImage);
 
 namespace eka2l1::drivers {
     static GLint to_gl_tex_dim(const int dim) {
@@ -43,51 +49,31 @@ namespace eka2l1::drivers {
         return 0;
     }
 
-    bool ogl_texture::tex(graphics_driver *driver, const bool is_first) {
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, static_cast<GLint>(pixels_per_line));
+    static void decode_rgb_etc2_texture(std::vector<std::uint8_t> &dest, const std::uint8_t *source, const std::int32_t width, const std::int32_t height) {
+        dest.resize(3 * width * height);
 
-        switch (dimensions) {
-        case 1:
-            glTexImage1D(GL_TEXTURE_1D, mip_level, texture_format_to_gl_enum(internal_format), tex_size.x, 0, texture_format_to_gl_enum(format),
-                texture_data_type_to_gl_enum(tex_data_type), tex_data);
+        std::uint32_t block_read = 0;
+        const std::uint32_t *source_u32 = reinterpret_cast<const std::uint32_t*>(source);
 
-            break;
+        for (std::int32_t y = 0; y < height / 4; y++) {
+            for (std::int32_t x = 0; x < width / 4; x++) {
+                std::uint32_t block_part1 = common::byte_swap(source_u32[block_read++]);
+                std::uint32_t block_part2 = common::byte_swap(source_u32[block_read++]);
 
-        case 2:
-            glTexImage2D(GL_TEXTURE_2D, mip_level, texture_format_to_gl_enum(internal_format), tex_size.x, tex_size.y, 0, texture_format_to_gl_enum(format),
-                texture_data_type_to_gl_enum(tex_data_type), tex_data);
-
-            break;
-
-        case 3:
-            glTexImage3D(GL_TEXTURE_3D, mip_level, texture_format_to_gl_enum(internal_format), tex_size.x, tex_size.y, tex_size.z, 0, texture_format_to_gl_enum(format),
-                texture_data_type_to_gl_enum(tex_data_type), tex_data);
-
-            break;
-
-        default: {
-            glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-
-            unbind(driver);
-            glDeleteTextures(1, &texture);
-
-            return false;
+                decompressBlockETC2(block_part1, block_part2, dest.data(), width, height, 4 * x, 4 * y);
+            } 
         }
-        }
-
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-        return true;
     }
 
     bool ogl_texture::create(graphics_driver *driver, const int dim, const int miplvl, const vec3 &size, const texture_format internal_format,
-        const texture_format format, const texture_data_type data_type, void *data, const std::size_t ppl) {
-        glGenTextures(1, &texture);
+        const texture_format format, const texture_data_type data_type, void *data, const std::size_t total_size, const std::size_t ppl,
+        const std::uint32_t unpack_alignment) {
+        if (!texture)
+            glGenTextures(1, &texture);
 
         dimensions = dim;
         tex_size = size;
         tex_data_type = data_type;
-        tex_data = data;
-        mip_level = miplvl;
         pixels_per_line = ppl;
 
         bind(driver, 0);
@@ -95,7 +81,87 @@ namespace eka2l1::drivers {
         this->internal_format = internal_format;
         this->format = format;
 
-        bool res = tex(driver, true);
+        bool res = true;
+
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, static_cast<GLint>(pixels_per_line));
+        glPixelStorei(GL_UNPACK_ALIGNMENT, static_cast<GLint>(unpack_alignment));
+
+        drivers::texture_format converted_internal_format = internal_format;
+        drivers::texture_format converted_format = format;
+        drivers::texture_data_type converted_data_type = tex_data_type;
+
+        std::vector<std::uint8_t> converted_data;
+        if (tex_data_type == drivers::texture_data_type::compressed) {
+            ogl_graphics_driver *ogl_driver = reinterpret_cast<ogl_graphics_driver*>(driver);
+            if (internal_format == drivers::texture_format::etc2_rgb8 && !ogl_driver->get_supported_feature(OGL_FEATURE_SUPPORT_ETC2)) {
+                converted_data_type = drivers::texture_data_type::ubyte;
+                converted_internal_format = drivers::texture_format::rgb;
+                converted_format = drivers::texture_format::rgb;
+
+                decode_rgb_etc2_texture(converted_data, reinterpret_cast<std::uint8_t*>(data), size.x, size.y);
+
+                data = converted_data.data();
+            } else if (((internal_format == drivers::texture_format::pvrtc_4bppv1_rgba) || (internal_format == drivers::texture_format::pvrtc_2bppv1_rgba)) && !ogl_driver->get_supported_feature(OGL_FEATURE_SUPPORT_PVRTC)) {
+                converted_data_type = drivers::texture_data_type::ubyte;
+                converted_internal_format = drivers::texture_format::rgba;
+                converted_format = drivers::texture_format::rgba;
+
+                std::uint32_t is_2bit = (internal_format == drivers::texture_format::pvrtc_2bppv1_rgba);
+
+                converted_data.resize(4 * size.x * size.y);
+                PVRTDecompressPVRTC(data, is_2bit, size.x, size.y, 0, converted_data.data());
+
+                data = converted_data.data();
+            }
+        }
+
+        if (converted_data_type == drivers::texture_data_type::compressed) {
+            switch (dimensions) {
+            case 1:
+                glCompressedTexImage1D(GL_TEXTURE_1D, miplvl, texture_format_to_gl_enum(internal_format), tex_size.x, 0, static_cast<GLsizei>(total_size), data);
+                break;
+
+            case 2:
+                glCompressedTexImage2D(GL_TEXTURE_2D, miplvl, texture_format_to_gl_enum(internal_format), tex_size.x, tex_size.y, 0, static_cast<GLsizei>(total_size), data);
+                break;
+
+            case 3:
+                glCompressedTexImage3D(GL_TEXTURE_3D, miplvl, texture_format_to_gl_enum(internal_format), tex_size.x, tex_size.y, tex_size.z, 0, static_cast<GLsizei>(total_size), data);
+                break;
+
+            default: {
+                res = false;
+                break;
+            }
+            }
+        } else {
+            switch (dimensions) {
+            case 1:
+                glTexImage1D(GL_TEXTURE_1D, miplvl, texture_format_to_gl_enum(converted_internal_format), tex_size.x, 0, texture_format_to_gl_enum(converted_format),
+                    texture_data_type_to_gl_enum(converted_data_type), data);
+
+                break;
+
+            case 2:
+                glTexImage2D(GL_TEXTURE_2D, miplvl, texture_format_to_gl_enum(converted_internal_format), tex_size.x, tex_size.y, 0, texture_format_to_gl_enum(converted_format),
+                    texture_data_type_to_gl_enum(converted_data_type), data);
+
+                break;
+
+            case 3:
+                glTexImage3D(GL_TEXTURE_3D, miplvl, texture_format_to_gl_enum(converted_internal_format), tex_size.x, tex_size.y, tex_size.z, 0, texture_format_to_gl_enum(converted_format),
+                    texture_data_type_to_gl_enum(converted_data_type), data);
+
+                break;
+
+            default: {
+                res = false;
+                break;
+            }
+            }
+        }
+
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
         unbind(driver);
 
         if (!res) {
@@ -111,22 +177,21 @@ namespace eka2l1::drivers {
         }
     }
 
-    void ogl_texture::change_size(const vec3 &new_size) {
-        tex_size = new_size;
-    }
-
-    void ogl_texture::change_data(const texture_data_type data_type, void *data) {
-        tex_data_type = data_type;
-        tex_data = data;
-    }
-
-    void ogl_texture::change_texture_format(const texture_format format) {
-        this->format = format;
-    }
-
     void ogl_texture::set_filter_minmag(const bool min, const filter_option op) {
         bind(nullptr, 0);
         glTexParameteri(GL_TEXTURE_2D, min ? GL_TEXTURE_MIN_FILTER : GL_TEXTURE_MAG_FILTER, to_filter_option(op));
+        unbind(nullptr);
+    }
+
+    void ogl_texture::set_addressing_mode(const addressing_direction dir, const addressing_option op) {
+        bind(nullptr, 0);
+        glTexParameteri(GL_TEXTURE_2D, to_tex_parameter_enum(dir), to_tex_wrapping_enum(op));
+        unbind(nullptr);
+    }
+
+    void ogl_texture::generate_mips() {
+        bind(nullptr, 0);
+        glGenerateMipmap(GL_TEXTURE_2D);
         unbind(nullptr);
     }
 
@@ -209,31 +274,77 @@ namespace eka2l1::drivers {
     }
 
     void ogl_texture::update_data(graphics_driver *driver, const int mip_lvl, const vec3 &offset, const vec3 &size, const std::size_t pixels_per_line,
-        const texture_format data_format, const texture_data_type data_type, const void *data) {
+        const texture_format data_format, const texture_data_type data_type, const void *data, const std::size_t data_size, const std::uint32_t alg) {
         bind(driver, 0);
+
         glPixelStorei(GL_UNPACK_ROW_LENGTH, static_cast<GLint>(pixels_per_line));
+        glPixelStorei(GL_UNPACK_ALIGNMENT, static_cast<GLint>(alg));
 
-        switch (dimensions) {
-        case 1:
-            glTexSubImage1D(GL_TEXTURE_1D, mip_lvl, offset.x, size.x, texture_format_to_gl_enum(data_format), texture_data_type_to_gl_enum(data_type), data);
-            break;
+        drivers::texture_format converted_format = data_format;
+        drivers::texture_data_type converted_data_type = data_type;
 
-        case 2: {
-            glTexSubImage2D(GL_TEXTURE_2D, mip_lvl, offset.x, offset.y, size.x, size.y, texture_format_to_gl_enum(data_format), texture_data_type_to_gl_enum(data_type), data);
-            break;
+        std::vector<std::uint8_t> converted_data;
+        if (data_type == drivers::texture_data_type::compressed) {
+            ogl_graphics_driver *ogl_driver = reinterpret_cast<ogl_graphics_driver*>(driver);
+            if (!ogl_driver->get_supported_feature(OGL_FEATURE_SUPPORT_ETC2)) {
+                converted_data_type = drivers::texture_data_type::ubyte;
+                converted_format = drivers::texture_format::rgb;
+
+                decode_rgb_etc2_texture(converted_data, reinterpret_cast<const std::uint8_t*>(data), size.x, size.y);
+
+                data = converted_data.data();
+            }
         }
+    
+        if (converted_data_type == texture_data_type::compressed) {
+            switch (dimensions) {
+            case 1:
+                glCompressedTexSubImage1D(GL_TEXTURE_1D, mip_lvl, offset.x, size.x, texture_format_to_gl_enum(data_format), static_cast<GLsizei>(data_size), data);
+                break;
 
-        case 3:
-            glTexSubImage3D(GL_TEXTURE_3D, mip_lvl, offset.x, offset.y, offset.z, size.x, size.y, size.z, texture_format_to_gl_enum(data_format),
-                texture_data_type_to_gl_enum(data_type), data);
+            case 2: {
+                glCompressedTexSubImage2D(GL_TEXTURE_2D, mip_lvl, offset.x, offset.y, size.x, size.y, texture_format_to_gl_enum(data_format), static_cast<GLsizei>(data_size), data);
+                break;
+            }
 
-            break;
+            case 3:
+                glCompressedTexSubImage3D(GL_TEXTURE_3D, mip_lvl, offset.x, offset.y, offset.z, size.x, size.y, size.z, texture_format_to_gl_enum(data_format),
+                    static_cast<GLsizei>(data_size), data);
 
-        default:
-            break;
+                break;
+
+            default:
+                break;
+            }
+        } else {
+            switch (dimensions) {
+            case 1:
+                glTexSubImage1D(GL_TEXTURE_1D, mip_lvl, offset.x, size.x, texture_format_to_gl_enum(converted_format), texture_data_type_to_gl_enum(converted_data_type), data);
+                break;
+
+            case 2: {
+                glTexSubImage2D(GL_TEXTURE_2D, mip_lvl, offset.x, offset.y, size.x, size.y, texture_format_to_gl_enum(converted_format), texture_data_type_to_gl_enum(converted_data_type), data);
+                break;
+            }
+
+            case 3:
+                glTexSubImage3D(GL_TEXTURE_3D, mip_lvl, offset.x, offset.y, offset.z, size.x, size.y, size.z, texture_format_to_gl_enum(converted_format),
+                    texture_data_type_to_gl_enum(converted_data_type), data);
+
+                break;
+
+            default:
+                break;
+            }
         }
 
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
         unbind(driver);
+    }
+
+    void ogl_texture::set_max_mip_level(const std::uint32_t max_mip) {
+        bind(nullptr, 0);
+        glTexParameteri(to_gl_tex_dim(dimensions), GL_TEXTURE_MAX_LEVEL, static_cast<GLint>(max_mip));
+        unbind(nullptr);
     }
 }

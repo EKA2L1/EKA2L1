@@ -181,6 +181,9 @@ namespace eka2l1 {
 
             // Initialize HLE finally
             dispatcher_ = std::make_unique<dispatch::dispatcher>(kern_.get(), timing_.get());
+            if (gdriver) {
+                dispatcher_->set_graphics_driver(gdriver);
+            }
 
             winserv_ = reinterpret_cast<window_server *>(kern_->get_by_name<service::server>(eka2l1::get_winserv_name_by_epocver(
                 kern_->get_epoc_version())));
@@ -546,6 +549,10 @@ namespace eka2l1 {
 
     void system_impl::set_graphics_driver(drivers::graphics_driver *graphics_driver) {
         gdriver = graphics_driver;
+
+        if (dispatcher_) {
+            dispatcher_->set_graphics_driver(gdriver);
+        }
     }
 
     void system_impl::set_audio_driver(drivers::audio_driver *aud_driver) {

@@ -23,6 +23,7 @@
 #include <drivers/graphics/backend/graphics_driver_shared.h>
 #include <drivers/graphics/backend/ogl/shader_ogl.h>
 #include <drivers/graphics/backend/ogl/texture_ogl.h>
+#include <drivers/graphics/backend/ogl/input_desc_ogl.h>
 #include <drivers/graphics/context.h>
 
 #include <common/queue.h>
@@ -53,14 +54,21 @@ namespace eka2l1::drivers {
         GLboolean last_enable_scissor_test;
     };
 
+    enum ogl_driver_feature {
+        OGL_FEATURE_SUPPORT_ETC2 = 1 << 0,
+        OGL_FEATURE_SUPPORT_PVRTC = 1 << 1,
+        OGL_MAX_FEATURE = 2
+    };
+
     class ogl_graphics_driver : public shared_graphics_driver {
         std::unique_ptr<graphics::gl_context> context_;
 
-        eka2l1::request_queue<server_graphics_command_list> list_queue;
-        std::unique_ptr<ogl_shader> sprite_program;
-        std::unique_ptr<ogl_shader> brush_program;
-        std::unique_ptr<ogl_shader> mask_program;
-        std::unique_ptr<ogl_shader> pen_program;
+        eka2l1::request_queue<command_list> list_queue;
+
+        std::unique_ptr<ogl_shader_program> sprite_program;
+        std::unique_ptr<ogl_shader_program> brush_program;
+        std::unique_ptr<ogl_shader_program> mask_program;
+        std::unique_ptr<ogl_shader_program> pen_program;
 
         GLuint sprite_vao;
         GLuint sprite_vbo;
@@ -107,35 +115,53 @@ namespace eka2l1::drivers {
         std::atomic_bool should_stop;
         std::atomic_bool surface_update_needed;
 
+        input_descriptors_ogl *active_input_descriptors_;
+
+        GLuint vbo_slots_[GL_BACKEND_MAX_VBO_SLOTS];
+        GLuint index_buffer_current_;
+
         void *new_surface;
         bool is_gles;
+        bool support_line_width_;
 
         float point_size;
         pen_style line_style;
 
+        std::uint32_t feature_flags_;
+
         void do_init();
         void prepare_draw_lines_shared();
 
-        void clear(command_helper &helper);
-        void draw_bitmap(command_helper &helper);
-        void draw_rectangle(command_helper &helper);
-        void set_clipping(command_helper &helper);
-        void clip_rect(command_helper &helper);
-        void draw_indexed(command_helper &helper);
-        void set_viewport(command_helper &helper);
-        void set_depth(command_helper &helper);
-        void set_stencil(command_helper &helper);
-        void set_blend(command_helper &helper);
-        void set_cull(command_helper &helper);
-        void blend_formula(command_helper &helper);
-        void set_stencil_action(command_helper &helper);
-        void set_stencil_pass_condition(command_helper &helper);
-        void set_stencil_mask(command_helper &helper);
-        void display(command_helper &helper);
-        void set_point_size(command_helper &helper);
-        void set_pen_style(command_helper &helper);
-        void draw_line(command_helper &helper);
-        void draw_polygon(command_helper &helper);
+        void clear(command &cmd);
+        void draw_bitmap(command &cmd);
+        void draw_rectangle(command &cmd);
+        void clip_rect(command &cmd);
+        void draw_indexed(command &cmd);
+        void draw_array(command &cmd);
+        void set_viewport(command &cmd);
+        void set_feature(command &cmd);
+        void blend_formula(command &cmd);
+        void set_stencil_action(command &cmd);
+        void set_stencil_pass_condition(command &cmd);
+        void set_stencil_mask(command &cmd);
+        void set_depth_mask(command &cmd);
+        void display(command &cmd);
+        void set_point_size(command &cmd);
+        void set_pen_style(command &cmd);
+        void draw_line(command &cmd);
+        void draw_polygon(command &cmd);
+        void set_cull_face(command &cmd);
+        void set_front_face_rule(command &cmd);
+        void set_color_mask(command &cmd);
+        void set_depth_func(command &cmd);
+        void set_uniform(command &cmd);
+        void set_texture_for_shader(command &cmd);
+        void bind_vertex_buffers(command &cmd);
+        void bind_index_buffer(command &cmd);
+        void bind_input_descriptors(command &cmd);
+        void set_line_width(command &cmd);
+        void set_depth_bias(command &cmd);
+        void set_depth_range(command &cmd);
 
         void save_gl_state();
         void load_gl_state();
@@ -145,18 +171,20 @@ namespace eka2l1::drivers {
         ~ogl_graphics_driver() override {}
 
         void set_viewport(const eka2l1::rect &viewport) override;
-        std::unique_ptr<graphics_command_list> new_command_list() override;
-        void submit_command_list(graphics_command_list &command_list) override;
-        std::unique_ptr<graphics_command_list_builder> new_command_builder(graphics_command_list *list) override;
+        void submit_command_list(command_list &cmd_list) override;
 
         void run() override;
         void abort() override;
-        void dispatch(command *cmd) override;
+        void dispatch(command &cmd) override;
         void bind_swapchain_framebuf() override;
         void update_surface(void *new_surface) override;
 
         bool is_stricted() const override {
             return is_gles;
+        }
+
+        bool get_supported_feature(const std::uint32_t feature_mask) const {
+            return feature_flags_ & feature_mask;
         }
     };
 }

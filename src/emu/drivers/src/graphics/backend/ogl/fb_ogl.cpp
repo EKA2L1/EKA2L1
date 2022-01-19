@@ -39,14 +39,12 @@ namespace eka2l1::drivers {
 
         for (std::size_t i = 0; i < color_buffer_list.size(); i++) {
             glFramebufferTexture2D(GL_FRAMEBUFFER, static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + i),
-                GL_TEXTURE_2D, static_cast<GLuint>(color_buffers[i]->texture_handle()),
-                color_buffers[i]->get_mip_level());
+                GL_TEXTURE_2D, static_cast<GLuint>(color_buffers[i]->texture_handle()), 0);
         }
 
         if (depth_and_stencil_buffer) {
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
-                static_cast<GLuint>(depth_and_stencil_buffer->texture_handle()),
-                depth_and_stencil_buffer->get_mip_level());
+                static_cast<GLuint>(depth_and_stencil_buffer->texture_handle()), 0);
         }
 
         const GLenum framebuffer_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -139,8 +137,7 @@ namespace eka2l1::drivers {
         }
 
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachment_id, GL_TEXTURE_2D,
-            static_cast<GLuint>(color_buffers[attachment_id]->texture_handle()),
-            color_buffers[attachment_id]->get_mip_level());
+            static_cast<GLuint>(color_buffers[attachment_id]->texture_handle()), 0);
 
         return attachment_id;
     }
@@ -148,7 +145,7 @@ namespace eka2l1::drivers {
     bool ogl_framebuffer::set_depth_stencil_buffer(texture *tex) {
         depth_and_stencil_buffer = tex;
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
-            static_cast<GLuint>(tex->texture_handle()), tex->get_mip_level());
+            static_cast<GLuint>(tex->texture_handle()), 0);
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
             return false;

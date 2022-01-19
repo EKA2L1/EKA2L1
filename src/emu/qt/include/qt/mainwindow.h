@@ -99,6 +99,7 @@ private:
     void make_default_binding_profile();
     void on_screen_current_group_change_callback();
     void switch_to_game_display_mode();
+    void force_refresh_applist();
 
     eka2l1::epoc::screen *get_current_active_screen();
     eka2l1::config::app_setting *get_active_app_setting();
@@ -128,6 +129,8 @@ private slots:
     void on_app_setting_changed();
     void on_another_rotation_triggered(QAction *action);
     void on_pause_toggled(bool checked);
+    void on_package_uninstalled();
+    void on_refresh_app_list_requested();
 
     int on_package_install_language_choose(const int *languages, const int language_count);
 

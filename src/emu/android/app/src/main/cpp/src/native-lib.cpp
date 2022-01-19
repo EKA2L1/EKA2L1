@@ -30,12 +30,26 @@
 
 #include <common/android/jniutils.h>
 
+#if EKA2L1_ARCH(ARM)
+#include <cpu/12l1r/tests/test_entry.h>
+#endif
+
+#define CATCH_CONFIG_RUNNER
+#define CATCH_CONFIG_ANDROID_LOGWRITE
+
+#include <catch2/catch.hpp>
+
 ANativeWindow *s_surf;
 std::unique_ptr<eka2l1::android::emulator> state;
 bool inited;
 
 extern "C" jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     eka2l1::common::jni::virtual_machine = vm;
+
+#if EKA2L1_ARCH(ARM)
+    eka2l1::arm::r12l1::register_all_tests();
+#endif
+
     return JNI_VERSION_1_6;
 }
 
@@ -78,6 +92,16 @@ Java_com_github_eka2l1_emu_Emulator_getApps(
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_github_eka2l1_emu_Emulator_launchApp(JNIEnv *env, jclass clazz, jint uid) {
+    // Draw the screen's backdrop first. Black is boring
+    eka2l1::drivers::graphics_command_builder builder;
+    state->launcher->draw(builder, nullptr, state->window->window_fb_size().x,
+                         state->window->window_fb_size().y);
+    builder.present(nullptr);
+
+    eka2l1::drivers::command_list retrieved = builder.retrieve_command_list();
+    state->graphics_driver->submit_command_list(retrieved);
+
+    // Launch the real app...
     state->launcher->launch_app(uid);
 }
 
@@ -260,4 +284,22 @@ Java_com_github_eka2l1_emu_Emulator_setScreenParams(JNIEnv *env, jclass clazz,
                                                     jint background_color, jint scale_ratio,
                                                     jint scale_type, jint gravity) {
     state->launcher->set_screen_params(background_color, scale_ratio, scale_type, gravity);
+}
+
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_github_eka2l1_emu_Emulator_runTest(JNIEnv *env, jclass clazz, jstring test_name) {
+    const char *test_name_c = env->GetStringUTFChars(test_name, nullptr);
+
+    const char *arguments[] = {
+            "fake.exe",
+            test_name_c
+    };
+
+    const int argument_count = 2;
+
+    bool result = (Catch::Session().run(argument_count, arguments) == 0);
+    env->ReleaseStringUTFChars(test_name, test_name_c);
+
+    return result;
 }

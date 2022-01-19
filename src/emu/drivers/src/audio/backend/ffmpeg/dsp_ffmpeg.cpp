@@ -144,7 +144,7 @@ namespace eka2l1::drivers {
             LOG_ERROR(DRIVER_AUD, "Can't initialize DSP custom IO!");
         }
 
-        AVCodec *decoder = avcodec_find_decoder(find_result->second);
+        const AVCodec *decoder = avcodec_find_decoder(find_result->second);
 
         if (!decoder) {
             LOG_ERROR(DRIVER_AUD, "Decoder not supported by ffmpeg!");

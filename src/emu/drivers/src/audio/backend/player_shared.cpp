@@ -187,6 +187,14 @@ namespace eka2l1::drivers {
         return encoding_;
     }
 
+    std::uint64_t player_shared::position() const {
+        std::uint64_t pos_in_frames = 0;
+        if (!output_stream_ || !freq_ || !output_stream_->current_frame_position(&pos_in_frames)) {
+            return 0;
+        }
+        return pos_in_frames * channels_ * 1000000ULL / freq_;
+    }
+
     player_shared::player_shared(audio_driver *driver)
         : aud_(driver)
         , data_pointer_(0)

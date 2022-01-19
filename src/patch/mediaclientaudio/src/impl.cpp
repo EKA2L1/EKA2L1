@@ -224,10 +224,14 @@ TInt CMMFMdaAudioUtility::GetVolume() {
 
 TTimeIntervalMicroSeconds CMMFMdaAudioUtility::CurrentPosition() {
 #ifdef EKA2
-    return EAudioPlayerGetCurrentPlayPos(0, iDispatchInstance);
+    TUint64 result = 0;
+    EAudioPlayerGetCurrentPlayPos(0, iDispatchInstance, result);
+
+    return result;
 #else
-    return TTimeIntervalMicroSeconds(MakeSoftwareInt64FromHardwareUint64(EAudioPlayerGetCurrentPlayPos(
-        0, iDispatchInstance)));
+    TUint64 result = 0;
+    EAudioPlayerGetCurrentPlayPos(0, iDispatchInstance, result);
+    return TTimeIntervalMicroSeconds(MakeSoftwareInt64FromHardwareUint64(result));
 #endif
 }
 
@@ -342,8 +346,11 @@ void CMMFMdaAudioRecorderUtility::OnStateChanged(const TMdaState aCurrentState, 
         return;
     }
 
-    // TODO: no nullptr? Haha hehe
-    iObserver.MoscoStateChangeEvent(NULL, prevTrans, currentTrans, aError);
+    TInt realError = aError;
+    if (aError == 1)
+        realError = 0;
+
+    iObserver.MoscoStateChangeEvent(this, prevTrans, currentTrans, realError);
 }
 
 TInt CMMFMdaAudioRecorderUtility::SetDestCodec(TFourCC aDestCodec) {

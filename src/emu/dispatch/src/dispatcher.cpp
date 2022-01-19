@@ -38,12 +38,20 @@ namespace eka2l1::dispatch {
 
     dispatcher::dispatcher(kernel_system *kern, ntimer *timing)
         : trampoline_chunk_(nullptr)
+        , static_data_chunk_(nullptr)
         , libmngr_(nullptr)
         , mem_(nullptr)
+        , kern_(nullptr)
         , trampoline_allocated_(0)
-        , winserv_(nullptr) {
+        , static_data_allocated_(0)
+        , winserv_(nullptr)
+        , egl_controller_(nullptr) {
         trampoline_chunk_ = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr, "DispatcherTrampolines", 0,
             MAX_TRAMPOLINE_CHUNK_SIZE, MAX_TRAMPOLINE_CHUNK_SIZE, prot_read_write_exec, kernel::chunk_type::normal,
+            kernel::chunk_access::rom, kernel::chunk_attrib::none);
+
+        static_data_chunk_ = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr, "DispatcherStaticData", 0,
+            MAX_TRAMPOLINE_CHUNK_SIZE, MAX_TRAMPOLINE_CHUNK_SIZE, prot_read_write, kernel::chunk_type::normal,
             kernel::chunk_access::rom, kernel::chunk_attrib::none);
 
         winserv_ = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>(
@@ -53,11 +61,25 @@ namespace eka2l1::dispatch {
         timing_ = timing;
         libmngr_ = kern->get_lib_manager();
         mem_ = kern->get_memory_system();
+        kern_ = kern;
 
         post_transferer_.construct(timing_);
+
+        // Add static strings
+        add_static_string(GLES1_STATIC_STRING_KEY_VENDOR, GLES1_STATIC_STRING_VENDOR);
+        add_static_string(GLES1_STATIC_STRING_KEY_RENDERER, GLES1_STATIC_STRING_RENDERER);
+        add_static_string(GLES1_STATIC_STRING_KEY_EXTENSIONS, GLES1_STATIC_STRING_EXTENSIONS);
+        add_static_string(GLES1_STATIC_STRING_KEY_VERSION, GLES1_STATIC_STRING_VERSION);
+        add_static_string(EGL_VENDOR_EMU, EGL_STATIC_STRING_VENDOR);
+        add_static_string(EGL_VERSION_EMU, EGL_STATIC_STRING_VERSION);
+        add_static_string(EGL_EXTENSIONS_EMU, EGL_STATIC_STRING_EXTENSION);
     }
 
     dispatcher::~dispatcher() {
+    }
+    
+    void dispatcher::set_graphics_driver(drivers::graphics_driver *driver) {
+        egl_controller_.set_graphics_driver(driver);
     }
 
     void dispatcher::resolve(eka2l1::system *sys, const std::uint32_t function_ord) {
@@ -86,6 +108,33 @@ namespace eka2l1::dispatch {
             dispatch::update_screen(sys, 0, scr->number, 1, &up_rect);
             scr = scr->next;
         }
+    }
+
+    address dispatcher::add_static_string(const std::uint32_t key, const std::string &value) {
+        if (static_string_addrs_.find(key) != static_string_addrs_.end()) {
+            return 0;
+        }
+
+        char *base = reinterpret_cast<char*>(static_data_chunk_->host_base());
+        address base_virt = static_data_chunk_->base(nullptr).ptr_address();
+
+        std::memcpy(base + static_data_allocated_, value.data(), value.length());
+        base[static_data_allocated_ + value.length()] = '\0';
+
+        address return_val = base_virt + static_data_allocated_;
+        static_string_addrs_.emplace(key, return_val);
+
+        static_data_allocated_ += static_cast<std::uint32_t>(value.length() + 1);
+        return return_val;
+    }
+
+    address dispatcher::retrieve_static_string(const std::uint32_t key) {
+        auto ite = static_string_addrs_.find(key);
+        if (ite == static_string_addrs_.end()) {
+            return 0;
+        }
+
+        return ite->second;
     }
 
     bool dispatcher::patch_libraries(const std::u16string &path, patch_info *patches,
@@ -130,12 +179,13 @@ namespace eka2l1::dispatch {
                 + trampoline_allocated_);
 
             start_base[0] = 0xEFC10001;
-            start_base[1] = patches[i].dispatch_number_;
+            start_base[1] = 0xE12FFF1E;     // BX LR
+            start_base[2] = patches[i].dispatch_number_;
 
             // TODO!!! Export table is fixed as a whole, not as an individual, this is bad for HLEing only some functions!
             seg->set_export(patches[i].ordinal_number_, entryentry);
 
-            trampoline_allocated_ += 8;
+            trampoline_allocated_ += 12;
         }
 
         return true;

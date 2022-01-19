@@ -260,6 +260,7 @@ namespace eka2l1::android {
 
         epoc::apa::command_line cmdline;
         cmdline.launch_cmd_ = epoc::apa::command_create;
+
         kern->lock();
         alserv->launch_app(*reg, cmdline, nullptr);
         kern->unlock();
@@ -447,116 +448,115 @@ namespace eka2l1::android {
         }
     }
 
-    void launcher::draw(drivers::graphics_command_list_builder *builder, std::uint32_t window_width,
-        std::uint32_t window_height) {
-        epoc::screen *scr = winserv->get_screens();
+    void launcher::draw(drivers::graphics_command_builder &builder, epoc::screen *scr,
+                        std::uint32_t window_width, std::uint32_t window_height) {
+        eka2l1::rect viewport;
+        eka2l1::rect src;
+        eka2l1::rect dest;
+
+        drivers::filter_option filter = conf->nearest_neighbor_filtering ? drivers::filter_option::nearest : drivers::filter_option::linear;
+
+        eka2l1::vec2 swapchain_size(window_width, window_height);
+        viewport.size = swapchain_size;
+        builder.set_swapchain_size(swapchain_size);
+
+        builder.backup_state();
+        builder.bind_bitmap(0);
+
+        builder.set_feature(drivers::graphics_feature::cull, false);
+        builder.set_feature(drivers::graphics_feature::depth_test, false);
+        builder.set_feature(eka2l1::drivers::graphics_feature::blend, false);
+        builder.set_feature(drivers::graphics_feature::clipping, false);
+        builder.set_feature(drivers::graphics_feature::stencil_test, false);
+        //builder->set_clipping(true);
+        builder.set_viewport(viewport);
+
+        builder.clear({ background_color_[0] / 255.0f, background_color_[1] / 255.0f, background_color_[2] / 255.0f, 1.0f, 0.0f, 0.0f },
+            drivers::draw_buffer_bit_color_buffer);
+
         if (scr) {
-            eka2l1::rect viewport;
-            eka2l1::rect src;
-            eka2l1::rect dest;
+            auto &crr_mode = scr->current_mode();
 
-            drivers::filter_option filter = conf->nearest_neighbor_filtering ? drivers::filter_option::nearest : drivers::filter_option::linear;
+            eka2l1::vec2 size = crr_mode.size;
+            src.size = size;
 
-            eka2l1::vec2 swapchain_size(window_width, window_height);
-            viewport.size = swapchain_size;
-            builder->set_swapchain_size(swapchain_size);
+            float width = 0;
+            float height = 0;
+            std::uint32_t x = 0;
+            std::uint32_t y = 0;
 
-            builder->backup_state();
-            builder->bind_bitmap(0);
-
-            builder->clear({ background_color_[0], background_color_[1], background_color_[2],
-                               0xFF },
-                drivers::draw_buffer_bit_color_buffer);
-            builder->set_cull_mode(false);
-            builder->set_depth(false);
-            //builder->set_clipping(true);
-            builder->set_viewport(viewport);
-
-            for (std::uint32_t i = 0; scr && scr->screen_texture; i++, scr = scr->next) {
-                scr->screen_mutex.lock();
-                auto &crr_mode = scr->current_mode();
-
-                eka2l1::vec2 size = crr_mode.size;
-                src.size = size;
-
-                float width = 0;
-                float height = 0;
-                std::uint32_t x = 0;
-                std::uint32_t y = 0;
-
-                switch (scale_type_) {
-                    case 0:
-                        // without scaling
-                        width = size.x;
-                        height = size.y;
-                        break;
-                    case 1:
-                        // try to fit in width
-                        width = swapchain_size.x;
-                        height = size.y * swapchain_size.x / size.x;
-                        if (height > swapchain_size.y) {
-                            // if height is too big, then fit in height
-                            height = swapchain_size.y;
-                            width = size.x * swapchain_size.y / size.y;
-                        }
-                        break;
-                    case 2:
-                        // scaling without preserving the aspect ratio:
-                        // just stretch the picture to full screen
-                        width = swapchain_size.x;
+            switch (scale_type_) {
+                case 0:
+                    // without scaling
+                    width = size.x;
+                    height = size.y;
+                    break;
+                case 1:
+                    // try to fit in width
+                    width = swapchain_size.x;
+                    height = size.y * swapchain_size.x / size.x;
+                    if (height > swapchain_size.y) {
+                        // if height is too big, then fit in height
                         height = swapchain_size.y;
-                        break;
-                }
-
-                width = width * scale_ratio_ / 100;
-                height = height * scale_ratio_ / 100;
-
-                switch (gravity_) {
-                    case 0: // left
-                        x = 0;
-                        y = (swapchain_size.y - height) / 2;
-                        break;
-                    case 1: // top
-                        x = (swapchain_size.x - width) / 2;
-                        y = 0;
-                        break;
-                    case 2: // center
-                        x = (swapchain_size.x - width) / 2;
-                        y = (swapchain_size.y - height) / 2;
-                        break;
-                    case 3: // right
-                        x = swapchain_size.x - width;
-                        y = (swapchain_size.y - height) / 2;
-                        break;
-                    case 4: // bottom
-                        x = (swapchain_size.x - width) / 2;
-                        y = swapchain_size.y - height;
-                        break;
-                }
-
-                scr->scale_x = width / size.x;
-                scr->scale_y = height / size.y;
-                scr->absolute_pos.x = static_cast<int>(x);
-                scr->absolute_pos.y = static_cast<int>(y);
-
-                dest.top = eka2l1::vec2(x, y);
-                dest.size = eka2l1::vec2(width, height);
-
-                advance_dsa_pos_around_origin(dest, scr->ui_rotation);
-
-                if (scr->ui_rotation % 180 != 0) {
-                    std::swap(dest.size.x, dest.size.y);
-                    std::swap(src.size.x, src.size.y);
-                }
-
-                builder->set_texture_filter(scr->screen_texture, filter, filter);
-                builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0),
-                    static_cast<float>(scr->ui_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
-
-                scr->screen_mutex.unlock();
+                        width = size.x * swapchain_size.y / size.y;
+                    }
+                    break;
+                case 2:
+                    // scaling without preserving the aspect ratio:
+                    // just stretch the picture to full screen
+                    width = swapchain_size.x;
+                    height = swapchain_size.y;
+                    break;
             }
-            builder->load_backup_state();
+
+            width = width * scale_ratio_ / 100;
+            height = height * scale_ratio_ / 100;
+
+            switch (gravity_) {
+                case 0: // left
+                    x = 0;
+                    y = (swapchain_size.y - height) / 2;
+                    break;
+                case 1: // top
+                    x = (swapchain_size.x - width) / 2;
+                    y = 0;
+                    break;
+                case 2: // center
+                    x = (swapchain_size.x - width) / 2;
+                    y = (swapchain_size.y - height) / 2;
+                    break;
+                case 3: // right
+                    x = swapchain_size.x - width;
+                    y = (swapchain_size.y - height) / 2;
+                    break;
+                case 4: // bottom
+                    x = (swapchain_size.x - width) / 2;
+                    y = swapchain_size.y - height;
+                    break;
+            }
+
+            scr->scale_x = width / size.x;
+            scr->scale_y = height / size.y;
+            scr->absolute_pos.x = static_cast<int>(x);
+            scr->absolute_pos.y = static_cast<int>(y);
+
+            dest.top = eka2l1::vec2(x, y);
+            dest.size = eka2l1::vec2(width, height);
+
+            advance_dsa_pos_around_origin(dest, scr->ui_rotation);
+
+            if (scr->ui_rotation % 180 != 0) {
+                std::swap(dest.size.x, dest.size.y);
+                std::swap(src.size.x, src.size.y);
+            }
+
+            builder.set_texture_filter(scr->screen_texture, false, filter);
+            builder.set_texture_filter(scr->screen_texture, true, filter);
+            builder.draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0),
+                                 static_cast<float>(scr->ui_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
         }
+
+        builder.load_backup_state();
     }
 
     std::vector<std::string> launcher::get_language_ids() {

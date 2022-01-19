@@ -28,16 +28,16 @@
 
 namespace eka2l1::epoc {
     bool click_dll::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
-        TWsClickOpcodes op = static_cast<decltype(op)>(cmd.header.op);
+        ws_click_op op = static_cast<decltype(op)>(cmd.header.op);
         bool quit = false;
 
         switch (op) {
-        case EWsClickOpIsLoaded: {
+        case ws_click_is_loaded: {
             ctx.complete(loaded ? 0 : 0x1);
             break;
         }
 
-        case EWsClickOpLoad: {
+        case ws_click_load: {
             int dll_click_name_length = *reinterpret_cast<int *>(cmd.data_ptr);
             char16_t *dll_click_name_ptr = reinterpret_cast<char16_t *>(
                 reinterpret_cast<std::uint8_t *>(cmd.data_ptr) + 4);
@@ -50,7 +50,7 @@ namespace eka2l1::epoc {
             break;
         }
 
-        case EWsClickOpCommandReply: {
+        case ws_click_command_reply: {
             LOG_TRACE(SERVICE_WINDOW, "ClickOpCommandReply stubbed with KErrNone");
             ctx.complete(epoc::error_none);
 

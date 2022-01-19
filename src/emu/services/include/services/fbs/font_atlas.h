@@ -30,7 +30,7 @@
 
 namespace eka2l1::drivers {
     class graphics_driver;
-    class graphics_command_list_builder;
+    class graphics_command_builder;
 }
 
 namespace eka2l1::epoc {
@@ -70,6 +70,6 @@ namespace eka2l1::epoc {
         int get_atlas_width() const;
 
         bool draw_text(const std::u16string &text, const eka2l1::rect &box, const epoc::text_alignment alignment, drivers::graphics_driver *driver,
-            drivers::graphics_command_list_builder *builder);
+            drivers::graphics_command_builder &builder);
     };
 }

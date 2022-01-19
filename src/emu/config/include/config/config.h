@@ -116,6 +116,7 @@ namespace eka2l1::config {
         bool mtm_reset_2{ false };
         bool report_mmfdev_underflow{ false };
         bool disable_display_content_scale { false };
+        bool enable_hw_gles1 { true };
 
         keybind_profile keybinds;
 
