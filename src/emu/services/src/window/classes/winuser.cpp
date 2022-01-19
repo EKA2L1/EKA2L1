@@ -99,6 +99,8 @@ namespace eka2l1::epoc {
                 abs_rect.size = scr->size();
             }
         }
+        
+        LOG_TRACE(SERVICE_WINDOW, "Window {} created with size {}x{} and parent {}", id, abs_rect.size.x, abs_rect.size.y, parent->id);
 
         kernel_system *kern = client->get_ws().get_kernel_system();
         if (kern->get_epoc_version() >= epocver::epoc94) {
@@ -185,7 +187,7 @@ namespace eka2l1::epoc {
     }
 
     bool canvas_base::can_be_physically_seen() const {
-        return is_visible() && !visible_region.empty();
+        return is_visible();
     }
 
     bool canvas_base::is_visible() const {
@@ -246,6 +248,10 @@ namespace eka2l1::epoc {
 
         // Relative position stays the same, however the absolute one got a definite change
         abs_rect.top += diff;
+
+        if (flags & flag_shape_region) {
+            shape_region.advance(diff);
+        }
     }
 
     void canvas_base::set_extent(const eka2l1::vec2 &top, const eka2l1::vec2 &new_size) {
@@ -425,6 +431,7 @@ namespace eka2l1::epoc {
 
     void canvas_base::set_transparency_alpha_channel(service::ipc_context &context, ws_cmd &cmd) {
         flags |= flags_enable_alpha;
+        LOG_TRACE(SERVICE_WINDOW, "Enable alpha for window {}", id);
         context.complete(epoc::error_none);
     }
 
@@ -453,7 +460,7 @@ namespace eka2l1::epoc {
     }
 
     bool free_modify_canvas::clear_redraw_store() {
-        has_redraw_content(false);
+        //has_redraw_content(false);
         return true;
     }
 
@@ -562,6 +569,22 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
+    void canvas_base::set_shape(service::ipc_context &context, ws_cmd &cmd) {
+        std::optional<common::region> shape = get_region_from_context(context, cmd);
+        if (!shape.has_value()) {
+            context.complete(epoc::error_argument);
+            return;
+        }
+
+        flags |= flag_shape_region;
+
+        shape_region = std::move(shape.value());
+        shape_region.advance(abs_rect.top);
+
+        scr->recalculate_visible_regions();
+        context.complete(epoc::error_none);
+    }
+
     bool canvas_base::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         bool useless = false;
         return execute_command_detail(ctx, cmd, useless);
@@ -657,6 +680,7 @@ namespace eka2l1::epoc {
         case EWsWinOpSetBackgroundColor:
         case EWsWinOpSetNoBackgroundColor: {
             if ((cmd.header.cmd_len == 0) && (cmd.header.op == EWsWinOpSetNoBackgroundColor)) {
+                LOG_TRACE(SERVICE_WINDOW, "Set no clear for {}", id);
                 clear_color_enable = false;
                 ctx.complete(epoc::error_none);
 
@@ -741,9 +765,7 @@ namespace eka2l1::epoc {
             break;
 
         case EWsWinOpSetShape:
-            LOG_WARN(SERVICE_WINDOW, "SetShape stubbed");
-
-            ctx.complete(epoc::error_none);
+            set_shape(ctx, cmd);
             break;
 
         case EWsWinOpSetCornerType:
@@ -791,6 +813,8 @@ namespace eka2l1::epoc {
     
         eka2l1::vec2 abs_pos = absolute_position();
         auto color_extracted = common::rgba_to_vec(clear_color);
+
+        clip_region(builder, visible_region);
 
         if (display_mode() <= epoc::display_mode::color16mu) {
             color_extracted[3] = 255;
@@ -983,6 +1007,8 @@ namespace eka2l1::epoc {
             eka2l1::vec2 abs_pos = absolute_position();
             if (!scr->scr_config.blt_offscreen && clear_color_enable && !background_region.empty()) {
                 background_region.advance(abs_pos);
+                background_region.intersect(visible_region);
+
                 clip_region(builder, background_region);
 
                 auto color_extracted = common::rgba_to_vec(clear_color);
@@ -999,6 +1025,8 @@ namespace eka2l1::epoc {
                 builder.set_brush_color(eka2l1::vec3(255, 255, 255));
                 builder.set_feature(drivers::graphics_feature::clipping, false);
             }
+
+            clip_region(builder, visible_region);
 
             // Draw it onto current binding buffer
             // TODO: We can probably also make use of visible regions and stencil buffer to reduce and provide
@@ -1215,6 +1243,8 @@ namespace eka2l1::epoc {
         }
 
         eka2l1::vec2 abs_pos = absolute_position();
+
+        clip_region(builder, visible_region);
 
         if (!scr->scr_config.blt_offscreen && clear_color_enable) {
             auto color_extracted = common::rgba_to_vec(clear_color);

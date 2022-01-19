@@ -535,7 +535,11 @@ namespace eka2l1::epoc {
                 winuser->visible_region.make_empty();
 
                 if (!visible_left_region_.empty() && winuser->is_visible()) {
-                    winuser->visible_region.add_rect(winuser->abs_rect);
+                    if (winuser->flags & epoc::window::flag_shape_region) {
+                        winuser->visible_region = winuser->shape_region;
+                    } else {
+                        winuser->visible_region.add_rect(winuser->abs_rect);
+                    }
 
                     // The region that window can render is the region intersects with the current available left region
                     // Eliminating the intersected region that is reserved for this window, we got the next region left to go on.

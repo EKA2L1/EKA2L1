@@ -141,11 +141,14 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
 
     // The format that is stored is same as how it's present in HTML ARGB (from lowest to highest bytes)
     // The normal one that emulator assumes is ABGR (from lowest to highest bytes too)
-    builder.clear({ color_clear[2] / 255.0f, color_clear[1] / 255.0f, color_clear[0] / 255.0f, color_clear[3] / 255.0f, 0.0f, 0.0f }, eka2l1::drivers::draw_buffer_bit_color_buffer);
     builder.set_feature(eka2l1::drivers::graphics_feature::cull, false);
     builder.set_feature(eka2l1::drivers::graphics_feature::depth_test, false);
     builder.set_feature(eka2l1::drivers::graphics_feature::blend, false);
+    builder.set_feature(eka2l1::drivers::graphics_feature::stencil_test, false);
+    builder.set_feature(eka2l1::drivers::graphics_feature::clipping, false);
     builder.set_viewport(viewport);
+
+    builder.clear({ color_clear[2] / 255.0f, color_clear[1] / 255.0f, color_clear[0] / 255.0f, color_clear[3] / 255.0f, 0.0f, 0.0f }, eka2l1::drivers::draw_buffer_bit_color_buffer);
 
     auto &crr_mode = scr->current_mode();
 

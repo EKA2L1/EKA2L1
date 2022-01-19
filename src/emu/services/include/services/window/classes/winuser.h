@@ -77,6 +77,7 @@ namespace eka2l1::epoc {
         std::uint64_t ping_pong_driver_win_id;
 
         common::region visible_region;
+        common::region shape_region;
 
         int shadow_height;
 
@@ -165,6 +166,7 @@ namespace eka2l1::epoc {
         void free(service::ipc_context &context, ws_cmd &cmd);
         void alloc_pointer_buffer(service::ipc_context &context, ws_cmd &cmd);
         void scroll(service::ipc_context &context, ws_cmd &cmd);
+        void set_shape(service::ipc_context &context, ws_cmd &cmd);
 
         epoc::window_group *get_group();
 

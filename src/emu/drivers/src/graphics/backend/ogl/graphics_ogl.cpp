@@ -879,7 +879,7 @@ namespace eka2l1::drivers {
         std::int32_t ref_value = 0;
         std::uint32_t mask = 0xFF;
 
-        unpack_u64_to_2u32(cmd.data_[0], pass_func, face_to_operate);
+        unpack_u64_to_2u32(cmd.data_[0], face_to_operate, pass_func);
         unpack_u64_to_2u32(cmd.data_[1], ref_value, mask);
 
         glStencilFuncSeparate(rendering_face_to_gl_enum(face_to_operate), condition_func_to_gl_enum(pass_func),
