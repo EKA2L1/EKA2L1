@@ -215,6 +215,7 @@ namespace eka2l1 {
 
         bool rescan_registries_on_drive_oldarch(eka2l1::io_system *io, const drive_number num);
         bool rescan_registries_on_drive_newarch(eka2l1::io_system *io, const drive_number num);
+        bool rescan_registries_on_drive_newarch_with_path(eka2l1::io_system *io, const drive_number num, const std::u16string &path);
 
         /*! \brief Get the number of screen shared for an app. 
          * 

@@ -373,8 +373,25 @@ namespace eka2l1 {
     }
 
     bool applist_server::rescan_registries_on_drive_newarch(eka2l1::io_system *io, const drive_number drv) {
-        const std::u16string base_dir = std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\import\\apps\\";
-        auto reg_dir = io->open_dir(base_dir + NEWARCH_REG_FILE_SEARCH_WILDCARD16, {}, io_attrib_include_file);
+        const std::u16string import_rsc_path = std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\import\\apps\\" + NEWARCH_REG_FILE_SEARCH_WILDCARD16;
+        const std::u16string rom_rscs_path = std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\apps\\" + NEWARCH_REG_FILE_SEARCH_WILDCARD16;
+
+        bool modded = false;
+
+        // Supposedly to only scan in ROM, but it's not really that strict on the emulator ;)
+        if (rescan_registries_on_drive_newarch_with_path(io, drv, rom_rscs_path)) {
+            modded = true;
+        }
+
+        if (rescan_registries_on_drive_newarch_with_path(io, drv, import_rsc_path)) {
+            modded = true;
+        }
+
+        return modded;
+    }
+
+    bool applist_server::rescan_registries_on_drive_newarch_with_path(eka2l1::io_system *io, const drive_number drv, const std::u16string &path) {
+        auto reg_dir = io->open_dir(path, {}, io_attrib_include_file);
         bool modded = false;
 
         if (reg_dir) {
@@ -544,19 +561,6 @@ namespace eka2l1 {
         }
 
         ctx.write_data_to_descriptor_argument<apa_app_info>(1, reg->mandatory_info);
-        ctx.complete(epoc::error_none);
-    }
-
-    void applist_server::get_capability(service::ipc_context &ctx) {
-        const epoc::uid app_uid = *ctx.get_argument_value<epoc::uid>(1);
-        apa_app_registry *reg = get_registration(app_uid);
-
-        if (!reg) {
-            ctx.complete(epoc::error_not_found);
-            return;
-        }
-
-        ctx.write_data_to_descriptor_argument<apa_capability>(0, reg->caps, nullptr, true);
         ctx.complete(epoc::error_none);
     }
 
@@ -811,6 +815,43 @@ namespace eka2l1 {
         }
 
         ctx.write_data_to_descriptor_argument<applist_app_for_document>(0, app);
+        ctx.complete(epoc::error_none);
+    }
+
+    void applist_server::get_capability(service::ipc_context &ctx) {
+        std::optional<epoc::uid> app_uid = ctx.get_argument_value<epoc::uid>(1);
+        if (!app_uid.has_value()) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        std::uint8_t *buf = ctx.get_descriptor_argument_ptr(0);
+        std::size_t buf_size = ctx.get_argument_max_data_size(0);
+
+        if (!buf_size || !buf) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        apa_app_registry *reg = get_registration(app_uid.value());
+        if (!reg) {
+            ctx.complete(epoc::error_not_found);
+            return;
+        }
+
+        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
+        reg->caps.do_it(seri);
+
+        if (seri.size() > buf_size) {
+            LOG_WARN(SERVICE_APPLIST, "Not enough buffer size to fit app capabilities! Size will be shrunked.");
+        }
+
+        buf_size = common::min(seri.size(), buf_size);
+        seri = common::chunkyseri(buf, buf_size, common::SERI_MODE_WRITE);
+
+        reg->caps.do_it(seri);
+
+        ctx.set_descriptor_argument_length(0, static_cast<std::uint32_t>(buf_size));
         ctx.complete(epoc::error_none);
     }
 
