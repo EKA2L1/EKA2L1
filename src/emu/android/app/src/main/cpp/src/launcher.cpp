@@ -463,12 +463,16 @@ namespace eka2l1::android {
         builder.backup_state();
         builder.bind_bitmap(0);
 
-        builder.clear({ background_color_[0] / 255.0f, background_color_[1] / 255.0f, background_color_[2] / 255.0f, 1.0f, 0.0f, 0.0f },
-            drivers::draw_buffer_bit_color_buffer);
         builder.set_feature(drivers::graphics_feature::cull, false);
         builder.set_feature(drivers::graphics_feature::depth_test, false);
+        builder.set_feature(eka2l1::drivers::graphics_feature::blend, false);
+        builder.set_feature(drivers::graphics_feature::clipping, false);
+        builder.set_feature(drivers::graphics_feature::stencil_test, false);
         //builder->set_clipping(true);
         builder.set_viewport(viewport);
+
+        builder.clear({ background_color_[0] / 255.0f, background_color_[1] / 255.0f, background_color_[2] / 255.0f, 1.0f, 0.0f, 0.0f },
+            drivers::draw_buffer_bit_color_buffer);
 
         if (scr) {
             auto &crr_mode = scr->current_mode();
