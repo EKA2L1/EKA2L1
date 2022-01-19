@@ -35,7 +35,7 @@ namespace eka2l1::epoc {
         epoc::canvas_base *user = reinterpret_cast<epoc::canvas_base *>(win);
         // Stop, we found it!
         // Send it right now
-        evt.adv_pointer_evt_.pos = scr_coord_ - user->pos;
+        evt.adv_pointer_evt_.pos = scr_coord_ - user->abs_rect.top;
 
         if (user->parent->type == epoc::window_kind::top_client) {
             evt.adv_pointer_evt_.parent_pos = scr_coord_;
