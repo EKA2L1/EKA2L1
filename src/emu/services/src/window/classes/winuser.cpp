@@ -187,7 +187,7 @@ namespace eka2l1::epoc {
     }
 
     bool canvas_base::can_be_physically_seen() const {
-        return is_visible();
+        return is_visible() && !visible_region.empty();
     }
 
     bool canvas_base::is_visible() const {
