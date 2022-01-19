@@ -100,7 +100,7 @@ namespace eka2l1::epoc {
             }
         }
         
-        LOG_TRACE(SERVICE_WINDOW, "Window {} created with size {}x{} and parent {}", id, abs_rect.size.x, abs_rect.size.y, parent->id);
+        // LOG_TRACE(SERVICE_WINDOW, "Window {} created with size {}x{} and parent {}", id, abs_rect.size.x, abs_rect.size.y, parent->id);
 
         kernel_system *kern = client->get_ws().get_kernel_system();
         if (kern->get_epoc_version() >= epocver::epoc94) {
