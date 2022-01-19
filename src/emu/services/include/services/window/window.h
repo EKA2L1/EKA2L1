@@ -81,6 +81,9 @@ namespace eka2l1::epoc {
     struct event_screen_change_user : public event_notifier_base {
     };
 
+    struct event_focus_group_change_user: public event_notifier_base {
+    };
+
     struct event_error_msg_user : public event_notifier_base {
         event_control when;
     };
@@ -175,6 +178,7 @@ namespace eka2l1::epoc {
         nof_container<epoc::event_mod_notifier_user> mod_notifies;
         nof_container<epoc::event_screen_change_user> screen_changes;
         nof_container<epoc::event_error_msg_user> error_notifies;
+        nof_container<epoc::event_focus_group_change_user> focus_group_change_notifies;
 
         void create_screen_device(service::ipc_context &ctx, ws_cmd &cmd);
         void create_dsa(service::ipc_context &ctx, ws_cmd &cmd);
@@ -278,7 +282,9 @@ namespace eka2l1::epoc {
         }
 
         ws::uid add_capture_key_notifier_to_server(epoc::event_capture_key_notifier &notifier);
+
         void send_screen_change_events(epoc::screen *scr);
+        void send_focus_group_change_events(epoc::screen *scr);
 
         // We have been blessed with so much reflection that it's actually seems evil now.
         template <typename T>
@@ -296,6 +302,9 @@ namespace eka2l1::epoc {
                 return static_cast<ws::uid>(error_notifies.size());
             } else if constexpr (std::is_same_v<T, epoc::event_capture_key_notifier>) {
                 return add_capture_key_notifier_to_server(evt);
+            } else if constexpr (std::is_same_v<T, epoc::event_focus_group_change_user>) {
+                focus_group_change_notifies.emplace(std::move(evt));
+                return static_cast<ws::uid>(focus_group_change_notifies.size());
             } else {
                 throw std::runtime_error("Unsupported event notifier type!");
             }
@@ -486,6 +495,7 @@ namespace eka2l1 {
         void send_event_to_window_groups(const epoc::event &evt);
 
         void send_screen_change_events(epoc::screen *scr);
+        void send_focus_group_change_events(epoc::screen *scr);
 
         void init_key_mappings();
         void set_screen_sync_buffer_option(const int option);

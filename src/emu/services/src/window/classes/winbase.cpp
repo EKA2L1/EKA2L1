@@ -351,9 +351,6 @@ namespace eka2l1::epoc {
         case EWsWinOpSetOrdinalPosition: {
             const int position = *reinterpret_cast<int *>(cmd.data_ptr);
             set_position(position);
-    
-            LOG_TRACE(SERVICE_WINDOW, "Window {} changed position to {}", id, position);
-
             ctx.complete(epoc::error_none);
 
             return true;
@@ -364,11 +361,17 @@ namespace eka2l1::epoc {
             priority = info->pri1;
             const int position = info->pri2;
 
-            LOG_TRACE(SERVICE_WINDOW, "Window {} changed position + priority to {},{}", id, position, priority);
-
             set_position(position);
             ctx.complete(epoc::error_none);
 
+            return true;
+        }
+
+        case EWsWinOpSetOrdinalPriorityAdjust: {
+            priority = *reinterpret_cast<std::int32_t*>(cmd.data_ptr);
+            set_position(0);
+
+            ctx.complete(epoc::error_none);
             return true;
         }
 
@@ -383,9 +386,20 @@ namespace eka2l1::epoc {
             nof.when = ctrl;
             nof.user = this;
 
-            client->add_event_notifier<epoc::event_error_msg_user>(nof);
             ctx.complete(epoc::error_none);
 
+            return true;
+        }
+        
+        case EWsWinOpEnableFocusChangeEvents: {
+            if (!focus_group_change_event_handle) {
+                epoc::event_focus_group_change_user evt;
+                evt.user = this;
+
+                focus_group_change_event_handle = client->add_event_notifier<epoc::event_focus_group_change_user>(evt);
+            }
+
+            ctx.complete(epoc::error_none);
             return true;
         }
 

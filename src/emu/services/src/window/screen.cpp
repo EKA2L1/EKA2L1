@@ -326,11 +326,15 @@ namespace eka2l1::epoc {
                 serv->set_focus_screen(new_focus_screen);
 
                 alternative_focus->gain_focus();
+
+                serv->send_focus_group_change_events(new_focus_screen);
                 new_focus_screen->fire_focus_change_callbacks(focus_change_target);
 
                 refresh_rate = alternative_focus->last_refresh_rate;
             } else if (focus && is_me_currently_focus) {
                 focus->gain_focus();
+
+                serv->send_focus_group_change_events(this);
                 fire_focus_change_callbacks(focus_change_target);
 
                 refresh_rate = focus->last_refresh_rate;

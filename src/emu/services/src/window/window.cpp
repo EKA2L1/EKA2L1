@@ -1169,6 +1169,18 @@ namespace eka2l1::epoc {
             }
         }
     }
+
+    void window_server_client::send_focus_group_change_events(epoc::screen *scr) {
+        for (auto &request: focus_group_change_notifies) {
+            if (request.user->scr == scr) {
+                epoc::event evt;
+                evt.type = epoc::event_code::focus_group_changed;
+                evt.handle = request.user->client_handle;
+
+                queue_event(evt);
+            }
+        }
+    }
 }
 
 namespace eka2l1 {
@@ -2232,6 +2244,14 @@ namespace eka2l1 {
         for (auto &[uid, cli]: clients) {
             if (cli) {
                 cli->send_screen_change_events(scr);
+            }
+        }
+    }
+
+    void window_server::send_focus_group_change_events(epoc::screen *scr) {
+        for (auto &[uid, cli]: clients) {
+            if (cli) {
+                cli->send_focus_group_change_events(scr);
             }
         }
     }
