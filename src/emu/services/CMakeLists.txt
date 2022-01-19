@@ -248,6 +248,7 @@ add_library(epocservs
         src/unipertar/unipertar.cpp
         src/window/classes/plugins/animdll.cpp
         src/window/classes/plugins/clickdll.cpp
+        src/window/classes/plugins/graphics.cpp
         src/window/classes/plugins/sprite.cpp
         src/window/classes/bitmap.cpp
         src/window/classes/dsa.cpp

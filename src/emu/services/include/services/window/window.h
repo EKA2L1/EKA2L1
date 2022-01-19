@@ -189,6 +189,7 @@ namespace eka2l1::epoc {
         void create_click_dll(service::ipc_context &ctx, ws_cmd &cmd);
         void create_sprite(service::ipc_context &ctx, ws_cmd &cmd);
         void create_wsbmp(service::ipc_context &ctx, ws_cmd &cmd);
+        void create_graphic(service::ipc_context &ctx, ws_cmd &cmd);
         void get_window_group_list(service::ipc_context &ctx, ws_cmd &cmd);
         void get_number_of_window_groups(service::ipc_context &ctx, ws_cmd &cmd);
         void restore_hotkey(service::ipc_context &ctx, ws_cmd &cmd);
@@ -200,6 +201,7 @@ namespace eka2l1::epoc {
         void find_window_group_id_thread(service::ipc_context &ctx, ws_cmd &cmd);
         void set_pointer_cursor_mode(service::ipc_context &ctx, ws_cmd &cmd);
         void get_window_group_client_thread_id(service::ipc_context &ctx, ws_cmd &cmd);
+        void get_window_group_ordinal_priority(service::ipc_context &ctx, ws_cmd &cmd);
         void get_redraw(service::ipc_context &ctx, ws_cmd &cmd);
         void get_event(service::ipc_context &ctx, ws_cmd &cmd);
         void get_focus_window_group(service::ipc_context &ctx, ws_cmd &cmd);

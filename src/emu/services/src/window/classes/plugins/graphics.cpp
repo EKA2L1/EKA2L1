@@ -18,37 +18,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/window/classes/plugins/animdll.h>
+#include <services/window/classes/plugins/graphics.h>
 #include <services/window/window.h>
 #include <services/window/op.h>
+#include <services/window/opheader.h>
 #include <utils/err.h>
 
 namespace eka2l1::epoc {
-    anim_dll::anim_dll(window_server_client_ptr client, screen *scr)
-        : window_client_obj(client, scr)
-        , user_count(0) {
-    }
-
-    bool anim_dll::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
-        ws_anim_dll_opcode op = static_cast<decltype(op)>(cmd.header.op);
+    bool graphics_piece::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+        ws_graphic_drawer_opcode op = static_cast<ws_graphic_drawer_opcode>(cmd.header.op);
         bool quit = false;
 
         switch (op) {
-        case ws_anim_dll_op_create_instance: {
-            LOG_TRACE(SERVICE_WINDOW, "AnimDll::CreateInstance stubbed with a anim handle (>= 0)");
-            ctx.complete(user_count++);
-
-            break;
-        }
-
-        case ws_anim_dll_op_command_reply: {
-            LOG_TRACE(SERVICE_WINDOW, "AnimDll command reply stubbed!");
-            ctx.complete(epoc::error_none);
-
-            break;
-        }
-
-        case ws_anim_dll_op_free: {
+        case ws_graphic_drawer_free: {
             ctx.complete(epoc::error_none);
             client->delete_object(cmd.obj_handle);
 
@@ -56,13 +38,32 @@ namespace eka2l1::epoc {
             break;
         }
 
-        default: {
-            LOG_ERROR(SERVICE_WINDOW, "Unimplemented AnimDll opcode: 0x{:x}", cmd.header.op);
+        case ws_graphic_drawer_get_graphic_id: {
+            LOG_TRACE(SERVICE_WINDOW, "Graphics drawer get graphic id stubbed");
+
+            ws_cmd_graphic_drawer_graphic_id id_var;
+            id_var.id = 1;
+            id_var.is_uid = 0;
+
+            ctx.write_data_to_descriptor_argument(reply_slot, id_var, nullptr, true);
             ctx.complete(epoc::error_none);
+
+            break;
+        }
+
+        default: {
+            // The number of unimplemented is too small, better just complete all
+            LOG_TRACE(SERVICE_WINDOW, "Unimplemented graphic drawer opcode: 0x{:x}", cmd.header.op);
+            ctx.complete(epoc::error_none);
+
             break;
         }
         }
 
         return quit;
+    }
+
+    graphics_piece::graphics_piece(window_server_client_ptr client, screen *scr)
+        : window_client_obj(client, scr) {
     }
 }

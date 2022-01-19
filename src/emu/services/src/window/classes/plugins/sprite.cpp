@@ -19,10 +19,33 @@
  */
 
 #include <services/window/classes/plugins/sprite.h>
+#include <services/window/window.h>
+#include <services/window/op.h>
+#include <utils/err.h>
 
 namespace eka2l1::epoc {
-    bool sprite::execute_command(service::ipc_context &context, ws_cmd &cmd) {
+    bool sprite::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+        ws_sprite_op op = static_cast<decltype(op)>(cmd.header.op);
         bool quit = false;
+
+        switch (op) {
+        case ws_sprite_free: {
+            ctx.complete(epoc::error_none);
+            client->delete_object(cmd.obj_handle);
+
+            quit = true;
+            break;
+        }
+
+        default: {
+            // The number of unimplemented is too small, better just complete all
+            LOG_ERROR(SERVICE_WINDOW, "Unimplemented SpriteDLL opcode: 0x{:x}", cmd.header.op);
+            ctx.complete(epoc::error_none);
+
+            break;
+        }
+        }
+
         return quit;
     }
 

@@ -508,6 +508,15 @@ namespace eka2l1::epoc {
         eka2l1::rect source_rect = blt_cmd->source_rect;
         source_rect.transform_from_symbian_rectangle();
 
+        // Clip the size
+        if (source_rect.size.x > bmp->header_.size_pixels.x) {
+            source_rect.size.x = bmp->header_.size_pixels.x;
+        }
+        
+        if (source_rect.size.y > bmp->header_.size_pixels.y) {
+            source_rect.size.y = bmp->header_.size_pixels.y;
+        }
+
         eka2l1::rect dest_rect;
         dest_rect.size = source_rect.size;
         dest_rect.top = blt_cmd->pos;

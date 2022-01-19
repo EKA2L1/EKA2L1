@@ -29,6 +29,7 @@
 #include <services/window/classes/gctx.h>
 #include <services/window/classes/plugins/animdll.h>
 #include <services/window/classes/plugins/clickdll.h>
+#include <services/window/classes/plugins/graphics.h>
 #include <services/window/classes/plugins/sprite.h>
 #include <services/window/classes/scrdvc.h>
 #include <services/window/classes/winbase.h>
@@ -379,6 +380,13 @@ namespace eka2l1::epoc {
         ctx.complete(add_object(spr));
     }
 
+    void window_server_client::create_graphic(service::ipc_context &ctx, ws_cmd &cmd) {
+        LOG_TRACE(SERVICE_WINDOW, "Create graphic drawer stubbed!");
+
+        window_client_obj_ptr drawer = std::make_unique<epoc::graphics_piece>(this, nullptr);
+        ctx.complete(add_object(drawer));
+    }
+
     void window_server_client::create_anim_dll(service::ipc_context &ctx, ws_cmd &cmd) {
         const int dll_name_length = *reinterpret_cast<int *>(cmd.data_ptr);
         const char16_t *dll_name_ptr = reinterpret_cast<char16_t *>(reinterpret_cast<std::uint8_t *>(cmd.data_ptr) + sizeof(int));
@@ -639,6 +647,19 @@ namespace eka2l1::epoc {
         }
 
         ctx.complete(epoc::error_none);
+    }
+
+    void window_server_client::get_window_group_ordinal_priority(service::ipc_context &ctx, ws_cmd &cmd) {
+        std::uint32_t group_id = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
+        epoc::window_group *win = get_ws().get_group_from_id(group_id);
+
+        if (!win || (win->type != window_kind::group)) {
+            LOG_TRACE(SERVICE_WINDOW, "Can't find group with id {}", group_id);
+            ctx.complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx.complete(win->priority);
     }
 
     void window_server_client::get_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -942,6 +963,10 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case ws_cl_op_get_window_group_ordinal_priority:
+            get_window_group_ordinal_priority(ctx, cmd);
+            break;
+
         case ws_cl_op_send_event_to_window_group: {
             send_event_to_window_group(ctx, cmd);
             break;
@@ -1023,6 +1048,10 @@ namespace eka2l1::epoc {
 
         case ws_cl_op_create_click:
             create_click_dll(ctx, cmd);
+            break;
+
+        case ws_cl_op_create_graphics:
+            create_graphic(ctx, cmd);
             break;
 
         case ws_cl_op_event_ready:
@@ -2057,6 +2086,8 @@ namespace eka2l1 {
                 break;
             }
             }
+        } else {
+            ctx.complete(epoc::error_none);
         }
     }
 
