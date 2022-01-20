@@ -196,7 +196,7 @@ namespace eka2l1::drivers {
         common::rw_stream *stream = reinterpret_cast<common::rw_stream *>(opaque);
         const std::uint64_t size = stream->read(buf, buf_size);
 
-        return static_cast<int>(size);
+        return ((size <= 0) ? -1 : static_cast<int>(size));
     }
 
     static int ffmpeg_custom_rw_io_write(void *opaque, std::uint8_t *buf, int buf_size) {
