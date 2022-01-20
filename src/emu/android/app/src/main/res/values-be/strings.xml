@@ -7,7 +7,7 @@
     <string name="settings">Налады</string>
     <string name="packages">Пакеты</string>
     <string name="devices">Прылады</string>
-    <string name="profiles">Профіль</string>
+    <string name="profiles">Профілі</string>
     <string name="processing">Апрацоўка...</string>
     <string name="completed">Завершана!</string>
     <string name="remove">Выдаліць</string>
@@ -18,7 +18,7 @@
     <string name="save_log">Захаваць лог</string>
     <string name="opengl_required">Дастасаванне патрабуе OpenGL ES 3.0+.</string>
     <string name="warning">Увага</string>
-    <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
+    <string name="scoped_storage_warning">Вашы карыстацкія дадзеныя захоўваюцца ў месцы якое<b>будзе выдаленае</b>пры выдаленні прыкладання:\n</string>
     <string name="install">Усталяваць</string>
     <string name="device_dump">Дамп прылады</string>
     <string name="path_to_rpkg">Шлях да RPKG</string>
@@ -68,11 +68,11 @@
     <string name="pref_device_display_name">Friendly phone name</string>
     <string name="action_context_delete">Выдаліць</string>
     <string name="action_context_rename">Перайменаваць</string>
-    <string name="start">Start</string>
-    <string name="reset_settings">Reset settings</string>
-    <string name="reset_layout">Reset keylayout</string>
-    <string name="load_profile">Load profile</string>
-    <string name="save_profile">Save profile</string>
+    <string name="start">Пачаць</string>
+    <string name="reset_settings">Скінуць налады</string>
+    <string name="reset_layout">Скінуць размяшчэнне кнопак</string>
+    <string name="load_profile">Загрузіць профіль</string>
+    <string name="save_profile">Захаваць профіль</string>
     <string name="pref_screen_options">Screen options</string>
     <string name="pref_scale_ratio">Scale(%)</string>
     <string name="pref_background">Background</string>
