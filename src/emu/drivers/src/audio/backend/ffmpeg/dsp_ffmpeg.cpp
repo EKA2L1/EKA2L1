@@ -71,10 +71,8 @@ namespace eka2l1::drivers {
     }
 
     int dsp_output_stream_ffmpeg::read_queued_data(std::uint8_t *buffer, int buffer_size) {
-        const std::lock_guard<std::mutex> guard(decode_lock_);
-
         if (queued_data_.empty()) {
-            return 0;
+            return -1;
         }
 
         int read_size = common::min<int>(buffer_size, static_cast<int>(queued_data_.size()));
@@ -86,7 +84,7 @@ namespace eka2l1::drivers {
             queued_data_.erase(queued_data_.begin(), queued_data_.begin() + read_size);
         }
 
-        return read_size;
+        return (read_size <= 0) ? -1 : read_size;
     }
 
     void dsp_output_stream_ffmpeg::get_supported_formats(std::vector<four_cc> &cc_list) {
