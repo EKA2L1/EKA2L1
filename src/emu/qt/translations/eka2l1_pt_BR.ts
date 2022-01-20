@@ -215,7 +215,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="301"/>
       <source>RPKG file (*.rpkg *.RPKG);;All files (*.*</source>
-      <translation type="unfinished">RPKG file (*.rpkg *.RPKG);;All files (*.*</translation>
+      <translation>Arquivo RPKG (*.rpkg *.RPKG);;Todos os arquivos (*.*</translation>
     </message>
   </context>
   <context>
@@ -338,7 +338,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="260"/>
       <source>Refresh app list</source>
-      <translation type="unfinished">Refresh app list</translation>
+      <translation>Atualizar lista</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="241"/>
@@ -805,7 +805,7 @@ A opção de preferência ativará isso automaticamente em dispositivos S60v1/S6
     <message>
       <location filename="../src/settings_dialog.ui" line="538"/>
       <source>Enable GPU accelerated GLES1</source>
-      <translation type="unfinished">Enable GPU accelerated GLES1</translation>
+      <translation>Ativar GPU com aceleração GLES1</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="548"/>
@@ -1291,12 +1291,12 @@ A opção de preferência ativará isso automaticamente em dispositivos S60v1/S6
     <message>
       <location filename="../src/settings_dialog.cpp" line="1299"/>
       <source>Emulator reset needed</source>
-      <translation type="unfinished">Emulator reset needed</translation>
+      <translation>Redefinição do emulador necessária</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1299"/>
       <source>This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</source>
-      <translation type="unfinished">This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</translation>
+      <translation>Esta mudança será efetiva após a redefinição do emulador através do menu de emulação, ou no próximo lançamento do emulador.</translation>
     </message>
   </context>
 </TS>
