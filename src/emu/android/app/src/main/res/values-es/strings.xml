@@ -7,7 +7,7 @@
     <string name="settings">Configuración</string>
     <string name="packages">Packages</string>
     <string name="devices">Dispositivos</string>
-    <string name="profiles">Profiles</string>
+    <string name="profiles">Perfiles</string>
     <string name="processing">Procesando...</string>
     <string name="completed">¡Completado!</string>
     <string name="remove">Eliminar</string>
@@ -17,7 +17,7 @@
     <string name="rename">Renombrar</string>
     <string name="save_log">Guardar log</string>
     <string name="opengl_required">Esta aplicación requiere OpenGL ES 3.0+.</string>
-    <string name="warning">Warning</string>
+    <string name="warning">Advertencia</string>
     <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
     <string name="install">Instalar</string>
     <string name="device_dump">Volcado del dispositivo</string>
