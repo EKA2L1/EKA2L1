@@ -53,7 +53,7 @@ HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetBalance, TAny *aInstance, TInt aBalance);
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetBalance, TAny *aInstance);
 
 // Supply raw audio data to media player queue.
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerSupplyData, TAny *aInstance, TDesC8 &aAudioData);
+HLE_DISPATCH_FUNC(TInt, EAudioPlayerSupplyData, TAny *aInstance, const TDesC8 &aAudioData);
 
 // Set volume of the play instance.
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetVolume, TAny *aInstance, const TInt aVolume);

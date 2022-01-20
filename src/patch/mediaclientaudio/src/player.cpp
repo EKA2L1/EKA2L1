@@ -110,7 +110,7 @@ EXPORT_C void CMdaAudioPlayerUtility::OpenFileL(const TDesC &aFileName) {
 }
 
 EXPORT_C void CMdaAudioPlayerUtility::OpenDesL(const TDesC8 &aDescriptor) {
-    LogOut(KMcaCat, _L("Unimplemented function to open audio player stream with descriptor!"));
+    iProperties->SupplyData(aDescriptor);
 }
 
 EXPORT_C void CMdaAudioPlayerUtility::OpenUrlL(const TDesC &aUrl, TInt aIapId, const TDesC8 &aMimeType) {

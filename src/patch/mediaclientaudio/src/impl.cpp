@@ -146,7 +146,7 @@ void CMMFMdaAudioUtility::SupplyUrl(const TDesC &aFilename) {
     iOpener.Open(this);
 }
 
-void CMMFMdaAudioUtility::SupplyData(TDesC8 &aData) {
+void CMMFMdaAudioUtility::SupplyData(const TDesC8 &aData) {
     if ((iState == EMdaStatePlay) || (iState == EMdaStatePause)) {
         LogOut(KMcaCat, _L("Audio supplied while utility is being played."));
 

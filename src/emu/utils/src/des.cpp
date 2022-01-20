@@ -170,12 +170,15 @@ namespace eka2l1::epoc {
         const std::uint64_t to_read = common::min<std::uint64_t>(read_size, left());
         std::memcpy(buf, des_->get_pointer(pr_) + current_pos_, to_read);
 
+        current_pos_ += to_read;
         return to_read;
     }
 
     std::uint64_t rw_des_stream::write(const void *buf, const std::uint64_t write_size) {
         const std::uint64_t to_write = common::min<std::uint64_t>(write_size, left());
         std::memcpy(des_->get_pointer(pr_) + current_pos_, buf, write_size);
+
+        current_pos_ += to_write;
 
         return write_size;
     }

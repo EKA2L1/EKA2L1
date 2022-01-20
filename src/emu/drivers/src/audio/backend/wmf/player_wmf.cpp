@@ -63,6 +63,9 @@ namespace eka2l1::drivers {
         return out_mt;
     }
 
+    static wchar_t *DUMMY_ISTREAM_FILE_NAME = L"dummy";
+    static constexpr int DUMMY_ISTREAM_FILE_NAME_LENGTH = 6;
+
     /**
      * @brief EKA2L1's RW stream wrapper.
      * 
@@ -192,7 +195,13 @@ namespace eka2l1::drivers {
         }
 
         virtual HRESULT __stdcall Stat(STATSTG *pstatstg, DWORD grfStatFlag) {
-            return E_NOTIMPL;
+            if ((grfStatFlag & STATFLAG_NONAME) == 0) {
+                pstatstg->pwcsName = reinterpret_cast<LPOLESTR>(CoTaskMemAlloc(DUMMY_ISTREAM_FILE_NAME_LENGTH * sizeof(wchar_t)));
+                std::memcpy(pstatstg->pwcsName, DUMMY_ISTREAM_FILE_NAME, DUMMY_ISTREAM_FILE_NAME_LENGTH * sizeof(wchar_t));
+            }
+
+            pstatstg->cbSize.QuadPart = stream_->size();
+            return S_OK;
         }
 
         virtual HRESULT __stdcall Clone(IStream **ppstm) {

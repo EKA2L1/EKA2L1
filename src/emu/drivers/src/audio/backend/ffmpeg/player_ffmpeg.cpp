@@ -375,6 +375,8 @@ namespace eka2l1::drivers {
             avformat_free_context(format_context_);
         }
 
+        format_context_ = avformat_alloc_context();
+
         if (custom_io_) {
             format_context_->pb = custom_io_;
             format_context_->flags |= AVFMT_FLAG_CUSTOM_IO;
