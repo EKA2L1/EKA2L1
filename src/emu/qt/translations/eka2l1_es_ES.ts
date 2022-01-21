@@ -195,7 +195,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="266"/>
       <source>VPL file (*.vpl);;All files (*.*)</source>
-      <translation type="unfinished">VPL file (*.vpl);;All files (*.*)</translation>
+      <translation>Archivos VPL (*.vpl);;Todos los archivos (*.*)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="275"/>
@@ -205,7 +205,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="276"/>
       <source>ROM file (*.rom *.ROM);;All files (*.*)</source>
-      <translation type="unfinished">ROM file (*.rom *.ROM);;All files (*.*)</translation>
+      <translation>Archivos ROM (*.rom *.ROM);;Todos los archivos (*.*)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="300"/>
@@ -215,7 +215,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="301"/>
       <source>RPKG file (*.rpkg *.RPKG);;All files (*.*</source>
-      <translation type="unfinished">RPKG file (*.rpkg *.RPKG);;All files (*.*</translation>
+      <translation>Archivos RPKG (*.rpkg *.RPKG);;Todos los archivos (*.*)</translation>
     </message>
   </context>
   <context>
@@ -338,7 +338,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="260"/>
       <source>Refresh app list</source>
-      <translation type="unfinished">Refresh app list</translation>
+      <translation>Actualizar lista de aplicaciones</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="241"/>
@@ -586,7 +586,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="123"/>
       <source>Time delay (0-1000us)</source>
-      <translation type="unfinished">Time delay (0-1000us)</translation>
+      <translation>Tiempo de retraso (0-1000us)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="162"/>
@@ -718,7 +718,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="402"/>
       <source>Disable scaling phone screen to emulator&apos;s window size</source>
-      <translation type="unfinished">Disable scaling phone screen to emulator&apos;s window size</translation>
+      <translation>Desactivar el escalado de la pantalla del teléfono a la ventana del emulador</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="414"/>
@@ -748,12 +748,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="459"/>
       <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
-      <translation type="unfinished">Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</translation>
+      <translation>Habilitar esto hará que la ventana del emulador siempre mantenga su título a &quot;EKA2L1&quot;, sin ninguna información adicional.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="465"/>
       <source>Disable easter egg title</source>
-      <translation type="unfinished">Disable easter egg title</translation>
+      <translation>Desactivar el easter egg en el título</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="472"/>
@@ -768,44 +768,43 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="489"/>
       <source>Graphics</source>
-      <translation type="unfinished">Graphics</translation>
+      <translation>Gráficos</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="497"/>
       <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
-      <translation type="unfinished">This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
-Preferred option will automatically enable this on S60v1/S60v2 devices.</translation>
+      <translation>Esto permite grabar los programas emulados y evita parpadeos en algunos juegos S60v1/S60v2 antiguos. El modo automático habilitará esto en dispositivos S60v1/S60v2.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="501"/>
       <source>Screen buffer sync</source>
-      <translation type="unfinished">Screen buffer sync</translation>
+      <translation>Sincronización de búfer de pantalla</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="515"/>
       <source>Preferred</source>
-      <translation type="unfinished">Preferred</translation>
+      <translation>Automático</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="520"/>
       <source>Disable</source>
-      <translation type="unfinished">Disable</translation>
+      <translation>Deshabilitado</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="525"/>
       <source>Enable</source>
-      <translation type="unfinished">Enable</translation>
+      <translation>Habilitado</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="535"/>
       <source>Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</source>
-      <translation type="unfinished">Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</translation>
+      <translation>Permitir al emulador acelerar la API GLES1 de Symbian mediante GPU.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="538"/>
       <source>Enable GPU accelerated GLES1</source>
-      <translation type="unfinished">Enable GPU accelerated GLES1</translation>
+      <translation>Habilitar aceleración por GPU de GLES1</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="548"/>
@@ -873,12 +872,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="738"/>
       <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
-      <translation type="unfinished">The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</translation>
+      <translation>El nombre que se mostrará en las aplicaciones o juegos emulados. Máximo 30 caracteres.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="741"/>
       <source>Friendly phone name</source>
-      <translation type="unfinished">Friendly phone name</translation>
+      <translation>Nombre amistoso del teléfono</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="766"/>
@@ -933,7 +932,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="847"/>
       <source>SF2 bank</source>
-      <translation type="unfinished">SF2 bank</translation>
+      <translation>Banco SF2</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="874"/>
@@ -944,22 +943,22 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="888"/>
       <source>HSB bank</source>
-      <translation type="unfinished">HSB bank</translation>
+      <translation>Banco HSB</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="932"/>
       <source>MIDI backend</source>
-      <translation type="unfinished">MIDI backend</translation>
+      <translation>Motor MIDI</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="946"/>
       <source>TinySoundFont (High-quality, support SF2)</source>
-      <translation type="unfinished">TinySoundFont (High-quality, support SF2)</translation>
+      <translation>TinySoundFont (alta calidad, soporta SF2)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="951"/>
       <source>MiniBAE (Lower-quality, support HSB)</source>
-      <translation type="unfinished">MiniBAE (Lower-quality, support HSB)</translation>
+      <translation>MiniBAE (calidad inferior, soporta HSB)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="969"/>
@@ -1271,32 +1270,32 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="1227"/>
       <source>Successfully changed</source>
-      <translation type="unfinished">Successfully changed</translation>
+      <translation>Cambiado con éxito</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1227"/>
       <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
-      <translation type="unfinished">Next time the application requests to play a new MIDI, the choosen backend will be used!</translation>
+      <translation>Se utilizará el motor seleccionado la próxima vez que la aplicación reproduzca un nuevo sonido MIDI</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1240"/>
       <source>Choose the HSB bank file</source>
-      <translation type="unfinished">Choose the HSB bank file</translation>
+      <translation>Seleccione el archivo HSB</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1263"/>
       <source>Choose the SF2 bank file</source>
-      <translation type="unfinished">Choose the SF2 bank file</translation>
+      <translation>Seleccione el archivo SF2</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1299"/>
       <source>Emulator reset needed</source>
-      <translation type="unfinished">Emulator reset needed</translation>
+      <translation>Se requiere un reinicio del emulador</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1299"/>
       <source>This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</source>
-      <translation type="unfinished">This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</translation>
+      <translation>Los cambios tendrán efecto tras reiniciar el emulador via el menú de Emulación o en la próxima ejecución.</translation>
     </message>
   </context>
 </TS>
