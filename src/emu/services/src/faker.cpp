@@ -221,7 +221,7 @@ namespace eka2l1::service {
             }
         } else {
             for (const auto &to_free : free_lists_) {
-                allocator_->free(to_free);
+                allocator_->freep(to_free);
             }
 
             free_lists_.clear();

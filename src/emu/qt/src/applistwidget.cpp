@@ -17,6 +17,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <QBitmap>
+#include <QLineEdit>
+#include <QPainter>
+#include <QtSvg/QSvgRenderer>
+
 #include <common/buffer.h>
 #include <common/cvt.h>
 #include <common/path.h>
@@ -26,10 +31,6 @@
 #include <services/fbs/fbs.h>
 #include <utils/apacmd.h>
 
-#include <QBitmap>
-#include <QLineEdit>
-#include <QPainter>
-#include <QtSvg/QSvgRenderer>
 #include <vector>
 
 #include <loader/mif.h>

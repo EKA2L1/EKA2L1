@@ -392,7 +392,7 @@ namespace eka2l1::mem {
             linear_section *sec = get_section(create_flags_);
 
             if (sec)
-                sec->alloc_.free((base_ - sec->beg_) >> control_->page_size_bits_, max_size_ >> control_->page_size_bits_);
+                sec->alloc_.deallocate((base_ - sec->beg_) >> control_->page_size_bits_, max_size_ >> control_->page_size_bits_);
         }
 
         if (is_code) {

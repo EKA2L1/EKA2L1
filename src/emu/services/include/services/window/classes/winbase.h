@@ -86,9 +86,9 @@ namespace eka2l1::epoc {
             flag_focus_receiveable = 1 << 12,
             flag_winmode_fixed = 1 << 13,
             flag_visiblity_event_report = 1 << 14,
-            flag_has_redraw_content = 1 << 15,
+            flag_has_redraw_store = 1 << 15,
             flag_content_changed = 1 << 16,
-            flag_shape_region = 1 << 17,            // Only support region and square on the emulator, others are too complicated
+            flag_shape_region = 1 << 17            // Only support region and square on the emulator, others are too complicated
         };
 
         std::uint32_t flags;
@@ -187,18 +187,6 @@ namespace eka2l1::epoc {
         void remove_from_sibling_list();
 
         void set_parent(window *parent);
-
-        bool has_redraw_content() const {
-            return flags & flag_has_redraw_content;
-        }
-
-        void has_redraw_content(const bool value) {
-            if (value) {
-                flags |= flag_has_redraw_content;
-            } else {
-                flags &= ~flag_has_redraw_content;
-            }
-        }
 
         explicit window(window_server_client_ptr client, screen *scr, window *parent)
             : window_client_obj(client, scr)

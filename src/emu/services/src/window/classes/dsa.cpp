@@ -63,7 +63,7 @@ namespace eka2l1::epoc {
             sync_thread_->stop();
 
             epoc::chunk_allocator *allocator = client->get_ws().allocator();
-            allocator->free(allocator->to_pointer(sync_status_.ptr_address(), nullptr));
+            allocator->freep(allocator->to_pointer(sync_status_.ptr_address(), nullptr));
 
             sync_thread_ = nullptr;
         }
@@ -219,7 +219,7 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_none);
     }
 
-    void dsa::free(eka2l1::service::ipc_context &context, eka2l1::ws_cmd &cmd) {
+    void dsa::destroy(eka2l1::service::ipc_context &context, eka2l1::ws_cmd &cmd) {
         on_command_batch_done(context);
 
         context.complete(epoc::error_none);
@@ -251,7 +251,7 @@ namespace eka2l1::epoc {
                 break;
 
             case ws_dsa_old_free:
-                free(ctx, cmd);
+                destroy(ctx, cmd);
                 quit = true;
                 break;
 
@@ -289,7 +289,7 @@ namespace eka2l1::epoc {
                 break;
 
             case ws_dsa_free:
-                free(ctx, cmd);
+                destroy(ctx, cmd);
                 quit = true;
                 break;
 

@@ -19,6 +19,7 @@
 
 #include <dispatch/libraries/egl/def.h>
 #include <drivers/graphics/graphics.h>
+#include <services/window/screen.h>
 
 #include <common/log.h>
 
@@ -42,10 +43,14 @@ namespace eka2l1::dispatch {
         , dimension_(dim)
         , associated_thread_uid_(0)
         , dead_pending_(false)
+        , current_scale_(1.0f)
         , bounded_context_(nullptr) {
+        if (screen) {
+            current_scale_ = screen->display_scale_factor;
+        }
     }
 
-    void egl_context::free(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) {
+    void egl_context::destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) {
         drivers::command_list retrieved = builder.retrieve_command_list();
         driver->submit_command_list(retrieved);
     }
@@ -61,7 +66,7 @@ namespace eka2l1::dispatch {
 
         for (auto &ctx: contexts_) {
             if (ctx) {
-                ctx->free(driver_, cmd_builder);
+                ctx->destroy(driver_, cmd_builder);
                 freed_once = true;
             }
         }
@@ -118,7 +123,7 @@ namespace eka2l1::dispatch {
             ite->second->read_surface_ = nullptr;
 
             if (ite->second->dead_pending_) {
-                ite->second->free(driver_, ite->second->cmd_builder_);
+                ite->second->destroy(driver_, ite->second->cmd_builder_);
             } else {    
                 // Submit pending works...
                 drivers::command_list list = ite->second->cmd_builder_.retrieve_command_list();
@@ -241,7 +246,7 @@ namespace eka2l1::dispatch {
 
         if (can_del_imm) {
             drivers::graphics_command_builder builder;
-            context_ptr->get()->free(driver_, builder);
+            context_ptr->get()->destroy(driver_, builder);
 
             drivers::command_list retrieved = builder.retrieve_command_list();
             driver_->submit_command_list(retrieved);

@@ -299,7 +299,7 @@ namespace eka2l1::dispatch {
         }
 
         void initialize(drivers::graphics_driver *drv, const std::size_t size_per_buffer);
-        void free(drivers::graphics_command_builder &builder);
+        void destroy(drivers::graphics_command_builder &builder);
         void done_frame();
 
         drivers::handle push_buffer(const std::uint8_t *data, const std::size_t buffer_size, std::size_t &buffer_offset);
@@ -486,7 +486,7 @@ namespace eka2l1::dispatch {
         drivers::handle binded_texture_driver_handle();
 
         void init_context_state() override;
-        void free(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) override;
+        void destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) override;
         void return_handle_to_pool(const gles1_object_type type, const drivers::handle h);
         void on_surface_changed(egl_surface *prev_read, egl_surface *prev_draw) override;
         void flush_to_driver(drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) override;

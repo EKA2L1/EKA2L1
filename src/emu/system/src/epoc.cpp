@@ -849,6 +849,10 @@ namespace eka2l1 {
 
         dispatcher_.reset();
 
+        if (cpu) {
+            cpu->clear_instruction_cache();
+        }
+
         if (kern_) {
             kern_->reset();
         }

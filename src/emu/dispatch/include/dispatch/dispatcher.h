@@ -138,7 +138,7 @@ namespace eka2l1::dispatch {
     public:
         explicit dsp_epoc_audren_sema();
 
-        bool free() const;
+        bool destroy() const;
 
         // Argument reserved
         void acquire(void * /* owner */);
@@ -207,7 +207,7 @@ namespace eka2l1::dispatch {
         void complete_notify(epoc::notify_info *info);
 
         void construct(ntimer *timing);
-        void free(drivers::graphics_driver *drv);
+        void destroy(drivers::graphics_driver *drv);
 
         void wait_vsync(epoc::screen *scr, epoc::notify_info &info);
         void cancel_wait_vsync(const epoc::notify_info &info);

@@ -67,6 +67,6 @@ namespace eka2l1::mem::flexible {
          * 
          * @see     allocate
          */
-        bool free(const asid id);
+        bool free_one(const asid id);
     };
 }

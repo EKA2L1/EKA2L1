@@ -458,6 +458,7 @@ namespace eka2l1::android {
 
         eka2l1::vec2 swapchain_size(window_width, window_height);
         viewport.size = swapchain_size;
+
         builder.set_swapchain_size(swapchain_size);
 
         builder.backup_state();
@@ -468,7 +469,6 @@ namespace eka2l1::android {
         builder.set_feature(eka2l1::drivers::graphics_feature::blend, false);
         builder.set_feature(drivers::graphics_feature::clipping, false);
         builder.set_feature(drivers::graphics_feature::stencil_test, false);
-        //builder->set_clipping(true);
         builder.set_viewport(viewport);
 
         builder.clear({ background_color_[0] / 255.0f, background_color_[1] / 255.0f, background_color_[2] / 255.0f, 1.0f, 0.0f, 0.0f },
@@ -495,6 +495,7 @@ namespace eka2l1::android {
                     // try to fit in width
                     width = swapchain_size.x;
                     height = size.y * swapchain_size.x / size.x;
+
                     if (height > swapchain_size.y) {
                         // if height is too big, then fit in height
                         height = swapchain_size.y;
@@ -504,6 +505,7 @@ namespace eka2l1::android {
                 case 2:
                     // scaling without preserving the aspect ratio:
                     // just stretch the picture to full screen
+                    // Upscale factor is the min factor of scale width and height
                     width = swapchain_size.x;
                     height = swapchain_size.y;
                     break;
@@ -535,8 +537,11 @@ namespace eka2l1::android {
                     break;
             }
 
-            scr->scale_x = width / size.x;
-            scr->scale_y = height / size.y;
+            const float scale_x = width / static_cast<float>(size.x);
+            const float scale_y = height / static_cast<float>(size.y);
+
+            scr->set_native_scale_factor(sys->get_graphics_driver(), scale_x, scale_y);
+
             scr->absolute_pos.x = static_cast<int>(x);
             scr->absolute_pos.y = static_cast<int>(y);
 
@@ -550,10 +555,12 @@ namespace eka2l1::android {
                 std::swap(src.size.x, src.size.y);
             }
 
+            src.size *= scr->display_scale_factor;
+
             builder.set_texture_filter(scr->screen_texture, false, filter);
             builder.set_texture_filter(scr->screen_texture, true, filter);
             builder.draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0),
-                                 static_cast<float>(scr->ui_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
+                                 static_cast<float>(scr->ui_rotation), 0);
         }
 
         builder.load_backup_state();

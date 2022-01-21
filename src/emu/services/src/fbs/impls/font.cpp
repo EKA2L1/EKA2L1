@@ -951,7 +951,7 @@ namespace eka2l1 {
 
     fbsfont::~fbsfont() {
         // Free atlas + bitmap
-        atlas.free(serv->get_graphics_driver());
+        atlas.destroy(serv->get_graphics_driver());
         std::uint8_t *font_ptr = serv->get_shared_chunk_base() + guest_font_offset;
 
         switch (serv->legacy_level()) {

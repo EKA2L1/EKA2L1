@@ -335,7 +335,7 @@ namespace eka2l1::epoc {
         window_client_obj_ptr win = nullptr;
         switch (header->win_type) {
         case epoc::window_type::redraw:
-            win = std::make_unique<epoc::free_modify_canvas>(this, parent->scr, (parent->type == window_kind::group) ? parent->child : parent,
+            win = std::make_unique<epoc::redraw_msg_canvas>(this, parent->scr, (parent->type == window_kind::group) ? parent->child : parent,
                 disp, header->client_handle);
 
             break;
@@ -739,7 +739,7 @@ namespace eka2l1::epoc {
                 epoc::canvas_base *user = reinterpret_cast<epoc::canvas_base *>(win);
 
                 if (user->win_type == epoc::window_type::redraw) {
-                    epoc::free_modify_canvas *fm_user = reinterpret_cast<epoc::free_modify_canvas*>(win);
+                    epoc::redraw_msg_canvas *fm_user = reinterpret_cast<epoc::redraw_msg_canvas*>(win);
                     fm_user->clear_redraw_store();
                 }
             }
@@ -1589,18 +1589,10 @@ namespace eka2l1 {
 
         scr->screen_mutex.lock();
 
-        float factor_to_divide_x = scr->scale_x;
-        float factor_to_divide_y = scr->scale_y;
-
-        if (scr->ui_rotation % 180 != 0) {
-            factor_to_divide_x = scr->scale_y;
-            factor_to_divide_y = scr->scale_x;
-        }
-
         guest_evt_.adv_pointer_evt_.pos.x = static_cast<int>(static_cast<float>(driver_evt_.mouse_.pos_x_ - scr->absolute_pos.x)
-            / factor_to_divide_x);
+            / scr->logic_scale_factor_x);
         guest_evt_.adv_pointer_evt_.pos.y = static_cast<int>(static_cast<float>(driver_evt_.mouse_.pos_y_ - scr->absolute_pos.y)
-            / factor_to_divide_y);
+            / scr->logic_scale_factor_y);
 
         const int orgx = guest_evt_.adv_pointer_evt_.pos.x;
         const int orgy = guest_evt_.adv_pointer_evt_.pos.y;
@@ -1680,8 +1672,8 @@ namespace eka2l1 {
 
         case drivers::input_event_type::touch: {
             epoc::screen *scr = get_current_focus_screen();
-            eka2l1::vec2 screen_size_scaled(static_cast<int>(std::roundf(scr->current_mode().size.x * scr->scale_x)),
-                static_cast<int>(std::roundf(scr->current_mode().size.y * scr->scale_y)));
+            eka2l1::vec2 screen_size_scaled(static_cast<int>(std::roundf(scr->current_mode().size.x * scr->logic_scale_factor_x)),
+                static_cast<int>(std::roundf(scr->current_mode().size.y * scr->logic_scale_factor_y)));
 
             if (scr->ui_rotation % 180 != 0) {
                 std::swap(screen_size_scaled.x, screen_size_scaled.y);
@@ -2235,6 +2227,10 @@ namespace eka2l1 {
         }
 
         return nullptr;
+    }
+
+    fbsbitmap *window_server::get_raw_fbsbitmap(const std::uint32_t h) {
+        return get_fbs_server()->get<fbsbitmap>(h);
     }
 
     void window_server::set_keyboard_repeat_rate(const std::uint64_t initial_time, const std::uint64_t next_time) {

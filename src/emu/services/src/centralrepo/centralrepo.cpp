@@ -627,7 +627,6 @@ namespace eka2l1 {
         }
 
         // Bie...
-        client_subsessions.erase(repo_subsession_ite);
         return 0;
     }
 
@@ -638,7 +637,12 @@ namespace eka2l1 {
             return -1;
         }
 
-        return closerep(io, mngr, repo_id, repo_subsession_ite);
+        const int result = closerep(io, mngr, repo_id, repo_subsession_ite);
+        if (result == 0) {
+            client_subsessions.erase(repo_subsession_ite);
+        }
+
+        return result;
     }
 
     void central_repo_client_session::close(service::ipc_context *ctx) {

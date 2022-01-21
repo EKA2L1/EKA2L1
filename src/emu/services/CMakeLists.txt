@@ -254,6 +254,7 @@ add_library(epocservs
         src/window/classes/dsa.cpp
         src/window/classes/gctx.cpp
         src/window/classes/scrdvc.cpp
+        src/window/classes/gstore.cpp
         src/window/classes/winbase.cpp
         src/window/classes/wingroup.cpp
         src/window/classes/winuser.cpp

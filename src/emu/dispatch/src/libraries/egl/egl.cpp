@@ -245,7 +245,7 @@ namespace eka2l1::dispatch {
             return EGL_NO_SURFACE_EMU;
         }
 
-        drivers::handle hh = drivers::create_bitmap(driver, canvas->size(), choosen_config.buffer_size());
+        drivers::handle hh = drivers::create_bitmap(driver, canvas->size() * canvas->scr->display_scale_factor, choosen_config.buffer_size());
         if (hh == 0) {
             egl_push_error(sys, EGL_BAD_CONFIG);
             return EGL_NO_SURFACE_EMU;
@@ -330,6 +330,7 @@ namespace eka2l1::dispatch {
         std::unique_ptr<egl_surface> result_surface = std::make_unique<egl_surface>(nullptr,
             backed_screen, dim, hh, egl_config::EGL_SURFACE_TYPE_PBUFFER);
 
+        result_surface->current_scale_ = 1.0f;
         egl_surface_handle result_handle = controller.add_managed_surface(result_surface);
 
         if (result_handle == EGL_NO_SURFACE_EMU) {
@@ -462,22 +463,24 @@ namespace eka2l1::dispatch {
 
         if (surface->backed_window_) {
             egl_context *ctx = surface->bounded_context_;
-            if (ctx) {
-                if (!surface->backed_window_->driver_win_id) {
-                    surface->backed_window_->driver_win_id = drivers::create_bitmap(drv, surface->backed_window_->size(), 32);
-                }
+            if (surface->current_scale_ != surface->backed_screen_->display_scale_factor) {
+                // Silently resize and scale
+                float new_display_factor = surface->backed_screen_->display_scale_factor;
+                eka2l1::vec2 new_scaled_size = surface->dimension_ * new_display_factor;
 
-                eka2l1::rect draw_rect(eka2l1::vec2(0, 0), surface->dimension_);
+                drivers::handle new_surface = drivers::create_bitmap(drv, new_scaled_size, 32);
 
-                ctx->cmd_builder_.set_feature(drivers::graphics_feature::clipping, false);
-                ctx->cmd_builder_.set_feature(drivers::graphics_feature::depth_test, false);
-                ctx->cmd_builder_.set_feature(drivers::graphics_feature::cull, false);
-                ctx->cmd_builder_.set_feature(drivers::graphics_feature::blend, false);
+                ctx->cmd_builder_.bind_bitmap(new_surface);
+                ctx->cmd_builder_.draw_bitmap(surface->handle_, 0, eka2l1::rect(eka2l1::vec2(0, 0), new_scaled_size),
+                    eka2l1::rect(eka2l1::vec2(0, 0), eka2l1::vec2(0, 0)));
+                ctx->cmd_builder_.destroy_bitmap(surface->handle_);
 
-                ctx->cmd_builder_.bind_bitmap(surface->backed_window_->driver_win_id);
-                ctx->cmd_builder_.draw_bitmap(surface->handle_, 0, draw_rect, draw_rect, eka2l1::vec2(0, 0), 0.0f, drivers::bitmap_draw_flag_no_flip);
+                surface->handle_ = new_surface;
+                surface->current_scale_ = surface->backed_screen_->display_scale_factor;
+            }
 
-                surface->backed_window_->has_redraw_content(true);
+            if (ctx && surface->backed_window_->can_be_physically_seen()) {
+                surface->backed_window_->surface_post_queue_.push(surface->handle_);
             }
         }
 

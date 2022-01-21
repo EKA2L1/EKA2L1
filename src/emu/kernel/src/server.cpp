@@ -164,6 +164,10 @@ namespace eka2l1::service {
     }
 
     void server::cancel_async_lle() {
+        if (!request_own_thread) {
+            return;
+        }
+
         if (!request_status) {
             request_own_thread->signal_request();
             return;

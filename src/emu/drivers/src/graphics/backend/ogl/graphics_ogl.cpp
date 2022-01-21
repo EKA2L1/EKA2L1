@@ -241,7 +241,6 @@ namespace eka2l1::drivers {
         color_loc = sprite_program->get_uniform_location("u_color").value_or(-1);
         proj_loc = sprite_program->get_uniform_location("u_proj").value_or(-1);
         model_loc = sprite_program->get_uniform_location("u_model").value_or(-1);
-        flip_loc = sprite_program->get_uniform_location("u_flip").value_or(-1);
         in_position_loc = sprite_program->get_attrib_location("in_position").value_or(-1);
         in_texcoord_loc = sprite_program->get_attrib_location("in_texcoord").value_or(-1);
 
@@ -255,7 +254,6 @@ namespace eka2l1::drivers {
         invert_loc_mask = mask_program->get_uniform_location("u_invert").value_or(-1);
         source_loc_mask = mask_program->get_uniform_location("u_tex").value_or(-1);
         mask_loc_mask = mask_program->get_uniform_location("u_mask").value_or(-1);
-        flip_loc_mask = mask_program->get_uniform_location("u_flip").value_or(-1);
         flat_blend_loc_mask = mask_program->get_uniform_location("u_flat").value_or(-1);
         in_position_loc_mask = mask_program->get_attrib_location("in_position").value_or(-1);
         in_texcoord_loc_mask = mask_program->get_attrib_location("in_texcoord").value_or(-1);
@@ -292,6 +290,18 @@ namespace eka2l1::drivers {
         unpack_u64_to_2u32(cmd.data_[0], brush_rect.top.x, brush_rect.top.y);
         unpack_u64_to_2u32(cmd.data_[1], brush_rect.size.x, brush_rect.size.y);
 
+        if (brush_rect.size.x == 0) {
+            brush_rect.size.x = current_fb_width;
+        }
+
+        if (brush_rect.size.y == 0) {
+            brush_rect.size.y = current_fb_height;
+        }
+
+        if (!binding) {
+            brush_rect.top.y = current_fb_height - (brush_rect.size.y + brush_rect.top.y);
+        }
+
         brush_program->use(this);
 
         // Build model matrix
@@ -313,7 +323,7 @@ namespace eka2l1::drivers {
             0.0f,
             0.0f,
             1.0f,
-            1.0f,
+            1.0f
         };
 
         glBindVertexArray(brush_vao);
@@ -413,10 +423,36 @@ namespace eka2l1::drivers {
             1.0f,
             1.0f,
             1.0f,
-            1.0f,
+            1.0f
         };
 
+        static GLfloat verts_default_flipped[] = {
+            0.0f,
+            1.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            0.0f,
+            1.0f,
+            1.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            1.0f,
+            1.0f,
+            1.0f,
+            0.0f
+        };
+
+        std::uint32_t flags = static_cast<std::uint32_t>(cmd.data_[7] >> 32);
         void *vert_pointer = verts_default;
+
+        bool need_texture_flip = (flags & bitmap_draw_flag_flip);
+        if (!binding) {
+            // The surface will be filpped manually by the OS handler, so we revert our coordinate
+            need_texture_flip = !need_texture_flip;
+        }
 
         if (!source_rect.empty()) {
             const float texel_width = 1.0f / draw_texture->get_size().x;
@@ -450,7 +486,16 @@ namespace eka2l1::drivers {
             verts[3].coord[0] = (source_rect.top.x + source_rect.size.x) * texel_width;
             verts[3].coord[1] = (source_rect.top.y + source_rect.size.y) * texel_height;
 
+            if (need_texture_flip) {
+                verts[0].coord[1] = 1.0f - verts[0].coord[1];
+                verts[1].coord[1] = 1.0f - verts[1].coord[1];
+                verts[2].coord[1] = 1.0f - verts[2].coord[1];
+                verts[3].coord[1] = 1.0f - verts[3].coord[1];
+            }
+
             vert_pointer = verts;
+        } else if (need_texture_flip) {
+            vert_pointer = verts_default_flipped;
         }
 
         glBindVertexArray(sprite_vao);
@@ -494,6 +539,10 @@ namespace eka2l1::drivers {
         if (dest_rect.size.y == 0) {
             dest_rect.size.y = source_rect.size.y;
         }
+        
+        if (!binding) {
+            dest_rect.top.y = current_fb_height - (dest_rect.top.y + dest_rect.size.y);
+        }
 
         model_matrix = glm::translate(model_matrix, glm::vec3(static_cast<float>(origin.x), static_cast<float>(origin.y), 0.0f));
         model_matrix = glm::rotate(model_matrix, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -505,8 +554,6 @@ namespace eka2l1::drivers {
         glUniformMatrix4fv((mask_draw_texture ? proj_loc_mask : proj_loc), 1, false, glm::value_ptr(projection_matrix));
 
         // Supply brush
-        std::uint32_t flags = static_cast<std::uint32_t>(cmd.data_[7] >> 32);
-
         const GLfloat color[] = { 255.0f, 255.0f, 255.0f, 255.0f };
 
         if (flags & bitmap_draw_flag_use_brush) {
@@ -514,8 +561,6 @@ namespace eka2l1::drivers {
         } else {
             glUniform4fv((mask_draw_texture ? color_loc_mask : color_loc), 1, color);
         }
-
-        glUniform1f((mask_draw_texture ? flip_loc_mask : flip_loc), (flags & bitmap_draw_flag_no_flip) ? 1.0f : -1.0f);
 
         if (mask_draw_texture) {
             glUniform1f(invert_loc_mask, (flags & bitmap_draw_flag_invert_mask) ? 1.0f : 0.0f);
@@ -533,7 +578,14 @@ namespace eka2l1::drivers {
         unpack_u64_to_2u32(cmd.data_[0], clip_rect.top.x, clip_rect.top.y);
         unpack_u64_to_2u32(cmd.data_[1], clip_rect.size.x, clip_rect.size.y);
 
-        glScissor(clip_rect.top.x, (clip_rect.size.y > 0) ? (current_fb_height - (clip_rect.top.y - clip_rect.size.y)) : clip_rect.top.y, clip_rect.size.x, common::abs(clip_rect.size.y));
+        if (cmd.opcode_ == drivers::graphics_driver_clip_bitmap_rect) {
+            if (binding != nullptr) {
+                // Top left translated by shader is bottom left now
+                clip_rect.size.y *= -1;
+            }
+        }
+
+        glScissor(clip_rect.top.x, ((clip_rect.size.y < 0) ? clip_rect.top.y : (current_fb_height - (clip_rect.top.y + clip_rect.size.y))), clip_rect.size.x, common::abs(clip_rect.size.y));
     }
 
     static GLenum prim_mode_to_gl_enum(const graphics_primitive_mode prim_mode) {
@@ -612,7 +664,7 @@ namespace eka2l1::drivers {
     }
 
     void ogl_graphics_driver::set_viewport(const eka2l1::rect &viewport) {
-        glViewport(viewport.top.x, current_fb_height - (viewport.top.y + viewport.size.y), viewport.size.x, viewport.size.y);
+        glViewport(viewport.top.x, ((viewport.size.y < 0) ? viewport.top.y : (current_fb_height - (viewport.top.y + viewport.size.y))), viewport.size.x, common::abs(viewport.size.y));
     }
 
     void ogl_graphics_driver::set_feature(command &cmd) {
@@ -695,6 +747,13 @@ namespace eka2l1::drivers {
         eka2l1::rect viewport;
         unpack_u64_to_2u32(cmd.data_[0], viewport.top.x, viewport.top.y);
         unpack_u64_to_2u32(cmd.data_[1], viewport.size.x, viewport.size.y);
+
+        if (cmd.opcode_ == drivers::graphics_driver_clip_bitmap_rect) {
+            if (binding != nullptr) {
+                // Top left translated by shader is bottom left now
+                viewport.size.y *= -1;
+            }
+        }
 
         set_viewport(viewport);
     }
@@ -1336,7 +1395,8 @@ namespace eka2l1::drivers {
             break;
         }
 
-        case graphics_driver_clip_rect: {
+        case graphics_driver_clip_rect:
+        case graphics_driver_clip_bitmap_rect: {
             clip_rect(cmd);
             break;
         }
@@ -1387,7 +1447,8 @@ namespace eka2l1::drivers {
             break;
         }
 
-        case graphics_driver_set_viewport: {
+        case graphics_driver_set_viewport:
+        case graphics_driver_set_bitmap_viewport: {
             set_viewport(cmd);
             break;
         }

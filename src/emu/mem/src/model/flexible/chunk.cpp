@@ -100,7 +100,7 @@ namespace eka2l1::mem::flexible {
 
         // TODO: This does not seems safe...
         if (page_bma_) {
-            page_bma_->free(dropping_place, static_cast<int>(total_page_to_decommit));
+            page_bma_->deallocate(dropping_place, static_cast<int>(total_page_to_decommit));
         }
 
         committed_ -= static_cast<std::uint32_t>(total_page_to_decommit << control_->page_size_bits_);
@@ -116,7 +116,7 @@ namespace eka2l1::mem::flexible {
             LOG_ERROR(MEMORY, "Unable to allocate requested size!");
 
             if (page_offset != -1) {
-                page_bma_->free(page_offset, page_allocated);
+                page_bma_->deallocate(page_offset, page_allocated);
             }
 
             return false;

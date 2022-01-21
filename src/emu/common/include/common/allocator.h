@@ -32,7 +32,7 @@ namespace eka2l1::common {
     class allocator {
     public:
         virtual void *allocate(std::size_t s) = 0;
-        virtual bool free(const void *ptr) = 0;
+        virtual bool freep(const void *ptr) = 0;
     };
 
     class space_based_allocator : public allocator {
@@ -72,7 +72,7 @@ namespace eka2l1::common {
         explicit block_allocator(std::uint8_t *sptr, const std::size_t initial_max_size);
 
         void *allocate(std::size_t bytes) override;
-        bool free(const void *ptr) override;
+        bool freep(const void *ptr) override;
 
         virtual bool expand(std::size_t target) override {
             return false;
@@ -94,7 +94,7 @@ namespace eka2l1::common {
 
         int force_fill(const std::uint32_t offset, const int size, const bool or_mode = false);
         int allocate_from(const std::uint32_t start_offset, int &size, const bool best_fit = false);
-        void free(const std::uint32_t offset, const int size);
+        void deallocate(const std::uint32_t offset, const int size);
 
         /**
          * @brief   Get the number of allocated cells from specified region.

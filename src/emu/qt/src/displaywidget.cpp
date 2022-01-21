@@ -17,15 +17,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <common/algorithm.h>
-#include <common/log.h>
-#include <qt/displaywidget.h>
-
 #include <QWindow>
 #include <QKeyEvent>
 #include <QMouseEvent>
 #include <QMessageBox>
 #include <QGuiApplication>
+
+#include <common/algorithm.h>
+#include <common/log.h>
+#include <qt/displaywidget.h>
 
 #if !(defined(WIN32) || defined(__APPLE__) || defined(__HAIKU__))
 #include <qpa/qplatformnativeinterface.h>

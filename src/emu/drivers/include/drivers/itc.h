@@ -201,7 +201,22 @@ namespace eka2l1::drivers {
             return copy;
         }
 
-        void set_brush_color_detail(const eka2l1::vecx<int, 4> &color);
+        bool merge(command_list &another) {
+            if (list_.base_ == nullptr) {
+                list_ = another;
+            } else {
+                if (another.size_ + list_.size_ > list_.max_cap_) {
+                    return false;
+                }
+
+                std::memcpy(list_.base_ + list_.size_, another.base_, another.size_ * sizeof(command));
+                list_.size_ += another.size_;
+            }
+
+            return true;
+        }
+
+        void set_brush_color_detail(const eka2l1::vec4 &color);
 
         void set_brush_color(const eka2l1::vec3 &color) {
             set_brush_color_detail({ color.x, color.y, color.z, 255 });
@@ -215,6 +230,7 @@ namespace eka2l1::drivers {
          * If the height is negative, the clip will use left-hand coordinates.
          */
         void clip_rect(const eka2l1::rect &rect);
+        void clip_bitmap_rect(const eka2l1::rect &rect);
 
         /**
           * \brief Clear the binding bitmap with color.
@@ -396,6 +412,7 @@ namespace eka2l1::drivers {
          * \param viewport_rect     The rectangle to set viewport to
          */
         void set_viewport(const eka2l1::rect &viewport_rect);
+        void set_bitmap_viewport(const eka2l1::rect &viewport_rect);
 
         /**
          * \brief Enable/disable a graphic feature.

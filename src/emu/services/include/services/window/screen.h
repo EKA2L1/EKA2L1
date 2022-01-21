@@ -68,8 +68,10 @@ namespace eka2l1::epoc {
         int ui_rotation; ///< Rotation for UI display. So nikita can skip neck day.
 
         std::uint8_t refresh_rate;
-        float scale_x;
-        float scale_y;
+
+        float display_scale_factor;
+        float logic_scale_factor_x;
+        float logic_scale_factor_y;
 
         // The root window, used to traverse window tree
         // Draw order will be child in front of parent, newer in front of older.
@@ -178,6 +180,8 @@ namespace eka2l1::epoc {
          * \brief Set screen mode.
          */
         void set_screen_mode(window_server *winserv, drivers::graphics_driver *drv, const int mode);
+        void set_native_scale_factor(drivers::graphics_driver *driver, const float scale_factor_x,
+            const float scale_factor_y);
 
         /**
          * \brief Resize the screen.

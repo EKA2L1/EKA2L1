@@ -121,8 +121,8 @@ namespace eka2l1 {
         OBJECT_CONTAINER_CLEANUP(semas_);
         OBJECT_CONTAINER_CLEANUP(change_notifiers_);
         OBJECT_CONTAINER_CLEANUP(undertakers_);
-        OBJECT_CONTAINER_CLEANUP(props_);
         OBJECT_CONTAINER_CLEANUP(prop_refs_);
+        OBJECT_CONTAINER_CLEANUP(props_);
         OBJECT_CONTAINER_CLEANUP(chunks_);
         OBJECT_CONTAINER_CLEANUP(threads_);
         OBJECT_CONTAINER_CLEANUP(processes_);

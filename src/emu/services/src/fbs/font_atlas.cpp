@@ -51,7 +51,7 @@ namespace eka2l1::epoc {
         atlas_data_.reset();
     }
 
-    void font_atlas::free(drivers::graphics_driver *driver) {
+    void font_atlas::destroy(drivers::graphics_driver *driver) {
         if (atlas_handle_) {
             drivers::graphics_command_builder builder;
             builder.destroy_bitmap(atlas_handle_);
@@ -66,14 +66,18 @@ namespace eka2l1::epoc {
         if (pack_handle_) {
             adapter_->end_get_atlas(pack_handle_);
         }
+
+        last_use_.clear();
+        characters_.clear();
     }
 
     int font_atlas::get_atlas_width() const {
         return common::align(ESTIMATE_MAX_CHAR_IN_ATLAS_WIDTH * size_, 1024);
     }
 
-    bool font_atlas::draw_text(const std::u16string &text, const eka2l1::rect &text_box, const epoc::text_alignment alignment, drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) {
+    bool font_atlas::draw_text(const std::u16string &text, const eka2l1::rect &text_box, const epoc::text_alignment alignment, drivers::graphics_driver *driver, drivers::graphics_command_builder &builder, const float scale_factor) {
         const int width = get_atlas_width();
+        drivers::graphics_command_builder upload_builder;
 
         if (!atlas_data_) {
             atlas_data_ = std::make_unique<std::uint8_t[]>(width * width);
@@ -96,9 +100,12 @@ namespace eka2l1::epoc {
                 characters_.emplace(initial_range_.first + i, cinfos[i]);
             }
 
+            // Submit the bitmap through another queue, in case the command list above never got submitted
             atlas_handle_ = drivers::create_bitmap(driver, { width, width }, 8);
-            builder.update_bitmap(atlas_handle_, reinterpret_cast<const char *>(atlas_data_.get()),
+
+            upload_builder.update_bitmap(atlas_handle_, reinterpret_cast<const char *>(atlas_data_.get()),
                 width * width, { 0, 0 }, { width, width });
+            upload_builder.set_texture_filter(atlas_handle_, false, drivers::filter_option::nearest);
         }
 
         std::vector<int> to_rast;
@@ -150,7 +157,7 @@ namespace eka2l1::epoc {
                     characters_.emplace(to_rast[i], cinfos[i]);
                 }
 
-                builder.update_bitmap(atlas_handle_, reinterpret_cast<const char *>(atlas_data_.get()),
+                upload_builder.update_bitmap(atlas_handle_, reinterpret_cast<const char *>(atlas_data_.get()),
                     width * width, { 0, 0 }, { width, width });
             }
         }
@@ -163,7 +170,7 @@ namespace eka2l1::epoc {
             float size_length = 0;
 
             for (auto &chr : text) {
-                size_length += characters_[chr].xadv;
+                size_length += characters_[chr].xadv * scale_factor;
             }
 
             if (alignment == epoc::text_alignment::right) {
@@ -193,10 +200,11 @@ namespace eka2l1::epoc {
             source_rect.size = eka2l1::object_size(info.x1 - info.x0, info.y1 - info.y0);
 
             eka2l1::rect dest_rect;
-            dest_rect.top.x = cur_pos.x + static_cast<int>(info.xoff);
-            dest_rect.top.y = cur_pos.y + static_cast<int>(info.yoff);
-            dest_rect.size.x = static_cast<int>(info.xoff2 - info.xoff);
-            dest_rect.size.y = static_cast<int>(info.yoff2 - info.yoff);
+            dest_rect.top.x = cur_pos.x + static_cast<int>(info.xoff * scale_factor);
+            dest_rect.top.y = cur_pos.y + static_cast<int>(info.yoff * scale_factor);
+
+            dest_rect.size.x = static_cast<int>((info.xoff2 - info.xoff) * scale_factor);
+            dest_rect.size.y = static_cast<int>((info.yoff2 - info.yoff) * scale_factor);
 
             if ((dest_rect.size.x != 0) && (dest_rect.size.y != 0) && (source_rect.size.x != 0) && (source_rect.size.y != 0)) {
                 builder.draw_bitmap(atlas_handle_, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), 0.0f,
@@ -204,10 +212,13 @@ namespace eka2l1::epoc {
             }
 
             // TODO: Newline
-            cur_pos.x += static_cast<int>(std::round(info.xadv));
+            cur_pos.x += static_cast<int>(std::round(info.xadv * scale_factor));
         }
 
         builder.set_feature(drivers::graphics_feature::blend, false);
+
+        drivers::command_list retrieved = upload_builder.retrieve_command_list();
+        driver->submit_command_list(retrieved);
 
         return true;
     }

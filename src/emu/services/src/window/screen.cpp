@@ -107,8 +107,9 @@ namespace eka2l1::epoc {
         : number(number)
         , ui_rotation(0)
         , refresh_rate(60)
-        , scale_x(1.0f)
-        , scale_y(1.0f)
+        , display_scale_factor(1.0f)
+        , logic_scale_factor_x(1.0f)
+        , logic_scale_factor_y(1.0f)
         , screen_texture(0)
         , dsa_texture(0)
         , disp_mode(display_mode::color16ma)
@@ -177,10 +178,9 @@ namespace eka2l1::epoc {
         builder.set_feature(eka2l1::drivers::graphics_feature::depth_test, false);
         builder.set_feature(eka2l1::drivers::graphics_feature::blend, false);
 
-        builder.clear(eka2l1::vecx<float, 6>({ 0.0, 0.0, 0.0, 1.0, 1.0, 0.0 }), drivers::draw_buffer_bit_color_buffer | drivers::draw_buffer_bit_depth_buffer
+        builder.clear(eka2l1::vecx<float, 6>({ 0.0, 0.0, 0.0, 1.0, 1.0, 0.0 }), drivers::draw_buffer_bit_depth_buffer
             | drivers::draw_buffer_bit_stencil_buffer);
 
-        builder.set_feature(drivers::graphics_feature::blend, true);
         builder.blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
             drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
             drivers::blend_factor::one, drivers::blend_factor::one);
@@ -209,7 +209,7 @@ namespace eka2l1::epoc {
         eka2l1::drivers::command_list retrieved = builder.retrieve_command_list();
         driver->submit_command_list(retrieved);
 
-        if (performed && sync_screen_buffer) {
+        if (performed && sync_screen_buffer && (display_scale_factor == 1.0f)) {
             sync_screen_buffer_data(driver);
         }
 
@@ -246,12 +246,14 @@ namespace eka2l1::epoc {
         drivers::graphics_command_builder builder;
         bool need_bind = true;
 
+        eka2l1::vec2 screen_size_scaled = current_mode().size * display_scale_factor;
+
         if (!screen_texture) {
             // Create new one!
-            screen_texture = drivers::create_bitmap(driver, new_size, 32);
+            screen_texture = drivers::create_bitmap(driver, screen_size_scaled, 32);
         } else {
             builder.bind_bitmap(screen_texture);
-            builder.resize_bitmap(screen_texture, new_size);
+            builder.resize_bitmap(screen_texture, screen_size_scaled);
 
             need_bind = false;
         }
@@ -535,7 +537,8 @@ namespace eka2l1::epoc {
         bool do_it(epoc::window *win) override {
             if (win->type == epoc::window_kind::client) {
                 epoc::canvas_base *winuser = reinterpret_cast<epoc::canvas_base*>(win);
-                
+                common::region previous_region = winuser->visible_region;
+
                 winuser->visible_region.make_empty();
 
                 if (!visible_left_region_.empty() && winuser->is_visible()) {
@@ -549,6 +552,20 @@ namespace eka2l1::epoc {
                     // Eliminating the intersected region that is reserved for this window, we got the next region left to go on.
                     winuser->visible_region = winuser->visible_region.intersect(visible_left_region_);
                     visible_left_region_.eliminate(winuser->visible_region);
+                }
+
+                if (!winuser->visible_region.empty() && (winuser->win_type == epoc::window_type::redraw) && ((winuser->flags & epoc::window::flag_has_redraw_store) == 0)) {
+                    eka2l1::vec2 negated = eka2l1::vec2(0, 0) - winuser->abs_rect.top;
+                    common::region current_region = winuser->visible_region;
+                    current_region.advance(negated);
+
+                    epoc::redraw_msg_canvas *redraw_win = reinterpret_cast<epoc::redraw_msg_canvas*>(winuser);
+                    for (std::size_t i = 0; i < current_region.rects_.size(); i++) {
+                        redraw_win->invalidate(current_region.rects_[i]);
+                    }
+
+                    if (redraw_win->gdi_builder_)
+                        redraw_win->gdi_builder_->set_clip_region(winuser->visible_region);
                 }
 
                 if (winuser->is_dsa_active()) {
@@ -596,6 +613,49 @@ namespace eka2l1::epoc {
             }
         } else {
             flags_ &= ~FLAG_NEED_RECALC_VISIBLE;
+        }
+    }
+
+    void screen::set_native_scale_factor(drivers::graphics_driver *driver, const float new_scale_factor_x,
+        const float new_scale_factor_y) {
+        if (logic_scale_factor_x != new_scale_factor_x) {
+            logic_scale_factor_x = new_scale_factor_x;
+        }
+
+        if (logic_scale_factor_y != new_scale_factor_y) {
+            logic_scale_factor_y = new_scale_factor_y;
+        }
+
+        // We want to keep the original display size in case it's downscale.
+        float correct_display_scale_factor = common::min(new_scale_factor_x, new_scale_factor_y);
+
+        if (correct_display_scale_factor < 1.0f) {
+            correct_display_scale_factor = 1.0f;
+        }
+
+        if (correct_display_scale_factor != display_scale_factor) {
+            // Resize the screen bitmap
+            if (screen_texture) {
+                eka2l1::vec2 screen_size_scaled = current_mode().size * correct_display_scale_factor;
+                drivers::handle new_screen_handle = drivers::create_bitmap(driver, screen_size_scaled, 32);
+
+                // We don't store redraw, so for now draw a scaled version of the window to the new bitmap
+                drivers::graphics_command_builder cmd_builder;
+
+                eka2l1::rect source_rect;           // Empty...
+                eka2l1::rect dest_rect(eka2l1::vec2{0, 0}, screen_size_scaled);
+
+                cmd_builder.bind_bitmap(new_screen_handle);
+                cmd_builder.draw_bitmap(screen_texture, 0, dest_rect, source_rect);
+                cmd_builder.destroy_bitmap(screen_texture);
+
+                drivers::command_list retrieved = cmd_builder.retrieve_command_list();
+                driver->submit_command_list(retrieved);
+
+                screen_texture = new_screen_handle;
+            }
+
+            display_scale_factor = correct_display_scale_factor;
         }
     }
 }

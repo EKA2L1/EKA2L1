@@ -46,7 +46,7 @@ namespace eka2l1::dispatch {
         : own_(0) {
     }
 
-    bool dsp_epoc_audren_sema::free() const {
+    bool dsp_epoc_audren_sema::destroy() const {
         return !own_.load();
     }
 
@@ -276,7 +276,7 @@ namespace eka2l1::dispatch {
                 return epoc::error_general;
             }
 
-            manager.audio_renderer_semaphore()->free();
+            manager.audio_renderer_semaphore()->destroy();
         }
 
         return epoc::error_none;

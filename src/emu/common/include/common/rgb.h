@@ -27,11 +27,11 @@
 #include <cstdint>
 
 namespace eka2l1::common {
-    inline vecx<std::uint8_t, 4> rgba_to_vec(const std::uint32_t rgba) {
-        return vecx<std::uint8_t, 4>{ static_cast<std::uint8_t>(rgba & 0x000000FF),
+    inline vec4 rgba_to_vec(const std::uint32_t rgba) {
+        return vec4(static_cast<std::uint8_t>(rgba & 0x000000FF),
             static_cast<std::uint8_t>((rgba & 0x0000FF00) >> 8),
             static_cast<std::uint8_t>((rgba & 0x00FF0000) >> 16),
-            static_cast<std::uint8_t>(rgba >> 24) };
+            static_cast<std::uint8_t>(rgba >> 24));
     }
 
     using rgba = std::uint32_t;

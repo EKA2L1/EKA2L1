@@ -120,6 +120,7 @@ namespace eka2l1::drivers {
 
     bitmap::~bitmap() {
         tex.reset();
+        ds_tex.reset();
         fb.reset();
     }
 

@@ -55,6 +55,7 @@
 namespace eka2l1 {
     class window_server;
     class fbs_server;
+    struct fbsbitmap;
 
     namespace drivers {
         class graphics_driver;
@@ -446,6 +447,7 @@ namespace eka2l1 {
         epoc::screen *get_screen(const int number);
 
         epoc::bitwise_bitmap *get_bitmap(const std::uint32_t h);
+        fbsbitmap *get_raw_fbsbitmap(const std::uint32_t h);
 
         epoc::window_group *get_group_from_id(const epoc::ws::uid id);
         epoc::window_group *get_starting_group();

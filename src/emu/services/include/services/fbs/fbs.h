@@ -522,6 +522,9 @@ namespace eka2l1 {
          */
         fbsfont *get_font(const service::uid id);
 
+        bool is_heap_busy();
+        void spin_wait_heap(const std::uint32_t max_times = 200);
+
         template <typename T>
         bool free_general_data(const T *dat) {
             return free_general_data_impl(dat);

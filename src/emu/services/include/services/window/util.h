@@ -31,6 +31,7 @@ namespace eka2l1 {
     }
 
     std::optional<common::region> get_region_from_context(service::ipc_context &ctx, ws_cmd &cmd);
-    void clip_region(drivers::graphics_command_builder &builder, const common::region &region,
-        const bool stencil_one_for_valid = true);
+    void clip_multiple_rects(drivers::graphics_command_builder &builder, const eka2l1::rect *rects, const std::size_t rect_count, const float scale_factor, const bool stencil_one_for_valid, const eka2l1::vec2 &offset = eka2l1::vec2(0, 0));
+    void clip_region(drivers::graphics_command_builder &cmd_builder, const common::region &region, const float scale_factor, const bool stencil_one_for_valid = true, const eka2l1::vec2 &offset = eka2l1::vec2(0, 0));
+    void scale_rectangle(eka2l1::rect &r, const float scale_factor);
 }

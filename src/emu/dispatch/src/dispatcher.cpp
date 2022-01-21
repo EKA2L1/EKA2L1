@@ -94,7 +94,7 @@ namespace eka2l1::dispatch {
     }
 
     void dispatcher::shutdown(drivers::graphics_driver *driver) {
-        post_transferer_.free(driver);
+        post_transferer_.destroy(driver);
     }
 
     void dispatcher::update_all_screens(eka2l1::system *sys) {

@@ -123,6 +123,10 @@ namespace eka2l1 {
         vec2 operator*(const int rhs) const {
             return vec2(x * rhs, y * rhs);
         }
+        
+        vec2 operator*(const float rhs) const {
+            return vec2(static_cast<int>(x * rhs), static_cast<int>(y * rhs));
+        }
 
         bool operator==(const vec2 &rhs) const {
             return (x == rhs.x) && (y == rhs.y);
@@ -148,6 +152,11 @@ namespace eka2l1 {
         void operator-=(const vec2 &rhs) {
             x -= rhs.x;
             y -= rhs.y;
+        }
+
+        void operator*=(const float rhs) {
+            x = static_cast<int>(x * rhs);
+            y = static_cast<int>(y * rhs);
         }
 
         void operator=(const vec2 &rhs) {
@@ -179,6 +188,28 @@ namespace eka2l1 {
 
         vec3 operator*(const int rhs) const {
             return vec3(x * rhs, y * rhs, z * rhs);
+        }
+    };
+
+    struct vec4 : public vec3 {
+        int w;
+        
+        vec4() {}
+
+        vec4(const int x, const int y, const int z, const int w)
+            : vec3(x, y, z)
+            , w(w) {}
+
+        vec4 operator+(const vec4 &rhs) const {
+            return vec4(x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w);
+        }
+
+        vec4 operator-(const vec4 &rhs) const {
+            return vec4(x - rhs.x, y - rhs.y, z - rhs.z, w - rhs.w);
+        }
+
+        vec4 operator*(const int rhs) const {
+            return vec4(x * rhs, y * rhs, z * rhs, w * rhs);
         }
     };
 
@@ -235,6 +266,11 @@ namespace eka2l1 {
             top = { 0, 0 };
             size.x = 0;
             size.y = 0;
+        }
+
+        void scale(const float factor) {
+            size *= factor;
+            top *= factor;
         }
 
         /**

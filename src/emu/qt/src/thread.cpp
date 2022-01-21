@@ -204,7 +204,9 @@ namespace eka2l1::desktop {
         }
 
         state.joystick_controller->start_polling();
+
         // Keep running. User which want to change the graphics backend will have to restart EKA2L1.
+        state.graphics_event.reset();
         state.graphics_driver->run();
 
         result = graphics_driver_thread_deinitialization(state);

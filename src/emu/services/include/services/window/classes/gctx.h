@@ -62,7 +62,6 @@ namespace eka2l1::epoc {
 
     struct graphic_context : public window_client_obj {
         canvas_base *attached_window;
-        drivers::graphics_command_builder cmd_builder;
 
         common::double_linked_queue_element context_attach_link;
         fbsfont *text_font;
@@ -80,8 +79,6 @@ namespace eka2l1::epoc {
         eka2l1::rect clipping_rect;
         common::region clipping_region;
 
-        void flush_queue_to_driver();
-
         void submit_queue_commands(kernel::thread *rq);
         void on_command_batch_done(service::ipc_context &ctx) override;
 
@@ -93,19 +90,17 @@ namespace eka2l1::epoc {
         void reset_context();
         bool no_building() const;
 
-        drivers::handle handle_from_bitwise_bitmap(epoc::bitwise_bitmap *bmp);
-
         void do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left,
             eka2l1::vec2 bottom_right, const std::u16string &text, epoc::text_alignment align,
             const int baseline_offset, const int margin, const bool fill_surrounding);
 
-        void do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h, const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect);
-        bool do_command_set_brush_color();
-        bool do_command_put_pen();
+        void do_command_draw_bitmap(service::ipc_context &ctx, void *bitmap, eka2l1::rect source_rect, eka2l1::rect dest_rect, const std::uint8_t flags);
+        bool get_brush_color(eka2l1::vec4 &color_brush);
+        bool get_pen_color_and_style(eka2l1::vec4 &pen_color, drivers::pen_style &style);
 
         void do_submit_clipping();
 
-        void draw_mask_impl(epoc::bitwise_bitmap *source_bitmap, epoc::bitwise_bitmap *mask_bitmap, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect, const bool invert_mask);
+        void draw_mask_impl(void *source_bitmap, void *mask_bitmap, eka2l1::rect dest_rect, eka2l1::rect source_rect, const std::uint8_t flags);
 
         void active(service::ipc_context &context, ws_cmd cmd);
         void deactive(service::ipc_context &context, ws_cmd &cmd);
@@ -137,7 +132,7 @@ namespace eka2l1::epoc {
         void use_font(service::ipc_context &context, ws_cmd &cmd);
         void discard_font(service::ipc_context &context, ws_cmd &cmd);
         void reset(service::ipc_context &context, ws_cmd &cmd);
-        void free(service::ipc_context &context, ws_cmd &cmd);
+        void destroy(service::ipc_context &context, ws_cmd &cmd);
         void set_clipping_rect(service::ipc_context &context, ws_cmd &cmd);
 
         bool execute_command(service::ipc_context &context, ws_cmd &cmd) override;

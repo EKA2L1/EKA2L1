@@ -21,6 +21,7 @@
 #pragma once
 
 #include <services/window/classes/winbase.h>
+#include <services/window/classes/gstore.h>
 #include <services/window/common.h>
 
 #include <common/linked.h>
@@ -30,6 +31,7 @@
 
 namespace eka2l1 {
     struct fbsbitmap;
+    struct fbsfont;
 
     namespace drivers {
         class graphics_command_builder;
@@ -73,9 +75,6 @@ namespace eka2l1::epoc {
 
         eka2l1::vec2 cursor_pos;
 
-        std::uint64_t driver_win_id;
-        std::uint64_t ping_pong_driver_win_id;
-
         common::region visible_region;
         common::region shape_region;
 
@@ -90,17 +89,21 @@ namespace eka2l1::epoc {
 
         // NOTE: If you ever want to access this and call a function that can directly affect this list elements, copy it first
         std::vector<dsa*> directs_;
+        std::queue<drivers::handle> surface_post_queue_;
 
         explicit canvas_base(window_server_client_ptr client, screen *scr, window *parent, const epoc::window_type type_of_window, const epoc::display_mode dmode, const std::uint32_t client_handle);
-        ~canvas_base() override;
+        virtual ~canvas_base() override;
 
-        virtual void wipeout();
-        virtual bool draw(drivers::graphics_command_builder &builder) = 0;
+        virtual bool draw(drivers::graphics_command_builder &builder);
 
         virtual void on_activate() = 0;
         virtual void handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) = 0;
+        virtual void add_draw_command(gdi_store_command &command);
+        virtual void prepare_for_draw() {}
 
-        void prepare_driver_bitmap();
+        virtual bool scroll(eka2l1::rect clip_space, const eka2l1::vec2 offset, eka2l1::rect source_rect) {
+            return true;
+        }
 
         epoc::display_mode display_mode() const;
         eka2l1::vec2 absolute_position() const override;
@@ -119,7 +122,6 @@ namespace eka2l1::epoc {
          */
         void set_extent(const eka2l1::vec2 &top, const eka2l1::vec2 &size);
         void recalculate_absolute_position(const eka2l1::vec2 &diff);
-        bool scroll(eka2l1::rect clip_space, const eka2l1::vec2 offset, eka2l1::rect source_rect);
 
         bool is_visible() const;
         bool can_be_physically_seen() const;
@@ -163,7 +165,7 @@ namespace eka2l1::epoc {
         void set_size(service::ipc_context &context, ws_cmd &cmd);
         void set_transparency_alpha_channel(service::ipc_context &context, ws_cmd &cmd);
         void activate(service::ipc_context &context, ws_cmd &cmd);
-        void free(service::ipc_context &context, ws_cmd &cmd);
+        void destroy(service::ipc_context &context, ws_cmd &cmd);
         void alloc_pointer_buffer(service::ipc_context &context, ws_cmd &cmd);
         void scroll(service::ipc_context &context, ws_cmd &cmd);
         void set_shape(service::ipc_context &context, ws_cmd &cmd);
@@ -193,12 +195,19 @@ namespace eka2l1::epoc {
     };
 
     // Canvas that data is backed using a bitmap
+    // These are not upscaled, given the usage that is usually to upload some native drawn thing to CPU.
     struct bitmap_backed_canvas: public canvas_base {
+        gdi_command_builder gdi_builder_;
+        drivers::graphics_command_builder driver_builder_;
+
+        std::uint64_t driver_win_id;
+        std::uint64_t ping_pong_driver_win_id;
+
         fbsbitmap *bitmap_;
 
         void create_backed_bitmap();
 
-        void on_activate() override {}
+        void on_activate() override;
         void handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) override;
 
         explicit bitmap_backed_canvas(window_server_client_ptr client, screen *scr, window *parent,
@@ -210,22 +219,34 @@ namespace eka2l1::epoc {
         void update_screen(service::ipc_context &context, ws_cmd &cmd);
         bool execute_command(service::ipc_context &context, ws_cmd &cmd) override;
         void take_action_on_change(kernel::thread *drawer) override;
+        bool scroll(eka2l1::rect clip_space, const eka2l1::vec2 offset, eka2l1::rect source_rect) override;
 
         void sync_from_bitmap(std::optional<common::region> region = std::nullopt);
         bool draw(drivers::graphics_command_builder &builder) override;
+
+        void add_draw_command(gdi_store_command &command) override;
+        void prepare_for_draw() override;
     };
 
-    struct free_modify_canvas : public canvas_base {
+    struct redraw_msg_canvas : public canvas_base {
         common::region redraw_region;
         common::region background_region;           // Region to paint background on screen
         eka2l1::rect redraw_rect_curr;
 
-        explicit free_modify_canvas(window_server_client_ptr client, screen *scr, window *parent,
+        gdi_store_command_collection redraw_segments_;
+        std::unique_ptr<gdi_command_builder> gdi_builder_;
+        drivers::graphics_command_builder driver_builder_;
+
+        std::vector<fbsfont*> using_fonts_;
+
+        explicit redraw_msg_canvas(window_server_client_ptr client, screen *scr, window *parent,
             const epoc::display_mode dmode, const std::uint32_t client_handle);
 
         void invalidate(const eka2l1::rect &irect);
         void on_activate() override;
         void handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) override;
+        void add_draw_command(gdi_store_command &command) override;
+        bool scroll(eka2l1::rect clip_space, const eka2l1::vec2 offset, eka2l1::rect source_rect) override;
 
         // ===================== OPCODE IMPLEMENTATIONS ===========================
         void begin_redraw(service::ipc_context &context, ws_cmd &cmd);

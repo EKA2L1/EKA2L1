@@ -137,7 +137,7 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     builder.set_swapchain_size(swapchain_size);
     builder.backup_state();
 
-    eka2l1::vecx<std::uint8_t, 4> color_clear = eka2l1::common::rgba_to_vec(state.conf.display_background_color.load());
+    eka2l1::vec4 color_clear = eka2l1::common::rgba_to_vec(state.conf.display_background_color.load());
 
     // The format that is stored is same as how it's present in HTML ARGB (from lowest to highest bytes)
     // The normal one that emulator assumes is ABGR (from lowest to highest bytes too)
@@ -148,7 +148,7 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     builder.set_feature(eka2l1::drivers::graphics_feature::clipping, false);
     builder.set_viewport(viewport);
 
-    builder.clear({ color_clear[2] / 255.0f, color_clear[1] / 255.0f, color_clear[0] / 255.0f, color_clear[3] / 255.0f, 0.0f, 0.0f }, eka2l1::drivers::draw_buffer_bit_color_buffer);
+    builder.clear({ color_clear.z / 255.0f, color_clear.y / 255.0f, color_clear.x / 255.0f, color_clear.w / 255.0f, 0.0f, 0.0f }, eka2l1::drivers::draw_buffer_bit_color_buffer);
 
     auto &crr_mode = scr->current_mode();
 
@@ -156,8 +156,6 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     if ((scr->ui_rotation % 180) != 0) {
         std::swap(size.x, size.y);
     }
-
-    src.size = size;
 
     float mult = state.conf.disable_display_content_scale ? 1.0 : (static_cast<float>(window_width) / size.x);
     float width = size.x * mult;
@@ -173,8 +171,7 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     x = (swapchain_size.x - width) / 2;
     y = (swapchain_size.y - height) / 2;
 
-    scr->scale_x = mult;
-    scr->scale_y = mult;
+    scr->set_native_scale_factor(state_ptr->graphics_driver.get(), mult, mult);
     scr->absolute_pos.x = static_cast<int>(x);
     scr->absolute_pos.y = static_cast<int>(y);
 
@@ -185,14 +182,12 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
 
     if (scr->ui_rotation % 180 != 0) {
         std::swap(dest.size.x, dest.size.y);
-        std::swap(src.size.x, src.size.y);
     }
 
     builder.set_texture_filter(scr->screen_texture, false, filter);
     builder.set_texture_filter(scr->screen_texture, true, filter);
 
-    builder.draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(scr->ui_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
-
+    builder.draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(scr->ui_rotation), 0);
     builder.load_backup_state();
 
     state_ptr->present_status = -100;

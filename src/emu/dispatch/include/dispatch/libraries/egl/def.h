@@ -388,6 +388,7 @@ namespace eka2l1::dispatch {
         kernel::uid associated_thread_uid_;
         bool dead_pending_;
 
+        float current_scale_;
         egl_context *bounded_context_;
 
         explicit egl_surface(epoc::canvas_base *backed_window, epoc::screen *screen, eka2l1::vec2 dim,
@@ -411,7 +412,7 @@ namespace eka2l1::dispatch {
         explicit egl_context();
         virtual ~egl_context() = default;
 
-        virtual void free(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder);
+        virtual void destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder);
         virtual void flush_to_driver(drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) = 0;
         virtual egl_context_type context_type() const = 0;
         virtual void init_context_state() = 0;

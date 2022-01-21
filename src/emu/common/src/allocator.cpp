@@ -94,7 +94,7 @@ namespace eka2l1::common {
         return farthest_end_offset + ptr;
     }
 
-    bool block_allocator::free(const void *tptr) {
+    bool block_allocator::freep(const void *tptr) {
         const std::uint64_t to_free_offset = reinterpret_cast<const std::uint8_t *>(tptr) - ptr;
 
         const std::lock_guard<std::mutex> guard(lock);
@@ -176,7 +176,7 @@ namespace eka2l1::common {
         return std::min<int>(size, static_cast<int>((words_.size() << 5) - set_bit));
     }
 
-    void bitmap_allocator::free(const std::uint32_t offset, const int size) {
+    void bitmap_allocator::deallocate(const std::uint32_t offset, const int size) {
         force_fill(offset, size, true);
     }
 

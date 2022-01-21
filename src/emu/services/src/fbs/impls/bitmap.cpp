@@ -742,7 +742,7 @@ namespace eka2l1 {
             }
 
             if (!data) {
-                shared_chunk_allocator->free(bws_bmp);
+                shared_chunk_allocator->freep(bws_bmp);
                 return nullptr;
             }
         }
@@ -787,10 +787,10 @@ namespace eka2l1 {
 
             // First, free the bitmap pixels.
             if (bmp->bitmap_->offset_from_me_) {
-                shared_chunk_allocator->free(bmp->bitmap_->data_pointer(this) - reserved_bytes);
+                shared_chunk_allocator->freep(bmp->bitmap_->data_pointer(this) - reserved_bytes);
                 no_failure = true;
             } else {
-                large_chunk_allocator->free(bmp->bitmap_->data_pointer(this) - reserved_bytes);
+                large_chunk_allocator->freep(bmp->bitmap_->data_pointer(this) - reserved_bytes);
                 no_failure = true;
             }
         }

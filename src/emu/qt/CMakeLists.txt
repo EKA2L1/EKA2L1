@@ -239,11 +239,17 @@ if (WIN32)
         TARGET eka2l1_qt
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/qt.conf.win" "$<TARGET_FILE_DIR:eka2l1_qt>/qt.conf")
+    
+    if(CMAKE_BUILD_TYPE MATCHES DEBUG)
+        set(DEPLOY_BUILD_CONFIG_ARG "--debug")
+    else()
+        set(DEPLOY_BUILD_CONFIG_ARG "--release")
+    endif()
 
     add_custom_command(
         TARGET eka2l1_qt
         POST_BUILD
-        COMMAND "${WINDEPLOYQT_EXECUTABLE}" --no-compiler-runtime --no-opengl-sw --no-quick --plugindir "$<TARGET_FILE_DIR:eka2l1_qt>/qt/plugins" --release "$<TARGET_FILE:eka2l1_qt>")
+        COMMAND "${WINDEPLOYQT_EXECUTABLE}" --no-compiler-runtime --no-opengl-sw --no-quick --plugindir "$<TARGET_FILE_DIR:eka2l1_qt>/qt/plugins" ${DEPLOY_BUILD_CONFIG_ARG} "$<TARGET_FILE:eka2l1_qt>")
 endif()
 
 # This code is taken and modified from RPCS3

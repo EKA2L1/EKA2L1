@@ -192,7 +192,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        while (true) {
+        while (ite) {
             if (ite->sibling == this) {
                 break;
             }
@@ -200,7 +200,8 @@ namespace eka2l1::epoc {
             ite = ite->sibling;
         }
 
-        ite->sibling = sibling;
+        if (ite)
+            ite->sibling = sibling;
     }
 
     // This is the biggest sin i have commit, using DFS

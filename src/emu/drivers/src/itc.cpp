@@ -205,6 +205,14 @@ namespace eka2l1::drivers {
         cmd->data_[1] = PACK_2U32_TO_U64(rect.size.x, rect.size.y);
     }
 
+    void graphics_command_builder::clip_bitmap_rect(const eka2l1::rect &rect) {
+        command *cmd = list_.retrieve_next();
+        cmd->opcode_ = graphics_driver_clip_bitmap_rect;
+
+        cmd->data_[0] = PACK_2U32_TO_U64(rect.top.x, rect.top.y);
+        cmd->data_[1] = PACK_2U32_TO_U64(rect.size.x, rect.size.y);
+    }
+
     void graphics_command_builder::clear(vecx<float, 6> color, const std::uint8_t clear_bitarr) {
         command *cmd = list_.retrieve_next();
         cmd->opcode_ = graphics_driver_clear;
@@ -295,12 +303,12 @@ namespace eka2l1::drivers {
         cmd->data_[1] = PACK_2U32_TO_U64(target_rect.size.x, target_rect.size.y);
     }
 
-    void graphics_command_builder::set_brush_color_detail(const eka2l1::vecx<int, 4> &color) {
+    void graphics_command_builder::set_brush_color_detail(const eka2l1::vec4 &color) {
         command *cmd = list_.retrieve_next();
 
         cmd->opcode_ = graphics_driver_set_brush_color;
-        cmd->data_[0] = PACK_2U32_TO_U64(color[0], color[1]);
-        cmd->data_[1] = PACK_2U32_TO_U64(color[2], color[3]);
+        cmd->data_[0] = PACK_2U32_TO_U64(color.x, color.y);
+        cmd->data_[1] = PACK_2U32_TO_U64(color.z, color.w);
     }
 
     void graphics_command_builder::use_program(drivers::handle h) {
@@ -383,6 +391,14 @@ namespace eka2l1::drivers {
     void graphics_command_builder::set_viewport(const eka2l1::rect &viewport_rect) {
         command *cmd = list_.retrieve_next();
         cmd->opcode_ = graphics_driver_set_viewport;
+
+        cmd->data_[0] = PACK_2U32_TO_U64(viewport_rect.top.x, viewport_rect.top.y);
+        cmd->data_[1] = PACK_2U32_TO_U64(viewport_rect.size.x, viewport_rect.size.y);
+    }
+
+    void graphics_command_builder::set_bitmap_viewport(const eka2l1::rect &viewport_rect) {
+        command *cmd = list_.retrieve_next();
+        cmd->opcode_ = graphics_driver_set_bitmap_viewport;
 
         cmd->data_[0] = PACK_2U32_TO_U64(viewport_rect.top.x, viewport_rect.top.y);
         cmd->data_[1] = PACK_2U32_TO_U64(viewport_rect.size.x, viewport_rect.size.y);

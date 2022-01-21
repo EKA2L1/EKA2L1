@@ -5,6 +5,7 @@ uniform sampler2D u_mask;
 uniform float u_invert;
 uniform float u_flat;
 uniform vec4 u_color;
+uniform float u_flip;
 
 in vec2 r_texcoord;
 out vec4 o_color;

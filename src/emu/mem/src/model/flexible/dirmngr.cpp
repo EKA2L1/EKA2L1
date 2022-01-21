@@ -43,7 +43,7 @@ namespace eka2l1::mem::flexible {
         return nullptr;
     }
 
-    bool page_directory_manager::free(const asid id) {
+    bool page_directory_manager::free_one(const asid id) {
         if (id >= dirs_.size() || id < 0) {
             return false;
         }

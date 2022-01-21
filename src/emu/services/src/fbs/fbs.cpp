@@ -443,7 +443,7 @@ namespace eka2l1 {
             return false;
         }
 
-        return shared_chunk_allocator->free(ptr);
+        return shared_chunk_allocator->freep(ptr);
     }
 
     void *fbs_server::allocate_large_data(const std::size_t s) {
@@ -461,7 +461,7 @@ namespace eka2l1 {
             return false;
         }
 
-        return large_chunk_allocator->free(ptr);
+        return large_chunk_allocator->freep(ptr);
     }
 
     fbs_server::~fbs_server() {
@@ -485,6 +485,37 @@ namespace eka2l1 {
 
     drivers::graphics_driver *fbs_server::get_graphics_driver() {
         return sys->get_graphics_driver();
+    }
+
+    bool fbs_server::is_heap_busy() {
+        if (!large_bitmap_access_mutex) {
+            return false;
+        }
+
+        if (kern->is_eka1()) {
+            return reinterpret_cast<kernel::legacy::mutex*>(large_bitmap_access_mutex)->count() <= 0;
+        }
+
+        return large_bitmap_access_mutex->count() < 0;
+    }
+
+    void fbs_server::spin_wait_heap(const std::uint32_t max_times) {
+        if (!large_bitmap_access_mutex) {
+            return;
+        }
+
+        std::uint32_t current = 0;
+        while (current < max_times) {
+            if (kern->is_eka1()) {
+                if (reinterpret_cast<kernel::legacy::mutex*>(large_bitmap_access_mutex)->count() > 0)
+                    break;
+            } else {
+                if (large_bitmap_access_mutex->count() >= 0)
+                    break;
+            }
+
+            current++;
+        }
     }
 
     fbscli::fbscli(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version)

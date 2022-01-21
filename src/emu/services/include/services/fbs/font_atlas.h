@@ -65,11 +65,15 @@ namespace eka2l1::epoc {
         void init(adapter::font_file_adapter_base *adapter, const std::size_t typeface_idx, const char16_t initial_start,
             const char16_t initial_char_count, int font_size);
 
-        void free(drivers::graphics_driver *driver);
+        void destroy(drivers::graphics_driver *driver);
 
         int get_atlas_width() const;
 
         bool draw_text(const std::u16string &text, const eka2l1::rect &box, const epoc::text_alignment alignment, drivers::graphics_driver *driver,
-            drivers::graphics_command_builder &builder);
+            drivers::graphics_command_builder &builder, const float scale_factor = 1.0f);
+
+        int get_char_size() const {
+            return size_;
+        }
     };
 }

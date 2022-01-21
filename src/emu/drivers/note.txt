@@ -1,0 +1,10 @@
+In this drivers module, there's an abstraction module called graphics. The current backend of this module is only OpenGL.
+This module has some stuffs that may confuse people why mapping it to OpenGL backend.
+
+1. The coordinate operates on top-left. This is for compability with future backends if there are.
+2. Bitmap data type is a simply texture package with predefined data types based on BPP. Bitmap, textures and other operations
+are also top-left
+
+As such, OpenGL backend tries to map everything to top-left. So then, with bitmap drawing, which is in a layer we called immediate,
+the Y axis is negated, meaning the whole bitmap will flip, with the exception of the main window surface framebuffer. Separate viewport
+and scissor set function serves purpose for handling the right coordinate for bitmap drawing.

@@ -5,7 +5,7 @@
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * the free software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  * 
  * This program is distributed in the hope that it will be useful,
@@ -238,7 +238,7 @@ namespace eka2l1::dispatch {
         }
     }
 
-    void gles1_buffer_pusher::free(drivers::graphics_command_builder &builder) {
+    void gles1_buffer_pusher::destroy(drivers::graphics_command_builder &builder) {
         for (std::uint8_t i = 0; i < MAX_BUFFER_SLOT; i++) {
             builder.destroy(buffers_[i]);
             delete data_[i];
@@ -492,13 +492,13 @@ namespace eka2l1::dispatch {
         fragment_statuses_ |= FRAGMENT_STATE_FOG_MODE_EXP;
     }
 
-    void egl_context_es1::free(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) {
+    void egl_context_es1::destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) {
         if (input_desc_) {
             cmd_builder_.destroy(input_desc_);
         }
 
-        vertex_buffer_pusher_.free(builder);
-        index_buffer_pusher_.free(builder);
+        vertex_buffer_pusher_.destroy(builder);
+        index_buffer_pusher_.destroy(builder);
 
         for (auto &obj: objects_) {
             if (obj) {
@@ -520,7 +520,7 @@ namespace eka2l1::dispatch {
             buffer_pools_.pop();
         }
 
-        egl_context::free(driver, builder);
+        egl_context::destroy(driver, builder);
     }
 
     void egl_context_es1::flush_to_driver(drivers::graphics_driver *drv, const bool is_frame_swap_flush) {
@@ -560,7 +560,11 @@ namespace eka2l1::dispatch {
         }
 
         if (state_change_tracker_ & STATE_CHANGED_SCISSOR_RECT) {
-            cmd_builder_.clip_rect(scissor_bl_);
+            eka2l1::rect scissor_bl_scaled = scissor_bl_;
+            scissor_bl_scaled.scale(draw_surface_->current_scale_);
+            scissor_bl_scaled.size.y *= -1;
+
+            cmd_builder_.clip_rect(scissor_bl_scaled);
         }
 
         if (state_change_tracker_ & STATE_CHANGED_FRONT_FACE_RULE) {
@@ -568,8 +572,11 @@ namespace eka2l1::dispatch {
         }
 
         if (state_change_tracker_ & STATE_CHANGED_VIEWPORT_RECT) {
-            eka2l1::rect viewport_transformed(eka2l1::vec2(viewport_bl_.top.x, draw_surface_->dimension_.y - (viewport_bl_.top.y + viewport_bl_.size.y)),
-                viewport_bl_.size);
+            eka2l1::rect viewport_transformed = viewport_bl_;
+
+            // Make viewport bottom left
+            viewport_transformed.scale(draw_surface_->current_scale_);
+            viewport_transformed.size.y *= -1;
 
             cmd_builder_.set_viewport(viewport_transformed);
         }
@@ -645,10 +652,17 @@ namespace eka2l1::dispatch {
         cmd_builder_.set_feature(drivers::graphics_feature::sample_coverage, non_shader_statuses_ & NON_SHADER_STATE_SAMPLE_COVERAGE);
         cmd_builder_.set_feature(drivers::graphics_feature::stencil_test, non_shader_statuses_ & NON_SHADER_STATE_STENCIL_TEST_ENABLE);
 
-        eka2l1::rect viewport_transformed(eka2l1::vec2(viewport_bl_.top.x, draw_surface_->dimension_.y - (viewport_bl_.top.y + viewport_bl_.size.y)),
-            viewport_bl_.size);
-            
-        cmd_builder_.clip_rect(scissor_bl_);
+        eka2l1::rect viewport_transformed = viewport_bl_;
+        eka2l1::rect clip_rect_transformed = scissor_bl_;
+
+        viewport_transformed.scale(draw_surface_->current_scale_);
+        viewport_transformed.size.y *= -1;
+
+        // Scale and make scissor bottom left.
+        clip_rect_transformed.scale(draw_surface_->current_scale_);
+        clip_rect_transformed.size.y *= -1;
+
+        cmd_builder_.clip_rect(clip_rect_transformed);
         cmd_builder_.set_viewport(viewport_transformed);
         
         // Some games have 0 alphas in some situation!
@@ -1211,7 +1225,7 @@ namespace eka2l1::dispatch {
 
         // Emulator graphics abstraction use top-left as origin.
         ctx->scissor_bl_.top = eka2l1::vec2(x, y);
-        ctx->scissor_bl_.size = eka2l1::vec2(width, -height);
+        ctx->scissor_bl_.size = eka2l1::vec2(width, height);
 
         ctx->state_change_tracker_ |= egl_context_es1::STATE_CHANGED_SCISSOR_RECT;
     }
@@ -3986,9 +4000,10 @@ namespace eka2l1::dispatch {
             ctx->cmd_builder_.set_dynamic_uniform(var_info->global_ambient_loc_, drivers::shader_set_var_type::vec4,
                 ctx->global_ambient_, 16);
 
-            if (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_ALPHA_TEST)
+            if (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_ALPHA_TEST) {
                 ctx->cmd_builder_.set_dynamic_uniform(var_info->alpha_test_ref_loc_, drivers::shader_set_var_type::real,
                     &ctx->alpha_test_ref_, 4);
+            }
 
             if (ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_FOG_ENABLE) {
                 ctx->cmd_builder_.set_dynamic_uniform(var_info->fog_color_loc_, drivers::shader_set_var_type::vec4,

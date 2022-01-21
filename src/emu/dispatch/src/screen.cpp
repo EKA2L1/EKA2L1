@@ -84,7 +84,7 @@ namespace eka2l1::dispatch {
         }
     }
 
-    void screen_post_transferer::free(drivers::graphics_driver *drv) {
+    void screen_post_transferer::destroy(drivers::graphics_driver *drv) {
         for (std::size_t i = 0; i < vsync_notifies_.size(); i++) {
             timing_->unschedule_event(vsync_notify_event_, reinterpret_cast<std::uint64_t>(vsync_notifies_[i]));
             delete vsync_notifies_[i];
@@ -250,10 +250,12 @@ namespace eka2l1::dispatch {
 
                 // 270 rotation clock-wise makes screen content comes from the top where camera lies, to down where the ports reside.
                 // That makes it a standard, non-flip landscape. 0 is obviously standard too. Therefore mode 90 and 180 needs flip.
-                const std::uint32_t flags = ((mode_info.rotation == 90) || (mode_info.rotation == 180)) ? drivers::bitmap_draw_flag_no_flip : 0;
+                const std::uint32_t flags = ((mode_info.rotation == 90) || (mode_info.rotation == 180)) ? drivers::bitmap_draw_flag_flip : 0;
 
                 eka2l1::rect source_rect { eka2l1::vec2(0, 0), mode_info.size };
                 eka2l1::rect dest_rect = source_rect;
+
+                dest_rect.scale(scr->display_scale_factor);
 
                 builder.bind_bitmap(scr->screen_texture);
                 builder.set_feature(drivers::graphics_feature::clipping, false);
@@ -322,9 +324,12 @@ namespace eka2l1::dispatch {
                 drivers::handle temp = transferer.transfer_data_to_texture(driver, builder,
                     screen_index, data, eka2l1::vec2(size_x, size_y), format);
 
+                eka2l1::rect scaled_twice_rect = info->scale_to_rect;
+                scaled_twice_rect.scale(scr->display_scale_factor);
+
                 builder.bind_bitmap(scr->screen_texture);
                 builder.set_feature(drivers::graphics_feature::clipping, false);
-                builder.draw_bitmap(temp, 0, info->scale_to_rect, info->input_crop, eka2l1::vec2(0, 0), 0, 0);
+                builder.draw_bitmap(temp, 0, scaled_twice_rect, info->input_crop, eka2l1::vec2(0, 0), 0, 0);
                 builder.bind_bitmap(0);
 
                 drivers::command_list retrieved = builder.retrieve_command_list();

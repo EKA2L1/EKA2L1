@@ -61,25 +61,37 @@ namespace eka2l1 {
 
         return return_result;
     }
+    
+    void scale_rectangle(eka2l1::rect &r, const float scale_factor) {
+        r.top *= scale_factor;
+        r.size *= scale_factor;
+    }
 
-    void clip_region(drivers::graphics_command_builder &cmd_builder, const common::region &region, const bool stencil_one_for_valid) {
-        if (region.empty()) {
+    void clip_region(drivers::graphics_command_builder &cmd_builder, const common::region &region, const float scale_factor, const bool stencil_one_for_valid, const eka2l1::vec2 &offset) {
+        clip_multiple_rects(cmd_builder, region.rects_.data(), region.rects_.size(), scale_factor, stencil_one_for_valid, offset);
+    }
+
+    void clip_multiple_rects(drivers::graphics_command_builder &cmd_builder, const eka2l1::rect *rects, const std::size_t rect_count, const float scale_factor, const bool stencil_one_for_valid, const eka2l1::vec2 &offset) {
+        if (rect_count == 0) {
             return;
         }
 
-        if (region.rects_.size() == 1) {
-            eka2l1::rect rect_clip = region.rects_[0];
-            rect_clip.size.y *= -1;
+        if (rect_count == 1) {
+            eka2l1::rect rect_clip = rects[0];
+            rect_clip.top += offset;
+
+            scale_rectangle(rect_clip, scale_factor);
 
             cmd_builder.set_feature(drivers::graphics_feature::stencil_test, false);
             cmd_builder.set_feature(drivers::graphics_feature::clipping, true);
-            cmd_builder.clip_rect(rect_clip);
+            cmd_builder.clip_bitmap_rect(rect_clip);
 
             return;
         }
 
-        cmd_builder.clear({ 0, 0, 0, 0 }, drivers::draw_buffer_bit_stencil_buffer);
+        cmd_builder.clear({ 0, 0, 0, 0, 0, 0 }, drivers::draw_buffer_bit_stencil_buffer);
         cmd_builder.set_feature(drivers::graphics_feature::stencil_test, true);
+        cmd_builder.set_feature(drivers::graphics_feature::clipping, false);
 
         // Try to fill region rects with 1 in stencil buffer.
         // Intentionally let stencil test fail so nothing gets draw. Just need to fill it after all.
@@ -89,9 +101,14 @@ namespace eka2l1 {
             drivers::stencil_action::keep, drivers::stencil_action::keep);
         cmd_builder.set_stencil_mask(drivers::rendering_face::back_and_front, 0xFF);
 
-        for (std::size_t i = 0; i < region.rects_.size(); i++) {
-            if (region.rects_[i].valid()) {
-                cmd_builder.draw_rectangle(region.rects_[i]);
+        for (std::size_t i = 0; i < rect_count; i++) {
+            if (rects[i].valid()) {
+                eka2l1::rect rect_to_draw = rects[i];
+                rect_to_draw.top += offset;
+
+                scale_rectangle(rect_to_draw, scale_factor);
+                
+                cmd_builder.draw_rectangle(rect_to_draw);
             }
         }
 
