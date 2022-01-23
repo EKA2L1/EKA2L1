@@ -215,7 +215,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="301"/>
       <source>RPKG file (*.rpkg *.RPKG);;All files (*.*</source>
-      <translation type="unfinished">RPKG file (*.rpkg *.RPKG);;All files (*.*</translation>
+      <translation>File RPKG (*.rpkg *.RPKG);;Tutti i file (*.*)</translation>
     </message>
   </context>
   <context>
@@ -338,7 +338,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="260"/>
       <source>Refresh app list</source>
-      <translation type="unfinished">Refresh app list</translation>
+      <translation>Aggiorna elenco app</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="241"/>
@@ -800,12 +800,12 @@ Per opzione preferita sarà attivo su dispositivi S60v1/S60v2.</translation>
     <message>
       <location filename="../src/settings_dialog.ui" line="535"/>
       <source>Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</source>
-      <translation type="unfinished">Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</translation>
+      <translation>Permetti all'emulatore di eseguire l'accelerazione GLES1 API nativa delle GPU per Symbian.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="538"/>
       <source>Enable GPU accelerated GLES1</source>
-      <translation type="unfinished">Enable GPU accelerated GLES1</translation>
+      <translation>Abilita accelerazione GPU GLES1</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="548"/>
@@ -1291,7 +1291,7 @@ Per opzione preferita sarà attivo su dispositivi S60v1/S60v2.</translation>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1299"/>
       <source>Emulator reset needed</source>
-      <translation type="unfinished">Emulator reset needed</translation>
+      <translation>Reset emulatore necessario</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1299"/>
