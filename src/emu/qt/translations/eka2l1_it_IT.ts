@@ -1296,7 +1296,7 @@ Per opzione preferita sarà attivo su dispositivi S60v1/S60v2.</translation>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1299"/>
       <source>This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</source>
-      <translation type="unfinished">This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</translation>
+      <translation>Questa modifica sarà effettuata dopo aver resettato l'emulatore attraverso il menu Emulazione, o al prossimo lancio dell'emulatore.</translation>
     </message>
   </context>
 </TS>
