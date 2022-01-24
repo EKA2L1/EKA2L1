@@ -819,39 +819,15 @@ namespace eka2l1 {
     }
 
     void applist_server::get_capability(service::ipc_context &ctx) {
-        std::optional<epoc::uid> app_uid = ctx.get_argument_value<epoc::uid>(1);
-        if (!app_uid.has_value()) {
-            ctx.complete(epoc::error_argument);
-            return;
-        }
+        const epoc::uid app_uid = *ctx.get_argument_value<epoc::uid>(1);
+        apa_app_registry *reg = get_registration(app_uid);
 
-        std::uint8_t *buf = ctx.get_descriptor_argument_ptr(0);
-        std::size_t buf_size = ctx.get_argument_max_data_size(0);
-
-        if (!buf_size || !buf) {
-            ctx.complete(epoc::error_argument);
-            return;
-        }
-
-        apa_app_registry *reg = get_registration(app_uid.value());
         if (!reg) {
             ctx.complete(epoc::error_not_found);
             return;
         }
 
-        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
-        reg->caps.do_it(seri);
-
-        if (seri.size() > buf_size) {
-            LOG_WARN(SERVICE_APPLIST, "Not enough buffer size to fit app capabilities! Size will be shrunked.");
-        }
-
-        buf_size = common::min(seri.size(), buf_size);
-        seri = common::chunkyseri(buf, buf_size, common::SERI_MODE_WRITE);
-
-        reg->caps.do_it(seri);
-
-        ctx.set_descriptor_argument_length(0, static_cast<std::uint32_t>(buf_size));
+        ctx.write_data_to_descriptor_argument<apa_capability>(0, reg->caps, nullptr, true);
         ctx.complete(epoc::error_none);
     }
 
