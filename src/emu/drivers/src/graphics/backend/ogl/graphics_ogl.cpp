@@ -520,10 +520,6 @@ namespace eka2l1::drivers {
             glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(mask_draw_texture->texture_handle()));
         }
 
-        // Build model matrix
-        glm::mat4 model_matrix = glm::identity<glm::mat4>();
-        model_matrix = glm::translate(model_matrix, { dest_rect.top.x, dest_rect.top.y, 0.0f });
-
         if (source_rect.size.x == 0) {
             source_rect.size.x = draw_texture->get_size().x;
         }
@@ -539,11 +535,15 @@ namespace eka2l1::drivers {
         if (dest_rect.size.y == 0) {
             dest_rect.size.y = source_rect.size.y;
         }
-        
+
         if (!binding) {
             dest_rect.top.y = current_fb_height - (dest_rect.top.y + dest_rect.size.y);
         }
 
+        // Build model matrix
+        glm::mat4 model_matrix = glm::identity<glm::mat4>();
+
+        model_matrix = glm::translate(model_matrix, { dest_rect.top.x, dest_rect.top.y, 0.0f });
         model_matrix = glm::translate(model_matrix, glm::vec3(static_cast<float>(origin.x), static_cast<float>(origin.y), 0.0f));
         model_matrix = glm::rotate(model_matrix, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
         model_matrix = glm::translate(model_matrix, glm::vec3(static_cast<float>(-origin.x), static_cast<float>(-origin.y), 0.0f));
