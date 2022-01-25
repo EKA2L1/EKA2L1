@@ -487,10 +487,8 @@ namespace eka2l1::drivers {
             verts[3].coord[1] = (source_rect.top.y + source_rect.size.y) * texel_height;
 
             if (need_texture_flip) {
-                verts[0].coord[1] = 1.0f - verts[0].coord[1];
-                verts[1].coord[1] = 1.0f - verts[1].coord[1];
-                verts[2].coord[1] = 1.0f - verts[2].coord[1];
-                verts[3].coord[1] = 1.0f - verts[3].coord[1];
+                std::swap(verts[0].coord[1], verts[2].coord[1]);
+                std::swap(verts[1].coord[1], verts[3].coord[1]);
             }
 
             vert_pointer = verts;
