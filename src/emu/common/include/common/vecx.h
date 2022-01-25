@@ -124,6 +124,10 @@ namespace eka2l1 {
             return vec2(x * rhs, y * rhs);
         }
         
+        vec2 operator /(const int rhs) const {
+            return vec2(x / rhs, y / rhs);
+        }
+        
         vec2 operator*(const float rhs) const {
             return vec2(static_cast<int>(x * rhs), static_cast<int>(y * rhs));
         }
@@ -236,6 +240,7 @@ namespace eka2l1 {
             x = rhs.x;
             y = rhs.y;
         }
+
     };
 
     using point = vec2;

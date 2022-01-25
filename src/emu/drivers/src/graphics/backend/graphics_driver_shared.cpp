@@ -377,10 +377,12 @@ namespace eka2l1::drivers {
         bmp->fb->bind(this, bind_type);
         binding = bmp;
 
+        bool no_need_flip = !(!binding && (get_current_api() == drivers::graphic_api::opengl));
+
         // Build projection matrixx
         projection_matrix = glm::identity<glm::mat4>();
-        projection_matrix = glm::ortho(0.0f, static_cast<float>(bmp->tex->get_size().x), static_cast<float>(bmp->tex->get_size().y),
-            0.0f, -1.0f, 1.0f);
+        projection_matrix = glm::ortho(0.0f, static_cast<float>(bmp->tex->get_size().x), no_need_flip ? static_cast<float>(bmp->tex->get_size().y) : 0,
+            no_need_flip ? 0.0f : static_cast<float>(bmp->tex->get_size().y), -1.0f, 1.0f);
 
         current_fb_height = bmp->tex->get_size().y;
         current_fb_width = bmp->tex->get_size().x;
@@ -860,18 +862,22 @@ namespace eka2l1::drivers {
             current_fb_height = swapchain_size.y;
         }
 
+        bool no_need_flip = !(!binding && (get_current_api() == drivers::graphic_api::opengl));
+
         projection_matrix = glm::identity<glm::mat4>();
-        projection_matrix = glm::ortho(0.0f, static_cast<float>(swapchain_size.x), static_cast<float>(swapchain_size.y),
-            0.0f, -1.0f, 1.0f);
+        projection_matrix = glm::ortho(0.0f, static_cast<float>(swapchain_size.x), no_need_flip ? static_cast<float>(swapchain_size.y) : 0.0f,
+            no_need_flip ? 0.0f : static_cast<float>(swapchain_size.y), -1.0f, 1.0f);
     }
 
     void shared_graphics_driver::set_ortho_size(command &cmd) {
         eka2l1::vec2 size;
         unpack_u64_to_2u32(cmd.data_[0], size.x, size.y);
 
+        bool no_need_flip = !(!binding && (get_current_api() == drivers::graphic_api::opengl));
+
         projection_matrix = glm::identity<glm::mat4>();
-        projection_matrix = glm::ortho(0.0f, static_cast<float>(size.x), static_cast<float>(size.y),
-            0.0f, -1.0f, 1.0f);
+        projection_matrix = glm::ortho(0.0f, static_cast<float>(size.x), no_need_flip ? static_cast<float>(size.y) : 0,
+            no_need_flip ? 0.0f : static_cast<float>(swapchain_size.y), -1.0f, 1.0f);
     }
 
     void shared_graphics_driver::dispatch(command &cmd) {

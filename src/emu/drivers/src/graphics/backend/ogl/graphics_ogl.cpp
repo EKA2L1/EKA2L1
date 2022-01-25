@@ -298,10 +298,6 @@ namespace eka2l1::drivers {
             brush_rect.size.y = current_fb_height;
         }
 
-        if (!binding) {
-            brush_rect.top.y = current_fb_height - (brush_rect.size.y + brush_rect.top.y);
-        }
-
         brush_program->use(this);
 
         // Build model matrix
@@ -449,10 +445,6 @@ namespace eka2l1::drivers {
         void *vert_pointer = verts_default;
 
         bool need_texture_flip = (flags & bitmap_draw_flag_flip);
-        if (!binding) {
-            // The surface will be filpped manually by the OS handler, so we revert our coordinate
-            need_texture_flip = !need_texture_flip;
-        }
 
         if (!source_rect.empty()) {
             const float texel_width = 1.0f / draw_texture->get_size().x;
@@ -534,18 +526,14 @@ namespace eka2l1::drivers {
             dest_rect.size.y = source_rect.size.y;
         }
 
-        if (!binding) {
-            dest_rect.top.y = current_fb_height - (dest_rect.top.y + dest_rect.size.y);
-        }
-
         // Build model matrix
         glm::mat4 model_matrix = glm::identity<glm::mat4>();
 
         model_matrix = glm::translate(model_matrix, { dest_rect.top.x, dest_rect.top.y, 0.0f });
+
         model_matrix = glm::translate(model_matrix, glm::vec3(static_cast<float>(origin.x), static_cast<float>(origin.y), 0.0f));
         model_matrix = glm::rotate(model_matrix, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
         model_matrix = glm::translate(model_matrix, glm::vec3(static_cast<float>(-origin.x), static_cast<float>(-origin.y), 0.0f));
-
         model_matrix = glm::scale(model_matrix, glm::vec3(dest_rect.size.x, dest_rect.size.y, 1.0f));
 
         glUniformMatrix4fv((mask_draw_texture ? model_loc_mask : model_loc), 1, false, glm::value_ptr(model_matrix));
