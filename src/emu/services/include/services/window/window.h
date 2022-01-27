@@ -201,6 +201,7 @@ namespace eka2l1::epoc {
         void find_window_group_id(service::ipc_context &ctx, ws_cmd &cmd);
         void find_window_group_id_thread(service::ipc_context &ctx, ws_cmd &cmd);
         void set_pointer_cursor_mode(service::ipc_context &ctx, ws_cmd &cmd);
+        void get_pointer_cursor_mode(service::ipc_context &ctx, ws_cmd &cmd);
         void get_window_group_client_thread_id(service::ipc_context &ctx, ws_cmd &cmd);
         void get_window_group_ordinal_priority(service::ipc_context &ctx, ws_cmd &cmd);
         void get_redraw(service::ipc_context &ctx, ws_cmd &cmd);
@@ -356,7 +357,7 @@ namespace eka2l1 {
         std::unordered_map<epoc::ws::uid, key_capture_request_queue> key_capture_requests;
 
         epoc::screen *focus_screen_{ nullptr };
-        epoc::pointer_cursor_mode cursor_mode_;
+        epoc::pointer_cursor_mode cursor_mode_{ epoc::pointer_cursor_mode::fixed };
 
         epoc::bitmap_cache bmp_cache;
         epoc::animation_scheduler anim_sched;

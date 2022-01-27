@@ -627,6 +627,10 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_permission_denied);
     }
 
+    void window_server_client::get_pointer_cursor_mode(service::ipc_context &ctx, ws_cmd &cmd) {
+        ctx.complete(static_cast<int>(get_ws().cursor_mode()));
+    }
+
     void window_server_client::get_window_group_client_thread_id(service::ipc_context &ctx, ws_cmd &cmd) {
         std::uint32_t group_id = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
         epoc::window_group *win = get_ws().get_group_from_id(group_id);
@@ -1002,6 +1006,10 @@ namespace eka2l1::epoc {
             set_pointer_cursor_mode(ctx, cmd);
             break;
         }
+
+        case ws_cl_op_pointer_cursor_mode:
+            get_pointer_cursor_mode(ctx, cmd);
+            break;
 
         case ws_cl_op_get_window_group_client_thread_id: {
             get_window_group_client_thread_id(ctx, cmd);
