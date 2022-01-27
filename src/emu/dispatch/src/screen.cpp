@@ -229,6 +229,10 @@ namespace eka2l1::dispatch {
                     scr->dsa_texture = bitmap_handle;
                 }
 
+                if (!scr->screen_texture) {
+                    scr->set_screen_mode(nullptr, driver, scr->crr_mode);
+                }
+
                 drivers::graphics_command_builder builder;
                 builder.update_bitmap(scr->dsa_texture, reinterpret_cast<const char *>(scr->screen_buffer_ptr()),
                     buffer_size, { 0, 0 }, screen_size);
