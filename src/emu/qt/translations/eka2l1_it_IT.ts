@@ -60,7 +60,7 @@
   <context>
     <name>applist_search_bar</name>
     <message>
-      <location filename="../src/applistwidget.cpp" line="45"/>
+      <location filename="../src/applistwidget.cpp" line="46"/>
       <source>Search</source>
       <translation>Cerca</translation>
     </message>
@@ -68,7 +68,7 @@
   <context>
     <name>applist_widget</name>
     <message>
-      <location filename="../src/applistwidget.cpp" line="342"/>
+      <location filename="../src/applistwidget.cpp" line="343"/>
       <source>&lt;br&gt;App UID: 0x%1</source>
       <translation>&lt;br&gt;UID dell'App: 0x%1</translation>
     </message>
@@ -341,159 +341,159 @@
       <translation>Aggiorna elenco app</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="241"/>
+      <location filename="../src/mainwindow.cpp" line="236"/>
       <source>Clear menu</source>
       <translation>Cancella elenco</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="304"/>
+      <location filename="../src/mainwindow.cpp" line="299"/>
       <source>Touchscreen disabled</source>
       <translation>Touchscreen disabilitato</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="304"/>
+      <location filename="../src/mainwindow.cpp" line="299"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
       <translation>Nelle combinazioni di tasti correnti, sono associati pulsanti del mouse. Pertanto il touchscreen emulato è stato disabilitato.&lt;br&gt;&lt;br&gt;&lt;b&gt;Nota:&lt;/b&gt;&lt;br&gt;Il Touchscreen può essere riabilitato riassociando i pulsanti del mouse con i tasti della tastiera.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="305"/>
-      <location filename="../src/mainwindow.cpp" line="370"/>
+      <location filename="../src/mainwindow.cpp" line="300"/>
+      <location filename="../src/mainwindow.cpp" line="365"/>
       <source>Don&apos;t show this again</source>
       <translation>Non mostrare di nuovo</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="369"/>
+      <location filename="../src/mainwindow.cpp" line="364"/>
       <source>No device installed</source>
       <translation>Nessun dispositivo installato</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="369"/>
+      <location filename="../src/mainwindow.cpp" line="364"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
       <translation>Non hai installato alcun dispositivo. Installane uno seguendo le istruzioni di installazione sulla pagina GitHub di EKA2L1.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="660"/>
-      <location filename="../src/mainwindow.cpp" line="909"/>
+      <location filename="../src/mainwindow.cpp" line="655"/>
+      <location filename="../src/mainwindow.cpp" line="904"/>
       <source>Cancel</source>
       <translation>Annulla</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="663"/>
+      <location filename="../src/mainwindow.cpp" line="658"/>
       <source>Extracting game dump files</source>
       <translation>Estrazione del file dump di gioco</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="684"/>
+      <location filename="../src/mainwindow.cpp" line="679"/>
       <source>Mounting aborted</source>
       <translation>Montaggio annullato</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="689"/>
+      <location filename="../src/mainwindow.cpp" line="684"/>
       <source>The ZIP file is corrupted!</source>
       <translation>File ZIP corrotto!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="694"/>
+      <location filename="../src/mainwindow.cpp" line="689"/>
       <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
       <translation>Il file ZIP non contiene la cartella System nel root. La cartella System deve essere presente nel dump del gioco.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="700"/>
+      <location filename="../src/mainwindow.cpp" line="695"/>
       <source>The choosen file is not a ZIP file!</source>
       <translation>Il file selezionato non è un file ZIP!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="714"/>
+      <location filename="../src/mainwindow.cpp" line="709"/>
       <source>Game card problem</source>
       <translation>Problema con la scheda del gioco</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="714"/>
+      <location filename="../src/mainwindow.cpp" line="709"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
       <translation>Il dump della scheda di gioco contiene file sensibili alle maiuscole e minuscole. Questo potrebbe causare problemi con l'emulatore.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="718"/>
+      <location filename="../src/mainwindow.cpp" line="713"/>
       <source>Game card dump folder correction</source>
       <translation>Correzione cartella dump scheda di gioco</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="718"/>
+      <location filename="../src/mainwindow.cpp" line="713"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
       <translation>Il percorso selezionato sembra non essere corretto.&lt;br&gt;Vuoi che l'emulatore lo corregga?</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="774"/>
+      <location filename="../src/mainwindow.cpp" line="769"/>
       <source>Choose the game card dump folder</source>
       <translation>Scegli la cartella dump della scheda di gioco</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="794"/>
+      <location filename="../src/mainwindow.cpp" line="789"/>
       <source>Choose the game card zip</source>
       <translation>Scegli il file zip della scheda di gioco</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="873"/>
+      <location filename="../src/mainwindow.cpp" line="868"/>
       <source>Document</source>
       <translation>Documento</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="891"/>
+      <location filename="../src/mainwindow.cpp" line="886"/>
       <source>Choose a language for the package</source>
       <translation>Scegli una lingua per il pacchetto</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="912"/>
+      <location filename="../src/mainwindow.cpp" line="907"/>
       <source>Installing package progress</source>
       <translation>Installazione pacchetto in corso</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="936"/>
+      <location filename="../src/mainwindow.cpp" line="931"/>
       <source>Installation aborted</source>
       <translation>Installazione annullata</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="936"/>
+      <location filename="../src/mainwindow.cpp" line="931"/>
       <source>The installation has been canceled</source>
       <translation>L'installazione è stata annullata</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="941"/>
+      <location filename="../src/mainwindow.cpp" line="936"/>
       <source>Installation failed</source>
       <translation>Intallazione fallita</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="941"/>
+      <location filename="../src/mainwindow.cpp" line="936"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
       <translation>Impossibile installare il pacchetto al percorso: %1. Assicurarsi che il percorso indichi un file SIS/SISX valido.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="948"/>
+      <location filename="../src/mainwindow.cpp" line="943"/>
       <source>Installation success</source>
       <translation>Installazione completata</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="948"/>
+      <location filename="../src/mainwindow.cpp" line="943"/>
       <source>Package has been successfully installed</source>
       <translation>Il pacchetto è stato installato correttamente</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="973"/>
+      <location filename="../src/mainwindow.cpp" line="968"/>
       <source>Choose the file to install</source>
       <translation>Scegli il file da installare</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="973"/>
+      <location filename="../src/mainwindow.cpp" line="968"/>
       <source>SIS file (*.sis *.sisx)</source>
       <translation>File SIS (*.sis *.sisx)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1141"/>
+      <location filename="../src/mainwindow.cpp" line="1136"/>
       <source>Load theme failed!</source>
       <translation>Caricamento tema fallito!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1141"/>
+      <location filename="../src/mainwindow.cpp" line="1136"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
       <translation>Impossibile trovare il file di stile del tema scuro!</translation>
     </message>
