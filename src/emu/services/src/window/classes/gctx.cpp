@@ -148,7 +148,7 @@ namespace eka2l1::epoc {
         epoc::gdi_store_command_draw_text_data &draw_text_data = draw_text_cmd.get_data_struct<epoc::gdi_store_command_draw_text_data>();
 
         draw_text_cmd.opcode_ = epoc::gdi_store_command_draw_text;
-        if (attached_window->flags & epoc::window::flag_has_redraw_store) {
+        if (attached_window->win_type == epoc::window_type::redraw) {
             draw_text_cmd.dynamic_pointer_ = new char16_t[text.length() + 1];
             draw_text_data.string_ = reinterpret_cast<const char16_t*>(draw_text_cmd.dynamic_pointer_);
 
@@ -299,7 +299,7 @@ namespace eka2l1::epoc {
             epoc::gdi_store_command_set_clip_rect_multiple_data &data = cmd.get_data_struct<epoc::gdi_store_command_set_clip_rect_multiple_data>();
             data.rect_count_ = static_cast<std::uint32_t>(the_region->rects_.size());
     
-            if (attached_window->flags & epoc::window::flag_has_redraw_store) {
+            if (attached_window->win_type == epoc::window_type::redraw) {
                 data.rects_ = new eka2l1::rect[data.rect_count_];
                 cmd.dynamic_pointer_ = data.rects_;
 
@@ -652,7 +652,7 @@ namespace eka2l1::epoc {
             cmd_data.color_ = pen_color;
             cmd_data.style_ = pen_style;
 
-            if (attached_window->flags & epoc::window::flag_has_redraw_store) {
+            if (attached_window->win_type == epoc::window_type::redraw) {
                 cmd_data.points_ = new eka2l1::point[5];
                 gdi_cmd.dynamic_pointer_ = cmd_data.points_;
 

@@ -1254,6 +1254,11 @@ namespace eka2l1 {
     }
 
     void window_server::parse_wsini() {
+        common::ini_node_ptr no_redraw_storing_node = ws_config.find("NOREDRAWSTORING");
+        if (no_redraw_storing_node || (kern->get_epoc_version() <= epocver::epoc81b)) {
+            config_flags |= CONFIG_FLAG_NO_REDRAW_STORING;
+        }
+
         common::ini_node_ptr window_mode_node = ws_config.find("WINDOWMODE");
         epoc::display_mode scr_mode_global = epoc::display_mode::color16ma;
 
@@ -1471,7 +1476,8 @@ namespace eka2l1 {
         , sync_thread_code_offset(0)
         , initial_repeat_delay_(0)
         , next_repeat_delay_(0)
-        , repeatable_event_(0) {
+        , repeatable_event_(0)
+        , config_flags(0) {
         REGISTER_IPC(window_server, init, EWservMessInit,
             "Ws::Init");
         REGISTER_IPC(window_server, send_to_command_buffer, EWservMessCommandBuffer,

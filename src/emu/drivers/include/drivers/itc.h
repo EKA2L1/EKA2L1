@@ -203,6 +203,10 @@ namespace eka2l1::drivers {
         }
 
         bool merge(command_list &another) {
+            if (!another.base_ || !another.size_) {
+                return true;
+            }
+
             if (list_.base_ == nullptr) {
                 list_ = another;
             } else {
@@ -214,6 +218,7 @@ namespace eka2l1::drivers {
                 list_.size_ += another.size_;
             }
 
+            delete another.base_;
             return true;
         }
 

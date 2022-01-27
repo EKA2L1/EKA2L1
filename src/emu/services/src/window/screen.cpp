@@ -194,6 +194,9 @@ namespace eka2l1::epoc {
         // Done! Unbind and submit this to the driver
         builder.bind_bitmap(0);
 
+        // Remove pending draw flags...
+        flags_ &= ~(FLAG_SERVER_REDRAW_PENDING | FLAG_CLIENT_REDRAW_PENDING);
+
         return adrawwalker.total_redrawed_;
     }
 
@@ -554,18 +557,16 @@ namespace eka2l1::epoc {
                     visible_left_region_.eliminate(winuser->visible_region);
                 }
 
-                if (!winuser->visible_region.empty() && (winuser->win_type == epoc::window_type::redraw) && ((winuser->flags & epoc::window::flag_has_redraw_store) == 0)) {
-                    eka2l1::vec2 negated = eka2l1::vec2(0, 0) - winuser->abs_rect.top;
-                    common::region current_region = winuser->visible_region;
-                    current_region.advance(negated);
-
-                    epoc::redraw_msg_canvas *redraw_win = reinterpret_cast<epoc::redraw_msg_canvas*>(winuser);
-                    for (std::size_t i = 0; i < current_region.rects_.size(); i++) {
-                        redraw_win->invalidate(current_region.rects_[i]);
+                if (!winuser->visible_region.empty()) {
+                    if (winuser->win_type == epoc::window_type::redraw) {
+                        epoc::redraw_msg_canvas *redraw_win = reinterpret_cast<epoc::redraw_msg_canvas*>(winuser);
+                        
+                        if (redraw_win->gdi_builder_)
+                            redraw_win->gdi_builder_->set_clip_region(winuser->visible_region);
+                    } else if (winuser->win_type == epoc::window_type::backed_up) {
+                        epoc::bitmap_backed_canvas *backed_win_cv = reinterpret_cast<epoc::bitmap_backed_canvas*>(winuser);
+                        backed_win_cv->gdi_builder_.set_clip_region(winuser->visible_region);
                     }
-
-                    if (redraw_win->gdi_builder_)
-                        redraw_win->gdi_builder_->set_clip_region(winuser->visible_region);
                 }
 
                 if (winuser->is_dsa_active()) {
@@ -590,6 +591,9 @@ namespace eka2l1::epoc {
 
         root->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children);
         need_update_visible_regions(false);
+
+        // The server side causes a change (maybe position or visiblity, so a redraw requested from server is needed)
+        flags_ |= FLAG_SERVER_REDRAW_PENDING;
     }
 
     void screen::ref_dsa_usage() {
@@ -653,6 +657,9 @@ namespace eka2l1::epoc {
                 driver->submit_command_list(retrieved);
 
                 screen_texture = new_screen_handle;
+
+                // Wholeheartedly need a redraw pls
+                flags_ |= FLAG_SERVER_REDRAW_PENDING;
             }
 
             display_scale_factor = correct_display_scale_factor;

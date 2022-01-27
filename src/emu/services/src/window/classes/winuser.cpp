@@ -309,8 +309,9 @@ namespace eka2l1::epoc {
             surface_post_queue_.pop();
 
             builder.set_feature(drivers::graphics_feature::blend, false);
-            builder.set_feature(drivers::graphics_feature::clipping, false);
             builder.set_feature(drivers::graphics_feature::stencil_test, false);
+
+            clip_region(builder, visible_region, scr->display_scale_factor);
 
             eka2l1::rect dest_rect = abs_rect;
             scale_rectangle(dest_rect, scr->display_scale_factor);
@@ -357,6 +358,9 @@ namespace eka2l1::epoc {
             }
 
             fps_count_++;
+
+            // We need a redraw from the client side, so set this
+            scr->set_client_draw_pending();
 
             sched->schedule(client->get_ws().get_graphics_driver(), scr, crr + wait_time);
             drawer->sleep(static_cast<std::uint32_t>(wait_time));
@@ -735,6 +739,10 @@ namespace eka2l1::epoc {
             return false;
         }
 
+        if ((scr->flags_ & screen::FLAG_SERVER_REDRAW_PENDING) == 0) {
+            return false;
+        }
+
         if (canvas_base::draw(builder)) {
             return true;
         }
@@ -758,9 +766,6 @@ namespace eka2l1::epoc {
     redraw_msg_canvas::redraw_msg_canvas(window_server_client_ptr client, screen *scr, window *parent,
         const epoc::display_mode dmode, const std::uint32_t client_handle)
         : canvas_base(client, scr, parent, epoc::window_type::redraw, dmode, client_handle) {
-        if (!client->get_ws().get_kernel_system()->is_eka1()) {
-            flags |= flag_has_redraw_store;
-        }
     }
 
     void redraw_msg_canvas::handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) {
@@ -850,13 +855,10 @@ namespace eka2l1::epoc {
 
     void redraw_msg_canvas::end_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
         redraw_rect_curr.make_empty();
+        redraw_segments_.promote_last_segment();
 
-        if (flags & flag_has_redraw_store) {
-            redraw_segments_.promote_last_segment();
-        } else {
-            if (gdi_builder_) {
-                gdi_builder_.reset();
-            }
+        if (gdi_builder_) {
+            gdi_builder_.reset();
         }
 
         if (content_changed()) {
@@ -902,9 +904,7 @@ namespace eka2l1::epoc {
 
         // remove all pending redraws. End redraw will report invalidates later
         client->remove_redraws(this);
-
-        if (flags & flag_has_redraw_store)
-            redraw_segments_.add_new_segment(redraw_rect_curr, epoc::gdi_store_command_segment_pending_redraw);
+        redraw_segments_.add_new_segment(redraw_rect_curr, epoc::gdi_store_command_segment_pending_redraw);
 
         flags |= flags_in_redraw;
 
@@ -935,75 +935,75 @@ namespace eka2l1::epoc {
     void redraw_msg_canvas::add_draw_command(gdi_store_command &command) {
         const std::lock_guard<std::mutex> guard(scr->screen_mutex);
 
-        if (flags & flag_has_redraw_store) {
-            if ((flags & flags_in_redraw) == 0) {
-                eka2l1::rect full_size_rect(eka2l1::vec2(0, 0), abs_rect.size);
+        if ((flags & flags_in_redraw) == 0) {
+            eka2l1::rect full_size_rect(eka2l1::vec2(0, 0), abs_rect.size);
 
-                // Not in redraw? Try to cleanup non redraw segments to make ways
-                if (redraw_segments_.clean_old_nonredraw_segments()) {
+            // Not in redraw? Try to cleanup non redraw segments to make ways
+            if (redraw_segments_.clean_old_nonredraw_segments()) {
+                // With no redraw store, segments aging is ineffective. So just ignore...
+                if (!client->get_ws().no_redraw_storing_enabled())
                     invalidate(full_size_rect);
-                }
-
-                gdi_store_command_segment *current_segment = redraw_segments_.get_current_segment();
-                if (!current_segment || (current_segment->type_ != gdi_store_command_segment_non_redraw)) {
-                    // Create a new non redraw segment, covers the entire screen
-                    redraw_segments_.add_new_segment(full_size_rect, gdi_store_command_segment_non_redraw);
-                }
             }
-
-            content_changed(true);
 
             gdi_store_command_segment *current_segment = redraw_segments_.get_current_segment();
-            if (command.dynamic_pointer_) {
-                current_segment->dynamic_pointers_.push_back(reinterpret_cast<std::uint8_t*>(command.dynamic_pointer_));
+            if (!current_segment || (current_segment->type_ != gdi_store_command_segment_non_redraw)) {
+                // Create a new non redraw segment, covers the entire screen
+                redraw_segments_.add_new_segment(full_size_rect, gdi_store_command_segment_non_redraw);
             }
-
-            if (command.opcode_ == gdi_store_command_draw_text) {
-                auto &data = command.get_data_struct_const<gdi_store_command_draw_text_data>();
-                if (data.fbs_font_ptr_) {
-                    auto ite = std::find(current_segment->font_objects_.begin(), current_segment->font_objects_.end(),
-                        data.fbs_font_ptr_);
-
-                    if (ite == current_segment->font_objects_.end()) {
-                        current_segment->font_objects_.push_back(data.fbs_font_ptr_);
-                        reinterpret_cast<fbsfont*>(data.fbs_font_ptr_)->ref();
-                    }
-                }
-            }
-
-            if (command.opcode_ == gdi_store_command_draw_bitmap) {
-                auto &data = command.get_data_struct_const<gdi_store_command_draw_bitmap_data>();
-                if (data.main_fbs_bitmap_ && ((data.gdi_flags_ & GDI_STORE_COMMAND_MAIN_RAW) == 0)) {
-                    auto ite = std::find(current_segment->bitmap_objects_.begin(), current_segment->bitmap_objects_.end(),
-                        data.main_fbs_bitmap_);
-
-                    if (ite == current_segment->bitmap_objects_.end()) {
-                        current_segment->bitmap_objects_.push_back(data.main_fbs_bitmap_);
-                        reinterpret_cast<fbsfont*>(data.main_fbs_bitmap_)->ref();
-                    }
-                }
-                
-                if (data.mask_fbs_bitmap_ && ((data.gdi_flags_ & GDI_STORE_COMMAND_MASK_RAW) == 0)) {
-                    auto ite = std::find(current_segment->bitmap_objects_.begin(), current_segment->bitmap_objects_.end(),
-                        data.mask_fbs_bitmap_);
-
-                    if (ite == current_segment->bitmap_objects_.end()) {
-                        current_segment->bitmap_objects_.push_back(data.mask_fbs_bitmap_);
-                        reinterpret_cast<fbsfont*>(data.mask_fbs_bitmap_)->ref();
-                    }
-                }
-            }
-
-            current_segment->commands_.push_back(std::move(command));
-        } else {
-            if (!gdi_builder_) {
-                gdi_builder_ = std::make_unique<gdi_command_builder>(client->get_ws().get_graphics_driver(), driver_builder_,
-                    *client->get_ws().get_bitmap_cache(), abs_rect.top, scr->display_scale_factor,
-                    visible_region);
-            }
-
-            gdi_builder_->build_single_command(command);
         }
+
+        content_changed(true);
+
+        gdi_store_command_segment *current_segment = redraw_segments_.get_current_segment();
+        if (command.dynamic_pointer_) {
+            current_segment->dynamic_pointers_.push_back(reinterpret_cast<std::uint8_t*>(command.dynamic_pointer_));
+        }
+
+        if (command.opcode_ == gdi_store_command_draw_text) {
+            auto &data = command.get_data_struct_const<gdi_store_command_draw_text_data>();
+            if (data.fbs_font_ptr_) {
+                auto ite = std::find(current_segment->font_objects_.begin(), current_segment->font_objects_.end(),
+                    data.fbs_font_ptr_);
+
+                if (ite == current_segment->font_objects_.end()) {
+                    current_segment->font_objects_.push_back(data.fbs_font_ptr_);
+                    reinterpret_cast<fbsfont*>(data.fbs_font_ptr_)->ref();
+                }
+            }
+        }
+
+        if (command.opcode_ == gdi_store_command_draw_bitmap) {
+            auto &data = command.get_data_struct_const<gdi_store_command_draw_bitmap_data>();
+            if (data.main_fbs_bitmap_ && ((data.gdi_flags_ & GDI_STORE_COMMAND_MAIN_RAW) == 0)) {
+                auto ite = std::find(current_segment->bitmap_objects_.begin(), current_segment->bitmap_objects_.end(),
+                    data.main_fbs_bitmap_);
+
+                if (ite == current_segment->bitmap_objects_.end()) {
+                    current_segment->bitmap_objects_.push_back(data.main_fbs_bitmap_);
+                    reinterpret_cast<fbsfont*>(data.main_fbs_bitmap_)->ref();
+                }
+            }
+            
+            if (data.mask_fbs_bitmap_ && ((data.gdi_flags_ & GDI_STORE_COMMAND_MASK_RAW) == 0)) {
+                auto ite = std::find(current_segment->bitmap_objects_.begin(), current_segment->bitmap_objects_.end(),
+                    data.mask_fbs_bitmap_);
+
+                if (ite == current_segment->bitmap_objects_.end()) {
+                    current_segment->bitmap_objects_.push_back(data.mask_fbs_bitmap_);
+                    reinterpret_cast<fbsfont*>(data.mask_fbs_bitmap_)->ref();
+                }
+            }
+        }
+
+        current_segment->commands_.push_back(std::move(command));
+
+        if (!gdi_builder_) {
+            gdi_builder_ = std::make_unique<gdi_command_builder>(client->get_ws().get_graphics_driver(), driver_builder_,
+                *client->get_ws().get_bitmap_cache(), abs_rect.top, scr->display_scale_factor,
+                visible_region);
+        }
+
+        gdi_builder_->build_single_command(command);
     }
 
     bool redraw_msg_canvas::scroll(eka2l1::rect clip_space, const eka2l1::vec2 offset, eka2l1::rect source_rect) {
@@ -1064,7 +1064,7 @@ namespace eka2l1::epoc {
 
         builder.set_feature(drivers::graphics_feature::blend, false);
 
-        if (flags & flag_has_redraw_store) {
+        if (scr->flags_ & screen::FLAG_SERVER_REDRAW_PENDING) {
             auto &segments = redraw_segments_.get_segments();
 
             if (!segments.empty()) {
@@ -1081,7 +1081,9 @@ namespace eka2l1::epoc {
                     }
                 }
             }
-        } else {
+        }
+
+        if (scr->flags_ & screen::FLAG_CLIENT_REDRAW_PENDING) {
             drivers::command_list cmd_list = driver_builder_.retrieve_command_list();
             if (!cmd_list.empty()) {
                 draw_background_color();
@@ -1267,7 +1269,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        content_changed(false);
+        scr->set_client_draw_pending();
 
         drivers::command_list list = driver_builder_.retrieve_command_list();
         drv->submit_command_list(list);
@@ -1436,6 +1438,10 @@ namespace eka2l1::epoc {
 
             driver_builder_.bind_bitmap(driver_win_id);
             content_changed(false);
+        } else {
+            if ((scr->flags_ & screen::FLAG_CLIENT_REDRAW_PENDING) && !(scr->flags_ & screen::FLAG_SERVER_REDRAW_PENDING)) {
+                return false;
+            }
         }
 
         builder.set_feature(drivers::graphics_feature::blend, false);

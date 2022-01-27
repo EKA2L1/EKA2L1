@@ -86,7 +86,6 @@ namespace eka2l1::epoc {
             flag_focus_receiveable = 1 << 12,
             flag_winmode_fixed = 1 << 13,
             flag_visiblity_event_report = 1 << 14,
-            flag_has_redraw_store = 1 << 15,
             flag_content_changed = 1 << 16,
             flag_shape_region = 1 << 17            // Only support region and square on the emulator, others are too complicated
         };

@@ -112,7 +112,9 @@ namespace eka2l1::epoc {
         enum {
             FLAG_NEED_RECALC_VISIBLE = 1 << 0,
             FLAG_ORIENTATION_LOCK = 1 << 1,
-            FLAG_AUTO_CLEAR_BACKGROUND = 1 << 2
+            FLAG_AUTO_CLEAR_BACKGROUND = 1 << 2,
+            FLAG_SERVER_REDRAW_PENDING = 1 << 3,
+            FLAG_CLIENT_REDRAW_PENDING = 1 << 4
         };
 
         using focus_change_callback = std::pair<void *, focus_change_callback_handler>;
@@ -237,6 +239,10 @@ namespace eka2l1::epoc {
 
         const bool auto_clear_enabled() const {
             return flags_ & FLAG_AUTO_CLEAR_BACKGROUND;
+        }
+
+        void set_client_draw_pending() {
+            flags_ |= FLAG_CLIENT_REDRAW_PENDING;
         }
 
         void need_update_visible_regions(const bool value);

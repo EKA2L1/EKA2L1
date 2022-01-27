@@ -247,10 +247,6 @@ namespace eka2l1::epoc {
 
             const bitmap_file_compression comp = bmp->compression_type();
 
-            if ((bmp->header_.size_pixels.x == 640) && (bmp->header_.size_pixels.y == 360)) {
-                LOG_TRACE(KERNEL, "Test");
-            }
-
             if (comp != bitmap_file_no_compression) {
                 raw_size = bmp->byte_width_ * bmp->header_.size_pixels.y;
                 decompressed.resize(raw_size);

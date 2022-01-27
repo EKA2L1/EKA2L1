@@ -377,6 +377,12 @@ namespace eka2l1 {
 
         int repeatable_event_;
 
+        enum {
+            CONFIG_FLAG_NO_REDRAW_STORING = 1 << 0
+        };
+
+        std::uint32_t config_flags;
+
         void init(service::ipc_context &ctx);
         void send_to_command_buffer(service::ipc_context &ctx);
 
@@ -503,5 +509,9 @@ namespace eka2l1 {
 
         void init_key_mappings();
         void set_screen_sync_buffer_option(const int option);
+
+        const bool no_redraw_storing_enabled() const {
+            return config_flags & CONFIG_FLAG_NO_REDRAW_STORING;
+        }
     };
 }
