@@ -1021,6 +1021,15 @@ namespace eka2l1::epoc {
         return true;
     }
 
+    void redraw_msg_canvas::take_action_on_change(kernel::thread *drawer) {
+        if (gdi_builder_) {
+            // Set the new scale factor (updated maybe)
+            gdi_builder_->set_scale_factor(scr->display_scale_factor);
+        }
+
+        canvas_base::take_action_on_change(drawer);
+    }
+
     bool redraw_msg_canvas::draw(drivers::graphics_command_builder &builder) {
         if (!can_be_physically_seen()) {
             // No need to redraw this window yet. It doesn't even have any content ready.

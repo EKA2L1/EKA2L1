@@ -247,6 +247,7 @@ namespace eka2l1::epoc {
         void handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) override;
         void add_draw_command(gdi_store_command &command) override;
         bool scroll(eka2l1::rect clip_space, const eka2l1::vec2 offset, eka2l1::rect source_rect) override;
+        void take_action_on_change(kernel::thread *drawer) override;
 
         // ===================== OPCODE IMPLEMENTATIONS ===========================
         void begin_redraw(service::ipc_context &context, ws_cmd &cmd);

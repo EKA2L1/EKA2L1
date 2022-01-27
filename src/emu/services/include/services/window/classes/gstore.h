@@ -197,6 +197,10 @@ namespace eka2l1::epoc {
             clip_ = region;
         }
 
+        void set_scale_factor(const float factor) {
+            scale_factor_ = factor;
+        }
+
         void build_segment(const gdi_store_command_segment &segment);
         void build_single_command(const gdi_store_command &command);
         void build_command_draw_rect(const gdi_store_command_draw_rect_data &cmd);
