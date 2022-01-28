@@ -184,8 +184,8 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
         std::swap(dest.size.x, dest.size.y);
     }
 
-    builder.set_texture_filter(scr->screen_texture, false, filter);
     builder.set_texture_filter(scr->screen_texture, true, filter);
+    builder.set_texture_filter(scr->screen_texture, false, eka2l1::drivers::filter_option::linear);
 
     builder.draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(scr->ui_rotation), 0);
     builder.load_backup_state();

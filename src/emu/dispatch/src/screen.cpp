@@ -18,6 +18,7 @@
  */
 
 #include <common/log.h>
+#include <config/config.h>
 #include <dispatch/dispatcher.h>
 #include <dispatch/screen.h>
 
@@ -176,7 +177,6 @@ namespace eka2l1::dispatch {
             info.transfer_texture_size_ = size;
             info.format_ = format;
 
-            builder.set_texture_filter(info.transfer_texture_, true, drivers::filter_option::linear);
             builder.set_texture_filter(info.transfer_texture_, false, drivers::filter_option::linear);
         }
 
@@ -233,7 +233,9 @@ namespace eka2l1::dispatch {
                     scr->set_screen_mode(nullptr, driver, scr->crr_mode);
                 }
 
+                eka2l1::drivers::filter_option filter = (kern->get_config()->nearest_neighbor_filtering ? eka2l1::drivers::filter_option::nearest : eka2l1::drivers::filter_option::linear);
                 drivers::graphics_command_builder builder;
+
                 builder.update_bitmap(scr->dsa_texture, reinterpret_cast<const char *>(scr->screen_buffer_ptr()),
                     buffer_size, { 0, 0 }, screen_size);
 
@@ -263,6 +265,10 @@ namespace eka2l1::dispatch {
 
                 builder.bind_bitmap(scr->screen_texture);
                 builder.set_feature(drivers::graphics_feature::clipping, false);
+
+                builder.set_texture_filter(scr->dsa_texture, true, filter);
+                builder.set_texture_filter(scr->dsa_texture, false, filter);
+
                 builder.draw_bitmap(scr->dsa_texture, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), 0, flags);
                 builder.bind_bitmap(0);
 
@@ -327,6 +333,9 @@ namespace eka2l1::dispatch {
             if (scr->number == screen_index) {
                 drivers::handle temp = transferer.transfer_data_to_texture(driver, builder,
                     screen_index, data, eka2l1::vec2(size_x, size_y), format);
+
+                eka2l1::drivers::filter_option filter = (kern->get_config()->nearest_neighbor_filtering ? eka2l1::drivers::filter_option::nearest : eka2l1::drivers::filter_option::linear);
+                builder.set_texture_filter(temp, true, filter);
 
                 eka2l1::rect scaled_twice_rect = info->scale_to_rect;
                 scaled_twice_rect.scale(scr->display_scale_factor);

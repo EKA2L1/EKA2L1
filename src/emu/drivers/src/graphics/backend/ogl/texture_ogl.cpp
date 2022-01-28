@@ -179,7 +179,7 @@ namespace eka2l1::drivers {
 
     void ogl_texture::set_filter_minmag(const bool min, const filter_option op) {
         bind(nullptr, 0);
-        glTexParameteri(GL_TEXTURE_2D, min ? GL_TEXTURE_MIN_FILTER : GL_TEXTURE_MAG_FILTER, to_filter_option(op));
+        glTexParameteri(GL_TEXTURE_2D, (min ? GL_TEXTURE_MIN_FILTER : GL_TEXTURE_MAG_FILTER), to_filter_option(op));
         unbind(nullptr);
     }
 
