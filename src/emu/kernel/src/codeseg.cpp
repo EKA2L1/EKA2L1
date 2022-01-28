@@ -207,8 +207,8 @@ namespace eka2l1::kernel {
             data_base_ptr = reinterpret_cast<std::uint8_t *>(kern->get_memory_system()->get_real_pointer(data_addr));
         }
 
-        LOG_INFO(KERNEL, "{} runtime code: 0x{:x}", name(), the_addr_of_code_run);
-        LOG_INFO(KERNEL, "{} runtime data: 0x{:x}", name(), the_addr_of_data_run);
+        LOG_INFO(KERNEL, "{} (UID3=0x{:X}) runtime code: 0x{:x}", name(), uids[2], the_addr_of_code_run);
+        LOG_INFO(KERNEL, "{} (UID3=0x{:X}) runtime data: 0x{:x}", name(), uids[2], the_addr_of_data_run);
 
         attaches.emplace_back(std::make_unique<attached_info>(this, new_foe, dt_chunk, code_chunk));
 
