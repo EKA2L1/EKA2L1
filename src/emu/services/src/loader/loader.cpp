@@ -222,6 +222,11 @@ namespace eka2l1 {
             info->handle = lib_handle_and_obj.first;
             ctx.write_data_to_descriptor_argument(0, *info);
         } else {
+            // Don't know what they are but they got involved in Payload crash (uninitialized variable that should be 1 through this function)
+            info_eka1->unkXX[0] = 1;
+            info_eka1->unkXX[1] = 1;
+            info_eka1->unkXX[2] = 1;
+
             info_eka1->result_handle = lib_handle_and_obj.first;
             ctx.write_data_to_descriptor_argument(0, *info_eka1);
         }
