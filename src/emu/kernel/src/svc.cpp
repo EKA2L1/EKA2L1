@@ -581,8 +581,8 @@ namespace eka2l1::epoc {
             return epoc::error_no_memory;
         }
 
-        LOG_TRACE(KERNEL, "TLS set for 0x{:x}, ptr: 0x{:x}, thread {}", static_cast<std::uint32_t>(h), data_set.ptr_address(),
-            thr->name());
+        //LOG_TRACE(KERNEL, "TLS set for 0x{:x}, ptr: 0x{:x}, thread {}", static_cast<std::uint32_t>(h), data_set.ptr_address(),
+        //    thr->name());
 
         return epoc::error_none;
     }
@@ -591,7 +591,7 @@ namespace eka2l1::epoc {
         kernel::thread *thr = kern->crr_thread();
         thr->close_tls_slot(h);
 
-        LOG_TRACE(KERNEL, "TLS slot closed for 0x{:x}, thread {}", static_cast<std::uint32_t>(h), thr->name());
+        //LOG_TRACE(KERNEL, "TLS slot closed for 0x{:x}, thread {}", static_cast<std::uint32_t>(h), thr->name());
     }
 
     BRIDGE_FUNC(void, dll_filename, std::int32_t entry_addr, eka2l1::ptr<epoc::des8> full_path_ptr) {
