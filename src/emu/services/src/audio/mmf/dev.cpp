@@ -184,7 +184,8 @@ namespace eka2l1 {
         , volume_(5)
         , left_balance_(50)
         , right_balance_(50)
-        , underflow_event_(0) {
+        , underflow_event_(0)
+        , volume_ramp_us_(0) {
         conf_.channels_ = 1;
         conf_.rate_ = epoc::mmf_sample_rate_8000hz;
         conf_.buffer_size_ = MMF_BUFFER_SIZE_DEFAULT;
@@ -472,6 +473,9 @@ namespace eka2l1 {
         four_ccs_.clear();
         four_ccs_.push_back(PCM8_CC);
         four_ccs_.push_back(PCM16_CC);
+        four_ccs_.push_back(MP3_CC);
+        four_ccs_.push_back(AAC_CC);
+        four_ccs_.push_back(WAV_CC);
     }
 
     void mmf_dev_server_session::get_supported_input_data_types(service::ipc_context *ctx) {
@@ -484,6 +488,19 @@ namespace eka2l1 {
         ctx->write_data_to_descriptor_argument(2, reinterpret_cast<const std::uint8_t *>(four_ccs_.data()),
             static_cast<std::uint32_t>(four_ccs_.size() * sizeof(std::uint32_t)));
 
+        ctx->complete(epoc::error_none);
+    }
+
+    void mmf_dev_server_session::set_volume_ramp(service::ipc_context *ctx) {
+        std::optional<epoc::mmf_dev_sound_proxy_settings> settings
+            = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(2);
+
+        if (!settings) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        volume_ramp_us_ = settings->duration_;
         ctx->complete(epoc::error_none);
     }
 
@@ -805,7 +822,6 @@ namespace eka2l1 {
                 samples_played(ctx);
                 break;
 
-                /*
             case epoc::mmf_dev_get_supported_input_data_types:
                 get_supported_input_data_types(ctx);
                 break;
@@ -814,7 +830,9 @@ namespace eka2l1 {
                 copy_fourcc_array(ctx);
                 break;
 
-            */
+            case epoc::mmf_dev_set_volume_ramp:
+                set_volume_ramp(ctx);
+                break;
 
             default:
                 LOG_ERROR(SERVICE_MMFAUD, "Unimplemented MMF dev server session opcode {}", ctx->msg->function);

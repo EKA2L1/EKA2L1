@@ -41,6 +41,9 @@ namespace eka2l1 {
     constexpr std::uint32_t PCM16_CC = make_four_cc(' ', 'P', '1', '6');
     constexpr std::uint32_t PCMU8_CC = make_four_cc(' ', 'P', 'U', '8');
     constexpr std::uint32_t PCMU16_CC = make_four_cc('P', 'U', '1', '6');
+    constexpr std::uint32_t MP3_CC = make_four_cc(' ', 'M', 'P', '3');
+    constexpr std::uint32_t AAC_CC = make_four_cc(' ', 'A', 'A', 'C');
+    constexpr std::uint32_t WAV_CC = make_four_cc(' ', 'W', 'A', 'V');
 
     class mmf_dev_server_session : public service::typical_session {
         epoc::mmf_priority_settings pri_;
@@ -68,6 +71,7 @@ namespace eka2l1 {
         std::mutex dev_access_lock_;
 
         std::uint32_t volume_;
+        std::uint32_t volume_ramp_us_;
         std::int32_t left_balance_;
         std::int32_t right_balance_;
 
@@ -106,6 +110,7 @@ namespace eka2l1 {
         void get_buffer_to_be_filled(service::ipc_context *ctx);
         void cancel_play_error(service::ipc_context *ctx);
         void cancel_buffer_to_be_filled(service::ipc_context *ctx);
+        void set_volume_ramp(service::ipc_context *ctx);
 
         // Play sync, when finish complete the status
         void play_error(service::ipc_context *ctx);
