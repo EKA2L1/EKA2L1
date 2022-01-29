@@ -72,7 +72,7 @@ namespace eka2l1::drivers {
 
     int dsp_output_stream_ffmpeg::read_queued_data(std::uint8_t *buffer, int buffer_size) {
         if (queued_data_.empty()) {
-            return -1;
+            return AVERROR_EOF;
         }
 
         int read_size = common::min<int>(buffer_size, static_cast<int>(queued_data_.size()));
@@ -84,7 +84,7 @@ namespace eka2l1::drivers {
             queued_data_.erase(queued_data_.begin(), queued_data_.begin() + read_size);
         }
 
-        return (read_size <= 0) ? -1 : read_size;
+        return (read_size <= 0) ? AVERROR_EOF : read_size;
     }
 
     void dsp_output_stream_ffmpeg::get_supported_formats(std::vector<four_cc> &cc_list) {
