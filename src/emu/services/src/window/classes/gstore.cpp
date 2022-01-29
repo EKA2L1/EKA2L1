@@ -201,8 +201,7 @@ namespace eka2l1::epoc {
             break;
 
         case gdi_store_command_disable_clip:
-            builder_.set_feature(drivers::graphics_feature::stencil_test, false);
-            builder_.set_feature(drivers::graphics_feature::clipping, false);
+            build_command_disable_clip();
             break;
 
         case gdi_store_command_set_clip_rect_single:
@@ -395,5 +394,14 @@ namespace eka2l1::epoc {
         clipped.intersect(clip_);
 
         clip_region(builder_, clipped, scale_factor_, true);
+    }
+
+    void gdi_command_builder::build_command_disable_clip() {
+        if (clip_.empty()) {
+            builder_.set_feature(drivers::graphics_feature::stencil_test, false);
+            builder_.set_feature(drivers::graphics_feature::clipping, false);
+        } else {
+            clip_region(builder_, clip_, scale_factor_, true);
+        }
     }
 }
