@@ -125,6 +125,13 @@ void CMMFMdaAudioUtility::StartListeningForCompletion() {
 }
 
 void CMMFMdaAudioUtility::SupplyUrl(const TDesC &aFilename) {
+    if (iState == EMdaStateReady) {
+        LogOut(KMcaCat, _L("Audio clip player must be closed using Close() function before open new audio clip!"));
+        TransitionState(iState, KErrInUse);
+
+        return;
+    }
+
     if ((iState == EMdaStatePlay) || (iState == EMdaStatePause)) {
         LogOut(KMcaCat, _L("Audio supplied while utility is being played."));
         TransitionState(iState, KErrInUse);
@@ -132,10 +139,7 @@ void CMMFMdaAudioUtility::SupplyUrl(const TDesC &aFilename) {
         return;
     }
 
-    // Cancel if it's being activated
-    if (iState == EMdaStateReady) {
-        iOpener.FixupActiveStatus();
-    }
+    iOpener.FixupActiveStatus();
 
     TInt duration = EAudioPlayerSupplyUrl(0, iDispatchInstance, aFilename.Ptr(), aFilename.Length());
     TTimeIntervalMicroSeconds durationObj = TTimeIntervalMicroSeconds(duration);
@@ -147,6 +151,13 @@ void CMMFMdaAudioUtility::SupplyUrl(const TDesC &aFilename) {
 }
 
 void CMMFMdaAudioUtility::SupplyData(const TDesC8 &aData) {
+    if (iState == EMdaStateReady) {
+        LogOut(KMcaCat, _L("Audio clip player must be closed using Close() function before open new audio clip!"));
+        TransitionState(iState, KErrInUse);
+
+        return;
+    }
+
     if ((iState == EMdaStatePlay) || (iState == EMdaStatePause)) {
         LogOut(KMcaCat, _L("Audio supplied while utility is being played."));
 
@@ -155,9 +166,7 @@ void CMMFMdaAudioUtility::SupplyData(const TDesC8 &aData) {
     }
 
     // Cancel if it's being activated
-    if (iState == EMdaStateReady) {
-        iOpener.FixupActiveStatus();
-    }
+    iOpener.FixupActiveStatus();
 
     TInt duration = EAudioPlayerSupplyData(0, iDispatchInstance, aData);
     TTimeIntervalMicroSeconds durationObj = TTimeIntervalMicroSeconds(duration);
@@ -193,6 +202,17 @@ void CMMFMdaAudioUtility::Play() {
 
 void CMMFMdaAudioUtility::Stop() {
     TransitionState(EMdaStateReady, 1);
+    EAudioPlayerStop(0, iDispatchInstance);
+
+    // Do cancel
+    Cancel();
+}
+
+void CMMFMdaAudioUtility::Close() {
+    // Closing a clip will of course first will put a stop to playing
+    // The emulator side will auto handle closing when open a new URL. Here we are just complying
+    // with the rules...
+    TransitionState(EMdaStateIdle, KErrNone);
     EAudioPlayerStop(0, iDispatchInstance);
 
     // Do cancel

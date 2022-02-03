@@ -94,6 +94,7 @@ public:
 
     void Play();
     void Stop();
+    void Close();
 
     TInt Pause();
 

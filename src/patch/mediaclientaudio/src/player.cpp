@@ -83,7 +83,7 @@ EXPORT_C TInt CMdaAudioPlayerUtility::Pause() {
 }
 
 EXPORT_C void CMdaAudioPlayerUtility::Close() {
-    Stop();
+    iProperties->Close();
 }
 
 #if (MCA_NEW == 3)
