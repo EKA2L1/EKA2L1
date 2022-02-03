@@ -27,10 +27,15 @@
 #endif
 
 #include <common/algorithm.h>
+#include <common/fileutils.h>
 #include <common/path.h>
+#include <cstdio>
 #include <cstring>
 
 namespace eka2l1::drivers {
+    static constexpr const char *MIDI_HEADER_MAGIC = "MThd";
+    static constexpr int MIDI_HEADER_MAGIC_LENGTH = 4;
+
     audio_driver::audio_driver(const std::uint32_t initial_master_volume, const player_type preferred_midi_backend)
         : master_volume_(initial_master_volume)
         , preferred_midi_backend_(preferred_midi_backend) {
@@ -39,8 +44,18 @@ namespace eka2l1::drivers {
     std::vector<player_type> audio_driver::get_suitable_player_types(const std::string &url) {
         std::vector<player_type> res;
 
-        if (!url.empty() && common::compare_ignore_case(eka2l1::path_extension(url).c_str(), ".mid") == 0) {
-            res.push_back(preferred_midi_backend_);
+        if (!url.empty()) {
+            FILE *target_file = common::open_c_file(url, "rb");
+    
+            if (target_file) {
+                char header_magic[MIDI_HEADER_MAGIC_LENGTH];
+                if ((fread(header_magic, 1, MIDI_HEADER_MAGIC_LENGTH, target_file) == MIDI_HEADER_MAGIC_LENGTH) &&
+                    (strncmp(header_magic, MIDI_HEADER_MAGIC, MIDI_HEADER_MAGIC_LENGTH) == 0)) {
+                    res.push_back(preferred_midi_backend_);
+                }
+
+                fclose(target_file);
+            }
         }
 
 #if EKA2L1_PLATFORM(WIN32)
