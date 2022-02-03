@@ -38,11 +38,11 @@ namespace eka2l1::epoc {
     static epoc::security_policy key_capture_policy({ epoc::cap_sw_event });
 
     void window_group::lost_focus() {
-        queue_event(epoc::event{ id, epoc::event_code::focus_lost });
+        queue_event(epoc::event{ client_handle, epoc::event_code::focus_lost });
     }
 
     void window_group::gain_focus() {
-        queue_event(epoc::event{ id, epoc::event_code::focus_gained });
+        queue_event(epoc::event{ client_handle, epoc::event_code::focus_gained });
     }
 
     void window_group::receive_focus(service::ipc_context &context, ws_cmd &cmd) {

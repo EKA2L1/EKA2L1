@@ -207,6 +207,31 @@ namespace eka2l1::epoc {
         return abs_rect.size;
     }
 
+    void canvas_base::report_visiblity_change() {
+        if ((flags & flag_visiblity_event_report) == 0) {
+            return;
+        }
+
+        epoc::event visi_change_evt;
+        visi_change_evt.type = epoc::event_code::window_visibility_change;
+        visi_change_evt.time = client->get_ws().get_kernel_system()->home_time();
+        visi_change_evt.handle = client_handle;
+        visi_change_evt.win_visibility_change_evt_.flags_ = 0;
+
+        if (visible_region.empty()) {
+            visi_change_evt.win_visibility_change_evt_.flags_ = epoc::window_visiblity_changed_event::not_visible;
+        } else {
+            if (((flags & flag_shape_region) && (visible_region.identical(shape_region))) ||
+                (((flags & flag_shape_region) == 0) && (visible_region.rects_.size() == 1) && (visible_region.rects_[0] == bounding_rect()))) {
+                visi_change_evt.win_visibility_change_evt_.flags_ = (epoc::window_visiblity_changed_event::partially_visible | epoc::window_visiblity_changed_event::fully_visible);
+            } else {
+                visi_change_evt.win_visibility_change_evt_.flags_ = epoc::window_visiblity_changed_event::partially_visible;
+            }
+        }
+
+        window::queue_event(visi_change_evt);
+    }
+
     void canvas_base::queue_event(const epoc::event &evt) {
         if (!is_visible()) {
             // TODO: Im not sure... I think it can certainly receive

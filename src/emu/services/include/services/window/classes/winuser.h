@@ -125,6 +125,7 @@ namespace eka2l1::epoc {
          */
         void set_extent(const eka2l1::vec2 &top, const eka2l1::vec2 &size);
         void recalculate_absolute_position(const eka2l1::vec2 &diff);
+        void report_visiblity_change();
 
         bool is_visible() const;
         bool can_be_physically_seen() const;

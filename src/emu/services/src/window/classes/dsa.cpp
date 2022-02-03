@@ -194,6 +194,11 @@ namespace eka2l1::epoc {
     }
 
     void dsa::abort(const std::int32_t reason) {
+        if (state_ == state_completed) {
+            // Someone assassinated this DSA before we got our hand on it, damn
+            return;
+        }
+
         if (!dsa_must_abort_queue_->send(&reason, sizeof(reason))) {
             LOG_ERROR(SERVICE_WINDOW, "Unable to send abort message code {} to client", reason);
         }

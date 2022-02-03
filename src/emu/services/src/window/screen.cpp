@@ -440,8 +440,11 @@ namespace eka2l1::epoc {
 
             if (modeinfo_o && modeinfo_n) {
                 if (modeinfo_o->size != modeinfo_n->size) {
-                    need_update_visible_regions(true);
                     abort_all_dsas(dsa_terminate_rotation_change);
+                    
+                    // Do it right now (when are we gonna redraw again to calculate the visible region clueless)
+                    need_update_visible_regions(true);
+                    recalculate_visible_regions();
                 }
             }
         }
@@ -544,29 +547,31 @@ namespace eka2l1::epoc {
 
                 winuser->visible_region.make_empty();
 
-                if ((winuser->win_type == epoc::window_type::blank) && (winuser->scr->scr_config.blt_offscreen)) {
-                    return false;
+                if ((winuser->win_type != epoc::window_type::blank) || (!winuser->scr->scr_config.blt_offscreen)) {
+                    if (!visible_left_region_.empty() && winuser->is_visible()) {
+                        if (winuser->flags & epoc::window::flag_shape_region) {
+                            winuser->visible_region = winuser->shape_region;
+                        } else {
+                            winuser->visible_region.add_rect(winuser->abs_rect);
+                        }
+
+                        // The region that window can render is the region intersects with the current available left region
+                        // Eliminating the intersected region that is reserved for this window, we got the next region left to go on.
+                        winuser->visible_region = winuser->visible_region.intersect(visible_left_region_);
+                        visible_left_region_.eliminate(winuser->visible_region);
+                    }
                 }
 
-                if (!visible_left_region_.empty() && winuser->is_visible()) {
-                    if (winuser->flags & epoc::window::flag_shape_region) {
-                        winuser->visible_region = winuser->shape_region;
-                    } else {
-                        winuser->visible_region.add_rect(winuser->abs_rect);
+                if (!previous_region.identical(winuser->visible_region)) {
+                    if (winuser->is_dsa_active()) {
+                        std::vector<dsa*> dsa_residents = winuser->directs_;
+
+                        for (std::size_t i = 0; i < dsa_residents.size(); i++) {
+                            dsa_residents[i]->visible_region_changed(winuser->visible_region);
+                        }
                     }
 
-                    // The region that window can render is the region intersects with the current available left region
-                    // Eliminating the intersected region that is reserved for this window, we got the next region left to go on.
-                    winuser->visible_region = winuser->visible_region.intersect(visible_left_region_);
-                    visible_left_region_.eliminate(winuser->visible_region);
-                }
-
-                if (winuser->is_dsa_active()) {
-                    std::vector<dsa*> dsa_residents = winuser->directs_;
-
-                    for (std::size_t i = 0; i < dsa_residents.size(); i++) {
-                        dsa_residents[i]->visible_region_changed(winuser->visible_region);
-                    }
+                    winuser->report_visiblity_change();
                 }
             }
 

@@ -338,6 +338,10 @@ namespace eka2l1 {
             return r;
         }
 
+        const bool operator == (const eka2l1::rect &rhs) const {
+            return ((top == rhs.top) && (size == rhs.size));
+        }
+
         /**
          * @brief Transform raw rectangle from Symbian's guest.
          * 

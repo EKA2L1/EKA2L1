@@ -1486,12 +1486,9 @@ namespace eka2l1 {
         , next_repeat_delay_(0)
         , repeatable_event_(0)
         , config_flags(0) {
-        REGISTER_IPC(window_server, init, EWservMessInit,
-            "Ws::Init");
-        REGISTER_IPC(window_server, send_to_command_buffer, EWservMessCommandBuffer,
-            "Ws::CommandBuffer");
-        REGISTER_IPC(window_server, send_to_command_buffer, EWservMessSyncMsgBuf,
-            "Ws::MessSyncBuf");
+        REGISTER_IPC(window_server, init, ws_mess_init, "Ws::Init");
+        REGISTER_IPC(window_server, send_to_command_buffer, ws_mess_command_buffer, "Ws::CommandBuffer");
+        REGISTER_IPC(window_server, send_to_command_buffer, ws_mess_sync_msg_buf, "Ws::MessSyncBuf");
 
         // For addition mappings before actual game launches
         init_key_mappings();
@@ -2073,8 +2070,8 @@ namespace eka2l1 {
     }
 
     void window_server::on_unhandled_opcode(service::ipc_context &ctx) {
-        if (ctx.msg->function & EWservMessAsynchronousService) {
-            switch (ctx.msg->function & ~EWservMessAsynchronousService) {
+        if (ctx.msg->function & ws_mess_async_service) {
+            switch (ctx.msg->function & ~ws_mess_async_service) {
             case ws_cl_op_redraw_ready:
                 clients[ctx.msg->msg_session->unique_id()]->get_ready(ctx, nullptr, epoc::event_listener_type_redraw);
                 break;
@@ -2088,7 +2085,7 @@ namespace eka2l1 {
                 break;
 
             default: {
-                LOG_TRACE(SERVICE_WINDOW, "Unhandle async code: {}", ctx.msg->function & ~EWservMessAsynchronousService);
+                LOG_TRACE(SERVICE_WINDOW, "Unhandle async code: {}", ctx.msg->function & ~ws_mess_async_service);
                 break;
             }
             }

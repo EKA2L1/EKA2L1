@@ -403,6 +403,16 @@ namespace eka2l1::epoc {
         std::int32_t message_parameters_size;
     };
 
+    struct window_visiblity_changed_event {
+        enum {
+            partially_visible = 1 << 0,
+            not_visible = 1 << 1,
+            fully_visible = 1 << 2
+        };
+
+        std::uint32_t flags_;
+    };
+
     struct adv_pointer_event : public pointer_event {
         int spare1;
         int spare2;
@@ -442,6 +452,7 @@ namespace eka2l1::epoc {
             adv_pointer_event adv_pointer_evt_;
             key_event key_evt_;
             message_ready_event msg_ready_evt_;
+            window_visiblity_changed_event win_visibility_change_evt_;
         };
 
         event() {}

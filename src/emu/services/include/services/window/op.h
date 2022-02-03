@@ -17,16 +17,6 @@
 
 #pragma once
 
-enum TWservMessages {
-    EWservMessCommandBuffer,
-    EWservMessShutdown,
-    EWservMessInit,
-    EWservMessFinish,
-    EWservMessSyncMsgBuf,
-    EWservMessAsynchronousService = 0x010000,
-    EWservMessAnimDllAsyncCommand = 0x100000,
-};
-
 namespace eka2l1 {
     enum ws_messages {
         ws_mess_command_buffer = 0,
