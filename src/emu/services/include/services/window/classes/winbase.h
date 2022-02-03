@@ -195,7 +195,6 @@ namespace eka2l1::epoc {
             , child(nullptr)
             , flags(flags_visible) {
             set_parent(parent);
-            set_position(0);
         }
 
         explicit window(window_server_client_ptr client, screen *scr, window *parent, window_kind type)
@@ -206,7 +205,14 @@ namespace eka2l1::epoc {
             , child(nullptr)
             , flags(flags_visible) {
             set_parent(parent);
+        }
+
+        void set_initial_state() {
             set_position(0);
+
+            if (parent && ((parent->flags & flags_visible) == 0)) {
+                flags &= ~flags_visible;
+            }
         }
 
         ~window() override;

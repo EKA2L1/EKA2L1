@@ -21,6 +21,8 @@
 #pragma once
 
 #include <common/vecx.h>
+#include <common/region.h>
+
 #include <drivers/driver.h>
 #include <drivers/graphics/buffer.h>
 #include <drivers/graphics/common.h>
@@ -194,12 +196,23 @@ namespace eka2l1::drivers {
             return (list_.size_ >= MAX_THRESHOLD_TO_FLUSH);
         }
 
+        void reset_list() {
+            delete list_.base_;
+
+            list_.size_ = 0;
+            list_.base_ = nullptr;
+        }
+
         command_list retrieve_command_list() {
             command_list copy = list_;
             list_.base_ = nullptr;
             list_.size_ = 0;
 
             return copy;
+        }
+
+        command *create_next_command() {
+            return list_.retrieve_next();
         }
 
         bool merge(command_list &another) {
@@ -218,7 +231,7 @@ namespace eka2l1::drivers {
                 list_.size_ += another.size_;
             }
 
-            delete another.base_;
+            delete[] another.base_;
             return true;
         }
 
@@ -237,6 +250,8 @@ namespace eka2l1::drivers {
          */
         void clip_rect(const eka2l1::rect &rect);
         void clip_bitmap_rect(const eka2l1::rect &rect);
+
+        void clip_bitmap_region(const common::region &region, const float scale_factor = 1.0f);
 
         /**
           * \brief Clear the binding bitmap with color.
@@ -273,7 +288,8 @@ namespace eka2l1::drivers {
          * \returns Handle to the texture.
          */
         void update_bitmap(drivers::handle h, const char *data, const std::size_t size,
-            const eka2l1::vec2 &offset, const eka2l1::vec2 &dim, const std::size_t pixels_per_line = 0);
+            const eka2l1::vec2 &offset, const eka2l1::vec2 &dim, const std::size_t pixels_per_line = 0,
+            const bool need_copy = true);
 
         /**
          * @brief Update a texture data region.

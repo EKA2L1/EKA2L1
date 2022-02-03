@@ -125,7 +125,7 @@ namespace eka2l1::epoc {
         // However, ordinal position is from smallest to largest.
         // References TCoeWinPriority for information.
         // https://github.com/SymbianSource/oss.FCL.sf.mw.classicui/blob/dcea899751dfa099dcca7a5508cf32eab64afa7a/lafagnosticuifoundation/cone/inc/COEDEF.H
-        while (*prev != nullptr && priority > (*prev)->priority) {
+        while (*prev != nullptr && priority < (*prev)->priority) {
             prev = &((*prev)->sibling);
         }
 
@@ -157,14 +157,14 @@ namespace eka2l1::epoc {
         window *prev = nullptr;
 
         // Iterate to the same priority group
-        while ((cur == this) || ((cur != nullptr) && (priority > cur->priority))) {
+        while ((cur == this) || ((cur != nullptr) && (priority < cur->priority))) {
             prev = cur;
             cur = cur->sibling;
         }
 
         if (prev == this) {
             cur = this;
-        } else if (cur == nullptr || ((cur->sibling == this) && (priority < cur->priority))) {
+        } else if ((cur == nullptr) || ((cur->sibling == this) && (priority > cur->priority))) {
             // We are far too behind, should be in the front
             return true;
         }
@@ -230,7 +230,7 @@ namespace eka2l1::epoc {
     int window::ordinal_position(const bool full) {
         window *win = parent->child;
 
-        if (full) {
+        if (!full) {
             while (win->priority > priority) {
                 win = win->sibling;
             }

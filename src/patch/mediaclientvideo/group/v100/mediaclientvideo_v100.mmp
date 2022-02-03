@@ -1,0 +1,19 @@
+TARGET		  mediaclientvideo_v100.dll
+TARGETTYPE	  dll
+UID			 0x10003B19 0xee000009
+
+USERINCLUDE	    ..\..\inc
+SYSTEMINCLUDE   \epoc32\include ..\..\..\priv\inc
+
+SOURCEPATH	    ..\..\src
+
+SOURCE          VideoPlayerBody.cpp dispatch.s
+
+nostrictdef
+
+LIBRARY		    euser.lib mediaclient.lib efsrv.lib
+STATICLIBRARY   priv.lib
+
+DEBUGGABLE_UDEBONLY
+
+DEFFILE ..\..\eabi\mediaclientvideo_v100.def

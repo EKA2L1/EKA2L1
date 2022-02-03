@@ -37,15 +37,16 @@ namespace eka2l1::epoc {
     struct window;
 
     enum gdi_store_command_opcode : std::uint32_t {
+        gdi_store_command_invalid,
         gdi_store_command_draw_rect,
         gdi_store_command_draw_line,
         gdi_store_command_draw_polygon,
         gdi_store_command_draw_bitmap,
-        gdi_store_command_draw_raw_texture,
         gdi_store_command_draw_text,
         gdi_store_command_set_clip_rect_single,
         gdi_store_command_set_clip_rect_multiple,
-        gdi_store_command_disable_clip
+        gdi_store_command_disable_clip,
+        gdi_store_command_update_texture
     };
 
     struct gdi_store_command_draw_rect_data {
@@ -69,7 +70,7 @@ namespace eka2l1::epoc {
 
     struct gdi_store_command_draw_text_data {
         eka2l1::vec4 color_;
-        const char16_t *string_;
+        char16_t *string_;
         eka2l1::rect text_box_;
         std::uint32_t alignment_;
         void *fbs_font_ptr_;
@@ -101,6 +102,19 @@ namespace eka2l1::epoc {
         std::uint32_t gdi_flags_;
     };
 
+    struct gdi_store_command_update_texture_data {
+        drivers::handle handle_ = 0;
+        drivers::handle destroy_handle_ = 0;
+
+        void *texture_data_;
+        std::size_t texture_size_;
+        eka2l1::vec2 dim_;
+        std::size_t pixel_per_line_;
+
+        drivers::channel_swizzles swizz_;
+        bool do_swizz_ = false;
+    };
+
     struct gdi_store_command_set_clip_rect_single_data {
         eka2l1::rect clipping_rect_;
     };
@@ -113,9 +127,18 @@ namespace eka2l1::epoc {
     static constexpr std::size_t MAX_COMMAND_STORE_DATA_SIZE = sizeof(gdi_store_command_draw_bitmap_data);
 
     struct gdi_store_command {
-        gdi_store_command_opcode opcode_;
+        gdi_store_command_opcode opcode_ = gdi_store_command_invalid;
         std::uint8_t data_[MAX_COMMAND_STORE_DATA_SIZE];
-        void *dynamic_pointer_ = nullptr;
+        std::shared_ptr<std::vector<std::uint8_t>> dynamic_data_;
+
+        std::uint8_t *allocate_dynamic_data(const std::size_t size) {
+            if (!dynamic_data_) {
+                dynamic_data_ = std::make_shared<std::vector<std::uint8_t>>();
+            }
+
+            dynamic_data_->resize(size);
+            return dynamic_data_->data();
+        }
 
         template <typename T>
         T &get_data_struct() {
@@ -141,11 +164,12 @@ namespace eka2l1::epoc {
         common::region region_;
         std::vector<gdi_store_command> commands_;
 
-        std::vector<std::uint8_t*> dynamic_pointers_;
         std::vector<void*> font_objects_;
         std::vector<void*> bitmap_objects_;
 
         ~gdi_store_command_segment();
+
+        void add_command(gdi_store_command &cmd);
     };
 
     class gdi_store_command_collection {
@@ -156,7 +180,7 @@ namespace eka2l1::epoc {
     public:
         static constexpr std::uint32_t LIMIT_NON_REDRAW_SEGMENTS = 20;
         static constexpr std::int32_t KEEP_NON_REDRAW_SEGMENTS = 12;
-        static constexpr std::uint64_t AGE_LIMIT_NONREDRAW_US = 2000000;
+        static constexpr std::uint64_t AGE_LIMIT_NONREDRAW_US = 1000000;
 
         explicit gdi_store_command_collection();
 
@@ -212,5 +236,6 @@ namespace eka2l1::epoc {
         void build_command_set_clip_rect_single(const gdi_store_command_set_clip_rect_single_data &cmd);
         void build_command_set_clip_rect_multiple(const gdi_store_command_set_clip_rect_multiple_data &cmd);
         void build_command_disable_clip();
+        void build_command_update_texture(const gdi_store_command_update_texture_data &cmd);
     };
 }

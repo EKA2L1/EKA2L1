@@ -4611,10 +4611,10 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_COLOR_WRITEMASK_EMU:
-            params[0] = (ctx->color_mask_ & 1) ? 1 : 0;
-            params[1] = (ctx->color_mask_ & 2) ? 1 : 0;
-            params[2] = (ctx->color_mask_ & 4) ? 1 : 0;
-            params[3] = (ctx->color_mask_ & 8) ? 1 : 0;
+            params[0] = static_cast<T>((ctx->color_mask_ & 1) ? 1 : 0);
+            params[1] = static_cast<T>((ctx->color_mask_ & 2) ? 1 : 0);
+            params[2] = static_cast<T>((ctx->color_mask_ & 4) ? 1 : 0);
+            params[3] = static_cast<T>((ctx->color_mask_ & 8) ? 1 : 0);
 
             break;
 
@@ -4623,7 +4623,7 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_CULL_FACE_MODE_EMU:
-            *params = (static_cast<T>(ctx->active_cull_face_ == drivers::rendering_face::front)) ? GL_FRONT_EMU : GL_BACK_EMU;
+            *params = static_cast<T>((ctx->active_cull_face_ == drivers::rendering_face::front) ? GL_FRONT_EMU : GL_BACK_EMU);
             break;
 
         case GL_CURRENT_COLOR_EMU:
@@ -4676,7 +4676,7 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_TEXTURE_COORD_ARRAY_EMU: {
-            std::uint64_t mask = 1 << (egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY_POS +
+            std::uint64_t mask = 1 << static_cast<std::uint8_t>(egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY_POS +
                 static_cast<std::uint8_t>(ctx->active_client_texture_unit_));
 
             *params = static_cast<T>((ctx->vertex_statuses_ & mask) ? 1 : 0);
@@ -4724,11 +4724,11 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_RESCALE_NORMAL_EMU:
-            *params = (static_cast<T>(ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_NORMAL_ENABLE_RESCALE)) ? 1 : 0;
+            *params = static_cast<T>((ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_NORMAL_ENABLE_RESCALE) ? 1 : 0);
             break;
 
         case GL_NORMALIZE_EMU:
-            *params = (static_cast<T>(ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_NORMAL_ENABLE_NORMALIZE)) ? 1 : 0;
+            *params = static_cast<T>((ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_NORMAL_ENABLE_NORMALIZE) ? 1 : 0);
             break;
 
         case GL_MODELVIEW_MATRIX_EMU: {

@@ -165,6 +165,24 @@ namespace eka2l1::drivers {
         LOG_TRACE(DRIVER_GRAPHICS, "Supported features (for optimization): {}", feature);
     }
 
+    ogl_graphics_driver::~ogl_graphics_driver() {
+        bmp_textures.clear();
+        graphic_objects.clear();
+
+        sprite_program.reset();
+        brush_program.reset();
+        mask_program.reset();
+        pen_program.reset();
+
+        GLuint vao_to_del[3] = { sprite_vao, brush_vao, pen_vao };
+        GLuint vbo_to_del[3] = { sprite_vbo, brush_vbo, pen_vbo };
+        GLuint ibo_to_del[2] = { sprite_ibo, pen_ibo };
+
+        glDeleteVertexArrays(3, vao_to_del);
+        glDeleteBuffers(3, vbo_to_del);
+        glDeleteBuffers(2, ibo_to_del);
+    }
+
     static constexpr const char *sprite_norm_v_path = "resources//sprite_norm.vert";
     static constexpr const char *sprite_norm_f_path = "resources//sprite_norm.frag";
     static constexpr const char *sprite_mask_f_path = "resources//sprite_mask.frag";
@@ -281,23 +299,7 @@ namespace eka2l1::drivers {
         surface_update_needed = true;
     }
 
-    void ogl_graphics_driver::draw_rectangle(command &cmd) {
-        if (!brush_program) {
-            do_init();
-        }
-
-        eka2l1::rect brush_rect;
-        unpack_u64_to_2u32(cmd.data_[0], brush_rect.top.x, brush_rect.top.y);
-        unpack_u64_to_2u32(cmd.data_[1], brush_rect.size.x, brush_rect.size.y);
-
-        if (brush_rect.size.x == 0) {
-            brush_rect.size.x = current_fb_width;
-        }
-
-        if (brush_rect.size.y == 0) {
-            brush_rect.size.y = current_fb_height;
-        }
-
+    void ogl_graphics_driver::draw_rectangle(const eka2l1::rect &brush_rect) {
         brush_program->use(this);
 
         // Build model matrix
@@ -333,6 +335,26 @@ namespace eka2l1::drivers {
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
         glBindVertexArray(0);
+    }
+
+    void ogl_graphics_driver::draw_rectangle(command &cmd) {
+        if (!brush_program) {
+            do_init();
+        }
+
+        eka2l1::rect brush_rect;
+        unpack_u64_to_2u32(cmd.data_[0], brush_rect.top.x, brush_rect.top.y);
+        unpack_u64_to_2u32(cmd.data_[1], brush_rect.size.x, brush_rect.size.y);
+
+        if (brush_rect.size.x == 0) {
+            brush_rect.size.x = current_fb_width;
+        }
+
+        if (brush_rect.size.y == 0) {
+            brush_rect.size.y = current_fb_height;
+        }
+
+        draw_rectangle(brush_rect);
     }
 
     void ogl_graphics_driver::draw_bitmap(command &cmd) {
@@ -572,6 +594,60 @@ namespace eka2l1::drivers {
         }
 
         glScissor(clip_rect.top.x, ((clip_rect.size.y < 0) ? clip_rect.top.y : (current_fb_height - (clip_rect.top.y + clip_rect.size.y))), clip_rect.size.x, common::abs(clip_rect.size.y));
+    }
+
+    void ogl_graphics_driver::clip_region(command &cmd) {
+        common::region to_clip;
+        eka2l1::rect *to_clip_rects = reinterpret_cast<eka2l1::rect*>(cmd.data_[1]);
+
+        to_clip.rects_.insert(to_clip.rects_.begin(), to_clip_rects, to_clip_rects + cmd.data_[0]);
+
+        float scale = 0.0f;
+        float temp = 0.0f;
+
+        unpack_to_two_floats(cmd.data_[2], scale, temp);
+
+        delete[] to_clip_rects;
+
+        if (to_clip.empty()) {
+            glDisable(GL_SCISSOR_TEST);
+            glDisable(GL_STENCIL_TEST);
+
+            return;
+        }
+
+        if (to_clip.rects_.size() == 1) {
+            glEnable(GL_SCISSOR_TEST);
+            glDisable(GL_STENCIL_TEST);
+
+            eka2l1::rect clip_rect = to_clip.rects_[0];
+            clip_rect.scale(scale);
+
+            glScissor(clip_rect.top.x, ((binding != nullptr) ? clip_rect.top.y : (current_fb_height - (clip_rect.top.y + clip_rect.size.y))),
+                clip_rect.size.x, clip_rect.size.y);
+            
+            return;
+        }
+
+        glEnable(GL_STENCIL_TEST);
+        glDisable(GL_SCISSOR_TEST);
+
+        glClearStencil(0);
+        glClear(GL_STENCIL_BUFFER_BIT);
+
+        glStencilFunc(GL_NEVER, 1, 0xFF);
+        glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
+        glStencilMask(0xFF);
+
+        for (std::size_t i = 0; i < to_clip.rects_.size(); i++) {
+            if (to_clip.rects_[i].valid()) {
+                to_clip.rects_[i].scale(scale);
+                draw_rectangle(to_clip.rects_[i]);
+            }
+        }
+
+        glStencilFunc(GL_EQUAL, 1, 0xFF);
+        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
     }
 
     static GLenum prim_mode_to_gl_enum(const graphics_primitive_mode prim_mode) {
@@ -1090,7 +1166,7 @@ namespace eka2l1::drivers {
 
         glDrawElements(GL_LINES, static_cast<GLsizei>(indicies.size()), GL_UNSIGNED_INT, 0);
 
-        delete point_list;
+        delete[] point_list;
     }
 
     void ogl_graphics_driver::set_cull_face(command &cmd) {
@@ -1143,34 +1219,34 @@ namespace eka2l1::drivers {
         switch (var_type) {
         case shader_set_var_type::integer: {
             glUniform1i(binding, *reinterpret_cast<const GLint *>(data));
-            delete data;
+            delete[] data;
 
             return;
         }
 
         case shader_set_var_type::real:
             glUniform1f(binding, *reinterpret_cast<const GLfloat*>(data));
-            delete data;
+            delete[] data;
 
             return;
 
         case shader_set_var_type::mat4: {
             glUniformMatrix4fv(binding, 1, GL_FALSE, reinterpret_cast<const GLfloat *>(data));
-            delete data;
+            delete[] data;
 
             return;
         }
 
         case shader_set_var_type::vec3: {
             glUniform3fv(binding, 1, reinterpret_cast<const GLfloat *>(data));
-            delete data;
+            delete[] data;
 
             return;
         }
 
         case shader_set_var_type::vec4: {
             glUniform4fv(binding, 1, reinterpret_cast<const GLfloat *>(data));
-            delete data;
+            delete[] data;
 
             return;
         }
@@ -1200,7 +1276,7 @@ namespace eka2l1::drivers {
 
         if (starting_slots + count >= GL_BACKEND_MAX_VBO_SLOTS) {
             LOG_ERROR(DRIVER_GRAPHICS, "Slot to bind VBO exceed maximum (startSlot={}, count={})", starting_slots, count);
-            delete arr;
+            delete[] arr;
 
             return;
         }
@@ -1215,7 +1291,7 @@ namespace eka2l1::drivers {
             vbo_slots_[starting_slots + i] = bufobj->buffer_handle();
         }
 
-        delete arr;
+        delete[] arr;
     }
 
     void ogl_graphics_driver::bind_index_buffer(command &cmd) {
@@ -1359,7 +1435,7 @@ namespace eka2l1::drivers {
     void ogl_graphics_driver::submit_command_list(command_list &list) {
         if ((list.size_ == 0) || !list.base_) {
             if (list.base_) {
-                delete list.base_;
+                delete[] list.base_;
             }
 
             return;
@@ -1517,6 +1593,10 @@ namespace eka2l1::drivers {
             set_depth_range(cmd);
             break;
 
+        case graphics_driver_clip_region:
+            clip_region(cmd);
+            break;
+
         default:
             shared_graphics_driver::dispatch(cmd);
             break;
@@ -1536,7 +1616,7 @@ namespace eka2l1::drivers {
                 dispatch(list->base_[i]);
             }
 
-            delete list->base_;
+            delete[] list->base_;
         }
     }
 

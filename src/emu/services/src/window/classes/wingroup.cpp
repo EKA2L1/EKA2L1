@@ -89,6 +89,8 @@ namespace eka2l1::epoc {
         , uid_owner_change_callback_handle(0)
         , uid_owner_change_process(nullptr)
         , screen_change_event_handle(0) {
+        set_initial_state();
+
         // Create window group as child
         top = std::make_unique<top_canvas>(client, scr, this);
         child = top.get();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 EKA2L1 Team
+ * Copyright (c) 2022 EKA2L1 Team.
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -17,19 +17,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <drivers/video/backend/ffmpeg/video_player_ffmpeg.h>
+#include <drivers/video/video.h>
 
-#include <services/window/opheader.h>
-#include <services/context.h>
-#include <common/region.h>
-
-#include <optional>
-
-namespace eka2l1 {
-    namespace drivers {
-        class graphics_command_builder;
+namespace eka2l1::drivers {
+    video_player_instance new_best_video_player(audio_driver *drv) {
+        return std::make_unique<video_player_ffmpeg>(drv);
     }
-
-    std::optional<common::region> get_region_from_context(service::ipc_context &ctx, ws_cmd &cmd);
-    void scale_rectangle(eka2l1::rect &r, const float scale_factor);
 }

@@ -213,6 +213,29 @@ namespace eka2l1::drivers {
         cmd->data_[1] = PACK_2U32_TO_U64(rect.size.x, rect.size.y);
     }
 
+    void graphics_command_builder::clip_bitmap_region(const common::region &region, const float scale_factor) {
+        if (region.rects_.size() == 0) {
+            return;
+        }
+
+        if (region.rects_.size() == 1) {
+            set_feature(graphics_feature::clipping, true);
+            set_feature(graphics_feature::stencil_test, false);
+
+            eka2l1::rect to_scale = region.rects_[0];
+            to_scale.scale(scale_factor);
+
+            clip_bitmap_rect(to_scale);
+        } else {
+            command *cmd = list_.retrieve_next();
+
+            cmd->opcode_ = graphics_driver_clip_region;
+            cmd->data_[0] = static_cast<std::uint64_t>(region.rects_.size());
+            cmd->data_[1] = make_data_copy(region.rects_.data(), region.rects_.size() * sizeof(eka2l1::rect));
+            cmd->data_[2] = pack_from_two_floats(scale_factor, 0.0f);
+        }
+    }
+
     void graphics_command_builder::clear(vecx<float, 6> color, const std::uint8_t clear_bitarr) {
         command *cmd = list_.retrieve_next();
         cmd->opcode_ = graphics_driver_clear;
@@ -233,13 +256,13 @@ namespace eka2l1::drivers {
     }
 
     void graphics_command_builder::update_bitmap(drivers::handle h, const char *data, const std::size_t size,
-        const eka2l1::vec2 &offset, const eka2l1::vec2 &dim, const std::size_t pixels_per_line) {
+        const eka2l1::vec2 &offset, const eka2l1::vec2 &dim, const std::size_t pixels_per_line, const bool need_copy) {
         // Copy data
         command *cmd = list_.retrieve_next();
         cmd->opcode_ = graphics_driver_update_bitmap;
 
         cmd->data_[0] = h;
-        cmd->data_[1] = make_data_copy(data, size);
+        cmd->data_[1] = (need_copy ? make_data_copy(data, size) : reinterpret_cast<std::uint64_t>(data));
         cmd->data_[2] = size;
         cmd->data_[3] = PACK_2U32_TO_U64(offset.x, offset.y);
         cmd->data_[4] = PACK_2U32_TO_U64(dim.x, dim.y);

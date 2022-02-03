@@ -79,6 +79,7 @@ LOGCLASS(SERVICE_GOOMMONITOR, "Service.GOOMMonitor", "Global out-of-memory monit
 LOGCLASS(DRIVER_AUD, "Driver.Audio", "Audio driver")
 LOGCLASS(DRIVER_GRAPHICS, "Driver.Graphics", "Graphics driver")
 LOGCLASS(DRIVER_SENSOR, "Driver.Sensor", "Sensor driver")
+LOGCLASS(DRIVER_VID, "Driver.Video", "Video driver")
 LOGCLASS(VFS, "VFS", "Virtual file system")
 LOGCLASS(UTILS, "Utils", "Guest utils")
 

@@ -1,0 +1,167 @@
+EXPORTS
+	_Z9Reserved1v @ 1 NONAME
+	_Z9Reserved2v @ 2 NONAME
+	_ZN19CVideoPlayerUtility10SetVolumeLEi @ 3 NONAME
+	_ZN19CVideoPlayerUtility11SetBalanceLEi @ 4 NONAME
+	_ZN19CVideoPlayerUtility12SetPositionLERK25TTimeIntervalMicroSeconds @ 5 NONAME
+	_ZN19CVideoPlayerUtility12SetPriorityLEi22TMdaPriorityPreference @ 6 NONAME
+	_ZN19CVideoPlayerUtility12SetRotationLE14TVideoRotation @ 7 NONAME
+	_ZN19CVideoPlayerUtility13RefreshFrameLEv @ 8 NONAME
+	_ZN19CVideoPlayerUtility14SetCropRegionLERK5TRect @ 9 NONAME
+	_ZN19CVideoPlayerUtility15SetScaleFactorLEffi @ 10 NONAME
+	_ZN19CVideoPlayerUtility17CustomCommandSyncERK8TPckgBufI22TMMFMessageDestinationEiRK6TDesC8S7_ @ 11 NONAME
+	_ZN19CVideoPlayerUtility17CustomCommandSyncERK8TPckgBufI22TMMFMessageDestinationEiRK6TDesC8S7_R5TDes8 @ 12 NONAME
+	_ZN19CVideoPlayerUtility17SetDisplayWindowLER10RWsSessionR15CWsScreenDeviceR11RWindowBaseRK5TRectS8_ @ 13 NONAME
+	_ZN19CVideoPlayerUtility18CustomCommandAsyncERK8TPckgBufI22TMMFMessageDestinationEiRK6TDesC8S7_R14TRequestStatus @ 14 NONAME
+	_ZN19CVideoPlayerUtility18CustomCommandAsyncERK8TPckgBufI22TMMFMessageDestinationEiRK6TDesC8S7_R5TDes8R14TRequestStatus @ 15 NONAME
+	_ZN19CVideoPlayerUtility18SetVideoFrameRateLEf @ 16 NONAME
+	_ZN19CVideoPlayerUtility24GetVideoLoadingProgressLERi @ 17 NONAME
+	_ZN19CVideoPlayerUtility35RegisterForVideoLoadingNotificationER21MVideoLoadingObserver @ 18 NONAME
+	_ZN19CVideoPlayerUtility36ControllerImplementationInformationLEv @ 19 NONAME
+	_ZN19CVideoPlayerUtility4NewLER27MVideoPlayerUtilityObserveri22TMdaPriorityPreferenceR10RWsSessionR15CWsScreenDeviceR11RWindowBaseRK5TRectSB_ @ 20 NONAME
+	_ZN19CVideoPlayerUtility4PlayERK25TTimeIntervalMicroSecondsS2_ @ 21 NONAME
+	_ZN19CVideoPlayerUtility4PlayEv @ 22 NONAME
+	_ZN19CVideoPlayerUtility4StopEv @ 23 NONAME
+	_ZN19CVideoPlayerUtility5CloseEv @ 24 NONAME
+	_ZN19CVideoPlayerUtility6PauseLEv @ 25 NONAME
+	_ZN19CVideoPlayerUtility7PrepareEv @ 26 NONAME
+	_ZN19CVideoPlayerUtility8OpenDesLERK6TDesC84TUid @ 27 NONAME
+	_ZN19CVideoPlayerUtility8OpenUrlLERK7TDesC16iRK6TDesC84TUid @ 28 NONAME
+	_ZN19CVideoPlayerUtility9GetFrameLE12TDisplayMode @ 29 NONAME
+	_ZN19CVideoPlayerUtility9OpenFileLERK7TDesC164TUid @ 30 NONAME
+	_ZN21CVideoRecorderUtility12SetPriorityLEii @ 31 NONAME ABSENT
+	_ZN21CVideoRecorderUtility13SetAudioTypeLE7TFourCC @ 32 NONAME ABSENT
+	_ZN21CVideoRecorderUtility13SetVideoTypeLERK6TDesC8 @ 33 NONAME ABSENT
+	_ZN21CVideoRecorderUtility13VideoBitRateLEv @ 34 NONAME ABSENT
+	_ZN21CVideoRecorderUtility15SetMaxClipSizeLEi @ 35 NONAME ABSENT
+	_ZN21CVideoRecorderUtility16SetAudioBitRateLEi @ 36 NONAME ABSENT
+	_ZN21CVideoRecorderUtility16SetAudioEnabledLEi @ 37 NONAME ABSENT
+	_ZN21CVideoRecorderUtility16SetVideoBitRateLEi @ 38 NONAME ABSENT
+	_ZN21CVideoRecorderUtility17AddMetaDataEntryLERK17CMMFMetaDataEntry @ 39 NONAME ABSENT
+	_ZN21CVideoRecorderUtility17CustomCommandSyncERK8TPckgBufI22TMMFMessageDestinationEiRK6TDesC8S7_ @ 40 NONAME ABSENT
+	_ZN21CVideoRecorderUtility17CustomCommandSyncERK8TPckgBufI22TMMFMessageDestinationEiRK6TDesC8S7_R5TDes8 @ 41 NONAME ABSENT
+	_ZN21CVideoRecorderUtility18CustomCommandAsyncERK8TPckgBufI22TMMFMessageDestinationEiRK6TDesC8S7_R14TRequestStatus @ 42 NONAME ABSENT
+	_ZN21CVideoRecorderUtility18CustomCommandAsyncERK8TPckgBufI22TMMFMessageDestinationEiRK6TDesC8S7_R5TDes8R14TRequestStatus @ 43 NONAME ABSENT
+	_ZN21CVideoRecorderUtility18SetVideoFrameRateLEf @ 44 NONAME ABSENT
+	_ZN21CVideoRecorderUtility18SetVideoFrameSizeLERK5TSize @ 45 NONAME ABSENT
+	_ZN21CVideoRecorderUtility20RemoveMetaDataEntryLEi @ 46 NONAME ABSENT
+	_ZN21CVideoRecorderUtility21ReplaceMetaDataEntryLEiRK17CMMFMetaDataEntry @ 47 NONAME ABSENT
+	_ZN21CVideoRecorderUtility36ControllerImplementationInformationLEv @ 48 NONAME ABSENT
+	_ZN21CVideoRecorderUtility4NewLER29MVideoRecorderUtilityObserverii @ 49 NONAME ABSENT
+	_ZN21CVideoRecorderUtility4StopEv @ 50 NONAME ABSENT
+	_ZN21CVideoRecorderUtility5CloseEv @ 51 NONAME ABSENT
+	_ZN21CVideoRecorderUtility6PauseLEv @ 52 NONAME ABSENT
+	_ZN21CVideoRecorderUtility6RecordEv @ 53 NONAME ABSENT
+	_ZN21CVideoRecorderUtility7PrepareEv @ 54 NONAME ABSENT
+	_ZN21CVideoRecorderUtility8OpenDesLER5TDes8i4TUidS2_RK6TDesC87TFourCC @ 55 NONAME ABSENT
+	_ZN21CVideoRecorderUtility8OpenUrlLERK7TDesC16ii4TUidS3_RK6TDesC87TFourCC @ 56 NONAME ABSENT
+	_ZN21CVideoRecorderUtility8SetGainLEi @ 57 NONAME ABSENT
+	_ZN21CVideoRecorderUtility9OpenFileLERK7TDesC16i4TUidS3_RK6TDesC87TFourCC @ 58 NONAME ABSENT
+	_ZNK19CVideoPlayerUtility10AudioTypeLEv @ 59 NONAME
+	_ZNK19CVideoPlayerUtility13AudioBitRateLEv @ 60 NONAME
+	_ZNK19CVideoPlayerUtility13AudioEnabledLEv @ 61 NONAME
+	_ZNK19CVideoPlayerUtility13VideoBitRateLEv @ 62 NONAME
+	_ZNK19CVideoPlayerUtility14GetCropRegionLER5TRect @ 63 NONAME
+	_ZNK19CVideoPlayerUtility14MetaDataEntryLEi @ 64 NONAME
+	_ZNK19CVideoPlayerUtility15GetScaleFactorLERfS0_Ri @ 65 NONAME
+	_ZNK19CVideoPlayerUtility15VideoFrameRateLEv @ 66 NONAME
+	_ZNK19CVideoPlayerUtility15VideoFrameSizeLER5TSize @ 67 NONAME
+	_ZNK19CVideoPlayerUtility19VideoFormatMimeTypeEv @ 68 NONAME
+	_ZNK19CVideoPlayerUtility24NumberOfMetaDataEntriesLEv @ 69 NONAME
+	_ZNK19CVideoPlayerUtility6VolumeEv @ 70 NONAME
+	_ZNK19CVideoPlayerUtility7BalanceEv @ 71 NONAME
+	_ZNK19CVideoPlayerUtility9DurationLEv @ 72 NONAME
+	_ZNK19CVideoPlayerUtility9MaxVolumeEv @ 73 NONAME
+	_ZNK19CVideoPlayerUtility9PositionLEv @ 74 NONAME
+	_ZNK19CVideoPlayerUtility9PriorityLERiR22TMdaPriorityPreference @ 75 NONAME
+	_ZNK19CVideoPlayerUtility9RotationLEv @ 76 NONAME
+	_ZNK21CVideoRecorderUtility10AudioTypeLEv @ 77 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility12GetPriorityLERiR22TMdaPriorityPreference @ 78 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility13AudioBitRateLEv @ 79 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility13AudioEnabledLEv @ 80 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility14MetaDataEntryLEi @ 81 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility15VideoFrameRateLEv @ 82 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility18GetVideoFrameSizeLER5TSize @ 83 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility19RecordTimeAvailableEv @ 84 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility19VideoFormatMimeTypeEv @ 85 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility23GetSupportedAudioTypesLER6RArrayI7TFourCCE @ 86 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility23GetSupportedVideoTypesLER11CDesC8Array @ 87 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility24NumberOfMetaDataEntriesLEv @ 88 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility5GainLEv @ 89 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility8MaxGainLEv @ 90 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility9DurationLEv @ 91 NONAME ABSENT
+	_ZN19CVideoPlayerUtility9GetFrameLE12TDisplayModeN13ContentAccess7TIntentE @ 92 NONAME
+	_ZTI19CVideoPlayerUtility @ 93 NONAME ; #<TI>#
+	_ZTI21CVideoRecorderUtility @ 94 NONAME ABSENT ; #<TI>#
+	_ZTI23CMMFVideoPlayerCallback @ 95 NONAME ABSENT ; #<TI>#
+	_ZTI25CMMFVideoRecorderCallback @ 96 NONAME ABSENT ; #<TI>#
+	_ZTV19CVideoPlayerUtility @ 97 NONAME ; #<VT>#
+	_ZTV21CVideoRecorderUtility @ 98 NONAME ABSENT ; #<VT>#
+	_ZTV23CMMFVideoPlayerCallback @ 99 NONAME ABSENT ; #<VT>#
+	_ZTV25CMMFVideoRecorderCallback @ 100 NONAME ABSENT ; #<VT>#
+	_ZN19CVideoPlayerUtility9OpenFileLERK5RFile4TUid @ 101 NONAME
+	_ZN19CVideoPlayerUtility19GetDRMCustomCommandEv @ 102 NONAME
+	_ZN19CVideoPlayerUtility9OpenFileLERK9TMMSource4TUid @ 103 NONAME
+	_ZN21CVideoRecorderUtility9OpenFileLERK5RFilei4TUidS3_RK6TDesC87TFourCC @ 104 NONAME ABSENT
+	_ZN19CVideoPlayerUtility23StopDirectScreenAccessLEv @ 105 NONAME
+	_ZN19CVideoPlayerUtility24StartDirectScreenAccessLEv @ 106 NONAME
+	_ZN19CVideoPlayerUtility14WillResumePlayEv @ 107 NONAME
+	_ZN19CVideoPlayerUtility33RegisterAudioResourceNotificationER37MMMFAudioResourceNotificationCallback4TUidRK6TDesC8 @ 108 NONAME
+	_ZN19CVideoPlayerUtility39CancelRegisterAudioResourceNotificationE4TUid @ 109 NONAME
+	_ZN19CVideoPlayerUtility19SetInitScreenNumberEi @ 110 NONAME
+	_ZN21CVideoRecorderUtility17SetAudioChannelsLEj @ 111 NONAME ABSENT
+	_ZN21CVideoRecorderUtility19SetAudioSampleRateLEj @ 112 NONAME ABSENT
+	_ZN21CVideoRecorderUtility20SetPixelAspectRatioLERK17TVideoAspectRatio @ 113 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility14AudioChannelsLEv @ 114 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility16AudioSampleRateLEv @ 115 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility20GetPixelAspectRatioLER17TVideoAspectRatio @ 116 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility26GetSupportedAudioChannelsLER6RArrayIjE @ 117 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility29GetSupportedAudioSampleRatesLER6RArrayIjE @ 118 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility30GetSupportedPixelAspectRatiosLER6RArrayI17TVideoAspectRatioE @ 119 NONAME ABSENT
+	_ZN19CVideoPlayerUtility10StepFrameLEi @ 120 NONAME
+	_ZN19CVideoPlayerUtility13SetAutoScaleLE14TAutoScaleType @ 121 NONAME
+	_ZN19CVideoPlayerUtility13SetAutoScaleLE14TAutoScaleTypeii @ 122 NONAME
+	_ZN19CVideoPlayerUtility16SetAudioEnabledLEi @ 123 NONAME
+	_ZN19CVideoPlayerUtility16SetPlayVelocityLEi @ 124 NONAME
+	_ZN19CVideoPlayerUtility16SetVideoEnabledLEi @ 125 NONAME
+	_ZN21CVideoRecorderUtility16SetVideoEnabledLEi @ 126 NONAME ABSENT
+	_ZN21CVideoRecorderUtility16SetVideoQualityLEi @ 127 NONAME ABSENT
+	_ZN21CVideoRecorderUtility23SetVideoFrameRateFixedLEi @ 128 NONAME ABSENT
+	_ZNK19CVideoPlayerUtility13PlayVelocityLEv @ 129 NONAME
+	_ZNK19CVideoPlayerUtility13VideoEnabledLEv @ 130 NONAME
+	_ZNK19CVideoPlayerUtility24GetPlayRateCapabilitiesLER26TVideoPlayRateCapabilities @ 131 NONAME
+	_ZNK21CVideoRecorderUtility13VideoEnabledLEv @ 132 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility13VideoQualityLEv @ 133 NONAME ABSENT
+	_ZNK21CVideoRecorderUtility20VideoFrameRateFixedLEv @ 134 NONAME ABSENT
+	_ZN20CVideoPlayerUtility215SetVideoExtentLERK7RWindowRK5TRect @ 135 NONAME ABSENT
+	_ZN20CVideoPlayerUtility217AddDisplayWindowLER10RWsSessionR15CWsScreenDeviceR7RWindow @ 136 NONAME ABSENT
+	_ZN20CVideoPlayerUtility217AddDisplayWindowLER10RWsSessionR15CWsScreenDeviceR7RWindowRK5TRectS8_ @ 137 NONAME ABSENT
+	_ZN20CVideoPlayerUtility218SetWindowClipRectLERK7RWindowRK5TRect @ 138 NONAME ABSENT
+	_ZN20CVideoPlayerUtility219RemoveDisplayWindowER7RWindow @ 139 NONAME ABSENT
+	_ZN20CVideoPlayerUtility24NewLER27MVideoPlayerUtilityObserverii @ 140 NONAME ABSENT
+	_ZTI20CVideoPlayerUtility2 @ 141 NONAME ABSENT
+	_ZTV20CVideoPlayerUtility2 @ 142 NONAME ABSENT
+	_ZN20CVideoPlayerUtility212SetRotationLERK7RWindow14TVideoRotation @ 143 NONAME ABSENT
+	_ZN20CVideoPlayerUtility213SetAutoScaleLERK7RWindow14TAutoScaleType @ 144 NONAME ABSENT
+	_ZN20CVideoPlayerUtility213SetAutoScaleLERK7RWindow14TAutoScaleTypeii @ 145 NONAME ABSENT
+	_ZN20CVideoPlayerUtility215GetScaleFactorLERK7RWindowRfS3_ @ 146 NONAME ABSENT
+	_ZN20CVideoPlayerUtility215SetScaleFactorLERK7RWindowff @ 147 NONAME ABSENT
+	_ZN20CVideoPlayerUtility29RotationLERK7RWindow @ 148 NONAME ABSENT
+	_ZN20CVideoPlayerUtility214RedrawSubtitleER7RWindowRK5TRect @ 149 NONAME ABSENT
+	_ZN20CVideoPlayerUtility216DisableSubtitlesEv @ 150 NONAME ABSENT
+	_ZN20CVideoPlayerUtility216EnableSubtitlesLEv @ 151 NONAME ABSENT
+	_ZN20CVideoPlayerUtility217SubtitleLanguageLEv @ 152 NONAME ABSENT
+	_ZN20CVideoPlayerUtility218SubtitlesAvailableEv @ 153 NONAME ABSENT
+	_ZN20CVideoPlayerUtility220SetSubtitleLanguageLE9TLanguage @ 154 NONAME ABSENT
+	_ZN20CVideoPlayerUtility227SupportedSubtitleLanguagesLEv @ 155 NONAME ABSENT
+	_ZN20CVideoPlayerUtility211AddDisplayLER10RWsSessioniR23MMMFSurfaceEventHandler @ 156 NONAME ABSENT
+	_ZN20CVideoPlayerUtility213RemoveDisplayEi @ 157 NONAME ABSENT
+	_ZN19CVideoPlayerUtility28SetExternalDisplaySwitchingLEii @ 158 NONAME ABSENT
+	_ZN20CVideoPlayerUtility228SetExternalDisplaySwitchingLEii @ 159 NONAME ABSENT
+	_ZN38CExtDisplayConnectionProviderInterfaceC2Ev @ 160 NONAME ABSENT
+	_ZN38CExtDisplayConnectionProviderInterfaceD0Ev @ 161 NONAME ABSENT
+	_ZN38CExtDisplayConnectionProviderInterfaceD1Ev @ 162 NONAME ABSENT
+	_ZN38CExtDisplayConnectionProviderInterfaceD2Ev @ 163 NONAME ABSENT
+	_ZTI38CExtDisplayConnectionProviderInterface @ 164 NONAME ABSENT
+	_ZTV38CExtDisplayConnectionProviderInterface @ 165 NONAME ABSENT
+

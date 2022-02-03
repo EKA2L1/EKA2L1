@@ -27,6 +27,7 @@
 #include <drivers/graphics/context.h>
 
 #include <common/queue.h>
+#include <common/region.h>
 #include <glad/glad.h>
 
 #include <memory>
@@ -61,8 +62,6 @@ namespace eka2l1::drivers {
     };
 
     class ogl_graphics_driver : public shared_graphics_driver {
-        std::unique_ptr<graphics::gl_context> context_;
-
         eka2l1::request_queue<command_list> list_queue;
 
         std::unique_ptr<ogl_shader_program> sprite_program;
@@ -128,14 +127,18 @@ namespace eka2l1::drivers {
         pen_style line_style;
 
         std::uint32_t feature_flags_;
+        std::unique_ptr<graphics::gl_context> context_;
 
         void do_init();
         void prepare_draw_lines_shared();
+
+        void draw_rectangle(const eka2l1::rect &brush_rect);
 
         void clear(command &cmd);
         void draw_bitmap(command &cmd);
         void draw_rectangle(command &cmd);
         void clip_rect(command &cmd);
+        void clip_region(command &cmd);
         void draw_indexed(command &cmd);
         void draw_array(command &cmd);
         void set_viewport(command &cmd);
@@ -168,7 +171,7 @@ namespace eka2l1::drivers {
 
     public:
         explicit ogl_graphics_driver(const window_system_info &info);
-        ~ogl_graphics_driver() override {}
+        ~ogl_graphics_driver() override;
 
         void set_viewport(const eka2l1::rect &viewport) override;
         void submit_command_list(command_list &cmd_list) override;

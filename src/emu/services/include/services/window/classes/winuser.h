@@ -27,6 +27,7 @@
 #include <common/linked.h>
 #include <common/region.h>
 
+#include <memory>
 #include <optional>
 
 namespace eka2l1 {
@@ -89,12 +90,14 @@ namespace eka2l1::epoc {
 
         // NOTE: If you ever want to access this and call a function that can directly affect this list elements, copy it first
         std::vector<dsa*> directs_;
-        std::queue<drivers::handle> surface_post_queue_;
+
+        drivers::graphics_command_builder driver_builder_;
+        std::unique_ptr<epoc::gdi_store_command_segment> pending_segment_;
 
         explicit canvas_base(window_server_client_ptr client, screen *scr, window *parent, const epoc::window_type type_of_window, const epoc::display_mode dmode, const std::uint32_t client_handle);
         virtual ~canvas_base() override;
 
-        virtual bool draw(drivers::graphics_command_builder &builder);
+        virtual bool draw(drivers::graphics_command_builder &builder) = 0;
 
         virtual void on_activate() = 0;
         virtual void handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) = 0;
@@ -155,9 +158,11 @@ namespace eka2l1::epoc {
         void set_visible(const bool vis);
 
         /**
-         * @brief Action that this window does when its content is modified.
+         * @brief Try update the window does when its content is modified.
+         * 
+         * @returns Usually the time in microseconds until next screen update.
          */
-        virtual void take_action_on_change(kernel::thread *drawer);
+        virtual std::uint64_t try_update(kernel::thread *drawer);
 
         void queue_event(const epoc::event &evt) override;
 
@@ -197,9 +202,6 @@ namespace eka2l1::epoc {
     // Canvas that data is backed using a bitmap
     // These are not upscaled, given the usage that is usually to upload some native drawn thing to CPU.
     struct bitmap_backed_canvas: public canvas_base {
-        gdi_command_builder gdi_builder_;
-        drivers::graphics_command_builder driver_builder_;
-
         std::uint64_t driver_win_id;
         std::uint64_t ping_pong_driver_win_id;
 
@@ -218,7 +220,7 @@ namespace eka2l1::epoc {
         void bitmap_handle(service::ipc_context &context, ws_cmd &cmd);
         void update_screen(service::ipc_context &context, ws_cmd &cmd);
         bool execute_command(service::ipc_context &context, ws_cmd &cmd) override;
-        void take_action_on_change(kernel::thread *drawer) override;
+        std::uint64_t try_update(kernel::thread *drawer) override;
         bool scroll(eka2l1::rect clip_space, const eka2l1::vec2 offset, eka2l1::rect source_rect) override;
 
         void sync_from_bitmap(std::optional<common::region> region = std::nullopt);
@@ -234,9 +236,6 @@ namespace eka2l1::epoc {
         eka2l1::rect redraw_rect_curr;
 
         gdi_store_command_collection redraw_segments_;
-        std::unique_ptr<gdi_command_builder> gdi_builder_;
-        drivers::graphics_command_builder driver_builder_;
-
         std::vector<fbsfont*> using_fonts_;
 
         explicit redraw_msg_canvas(window_server_client_ptr client, screen *scr, window *parent,
@@ -247,7 +246,7 @@ namespace eka2l1::epoc {
         void handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) override;
         void add_draw_command(gdi_store_command &command) override;
         bool scroll(eka2l1::rect clip_space, const eka2l1::vec2 offset, eka2l1::rect source_rect) override;
-        void take_action_on_change(kernel::thread *drawer) override;
+        std::uint64_t try_update(kernel::thread *drawer) override;
 
         // ===================== OPCODE IMPLEMENTATIONS ===========================
         void begin_redraw(service::ipc_context &context, ws_cmd &cmd);

@@ -104,6 +104,8 @@ namespace eka2l1::epoc {
         draw_data.gdi_flags_ = flags;
         draw_data.main_fbs_bitmap_ = bitmap;
         draw_data.mask_fbs_bitmap_ = nullptr;
+        draw_data.main_drv_ = 0;
+        draw_data.mask_drv_ = 0;
 
         attached_window->add_draw_command(draw_cmd);
         ctx.complete(epoc::error_none);
@@ -148,14 +150,9 @@ namespace eka2l1::epoc {
         epoc::gdi_store_command_draw_text_data &draw_text_data = draw_text_cmd.get_data_struct<epoc::gdi_store_command_draw_text_data>();
 
         draw_text_cmd.opcode_ = epoc::gdi_store_command_draw_text;
-        if (attached_window->win_type == epoc::window_type::redraw) {
-            draw_text_cmd.dynamic_pointer_ = new char16_t[text.length() + 1];
-            draw_text_data.string_ = reinterpret_cast<const char16_t*>(draw_text_cmd.dynamic_pointer_);
+        draw_text_data.string_ = reinterpret_cast<char16_t*>(draw_text_cmd.allocate_dynamic_data((text.length() + 1) * sizeof(char16_t)));
 
-            std::memcpy(draw_text_cmd.dynamic_pointer_, text.data(), (text.length() + 1) * sizeof(char16_t));
-        } else {
-            draw_text_data.string_ = const_cast<char16_t*>(text.data());
-        }
+        std::memcpy(draw_text_data.string_, text.data(), (text.length() + 1) * sizeof(char16_t));
 
         draw_text_data.alignment_ = static_cast<std::uint32_t>(align);
         draw_text_data.text_box_ = area;
@@ -297,16 +294,11 @@ namespace eka2l1::epoc {
         } else {
             cmd.opcode_ = epoc::gdi_store_command_set_clip_rect_multiple;
             epoc::gdi_store_command_set_clip_rect_multiple_data &data = cmd.get_data_struct<epoc::gdi_store_command_set_clip_rect_multiple_data>();
-            data.rect_count_ = static_cast<std::uint32_t>(the_region->rects_.size());
-    
-            if (attached_window->win_type == epoc::window_type::redraw) {
-                data.rects_ = new eka2l1::rect[data.rect_count_];
-                cmd.dynamic_pointer_ = data.rects_;
 
-                std::memcpy(cmd.dynamic_pointer_, the_region->rects_.data(), data.rect_count_ * sizeof(eka2l1::rect));
-            } else {
-                data.rects_ = the_region->rects_.data();
-            }
+            data.rect_count_ = static_cast<std::uint32_t>(the_region->rects_.size());
+            data.rects_ = reinterpret_cast<eka2l1::rect*>(cmd.allocate_dynamic_data(data.rect_count_ * sizeof(eka2l1::rect)));
+
+            std::memcpy(data.rects_, the_region->rects_.data(), data.rect_count_ * sizeof(eka2l1::rect));
         }
 
         attached_window->add_draw_command(cmd);
@@ -347,7 +339,7 @@ namespace eka2l1::epoc {
     void graphic_context::submit_queue_commands(kernel::thread *rq) {
         if (!flushed) {
             // Content of the window changed, so call the handler
-            attached_window->take_action_on_change(rq);
+            attached_window->try_update(rq);
             flushed = true;
         }
     }
@@ -431,6 +423,8 @@ namespace eka2l1::epoc {
         draw_data.source_rect_ = source_rect;
         draw_data.main_fbs_bitmap_ = source_bitmap;
         draw_data.mask_fbs_bitmap_ = mask_bitmap;
+        draw_data.main_drv_ = 0;
+        draw_data.mask_drv_ = 0;
         draw_data.gdi_flags_ = extra_flags;
 
         attached_window->add_draw_command(draw_bmp_cmd);
@@ -651,15 +645,9 @@ namespace eka2l1::epoc {
             cmd_data.point_count_ = 5;
             cmd_data.color_ = pen_color;
             cmd_data.style_ = pen_style;
+            cmd_data.points_ = reinterpret_cast<eka2l1::point*>(gdi_cmd.allocate_dynamic_data(5 * sizeof(eka2l1::point)));
 
-            if (attached_window->win_type == epoc::window_type::redraw) {
-                cmd_data.points_ = new eka2l1::point[5];
-                gdi_cmd.dynamic_pointer_ = cmd_data.points_;
-
-                std::memcpy(gdi_cmd.dynamic_pointer_, point_list, 5 * sizeof(eka2l1::point));
-            } else {
-                cmd_data.points_ = point_list;
-            }
+            std::memcpy(cmd_data.points_, point_list, 5 * sizeof(eka2l1::point));
 
             attached_window->add_draw_command(gdi_cmd);
         }
@@ -670,7 +658,6 @@ namespace eka2l1::epoc {
 
             rect_draw_data.rect_ = area;
             rect_draw_data.color_ = pen_color;
-            gdi_cmd.dynamic_pointer_ = nullptr;
             gdi_cmd.opcode_ = epoc::gdi_store_command_draw_rect;
 
             attached_window->add_draw_command(gdi_cmd);

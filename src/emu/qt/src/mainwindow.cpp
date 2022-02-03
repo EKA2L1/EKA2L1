@@ -980,10 +980,13 @@ void main_window::resizeEvent(QResizeEvent *event) {
         return;
     }
 
+    save_ui_layouts();
+
     eka2l1::system *system = emulator_state_.symsys.get();
     if (system) {
         eka2l1::epoc::screen *scr = get_current_active_screen();
         if (scr) {
+            scr->flags_ |= eka2l1::epoc::screen::FLAG_SERVER_REDRAW_PENDING;
             draw_emulator_screen(&emulator_state_, scr, true, false);
         }
     }
@@ -1166,8 +1169,10 @@ void main_window::save_ui_layouts() {
 
     if (displayer_->isVisible()) {
         settings.setValue(LAST_EMULATED_DISPLAY_GEOMETRY_SETTING, saveGeometry());
+        settings.setValue(LAST_EMULATED_DISPLAY_STATE, saveState());
     } else {
         settings.setValue(LAST_UI_WINDOW_GEOMETRY_SETTING, saveGeometry());
+        settings.setValue(LAST_UI_WINDOW_STATE, saveState());
     }
 }
 
@@ -1178,11 +1183,17 @@ void main_window::restore_ui_layouts() {
 
     if (displayer_->isVisible()) {
         geo_variant = settings.value(LAST_EMULATED_DISPLAY_GEOMETRY_SETTING);
+        state_variant = settings.value(LAST_EMULATED_DISPLAY_STATE);
     } else {
         geo_variant = settings.value(LAST_UI_WINDOW_GEOMETRY_SETTING);
+        state_variant = settings.value(LAST_UI_WINDOW_STATE);
     }
 
     if (geo_variant.isValid()) {
         restoreGeometry(geo_variant.toByteArray());
+    }
+
+    if (state_variant.isValid()) {
+        restoreState(state_variant.toByteArray());
     }
 }

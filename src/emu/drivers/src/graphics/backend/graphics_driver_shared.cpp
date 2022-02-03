@@ -282,7 +282,7 @@ namespace eka2l1::drivers {
 
         update_bitmap(handle, size, offset, dim, data, pixels_per_line);
 
-        delete data;
+        delete[] data;
     }
 
     void shared_graphics_driver::update_texture(command &cmd) {
@@ -308,7 +308,7 @@ namespace eka2l1::drivers {
 
         obj->update_data(this, static_cast<int>(lvl), offset, dim, pixels_per_line, data_format, data_type, data, size, unpack_alignment);
 
-        delete data;
+        delete[] data;
     }
 
     void shared_graphics_driver::create_bitmap(command &cmd) {
@@ -583,7 +583,7 @@ namespace eka2l1::drivers {
         } else {
             if (data != nullptr) {
                 std::uint8_t *data_org = reinterpret_cast<std::uint8_t*>(data);
-                delete data_org;
+                delete[] data_org;
             }
         }
 
@@ -621,7 +621,7 @@ namespace eka2l1::drivers {
             finish(cmd.status_, 0);
         } else if ((initial_data != nullptr) && (existing_handle)) {
             std::uint8_t *data_casted = reinterpret_cast<std::uint8_t*>(initial_data);
-            delete data_casted;
+            delete[] data_casted;
         }
     }
 
@@ -655,7 +655,7 @@ namespace eka2l1::drivers {
             finish(cmd.status_, 0);
         } else if ((descs != nullptr) && (existing_handle)) {
             std::uint8_t *data_casted = reinterpret_cast<std::uint8_t*>(descs);
-            delete data_casted;
+            delete[] data_casted;
         }
     }
 
@@ -736,7 +736,7 @@ namespace eka2l1::drivers {
 
         bufobj->update_data(this, data, offset, size);
 
-        delete data;
+        delete[] data;
     }
 
     void shared_graphics_driver::destroy_object(command &cmd) {

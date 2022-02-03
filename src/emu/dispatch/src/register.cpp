@@ -21,6 +21,7 @@
 #include <dispatch/camera.h>
 #include <dispatch/register.h>
 #include <dispatch/screen.h>
+#include <dispatch/video.h>
 
 #include <dispatch/libraries/sysutils/functions.h>
 #include <dispatch/libraries/egl/egl.h>
@@ -69,6 +70,19 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER(0x52, eaudio_dsp_stream_notify_buffer_ready_cancel),
         BRIDGE_REGISTER_DISPATCHER(0x53, eaudio_dsp_stream_reset_stat),
         BRIDGE_REGISTER_DISPATCHER(0x60, ecam_number_of_cameras),
+        BRIDGE_REGISTER_DISPATCHER(0x80, evideo_player_inst),
+        BRIDGE_REGISTER_DISPATCHER(0x81, evideo_player_set_owned_window),
+        BRIDGE_REGISTER_DISPATCHER(0x82, evideo_player_set_display_rect),
+        BRIDGE_REGISTER_DISPATCHER(0x83, evideo_player_open_file),
+        BRIDGE_REGISTER_DISPATCHER(0x85, evideo_player_play),
+        BRIDGE_REGISTER_DISPATCHER(0x88, evideo_player_destroy),
+        BRIDGE_REGISTER_DISPATCHER(0x8C, evideo_player_set_done_notify),
+        BRIDGE_REGISTER_DISPATCHER(0x8D, evideo_player_cancel_done_notify),
+        BRIDGE_REGISTER_DISPATCHER(0x8E, evideo_player_close),
+        BRIDGE_REGISTER_DISPATCHER(0x92, evideo_player_max_volume),
+        BRIDGE_REGISTER_DISPATCHER(0x93, evideo_player_current_volume),
+        BRIDGE_REGISTER_DISPATCHER(0x94, evideo_player_set_volume),
+        BRIDGE_REGISTER_DISPATCHER(0x95, evideo_player_set_rotation),
         BRIDGE_REGISTER_DISPATCHER(0x1000, sysutils::sysstartup_get_state),
         BRIDGE_REGISTER_DISPATCHER(0x1100, egl_choose_config_emu),
         BRIDGE_REGISTER_DISPATCHER(0x1101, egl_copy_buffers_emu),

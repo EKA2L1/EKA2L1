@@ -189,7 +189,7 @@ namespace eka2l1::epoc {
         // We dont care about visible regions. Nowadays, detect visible region to reduce pixel plotting is
         // just not really worth the time, since GPU draws so fast. Symbian code still has it though.
         window_drawer_walker adrawwalker(builder);
-        root->walk_tree_back_to_front(&adrawwalker);
+        root->walk_tree(&adrawwalker, window_tree_walk_style::bonjour_children);
 
         // Done! Unbind and submit this to the driver
         builder.bind_bitmap(0);
@@ -544,6 +544,10 @@ namespace eka2l1::epoc {
 
                 winuser->visible_region.make_empty();
 
+                if ((winuser->win_type == epoc::window_type::blank) && (winuser->scr->scr_config.blt_offscreen)) {
+                    return false;
+                }
+
                 if (!visible_left_region_.empty() && winuser->is_visible()) {
                     if (winuser->flags & epoc::window::flag_shape_region) {
                         winuser->visible_region = winuser->shape_region;
@@ -555,18 +559,6 @@ namespace eka2l1::epoc {
                     // Eliminating the intersected region that is reserved for this window, we got the next region left to go on.
                     winuser->visible_region = winuser->visible_region.intersect(visible_left_region_);
                     visible_left_region_.eliminate(winuser->visible_region);
-                }
-
-                if (!winuser->visible_region.empty()) {
-                    if (winuser->win_type == epoc::window_type::redraw) {
-                        epoc::redraw_msg_canvas *redraw_win = reinterpret_cast<epoc::redraw_msg_canvas*>(winuser);
-                        
-                        if (redraw_win->gdi_builder_)
-                            redraw_win->gdi_builder_->set_clip_region(winuser->visible_region);
-                    } else if (winuser->win_type == epoc::window_type::backed_up) {
-                        epoc::bitmap_backed_canvas *backed_win_cv = reinterpret_cast<epoc::bitmap_backed_canvas*>(winuser);
-                        backed_win_cv->gdi_builder_.set_clip_region(winuser->visible_region);
-                    }
                 }
 
                 if (winuser->is_dsa_active()) {

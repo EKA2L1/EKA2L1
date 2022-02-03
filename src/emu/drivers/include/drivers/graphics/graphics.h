@@ -49,6 +49,7 @@ namespace eka2l1::drivers {
         graphics_driver_cull_face,
 
         // Mode 0: Immediate - Draw direct 2D elements to screen
+        // Don't mix it with advance mode
         graphics_driver_clear,
         graphics_driver_create_bitmap,
         graphics_driver_destroy_bitmap,
@@ -64,6 +65,7 @@ namespace eka2l1::drivers {
         graphics_driver_set_pen_style,
         graphics_driver_resize_bitmap,
         graphics_driver_read_bitmap,
+        graphics_driver_clip_region,
 
         // Mode 1: Advance - Lower access to functions
         graphics_driver_create_shader_module,

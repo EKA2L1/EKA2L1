@@ -480,7 +480,17 @@ namespace eka2l1::dispatch {
             }
 
             if (ctx && surface->backed_window_->can_be_physically_seen()) {
-                surface->backed_window_->surface_post_queue_.push(surface->handle_);
+                drivers::graphics_command_builder &window_builder = surface->backed_window_->driver_builder_;
+                window_builder.set_feature(drivers::graphics_feature::blend, false);
+                window_builder.set_feature(drivers::graphics_feature::stencil_test, false);
+
+                eka2l1::rect dest_rect = surface->backed_window_->abs_rect;
+                dest_rect.scale(surface->backed_screen_->display_scale_factor);
+
+                window_builder.draw_bitmap(surface->handle_, 0, dest_rect, eka2l1::rect(eka2l1::vec2(0, 0), eka2l1::vec2(0, 0)),
+                    eka2l1::vec2(0, 0), 0.0f, drivers::bitmap_draw_flag_flip);
+
+                surface->backed_window_->content_changed(true);
             }
         }
 
@@ -489,7 +499,7 @@ namespace eka2l1::dispatch {
         }
 
         if (surface->backed_window_)
-            surface->backed_window_->take_action_on_change(sys->get_kernel_system()->crr_thread());
+            surface->backed_window_->try_update(sys->get_kernel_system()->crr_thread());
 
         return EGL_TRUE;
     }

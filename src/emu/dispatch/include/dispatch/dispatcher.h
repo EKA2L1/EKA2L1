@@ -26,6 +26,8 @@
 
 #include <drivers/audio/dsp.h>
 #include <drivers/audio/player.h>
+#include <dispatch/video.h>
+
 #include <drivers/itc.h>
 
 #include <utils/des.h>
@@ -237,6 +239,9 @@ namespace eka2l1::dispatch {
     public:
         window_server *winserv_;
         ntimer *timing_;
+
+        // Well, we gonna share it anyway... So as well as just make it public.
+        object_manager<epoc_video_player> video_player_container_;
 
         explicit dispatcher(kernel_system *kern, ntimer *timing);
         ~dispatcher();

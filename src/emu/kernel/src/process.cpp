@@ -439,11 +439,11 @@ namespace eka2l1::kernel {
             elem = elem->next;
         } while (elem != end);
 
-        finish_logons();
-
         // Cleanup resources
-        if (!kern->wipeout_in_progress())
+        if (!kern->wipeout_in_progress()) {
+            finish_logons();
             process_handles.reset();
+        }
 
         decrease_access_count();
     }

@@ -16,6 +16,7 @@ add_library(epocdispatch
         include/dispatch/management.h
         include/dispatch/register.h
         include/dispatch/screen.h
+        include/dispatch/video.h
         src/libraries/egl/def.cpp
         src/libraries/egl/egl.cpp
         src/libraries/gles1/gles1.cpp
@@ -27,7 +28,8 @@ add_library(epocdispatch
         src/camera.cpp
         src/dispatcher.cpp
         src/register.cpp
-        src/screen.cpp)
+        src/screen.cpp
+        src/video.cpp)
 
 target_include_directories(epocdispatch PUBLIC include)
 

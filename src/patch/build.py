@@ -237,10 +237,11 @@ def should_generate_abld_makefile(mmp_full_path, plat):
 
 def invoke_abld_command(command):
     print('Invoke ABLD command {}'.format(command))
-    result = subprocess.call(['abld.bat'] + command, stdout=subprocess.PIPE)
+    result = subprocess.Popen(['abld.bat'] + command, stdout=subprocess.PIPE)
+    result.communicate()
 
-    if result != 0:
-        raise Exception('ABLD command failed with code ', result)
+    if result.returncode != 0:
+        raise Exception('ABLD command failed with code ', result.returncode)
 
 
 # Parse bld.inf files to get list of target MMPs and the target build platform

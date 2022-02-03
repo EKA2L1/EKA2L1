@@ -38,6 +38,7 @@ namespace eka2l1 {
 
 namespace eka2l1::epoc {
     constexpr std::uint32_t MAX_CACHE_SIZE = 1024;
+    struct gdi_store_command;
 
     class bitmap_cache {
     public:
@@ -78,7 +79,7 @@ namespace eka2l1::epoc {
         std::int64_t get_suitable_bitmap_index();
 
         /**
-         * \brief   Add a bitmap to texture cache if not available in the cache, and get
+         * @brief   Add a bitmap to texture cache if not available in the cache, and get
          *          the driver's texture handle.
          * 
          * If the cache is full, this will find the least used bitmap (by sorting out 
@@ -86,12 +87,15 @@ namespace eka2l1::epoc {
          * without a method to notify the user, this also hashes bitmap data (using xxHash),
          * and will reupload the bitmap to driver if the texture data is different.
          * 
-         * \param   driver  Pointer
-         * \param   bmp     The pointer to bitwise bitmap.
-         * \returns Handle to driver's texture associated with this bitmap.
+         * @param   driver          Pointer to graphics driver instance.
+         * @param   bmp             The pointer to bitwise bitmap.
+         * @param   builder         Pointer to a command builder, used for updating texture or destroying texture in sequence. NULL if not needed.
+         * @param   update_cmd      Pointer to a store command that will be filled with bitmap updating plus destroying command. NULL if not needed.
+         *
+         * @returns Handle to driver's texture associated with this bitmap.
          */
-        drivers::handle add_or_get(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder,
-            epoc::bitwise_bitmap *bmp);
+        drivers::handle add_or_get(drivers::graphics_driver *driver, epoc::bitwise_bitmap *bmp,
+            drivers::graphics_command_builder *builder = nullptr, gdi_store_command *update_cmd = nullptr);
 
         /**
          * \brief   Remove the bitmap from cache.

@@ -24,6 +24,7 @@
 #include <services/fbs/fbs.h>
 #include <services/fbs/palette.h>
 #include <services/window/bitmap_cache.h>
+#include <services/window/classes/gstore.h>
 
 #include <kernel/chunk.h>
 #include <kernel/kernel.h>
@@ -77,11 +78,11 @@ namespace eka2l1::epoc {
     }
 
     static char *converted_one_bpp_to_twenty_four_bpp_bitmap(epoc::bitwise_bitmap *bw_bmp,
-        const std::uint32_t *original_ptr, std::vector<char> &converted_pool) {
+        const std::uint32_t *original_ptr, std::size_t &raw_size) {
         std::uint32_t byte_width_converted = common::align(bw_bmp->header_.size_pixels.x * 3, 4);
-        converted_pool.resize(byte_width_converted * bw_bmp->header_.size_pixels.y);
+        raw_size = byte_width_converted * bw_bmp->header_.size_pixels.y;
 
-        char *return_ptr = &converted_pool[0];
+        char *return_ptr = new char[raw_size];
 
         for (std::size_t y = 0; y < bw_bmp->header_.size_pixels.y; y++) {
             for (std::size_t x = 0; x < bw_bmp->header_.size_pixels.x; x++) {
@@ -99,11 +100,10 @@ namespace eka2l1::epoc {
     }
 
     static char *converted_palette_bitmap_to_twenty_four_bitmap(epoc::bitwise_bitmap *bw_bmp,
-        const std::uint8_t *original_ptr, std::vector<char> &converted_pool, epoc::palette_256 &the_palette) {
+        const std::uint8_t *original_ptr, epoc::palette_256 &the_palette, std::size_t &raw_size) {
         std::uint32_t byte_width_converted = common::align(bw_bmp->header_.size_pixels.x * 3, 4);
-        converted_pool.resize(byte_width_converted * bw_bmp->header_.size_pixels.y);
-
-        char *return_ptr = &converted_pool[0];
+        raw_size = byte_width_converted * bw_bmp->header_.size_pixels.y;
+        char *return_ptr = new char[raw_size];
 
         epoc::display_mode dsp = bw_bmp->settings_.current_display_mode();
         if (dsp == epoc::display_mode::none) {
@@ -186,8 +186,8 @@ namespace eka2l1::epoc {
         return oldest_timestamp_idx;
     }
 
-    drivers::handle bitmap_cache::add_or_get(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder,
-        epoc::bitwise_bitmap *bmp) {
+    drivers::handle bitmap_cache::add_or_get(drivers::graphics_driver *driver, epoc::bitwise_bitmap *bmp, 
+        drivers::graphics_command_builder *builder, gdi_store_command *update_cmd) {
         if (!fbss_) {
             server_ptr ss = kern->get_by_name<service::server>(epoc::get_fbs_server_name_by_epocver(
                 kern->get_epoc_version()));
@@ -231,44 +231,58 @@ namespace eka2l1::epoc {
 
             should_recreate = (bmp->header_.size_pixels != bitmap_stored_size) || (bitmap_bpp != suit_bpp);
         }
+        
+        if (update_cmd) {
+            gdi_store_command_update_texture_data &data = update_cmd->get_data_struct<gdi_store_command_update_texture_data>();
+            data.destroy_handle_ = 0;
+            data.do_swizz_ = false;
+        }
 
         if (should_recreate) {
-            if (driver_textures[idx])
-                builder.destroy_bitmap(driver_textures[idx]);
+            if (driver_textures[idx]) {
+                if (builder) {
+                    builder->destroy_bitmap(driver_textures[idx]);
+                }
+
+                if (update_cmd) {
+                    gdi_store_command_update_texture_data &data = update_cmd->get_data_struct<gdi_store_command_update_texture_data>();
+            
+                    update_cmd->opcode_ = gdi_store_command_update_texture;
+                    data.destroy_handle_ = driver_textures[idx];
+                }
+            }
 
             driver_textures[idx] = drivers::create_bitmap(driver, bmp->header_.size_pixels, suit_bpp);
         }
 
         if (should_upload) {
             char *data_pointer = reinterpret_cast<char *>(bmp->data_pointer(fbss_));
-
-            std::vector<std::uint8_t> decompressed;
             std::uint32_t raw_size = 0;
 
             const bitmap_file_compression comp = bmp->compression_type();
 
             if (comp != bitmap_file_no_compression) {
                 raw_size = bmp->byte_width_ * bmp->header_.size_pixels.y;
-                decompressed.resize(raw_size);
+                char *new_data_allocated = new char[raw_size];
 
                 const std::uint32_t compressed_size = bmp->header_.bitmap_size - bmp->header_.header_len;
                 std::size_t final_size = raw_size;
 
                 switch (comp) {
                 case bitmap_file_byte_rle_compression:
-                    eka2l1::decompress_rle_fast_route<8>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, &decompressed[0], final_size);
+                    eka2l1::decompress_rle_fast_route<8>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, reinterpret_cast<std::uint8_t*>(new_data_allocated), final_size);
                     break;
 
                 case bitmap_file_twelve_bit_rle_compression:
-                    eka2l1::decompress_rle_fast_route<12>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, &decompressed[0], final_size);
+                    eka2l1::decompress_rle_fast_route<12>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, reinterpret_cast<std::uint8_t*>(new_data_allocated), final_size);
                     break;
 
                 case bitmap_file_sixteen_bit_rle_compression:
-                    eka2l1::decompress_rle_fast_route<16>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, &decompressed[0], final_size);
+                    eka2l1::decompress_rle_fast_route<16>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, reinterpret_cast<std::uint8_t*>(new_data_allocated), final_size);
                     break;
 
                 case bitmap_file_twenty_four_bit_rle_compression:
-                    eka2l1::decompress_rle_fast_route<24>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, &decompressed[0], final_size);
+                    eka2l1::decompress_rle_fast_route<24>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, reinterpret_cast<std::uint8_t*>(new_data_allocated), final_size);
                     break;
 
                 default:
@@ -276,12 +290,16 @@ namespace eka2l1::epoc {
                     break;
                 }
 
-                data_pointer = reinterpret_cast<char *>(&decompressed[0]);
+                data_pointer = new_data_allocated;
             } else {
                 raw_size = bmp->header_.bitmap_size - bmp->header_.header_len;
+
+                char *new_data_pointer = new char[raw_size];
+                std::memcpy(new_data_pointer, data_pointer, raw_size);
+
+                data_pointer = new_data_pointer;
             }
 
-            std::vector<char> converted;
             std::uint32_t bpp = bmp->header_.bit_per_pixels;
             std::size_t pixels_per_line = 0;
 
@@ -289,24 +307,31 @@ namespace eka2l1::epoc {
                 pixels_per_line = bmp->byte_width_ / (bmp->header_.bit_per_pixels >> 3);
             }
 
+            std::size_t raw_size_big = 0;
+            
             // GPU don't support them. Convert them on CPU
             if (is_palette_bitmap(bmp)) {
-                data_pointer = converted_palette_bitmap_to_twenty_four_bitmap(bmp, reinterpret_cast<const std::uint8_t *>(data_pointer),
-                    converted, epoc::get_suitable_palette_256(kern->get_epoc_version()));
+                char *new_pointer = converted_palette_bitmap_to_twenty_four_bitmap(bmp, reinterpret_cast<const std::uint8_t *>(data_pointer),
+                    epoc::get_suitable_palette_256(kern->get_epoc_version()), raw_size_big);
 
                 bpp = 24;
-                raw_size = static_cast<std::uint32_t>(converted.size());
+                raw_size = static_cast<std::uint32_t>(raw_size_big);
+
+                delete[] data_pointer;
+                data_pointer = new_pointer;
 
                 // Use default
                 pixels_per_line = 0;
             }
 
+            char *newly_pointer = nullptr;
+
             switch (bpp) {
             case 1:
-                data_pointer = converted_one_bpp_to_twenty_four_bpp_bitmap(bmp, reinterpret_cast<const std::uint32_t *>(data_pointer),
-                    converted);
+                newly_pointer = converted_one_bpp_to_twenty_four_bpp_bitmap(bmp, reinterpret_cast<const std::uint32_t *>(data_pointer),
+                    raw_size_big);
                 bpp = 24;
-                raw_size = static_cast<std::uint32_t>(converted.size());
+                raw_size = static_cast<std::uint32_t>(raw_size_big);
                 pixels_per_line = 0;
 
                 break;
@@ -315,7 +340,26 @@ namespace eka2l1::epoc {
                 break;
             }
 
-            builder.update_bitmap(driver_textures[idx], data_pointer, raw_size, { 0, 0 }, bmp->header_.size_pixels, pixels_per_line);
+            if (newly_pointer) {
+                delete[] data_pointer;
+                data_pointer = newly_pointer;
+            }
+
+            if (builder) {
+                builder->update_bitmap(driver_textures[idx], data_pointer, raw_size, { 0, 0 }, bmp->header_.size_pixels, pixels_per_line, false);
+            }
+
+            if (update_cmd) {
+                update_cmd->opcode_ = gdi_store_command_update_texture;
+
+                gdi_store_command_update_texture_data &data = update_cmd->get_data_struct<gdi_store_command_update_texture_data>();
+                data.handle_ = driver_textures[idx];
+                data.texture_data_ = data_pointer;
+                data.pixel_per_line_ = pixels_per_line;
+                data.dim_ = bmp->header_.size_pixels;
+                data.texture_size_ = raw_size;
+            }
+
             hashes[idx] = hash;
 
             epoc::display_mode dsp = bmp->settings_.current_display_mode();
@@ -324,8 +368,21 @@ namespace eka2l1::epoc {
             }
 
             if (dsp == epoc::display_mode::color16mu) {
-                builder.set_swizzle(driver_textures[idx], drivers::channel_swizzle::red, drivers::channel_swizzle::green,
-                    drivers::channel_swizzle::blue, drivers::channel_swizzle::one);
+                if (builder) {
+                    builder->set_swizzle(driver_textures[idx], drivers::channel_swizzle::red, drivers::channel_swizzle::green,
+                        drivers::channel_swizzle::blue, drivers::channel_swizzle::one);
+                }
+
+                if (update_cmd) {
+                    gdi_store_command_update_texture_data &data = update_cmd->get_data_struct<gdi_store_command_update_texture_data>();
+                    data.do_swizz_ = true;
+                    data.swizz_ = { drivers::channel_swizzle::red, drivers::channel_swizzle::green,
+                        drivers::channel_swizzle::blue, drivers::channel_swizzle::one };
+                }
+            }
+
+            if (!builder && !update_cmd) {
+                delete[] data_pointer;
             }
         }
 
