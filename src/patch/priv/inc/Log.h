@@ -23,6 +23,7 @@
 #include <e32std.h>
 
 _LIT(KMcaCat, "MediaClientAudioStream");
+_LIT(KMcvCat, "MediaClientVideo");
 _LIT(KBacklightCat, "Backlight");
 _LIT(KCameraCat, "Camera");
 _LIT(KScdvCat, "SCDV-HLE");
