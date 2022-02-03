@@ -24,6 +24,18 @@
 #include <services/framework.h>
 
 namespace eka2l1 {
+    // See DRMEngineClientServer.h in omadrm/drmengine/server/inc
+    // This belongs to the mw.drm repository.
+    enum rights_opcode {
+        rights_opcode_none,
+        rights_opcode_get_key = 7,
+        rights_opcode_initialize_key = 22,
+        rights_opcode_decrypt = 24
+    };
+
+    static constexpr std::uint32_t ERROR_CA_NO_RIGHTS = -17452;
+    static constexpr std::uint32_t ERROR_CA_PENDING_RIGHTS = -17455;
+
     class rights_server : public service::typical_server {
     public:
         explicit rights_server(eka2l1::system *sys);

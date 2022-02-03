@@ -38,7 +38,24 @@ namespace eka2l1 {
     }
 
     void rights_client_session::fetch(service::ipc_context *ctx) {
-        LOG_ERROR(SERVICE_DRMSYS, "Unimplemented opcode for RightsServer 0x{:X}", ctx->msg->function);
-        ctx->complete(epoc::error_none);
+        // These needs the private key to be registered in the database. We don't have that unfortunately
+        // However yep, encryption here is just simply AES
+        switch (ctx->msg->function) {
+        case rights_opcode_get_key:
+            ctx->complete(ERROR_CA_NO_RIGHTS);
+            break;
+
+        case rights_opcode_initialize_key:
+            ctx->complete(ERROR_CA_PENDING_RIGHTS);
+            break;
+
+        case rights_opcode_decrypt:
+            ctx->complete(ERROR_CA_NO_RIGHTS);
+            break;
+
+        default:
+            LOG_ERROR(SERVICE_DRMSYS, "Unimplemented opcode for RightsServer 0x{:X}", ctx->msg->function);
+            ctx->complete(epoc::error_none);
+        }
     }
 }
