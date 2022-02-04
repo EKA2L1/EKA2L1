@@ -185,7 +185,7 @@ namespace eka2l1::hle {
     }
 
     static std::string get_e32_codeseg_name_from_path(const std::u16string &path) {
-        std::string res = common::ucs2_to_utf8(eka2l1::filename(path));
+        std::string res = common::lowercase_string(common::ucs2_to_utf8(eka2l1::filename(path)));
         if (!res.empty() && res.back() == '\0') {
             res.pop_back();
         }
