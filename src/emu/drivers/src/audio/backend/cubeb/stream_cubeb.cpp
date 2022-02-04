@@ -97,6 +97,10 @@ namespace eka2l1::drivers {
     }
 
     bool cubeb_audio_output_stream::stop() {
+        if (!playing_) {
+            return true;
+        }
+
         if (cubeb_stream_stop(stream_) == CUBEB_OK) {
             playing_ = false;
             return true;

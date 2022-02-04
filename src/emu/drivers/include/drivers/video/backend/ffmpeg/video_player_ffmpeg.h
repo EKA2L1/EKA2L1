@@ -42,7 +42,7 @@ namespace eka2l1::drivers {
         std::unique_ptr<std::thread> decode_thread_;
         threadsafe_cn_queue<AVPacket*> audio_packets_;
 
-        common::ring_buffer<std::uint16_t, 0x10000> pending_samples_;
+        common::ring_buffer<std::uint16_t, 0x20000> pending_samples_;
         common::event done_event_;
 
         std::atomic_bool should_stop_;

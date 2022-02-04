@@ -57,6 +57,9 @@ namespace eka2l1::drivers {
     }
 
     void video_player_ffmpeg::reset_contexts() {
+        stream_.reset();
+        pending_samples_.reset();
+
         if (format_ctx_) {
             avformat_close_input(&format_ctx_);
         }
@@ -72,8 +75,6 @@ namespace eka2l1::drivers {
         if (resample_context_) {
             swr_free(&resample_context_);
         }
-
-        pending_samples_.reset();
 
         audio_stream_index_ = -1;
         image_stream_index_ = -1;
@@ -387,7 +388,7 @@ namespace eka2l1::drivers {
         std::size_t frame_buffer_size = 0;
 
         std::uint64_t amount_to_sleep = static_cast<std::uint64_t>(common::microsecs_per_sec / fps_);
-   
+
         while (!should_stop_) {
             int result = av_read_frame(format_ctx_, temp_packet);
             if (result < 0) {
@@ -442,15 +443,16 @@ namespace eka2l1::drivers {
                         int total_bytes_buffer = av_image_get_buffer_size(AV_PIX_FMT_RGBA, image_codec_ctx_->width,
                            image_codec_ctx_->height, 32);
 
-                        frame_buffer = reinterpret_cast<std::uint8_t*>(av_malloc(total_bytes_buffer));
-                        
+                        // I put it extra, suspect sws_scale is heap corrupting the data a bit
+                        frame_buffer = reinterpret_cast<std::uint8_t*>(av_malloc(total_bytes_buffer + (total_bytes_buffer / 2)));
+
                         av_image_fill_arrays(scaled_frame->data, scaled_frame->linesize, frame_buffer, AV_PIX_FMT_RGBA, image_codec_ctx_->width,
                             image_codec_ctx_->height, 32);
 
                         frame_buffer_size = static_cast<std::size_t>(total_bytes_buffer);
                     }
                     
-                    sws_scale(scale_context, temp_frame->data, temp_frame->linesize, 0, temp_frame->height, scaled_frame->data,
+                    int resres = sws_scale(scale_context, temp_frame->data, temp_frame->linesize, 0, temp_frame->height, scaled_frame->data,
                         scaled_frame->linesize);
 
                     image_frame_available_callback_(image_frame_available_callback_userdata_, frame_buffer, frame_buffer_size);
@@ -473,10 +475,6 @@ namespace eka2l1::drivers {
         // Wait until a confirmation that I can exit
         done_event_.wait();
 
-        if (temp_frame) {
-            av_frame_free(&temp_frame);
-        }
-
         if (scale_context) {
             sws_freeContext(scale_context);
         }
@@ -484,5 +482,15 @@ namespace eka2l1::drivers {
         if (scaled_frame) {
             av_frame_free(&scaled_frame);
         }
+
+        if (temp_frame) {
+            av_frame_free(&temp_frame);
+        }
+
+        if (temp_packet) {
+            av_packet_free(&temp_packet);
+        }
+
+        av_free(frame_buffer);
     }
 }
