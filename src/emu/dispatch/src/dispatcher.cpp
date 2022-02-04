@@ -145,6 +145,10 @@ namespace eka2l1::dispatch {
             return false;
         }
 
+        if (!seg->is_rom()) {
+            seg->set_export_table_fixed(true);
+        }
+
         for (std::size_t i = 0; i < patch_count; i++) {
             const address orgaddr = seg->lookup_no_relocate(patches[i].ordinal_number_);
             if (!orgaddr) {
