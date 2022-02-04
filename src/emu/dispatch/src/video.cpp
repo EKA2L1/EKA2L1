@@ -216,7 +216,8 @@ namespace eka2l1::dispatch {
         drivers::graphics_driver *grdrv = sys->get_graphics_driver();
         drivers::audio_driver *auddrv = sys->get_audio_driver();
 
-        return dispatcher->video_player_container_.add_object(std::make_unique<epoc_video_player>(grdrv, auddrv));
+        std::unique_ptr<epoc_video_player> player = std::make_unique<epoc_video_player>(grdrv, auddrv);
+        return dispatcher->video_player_container_.add_object(player);
     }
 
     BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_destroy, const std::uint32_t handle) {
