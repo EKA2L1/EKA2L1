@@ -357,18 +357,27 @@ namespace eka2l1::epoc {
         if (scaled_dest_rect.size.y == 0) {
             scaled_dest_rect.size.y = source_bitmap_bw->header_.size_pixels.y;
         }
+        
+        scale_rectangle(scaled_dest_rect, scale_factor_);
 
-        if ((cmd.gdi_flags_ & GDI_STORE_COMMAND_BLIT) && (
-            (cmd.dest_rect_.size.y > source_bitmap_bw->header_.size_pixels.y) ||
-            (cmd.dest_rect_.size.x > source_bitmap_bw->header_.size_pixels.x))) {
+        // Handle this variant: BitBlt(const TPoint &aDestination, const CFbsBitmap *aBitmap, const TRect &aSource);
+        if ((cmd.gdi_flags_ & GDI_STORE_COMMAND_BLIT) && (!mask_bitmap_drv) &&
+            ((cmd.source_rect_.size.y > source_bitmap_bw->header_.size_pixels.y) ||
+            (cmd.source_rect_.size.x > source_bitmap_bw->header_.size_pixels.x))
+            && (cmd.dest_rect_.size.x == 0) && (cmd.dest_rect_.size.y == 0)) {
             builder_.set_brush_color_detail(eka2l1::vec4(255, 255, 255, 255));
             builder_.draw_rectangle(scaled_dest_rect);
 
-            adjusted_source_rect.size = source_bitmap_bw->header_.size_pixels;
-            scaled_dest_rect.size = adjusted_source_rect.size;
+            if (cmd.source_rect_.size.y > source_bitmap_bw->header_.size_pixels.y) {
+                adjusted_source_rect.size.y = source_bitmap_bw->header_.size_pixels.y;
+            }
+            
+            if (cmd.source_rect_.size.x > source_bitmap_bw->header_.size_pixels.x) {
+                adjusted_source_rect.size.x = source_bitmap_bw->header_.size_pixels.x;
+            }
+
+            scaled_dest_rect.size = adjusted_source_rect.size * scale_factor_;
         }
-        
-        scale_rectangle(scaled_dest_rect, scale_factor_);
 
         bool swizzle_alteration = false;
 
