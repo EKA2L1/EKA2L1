@@ -145,12 +145,15 @@ namespace eka2l1::dispatch {
         const eka2l1::vec2 vid_size = video_player_->get_video_size();
         const eka2l1::vec3 vid_size_v3 = eka2l1::vec3(vid_size.x, vid_size.y, 0);
 
+        const std::lock_guard<std::mutex> guard(target_window_->scr->screen_mutex);
+
         if (!image_handle_) {
             image_handle_ = drivers::create_texture(driver_, 2, 0, drivers::texture_format::rgba, drivers::texture_format::rgba,
-                drivers::texture_data_type::ubyte, nullptr, 0, vid_size_v3);
+                drivers::texture_data_type::ubyte, buffer_data, buffer_size, vid_size_v3);
+        } else {
+            target_window_->driver_builder_.update_texture(image_handle_, reinterpret_cast<const char*>(buffer_data), buffer_size, 0, drivers::texture_format::rgba,
+                drivers::texture_data_type::ubyte, eka2l1::vec3(0, 0, 0), vid_size_v3);
         }
-
-        const std::lock_guard<std::mutex> guard(target_window_->scr->screen_mutex);
 
         eka2l1::rect dest_rect = display_rect_;
         dest_rect.top += target_window_->abs_rect.top;
@@ -181,9 +184,6 @@ namespace eka2l1::dispatch {
 
         target_window_->driver_builder_.set_texture_filter(image_handle_, false, drivers::filter_option::linear);
         target_window_->driver_builder_.set_texture_filter(image_handle_, true, drivers::filter_option::linear);
-
-        target_window_->driver_builder_.update_texture(image_handle_, reinterpret_cast<const char*>(buffer_data), buffer_size, 0, drivers::texture_format::rgba,
-            drivers::texture_data_type::ubyte, eka2l1::vec3(0, 0, 0), vid_size_v3);
         target_window_->driver_builder_.draw_bitmap(image_handle_, 0, dest_rect, eka2l1::rect(eka2l1::vec2(0, 0), eka2l1::vec2(0, 0)), eka2l1::vec2(0, 0), rotation_ * 90.0f);
         target_window_->content_changed(true);
 
