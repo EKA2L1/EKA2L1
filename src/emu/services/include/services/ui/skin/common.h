@@ -106,5 +106,7 @@ namespace eka2l1::epoc {
         std::int32_t next_hash_;
     };
 
+    static_assert(sizeof(akns_item_def_v2) == 24);
+
     using akns_item_def = akns_item_def_v2;
 }

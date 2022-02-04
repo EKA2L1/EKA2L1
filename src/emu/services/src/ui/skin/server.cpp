@@ -31,6 +31,7 @@
 
 #include <kernel/kernel.h>
 #include <system/epoc.h>
+#include <loader/e32img.h>
 
 namespace eka2l1 {
     akn_skin_server_session::akn_skin_server_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version)
@@ -248,10 +249,14 @@ namespace eka2l1 {
         } else if (sys->get_symbian_version_use() == epocver::epoc94) {
             // Some Symbian version changes some binary struct.
             // It should be the new one if ... it is not in rom
-            const std::u16string exe_path = u"z:\\sys\\bin\\aknskinsrv.exe";
+            const std::u16string dll_path = u"z:\\sys\\bin\\aknskinsrv.dll";
 
-            if (!sys->get_io_system()->is_entry_in_rom(exe_path)) {
-                flags |= epoc::akn_skin_chunk_maintainer_lookup_use_linked_list;
+            symfile dll_file = sys->get_io_system()->open_file(dll_path, READ_MODE | BIN_MODE | PREFER_PHYSICAL);
+            if (dll_file) {
+                ro_file_stream dll_file_stream(dll_file.get());
+                if (loader::is_e32img(&dll_file_stream)) {
+                    flags |= epoc::akn_skin_chunk_maintainer_lookup_use_linked_list;
+                }
             }
         }
 

@@ -87,7 +87,7 @@ namespace eka2l1::epoc {
         std::uint32_t bitmap_handle;
         std::uint32_t mask_handle;
         std::int32_t layout_type;
-        bool is_morphing;
+        std::uint32_t is_morphing;
         std::uint64_t item_timestamp;
         vec2 layout_size;
     };
@@ -244,7 +244,7 @@ namespace eka2l1::epoc {
                 return -1;
             }
 
-            while (head >= 0 && defs[head].id_ != id) {
+            while (head >= 0 && (defs[head].id_ != id)) {
                 head = defs[head].next_hash_;
             }
 
@@ -342,7 +342,7 @@ namespace eka2l1::epoc {
             // Update the hash
             if (flags_ & akn_skin_chunk_maintainer_lookup_use_linked_list) {
                 update_definition_hash(reinterpret_cast<akns_item_def *>(current_head),
-                    static_cast<std::int32_t>(def_size / sizeof(akns_item_def)));
+                    static_cast<std::int32_t>(def_size / sizeof(akns_item_def_v2)));
             }
 
             current_def = reinterpret_cast<akns_item_def *>(current_head);
