@@ -488,12 +488,12 @@
       <translation>Tệp SIS (*sis *.sisx)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1136"/>
+      <location filename="../src/mainwindow.cpp" line="1139"/>
       <source>Load theme failed!</source>
       <translation>Nhập giao diện thất bại!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1136"/>
+      <location filename="../src/mainwindow.cpp" line="1139"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
       <translation>Tệp mẫu điệu của giao diện tối không thể được tìm thấy!</translation>
     </message>
