@@ -624,7 +624,8 @@ namespace eka2l1::hle {
         info.exception_descriptor = romimg.header.exception_des;
         info.constant_data = reinterpret_cast<std::uint8_t *>(mem_->get_real_pointer(romimg.header.data_address));
 
-        const std::string seg_name = (path.empty()) ? "codeseg" : common::ucs2_to_utf8(eka2l1::filename(path));
+        const std::string seg_name = (path.empty()) ? "codeseg" :
+            common::lowercase_string(common::ucs2_to_utf8(eka2l1::filename(path)));
 
         auto cs = kern_->create<kernel::codeseg>(seg_name, info);
 

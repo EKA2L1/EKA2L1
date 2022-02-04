@@ -56,18 +56,24 @@ namespace eka2l1 {
         }
 
         std::vector<uint32_t> library::attach(kernel::process *pr) {
-            if (codeseg->state_with(pr) == codeseg_state_detached) {
-                std::vector<std::uint32_t> call_list;
-
-                codeseg->attach(pr);
-                codeseg->unmark();
-
-                codeseg->queries_call_list(pr, call_list);
-                codeseg->unmark();
+            if (!reffed) {
+                // Still attach first to increase ref count! But we also needed to see if it has
+                // never been attached before in the process.
+                kernel::codeseg_state prev_state = codeseg->state_with(pr);
+                codeseg->attach(pr);            
 
                 reffed = true;
+                
+                if (prev_state == codeseg_state_detached) {
+                    std::vector<std::uint32_t> call_list;
 
-                return call_list;
+                    codeseg->unmark();
+
+                    codeseg->queries_call_list(pr, call_list);
+                    codeseg->unmark();
+
+                    return call_list;
+                }
             }
 
             return std::vector<uint32_t>{};

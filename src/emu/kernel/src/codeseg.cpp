@@ -107,6 +107,9 @@ namespace eka2l1::kernel {
 
             if (att) {
                 if (!mark) {
+                    if (att->get()->use_count == 0)
+                        att->get()->closing_lib_link.deque();
+
                     att->get()->use_count++;
                     mark = true;
 
