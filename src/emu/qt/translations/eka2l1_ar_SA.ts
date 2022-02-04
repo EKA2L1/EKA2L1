@@ -488,12 +488,12 @@
       <translation>ملف SIS (*.sis *.sisx)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1136"/>
+      <location filename="../src/mainwindow.cpp" line="1139"/>
       <source>Load theme failed!</source>
       <translation>فشل تحميل السمة!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1136"/>
+      <location filename="../src/mainwindow.cpp" line="1139"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
       <translation>يمكن العثور على السمة المظلمة&apos;ملف النمط s&apos;t!</translation>
     </message>
