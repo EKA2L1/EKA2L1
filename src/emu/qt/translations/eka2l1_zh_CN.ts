@@ -488,12 +488,12 @@
       <translation>SIS文件(*.sis *.sisx)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1136"/>
+      <location filename="../src/mainwindow.cpp" line="1139"/>
       <source>Load theme failed!</source>
       <translation>加载主题失败！</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1136"/>
+      <location filename="../src/mainwindow.cpp" line="1139"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
       <translation>无法找到暗色主题的样式文件！</translation>
     </message>
