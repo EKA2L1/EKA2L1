@@ -126,8 +126,6 @@ namespace eka2l1::epoc {
 
         void set_fade(service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
         void window_group_id(service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
-        void enable_visiblity_change_events(service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
-
         bool execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
 
         /*! \brief Generic event queueing

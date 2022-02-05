@@ -212,6 +212,10 @@ namespace eka2l1::epoc {
             return;
         }
 
+        if ((flags & flags_active) == 0) {
+            return;
+        }
+
         epoc::event visi_change_evt;
         visi_change_evt.type = epoc::event_code::window_visibility_change;
         visi_change_evt.time = client->get_ws().get_kernel_system()->home_time();
@@ -568,6 +572,13 @@ namespace eka2l1::epoc {
         scr->recalculate_visible_regions();
         context.complete(epoc::error_none);
     }
+    
+    void canvas_base::enable_visiblity_change_events(service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+        flags |= flag_visiblity_event_report;
+        report_visiblity_change();
+        
+        ctx.complete(epoc::error_none);
+    }
 
     bool canvas_base::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         bool useless = false;
@@ -773,6 +784,10 @@ namespace eka2l1::epoc {
         case EWsWinOpScrollClip:
         case EWsWinOpScrollClipRect:
             scroll(ctx, cmd);
+            break;
+
+        case EWsWinOpEnableVisibilityChangeEvents:
+            enable_visiblity_change_events(ctx, cmd);
             break;
 
         default: {

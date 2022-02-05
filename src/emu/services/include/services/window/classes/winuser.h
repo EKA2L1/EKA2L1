@@ -175,6 +175,7 @@ namespace eka2l1::epoc {
         void alloc_pointer_buffer(service::ipc_context &context, ws_cmd &cmd);
         void scroll(service::ipc_context &context, ws_cmd &cmd);
         void set_shape(service::ipc_context &context, ws_cmd &cmd);
+        void enable_visiblity_change_events(service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
 
         epoc::window_group *get_group();
 
