@@ -21,6 +21,7 @@
 
 #include <common/types.h>
 #include <package/registry.h>
+#include <package/common.h>
 
 #include <atomic>
 #include <fstream>

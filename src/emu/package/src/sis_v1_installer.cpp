@@ -35,7 +35,153 @@
 #include <vfs/vfs.h>
 
 namespace eka2l1::loader {
-    bool install_sis_old(const std::u16string &path, io_system *io, drive_number drive, package::object &info, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
+    std::uint32_t sis_old_get_attribute_value(const std::uint32_t attrib_val, var_value_resolver_func resolver_cb, const language choosen_lang) {
+        // Same as new SIS version
+        switch (attrib_val) {
+        case 0x1000:
+            return static_cast<std::uint32_t>(choosen_lang);
+        
+        default:
+            break;
+        }
+
+        if (resolver_cb) {
+            return resolver_cb(attrib_val);
+        }
+
+        return 0;
+    }
+
+    std::uint32_t sis_old_evaluate_numeric_expression(sis_old_expression &expression, io_system *io, var_value_resolver_func resolver_cb,
+        const language choosen_lang) {
+        switch (expression.expression_type)  {
+        case sis_old_file_expression_type_number:
+            return static_cast<sis_old_number_expression&>(expression).value;
+
+        case sis_old_file_expression_type_attribute:
+            return sis_old_get_attribute_value(static_cast<sis_old_attribute_expression&>(expression).attribute,
+                resolver_cb, choosen_lang);
+
+        case sis_old_file_expression_type_exists: {
+            sis_old_unary_expression &exist_expr = static_cast<sis_old_unary_expression&>(expression);
+            if (!exist_expr.target_expression || (exist_expr.target_expression->expression_type != sis_old_file_expression_type_string)) {
+                LOG_ERROR(PACKAGE, "Invalid argument to function FILEEXIST(path). Expect path to be string, but expression type is {}",
+                    (exist_expr.target_expression ? "not even exist" : common::to_string(exist_expr.target_expression->expression_type)));
+                break;
+            }
+
+            return io->exist(static_cast<sis_old_string_expression&>(*exist_expr.target_expression).value);
+        }
+
+        case sis_old_file_expression_type_devcap:
+        case sis_old_file_expression_type_appcap:
+            LOG_TRACE(PACKAGE, "DEVCAP and APPCAP expression are not supported yet!");
+            break;
+
+        case sis_old_file_expression_type_not: {
+            sis_old_unary_expression &not_expr = static_cast<sis_old_unary_expression&>(expression);
+            if (!not_expr.target_expression) {
+                LOG_ERROR(PACKAGE, "No expression passed to logic operator NOT!");
+                break;
+            }
+            return !sis_old_evaluate_numeric_expression(*not_expr.target_expression, io, resolver_cb, choosen_lang);
+        }
+
+        case sis_old_file_expression_type_equal:
+        case sis_old_file_expression_type_lequal:
+        case sis_old_file_expression_type_and:
+        case sis_old_file_expression_type_gequal:
+        case sis_old_file_expression_type_greater:
+        case sis_old_file_expression_type_less:
+        case sis_old_file_expression_type_not_equal:
+        case sis_old_file_expression_type_or: {
+            sis_old_binary_expression &bin_expr = static_cast<sis_old_binary_expression&>(expression);
+            std::uint32_t lhs = 0;
+            std::uint32_t rhs = 0;
+
+            if (bin_expr.lhs)
+                lhs = sis_old_evaluate_numeric_expression(*bin_expr.lhs, io, resolver_cb, choosen_lang);
+                
+            if (bin_expr.rhs)
+                rhs = sis_old_evaluate_numeric_expression(*bin_expr.rhs, io, resolver_cb, choosen_lang);
+
+            switch (expression.expression_type) {
+            case sis_old_file_expression_type_equal:
+                return (lhs == rhs);
+
+            case sis_old_file_expression_type_not_equal:
+                return (lhs != rhs);
+
+            case sis_old_file_expression_type_less:
+                return (lhs < rhs);
+
+            case sis_old_file_expression_type_lequal:
+                return (lhs <= rhs);
+
+            case sis_old_file_expression_type_greater:
+                return (lhs > rhs);
+
+            case sis_old_file_expression_type_gequal:
+                return (lhs >= rhs);
+
+            case sis_old_file_expression_type_and:
+                return (lhs & rhs);
+
+            case sis_old_file_expression_type_or:
+                return (lhs | rhs);
+
+            default:
+                break;
+            }
+
+            break;
+        }
+
+        default:
+            LOG_WARN(PACKAGE, "Unknown SIS expression type {}!", expression.expression_type);
+            break;
+        }
+
+        return 0;
+    }
+
+    bool sis_old_is_condition_passed(sis_old_expression *expression, io_system *io, var_value_resolver_func resolver_cb,
+        const language choosen_lang) {
+        if (!expression) {
+            return true;
+        }
+
+        return (sis_old_evaluate_numeric_expression(*expression, io, resolver_cb, choosen_lang) != 0);
+    }
+    
+    void sis_old_evaluate_block(sis_old_block &block, std::vector<sis_old_file*> &files, io_system *io, var_value_resolver_func resolver_cb,
+        const language choosen_lang) {
+        std::vector<std::unique_ptr<sis_old_file_record>> *record_to_iterate = &block.false_commands;
+
+        if (sis_old_is_condition_passed(block.condition.get(), io, resolver_cb, choosen_lang)) {
+            record_to_iterate = &block.true_commands;
+        }
+
+        for (std::size_t i = 0; i < record_to_iterate->size(); i++) {
+            switch (record_to_iterate->at(i)->file_record_type) {
+            case file_record_type_block:
+                sis_old_evaluate_block(*reinterpret_cast<sis_old_block*>(record_to_iterate->at(i).get()), files, io, resolver_cb, choosen_lang);
+                break;
+
+            case file_record_type_simple_file:
+            case file_record_type_multiple_lang_file:
+                files.push_back(reinterpret_cast<sis_old_file*>(record_to_iterate->at(i).get()));
+                break;
+
+            default:
+                break;
+            }
+        }
+    }
+
+    bool install_sis_old(const std::u16string &path, io_system *io, drive_number drive,
+        package::object &info, choose_lang_func choose_lang_cb, var_value_resolver_func resolver_cb,
+        progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         std::optional<sis_old> res = *loader::parse_sis_old(common::ucs2_to_utf8(path));
         if (!res.has_value()) {
             return false;
@@ -55,13 +201,40 @@ namespace eka2l1::loader {
         info.current_drives = info.drives;
         info.is_removable = true;
 
-        std::size_t total_size = 0;
-        std::size_t decomped = 0;
-        for (auto &file : res->files) {
-            total_size += file.record.org_file_len;
+        language choosen_language = language::en;
+        std::size_t choosen_language_index = 0;
+
+        if (res->langs.size() >= 1) {
+            choosen_language = res->langs[0];
         }
 
-        if (res->files.empty()) {
+        if ((res->langs.size() > 1) && choose_lang_cb) {
+            choosen_language = static_cast<language>(choose_lang_cb(reinterpret_cast<const int*>(res->langs.data()),
+                static_cast<int>(res->langs.size())));
+
+            for (std::size_t i = 0; i < res->langs.size(); i++) {
+                if (res->langs[i] == choosen_language) {
+                    choosen_language_index = i;
+                    break;
+                }
+            }
+        }
+
+        std::vector<sis_old_file*> files_note;
+        sis_old_evaluate_block(res->root_block, files_note, io, resolver_cb, choosen_language);
+
+        std::size_t total_size = 0;
+        std::size_t decomped = 0;
+
+        for (auto &file : files_note) {
+            if ((choosen_language_index < file->file_infos.size()) && (file->file_record_type == file_record_type_multiple_lang_file)) {
+                total_size += file->file_infos[choosen_language_index].original_length;
+            } else {
+                total_size += file->file_infos[0].original_length;
+            }
+        }
+
+        if (files_note.empty()) {
             if (progress_cb)
                 progress_cb(1, 1);
         }
@@ -69,20 +242,20 @@ namespace eka2l1::loader {
         std::size_t processed = 0;
         bool canceled = false;
 
-        for (; processed < res->files.size(); processed++) {
-            loader::sis_old_file &file = res->files[processed];
+        for (; processed < files_note.size(); processed++) {
+            loader::sis_old_file *file = files_note[processed];
             if (cancel_cb && cancel_cb()) {
                 canceled = true;
                 break;
             }
 
-            std::u16string dest = file.dest;
+            std::u16string dest = file->dest;
 
             if (dest.find(u"!") != std::u16string::npos) {
                 dest[0] = drive_to_char16(drive);
             }
 
-            if (file.record.file_type != 1 && dest != u"") {
+            if ((file->file_type != 1) && dest != u"") {
                 std::string rp = eka2l1::file_directory(common::ucs2_to_utf8(dest));
                 io->create_directories(common::utf8_to_ucs2(rp));
             } else {
@@ -97,7 +270,15 @@ namespace eka2l1::loader {
 
             LOG_TRACE(PACKAGE, "Installing file {}", common::ucs2_to_utf8(dest));
 
-            size_t left = file.record.len;
+            loader::sis_old_file::individual_file_data_info *data_info = nullptr;
+            
+            if ((choosen_language_index < file->file_infos.size()) && (file->file_record_type == file_record_type_multiple_lang_file)) {
+                data_info = &file->file_infos[choosen_language_index];
+            } else {
+                data_info = &file->file_infos[0];
+            }
+
+            size_t left = data_info->length;
             size_t chunk = 0x2000;
 
             std::vector<char> temp;
@@ -107,7 +288,7 @@ namespace eka2l1::loader {
             inflated.resize(0x100000);
 
             common::ro_std_file_stream sis_file(common::ucs2_to_utf8(path), true);
-            sis_file.seek(file.record.ptr, common::seek_where::beg);
+            sis_file.seek(data_info->position, common::seek_where::beg);
 
             mz_stream stream;
 

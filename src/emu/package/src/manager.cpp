@@ -573,7 +573,7 @@ namespace eka2l1 {
                 final_obj.file_major_version = 5;
                 final_obj.file_minor_version = 4;
 
-                if (!loader::install_sis_old(path, sys, drive, final_obj, progress_cb, cancel_cb)) {
+                if (!loader::install_sis_old(path, sys, drive, final_obj, choose_lang, var_resolver, progress_cb, cancel_cb)) {
                     return package::installation_result_invalid;
                 }
 
