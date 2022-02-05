@@ -201,7 +201,7 @@ namespace eka2l1::loader {
                 stream.seek(crr, common::seek_where::beg);
 
                 if (file_record_type == file_record_type_multiple_lang_file) {
-                    old_file.file_infos.resize(common::max(sold.langs.size(), 1ULL));
+                    old_file.file_infos.resize(sold.langs.size());
                 } else {
                     old_file.file_infos.resize(1);
                 }

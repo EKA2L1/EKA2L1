@@ -28,6 +28,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <memory>
 #include <vector>
 
 namespace eka2l1 {
