@@ -69,7 +69,7 @@ namespace eka2l1::drivers {
         std::mutex lock_;
 
         explicit player()
-            : volume_(50)
+            : volume_(5)
             , balance_(0)
             , callback_(nullptr) {
         }
@@ -93,7 +93,7 @@ namespace eka2l1::drivers {
         virtual bool open_custom(common::rw_stream *stream) = 0;
 
         virtual std::uint32_t max_volume() const {
-            return 100;
+            return 10;
         }
 
         virtual std::uint32_t volume() const {

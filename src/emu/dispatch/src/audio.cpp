@@ -66,7 +66,7 @@ namespace eka2l1::dispatch {
 
     dsp_medium::dsp_medium(dsp_manager *manager, const dsp_medium_type type)
         : manager_(manager)
-        , logical_volume_(100)
+        , logical_volume_(10)
         , type_(type) {
     }
 

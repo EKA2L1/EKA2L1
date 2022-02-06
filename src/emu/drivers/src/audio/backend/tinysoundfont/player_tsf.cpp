@@ -261,7 +261,7 @@ namespace eka2l1::drivers {
             return false;
         }
 
-        return output_->set_volume(vol / 100.0f);
+        return output_->set_volume(vol / 10.0f);
     }
 
     bool player_tsf::open_url(const std::string &url) {

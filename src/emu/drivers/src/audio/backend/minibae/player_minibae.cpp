@@ -132,7 +132,7 @@ namespace eka2l1::drivers {
         }
 
         // Previous stop of same song may got the fade to activate. Reset fade
-        BAESong_Fade(song_, FLOAT_TO_FIXED(volume_ / 100.0f), FLOAT_TO_FIXED(volume_ / 100.0f), 0);
+        BAESong_Fade(song_, FLOAT_TO_FIXED(volume_ / 10.0f), FLOAT_TO_FIXED(volume_ / 10.0f), 0);
         const BAEResult error = BAESong_Start(song_, 0);
 
         if (error == BAE_NO_ERROR) {
@@ -172,7 +172,7 @@ namespace eka2l1::drivers {
         }
 
         if (song_) {
-            const BAEResult error = BAESong_SetVolume(song_, FLOAT_TO_UNSIGNED_FIXED(vol / 100.0f));
+            const BAEResult error = BAESong_SetVolume(song_, FLOAT_TO_UNSIGNED_FIXED(vol / 10.0f));
 
             if (error != BAE_NO_ERROR) {
                 LOG_ERROR(DRIVER_AUD, "Encounter error trying to set MIDI song volume: {}", static_cast<int>(error));

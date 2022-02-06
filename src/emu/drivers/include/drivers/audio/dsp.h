@@ -134,7 +134,7 @@ namespace eka2l1::drivers {
         }
 
         virtual std::uint32_t max_volume() const {
-            return 100;
+            return 10;
         }
 
         virtual bool is_playing() const override {

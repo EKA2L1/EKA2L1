@@ -60,7 +60,7 @@ namespace eka2l1::drivers {
         });
 
         if (stream_)
-            stream_->set_volume(static_cast<float>(volume_) / 100.0f);
+            stream_->set_volume(static_cast<float>(volume_) / 10.0f);
 
         if (!was_already_stopped) {
             stream_->start();
@@ -76,7 +76,7 @@ namespace eka2l1::drivers {
             return;
         }
 
-        stream_->set_volume(static_cast<float>(new_volume) / 100.0f);
+        stream_->set_volume(static_cast<float>(new_volume) / 10.0f);
     }
 
     bool dsp_output_stream_shared::start() {

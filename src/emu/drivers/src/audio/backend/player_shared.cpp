@@ -114,7 +114,7 @@ namespace eka2l1::drivers {
                 return true;
             }
 
-            output_stream_->set_volume(static_cast<float>(volume_) / 100.0f);
+            output_stream_->set_volume(static_cast<float>(volume_) / 10.0f);
         }
 
         return output_stream_->start();

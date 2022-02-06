@@ -43,7 +43,7 @@ namespace eka2l1::drivers {
         , resample_context_(nullptr)
         , audio_stream_index_(-1)
         , image_stream_index_(-1)
-        , volume_(100)
+        , volume_(10)
         , fps_(1.0f) {
     }
 
@@ -161,7 +161,7 @@ namespace eka2l1::drivers {
                         avcodec_free_context(&audio_codec_ctx_);
                     }
 
-                    stream_->set_volume(volume_ / 100.0f);
+                    stream_->set_volume(volume_ / 10.0f);
                 }
             }
         }
@@ -246,7 +246,7 @@ namespace eka2l1::drivers {
     }
 
     std::uint32_t video_player_ffmpeg::max_volume() const {
-        return 100;
+        return 10;
     }
     
     std::uint32_t video_player_ffmpeg::volume() const {
@@ -254,9 +254,9 @@ namespace eka2l1::drivers {
     }
 
     bool video_player_ffmpeg::set_volume(const std::uint32_t volume) {
-        volume_ = common::clamp(0U, 100U, volume);
+        volume_ = common::clamp(0U, 10U, volume);
         if (stream_) {
-            stream_->set_volume(volume_ / 100.0f);
+            stream_->set_volume(volume_ / 10.0f);
         }
 
         return true;
