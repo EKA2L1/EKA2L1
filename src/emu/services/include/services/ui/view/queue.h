@@ -27,7 +27,10 @@
 #include <vector>
 
 namespace eka2l1::ui::view {
-    using custom_message = std::vector<std::uint8_t>;
+    struct custom_message {
+        std::vector<std::uint8_t> data_;
+        epoc::uid id_;
+    };
 
     struct view_event_and_data {
         view_event evt_;

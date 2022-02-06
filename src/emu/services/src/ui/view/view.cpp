@@ -141,7 +141,8 @@ namespace eka2l1 {
         }
 
         activator->set_active_view(active_id);
-        activator->queue_event({ ui::view::view_event::event_active_view, active_id, old_id.value(), 0, 0 }, msg);
+        activator->queue_event({ ui::view::view_event::event_active_view, active_id, old_id.value(),
+            msg.id_, static_cast<std::int32_t>(msg.data_.size()) }, msg);
 
         call_activation_listener(active_id);
     }
@@ -281,7 +282,7 @@ namespace eka2l1 {
     void view_session::active_view(service::ipc_context *ctx, const bool should_complete) {
         kernel_system *kern = server<view_server>()->get_kernel_object_owner();
 
-        std::optional<epoc::uid> custom_message_uid;
+        std::optional<epoc::uid> custom_message_id;
         std::optional<ui::view::view_id> id;
         std::uint8_t *custom_message_buf = nullptr;
         std::size_t custom_message_size = 0;
@@ -289,7 +290,7 @@ namespace eka2l1 {
         if (kern->get_epoc_version() < epocver::epoc81a) {
             struct active_view_fundamental_info {
                 ui::view::view_id app_id_;
-                epoc::uid custom_message_uid_;
+                epoc::uid custom_message_id_;
                 std::uint32_t custom_message_size_;
             };
 
@@ -300,17 +301,17 @@ namespace eka2l1 {
             }
 
             id = info->app_id_;
-            custom_message_uid = info->custom_message_uid_;
+            custom_message_id = info->custom_message_id_;
             custom_message_size = info->custom_message_size_;
             custom_message_buf = ctx->get_descriptor_argument_ptr(1);
         } else {
-            custom_message_uid = ctx->get_argument_value<epoc::uid>(1);
+            custom_message_id = ctx->get_argument_value<epoc::uid>(1);
             custom_message_buf = ctx->get_descriptor_argument_ptr(2);
             custom_message_size = ctx->get_argument_data_size(2);
             id = ctx->get_argument_data_from_descriptor<ui::view::view_id>(0);
         }
 
-        if (!id || !custom_message_uid) {
+        if (!id || !custom_message_id) {
             ctx->complete(epoc::error_argument);
             return;
         }
@@ -332,7 +333,7 @@ namespace eka2l1 {
             return;
         }
 
-        server<view_server>()->make_view_active(this, id.value(), custom_message_buf_cop);
+        server<view_server>()->make_view_active(this, id.value(), { custom_message_buf_cop, custom_message_id.value() });
         ctx->complete(epoc::error_none);
     }
 
@@ -356,7 +357,7 @@ namespace eka2l1 {
 
     void view_session::get_custom_message(service::ipc_context *ctx) {
         const ui::view::custom_message custom = queue_.current_custom_message();
-        ctx->write_data_to_descriptor_argument(0, custom.data(), static_cast<std::uint32_t>(custom.size()));
+        ctx->write_data_to_descriptor_argument(0, custom.data_.data(), static_cast<std::uint32_t>(custom.data_.size()), nullptr, true);
         ctx->complete(epoc::error_none);
     }
 
