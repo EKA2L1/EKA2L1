@@ -719,6 +719,25 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
+    void graphic_context::plot(service::ipc_context &context, ws_cmd &cmd) {
+        eka2l1::point pos = *reinterpret_cast<eka2l1::point*>(cmd.data_ptr);
+        
+        // For now emulate it with drawing a 1x1 rectangle
+        epoc::gdi_store_command gdi_cmd;
+        epoc::gdi_store_command_draw_rect_data &rect_draw_data = gdi_cmd.get_data_struct<epoc::gdi_store_command_draw_rect_data>();
+
+        rect_draw_data.rect_ = eka2l1::rect(pos, eka2l1::vec2(1, 1));
+        rect_draw_data.color_ = common::rgba_to_vec(pen_color);
+        gdi_cmd.opcode_ = epoc::gdi_store_command_draw_rect;
+
+        if (!epoc::is_display_mode_alpha(attached_window->display_mode())) {
+            rect_draw_data.color_.w = 255;
+        }
+        
+        attached_window->add_draw_command(gdi_cmd);
+        context.complete(epoc::error_none);
+    }
+
     void graphic_context::reset_context() {
         if (text_font) {
             text_font = nullptr;
@@ -797,6 +816,13 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
+    void graphic_context::cancel_clipping_rect(service::ipc_context &context, ws_cmd &cmd) {
+        clipping_rect.make_empty();    
+        do_submit_clipping();
+
+        context.complete(epoc::error_none);    
+    }
+
     void graphic_context::destroy(service::ipc_context &context, ws_cmd &cmd) {
         context.complete(epoc::error_none);
         client->delete_object(cmd.obj_handle);
@@ -818,6 +844,7 @@ namespace eka2l1::epoc {
         static const ws_graphics_context_table_op v139u_opcode_handlers = {
             { ws_gc_u139_active, { &graphic_context::active, false, false } },
             { ws_gc_u139_set_clipping_rect, { &graphic_context::set_clipping_rect, false, false } },
+            { ws_gc_u139_cancel_clipping_rect, { &graphic_context::cancel_clipping_rect, false, false } },
             { ws_gc_u139_set_brush_color, { &graphic_context::set_brush_color, false, false } },
             { ws_gc_u139_set_brush_style, { &graphic_context::set_brush_style, false, false } },
             { ws_gc_u139_set_pen_color, { &graphic_context::set_pen_color, false, false } },
@@ -843,6 +870,7 @@ namespace eka2l1::epoc {
             { ws_gc_u139_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3, true, false } },
             { ws_gc_u139_gdi_blt_masked, { &graphic_context::gdi_blt_masked, true, false } },
             { ws_gc_u139_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked, true, false } },
+            { ws_gc_u139_plot, { &graphic_context::plot, true, false } },
             { ws_gc_u139_set_faded, { nullptr, true, false } },
             { ws_gc_u139_set_fade_params, { nullptr, true, false } },
             { ws_gc_u139_free, { &graphic_context::destroy, true, true } }
@@ -851,6 +879,7 @@ namespace eka2l1::epoc {
         static const ws_graphics_context_table_op v151u_m1_opcode_handlers = {
             { ws_gc_u151m1_active, { &graphic_context::active, false, false } },
             { ws_gc_u151m1_set_clipping_rect, { &graphic_context::set_clipping_rect, false, false } },
+            { ws_gc_u151m1_cancel_clipping_rect, { &graphic_context::cancel_clipping_rect, false, false } },
             { ws_gc_u151m1_set_brush_color, { &graphic_context::set_brush_color, false, false } },
             { ws_gc_u151m1_set_brush_style, { &graphic_context::set_brush_style, false, false } },
             { ws_gc_u151m1_set_pen_color, { &graphic_context::set_pen_color, false, false } },
@@ -876,6 +905,7 @@ namespace eka2l1::epoc {
             { ws_gc_u151m1_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3, true, false } },
             { ws_gc_u151m1_gdi_blt_masked, { &graphic_context::gdi_blt_masked, true, false } },
             { ws_gc_u151m1_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked, true, false } },
+            { ws_gc_u151m1_plot, { &graphic_context::plot, true, false } },
             { ws_gc_u151m1_set_faded, { nullptr, true, false } },
             { ws_gc_u151m1_set_fade_params, { nullptr, true, false } },
             { ws_gc_u151m1_free, { &graphic_context::destroy, true, true } }
@@ -884,6 +914,7 @@ namespace eka2l1::epoc {
         static const ws_graphics_context_table_op v151u_m2_opcode_handlers = {
             { ws_gc_u151m2_active, { &graphic_context::active, false, false } },
             { ws_gc_u151m2_set_clipping_rect, { &graphic_context::set_clipping_rect, false, false } },
+            { ws_gc_u151m2_cancel_clipping_rect, { &graphic_context::cancel_clipping_rect, false, false } },
             { ws_gc_u151m2_set_brush_color, { &graphic_context::set_brush_color, false, false } },
             { ws_gc_u151m2_set_brush_style, { &graphic_context::set_brush_style, false, false } },
             { ws_gc_u151m2_set_pen_color, { &graphic_context::set_pen_color, false, false } },
@@ -910,6 +941,7 @@ namespace eka2l1::epoc {
             { ws_gc_u151m2_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3, true, false } },
             { ws_gc_u151m2_gdi_blt_masked, { &graphic_context::gdi_blt_masked, true, false } },
             { ws_gc_u151m2_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked, true, false } },
+            { ws_gc_u151m2_plot, { &graphic_context::plot, true, false } },
             { ws_gc_u151m2_set_faded, { nullptr, true, false } },
             { ws_gc_u151m2_set_fade_params, { nullptr, true, false } },
             { ws_gc_u151m2_free, { &graphic_context::destroy, true, true } }
@@ -918,6 +950,7 @@ namespace eka2l1::epoc {
         static const ws_graphics_context_table_op curr_opcode_handlers = {
             { ws_gc_curr_active, { &graphic_context::active, false, false } },
             { ws_gc_curr_set_clipping_rect, { &graphic_context::set_clipping_rect, false, false } },
+            { ws_gc_curr_cancel_clipping_rect, { &graphic_context::cancel_clipping_rect, false, false } },
             { ws_gc_curr_set_brush_color, { &graphic_context::set_brush_color, false, false } },
             { ws_gc_curr_set_brush_style, { &graphic_context::set_brush_style, false, false } },
             { ws_gc_curr_set_pen_color, { &graphic_context::set_pen_color, false, false } },
@@ -944,6 +977,7 @@ namespace eka2l1::epoc {
             { ws_gc_curr_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3, true, false } },
             { ws_gc_curr_gdi_blt_masked, { &graphic_context::gdi_blt_masked, true, false } },
             { ws_gc_curr_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked, true, false } },
+            { ws_gc_curr_plot, { &graphic_context::plot, true, false } },
             { ws_gc_curr_set_faded, { nullptr, true, false } },
             { ws_gc_curr_set_fade_params, { nullptr, true, false } },
             { ws_gc_curr_free, { &graphic_context::destroy, true, true } }

@@ -304,7 +304,7 @@ namespace eka2l1 {
         volume_ = common::clamp<std::uint32_t>(0, 10, settings->vol_);
 
         if (stream_)
-            (reinterpret_cast<drivers::dsp_output_stream *>(stream_.get()))->volume(volume_ * 10);
+            (reinterpret_cast<drivers::dsp_output_stream *>(stream_.get()))->volume(volume_);
 
         ctx->complete(epoc::error_none);
     }
