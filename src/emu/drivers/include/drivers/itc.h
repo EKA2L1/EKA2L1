@@ -166,7 +166,7 @@ namespace eka2l1::drivers {
 
     template <typename T, typename R>
     void unpack_u64_to_2u32(const std::uint64_t source, T &a, R &b) {
-        a = static_cast<T>(source);
+        a = static_cast<T>(source & 0xFFFFFFFF);
         b = static_cast<R>(source >> 32);
     }
 

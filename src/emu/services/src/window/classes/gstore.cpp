@@ -190,13 +190,14 @@ namespace eka2l1::epoc {
     }
 
     gdi_command_builder::gdi_command_builder(drivers::graphics_driver *drv, drivers::graphics_command_builder &builder, bitmap_cache &bcache,
-        const eka2l1::vec2 &position, float scale_factor, const common::region &clip)
+        drivers::filter_option texture_filter, const eka2l1::vec2 &position, float scale_factor, const common::region &clip)
         : driver_(drv)
         , builder_(builder)
         , bcache_(bcache)
         , scale_factor_(scale_factor)
         , position_(position)
-        , clip_(clip) {
+        , clip_(clip)
+        , texture_filter_(texture_filter) {
     }
 
     void gdi_command_builder::build_segment(const gdi_store_command_segment &segment) {
@@ -408,6 +409,14 @@ namespace eka2l1::epoc {
             swizzle_alteration = true;
             builder_.set_swizzle(mask_bitmap_drv, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
                 drivers::channel_swizzle::blue, drivers::channel_swizzle::red);
+        }
+
+        builder_.set_texture_filter(source_bitmap_drv, false, texture_filter_);
+        builder_.set_texture_filter(source_bitmap_drv, true, texture_filter_);
+
+        if (mask_bitmap_drv) {
+            builder_.set_texture_filter(mask_bitmap_drv, false, texture_filter_);
+            builder_.set_texture_filter(mask_bitmap_drv, true, texture_filter_);
         }
 
         builder_.draw_bitmap(source_bitmap_drv, mask_bitmap_drv, scaled_dest_rect, adjusted_source_rect,

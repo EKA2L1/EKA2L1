@@ -208,10 +208,11 @@ namespace eka2l1::epoc {
         float scale_factor_;
         eka2l1::vec2 position_;
         common::region clip_;
+        drivers::filter_option texture_filter_;
 
     public:
         explicit gdi_command_builder(drivers::graphics_driver *drv, drivers::graphics_command_builder &builder, bitmap_cache &bcache,
-            const eka2l1::vec2 &position, float scale_factor, const common::region &clip);
+            drivers::filter_option texture_filter, const eka2l1::vec2 &position, float scale_factor, const common::region &clip);
 
         void set_position(const eka2l1::vec2 &pos) {
             position_ = pos;

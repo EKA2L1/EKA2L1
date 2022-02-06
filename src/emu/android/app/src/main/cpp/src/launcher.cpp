@@ -558,7 +558,7 @@ namespace eka2l1::android {
             src.size *= scr->display_scale_factor;
 
             builder.set_texture_filter(scr->screen_texture, true, filter);
-            builder.set_texture_filter(scr->screen_texture, false, drivers::filter_option::linear);
+            builder.set_texture_filter(scr->screen_texture, false, filter);
             builder.draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0),
                                  static_cast<float>(scr->ui_rotation), 0);
         }

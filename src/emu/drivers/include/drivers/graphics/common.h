@@ -56,13 +56,13 @@ namespace eka2l1::drivers {
         fixed = 7
     };
 
-    enum class blend_equation {
+    enum class blend_equation : std::uint8_t {
         add,
         sub,
         isub
     };
 
-    enum class blend_factor {
+    enum class blend_factor : std::uint32_t {
         one = 0,
         zero = 1,
         frag_out_alpha = 2,
@@ -76,20 +76,20 @@ namespace eka2l1::drivers {
         frag_out_alpha_saturate = 10
     };
 
-    enum draw_buffer_bits {
+    enum draw_buffer_bits : std::uint32_t  {
         draw_buffer_bit_color_buffer = 1 << 0,
         draw_buffer_bit_depth_buffer = 1 << 1,
         draw_buffer_bit_stencil_buffer = 1 << 2
     };
 
-    enum bitmap_draw_flags {
+    enum bitmap_draw_flags : std::uint32_t {
         bitmap_draw_flag_use_brush = 1 << 0,
         bitmap_draw_flag_invert_mask = 1 << 1,
         bitmap_draw_flag_flip = 1 << 2,
         bitmap_draw_flag_flat_blending = 1 << 3
     };
 
-    enum pen_style {
+    enum pen_style : std::uint8_t {
         pen_style_none = 0,
         pen_style_solid = 1,
         pen_style_dotted = 2,
@@ -126,7 +126,7 @@ namespace eka2l1::drivers {
         uint_24_8
     };
 
-    enum class filter_option {
+    enum class filter_option : std::uint16_t {
         linear,
         nearest,
         nearest_mipmap_nearest,
@@ -135,18 +135,18 @@ namespace eka2l1::drivers {
         linear_mipmap_linear
     };
 
-    enum class addressing_option {
+    enum class addressing_option : std::uint16_t {
         clamp_to_edge,
         repeat
     };
 
-    enum class addressing_direction {
+    enum class addressing_direction : std::uint16_t {
         s,
         t,
         r
     };
 
-    enum class channel_swizzle : std::uint32_t {
+    enum class channel_swizzle : std::uint16_t {
         red,
         green,
         blue,
@@ -155,7 +155,7 @@ namespace eka2l1::drivers {
         one
     };
 
-    enum class stencil_action {
+    enum class stencil_action : std::uint16_t {
         keep,
         replace,
         invert,
@@ -166,18 +166,18 @@ namespace eka2l1::drivers {
         set_to_zero,
     };
 
-    enum class rendering_face {
+    enum class rendering_face : std::uint16_t {
         back = 0x1,
         front = 0x2,
         back_and_front = back | front
     };
 
-    enum class rendering_face_determine_rule {
+    enum class rendering_face_determine_rule : std::uint16_t {
         vertices_clockwise,
         vertices_counter_clockwise
     };
 
-    enum class condition_func {
+    enum class condition_func : std::uint16_t {
         never,
         less,
         less_or_equal,
@@ -188,7 +188,7 @@ namespace eka2l1::drivers {
         always
     };
 
-    enum class graphics_feature {
+    enum class graphics_feature : std::uint32_t {
         depth_test = 0,
         stencil_test = 1,
         clipping = 2,
@@ -203,7 +203,7 @@ namespace eka2l1::drivers {
         dither = 11
     };
 
-    enum class shader_module_type {
+    enum class shader_module_type : std::uint32_t {
         vertex,
         fragment,
         geometry

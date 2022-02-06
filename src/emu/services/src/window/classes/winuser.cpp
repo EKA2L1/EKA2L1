@@ -35,6 +35,7 @@
 
 #include <common/log.h>
 #include <common/vecx.h>
+#include <config/config.h>
 
 #include <drivers/itc.h>
 
@@ -1075,6 +1076,9 @@ namespace eka2l1::epoc {
 
         builder.set_feature(drivers::graphics_feature::blend, false);
 
+        eka2l1::drivers::filter_option filter = (client->get_ws().get_kernel_system()->get_config()->nearest_neighbor_filtering ?
+            eka2l1::drivers::filter_option::nearest : eka2l1::drivers::filter_option::linear);
+
         if (scr->flags_ & screen::FLAG_SERVER_REDRAW_PENDING) {
             auto &segments = redraw_segments_.get_segments();
 
@@ -1084,7 +1088,7 @@ namespace eka2l1::epoc {
                 builder.clip_bitmap_region(visible_region, scr->display_scale_factor);
 
                 gdi_command_builder gdi_builder(client->get_ws().get_graphics_driver(), builder,
-                    *client->get_ws().get_bitmap_cache(), abs_rect.top, scr->display_scale_factor,
+                    *client->get_ws().get_bitmap_cache(), filter, abs_rect.top, scr->display_scale_factor,
                     visible_region);
 
                 for (std::size_t i = 0; i < segments.size(); i++) {
@@ -1105,7 +1109,7 @@ namespace eka2l1::epoc {
                 builder.clip_bitmap_region(visible_region, scr->display_scale_factor);
 
                 gdi_command_builder gdi_builder(client->get_ws().get_graphics_driver(), builder,
-                    *client->get_ws().get_bitmap_cache(), abs_rect.top, scr->display_scale_factor,
+                    *client->get_ws().get_bitmap_cache(), filter, abs_rect.top, scr->display_scale_factor,
                     visible_region);
 
                 gdi_builder.build_segment(*pending_segment_);
@@ -1295,7 +1299,8 @@ namespace eka2l1::epoc {
 
         if (pending_segment_) {
             gdi_command_builder gdi_builder(client->get_ws().get_graphics_driver(), driver_builder_,
-                *client->get_ws().get_bitmap_cache(), eka2l1::vec2(0, 0), 1.0f, common::region{});
+                *client->get_ws().get_bitmap_cache(), drivers::filter_option::linear, eka2l1::vec2(0, 0),
+                1.0f, common::region{});
 
             gdi_builder.build_segment(*pending_segment_);
             pending_segment_.reset();
@@ -1480,6 +1485,12 @@ namespace eka2l1::epoc {
         }
 
         builder.set_feature(drivers::graphics_feature::blend, true);
+
+        eka2l1::drivers::filter_option filter = (client->get_ws().get_kernel_system()->get_config()->nearest_neighbor_filtering ?
+            eka2l1::drivers::filter_option::nearest : eka2l1::drivers::filter_option::linear);
+
+        builder.set_texture_filter(driver_win_id, false, filter);
+        builder.set_texture_filter(driver_win_id, true, filter);
         builder.draw_bitmap(driver_win_id, 0, draw_dest_rect, eka2l1::rect({ 0, 0 }, { 0, 0 }), eka2l1::vec2(0, 0), 0.0f, 0);
 
         return true;

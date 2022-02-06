@@ -336,6 +336,7 @@ namespace eka2l1::dispatch {
 
                 eka2l1::drivers::filter_option filter = (kern->get_config()->nearest_neighbor_filtering ? eka2l1::drivers::filter_option::nearest : eka2l1::drivers::filter_option::linear);
                 builder.set_texture_filter(temp, true, filter);
+                builder.set_texture_filter(temp, false, filter);
 
                 eka2l1::rect scaled_twice_rect = info->scale_to_rect;
                 scaled_twice_rect.scale(scr->display_scale_factor);
