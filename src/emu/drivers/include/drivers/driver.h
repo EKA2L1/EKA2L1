@@ -20,7 +20,9 @@
 
 #pragma once
 
-#include <common/queue.h>
+#include <cstdint>
+#include <condition_variable>
+#include <mutex>
 
 namespace eka2l1 {
     class graphics_driver;
@@ -104,21 +106,20 @@ namespace eka2l1::drivers {
         virtual void run() = 0;
         virtual void abort() = 0;
 
-        void wake_clients() {
-            cond_.notify_all();
-        }
-
         void wait_for(int *status) {
+            std::unique_lock<std::mutex> ulock(mut_);
+
             if (*status == 0) {
                 return;
             }
 
-            std::unique_lock<std::mutex> ulock(mut_);
             cond_.wait(ulock, [&]() { return *status != -100; });
         }
 
         void finish(int *status, const int code) {
             if (status) {
+                std::unique_lock<std::mutex> ulock(mut_);
+
                 *status = code;
                 cond_.notify_all();
             }

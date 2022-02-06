@@ -24,6 +24,7 @@
 #include <services/window/classes/winbase.h>
 
 #include <vector>
+#include <queue>
 
 namespace eka2l1::kernel {
     class process;

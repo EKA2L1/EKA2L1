@@ -28,6 +28,7 @@
 #include <cstdint>
 #include <functional>
 #include <mutex>
+#include <optional>
 
 namespace eka2l1::drivers {
     using master_audio_volume_change_callback = std::function<void(const std::uint32_t old, const std::uint32_t newv)>;
