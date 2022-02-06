@@ -98,9 +98,32 @@ namespace eka2l1::epoc {
         }
         return return_ptr;
     }
+    
+    static char *converted_gray_four_bpp_to_twenty_four_bpp_bitmap(epoc::bitwise_bitmap *bw_bmp,
+        const std::uint8_t *original_ptr, std::size_t &raw_size) {
+        std::uint32_t byte_width_converted = common::align(bw_bmp->header_.size_pixels.x * 3, 4);
+        raw_size = byte_width_converted * bw_bmp->header_.size_pixels.y;
+
+        char *return_ptr = new char[raw_size];
+        std::uint32_t scan_line_size = ((bw_bmp->header_.size_pixels.x + 7) >> 3) << 2;
+
+        for (std::size_t y = 0; y < bw_bmp->header_.size_pixels.y; y++) {
+            for (std::size_t x = 0; x < bw_bmp->header_.size_pixels.x / 2; x++) {
+                std::uint8_t gray_pack = original_ptr[y * scan_line_size + x];
+                std::uint8_t converted_color_comp_first = (gray_pack & 0xF) | ((gray_pack & 0xF) << 4);
+                std::uint8_t converted_color_comp_second = ((gray_pack & 0xF0) >> 4) | (gray_pack & 0xF0);
+
+                std::memset(return_ptr + y * byte_width_converted + x * 3 * 2, converted_color_comp_first, 3);
+                std::memset(return_ptr + y * byte_width_converted + x * 3 * 2 + 3, converted_color_comp_second, 3);
+            }
+        }
+
+        return return_ptr;
+    }
 
     static char *converted_palette_bitmap_to_twenty_four_bitmap(epoc::bitwise_bitmap *bw_bmp,
-        const std::uint8_t *original_ptr, epoc::palette_256 &the_palette, std::size_t &raw_size) {
+        const std::uint8_t *original_ptr, epoc::palette_256 &the_palette, epoc::palette_16 &the_palette_16,
+        std::size_t &raw_size) {
         std::uint32_t byte_width_converted = common::align(bw_bmp->header_.size_pixels.x * 3, 4);
         raw_size = byte_width_converted * bw_bmp->header_.size_pixels.y;
         char *return_ptr = new char[raw_size];
@@ -110,8 +133,13 @@ namespace eka2l1::epoc {
             dsp = bw_bmp->settings_.initial_display_mode();
         }
 
+        std::uint32_t skip_width = 1;
+        if (dsp == epoc::display_mode::color16) {
+            skip_width = 2;
+        }
+
         for (std::size_t y = 0; y < bw_bmp->header_.size_pixels.y; y++) {
-            for (std::size_t x = 0; x < bw_bmp->header_.size_pixels.x; x++) {
+            for (std::size_t x = 0; x < bw_bmp->header_.size_pixels.x / skip_width; x++) {
                 switch (dsp) {
                 case epoc::display_mode::color256: {
                     const std::uint8_t palette_index = original_ptr[y * bw_bmp->byte_width_ + x];
@@ -122,6 +150,23 @@ namespace eka2l1::epoc {
                     return_ptr[location + 1] = (palette_color >> 8) & 0xFF;
                     return_ptr[location] = (palette_color >> 16) & 0xFF;
 
+                    break;
+                }
+
+                case epoc::display_mode::color16: {
+                    const std::uint8_t palette_index_for_two = original_ptr[y * bw_bmp->byte_width_ + x];
+                    const std::uint32_t palette_color_first = the_palette[palette_index_for_two & 0xFFFF];
+                    const std::uint32_t palette_color_second = the_palette[(palette_index_for_two >> 4) & 0xFFFF];
+                    const std::size_t location = byte_width_converted * y + x * 3 * 2;
+
+                    return_ptr[location + 2] = palette_color_first & 0xFF;
+                    return_ptr[location + 1] = (palette_color_first >> 8) & 0xFF;
+                    return_ptr[location] = (palette_color_first >> 16) & 0xFF;
+
+                    return_ptr[location + 5] = palette_color_second & 0xFF;
+                    return_ptr[location + 4] = (palette_color_second >> 8) & 0xFF;
+                    return_ptr[location + 3] = (palette_color_second >> 16) & 0xFF;
+                    
                     break;
                 }
 
@@ -136,7 +181,7 @@ namespace eka2l1::epoc {
     }
 
     static std::uint32_t get_suitable_bpp_for_bitmap(epoc::bitwise_bitmap *bmp) {
-        if (is_palette_bitmap(bmp) || (bmp->header_.bit_per_pixels == 1)) {
+        if (is_palette_bitmap(bmp) || (bmp->header_.bit_per_pixels == 1) || (bmp->header_.bit_per_pixels == 4)) {
             return 24;
         }
 
@@ -309,10 +354,20 @@ namespace eka2l1::epoc {
 
             std::size_t raw_size_big = 0;
             
+            epoc::display_mode dsp = bmp->settings_.current_display_mode();
+            if (dsp == epoc::display_mode::none) {
+                dsp = bmp->settings_.initial_display_mode();
+            }
+
             // GPU don't support them. Convert them on CPU
-            if (is_palette_bitmap(bmp)) {
-                char *new_pointer = converted_palette_bitmap_to_twenty_four_bitmap(bmp, reinterpret_cast<const std::uint8_t *>(data_pointer),
-                    epoc::get_suitable_palette_256(kern->get_epoc_version()), raw_size_big);
+            if (is_palette_bitmap(bmp) || (dsp == epoc::display_mode::gray16)) {
+                char *new_pointer = nullptr;
+                if (dsp == epoc::display_mode::gray16) {
+                    new_pointer = converted_gray_four_bpp_to_twenty_four_bpp_bitmap(bmp, reinterpret_cast<const std::uint8_t *>(data_pointer), raw_size_big);
+                } else {
+                    new_pointer = converted_palette_bitmap_to_twenty_four_bitmap(bmp, reinterpret_cast<const std::uint8_t *>(data_pointer),
+                        epoc::get_suitable_palette_256(kern->get_epoc_version()), epoc::color_16_palette, raw_size_big);
+                }
 
                 bpp = 24;
                 raw_size = static_cast<std::uint32_t>(raw_size_big);
@@ -361,11 +416,6 @@ namespace eka2l1::epoc {
             }
 
             hashes[idx] = hash;
-
-            epoc::display_mode dsp = bmp->settings_.current_display_mode();
-            if (dsp == epoc::display_mode::none) {
-                dsp = bmp->settings_.initial_display_mode();
-            }
 
             if (dsp == epoc::display_mode::color16mu) {
                 if (builder) {

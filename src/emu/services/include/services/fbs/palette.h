@@ -26,6 +26,14 @@
 
 namespace eka2l1::epoc {
     using palette_256 = std::array<common::rgba, 256>;
+    using palette_16 = std::array<common::rgba, 16>;
+
+    static palette_16 color_16_palette = {
+        0x00000000,	0x00555555,	0x00000080,	0x00008080,
+        0x00008000,	0x000000FF,	0x0000FFFF,	0x0000FF00,
+        0x00FF00FF,	0x00FF0000,	0x00FFFF00,	0x00800080,
+        0x00800000,	0x00808000, 0x00aaaaaa,	0x00FFFFFF
+    };
 
     static palette_256 color_256_palette_old = {
         0, 0xCCFFFF, 0x99FFFF, 0x66FFFF, 0x33FFFF, 0xFFFF, 0xFFCCFF,
