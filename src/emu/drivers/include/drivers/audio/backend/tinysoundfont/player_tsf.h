@@ -83,7 +83,7 @@ namespace eka2l1::drivers {
 
         bool is_playing() const override;
 
-        void set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) override;
+        void set_repeat(const std::int32_t repeat_times, const std::int64_t silence_intervals_micros) override;
         void set_position(const std::uint64_t pos_in_us) override;
 
         std::uint64_t position() const override;

@@ -68,7 +68,7 @@ HLE_DISPATCH_FUNC(TInt, EAudioPlayerPlay, TAny *aInstance);
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerStop, TAny *aInstance);
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerPause, TAny *aInstance);
 
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetRepeats, TAny *aInstance, const TInt aTimes, TUint64 aSilenceIntervalMicros);
+HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetRepeats, TAny *aInstance, const TInt aTimes, TInt aSilenceIntervalMicrosLow, TInt aSilenceIntervalMicrosHigh);
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerDestroy, TAny *aInstance);
 
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetDestinationSampleRate, TAny *aInstance);

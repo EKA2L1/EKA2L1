@@ -136,7 +136,7 @@ namespace eka2l1::drivers {
             userdata_.clear();
         }
 
-        virtual void set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) = 0;
+        virtual void set_repeat(const std::int32_t repeat_times, const std::int64_t silence_intervals_micros) = 0;
         virtual void set_position(const std::uint64_t pos_in_us) = 0;
         virtual std::uint64_t position() const = 0;
 

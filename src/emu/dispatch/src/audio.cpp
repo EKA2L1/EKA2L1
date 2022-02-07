@@ -376,7 +376,8 @@ namespace eka2l1::dispatch {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_set_repeats, eka2l1::ptr<void> handle, const std::int32_t times, const std::uint64_t silence_interval_micros) {
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_set_repeats, eka2l1::ptr<void> handle, const std::int32_t times, const std::uint32_t silence_interval_micros_low,
+        const std::int32_t silence_micros_high) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
         dsp_epoc_player *eplayer = manager.get_object<dsp_epoc_player>(handle.ptr_address());
@@ -386,10 +387,10 @@ namespace eka2l1::dispatch {
         }
 
         eplayer->stored_repeat_times = times;
-        eplayer->stored_trailing_silence_us = silence_interval_micros;
+        eplayer->stored_trailing_silence_us = silence_interval_micros_low | static_cast<std::int64_t>(silence_micros_high << 32);
 
         if (eplayer->impl_)
-            eplayer->impl_->set_repeat(times, silence_interval_micros);
+            eplayer->impl_->set_repeat(times, eplayer->stored_trailing_silence_us);
 
         return epoc::error_none;
     }

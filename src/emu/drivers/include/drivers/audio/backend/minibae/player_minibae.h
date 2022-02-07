@@ -32,6 +32,7 @@ namespace eka2l1::drivers {
     struct player_minibae : public player {
     private:
         BAESong song_;
+        std::int32_t repeat_times_;
 
     public:
         explicit player_minibae(audio_driver *driver);
@@ -59,10 +60,14 @@ namespace eka2l1::drivers {
 
         bool is_playing() const override;
 
-        void set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) override;
+        void set_repeat(const std::int32_t repeat_times, const std::int64_t silence_intervals_micros) override;
         void set_position(const std::uint64_t pos_in_us) override;
 
         std::uint64_t position() const override;
+
+        std::int32_t get_repeat_times() const {
+            return repeat_times_;
+        }
 
         player_type get_player_type() const override {
             return player_type_minibae;

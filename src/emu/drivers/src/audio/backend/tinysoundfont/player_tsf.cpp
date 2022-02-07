@@ -338,12 +338,16 @@ namespace eka2l1::drivers {
         return playing_message_;
     }
 
-    void player_tsf::set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) {
+    void player_tsf::set_repeat(const std::int32_t repeat_times, const std::int64_t silence_intervals_micros) {
         const std::lock_guard<std::mutex> guard(msg_lock_);
 
         repeat_count_ = repeat_times;
         repeat_left_ = repeat_count_;
         silence_intervals_us_ = silence_intervals_us_;
+
+        if (silence_intervals_us_ < 0) {
+            silence_intervals_us_ = 0;
+        }
     }
 
     void player_tsf::set_position(const std::uint64_t pos_in_us) {

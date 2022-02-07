@@ -115,7 +115,7 @@ int BAE_Is16BitSupported() {
 
 short int BAE_GetHardwareVolume(void) {
     if (global_originalvolume >= 0.0f) {
-        return global_originalvolume;
+        return static_cast<short int>(global_originalvolume * 256);
     }
 
     if (!global_baeout_stream) {
@@ -156,7 +156,7 @@ unsigned long BAE_Microseconds() {
     std::uint64_t now = std::chrono::duration_cast<std::chrono::microseconds>(
            std::chrono::system_clock::now().time_since_epoch()).count();
 
-    return now - last_recorded;
+    return static_cast<unsigned long>(now - last_recorded);
 }
 
 void BAE_WaitMicroseconds(unsigned long wait) {
@@ -320,13 +320,13 @@ static std::size_t minibae_data_callback(std::int16_t *buffer, const std::size_t
     const std::size_t total_to_grab = global_baeout_stream->get_channels() * frame_count;
     if ((bae_buffer_queue.size() == 0) && (total_to_grab == value)) {
         // Directly build and submit, no need to go through queue
-        BAE_BuildMixerSlice(nullptr, buffer, total_to_grab * 2, frame_count);
+        BAE_BuildMixerSlice(nullptr, buffer, static_cast<long>(total_to_grab * 2), static_cast<long>(frame_count));
         return frame_count;
     }
 
     while (bae_buffer_queue.size() < total_to_grab) {
         // Keep building until enough to grab some frames
-        BAE_BuildMixerSlice(nullptr, bae_11ms_buffer.data(), total_to_grab * 2, frame_count);
+        BAE_BuildMixerSlice(nullptr, bae_11ms_buffer.data(), static_cast<long>(total_to_grab * 2), static_cast<long>(frame_count));
         bae_buffer_queue.push(bae_11ms_buffer.data(), value);
     }
 

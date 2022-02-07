@@ -135,9 +135,13 @@ namespace eka2l1::drivers {
         return player::clear_notify_done();
     }
 
-    void player_shared::set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) {
+    void player_shared::set_repeat(const std::int32_t repeat_times, const std::int64_t silence_intervals_micros) {
         repeat_left_ = repeat_times;
         silence_micros_ = silence_intervals_micros;
+
+        if (silence_micros_ < 0) {
+            silence_micros_ = 0;
+        }
     }
 
     void player_shared::set_position(const std::uint64_t pos_in_us) {

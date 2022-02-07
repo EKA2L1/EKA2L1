@@ -111,7 +111,8 @@ namespace eka2l1::drivers {
     BAEMixerWrapper global_minibae_mixer;
 
     player_minibae::player_minibae(audio_driver *driver)
-        : song_(nullptr) {
+        : song_(nullptr)
+        , repeat_times_(0) {
         BAE_SetActiveAudioDriver(driver);
     }
     
@@ -234,7 +235,7 @@ namespace eka2l1::drivers {
             return false;
         }
 
-        BAEResult error = BAESong_LoadMidiFromMemory(new_song, data_read.data(), data_read.size(), true);
+        BAEResult error = BAESong_LoadMidiFromMemory(new_song, data_read.data(), static_cast<unsigned long>(data_read.size()), true);
     
         if (error != BAE_NO_ERROR) {
             LOG_ERROR(DRIVER_AUD, "Encounter error trying to load MIDI song: {}", static_cast<int>(error));
@@ -264,13 +265,20 @@ namespace eka2l1::drivers {
         return !done;
     }
 
-    void player_minibae::set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) {
+    void player_minibae::set_repeat(const std::int32_t repeat_times, const std::int64_t silence_intervals_micros) {
         if (!song_) {
             return;
         }
 
         // TODO: Ignoring silence intervals here....
-        BAESong_SetLoops(song_, repeat_times);
+        repeat_times_ = repeat_times;
+
+        if (repeat_times_ >= 0) {
+            BAESong_SetLoops(song_, repeat_times);
+        } else {
+            // It does not support infinite loop, so we have to work around with maximum signed short :(
+            BAESong_SetLoops(song_, 32767);
+        }
     }
 
     void player_minibae::set_position(const std::uint64_t pos_in_us) {

@@ -280,9 +280,9 @@ TInt CMMFMdaAudioUtility::SetBalance(const TInt aBalance) {
 
 void CMMFMdaAudioUtility::SetRepeats(const TInt aHowManyTimes, const TTimeIntervalMicroSeconds &aSilenceInterval) {
 #ifdef EKA2
-    EAudioPlayerSetRepeats(0, iDispatchInstance, aHowManyTimes, aSilenceInterval.Int64());
+    EAudioPlayerSetRepeats(0, iDispatchInstance, aHowManyTimes, aSilenceInterval.Int64() & 0xFFFFFFFF, (aSilenceInterval.Int64() >> 32) & 0xFFFFFFFF);
 #else
-    EAudioPlayerSetRepeats(0, iDispatchInstance, aHowManyTimes, aSilenceInterval.Int64().GetTInt());
+    EAudioPlayerSetRepeats(0, iDispatchInstance, aHowManyTimes, aSilenceInterval.Int64().GetTInt(), 0);
 #endif
 }
 

@@ -50,7 +50,7 @@ namespace eka2l1::drivers {
         std::uint32_t flags_;
 
         std::int32_t repeat_left_;
-        std::uint64_t silence_micros_;
+        std::int64_t silence_micros_;
 
         std::uint64_t pos_in_us_;
 
@@ -78,7 +78,7 @@ namespace eka2l1::drivers {
         bool notify_any_done(finish_callback callback, std::uint8_t *data, const std::size_t data_size) override;
         void clear_notify_done() override;
 
-        void set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) override;
+        void set_repeat(const std::int32_t repeat_times, const std::int64_t silence_intervals_micros) override;
         void set_position(const std::uint64_t pos_in_us) override;
 
         bool set_dest_freq(const std::uint32_t freq) override;
