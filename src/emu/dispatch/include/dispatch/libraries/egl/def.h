@@ -279,6 +279,7 @@ namespace eka2l1::dispatch {
         GL_MAX_MODELVIEW_STACK_DEPTH_EMU = 0x0D36,
         GL_MAX_PROJECTION_STACK_DEPTH_EMU = 0x0D38,
         GL_MAX_TEXTURE_STACK_DEPTH_EMU = 0x0D39,
+        GL_MAX_VIEWPORT_DIMS_EMU = 0x0D3A,
         GL_MAX_TEXTURE_UNITS_EMU = 0x84E2,
         GL_BLEND_DST_EMU = 0x0BE0,
         GL_BLEND_SRC_EMU = 0x0BE1,
@@ -323,10 +324,20 @@ namespace eka2l1::dispatch {
         GL_PALETTE8_R5_G6_B5_OES_EMU = 0x8B97,
         GL_PALETTE8_RGBA4_OES_EMU = 0x8B98,
         GL_PALETTE8_RGB5_A1_OES_EMU = 0x8B99,
+        GL_COMPRESSED_RGB_PVRTC_4BPPV1_EMU = 0x8C00,
+        GL_COMPRESSED_RGB_PVRTC_2BPPV1_EMU = 0x8C01,
         GL_COMPRESSED_RGBA_PVRTC_4BPPV1_EMU = 0x8C02,
+        GL_COMPRESSED_RGBA_PVRTC_2BPPV1_EMU = 0x8C03,
         GL_ETC1_RGB8_OES_EMU = 0x8D64,
         GL_UNPACK_ALIGNMENT_EMU = 0x0CF5,
         GL_PACK_ALIGNMENT_EMU = 0x0D05,
+        GL_SUBPIXEL_BITS_EMU = 0x0D50,
+        GL_RED_BITS_EMU = 0x0D52,
+        GL_GREEN_BITS_EMU = 0x0D53,
+        GL_BLUE_BITS_EMU = 0x0D54,
+        GL_ALPHA_BITS_EMU = 0x0D55,
+        GL_DEPTH_BITS_EMU = 0x0D56,
+        GL_STENCIL_BITS_EMU = 0x0D57,
         GL_MAXIMUM_MODELVIEW_MATRIX_STACK_SIZE = 16,
         GL_MAXIMUM_PROJECTION_MATRIX_STACK_SIZE = 2,
         GL_MAXIMUM_TEXTURE_MATRIX_STACK_SIZE = 2
@@ -358,7 +369,12 @@ namespace eka2l1::dispatch {
         }
 
         void set_buffer_size(const std::uint8_t buffer_size);
+
         std::uint8_t buffer_size() const;
+        std::uint8_t red_bits() const;
+        std::uint8_t green_bits() const;
+        std::uint8_t blue_bits() const;
+        std::uint8_t alpha_bits() const;
 
         void set_surface_type(const surface_type type);
         surface_type get_surface_type() const;
@@ -379,7 +395,7 @@ namespace eka2l1::dispatch {
 
     struct egl_surface {
         drivers::handle handle_;
-        egl_config::surface_type surface_type_;
+        egl_config config_;
 
         epoc::screen *backed_screen_;
         epoc::canvas_base *backed_window_;
@@ -392,7 +408,7 @@ namespace eka2l1::dispatch {
         egl_context *bounded_context_;
 
         explicit egl_surface(epoc::canvas_base *backed_window, epoc::screen *screen, eka2l1::vec2 dim,
-            drivers::handle h, egl_config::surface_type surface_type);
+            drivers::handle h, egl_config config);
     };
 
     struct egl_context {

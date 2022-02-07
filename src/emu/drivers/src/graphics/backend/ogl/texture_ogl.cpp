@@ -101,12 +101,13 @@ namespace eka2l1::drivers {
                 decode_rgb_etc2_texture(converted_data, reinterpret_cast<std::uint8_t*>(data), size.x, size.y);
 
                 data = converted_data.data();
-            } else if (((internal_format == drivers::texture_format::pvrtc_4bppv1_rgba) || (internal_format == drivers::texture_format::pvrtc_2bppv1_rgba)) && !ogl_driver->get_supported_feature(OGL_FEATURE_SUPPORT_PVRTC)) {
+            } else if (((internal_format == drivers::texture_format::pvrtc_4bppv1_rgba) || (internal_format == drivers::texture_format::pvrtc_2bppv1_rgba) || (internal_format == drivers::texture_format::pvrtc_4bppv1_rgb) ||
+                (internal_format == drivers::texture_format::pvrtc_2bppv1_rgb)) && !ogl_driver->get_supported_feature(OGL_FEATURE_SUPPORT_PVRTC)) {
                 converted_data_type = drivers::texture_data_type::ubyte;
                 converted_internal_format = drivers::texture_format::rgba;
                 converted_format = drivers::texture_format::rgba;
 
-                std::uint32_t is_2bit = (internal_format == drivers::texture_format::pvrtc_2bppv1_rgba);
+                std::uint32_t is_2bit = ((internal_format == drivers::texture_format::pvrtc_2bppv1_rgba) || (internal_format == drivers::texture_format::pvrtc_2bppv1_rgb));
 
                 converted_data.resize(4 * size.x * size.y);
                 PVRTDecompressPVRTC(data, is_2bit, size.x, size.y, 0, converted_data.data());
@@ -159,6 +160,10 @@ namespace eka2l1::drivers {
                 break;
             }
             }
+        }
+
+        if ((internal_format == drivers::texture_format::pvrtc_4bppv1_rgb) || (internal_format == drivers::texture_format::pvrtc_2bppv1_rgb)) {
+            glTexParameteri(to_gl_tex_dim(dimensions), GL_TEXTURE_SWIZZLE_A, GL_ONE);
         }
 
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);

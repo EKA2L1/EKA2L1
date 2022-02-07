@@ -75,6 +75,15 @@ namespace eka2l1::drivers {
         case texture_format::pvrtc_4bppv1_rgba:
             return GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
 
+        case texture_format::pvrtc_2bppv1_rgba:
+            return GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG;
+
+        case texture_format::pvrtc_4bppv1_rgb:
+            return GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG;
+
+        case texture_format::pvrtc_2bppv1_rgb:
+            return GL_COMPRESSED_RGB_PVRTC_2BPPV1_IMG;
+
         default:
             break;
         }

@@ -24,6 +24,11 @@
 #include <common/log.h>
 
 namespace eka2l1::dispatch {
+    static const std::uint32_t RED_SIZE_CONFIG_LOOKUP_TABLE[3] = { 5, 8, 8 };
+    static const std::uint32_t GREEN_SIZE_CONFIG_LOOKUP_TABLE[3] = { 6, 8, 8 };
+    static const std::uint32_t BLUE_SIZE_CONFIG_LOOKUP_TABLE[3] = { 5, 8, 8 };
+    static const std::uint32_t ALPHA_SIZE_CONFIG_LOOKUP_TABLE[3] = { 0, 0, 8 };
+
     egl_context::egl_context()
         : draw_surface_(nullptr)
         , read_surface_(nullptr)
@@ -35,9 +40,9 @@ namespace eka2l1::dispatch {
     }
 
     egl_surface::egl_surface(epoc::canvas_base *backed_window, epoc::screen *screen, eka2l1::vec2 dim,
-        drivers::handle h, egl_config::surface_type surface_type)
+        drivers::handle h, egl_config config)
         : handle_(h)
-        , surface_type_(surface_type)
+        , config_(config)
         , backed_screen_(screen)
         , backed_window_(backed_window)
         , dimension_(dim)
@@ -341,5 +346,21 @@ namespace eka2l1::dispatch {
 
     void egl_config::set_target_context_version(const target_context_version ver) {
         config_ |= (ver & 1) << 3;
+    }
+
+    std::uint8_t egl_config::red_bits() const {
+        return RED_SIZE_CONFIG_LOOKUP_TABLE[((config_ >> 1) & 0b11)];
+    }
+
+    std::uint8_t egl_config::green_bits() const {
+        return GREEN_SIZE_CONFIG_LOOKUP_TABLE[((config_ >> 1) & 0b11)];
+    }
+
+    std::uint8_t egl_config::blue_bits() const {
+        return BLUE_SIZE_CONFIG_LOOKUP_TABLE[((config_ >> 1) & 0b11)];
+    }
+
+    std::uint8_t egl_config::alpha_bits() const {
+        return ALPHA_SIZE_CONFIG_LOOKUP_TABLE[((config_ >> 1) & 0b11)];
     }
 }

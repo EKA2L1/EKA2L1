@@ -112,6 +112,8 @@ namespace eka2l1::drivers {
         depth_stencil,
         depth24_stencil8,
         etc2_rgb8,
+        pvrtc_4bppv1_rgb,
+        pvrtc_2bppv1_rgb,
         pvrtc_4bppv1_rgba,
         pvrtc_2bppv1_rgba
     };

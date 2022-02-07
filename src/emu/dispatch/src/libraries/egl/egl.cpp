@@ -44,11 +44,6 @@ namespace eka2l1::dispatch {
         0b1011, 0b1101, 0b1111,
     };
 
-    static const std::uint32_t RED_SIZE_CONFIG_LOOKUP_TABLE[3] = { 5, 8, 8 };
-    static const std::uint32_t GREEN_SIZE_CONFIG_LOOKUP_TABLE[3] = { 6, 8, 8 };
-    static const std::uint32_t BLUE_SIZE_CONFIG_LOOKUP_TABLE[3] = { 5, 8, 8 };
-    static const std::uint32_t ALPHA_SIZE_CONFIG_LOOKUP_TABLE[3] = { 0, 0, 8 };
-
     static constexpr std::uint32_t EGL_EMU_CONFIG_LIST_VALS_LENGTH = sizeof(EGL_EMU_CONFIG_LIST_VALS) / sizeof(std::uint32_t);
 
     static void egl_push_error(system *sys, const std::int32_t error) {
@@ -251,9 +246,7 @@ namespace eka2l1::dispatch {
             return EGL_NO_SURFACE_EMU;
         }
 
-        std::unique_ptr<egl_surface> result_surface = std::make_unique<egl_surface>(canvas,
-            canvas->scr, canvas->size(), hh, egl_config::EGL_SURFACE_TYPE_WINDOW);
-
+        std::unique_ptr<egl_surface> result_surface = std::make_unique<egl_surface>(canvas, canvas->scr, canvas->size(), hh, choosen_config);
         egl_surface_handle result_handle = controller.add_managed_surface(result_surface);
 
         if (result_handle == EGL_NO_SURFACE_EMU) {
@@ -327,8 +320,7 @@ namespace eka2l1::dispatch {
             return EGL_NO_SURFACE_EMU;
         }
 
-        std::unique_ptr<egl_surface> result_surface = std::make_unique<egl_surface>(nullptr,
-            backed_screen, dim, hh, egl_config::EGL_SURFACE_TYPE_PBUFFER);
+        std::unique_ptr<egl_surface> result_surface = std::make_unique<egl_surface>(nullptr, backed_screen, dim, hh, choosen_config);
 
         result_surface->current_scale_ = 1.0f;
         egl_surface_handle result_handle = controller.add_managed_surface(result_surface);
@@ -582,19 +574,19 @@ namespace eka2l1::dispatch {
             break;
 
         case EGL_RED_SIZE_EMU:
-            *value = RED_SIZE_CONFIG_LOOKUP_TABLE[parser.buffer_size() / 8 - 1];
+            *value = parser.red_bits();
             break;
             
         case EGL_GREEN_SIZE_EMU:
-            *value = GREEN_SIZE_CONFIG_LOOKUP_TABLE[parser.buffer_size() / 8 - 1];
+            *value = parser.green_bits();
             break;
 
         case EGL_BLUE_SIZE_EMU:
-            *value = BLUE_SIZE_CONFIG_LOOKUP_TABLE[parser.buffer_size() / 8 - 1];
+            *value = parser.blue_bits();
             break;
 
         case EGL_ALPHA_SIZE_EMU:
-            *value = ALPHA_SIZE_CONFIG_LOOKUP_TABLE[parser.buffer_size() / 8 - 1];
+            *value = parser.alpha_bits();
             break;
 
         case EGL_CONFIG_CAVEAT_EMU:

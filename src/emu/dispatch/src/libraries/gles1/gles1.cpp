@@ -1634,8 +1634,20 @@ namespace eka2l1::dispatch {
                 internal_format_driver = drivers::texture_format::etc2_rgb8;
                 break;
 
+            case GL_COMPRESSED_RGB_PVRTC_4BPPV1_EMU:
+                internal_format_driver = drivers::texture_format::pvrtc_4bppv1_rgb;
+                break;
+
             case GL_COMPRESSED_RGBA_PVRTC_4BPPV1_EMU:
                 internal_format_driver = drivers::texture_format::pvrtc_4bppv1_rgba;
+                break;
+
+            case GL_COMPRESSED_RGB_PVRTC_2BPPV1_EMU:
+                internal_format_driver = drivers::texture_format::pvrtc_2bppv1_rgb;
+                break;
+
+            case GL_COMPRESSED_RGBA_PVRTC_2BPPV1_EMU:
+                internal_format_driver = drivers::texture_format::pvrtc_2bppv1_rgba;
                 break;
 
             default:
@@ -4773,6 +4785,51 @@ namespace eka2l1::dispatch {
             *params = static_cast<T>(ctx->texture_units_[ctx->active_texture_unit_].texture_mat_stack_.size());
             break;
 
+        case GL_MAX_MODELVIEW_STACK_DEPTH_EMU:
+            *params = static_cast<T>(GL_MAXIMUM_MODELVIEW_MATRIX_STACK_SIZE);
+            break;
+
+        case GL_MAX_PROJECTION_STACK_DEPTH_EMU:
+            *params = static_cast<T>(GL_MAXIMUM_PROJECTION_MATRIX_STACK_SIZE);
+            break;
+
+        case GL_MAX_TEXTURE_STACK_DEPTH_EMU:
+            *params = static_cast<T>(GL_MAXIMUM_TEXTURE_MATRIX_STACK_SIZE);
+            break;
+
+        case GL_MAX_VIEWPORT_DIMS_EMU:
+            // We clamp on this
+            *params = static_cast<T>(GLES1_EMU_MAX_TEXTURE_SIZE);
+            break;
+
+        case GL_SUBPIXEL_BITS_EMU:
+            *params = static_cast<T>(4);
+            break;
+
+        case GL_RED_BITS_EMU:
+            *params = static_cast<T>(ctx->draw_surface_->config_.red_bits());
+            break;
+
+        case GL_GREEN_BITS_EMU:
+            *params = static_cast<T>(ctx->draw_surface_->config_.green_bits());
+            break;
+
+        case GL_BLUE_BITS_EMU:
+            *params = static_cast<T>(ctx->draw_surface_->config_.blue_bits());
+            break;
+
+        case GL_ALPHA_BITS_EMU:
+            *params = static_cast<T>(ctx->draw_surface_->config_.alpha_bits());
+            break;
+
+        case GL_DEPTH_BITS_EMU:
+            *params = static_cast<T>(24);
+            break;
+
+        case GL_STENCIL_BITS_EMU:
+            *params = static_cast<T>(8);
+            break;
+
         default:
             LOG_TRACE(HLE_DISPATCHER, "Unhandled integer attribute 0x{:X}!", pname);
             controller.push_error(ctx, GL_INVALID_ENUM);
@@ -4798,7 +4855,6 @@ namespace eka2l1::dispatch {
     }
     
     BRIDGE_FUNC_LIBRARY(void, gl_finish_emu) {
-        // No need!!!
     }
     
     BRIDGE_FUNC_LIBRARY(void, gl_polygon_offset_emu, float factors, float units) {
