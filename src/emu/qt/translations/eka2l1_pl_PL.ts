@@ -215,7 +215,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="301"/>
       <source>RPKG file (*.rpkg *.RPKG);;All files (*.*</source>
-      <translation type="unfinished">RPKG file (*.rpkg *.RPKG);;All files (*.*</translation>
+      <translation>Plik RPKG (*.rpkg *.RPKG);;Wszystkie pliki (*.*)</translation>
     </message>
   </context>
   <context>
@@ -338,7 +338,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="260"/>
       <source>Refresh app list</source>
-      <translation type="unfinished">Refresh app list</translation>
+      <translation>Odśwież listę aplikacji</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="236"/>
@@ -800,12 +800,12 @@ Preferowana opcja automatycznie włączy to na urządzeniach S60v1/S60v2.</trans
     <message>
       <location filename="../src/settings_dialog.ui" line="535"/>
       <source>Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</source>
-      <translation type="unfinished">Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</translation>
+      <translation>Pozwól emulatorowi na przyspieszenie GPU dla Symbian&apos;s GLES1 API.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="538"/>
       <source>Enable GPU accelerated GLES1</source>
-      <translation type="unfinished">Enable GPU accelerated GLES1</translation>
+      <translation>Włącz akcelerację GPU GLES1</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="548"/>
@@ -1291,12 +1291,12 @@ Preferowana opcja automatycznie włączy to na urządzeniach S60v1/S60v2.</trans
     <message>
       <location filename="../src/settings_dialog.cpp" line="1299"/>
       <source>Emulator reset needed</source>
-      <translation type="unfinished">Emulator reset needed</translation>
+      <translation>Potrzebny reset emulatora</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1299"/>
       <source>This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</source>
-      <translation type="unfinished">This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</translation>
+      <translation>Ta zmiana będzie działać po resecie emulatora z menu Emulacji albo przy kolejnym uruchomieniu emulatora.</translation>
     </message>
   </context>
 </TS>
