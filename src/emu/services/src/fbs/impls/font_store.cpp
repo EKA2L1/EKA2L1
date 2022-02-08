@@ -87,6 +87,7 @@ namespace eka2l1::epoc {
         int best_score = -99999999;
 
         const std::u16string my_name = spec.tf.name.to_std_string(nullptr);
+        std::int32_t spec_height = spec.height;
 
         for (auto &info : open_font_store) {
             bool maybe_same_family = (my_name.find(info.family) != std::string::npos);
@@ -103,7 +104,19 @@ namespace eka2l1::epoc {
 
             if (!info.adapter->vectorizable()) {
                 // Font that is not vectorizable, according to test, can't resize
-                score -= common::abs(spec.height - info.metrics.max_height) * 100;
+                std::uint32_t subtract_score = (common::abs(spec.height - info.metrics.max_height)) * 100;
+                if (info.face_attrib.coverage[1] & 0x8000000) {
+                    // NOTE: Some older games that use special character like Chinese seems to prefer smaller font
+                    // more despite the twips size (since their character is larger in display). Here CJK flag of
+                    // coverage is checked
+                    // But I don't want to make it choose too big fonts like 1000 or too small like 1.
+                    // So here we have the unit divided by 8, reducing penalty. Should help some fonts like
+                    // 11x12 or 15x16 to choose 11x12... 
+                    // I think the twip divider for epocv6 is close enough.
+                    // Take N-Gage for example, with 130ppi, it should be around 11 or 12 if you do the math
+                    subtract_score /= 8;
+                }
+                score -= subtract_score;
             }
 
             // Match the flags. This is also an important factor.
@@ -128,6 +141,14 @@ namespace eka2l1::epoc {
 
             // The more coverage, the more varieties of the font.
             for (std::size_t i = 0; i < COVERAGE_WORD_COUNT; i++) {
+                std::uint32_t coverage_patched = info.face_attrib.coverage[i];
+
+                // Symbols take multiple bits, patch it out, give less scores
+                if ((i == 1) && (coverage_patched & 0xFFFE)) {
+                    score += 40;
+                    coverage_patched &= ~0xFFFE;
+                }
+
                 score += 100 * common::count_bit_set(info.face_attrib.coverage[i]);
             }
 

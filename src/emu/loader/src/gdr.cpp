@@ -23,113 +23,136 @@
 
 namespace eka2l1::loader::gdr {
     static void scan_coverage(const code_section &range, std::uint32_t &coverage_flags, std::uint32_t &coverage_flags_add) {
-        // 0000-007F
-        if (range.header_.start_ >= 0x00) {
+        // 0000-024F (including extended), 1E02-1EF3
+        if (((range.header_.start_ <= 0x24F) && (range.header_.end_ >= 0x00)) ||
+            ((range.header_.start_ <= 0x1EF3) && (range.header_.end_ >= 0x1E02))) {
             coverage_flags |= font_bitmap::COVERAGE_LATIN_SET;
         }
 
         // 0370-03FF
-        if (range.header_.end_ >= 0x370) {
+        if ((range.header_.start_ <= 0x3FF) && (range.header_.end_ >= 0x0370)) {
             coverage_flags |= font_bitmap::COVERAGE_GREEK_SET;
         }
 
         // 0400-04FF
-        if (range.header_.end_ >= 0x400) {
+        if ((range.header_.start_ <= 0x4FF) && (range.header_.end_ >= 0x400)) {
             coverage_flags |= font_bitmap::COVERAGE_CYRILLIC_SET;
         }
 
         // 0530-058F
-        if (range.header_.end_ >= 0x530) {
+        if ((range.header_.start_ <= 0x58F) && (range.header_.end_ >= 0x0530)) {
             coverage_flags |= font_bitmap::COVERAGE_ARMENIAN_SET;
         }
 
         // 0590-05FF
-        if (range.header_.end_ >= 0x590) {
+        if ((range.header_.start_ <= 0x5FF) && (range.header_.end_ >= 0x0590)) {
             coverage_flags |= font_bitmap::COVERAGE_HEBREW_SET;
         }
 
         // 0600-06FF
-        if (range.header_.end_ >= 0x600) {
+        if ((range.header_.start_ <= 0x6FF) && (range.header_.end_ >= 0x600)) {
             coverage_flags |= font_bitmap::COVERAGE_ARABIC_SET;
         }
 
         // 0900-097F
-        if (range.header_.end_ >= 0x900) {
+        if ((range.header_.start_ <= 0x97F) && (range.header_.end_ >= 0x900)) {
             coverage_flags |= font_bitmap::COVERAGE_DEVANAGARI_SET;
         }
 
         // 0980-09FF
-        if (range.header_.end_ >= 0x980) {
+        if ((range.header_.start_ <= 0x9FF) && (range.header_.end_ >= 0x980)) {
             coverage_flags |= font_bitmap::COVERAGE_BENGALI_SET;
         }
 
         // 0A00-0A7F
-        if (range.header_.end_ >= 0xA00) {
+        if ((range.header_.start_ <= 0xA7F) && (range.header_.end_ >= 0xA00)) {
             coverage_flags |= font_bitmap::COVERAGE_GURMUKHI_SET;
         }
 
         // 0A80-0AFF
-        if (range.header_.end_ >= 0xA80) {
+        if ((range.header_.start_ <= 0xAFF) && (range.header_.end_ >= 0xA80)) {
             coverage_flags |= font_bitmap::COVERAGE_GUJURATI_SET;
         }
 
         // 0B00-0B7F
-        if (range.header_.end_ >= 0xB00) {
+        if ((range.header_.start_ <= 0xB7F) && (range.header_.end_ >= 0xB00)) {
             coverage_flags |= font_bitmap::COVERAGE_ORIYA_SET;
         }
 
         // 0B80-0BFF
-        if (range.header_.end_ >= 0xB80) {
+        if ((range.header_.start_ <= 0xBFF) && (range.header_.end_ >= 0xB80)) {
             coverage_flags |= font_bitmap::COVERAGE_TAMIL_SET;
         }
 
         // 0C00-0C7F
-        if (range.header_.end_ >= 0xC00) {
+        if ((range.header_.start_ <= 0xC7F) && (range.header_.end_ >= 0xC00)) {
             coverage_flags |= font_bitmap::COVERAGE_TELUGU_SET;
         }
 
         // 0C80-0CFF
-        if (range.header_.end_ >= 0xC80) {
+        if ((range.header_.start_ <= 0xCFF) && (range.header_.end_ >= 0xC80)) {
             coverage_flags |= font_bitmap::COVERAGE_KANNADA_SET;
         }
 
         // 0D00-0D7F
-        if (range.header_.end_ >= 0xD00) {
+        if ((range.header_.start_ <= 0xD7F) && (range.header_.end_ >= 0xD00)) {
             coverage_flags |= font_bitmap::COVERAGE_MALAYALAM_SET;
         }
 
         //  0E00-0E7F
-        if (range.header_.end_ >= 0xE00) {
+        if ((range.header_.start_ <= 0xE7F) && (range.header_.end_ >= 0xE00)) {
             coverage_flags |= font_bitmap::COVERAGE_THAI_SET;
         }
 
         // 0E80-0EFF
-        if (range.header_.end_ >= 0xE80) {
+        if ((range.header_.start_ <= 0xEFF) && (range.header_.end_ >= 0xE80)) {
             coverage_flags |= font_bitmap::COVERAGE_LAO_SET;
         }
 
         // 10A0-10FF
-        if (range.header_.end_ >= 0x10A0) {
+        if ((range.header_.start_ <= 0x10FF) && (range.header_.end_ >= 0x10A0)) {
             coverage_flags |= font_bitmap::COVERAGE_GEORGIAN_SET;
         }
 
         // 1100-11FF
-        if (range.header_.end_ >= 0x1100) {
+        if ((range.header_.start_ <= 0x11FF) && (range.header_.end_ >= 0x1100)) {
             coverage_flags |= font_bitmap::COVERAGE_HANGUL_JAMO_SET;
         }
 
         // NOTICE: I got lazy from here.
+        // NOTICE2: Nevermind I got very active and motivated!
+
+        // 2013 - 204A
+        if ((range.header_.start_ <= 0x204A) && (range.header_.end_ >= 0x2013)) {
+            coverage_flags_add |= font_bitmap::COVERAGE_SYMBOL_SETS;
+        }
 
         // 30A0 - 30FF
-        if (range.header_.end_ >= 0x30A0) {
+        if ((range.header_.start_ <= 0x30FF) && (range.header_.end_ >= 0x30A0)) {
             coverage_flags_add |= font_bitmap::COVERAGE_KANA_SETS;
         }
 
         // Hangul
         // U+AC00–U+D7AF, U+1100–U+11FF, U+3130–U+318F, U+A960–U+A97F, U+D7B0–U+D7FF
-        if ((range.header_.end_ >= 0xAC00) || (range.header_.end_ >= 0x1100) || (range.header_.end_ >= 0x3130) || (range.header_.end_ >= 0xA960)
-            || (range.header_.end_ >= 0xD7B0)) {
+        if (((range.header_.start_ <= 0xD7AF) && (range.header_.end_ >= 0xAC00)) ||
+            ((range.header_.start_ <= 0x11FF) && (range.header_.end_ >= 0x1100)) ||
+            ((range.header_.start_ <= 0x318F) && (range.header_.end_ >= 0x3130)) ||
+            ((range.header_.start_ <= 0xA97F) && (range.header_.end_ >= 0xA960)) ||
+            ((range.header_.start_ <= 0xD7FF) && (range.header_.end_ >= 0xD7B0))) {
             coverage_flags_add |= font_bitmap::COVERAGE_HANGUL_SET;
+        }
+
+        // CJK (Chinese characters with variants of Japan and Korea)
+        // Exclude some sets because here the designer of the GDR format limits the character codepoint
+        // to be signed 16-bit integer (as UCS2 should). I don't think it should grow this big in 2022 too.
+        // Human history has been very long!
+        // U+4E00-U+9FFF (common), U+3400-U+4DBF (more rare), U+F900-U+FAFF (Duplicates)
+        // U+3000-U+303F (punctations)
+        if (((range.header_.start_ <= 0x9FFF) && (range.header_.end_ >= 0x4E00)) ||
+            ((range.header_.start_ <= 0x4DBF) && (range.header_.end_ >= 0x3400)) ||
+            ((range.header_.start_ <= 0xFAFF) && (range.header_.end_ >= 0xF900)) ||
+            ((range.header_.start_ <= 0x303F) && (range.header_.end_ >= 0x3000))) {
+            coverage_flags_add |= font_bitmap::COVERAGE_CJK_SET;
         }
     }
 

@@ -151,17 +151,13 @@ namespace eka2l1::epoc::adapter {
             return false;
         }
 
-        epoc::open_font_metrics whole_metrics;
-        get_metrics(idx, whole_metrics);
-
         const std::int16_t target_width = the_char->metric_->move_in_pixels_ - the_char->metric_->left_adj_in_pixels_ - the_char->metric_->right_adjust_in_pixels_;
-        const float the_scale = static_cast<float>(font_size) / static_cast<float>(whole_metrics.max_height);
 
-        character_metric.width = static_cast<std::int16_t>(target_width * the_scale);
-        character_metric.height = font_size;
-        character_metric.horizontal_advance = static_cast<std::int16_t>(the_char->metric_->move_in_pixels_ * the_scale);
-        character_metric.horizontal_bearing_x = static_cast<std::int16_t>(the_char->metric_->left_adj_in_pixels_ * the_scale);
-        character_metric.horizontal_bearing_y = static_cast<std::int16_t>(the_char->metric_->ascent_in_pixels_ * the_scale);
+        character_metric.width = target_width;
+        character_metric.height = the_char->metric_->height_in_pixels_;
+        character_metric.horizontal_advance = the_char->metric_->move_in_pixels_;
+        character_metric.horizontal_bearing_x = the_char->metric_->left_adj_in_pixels_;
+        character_metric.horizontal_bearing_y = the_char->metric_->ascent_in_pixels_;
 
         // Todo supply vertical bearing: This is spaces when text placed vertically
         character_metric.vertical_bearing_x = 0;
