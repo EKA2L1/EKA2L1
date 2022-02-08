@@ -824,6 +824,8 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::destroy(service::ipc_context &context, ws_cmd &cmd) {
+        context_attach_link.deque();
+
         context.complete(epoc::error_none);
         client->delete_object(cmd.obj_handle);
     }
