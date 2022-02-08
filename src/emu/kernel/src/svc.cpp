@@ -5560,6 +5560,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x27, session_share),
         BRIDGE_REGISTER(0x28, thread_resume),
         BRIDGE_REGISTER(0x29, thread_suspend),
+        BRIDGE_REGISTER(0x2A, thread_priority),
         BRIDGE_REGISTER(0x2B, thread_set_priority),
         BRIDGE_REGISTER(0x2F, thread_set_flags),
         BRIDGE_REGISTER(0x31, thread_exit_type),
