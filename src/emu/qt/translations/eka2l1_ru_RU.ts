@@ -800,12 +800,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/settings_dialog.ui" line="535"/>
       <source>Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</source>
-      <translation type="unfinished">Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</translation>
+      <translation>Разрешить эмулятору выполнять собственное ускорение GPU для Symbian GLES1 API.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="538"/>
       <source>Enable GPU accelerated GLES1</source>
-      <translation type="unfinished">Enable GPU accelerated GLES1</translation>
+      <translation>Включить GLES1 с ускорением GPU</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="548"/>
@@ -1291,12 +1291,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1299"/>
       <source>Emulator reset needed</source>
-      <translation type="unfinished">Emulator reset needed</translation>
+      <translation>Требуется сброс эмулятора</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1299"/>
       <source>This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</source>
-      <translation type="unfinished">This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</translation>
+      <translation>Это изменение вступит в силу после сброса эмулятора через меню эмуляции или при следующем запуске эмулятора.</translation>
     </message>
   </context>
 </TS>
