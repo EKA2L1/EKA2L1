@@ -1989,29 +1989,35 @@ namespace eka2l1 {
 
                 kern->lock();
 
-                repeatable_evt.type = epoc::event_code::key;
+                if (get_focus()) {
+                    repeatable_evt.type = epoc::event_code::key;
 
-                repeatable_evt.handle = get_focus()->client_handle;
-                repeatable_evt.time = kern->universal_time();
-                repeatable_evt.key_evt_.code = code;
-                repeatable_evt.key_evt_.scancode = scancode;
-                repeatable_evt.key_evt_.repeats = 1;
+                    repeatable_evt.handle = get_focus()->client_handle;
+                    repeatable_evt.time = kern->universal_time();
+                    repeatable_evt.key_evt_.code = code;
+                    repeatable_evt.key_evt_.scancode = scancode;
+                    repeatable_evt.key_evt_.repeats = 1;
 
-                // TODO: Mark the modifiers currently being held in the server,
-                // and add them to the flags here!
-                repeatable_evt.key_evt_.modifiers = epoc::event_modifier_repeatable;
+                    // TODO: Mark the modifiers currently being held in the server,
+                    // and add them to the flags here!
+                    repeatable_evt.key_evt_.modifiers = epoc::event_modifier_repeatable;
 
-                kern->reset_inactivity_time();
+                    kern->reset_inactivity_time();
 
-                // TODO: When we queued this the event up event may already been queued.
-                // We have to make sure it's queued before event up, if there's something
-                // wrong popping up...
-                get_focus()->queue_event(repeatable_evt);
+                    // TODO: When we queued this the event up event may already been queued.
+                    // We have to make sure it's queued before event up, if there's something
+                    // wrong popping up...
+                    get_focus()->queue_event(repeatable_evt);
+                }
+
+                if (cancel_repeatable_list.find(data) != cancel_repeatable_list.end()) {
+                    cancel_repeatable_list.erase(data);
+                } else {
+                    // Schedule next repeat
+                    timing->schedule_event(next_repeat_delay_, repeatable_event_, data);
+                }
 
                 kern->unlock();
-
-                // Schedule next repeat
-                timing->schedule_event(next_repeat_delay_, repeatable_event_, data);
             });
     }
 

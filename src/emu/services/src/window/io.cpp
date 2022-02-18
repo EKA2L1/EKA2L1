@@ -185,8 +185,13 @@ namespace eka2l1::epoc {
             }
 
             if ((evt.type == epoc::event_code::key_up) && repeatable) {
-                int retry = 0;
-                while (!timing->unschedule_event(serv_->repeatable_event_, data_for_repeatable) && (++retry <= 3));
+                kern->lock();
+
+                if (!timing->unschedule_event(serv_->repeatable_event_, data_for_repeatable)) {    
+                    serv_->cancel_repeatable_list.insert(data_for_repeatable);
+                }
+
+                kern->unlock();
             }
 
             // Iterates through key capture requests and deliver those in needs.key_capture_request_queue &rqueue = key_capture_requests[extra_key_evt.key_evt_.code];

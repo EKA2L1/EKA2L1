@@ -609,6 +609,7 @@ namespace eka2l1::epoc {
             // It's actually two points
             draw_line_data.start_ = area.top;
             draw_line_data.end_ = area.size;
+            draw_line_data.pen_size_ = pen_size;
 
             attached_window->add_draw_command(cmd);
         }
@@ -825,8 +826,6 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::destroy(service::ipc_context &context, ws_cmd &cmd) {
-        context_attach_link.deque();
-
         context.complete(epoc::error_none);
         client->delete_object(cmd.obj_handle);
     }
@@ -1043,5 +1042,9 @@ namespace eka2l1::epoc {
         , brush_color(0xFFFFFFFF)
         , pen_color(0)
         , pen_size(1, 1) {
+    }
+    
+    graphic_context::~graphic_context() {
+        context_attach_link.deque();
     }
 }

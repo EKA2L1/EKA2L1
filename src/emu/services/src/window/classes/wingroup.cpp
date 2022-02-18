@@ -111,6 +111,17 @@ namespace eka2l1::epoc {
         if (uid_owner_change_process) {
             uid_owner_change_process->unregister_uid_type_change_callback(uid_owner_change_callback_handle);
         }
+        
+        remove_from_sibling_list();
+
+        if (this == scr->focus) {
+            set_receive_focus(false);
+            scr->update_focus(&client->get_ws(), this);
+        }
+
+        if (scr) {
+            scr->need_update_visible_regions(true);
+        }
     }
 
     eka2l1::vec2 window_group::get_origin() {
@@ -197,16 +208,6 @@ namespace eka2l1::epoc {
     void window_group::destroy(service::ipc_context &context, ws_cmd &cmd) {
         // Try to redraw the screen
         on_command_batch_done(context);
-        remove_from_sibling_list();
-
-        if (this == scr->focus) {
-            set_receive_focus(false);
-            scr->update_focus(&client->get_ws(), this);
-        }
-
-        if (scr) {
-            scr->need_update_visible_regions(true);
-        }
 
         context.complete(epoc::error_none);
         client->delete_object(cmd.obj_handle);

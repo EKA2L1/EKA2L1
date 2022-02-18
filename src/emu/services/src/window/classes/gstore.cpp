@@ -264,6 +264,28 @@ namespace eka2l1::epoc {
         eka2l1::point scaled_end = (cmd.end_ + position_) * scale_factor_;
 
         builder_.set_brush_color_detail(cmd.color_);
+
+        // Trying to emulate brush size here. There's more complexity in adding a real variant.
+        if (cmd.style_ == drivers::pen_style_solid) {
+            if (((scale_factor_ != 1.0f) || ((cmd.pen_size_.x != 1) || (cmd.pen_size_.y != 1))) && ((cmd.start_.x == cmd.end_.x)
+                || (cmd.start_.y == cmd.end_.y))) {
+                eka2l1::rect draw_rect;
+                draw_rect.top = scaled_start - (cmd.pen_size_ * (scale_factor_ / 2.0f));
+                if (cmd.start_.x == cmd.end_.x) {
+                    if (cmd.start_.y == cmd.end_.y) {
+                        draw_rect.size = cmd.pen_size_ * scale_factor_;
+                    } else {
+                        draw_rect.size = eka2l1::vec2(static_cast<int>(std::roundf(cmd.pen_size_.x * scale_factor_)), scaled_end.y - scaled_start.y + static_cast<int>(std::roundf(cmd.pen_size_.y * scale_factor_ / 2.0f)));
+                    }
+                } else {
+                    draw_rect.size = eka2l1::vec2(scaled_end.x - scaled_start.x + static_cast<int>(std::roundf(cmd.pen_size_.x * scale_factor_ / 2.0f)), static_cast<int>(std::roundf(cmd.pen_size_.y * scale_factor_)));
+                }
+
+                builder_.draw_rectangle(draw_rect);
+                return;
+            }
+        }
+
         builder_.set_pen_style(cmd.style_);
         builder_.draw_line(scaled_start, scaled_end);
     }
@@ -334,7 +356,7 @@ namespace eka2l1::epoc {
                 mask_bitmap_bw = reinterpret_cast<fbsbitmap*>(cmd.mask_fbs_bitmap_)->final_clean()->bitmap_;
             }
         }
-                
+
         drivers::handle source_bitmap_drv = cmd.main_drv_;
         if (!source_bitmap_drv) {
             source_bitmap_drv = bcache_.add_or_get(driver_, source_bitmap_bw, &builder_);
@@ -352,11 +374,19 @@ namespace eka2l1::epoc {
         eka2l1::rect adjusted_source_rect = cmd.source_rect_;
 
         if (scaled_dest_rect.size.x == 0) {
-            scaled_dest_rect.size.x = source_bitmap_bw->header_.size_pixels.x;
+            if (adjusted_source_rect.size.x == 0) {
+                scaled_dest_rect.size.x = source_bitmap_bw->header_.size_pixels.x;
+            } else {
+                scaled_dest_rect.size.x = adjusted_source_rect.size.x;
+            }
         }
 
         if (scaled_dest_rect.size.y == 0) {
-            scaled_dest_rect.size.y = source_bitmap_bw->header_.size_pixels.y;
+            if (adjusted_source_rect.size.y == 0) {
+                scaled_dest_rect.size.y = source_bitmap_bw->header_.size_pixels.y;
+            } else {
+                scaled_dest_rect.size.y = adjusted_source_rect.size.y;
+            }
         }
         
         scale_rectangle(scaled_dest_rect, scale_factor_);

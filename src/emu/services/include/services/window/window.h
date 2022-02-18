@@ -26,6 +26,7 @@
 #include <cstdint>
 #include <memory>
 #include <queue>
+#include <set>
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
@@ -377,6 +378,7 @@ namespace eka2l1 {
         std::uint64_t next_repeat_delay_; ///< Time that the next repeat event after the previous being generated.
 
         int repeatable_event_;
+        std::set<std::uint64_t> cancel_repeatable_list;
 
         enum {
             CONFIG_FLAG_NO_REDRAW_STORING = 1 << 0

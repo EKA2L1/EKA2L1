@@ -59,6 +59,7 @@ namespace eka2l1::epoc {
         drivers::pen_style style_;
         eka2l1::vec2 start_;
         eka2l1::vec2 end_;
+        eka2l1::vec2 pen_size_;
     };
 
     struct gdi_store_command_draw_polygon_data {

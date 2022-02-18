@@ -113,6 +113,15 @@ namespace eka2l1::epoc {
     }
 
     canvas_base::~canvas_base() {
+        set_visible(false);
+
+        remove_from_sibling_list();
+
+        if (scr) {
+            scr->need_update_visible_regions(true);
+        }
+
+        client->remove_redraws(this);
     }
 
     bool canvas_base::is_dsa_active() const {
@@ -456,15 +465,6 @@ namespace eka2l1::epoc {
     void canvas_base::destroy(service::ipc_context &context, ws_cmd &cmd) {
         // Try to redraw the screen
         on_command_batch_done(context);
-        set_visible(false);
-
-        remove_from_sibling_list();
-
-        if (scr) {
-            scr->need_update_visible_regions(true);
-        }
-
-        client->remove_redraws(this);
 
         context.complete(epoc::error_none);
         client->delete_object(cmd.obj_handle);

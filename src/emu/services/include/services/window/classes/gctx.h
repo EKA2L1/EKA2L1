@@ -140,5 +140,6 @@ namespace eka2l1::epoc {
         bool execute_command(service::ipc_context &context, ws_cmd &cmd) override;
 
         explicit graphic_context(window_server_client_ptr client, epoc::window *attach_win = nullptr);
+        ~graphic_context() override;
     };
 }
