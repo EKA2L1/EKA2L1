@@ -757,15 +757,15 @@ namespace eka2l1 {
         header.size_twips = info.size_ * epoc::get_approximate_pixel_to_twips_mul(kern->get_epoc_version());
         header.bit_per_pixels = epoc::get_bpp_from_display_mode(info.dpm_);
 
+        // Skip reserved spaces.
+        const std::size_t reserved_bytes = (bws_bmp->byte_width_ * final_reserve_each_side);
+        if (data) {
+            data = reinterpret_cast<std::uint8_t *>(data) + reserved_bytes;
+        }
+
         bws_bmp->construct(header, info.dpm_, data, base, support_current_display_mode_flag, true);
         bws_bmp->offset_from_me_ = smol;
         bws_bmp->post_construct(this);
-
-        // Skip reserved spaces.
-        const std::size_t reserved_bytes = (bws_bmp->byte_width_ * final_reserve_each_side);
-
-        bws_bmp->data_offset_ += static_cast<std::int32_t>(reserved_bytes);
-        data = reinterpret_cast<std::uint8_t *>(data) + reserved_bytes;
 
         if (info.data_) {
             std::memcpy(data, info.data_, common::min<std::size_t>(info.data_size_, original_bytes));
