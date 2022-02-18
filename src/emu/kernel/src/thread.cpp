@@ -521,7 +521,7 @@ namespace eka2l1 {
             kernel::process *mama = owning_process();
 
             if (mama->decrease_thread_count() == 0 || is_process_permanent() || ((exit_type == kernel::entity_exit_type::panic) && is_process_critical())) {
-                mama->kill(exit_type, exit_reason);
+                mama->kill(exit_type, exit_category, exit_reason);
             }
 
             kern->prepare_reschedule();

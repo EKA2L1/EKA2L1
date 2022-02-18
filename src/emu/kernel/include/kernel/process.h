@@ -159,6 +159,7 @@ namespace eka2l1::kernel {
         process_priority priority;
         int exit_reason = 0;
         entity_exit_type exit_type;
+        std::u16string exit_category;
 
         std::vector<epoc::notify_info> logon_requests;
         std::vector<epoc::notify_info> rendezvous_requests;
@@ -228,7 +229,7 @@ namespace eka2l1::kernel {
 
         int destroy() override;
         bool run();
-        void kill(const entity_exit_type ext, const std::int32_t reason);
+        void kill(const entity_exit_type ext, const std::u16string &category, const std::int32_t reason);
 
         std::string name() const override;
         std::string raw_name() const;
@@ -314,6 +315,10 @@ namespace eka2l1::kernel {
 
         int get_exit_reason() const {
             return exit_reason;
+        }
+
+        std::u16string get_exit_category() const {
+            return exit_category;
         }
 
         std::size_t get_total_open_handles() const {

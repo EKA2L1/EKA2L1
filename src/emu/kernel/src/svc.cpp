@@ -192,6 +192,23 @@ namespace eka2l1::epoc {
         return static_cast<std::int32_t>(pr_real->get_exit_reason());
     }
 
+    BRIDGE_FUNC(void, process_exit_category, kernel::handle h, epoc::des8 *category) {
+        process_ptr pr_real = kern->get<kernel::process>(h);
+        process_ptr cr_process = kern->crr_process();
+
+        if (!pr_real) {
+            LOG_ERROR(KERNEL, "Invalid handle passed to get process's exit category");
+            return;
+        }
+
+        if (!category) {
+            LOG_ERROR(KERNEL, "Invalid descriptor pointer passed to get process's exit category");
+            return;
+        }
+
+        category->assign(cr_process, common::ucs2_to_utf8(cr_process->get_exit_category()));
+    }
+
     BRIDGE_FUNC(void, process_rendezvous, std::int32_t complete_code) {
         kernel::process *pr = kern->crr_process();
         pr->rendezvous(complete_code);
@@ -5546,6 +5563,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x16, process_filename),
         BRIDGE_REGISTER(0x17, process_command_line),
         BRIDGE_REGISTER(0x18, process_exit_type),
+        BRIDGE_REGISTER(0x19, process_exit_reason),
+        BRIDGE_REGISTER(0x1A, process_exit_category),
         BRIDGE_REGISTER(0x1B, process_priority),
         BRIDGE_REGISTER(0x1C, process_set_priority),
         BRIDGE_REGISTER(0x1E, process_set_flags),
@@ -5706,6 +5725,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x17, process_command_line),
         BRIDGE_REGISTER(0x18, process_exit_type),
         BRIDGE_REGISTER(0x19, process_exit_reason),
+        BRIDGE_REGISTER(0x1A, process_exit_category),
         BRIDGE_REGISTER(0x1B, process_priority),
         BRIDGE_REGISTER(0x1C, process_set_priority),
         BRIDGE_REGISTER(0x1E, process_set_flags),

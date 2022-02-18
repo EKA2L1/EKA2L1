@@ -206,6 +206,7 @@ namespace eka2l1::kernel {
         , flags(0)
         , priority(kernel::process_priority::foreground)
         , exit_type(kernel::entity_exit_type::pending)
+        , exit_category(u"None")
         , bss_man_(nullptr)
         , parent_process_(nullptr)
         , time_delay_(0)
@@ -228,7 +229,7 @@ namespace eka2l1::kernel {
         kern->destroy(dll_lock);
 
         if (exit_type == entity_exit_type::pending) {
-            kill(kernel::entity_exit_type::kill, 0);
+            kill(kernel::entity_exit_type::kill, u"Kill", 0);
         } else if (!kern->wipeout_in_progress()) {
             process_handles.reset();
         }
@@ -419,13 +420,14 @@ namespace eka2l1::kernel {
         } while (elem != end);
     }
 
-    void process::kill(const entity_exit_type ext, const std::int32_t reason) {
+    void process::kill(const entity_exit_type ext, const std::u16string &category, const std::int32_t reason) {
         if (exit_type != entity_exit_type::pending) {
             return;
         }
 
         exit_type = ext;
         exit_reason = reason;
+        exit_category = category;
 
         common::double_linked_queue_element *elem = thread_list.first();
         common::double_linked_queue_element *end = thread_list.end();
