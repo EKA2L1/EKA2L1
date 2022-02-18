@@ -272,7 +272,7 @@ namespace eka2l1::epoc::adapter {
 
         character_metric.width = static_cast<std::int16_t>((x1 - x0) * scale_factor);
         character_metric.height = static_cast<std::int16_t>((y1 - y0) * scale_factor);
-        character_metric.horizontal_advance = static_cast<std::int16_t>(adv_width * scale_factor);
+        character_metric.horizontal_advance = static_cast<std::int16_t>(std::roundf(adv_width * scale_factor));
         character_metric.horizontal_bearing_x = static_cast<std::int16_t>(left_side_bearing * scale_factor);
 
         // Let's calculate vertical advance. Every character of the font should have same vertical size.
