@@ -36,8 +36,11 @@ add_library(epocservs
         include/services/internet/nifman.h
         include/services/drm/notifier/events.h
         include/services/drm/notifier/notifier.h
+        include/services/drm/rights/object.h
+        include/services/drm/rights/db.h
+        include/services/drm/rights/import.h
+        include/services/drm/rights/rights.h
         include/services/drm/helper.h
-        include/services/drm/rights.h
         include/services/etel/common.h
         include/services/etel/etel.h
         include/services/etel/line.h
@@ -161,8 +164,11 @@ add_library(epocservs
         src/drm/notifier/events.cpp
         src/drm/notifier/exchange.cpp
         src/drm/notifier/notifier.cpp
-        src/drm/helper.cpp    
-        src/drm/rights.cpp
+        src/drm/rights/db.cpp
+        src/drm/rights/import.cpp
+        src/drm/rights/object.cpp
+        src/drm/rights/rights.cpp
+        src/drm/helper.cpp
         src/etel/etel.cpp
         src/etel/line.cpp
         src/etel/modmngr.cpp
@@ -289,4 +295,5 @@ target_link_libraries(epocservs PRIVATE
         drivers
         stb
         xxHash
+        pugixml
         sqlite3)

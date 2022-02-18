@@ -31,7 +31,7 @@
 #include <services/comm/comm.h>
 #include <services/drm/helper.h>
 #include <services/drm/notifier/notifier.h>
-#include <services/drm/rights.h>
+#include <services/drm/rights/rights.h>
 #include <services/etel/etel.h>
 #include <services/fbs/fbs.h>
 #include <services/featmgr/featmgr.h>

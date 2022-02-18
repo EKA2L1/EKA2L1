@@ -334,6 +334,7 @@ namespace eka2l1 {
 
         file *get_file(const kernel::uid session_uid, const std::uint32_t handle);
         bool is_file_opened(const std::u16string &path);
+        symfile get_temp_file(const std::u16string &base_dir);
 
         fs_server_client *get_correspond_client(service::session *ss);
     };

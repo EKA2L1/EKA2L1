@@ -1,0 +1,6 @@
+- The XML DR parser still does not parse all attributes, since the clear format is still not known.
+But here is a glimse, it was published somewhere: https://wenku.baidu.com/view/24f7b524ccbff121dd368354.html
+
+- The DR will be programmed to replace any existing old attributes, to fill this shortcoming (users need to reimport in the future)
+- The server will not take any add rights request from applications, because the DRM keys are not encrypted, but store raw, this may become a huge problem. If this idea is to change, secure these keys need to be discussed first.
+- Why make the server HLE? - The key can not be encrypted anyway due to no driver existence on emulator, so I thought making a HLE implementation would benefit more, especially for encrypted IO operations.

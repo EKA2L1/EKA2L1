@@ -610,8 +610,7 @@ namespace eka2l1::epoc::msv {
             newly_created = true;
         }
 
-        std::string database_path_u8 = common::ucs2_to_utf8(database_real_path.value());
-        if (sqlite3_open(database_path_u8.c_str(), &database_) != SQLITE_OK) {
+        if (sqlite3_open16(database_real_path.value().c_str(), &database_) != SQLITE_OK) {
             LOG_ERROR(SERVICE_MSV, "Fail to establish messaging database!");
             return false;
         }

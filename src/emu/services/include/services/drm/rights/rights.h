@@ -20,32 +20,67 @@
 
 #pragma once
 
+#include <services/drm/rights/db.h>
 #include <kernel/server.h>
 #include <services/framework.h>
+
+#include <string>
 
 namespace eka2l1 {
     // See DRMEngineClientServer.h in omadrm/drmengine/server/inc
     // This belongs to the mw.drm repository.
     enum rights_opcode {
         rights_opcode_none,
+        rights_opcode_get_entry_list = 3,
         rights_opcode_get_key = 7,
+        rights_opcode_consume = 11,
         rights_opcode_initialize_key = 22,
-        rights_opcode_decrypt = 24
+        rights_opcode_decrypt = 24,
+        rights_opcode_check_consume = 27
+    };
+
+    enum rights_crediental_check_status {
+        rights_crediental_not_checked,
+        rights_crediental_checked_and_allowed,
+        rights_crediental_checked_and_denied
     };
 
     static constexpr std::uint32_t ERROR_CA_NO_RIGHTS = -17452;
     static constexpr std::uint32_t ERROR_CA_PENDING_RIGHTS = -17455;
 
     class rights_server : public service::typical_server {
+    private:
+        std::unique_ptr<epoc::drm::rights_database> database_;
+
+        void initialize();
+        void startup_imports();
+
     public:
         explicit rights_server(eka2l1::system *sys);
-
         void connect(service::ipc_context &context) override;
+
+        epoc::drm::rights_database &database() {
+            return *database_;
+        }
+
+        std::uint32_t get_suitable_seri_version() const;
     };
 
     struct rights_client_session : public service::typical_session {
+    private:
+        std::string current_key_;
+        rights_crediental_check_status check_status_;
+
+        void verify_crediental(kernel::process *client, const std::string &cid, const epoc::drm::rights_intent intent);
+
+    public:
         explicit rights_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
 
         void fetch(service::ipc_context *ctx) override;
+        void get_entry_list(service::ipc_context *ctx);
+        void init_key(service::ipc_context *ctx);
+        void get_key(service::ipc_context *ctx);
+        void consume(service::ipc_context *ctx);
+        void check_consume(service::ipc_context *ctx);
     };
 }
