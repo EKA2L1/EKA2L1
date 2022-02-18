@@ -447,7 +447,8 @@ namespace eka2l1::epoc {
         source_rect.transform_from_symbian_rectangle();
         dest_rect.transform_from_symbian_rectangle();
 
-        std::uint8_t flags = GDI_STORE_COMMAND_BLIT;
+        std::uint8_t flags = 0;
+
         void *source_bmp_to_pass = decide_bitmap_pointer_to_pass(myside_source_bmp, flags, false);
         void *mask_bmp_to_pass = decide_bitmap_pointer_to_pass(myside_mask_bmp, flags, true);
 
@@ -473,7 +474,7 @@ namespace eka2l1::epoc {
         source_rect.transform_from_symbian_rectangle();
 
         eka2l1::rect dest_rect;
-        dest_rect.size = source_rect.size;
+        dest_rect.size = eka2l1::vec2(0, 0);
         dest_rect.top = blt_cmd->pos;
 
         std::uint8_t flags = GDI_STORE_COMMAND_BLIT;
@@ -499,7 +500,7 @@ namespace eka2l1::epoc {
         source_rect.transform_from_symbian_rectangle();
 
         eka2l1::rect dest_rect;
-        dest_rect.size = source_rect.size;
+        dest_rect.size = eka2l1::vec2(0, 0);
         dest_rect.top = blt_cmd->pos;
 
         std::uint8_t flags = GDI_STORE_COMMAND_BLIT;
@@ -556,7 +557,7 @@ namespace eka2l1::epoc {
 
         eka2l1::rect dest_rect;
         dest_rect.top = blt_cmd->pos;
-        dest_rect.size = source_rect.size;
+        dest_rect.size = eka2l1::vec2(0, 0);
 
         do_command_draw_bitmap(context, bmp, source_rect, dest_rect, flags);
     }

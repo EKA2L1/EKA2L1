@@ -362,12 +362,13 @@ namespace eka2l1::epoc {
         scale_rectangle(scaled_dest_rect, scale_factor_);
 
         // Handle this variant: BitBlt(const TPoint &aDestination, const CFbsBitmap *aBitmap, const TRect &aSource);
-        if ((cmd.gdi_flags_ & GDI_STORE_COMMAND_BLIT) && (!mask_bitmap_drv) &&
+        if ((cmd.gdi_flags_ & GDI_STORE_COMMAND_BLIT) &&
             ((cmd.source_rect_.size.y > source_bitmap_bw->header_.size_pixels.y) ||
-            (cmd.source_rect_.size.x > source_bitmap_bw->header_.size_pixels.x))
-            && (cmd.dest_rect_.size.x == 0) && (cmd.dest_rect_.size.y == 0)) {
-            builder_.set_brush_color_detail(eka2l1::vec4(255, 255, 255, 255));
-            builder_.draw_rectangle(scaled_dest_rect);
+            (cmd.source_rect_.size.x > source_bitmap_bw->header_.size_pixels.x))) {
+            if (!mask_bitmap_drv) {
+                builder_.set_brush_color_detail(eka2l1::vec4(255, 255, 255, 255));
+                builder_.draw_rectangle(scaled_dest_rect);
+            }
 
             if (cmd.source_rect_.size.y > source_bitmap_bw->header_.size_pixels.y) {
                 adjusted_source_rect.size.y = source_bitmap_bw->header_.size_pixels.y;
