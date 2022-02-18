@@ -127,6 +127,16 @@ namespace eka2l1::epoc {
         locale.device_time_state_ = epoc::device_user_time;
         locale.decimal_separator_ = '.';
 
+        locale.time_separator_[0] = 0;
+        locale.time_separator_[1] = ':';
+        locale.time_separator_[2] = ':';
+        locale.time_separator_[3] = 0;
+
+        locale.date_separator_[0] = 0;
+        locale.date_separator_[1] = '/';
+        locale.date_separator_[2] = '/';
+        locale.date_separator_[3] = 0;
+
         return locale;
     }
 
