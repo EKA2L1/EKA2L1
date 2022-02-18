@@ -19,16 +19,18 @@
 
 #include <common/platform.h>
 #include <drivers/hwrm/backend/vibration_null.h>
-#include <drivers/hwrm/backend/vibration_sdl2.h>
 #ifdef EKA2L1_PLATFORM_ANDROID
 #include <drivers/hwrm/backend/vibration_jdk.h>
+#else
+#include <drivers/hwrm/backend/vibration_sdl2.h>
 #endif
 
 namespace eka2l1::drivers::hwrm {
     std::unique_ptr<vibrator> make_suitable_vibrator() {
 #ifdef EKA2L1_PLATFORM_ANDROID
         return std::make_unique<vibrator_jdk>();
-#endif
+#else
         return std::make_unique<vibrator_sdl2>();
+#endif
     }
 }
