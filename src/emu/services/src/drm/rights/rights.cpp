@@ -214,20 +214,26 @@ namespace eka2l1 {
             return;
         }
 
-        bool is_accepted = true;
+        bool is_accepted = false;
 
-        // Get constraint. Just pick first RO for now
-        if (!perms.empty() && (intent != epoc::drm::rights_intent_stop)) {
-            epoc::drm::rights_constraint *constraint = perms[0].get_constraint_from_intent(intent);
-            if (constraint->active_constraints_ & epoc::drm::rights_constraint_software) {
-                if (client->get_sec_info().secure_id != constraint->secure_id_) {
-                    is_accepted = false;
+        // Get constraint. Just pick first RO for now. In the original source code, one must have permission and constraint, else
+        // it will still not be accepted!
+        if ((intent == epoc::drm::rights_intent_stop) || (intent == epoc::drm::rights_intent_pause) || (intent == epoc::drm::rights_intent_continue)) {
+            // Whenever it is in any other state or not, we don't care at the moment :p
+            is_accepted = true;
+        } else {
+            if (!perms.empty()) {
+                epoc::drm::rights_constraint *constraint = perms[0].get_constraint_from_intent(intent);
+                if (constraint->active_constraints_ & epoc::drm::rights_constraint_software) {
+                    if (client->get_sec_info().secure_id == constraint->secure_id_) {
+                        is_accepted = true;
+                    }
                 }
-            }
 
-            if (constraint->active_constraints_ & epoc::drm::rights_constraint_vendor) {
-                if (client->get_sec_info().vendor_id != constraint->vendor_id_) {
-                    is_accepted = false;
+                if (constraint->active_constraints_ & epoc::drm::rights_constraint_vendor) {
+                    if (client->get_sec_info().vendor_id == constraint->vendor_id_) {
+                        is_accepted = true;
+                    }
                 }
             }
         }
