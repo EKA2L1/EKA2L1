@@ -34,7 +34,6 @@
 #include <system/epoc.h>
 
 #include <drivers/audio/audio.h>
-#include <drivers/graphics/cursor.h>
 #include <drivers/graphics/emu_window.h>
 #include <drivers/graphics/graphics.h>
 #include <drivers/input/emu_controller.h>

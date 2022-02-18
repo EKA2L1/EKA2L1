@@ -165,7 +165,7 @@ namespace eka2l1::desktop {
         }
         }
 
-        state.joystick_controller = drivers::new_emu_controller(eka2l1::drivers::controller_type::glfw);
+        state.joystick_controller = drivers::new_emu_controller(eka2l1::drivers::controller_type::sdl2);
         state.joystick_controller->on_button_event = [&](int jid, int button, bool pressed) {
             const std::lock_guard<std::mutex> guard(state.lockdown);
             auto evt = make_controller_event_driver(jid, button, pressed);
@@ -187,10 +187,6 @@ namespace eka2l1::desktop {
 
         state.joystick_controller->stop_polling();
         state.graphics_driver.reset();
-
-        if (!drivers::destroy_window_library(eka2l1::drivers::window_api::glfw)) {
-            return -1;
-        }
 
         return 0;
     }
@@ -364,10 +360,6 @@ namespace eka2l1::desktop {
         state.ui_main->setWindowTitle(get_emulator_window_title());
 
         state.window = state.ui_main->render_window();
-        
-        if (!drivers::init_window_library(drivers::window_api::glfw)) {
-            return -1;
-        }
 
         std::thread graphics_thread_obj(graphics_driver_thread, std::ref(state));
 

@@ -149,7 +149,8 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/drivers/resources/gl/" "$<TARGET_FILE_DIR:eka2l1_qt>/resources/"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/drivers/resources/defaultbank.hsb" "$<TARGET_FILE_DIR:eka2l1_qt>/resources/"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/emu/drivers/resources/defaultbank.sf2" "$<TARGET_FILE_DIR:eka2l1_qt>/resources/"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/config/compat/" "$<TARGET_FILE_DIR:eka2l1_qt>/compat/")
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/config/compat/" "$<TARGET_FILE_DIR:eka2l1_qt>/compat/"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/external/SDL_GameControllerDB/gamecontrollerdb.txt" "$<TARGET_FILE_DIR:eka2l1_qt>/resources/")
 
 if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
         add_custom_command(
@@ -203,7 +204,8 @@ if(APPLE)
         TARGET eka2l1_qt
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:eka2l1_qt>/patch"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/bin/patch/" "$<TARGET_FILE_DIR:eka2l1_qt>/patch/")
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/bin/patch/" "$<TARGET_FILE_DIR:eka2l1_qt>/patch/"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/external/sdl/macos/SDL2.framework" "$<TARGET_FILE_DIR:eka2l1_qt>/Frameworks/SDL2.framework")
 
     # Update library references to make the bundle portable
     include(DolphinPostprocessBundle)
@@ -242,7 +244,8 @@ if (WIN32)
     add_custom_command(
         TARGET eka2l1_qt
         POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/qt.conf.win" "$<TARGET_FILE_DIR:eka2l1_qt>/qt.conf")
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/qt.conf.win" "$<TARGET_FILE_DIR:eka2l1_qt>/qt.conf"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/external/sdl2/Windows/lib/x64/SDL2.dll" "$<TARGET_FILE_DIR:eka2l1_qt>")
     
     if(CMAKE_BUILD_TYPE MATCHES DEBUG)
         set(DEPLOY_BUILD_CONFIG_ARG "--debug")

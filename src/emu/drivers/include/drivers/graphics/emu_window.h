@@ -149,11 +149,6 @@ namespace eka2l1 {
             std::function<void(void*)> surface_change_hook;
         };
 
-        std::unique_ptr<emu_window> new_emu_window(const window_api win_type);
-
-        bool init_window_library(const window_api win_type);
-        bool destroy_window_library(const window_api win_type);
-
         using emu_window_ptr = std::unique_ptr<emu_window>;
     }
 }

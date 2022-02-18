@@ -17,7 +17,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <drivers/graphics/backend/emu_window_glfw.h>
 #include <drivers/graphics/emu_window.h>
 
 const char *number_to_key_name(const int keycode) {
@@ -32,44 +31,4 @@ const char *number_to_key_name(const int keycode) {
     }
 
     return nullptr;
-}
-
-namespace eka2l1 {
-    namespace drivers {
-        std::unique_ptr<emu_window> new_emu_window(const window_api win_type) {
-            switch (win_type) {
-            case window_api::glfw: {
-                return std::make_unique<emu_window_glfw3>();
-            }
-            }
-
-            return nullptr;
-        }
-
-        bool init_window_library(const window_api win_type) {
-            switch (win_type) {
-            case window_api::glfw:
-                glfwInitHint(GLFW_COCOA_CHDIR_RESOURCES, GLFW_FALSE);
-                return glfwInit() == GLFW_TRUE ? true : false;
-
-            default:
-                break;
-            }
-
-            return false;
-        }
-
-        bool destroy_window_library(const window_api win_type) {
-            switch (win_type) {
-            case window_api::glfw:
-                glfwTerminate();
-                return true;
-
-            default:
-                break;
-            }
-
-            return false;
-        }
-    }
 }

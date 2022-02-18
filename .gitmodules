@@ -71,3 +71,9 @@
 [submodule "src/external/TinySoundFont"]
 	path = src/external/TinySoundFont
 	url = https://github.com/schellingb/TinySoundFont
+[submodule "src/external/sdl2-cmake-scripts"]
+	path = src/external/sdl2-cmake-scripts
+	url = https://github.com/tcbrindle/sdl2-cmake-scripts
+[submodule "src/external/SDL_GameControllerDB"]
+	path = src/external/SDL_GameControllerDB
+	url = https://github.com/gabomdq/SDL_GameControllerDB

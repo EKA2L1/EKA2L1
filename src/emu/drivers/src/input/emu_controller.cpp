@@ -17,16 +17,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <drivers/input/backend/emu_controller_glfw.h>
+#include <drivers/input/backend/emu_controller_sdl2.h>
 #include <drivers/input/emu_controller.h>
 
 namespace eka2l1 {
     namespace drivers {
         emu_controller_ptr new_emu_controller(controller_type ctl_type) {
             switch (ctl_type) {
-            case controller_type::glfw: {
-                return std::make_unique<emu_controller_glfw3>();
-            }
+            case controller_type::sdl2:
+                return std::make_unique<emu_controller_sdl2>();
             }
 
             return nullptr;

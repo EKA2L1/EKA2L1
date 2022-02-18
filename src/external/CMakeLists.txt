@@ -121,15 +121,6 @@ if (NOT ARCHITECTURE_ARM32)
     add_subdirectory(dynarmic)
 endif()
 
-# GLFW - Disable docs, tests and examples
-option(GLFW_BUILD_DOCS "Build glfw documents" OFF)
-option(GLFW_BUILD_TESTS "Build glfw tests" OFF)
-option(GLFW_BUILD_EXAMPLES "Build glfw examples" OFF)
-
-if (NOT ANDROID)
-    add_subdirectory(glfw)
-endif()
-
 if (ANDROID)
     add_subdirectory(lunasvg)
 endif()
@@ -250,6 +241,25 @@ set(MINIBAE_SHARED_SOURCES ${MINIBAE_SHARED_SOURCES} CACHE INTERNAL "MiniBAE sou
 
 # TinySoundFont
 set (TSF_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "TSF include path")
+
+# SDL2
+# Can't believe in 2022 the official CMake can't still ship a FindSDL2 with the program...
+if (NOT ANDROID)
+    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/sdl2-cmake-scripts")
+
+    if(APPLE)
+        set(SDL2_PATH "${CMAKE_CURRENT_SOURCE_DIR}/sdl2/macos" CACHE PATH "Where SDL2 is located" FORCE)
+    elseif(WIN32)
+        set(SDL2_PATH "${CMAKE_CURRENT_SOURCE_DIR}/sdl2/Windows" CACHE PATH "Where SDL2 is located" FORCE)
+        set(SDL2_INCLUDE_DIR "${SDL2_PATH}/include" CACHE PATH "Where the SDL2 include files can be found" FORCE)
+    endif()
+
+    find_package(SDL2 REQUIRED)
+    add_library(SDL2 INTERFACE)
+
+    target_include_directories(SDL2 INTERFACE "${SDL2_INCLUDE_DIR}")
+    target_link_libraries(SDL2 INTERFACE "${SDL2_LIBRARY}")
+endif()
 
 set (capstone_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/capstone/include" PARENT_SCOPE)
 set (YAML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp/include" PARENT_SCOPE)

@@ -31,6 +31,7 @@
 #include <cpu/arm_utils.h>
 #include <drivers/audio/audio.h>
 #include <drivers/graphics/emu_window.h>
+#include <drivers/input/common.h>
 #include <drivers/input/emu_controller.h>
 #include <services/hwrm/def.h>
 #include <services/hwrm/power/power_def.h>
@@ -739,7 +740,7 @@ QString settings_dialog::key_bind_entry_to_string(eka2l1::config::keybind &bind)
         QString first_result = tr("Controller %1 : Button %2").arg(bind.source.data.button.controller_id);
         // Backend may not be able to initialized, so should do a check
         if (controller_) {
-            return first_result.arg(controller_->button_to_string(bind.source.data.button.button_id));
+            return first_result.arg(eka2l1::drivers::button_to_string(static_cast<eka2l1::drivers::controller_button_code>(bind.source.data.button.button_id)));
         } else {
             return first_result.arg(bind.source.data.button.button_id);
         }
@@ -822,7 +823,7 @@ void settings_dialog::on_controller_button_press(eka2l1::drivers::input_event ev
         new_bind.source.data.button.controller_id = event.button_.controller_;
         new_bind.source.data.button.button_id = event.button_.button_;
 
-        target_bind_->setText(tr("Controller %1 : Button %2").arg(event.button_.controller_).arg(controller_->button_to_string(event.button_.button_)));
+        target_bind_->setText(key_bind_entry_to_string(new_bind));
 
         eka2l1::window_server *win_serv = get_window_server_through_system(system_);
 

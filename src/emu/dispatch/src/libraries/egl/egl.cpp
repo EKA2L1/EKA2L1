@@ -474,7 +474,7 @@ namespace eka2l1::dispatch {
             if (ctx && surface->backed_window_->can_be_physically_seen()) {
                 drivers::graphics_command_builder &window_builder = surface->backed_window_->driver_builder_;
                 window_builder.set_feature(drivers::graphics_feature::blend, false);
-                window_builder.set_feature(drivers::graphics_feature::stencil_test, false);
+                window_builder.set_feature(drivers::graphics_feature::depth_test, false);
 
                 eka2l1::rect dest_rect = surface->backed_window_->abs_rect;
                 dest_rect.scale(surface->backed_screen_->display_scale_factor);
