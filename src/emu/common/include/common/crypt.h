@@ -76,6 +76,19 @@ namespace eka2l1::crypt {
         const std::size_t dest_max_size);
 
     /**
+     * @brief Encode binary data to ASCII with base64 algorithm.
+     * 
+     * This function will store the result to string. For more advanced use that need to output to another kind of buffer directly,
+     * you can use the other counterpart.
+     * 
+     * @param source The source binary data to be encoded.
+     * @param source_size The size of the source buffer.
+     * 
+     * @return std::string Encoded base64 string. 
+     */
+    std::string base64_encode(const std::uint8_t *source, const std::size_t source_size);
+
+    /**
      * @brief   Calculate checksum of 3 numbers UID.
      * 
      * @param   uids      Pointer to the UID buffer.

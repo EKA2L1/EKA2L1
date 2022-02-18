@@ -117,6 +117,15 @@ namespace eka2l1::crypt {
 
         return dest_written;
     }
+    
+    std::string base64_encode(const std::uint8_t *source, const std::size_t source_size) {
+        // Answer by adzm : https://stackoverflow.com/questions/1533113/calculate-the-size-to-a-base-64-encoded-message
+        std::string result;
+        result.resize(((source_size + ((source_size % 3) ? (3 - (source_size % 3)) : 0)) / 3) * 4);
+
+        base64_encode(source, source_size, result.data(), result.size());
+        return result;
+    }
 
     std::size_t base64_decode(const std::uint8_t *source, const std::size_t source_size, char *dest,
         const std::size_t dest_max_size) {
