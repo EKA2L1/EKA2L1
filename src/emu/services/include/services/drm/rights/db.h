@@ -39,9 +39,12 @@ namespace eka2l1::epoc::drm {
         sqlite3_stmt *get_encrypt_key_stmt_;
         sqlite3_stmt *get_cid_exist_full_stmt_;
 
+        std::u16string db_path_;
+
         int add_constraint(const rights_constraint &constraint, const int perm_id);
         bool get_constraint(const int constraint_id, rights_constraint &result);
         bool get_permission_list(const int right_id, std::vector<rights_permission> &permissions);
+        void reset();
 
     public:
         explicit rights_database(const std::u16string &database);
@@ -53,5 +56,7 @@ namespace eka2l1::epoc::drm {
         bool get_record(const std::string &content_id, rights_object &result);
         bool get_encryption_key(const std::string &content_id, std::string &output_key);
         bool get_permission_list(const std::string &content_id, std::vector<rights_permission> &permissions);
+
+        void flush();
     };
 }

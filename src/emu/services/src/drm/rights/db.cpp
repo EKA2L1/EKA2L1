@@ -35,8 +35,8 @@ namespace eka2l1::epoc::drm {
         , query_perms_stmt_(nullptr)
         , query_constraint_stmt_(nullptr)
         , get_encrypt_key_stmt_(nullptr)
-        , get_cid_exist_full_stmt_(nullptr) {
-        // TODO (Oct 16 21): Make database safe even when app crashes
+        , get_cid_exist_full_stmt_(nullptr)
+        , db_path_(database_path) {
         int result = sqlite3_open16(database_path.data(), &database_);
         if (result != SQLITE_OK) {
             LOG_ERROR(SERVICE_DRMSYS, "Fail to open DRM database!");
@@ -144,48 +144,74 @@ namespace eka2l1::epoc::drm {
     }
 
     rights_database::~rights_database() {
+        reset();
+    }
+
+    void rights_database::reset() {
         if (get_cid_exist_stmt_) {
             sqlite3_finalize(get_cid_exist_stmt_);
+            get_cid_exist_stmt_ = nullptr;
         }
 
         if (delete_record_stmt_) {
             sqlite3_finalize(delete_record_stmt_);
+            delete_record_stmt_ = nullptr;
         }
 
         if (add_right_info_stmt_) {
             sqlite3_finalize(add_right_info_stmt_);
+            add_right_info_stmt_ = nullptr;
         }
 
         if (add_perm_info_stmt_) {
             sqlite3_finalize(add_perm_info_stmt_);
+            add_perm_info_stmt_ = nullptr;
         }
 
         if (add_constraint_info_stmt_) {
             sqlite3_finalize(add_constraint_info_stmt_);
+            add_constraint_info_stmt_ = nullptr;
         }
 
         if (set_perm_constraints_stmt_) {
             sqlite3_finalize(set_perm_constraints_stmt_);
+            set_perm_constraints_stmt_ = nullptr;
         }
 
         if (query_perms_stmt_) {
             sqlite3_finalize(query_perms_stmt_);
+            query_perms_stmt_ = nullptr;
         }
 
         if (query_constraint_stmt_) {
             sqlite3_finalize(query_constraint_stmt_);
+            query_constraint_stmt_ = nullptr;
         }
 
         if (get_encrypt_key_stmt_) {
             sqlite3_finalize(get_encrypt_key_stmt_);
+            get_encrypt_key_stmt_ = nullptr;
         }
 
         if (get_cid_exist_full_stmt_) {
             sqlite3_finalize(get_cid_exist_full_stmt_);
+            get_cid_exist_full_stmt_ = nullptr;
         }
 
         if (database_) {
             sqlite3_close(database_);
+            database_ = nullptr;
+        }
+    }
+
+    void rights_database::flush() {
+        reset();
+
+        // Reopen the database. Previous reset will save the database to disk
+        int result = sqlite3_open16(db_path_.c_str(), &database_);
+        if (result != SQLITE_OK) {
+            LOG_ERROR(SERVICE_DRMSYS, "Fail to reopen DRM database!");
+            return;
         }
     }
 

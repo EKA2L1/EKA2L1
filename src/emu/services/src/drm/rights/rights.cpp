@@ -100,6 +100,8 @@ namespace eka2l1 {
                 }
             }
         }
+
+        database_->flush();
     }
 
     void rights_server::connect(service::ipc_context &context) {
