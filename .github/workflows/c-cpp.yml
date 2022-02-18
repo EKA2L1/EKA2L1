@@ -92,7 +92,7 @@ jobs:
         if: matrix.os == 'macos-latest'
 
       - name: CMake configure
-        run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DCMAKE_PREFIX_PATH=${{ env.Qt5_DIR }} -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+        run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_NO_TERMINAL=ON -DCMAKE_PREFIX_PATH=${{ env.Qt5_DIR }} -DCMAKE_BUILD_TYPE=${{ matrix.config }}
         if: matrix.os != 'macos-latest'
 
       - name: CMake build

@@ -233,6 +233,10 @@ if(QT_VERSION_MAJOR EQUAL 6)
 endif()
 
 if (WIN32)
+    if (NO_TERMINAL_FOR_UI)
+        set_property(TARGET eka2l1_qt PROPERTY WIN32_EXECUTABLE true)
+    endif()
+
     find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT_BIN_DIR}")
 
     add_custom_command(

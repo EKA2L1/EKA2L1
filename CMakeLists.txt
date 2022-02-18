@@ -9,6 +9,7 @@ option(EKA2L1_ENABLE_SCRIPTING_ABILITY "Enable to script with Python or Lua" ON)
 option(EKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER "Enable EKA2L1 to dump unexpected exception" OFF)
 option(EKA2L1_BUILD_VULKAN_BACKEND "Build Vulkan backend" OFF)
 option(EKA2L1_DEPLOY_DMG "Deploy EKA2L1 as .dmg" OFF)
+option(EKA2L1_NO_TERMINAL "Build EKA2L1 UI to run without terminal" OFF)
 
 set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set (ROOT ${CMAKE_CURRENT_SOURCE_DIR})
@@ -35,6 +36,10 @@ endif()
 if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
     set (ENABLE_SCRIPTING 1)
 endif(EKA2L1_ENABLE_SCRIPTING_ABILITY)
+
+if (EKA2L1_NO_TERMINAL)
+    set (NO_TERMINAL_FOR_UI 1)
+endif()
 
 set (ENABLE_SEH_HANDLER 0)
 
