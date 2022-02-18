@@ -106,7 +106,7 @@ namespace eka2l1::drivers {
         virtual void run() = 0;
         virtual void abort() = 0;
 
-        void wait_for(int *status) {
+        virtual void wait_for(int *status) {
             std::unique_lock<std::mutex> ulock(mut_);
 
             if (*status == 0) {

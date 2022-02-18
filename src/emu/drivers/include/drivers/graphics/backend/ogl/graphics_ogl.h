@@ -181,6 +181,7 @@ namespace eka2l1::drivers {
         void dispatch(command &cmd) override;
         void bind_swapchain_framebuf() override;
         void update_surface(void *new_surface) override;
+        void wait_for(int *status) override;
 
         bool is_stricted() const override {
             return is_gles;

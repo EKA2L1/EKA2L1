@@ -232,10 +232,23 @@ namespace eka2l1::drivers {
         glBindVertexArray(0);
 
         // Make fill VAO and VBO
+        static GLfloat brush_verts_default[] = {
+            0.0f,
+            1.0f,
+            1.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            1.0f
+        };
+
         glGenVertexArrays(1, &brush_vao);
         glGenBuffers(1, &brush_vbo);
         glBindVertexArray(brush_vao);
         glBindBuffer(GL_ARRAY_BUFFER, brush_vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(brush_verts_default), nullptr, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(brush_verts_default), brush_verts_default, GL_STATIC_DRAW);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid *)0);
         glBindVertexArray(0);
@@ -313,21 +326,8 @@ namespace eka2l1::drivers {
         // Supply brush
         glUniform4fv(color_loc_brush, 1, brush_color.elements.data());
 
-        static GLfloat brush_verts_default[] = {
-            0.0f,
-            1.0f,
-            1.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            1.0f,
-            1.0f
-        };
-
         glBindVertexArray(brush_vao);
         glBindBuffer(GL_ARRAY_BUFFER, brush_vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(brush_verts_default), nullptr, GL_STATIC_DRAW);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(brush_verts_default), brush_verts_default, GL_STATIC_DRAW);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid *)0);
 
@@ -1433,7 +1433,7 @@ namespace eka2l1::drivers {
     }
 
     void ogl_graphics_driver::submit_command_list(command_list &list) {
-        if ((list.size_ == 0) || !list.base_) {
+        if ((list.size_ == 0) || !list.base_ || should_stop) {
             if (list.base_) {
                 delete[] list.base_;
             }
@@ -1623,5 +1623,15 @@ namespace eka2l1::drivers {
     void ogl_graphics_driver::abort() {
         list_queue.abort();
         should_stop = true;
+
+        cond_.notify_all();
+    }
+
+    void ogl_graphics_driver::wait_for(int *status) {
+        if (should_stop) {
+            return;
+        }
+
+        driver::wait_for(status);
     }
 }
