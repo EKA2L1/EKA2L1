@@ -17,8 +17,8 @@
     <string name="rename">Перейменувати</string>
     <string name="save_log">Зберегти лог</string>
     <string name="opengl_required">Застосунок потребує OpenGL ES 3.0+.</string>
-    <string name="warning">Warning</string>
-    <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
+    <string name="warning">Попередження</string>
+    <string name="scoped_storage_warning">Ваші дані користувача зберігаються в місці, яке <b>буде видалено</b>, коли ви видалите застосунок:\n</string>
     <string name="install">Установити</string>
     <string name="device_dump">Дамп пристрою</string>
     <string name="path_to_rpkg">Шлях до RPKG</string>
@@ -54,7 +54,7 @@
     <string name="pref_enable_statusbar">Увімкнути рядок стану</string>
     <string name="pref_wakelock">Не вимикати екран</string>
     <string name="pref_enable_vibration">Увімкнути вібрацію</string>
-    <string name="pref_emulator_dir">Working directory</string>
+    <string name="pref_emulator_dir">Робочий каталог</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Увімкнути фільтрацію шляхом найближчого сусіда</string>
     <string name="pref_system_language_option_name">Мова</string>
     <string name="pref_system_real_time_accuracy_str">Точність у реальному часі</string>
@@ -81,7 +81,7 @@
     <string name="pref_vk_feedback">Вібровідгук</string>
     <string name="pref_touch_input">Сенсорне введення</string>
     <string name="pref_vk_back">Кнопки</string>
-    <string name="pref_vk_fore">Labels</string>
+    <string name="pref_vk_fore">Позначки</string>
     <string name="pref_vk_outline">Обвід</string>
     <string name="pref_vk_alpha">Непрозорість: </string>
     <string name="pref_vk_hide_delay">Hide delay: </string>
