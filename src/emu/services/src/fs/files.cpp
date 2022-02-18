@@ -103,6 +103,24 @@ namespace eka2l1 {
         return reinterpret_cast<eka2l1::file *>(ss->get_file_node(static_cast<int>(handle))->vfs_node.get());
     }
 
+    symfile fs_server::get_temp_file(const std::u16string &base_dir) {
+        std::u16string full_path = base_dir;
+        io_system *io = sys->get_io_system();
+
+        do {
+            std::u16string temp_name{ u"temp" };
+            temp_name += common::utf8_to_ucs2(common::to_string(eka2l1::random_range(0, 0xFFFFFFFE), std::hex));
+
+            full_path = eka2l1::add_path(base_dir, temp_name);
+
+            if (!io->exist(full_path)) {
+                break;
+            }
+        } while (true);
+
+        return io->open_file(full_path, WRITE_MODE | BIN_MODE);
+    }
+
     void fs_server_client::file_modified(service::ipc_context *ctx) {
         std::optional<std::int32_t> handle_res = ctx->get_argument_value<std::int32_t>(3);
 
@@ -528,12 +546,6 @@ namespace eka2l1 {
 
         file *vfs_file = reinterpret_cast<file *>(node->vfs_node.get());
 
-        // Delete temporary file
-        if (node->temporary) {
-            std::u16string path = vfs_file->file_name();
-            ctx->sys->get_io_system()->delete_entry(path);
-        }
-
         // Reset its status, so seek back, this is just in case it got used again
         vfs_file->seek(0, file_seek_mode::beg);
 
@@ -567,14 +579,10 @@ namespace eka2l1 {
             return;
         }
 
-        std::u16string temp_name{ u"temp" };
-        temp_name += common::utf8_to_ucs2(common::to_string(eka2l1::random_range(0, 0xFFFFFFFE), std::hex));
+        symfile temp_file = server<fs_server>()->get_temp_file(full_path);
+        full_path = temp_file->file_name();
 
-        full_path = eka2l1::add_path(full_path, temp_name);
-
-        // Create the file if it doesn't exist
-        symfile f = io->open_file(full_path, WRITE_MODE);
-        f->close();
+        temp_file->close();
 
         LOG_INFO(SERVICE_EFSRV, "Opening temp file: {}", common::ucs2_to_utf8(full_path));
         int handle = new_node(ctx->sys->get_io_system(), ctx->msg->own_thr, full_path,

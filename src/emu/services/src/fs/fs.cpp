@@ -448,6 +448,7 @@ namespace eka2l1 {
             // Create predictable directories if it does not exist
             std::u16string system_apps_dir = u"?:\\System\\Apps\\";
             std::u16string shared_data_dir = u"?:\\System\\SharedData\\";
+
             io_system *io = sys->get_io_system();
 
             // Ignore drive z.
@@ -458,6 +459,27 @@ namespace eka2l1 {
 
                     io->create_directories(system_apps_dir);
                     io->create_directories(shared_data_dir);
+                }
+            }
+        }
+
+        std::u16string temp_data_dir = u"?:\\System\\Temp\\";
+
+        io_system *io = sys->get_io_system();
+
+        // Ignore drive z.
+        for (drive_number drv = drive_y; drv >= drive_a; drv--) {
+            if (io->get_drive_entry(drv)) {
+                temp_data_dir[0] = drive_to_char16(drv);
+
+                if (auto dir = io->open_dir(temp_data_dir)) {
+                    while (auto dir_entry = dir->get_next_entry()) {
+                        if (dir_entry->type == io_component_type::file) {
+                            io->delete_entry(common::utf8_to_ucs2(dir_entry->full_path));
+                        }
+                    }
+                } else {
+                    io->create_directories(temp_data_dir);
                 }
             }
         }
