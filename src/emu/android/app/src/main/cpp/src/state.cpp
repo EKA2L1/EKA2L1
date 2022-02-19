@@ -36,6 +36,8 @@
 #include <services/init.h>
 
 namespace eka2l1::android {
+    static const char *PATCH_FOLDER_PATH = ".//patch//";
+
     emulator::emulator()
         : symsys(nullptr)
         , graphics_driver(nullptr)
@@ -47,12 +49,70 @@ namespace eka2l1::android {
         , should_emu_quit(false)
         , should_emu_pause(false)
         , should_ui_quit(false)
+        , system_reset_cbh(0)
         , stage_two_inited(false)
         , should_graphics_pause(false)
         , surface_inited(false)
         , first_time(true)
         , winserv(nullptr)
         , present_status(0) {
+    }
+
+    void emulator::register_draw_callback() {
+        if (winserv) {
+            // TODO: Clean these handles up somewhere (+ threads too!)
+            eka2l1::epoc::screen *screens = winserv->get_screens();
+            while (screens) {
+                std::size_t change_handle = screens->add_screen_redraw_callback(this, [](void *userdata,
+                                                                                           eka2l1::epoc::screen *scr, const bool is_dsa) {
+                    emulator *state_ptr = reinterpret_cast<emulator*>(userdata);
+                    if (!state_ptr->graphics_driver) {
+                        return;
+                    }
+
+                    // Check if previous presenting is done yet (to prevent input delay because frame
+                    // submit request is too fast)
+                    state_ptr->graphics_driver->wait_for(&state_ptr->present_status);
+
+                    drivers::graphics_command_builder builder;
+                    state_ptr->launcher->draw(builder, scr, state_ptr->window->window_fb_size().x,
+                                              state_ptr->window->window_fb_size().y);
+
+                    // Submit, present, and wait for the presenting
+                    // Don't wait for present to be done, let the game during this time to do
+                    // something meaningful. (Callback tied to draw thread)
+                    state_ptr->present_status = -100;
+                    builder.present(&state_ptr->present_status);
+
+                    drivers::command_list retrieved = builder.retrieve_command_list();
+                    state_ptr->graphics_driver->submit_command_list(retrieved);
+                });
+
+                screen_change_handles.push_back(change_handle);
+                screens = screens->next;
+            }
+        }
+    }
+
+    void emulator::on_system_reset(system *the_sys) {
+        winserv = reinterpret_cast<eka2l1::window_server *>(the_sys->get_kernel_system()->get_by_name<eka2l1::service::server>(
+                eka2l1::get_winserv_name_by_epocver(symsys->get_symbian_version_use())));
+
+        if (stage_two_inited) {
+            register_draw_callback();
+
+            kernel_system *kern = symsys->get_kernel_system();
+            hle::lib_manager *libmngr = kern->get_lib_manager();
+            dispatch::dispatcher *disp = the_sys->get_dispatcher();
+
+            // Start the bootload
+            kern->start_bootload();
+
+            libmngr->load_patch_libraries(PATCH_FOLDER_PATH);
+            dispatch::libraries::register_functions(kern, disp);
+
+            service::init_services_post_bootup(the_sys);
+        }
     }
 
     void emulator::stage_one() {
@@ -91,9 +151,12 @@ namespace eka2l1::android {
             symsys->mount(drive_d, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/d/"), io_attrib_internal);
             symsys->mount(drive_e, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/e/"), io_attrib_removeable);
 
-            winserv = reinterpret_cast<eka2l1::window_server *>(symsys->get_kernel_system()->get_by_name<eka2l1::service::server>(
-                eka2l1::get_winserv_name_by_epocver(symsys->get_symbian_version_use())));
+            on_system_reset(symsys.get());
         }
+
+        system_reset_cbh = symsys->add_system_reset_callback([this](system *the_sys) {
+            on_system_reset(the_sys);
+        });
 
         first_time = true;
 
@@ -157,7 +220,7 @@ namespace eka2l1::android {
             // Start the bootload
             kern->start_bootload();
 
-            libmngr->load_patch_libraries(".//patch//");
+            libmngr->load_patch_libraries(PATCH_FOLDER_PATH);
             dispatch::libraries::register_functions(kern, disp);
 
             service::init_services_post_bootup(symsys.get());
@@ -217,6 +280,8 @@ namespace eka2l1::android {
 
             pkgmngr->load_registries();
             pkgmngr->migrate_legacy_registries();
+
+            register_draw_callback();
 
             stage_two_inited = true;
         }

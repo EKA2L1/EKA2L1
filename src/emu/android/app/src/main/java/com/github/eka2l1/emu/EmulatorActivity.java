@@ -32,6 +32,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Process;
+import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.Display;
 import android.view.KeyEvent;
@@ -122,8 +123,25 @@ public class EmulatorActivity extends AppCompatActivity {
         }
 
         Intent intent = getIntent();
+        if (intent.getBooleanExtra(KEY_APP_IS_SHORTCUT, false)) {
+            Emulator.initializeForShortcutLaunch(this);
+        }
+
         uid = intent.getLongExtra(KEY_APP_UID, -1);
+
         String name = intent.getStringExtra(KEY_APP_NAME);
+        String deviceCode = intent.getStringExtra(KEY_DEVICE_CODE);
+
+        if (deviceCode != null) {
+            String []availableDevices = Emulator.getDeviceFirmwareCodes();
+            for (int id = 0; id < availableDevices.length; id++) {
+                if (availableDevices[id].compareToIgnoreCase(deviceCode) == 0) {
+                    Emulator.setCurrentDevice(id, true);
+                    break;
+                }
+            }
+        }
+
         setActionBar(name);
         hideSystemUI();
 

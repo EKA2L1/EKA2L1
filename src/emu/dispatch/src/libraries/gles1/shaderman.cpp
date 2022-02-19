@@ -37,23 +37,25 @@ namespace eka2l1::dispatch {
     }
 
     gles1_shaderman::~gles1_shaderman() {
-        drivers::graphics_command_builder builder;
+        if (driver_) {
+            drivers::graphics_command_builder builder;
 
-        for (auto &module: vertex_cache_) {
-            builder.destroy(module.second);
+            for (auto &module: vertex_cache_) {
+                builder.destroy(module.second);
+            }
+
+            for (auto &module: fragment_cache_) {
+                builder.destroy(module.second);
+            }
+
+            for (auto &vert_index: program_cache_) {
+                for (auto &frag_index: vert_index.second)
+                    builder.destroy(frag_index.second.first);
+            }
+
+            drivers::command_list retrieved = builder.retrieve_command_list();
+            driver_->submit_command_list(retrieved);
         }
-
-        for (auto &module: fragment_cache_) {
-            builder.destroy(module.second);
-        }
-
-        for (auto &vert_index: program_cache_) {
-            for (auto &frag_index: vert_index.second)
-                builder.destroy(frag_index.second.first);
-        }
-
-        drivers::command_list retrieved = builder.retrieve_command_list();
-        driver_->submit_command_list(retrieved);
 
         if (fragment_status_hasher_) {
             XXH64_freeState(reinterpret_cast<XXH64_state_t*>(fragment_status_hasher_));

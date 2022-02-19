@@ -53,6 +53,7 @@ namespace eka2l1::android {
 
         void set_language_to_property(const language new_one);
         void set_language_current(const language lang);
+        void retrieve_servers();
 
     public:
         explicit launcher(eka2l1::system *sys);
@@ -62,7 +63,8 @@ namespace eka2l1::android {
         void launch_app(std::uint32_t uid);
         package::installation_result install_app(std::string &path);
         std::vector<std::string> get_devices();
-        void set_current_device(std::uint32_t id);
+        std::vector<std::string> get_device_firwmare_codes();
+        void set_current_device(std::uint32_t id, const bool temporary);
         void set_device_name(std::uint32_t id, const char *name);
         std::uint32_t get_current_device();
         device_installation_error install_device(std::string &rpkg_path, std::string &rom_path, bool install_rpkg);

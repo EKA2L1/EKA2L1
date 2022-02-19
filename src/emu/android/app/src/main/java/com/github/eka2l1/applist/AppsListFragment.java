@@ -20,11 +20,17 @@
 package com.github.eka2l1.applist;
 
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -43,6 +49,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.content.pm.ShortcutInfoCompat;
+import androidx.core.content.pm.ShortcutManagerCompat;
+import androidx.core.graphics.drawable.IconCompat;
 import androidx.fragment.app.ListFragment;
 
 import com.github.eka2l1.R;
@@ -312,6 +321,60 @@ public class AppsListFragment extends ListFragment {
         inflater.inflate(R.menu.context_appslist, menu);
     }
 
+    private void addAppShortcut(AppItem item) {
+        // Get current device code
+        int currentDeviceId = Emulator.getCurrentDevice();
+        String []deviceCode = Emulator.getDeviceFirmwareCodes();
+
+        if (currentDeviceId >= deviceCode.length) {
+            return;
+        }
+
+        Bitmap iconBitmap = item.getIcon();
+        IconCompat icon = null;
+
+        if (iconBitmap == null) {
+            icon = IconCompat.createWithResource(getActivity(), R.mipmap.ic_ducky_foreground);
+        } else {
+            int width = iconBitmap.getWidth();
+            int height = iconBitmap.getHeight();
+            ActivityManager am = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
+            int iconSize = am.getLauncherLargeIconSize();
+            Rect src;
+            if (width > height) {
+                int left = (width - height) / 2;
+                src = new Rect(left, 0, left + height, height);
+            } else if (width < height) {
+                int top = (height - width) / 2;
+                src = new Rect(0, top, width, top + width);
+            } else {
+                src = null;
+            }
+            Bitmap scaled = Bitmap.createBitmap(iconSize, iconSize, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(scaled);
+            canvas.drawBitmap(iconBitmap, src, new RectF(0, 0, iconSize, iconSize), null);
+            icon = IconCompat.createWithBitmap(scaled);
+        }
+
+        Intent launchIntent = new Intent(Intent.ACTION_DEFAULT, null, getActivity(), EmulatorActivity.class);
+        launchIntent.putExtra(KEY_APP_UID, item.getUid());
+        launchIntent.putExtra(KEY_APP_NAME, item.getTitle());
+        launchIntent.putExtra(KEY_DEVICE_CODE, deviceCode[currentDeviceId]);
+        launchIntent.putExtra(KEY_APP_IS_SHORTCUT, true);
+
+        ShortcutInfoCompat shortcut = new ShortcutInfoCompat.Builder(getActivity(), item.getTitle())
+                .setIntent(launchIntent)
+                .setShortLabel(item.getTitle())
+                .setIcon(icon)
+                .build();
+
+        try {
+            ShortcutManagerCompat.requestPinShortcut(getActivity(), shortcut, null);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
     @Override
     public boolean onContextItemSelected(@NonNull MenuItem item) {
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
@@ -328,6 +391,8 @@ public class AppsListFragment extends ListFragment {
                     .replace(R.id.container, configFragment)
                     .addToBackStack(null)
                     .commit();
+        } else if (item.getItemId() == R.id.action_context_shortcut) {
+            addAppShortcut(appItem);
         }
         return super.onContextItemSelected(item);
     }

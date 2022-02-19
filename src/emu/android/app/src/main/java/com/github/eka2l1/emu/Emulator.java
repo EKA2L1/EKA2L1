@@ -269,6 +269,13 @@ public class Emulator {
         }
     }
 
+    public static void initializeForShortcutLaunch(Context context) {
+        initializePath(context);
+        initializeFolders();
+
+        checkInit();
+    }
+
     public static void setVibration(boolean vibrationEnabled) {
         Emulator.vibrationEnabled = vibrationEnabled;
     }
@@ -286,6 +293,11 @@ public class Emulator {
         }
         vibrator.vibrate(duration);
         return true;
+    }
+
+    @SuppressLint("unused")
+    public static void stopVibrate() {
+        vibrator.cancel();
     }
 
     @SuppressLint("unused")
@@ -542,7 +554,9 @@ public class Emulator {
 
     public static native String[] getDevices();
 
-    public static native void setCurrentDevice(int id);
+    public static native String[] getDeviceFirmwareCodes();
+
+    public static native void setCurrentDevice(int id, boolean isTemporary);
 
     public static native void setDeviceName(int id, String newName);
 

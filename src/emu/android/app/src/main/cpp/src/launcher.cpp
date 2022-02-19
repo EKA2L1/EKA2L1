@@ -46,13 +46,17 @@ namespace eka2l1::android {
         , conf(sys->get_config())
         , kern(sys->get_kernel_system())
         , alserv(nullptr) {
+        retrieve_servers();
+    }
+
+    void launcher::retrieve_servers() {
         if (kern) {
             alserv = reinterpret_cast<eka2l1::applist_server *>(kern->get_by_name<service::server>(get_app_list_server_name_by_epocver(
-                kern->get_epoc_version())));
+                    kern->get_epoc_version())));
             winserv = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>(get_winserv_name_by_epocver(
-                kern->get_epoc_version())));
+                    kern->get_epoc_version())));
             fbsserv = reinterpret_cast<eka2l1::fbs_server *>(kern->get_by_name<service::server>(epoc::get_fbs_server_name_by_epocver(
-                kern->get_epoc_version())));
+                    kern->get_epoc_version())));
         }
     }
 
@@ -283,6 +287,17 @@ namespace eka2l1::android {
         return info;
     }
 
+    std::vector<std::string> launcher::get_device_firwmare_codes() {
+        device_manager *dvc_mngr = sys->get_device_manager();
+        auto &dvcs = dvc_mngr->get_devices();
+        std::vector<std::string> info;
+        for (auto &device : dvcs) {
+            std::string name = device.firmware_code;
+            info.push_back(name);
+        }
+        return info;
+    }
+
     void launcher::set_language_to_property(const language new_one) {
         property_ptr lang_prop = kern->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY);
         auto current_lang = lang_prop->get_pkg<epoc::locale_language>();
@@ -301,7 +316,7 @@ namespace eka2l1::android {
         set_language_to_property(lang);
     }
 
-    void launcher::set_current_device(std::uint32_t id) {
+    void launcher::set_current_device(std::uint32_t id, const bool temporary) {
         device_manager *dvc_mngr = sys->get_device_manager();
         auto &dvcs = dvc_mngr->get_devices();
 
@@ -310,11 +325,22 @@ namespace eka2l1::android {
             if (std::find(dvcs[id].languages.begin(), dvcs[id].languages.end(), conf->language) == dvcs[id].languages.end()) {
                 set_language_current(static_cast<language>(dvcs[id].default_language_code));
             }
+
+            if (temporary) {
+                sys->set_device(id);
+                retrieve_servers();
+            } else {
+                // Permanent set in Android backend will reset the native side
+                conf->device = id;
+                conf->serialize();
+
+                device_manager *dvcmngr = sys->get_device_manager();
+                if (dvcmngr) {
+                    dvcmngr->set_current(id);
+                }
+            }
         }
 
-        conf->device = id;
-        conf->serialize();
-        dvc_mngr->set_current(id);
     }
 
     void launcher::set_device_name(std::uint32_t id, const char *name) {

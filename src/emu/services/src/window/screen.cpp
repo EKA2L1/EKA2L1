@@ -221,18 +221,20 @@ namespace eka2l1::epoc {
 
     void screen::deinit(drivers::graphics_driver *driver) {
         // Make command list first, and bind our screen bitmap
-        drivers::graphics_command_builder builder;
+        if (driver) {
+            drivers::graphics_command_builder builder;
 
-        if (dsa_texture) {
-            builder.destroy_bitmap(dsa_texture);
+            if (dsa_texture) {
+                builder.destroy_bitmap(dsa_texture);
+            }
+
+            if (screen_texture) {
+                builder.destroy_bitmap(screen_texture);
+            }
+
+            eka2l1::drivers::command_list retrieved = builder.retrieve_command_list();
+            driver->submit_command_list(retrieved);
         }
-
-        if (screen_texture) {
-            builder.destroy_bitmap(screen_texture);
-        }
-
-        eka2l1::drivers::command_list retrieved = builder.retrieve_command_list();
-        driver->submit_command_list(retrieved);
     }
 
     const void screen::get_max_num_colors(int &colors, int &greys) const {

@@ -79,6 +79,7 @@
 
     <string name="action_context_delete">Delete</string>
     <string name="action_context_rename">Rename</string>
+    <string name="action_context_shortcut">Create shortcut</string>
 
     <string name="start">Start</string>
     <string name="reset_settings">Reset settings</string>

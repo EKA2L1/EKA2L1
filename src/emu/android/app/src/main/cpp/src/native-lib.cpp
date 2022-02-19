@@ -147,22 +147,31 @@ Java_com_github_eka2l1_emu_Emulator_installApp(JNIEnv *env, jclass clazz, jstrin
     return state->launcher->install_app(cpath);
 }
 
+static jobjectArray retrieve_jni_string_array_from_vector(JNIEnv *env, const std::vector<std::string> &strings) {
+    jobjectArray jdevices = env->NewObjectArray(static_cast<jsize>(strings.size()),
+                                                env->FindClass("java/lang/String"),
+                                                nullptr);
+    for (jsize i = 0; i < strings.size(); ++i)
+        env->SetObjectArrayElement(jdevices, i, env->NewStringUTF(strings[i].c_str()));
+    return jdevices;
+}
+
 extern "C" JNIEXPORT jobjectArray JNICALL
 Java_com_github_eka2l1_emu_Emulator_getDevices(
     JNIEnv *env,
     jclass clazz) {
-    std::vector<std::string> info = state->launcher->get_devices();
-    jobjectArray jdevices = env->NewObjectArray(static_cast<jsize>(info.size()),
-        env->FindClass("java/lang/String"),
-        nullptr);
-    for (jsize i = 0; i < info.size(); ++i)
-        env->SetObjectArrayElement(jdevices, i, env->NewStringUTF(info[i].c_str()));
-    return jdevices;
+    return retrieve_jni_string_array_from_vector(env, state->launcher->get_devices());
+}
+
+extern "C"
+JNIEXPORT jobjectArray JNICALL
+Java_com_github_eka2l1_emu_Emulator_getDeviceFirmwareCodes(JNIEnv *env, jclass clazz) {
+    return retrieve_jni_string_array_from_vector(env, state->launcher->get_device_firwmare_codes());
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_github_eka2l1_emu_Emulator_setCurrentDevice(JNIEnv *env, jclass clazz, jint id) {
-    state->launcher->set_current_device(id);
+Java_com_github_eka2l1_emu_Emulator_setCurrentDevice(JNIEnv *env, jclass clazz, jint id, jboolean is_temp) {
+    state->launcher->set_current_device(id, is_temp);
 }
 
 extern "C" JNIEXPORT void JNICALL

@@ -37,6 +37,10 @@ namespace eka2l1::manager {
     static void script_file_changed_callback(void *data, common::directory_changes &changes) {
         scripts *manager = reinterpret_cast<scripts*>(data);
         for (std::size_t i = 0; i < changes.size(); i++) {
+            if (changes[i].filename_.empty()) {
+                continue;
+            }
+
             if (!(changes[i].change_ & common::directory_change_action_created))
                 manager->unload_module(changes[i].filename_);
 

@@ -38,6 +38,8 @@ public class Constants {
 
     public static final String KEY_APP_UID = "appUid";
     public static final String KEY_APP_NAME = "appName";
+    public static final String KEY_DEVICE_CODE = "appDeviceCode";
+    public static final String KEY_APP_IS_SHORTCUT = "appIsShortcut";
 
     public static final String PREF_DEFAULT_PROFILE = "default_profile";
     public static final String PREF_STORAGE_WARNING_SHOWN = "storage-warning-shown";

@@ -121,42 +121,6 @@ namespace eka2l1::android {
         //state.graphics_sema.notify();
     }
 
-    void register_screen_draw_events(emulator &state) {
-        if (state.winserv) {
-            // TODO: Clean these handles up somewhere (+ threads too!)
-            eka2l1::epoc::screen *screens = state.winserv->get_screens();
-            while (screens) {
-                std::size_t change_handle = screens->add_screen_redraw_callback(&state, [](void *userdata,
-                                                                                           eka2l1::epoc::screen *scr, const bool is_dsa) {
-                    emulator *state_ptr = reinterpret_cast<emulator*>(userdata);
-                    if (!state_ptr->graphics_driver) {
-                        return;
-                    }
-
-                    // Check if previous presenting is done yet (to prevent input delay because frame
-                    // submit request is too fast)
-                    state_ptr->graphics_driver->wait_for(&state_ptr->present_status);
-
-                    drivers::graphics_command_builder builder;
-                    state_ptr->launcher->draw(builder, scr, state_ptr->window->window_fb_size().x,
-                                              state_ptr->window->window_fb_size().y);
-
-                    // Submit, present, and wait for the presenting
-                    // Don't wait for present to be done, let the game during this time to do
-                    // something meaningful. (Callback tied to draw thread)
-                    state_ptr->present_status = -100;
-                    builder.present(&state_ptr->present_status);
-
-                    drivers::command_list retrieved = builder.retrieve_command_list();
-                    state_ptr->graphics_driver->submit_command_list(retrieved);
-                });
-
-                state.screen_change_handles.push_back(change_handle);
-                screens = screens->next;
-            }
-        }
-    }
-
     bool emulator_entry(emulator &state) {
         state.stage_one();
 
@@ -164,7 +128,6 @@ namespace eka2l1::android {
 
         // Instantiate UI and High-level interface threads
         if (result) {
-            register_screen_draw_events(state);
             os_thread_obj = std::make_unique<std::thread>(os_thread, std::ref(state));
         }
 

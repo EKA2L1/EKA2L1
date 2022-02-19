@@ -313,6 +313,10 @@ namespace eka2l1::drivers {
     }
 
     void ogl_graphics_driver::draw_rectangle(const eka2l1::rect &brush_rect) {
+        if (!brush_program) {
+            do_init();
+        }
+
         brush_program->use(this);
 
         // Build model matrix
@@ -338,10 +342,6 @@ namespace eka2l1::drivers {
     }
 
     void ogl_graphics_driver::draw_rectangle(command &cmd) {
-        if (!brush_program) {
-            do_init();
-        }
-
         eka2l1::rect brush_rect;
         unpack_u64_to_2u32(cmd.data_[0], brush_rect.top.x, brush_rect.top.y);
         unpack_u64_to_2u32(cmd.data_[1], brush_rect.size.x, brush_rect.size.y);

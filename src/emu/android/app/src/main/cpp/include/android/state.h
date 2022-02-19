@@ -73,6 +73,7 @@ namespace eka2l1::android {
         std::atomic<bool> should_ui_quit;
         std::atomic<bool> stage_two_inited;
         std::vector<std::size_t> screen_change_handles;
+        std::size_t system_reset_cbh;
 
         bool first_time;
 
@@ -90,5 +91,8 @@ namespace eka2l1::android {
 
         void stage_one();
         bool stage_two();
+
+        void on_system_reset(system *the_sys);
+        void register_draw_callback();
     };
 }
