@@ -68,7 +68,7 @@
     <string name="pref_device_display_name">Имя телефона</string>
     <string name="action_context_delete">Удалить</string>
     <string name="action_context_rename">Переименовать</string>
-    <string name="action_context_shortcut">Create shortcut</string>
+    <string name="action_context_shortcut">Создать ярлык</string>
     <string name="start">Пуск</string>
     <string name="reset_settings">Сброс настроек</string>
     <string name="reset_layout">Сброс раскладки</string>
