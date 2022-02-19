@@ -68,6 +68,7 @@
     <string name="pref_device_display_name">Friendly phone name</string>
     <string name="action_context_delete">Выдаліць</string>
     <string name="action_context_rename">Перайменаваць</string>
+    <string name="action_context_shortcut">Create shortcut</string>
     <string name="start">Пачаць</string>
     <string name="reset_settings">Скінуць налады</string>
     <string name="reset_layout">Скінуць размяшчэнне кнопак</string>
