@@ -30,6 +30,10 @@ namespace eka2l1::drivers::hwrm {
     }
 
     void vibrator_jdk::stop_vibrate() {
+        JNIEnv *env = common::jni::environment();
+        jclass clazz = common::jni::find_class("com/github/eka2l1/emu/Emulator");
+        jmethodID stop_vibrate_method = env->GetStaticMethodID(clazz, "stopVibrate", "()V");
 
+        env->CallStaticVoidMethod(clazz, stop_vibrate_method);
     }
 }
