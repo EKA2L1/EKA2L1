@@ -68,6 +68,7 @@
     <string name="pref_device_display_name">友好的手机名称</string>
     <string name="action_context_delete">删除</string>
     <string name="action_context_rename">重命名</string>
+    <string name="action_context_shortcut">Create shortcut</string>
     <string name="start">开始</string>
     <string name="reset_settings">重置设置</string>
     <string name="reset_layout">重置按键布局</string>
