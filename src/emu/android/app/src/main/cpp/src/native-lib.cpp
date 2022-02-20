@@ -90,18 +90,21 @@ Java_com_github_eka2l1_emu_Emulator_getApps(
     return japps;
 }
 
-extern "C" JNIEXPORT void JNICALL
-Java_com_github_eka2l1_emu_Emulator_launchApp(JNIEnv *env, jclass clazz, jint uid) {
-    // Draw the screen's backdrop first. Black is boring
+static void redraw_screens_immediately() {
     eka2l1::drivers::graphics_command_builder builder;
-    state->launcher->draw(builder, nullptr, state->window->window_fb_size().x,
-                         state->window->window_fb_size().y);
+    state->launcher->draw(builder, state->winserv ? state->winserv->get_screens() : nullptr,
+                          state->window->window_fb_size().x,
+                          state->window->window_fb_size().y);
     builder.present(nullptr);
 
     eka2l1::drivers::command_list retrieved = builder.retrieve_command_list();
     state->graphics_driver->submit_command_list(retrieved);
+}
 
+extern "C" JNIEXPORT void JNICALL
+Java_com_github_eka2l1_emu_Emulator_launchApp(JNIEnv *env, jclass clazz, jint uid) {
     // Launch the real app...
+    redraw_screens_immediately();
     state->launcher->launch_app(uid);
 }
 
@@ -116,6 +119,7 @@ Java_com_github_eka2l1_emu_Emulator_surfaceChanged(JNIEnv *env, jclass clazz, jo
     } else {
         start_threads(*state);
     }
+    redraw_screens_immediately();
 }
 
 extern "C" JNIEXPORT void JNICALL
