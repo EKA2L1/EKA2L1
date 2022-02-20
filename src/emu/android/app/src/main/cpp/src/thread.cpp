@@ -57,9 +57,7 @@ namespace eka2l1::android {
 
             if (state.should_graphics_pause) {
                 state.graphics_driver->update_surface(nullptr);
-
                 state.pause_graphics_sema.wait();
-                state.pause_sema.notify();
             }
         });
         return 0;
@@ -111,7 +109,6 @@ namespace eka2l1::android {
 #endif
             if (state.should_emu_pause) {
                 state.symsys->pause();
-                state.should_graphics_pause = true;
                 state.pause_sema.wait();
                 state.symsys->unpause();
             }
@@ -143,13 +140,15 @@ namespace eka2l1::android {
     }
 
     void start_threads(emulator &state) {
-        state.should_graphics_pause = false;
         state.should_emu_pause = false;
+        state.should_graphics_pause = false;
         state.pause_graphics_sema.notify();
+        state.pause_sema.notify();
     }
 
     void pause_threads(emulator &state) {
         state.should_emu_pause = true;
+        state.should_graphics_pause = true;
     }
 
     void press_key(emulator &state, int key, int key_state) {
