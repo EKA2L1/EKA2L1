@@ -68,7 +68,7 @@
     <string name="pref_device_display_name">Przyjazna nazwa telefonu</string>
     <string name="action_context_delete">Usuń</string>
     <string name="action_context_rename">Zmień nazwę</string>
-    <string name="action_context_shortcut">Create shortcut</string>
+    <string name="action_context_shortcut">Utwórz skrót</string>
     <string name="start">Rozpocznij</string>
     <string name="reset_settings">Zresetuj ustawienia</string>
     <string name="reset_layout">Zresetuj układ klawiszy</string>
