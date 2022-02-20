@@ -139,6 +139,9 @@ namespace eka2l1::epoc::drm {
                             for (pugi::xml_node &context_node: software_node.children("o-ex:context")) {
                                 for (pugi::xml_node &property_node: context_node.children("property")) {
                                     pugi::xml_attribute attrib = property_node.attribute("schema");
+                                    if (!attrib) {    
+                                        attrib = property_node.attribute("scheme");
+                                    }
                                     if (strcmp(attrib.value(), "symbianvid") == 0) {
                                         the_constraint->vendor_id_ = common::pystr(property_node.child_value()).as_int<std::uint32_t>(0, 16);
                                         the_constraint->active_constraints_ |= rights_constraint_vendor;
