@@ -800,7 +800,7 @@ A opção de preferência ativará isso automaticamente em dispositivos S60v1/S6
     <message>
       <location filename="../src/settings_dialog.ui" line="535"/>
       <source>Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</source>
-      <translation type="unfinished">Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</translation>
+      <translation>Permitir que o emulador execute uma aceleração nativa da GPU para a API Symbian&apos;s GLES1.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="538"/>
