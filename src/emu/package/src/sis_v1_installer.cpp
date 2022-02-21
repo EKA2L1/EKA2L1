@@ -249,6 +249,10 @@ namespace eka2l1::loader {
                 break;
             }
 
+            if (file->file_type != 0) {
+                continue;
+            }
+
             std::u16string dest = file->dest;
 
             if (dest.find(u"!") != std::u16string::npos) {
