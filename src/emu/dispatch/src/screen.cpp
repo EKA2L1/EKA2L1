@@ -86,7 +86,6 @@ namespace eka2l1::dispatch {
     }
 
     void screen_post_transferer::destroy(drivers::graphics_driver *drv) {
-        LOG_TRACE(KERNEL, "Vsync notify {} timing {}", vsync_notifies_.size(), (timing_ != nullptr));
         for (std::size_t i = 0; i < vsync_notifies_.size(); i++) {
             timing_->unschedule_event(vsync_notify_event_, reinterpret_cast<std::uint64_t>(vsync_notifies_[i]));
             delete vsync_notifies_[i];
@@ -94,8 +93,6 @@ namespace eka2l1::dispatch {
 
         vsync_notifies_.clear();
         timing_->remove_event(vsync_notify_event_);
-
-        LOG_TRACE(KERNEL, "Done remove timing {}", vsync_notifies_.size(), (timing_ != nullptr));
 
         if (drv) {
             drivers::graphics_command_builder builder;
@@ -114,8 +111,6 @@ namespace eka2l1::dispatch {
                 drv->submit_command_list(retrieved);
             }
         }
-
-        LOG_TRACE(KERNEL, "Done remove all");
     }
 
     drivers::handle screen_post_transferer::transfer_data_to_texture(drivers::graphics_driver *drv, drivers::graphics_command_builder &builder,
