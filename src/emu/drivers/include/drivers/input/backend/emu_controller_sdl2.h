@@ -25,6 +25,7 @@
 #include <atomic>
 #include <map>
 #include <thread>
+#include <vector>
 
 namespace eka2l1::drivers {
     class emu_controller_sdl2 : public emu_controller {

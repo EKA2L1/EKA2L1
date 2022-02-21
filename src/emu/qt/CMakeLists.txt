@@ -205,7 +205,7 @@ if(APPLE)
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:eka2l1_qt>/patch"
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/bin/patch/" "$<TARGET_FILE_DIR:eka2l1_qt>/patch/"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/external/sdl/macos/SDL2.framework" "$<TARGET_FILE_DIR:eka2l1_qt>/Frameworks/SDL2.framework")
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/external/sdl2/macos/SDL2.framework" "$<TARGET_FILE_DIR:eka2l1_qt>/Frameworks/SDL2.framework")
 
     # Update library references to make the bundle portable
     include(DolphinPostprocessBundle)
