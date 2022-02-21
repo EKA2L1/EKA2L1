@@ -17,8 +17,8 @@
     <string name="rename">重命名</string>
     <string name="save_log">保存日志</string>
     <string name="opengl_required">此应用需要OpenGL ES 3.0及更高版本。</string>
-    <string name="warning">Warning</string>
-    <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
+    <string name="warning">警告</string>
+    <string name="scoped_storage_warning">您的用户数据存储路径在卸载应用时<b>将被删除</b>\n</string>
     <string name="install">安装</string>
     <string name="device_dump">从设备上导出的ROM</string>
     <string name="path_to_rpkg">RPKG路径</string>
@@ -54,7 +54,7 @@
     <string name="pref_enable_statusbar">启用状态栏</string>
     <string name="pref_wakelock">保持屏幕常亮</string>
     <string name="pref_enable_vibration">开启振动</string>
-    <string name="pref_emulator_dir">Working directory</string>
+    <string name="pref_emulator_dir">工作目录</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">启用最近邻域过滤</string>
     <string name="pref_system_language_option_name">语言</string>
     <string name="pref_system_real_time_accuracy_str">实时精度</string>
@@ -68,7 +68,7 @@
     <string name="pref_device_display_name">友好的手机名称</string>
     <string name="action_context_delete">删除</string>
     <string name="action_context_rename">重命名</string>
-    <string name="action_context_shortcut">Create shortcut</string>
+    <string name="action_context_shortcut">创建快捷方式</string>
     <string name="start">开始</string>
     <string name="reset_settings">重置设置</string>
     <string name="reset_layout">重置按键布局</string>
