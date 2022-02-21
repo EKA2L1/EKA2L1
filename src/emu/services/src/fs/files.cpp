@@ -678,9 +678,20 @@ namespace eka2l1 {
     }
 
     void fs_server_client::read_file_section(service::ipc_context *ctx) {
-        std::uint64_t position = 0;
+        kernel_system *kern = ctx->sys->get_kernel_system();
 
-        if (ctx->msg->function & 0x00040000) {
+        std::uint64_t position = 0;
+        bool old_read_model = kern->is_eka1();
+
+        std::uint32_t filename_slot = (old_read_model ? 0 : 1);
+        std::optional<std::u16string> target_file_path = ctx->get_argument_value<std::u16string>(filename_slot);
+
+        if (!target_file_path) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        if (!old_read_model && (ctx->msg->function & 0x00040000)) {
             // The position is in a package
             auto position_package = ctx->get_argument_data_from_descriptor<std::uint64_t>(2);
 
@@ -691,14 +702,11 @@ namespace eka2l1 {
 
             position = position_package.value();
         } else {
-            position = ctx->get_argument_value<std::uint32_t>(2).value();
-        }
-
-        std::optional<std::u16string> target_file_path = ctx->get_argument_value<std::u16string>(1);
-
-        if (!target_file_path) {
-            ctx->complete(epoc::error_argument);
-            return;
+            if (old_read_model) {
+                position = ctx->get_argument_value<std::uint32_t>(1).value();
+            } else {    
+                position = ctx->get_argument_value<std::uint32_t>(2).value();
+            }
         }
 
         target_file_path.value() = get_full_symbian_path(ss_path, target_file_path.value());
@@ -709,7 +717,12 @@ namespace eka2l1 {
         }
 
         // Get the buffer length
-        const std::uint32_t buffer_length = ctx->get_argument_value<std::uint32_t>(3).value();
+        std::uint32_t buffer_length = 0;
+        if (old_read_model) {
+            buffer_length = ctx->get_argument_value<std::uint32_t>(2).value();
+        } else {
+            buffer_length = ctx->get_argument_value<std::uint32_t>(3).value();
+        }
 
         // Open the file, one time only, from VFS
         io_system *io = ctx->sys->get_io_system();
@@ -720,7 +733,8 @@ namespace eka2l1 {
             return;
         }
 
-        std::uint8_t *buffer = ctx->get_descriptor_argument_ptr(0);
+        std::uint32_t slot_to_set_length = (old_read_model ? 3 : 0);
+        std::uint8_t *buffer = ctx->get_descriptor_argument_ptr(slot_to_set_length);
 
         if (!buffer) {
             ctx->complete(epoc::error_argument);
@@ -732,7 +746,7 @@ namespace eka2l1 {
         const std::size_t readed_size = target_file->read_file(buffer, buffer_length, 1);
         target_file->close();
 
-        if (!ctx->set_descriptor_argument_length(0, static_cast<std::uint32_t>(readed_size))) {
+        if (!ctx->set_descriptor_argument_length(slot_to_set_length, static_cast<std::uint32_t>(readed_size))) {
             ctx->complete(epoc::error_argument);
             return;
         }
