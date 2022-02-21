@@ -23,6 +23,7 @@
   * Fix Symbian^3 stub installation
   * Smooth out N-Gage launcher's UI. Fix banner not completely displayed, and text spacing messed up
   * Allow games/apps/files DRM licenses to be installed through C:\Private\101f51f2\import. Extension of accepted files is ```*.dr```
+  * Fix ReadFileSection on EKA1, allowing Space Impact Evolution X to boot
 
 - Desktop
   * Improve macOS support. It should work now, and distributed as .dmg
@@ -33,6 +34,7 @@
   * App list now automatically updates after you install a SIS
   * Command line argument now only need one dash
   * Fix FPS slider allowing sliding down to 0
+  * Add SDL2 controller and vibration support, replacing GLFW. Keybinds are compatible
 
 - Android
   * Add scoped storage support, emulator data folder will now move to Android/data/com.github.eka2l1/files. Users can use X-Plore app from the Play Store and move the previous data located in /Internal Storage/EKA2L1/ to this new folder.
