@@ -6,14 +6,24 @@
 
 Experimental Symbian OS emulator, written in C++ 17. 
 
-The emulator currently *emulates* Symbian OS's EKA1 and EKA2 behavior, and *reimplement* most of its critical app servers. It can already boot many EKA2's apps and games, with EKA1 being worked on at the moment. For more discussion and support, please visit our [**Discord server**](https://discord.gg/5Bm5SJ9).
+The emulator currently *emulates* Symbian OS's EKA1 and EKA2 behavior, and *reimplement* most of its critical app servers. It can already boot many EKA1 and EKA2 apps. For more discussion and support, please visit our [**Discord server**](https://discord.gg/5Bm5SJ9).
 
 ### Artifacts:
   * Artifacts for Windows, OSX, Linux and Android are provided through Github Actions. Click on the [***Releases***](https://github.com/EKA2L1/EKA2L1/releases/tag/continous) section to get the newest stable build.
 
 ### Compatibility:
   * Compatibility for the games and software that can (and can't) run on the emulator can be verified [**here**](https://github.com/EKA2L1/Compatibility-List)
-  
+
+### Screenshots:
+
+Calculator (5530)                                               |  High Seize                                                   |          Dirk Dagger
+:--------------------------------------------------------------:|:-------------------------------------------------------------:|:-----------------------------------------------:
+![calculator](screenshots/0.0.8/screenshot_008_calculator.jpg)  | ![highseize](screenshots/0.0.8/screenshot_008_highseize.jpg)  | ![dirkdagger1](screenshots/0.0.8/screenshot_008_dirkdagger1.jpg)
+
+The Big Roll in Paradise                                 | Mega Monster       
+:-------------------------------------------------------:|:-----------------------------------------------------------------:
+![BigRoll](screenshots/0.0.8/screenshot_008_bigroll.jpg) | ![MegaMonster](screenshots/0.0.8/screenshot_008_megamonster.jpg)
+
   -------------
  *GIFs are provided by [**Stranno**](https://www.youtube.com/user/9esferas1)!*
   
