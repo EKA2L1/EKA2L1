@@ -68,6 +68,7 @@
     <string name="pref_device_display_name">Tên điện thoại thân thiện</string>
     <string name="action_context_delete">Xóa</string>
     <string name="action_context_rename">Đổi tên</string>
+    <string name="action_context_shortcut">Create shortcut</string>
     <string name="start">Bắt đầu</string>
     <string name="reset_settings">Đặt lại thiết đặt</string>
     <string name="reset_layout">Đặt lại bố cục phím</string>

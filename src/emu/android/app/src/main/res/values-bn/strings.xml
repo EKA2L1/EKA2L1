@@ -68,6 +68,7 @@
     <string name="pref_device_display_name">Friendly phone name</string>
     <string name="action_context_delete">Delete</string>
     <string name="action_context_rename">পুনঃনামকরণ</string>
+    <string name="action_context_shortcut">Create shortcut</string>
     <string name="start">Start</string>
     <string name="reset_settings">Reset settings</string>
     <string name="reset_layout">Reset keylayout</string>

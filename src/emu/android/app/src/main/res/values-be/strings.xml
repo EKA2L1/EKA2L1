@@ -54,7 +54,7 @@
     <string name="pref_enable_statusbar">Уключыць радок стану</string>
     <string name="pref_wakelock">Не выключаць экран</string>
     <string name="pref_enable_vibration">Уключыць вібрацыю</string>
-    <string name="pref_emulator_dir">Working directory</string>
+    <string name="pref_emulator_dir">Працоўны каталог</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Уключыць фільтрацыю шляхам бліжэйшага суседа</string>
     <string name="pref_system_language_option_name">Мова</string>
     <string name="pref_system_real_time_accuracy_str">Дакладнасць у рэальным часе</string>
@@ -68,6 +68,7 @@
     <string name="pref_device_display_name">Friendly phone name</string>
     <string name="action_context_delete">Выдаліць</string>
     <string name="action_context_rename">Перайменаваць</string>
+    <string name="action_context_shortcut">Create shortcut</string>
     <string name="start">Пачаць</string>
     <string name="reset_settings">Скінуць налады</string>
     <string name="reset_layout">Скінуць размяшчэнне кнопак</string>

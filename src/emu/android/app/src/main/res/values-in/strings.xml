@@ -68,6 +68,7 @@
     <string name="pref_device_display_name">Nama ponsel yang ramah</string>
     <string name="action_context_delete">Hapus</string>
     <string name="action_context_rename">Ganti nama</string>
+    <string name="action_context_shortcut">Create shortcut</string>
     <string name="start">Mulai</string>
     <string name="reset_settings">Atur ulang pengaturan</string>
     <string name="reset_layout">Atur ulang letak tombol</string>
