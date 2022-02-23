@@ -16,8 +16,8 @@ android {
         applicationId "com.github.eka2l1"
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 9
-        versionName "0.0.7"
+        versionCode 10
+        versionName "0.0.8"
         ndkVersion = '21.3.6528147'
         buildConfigField "String", "GIT_HASH", "\"${getGitHash()}\""
         ndk {
