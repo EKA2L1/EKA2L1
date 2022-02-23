@@ -68,7 +68,7 @@
     <string name="pref_device_display_name">Nome telefono familiare</string>
     <string name="action_context_delete">Elimina</string>
     <string name="action_context_rename">Rinomina</string>
-    <string name="action_context_shortcut">Create shortcut</string>
+    <string name="action_context_shortcut">Crea collegamento</string>
     <string name="start">Inizia</string>
     <string name="reset_settings">Ripristina impostazioni</string>
     <string name="reset_layout">Ripristina Layout Tasti</string>
