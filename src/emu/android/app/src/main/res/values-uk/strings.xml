@@ -105,7 +105,7 @@
     <string name="pref_button_shape_rect">Прямокутні</string>
     <string name="pref_button_shape_round">Прямокутні із заокругленими кутами</string>
     <string name="pref_input_devices_title">Пристрої введення</string>
-    <string name="pref_screen_gravity">Screen gravity</string>
+    <string name="pref_screen_gravity">Розташування екрана</string>
     <string name="pref_screen_gravity_bottom">Знизу</string>
     <string name="pref_screen_gravity_center">По центру</string>
     <string name="pref_screen_gravity_left">Ліворуч</string>
