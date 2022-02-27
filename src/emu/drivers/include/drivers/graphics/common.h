@@ -86,7 +86,8 @@ namespace eka2l1::drivers {
         bitmap_draw_flag_use_brush = 1 << 0,
         bitmap_draw_flag_invert_mask = 1 << 1,
         bitmap_draw_flag_flip = 1 << 2,
-        bitmap_draw_flag_flat_blending = 1 << 3
+        bitmap_draw_flag_flat_blending = 1 << 3,
+        bitmap_draw_flag_use_upscale_shader = 1 << 4        // Only apply to non-mask draw
     };
 
     enum pen_style : std::uint8_t {

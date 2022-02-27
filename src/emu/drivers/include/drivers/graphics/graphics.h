@@ -152,6 +152,9 @@ namespace eka2l1::drivers {
          * \param cmd_list     Command list to submit.
          */
         virtual void submit_command_list(command_list &cmd_list) = 0;
+
+        virtual void set_upscale_shader(const std::string &name) = 0;
+        virtual std::string get_active_upscale_shader() const = 0;
     };
 
     using graphics_driver_ptr = std::unique_ptr<graphics_driver>;

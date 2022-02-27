@@ -258,7 +258,6 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     ui_->system_audio_vol_slider->setValue(configuration_.audio_master_volume);
     ui_->system_audio_current_val_label->setText(QString("%1").arg(configuration_.audio_master_volume));
     ui_->system_screen_buffer_sync_combo->setCurrentIndex(static_cast<int>(configuration_.screen_buffer_sync));
-    ui_->emulator_display_disable_content_scale->setChecked(configuration_.disable_display_content_scale);
     ui_->system_friendly_phone_name_edit->setText(QString::fromStdString(configuration_.device_display_name));
     ui_->system_audio_midi_backend_combo->setCurrentIndex(static_cast<int>(configuration.midi_backend));
     ui_->system_audio_midi_hsb_bank_edit->setText(QString::fromStdString(eka2l1::absolute_path(configuration.hsb_bank_path, current_dir)));
@@ -292,6 +291,16 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
                 ui_->interface_language_combo->setCurrentIndex(ui_->interface_language_combo->count() - 1);
             }
         }
+    }
+    
+    QDir upscale_shader_dir("resources/upscale/");
+    upscale_shader_dir.setNameFilters({ "*.frag" });
+
+    ui_->app_config_list_shaders_upscale->addItem(tr("Default"));
+
+    QStringList upscale_shader_file_list = upscale_shader_dir.entryList();
+    for (qsizetype i = 0; i < upscale_shader_file_list.count(); i++) {
+        ui_->app_config_list_shaders_upscale->addItem(QFileInfo(upscale_shader_file_list[i]).completeBaseName());
     }
 
     const arm_emulator_type type = system_->get_cpu_executor_type();
@@ -351,12 +360,14 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->emulator_display_hide_cursor_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_cursor_visibility_change);
     connect(ui_->emulator_display_true_size_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_true_size_enable_toogled);
     connect(ui_->emulator_display_bgc_pick_btn, &QPushButton::clicked, this, &settings_dialog::on_background_color_pick_button_clicked);
-    connect(ui_->emulator_display_disable_content_scale, &QCheckBox::toggled, this, &settings_dialog::on_disable_scale_display_content_toggled);
 
     connect(ui_->general_clear_ui_config_btn, &QPushButton::clicked, this, &settings_dialog::on_ui_clear_all_configs_clicked);
     connect(ui_->app_config_fps_slider, &QSlider::valueChanged, this, &settings_dialog::on_fps_slider_value_changed);
     connect(ui_->app_config_time_delay_slider, &QSlider::valueChanged, this, &settings_dialog::on_time_delay_value_changed);
     connect(ui_->app_config_inherit_settings_child_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_inherit_settings_toggled);
+    connect(ui_->app_config_screen_scale_combo_box, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_upscale_factor_choose);
+    connect(ui_->app_config_enable_upscale_use_shader, &QCheckBox::toggled, this, &settings_dialog::on_use_shader_for_upscale_toggled);
+    connect(ui_->app_config_list_shaders_upscale, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_upscale_shader_choose);
 
     connect(ui_->interface_status_bar_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_status_bar_visibility_change);
     connect(ui_->interface_theme_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_theme_changed);
@@ -955,8 +966,26 @@ void settings_dialog::refresh_configuration_for_who(const bool clear) {
 
             ui_->app_config_time_delay_slider->setValue(info->associated_->get_time_delay());
             ui_->app_config_inherit_settings_child_checkbox->setChecked(info->associated_->get_child_inherit_setting());
-
             ui_->app_config_time_delay_current_val->setText(QString("%1").arg(info->associated_->get_time_delay()));
+            ui_->app_config_screen_scale_combo_box->setCurrentIndex((scr->requested_ui_scale_factor <= 0.0f) ? 0 : eka2l1::common::min(eka2l1::common::find_most_significant_bit_one(static_cast<int>(scr->requested_ui_scale_factor)) + 1, 4));
+            ui_->app_config_enable_upscale_use_shader->setChecked((scr->flags_ & eka2l1::epoc::screen::FLAG_SCREEN_UPSCALE_FACTOR_LOCK) ? true : false);
+
+            if (!ui_->app_config_enable_upscale_use_shader->isChecked()) {
+                ui_->app_config_upscale_shader_widget->setVisible(false);
+            }
+
+            eka2l1::config::app_setting *setting = app_settings_->get_setting(info->app_uid_);
+            if (setting) {
+                if (setting->filter_shader_path.empty()) {
+                    ui_->app_config_list_shaders_upscale->setCurrentIndex(0);
+                } else {
+                    for (int i = 1; i < ui_->app_config_list_shaders_upscale->count(); i++) {
+                        if (ui_->app_config_list_shaders_upscale->itemText(i) == QString::fromStdString(setting->filter_shader_path)) {
+                            ui_->app_config_list_shaders_upscale->setCurrentIndex(i);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -1190,10 +1219,6 @@ void settings_dialog::on_screen_buffer_sync_option_changed(int index) {
     }
 }
 
-void settings_dialog::on_disable_scale_display_content_toggled(bool val) {
-    configuration_.disable_display_content_scale = val;
-}
-
 void settings_dialog::on_friendly_phone_name_edited(const QString &text) {
     configuration_.device_display_name = text.toStdString();
     eka2l1::kernel_system *kern = system_->get_kernel_system();
@@ -1298,4 +1323,51 @@ void settings_dialog::on_audio_sf2_reset_clicked() {
 void settings_dialog::on_enable_hw_gles1_toggled(bool val) {
     configuration_.enable_hw_gles1 = val;
     QMessageBox::information(this, tr("Emulator reset needed"), tr("This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator."));
+}
+
+void settings_dialog::on_use_shader_for_upscale_toggled(bool checked) {
+    eka2l1::epoc::screen *scr = get_current_active_screen(system_);
+    if (!scr) {
+        return;
+    }
+
+    if (checked) {
+        scr->flags_ |= eka2l1::epoc::screen::FLAG_SCREEN_UPSCALE_FACTOR_LOCK;
+        scr->try_change_display_rescale(system_->get_graphics_driver(), 1.0f);
+    } else {
+        scr->flags_ &= ~eka2l1::epoc::screen::FLAG_SCREEN_UPSCALE_FACTOR_LOCK;
+    }
+
+    ui_->app_config_upscale_shader_widget->setVisible(checked);
+    emit active_app_setting_changed();
+}
+
+void settings_dialog::on_upscale_shader_choose(const int index) {
+    eka2l1::drivers::graphics_driver *driver = system_->get_graphics_driver();
+
+    if (index == 0) {
+        driver->set_upscale_shader("Default");
+    } else {
+        driver->set_upscale_shader(ui_->app_config_list_shaders_upscale->itemText(index).toStdString());
+    }
+
+    emit active_app_setting_changed();
+}
+
+void settings_dialog::on_upscale_factor_choose(const int index) {
+    eka2l1::epoc::screen *scr = get_current_active_screen(system_);
+    if (!scr) {
+        return;
+    }
+
+    scr->requested_ui_scale_factor = ((index == 0) ? -1.0f : static_cast<float>(1 << (index - 1)));
+    emit active_app_setting_changed();
+}
+
+QString settings_dialog::active_upscale_shader() const {
+    if (ui_->app_config_list_shaders_upscale->currentIndex() == 0) {
+        return "Default";
+    }
+
+    return ui_->app_config_list_shaders_upscale->currentText();
 }

@@ -100,7 +100,6 @@ private slots:
     void on_data_path_browse_clicked();
     void on_tab_changed(int index);
     void on_true_size_enable_toogled(bool val);
-    void on_disable_scale_display_content_toggled(bool val);
 
     void on_control_profile_add_clicked();
     void on_control_profile_rename_clicked();
@@ -122,6 +121,9 @@ private slots:
     void on_fps_slider_value_changed(int value);
     void on_time_delay_value_changed(int value);
     void on_inherit_settings_toggled(bool checked);
+    void on_use_shader_for_upscale_toggled(bool checked);
+    void on_upscale_shader_choose(const int index);
+    void on_upscale_factor_choose(const int index);
     void on_theme_changed(int value);
     void on_cpu_backend_changed(int value);
     void on_ui_clear_all_configs_clicked();
@@ -156,6 +158,8 @@ public:
 
     bool eventFilter(QObject *obj, QEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
+
+    QString active_upscale_shader() const;
 
 private:
     Ui::settings_dialog *ui_;

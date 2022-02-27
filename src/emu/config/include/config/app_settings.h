@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <map>
+#include <string>
 
 namespace eka2l1::epoc {
     using uid = std::uint32_t;
@@ -35,7 +36,10 @@ namespace eka2l1::config {
         std::uint32_t time_delay;
 
         int screen_rotation;
-        float screen_scale;
+
+        float screen_upscale;
+        std::uint32_t screen_upscale_method;
+        std::string filter_shader_path;
 
         bool child_inherit_setting;
 

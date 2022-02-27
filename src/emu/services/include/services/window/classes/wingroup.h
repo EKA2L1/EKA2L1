@@ -22,6 +22,7 @@
 
 #include <drivers/graphics/graphics.h>
 #include <services/window/classes/winbase.h>
+#include <config/app_settings.h>
 
 #include <vector>
 #include <queue>
@@ -39,7 +40,7 @@ namespace eka2l1::epoc {
         std::unique_ptr<top_canvas> top;
         std::queue<message_data> msg_datas;
 
-        std::uint8_t last_refresh_rate;
+        eka2l1::config::app_setting saved_setting;
         std::size_t uid_owner_change_callback_handle;
 
         kernel::process *uid_owner_change_process;

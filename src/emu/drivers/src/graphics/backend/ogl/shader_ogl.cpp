@@ -85,6 +85,9 @@ namespace eka2l1::drivers {
     ogl_shader_module::ogl_shader_module(const std::string &path, const shader_module_type type)
         : shader(0) {
         common::ro_std_file_stream stream(path, std::ios_base::binary);
+        if (!stream.valid()) {
+            LOG_ERROR(DRIVER_GRAPHICS, "Shader file stream with path {} is invalid!", path);
+        }
         
         std::string whole_code;
         whole_code.resize(stream.size());

@@ -157,7 +157,7 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
         std::swap(size.x, size.y);
     }
 
-    float mult = state.conf.disable_display_content_scale ? 1.0 : (static_cast<float>(window_width) / size.x);
+    float mult = scr->requested_ui_scale_factor > 0.0f ? scr->requested_ui_scale_factor : (static_cast<float>(window_width) / size.x);
     float width = size.x * mult;
     float height = size.y * mult;
     std::uint32_t x = 0;
@@ -187,7 +187,9 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     builder.set_texture_filter(scr->screen_texture, true, filter);
     builder.set_texture_filter(scr->screen_texture, false, filter);
 
-    builder.draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(scr->ui_rotation), 0);
+    builder.draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(scr->ui_rotation),
+        (scr->flags_ & eka2l1::epoc::screen::FLAG_SCREEN_UPSCALE_FACTOR_LOCK) ? eka2l1::drivers::bitmap_draw_flag_use_upscale_shader : 0);
+
     builder.load_backup_state();
 
     state_ptr->present_status = -100;
@@ -1063,6 +1065,9 @@ void main_window::on_app_setting_changed() {
     setting.time_delay = info->associated_->get_time_delay();
     setting.child_inherit_setting = info->associated_->get_child_inherit_setting();
     setting.screen_rotation = scr->ui_rotation;
+    setting.screen_upscale = scr->requested_ui_scale_factor;
+    setting.screen_upscale_method = ((scr->flags_ & eka2l1::epoc::screen::FLAG_SCREEN_UPSCALE_FACTOR_LOCK) ? 1 : 0);
+    setting.filter_shader_path = settings_dialog_->active_upscale_shader().toStdString();
 
     emulator_state_.app_settings->add_or_replace_setting(info->app_uid_, setting);
 }

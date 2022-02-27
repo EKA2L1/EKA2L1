@@ -68,6 +68,7 @@ namespace eka2l1::drivers {
         std::unique_ptr<ogl_shader_program> brush_program;
         std::unique_ptr<ogl_shader_program> mask_program;
         std::unique_ptr<ogl_shader_program> pen_program;
+        std::unique_ptr<ogl_shader_program> upscale_program;
 
         GLuint sprite_vao;
         GLuint sprite_vbo;
@@ -83,6 +84,13 @@ namespace eka2l1::drivers {
         GLint proj_loc;
         GLint model_loc;
         GLint flip_loc;
+
+        GLint color_upscaled_loc;
+        GLint proj_upscaled_loc;
+        GLint model_upscaled_loc;
+        GLint flip_upscaled_loc;
+        GLint texel_delta_upscaled_loc_;
+        GLint pixel_delta_upscaled_loc_;
 
         GLint color_loc_brush;
         GLint proj_loc_brush;
@@ -102,6 +110,9 @@ namespace eka2l1::drivers {
 
         GLint in_position_loc_mask;
         GLint in_texcoord_loc_mask;
+
+        GLint in_position_loc_upscale;
+        GLint in_texcoord_loc_upscale;
 
         GLint color_loc_pen;
         GLint proj_loc_pen;
@@ -128,6 +139,8 @@ namespace eka2l1::drivers {
 
         std::uint32_t feature_flags_;
         std::unique_ptr<graphics::gl_context> context_;
+        std::string pending_upscale_shader_;
+        std::string active_upscale_shader_;
 
         void do_init();
         void prepare_draw_lines_shared();
@@ -169,6 +182,8 @@ namespace eka2l1::drivers {
         void save_gl_state();
         void load_gl_state();
 
+        void commit_upscale_shader_change();
+
     public:
         explicit ogl_graphics_driver(const window_system_info &info);
         ~ogl_graphics_driver() override;
@@ -182,6 +197,8 @@ namespace eka2l1::drivers {
         void bind_swapchain_framebuf() override;
         void update_surface(void *new_surface) override;
         void wait_for(int *status) override;
+        void set_upscale_shader(const std::string &name) override;
+        std::string get_active_upscale_shader() const override;
 
         bool is_stricted() const override {
             return is_gles;

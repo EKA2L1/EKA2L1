@@ -66,12 +66,14 @@ namespace eka2l1::epoc {
         eka2l1::config::app_settings *settings = kern->get_app_settings();
         eka2l1::config::app_setting *the_setting = settings->get_setting(new_uid);
 
-        if (the_setting) {
-            last_refresh_rate = the_setting->fps;
+        if (!the_setting) {
+            return;
         }
 
+        saved_setting = *the_setting;
+
         if (this == scr->focus) {
-            scr->refresh_rate = last_refresh_rate;
+            scr->restore_from_config(client->get_ws().get_graphics_driver(), saved_setting);
         }
     }
 
@@ -85,7 +87,6 @@ namespace eka2l1::epoc {
 
     window_group::window_group(window_server_client_ptr client, screen *scr, epoc::window *parent, const std::uint32_t client_handle)
         : window(client, scr, parent, window_kind::group)
-        , last_refresh_rate(60)
         , uid_owner_change_callback_handle(0)
         , uid_owner_change_process(nullptr)
         , screen_change_event_handle(0) {

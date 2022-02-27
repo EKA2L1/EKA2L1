@@ -38,6 +38,10 @@ namespace eka2l1 {
         class chunk;
     }
 
+    namespace config {
+        struct app_setting;
+    }
+
     class window_server;
     class ntimer;
 }
@@ -72,6 +76,7 @@ namespace eka2l1::epoc {
         float display_scale_factor;
         float logic_scale_factor_x;
         float logic_scale_factor_y;
+        float requested_ui_scale_factor;
 
         // The root window, used to traverse window tree
         // Draw order will be child in front of parent, newer in front of older.
@@ -114,7 +119,8 @@ namespace eka2l1::epoc {
             FLAG_ORIENTATION_LOCK = 1 << 1,
             FLAG_AUTO_CLEAR_BACKGROUND = 1 << 2,
             FLAG_SERVER_REDRAW_PENDING = 1 << 3,
-            FLAG_CLIENT_REDRAW_PENDING = 1 << 4
+            FLAG_CLIENT_REDRAW_PENDING = 1 << 4,
+            FLAG_SCREEN_UPSCALE_FACTOR_LOCK = 1 << 5
         };
 
         using focus_change_callback = std::pair<void *, focus_change_callback_handler>;
@@ -146,6 +152,10 @@ namespace eka2l1::epoc {
         void set_orientation_lock(drivers::graphics_driver *drv, const bool lock);
         void abort_all_dsas(const std::int32_t reason);
         void recalculate_visible_regions();
+
+        void restore_from_config(drivers::graphics_driver *driver, const eka2l1::config::app_setting &setting);
+        void store_to_config(drivers::graphics_driver *driver, eka2l1::config::app_setting &setting);
+        void try_change_display_rescale(drivers::graphics_driver *driver, const float scale_factor);
 
         // ========================= UTILITIES FUNCTIONS ===========================
         epoc::window_group *get_group_chain();

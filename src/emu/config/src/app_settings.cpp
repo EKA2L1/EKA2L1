@@ -35,7 +35,8 @@ namespace eka2l1::config {
         : fps(60)
         , time_delay(0)
         , screen_rotation(0)
-        , screen_scale(1)
+        , screen_upscale(-1.0f)
+        , screen_upscale_method(0)
         , child_inherit_setting(false) {
     }
 

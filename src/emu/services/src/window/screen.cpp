@@ -26,6 +26,7 @@
 
 #include <common/rgb.h>
 #include <common/time.h>
+#include <config/app_settings.h>
 #include <drivers/itc.h>
 
 #include <kernel/kernel.h>
@@ -110,6 +111,7 @@ namespace eka2l1::epoc {
         , display_scale_factor(1.0f)
         , logic_scale_factor_x(1.0f)
         , logic_scale_factor_y(1.0f)
+        , requested_ui_scale_factor(-1.0f)
         , screen_texture(0)
         , dsa_texture(0)
         , disp_mode(display_mode::color16ma)
@@ -287,6 +289,38 @@ namespace eka2l1::epoc {
         return next_to_focus;
     }
 
+    void screen::restore_from_config(drivers::graphics_driver *driver, const eka2l1::config::app_setting &setting) {
+        refresh_rate = static_cast<std::uint8_t>(setting.fps);
+        flags_ &= ~FLAG_SCREEN_UPSCALE_FACTOR_LOCK;
+
+        if (setting.screen_upscale_method != 0) {
+            flags_ |= FLAG_SCREEN_UPSCALE_FACTOR_LOCK;
+            display_scale_factor = 1.0f;
+        }
+
+        requested_ui_scale_factor = setting.screen_upscale;
+
+        if (driver) {
+            driver->set_upscale_shader(setting.filter_shader_path);
+        }
+    }
+
+    void screen::store_to_config(drivers::graphics_driver *driver, eka2l1::config::app_setting &setting) {
+        setting.fps = refresh_rate;
+
+        if (flags_ & FLAG_SCREEN_UPSCALE_FACTOR_LOCK) {
+            setting.screen_upscale_method = 1;
+        } else {
+            setting.screen_upscale_method = 0;
+        }
+
+        setting.screen_upscale = requested_ui_scale_factor;
+
+        if (driver) {
+            setting.filter_shader_path = driver->get_active_upscale_shader();
+        }
+    }
+
     epoc::window_group *screen::update_focus(window_server *serv, epoc::window_group *closing_group) {
         epoc::window_group *old_focus = focus;
 
@@ -324,9 +358,12 @@ namespace eka2l1::epoc {
         if (old_focus != focus || new_focus_screen) {
             if (old_focus && (old_focus != closing_group) && is_me_currently_focus) {
                 if (focus)
-                    old_focus->last_refresh_rate = focus->scr->refresh_rate;
+                    focus->scr->store_to_config(serv->get_graphics_driver(), old_focus->saved_setting);
 
                 old_focus->lost_focus();
+
+                // Remove the screen native upscale lock
+                flags_ &= ~FLAG_SCREEN_UPSCALE_FACTOR_LOCK;
             }
 
             if (new_focus_screen) {
@@ -337,14 +374,14 @@ namespace eka2l1::epoc {
                 serv->send_focus_group_change_events(new_focus_screen);
                 new_focus_screen->fire_focus_change_callbacks(focus_change_target);
 
-                refresh_rate = alternative_focus->last_refresh_rate;
+                new_focus_screen->restore_from_config(serv->get_graphics_driver(), alternative_focus->saved_setting);
             } else if (focus && is_me_currently_focus) {
                 focus->gain_focus();
 
                 serv->send_focus_group_change_events(this);
                 fire_focus_change_callbacks(focus_change_target);
 
-                refresh_rate = focus->last_refresh_rate;
+                restore_from_config(serv->get_graphics_driver(), focus->saved_setting);
             }
         }
 
@@ -619,27 +656,11 @@ namespace eka2l1::epoc {
         }
     }
 
-    void screen::set_native_scale_factor(drivers::graphics_driver *driver, const float new_scale_factor_x,
-        const float new_scale_factor_y) {
-        if (logic_scale_factor_x != new_scale_factor_x) {
-            logic_scale_factor_x = new_scale_factor_x;
-        }
-
-        if (logic_scale_factor_y != new_scale_factor_y) {
-            logic_scale_factor_y = new_scale_factor_y;
-        }
-
-        // We want to keep the original display size in case it's downscale.
-        float correct_display_scale_factor = common::min(new_scale_factor_x, new_scale_factor_y);
-
-        if (correct_display_scale_factor < 1.0f) {
-            correct_display_scale_factor = 1.0f;
-        }
-
-        if (correct_display_scale_factor != display_scale_factor) {
+    void screen::try_change_display_rescale(drivers::graphics_driver *driver, const float new_scale_factor) {
+        if (new_scale_factor != display_scale_factor) {
             // Resize the screen bitmap
             if (screen_texture) {
-                eka2l1::vec2 screen_size_scaled = current_mode().size * correct_display_scale_factor;
+                eka2l1::vec2 screen_size_scaled = current_mode().size * new_scale_factor;
                 drivers::handle new_screen_handle = drivers::create_bitmap(driver, screen_size_scaled, 32);
 
                 // We don't store redraw, so for now draw a scaled version of the window to the new bitmap
@@ -661,7 +682,31 @@ namespace eka2l1::epoc {
                 flags_ |= FLAG_SERVER_REDRAW_PENDING;
             }
 
-            display_scale_factor = correct_display_scale_factor;
+            display_scale_factor = new_scale_factor;
         }
+    }
+
+    void screen::set_native_scale_factor(drivers::graphics_driver *driver, const float new_scale_factor_x,
+        const float new_scale_factor_y) {
+        if (logic_scale_factor_x != new_scale_factor_x) {
+            logic_scale_factor_x = new_scale_factor_x;
+        }
+
+        if (logic_scale_factor_y != new_scale_factor_y) {
+            logic_scale_factor_y = new_scale_factor_y;
+        }
+
+        float correct_display_scale_factor = 1.0f;
+
+        // We want to keep the original display size in case it's downscale.
+        if ((flags_ & FLAG_SCREEN_UPSCALE_FACTOR_LOCK) == 0) {
+            correct_display_scale_factor = common::min(new_scale_factor_x, new_scale_factor_y);
+
+            if (correct_display_scale_factor < 1.0f) {
+                correct_display_scale_factor = 1.0f;
+            }
+        }
+
+        try_change_display_rescale(driver, correct_display_scale_factor);
     }
 }

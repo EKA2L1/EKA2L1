@@ -25,7 +25,9 @@ SETTING(fps, fps, 60)
 SETTING(time-delay, time_delay, 0)
 SETTING(should-child-inherit-setting, child_inherit_setting, true)
 SETTING(screen-rotation, screen_rotation, 0)
-SETTING(screen-scale, screen_scale, 1)
+SETTING(screen-upscale, screen_upscale, -1.0f)
+SETTING(screen-upscale-method, screen_upscale_method, 0)
+SETTING(filter-shader-path, filter_shader_path, "")
 
 #ifdef SETTING
 #undef SETTING

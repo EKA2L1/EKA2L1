@@ -81,7 +81,8 @@ namespace eka2l1::drivers {
         , line_style(pen_style_none)
         , active_input_descriptors_(nullptr)
         , index_buffer_current_(0)
-        , feature_flags_(0) {
+        , feature_flags_(0)
+        , active_upscale_shader_("Default") {
         context_ = graphics::make_gl_context(info, false, true);
 
         if (!context_) {
@@ -186,6 +187,7 @@ namespace eka2l1::drivers {
     static constexpr const char *sprite_norm_v_path = "resources//sprite_norm.vert";
     static constexpr const char *sprite_norm_f_path = "resources//sprite_norm.frag";
     static constexpr const char *sprite_mask_f_path = "resources//sprite_mask.frag";
+    static constexpr const char *sprite_upscaled_f_path = "resources//sprite_upscaled.frag";
     static constexpr const char *brush_v_path = "resources//brush.vert";
     static constexpr const char *brush_f_path = "resources//brush.frag";
     static constexpr const char *pen_v_path = "resources//pen.vert";
@@ -198,6 +200,7 @@ namespace eka2l1::drivers {
 
         auto sprite_norm_fragment_module = std::make_unique<ogl_shader_module>(sprite_norm_f_path, shader_module_type::fragment);
         auto sprite_mask_fragment_module = std::make_unique<ogl_shader_module>(sprite_mask_f_path, shader_module_type::fragment);
+        auto sprite_upscale_fragment_module = std::make_unique<ogl_shader_module>(sprite_upscaled_f_path, shader_module_type::fragment);
         auto brush_fragment_module = std::make_unique<ogl_shader_module>(brush_f_path, shader_module_type::fragment);
         auto pen_fragment_module = std::make_unique<ogl_shader_module>(pen_f_path, shader_module_type::fragment);
 
@@ -205,9 +208,11 @@ namespace eka2l1::drivers {
         mask_program = std::make_unique<ogl_shader_program>();
         brush_program = std::make_unique<ogl_shader_program>();
         pen_program = std::make_unique<ogl_shader_program>();
+        upscale_program = std::make_unique<ogl_shader_program>();
 
         sprite_program->create(this, sprite_norm_vertex_module.get(), sprite_norm_fragment_module.get());
         mask_program->create(this, sprite_norm_vertex_module.get(), sprite_mask_fragment_module.get());
+        upscale_program->create(this, sprite_norm_vertex_module.get(), sprite_upscale_fragment_module.get());
         brush_program->create(this, brush_vertex_module.get(), brush_fragment_module.get());
         pen_program->create(this, pen_vertex_module.get(), pen_fragment_module.get());
 
@@ -275,6 +280,14 @@ namespace eka2l1::drivers {
         in_position_loc = sprite_program->get_attrib_location("in_position").value_or(-1);
         in_texcoord_loc = sprite_program->get_attrib_location("in_texcoord").value_or(-1);
 
+        color_upscaled_loc = upscale_program->get_uniform_location("u_color").value_or(-1);
+        proj_upscaled_loc = upscale_program->get_uniform_location("u_proj").value_or(-1);
+        model_upscaled_loc = upscale_program->get_uniform_location("u_model").value_or(-1);
+        texel_delta_upscaled_loc_ = upscale_program->get_uniform_location("u_texelDelta").value_or(-1);
+        pixel_delta_upscaled_loc_ = upscale_program->get_uniform_location("u_pixelDelta").value_or(-1);
+        in_position_loc_upscale = upscale_program->get_attrib_location("in_position").value_or(-1);
+        in_texcoord_loc_upscale = upscale_program->get_attrib_location("in_texcoord").value_or(-1);
+
         color_loc_brush = brush_program->get_uniform_location("u_color").value_or(-1);
         proj_loc_brush = brush_program->get_uniform_location("u_proj").value_or(-1);
         model_loc_brush = brush_program->get_uniform_location("u_model").value_or(-1);
@@ -295,6 +308,44 @@ namespace eka2l1::drivers {
         point_size_loc_pen = pen_program->get_uniform_location("u_pointSize").value_or(-1);
         pattern_bytes_loc_pen = pen_program->get_uniform_location("u_pattern").value_or(-1);
         viewport_loc_pen = pen_program->get_uniform_location("u_viewport").value_or(-1);
+    }
+
+    void ogl_graphics_driver::commit_upscale_shader_change() {
+        if (pending_upscale_shader_.empty()) {
+            return;
+        }
+
+        if ((pending_upscale_shader_ == "default") || (pending_upscale_shader_ == "Default")) {
+            pending_upscale_shader_ = sprite_upscaled_f_path;
+        } else {
+            pending_upscale_shader_ = "resources//upscale//" + pending_upscale_shader_ + ".frag";
+        }
+
+        auto sprite_norm_vertex_module = std::make_unique<ogl_shader_module>(sprite_norm_v_path, shader_module_type::vertex);        
+        auto sprite_upscale_fragment_module = std::make_unique<ogl_shader_module>(pending_upscale_shader_, shader_module_type::fragment);
+
+        auto upscale_program_new = std::make_unique<ogl_shader_program>();
+
+        if (!upscale_program_new->create(this, sprite_norm_vertex_module.get(), sprite_upscale_fragment_module.get())) {
+            return;
+        }
+
+        upscale_program = std::move(upscale_program_new);
+
+        color_upscaled_loc = upscale_program->get_uniform_location("u_color").value_or(-1);
+        proj_upscaled_loc = upscale_program->get_uniform_location("u_proj").value_or(-1);
+        model_upscaled_loc = upscale_program->get_uniform_location("u_model").value_or(-1);
+        texel_delta_upscaled_loc_ = upscale_program->get_uniform_location("u_texelDelta").value_or(-1);
+        pixel_delta_upscaled_loc_ = upscale_program->get_uniform_location("u_pixelDelta").value_or(-1);
+        in_position_loc_upscale = upscale_program->get_attrib_location("in_position").value_or(-1);
+        in_texcoord_loc_upscale = upscale_program->get_attrib_location("in_texcoord").value_or(-1);
+
+        pending_upscale_shader_.clear();
+    }
+
+    void ogl_graphics_driver::set_upscale_shader(const std::string &name) {
+        pending_upscale_shader_ = name;
+        active_upscale_shader_ = name;
     }
 
     void ogl_graphics_driver::bind_swapchain_framebuf() {
@@ -364,6 +415,7 @@ namespace eka2l1::drivers {
 
         // Get bitmap to draw
         drivers::handle to_draw = static_cast<drivers::handle>(cmd.data_[0]);
+        std::uint32_t flags = static_cast<std::uint32_t>(cmd.data_[7] >> 32);
 
         bitmap *bmp = get_bitmap(to_draw);
         texture *draw_texture = nullptr;
@@ -403,10 +455,15 @@ namespace eka2l1::drivers {
         unpack_u64_to_2u32(cmd.data_[2], dest_rect.top.x, dest_rect.top.y);
         unpack_u64_to_2u32(cmd.data_[3], dest_rect.size.x, dest_rect.size.y);
 
-        if (mask_bmp) {
-            mask_program->use(this);
+        if (flags & bitmap_draw_flag_use_upscale_shader) {
+            commit_upscale_shader_change();
+            upscale_program->use(this);
         } else {
-            sprite_program->use(this);
+            if (mask_bmp) {
+                mask_program->use(this);
+            } else {
+                sprite_program->use(this);
+            }
         }
 
         // Build texcoords
@@ -463,7 +520,6 @@ namespace eka2l1::drivers {
             0.0f
         };
 
-        std::uint32_t flags = static_cast<std::uint32_t>(cmd.data_[7] >> 32);
         void *vert_pointer = verts_default;
 
         bool need_texture_flip = (flags & bitmap_draw_flag_flip);
@@ -514,9 +570,21 @@ namespace eka2l1::drivers {
         glBindBuffer(GL_ARRAY_BUFFER, sprite_vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(verts), nullptr, GL_STATIC_DRAW);
         glBufferData(GL_ARRAY_BUFFER, sizeof(verts), vert_pointer, GL_STATIC_DRAW);
-        glEnableVertexAttribArray(mask_draw_texture ? in_position_loc_mask : in_position_loc);
+
+        if (flags & bitmap_draw_flag_use_upscale_shader) {
+            glEnableVertexAttribArray(in_position_loc_upscale);
+        } else {
+            glEnableVertexAttribArray(mask_draw_texture ? in_position_loc_mask : in_position_loc);
+        }
+
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0);
-        glEnableVertexAttribArray(mask_draw_texture ? in_texcoord_loc_mask : in_texcoord_loc);
+        
+        if (flags & bitmap_draw_flag_use_upscale_shader) {
+            glEnableVertexAttribArray(in_position_loc_upscale);
+        } else {
+            glEnableVertexAttribArray(mask_draw_texture ? in_texcoord_loc_mask : in_texcoord_loc);
+        }
+
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat)));
 
         if (mask_draw_texture) {
@@ -564,10 +632,20 @@ namespace eka2l1::drivers {
         // Supply brush
         const GLfloat color[] = { 255.0f, 255.0f, 255.0f, 255.0f };
 
-        if (flags & bitmap_draw_flag_use_brush) {
-            glUniform4fv((mask_draw_texture ? color_loc_mask : color_loc), 1, brush_color.elements.data());
-        } else {
-            glUniform4fv((mask_draw_texture ? color_loc_mask : color_loc), 1, color);
+        if (flags & bitmap_draw_flag_use_upscale_shader) {
+            glUniform4fv(color_upscaled_loc, 1, color);
+
+            float texel_delta[2] = { 1.0f / static_cast<float>(source_rect.size.x), 1.0f / static_cast<float>(source_rect.size.y) };
+            float pixel_delta[2] = { 1.0f / static_cast<float>(dest_rect.size.x), 1.0f / static_cast<float>(dest_rect.size.y) };
+
+            glUniform2fv(texel_delta_upscaled_loc_, 1, texel_delta);
+            glUniform2fv(pixel_delta_upscaled_loc_, 1, pixel_delta);
+        } else {   
+            if (flags & bitmap_draw_flag_use_brush) {
+                glUniform4fv((mask_draw_texture ? color_loc_mask : color_loc), 1, brush_color.elements.data());
+            } else {
+                glUniform4fv((mask_draw_texture ? color_loc_mask : color_loc), 1, color);
+            }
         }
 
         if (mask_draw_texture) {
@@ -1633,5 +1711,9 @@ namespace eka2l1::drivers {
         }
 
         driver::wait_for(status);
+    }
+
+    std::string ogl_graphics_driver::get_active_upscale_shader() const {
+        return active_upscale_shader_;
     }
 }
