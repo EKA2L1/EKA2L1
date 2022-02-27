@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/utils.cpp" line="126"/>
       <source>EKA2L1 - Symbian OS emulator</source>
-      <translation type="unfinished">EKA2L1 - Symbian OS emulator</translation>
+      <translation>EKA2L1 - емулятор Symbian OS</translation>
     </message>
   </context>
   <context>
@@ -195,7 +195,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="266"/>
       <source>VPL file (*.vpl);;All files (*.*)</source>
-      <translation type="unfinished">VPL file (*.vpl);;All files (*.*)</translation>
+      <translation>Файл VPL (*.vpl);;Усі файли (*.*)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="275"/>
@@ -205,7 +205,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="276"/>
       <source>ROM file (*.rom *.ROM);;All files (*.*)</source>
-      <translation type="unfinished">ROM file (*.rom *.ROM);;All files (*.*)</translation>
+      <translation>Файл ROM (*.rom *.ROM);;Усі файли (*.*)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="300"/>
@@ -586,7 +586,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="123"/>
       <source>Time delay (0-1000us)</source>
-      <translation type="unfinished">Time delay (0-1000us)</translation>
+      <translation>Час затримки (0-1000мкс)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="162"/>
@@ -768,7 +768,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="489"/>
       <source>Graphics</source>
-      <translation type="unfinished">Graphics</translation>
+      <translation>Графіка</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="497"/>
@@ -780,22 +780,22 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="501"/>
       <source>Screen buffer sync</source>
-      <translation type="unfinished">Screen buffer sync</translation>
+      <translation>Синхронізація буфера екрана</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="515"/>
       <source>Preferred</source>
-      <translation type="unfinished">Preferred</translation>
+      <translation>Найоптимальніше</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="520"/>
       <source>Disable</source>
-      <translation type="unfinished">Disable</translation>
+      <translation>Вимкнути</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="525"/>
       <source>Enable</source>
-      <translation type="unfinished">Enable</translation>
+      <translation>Увімкнути</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="535"/>
