@@ -115,6 +115,9 @@
     <string name="pref_screen_scale_type_fill">Заповнити вікно (ігнорувати пропорції)</string>
     <string name="pref_screen_scale_type_fit">Уписати у вікно</string>
     <string name="pref_screen_scale_type_none">Як є</string>
+    <string name="pref_screen_scale_use_shader">Use shader for upscaling</string>
+    <string name="pref_screen_upscale_shader">Upscale shader</string>
+    <string name="pref_screen_default_shader">За промовчанням</string>
     <string name="default_label">"%s (стандартний)"</string>
     <string name="not_saved_exists">Уже існує</string>
     <string name="error_name">Уведіть назву!</string>
