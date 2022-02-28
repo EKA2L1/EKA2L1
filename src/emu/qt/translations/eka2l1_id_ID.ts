@@ -999,7 +999,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.ui" line="1085"/>
       <source>Control</source>
-      <translation>Kendalian</translation>
+      <translation>Kontrol</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1100"/>
