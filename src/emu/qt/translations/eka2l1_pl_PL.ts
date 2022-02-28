@@ -599,26 +599,6 @@
       <translation type="unfinished">Fit the window</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="192"/>
-      <source>1x</source>
-      <translation type="unfinished">1x</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="197"/>
-      <source>2x</source>
-      <translation type="unfinished">2x</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="202"/>
-      <source>4x</source>
-      <translation type="unfinished">4x</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="207"/>
-      <source>8x</source>
-      <translation type="unfinished">8x</translation>
-    </message>
-    <message>
       <location filename="../src/settings_dialog.ui" line="217"/>
       <source>Save screen scale and rotations</source>
       <translation>Zapisz skalowanie ekranu i obracanie</translation>
@@ -1133,8 +1113,8 @@ Preferowana opcja automatycznie włączy to na urządzeniach S60v1/S60v2.</trans
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="435"/>
-      <location filename="../src/settings_dialog.cpp" line="1136"/>
-      <location filename="../src/settings_dialog.cpp" line="1161"/>
+      <location filename="../src/settings_dialog.cpp" line="1135"/>
+      <location filename="../src/settings_dialog.cpp" line="1160"/>
       <source>Relaunch needed</source>
       <translation>Wymagane ponowne uruchomienie</translation>
     </message>
@@ -1233,102 +1213,102 @@ Preferowana opcja automatycznie włączy to na urządzeniach S60v1/S60v2.</trans
       <translation>Brak</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1063"/>
+      <location filename="../src/settings_dialog.cpp" line="1062"/>
       <source>IMEI sequence contains non-numeric character!</source>
       <translation>Sekwencja IMEI zawiera nie-numeryczne znaki!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1066"/>
+      <location filename="../src/settings_dialog.cpp" line="1065"/>
       <source>IMEI sequence has invalid sum!</source>
       <translation>Sekwencja IMEI na niewłaściwą sumę!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1069"/>
+      <location filename="../src/settings_dialog.cpp" line="1068"/>
       <source>IMEI sequence length must be 15!</source>
       <translation>Długość sekwencji IMEI musi wynosić 15!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1075"/>
+      <location filename="../src/settings_dialog.cpp" line="1074"/>
       <source>Unidentified error!</source>
       <translation>Niezidentyfikowany błąd!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1082"/>
+      <location filename="../src/settings_dialog.cpp" line="1081"/>
       <source>IMEI valid!</source>
       <translation>IMEI prawidłowe!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1082"/>
+      <location filename="../src/settings_dialog.cpp" line="1081"/>
       <source>The IMEI sequence is valid!</source>
       <translation>Sekwencja IMEI jest prawidłowa!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1085"/>
+      <location filename="../src/settings_dialog.cpp" line="1084"/>
       <source>IMEI invalid!</source>
       <translation>IMEI nieprawidłowe!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1095"/>
+      <location filename="../src/settings_dialog.cpp" line="1094"/>
       <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
       <translation>Twoje IMEI jest nieprawidłowe z powodu: %1.&lt;br&gt;Czy chcesz edytować obecne IMEI zamiast zamykać? Wybranie &quot;Nie&quot; zapisze obecną wartość IMEI.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1097"/>
+      <location filename="../src/settings_dialog.cpp" line="1096"/>
       <source>Cancel closing</source>
       <translation>Anuluj zamykanie</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1136"/>
+      <location filename="../src/settings_dialog.cpp" line="1135"/>
       <source>This change will be effective on the next launch of the emulator.</source>
       <translation>Ta zamiana będzie działać przy kolejnym uruchomieniu emulatora.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1144"/>
+      <location filename="../src/settings_dialog.cpp" line="1143"/>
       <source>Confirmation</source>
       <translation>Potwierdzenie</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1144"/>
+      <location filename="../src/settings_dialog.cpp" line="1143"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
       <translation>Na pewno? Twój obecny temat zostanie zresetowany, wszystkie wiadomości które zostały wyłączone zostaną ponownie włączone i wszystkie ostatnie punkty montażu zostaną wyczyszczone.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1161"/>
+      <location filename="../src/settings_dialog.cpp" line="1160"/>
       <source>The language will be updated on the next launch of the emulator.</source>
       <translation>Język będzie zaktualizowany przy kolejnym uruchomieniu emulatora.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1188"/>
+      <location filename="../src/settings_dialog.cpp" line="1187"/>
       <source>Pick the screen background color</source>
       <translation>Wybierz kolor tła</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1253"/>
+      <location filename="../src/settings_dialog.cpp" line="1252"/>
       <source>Successfully changed</source>
       <translation>Pomyślnie zmieniono</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1253"/>
+      <location filename="../src/settings_dialog.cpp" line="1252"/>
       <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
       <translation>Następnym razem, gdy aplikacja chce zagrać nowe MIDI, wybrany backend zostanie użyty!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1266"/>
+      <location filename="../src/settings_dialog.cpp" line="1265"/>
       <source>Choose the HSB bank file</source>
       <translation>Wybierz plik bazy dźwięków HSB</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1289"/>
+      <location filename="../src/settings_dialog.cpp" line="1288"/>
       <source>Choose the SF2 bank file</source>
       <translation>Wybierz plik bazy dźwięków SF2</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1325"/>
+      <location filename="../src/settings_dialog.cpp" line="1324"/>
       <source>Emulator reset needed</source>
       <translation>Potrzebny reset emulatora</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1325"/>
+      <location filename="../src/settings_dialog.cpp" line="1324"/>
       <source>This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</source>
       <translation>Ta zmiana będzie działać po resecie emulatora z menu Emulacji albo przy kolejnym uruchomieniu emulatora.</translation>
     </message>
