@@ -591,12 +591,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="179"/>
       <source>Screen scale factor</source>
-      <translation type="unfinished">Screen scale factor</translation>
+      <translation>Коефіцієнт масштабування екрана</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="187"/>
       <source>Fit the window</source>
-      <translation type="unfinished">Fit the window</translation>
+      <translation>Уписати у вікно</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="217"/>
@@ -611,12 +611,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="234"/>
       <source>Use shader for upscaling</source>
-      <translation type="unfinished">Use shader for upscaling</translation>
+      <translation>Використовувати шейдер для масштабування</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="250"/>
       <source>Upscale shader</source>
-      <translation type="unfinished">Upscale shader</translation>
+      <translation>Масштабувальний шейдер</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="272"/>
