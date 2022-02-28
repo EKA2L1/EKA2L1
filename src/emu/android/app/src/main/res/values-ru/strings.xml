@@ -116,7 +116,7 @@
     <string name="pref_screen_scale_type_fit">Вписать</string>
     <string name="pref_screen_scale_type_none">Как есть</string>
     <string name="pref_screen_scale_use_shader">Использовать шейдер для масштабирования</string>
-    <string name="pref_screen_upscale_shader">Upscale shader</string>
+    <string name="pref_screen_upscale_shader">Масштабирующий шейдер</string>
     <string name="pref_screen_default_shader">По умолчанию</string>
     <string name="default_label">"%s (стандартный)"</string>
     <string name="not_saved_exists">Уже существует</string>
