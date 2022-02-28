@@ -596,7 +596,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="187"/>
       <source>Fit the window</source>
-      <translation type="unfinished">Fit the window</translation>
+      <translation>Вписать в окно</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="217"/>
@@ -616,7 +616,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="250"/>
       <source>Upscale shader</source>
-      <translation type="unfinished">Upscale shader</translation>
+      <translation>Масштабирующий шейдер</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="272"/>
