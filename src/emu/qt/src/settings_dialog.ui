@@ -189,22 +189,22 @@
                  </item>
                  <item>
                   <property name="text">
-                   <string>1x</string>
+                   <string notr="true">1x</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>2x</string>
+                   <string notr="true">2x</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>4x</string>
+                   <string notr="true">4x</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>8x</string>
+                   <string notr="true">8x</string>
                   </property>
                  </item>
                 </widget>

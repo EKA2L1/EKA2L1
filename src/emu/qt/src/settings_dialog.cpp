@@ -976,9 +976,8 @@ void settings_dialog::refresh_configuration_for_who(const bool clear) {
 
             eka2l1::config::app_setting *setting = app_settings_->get_setting(info->app_uid_);
             if (setting) {
-                if (setting->filter_shader_path.empty()) {
-                    ui_->app_config_list_shaders_upscale->setCurrentIndex(0);
-                } else {
+                ui_->app_config_list_shaders_upscale->setCurrentIndex(0);
+                if (!setting->filter_shader_path.empty()) {
                     for (int i = 1; i < ui_->app_config_list_shaders_upscale->count(); i++) {
                         if (ui_->app_config_list_shaders_upscale->itemText(i) == QString::fromStdString(setting->filter_shader_path)) {
                             ui_->app_config_list_shaders_upscale->setCurrentIndex(i);

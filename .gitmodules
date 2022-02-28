@@ -77,3 +77,6 @@
 [submodule "src/external/SDL_GameControllerDB"]
 	path = src/external/SDL_GameControllerDB
 	url = https://github.com/gabomdq/SDL_GameControllerDB
+[submodule "src/emu/drivers/resources/upscale"]
+	path = src/emu/drivers/resources/upscale
+	url = https://github.com/EKA2L1/upscale-shaders
