@@ -599,26 +599,6 @@
       <translation>Sesuaikan jendela</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="192"/>
-      <source>1x</source>
-      <translation>1x</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="197"/>
-      <source>2x</source>
-      <translation>2x</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="202"/>
-      <source>4x</source>
-      <translation>4x</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="207"/>
-      <source>8x</source>
-      <translation>8x</translation>
-    </message>
-    <message>
       <location filename="../src/settings_dialog.ui" line="217"/>
       <source>Save screen scale and rotations</source>
       <translation>Simpan skala dan perputaran layar</translation>
@@ -1133,8 +1113,8 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="435"/>
-      <location filename="../src/settings_dialog.cpp" line="1136"/>
-      <location filename="../src/settings_dialog.cpp" line="1161"/>
+      <location filename="../src/settings_dialog.cpp" line="1135"/>
+      <location filename="../src/settings_dialog.cpp" line="1160"/>
       <source>Relaunch needed</source>
       <translation>Perlu diluncur ulang</translation>
     </message>
@@ -1233,102 +1213,102 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
       <translation>Tak ada</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1063"/>
+      <location filename="../src/settings_dialog.cpp" line="1062"/>
       <source>IMEI sequence contains non-numeric character!</source>
       <translation>Urutan dari IMEI mengandung karakter non-numerik!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1066"/>
+      <location filename="../src/settings_dialog.cpp" line="1065"/>
       <source>IMEI sequence has invalid sum!</source>
       <translation>Urutan IMEI memiliki jumlah yang tidak sah!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1069"/>
+      <location filename="../src/settings_dialog.cpp" line="1068"/>
       <source>IMEI sequence length must be 15!</source>
       <translation>Panjang dari urutan IMEI harus 15!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1075"/>
+      <location filename="../src/settings_dialog.cpp" line="1074"/>
       <source>Unidentified error!</source>
       <translation>Galat tak dikenal!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1082"/>
+      <location filename="../src/settings_dialog.cpp" line="1081"/>
       <source>IMEI valid!</source>
       <translation>IMEI absah!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1082"/>
+      <location filename="../src/settings_dialog.cpp" line="1081"/>
       <source>The IMEI sequence is valid!</source>
       <translation>Urutan IMEI-nya absah!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1085"/>
+      <location filename="../src/settings_dialog.cpp" line="1084"/>
       <source>IMEI invalid!</source>
       <translation>IMEI tidak sah!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1095"/>
+      <location filename="../src/settings_dialog.cpp" line="1094"/>
       <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
       <translation>IMEI Anda tidak sah karena: %1.&lt;br&gt;Apakah Anda ingin mengubah IMEI saat ini sebelum menutup? Memilih &quot;No&quot; akan menyimpan nilai (value) IMEI saat ini.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1097"/>
+      <location filename="../src/settings_dialog.cpp" line="1096"/>
       <source>Cancel closing</source>
       <translation>Batalkan menutup</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1136"/>
+      <location filename="../src/settings_dialog.cpp" line="1135"/>
       <source>This change will be effective on the next launch of the emulator.</source>
       <translation>Ubahan ini akan mangkus pada peluncuran emulator berikutnya.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1144"/>
+      <location filename="../src/settings_dialog.cpp" line="1143"/>
       <source>Confirmation</source>
       <translation>Konfirmasi</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1144"/>
+      <location filename="../src/settings_dialog.cpp" line="1143"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
       <translation>Apakah Anda yakin? Tema Anda saat ini akan diatur ulang, semua kotak pesan yang telah dinonaktifkan akan diaktifkan ulang, dan semua mount tadi akan dikosongkan.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1161"/>
+      <location filename="../src/settings_dialog.cpp" line="1160"/>
       <source>The language will be updated on the next launch of the emulator.</source>
       <translation>Bahasa akan diperbarui pada peluncuran emulator berikutnya.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1188"/>
+      <location filename="../src/settings_dialog.cpp" line="1187"/>
       <source>Pick the screen background color</source>
       <translation>Pilih warna latar belakang layar</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1253"/>
+      <location filename="../src/settings_dialog.cpp" line="1252"/>
       <source>Successfully changed</source>
       <translation>Berhasil diubah</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1253"/>
+      <location filename="../src/settings_dialog.cpp" line="1252"/>
       <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
       <translation>Aplikasi meminta untuk memainkan MIDI baru, latar belakang yang dipilih akan digunakan!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1266"/>
+      <location filename="../src/settings_dialog.cpp" line="1265"/>
       <source>Choose the HSB bank file</source>
       <translation>Pilih berkas bank HSB</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1289"/>
+      <location filename="../src/settings_dialog.cpp" line="1288"/>
       <source>Choose the SF2 bank file</source>
       <translation>Pilih berkas bank SF2</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1325"/>
+      <location filename="../src/settings_dialog.cpp" line="1324"/>
       <source>Emulator reset needed</source>
       <translation>Perlu reset emulator</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1325"/>
+      <location filename="../src/settings_dialog.cpp" line="1324"/>
       <source>This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</source>
       <translation>Perubahan ini akan efektif setelah menyetel ulang emulator melalui menu Emulation, atau pada peluncuran emulator berikutnya.</translation>
     </message>
