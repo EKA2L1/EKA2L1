@@ -36,11 +36,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -57,7 +60,10 @@ import com.github.eka2l1.settings.KeyMapperFragment;
 import com.github.eka2l1.util.FileUtils;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import yuku.ambilwarna.AmbilWarnaDialog;
 
@@ -76,6 +82,9 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
     protected Spinner spOrientation;
     protected Spinner spScreenGravity;
     protected Spinner spScaleType;
+    protected TextView tvUpscaleShader;
+    protected Spinner spUpscaleShader;
+    protected CompoundButton cbUseShaderForUpscale;
 
     protected CompoundButton cbShowKeyboard;
 
@@ -165,6 +174,9 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
         sbScaleRatio = view.findViewById(R.id.sbScaleRatio);
         etScaleRatioValue = view.findViewById(R.id.etScaleRatioValue);
         spOrientation = view.findViewById(R.id.spOrientation);
+        tvUpscaleShader = view.findViewById(R.id.tvUpscaleShader);
+        spUpscaleShader = view.findViewById(R.id.spUpscaleShader);
+        cbUseShaderForUpscale = view.findViewById(R.id.cbShouldUseShaderForUpscale);
 
         rootInputConfig = view.findViewById(R.id.rootInputConfig);
         cbTouchInput = view.findViewById(R.id.cbTouchInput);
@@ -189,6 +201,28 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
         view.findViewById(R.id.cmdVKSelBack).setOnClickListener(this);
         view.findViewById(R.id.cmdVKSelFore).setOnClickListener(this);
         view.findViewById(R.id.cmdVKOutline).setOnClickListener(this);
+
+        // Load shaders
+        File upscaleShaderDir = new File(Emulator.getEmulatorDir() + "resources/upscale");
+        File []upscaleShaderFiles = upscaleShaderDir.listFiles(file -> file.getPath().endsWith(".frag"));
+
+        List<String> upscaleShaderNames = new ArrayList<>();
+        upscaleShaderNames.add(getString(R.string.pref_screen_default_shader));
+
+        if (upscaleShaderFiles != null) {
+            for (File upscaleShaderFile: upscaleShaderFiles) {
+                String singleName = upscaleShaderFile.getName();
+                singleName = singleName.substring(0, singleName.length() - 5);
+                upscaleShaderNames.add(singleName);
+            }
+        }
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
+                android.R.layout.simple_spinner_dropdown_item,
+                upscaleShaderNames);
+
+        spUpscaleShader.setAdapter(adapter);
+
         etScreenRefreshRate.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -264,6 +298,27 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
                 } catch (NumberFormatException e) {
                     s.clear();
                 }
+            }
+        });
+        cbUseShaderForUpscale.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                tvUpscaleShader.setVisibility(View.VISIBLE);
+                spUpscaleShader.setVisibility(View.VISIBLE);
+            } else {
+                tvUpscaleShader.setVisibility(View.GONE);
+                spUpscaleShader.setVisibility(View.GONE);
+            }
+
+            compatChanged = true;
+        });
+        spUpscaleShader.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                compatChanged = true;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
             }
         });
         cbShowKeyboard.setOnClickListener((b) -> {
@@ -356,6 +411,27 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
         spScaleType.setSelection(params.screenScaleType);
         spScreenGravity.setSelection(params.screenGravity);
 
+        cbUseShaderForUpscale.setChecked(dataStore.getString("screen-upscale-method", "0") != "0");
+        if (!cbUseShaderForUpscale.isChecked()) {
+            tvUpscaleShader.setVisibility(View.GONE);
+            spUpscaleShader.setVisibility(View.GONE);
+        } else {
+            tvUpscaleShader.setVisibility(View.VISIBLE);
+            spUpscaleShader.setVisibility(View.VISIBLE);
+        }
+
+        String shaderName = dataStore.getString("filter-shader-path", "");
+        spUpscaleShader.setSelection(0);
+        if (!shaderName.isEmpty()) {
+            for (int i = 1; i < spUpscaleShader.getCount(); i++) {
+                String spinnerShaderName = (String)spUpscaleShader.getItemAtPosition(i);
+                if (spinnerShaderName.equals(shaderName)) {
+                    spUpscaleShader.setSelection(i);
+                    break;
+                }
+            }
+        }
+
         boolean showVk = params.showKeyboard;
         cbShowKeyboard.setChecked(showVk);
         groupVkConfig.setVisibility(showVk ? View.VISIBLE : View.GONE);
@@ -422,6 +498,12 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
                 dataStore.putString("fps", etScreenRefreshRate.getText().toString());
                 dataStore.putString("time-delay", etSystemTimeDelay.getText().toString());
                 dataStore.putBoolean("should-child-inherit-setting", cbShouldChildInherit.isChecked());
+                dataStore.putString("screen-upscale-method", cbUseShaderForUpscale.isChecked() ? "1" : "0");
+                String toSaveFilterName = "Default";
+                if (spUpscaleShader.getSelectedItemPosition() != 0) {
+                    toSaveFilterName = (String)spUpscaleShader.getSelectedItem();
+                }
+                dataStore.putString("filter-shader-path", toSaveFilterName);
                 dataStore.save();
                 Emulator.updateAppSetting((int) uid);
             }

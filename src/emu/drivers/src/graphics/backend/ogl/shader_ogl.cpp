@@ -82,7 +82,7 @@ namespace eka2l1::drivers {
         : shader(0) {
     }
 
-    ogl_shader_module::ogl_shader_module(const std::string &path, const shader_module_type type)
+    ogl_shader_module::ogl_shader_module(const std::string &path, const shader_module_type type, const std::string &extra_header)
         : shader(0) {
         common::ro_std_file_stream stream(path, std::ios_base::binary);
         if (!stream.valid()) {
@@ -93,6 +93,7 @@ namespace eka2l1::drivers {
         whole_code.resize(stream.size());
 
         stream.read(whole_code.data(), whole_code.size());
+        whole_code.insert(whole_code.begin(), extra_header.begin(), extra_header.end());
 
         create(nullptr, whole_code.data(), whole_code.size(), type);
     }

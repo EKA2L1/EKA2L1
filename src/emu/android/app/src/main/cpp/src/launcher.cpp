@@ -583,10 +583,15 @@ namespace eka2l1::android {
 
             src.size *= scr->display_scale_factor;
 
+            std::uint32_t flags = 0;
+            if (scr->flags_ & epoc::screen::FLAG_SCREEN_UPSCALE_FACTOR_LOCK) {
+                flags |= drivers::bitmap_draw_flag_use_upscale_shader;
+            }
+
             builder.set_texture_filter(scr->screen_texture, true, filter);
             builder.set_texture_filter(scr->screen_texture, false, filter);
             builder.draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0),
-                                 static_cast<float>(scr->ui_rotation), 0);
+                                 static_cast<float>(scr->ui_rotation), flags);
         }
 
         builder.load_backup_state();

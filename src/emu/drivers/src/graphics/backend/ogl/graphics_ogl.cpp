@@ -315,18 +315,26 @@ namespace eka2l1::drivers {
             return;
         }
 
+        std::string extra_header = "";
+
         if ((pending_upscale_shader_ == "default") || (pending_upscale_shader_ == "Default")) {
             pending_upscale_shader_ = sprite_upscaled_f_path;
         } else {
             pending_upscale_shader_ = "resources//upscale//" + pending_upscale_shader_ + ".frag";
+            if (is_gles) {
+                extra_header = "#version 300 es\n";
+            } else {
+                extra_header = "#version 140\n";
+            }
         }
 
         auto sprite_norm_vertex_module = std::make_unique<ogl_shader_module>(sprite_norm_v_path, shader_module_type::vertex);        
-        auto sprite_upscale_fragment_module = std::make_unique<ogl_shader_module>(pending_upscale_shader_, shader_module_type::fragment);
+        auto sprite_upscale_fragment_module = std::make_unique<ogl_shader_module>(pending_upscale_shader_, shader_module_type::fragment, extra_header);
 
         auto upscale_program_new = std::make_unique<ogl_shader_program>();
 
         if (!upscale_program_new->create(this, sprite_norm_vertex_module.get(), sprite_upscale_fragment_module.get())) {
+            pending_upscale_shader_.clear();
             return;
         }
 
@@ -626,13 +634,13 @@ namespace eka2l1::drivers {
         model_matrix = glm::translate(model_matrix, glm::vec3(static_cast<float>(-origin.x), static_cast<float>(-origin.y), 0.0f));
         model_matrix = glm::scale(model_matrix, glm::vec3(dest_rect.size.x, dest_rect.size.y, 1.0f));
 
-        glUniformMatrix4fv((mask_draw_texture ? model_loc_mask : model_loc), 1, false, glm::value_ptr(model_matrix));
-        glUniformMatrix4fv((mask_draw_texture ? proj_loc_mask : proj_loc), 1, false, glm::value_ptr(projection_matrix));
-
         // Supply brush
         const GLfloat color[] = { 255.0f, 255.0f, 255.0f, 255.0f };
 
         if (flags & bitmap_draw_flag_use_upscale_shader) {
+            glUniformMatrix4fv(model_upscaled_loc, 1, false, glm::value_ptr(model_matrix));
+            glUniformMatrix4fv(proj_upscaled_loc, 1, false, glm::value_ptr(projection_matrix));
+
             glUniform4fv(color_upscaled_loc, 1, color);
 
             float texel_delta[2] = { 1.0f / static_cast<float>(source_rect.size.x), 1.0f / static_cast<float>(source_rect.size.y) };
@@ -640,7 +648,10 @@ namespace eka2l1::drivers {
 
             glUniform2fv(texel_delta_upscaled_loc_, 1, texel_delta);
             glUniform2fv(pixel_delta_upscaled_loc_, 1, pixel_delta);
-        } else {   
+        } else {
+            glUniformMatrix4fv((mask_draw_texture ? model_loc_mask : model_loc), 1, false, glm::value_ptr(model_matrix));
+            glUniformMatrix4fv((mask_draw_texture ? proj_loc_mask : proj_loc), 1, false, glm::value_ptr(projection_matrix));
+
             if (flags & bitmap_draw_flag_use_brush) {
                 glUniform4fv((mask_draw_texture ? color_loc_mask : color_loc), 1, brush_color.elements.data());
             } else {

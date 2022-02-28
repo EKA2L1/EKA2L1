@@ -14,7 +14,7 @@ namespace eka2l1::drivers {
         ~ogl_shader_module() override;
 
         explicit ogl_shader_module();
-        explicit ogl_shader_module(const std::string &path, const shader_module_type type);
+        explicit ogl_shader_module(const std::string &path, const shader_module_type type, const std::string &extra_header = "");
         explicit ogl_shader_module(const char *data, const std::size_t size, const shader_module_type type);
 
         bool create(graphics_driver *driver, const char *data, const std::size_t size, const shader_module_type type) override;

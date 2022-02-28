@@ -259,6 +259,41 @@
                 app:layout_constraintStart_toEndOf="@+id/barrierScreenConfig"
                 app:layout_constraintTop_toBottomOf="@+id/tvScreenGravity" />
 
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/cbShouldUseShaderForUpscale"
+                style="@style/SwitchStyle"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/height_config_row"
+                android:layout_marginHorizontal="5dp"
+                android:checked="false"
+                android:text="@string/pref_screen_scale_use_shader"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/spScaleType" />
+
+            <TextView
+                android:id="@+id/tvUpscaleShader"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/height_config_row"
+                android:checked="false"
+                android:gravity="center_vertical"
+                android:text="@string/pref_screen_upscale_shader"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textColor="?attr/textColorSecondary"
+                android:textSize="15sp"
+                app:layout_constraintEnd_toStartOf="@+id/barrierScreenConfig"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cbShouldUseShaderForUpscale"
+                app:layout_constraintWidth_min="wrap" />
+
+            <Spinner
+                android:id="@+id/spUpscaleShader"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/height_config_row"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/barrierScreenConfig"
+                app:layout_constraintTop_toBottomOf="@+id/cbShouldUseShaderForUpscale" />
+
             <androidx.constraintlayout.widget.Barrier
                 android:id="@+id/barrierScreenConfig"
                 android:layout_width="10dp"
