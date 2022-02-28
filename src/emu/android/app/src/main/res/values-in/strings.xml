@@ -115,6 +115,9 @@
     <string name="pref_screen_scale_type_fill">Layar penuh (abaikan aspek rasio)</string>
     <string name="pref_screen_scale_type_fit">Paskan ke layar</string>
     <string name="pref_screen_scale_type_none">Seaslinya</string>
+    <string name="pref_screen_scale_use_shader">Gunakan shader untuk upscaling</string>
+    <string name="pref_screen_upscale_shader">Perbesar shader</string>
+    <string name="pref_screen_default_shader">Bawaan</string>
     <string name="default_label">"%s (bawaan)"</string>
     <string name="not_saved_exists">Sudah ada</string>
     <string name="error_name">Ketik nama!</string>
