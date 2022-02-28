@@ -223,7 +223,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="50"/>
       <source>App launcher is unavailable.&lt;br&gt;Install a device to continue.</source>
-      <translation>Peluncur aplikasi tak tersedia.&lt;br&gt;Pasang sebuah perangkat untuk melanjutkan.</translation>
+      <translation>Peluncur aplikasi tak tersedia.&lt;br&gt;Pasang sebuah perangkat firmware untuk melanjutkan.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="69"/>
@@ -369,7 +369,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="366"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
-      <translation>Anda belum memasang perangkat apa pun. Silakan pasang perangkat atau ikuti instruksi pemasangan di halaman wiki GitHub EKA2L1.</translation>
+      <translation>Anda belum memasang perangkat apa pun. Silakan pasang perangkat atau ikuti instruksi pemasangan di halaman&apos;s wiki GitHub EKA2L1.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="657"/>
@@ -591,32 +591,32 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="179"/>
       <source>Screen scale factor</source>
-      <translation type="unfinished">Screen scale factor</translation>
+      <translation>Faktor skala layar</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="187"/>
       <source>Fit the window</source>
-      <translation type="unfinished">Fit the window</translation>
+      <translation>Sesuaikan jendela</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="192"/>
       <source>1x</source>
-      <translation type="unfinished">1x</translation>
+      <translation>1x</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="197"/>
       <source>2x</source>
-      <translation type="unfinished">2x</translation>
+      <translation>2x</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="202"/>
       <source>4x</source>
-      <translation type="unfinished">4x</translation>
+      <translation>4x</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="207"/>
       <source>8x</source>
-      <translation type="unfinished">8x</translation>
+      <translation>8x</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="217"/>
@@ -631,12 +631,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="234"/>
       <source>Use shader for upscaling</source>
-      <translation type="unfinished">Use shader for upscaling</translation>
+      <translation>Gunakan shader untuk upscaling</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="250"/>
       <source>Upscale shader</source>
-      <translation type="unfinished">Upscale shader</translation>
+      <translation>Perbesar shader</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="272"/>
