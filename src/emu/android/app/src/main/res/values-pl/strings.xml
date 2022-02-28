@@ -115,6 +115,9 @@
     <string name="pref_screen_scale_type_fill">Wypełnij okno (ignoruj proporcje obrazu)</string>
     <string name="pref_screen_scale_type_fit">Dopasuj do okna</string>
     <string name="pref_screen_scale_type_none">Tak jak jest</string>
+    <string name="pref_screen_scale_use_shader">Use shader for upscaling</string>
+    <string name="pref_screen_upscale_shader">Upscale shader</string>
+    <string name="pref_screen_default_shader">Domyślne</string>
     <string name="default_label">"%s (domyślnie)"</string>
     <string name="not_saved_exists">Już istnieje</string>
     <string name="error_name">Wprowadź nazwę!</string>
