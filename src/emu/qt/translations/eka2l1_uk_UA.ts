@@ -599,26 +599,6 @@
       <translation type="unfinished">Fit the window</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="192"/>
-      <source>1x</source>
-      <translation type="unfinished">1x</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="197"/>
-      <source>2x</source>
-      <translation type="unfinished">2x</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="202"/>
-      <source>4x</source>
-      <translation type="unfinished">4x</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="207"/>
-      <source>8x</source>
-      <translation type="unfinished">8x</translation>
-    </message>
-    <message>
       <location filename="../src/settings_dialog.ui" line="217"/>
       <source>Save screen scale and rotations</source>
       <translation>Зберегти масштаб і поворот екрана</translation>
@@ -1133,8 +1113,8 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="435"/>
-      <location filename="../src/settings_dialog.cpp" line="1136"/>
-      <location filename="../src/settings_dialog.cpp" line="1161"/>
+      <location filename="../src/settings_dialog.cpp" line="1135"/>
+      <location filename="../src/settings_dialog.cpp" line="1160"/>
       <source>Relaunch needed</source>
       <translation>Потрібен перезапуск</translation>
     </message>
@@ -1233,102 +1213,102 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
       <translation>Немає</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1063"/>
+      <location filename="../src/settings_dialog.cpp" line="1062"/>
       <source>IMEI sequence contains non-numeric character!</source>
       <translation>Послідовність IMEI містить нецифровий знак!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1066"/>
+      <location filename="../src/settings_dialog.cpp" line="1065"/>
       <source>IMEI sequence has invalid sum!</source>
       <translation>Послідовність IMEI має неприпустиму суму!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1069"/>
+      <location filename="../src/settings_dialog.cpp" line="1068"/>
       <source>IMEI sequence length must be 15!</source>
       <translation>Довжина послідовності IMEI повинна бути 15 знаків!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1075"/>
+      <location filename="../src/settings_dialog.cpp" line="1074"/>
       <source>Unidentified error!</source>
       <translation>Невідома помилка!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1082"/>
+      <location filename="../src/settings_dialog.cpp" line="1081"/>
       <source>IMEI valid!</source>
       <translation>IMEI дійсний!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1082"/>
+      <location filename="../src/settings_dialog.cpp" line="1081"/>
       <source>The IMEI sequence is valid!</source>
       <translation>Послідовність IMEI дійсна!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1085"/>
+      <location filename="../src/settings_dialog.cpp" line="1084"/>
       <source>IMEI invalid!</source>
       <translation>IMEI недійсний!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1095"/>
+      <location filename="../src/settings_dialog.cpp" line="1094"/>
       <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
       <translation>Ваш IMEI недійсний, тому що: %1.&lt;br&gt;Ви хочете редагувати поточний IMEI замість закриття? Вибір "Ні" збереже поточне значення IMEI.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1097"/>
+      <location filename="../src/settings_dialog.cpp" line="1096"/>
       <source>Cancel closing</source>
       <translation>Скасувати закриття</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1136"/>
+      <location filename="../src/settings_dialog.cpp" line="1135"/>
       <source>This change will be effective on the next launch of the emulator.</source>
       <translation>Ця зміна набуде чинності після наступного запуску емулятора.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1144"/>
+      <location filename="../src/settings_dialog.cpp" line="1143"/>
       <source>Confirmation</source>
       <translation>Підтвердження</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1144"/>
+      <location filename="../src/settings_dialog.cpp" line="1143"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
       <translation>Ви впевнені в цьому? Вашу поточну тему буде скинуто, всі вікна повідомлень, що були вимкнені, буде знову ввімкнено, і всі недавні монтування буде очищено.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1161"/>
+      <location filename="../src/settings_dialog.cpp" line="1160"/>
       <source>The language will be updated on the next launch of the emulator.</source>
       <translation>Мову буде оновлено після наступного запуску емулятора.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1188"/>
+      <location filename="../src/settings_dialog.cpp" line="1187"/>
       <source>Pick the screen background color</source>
       <translation>Виберіть колір тла екрана</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1253"/>
+      <location filename="../src/settings_dialog.cpp" line="1252"/>
       <source>Successfully changed</source>
       <translation type="unfinished">Successfully changed</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1253"/>
+      <location filename="../src/settings_dialog.cpp" line="1252"/>
       <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
       <translation type="unfinished">Next time the application requests to play a new MIDI, the choosen backend will be used!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1266"/>
+      <location filename="../src/settings_dialog.cpp" line="1265"/>
       <source>Choose the HSB bank file</source>
       <translation type="unfinished">Choose the HSB bank file</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1289"/>
+      <location filename="../src/settings_dialog.cpp" line="1288"/>
       <source>Choose the SF2 bank file</source>
       <translation type="unfinished">Choose the SF2 bank file</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1325"/>
+      <location filename="../src/settings_dialog.cpp" line="1324"/>
       <source>Emulator reset needed</source>
       <translation>Потрібне скидання емулятора</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1325"/>
+      <location filename="../src/settings_dialog.cpp" line="1324"/>
       <source>This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</source>
       <translation>Ця зміна набуде чинності після скидання емулятора через меню емуляції або після наступного запуску емулятора.</translation>
     </message>
