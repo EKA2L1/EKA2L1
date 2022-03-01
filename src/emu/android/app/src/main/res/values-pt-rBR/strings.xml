@@ -115,8 +115,8 @@
     <string name="pref_screen_scale_type_fill">Preencher janela (ignorar proporção de aspecto)</string>
     <string name="pref_screen_scale_type_fit">Ajustar a janela</string>
     <string name="pref_screen_scale_type_none">Como é</string>
-    <string name="pref_screen_scale_use_shader">Use shader for upscaling</string>
-    <string name="pref_screen_upscale_shader">Upscale shader</string>
+    <string name="pref_screen_scale_use_shader">Usar Sombra para aumentar</string>
+    <string name="pref_screen_upscale_shader">Sombra de Upscale</string>
     <string name="pref_screen_default_shader">Padrão</string>
     <string name="default_label">"[%s] (padrão)"</string>
     <string name="not_saved_exists">Já existe</string>
