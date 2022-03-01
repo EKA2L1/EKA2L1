@@ -758,7 +758,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="533"/>
       <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
-      <translation type="unfinished">Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</translation>
+      <translation>Увімкніть це, щоб на вікні була постійна назва &quot;EKA2L1&quot; без додаткової інформації.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="539"/>
@@ -784,8 +784,8 @@
       <location filename="../src/settings_dialog.ui" line="571"/>
       <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
-      <translation type="unfinished">This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
-Preferred option will automatically enable this on S60v1/S60v2 devices.</translation>
+      <translation>Це дає змогу записувати емульовані програми й запобігати блиманню в деяких старих іграх S60v1/S60v2.
+Опція "Найоптимальніше" автоматично вмикатиме це на пристроях S60v1/S60v2.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="575"/>
@@ -883,7 +883,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="812"/>
       <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
-      <translation type="unfinished">The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</translation>
+      <translation>Ім’я, яке відображатиметься в емульованих програмах чи іграх. Дозволено щонайбільше 30 символів.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="815"/>
@@ -943,7 +943,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="921"/>
       <source>SF2 bank</source>
-      <translation type="unfinished">SF2 bank</translation>
+      <translation>Банк SF2</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="948"/>
@@ -954,22 +954,22 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="962"/>
       <source>HSB bank</source>
-      <translation type="unfinished">HSB bank</translation>
+      <translation>Банк HSB</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1006"/>
       <source>MIDI backend</source>
-      <translation type="unfinished">MIDI backend</translation>
+      <translation>MIDI бекенд</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1020"/>
       <source>TinySoundFont (High-quality, support SF2)</source>
-      <translation type="unfinished">TinySoundFont (High-quality, support SF2)</translation>
+      <translation>TinySoundFont (висока якість, підтримка SF2)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1025"/>
       <source>MiniBAE (Lower-quality, support HSB)</source>
-      <translation type="unfinished">MiniBAE (Lower-quality, support HSB)</translation>
+      <translation>MiniBAE (нижча якість, підтримка HSB)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1043"/>
@@ -1285,22 +1285,22 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="1252"/>
       <source>Successfully changed</source>
-      <translation type="unfinished">Successfully changed</translation>
+      <translation>Успішно змінено</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1252"/>
       <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
-      <translation type="unfinished">Next time the application requests to play a new MIDI, the choosen backend will be used!</translation>
+      <translation>Наступного разу, коли застосунок запитає відтворення нового MIDI, буде використано вибраний бекенд!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1265"/>
       <source>Choose the HSB bank file</source>
-      <translation type="unfinished">Choose the HSB bank file</translation>
+      <translation>Виберіть файл банку HSB</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1288"/>
       <source>Choose the SF2 bank file</source>
-      <translation type="unfinished">Choose the SF2 bank file</translation>
+      <translation>Виберіть файл банку SF2</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1324"/>
