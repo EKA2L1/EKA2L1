@@ -1104,7 +1104,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="299"/>
       <source>Default</source>
-      <translation type="unfinished">Default</translation>
+      <translation>Па змаўчанні</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="433"/>
