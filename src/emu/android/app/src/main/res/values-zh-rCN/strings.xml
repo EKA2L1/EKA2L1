@@ -115,8 +115,8 @@
     <string name="pref_screen_scale_type_fill">填充 (忽略宽高比)</string>
     <string name="pref_screen_scale_type_fit">适应</string>
     <string name="pref_screen_scale_type_none">无</string>
-    <string name="pref_screen_scale_use_shader">Use shader for upscaling</string>
-    <string name="pref_screen_upscale_shader">Upscale shader</string>
+    <string name="pref_screen_scale_use_shader">使用着色器进行缩放</string>
+    <string name="pref_screen_upscale_shader">缩放着色器</string>
     <string name="pref_screen_default_shader">默认</string>
     <string name="default_label">"%s (默认)"</string>
     <string name="not_saved_exists">已经存在</string>
