@@ -888,7 +888,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/settings_dialog.ui" line="815"/>
       <source>Friendly phone name</source>
-      <translation type="unfinished">Friendly phone name</translation>
+      <translation>Ім'я телефона</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="840"/>
