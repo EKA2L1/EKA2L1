@@ -591,12 +591,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="179"/>
       <source>Screen scale factor</source>
-      <translation type="unfinished">Screen scale factor</translation>
+      <translation>Fator de escala da tela</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="187"/>
       <source>Fit the window</source>
-      <translation type="unfinished">Fit the window</translation>
+      <translation>Ajustar a janela</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="217"/>
@@ -611,12 +611,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="234"/>
       <source>Use shader for upscaling</source>
-      <translation type="unfinished">Use shader for upscaling</translation>
+      <translation>Usar Sombra para aumentar</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="250"/>
       <source>Upscale shader</source>
-      <translation type="unfinished">Upscale shader</translation>
+      <translation>Sombra de Upscale</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="272"/>
