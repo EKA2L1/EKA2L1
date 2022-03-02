@@ -758,7 +758,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="533"/>
       <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
-      <translation type="unfinished">Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</translation>
+      <translation>Уключыце гэта, каб на акне была сталая назва &quot;EKA2L1&quot; без дадатковай інфармацыі.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="539"/>
@@ -795,7 +795,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="589"/>
       <source>Preferred</source>
-      <translation type="unfinished">Preferred</translation>
+      <translation>Найаптымальней</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="594"/>
