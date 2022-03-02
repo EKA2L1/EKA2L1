@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/utils.cpp" line="126"/>
       <source>EKA2L1 - Symbian OS emulator</source>
-      <translation type="unfinished">EKA2L1 - Symbian OS emulator</translation>
+      <translation>EKA2L1 - эмулятар Symbian OS</translation>
     </message>
   </context>
   <context>
@@ -195,7 +195,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="266"/>
       <source>VPL file (*.vpl);;All files (*.*)</source>
-      <translation type="unfinished">VPL file (*.vpl);;All files (*.*)</translation>
+      <translation>Файл VPL (*.vpl);;Усе файлы (*.*)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="275"/>
@@ -205,7 +205,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="276"/>
       <source>ROM file (*.rom *.ROM);;All files (*.*)</source>
-      <translation type="unfinished">ROM file (*.rom *.ROM);;All files (*.*)</translation>
+      <translation>Файл ROM (*.rom *.ROM);;Усе файлы (*.*)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="300"/>
@@ -586,17 +586,17 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="123"/>
       <source>Time delay (0-1000us)</source>
-      <translation type="unfinished">Time delay (0-1000us)</translation>
+      <translation>Час затрымкі (0-1000мкс)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="179"/>
       <source>Screen scale factor</source>
-      <translation type="unfinished">Screen scale factor</translation>
+      <translation>Каэфіцыент маштабавання экрана</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="187"/>
       <source>Fit the window</source>
-      <translation type="unfinished">Fit the window</translation>
+      <translation>Упісаць у акно</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="217"/>
@@ -611,12 +611,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="234"/>
       <source>Use shader for upscaling</source>
-      <translation type="unfinished">Use shader for upscaling</translation>
+      <translation>Выкарыстоўваць шэйдар для маштабавання</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="250"/>
       <source>Upscale shader</source>
-      <translation type="unfinished">Upscale shader</translation>
+      <translation>Маштабавальны шэйдар</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="272"/>
@@ -763,7 +763,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="539"/>
       <source>Disable easter egg title</source>
-      <translation type="unfinished">Disable easter egg title</translation>
+      <translation>Адключыць велікоднае яйка ў загалоўку</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="546"/>
@@ -778,7 +778,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="563"/>
       <source>Graphics</source>
-      <translation type="unfinished">Graphics</translation>
+      <translation>Графіка</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="571"/>
@@ -790,7 +790,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="575"/>
       <source>Screen buffer sync</source>
-      <translation type="unfinished">Screen buffer sync</translation>
+      <translation>Сінхранізацыя буфера экрана</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="589"/>
@@ -800,12 +800,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="594"/>
       <source>Disable</source>
-      <translation type="unfinished">Disable</translation>
+      <translation>Выключыць</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="599"/>
       <source>Enable</source>
-      <translation type="unfinished">Enable</translation>
+      <translation>Уключыць</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="609"/>
@@ -888,7 +888,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="815"/>
       <source>Friendly phone name</source>
-      <translation type="unfinished">Friendly phone name</translation>
+      <translation>Імя тэлефона</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="840"/>
@@ -943,7 +943,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="921"/>
       <source>SF2 bank</source>
-      <translation type="unfinished">SF2 bank</translation>
+      <translation>Банк SF2</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="948"/>
@@ -954,22 +954,22 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="962"/>
       <source>HSB bank</source>
-      <translation type="unfinished">HSB bank</translation>
+      <translation>Банк HSB</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1006"/>
       <source>MIDI backend</source>
-      <translation type="unfinished">MIDI backend</translation>
+      <translation>MIDI бэкэнд</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1020"/>
       <source>TinySoundFont (High-quality, support SF2)</source>
-      <translation type="unfinished">TinySoundFont (High-quality, support SF2)</translation>
+      <translation>TinySoundFont (высокая якасць, падтрымка SF2)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1025"/>
       <source>MiniBAE (Lower-quality, support HSB)</source>
-      <translation type="unfinished">MiniBAE (Lower-quality, support HSB)</translation>
+      <translation>MiniBAE (ніжэйшая якасць, падтрымка HSB)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1043"/>
@@ -1285,7 +1285,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="1252"/>
       <source>Successfully changed</source>
-      <translation type="unfinished">Successfully changed</translation>
+      <translation>Паспяхова зменена</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1252"/>
