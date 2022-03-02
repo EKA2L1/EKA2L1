@@ -883,7 +883,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="812"/>
       <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
-      <translation type="unfinished">The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</translation>
+      <translation>Імя, якое будзе адлюстроўвацца ў эмуляваных дастасаваннях ці гульнях. Дазволена максімум 30 сімвалаў.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="815"/>
@@ -1295,12 +1295,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="1265"/>
       <source>Choose the HSB bank file</source>
-      <translation type="unfinished">Choose the HSB bank file</translation>
+      <translation>Выберыце файл банка HSB</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1288"/>
       <source>Choose the SF2 bank file</source>
-      <translation type="unfinished">Choose the SF2 bank file</translation>
+      <translation>Выберыце файл банка SF2</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1324"/>
