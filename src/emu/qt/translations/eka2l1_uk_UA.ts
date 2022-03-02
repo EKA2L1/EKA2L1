@@ -883,7 +883,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/settings_dialog.ui" line="812"/>
       <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
-      <translation>Ім’я, яке відображатиметься в емульованих програмах чи іграх. Дозволено щонайбільше 30 символів.</translation>
+      <translation>Ім’я, яке відображатиметься в емульованих застосунках чи іграх. Дозволено щонайбільше 30 символів.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="815"/>
