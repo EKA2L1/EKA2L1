@@ -65,7 +65,7 @@
     <string name="pref_system_setting_inheritance_option_name">Успадкоўванне налад</string>
     <string name="emulated_screen_rotation_item_name">Паварот экрана</string>
     <string name="emulated_screen_refresh_rate_item_name">Частата абнаўлення</string>
-    <string name="pref_device_display_name">Friendly phone name</string>
+    <string name="pref_device_display_name">Імя тэлефона</string>
     <string name="action_context_delete">Выдаліць</string>
     <string name="action_context_rename">Перайменаваць</string>
     <string name="action_context_shortcut">Стварыць ярлык</string>
@@ -115,19 +115,19 @@
     <string name="pref_screen_scale_type_fill">Запоўніць акно (ігнараваць прапорцыі)</string>
     <string name="pref_screen_scale_type_fit">Упісаць у акно</string>
     <string name="pref_screen_scale_type_none">Як ёсць</string>
-    <string name="pref_screen_scale_use_shader">Use shader for upscaling</string>
-    <string name="pref_screen_upscale_shader">Upscale shader</string>
+    <string name="pref_screen_scale_use_shader">Выкарыстоўваць шэйдар для маштабавання</string>
+    <string name="pref_screen_upscale_shader">Маштабавальны шэйдар</string>
     <string name="pref_screen_default_shader">Па змаўчанні</string>
     <string name="default_label">"%s (стандартны)"</string>
     <string name="not_saved_exists">Ужо існуе</string>
     <string name="error_name">Увядзіце назву!</string>
-    <string name="set_as_default">Set as default</string>
-    <string name="edit">Edit</string>
+    <string name="set_as_default">Устанавіць як стандартны</string>
+    <string name="edit">Рэдагаваць</string>
     <string name="add">Дадаць</string>
-    <string name="add_profile_description">Create new profile</string>
-    <string name="enter_name">Enter name</string>
-    <string name="set_default_profile_description">Select this profile as a standard settings for all apps that will be installed later</string>
-    <string name="error_name_exists">Already exists, enter other name</string>
+    <string name="add_profile_description">Стварыць новы профіль</string>
+    <string name="enter_name">Увядзіце назву</string>
+    <string name="set_default_profile_description">Выберыце гэты профіль як стандартныя налады для ўсіх дастасаванняў, якія будуць усталяваны пазней</string>
+    <string name="error_name_exists">Ужо існуе, увядзіце іншую назву</string>
     <string name="mapping_dialog_title">Націсніце кнопку</string>
     <string name="mapping_dialog_message" formatted="false">Бягучае супастаўленне: %1$s</string>
     <string name="reset_mapping">Скінуць</string>
