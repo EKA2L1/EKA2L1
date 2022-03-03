@@ -1290,7 +1290,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="1252"/>
       <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
-      <translation type="unfinished">Next time the application requests to play a new MIDI, the choosen backend will be used!</translation>
+      <translation>У наступны раз, калі дастасаванне запытае прайграванне новага MIDI, будзе выкарыстаны выбраны бэкэнд!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1265"/>
