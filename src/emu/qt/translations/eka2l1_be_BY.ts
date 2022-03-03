@@ -784,8 +784,8 @@
       <location filename="../src/settings_dialog.ui" line="571"/>
       <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
-      <translation type="unfinished">This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
-Preferred option will automatically enable this on S60v1/S60v2 devices.</translation>
+      <translation>Гэта дае змогу запісваць эмуляваныя праграмы і прадухіляць мігценне ў некаторых старых гульнях S60v1/S60v2.
+Опцыя "Найаптымальней" будзе аўтаматычна ўключаць гэта на прыладах S60v1/S60v2.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="575"/>
