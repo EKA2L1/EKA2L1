@@ -140,7 +140,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="216"/>
       <source>One of the FPSX files provided in the firmware is corrupted!</source>
-      <translation>Salah satu berkas FPSX yang tersedia dalam firmware-nya rusak!</translation>
+      <translation>Salah satu berkas FPSX yang tersedia dalam firmware telah rusak!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="220"/>
@@ -223,7 +223,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="50"/>
       <source>App launcher is unavailable.&lt;br&gt;Install a device to continue.</source>
-      <translation>Peluncur aplikasi tak tersedia.&lt;br&gt;Pasang sebuah perangkat firmware untuk melanjutkan.</translation>
+      <translation>Peluncur aplikasi tak tersedia.&lt;br&gt;Pasang firmware perangkat untuk melanjutkan.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="69"/>
@@ -273,7 +273,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="143"/>
       <source>Device</source>
-      <translation>Firmware perangkat</translation>
+      <translation>Perangkat</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="148"/>
@@ -288,7 +288,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="161"/>
       <source>Pause</source>
-      <translation>Tunda</translation>
+      <translation>Jeda</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="166"/>
@@ -318,7 +318,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="191"/>
       <source>Window tree</source>
-      <translation>Window tree</translation>
+      <translation>Cabang jendela</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="199"/>
@@ -338,7 +338,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="260"/>
       <source>Refresh app list</source>
-      <translation>Segarkan Daftar App</translation>
+      <translation>Segarkan daftar aplikasi</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="238"/>
@@ -369,7 +369,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="366"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
-      <translation>Anda belum memasang perangkat apa pun. Silakan pasang perangkat atau ikuti instruksi pemasangan di halaman&apos;s wiki GitHub EKA2L1.</translation>
+      <translation>Anda belum memasang perangkat apa pun. Silakan pasang perangkat atau ikuti arahan pemasangan di halaman wiki GitHub EKA2L1.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="657"/>
@@ -410,7 +410,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="711"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
-      <translation>Dump kartu permainan terdapat berkas yang perlu ada huruf besar kecil. Ini bisa bermasalah pada emulator.</translation>
+      <translation>Dump kartu permainan terdapat berkas yang peka huruf besar kecil. Ini bisa bermasalah pada emulator.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="715"/>
@@ -631,12 +631,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="300"/>
       <source>CPU read</source>
-      <translation>CPU read</translation>
+      <translation>Baca CPU</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="307"/>
       <source>CPU write</source>
-      <translation>CPU write</translation>
+      <translation>Tulis CPU</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="314"/>
@@ -646,7 +646,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="317"/>
       <source>CPU step</source>
-      <translation>CPU step</translation>
+      <translation>Langkah CPU</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="330"/>
@@ -661,7 +661,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="344"/>
       <source>Enable kernel tracing that is used in driver. Slowdown expected on enable.</source>
-      <translation>Aktifkan pelacakan kernel yang digunakan di pengandar (driver). Ketika diaktifkan kadang lambat.</translation>
+      <translation>Aktifkan pelacakan kernel yang digunakan di pengandar (driver). Akan lambat ketika diaktifkan.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="347"/>
@@ -723,7 +723,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="473"/>
       <source>By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</source>
-      <translation>Secara default, emulator hanya mengizinkan pengubahan ukuran tampilan emulator ke minimum layar ponsel&apos;s ukuran, kalikan dengan skala tampilan sistem, agar sesuai dengan sebagian besar pengguna&apos;s mata</translation>
+      <translation>Secara bawaan, emulator hanya mengizinkan mengubah tampilan emulator ke ukuran minimum layar ponsel, kalikan dengan skala tampilan sistem untuk menyesuaikan sebagian besar mata pengguna</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="476"/>
@@ -784,7 +784,7 @@
       <location filename="../src/settings_dialog.ui" line="571"/>
       <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
-      <translation>Ini memungkinkan perangkat lunak yang diemulasi memiliki kemampuan merekam, dan mencegah flashing di beberapa game S60v1/S60v2 lama.
+      <translation>Ini membolehkan perangkat lunak yang diemulasi memiliki kemampuan merekam, dan mencegah kelap-kelip di beberapa permainan S60v1/S60v2 lama.
 Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</translation>
     </message>
     <message>
@@ -810,12 +810,12 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.ui" line="609"/>
       <source>Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</source>
-      <translation>Izinkan emulator melakukan akselerasi GPU asli untuk Symbian&apos;s GLES1 API.</translation>
+      <translation>Izinkan emulator melakukan akselerasi GPU asli mesin untuk API GLES1 Symbian.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="612"/>
       <source>Enable GPU accelerated GLES1</source>
-      <translation>Aktifkan akselerasi GPU</translation>
+      <translation>Aktifkan GLES1 dipercepat GPU</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="622"/>
@@ -856,7 +856,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.ui" line="704"/>
       <source>Properties</source>
-      <translation>Rincian</translation>
+      <translation>Rincian ciri</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="712"/>
@@ -883,7 +883,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.ui" line="812"/>
       <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
-      <translation>Nama yang akan ditampilkan di aplikasi atau game yang diemulasi. Maksimum 30 karakter.</translation>
+      <translation>Nama yang akan tampil di aplikasi atau permainan yang diemulasi. Maksimum 30 karakter.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="815"/>
@@ -959,7 +959,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.ui" line="1006"/>
       <source>MIDI backend</source>
-      <translation>Latar belakang MIDI</translation>
+      <translation>Back-end MIDI</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1020"/>
@@ -1260,7 +1260,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="1135"/>
       <source>This change will be effective on the next launch of the emulator.</source>
-      <translation>Ubahan ini akan mangkus pada peluncuran emulator berikutnya.</translation>
+      <translation>Perubahan ini akan efektif pada peluncuran emulator berikutnya.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1143"/>
@@ -1290,7 +1290,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="1252"/>
       <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
-      <translation>Aplikasi meminta untuk memainkan MIDI baru, latar belakang yang dipilih akan digunakan!</translation>
+      <translation>Ketika aplikasi meminta memainkan MIDI baru, back-end yang dipilih akan digunakan!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1265"/>
@@ -1305,12 +1305,12 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="1324"/>
       <source>Emulator reset needed</source>
-      <translation>Perlu reset emulator</translation>
+      <translation>Emulator perlu diatur ulang</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1324"/>
       <source>This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</source>
-      <translation>Perubahan ini akan efektif setelah menyetel ulang emulator melalui menu Emulation, atau pada peluncuran emulator berikutnya.</translation>
+      <translation>Perubahan ini akan efektif setelah mengatur ulang emulator melalui menu Emulasi, atau pada peluncuran emulator berikutnya.</translation>
     </message>
   </context>
 </TS>
