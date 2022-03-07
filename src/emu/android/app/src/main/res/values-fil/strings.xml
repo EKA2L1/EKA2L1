@@ -7,7 +7,7 @@
     <string name="settings">Mga settings</string>
     <string name="packages">Mga pakete</string>
     <string name="devices">Mga aparato</string>
-    <string name="profiles">Profiles</string>
+    <string name="profiles">Profile</string>
     <string name="processing">Nagproproseso...</string>
     <string name="completed">Tapos na!</string>
     <string name="remove">Tanggalin</string>
@@ -17,7 +17,7 @@
     <string name="rename">I-rename</string>
     <string name="save_log">I-save ang log</string>
     <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
-    <string name="warning">Warning</string>
+    <string name="warning">Babala</string>
     <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
     <string name="install">I-install</string>
     <string name="device_dump">File mula sa aparato</string>
