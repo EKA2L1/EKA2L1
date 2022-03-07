@@ -31,7 +31,7 @@
     <string name="no_device_installed">Harap pasang firmware perangkat. Berkas dan ROM dari perangkat Symbian diperlukan untuk pemasangan.\n\n<b>Catatan:</b> Setiap aplikasi memerlukan perangkat Symbian yang cocok untuk dijalankan.</string>
     <string name="install_device_note_may_need_rpkg">Untuk perangkat S60v2 atau lebih tinggi, perlu ada berkas tambahan bernama RPKG. Jika perangkatnya terdeteksi maka akan muncul permintaan memasukkan berkas tersebut.</string>
     <string name="recommended_devices_to_install">Perangkat anjuran untuk dipasang</string>
-    <string name="wiki_info">Untuk informasi lanjut mengenai pemasangan perangkat, silakan periksa wiki kami:</string>
+    <string name="wiki_info">Untuk informasi lebih lanjut mengenai pemasangan perangkat, silakan kunjungi wiki kami:</string>
     <string name="install_rpkg_corrupt">Berkas RPKG yang disediakan rusak!</string>
     <string name="install_rpkg_file_not_found">Berkas RPKG tidak bisa dibuka!</string>
     <string name="install_raw_dump_fail_to_copy">Gagal menyalin berkas raw dump ke tempat tujuan!</string>
@@ -62,7 +62,7 @@
     <string name="pref_system_real_time_accuracy_level_name_mid">Sedang</string>
     <string name="pref_system_real_time_accuracy_level_name_high">Tinggi</string>
     <string name="pref_system_time_delay_option_name">Penundaan waktu</string>
-    <string name="pref_system_setting_inheritance_option_name">Mengatur waris</string>
+    <string name="pref_system_setting_inheritance_option_name">Warisan pengaturan</string>
     <string name="emulated_screen_rotation_item_name">Perputaran</string>
     <string name="emulated_screen_refresh_rate_item_name">Laju refresh</string>
     <string name="pref_device_display_name">Nama ponsel yang ramah</string>
@@ -79,17 +79,17 @@
     <string name="pref_background">Latar belakang</string>
     <string name="pref_virtual_keyboard_options">Papan tombol maya</string>
     <string name="pref_vk_show">Tampilkan papan tombol</string>
-    <string name="pref_vk_feedback">Respon sentuh</string>
-    <string name="pref_touch_input">Masukan sentuhan</string>
+    <string name="pref_vk_feedback">Respon sentuhan</string>
+    <string name="pref_touch_input">Masukan sentuh</string>
     <string name="pref_vk_back">Tombol</string>
     <string name="pref_vk_fore">Label</string>
     <string name="pref_vk_outline">Garis luar</string>
     <string name="pref_vk_alpha">Keburaman: </string>
     <string name="pref_vk_hide_delay">Penundaan sembunyi: </string>
-    <string name="pref_unit_ms">ms/milidetik</string>
+    <string name="pref_unit_ms">milidetik</string>
     <string name="pref_vk_sel_fore">Label (P)</string>
     <string name="pref_vk_sel_back">Tombol (P)</string>
-    <string name="pref_sys_props">Rincian sifat sistem</string>
+    <string name="pref_sys_props">Rincian ciri sistem</string>
     <string name="pref_orientation">Orientasi layar</string>
     <string name="pref_orientation_default">Bawaan</string>
     <string name="pref_orientation_auto">Otomatis</string>
@@ -112,7 +112,7 @@
     <string name="pref_screen_gravity_right">Kanan</string>
     <string name="pref_screen_gravity_top">Atas</string>
     <string name="pref_screen_scale_type">Tipe skala</string>
-    <string name="pref_screen_scale_type_fill">Layar penuh (abaikan aspek rasio)</string>
+    <string name="pref_screen_scale_type_fill">Penuhi layar (abaikan rasio aspek)</string>
     <string name="pref_screen_scale_type_fit">Paskan ke layar</string>
     <string name="pref_screen_scale_type_none">Seaslinya</string>
     <string name="pref_screen_scale_use_shader">Gunakan shader untuk upscaling</string>
@@ -131,10 +131,10 @@
     <string name="mapping_dialog_title">Tekan tombol</string>
     <string name="mapping_dialog_message" formatted="false">Pemetaan saat ini: %1$s</string>
     <string name="reset_mapping">Atur ulang</string>
-    <string name="layout_edit_finished">Mode ubah telah selesai</string>
-    <string name="layout_edit_finish">Akhiri mode pengubahan</string>
-    <string name="layout_edit_mode">Ubah letak tombol</string>
-    <string name="layout_scale_mode">Ubah ukuran tombol</string>
+    <string name="layout_edit_finished">Mode sunting telah selesai</string>
+    <string name="layout_edit_finish">Akhiri mode penyutingan</string>
+    <string name="layout_edit_mode">Mode ubah letak tombol</string>
+    <string name="layout_scale_mode">Mode ubah ukuran tombol</string>
     <string name="layout_switch">Ganti letak tombol</string>
     <string name="hide_buttons">Samarkan tombol</string>
     <string name="confirmation_required">Memerlukan konfirmasi</string>
