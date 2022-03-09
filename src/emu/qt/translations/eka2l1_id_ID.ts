@@ -611,12 +611,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="234"/>
       <source>Use shader for upscaling</source>
-      <translation>Gunakan shader untuk upscaling</translation>
+      <translation>Gunakan shader untuk naik skala</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="250"/>
       <source>Upscale shader</source>
-      <translation>Perbesar shader</translation>
+      <translation>Naikkan skala shader</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="272"/>
