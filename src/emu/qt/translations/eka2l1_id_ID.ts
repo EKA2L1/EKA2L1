@@ -723,7 +723,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="473"/>
       <source>By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</source>
-      <translation>Secara bawaan, emulator hanya mengizinkan mengubah tampilan emulator ke ukuran minimum layar ponsel, kalikan dengan skala tampilan sistem untuk menyesuaikan sebagian besar mata pengguna</translation>
+      <translation>Secara bawaan, emulator hanya mengizinkan mengubah tampilan emulator ke ukuran minimum layar ponsel, dikalikan dengan skala tampilan sistem untuk menyesuaikan sebagian besar mata pengguna</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="476"/>
