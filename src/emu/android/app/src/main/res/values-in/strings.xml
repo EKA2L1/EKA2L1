@@ -132,7 +132,7 @@
     <string name="mapping_dialog_message" formatted="false">Pemetaan saat ini: %1$s</string>
     <string name="reset_mapping">Atur ulang</string>
     <string name="layout_edit_finished">Mode sunting telah selesai</string>
-    <string name="layout_edit_finish">Akhiri mode penyutingan</string>
+    <string name="layout_edit_finish">Akhiri mode penyuntingan</string>
     <string name="layout_edit_mode">Mode ubah letak tombol</string>
     <string name="layout_scale_mode">Mode ubah ukuran tombol</string>
     <string name="layout_switch">Ganti letak tombol</string>
