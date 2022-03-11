@@ -24,6 +24,7 @@
 #include <services/socket/socket.h>
 
 #include <common/container.h>
+#include <common/sync.h>
 
 #include <memory>
 #include <string>
@@ -108,6 +109,7 @@ namespace eka2l1::epoc::internet {
         epoc::socket::receive_done_callback receive_done_cb_;
 
         std::unique_ptr<common::ring_buffer<char, 0x80000>> stream_data_buffer_;
+        common::event exit_event_;
 
         void close_down();
         void handle_connect_done_error_code(const int error_code);
@@ -146,6 +148,11 @@ namespace eka2l1::epoc::internet {
         void prepare_buffer_for_recv(const std::size_t suggested_size, void *buf_ptr);
         void handle_udp_delivery(const std::int64_t bytes_read, const void *buf_ptr, const void *addr);
         void handle_tcp_delivery(const std::int64_t bytes_read, const void *buf_ptr);
+
+        void set_exit_event();
+        void *get_opaque_handle() {
+            return opaque_handle_;
+        }
     };
 
     class inet_bridged_protocol : public socket::protocol {

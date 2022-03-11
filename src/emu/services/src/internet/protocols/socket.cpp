@@ -51,9 +51,29 @@ namespace eka2l1::epoc::internet {
         return sock;
     }
 
+    void inet_socket::set_exit_event() {
+        exit_event_.set();
+    }
+
     void inet_socket::close_down() {
         if (opaque_handle_) {
-            uv_close(reinterpret_cast<uv_handle_t*>(opaque_handle_), nullptr);
+            uv_async_t *async = new uv_async_t;
+            async->data = this;
+
+            uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
+                inet_socket *sock = reinterpret_cast<inet_socket*>(async->data);
+                uv_handle_t *handle = reinterpret_cast<uv_handle_t*>(sock->get_opaque_handle());
+                handle->data = sock;
+
+                uv_close(handle, [](uv_handle_t *handle) {
+                    reinterpret_cast<inet_socket*>(handle->data)->set_exit_event();
+                });
+
+                delete async;
+            });
+
+            uv_async_send(async);
+            exit_event_.wait();
 
             // Delete the stored data
             std::uint8_t *opaque_handle_casted = reinterpret_cast<std::uint8_t*>(opaque_handle_);
@@ -136,6 +156,7 @@ namespace eka2l1::epoc::internet {
 
         // Start the looper now, we might have the first customer!
         papa_->initialize_looper();
+        exit_event_.reset();
 
         protocol_ = protocol_id;
         return true;
