@@ -31,12 +31,12 @@
     <string name="no_device_installed">Harap pasang firmware perangkat. Berkas dan ROM dari perangkat Symbian diperlukan untuk pemasangan.\n\n<b>Catatan:</b> Setiap aplikasi memerlukan perangkat Symbian yang cocok untuk dijalankan.</string>
     <string name="install_device_note_may_need_rpkg">Untuk perangkat S60v2 atau lebih tinggi, perlu ada berkas tambahan bernama RPKG. Jika perangkatnya terdeteksi maka akan muncul permintaan memasukkan berkas tersebut.</string>
     <string name="recommended_devices_to_install">Perangkat anjuran untuk dipasang</string>
-    <string name="wiki_info">Untuk informasi lebih lanjut mengenai pemasangan perangkat, silakan kunjungi wiki kami:</string>
+    <string name="wiki_info">Untuk informasi lebih lanjut tentang pemasangan perangkat, kunjungi wiki kami:</string>
     <string name="install_rpkg_corrupt">Berkas RPKG yang disediakan rusak!</string>
     <string name="install_rpkg_file_not_found">Berkas RPKG tidak bisa dibuka!</string>
     <string name="install_raw_dump_fail_to_copy">Gagal menyalin berkas raw dump ke tempat tujuan!</string>
     <string name="install_rom_fail_to_copy">Gagal menyalin ROM ke tempat tujuan!</string>
-    <string name="install_rpkg_insufficent_size">Ukuran berkas RPKG terlalu kecil, dump mungkin tidak akan selesai!</string>
+    <string name="install_rpkg_insufficent_size">Ukuran berkas RPKG terlalu kecil, dump-nya mungkin belum selesai!</string>
     <string name="install_already_exist">Perangkat yang dipasang sudah ada!</string>
     <string name="install_product_determine_fail">Gagal menentukan informasi produk!</string>
     <string name="install_device_vpl_invalid_msg">Berkas deskripsi firmware (VPL) tidak sah!</string>
@@ -132,9 +132,9 @@
     <string name="mapping_dialog_message" formatted="false">Pemetaan saat ini: %1$s</string>
     <string name="reset_mapping">Atur ulang</string>
     <string name="layout_edit_finished">Mode sunting telah selesai</string>
-    <string name="layout_edit_finish">Akhiri mode penyuntingan</string>
-    <string name="layout_edit_mode">Mode ubah letak tombol</string>
-    <string name="layout_scale_mode">Mode ubah ukuran tombol</string>
+    <string name="layout_edit_finish">Akhiri mode ubah</string>
+    <string name="layout_edit_mode">Ubah letak tombol</string>
+    <string name="layout_scale_mode">Ubah ukuran tombol</string>
     <string name="layout_switch">Ganti letak tombol</string>
     <string name="hide_buttons">Samarkan tombol</string>
     <string name="confirmation_required">Memerlukan konfirmasi</string>
