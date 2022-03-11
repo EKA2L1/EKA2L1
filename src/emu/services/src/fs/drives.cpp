@@ -235,6 +235,9 @@ namespace eka2l1 {
         }
 
         std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
+        std::u16string drive_name = u"EKA2L1_A";
+
+        drive_name.back() += static_cast<char>(drv - drive_a);
 
 #define VOLUME_INFO_GETTERS(info_name)                                                \
     LOG_WARN(SERVICE_EFSRV, "Volume size stubbed with 1GB");                          \
@@ -242,7 +245,8 @@ namespace eka2l1 {
         io_drive.has_value() ? &io_drive.value() : nullptr, cli_ver);                 \
     info_name.uid = drv;                                                              \
     info_name.size = common::GB(1);                                                   \
-    info_name.free = common::GB(1);
+    info_name.free = common::GB(1);                                                   \
+    info_name.name.assign(nullptr, drive_name);
 
         const epoc::version cli_ver = client_version();
         if (cli_ver.major >= 2) {
