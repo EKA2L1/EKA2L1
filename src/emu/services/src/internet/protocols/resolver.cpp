@@ -27,6 +27,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+
+#include <netinet/in.h>
+#include <netinet/ip.h>
 #endif
 
 namespace eka2l1::epoc::internet {
@@ -81,7 +84,7 @@ namespace eka2l1::epoc::internet {
             supply_and_result.addr_.port_ = ntohs(in6->sin6_port);
 
             sinet6_address &in6_guest = static_cast<sinet6_address&>(supply_and_result.addr_);
-            std::memcpy(in6_guest.address_32x4(), in6->sin6_addr.u.Byte, 16);
+            std::memcpy(in6_guest.address_32x4(), &in6->sin6_addr, 16);
 
             *in6_guest.flow() = in6->sin6_flowinfo;
             *in6_guest.scope() = in6->sin6_scope_id;

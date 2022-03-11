@@ -429,7 +429,7 @@ namespace eka2l1::epoc::internet {
         temp_buffer_.resize(suggested_size);
         
         buf->base = temp_buffer_.data();
-        buf->len = static_cast<ULONG>(suggested_size);
+        buf->len = static_cast<std::uint32_t>(suggested_size);
     }
 
     static bool is_same_address(const epoc::socket::saddress &addr_requested, const sockaddr *addr_to_check) {
