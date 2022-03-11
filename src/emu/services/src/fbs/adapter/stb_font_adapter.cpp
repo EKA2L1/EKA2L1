@@ -229,8 +229,7 @@ namespace eka2l1::epoc::adapter {
         return result;
     }
 
-    bool stb_font_file_adapter::get_glyph_metric(const std::size_t idx, std::uint32_t code,
-        open_font_character_metric &character_metric, const std::int32_t baseline_horz_off,
+    bool stb_font_file_adapter::get_glyph_metric(const std::size_t idx, std::uint32_t code, open_font_character_metric &character_metric, const std::int32_t baseline_horz_off,
         const std::uint16_t font_size) {
         bool get_codepoint = true;
 
@@ -360,5 +359,23 @@ namespace eka2l1::epoc::adapter {
         }
 
         return (stbtt_FindGlyphIndex(info, codepoint) != 0);
+    }
+    
+    std::uint32_t stb_font_file_adapter::get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint, const std::uint16_t font_size, const bool vertical) {
+        int off = 0;
+        stbtt_fontinfo *info = get_or_create_info(static_cast<int>(face_index), &off);
+
+        if (!info) {
+            return 0xFFFFFFFF;
+        }
+
+        int adv_width, left_side_bearing = 0;
+        stbtt_GetCodepointHMetrics(info, static_cast<int>(codepoint), &adv_width, &left_side_bearing);
+
+        int wx0, wx1, wy0, wy1 = 0;
+        stbtt_GetFontBoundingBox(info, &wx0, &wy0, &wx1, &wy1);
+
+        const float scale_factor = static_cast<float>(font_size) / static_cast<float>(wy1 - wy0);
+        return static_cast<std::uint32_t>(adv_width * scale_factor);
     }
 }

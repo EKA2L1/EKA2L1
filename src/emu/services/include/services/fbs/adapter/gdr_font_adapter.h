@@ -44,7 +44,8 @@ namespace eka2l1::epoc::adapter {
         common::identity_container<gdr_font_atlas_pack_context> pack_contexts_;
 
     protected:
-        loader::gdr::character *get_character(const std::size_t idx, std::uint32_t code);
+        loader::gdr::character *get_character(const std::size_t idx, std::uint32_t code);    
+        std::uint32_t get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint, const std::uint16_t font_size, const bool vertical = false) override;
 
     public:
         explicit gdr_font_file_adapter(std::vector<std::uint8_t> &data_);

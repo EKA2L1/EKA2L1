@@ -45,6 +45,9 @@ namespace eka2l1::epoc::adapter {
      * \brief Base class for adapter.
      */
     class font_file_adapter_base {
+    protected:
+        virtual std::uint32_t get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint, const std::uint16_t font_size, const bool vertical = false) = 0;
+
     public:
         virtual ~font_file_adapter_base() {}
 
@@ -119,6 +122,16 @@ namespace eka2l1::epoc::adapter {
          * @param       codepoint         The Unicode codepoint of the character to check against.
          */
         virtual bool has_character(const std::size_t face_index, const std::int32_t codepoint) = 0;
+
+        /**
+         * @brief Fill shaping struct describing the layout of the text using this font with a specific language code.
+         * 
+         * @param params            The parameter struct, giving clues for laying out the text.
+         * @param text              The target text that will be laid out.
+         * @param shaping_header    On return, filled shaping info.
+         * @param shaping_data      On return, filled shaping data. This contains the position of each glyph in the text, also the total advance.
+         */
+        virtual bool make_text_shape(const std::size_t face_index, const open_font_shaping_parameter &params, const std::u16string &text, const std::uint16_t font_size, open_font_shaping_header &shaping_header, std::uint8_t *shaping_data);
     };
 
     enum class font_file_adapter_kind {

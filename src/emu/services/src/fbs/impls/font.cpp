@@ -949,6 +949,89 @@ namespace eka2l1 {
         ctx->complete(result);
     }
 
+    void fbscli::get_font_shaping(service::ipc_context *ctx) {
+        fbsfont *font = get_font_object(ctx);
+
+        if (!font) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        std::optional<epoc::open_font_shaping_parameter> params = ctx->get_argument_data_from_descriptor<epoc::open_font_shaping_parameter>(2);
+        if (!params.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        std::optional<std::u16string> text_to_shape = ctx->get_argument_value<std::u16string>(1);
+        if (!text_to_shape.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        // Open a temporary header to calculate neccessary allocations
+        epoc::open_font_shaping_header temp_header;
+        if (!font->of_info.adapter->make_text_shape(font->of_info.idx, params.value(), text_to_shape.value(), font->of_info.metrics.max_height, temp_header, nullptr)) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        fbs_server *serv = server<fbs_server>();
+        std::uint8_t *allocated_data = reinterpret_cast<std::uint8_t*>(serv->allocate_general_data_impl(sizeof(epoc::open_font_shaping_header) + temp_header.glyph_count_ * 10 + 4));
+        if (!allocated_data) {
+            LOG_TRACE(SERVICE_FBS, "Can't allocate data for store shaping!");
+            ctx->complete(epoc::error_no_memory);
+            return;
+        }
+
+        if (!font->of_info.adapter->make_text_shape(font->of_info.idx, params.value(), text_to_shape.value(), font->of_info.metrics.max_height, *reinterpret_cast<epoc::open_font_shaping_header*>(allocated_data),
+            allocated_data + sizeof(epoc::open_font_shaping_header))) {
+            serv->free_general_data_impl(allocated_data);
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        // Push to cleanup list
+        font->shapings.push_back(allocated_data);
+
+        if (epoc::does_client_use_pointer_instead_of_offset(this)) {
+            ctx->complete(static_cast<int>(serv->host_ptr_to_guest_general_data(allocated_data).ptr_address()));
+        } else {
+            ctx->complete(static_cast<int>(serv->host_ptr_to_guest_shared_offset(allocated_data)));
+        }
+    }
+
+    void fbscli::delete_font_shaping(service::ipc_context *ctx) {
+        fbsfont *font = get_font_object(ctx);
+        std::optional<std::int32_t> offset = ctx->get_argument_value<std::int32_t>(1);
+
+        if (!font || !offset.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        fbs_server *serv = server<fbs_server>();
+        std::uint8_t *shape_ptr = nullptr;
+        
+        if (epoc::does_client_use_pointer_instead_of_offset(this)) {
+            std::uint32_t ptr_addr = static_cast<std::uint32_t>(offset.value());
+            shape_ptr = reinterpret_cast<std::uint8_t*>(serv->guest_general_data_to_host_ptr(ptr<std::uint8_t>(ptr_addr)));
+        } else {
+            shape_ptr = serv->get_shared_chunk_base() + offset.value();
+        }
+
+        for (std::size_t i = 0; i < font->shapings.size(); i++) {
+            if (shape_ptr == font->shapings[i]) {
+                serv->free_general_data_impl(shape_ptr);
+                font->shapings.erase(font->shapings.begin() + i);
+
+                break;
+            }
+        }
+
+        ctx->complete(epoc::error_none);
+    }
+
     fbsfont::~fbsfont() {
         // Free atlas + bitmap
         atlas.destroy(serv->get_graphics_driver());
@@ -964,6 +1047,10 @@ namespace eka2l1 {
         default:
             serv->destroy_bitmap_font<epoc::bitmapfont_v2>(reinterpret_cast<epoc::bitmapfont_v2 *>(font_ptr));
             break;
+        }
+
+        for (std::size_t i = 0; i < shapings.size(); i++) {
+            serv->free_general_data_impl(shapings[i]);
         }
     }
 

@@ -67,6 +67,14 @@ namespace eka2l1::epoc {
 
     static_assert(sizeof(open_font_metrics) == 16);
 
+    struct open_font_shaping_parameter {
+        std::uint32_t text_range_[2];
+        std::uint32_t script_code_;
+        std::uint32_t language_code_;
+    };
+
+    static_assert(sizeof(open_font_shaping_parameter) == 16);
+
     struct open_font_shaping_header {
         std::uint32_t glyph_count_;
         std::uint32_t char_count_;

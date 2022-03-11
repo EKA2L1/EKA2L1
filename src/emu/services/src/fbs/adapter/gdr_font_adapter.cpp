@@ -437,4 +437,18 @@ namespace eka2l1::epoc::adapter {
     bool gdr_font_file_adapter::has_character(const std::size_t face_index, const std::int32_t codepoint) {
         return (get_character(face_index, codepoint) != nullptr);
     }
+
+    std::uint32_t gdr_font_file_adapter::get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint, const std::uint16_t font_size, const bool vertical) {
+        loader::gdr::character *the_char = get_character(face_index, codepoint);
+        if (!the_char) {
+            return 0xFFFFFFFF;
+        }
+
+        if (vertical) {
+            // Not official, GDR does not have vertical advance fields
+            return the_char->metric_->height_in_pixels_;
+        }
+
+        return the_char->metric_->move_in_pixels_;
+    }
 }

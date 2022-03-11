@@ -30,6 +30,7 @@
 
 namespace eka2l1::epoc::adapter {
     class stb_font_file_adapter : public font_file_adapter_base {
+    private:
         std::vector<std::uint8_t> data_;
         std::map<int, stbtt_fontinfo> cache_info;
 
@@ -43,6 +44,9 @@ namespace eka2l1::epoc::adapter {
         enum {
             FLAGS_CONTEXT_INITED = 1 << 0
         };
+
+    protected:
+        std::uint32_t get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint, const std::uint16_t font_size, const bool vertical = false) override;
 
     public:
         stbtt_fontinfo *get_or_create_info(const int idx, int *off);
