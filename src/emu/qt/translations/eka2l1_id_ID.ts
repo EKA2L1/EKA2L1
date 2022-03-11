@@ -160,7 +160,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="232"/>
       <source>The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</source>
-      <translation>ROFS dalam berkas firmware-nya rusak! Pastikan berkas firmware Anda tidak rusak (corrupt).</translation>
+      <translation>ROFS dalam berkas firmware telah rusak! Pastikan berkas firmware Anda tidak rusak (corrupt).</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="236"/>
@@ -369,7 +369,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="366"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
-      <translation>Anda belum memasang perangkat apa pun. Silakan pasang perangkat atau ikuti arahan pemasangan di halaman wiki GitHub EKA2L1.</translation>
+      <translation>Anda belum memasang perangkat apa pun. Mohon pasang perangkat atau ikuti arahan pemasangan di halaman wiki GitHub EKA2L1.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="657"/>
@@ -1121,7 +1121,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="435"/>
       <source>This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</source>
-      <translation>Perubahan ini perlu peluncuran ulang pada emulator.&lt;br&gt;Ingin Anda lanjutkan?</translation>
+      <translation>Perubahan ini perlu peluncuran ulang pada emulator.&lt;br&gt;Anda ingin lanjut?</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="556"/>
@@ -1250,7 +1250,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="1094"/>
       <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
-      <translation>IMEI Anda tidak sah karena: %1.&lt;br&gt;Apakah Anda ingin mengubah IMEI saat ini sebelum menutup? Memilih &quot;No&quot; akan menyimpan nilai (value) IMEI saat ini.</translation>
+      <translation>IMEI Anda tidak sah karena: %1.&lt;br&gt;Apakah Anda ingin mengubah IMEI saat ini sebelum menutup? Memilih &quot;Tidak&quot; akan menyimpan nilai (value) IMEI saat ini.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1096"/>
