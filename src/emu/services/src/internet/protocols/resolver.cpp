@@ -91,7 +91,7 @@ namespace eka2l1::epoc::internet {
             sinet_address &in4_guest = static_cast<sinet_address&>(supply_and_result.addr_);
             sockaddr_in *in = reinterpret_cast<sockaddr_in*>(result_info->ai_addr);
 
-            *in4_guest.addr_long() = in->sin_addr.S_un.S_addr;
+            std::memcpy(in4_guest.addr_long(), &in->sin_addr, 4);
             in4_guest.port_ = ntohs(in->sin_port);
         }
 
