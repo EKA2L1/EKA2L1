@@ -89,7 +89,7 @@
     <string name="pref_unit_ms">milidetik</string>
     <string name="pref_vk_sel_fore">Label (P)</string>
     <string name="pref_vk_sel_back">Tombol (P)</string>
-    <string name="pref_sys_props">Rincian ciri sistem</string>
+    <string name="pref_sys_props">Rincian sifat sistem</string>
     <string name="pref_orientation">Orientasi layar</string>
     <string name="pref_orientation_default">Bawaan</string>
     <string name="pref_orientation_auto">Otomatis</string>
@@ -115,8 +115,8 @@
     <string name="pref_screen_scale_type_fill">Penuhi layar (abaikan rasio aspek)</string>
     <string name="pref_screen_scale_type_fit">Paskan ke layar</string>
     <string name="pref_screen_scale_type_none">Seaslinya</string>
-    <string name="pref_screen_scale_use_shader">Gunakan shader untuk upscaling</string>
-    <string name="pref_screen_upscale_shader">Perbesar shader</string>
+    <string name="pref_screen_scale_use_shader">Gunakan shader untuk naik skala</string>
+    <string name="pref_screen_upscale_shader">Naikkan skala shader</string>
     <string name="pref_screen_default_shader">Bawaan</string>
     <string name="default_label">"%s (bawaan)"</string>
     <string name="not_saved_exists">Sudah ada</string>
@@ -142,5 +142,5 @@
     <string name="log_saved">Log telah disimpan</string>
     <string name="about_icon_by">&lt;BR&gt;Ikon oleh: </string>
     <string name="version">Versi: </string>
-    <string name="recommended_devices_note"><b>Catatan:</b> Dianjurkan untuk menggunakan firmware pada pemasangan perangkat S60v3 ke atas.</string>
+    <string name="recommended_devices_note"><b>Catatan:</b> Dianjurkan menggunakan firmware untuk pemasangan perangkat S60v3 ke atas.</string>
 </resources>
