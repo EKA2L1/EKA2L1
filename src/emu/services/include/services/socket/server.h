@@ -87,7 +87,7 @@ namespace eka2l1 {
             void connect(service::ipc_context *ctx);
             void send(service::ipc_context *ctx, const bool has_return_length, const bool has_addr);
             void recv(service::ipc_context *ctx, const bool has_return_length, const bool one_or_more, const bool has_addr);
-            void cancel_write(service::ipc_context *ctx);
+            void cancel_send(service::ipc_context *ctx);
             void cancel_recv(service::ipc_context *ctx);
 
         public:
@@ -116,7 +116,7 @@ namespace eka2l1 {
         socket_so_ioctl = 0x19,
         socket_so_close = 0x1D,
         socket_so_cancel_recv = 0x20,
-        socket_so_cancel_write = 0x21,
+        socket_so_cancel_send = 0x21,
         socket_so_cancel_connect = 0x22,
         socket_hr_open = 0x28,
         socket_hr_get_by_name = 0x29,

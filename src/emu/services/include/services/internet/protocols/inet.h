@@ -93,9 +93,7 @@ namespace eka2l1::epoc::internet {
 
         std::uint32_t protocol_;
         epoc::notify_info connect_done_info_;
-        epoc::notify_info write_done_info_;
         epoc::notify_info send_done_info_;
-        epoc::notify_info read_done_info_;
         epoc::notify_info recv_done_info_;
 
         std::uint32_t *bytes_written_;
@@ -139,8 +137,8 @@ namespace eka2l1::epoc::internet {
         void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr,
             std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) override;
 
-        void cancel_receive(const std::uint32_t flags) override;
-        void cancel_send(const std::uint32_t flags) override;
+        void cancel_receive() override;
+        void cancel_send() override;
         void cancel_connect() override;
 
         void complete_connect_done_info(const int err);

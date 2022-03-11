@@ -35,8 +35,7 @@ namespace eka2l1::epoc::socket {
     };
     
     enum socket_operate_flag : std::uint32_t {
-        SOCKET_FLAG_DONT_WAIT_FULL = 1 << 29,
-        SOCKET_FLAG_IS_NATIVE_FUNCTION = 1 << 30
+        SOCKET_FLAG_DONT_WAIT_FULL = 1 << 29
     };
 
     using receive_done_callback = std::function<void(const std::int64_t received)>;
@@ -133,9 +132,9 @@ namespace eka2l1::epoc::socket {
         virtual void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *recv_size, const saddress *addr,
             const std::uint32_t flags, epoc::notify_info &complete_info, receive_done_callback done_callback = nullptr);
 
-        virtual void cancel_receive(const std::uint32_t flags);
+        virtual void cancel_receive();
 
-        virtual void cancel_send(const std::uint32_t flags);
+        virtual void cancel_send();
 
         virtual void cancel_connect();
     };

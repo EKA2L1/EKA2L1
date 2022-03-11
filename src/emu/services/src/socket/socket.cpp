@@ -60,11 +60,11 @@ namespace eka2l1::epoc::socket {
         LOG_ERROR(SERVICE_ESOCK, "Receiving data from socket unimplemented!");        
     }
 
-    void socket::cancel_receive(const std::uint32_t flags) {
+    void socket::cancel_receive() {
         LOG_ERROR(SERVICE_ESOCK, "Cancel receive unimplemented!");
     }
 
-    void socket::cancel_send(const std::uint32_t flags) {
+    void socket::cancel_send() {
         LOG_ERROR(SERVICE_ESOCK, "Cancel send unimplemented!");
     }
 
@@ -265,7 +265,7 @@ namespace eka2l1::epoc::socket {
         }
 
         epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
-        sock_->send(packet_buffer, packet_size, size_return, optional_addr.has_value() ? &optional_addr.value() : nullptr, SOCKET_FLAG_IS_NATIVE_FUNCTION | flags.value(), info);
+        sock_->send(packet_buffer, packet_size, size_return, optional_addr.has_value() ? &optional_addr.value() : nullptr,  flags.value(), info);
     }
 
     void socket_socket::recv(service::ipc_context *ctx, const bool has_return_length, const bool one_or_more, const bool has_addr) {
@@ -277,7 +277,6 @@ namespace eka2l1::epoc::socket {
             ctx->complete(epoc::error_argument);
             return;
         }
-
         
         kernel::process *requester = ctx->msg->own_thr->owning_process();
         epoc::des8 *packet_des = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[2]).get(requester);
@@ -311,7 +310,6 @@ namespace eka2l1::epoc::socket {
             }
         }
 
-        flags.value() |= SOCKET_FLAG_IS_NATIVE_FUNCTION;
         if (one_or_more) {
             flags.value() |= SOCKET_FLAG_DONT_WAIT_FULL;
         }
@@ -322,7 +320,7 @@ namespace eka2l1::epoc::socket {
                 if (length < 0) {
                     packet_des->set_length(requester, 0);
                 } else {
-                    packet_des->set_length(requester, static_cast<std::uint32_t>(length));
+                    packet_des->set_length(requester, common::min<std::uint32_t>(static_cast<std::uint32_t>(length), packet_des->get_max_length(requester)));
                 }
             });
     }
@@ -343,13 +341,13 @@ namespace eka2l1::epoc::socket {
         sock_->ioctl(command.value(), info, buffer, buffer_size, max_buffer_size, level.value());
     }
     
-    void socket_socket::cancel_write(service::ipc_context *ctx) {
-        sock_->cancel_send(0);
+    void socket_socket::cancel_send(service::ipc_context *ctx) {
+        sock_->cancel_send();
         ctx->complete(epoc::error_none);
     }
 
     void socket_socket::cancel_recv(service::ipc_context *ctx) {
-        sock_->cancel_receive(SOCKET_FLAG_IS_NATIVE_FUNCTION);
+        sock_->cancel_receive();
         ctx->complete(epoc::error_none);
     }
 
@@ -422,8 +420,8 @@ namespace eka2l1::epoc::socket {
                 ioctl(ctx);
                 return;
 
-            case socket_so_cancel_write:
-                cancel_write(ctx);
+            case socket_so_cancel_send:
+                cancel_send(ctx);
                 return;
 
             case socket_so_cancel_recv:
