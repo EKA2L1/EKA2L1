@@ -402,6 +402,27 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
             etScreenRefreshRate.setText(dataStore.getString("fps", "60"));
             etSystemTimeDelay.setText(dataStore.getString("time-delay", "0"));
             cbShouldChildInherit.setChecked(dataStore.getBoolean("should-child-inherit-setting", true));
+
+            cbUseShaderForUpscale.setChecked(dataStore.getString("screen-upscale-method", "0") != "0");
+            if (!cbUseShaderForUpscale.isChecked()) {
+                tvUpscaleShader.setVisibility(View.GONE);
+                spUpscaleShader.setVisibility(View.GONE);
+            } else {
+                tvUpscaleShader.setVisibility(View.VISIBLE);
+                spUpscaleShader.setVisibility(View.VISIBLE);
+            }
+
+            String shaderName = dataStore.getString("filter-shader-path", "");
+            spUpscaleShader.setSelection(0);
+            if (!shaderName.isEmpty()) {
+                for (int i = 1; i < spUpscaleShader.getCount(); i++) {
+                    String spinnerShaderName = (String)spUpscaleShader.getItemAtPosition(i);
+                    if (spinnerShaderName.equals(shaderName)) {
+                        spUpscaleShader.setSelection(i);
+                        break;
+                    }
+                }
+            }
         }
 
         etScreenBack.setText(String.format("%06X", params.screenBackgroundColor));
@@ -410,27 +431,6 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
         spOrientation.setSelection(params.orientation);
         spScaleType.setSelection(params.screenScaleType);
         spScreenGravity.setSelection(params.screenGravity);
-
-        cbUseShaderForUpscale.setChecked(dataStore.getString("screen-upscale-method", "0") != "0");
-        if (!cbUseShaderForUpscale.isChecked()) {
-            tvUpscaleShader.setVisibility(View.GONE);
-            spUpscaleShader.setVisibility(View.GONE);
-        } else {
-            tvUpscaleShader.setVisibility(View.VISIBLE);
-            spUpscaleShader.setVisibility(View.VISIBLE);
-        }
-
-        String shaderName = dataStore.getString("filter-shader-path", "");
-        spUpscaleShader.setSelection(0);
-        if (!shaderName.isEmpty()) {
-            for (int i = 1; i < spUpscaleShader.getCount(); i++) {
-                String spinnerShaderName = (String)spUpscaleShader.getItemAtPosition(i);
-                if (spinnerShaderName.equals(shaderName)) {
-                    spUpscaleShader.setSelection(i);
-                    break;
-                }
-            }
-        }
 
         boolean showVk = params.showKeyboard;
         cbShowKeyboard.setChecked(showVk);
