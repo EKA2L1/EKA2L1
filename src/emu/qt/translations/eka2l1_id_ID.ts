@@ -856,7 +856,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.ui" line="704"/>
       <source>Properties</source>
-      <translation>Rincian ciri</translation>
+      <translation>Rincian sifat</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="712"/>
