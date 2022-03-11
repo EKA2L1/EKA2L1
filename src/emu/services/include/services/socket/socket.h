@@ -23,22 +23,23 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 
 namespace eka2l1::epoc::socket {
-    /// Note! This is following Symbian OS es_sock ordinal
-    enum socket_type {
-        socket_type_undefined = 0,
-        socket_type_stream = 1, ///< Data sent in order, no boundaries, re-connect when socket sudden end (no goodbye)
-        socket_type_datagram, ///< Data sent may not be in order, message boundaries preserved, data may modified or lost
-        socket_type_packet, ///< Stream except message/data has length/boundaries.
-        socket_type_raw ///< Receive raw packet that is wrapped with protocol header, has not been extracted by any network layer.
-    };
+    struct saddress;
 
     enum {
         SOCKET_MESSAGE_SIZE_IS_STREAM = 0, ///< Stream socket, message can be of any size
         SOCKET_MESSAGE_SIZE_UNDEFINED = 1, ///< Undefined, depends on layers
         SOCKET_MESSAGE_SIZE_NO_LIMIT = -1
     };
+    
+    enum socket_operate_flag : std::uint32_t {
+        SOCKET_FLAG_DONT_WAIT_FULL = 1 << 29,
+        SOCKET_FLAG_IS_NATIVE_FUNCTION = 1 << 30
+    };
+
+    using receive_done_callback = std::function<void(const std::int64_t received)>;
 
     struct socket {
     public:
@@ -87,27 +88,55 @@ namespace eka2l1::epoc::socket {
          * @brief Perform binding this address to local desired address.
          * 
          * @param sockaddr_buffer        Buffer containing the information about the address, different per socket implementation.
-         * @param available_size         Size of the socket address buffer.
-         * 
-         * @returns 0 on success, else Symbian specific error code.
+         * @param info                   Request status notify info.
          */
-        virtual std::int32_t bind(const std::uint8_t *sockaddr_buffer, const std::size_t available_size);
+        virtual void bind(const saddress &addr, epoc::notify_info &info);
+
+        /**
+         * @brief Perform connect to remote address.
+         * 
+         * @param addr                  Address to be connected to
+         * @param info                  Request status notify info.
+         */
+        virtual void connect(const saddress &addr, epoc::notify_info &info);
 
         /**
          * @brief Send data to remote host, on a non-connected or connected socket.
          * 
-         * If a socket is not connected, sockaddr_buffer must not be NULL and points to a valid buffer containg
+         * If a socket is not connected, sockaddr must not be NULL and points to a valid buffer containg
          * information about remote host address.
          * 
          * @param   data                    Data to send to remote host.
          * @param   data_size               Size of data to send, also the size of data buffer.
          * @param   sent_size               Optional arugment that contains the amount of data sent. Can be NULL.
-         * @param   sockaddr_buffer         The address to send the data to. On a connected socket, this address will be used if not NULL.
-         * @param   sockaddr_buffer_size    Size of the socket address buffer. Ignored if sockaddr_buffer is NULL.
+         * @param   sockaddr                The address to send the data to. On a connected socket, this address will be used if not NULL.
          * @param   flags                   Flags that specified how to process this packet.
          * @param   complete_info           A notify info that is signaled when the sent is done, can contain the error code.
          */
-        virtual void send(const std::uint8_t *data, const std::size_t data_size, std::size_t *sent_size, const std::uint8_t *sockaddr_buffer,
-            const std::size_t sockaddr_buffer_size, const std::uint32_t flags, epoc::notify_info &complete_info);
+        virtual void send(const std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const saddress *addr,
+            const std::uint32_t flags, epoc::notify_info &complete_info);
+
+        /**
+         * @brief Receive data from remote client, on a non-connected or connected socket.
+         * 
+         * If a socket is not connected, sockaddr must not be NULL and points to a valid buffer containg
+         * information about remote address.
+         * 
+         * @param   data                    Data to be received from remote.
+         * @param   data_size               Size of data to be read. For stream socket, to receive the data pack available only, use the flag SOCKET_FLAG_DONT_WAIT_FULL.
+         * @param   sent_size               Optional arugment that on completion contains the amount of data read. Can be NULL.
+         * @param   sockaddr                The address to receive the data from. On a connected socket, this address will only be used if not NULL and the socket is stream.
+         * @param   flags                   Flags that specified how to process this packet.
+         * @param   complete_info           A notify info that is signaled when the receive is done, can contain the error code.
+         * @param   done_callback           Function that will be called when receive is done (asynchronously).
+         */
+        virtual void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *recv_size, const saddress *addr,
+            const std::uint32_t flags, epoc::notify_info &complete_info, receive_done_callback done_callback = nullptr);
+
+        virtual void cancel_receive(const std::uint32_t flags);
+
+        virtual void cancel_send(const std::uint32_t flags);
+
+        virtual void cancel_connect();
     };
 }

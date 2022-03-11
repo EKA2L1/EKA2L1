@@ -35,9 +35,14 @@ namespace eka2l1::epoc::socket {
         return false;
     }
 
-    std::int32_t socket::bind(const std::uint8_t *sockaddr_buffer, const std::size_t available_size) {
+    void socket::bind(const saddress &addr, epoc::notify_info &info) {
         LOG_ERROR(SERVICE_ESOCK, "Binding socket unimplemented");
-        return epoc::error_permission_denied;
+        info.complete(epoc::error_not_supported);
+    }
+
+    void socket::connect(const saddress &addr, epoc::notify_info &info) {
+        LOG_ERROR(SERVICE_ESOCK, "Connecting socket unimplemented");
+        info.complete(epoc::error_not_supported);
     }
 
     void socket::ioctl(const std::uint32_t command, epoc::notify_info &complete_info, std::uint8_t *buffer,
@@ -45,9 +50,26 @@ namespace eka2l1::epoc::socket {
         LOG_ERROR(SERVICE_ESOCK, "Unhandled base IOCTL (command={})", command);
     }
 
-    void socket::send(const std::uint8_t *data, const std::size_t data_size, std::size_t *sent_size, const std::uint8_t *sockaddr_buffer,
-        const std::size_t sockaddr_buffer_size, const std::uint32_t flags, epoc::notify_info &complete_info) {
+    void socket::send(const std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const saddress *addr,
+        std::uint32_t flags, epoc::notify_info &complete_info) {
         LOG_ERROR(SERVICE_ESOCK, "Sending data to socket unimplemented!");
+    }
+
+    void socket::receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const saddress *addr,
+        std::uint32_t flags, epoc::notify_info &complete_info, receive_done_callback cb) {
+        LOG_ERROR(SERVICE_ESOCK, "Receiving data from socket unimplemented!");        
+    }
+
+    void socket::cancel_receive(const std::uint32_t flags) {
+        LOG_ERROR(SERVICE_ESOCK, "Cancel receive unimplemented!");
+    }
+
+    void socket::cancel_send(const std::uint32_t flags) {
+        LOG_ERROR(SERVICE_ESOCK, "Cancel send unimplemented!");
+    }
+
+    void socket::cancel_connect() {
+        LOG_ERROR(SERVICE_ESOCK, "Cancel connect unimplemented!");
     }
 
     socket_socket::socket_socket(socket_client_session *parent, std::unique_ptr<socket> &sock)
@@ -169,16 +191,27 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket_socket::bind(service::ipc_context *ctx) {
-        std::uint8_t *sockaddr_buffer = ctx->get_descriptor_argument_ptr(0);
-        std::size_t sockaddr_buffer_size = ctx->get_argument_data_size(0);
+        std::optional<saddress> sockaddr = ctx->get_argument_data_from_descriptor<saddress>(0);
 
-        if (!sockaddr_buffer || !sockaddr_buffer_size) {
+        if (!sockaddr.has_value()) {
             ctx->complete(epoc::error_argument);
             return;
         }
 
-        const std::int32_t bind_result = sock_->bind(sockaddr_buffer, sockaddr_buffer_size);
-        ctx->complete(bind_result);
+        epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
+        sock_->bind(sockaddr.value(), info);
+    }
+    
+    void socket_socket::connect(service::ipc_context *ctx) {
+        std::optional<saddress> sockaddr = ctx->get_argument_data_from_descriptor<saddress>(0);
+
+        if (!sockaddr.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
+        sock_->connect(sockaddr.value(), info);
     }
 
     void socket_socket::write(service::ipc_context *ctx) {
@@ -191,7 +224,107 @@ namespace eka2l1::epoc::socket {
         }
 
         epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
-        sock_->send(packet_buffer, packet_size, nullptr, nullptr, 0, 0, info);
+        sock_->send(packet_buffer, static_cast<std::uint32_t>(packet_size), nullptr, nullptr, 0, info);
+    }
+
+    void socket_socket::send(service::ipc_context *ctx, const bool has_return_length, const bool has_addr) {
+        std::optional<std::uint32_t> flags = std::nullopt;
+        std::uint8_t *packet_buffer = ctx->get_descriptor_argument_ptr(2);
+        std::size_t packet_size = ctx->get_argument_data_size(2);
+
+        if (!packet_buffer || !packet_size) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+        
+        std::uint32_t *size_return = nullptr;
+        if (has_return_length) {
+            size_return = reinterpret_cast<std::uint32_t*>(ctx->get_descriptor_argument_ptr(0));
+            if (!size_return) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+
+            flags = *size_return;
+        } else {
+            flags = ctx->get_argument_value<std::uint32_t>(0);
+        }
+
+        if (!flags.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        std::optional<saddress> optional_addr = std::nullopt;
+        if (has_addr) {
+            optional_addr = ctx->get_argument_data_from_descriptor<saddress>(1);
+            if (!optional_addr.has_value()) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+        }
+
+        epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
+        sock_->send(packet_buffer, packet_size, size_return, optional_addr.has_value() ? &optional_addr.value() : nullptr, SOCKET_FLAG_IS_NATIVE_FUNCTION | flags.value(), info);
+    }
+
+    void socket_socket::recv(service::ipc_context *ctx, const bool has_return_length, const bool one_or_more, const bool has_addr) {
+        std::optional<std::uint32_t> flags = std::nullopt;
+        std::uint8_t *packet_buffer = ctx->get_descriptor_argument_ptr(2);
+        std::size_t packet_size = ctx->get_argument_max_data_size(2);
+
+        if (!packet_buffer || !packet_size) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        
+        kernel::process *requester = ctx->msg->own_thr->owning_process();
+        epoc::des8 *packet_des = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[2]).get(requester);
+        
+        std::uint32_t *size_return = nullptr;
+        if (has_return_length) {
+            size_return = reinterpret_cast<std::uint32_t*>(ctx->get_descriptor_argument_ptr(0));
+            if (!size_return) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+
+            // Not in S^3 I think, but they store the flag in this variable in s60v5 and down
+            // Layout in S^3 makes more sense. They still do this in some case where things are not fit though in s^3.
+            flags = *size_return;
+        } else {
+            flags = ctx->get_argument_value<std::uint32_t>(0);
+        }
+
+        if (!flags.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        std::optional<saddress> optional_addr = std::nullopt;
+        if (has_addr) {
+            optional_addr = ctx->get_argument_data_from_descriptor<saddress>(1);
+            if (!optional_addr.has_value()) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+        }
+
+        flags.value() |= SOCKET_FLAG_IS_NATIVE_FUNCTION;
+        if (one_or_more) {
+            flags.value() |= SOCKET_FLAG_DONT_WAIT_FULL;
+        }
+
+        epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
+        sock_->receive(packet_buffer, static_cast<std::uint32_t>(packet_size), size_return, optional_addr.has_value() ? &optional_addr.value() : nullptr, flags.value(), info,
+            [packet_des, requester](const std::int64_t length) {
+                if (length < 0) {
+                    packet_des->set_length(requester, 0);
+                } else {
+                    packet_des->set_length(requester, static_cast<std::uint32_t>(length));
+                }
+            });
     }
 
     void socket_socket::ioctl(service::ipc_context *ctx) {
@@ -208,6 +341,16 @@ namespace eka2l1::epoc::socket {
 
         epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
         sock_->ioctl(command.value(), info, buffer, buffer_size, max_buffer_size, level.value());
+    }
+    
+    void socket_socket::cancel_write(service::ipc_context *ctx) {
+        sock_->cancel_send(0);
+        ctx->complete(epoc::error_none);
+    }
+
+    void socket_socket::cancel_recv(service::ipc_context *ctx) {
+        sock_->cancel_receive(SOCKET_FLAG_IS_NATIVE_FUNCTION);
+        ctx->complete(epoc::error_none);
     }
 
     void socket_socket::close(service::ipc_context *ctx) {
@@ -243,6 +386,10 @@ namespace eka2l1::epoc::socket {
                 close(ctx);
                 return;
 
+            case socket_so_connect:
+                connect(ctx);
+                return;
+
             case socket_so_bind:
                 bind(ctx);
                 return;
@@ -251,8 +398,42 @@ namespace eka2l1::epoc::socket {
                 write(ctx);
                 return;
 
+            case socket_so_send:
+                send(ctx, true, false);
+                return;
+
+            case socket_so_send_no_len:
+                send(ctx, false, false);
+                return;
+
+            case socket_so_recv:
+                recv(ctx, false, false, false);
+                return;
+
+            case socket_so_recv_no_len:
+                recv(ctx, true, false, false);
+                return;
+
+            case socket_so_recv_one_or_more:
+                recv(ctx, true, true, false);
+                return;
+
             case socket_so_ioctl:
                 ioctl(ctx);
+                return;
+
+            case socket_so_cancel_write:
+                cancel_write(ctx);
+                return;
+
+            case socket_so_cancel_recv:
+                cancel_recv(ctx);
+                return;
+
+            case socket_so_cancel_connect:
+                sock_->cancel_connect();
+                ctx->complete(epoc::error_none);
+
                 return;
 
             default:

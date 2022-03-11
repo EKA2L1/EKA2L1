@@ -61,12 +61,12 @@ namespace eka2l1::epoc::bt {
             return u"BTLinkManager";
         }
 
-        std::uint32_t family_id() const override {
-            return BTADDR_PROTOCOL_FAMILY_ID;
+        std::vector<std::uint32_t> family_ids() const override {
+            return { BTADDR_PROTOCOL_FAMILY_ID };
         }
 
-        virtual std::uint32_t id() const override {
-            return BTLINK_MANAGER_PROTOCOL_ID;
+        virtual std::vector<std::uint32_t> supported_ids() const override {
+            return { BTLINK_MANAGER_PROTOCOL_ID };
         }
 
         virtual epoc::version ver() const override {
@@ -82,12 +82,12 @@ namespace eka2l1::epoc::bt {
             return epoc::socket::byte_order_little_endian;
         }
 
-        virtual std::unique_ptr<epoc::socket::socket> make_socket() override {
+        virtual std::unique_ptr<epoc::socket::socket> make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket::socket_type sock_type) override {
             // L2CAP will be the one handling this. This stack is currently only used for managing links.
             return nullptr;
         }
 
-        virtual std::unique_ptr<epoc::socket::host_resolver> make_host_resolver() override {
+        virtual std::unique_ptr<epoc::socket::host_resolver> make_host_resolver(const std::uint32_t id, const std::uint32_t family_id) override {
             return std::make_unique<btlink_host_resolver>(this);
         }
     };

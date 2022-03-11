@@ -38,13 +38,12 @@ namespace eka2l1::epoc::sms {
 
         ~datagram_socket() override;
 
-        std::int32_t bind(const std::uint8_t *sockaddr_buffer, const std::size_t available_size) override;
+        void bind(const epoc::socket::saddress &sockaddr, epoc::notify_info &info) override;
 
         void ioctl(const std::uint32_t command, epoc::notify_info &complete_info, std::uint8_t *buffer,
             const std::size_t available_size, const std::size_t max_buffer_size, const std::uint32_t level) override;
         
-        void send(const std::uint8_t *data, const std::size_t data_size, std::size_t *sent_size, const std::uint8_t *sockaddr_buffer,
-            const std::size_t sockaddr_buffer_size, const std::uint32_t flags, epoc::notify_info &complete_info) override;
+        void send(const std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr, std::uint32_t flags, epoc::notify_info &complete_info) override;
     };
 
     class datagram_protocol : public socket::protocol {
@@ -62,12 +61,12 @@ namespace eka2l1::epoc::sms {
             return u"SMS Datagram";
         }
 
-        std::uint32_t family_id() const override {
-            return SMS_ADDRESS_FAMILY;
+        std::vector<std::uint32_t> family_ids() const override {
+            return { SMS_ADDRESS_FAMILY };
         }
 
-        virtual std::uint32_t id() const override {
-            return SMS_DTG_PROTOCOL;
+        virtual std::vector<std::uint32_t> supported_ids() const override {
+            return { SMS_DTG_PROTOCOL };
         }
 
         virtual epoc::version ver() const override {
@@ -83,10 +82,10 @@ namespace eka2l1::epoc::sms {
             return epoc::socket::byte_order_little_endian;
         }
 
-        virtual std::unique_ptr<epoc::socket::host_resolver> make_host_resolver() override {
+        virtual std::unique_ptr<epoc::socket::host_resolver> make_host_resolver(const std::uint32_t addr_family, const std::uint32_t protocol_id) override {
             return nullptr;
         }
         
-        virtual std::unique_ptr<epoc::socket::socket> make_socket() override;
+        virtual std::unique_ptr<epoc::socket::socket> make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket::socket_type sock_type) override;
     };
 }

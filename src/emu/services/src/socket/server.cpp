@@ -52,14 +52,15 @@ namespace eka2l1 {
         context.complete(epoc::error_none);
     }
 
-    inline std::uint64_t make_protocol_key_map(const std::uint32_t addr_family, const std::uint32_t pr_id) {
-        return (static_cast<std::uint64_t>(addr_family) << 32) | pr_id;
-    }
-
     epoc::socket::protocol *socket_server::find_protocol(const std::uint32_t addr_family, const std::uint32_t protocol_id) {
-        auto fres = protocols_.find(make_protocol_key_map(addr_family, protocol_id));
-        if (fres != protocols_.end()) {
-            return fres->second.get();
+        for (auto &pr: protocols_) {
+            std::vector<std::uint32_t> ids = pr->family_ids();
+            if (std::find(ids.begin(), ids.end(), addr_family) != ids.end()) {
+                ids = pr->supported_ids();
+                if (std::find(ids.begin(), ids.end(), protocol_id) != ids.end()) {
+                    return pr.get();
+                }
+            }
         }
 
         return nullptr;
@@ -67,8 +68,8 @@ namespace eka2l1 {
 
     epoc::socket::protocol *socket_server::find_protocol_by_name(const std::u16string &name) {
         for (auto &pr : protocols_) {
-            if (pr.second->name() == name) {
-                return pr.second.get();
+            if (pr->name() == name) {
+                return pr.get();
             }
         }
 
@@ -76,14 +77,7 @@ namespace eka2l1 {
     }
 
     bool socket_server::add_protocol(std::unique_ptr<epoc::socket::protocol> &pr) {
-        // Once added, the address family and protocol ID can't be changed. So I think it's fine to store in a map...
-        std::uint64_t map_key = make_protocol_key_map(pr->family_id(), pr->id());
-        if (protocols_.find(map_key) != protocols_.end()) {
-            LOG_ERROR(SERVICE_ESOCK, "Trying to add an protocol with same family address and same protocol number!");
-            return false;
-        }
-
-        protocols_.emplace(map_key, std::move(pr));
+        protocols_.push_back(std::move(pr));
         return true;
     }
 
@@ -167,6 +161,11 @@ namespace eka2l1 {
                 cn_get_long_des_setting(ctx);
                 return;
 
+            case socket_so_open_with_connection:
+            case socket_so_open_with_subconnection:
+                so_create_with_conn_or_subconn(ctx);
+                return;
+
             default:
                 break;
             }
@@ -201,11 +200,11 @@ namespace eka2l1 {
     }
 
     static void fill_protocol_description(epoc::socket::protocol *pr, protocol_description &des) {
-        des.addr_fam_ = pr->family_id();
-        des.protocol_ = pr->id();
+        //des.addr_fam_ = pr->family_id();
+       // des.protocol_ = pr->id();
         des.ver_ = pr->ver();
         des.bord_ = pr->get_byte_order();
-        des.sock_type_ = pr->sock_type();
+        //des.sock_type_ = pr->sock_type();
         des.message_size_ = pr->message_size();
 
         des.name_.assign(nullptr, pr->name());
@@ -271,7 +270,7 @@ namespace eka2l1 {
         }
 
         // Try to instantiate the host resolver
-        std::unique_ptr<epoc::socket::host_resolver> resolver_impl = target_pr->make_host_resolver();
+        std::unique_ptr<epoc::socket::host_resolver> resolver_impl = target_pr->make_host_resolver(addr_family.value(), protocol.value());
         if (!resolver_impl) {
             LOG_ERROR(SERVICE_ESOCK, "The protocol {} does not support resolving host!", common::ucs2_to_utf8(target_pr->name()));
             ctx->complete(epoc::error_not_supported);
@@ -310,11 +309,45 @@ namespace eka2l1 {
             return;
         }
 
-        if (sock_type.value() != target_pr->sock_type()) {
-            LOG_WARN(SERVICE_ESOCK, "Incompatible socket type {}, proceed to create socket anyway", sock_type.value());
+        std::unique_ptr<epoc::socket::socket> sock_impl = target_pr->make_socket(addr_family.value(), protocol.value(), static_cast<epoc::socket::socket_type>(sock_type.value()));
+
+        if (!sock_impl) {
+            LOG_ERROR(SERVICE_ESOCK, "The protocol {} does not support opening socket!", common::ucs2_to_utf8(target_pr->name()));
+            ctx->complete(epoc::error_not_supported);
+
+            return;
         }
 
-        std::unique_ptr<epoc::socket::socket> sock_impl = target_pr->make_socket();
+        // Create new session
+        socket_subsession_instance so_inst = std::make_unique<epoc::socket::socket_socket>(this, sock_impl);
+
+        const std::uint32_t id = static_cast<std::uint32_t>(subsessions_.add(so_inst));
+        subsessions_.get(id)->get()->set_id(id);
+
+        // Write the subsession handle
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(3, id);
+        ctx->complete(epoc::error_none);
+    }
+
+    void socket_client_session::so_create_with_conn_or_subconn(service::ipc_context *ctx) {
+        std::optional<socket_open_info> open_info = ctx->get_argument_data_from_descriptor<socket_open_info>(0);
+
+        if (!open_info.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        // Find the protocol that satifies our condition first
+        epoc::socket::protocol *target_pr = server<socket_server>()->find_protocol(open_info->addr_family_, open_info->protocol_);
+        if (!target_pr) {
+            LOG_ERROR(SERVICE_ESOCK, "Unable to find protocol with address={}, protocol={}", open_info->addr_family_, open_info->protocol_);
+            ctx->complete(epoc::error_not_found);
+
+            return;
+        }
+
+        std::unique_ptr<epoc::socket::socket> sock_impl = target_pr->make_socket(open_info->addr_family_, open_info->protocol_, static_cast<epoc::socket::socket_type>(open_info->socket_type_));
+
         if (!sock_impl) {
             LOG_ERROR(SERVICE_ESOCK, "The protocol {} does not support opening socket!", common::ucs2_to_utf8(target_pr->name()));
             ctx->complete(epoc::error_not_supported);

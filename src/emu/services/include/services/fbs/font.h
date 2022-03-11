@@ -67,6 +67,14 @@ namespace eka2l1::epoc {
 
     static_assert(sizeof(open_font_metrics) == 16);
 
+    struct open_font_shaping_header {
+        std::uint32_t glyph_count_;
+        std::uint32_t char_count_;
+        std::int32_t reserved[2];
+    };
+
+    static_assert(sizeof(open_font_shaping_header) == 16);
+
     struct open_font_face_attrib {
         enum {
             bold = 0x1,

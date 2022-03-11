@@ -22,6 +22,7 @@
 namespace eka2l1::epoc::internet {
     enum {
         INET_ADDRESS_FAMILY = 0x800,
+        INET6_ADDRESS_FAMILY = 0x806,
         INET_ICMP_PROTCOL_ID = 1,
         INET_TCP_PROTOCOL_ID = 6,
         INET_UDP_PROTOCOL_ID = 17,

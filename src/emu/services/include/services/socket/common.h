@@ -30,9 +30,23 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::epoc::socket {
+    /// Note! This is following Symbian OS es_sock ordinal
+    enum socket_type {
+        socket_type_undefined = 0,
+        socket_type_stream = 1, ///< Data sent in order, no boundaries, re-connect when socket sudden end (no goodbye)
+        socket_type_datagram, ///< Data sent may not be in order, message boundaries preserved, data may modified or lost
+        socket_type_packet, ///< Stream except message/data has length/boundaries.
+        socket_type_raw ///< Receive raw packet that is wrapped with protocol header, has not been extracted by any network layer.
+    };
+
+    enum {
+        INVALID_FAMILY_ID = 0xFFFFFFFF
+    };
+
     struct saddress {
-        std::uint32_t family_;
+        std::uint32_t family_ = INVALID_FAMILY_ID;
         std::uint32_t port_;
+        std::uint8_t user_data_[24];
     };
 
     static constexpr std::uint32_t SOCKET_OPTION_FAMILY_BASE = 1;

@@ -26,6 +26,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 namespace eka2l1::epoc::socket {
     enum byte_order {
@@ -51,23 +52,19 @@ namespace eka2l1::epoc::socket {
 
         virtual std::u16string name() const = 0;
 
-        /// Get the family identifier of the protocol.
-        virtual std::uint32_t family_id() const = 0;
+        /// Get the family identifier that the protocol supports
+        virtual std::vector<std::uint32_t> family_ids() const = 0;
 
-        /// Get ID of the protocol in the family
-        virtual std::uint32_t id() const = 0;
+        /// Get IDs of the protocol in the family
+        virtual std::vector<std::uint32_t> supported_ids() const = 0;
         virtual epoc::version ver() const = 0;
         virtual byte_order get_byte_order() const = 0;
-
-        virtual socket_type sock_type() const {
-            return socket_type_undefined;
-        }
 
         virtual std::int32_t message_size() const {
             return SOCKET_MESSAGE_SIZE_UNDEFINED;
         }
 
-        virtual std::unique_ptr<host_resolver> make_host_resolver() = 0;
-        virtual std::unique_ptr<socket> make_socket() = 0;
+        virtual std::unique_ptr<host_resolver> make_host_resolver(const std::uint32_t family_id, const std::uint32_t protocol_id) = 0;
+        virtual std::unique_ptr<socket> make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket_type sock_type) = 0;
     };
 };

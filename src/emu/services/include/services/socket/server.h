@@ -60,6 +60,7 @@ namespace eka2l1 {
         protected:
             void get_host_name(service::ipc_context *ctx);
             void set_host_name(service::ipc_context *ctx);
+            void get_by_name(service::ipc_context *ctx);
             void close(service::ipc_context *ctx);
 
         public:
@@ -83,6 +84,11 @@ namespace eka2l1 {
             void write(service::ipc_context *ctx);
             void ioctl(service::ipc_context *ctx);
             void close(service::ipc_context *ctx);
+            void connect(service::ipc_context *ctx);
+            void send(service::ipc_context *ctx, const bool has_return_length, const bool has_addr);
+            void recv(service::ipc_context *ctx, const bool has_return_length, const bool one_or_more, const bool has_addr);
+            void cancel_write(service::ipc_context *ctx);
+            void cancel_recv(service::ipc_context *ctx);
 
         public:
             explicit socket_socket(socket_client_session *parent, std::unique_ptr<socket> &sock);
@@ -98,16 +104,29 @@ namespace eka2l1 {
     enum socket_opcode {
         socket_pr_find = 0x02,
         socket_so_create = 0x06,
+        socket_so_send = 0x08,
+        socket_so_send_no_len = 0x09,
+        socket_so_recv = 0x0A,
+        socket_so_recv_no_len = 0x0B,
+        socket_so_recv_one_or_more = 0x0C,
         socket_so_write = 0xE,
+        socket_so_connect = 0x13,
         socket_so_bind = 0x14,
         socket_so_get_opt = 0x18,
         socket_so_ioctl = 0x19,
         socket_so_close = 0x1D,
+        socket_so_cancel_recv = 0x20,
+        socket_so_cancel_write = 0x21,
+        socket_so_cancel_connect = 0x22,
         socket_hr_open = 0x28,
+        socket_hr_get_by_name = 0x29,
+        socket_hr_close = 0x2F,
         socket_sr_get_by_number = 0x32,
+        socket_so_open_with_connection = 0x3D,
         socket_hr_open_with_connection = 0x3E,
         socket_cn_open_with_cn_type = 0x3F,
-        socket_cn_get_long_des_setting = 0x51
+        socket_cn_get_long_des_setting = 0x51,
+        socket_so_open_with_subconnection = 0x71
     };
 
     enum socket_opcode_old {
@@ -137,10 +156,18 @@ namespace eka2l1 {
         std::uint32_t message_size_;
     };
 
+    struct socket_open_info {
+        std::uint32_t addr_family_;
+        std::uint32_t socket_type_;
+        std::uint32_t protocol_;
+        std::uint32_t handle_;
+        std::int32_t reserved_;
+    };
+
     std::string get_socket_server_name_by_epocver(const epocver ver);
 
     class socket_server : public service::typical_server {
-        std::map<std::uint64_t, std::unique_ptr<epoc::socket::protocol>> protocols_;
+        std::vector<std::unique_ptr<epoc::socket::protocol>> protocols_;
         std::vector<std::unique_ptr<epoc::socket::connect_agent>> agents_;
 
     public:
@@ -172,6 +199,7 @@ namespace eka2l1 {
 
         void hr_create(service::ipc_context *ctx, const bool with_conn);
         void so_create(service::ipc_context *ctx);
+        void so_create_with_conn_or_subconn(service::ipc_context *ctx);
         void pr_find(service::ipc_context *ctx);
         void sr_get_by_number(eka2l1::service::ipc_context *ctx);
         void cn_open(eka2l1::service::ipc_context *ctx);

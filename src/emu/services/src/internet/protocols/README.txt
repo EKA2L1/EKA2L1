@@ -1,0 +1,1 @@
+I pick libuv because Symbian sockets allow async like Windows

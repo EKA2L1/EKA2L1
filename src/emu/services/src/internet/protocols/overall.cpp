@@ -17,24 +17,30 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <services/internet/protocols/inet.h>
 #include <services/internet/protocols/overall.h>
-#include <services/internet/protocols/tcp/tcp.h>
-#include <services/internet/protocols/udp/udp.h>
 #include <services/socket/server.h>
 
 #include <common/log.h>
 
+#if EKA2L1_PLATFORM(WIN32)
+#include <ws2tcpip.h>
+#endif
+
 namespace eka2l1::epoc::internet {
+    inet_bridged_protocol::inet_bridged_protocol(const bool oldarch)
+        : socket::protocol(oldarch) {
+#if EKA2L1_PLATFORM(WIN32)
+        WSADATA init_data;
+        WSAStartup(MAKEWORD(2, 0), &init_data);
+#endif
+    }
+
     void add_internet_stack_protocols(socket_server *sock, const bool oldarch) {
-        std::unique_ptr<epoc::socket::protocol> udp_pr = std::make_unique<udp_protocol>(oldarch);
-        std::unique_ptr<epoc::socket::protocol> tcp_pr = std::make_unique<tcp_protocol>(oldarch);
+        std::unique_ptr<epoc::socket::protocol> inet_br_pr = std::make_unique<inet_bridged_protocol>(oldarch);
 
-        if (!sock->add_protocol(udp_pr)) {
-            LOG_ERROR(SERVICE_BLUETOOTH, "Failed to add INET UDP protocol");
-        }
-
-        if (!sock->add_protocol(tcp_pr)) {
-            LOG_ERROR(SERVICE_BLUETOOTH, "Failed to add INET TCP protocol");
+        if (!sock->add_protocol(inet_br_pr)) {
+            LOG_ERROR(SERVICE_BLUETOOTH, "Failed to add INET bridged protocol");
         }
     }
 }

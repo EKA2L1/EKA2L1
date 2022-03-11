@@ -22,7 +22,7 @@
 #include <utils/err.h>
 
 namespace eka2l1::epoc::sms {
-    std::unique_ptr<epoc::socket::socket> datagram_protocol::make_socket() {
+    std::unique_ptr<epoc::socket::socket> datagram_protocol::make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket::socket_type sock_type) {
         if (socket_count_ >= SMS_MAX_SOCKS) {
             LOG_ERROR(SERVICE_SMS, "Number of SMS socket instances exceed maximum!");
             return nullptr;
@@ -38,9 +38,9 @@ namespace eka2l1::epoc::sms {
         }
     }
 
-    std::int32_t datagram_socket::bind(const std::uint8_t *sockaddr_buffer, const std::size_t available_size) {
+    void datagram_socket::bind(const epoc::socket::saddress &sockaddr, epoc::notify_info &info) {
         LOG_INFO(SERVICE_SMS, "Socket bind stubbed to success");
-        return epoc::error_none;
+        info.complete(epoc::error_none);
     }
 
     void datagram_socket::ioctl(const std::uint32_t command, epoc::notify_info &complete_info, std::uint8_t *buffer,
@@ -49,8 +49,8 @@ namespace eka2l1::epoc::sms {
         complete_info.complete(epoc::error_none);
     }
     
-    void datagram_socket::send(const std::uint8_t *data, const std::size_t data_size, std::size_t *sent_size, const std::uint8_t *sockaddr_buffer,
-        const std::size_t sockaddr_buffer_size, const std::uint32_t flags, epoc::notify_info &complete_info) {
+    void datagram_socket::send(const std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr,
+        std::uint32_t flags, epoc::notify_info &complete_info) {
         //LOG_INFO(SERVICE_SMS, "Socket send stubbed with complete!");
         complete_info.complete(epoc::error_none);
     }

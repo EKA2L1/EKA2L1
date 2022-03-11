@@ -53,6 +53,26 @@ namespace eka2l1::epoc::socket {
         ctx->complete(epoc::error_none);
     }
 
+    void socket_host_resolver::get_by_name(service::ipc_context *ctx) {
+        std::optional<std::u16string> name = ctx->get_argument_value<std::u16string>(0);
+
+        if (!name.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        epoc::socket::name_entry entry_holder;
+        entry_holder.name_ = name.value();
+
+        if (!resolver_->get_by_name(entry_holder)) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        ctx->write_data_to_descriptor_argument(1, entry_holder);
+        ctx->complete(epoc::error_none);
+    }
+
     void socket_host_resolver::close(service::ipc_context *ctx) {
         parent_->subsessions_.remove(id_);
         ctx->complete(epoc::error_none);
@@ -78,6 +98,14 @@ namespace eka2l1::epoc::socket {
             }
         } else {
             switch (ctx->msg->function) {
+            case socket_hr_get_by_name:
+                get_by_name(ctx);
+                return;
+
+            case socket_hr_close:
+                close(ctx);
+                return;
+
             default:
                 break;
             }

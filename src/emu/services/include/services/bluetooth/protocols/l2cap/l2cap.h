@@ -63,17 +63,13 @@ namespace eka2l1::epoc::bt {
             return u"L2CAP";
         }
 
-        virtual std::uint32_t id() const override {
-            return L2CAP_PROTOCOL_ID;
-        }
-
-        virtual epoc::socket::socket_type sock_type() const override {
-            return epoc::socket::socket_type_packet;
+        virtual std::vector<std::uint32_t> supported_ids() const override {
+            return { L2CAP_PROTOCOL_ID };
         }
 
         virtual std::int32_t message_size() const override;
 
-        virtual std::unique_ptr<epoc::socket::socket> make_socket() override {
+        virtual std::unique_ptr<epoc::socket::socket> make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket::socket_type sock_type) override {
             return std::make_unique<l2cap_socket>(this);
         }
     };

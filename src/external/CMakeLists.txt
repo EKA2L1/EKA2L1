@@ -261,6 +261,12 @@ if (NOT ANDROID)
     target_link_libraries(SDL2 INTERFACE "${SDL2_LIBRARY}")
 endif()
 
+# libuv
+set(LIBUV_BUILD_TESTS "Build test for libuv" CACHE INTERNAL OFF)
+set(LIBUV_BUILD_BENCH "Build bench for libuv" CACHE INTERNAL OFF)
+
+add_subdirectory(libuv)
+
 set (capstone_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/capstone/include" PARENT_SCOPE)
 set (YAML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp/include" PARENT_SCOPE)
 set (LIBCXXABI_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libcxxabi/include" PARENT_SCOPE)

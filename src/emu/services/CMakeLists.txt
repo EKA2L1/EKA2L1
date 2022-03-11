@@ -28,9 +28,8 @@ add_library(epocservs
         include/services/centralrepo/common.h
         include/services/centralrepo/repo.h
         include/services/comm/comm.h
-        include/services/internet/protocols/tcp/tcp.h
-        include/services/internet/protocols/udp/udp.h
         include/services/internet/protocols/common.h
+        include/services/internet/protocols/inet.h
         include/services/internet/protocols/overall.h
         include/services/internet/connmonitor.h
         include/services/internet/nifman.h
@@ -156,9 +155,9 @@ add_library(epocservs
         src/centralrepo/cre.cpp
         src/centralrepo/repo.cpp
         src/comm/comm.cpp
-        src/internet/protocols/tcp/resolver.cpp
-        src/internet/protocols/udp/resolver.cpp
         src/internet/protocols/overall.cpp
+        src/internet/protocols/resolver.cpp
+        src/internet/protocols/socket.cpp
         src/internet/connmonitor.cpp
         src/internet/nifman.cpp
         src/drm/notifier/events.cpp
@@ -294,6 +293,11 @@ target_link_libraries(epocservs PRIVATE
         epocpkg
         drivers
         stb
+        uv_a
         xxHash
         pugixml
         sqlite3)
+
+if (WIN32)
+        target_link_libraries(epocservs PRIVATE Ws2_32.lib)
+endif()
