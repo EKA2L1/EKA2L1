@@ -591,12 +591,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="179"/>
       <source>Screen scale factor</source>
-      <translation type="unfinished">Screen scale factor</translation>
+      <translation>Factor de escala de la pantalla</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="187"/>
       <source>Fit the window</source>
-      <translation type="unfinished">Fit the window</translation>
+      <translation>Ajustar a la ventana</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="217"/>
