@@ -1,0 +1,1 @@
+Overriding default FEP to let direct keyboard input/Android softkey input. And because the touch input for the IME is broken, and outdated on emulator.

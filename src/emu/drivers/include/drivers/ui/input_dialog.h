@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 EKA2L1 Team.
+ * Copyright (c) 2022 EKA2L1 Team.
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -17,19 +17,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MEDIA_CLIENT_AUDIO_STREAM_LOG_H_
-#define MEDIA_CLIENT_AUDIO_STREAM_LOG_H_
+#pragma once
 
-#include <e32std.h>
+#include <cstdint>
+#include <functional>
+#include <string>
 
-_LIT(KMcaCat, "MediaClientAudioStream");
-_LIT(KMcvCat, "MediaClientVideo");
-_LIT(KBacklightCat, "Backlight");
-_LIT(KCameraCat, "Camera");
-_LIT(KScdvCat, "SCDV-HLE");
-_LIT(KPostingSurfaceCat, "PostingSurface");
-_LIT(KAvkonFepCat, "AVKONFEP");
+namespace eka2l1::drivers::ui {
+    using input_dialog_complete_callback = std::function<void(const std::u16string &)>;
 
-void LogOut(const TDesC &aCategory, const TDesC &aMessage, ...);
-
-#endif
+    bool open_input_view(const std::u16string &initial_text, const int max_len, input_dialog_complete_callback complete_callback);
+    void close_input_view();
+}

@@ -11,6 +11,7 @@ add_library(native-lib SHARED
         include/android/state.h
         include/android/thread.h
         src/emu_window_android.cpp
+        src/input_dialog.cpp
         src/launcher.cpp
         src/state.cpp
         src/thread.cpp
@@ -33,7 +34,17 @@ target_link_libraries(native-lib PRIVATE
         yaml-cpp)
 
 target_include_directories(native-lib PRIVATE include)
-add_dependencies(native-lib ecam scdv mediaclientaudio mediaclientaudiostream mediaclientvideo vibractrl backlightctrl postingsurfacefactory goommonitor)
+add_dependencies(native-lib
+        avkonfep
+        ecam
+        scdv
+        mediaclientaudio
+        mediaclientaudiostream
+        mediaclientvideo
+        vibractrl
+        backlightctrl
+        postingsurfacefactory
+        goommonitor)
 
 set(ASSETS_DIR "${PROJECT_SOURCE_DIR}/src/emu/android/app/src/main/assets")
 

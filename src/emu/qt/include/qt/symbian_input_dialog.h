@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 EKA2L1 Team.
+ * Copyright (c) 2022 EKA2L1 Team.
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -17,19 +17,36 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MEDIA_CLIENT_AUDIO_STREAM_LOG_H_
-#define MEDIA_CLIENT_AUDIO_STREAM_LOG_H_
+#pragma once
 
-#include <e32std.h>
+#include <QDialog>
 
-_LIT(KMcaCat, "MediaClientAudioStream");
-_LIT(KMcvCat, "MediaClientVideo");
-_LIT(KBacklightCat, "Backlight");
-_LIT(KCameraCat, "Camera");
-_LIT(KScdvCat, "SCDV-HLE");
-_LIT(KPostingSurfaceCat, "PostingSurface");
-_LIT(KAvkonFepCat, "AVKONFEP");
+namespace Ui {
+class SymbianInputDialog;
+}
 
-void LogOut(const TDesC &aCategory, const TDesC &aMessage, ...);
+class symbian_input_dialog : public QDialog
+{
+    Q_OBJECT
 
-#endif
+private:
+    int max_length_;
+
+private slots:
+    void event_content_changed();
+    void event_submit_pressed();
+    void event_finished(int result);
+
+signals:
+    void finished_input(const QString &result, const bool force_close);
+
+public:
+    explicit symbian_input_dialog(QWidget *parent = nullptr);
+    ~symbian_input_dialog();
+
+    void open_for_input(const QString &initial_text, const int max_length);
+    QString get_current_text() const;
+
+private:
+    Ui::SymbianInputDialog *ui;
+};

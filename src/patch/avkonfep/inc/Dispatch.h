@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 EKA2L1 Team.
+ * Copyright (c) 2021 EKA2L1 Team.
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -17,19 +17,20 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MEDIA_CLIENT_AUDIO_STREAM_LOG_H_
-#define MEDIA_CLIENT_AUDIO_STREAM_LOG_H_
+#ifndef AVKONFEP_DISPATCH_H_
+#define AVKONFEP_DISPATCH_H_
 
 #include <e32std.h>
 
-_LIT(KMcaCat, "MediaClientAudioStream");
-_LIT(KMcvCat, "MediaClientVideo");
-_LIT(KBacklightCat, "Backlight");
-_LIT(KCameraCat, "Camera");
-_LIT(KScdvCat, "SCDV-HLE");
-_LIT(KPostingSurfaceCat, "PostingSurface");
-_LIT(KAvkonFepCat, "AVKONFEP");
+#define HLE_DISPATCH_FUNC(ret, name, ARGS...) \
+    ret name(const TUint32 func_id, ##ARGS)
 
-void LogOut(const TDesC &aCategory, const TDesC &aMessage, ...);
+extern "C" {
+// On beginning, contains the initial text. On finish with request status done, return the committed text
+// The text will be clamped to max length of descriptor
+HLE_DISPATCH_FUNC(TInt, EHUIOpenGlobalTextView, const TDesC *aInitialText, const TInt aMaxLength, TRequestStatus *aStatus);
+HLE_DISPATCH_FUNC(void, EHUIGetStoredText, TInt *aLength, const void *aPtr);
+HLE_DISPATCH_FUNC(void, EHUICancelGlobalTextView);
+}
 
 #endif

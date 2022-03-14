@@ -27,6 +27,7 @@
 #include <drivers/audio/dsp.h>
 #include <drivers/audio/player.h>
 #include <dispatch/video.h>
+#include <dispatch/hui.h>
 
 #include <drivers/itc.h>
 
@@ -233,6 +234,7 @@ namespace eka2l1::dispatch {
         dsp_manager dsp_manager_;
         screen_post_transferer post_transferer_;
         egl_controller egl_controller_;
+        ehui_controller hui_controller_;
 
         std::map<std::uint32_t, address> static_string_addrs_;
 
@@ -265,6 +267,10 @@ namespace eka2l1::dispatch {
 
         egl_controller &get_egl_controller() {
             return egl_controller_;
+        }
+
+        ehui_controller &get_hui_controller() {
+            return hui_controller_;
         }
 
         address add_static_string(const std::uint32_t key, const std::string &value);

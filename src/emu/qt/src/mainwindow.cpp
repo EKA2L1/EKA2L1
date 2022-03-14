@@ -23,6 +23,7 @@
 #include <qt/device_install_dialog.h>
 #include <qt/displaywidget.h>
 #include <qt/mainwindow.h>
+#include <qt/symbian_input_dialog.h>
 #include <qt/package_manager_dialog.h>
 #include <qt/settings_dialog.h>
 #include <qt/state.h>
@@ -210,6 +211,9 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     , active_screen_draw_callback_(0)
     , active_screen_mode_change_callback_(0)
     , settings_dialog_(nullptr)
+    , input_complete_callback_(nullptr)
+    , input_text_max_len_(0x7FFFFFFF)
+    , input_dialog_(nullptr)
     , ui_(new Ui::main_window)
     , applist_(nullptr)
     , displayer_(nullptr) {
@@ -332,6 +336,8 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     connect(this, &main_window::package_install_text_ask, this, &main_window::on_package_install_text_ask, Qt::BlockingQueuedConnection);
     connect(this, &main_window::package_install_language_choose, this, &main_window::on_package_install_language_choose, Qt::BlockingQueuedConnection);
     connect(this, &main_window::screen_focus_group_changed, this, &main_window::on_screen_current_group_change_callback, Qt::QueuedConnection);
+    connect(this, &main_window::input_dialog_open_request, this, &main_window::on_input_dialog_open_request);
+    connect(this, &main_window::input_dialog_close_request, this, &main_window::on_input_dialog_close_request);
 
     setAcceptDrops(true);
 }
@@ -406,6 +412,10 @@ main_window::~main_window() {
 
     if (displayer_) {
         delete displayer_;
+    }
+
+    if (input_dialog_) {
+        delete input_dialog_;
     }
 
     delete recent_mount_folder_menu_;
@@ -1201,4 +1211,59 @@ void main_window::restore_ui_layouts() {
     if (state_variant.isValid()) {
         restoreState(state_variant.toByteArray());
     }
+}
+
+bool main_window::input_dialog_open(const std::u16string &inital_text, const int max_length, eka2l1::drivers::ui::input_dialog_complete_callback complete_callback) {
+    if (input_complete_callback_) {
+        return false;
+    }
+
+    input_complete_callback_ = complete_callback;
+    input_initial_text_ = inital_text;
+    input_text_max_len_ = max_length;
+
+    emit input_dialog_open_request();
+    return true;
+}
+
+void main_window::input_dialog_close() {
+    emit input_dialog_close_request();
+}
+
+void main_window::on_finished_text_input(const QString &text, const bool force_close) {
+    if (input_complete_callback_) {
+        input_complete_callback_(text.toStdU16String());
+        input_complete_callback_ = nullptr;
+    }
+
+    if (!force_close) {
+        input_dialog_->done(QDialog::Accepted);
+    }
+
+    input_dialog_ = nullptr;
+}
+
+void main_window::on_input_dialog_open_request() {
+    if (input_dialog_) {
+        LOG_ERROR(eka2l1::FRONTEND_UI, "Input dialog is already opened! We are aborting...");
+        return;
+    }
+
+    input_dialog_ = new symbian_input_dialog(this);
+    connect(input_dialog_, &symbian_input_dialog::finished_input, this, &main_window::on_finished_text_input);
+
+    input_dialog_->open_for_input(QString::fromStdU16String(input_initial_text_), input_text_max_len_);
+}
+
+void main_window::on_input_dialog_close_request() {
+    if (input_dialog_) {
+        if (input_complete_callback_) {
+            input_complete_callback_(input_dialog_->get_current_text().toStdU16String());
+        }
+
+        input_dialog_->done(QDialog::Accepted);
+        input_dialog_ = nullptr;
+    }
+
+    input_complete_callback_ = nullptr;
 }

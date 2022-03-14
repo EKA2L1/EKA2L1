@@ -22,6 +22,7 @@
 
 #include <drivers/input/common.h>
 #include <drivers/graphics/context.h>
+#include <drivers/ui/input_dialog.h>
 
 #include <QActionGroup>
 #include <QListWidgetItem>
@@ -37,6 +38,7 @@ namespace Ui {
 QT_END_NAMESPACE
 
 static constexpr std::size_t MAX_RECENT_ENTRIES = 5;
+class symbian_input_dialog;
 
 namespace eka2l1 {
     class system;
@@ -87,6 +89,12 @@ private:
     QActionGroup *rotate_group_;
 
     QMargins before_margins_;
+
+    eka2l1::drivers::ui::input_dialog_complete_callback input_complete_callback_;
+    std::u16string input_initial_text_;
+    int input_text_max_len_;
+
+    symbian_input_dialog *input_dialog_;
 
     void setup_screen_draw();
     void setup_app_list();
@@ -140,6 +148,9 @@ private slots:
     void on_theme_change_requested(const QString &text);
     void force_update_display_minimum_size();
     void on_window_title_setting_changed();
+    void on_finished_text_input(const QString &text, const bool force_close);
+    void on_input_dialog_open_request();
+    void on_input_dialog_close_request();
 
 signals:
     void progress_dialog_change(const std::size_t now, const std::size_t total);
@@ -150,6 +161,8 @@ signals:
     void restart_requested();
     void controller_button_press(eka2l1::drivers::input_event event);
     void screen_focus_group_changed();
+    void input_dialog_open_request();
+    void input_dialog_close_request();
 
 public:
     main_window(QApplication &app, QWidget *parent, eka2l1::desktop::emulator &emulator_state);
@@ -167,6 +180,9 @@ public:
     }
 
     bool controller_event_handler(eka2l1::drivers::input_event &event);
+
+    bool input_dialog_open(const std::u16string &inital_text, const int max_length, eka2l1::drivers::ui::input_dialog_complete_callback complete_callback);
+    void input_dialog_close();
 
 private:
     Ui::main_window *ui_;

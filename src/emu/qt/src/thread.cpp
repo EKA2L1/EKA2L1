@@ -42,6 +42,7 @@
 #include <drivers/input/emu_controller.h>
 
 #include <services/window/window.h>
+#include <qt/input_dialog_driver.h>
 
 #include <kernel/kernel.h>
 
@@ -359,6 +360,7 @@ namespace eka2l1::desktop {
         state.ui_main->show();
         state.ui_main->setWindowTitle(get_emulator_window_title());
 
+        eka2l1::drivers::ui::main_window_instance = state.ui_main;
         state.window = state.ui_main->render_window();
 
         std::thread graphics_thread_obj(graphics_driver_thread, std::ref(state));

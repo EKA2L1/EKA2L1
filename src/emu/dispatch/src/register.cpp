@@ -19,6 +19,7 @@
 
 #include <dispatch/audio.h>
 #include <dispatch/camera.h>
+#include <dispatch/hui.h>
 #include <dispatch/register.h>
 #include <dispatch/screen.h>
 #include <dispatch/video.h>
@@ -83,6 +84,9 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER(0x93, evideo_player_current_volume),
         BRIDGE_REGISTER_DISPATCHER(0x94, evideo_player_set_volume),
         BRIDGE_REGISTER_DISPATCHER(0x95, evideo_player_set_rotation),
+        BRIDGE_REGISTER_DISPATCHER(0xA0, ehui_open_input_view),
+        BRIDGE_REGISTER_DISPATCHER(0xA1, ehui_get_stored_input_text),
+        BRIDGE_REGISTER_DISPATCHER(0xA2, ehui_close_input_view),
         BRIDGE_REGISTER_DISPATCHER(0x1000, sysutils::sysstartup_get_state),
         BRIDGE_REGISTER_DISPATCHER(0x1100, egl_choose_config_emu),
         BRIDGE_REGISTER_DISPATCHER(0x1101, egl_copy_buffers_emu),
