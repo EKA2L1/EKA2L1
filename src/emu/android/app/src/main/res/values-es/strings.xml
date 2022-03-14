@@ -68,7 +68,7 @@
     <string name="pref_device_display_name">Nombre amistoso del teléfono</string>
     <string name="action_context_delete">Eliminar</string>
     <string name="action_context_rename">Renombrar</string>
-    <string name="action_context_shortcut">Create shortcut</string>
+    <string name="action_context_shortcut">Crear acceso directo</string>
     <string name="start">Iniciar</string>
     <string name="reset_settings">Restablecer ajustes</string>
     <string name="reset_layout">Restablecer disposición del teclado</string>
