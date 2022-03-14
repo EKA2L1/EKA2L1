@@ -10,6 +10,19 @@
     </message>
   </context>
   <context>
+    <name>SymbianInputDialog</name>
+    <message>
+      <location filename="../src/symbian_input_dialog.ui" line="14"/>
+      <source>Enter the text</source>
+      <translation type="unfinished">Enter the text</translation>
+    </message>
+    <message>
+      <location filename="../src/symbian_input_dialog.ui" line="31"/>
+      <source>Submit</source>
+      <translation type="unfinished">Submit</translation>
+    </message>
+  </context>
+  <context>
     <name>about_dialog</name>
     <message>
       <location filename="../src/aboutdialog.ui" line="14"/>
@@ -341,159 +354,159 @@
       <translation>Segarkan daftar aplikasi</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="238"/>
+      <location filename="../src/mainwindow.cpp" line="242"/>
       <source>Clear menu</source>
       <translation>Kosongkan menu</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="301"/>
+      <location filename="../src/mainwindow.cpp" line="305"/>
       <source>Touchscreen disabled</source>
       <translation>Layar sentuh dinonaktifkan</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="301"/>
+      <location filename="../src/mainwindow.cpp" line="305"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
       <translation>Beberapa pemetaan tombol dipautkan dengan tombol tetikus. Sehingga layar sentuh dinonaktifkan.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Layar sentuh dapat diaktifkan kembali dengan memetakan tombol tetikus dengan tombol papan ketik.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="302"/>
-      <location filename="../src/mainwindow.cpp" line="367"/>
+      <location filename="../src/mainwindow.cpp" line="306"/>
+      <location filename="../src/mainwindow.cpp" line="373"/>
       <source>Don&apos;t show this again</source>
       <translation>Jangan tampilkan lagi</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="366"/>
+      <location filename="../src/mainwindow.cpp" line="372"/>
       <source>No device installed</source>
       <translation>Tak ada perangkat terpasang</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="366"/>
+      <location filename="../src/mainwindow.cpp" line="372"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
       <translation>Anda belum memasang perangkat apa pun. Mohon pasang perangkat atau ikuti arahan pemasangan di halaman wiki GitHub EKA2L1.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="657"/>
-      <location filename="../src/mainwindow.cpp" line="906"/>
+      <location filename="../src/mainwindow.cpp" line="667"/>
+      <location filename="../src/mainwindow.cpp" line="916"/>
       <source>Cancel</source>
       <translation>Batal</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="660"/>
+      <location filename="../src/mainwindow.cpp" line="670"/>
       <source>Extracting game dump files</source>
       <translation>Mengekstrak berkas dump permainan</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="681"/>
+      <location filename="../src/mainwindow.cpp" line="691"/>
       <source>Mounting aborted</source>
       <translation>Mount digagalkan</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="686"/>
+      <location filename="../src/mainwindow.cpp" line="696"/>
       <source>The ZIP file is corrupted!</source>
       <translation>Berkas ZIP rusak!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="691"/>
+      <location filename="../src/mainwindow.cpp" line="701"/>
       <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
       <translation>Di dalam ZIP tidak ada folder System pada root. Folder System harus ada di dump permainan.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="697"/>
+      <location filename="../src/mainwindow.cpp" line="707"/>
       <source>The choosen file is not a ZIP file!</source>
       <translation>Berkas yang dipilih bukan berkas ZIP!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="711"/>
+      <location filename="../src/mainwindow.cpp" line="721"/>
       <source>Game card problem</source>
       <translation>Kartu permainan bermasalah</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="711"/>
+      <location filename="../src/mainwindow.cpp" line="721"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
       <translation>Dump kartu permainan terdapat berkas yang peka huruf besar kecil. Ini bisa bermasalah pada emulator.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="715"/>
+      <location filename="../src/mainwindow.cpp" line="725"/>
       <source>Game card dump folder correction</source>
       <translation>Pembetulan folder dump kartu permainan</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="715"/>
+      <location filename="../src/mainwindow.cpp" line="725"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
       <translation>Jalur yang dipilih terlihat tidak tepat.&lt;br&gt;Ingin dibetulkan langsung oleh emulator?</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="771"/>
+      <location filename="../src/mainwindow.cpp" line="781"/>
       <source>Choose the game card dump folder</source>
       <translation>Pilih folder dump kartu permainan</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="791"/>
+      <location filename="../src/mainwindow.cpp" line="801"/>
       <source>Choose the game card zip</source>
       <translation>Pilih ZIP kartu permainan</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="870"/>
+      <location filename="../src/mainwindow.cpp" line="880"/>
       <source>Document</source>
       <translation>Dokumen</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="888"/>
+      <location filename="../src/mainwindow.cpp" line="898"/>
       <source>Choose a language for the package</source>
       <translation>Pilih bahasa untuk paket</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="909"/>
+      <location filename="../src/mainwindow.cpp" line="919"/>
       <source>Installing package progress</source>
       <translation>Progres pemasangan paket</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="933"/>
+      <location filename="../src/mainwindow.cpp" line="943"/>
       <source>Installation aborted</source>
       <translation>Pemasangan digagalkan</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="933"/>
+      <location filename="../src/mainwindow.cpp" line="943"/>
       <source>The installation has been canceled</source>
       <translation>Pemasangan telah dibatalkan</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="938"/>
+      <location filename="../src/mainwindow.cpp" line="948"/>
       <source>Installation failed</source>
       <translation>Pemasangan gagal</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="938"/>
+      <location filename="../src/mainwindow.cpp" line="948"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
       <translation>Gagal memasang paket pada jalur: %1. Pastikan jalurnya ke berkas SIS/SISX yang absah.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="945"/>
+      <location filename="../src/mainwindow.cpp" line="955"/>
       <source>Installation success</source>
       <translation>Pemasangan berhasil</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="945"/>
+      <location filename="../src/mainwindow.cpp" line="955"/>
       <source>Package has been successfully installed</source>
       <translation>Paket telah berhasil dipasang</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="970"/>
+      <location filename="../src/mainwindow.cpp" line="980"/>
       <source>Choose the file to install</source>
       <translation>Pilih berkas untuk dipasang (install)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="970"/>
+      <location filename="../src/mainwindow.cpp" line="980"/>
       <source>SIS file (*.sis *.sisx)</source>
       <translation>Berkas SIS (*.sis *.sisx)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1144"/>
+      <location filename="../src/mainwindow.cpp" line="1154"/>
       <source>Load theme failed!</source>
       <translation>Gagal memuat tema!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1144"/>
+      <location filename="../src/mainwindow.cpp" line="1154"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
       <translation>Berkas tema gelap tidak ditemukan!</translation>
     </message>
