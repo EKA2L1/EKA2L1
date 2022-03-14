@@ -110,6 +110,7 @@ namespace eka2l1::epoc::internet {
 
         std::unique_ptr<common::ring_buffer<char, 0x80000>> stream_data_buffer_;
         common::event exit_event_;
+        common::event open_event_;
 
         void close_down();
         void handle_connect_done_error_code(const int error_code);
@@ -161,6 +162,8 @@ namespace eka2l1::epoc::internet {
 
     public:
         explicit inet_bridged_protocol(const bool oldarch);
+        ~inet_bridged_protocol() override;
+
         void initialize_looper();
 
         virtual std::u16string name() const override {

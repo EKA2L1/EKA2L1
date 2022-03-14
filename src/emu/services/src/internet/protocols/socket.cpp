@@ -23,7 +23,9 @@
 #include <kernel/kernel.h>
 #include <common/thread.h>
 
+extern "C" {
 #include <uv.h>
+}
 
 namespace eka2l1::epoc::internet {    
     void inet_bridged_protocol::initialize_looper() {
@@ -37,6 +39,19 @@ namespace eka2l1::epoc::internet {
 
                 uv_loop_close(uv_default_loop());
             });
+        }
+    }
+
+    inet_bridged_protocol::~inet_bridged_protocol() {
+        if (loop_thread_) {
+            uv_async_t *async = new uv_async_t;
+            uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
+                uv_stop(uv_default_loop());
+                delete async;
+            });
+
+            uv_async_send(async);
+            loop_thread_->join();
         }
     }
 
@@ -139,24 +154,56 @@ namespace eka2l1::epoc::internet {
             return false;
         }
 
-        int global_result = 0;
+        uv_async_t *async = new uv_async_t;
+        open_event_.reset();
+
+        struct uv_sock_init_params {
+            void *opaque_handle_;
+            int result_ = 0;
+            common::event *done_evt_ = nullptr;
+        };
+
+        uv_sock_init_params params;
+        params.done_evt_ = &open_event_;
+
+        async->data = &params;
 
         if (protocol_id == INET_TCP_PROTOCOL_ID) {
             opaque_handle_ = new uv_tcp_t;
-            global_result = uv_tcp_init(uv_default_loop(), reinterpret_cast<uv_tcp_t*>(opaque_handle_));
+            params.opaque_handle_ = opaque_handle_;
+
+            uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
+                uv_sock_init_params *params = reinterpret_cast<uv_sock_init_params*>(async->data);
+                params->result_ = uv_tcp_init(uv_default_loop(), reinterpret_cast<uv_tcp_t*>(params->opaque_handle_));
+                params->done_evt_->set();
+
+                delete async;
+            });
         } else {
             opaque_handle_ = new uv_udp_t;
-            global_result = uv_udp_init(uv_default_loop(), reinterpret_cast<uv_udp_t*>(opaque_handle_));
+            params.opaque_handle_ = opaque_handle_;
+
+            uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
+                uv_sock_init_params *params = reinterpret_cast<uv_sock_init_params*>(async->data);
+                params->result_ = uv_udp_init(uv_default_loop(), reinterpret_cast<uv_udp_t*>(params->opaque_handle_));
+                params->done_evt_->set();
+
+                delete async;
+            });
         }
 
-        if (global_result < 0) {
-            LOG_ERROR(SERVICE_INTERNET, "Socket failed to be initialize, error code={}", errno);
-            return false;
-        }
+        uv_async_send(async);
 
         // Start the looper now, we might have the first customer!
         papa_->initialize_looper();
         exit_event_.reset();
+
+        open_event_.wait();
+
+        if (params.result_ < 0) {
+            LOG_ERROR(SERVICE_INTERNET, "Socket failed to be initialize, error code={}", errno);
+            return false;
+        }
 
         protocol_ = protocol_id;
         return true;
@@ -230,10 +277,7 @@ namespace eka2l1::epoc::internet {
             return;
         }
 
-        kernel_system *kern = connect_done_info_.requester->get_kernel_object_owner();
-        kern->lock();
         handle_connect_done_error_code(err);
-        kern->unlock();
     }
 
     void inet_socket::connect(const epoc::socket::saddress &addr, epoc::notify_info &info) {

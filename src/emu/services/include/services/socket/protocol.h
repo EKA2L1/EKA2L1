@@ -45,6 +45,7 @@ namespace eka2l1::epoc::socket {
 
     public:
         explicit protocol(const bool oldarch);
+        virtual ~protocol() = default;
 
         const bool is_oldarch() const {
             return flags_ & FLAG_OLDARCH;
