@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2022 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project.
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef AVKONFEP_IME_FEP_H_
 #define AVKONFEP_IME_FEP_H_
 
@@ -7,6 +26,8 @@
 #include <fepitfr.h>
 #include <ecom/ecom.h>
 #include <ecom/ImplementationProxy.h>
+#include <aknedstsobs.h>
+#include <aknextendedinputcapabilities.h>
 
 class CHostBridgedImeFEP;
 
@@ -23,7 +44,12 @@ public:
     virtual void DoCancel();
 };
 
-class CHostBridgedImeFEP : public CCoeFep, public MFepInlineTextFormatRetriever, public MFepPointerEventHandlerDuringInlineEdit {
+class CHostBridgedImeFEP :
+    public CCoeFep,
+    public MFepInlineTextFormatRetriever,
+    public MFepPointerEventHandlerDuringInlineEdit,
+    public CAknExtendedInputCapabilities::MAknEventObserver,
+    private MAknEdStateObserver {
 private:
     virtual void HandleGainingForeground();
     virtual void HandleLosingForeground();
@@ -31,10 +57,20 @@ private:
     virtual void HandleDestructionOfFocusedItem();
     
     void HandleChangeInFocusL();
-    void OpenDialogInputL();
+    void OpenDialogInputL(const TBool aTranstractRestart = EFalse);
+
+    void RegisterObserver();
+    void UnregisterObserver();
+
+    void HandleInputCapabilitiesEventL( TInt aEvent, TAny* aParams );
+    void HandleAknEdwinStateEventL(CAknEdwinState* aAknEdwinState, EAknEdwinStateEvent aEventType);
+    void CancelAndCommitDialogL();
+
+    CAknEdwinState* EditorState() const;
 
     TCoeInputCapabilities iInputCapabilities;
     TBool iDialogPending;
+    TBool iHasFep;
 
     CHostDialogIme iImeDialog;
 

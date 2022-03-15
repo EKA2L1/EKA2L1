@@ -10,7 +10,7 @@ SOURCEPATH	    ..\..\src
 SOURCE		    HostBridgedImeFEP.cpp Dispatch.s
 nostrictdef
 
-LIBRARY	        euser.lib fepbase.lib ecom.lib avkon.lib cone.lib
+LIBRARY	        euser.lib fepbase.lib ecom.lib avkon.lib cone.lib eikcoctl.lib eikctl.lib uiklaf.lib form.lib
 STATICLIBRARY   priv.lib
 
 DEBUGGABLE_UDEBONLY
