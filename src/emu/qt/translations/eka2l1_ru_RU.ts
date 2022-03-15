@@ -19,7 +19,7 @@
     <message>
       <location filename="../src/symbian_input_dialog.ui" line="31"/>
       <source>Submit</source>
-      <translation>Отправить</translation>
+      <translation>Подтвердить</translation>
     </message>
   </context>
   <context>
