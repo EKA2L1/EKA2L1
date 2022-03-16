@@ -30,15 +30,22 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.ParcelFileDescriptor;
 import android.os.Vibrator;
 import android.provider.DocumentsContract;
 import android.view.Surface;
+import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.documentfile.provider.DocumentFile;
 
 import com.github.eka2l1.BuildConfig;
+import com.github.eka2l1.R;
 import com.github.eka2l1.applist.AppItem;
 import com.github.eka2l1.settings.AppDataStore;
 import com.github.eka2l1.util.FileUtils;
@@ -86,6 +93,7 @@ public class Emulator {
     private static Context context;
     private static boolean vibrationEnabled;
     private static Vibrator vibrator;
+    private static AlertDialog inputDialog;
 
     private static String emulatorDir;
     private static String compatDir;
@@ -274,6 +282,10 @@ public class Emulator {
         initializeFolders();
 
         checkInit();
+    }
+
+    public static void setContext(Context context) {
+        Emulator.context = context;
     }
 
     public static void setVibration(boolean vibrationEnabled) {
@@ -530,6 +542,49 @@ public class Emulator {
         }
     }
 
+    public static void showInputDialog(String initialText, int maxLen) {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            if (inputDialog == null) {
+                EditText editText = new EditText(context);
+                editText.setLines(3);
+                editText.setText(initialText);
+                float density = context.getResources().getDisplayMetrics().density;
+                LinearLayout linearLayout = new LinearLayout(context);
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT);
+                int margin = (int) (density * 20);
+                params.setMargins(margin, 0, margin, 0);
+                linearLayout.addView(editText, params);
+                int paddingVertical = (int) (density * 16);
+                int paddingHorizontal = (int) (density * 8);
+                editText.setPadding(paddingHorizontal, paddingVertical, paddingHorizontal, paddingVertical);
+                AlertDialog.Builder builder = new AlertDialog.Builder(context)
+                        .setTitle(R.string.enter_text)
+                        .setView(linearLayout)
+                        .setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
+                            Emulator.submitInput(editText.getText().toString());
+                            inputDialog = null;
+                        })
+                        .setNegativeButton(android.R.string.cancel, (dialogInterface, i) -> {
+                            Emulator.submitInput("");
+                            inputDialog = null;
+                        });
+                inputDialog = builder.create();
+                inputDialog.show();
+            }
+        });
+    }
+
+    public static void closeInputDialog() {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            if (inputDialog != null) {
+                Emulator.submitInput("");
+                inputDialog.dismiss();
+                inputDialog = null;
+            }
+        });
+    }
+
     public static boolean isInitialized() {
         return init;
     }
@@ -589,4 +644,6 @@ public class Emulator {
     public static native void setScreenParams(int backgroundColor, int scaleRatio, int scaleType, int gravity);
 
     public static native boolean runTest(String testName);
+
+    public static native void submitInput(String text);
 }

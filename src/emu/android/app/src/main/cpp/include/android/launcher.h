@@ -24,6 +24,7 @@
 #include <common/cvt.h>
 #include <common/types.h>
 
+#include <drivers/ui/input_dialog.h>
 #include <services/applist/applist.h>
 #include <services/window/window.h>
 #include <system/installation/common.h>
@@ -50,6 +51,7 @@ namespace eka2l1::android {
         float scale_ratio_;
         std::uint32_t scale_type_;
         std::uint32_t gravity_;
+        eka2l1::drivers::ui::input_dialog_complete_callback input_complete_callback_;
 
         void set_language_to_property(const language new_one);
         void set_language_current(const language lang);
@@ -82,6 +84,11 @@ namespace eka2l1::android {
         std::vector<std::string> get_language_names();
         void set_screen_params(std::uint32_t background_color, std::uint32_t scale_ratio,
                                std::uint32_t scale_type, std::uint32_t gravity);
+        bool open_input_view(const std::u16string &initial_text,
+                             const int max_len,
+                             drivers::ui::input_dialog_complete_callback complete_callback);
+        void close_input_view();
+        void on_finished_text_input(const std::string &text, const bool force_close);
 
         fbs_server *get_fbs_serv() {
             return fbsserv;

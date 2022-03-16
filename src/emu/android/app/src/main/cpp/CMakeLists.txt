@@ -7,6 +7,7 @@ cmake_minimum_required(VERSION 3.8)
 
 add_library(native-lib SHARED
         include/android/emu_window_android.h
+        include/android/input_dialog.h
         include/android/launcher.h
         include/android/state.h
         include/android/thread.h

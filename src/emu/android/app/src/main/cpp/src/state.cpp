@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <android/input_dialog.h>
 #include <android/state.h>
 #include <common/algorithm.h>
 #include <common/fileutils.h>
@@ -161,6 +162,7 @@ namespace eka2l1::android {
         first_time = true;
 
         launcher = std::make_unique<eka2l1::android::launcher>(symsys.get());
+        eka2l1::drivers::ui::launcher_instance = launcher.get();
 
         stage_two_inited = false;
     }

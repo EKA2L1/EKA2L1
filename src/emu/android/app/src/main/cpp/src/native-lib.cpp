@@ -316,3 +316,11 @@ Java_com_github_eka2l1_emu_Emulator_runTest(JNIEnv *env, jclass clazz, jstring t
 
     return result;
 }
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_github_eka2l1_emu_Emulator_submitInput(JNIEnv *env, jclass clazz, jstring text) {
+    const char *cstr = env->GetStringUTFChars(text, nullptr);
+    std::string ctext = std::string(cstr);
+    state->launcher->on_finished_text_input(ctext, false);
+}

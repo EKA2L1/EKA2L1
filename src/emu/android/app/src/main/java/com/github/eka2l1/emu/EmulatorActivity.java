@@ -125,6 +125,8 @@ public class EmulatorActivity extends AppCompatActivity {
         Intent intent = getIntent();
         if (intent.getBooleanExtra(KEY_APP_IS_SHORTCUT, false)) {
             Emulator.initializeForShortcutLaunch(this);
+        } else {
+            Emulator.setContext(this);
         }
 
         uid = intent.getLongExtra(KEY_APP_UID, -1);

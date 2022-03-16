@@ -178,6 +178,7 @@
     <string name="confirmation_required">Confirmation required</string>
     <string name="force_close_confirmation">Force-closing the application may result in data loss or even break it completely!\nProceed?</string>
     <string name="log_saved">Log has been saved</string>
+    <string name="enter_text">Enter the text</string>
 
     <string name="about_website" translatable="false">&lt;BR>Website: &lt;a href="https://12z1.com">12z1.com&lt;/a></string>
     <string name="about_github" translatable="false">&lt;BR>GitHub: &lt;a href="https://github.com/EKA2L1/EKA2L1">github.com/EKA2L1/EKA2L1&lt;/a></string>

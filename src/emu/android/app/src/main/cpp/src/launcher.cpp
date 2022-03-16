@@ -25,6 +25,7 @@
 #include <system/devices.h>
 
 #include <common/fileutils.h>
+#include <common/android/jniutils.h>
 #include <common/language.h>
 #include <common/path.h>
 #include <common/pystr.h>
@@ -38,6 +39,7 @@
 #include <utils/system.h>
 
 #include <document.h>
+#include <jni.h>
 
 namespace eka2l1::android {
 
@@ -634,5 +636,36 @@ namespace eka2l1::android {
         scale_ratio_ = scale_ratio;
         scale_type_ = scale_type;
         gravity_ = gravity;
+    }
+
+    bool launcher::open_input_view(const std::u16string &initial_text, const int max_len,
+                                   drivers::ui::input_dialog_complete_callback complete_callback) {
+        if (input_complete_callback_) {
+            return false;
+        }
+
+        input_complete_callback_ = complete_callback;
+
+        JNIEnv *env = common::jni::environment();
+        jclass clazz = common::jni::find_class("com/github/eka2l1/emu/Emulator");
+        jmethodID input_method = env->GetStaticMethodID(clazz, "showInputDialog", "(Ljava/lang/String;I)V");
+        std::string text = common::ucs2_to_utf8(initial_text);
+        jstring jtext = env->NewStringUTF(text.c_str());
+        env->CallStaticVoidMethod(clazz, input_method, jtext, (jint)max_len);
+        return true;
+    }
+
+    void launcher::close_input_view() {
+        JNIEnv *env = common::jni::environment();
+        jclass clazz = common::jni::find_class("com/github/eka2l1/emu/Emulator");
+        jmethodID input_method = env->GetStaticMethodID(clazz, "closeInputDialog", "()V");
+        env->CallStaticVoidMethod(clazz, input_method);
+    }
+
+    void launcher::on_finished_text_input(const std::string &text, const bool force_close) {
+        if (input_complete_callback_) {
+            input_complete_callback_(common::utf8_to_ucs2(text));
+            input_complete_callback_ = nullptr;
+        }
     }
 }
