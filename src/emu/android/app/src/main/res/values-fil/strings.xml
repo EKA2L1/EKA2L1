@@ -140,6 +140,7 @@
     <string name="confirmation_required">Kinakailangan ang kumpirmasyon</string>
     <string name="force_close_confirmation">Ang pwersahang pagsara ng aplikasyon ay maaaring magresulta sa pagkawala o pagkasira ng data! \nItutuloy mo pa ba ito?</string>
     <string name="log_saved">Ang file ay nai-save</string>
+    <string name="enter_text">Enter the text</string>
     <string name="about_icon_by">&lt;BR&gt;Ang icon nito ay galing kay: </string>
     <string name="version">Bersyon: </string>
     <string name="recommended_devices_note"><b>Paalala:</b> Nirerekomenda na gumamit ng firmware sa pag-iinstall ng mga aparato mula S60v3 pataas.</string>
