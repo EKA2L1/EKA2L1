@@ -140,6 +140,7 @@
     <string name="confirmation_required">Wymagane potwierdzenie</string>
     <string name="force_close_confirmation">Wymuszenie zamknięcia aplikacji może spowodować utratę danych lub nawet całkowicie ją zepsuć!\nKontynuować?</string>
     <string name="log_saved">Log został zapisany</string>
+    <string name="enter_text">Enter the text</string>
     <string name="about_icon_by">&lt;BR&gt;Ikona autorstwa: </string>
     <string name="version">Wersja: </string>
     <string name="recommended_devices_note"><b>Uwaga:</b> zalecane jest używać firmware\'u do instalacji urządzeń od S60v3 i wyżej.</string>
