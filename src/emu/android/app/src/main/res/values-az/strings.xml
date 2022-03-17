@@ -140,6 +140,7 @@
     <string name="confirmation_required">Təsdiq tələb olunur</string>
     <string name="force_close_confirmation">Tətbiqin zorla bağlanması, verilənlərin itkisi ilə nəticələnə və hətta onu tamamilə zədələyə bilər!\nDavam edirsiniz?</string>
     <string name="log_saved">Jurnal saxlanıldı</string>
+    <string name="enter_text">Enter the text</string>
     <string name="about_icon_by">&lt;BR&gt;Nişan müəllifi: </string>
     <string name="version">Versiya: </string>
     <string name="recommended_devices_note"><b>Qeyd:</b> S60v3 və yuxarı cihazların quraşdırılması üçün firmware istifadə etməyiniz məsləhətdir.</string>
