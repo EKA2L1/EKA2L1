@@ -140,6 +140,7 @@
     <string name="confirmation_required">需要确认</string>
     <string name="force_close_confirmation">强制关闭应用程序可能会导致数据丢失甚至损坏！\n继续?</string>
     <string name="log_saved">日志已保存</string>
+    <string name="enter_text">Enter the text</string>
     <string name="about_icon_by">&lt;BR&gt;图标设计： </string>
     <string name="version">版本： </string>
     <string name="recommended_devices_note"><b>注：</b> 建议安装S60v3及以上版本的设备固件。</string>
