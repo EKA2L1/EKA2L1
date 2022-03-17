@@ -140,6 +140,7 @@
     <string name="confirmation_required">Необхідне підтвердження</string>
     <string name="force_close_confirmation">Примусове закриття застосунку може призвести до втрати даних або навіть до повного виведення його з ладу!\nПродовжити?</string>
     <string name="log_saved">Лог збережено</string>
+    <string name="enter_text">Уведіть текст</string>
     <string name="about_icon_by">&lt;BR&gt;Іконка від: </string>
     <string name="version">Версія: </string>
     <string name="recommended_devices_note"><b>Примітка:</b> Рекомендовано використовувати прошивку для встановлення пристроїв від S60v3 і вище.</string>
