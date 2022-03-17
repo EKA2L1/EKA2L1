@@ -140,6 +140,7 @@
     <string name="confirmation_required">Vahvistus vaaditaan</string>
     <string name="force_close_confirmation">Sovelluksen sulkeminen voi johtaa tietojen menetykseen tai jopa rikkoa sen kokonaan!\nJatketaanko?</string>
     <string name="log_saved">Loki on tallennettu</string>
+    <string name="enter_text">Enter the text</string>
     <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
     <string name="version">Versio: </string>
     <string name="recommended_devices_note"><b>Note:</b> It\'s recommended to use firmware for installation of devices from S60v3 and above.</string>
