@@ -140,6 +140,7 @@
     <string name="confirmation_required">Onay gerekli</string>
     <string name="force_close_confirmation">Uygulamayı zorla kapatmak veri kaybına neden olabilir veya tamamen bozabilir!\nDevam edilsin mi?</string>
     <string name="log_saved">Günlük kaydedildi</string>
+    <string name="enter_text">Enter the text</string>
     <string name="about_icon_by">&lt;BR&gt;Simge Üreticisi: </string>
     <string name="version">Sürüm: </string>
     <string name="recommended_devices_note"><b>Not:</b> Kurulum için S60v3 ve üzerine ait bir yazılım kullanmanız önerilir.</string>
