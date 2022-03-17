@@ -140,6 +140,7 @@
     <string name="confirmation_required">Патрабуецца пацверджанне</string>
     <string name="force_close_confirmation">Прымусовае закрыццё дастасавання можа прывесці да страты дадзеных або нават да поўнага вываду яго з ладу!\nПрацягнуць?</string>
     <string name="log_saved">Лог захаваны</string>
+    <string name="enter_text">Увядзіце тэкст</string>
     <string name="about_icon_by">&lt;BR&gt;Абразок ад: </string>
     <string name="version">Версія: </string>
     <string name="recommended_devices_note"><b>Заўвага:</b> Рэкамендавана выкарыстоўваць прашыўку для ўсталёўкі прылад ад S60v3 і вышэй.</string>
