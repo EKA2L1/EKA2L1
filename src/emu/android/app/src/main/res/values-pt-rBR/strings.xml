@@ -140,7 +140,7 @@
     <string name="confirmation_required">Confirmação necessária</string>
     <string name="force_close_confirmation">O fechamento forçado do aplicativo pode resultar em perda de dados ou até mesmo interrompê-lo completamente!\nContinuar?</string>
     <string name="log_saved">Log foi salvo</string>
-    <string name="enter_text">Enter the text</string>
+    <string name="enter_text">Digite o texto</string>
     <string name="about_icon_by">&lt;BR&gt;Ícone por: </string>
     <string name="version">Versão: </string>
     <string name="recommended_devices_note"><b>Nota:</b> É recomendável usar firmware para instalação de dispositivos do S60v3 ou superior.</string>
