@@ -1070,6 +1070,11 @@ void main_window::on_app_setting_changed() {
         return;
     }
 
+    if (!settings_dialog_) {
+        settings_dialog_ = new settings_dialog(this, emulator_state_.symsys.get(), emulator_state_.joystick_controller.get(),
+            emulator_state_.app_settings.get(), emulator_state_.conf);
+    }
+
     eka2l1::config::app_setting setting;
     setting.fps = scr->refresh_rate;
     setting.time_delay = info->associated_->get_time_delay();
