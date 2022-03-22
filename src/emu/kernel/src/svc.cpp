@@ -5652,6 +5652,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xA8, message_ipc_copy),
         BRIDGE_REGISTER(0xA9, message_client),
         BRIDGE_REGISTER(0xAC, message_kill),
+        BRIDGE_REGISTER(0xAD, message_open_handle),
         BRIDGE_REGISTER(0xAE, process_security_info),
         BRIDGE_REGISTER(0xAF, thread_security_info),
         BRIDGE_REGISTER(0xB0, message_security_info),
@@ -5684,6 +5685,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xDE, mutex_is_held),
         BRIDGE_REGISTER(0xDF, leave_start),
         BRIDGE_REGISTER(0xE0, leave_end),
+        BRIDGE_REGISTER(0xE5, session_security_info),
         BRIDGE_REGISTER(0xE8, btrace_out)
     };
 
@@ -5816,7 +5818,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xA8, message_client),
         BRIDGE_REGISTER(0xAA, message_construct),
         BRIDGE_REGISTER(0xAB, message_kill),
-        BRIDGE_REGISTER(0xAc, message_open_handle),
+        BRIDGE_REGISTER(0xAC, message_open_handle),
         BRIDGE_REGISTER(0xAD, process_security_info),
         BRIDGE_REGISTER(0xAE, thread_security_info),
         BRIDGE_REGISTER(0xAF, message_security_info),
