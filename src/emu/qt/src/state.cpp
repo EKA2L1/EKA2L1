@@ -205,7 +205,8 @@ namespace eka2l1::desktop {
 
             // Copy additional DLLs
             std::vector<std::tuple<std::u16string, std::string, epocver>> dlls_need_to_copy = {
-                { u"Z:\\sys\\bin\\goommonitor.dll", "patch\\goommonitor_general.dll", epocver::epoc94 }
+                { u"Z:\\sys\\bin\\goommonitor.dll", "patch\\goommonitor_general.dll", epocver::epoc94 },
+                { u"Z:\\sys\\bin\\avkonfep.dll", "patch\\avkonfep_general.dll", epocver::epoc93fp1 }
             };
 
             for (std::size_t i = 0; i < dlls_need_to_copy.size(); i++) {
@@ -219,7 +220,8 @@ namespace eka2l1::desktop {
 
                 if (where_to_copy.has_value()) {
                     std::string where_to_copy_u8 = common::ucs2_to_utf8(where_to_copy.value());
-                    if (common::exists(where_to_copy_u8)) {
+                    std::string where_to_backup_u8 = where_to_copy_u8 + ".bak";
+                    if (common::exists(where_to_copy_u8) && !common::exists(where_to_backup_u8)) {
                         common::move_file(where_to_copy_u8, where_to_copy_u8 + ".bak");
                     }
                     common::copy_file(std::get<1>(dlls_need_to_copy[i]), where_to_copy_u8, true);

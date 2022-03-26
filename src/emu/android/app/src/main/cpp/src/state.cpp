@@ -262,7 +262,8 @@ namespace eka2l1::android {
 
             // Copy additional DLLs
             std::vector<std::tuple<std::u16string, std::string, epocver>> dlls_need_to_copy = {
-                { u"Z:\\sys\\bin\\goommonitor.dll", "patch\\goommonitor_general.dll", epocver::epoc94 }
+                { u"Z:\\sys\\bin\\goommonitor.dll", "patch\\goommonitor_general.dll", epocver::epoc94 },
+                { u"Z:\\sys\\bin\\avkonfep.dll", "patch\\avkonfep_general.dll", epocver::epoc93fp1 }
             };
 
             for (std::size_t i = 0; i < dlls_need_to_copy.size(); i++) {
@@ -272,9 +273,19 @@ namespace eka2l1::android {
                 }
 
                 std::u16string org_file_path = std::get<0>(dlls_need_to_copy[i]);
-                auto where_to_copy = io->get_raw_path(eka2l1::file_directory(org_file_path));
+                auto where_to_copy = io->get_raw_path(org_file_path);
+
                 if (where_to_copy.has_value()) {
-                    common::copy_file(std::get<1>(dlls_need_to_copy[i]), common::ucs2_to_utf8(where_to_copy.value()), true);
+                    std::string where_to_copy_u8 = common::ucs2_to_utf8(where_to_copy.value());
+                    std::string where_to_backup_u8 = where_to_copy_u8 + ".bak";
+                    if (common::exists(where_to_copy_u8) && !common::exists(where_to_backup_u8)) {
+                        common::move_file(where_to_copy_u8, where_to_copy_u8 + ".bak");
+                    }
+                    std::string source_copy = std::get<1>(dlls_need_to_copy[i]);
+                    std::string current_dir;
+                    common::get_current_directory(current_dir);
+                    source_copy = eka2l1::absolute_path(source_copy, current_dir);
+                    common::copy_file(source_copy, where_to_copy_u8, true);
                 }
             }
 

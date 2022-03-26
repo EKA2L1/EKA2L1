@@ -1,6 +1,6 @@
 TARGET        avkonfep_general.dll
 TARGETTYPE    PLUGIN
-UID 0x10009D8D 0xee00000a
+UID 0x10009D8D 0x100056DE
 
 USERINCLUDE	    ..\..\inc ..\..\..\priv\inc
 SYSTEMINCLUDE   \epoc32\include
