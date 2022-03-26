@@ -1250,9 +1250,14 @@ namespace eka2l1 {
                         break;
 
                     case bitmap_file_twenty_four_bit_rle_compression:
+                    case bitmap_file_thirty_two_u_bit_rle_compression:
                         decompress_rle<24>(reinterpret_cast<common::ro_stream *>(&source),
                             reinterpret_cast<common::wo_stream *>(&decomp_dest_stream));
                         break;
+
+                    case bitmap_file_thirty_two_a_bit_rle_compression:
+                        decompress_rle<32>(reinterpret_cast<common::ro_stream *>(&source),
+                            reinterpret_cast<common::wo_stream *>(&decomp_dest_stream));
 
                     default:
                         LOG_ERROR(SERVICE_FBS, "Unsupported compression type {}", header.compression);
@@ -1278,7 +1283,12 @@ namespace eka2l1 {
                         break;
 
                     case bitmap_file_twenty_four_bit_rle_compression:
+                    case bitmap_file_thirty_two_u_bit_rle_compression:
                         decompress_rle_fast_route<24>(source_data.data(), source_data.size(), decomp_data.data(), final_size);
+                        break;
+
+                    case bitmap_file_thirty_two_a_bit_rle_compression:
+                        decompress_rle_fast_route<32>(source_data.data(), source_data.size(), decomp_data.data(), final_size);
                         break;
 
                     default:
@@ -1292,7 +1302,13 @@ namespace eka2l1 {
             }
 
             current_to_look->seek(0, common::seek_where::beg);
-            const epoc::display_mode dpm = get_display_mode_from_bpp(header.bit_per_pixels, header.color);
+            epoc::display_mode dpm = get_display_mode_from_bpp(header.bit_per_pixels, header.color);
+
+            // Unused top byte. Just make it rgb24 then!
+            if ((comp == bitmap_file_thirty_two_u_bit_rle_compression) && (dpm == epoc::display_mode::color16ma)) {
+                dpm = epoc::display_mode::color16m;
+                byte_width = header.size_pixels.x * 3;
+            }
 
             switch (dpm) {
             case epoc::display_mode::color256:
@@ -1388,6 +1404,26 @@ namespace eka2l1 {
                 }
 
                 break;
+
+            case epoc::display_mode::color16ma: {
+                for (std::size_t y = 0; y < header.size_pixels.y; y++) {    
+                    current_to_look->seek(y * byte_width, common::seek_where::beg);
+
+                    for (std::size_t x = 0; x < header.size_pixels.x; x++) {
+                        std::uint8_t base[4];
+                        if (current_to_look->read(base, 4) != 3) {
+                            return false;
+                        }
+
+                        dest.write(base + 2, 1);
+                        dest.write(base + 1, 1);
+                        dest.write(base, 1);
+                        dest.write(base + 3, 1);
+                    }
+                }
+
+                break;
+            }
 
             case epoc::display_mode::gray256:
                 for (std::size_t y = 0; y < header.size_pixels.y; y++) {
