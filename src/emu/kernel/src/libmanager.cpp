@@ -256,9 +256,12 @@ namespace eka2l1::hle {
         return cs;
     }
 
-    static void patch_rom_export(memory_system *mem, codeseg_ptr source_seg,
-        codeseg_ptr dest_seg, const std::uint32_t source_export,
-        const std::uint32_t dest_export) {
+    static void patch_rom_export(std::map<address, address> &trampoline_map, memory_system *mem, codeseg_ptr source_seg, codeseg_ptr dest_seg, const std::uint32_t source_export, const std::uint32_t dest_export) {
+        if (dest_export == 0) {
+            LOG_ERROR(KERNEL, "Export should not have the value of 0!");
+            return;
+        }
+
         const address source_ptr = source_seg->lookup(nullptr, source_export);
         const address dest_ptr = dest_seg->lookup(nullptr, dest_export);
 
@@ -269,30 +272,75 @@ namespace eka2l1::hle {
             return;
         }
 
-        if (dest_ptr & 1) {
-            std::memcpy(dest_ptr_host, THUMB_TRAMPOLINE_ASM, sizeof(THUMB_TRAMPOLINE_ASM));
+        // For some functions that is too small (bx lr etc...) That can't fit the trampoline, use an SVC call and then lookup
+        // the PC
+        bool resolve_to_trampoline_map = false;
 
-            // It's thumb
-            // Hope it's big enough
-            if (((dest_ptr & ~1) & 3) == 0) {
-                dest_ptr_host -= 2;
+        // Quick check if the size is overlapped
+        std::vector<std::uint32_t> export_tables = dest_seg->get_export_table_raw();
+        auto will_current_export_resolve_to_trampoline_map = [&](const std::size_t index) -> bool {
+            if (export_tables[index] > dest_ptr) {
+                if (((dest_ptr & 1) && ((export_tables[index] & ~1) - (dest_ptr & ~1) < sizeof(THUMB_TRAMPOLINE_ASM))) ||
+                    (((dest_ptr & 1) == 0) && ((export_tables[index] & ~1) - (dest_ptr & ~1) < sizeof(ARM_TRAMPOLINE_ASM)))) {
+                    resolve_to_trampoline_map = true;
+                    trampoline_map.emplace(dest_ptr, source_ptr);
+
+                    return true;
+                }
             }
 
-            *reinterpret_cast<std::uint32_t *>(dest_ptr_host + sizeof(THUMB_TRAMPOLINE_ASM)) = source_ptr;
+            return false;
+        };
+
+        // Resolve to find later entries, they likely are neighbor. Of course the end entry will reiterate
+        // from the first to find neighbor, but we did try to shorten our searches on others
+        for (std::size_t i = dest_export; i < export_tables.size(); i++) {
+            if (will_current_export_resolve_to_trampoline_map(i)) {
+                break;
+            }
+        }
+
+        for (std::size_t i = 0; i < dest_export - 1; i++) {
+            if (will_current_export_resolve_to_trampoline_map(i)) {
+                break;
+            }
+        }
+
+        if (resolve_to_trampoline_map) {
+            if (dest_ptr & 1) {
+                *reinterpret_cast<std::uint16_t *>(dest_ptr_host) = 0xDFFF;            // SVC #0xFF
+            } else {
+                *reinterpret_cast<std::uint32_t *>(dest_ptr_host) = 0xEF0000FF;        // SVC #0xFF
+            }
         } else {
-            // ARM!!!!!!!!!
-            std::memcpy(dest_ptr_host, ARM_TRAMPOLINE_ASM, sizeof(ARM_TRAMPOLINE_ASM));
-            *reinterpret_cast<std::uint32_t *>(dest_ptr_host + sizeof(ARM_TRAMPOLINE_ASM)) = source_ptr;
+            if (dest_ptr & 1) {
+                std::memcpy(dest_ptr_host, THUMB_TRAMPOLINE_ASM, sizeof(THUMB_TRAMPOLINE_ASM));
+
+                // It's thumb
+                // Hope it's big enough
+                if (((dest_ptr & ~1) & 3) == 0) {
+                    dest_ptr_host -= 2;
+                }
+
+                *reinterpret_cast<std::uint32_t *>(dest_ptr_host + sizeof(THUMB_TRAMPOLINE_ASM)) = source_ptr;
+            } else {
+                // ARM!!!!!!!!!
+                std::memcpy(dest_ptr_host, ARM_TRAMPOLINE_ASM, sizeof(ARM_TRAMPOLINE_ASM));
+                *reinterpret_cast<std::uint32_t *>(dest_ptr_host + sizeof(ARM_TRAMPOLINE_ASM)) = source_ptr;
+            }
         }
     }
 
-    static void patch_original_codeseg(std::vector<patch_route_info> &infos, memory_system *mem, codeseg_ptr source_seg,
+    static void patch_original_codeseg(std::map<address, address> &trampoline_map, std::vector<patch_route_info> &infos, memory_system *mem, codeseg_ptr source_seg,
         codeseg_ptr dest_seg) {
-        for (auto &rinfo : infos) {
-            if (dest_seg->is_rom()) {
-                patch_rom_export(mem, source_seg, dest_seg, rinfo.first, rinfo.second);
+        if (dest_seg->is_rom()) {
+            for (auto &rinfo : infos) {
+                patch_rom_export(trampoline_map, mem, source_seg, dest_seg, rinfo.first, rinfo.second);
             }
+        }
 
+        // Can't set upper since export table in upper loop needs to be in shape and unmodified
+        for (auto &rinfo: infos) {
             dest_seg->set_export(rinfo.second, source_seg->lookup(nullptr, rinfo.first));
         }
 
@@ -424,6 +472,12 @@ namespace eka2l1::hle {
                     if (u3) {
                         u3->get(&the_patch.req_uid3_, 1, 0);
                     }
+
+                    if (req_section->find("inrom") != nullptr) {
+                        the_patch.need_dest_rom_ = true;
+                    } else {
+                        the_patch.need_dest_rom_ = false;
+                    }
                 } else {
                     LOG_TRACE(KERNEL, "Patch {} has no hard requirements", entry.name);
                 }
@@ -518,6 +572,10 @@ namespace eka2l1::hle {
             }
         }
 
+        if (patch.need_dest_rom_ && !original->is_rom()) {
+            return false;
+        }
+
         const auto the_uids = original->get_uids();
         const bool uid2_sas = (!patch.req_uid2_ || (patch.req_uid2_ == std::get<1>(the_uids)));
         const bool uid3_sas = (!patch.req_uid3_ || (patch.req_uid3_ == std::get<2>(the_uids)));
@@ -550,7 +608,7 @@ namespace eka2l1::hle {
 
                     patch_pendings_.push_back(entry);
                 } else {
-                    patch_original_codeseg(patches_[i].routes_, kern_->get_memory_system(), patches_[i].patch_,
+                    patch_original_codeseg(trampoline_lookup_, patches_[i].routes_, kern_->get_memory_system(), patches_[i].patch_,
                         original);
                 }
 
@@ -568,7 +626,7 @@ namespace eka2l1::hle {
             }
 
             patch_info &info = patches_[pending_entry.info_index_];
-            patch_original_codeseg(info.routes_, kern_->get_memory_system(), info.patch_,
+            patch_original_codeseg(trampoline_lookup_, info.routes_, kern_->get_memory_system(), info.patch_,
                 pending_entry.dest_);
         }
     }
@@ -916,9 +974,32 @@ namespace eka2l1::hle {
         return nullptr;
     }
 
+    void lib_manager::jump_trampoline_through_svc() {
+        kernel::thread *crr = kern_->crr_thread();
+        arm::core::thread_context &context = crr->get_thread_context();
+        address lookup_addr = (context.get_pc() | ((context.cpsr & 0x20) ? 1 : 0));
+
+        auto ite = trampoline_lookup_.find(lookup_addr);
+        if (ite != trampoline_lookup_.end()) {
+            context.set_pc(ite->second);
+        } else {
+            LOG_ERROR(KERNEL, "Unable to find jump for patched address 0x{:X} (impossible)", lookup_addr);
+            context.set_pc(context.get_lr());
+        }
+    }
+
     bool lib_manager::call_svc(sid svcnum) {
         // Lock the kernel so SVC call can operate in safety
         kern_->lock();
+        
+        // Trampoline lookup here
+        if (svcnum == 0xFF) {
+            jump_trampoline_through_svc();
+            kern_->unlock();
+
+            return true;
+        }
+
         auto res = svc_funcs_.find(svcnum);
 
         if (res == svc_funcs_.end()) {
@@ -1170,7 +1251,6 @@ namespace eka2l1::hle {
 namespace eka2l1::epoc {
     bool get_image_info(hle::lib_manager *mngr, const std::u16string &name, epoc::lib_info &linfo) {
         auto imgs = mngr->try_search_and_parse(name);
-
         LOG_TRACE(KERNEL, "Get Info of {}", common::ucs2_to_utf8(name));
 
         if (!imgs.first && !imgs.second) {

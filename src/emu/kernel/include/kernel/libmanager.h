@@ -31,7 +31,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <vector>
 
 namespace YAML {
     class Node;
@@ -98,6 +97,7 @@ namespace eka2l1 {
             std::string name_;
             std::uint32_t req_uid2_;
             std::uint32_t req_uid3_;
+            bool need_dest_rom_ = false;
 
             codeseg_ptr patch_;
             std::vector<patch_route_info> routes_;
@@ -134,6 +134,7 @@ namespace eka2l1 {
 
             std::vector<patch_info> patches_;
             std::vector<patch_pending_entry> patch_pendings_;
+            std::map<address, address> trampoline_lookup_;
 
         protected:
             const std::uint8_t *entry_points_call_routine_;
@@ -145,6 +146,7 @@ namespace eka2l1 {
 
             void apply_pending_patches();
             void apply_trick_or_treat_algo();
+            void jump_trampoline_through_svc();
 
         public:
             std::map<sid, epoc_import_func> svc_funcs_;
