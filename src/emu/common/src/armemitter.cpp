@@ -982,11 +982,19 @@ namespace eka2l1::common::armgen {
     }
 
     void armx_emitter::SMULxy(arm_reg dest, arm_reg rn, arm_reg rm, bool m, bool n) {
-        write32(condition | (0x16 << 20) | (dest << 16) | (rn << 8) | (1 << 7) | (n << 6) | (m << 5) | rm);
+        write32(condition | (0x16 << 20) | (dest << 16) | (rm << 8) | (1 << 7) | (n << 6) | (m << 5) | rn);
     }
 
     void armx_emitter::SMLAxy(arm_reg dest, arm_reg rn, arm_reg rm, arm_reg ra, bool m, bool n) {
-        write32(condition | (0x10 << 20) | (dest << 16) | (ra << 12) | (rn << 8) | (1 << 7) | (n << 6) | (m << 5) | rm);
+        write32(condition | (0x10 << 20) | (dest << 16) | (ra << 12) | (rm << 8) | (1 << 7) | (n << 6) | (m << 5) | rn);
+    }
+
+    void armx_emitter::SMULWy(arm_reg dest, arm_reg rn, arm_reg rm, bool top) {
+        write32(condition | (0x12 << 20) | (dest << 16) | (rm << 8) | (1 << 7) | (top << 6) | 0x20 | rn);
+    }
+
+    void armx_emitter::SMLAWy(arm_reg dest, arm_reg rn, arm_reg rm, arm_reg ra, bool top) {
+        write32(condition | (0x12 << 20) | (dest << 16) | (ra << 12) | (rm << 8) | (1 << 7) | (top << 6) | rn);
     }
 
     void armx_emitter::UBFX(arm_reg dest, arm_reg rn, std::uint8_t lsb, std::uint8_t width) {
