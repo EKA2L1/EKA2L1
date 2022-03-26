@@ -758,7 +758,8 @@ namespace eka2l1 {
         header.bit_per_pixels = epoc::get_bpp_from_display_mode(info.dpm_);
 
         // Skip reserved spaces.
-        const std::size_t reserved_bytes = (bws_bmp->byte_width_ * final_reserve_each_side);
+        const std::size_t byte_width_calc = epoc::get_byte_width(header.size_pixels.width(), static_cast<std::uint8_t>(header.bit_per_pixels));
+        const std::size_t reserved_bytes = (byte_width_calc * final_reserve_each_side);
         if (data) {
             data = reinterpret_cast<std::uint8_t *>(data) + reserved_bytes;
         }
