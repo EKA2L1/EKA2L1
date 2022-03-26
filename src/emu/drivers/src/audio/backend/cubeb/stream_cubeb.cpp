@@ -40,7 +40,9 @@ namespace eka2l1::drivers {
         , stream_(nullptr)
         , callback_(callback)
         , playing_(false)
-        , volume_(1.0f) {
+        , pausing_(false)
+        , volume_(1.0f)
+        , idled_frames_(0) {
         cubeb_stream_params params;
         params.format = CUBEB_SAMPLE_S16LE;
         params.rate = sample_rate;
@@ -74,22 +76,38 @@ namespace eka2l1::drivers {
     }
 
     cubeb_audio_output_stream::~cubeb_audio_output_stream() {
+        pausing_ = false;
+
         if (stream_) {
             cubeb_stream_destroy(stream_);
         }
     }
 
     std::size_t cubeb_audio_output_stream::call_callback(std::int16_t *output_buffer, const long frames) {
+        if (pausing_) {
+            std::memset(output_buffer, 0, frames * channels * sizeof(std::int16_t));
+            idled_frames_ += static_cast<std::uint64_t>(frames);
+  
+            return static_cast<std::size_t>(frames);
+        }
+
         return callback_(output_buffer, frames);
     }
 
     bool cubeb_audio_output_stream::start() {
+        if (pausing_) {
+            pausing_ = false;
+            return true;
+        }
+
         if (playing_) {
             return true;
         }
 
         if (cubeb_stream_start(stream_) == CUBEB_OK) {
             playing_ = true;
+            idled_frames_ = 0;
+
             return true;
         }
 
@@ -101,6 +119,8 @@ namespace eka2l1::drivers {
             return true;
         }
 
+        pausing_ = false;
+
         if (cubeb_stream_stop(stream_) == CUBEB_OK) {
             playing_ = false;
             return true;
@@ -109,8 +129,16 @@ namespace eka2l1::drivers {
         return false;
     }
 
+    void cubeb_audio_output_stream::pause() {
+        pausing_ = true;
+    }
+
     bool cubeb_audio_output_stream::is_playing() {
         return playing_;
+    }
+
+    bool cubeb_audio_output_stream::is_pausing() {
+        return pausing_;
     }
 
     bool cubeb_audio_output_stream::set_volume(const float volume) {
@@ -127,6 +155,16 @@ namespace eka2l1::drivers {
     }
 
     bool cubeb_audio_output_stream::current_frame_position(std::uint64_t *pos)  {
-        return (cubeb_stream_get_position(stream_, pos) == CUBEB_OK);
+        if (cubeb_stream_get_position(stream_, pos) != CUBEB_OK) {
+            return false;
+        }
+
+        if (idled_frames_ >= *pos) {
+            *pos = 0;
+        } else {
+            *pos -= idled_frames_;
+        }
+
+        return true;
     }
 }

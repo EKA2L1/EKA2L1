@@ -44,6 +44,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER(0x26, eaudio_player_max_volume),
         BRIDGE_REGISTER_DISPATCHER(0x27, eaudio_player_play),
         BRIDGE_REGISTER_DISPATCHER(0x28, eaudio_player_stop),
+        BRIDGE_REGISTER_DISPATCHER(0x29, eaudio_player_pause),
         BRIDGE_REGISTER_DISPATCHER(0x2A, eaudio_player_cancel_notify_done),
         BRIDGE_REGISTER_DISPATCHER(0x2B, eaudio_player_get_position),
         BRIDGE_REGISTER_DISPATCHER(0x2C, eaudio_player_set_position),

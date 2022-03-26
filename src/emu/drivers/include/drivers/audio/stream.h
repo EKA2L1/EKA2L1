@@ -40,8 +40,10 @@ namespace eka2l1::drivers {
 
         virtual bool start() = 0;
         virtual bool stop() = 0;
+        virtual void pause() = 0;
 
         virtual bool is_playing() = 0;
+        virtual bool is_pausing() = 0;
 
         virtual bool set_volume(const float volume) = 0;
         virtual float get_volume() const = 0;

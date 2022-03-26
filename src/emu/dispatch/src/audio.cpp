@@ -147,7 +147,7 @@ namespace eka2l1::dispatch {
     }
 
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_supply_url, eka2l1::ptr<void> handle,
-        const std::uint16_t *url, const std::uint32_t url_length) {
+        const std::uint16_t *url, const std::uint32_t url_length, std::uint64_t *duration_us) {
         std::u16string url_str(reinterpret_cast<const char16_t *>(url), url_length);
 
         // Check if the URL references to a local path (drive)
@@ -198,11 +198,16 @@ namespace eka2l1::dispatch {
         eplayer->impl_->set_volume(eplayer->volume());
         eplayer->impl_->set_repeat(eplayer->stored_repeat_times, eplayer->stored_trailing_silence_us);
 
-        // TODO: Return duration
+        if (duration_us) {
+            *duration_us = eplayer->impl_->duration();
+        } else {
+            LOG_WARN(HLE_DISPATCHER, "Audio duration pointer is supposed to not be null!");
+        }
+
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_supply_buffer, eka2l1::ptr<void> handle, epoc::des8 *buffer) {
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_supply_buffer, eka2l1::ptr<void> handle, epoc::des8 *buffer, std::uint64_t *duration_us) {
         kernel::process *pr = sys->get_kernel_system()->crr_process();
 
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
@@ -241,7 +246,12 @@ namespace eka2l1::dispatch {
         eplayer->impl_->set_volume(eplayer->volume());
         eplayer->impl_->set_repeat(eplayer->stored_repeat_times, eplayer->stored_trailing_silence_us);
 
-        // TODO: Return duration
+        if (duration_us) {
+            *duration_us = eplayer->impl_->duration();
+        } else {
+            LOG_WARN(HLE_DISPATCHER, "Audio duration pointer is supposed to not be null!");
+        }
+
         return epoc::error_none;
     }
 
@@ -278,6 +288,21 @@ namespace eka2l1::dispatch {
 
             manager.audio_renderer_semaphore()->destroy();
         }
+
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_pause, eka2l1::ptr<void> handle) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
+        dsp_epoc_player *eplayer = manager.get_object<dsp_epoc_player>(handle.ptr_address());
+
+        if (!eplayer) {
+            return epoc::error_bad_handle;
+        }
+
+        if (eplayer->impl_)
+            eplayer->impl_->pause();
 
         return epoc::error_none;
     }

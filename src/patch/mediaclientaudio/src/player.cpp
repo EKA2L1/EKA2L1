@@ -106,16 +106,16 @@ const TTimeIntervalMicroSeconds &CMdaAudioPlayerUtility::Duration() {
 
 EXPORT_C void CMdaAudioPlayerUtility::OpenFileL(const TDesC &aFileName) {
     // It will auto detect filename anyway!
-    iProperties->SupplyUrl(aFileName);
+    iProperties->SupplyUrlL(aFileName);
 }
 
 EXPORT_C void CMdaAudioPlayerUtility::OpenDesL(const TDesC8 &aDescriptor) {
-    iProperties->SupplyData(aDescriptor);
+    iProperties->SupplyDataL(aDescriptor);
 }
 
 EXPORT_C void CMdaAudioPlayerUtility::OpenUrlL(const TDesC &aUrl, TInt aIapId, const TDesC8 &aMimeType) {
     // ID and MIME are ignored right now
-    iProperties->SupplyUrl(aUrl);
+    iProperties->SupplyUrlL(aUrl);
 }
 
 EXPORT_C TInt CMdaAudioPlayerUtility::GetPosition(TTimeIntervalMicroSeconds &aPosition) {

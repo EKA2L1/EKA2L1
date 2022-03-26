@@ -49,6 +49,7 @@ namespace eka2l1::drivers {
         IMFMediaType *output_type_;
 
         rw_stream_com *custom_stream_;
+        std::uint64_t duration_us_;
 
     protected:
         bool is_ready_to_play() override;
@@ -79,6 +80,10 @@ namespace eka2l1::drivers {
         bool set_dest_encoding(const std::uint32_t enc) override;
         bool set_dest_freq(const std::uint32_t freq) override;
         bool set_dest_channel_count(const std::uint32_t cn) override;
+
+        std::uint64_t duration() const override {
+            return duration_us_;
+        }
 
         player_type get_player_type() const override {
             return player_type_wmf;

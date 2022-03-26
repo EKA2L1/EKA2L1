@@ -44,7 +44,7 @@ CMdaAudioRecorderUtility::~CMdaAudioRecorderUtility() {
 }
 
 void CMdaAudioRecorderUtility::OpenFileL(const TDesC &aFileName) {
-    iProperties->SupplyUrl(aFileName);
+    iProperties->SupplyUrlL(aFileName);
 }
 
 void CMdaAudioRecorderUtility::OpenDesL(const TDesC8 &aDescriptor) {
@@ -83,10 +83,10 @@ void CMdaAudioRecorderUtility::OpenL(TMdaClipLocation *aLocation, TMdaClipFormat
 
     if (supplyUrl) {
         TMdaFileClipLocation *urlLocation = reinterpret_cast<TMdaFileClipLocation *>(aLocation);
-        iProperties->SupplyUrl(urlLocation->iName); // TODO mimetype tap
+        iProperties->SupplyUrlL(urlLocation->iName); // TODO mimetype tap
     } else {
         TMdaDesClipLocation *desLocation = reinterpret_cast<TMdaDesClipLocation *>(aLocation);
-        iProperties->SupplyData(*desLocation->iDes);
+        iProperties->SupplyDataL(*desLocation->iDes);
     }
 
     if (aFormat->Type() != KUidMdaClipFormat) {
@@ -285,7 +285,7 @@ EXPORT_C void CMdaAudioRecorderUtility::OpenFileL(const RFile &aFile) {
     TFullName filePath;
     aFile.FullName(filePath);
 
-    iProperties->SupplyUrl(filePath);
+    iProperties->SupplyUrlL(filePath);
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::OpenFileL(const TMMSource &aSource) {

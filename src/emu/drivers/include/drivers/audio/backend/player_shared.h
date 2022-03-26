@@ -74,6 +74,7 @@ namespace eka2l1::drivers {
 
         bool play() override;
         bool stop() override;
+        void pause() override;
 
         bool notify_any_done(finish_callback callback, std::uint8_t *data, const std::size_t data_size) override;
         void clear_notify_done() override;

@@ -89,8 +89,8 @@ public:
 
     void StartListeningForCompletion();
 
-    void SupplyUrl(const TDesC &aUrl);
-    void SupplyData(const TDesC8 &aData);
+    void SupplyUrlL(const TDesC &aUrl);
+    void SupplyDataL(const TDesC8 &aData);
 
     void Play();
     void Stop();

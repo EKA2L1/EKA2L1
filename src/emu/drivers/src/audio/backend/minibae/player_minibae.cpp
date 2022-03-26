@@ -112,11 +112,14 @@ namespace eka2l1::drivers {
 
     player_minibae::player_minibae(audio_driver *driver)
         : song_(nullptr)
-        , repeat_times_(0) {
+        , repeat_times_(0)
+        , paused_(false) {
         BAE_SetActiveAudioDriver(driver);
     }
     
     player_minibae::~player_minibae() {
+        paused_ = false;
+
         if (song_) {
             BAESong_Delete(song_);
         }
@@ -130,6 +133,13 @@ namespace eka2l1::drivers {
     bool player_minibae::play() {
         if (!song_) {
             return false;
+        }
+
+        if (paused_) {
+            BAESong_Resume(song_);
+            paused_ = false;
+
+            return true;
         }
 
         // Previous stop of same song may got the fade to activate. Reset fade
@@ -165,6 +175,13 @@ namespace eka2l1::drivers {
         }
 
         return true;
+    }
+
+    void player_minibae::pause() {
+        if (!paused_ && song_) {
+            BAESong_Pause(song_);
+            paused_ = true;
+        }
     }
     
     bool player_minibae::set_volume(const std::uint32_t vol) {

@@ -124,7 +124,7 @@ void CMMFMdaAudioUtility::StartListeningForCompletion() {
     SetActive();
 }
 
-void CMMFMdaAudioUtility::SupplyUrl(const TDesC &aFilename) {
+void CMMFMdaAudioUtility::SupplyUrlL(const TDesC &aFilename) {
     if (iState == EMdaStateReady) {
         LogOut(KMcaCat, _L("Audio clip player must be closed using Close() function before open new audio clip!"));
         TransitionState(iState, KErrInUse);
@@ -141,16 +141,21 @@ void CMMFMdaAudioUtility::SupplyUrl(const TDesC &aFilename) {
 
     iOpener.FixupActiveStatus();
 
-    TInt duration = EAudioPlayerSupplyUrl(0, iDispatchInstance, aFilename.Ptr(), aFilename.Length());
-    TTimeIntervalMicroSeconds durationObj = TTimeIntervalMicroSeconds(duration);
+    TUint64 localDuration = 0;
+    User::LeaveIfError(EAudioPlayerSupplyUrl(0, iDispatchInstance, aFilename.Ptr(), aFilename.Length(), &localDuration));
 
-    iDuration = durationObj;
+#ifndef EKA2
+    iDuration = TTimeIntervalMicroSeconds(MakeSoftwareInt64FromHardwareUint64(localDuration));
+#else
+    iDuration = TTimeIntervalMicroSeconds(localDuration);
+#endif
+
     iPlayType = EMdaPlayTypeFile;
 
     iOpener.Open(this);
 }
 
-void CMMFMdaAudioUtility::SupplyData(const TDesC8 &aData) {
+void CMMFMdaAudioUtility::SupplyDataL(const TDesC8 &aData) {
     if (iState == EMdaStateReady) {
         LogOut(KMcaCat, _L("Audio clip player must be closed using Close() function before open new audio clip!"));
         TransitionState(iState, KErrInUse);
@@ -168,27 +173,34 @@ void CMMFMdaAudioUtility::SupplyData(const TDesC8 &aData) {
     // Cancel if it's being activated
     iOpener.FixupActiveStatus();
 
-    TInt duration = EAudioPlayerSupplyData(0, iDispatchInstance, aData);
-    TTimeIntervalMicroSeconds durationObj = TTimeIntervalMicroSeconds(duration);
+    TUint64 localDuration = 0;
+    User::LeaveIfError(EAudioPlayerSupplyData(0, iDispatchInstance, aData, &localDuration));
 
-    iDuration = durationObj;
+#ifndef EKA2
+    iDuration = TTimeIntervalMicroSeconds(MakeSoftwareInt64FromHardwareUint64(localDuration));
+#else
+    iDuration = TTimeIntervalMicroSeconds(localDuration);
+#endif
+
     iPlayType = EMdaPlayTypeBuffer;
 
     iOpener.Open(this);
 }
 
 void CMMFMdaAudioUtility::Play() {
-    if (iState == EMdaStatePlay) {
-        Cancel();
-    }
+    if (iState != EMdaStatePause) {
+        if (iState == EMdaStatePlay) {
+            Cancel();
+        }
 
-    if ((iState == EMdaStateReady) || (iState == EMdaStatePlay)) {
-        StartListeningForCompletion();
-    } else {
-        LogOut(KMcaCat, _L("Can't play audio due to no data not being yet queued."));
+        if ((iState == EMdaStateReady) || (iState == EMdaStatePlay)) {
+            StartListeningForCompletion();
+        } else {
+            LogOut(KMcaCat, _L("Can't play audio due to no data not being yet queued."));
 
-        TransitionState(EMdaStateReady, KErrNotReady);
-        return;
+            TransitionState(EMdaStateReady, KErrNotReady);
+            return;
+        }
     }
 
     TransitionState(EMdaStatePlay, KErrNone);

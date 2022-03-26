@@ -221,6 +221,11 @@ namespace eka2l1::drivers {
     }
     
     bool player_tsf::play() {
+        if (output_ && output_->is_pausing()) {
+            output_->start();
+            return true;
+        }
+
         if (!begin_msg_) {
             return false;
         }
@@ -254,6 +259,12 @@ namespace eka2l1::drivers {
         playing_message_ = nullptr;
 
         return true;
+    }
+
+    void player_tsf::pause() {
+        if (output_) {
+            output_->pause();
+        }
     }
     
     bool player_tsf::set_volume(const std::uint32_t vol) {

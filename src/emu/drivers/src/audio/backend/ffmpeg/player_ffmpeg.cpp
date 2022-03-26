@@ -19,6 +19,7 @@
 
 #include <common/buffer.h>
 #include <common/log.h>
+#include <common/time.h>
 
 #include <drivers/audio/backend/ffmpeg/player_ffmpeg.h>
 
@@ -87,6 +88,9 @@ namespace eka2l1::drivers {
 
         channels_ = codec_->channels;
         freq_ = codec_->sample_rate;
+
+        const double time_base = av_q2d(stream->time_base);
+        duration_us_ = static_cast<std::uint64_t>(static_cast<double>(stream->duration) * time_base * common::microsecs_per_sec);
 
         return true;
     }
@@ -424,7 +428,8 @@ namespace eka2l1::drivers {
         , output_encoder_(nullptr)
         , channel_layout_dest_(0)
         , custom_io_(nullptr)
-        , custom_io_buffer_(nullptr) {
+        , custom_io_buffer_(nullptr)
+        , duration_us_(0) {
         av_init_packet(&packet_);
     }
 

@@ -79,6 +79,7 @@ namespace eka2l1::drivers {
         virtual bool play() = 0;
         virtual bool record() = 0;
         virtual bool stop() = 0;
+        virtual void pause() = 0;
 
         /**
          * @brief       Crop queued audio source.
@@ -139,6 +140,9 @@ namespace eka2l1::drivers {
         virtual void set_repeat(const std::int32_t repeat_times, const std::int64_t silence_intervals_micros) = 0;
         virtual void set_position(const std::uint64_t pos_in_us) = 0;
         virtual std::uint64_t position() const = 0;
+        virtual std::uint64_t duration() const {
+            return 0;
+        }
 
         virtual bool set_dest_freq(const std::uint32_t freq) = 0;
         virtual bool set_dest_channel_count(const std::uint32_t cn) = 0;

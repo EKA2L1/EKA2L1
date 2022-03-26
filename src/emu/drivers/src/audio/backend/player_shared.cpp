@@ -88,8 +88,14 @@ namespace eka2l1::drivers {
 
     bool player_shared::play() {
         // Stop previous session
-        if (output_stream_)
+        if (output_stream_) {
+            if (output_stream_->is_pausing()) {
+                output_stream_->start();
+                return true;
+            }
+
             output_stream_->stop();
+        }
 
         // Reset the request
         {
@@ -125,6 +131,12 @@ namespace eka2l1::drivers {
             return output_stream_->stop();
 
         return true;
+    }
+
+    void player_shared::pause() {
+        if (output_stream_) {
+            output_stream_->pause();
+        }
     }
 
     bool player_shared::notify_any_done(finish_callback callback, std::uint8_t *data, const std::size_t data_size) {

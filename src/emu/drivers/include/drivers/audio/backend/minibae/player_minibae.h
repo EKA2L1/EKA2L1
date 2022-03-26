@@ -33,6 +33,7 @@ namespace eka2l1::drivers {
     private:
         BAESong song_;
         std::int32_t repeat_times_;
+        bool paused_;
 
     public:
         explicit player_minibae(audio_driver *driver);
@@ -44,6 +45,7 @@ namespace eka2l1::drivers {
         bool record() override;
         bool stop() override;
         bool crop() override;
+        void pause() override;
 
         bool set_volume(const std::uint32_t vol) override;
         bool open_url(const std::string &url) override;

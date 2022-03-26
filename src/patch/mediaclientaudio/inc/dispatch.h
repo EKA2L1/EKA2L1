@@ -40,7 +40,7 @@ HLE_DISPATCH_FUNC(TInt, EAudioPlayerNotifyAnyDone, TAny *aInstance, TRequestStat
 
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerCancelNotifyAnyDone, TAny *aInstance);
 
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerSupplyUrl, TAny *aInstance, const TUint16 *aUrl, const TUint aUrlLength);
+HLE_DISPATCH_FUNC(TInt, EAudioPlayerSupplyUrl, TAny *aInstance, const TUint16 *aUrl, const TUint aUrlLength, TUint64 *aDurationUs);
 
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetCurrentPlayPos, TAny *aInstance, TUint64 &aPosition);
 
@@ -53,7 +53,7 @@ HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetBalance, TAny *aInstance, TInt aBalance);
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetBalance, TAny *aInstance);
 
 // Supply raw audio data to media player queue.
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerSupplyData, TAny *aInstance, const TDesC8 &aAudioData);
+HLE_DISPATCH_FUNC(TInt, EAudioPlayerSupplyData, TAny *aInstance, const TDesC8 &aAudioData, TUint64 *aDurationUs);
 
 // Set volume of the play instance.
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetVolume, TAny *aInstance, const TInt aVolume);

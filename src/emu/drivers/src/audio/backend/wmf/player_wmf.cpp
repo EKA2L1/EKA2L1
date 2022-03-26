@@ -215,7 +215,8 @@ namespace eka2l1::drivers {
         , writer_(nullptr)
         , output_supported_list_(nullptr)
         , output_type_(nullptr)
-        , custom_stream_(nullptr) {
+        , custom_stream_(nullptr)
+        , duration_us_(0) {
         // Startup media foundation!
         loader::MFStartup(MF_VERSION, 0);
     }
@@ -357,6 +358,22 @@ namespace eka2l1::drivers {
 
         media_type_on_stream->GetUINT32(MF_MT_AUDIO_NUM_CHANNELS, &channels_);
         media_type_on_stream->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &freq_);
+
+        PROPVARIANT prop_variant;
+
+        duration_us_ = 0;
+        hr = reader_->GetPresentationAttribute(MF_SOURCE_READER_MEDIASOURCE, MF_PD_DURATION, &prop_variant);
+
+        if (SUCCEEDED(hr)) {
+            if (!SUCCEEDED(PropVariantToUInt64(prop_variant, &duration_us_))) {
+                LOG_WARN(DRIVER_AUD, "Unable to retrieve media source's duration!");
+            } else {
+                // The duration retrieved is in 100-unit nanoseconds!
+                duration_us_ /= 10;
+            }
+        } else {
+            LOG_WARN(DRIVER_AUD, "Get duration attribute failed with code {}", hr);
+        }
 
         SafeRelease(&partial_type);
         SafeRelease(&media_type_on_stream);
