@@ -138,7 +138,7 @@ INST(arm_LDRB_imm,      "LDRB (imm)",          "cccc010pu1w1nnnnttttvvvvvvvvvvvv
 INST(arm_LDRB_reg,      "LDRB (reg)",          "cccc011pu1w1nnnnttttvvvvvrr0mmmm")
 //INST(arm_LDRD_lit,      "LDRD (lit)",          "cccc0001u1001111ttttvvvv1101vvvv")
 INST(arm_LDRD_imm,      "LDRD (imm)",          "cccc000pu1w0nnnnttttvvvv1101vvvv") // v5E
-//INST(arm_LDRD_reg,      "LDRD (reg)",          "cccc000pu0w0nnnntttt00001101mmmm") // v5E
+INST(arm_LDRD_reg,      "LDRD (reg)",          "cccc000pu0w0nnnntttt00001101mmmm") // v5E
 //INST(arm_LDRH_lit,      "LDRH (lit)",          "cccc000pu1w11111ttttvvvv1011vvvv")
 INST(arm_LDRH_imm,      "LDRH (imm)",          "cccc000pu1w1nnnnttttvvvv1011vvvv")
 INST(arm_LDRH_reg,      "LDRH (reg)",          "cccc000pu0w1nnnntttt00001011mmmm")
@@ -223,8 +223,8 @@ INST(arm_SMLAxy,        "SMLAXY",              "cccc00010000ddddaaaammmm1xy0nnnn
 INST(arm_SMULxy,        "SMULXY",              "cccc00010110dddd0000mmmm1xy0nnnn") // v5xP
 
 // Multiply (Word by Halfword) instructions
-//INST(arm_SMLAWy,        "SMLAWY",              "cccc00010010ddddaaaammmm1y00nnnn") // v5xP
-//INST(arm_SMULWy,        "SMULWY",              "cccc00010010dddd0000mmmm1y10nnnn") // v5xP
+INST(arm_SMLAWy,        "SMLAWY",              "cccc00010010ddddaaaammmm1y00nnnn") // v5xP
+INST(arm_SMULWy,        "SMULWY",              "cccc00010010dddd0000mmmm1y10nnnn") // v5xP
 
 // Multiply (Most Significant Word) instructions
 //INST(arm_SMMUL,         "SMMUL",               "cccc01110101dddd1111mmmm00R1nnnn") // v6

@@ -205,6 +205,45 @@ namespace eka2l1::arm::r12l1 {
         const common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         big_block_->SMLAxy(dest_mapped, op1_mapped, op2_mapped, accum_mapped, M, N);
+        cpsr_nzcvq_changed();
+
+        return true;
+    }
+
+    bool arm_translate_visitor::arm_SMULWy(common::cc_flags cond, reg_index d, reg_index m, bool top, reg_index n) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg op2_real = reg_index_to_gpr(m);
+
+        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
+        const common::armgen::arm_reg op2_mapped = reg_supplier_.map(op2_real, 0);
+        const common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+
+        big_block_->SMULWy(dest_mapped, op1_mapped, op2_mapped, top);
+        return true;
+    }
+
+    bool arm_translate_visitor::arm_SMLAWy(common::cc_flags cond, reg_index d, reg_index a, reg_index m, bool top, reg_index n) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg op2_real = reg_index_to_gpr(m);
+        common::armgen::arm_reg accum_real = reg_index_to_gpr(a);
+
+        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
+        const common::armgen::arm_reg op2_mapped = reg_supplier_.map(op2_real, 0);
+        const common::armgen::arm_reg accum_mapped = reg_supplier_.map(accum_real, 0);
+        const common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+
+        big_block_->SMLAWy(dest_mapped, op1_mapped, op2_mapped, accum_mapped, top);
+        cpsr_nzcvq_changed();
 
         return true;
     }

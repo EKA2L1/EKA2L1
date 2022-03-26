@@ -87,6 +87,27 @@ namespace eka2l1::arm::r12l1 {
         return emit_memory_access(dest_real, base_real, adv, 64, false, U, P, W, true, dest_real_2);
     }
 
+    bool arm_translate_visitor::arm_LDRD_reg(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index t, reg_index m) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(t);
+        common::armgen::arm_reg dest_real_2 = reg_index_to_gpr(t + 1);
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg offset_base_real = reg_index_to_gpr(m);
+
+        common::armgen::arm_reg offset_base_mapped = reg_supplier_.map(offset_base_real, 0);
+        common::armgen::operand2 adv(offset_base_mapped);
+
+        reg_supplier_.spill_lock(offset_base_real);
+
+        const bool res = emit_memory_access(dest_real, base_real, adv, 64, false, U, P, W, true, dest_real_2);
+        reg_supplier_.release_spill_lock(offset_base_real);
+
+        return res;
+    }
+
     bool arm_translate_visitor::arm_LDRB_lit(common::cc_flags cond, bool U, reg_index t, std::uint16_t imm12) {
         if (!condition_passed(cond)) {
             return false;
