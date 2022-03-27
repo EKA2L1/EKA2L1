@@ -49,12 +49,12 @@ namespace eka2l1::drivers {
     }
 
     bool sensor_null_base::get_property(const sensor_property prop, const std::int32_t item_index,
-        const std::int32_t *array_index, sensor_property_data &data) {
+        const std::int32_t array_index, sensor_property_data &data) {
         data.property_id_ = prop;
 
         for (std::size_t i = 0; i < properties_datas_.size(); i++) {
             if ((properties_datas_[i].property_id_ == prop) && (properties_datas_[i].item_index_ == item_index)
-                && (!array_index || (properties_datas_[i].array_index_ == *array_index))) {
+                && (properties_datas_[i].array_index_ == array_index)) {
                 data = properties_datas_[i];
                 return true;
             }
@@ -84,14 +84,16 @@ namespace eka2l1::drivers {
         return true;
     }
 
-    std::size_t sensor_null_base::listen_for_data(sensor_data_callback callback, std::size_t desired_buffering_count,
-        std::size_t max_buffering_count, std::size_t delay_us) {
+    bool sensor_null_base::listen_for_data(std::size_t desired_buffering_count, std::size_t max_buffering_count, std::size_t delay_us) {
         // Return a fake handle.
-        return 1;
+        return true;
     }
 
-    bool sensor_null_base::cancel_data_listening(const std::size_t handle) {
+    bool sensor_null_base::cancel_data_listening() {
         return true;
+    }
+
+    void sensor_null_base::receive_data(sensor_data_callback callback) {
     }
 
     sensor_accelerometer_null::sensor_accelerometer_null(const sensor_info &info)

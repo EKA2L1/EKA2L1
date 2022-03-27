@@ -23,6 +23,7 @@
 #include <string>
 #include <functional>
 #include <memory>
+#include <vector>
 
 namespace eka2l1::drivers {
     // NOTE: This matchs Symbian's Sensor API to reduce less translation.
@@ -75,6 +76,12 @@ namespace eka2l1::drivers {
         SENSOR_UNIT_TELSA = 12 
     };
 
+    enum sensor_data_format {
+        SENSOR_DATA_FORMAT_UNDEFINED = 0,
+        SENSOR_DATA_FORMAT_ABSOLUTE = 1,
+        SENSOR_DATA_FORMAT_SCALED = 2
+    };
+
     // NOTE: This matchs Symbian's Sensor API to reduce less translation.
     enum sensor_property {
         SENSOR_PROPERTY_SAMPLE_RATE = 0x2,
@@ -102,6 +109,7 @@ namespace eka2l1::drivers {
         std::string location_;
 
         std::uint32_t id_ = 0;
+        std::uint32_t item_size_ = 0;
     };
 
     enum sensor_property_array_index {
@@ -141,35 +149,57 @@ namespace eka2l1::drivers {
         // Many times we do :(
         void set_int(const std::int32_t int_value, const std::int32_t item_index = -1);
         void set_double(const double float_value, const std::int32_t item_index = -1);
+        void set_int_range(const std::int32_t min, const std::int32_t max);
+        void set_double_range(const double min, const double max);
         void set_buffer(const std::string &buffer, const std::int32_t item_index = -1);
 
         void set_as_array_status(data_type type, const std::int32_t max_num, const std::int32_t active_element);
     };
 
-    using sensor_data_callback = std::function<void(std::vector<std::uint8_t> &, std::size_t)>();
+#pragma pack(push, 1)
+    struct sensor_accelerometer_axis_data {
+        std::uint64_t timestamp_;
+        std::int32_t axis_x_;
+        std::int32_t axis_y_;
+        std::int32_t axis_z_;
+        std::int32_t pad_ = 0;
+    };
+#pragma pack(pop)
+
+    static_assert(sizeof(sensor_accelerometer_axis_data) == 24);
+
+    using sensor_data_callback = std::function<void(std::vector<std::uint8_t> &, std::size_t)>;
 
     // TODO: Property listening
     class sensor {
     public:
+        virtual ~sensor() = default;
         virtual bool get_property(const sensor_property prop, const std::int32_t item_index,
-            const std::int32_t *array_index, sensor_property_data &data) = 0;
+            const std::int32_t array_index, sensor_property_data &data) = 0;
         virtual bool set_property(const sensor_property_data &data) = 0;
         virtual std::vector<sensor_property_data> get_all_properties(const sensor_property *prop_value = nullptr) = 0;
 
         /**
          * @brief Listen for sensor data.
          * 
-         * @param callback                  Data callback contains the packed data and number of packets in the vector.
          * @param desired_buffering_count   Number of packets desired to received on the callback.
          * @param max_buffering_count       Maximum number of packets to received on the callback.
-         * @param delay_us                  Specifiy the time after all packets are prepared, to call the callback.
+         * @param delay_us                  Specify the time after all packets are prepared, to call the callback.
          * 
-         * @returns Handle to the callback.
+         * @returns True on success.
          */
-        virtual std::size_t listen_for_data(sensor_data_callback callback, std::size_t desired_buffering_count,
-            std::size_t max_buffering_count, std::size_t delay_us) = 0;
+        virtual bool listen_for_data(std::size_t desired_buffering_count, std::size_t max_buffering_count, std::size_t delay_us) = 0;
+        virtual bool cancel_data_listening() = 0;
 
-        virtual bool cancel_data_listening(const std::size_t handle) = 0;
+        /**
+         * Asynchronously receive sensor data.
+         *
+         * Listen must be called first!
+         *
+         * @param callback Function that called when the amount of desired packets have arrived.
+         */
+        virtual void receive_data(sensor_data_callback callback) = 0;
+
         virtual std::uint32_t data_packet_size() const = 0;
     };
 
@@ -177,6 +207,18 @@ namespace eka2l1::drivers {
     public:
         virtual std::vector<sensor_info> queries_active_sensor(const sensor_info &search_info) = 0;
         virtual std::unique_ptr<sensor> new_sensor_controller(const std::uint32_t id) = 0;
+
+        /**
+         * Pause all sensor listeners. Use to save battery when inactive.
+         * @return True on success.
+         */
+        virtual bool pause() = 0;
+
+        /**
+         * Resume all active sensor listeners. Use when app is back from background.
+         * @return True on success.
+         */
+        virtual bool resume() = 0;
 
         static std::unique_ptr<sensor_driver> instantiate();
     };

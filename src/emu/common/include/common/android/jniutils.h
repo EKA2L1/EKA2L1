@@ -19,10 +19,12 @@
 
 #pragma once
 
+#include <android/looper.h>
 #include <jni.h>
 
 namespace eka2l1::common::jni {
     extern JavaVM *virtual_machine;
+    extern ALooper *main_looper;
 
     void init_classloader();
     jclass find_class(const char *name);

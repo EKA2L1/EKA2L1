@@ -94,7 +94,9 @@ if (NOT ANDROID)
 else()
     target_sources(drivers PRIVATE
         include/drivers/hwrm/backend/vibration_jdk.h
-        src/hwrm/backend/vibration_jdk.cpp)
+        src/hwrm/backend/vibration_jdk.cpp
+        src/sensor/backend/android/sensor_android.cpp
+        src/sensor/backend/android/sensor_android.h)
 endif()
 
 if(WIN32)
@@ -148,6 +150,8 @@ target_link_libraries(miniBAE_EMU PRIVATE common)
 target_link_libraries(drivers PRIVATE common cubeb ffmpeg glad glm miniBAE_EMU)
 if (NOT ANDROID)
     target_link_libraries(drivers PRIVATE SDL2)
+else()
+    target_link_libraries(drivers PRIVATE android)
 endif()
 
 target_include_directories(drivers PUBLIC include ${MINIBAE_PUBLIC_INCLUDE_DIRS} ${TSF_INCLUDE})

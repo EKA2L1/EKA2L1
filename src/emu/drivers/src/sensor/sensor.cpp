@@ -17,8 +17,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/platform.h>
 #include <drivers/sensor/sensor.h>
+
 #include "backend/null/sensor_null.h"
+
+#if EKA2L1_PLATFORM(ANDROID)
+#include "backend/android/sensor_android.h"
+#endif
 
 namespace eka2l1::drivers {
     void sensor_property_data::set_int(const std::int32_t int_value, const std::int32_t item_index) {
@@ -53,7 +59,25 @@ namespace eka2l1::drivers {
         int_value_ = active_element;
     }
 
+    void sensor_property_data::set_int_range(const std::int32_t min, const std::int32_t max) {
+        min_int_value_ = min;
+        max_int_value_ = max;
+
+        data_type_ = DATA_TYPE_INT;
+    }
+
+    void sensor_property_data::set_double_range(const double min, const double max) {
+        min_float_value_ = min;
+        max_float_value_ = max;
+
+        data_type_ = DATA_TYPE_DOUBLE;
+    }
+
     std::unique_ptr<sensor_driver> sensor_driver::instantiate() {
+#if EKA2L1_PLATFORM(ANDROID)
+        return std::make_unique<sensor_driver_android>();
+#endif
+
         return std::make_unique<sensor_driver_null>();
     }
 }

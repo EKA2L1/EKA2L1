@@ -27,6 +27,7 @@
 #include <mem/ptr.h>
 
 #include <cstring>
+#include <memory>
 #include <optional>
 #include <string>
 
@@ -256,6 +257,13 @@ namespace eka2l1 {
              * \returns  True if passed.
              */
             bool satisfy(epoc::security_policy &policy, epoc::security_info *missing = nullptr);
+
+            std::unique_ptr<ipc_context> move_to_new() {
+                std::unique_ptr<ipc_context> copy = std::make_unique<ipc_context>(*this);
+                auto_deref = false;
+
+                return copy;
+            }
         };
     }
 }

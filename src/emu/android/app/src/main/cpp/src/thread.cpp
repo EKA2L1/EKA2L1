@@ -19,6 +19,7 @@
 
 #include <android/thread.h>
 #include <common/thread.h>
+#include <drivers/audio/audio.h>
 #include <drivers/graphics/graphics.h>
 
 std::unique_ptr<std::thread> os_thread_obj;
@@ -144,11 +145,27 @@ namespace eka2l1::android {
         state.should_graphics_pause = false;
         state.pause_graphics_sema.notify();
         state.pause_sema.notify();
+
+        if (state.sensor_driver) {
+            state.sensor_driver->resume();
+        }
+
+        if (state.audio_driver) {
+            state.audio_driver->resume();
+        }
     }
 
     void pause_threads(emulator &state) {
         state.should_emu_pause = true;
         state.should_graphics_pause = true;
+
+        if (state.sensor_driver) {
+            state.sensor_driver->pause();
+        }
+
+        if (state.audio_driver) {
+            state.audio_driver->suspend();
+        }
     }
 
     void press_key(emulator &state, int key, int key_state) {

@@ -23,6 +23,9 @@
 namespace eka2l1::common::jni {
     JavaVM *virtual_machine = nullptr;
 
+    // Only do this will it executes thing in main thread. Ironic
+    ALooper *main_looper = ALooper_forThread();
+
     jobject c_classloader;
     jmethodID c_findclass_method;
 

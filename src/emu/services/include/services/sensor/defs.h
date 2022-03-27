@@ -64,6 +64,13 @@ namespace eka2l1 {
         std::uint32_t buffering_period;
     };
 
+    struct data_count_ret_val {
+        std::uint32_t item_count_;
+        std::uint32_t lost_count_;
+    };
+
+    static_assert(sizeof(data_count_ret_val) == 8);
+
     #pragma pack(push, 1)
     struct sensor_property {
         std::uint32_t property_id;

@@ -118,6 +118,8 @@ if (UNIX OR APPLE)
     set_property(TARGET common PROPERTY POSITION_INDEPENDENT_CODE ON)
     if (NOT ANDROID)
         target_link_libraries(common PRIVATE pthread)
+    else()
+        target_link_libraries(common PRIVATE android)
     endif()
 endif ()
 
