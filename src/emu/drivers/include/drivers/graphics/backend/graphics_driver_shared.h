@@ -33,6 +33,8 @@
 #include <common/vecx.h>
 
 namespace eka2l1::drivers {
+    #define HANDLE_BITMAP (1ULL << 32)
+
     /**
      * \brief Bitmap is basically a texture. It can be drawn into and can be taken to draw.
      */

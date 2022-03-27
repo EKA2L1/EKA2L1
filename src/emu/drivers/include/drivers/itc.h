@@ -539,6 +539,8 @@ namespace eka2l1::drivers {
 
         void set_texture_addressing_mode(drivers::handle h, const drivers::addressing_direction dir, const drivers::addressing_option opt);
 
+        void set_texture_anisotrophy(drivers::handle h, const float anisotrophy_fact);
+
         void set_texture_max_mip(drivers::handle h, const std::uint32_t max_mip);
 
         void regenerate_mips(drivers::handle h);

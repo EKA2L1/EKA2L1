@@ -165,8 +165,6 @@ namespace eka2l1::drivers {
     shared_graphics_driver::~shared_graphics_driver() {
     }
 
-#define HANDLE_BITMAP (1ULL << 32)
-
     bitmap *shared_graphics_driver::get_bitmap(const drivers::handle h) {
         if ((h & HANDLE_BITMAP) == 0) {
             return nullptr;

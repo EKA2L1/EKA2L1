@@ -77,6 +77,7 @@ namespace eka2l1::drivers {
         graphics_driver_set_texture_wrap,
         graphics_driver_generate_mips,
         graphics_driver_set_max_mip_level,
+        graphics_driver_set_texture_anisotrophy,
         graphics_driver_use_program,
         graphics_driver_set_uniform,
         graphics_driver_bind_texture,
@@ -98,6 +99,14 @@ namespace eka2l1::drivers {
         graphics_driver_set_depth_range,
         graphics_driver_backup_state, // Backup all possible state to a struct
         graphics_driver_restore_state // Restore previously backup data
+    };
+
+    enum graphics_driver_extension {
+        graphics_driver_extension_anisotrophy_filtering = 1 << 0
+    };
+
+    enum graphics_driver_extension_query {
+        graphics_driver_extension_query_max_texture_max_anisotrophy
     };
 
     using display_hook = std::function<void()>;
@@ -155,6 +164,9 @@ namespace eka2l1::drivers {
 
         virtual void set_upscale_shader(const std::string &name) = 0;
         virtual std::string get_active_upscale_shader() const = 0;
+
+        virtual bool support_extension(const graphics_driver_extension ext) = 0;
+        virtual bool query_extension_value(const graphics_driver_extension_query query, void *data_ptr) = 0;
     };
 
     using graphics_driver_ptr = std::unique_ptr<graphics_driver>;

@@ -680,4 +680,11 @@ namespace eka2l1::drivers {
         cmd->opcode_ = graphics_driver_set_depth_range;
         cmd->data_[0] = pack_from_two_floats(min, max);
     }
+    
+    void graphics_command_builder::set_texture_anisotrophy(drivers::handle h, const float anisotrophy_fact) {
+        command *cmd = list_.retrieve_next();
+        cmd->opcode_ = graphics_driver_set_texture_anisotrophy;
+        cmd->data_[0] = h;
+        cmd->data_[1] = pack_from_two_floats(anisotrophy_fact, 0);
+    }
 }

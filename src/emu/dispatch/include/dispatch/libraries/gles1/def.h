@@ -80,6 +80,7 @@ namespace eka2l1::dispatch {
         std::uint32_t wrap_s_;
         std::uint32_t wrap_t_;
         std::uint32_t mip_count_;
+        float max_anisotrophy_;
 
         bool auto_regen_mipmap_;
 
@@ -147,6 +148,14 @@ namespace eka2l1::dispatch {
 
         void set_auto_regenerate_mipmap(const bool opt) {
             auto_regen_mipmap_ = opt;
+        }
+
+        float max_anisotrophy() const {
+            return max_anisotrophy_;
+        }
+
+        void set_max_anisotrophy(const float val) {
+            max_anisotrophy_ = val;
         }
 
         eka2l1::vec2 size() const {
@@ -410,7 +419,9 @@ namespace eka2l1::dispatch {
             STATE_CHANGED_LINE_WIDTH = 1 << 8,
             STATE_CHANGED_DEPTH_MASK = 1 << 9,
             STATE_CHANGED_DEPTH_PASS_COND = 1 << 10,
-            STATE_CHANGED_DEPTH_RANGE = 1 << 11
+            STATE_CHANGED_DEPTH_RANGE = 1 << 11,
+            STATE_CHANGED_STENCIL_FUNC = 1 << 12,
+            STATE_CHANGED_STENCIL_OP = 1 << 13
         };
 
         gles1_vertex_attrib vertex_attrib_;
@@ -461,6 +472,12 @@ namespace eka2l1::dispatch {
         std::uint32_t stencil_mask_;
         std::uint32_t depth_mask_;
         std::uint32_t depth_func_;
+        std::uint32_t stencil_func_;
+        std::uint32_t stencil_func_mask_;
+        std::int32_t stencil_func_ref_;
+        std::uint32_t stencil_fail_action_;
+        std::uint32_t stencil_depth_fail_action_;
+        std::uint32_t stencil_depth_pass_action_;
 
         float alpha_test_ref_;
 
@@ -498,4 +515,14 @@ namespace eka2l1::dispatch {
     };
 
     egl_context_es1 *get_es1_active_context(system *sys);
+
+    /**
+     * @brief Get the extension string for ES1 layer.
+     * 
+     * This also accounts the extensions that the host GPU supports.
+     * 
+     * @param   driver            Graphic driver pointer.
+     * @return  The extension string.
+     */
+    std::string get_es1_extensions(drivers::graphics_driver *driver);
 }

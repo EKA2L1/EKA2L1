@@ -118,6 +118,8 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_LIBRARY(void, gl_light_model_fv_emu, std::uint32_t pname, float *param);
     BRIDGE_FUNC_LIBRARY(void, gl_light_model_xv_emu, std::uint32_t pname, gl_fixed *param);
     BRIDGE_FUNC_LIBRARY(void, gl_depth_func_emu, std::uint32_t func);
+    BRIDGE_FUNC_LIBRARY(void, gl_stencil_func_emu, std::uint32_t func, std::int32_t ref, std::uint32_t mask);
+    BRIDGE_FUNC_LIBRARY(void, gl_stencil_op_emu, std::uint32_t fail, std::uint32_t depth_fail, std::uint32_t depth_pass);
     BRIDGE_FUNC_LIBRARY(void, gl_enable_emu, std::uint32_t cap);
     BRIDGE_FUNC_LIBRARY(void, gl_disable_emu, std::uint32_t cap);
     BRIDGE_FUNC_LIBRARY(void, gl_clip_plane_f_emu, std::uint32_t plane, float *eq);

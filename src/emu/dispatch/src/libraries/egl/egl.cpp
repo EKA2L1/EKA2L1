@@ -619,6 +619,14 @@ namespace eka2l1::dispatch {
 
             break;
 
+        case EGL_MAX_PBUFFER_WIDTH_EMU:
+            *value = MAX_EGL_FB_WIDTH;
+            break;
+
+        case EGL_MAX_PBUFFER_HEIGHT_EMU:
+            *value = MAX_EGL_FB_HEIGHT;
+            break;
+
         default:
             LOG_ERROR(HLE_DISPATCHER, "Unhandled config attribute getter 0x{:X}", attribute);
             egl_push_error(sys, EGL_BAD_ATTRIBUTE_EMU);

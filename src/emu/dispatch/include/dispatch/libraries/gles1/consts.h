@@ -22,6 +22,16 @@ namespace eka2l1::dispatch {
     static constexpr const char *GLES1_STATIC_STRING_RENDERER = "POWERVR EKA2L1";
     static constexpr const char *GLES1_STATIC_STRING_VERSION = "1.1.0 POWERVR (EKA2L1 IMPLEMENTATION)";
     static constexpr const char *GLES1_STATIC_STRING_EXTENSIONS = "GL_IMG_texture_compression_pvrtc "
-        "OES_compressed_ETC1_RGB8_texture "
-        "GL_OES_compressed_paletted_texture ";
+        "GL_OES_compressed_ETC1_RGB8_texture "
+        "GL_OES_compressed_paletted_texture "
+        "GL_ARB_texture_env_combine "
+        "GL_OES_texture_env_crossbar "
+        "GL_OES_texture_mirrored_repeat "
+        "GL_EXT_texture_format_BGRA8888 "
+        "GL_OES_vertex_buffer_object "
+        "GL_EXT_texture_lod_bias ";
+        /**
+         * "GL_OES_framebuffer_object "
+         * "GL_EXT_texture_compression_s3tc "
+         */
 }

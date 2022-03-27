@@ -20,6 +20,7 @@
 #include <config/config.h>
 #include <dispatch/dispatcher.h>
 #include <dispatch/libraries/register.h>
+#include <dispatch/libraries/gles1/def.h>
 #include <dispatch/register.h>
 #include <dispatch/screen.h>
 #include <kernel/kernel.h>
@@ -45,7 +46,8 @@ namespace eka2l1::dispatch {
         , trampoline_allocated_(0)
         , static_data_allocated_(0)
         , winserv_(nullptr)
-        , egl_controller_(nullptr) {
+        , egl_controller_(nullptr)
+        , graphics_string_added_(false) {
         trampoline_chunk_ = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr, "DispatcherTrampolines", 0,
             MAX_TRAMPOLINE_CHUNK_SIZE, MAX_TRAMPOLINE_CHUNK_SIZE, prot_read_write_exec, kernel::chunk_type::normal,
             kernel::chunk_access::rom, kernel::chunk_attrib::none);
@@ -64,21 +66,25 @@ namespace eka2l1::dispatch {
         kern_ = kern;
 
         post_transferer_.construct(timing_);
-
-        // Add static strings
-        add_static_string(GLES1_STATIC_STRING_KEY_VENDOR, GLES1_STATIC_STRING_VENDOR);
-        add_static_string(GLES1_STATIC_STRING_KEY_RENDERER, GLES1_STATIC_STRING_RENDERER);
-        add_static_string(GLES1_STATIC_STRING_KEY_EXTENSIONS, GLES1_STATIC_STRING_EXTENSIONS);
-        add_static_string(GLES1_STATIC_STRING_KEY_VERSION, GLES1_STATIC_STRING_VERSION);
-        add_static_string(EGL_VENDOR_EMU, EGL_STATIC_STRING_VENDOR);
-        add_static_string(EGL_VERSION_EMU, EGL_STATIC_STRING_VERSION);
-        add_static_string(EGL_EXTENSIONS_EMU, EGL_STATIC_STRING_EXTENSION);
     }
 
     dispatcher::~dispatcher() {
     }
     
     void dispatcher::set_graphics_driver(drivers::graphics_driver *driver) {
+        if (!graphics_string_added_) {
+            // Add static strings
+            add_static_string(GLES1_STATIC_STRING_KEY_VENDOR, GLES1_STATIC_STRING_VENDOR);
+            add_static_string(GLES1_STATIC_STRING_KEY_RENDERER, GLES1_STATIC_STRING_RENDERER);
+            add_static_string(GLES1_STATIC_STRING_KEY_EXTENSIONS, dispatch::get_es1_extensions(driver));
+            add_static_string(GLES1_STATIC_STRING_KEY_VERSION, GLES1_STATIC_STRING_VERSION);
+            add_static_string(EGL_VENDOR_EMU, EGL_STATIC_STRING_VENDOR);
+            add_static_string(EGL_VERSION_EMU, EGL_STATIC_STRING_VERSION);
+            add_static_string(EGL_EXTENSIONS_EMU, EGL_STATIC_STRING_EXTENSION);
+
+            graphics_string_added_ = true;
+        }
+
         egl_controller_.set_graphics_driver(driver);
     }
 

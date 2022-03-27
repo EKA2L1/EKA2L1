@@ -58,6 +58,7 @@ namespace eka2l1::drivers {
     enum ogl_driver_feature {
         OGL_FEATURE_SUPPORT_ETC2 = 1 << 0,
         OGL_FEATURE_SUPPORT_PVRTC = 1 << 1,
+        OGL_FEATURE_SUPPORT_ANISOTROPHY = 1 << 2,
         OGL_MAX_FEATURE = 2
     };
 
@@ -142,6 +143,8 @@ namespace eka2l1::drivers {
         std::string pending_upscale_shader_;
         std::string active_upscale_shader_;
 
+        float anisotrophy_max_;
+
         void do_init();
         void prepare_draw_lines_shared();
 
@@ -178,6 +181,7 @@ namespace eka2l1::drivers {
         void set_line_width(command &cmd);
         void set_depth_bias(command &cmd);
         void set_depth_range(command &cmd);
+        void set_texture_anisotrophy(command &cmd);
 
         void save_gl_state();
         void load_gl_state();
@@ -199,6 +203,9 @@ namespace eka2l1::drivers {
         void wait_for(int *status) override;
         void set_upscale_shader(const std::string &name) override;
         std::string get_active_upscale_shader() const override;
+
+        bool support_extension(const graphics_driver_extension ext) override;
+        bool query_extension_value(const graphics_driver_extension_query query, void *data_ptr) override;
 
         bool is_stricted() const override {
             return is_gles;

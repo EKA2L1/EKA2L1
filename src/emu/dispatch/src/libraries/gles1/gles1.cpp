@@ -28,7 +28,15 @@
 
 #include <vector>
 
-namespace eka2l1::dispatch {
+namespace eka2l1::dispatch {    
+    std::string get_es1_extensions(drivers::graphics_driver *driver) {
+        std::string original_list = GLES1_STATIC_STRING_EXTENSIONS;
+        if (driver->support_extension(drivers::graphics_driver_extension_anisotrophy_filtering)) {
+            original_list += "GL_EXT_texture_filter_anisotropic ";
+        }
+        return original_list;
+    }
+
     static bool decompress_palette_data(std::vector<std::uint8_t> &dest, std::vector<std::size_t> &out_size, std::uint8_t *source, std::int32_t width,
         std::int32_t height, std::uint32_t source_format, std::int32_t mip_count, drivers::texture_format &dest_format,
         drivers::texture_data_type &dest_data_type, std::uint32_t &dest_format_gl) {
@@ -206,6 +214,39 @@ namespace eka2l1::dispatch {
 
         case GL_NOTEQUAL_EMU:
             drv_func = drivers::condition_func::not_equal;
+            break;
+
+        default:
+            return false;
+        }
+
+        return true;
+    }
+
+    static bool stencil_action_from_gl_enum(const std::uint32_t func, drivers::stencil_action &action) {
+        switch (func) {
+        case GL_KEEP_EMU:
+            action = drivers::stencil_action::keep;
+            break;
+        
+        case GL_ZERO_EMU:
+            action = drivers::stencil_action::set_to_zero;
+            break;
+
+        case GL_REPLACE_EMU:
+            action = drivers::stencil_action::replace;
+            break;
+
+        case GL_INCR_EMU:
+            action = drivers::stencil_action::increment;
+            break;
+
+        case GL_DECR_EMU:
+            action = drivers::stencil_action::decrement;
+            break;
+
+        case GL_INVERT_EMU:
+            action = drivers::stencil_action::invert;
             break;
 
         default:
@@ -417,6 +458,12 @@ namespace eka2l1::dispatch {
         , stencil_mask_(0xFFFFFFFF)
         , depth_mask_(0xFFFFFFFF)
         , depth_func_(GL_LESS_EMU)
+        , stencil_func_(GL_ALWAYS_EMU)
+        , stencil_func_mask_(0xFFFFFFFF)
+        , stencil_func_ref_(0)
+        , stencil_fail_action_(GL_KEEP_EMU)
+        , stencil_depth_fail_action_(GL_KEEP_EMU)
+        , stencil_depth_pass_action_(GL_KEEP_EMU)
         , alpha_test_ref_(0)
         , input_desc_(0)
         , polygon_offset_factor_(0.0f)
@@ -617,6 +664,24 @@ namespace eka2l1::dispatch {
             cmd_builder_.set_depth_range(depth_range_min_, depth_range_max_);
         }
 
+        if (state_change_tracker_ & STATE_CHANGED_STENCIL_FUNC) {
+            drivers::condition_func stencil_func_drv;
+            cond_func_from_gl_enum(stencil_func_, stencil_func_drv);
+
+            cmd_builder_.set_stencil_pass_condition(drivers::rendering_face::back_and_front, stencil_func_drv,
+                stencil_func_ref_, stencil_func_mask_);
+        }
+
+        if (state_change_tracker_ & STATE_CHANGED_STENCIL_OP) {
+            drivers::stencil_action stencil_action_fail_drv, stencil_action_depth_fail_drv, stencil_action_depth_pass_drv;
+            stencil_action_from_gl_enum(stencil_fail_action_, stencil_action_fail_drv);
+            stencil_action_from_gl_enum(stencil_depth_fail_action_, stencil_action_depth_fail_drv);
+            stencil_action_from_gl_enum(stencil_depth_pass_action_, stencil_action_depth_pass_drv);
+    
+            cmd_builder_.set_stencil_action(drivers::rendering_face::back_and_front, stencil_action_fail_drv,
+                stencil_action_depth_fail_drv, stencil_action_depth_pass_drv);
+        }
+
         state_change_tracker_ = 0;
     }
 
@@ -627,10 +692,18 @@ namespace eka2l1::dispatch {
         cmd_builder_.set_color_mask(color_mask_);
         cmd_builder_.set_stencil_mask(drivers::rendering_face::back_and_front, stencil_mask_);
 
-        drivers::condition_func func;
-        cond_func_from_gl_enum(depth_func_, func);
+        drivers::condition_func depth_func_drv;
+        cond_func_from_gl_enum(depth_func_, depth_func_drv);
 
-        cmd_builder_.set_depth_pass_condition(func);
+        drivers::condition_func stencil_func_drv;
+        cond_func_from_gl_enum(stencil_func_, stencil_func_drv);
+
+        drivers::stencil_action stencil_action_fail_drv, stencil_action_depth_fail_drv, stencil_action_depth_pass_drv;
+        stencil_action_from_gl_enum(stencil_fail_action_, stencil_action_fail_drv);
+        stencil_action_from_gl_enum(stencil_depth_fail_action_, stencil_action_depth_fail_drv);
+        stencil_action_from_gl_enum(stencil_depth_pass_action_, stencil_action_depth_pass_drv);
+
+        cmd_builder_.set_depth_pass_condition(depth_func_drv);
         cmd_builder_.set_depth_mask(depth_mask_);
         cmd_builder_.blend_formula(drivers::blend_equation::add, drivers::blend_equation::add, source_blend_factor_, dest_blend_factor_,
             source_blend_factor_, dest_blend_factor_);
@@ -638,6 +711,10 @@ namespace eka2l1::dispatch {
         cmd_builder_.set_line_width(line_width_);
         cmd_builder_.set_depth_bias(polygon_offset_units_, 1.0, polygon_offset_factor_);
         cmd_builder_.set_depth_range(depth_range_min_, depth_range_max_);
+        cmd_builder_.set_stencil_pass_condition(drivers::rendering_face::back_and_front, stencil_func_drv,
+            stencil_func_ref_, stencil_func_mask_);
+        cmd_builder_.set_stencil_action(drivers::rendering_face::back_and_front, stencil_action_fail_drv,
+            stencil_action_depth_fail_drv, stencil_action_depth_pass_drv);
 
         cmd_builder_.set_feature(drivers::graphics_feature::blend, non_shader_statuses_ & NON_SHADER_STATE_BLEND_ENABLE);
         cmd_builder_.set_feature(drivers::graphics_feature::clipping, non_shader_statuses_ & NON_SHADER_STATE_SCISSOR_ENABLE);
@@ -774,7 +851,8 @@ namespace eka2l1::dispatch {
         , wrap_s_(GL_REPEAT_EMU)
         , wrap_t_(GL_REPEAT_EMU)
         , mip_count_(0)
-        , auto_regen_mipmap_(false) {
+        , auto_regen_mipmap_(false)
+        , max_anisotrophy_(-1.0f) {
     }
 
     gles1_driver_buffer::gles1_driver_buffer(egl_context_es1 *ctx)
@@ -2148,7 +2226,7 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        if ((size < 0) || (offset < 0) || (offset + size >= static_cast<std::int32_t>(buffer->data_size()))) {
+        if ((size < 0) || (offset < 0) || ((offset + size) > static_cast<std::int32_t>(buffer->data_size()))) {
             controller.push_error(ctx, GL_INVALID_VALUE);
             return;
         }
@@ -3364,6 +3442,56 @@ namespace eka2l1::dispatch {
         ctx->depth_func_ = func;
     }
     
+    BRIDGE_FUNC_LIBRARY(void, gl_stencil_func_emu, std::uint32_t func, std::int32_t ref, std::uint32_t mask) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        drivers::condition_func func_drv = drivers::condition_func::always;
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if (!cond_func_from_gl_enum(func, func_drv)) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        if ((ctx->stencil_func_ != func) || (ctx->stencil_func_ref_ != ref) || (ctx->stencil_func_mask_ != mask)) {
+            ctx->state_change_tracker_ |= egl_context_es1::STATE_CHANGED_STENCIL_FUNC;
+        }
+
+        ctx->stencil_func_ = func;
+        ctx->stencil_func_ref_ = ref;
+        ctx->stencil_func_mask_ = mask;
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, gl_stencil_op_emu, std::uint32_t fail, std::uint32_t depth_fail, std::uint32_t depth_pass) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        drivers::stencil_action action_temp = drivers::stencil_action::keep;
+        if (!stencil_action_from_gl_enum(fail, action_temp) || !stencil_action_from_gl_enum(depth_fail, action_temp) ||
+            !stencil_action_from_gl_enum(depth_pass, action_temp)) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        if ((ctx->stencil_fail_action_ != fail) || (ctx->stencil_depth_fail_action_ != depth_fail) ||
+            (ctx->stencil_depth_pass_action_ != depth_pass)) {
+            ctx->state_change_tracker_ |= egl_context_es1::STATE_CHANGED_STENCIL_OP;
+        }
+
+        ctx->stencil_fail_action_ = fail;
+        ctx->stencil_depth_fail_action_ = depth_fail;
+        ctx->stencil_depth_pass_action_ = depth_pass;
+    }
+
     BRIDGE_FUNC_LIBRARY(void, gl_enable_emu, std::uint32_t cap) {
         egl_context_es1 *ctx = get_es1_active_context(sys);
         if (!ctx) {
@@ -3804,6 +3932,7 @@ namespace eka2l1::dispatch {
         gles1_driver_texture *tex = ctx->binded_texture();
         dispatcher *dp = sys->get_dispatcher();
         dispatch::egl_controller &controller = dp->get_egl_controller();
+        drivers::graphics_driver *drv = sys->get_graphics_driver();
 
         if (!tex) {
             controller.push_error(ctx, GL_INVALID_OPERATION);
@@ -3908,6 +4037,28 @@ namespace eka2l1::dispatch {
             tex->set_auto_regenerate_mipmap(param != 0);
             break;
 
+        case GL_TEXTURE_MAX_ANISOTROPHY_EMU: {
+            if (!drv->support_extension(drivers::graphics_driver_extension_anisotrophy_filtering)) {
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            float max_max_ani = 1.0f;
+            drv->query_extension_value(drivers::graphics_driver_extension_query_max_texture_max_anisotrophy, &max_max_ani);
+
+            if (tex->max_anisotrophy() != param) {
+                if ((param > max_max_ani) || (param < 1.0f)) {
+                    controller.push_error(ctx, GL_INVALID_VALUE);
+                    return;
+                }
+
+                ctx->cmd_builder_.set_texture_anisotrophy(tex->handle_value(), static_cast<float>(param));
+                tex->set_max_anisotrophy(static_cast<float>(param));
+            }
+
+            break;
+        }
+
         default:
             controller.push_error(ctx, GL_INVALID_ENUM);
             return;
@@ -3915,10 +4066,50 @@ namespace eka2l1::dispatch {
     }
 
     BRIDGE_FUNC_LIBRARY(void, gl_tex_parameter_f_emu, std::uint32_t target, std::uint32_t pname, float param) {
-        gl_tex_parameter_i_emu(sys, target, pname, static_cast<std::int32_t>(param));
+        if (pname == GL_TEXTURE_MAX_ANISOTROPHY_EMU) {
+            egl_context_es1 *ctx = get_es1_active_context(sys);
+            if (!ctx) {
+                return;
+            }
+
+            gles1_driver_texture *tex = ctx->binded_texture();
+            dispatcher *dp = sys->get_dispatcher();
+            dispatch::egl_controller &controller = dp->get_egl_controller();
+            drivers::graphics_driver *drv = sys->get_graphics_driver();
+
+            if (!tex) {
+                controller.push_error(ctx, GL_INVALID_OPERATION);
+                return;
+            }
+
+            if (!drv->support_extension(drivers::graphics_driver_extension_anisotrophy_filtering)) {
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            float max_max_ani = 1.0f;
+            drv->query_extension_value(drivers::graphics_driver_extension_query_max_texture_max_anisotrophy, &max_max_ani);
+
+            if (tex->max_anisotrophy() != param) {
+                if ((param > max_max_ani) || (param < 1.0f)) {
+                    controller.push_error(ctx, GL_INVALID_VALUE);
+                    return;
+                }
+
+                ctx->cmd_builder_.set_texture_anisotrophy(tex->handle_value(), param);
+                tex->set_max_anisotrophy(param);
+            }
+        } else {
+            gl_tex_parameter_i_emu(sys, target, pname, static_cast<std::int32_t>(param));
+        }
     }
 
     BRIDGE_FUNC_LIBRARY(void, gl_tex_parameter_x_emu, std::uint32_t target, std::uint32_t pname, gl_fixed param) {
+        if (pname == GL_TEXTURE_MAX_ANISOTROPHY_EMU) {
+            gl_tex_parameter_f_emu(sys, target, pname, FIXED_32_TO_FLOAT(param));
+            return;
+        }
+
         gl_tex_parameter_i_emu(sys, target, pname, static_cast<std::int32_t>(param));
     }
 
@@ -4829,6 +5020,29 @@ namespace eka2l1::dispatch {
         case GL_STENCIL_BITS_EMU:
             *params = static_cast<T>(8);
             break;
+
+        case GL_SMOOTH_LINE_WIDTH_RANGE_EMU:
+            params[0] = static_cast<T>(1);
+            params[1] = static_cast<T>(1);
+            break;
+
+        case GL_POINT_SIZE_MIN_EMU:
+        case GL_POINT_SIZE_MAX_EMU:
+            *params = static_cast<T>(1);
+            break;
+
+        case GL_MAX_TEXTURE_MAX_ANISOTROPHY_EMU: {
+            float query_val = 1.0f;
+            if (!drv->support_extension(drivers::graphics_driver_extension_anisotrophy_filtering)) {    
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            drv->query_extension_value(drivers::graphics_driver_extension_query_max_texture_max_anisotrophy, &query_val);
+            *params = static_cast<T>(query_val);
+
+            break;
+        }
 
         default:
             LOG_TRACE(HLE_DISPATCHER, "Unhandled integer attribute 0x{:X}!", pname);

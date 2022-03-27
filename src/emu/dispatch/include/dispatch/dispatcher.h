@@ -237,6 +237,7 @@ namespace eka2l1::dispatch {
         ehui_controller hui_controller_;
 
         std::map<std::uint32_t, address> static_string_addrs_;
+        bool graphics_string_added_;
 
     public:
         window_server *winserv_;

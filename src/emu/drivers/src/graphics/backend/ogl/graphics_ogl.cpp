@@ -141,11 +141,17 @@ namespace eka2l1::drivers {
             const GLubyte *next_extension = glGetStringi(GL_EXTENSIONS, i);
             if (strcmp(reinterpret_cast<const char*>(next_extension), "GL_ARB_ES3_compatibility") == 0) {
                 feature_flags_ |= OGL_FEATURE_SUPPORT_ETC2;
-                break;
             }
 
             if (strcmp(reinterpret_cast<const char*>(next_extension), "GL_IMG_texture_compression_pvrtc") == 0) {
                 feature_flags_ |= OGL_FEATURE_SUPPORT_PVRTC;
+            }
+
+            if (strcmp(reinterpret_cast<const char*>(next_extension), "GL_EXT_texture_filter_anisotropic") == 0) {
+                feature_flags_ |= OGL_FEATURE_SUPPORT_ANISOTROPHY;
+
+                anisotrophy_max_ = 1.0f;
+                glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &anisotrophy_max_);
             }
         }
 
@@ -157,6 +163,10 @@ namespace eka2l1::drivers {
 
         if (feature_flags_ & OGL_FEATURE_SUPPORT_PVRTC) {
             feature += "PVRTDec;";
+        }
+
+        if (feature_flags_ & OGL_FEATURE_SUPPORT_ANISOTROPHY) {
+            feature += "AnisotrophyFiltering;";
         }
 
         if (!feature.empty()) {
@@ -182,6 +192,36 @@ namespace eka2l1::drivers {
         glDeleteVertexArrays(3, vao_to_del);
         glDeleteBuffers(3, vbo_to_del);
         glDeleteBuffers(2, ibo_to_del);
+    }
+
+    bool ogl_graphics_driver::support_extension(const graphics_driver_extension ext) {
+        if (ext == graphics_driver_extension_anisotrophy_filtering) {
+            return (feature_flags_ & OGL_FEATURE_SUPPORT_ANISOTROPHY);
+        }
+
+        return false;
+    }
+
+    bool ogl_graphics_driver::query_extension_value(const graphics_driver_extension_query query, void *data_ptr) {
+        if (!data_ptr) {
+            return false;
+        }
+
+        switch (query) {
+        case graphics_driver_extension_query_max_texture_max_anisotrophy:
+            if ((feature_flags_ & OGL_FEATURE_SUPPORT_ANISOTROPHY) == 0) {
+                return false;
+            }
+            
+            *reinterpret_cast<float*>(data_ptr) = anisotrophy_max_;
+
+            break;
+
+        default:
+            return false;
+        }
+
+        return true;
     }
 
     static constexpr const char *sprite_norm_v_path = "resources//sprite_norm.vert";
@@ -1449,6 +1489,40 @@ namespace eka2l1::drivers {
         }
     }
 
+    void ogl_graphics_driver::set_texture_anisotrophy(command &cmd) {
+        if ((feature_flags_ & OGL_FEATURE_SUPPORT_ANISOTROPHY) == 0) {
+            return;
+        }
+
+        drivers::handle h = static_cast<drivers::handle>(cmd.data_[0]);
+
+        float max_ani, temp = 0.0f;
+        unpack_to_two_floats(cmd.data_[1], max_ani, temp);
+
+        texture *texobj = nullptr;
+
+        if (h & HANDLE_BITMAP) {
+            // Bind bitmap as texture
+            bitmap *b = get_bitmap(h);
+
+            if (!b) {
+                return;
+            }
+
+            texobj = b->tex.get();
+        } else {
+            texobj = reinterpret_cast<texture *>(get_graphics_object(h));
+        }
+
+        if (!texobj) {
+            return;
+        }
+
+        texobj->bind(nullptr, 0);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, max_ani);
+        texobj->unbind(nullptr);
+    }
+
     void ogl_graphics_driver::save_gl_state() {
         glGetIntegerv(GL_CURRENT_PROGRAM, &backup.last_program);
         glGetIntegerv(GL_TEXTURE_BINDING_2D, &backup.last_texture);
@@ -1684,6 +1758,10 @@ namespace eka2l1::drivers {
 
         case graphics_driver_clip_region:
             clip_region(cmd);
+            break;
+
+        case graphics_driver_set_texture_anisotrophy:
+            set_texture_anisotrophy(cmd);
             break;
 
         default:

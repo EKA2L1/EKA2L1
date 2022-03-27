@@ -76,6 +76,8 @@ namespace eka2l1::dispatch {
         EGL_DEPTH_SIZE_EMU = 0x3025,
         EGL_STENCIL_SIZE_EMU = 0x3026,
         EGL_CONFIG_CAVEAT_EMU = 0x3027,
+        EGL_MAX_PBUFFER_HEIGHT_EMU = 0x302A,
+        EGL_MAX_PBUFFER_WIDTH_EMU = 0x302C,
         EGL_SURFACE_TYPE_EMU = 0x3033,
         EGL_NONE_EMU = 0x3038,
         EGL_RENDERABLE_TYPE_EMU = 0x3040,
@@ -161,6 +163,7 @@ namespace eka2l1::dispatch {
         GL_LINEAR_ATTENUATION_EMU = 0x1208,
         GL_QUADRATIC_ATTENUATION_EMU = 0x1209,
         GL_UNSIGNED_BYTE_EMU = 0x1401,
+        GL_INVERT_EMU = 0x150A,
         GL_EMISSION_EMU = 0x1600,
         GL_SHININESS_EMU = 0x1601,
         GL_AMBIENT_AND_DIFFUSE_EMU = 0x1602,
@@ -188,7 +191,10 @@ namespace eka2l1::dispatch {
         GL_MODULATE_EMU = 0x2100,
         GL_DECAL_EMU = 0x2101,
         GL_ADD_EMU = 0x0104,
+        GL_KEEP_EMU = 0x1E00,
         GL_REPLACE_EMU = 0x1E01,
+        GL_INCR_EMU = 0x1E02,
+        GL_DECR_EMU = 0x1E03,
         GL_TEX_ENV_MODE_EMU = 0x2200,
         GL_TEX_ENV_COLOR_EMU = 0x2201,
         GL_TEX_ENV_EMU = 0x2300,
@@ -225,6 +231,8 @@ namespace eka2l1::dispatch {
         GL_ACTIVE_TEXTURE_EMU = 0x84E0,
         GL_CLIENT_ACTIVE_TEXTURE_EMU = 0x84E1,
         GL_SUBTRACT_EMU = 0x84E7,
+        GL_TEXTURE_MAX_ANISOTROPHY_EMU = 0x84FE,
+        GL_MAX_TEXTURE_MAX_ANISOTROPHY_EMU = 0x84FF,
         GL_COMBINE_EMU = 0x8570,
         GL_COMBINE_RGB_EMU = 0x8571,
         GL_COMBINE_ALPHA_EMU = 0x8572,
@@ -259,6 +267,8 @@ namespace eka2l1::dispatch {
         GL_TEXTURE_MIN_FILTER_EMU = 0x2801,
         GL_TEXTURE_WRAP_S_EMU = 0x2802,
         GL_TEXTURE_WRAP_T_EMU = 0x2803,
+        GL_POINT_SIZE_MIN_EMU = 0x8126,
+        GL_POINT_SIZE_MAX_EMU = 0x8127,
         GL_GENERATE_MIPMAP_EMU = 0x8191,
         GL_REPEAT_EMU = 0x2901,
         GL_CLAMP_TO_EDGE_EMU = 0x812F,
@@ -296,6 +306,7 @@ namespace eka2l1::dispatch {
         GL_TEXTURE_COORD_ARRAY_STRIDE_EMU = 0x808A,
         GL_COLOR_CLEAR_VALUE_EMU = 0x0C22,
         GL_COLOR_WRITEMASK_EMU = 0x0C23,
+        GL_SMOOTH_LINE_WIDTH_RANGE_EMU = 0x0B22,
         GL_CULL_FACE_MODE_EMU = 0x0B45,
         GL_CURRENT_COLOR_EMU = 0x0B00,
         GL_CURRENT_NORMAL_EMU = 0x0B02,
@@ -346,6 +357,8 @@ namespace eka2l1::dispatch {
     static constexpr const char *EGL_STATIC_STRING_VENDOR = "EKA2L1";
     static constexpr const char *EGL_STATIC_STRING_VERSION = "1.4";
     static constexpr const char *EGL_STATIC_STRING_EXTENSION = "";
+    static constexpr std::uint32_t MAX_EGL_FB_WIDTH = 2048;
+    static constexpr std::uint32_t MAX_EGL_FB_HEIGHT = 2048;
 
     using egl_display = std::uint32_t;
     using egl_boolean = std::uint32_t;
