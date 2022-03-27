@@ -46,6 +46,8 @@ namespace eka2l1::drivers {
         std::array<std::string, MIDI_BANK_TYPE_MAX> midi_banks_;
 
         std::uint32_t master_volume_ = 100;
+        bool suspend_ = false;
+
         std::mutex lock_;
 
         std::size_t add_master_volume_change_callback(master_audio_volume_change_callback callback);
@@ -77,6 +79,18 @@ namespace eka2l1::drivers {
 
         std::uint32_t master_volume() const {
             return master_volume_;
+        }
+
+        bool suspending() const {
+            return suspend_;
+        }
+
+        virtual void suspend() {
+            suspend_ = true;
+        }
+
+        virtual void resume() {
+            suspend_ = false;
         }
 
         void master_volume(const std::uint32_t value);

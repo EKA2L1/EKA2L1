@@ -312,12 +312,18 @@ int BAE_SetFileLength(long fileReference, unsigned long newSize) {
 }
 
 static std::size_t minibae_data_callback(std::int16_t *buffer, const std::size_t frame_count) {
+    const std::size_t total_to_grab = global_baeout_stream->get_channels() * frame_count;
+
+    if (global_baedriver && global_baedriver->suspending()) {
+        std::memset(buffer, 0, total_to_grab * sizeof(std::int16_t));
+        return frame_count;
+    }
+
     auto value = BAE_GetMaxSamplePerSlice() * global_baeout_stream->get_channels();
     if (bae_11ms_buffer.size() < value) {
         bae_11ms_buffer.resize(value);
     }
 
-    const std::size_t total_to_grab = global_baeout_stream->get_channels() * frame_count;
     if ((bae_buffer_queue.size() == 0) && (total_to_grab == value)) {
         // Directly build and submit, no need to go through queue
         BAE_BuildMixerSlice(nullptr, buffer, static_cast<long>(total_to_grab * 2), static_cast<long>(frame_count));

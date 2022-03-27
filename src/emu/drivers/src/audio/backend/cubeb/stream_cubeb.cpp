@@ -84,7 +84,7 @@ namespace eka2l1::drivers {
     }
 
     std::size_t cubeb_audio_output_stream::call_callback(std::int16_t *output_buffer, const long frames) {
-        if (pausing_) {
+        if (pausing_ || driver_->suspending()) {
             std::memset(output_buffer, 0, frames * channels * sizeof(std::int16_t));
             idled_frames_ += static_cast<std::uint64_t>(frames);
   
