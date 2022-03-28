@@ -42,6 +42,9 @@ namespace eka2l1 {
         if (len == 0) {
             dat = u"";
             return true;
+        } else if (len < 0) {
+            // NOTE: Seems to definitely signed!
+            return false;
         }
 
         // Align if necessary. Required align by 2.
