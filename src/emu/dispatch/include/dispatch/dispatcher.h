@@ -252,7 +252,7 @@ namespace eka2l1::dispatch {
         void set_graphics_driver(drivers::graphics_driver *driver);
         void shutdown(drivers::graphics_driver *driver);
 
-        bool patch_libraries(const std::u16string &path, patch_info *patches,
+        bool patch_libraries(const std::u16string &path, const patch_info *patches,
             const std::size_t patch_count);
 
         void resolve(eka2l1::system *sys, const std::uint32_t function_ord);

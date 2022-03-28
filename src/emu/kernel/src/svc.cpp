@@ -2038,7 +2038,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::uint32_t, library_entry_call_start, const address addr) {
-        LOG_TRACE(KERNEL, "Starting address 0x{:X}", addr);
+        //LOG_TRACE(KERNEL, "Starting address 0x{:X}", addr);
         return epoc::error_none;
     }
 
