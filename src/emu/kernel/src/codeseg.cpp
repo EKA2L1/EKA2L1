@@ -523,7 +523,7 @@ namespace eka2l1::kernel {
     }
 
     address codeseg::get_entry_point(kernel::process *pr) {
-        if (code_addr != 0) {
+        if ((code_addr != 0) || patched_) {
             return ep;
         }
 
@@ -578,7 +578,7 @@ namespace eka2l1::kernel {
         }
 
         // Add our last. Don't change order, this is how it supposed to be
-        if (!patched_)
+        if (!ep_disabled_)
             call_list.push_back(get_entry_point(pr));
     }
 
@@ -640,8 +640,16 @@ namespace eka2l1::kernel {
         export_table[ordinal - 1] = address.ptr_address();
     }
 
-    void codeseg::set_patched(const bool is_patched) {
-        patched_ = is_patched;
+    void codeseg::set_entry_point(eka2l1::ptr<void> address) {
+        ep = address.ptr_address();
+    }
+
+    void codeseg::set_patched() {
+        patched_ = true;
+    }
+
+    void codeseg::set_entry_point_disabled() {
+        ep_disabled_ = true;
     }
 
     bool codeseg::add_premade_entry_point(const address addr) {

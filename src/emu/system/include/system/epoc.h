@@ -183,5 +183,7 @@ namespace eka2l1 {
 
         std::size_t add_system_reset_callback(system_reset_callback_type type);
         bool remove_system_reset_callback(const std::size_t h);
+
+        void initialize_user_parties();
     };
 }

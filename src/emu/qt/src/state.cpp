@@ -25,7 +25,6 @@
 #include <common/version.h>
 #include <gdbstub/gdbstub.h>
 
-#include <dispatch/libraries/register.h>
 #include <drivers/audio/audio.h>
 #include <drivers/graphics/graphics.h>
 
@@ -40,8 +39,6 @@
 #include <qt/state.h>
 
 namespace eka2l1::desktop {
-    static const char *PATCH_FOLDER_PATH = ".//patch//";
-
     emulator::emulator()
         : symsys(nullptr)
         , graphics_driver(nullptr)
@@ -155,18 +152,7 @@ namespace eka2l1::desktop {
             }
 
             symsys->set_sensor_driver(sensor_driver.get());
-
-            // Load patch libraries
-            kernel_system *kern = symsys->get_kernel_system();
-            hle::lib_manager *libmngr = kern->get_lib_manager();
-            dispatch::dispatcher *disp = symsys->get_dispatcher();
-
-            // Start the bootload
-            kern->start_bootload();
-
-            libmngr->load_patch_libraries(PATCH_FOLDER_PATH);
-            dispatch::libraries::register_functions(kern, disp);
-            service::init_services_post_bootup(symsys.get());
+            symsys->initialize_user_parties();
 
             io_system *io = symsys->get_io_system();
 
@@ -245,17 +231,7 @@ namespace eka2l1::desktop {
 
         // Load patch libraries
         if (stage_two_inited) {
-            kernel_system *kern = symsys->get_kernel_system();
-            hle::lib_manager *libmngr = kern->get_lib_manager();
-            dispatch::dispatcher *disp = the_sys->get_dispatcher();
-
-            // Start the bootload
-            kern->start_bootload();
-
-            libmngr->load_patch_libraries(PATCH_FOLDER_PATH);
-            dispatch::libraries::register_functions(kern, disp);
-
-            service::init_services_post_bootup(the_sys);
+            symsys->initialize_user_parties();
         }
     }
 }

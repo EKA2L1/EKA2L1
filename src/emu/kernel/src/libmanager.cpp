@@ -344,7 +344,8 @@ namespace eka2l1::hle {
             dest_seg->set_export(rinfo.second, source_seg->lookup(nullptr, rinfo.first));
         }
 
-        dest_seg->set_patched(true);
+        dest_seg->set_patched();
+        dest_seg->set_entry_point_disabled();
     }
 
     static void get_route_from_ini_section(common::ini_section &section, std::vector<patch_route_info> &infos) {

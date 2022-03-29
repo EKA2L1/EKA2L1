@@ -20,6 +20,8 @@
 
 #include <mutex>
 #include <scripting/instance.h>
+#include <common/types.h>
+#include <system/epoc.h>
 
 namespace eka2l1::scripting {
     eka2l1::system *instance;
@@ -33,4 +35,10 @@ namespace eka2l1::scripting {
     eka2l1::system *get_current_instance() {
         return instance;
     }
+}
+
+extern "C" {
+EKA2L1_EXPORT int eka2l1_get_current_symbian_version() {
+    return static_cast<int>(eka2l1::scripting::instance->get_symbian_version_use());
+}
 }

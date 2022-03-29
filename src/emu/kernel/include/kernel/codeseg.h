@@ -156,6 +156,7 @@ namespace eka2l1::kernel {
         std::vector<std::uint64_t> relocation_list;
 
         bool patched_{ false };
+        bool ep_disabled_{ false };
 
     public:
         /*! \brief Create a new codeseg
@@ -271,7 +272,10 @@ namespace eka2l1::kernel {
 
         // Use for patching
         void set_export(const std::uint32_t ordinal, eka2l1::ptr<void> address);
-        void set_patched(const bool is_patched);
+        void set_entry_point(eka2l1::ptr<void> address);
+        void set_patched();
+        void set_entry_point_disabled();
+
         address relocate(kernel::process *pr, const address addr_on_base);
     };
 }

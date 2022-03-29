@@ -38,17 +38,25 @@ namespace eka2l1::scripting {
     public:
         codeseg() = default;
         explicit codeseg(std::uint64_t handle);
+        ~codeseg();
 
         std::uint32_t lookup(process_inst pr, const std::uint32_t ord);
         std::uint32_t code_run_address(process_inst pr);
         std::uint32_t data_run_address(process_inst pr);
         std::uint32_t bss_run_address(process_inst pr);
+        std::uint32_t get_export(process *pr, const std::uint32_t index);
+        std::uint32_t get_entry_point(process *pr);
 
         std::uint32_t code_size();
         std::uint32_t data_size();
         std::uint32_t bss_size();
 
         std::uint32_t get_export_count();
+
+        void set_export(const std::uint32_t index, const std::uint32_t value);
+        void set_entry_point(const std::uint32_t value);
+        void set_patched();
+        void set_entry_point_disabled();
     };
 
     std::unique_ptr<scripting::codeseg> load_codeseg(const std::string &virt_path);

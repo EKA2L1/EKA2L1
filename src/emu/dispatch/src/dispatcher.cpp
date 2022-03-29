@@ -151,7 +151,8 @@ namespace eka2l1::dispatch {
             return false;
         }
 
-        seg->set_patched(true);
+        seg->set_patched();
+        seg->set_entry_point_disabled();
 
         for (std::size_t i = 0; i < patch_count; i++) {
             const address orgaddr = seg->lookup_no_relocate(patches[i].ordinal_number_);

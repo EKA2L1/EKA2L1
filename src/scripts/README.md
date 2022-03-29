@@ -1,0 +1,1 @@
+Game/app specific patch or OS platform patch can be placed here to ship with emulator.

@@ -213,19 +213,7 @@ namespace eka2l1::android {
             }
 
             symsys->set_sensor_driver(sensor_driver.get());
-
-            // Load patch libraries
-            kernel_system *kern = symsys->get_kernel_system();
-            hle::lib_manager *libmngr = kern->get_lib_manager();
-            dispatch::dispatcher *disp = symsys->get_dispatcher();
-
-            // Start the bootload
-            kern->start_bootload();
-
-            libmngr->load_patch_libraries(PATCH_FOLDER_PATH);
-            dispatch::libraries::register_functions(kern, disp);
-
-            service::init_services_post_bootup(symsys.get());
+            symsys->initialize_user_parties();
 
             io_system *io = symsys->get_io_system();
 

@@ -32,10 +32,16 @@ ffi.cdef([[
     uint32_t eka2l1_codeseg_code_run_address(codeseg *seg, process *pr);
     uint32_t eka2l1_codeseg_data_run_address(codeseg *seg, process *pr);
     uint32_t eka2l1_codeseg_bss_run_address(codeseg *seg, process *pr);
+    uint32_t eka2l1_codeseg_get_export(codeseg *seg, process *pr, const uint32_t index);
+    uint32_t eka2l1_codeseg_get_entry_point(codeseg *seg, process *pr);
     uint32_t eka2l1_codeseg_code_size(codeseg *seg);
     uint32_t eka2l1_codeseg_data_size(codeseg *seg);
     uint32_t eka2l1_codeseg_bss_size(codeseg *seg);
     uint32_t eka2l1_codeseg_export_count(codeseg *seg);
+    void eka2l1_codeseg_set_export(codeseg *seg, const uint32_t index, const uint32_t addr_or_offset);
+    void eka2l1_codeseg_set_entry_point(codeseg *seg, const uint32_t addr_or_offset);
+    void eka2l1_codeseg_set_patched(codeseg *seg);
+    void eka2l1_codeseg_set_entry_point_disabled(codeseg *seg);
 
     int32_t eka2l1_queries_all_processes(process ***pr);
     process *eka2l1_get_current_process();
@@ -121,6 +127,8 @@ kernel.PRIORITY_ABSOLUTE_FOREGROUND_NORMAL = 350
 kernel.PRIORITY_ABSOLUTE_FOREGROUND = 400
 kernel.PRIORITY_ABSOLUTE_HIGH = 500
 
+kernel.INVALID_ADDRESS = 0xFFFFFFFF
+
 handle = helper.class(function(self, impl)
     self.impl = impl
 end)
@@ -148,10 +156,80 @@ end
 function kernel.codeseg:bssSize()
     return ffi.C.eka2l1_codeseg_bss_size(self.impl)
 end
+
+--- Get the export value of a code segment.
+---
+--- @param pr       The process to retrieve the export value from its address space. Nil to get raw value.
+--- @param index    The target export ordinal.
+---
+--- @return The export address value.
+function kernel.codeseg:getExport(pr, index)
+    prImpl = nil
+    if (pr ~= nil) then
+        prImpl = pr.impl
+    end
+    return ffi.C.eka2l1_codeseg_get_export(self.impl, prImpl, index)
+end
+
+--- Get the entry point of a code segment.
+---
+--- @param pr   The process to retrieve the entry point from its address space. Nil to get raw value.
+--- @return The entry point address value.
+function kernel.codeseg:getEntryPoint(pr)
+    prImpl = nil
+    if (pr ~= nil) then
+        prImpl = pr.impl
+    end
+    return ffi.C.eka2l1_codeseg_get_entry_point(self.impl, prImpl)
+end
+
 --- Get the number of export functions (addresses) this code segment provides.
 --- @return A 32-bit integer containing the export count.
 function kernel.codeseg:exportCount()
     return ffi.C.eka2l1_codeseg_export_count(self.impl)
+end
+
+--- Set the address or offset relative to the codeseg's code section, to one of the codeseg's export.
+---
+--- Depends on if the codeseg is XIP or not (in ROM for example), the address will be absolute in the memory.
+--- Bit 0 on in the address value means that the function the export is pointing to will be in THUMB mode.
+--- To make the address absolute in non-XIP, consider setting the codeseg patched attribute to true.
+---
+--- @param index    The index of the export to set the address/offset. Must be greater than 1.
+--- @param addr     The offset/address value. Refer to detail description.
+function kernel.codeseg:setExport(index, addr)
+    if (index < 1) then
+        error("Wrong index argument passed to codeseg:setExport. Index value must be larger than 1!")
+    end
+
+    ffi.C.eka2l1_codeseg_set_export(self.impl, index, addr)
+end
+
+--- Set the address or offset relative to the codeseg's code section as the code segment's entry point.
+
+--- Depends on if the codeseg is XIP or not (in ROM for example), the address will be absolute in the memory.
+--- Bit 0 on in the address value means that the function the export is pointing to will be in THUMB mode.
+--- To make the address absolute in non-XIP, consider setting the codeseg patched attribute to true.
+---
+--- @param addr The address/offset value to set the entry point as.
+function kernel.codeseg:setEntryPoint(addr)
+    ffi.C.eka2l1_codeseg_set_entry_point(self.impl, addr)
+end
+
+--- Set the code segment as patched.
+---
+--- Patched code segment will have its export table value and the entry point address understood as absolute, and will be the
+--- same for all the processes.
+function kernel.codeseg:setPatched()
+    ffi.C.eka2l1_codeseg_set_patched(self.impl)
+end
+
+--- Disable the entry point of the code segment from being used.
+---
+--- By calling this function on a codeseg, its entry point will not be query to the static call list, which means
+--- that there's no static data initialised for the DLL.
+function kernel.codeseg:setEntryPointDisabled()
+    ffi.C.eka2l1_codeseg_set_entry_point_disabled(self.impl)
 end
 
 --- Search for a function with specified index (ordinal) in the library and retrieve its address.

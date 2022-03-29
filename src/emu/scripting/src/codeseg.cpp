@@ -31,6 +31,11 @@
 namespace eka2l1::scripting {
     codeseg::codeseg(std::uint64_t handle)
         : real_seg_(reinterpret_cast<kernel::codeseg *>(handle)) {
+        real_seg_->increase_access_count();
+    }
+
+    codeseg::~codeseg() {
+        real_seg_->decrease_access_count();
     }
 
     std::uint32_t codeseg::lookup(process_inst pr, const std::uint32_t ord) {
@@ -63,6 +68,34 @@ namespace eka2l1::scripting {
 
     std::uint32_t codeseg::get_export_count() {
         return real_seg_->export_count();
+    }
+
+    void codeseg::set_export(const std::uint32_t index, const std::uint32_t value) {
+        real_seg_->set_export(index, value);
+    }
+
+    void codeseg::set_patched() {
+        real_seg_->set_patched();
+    }
+    
+    void codeseg::set_entry_point(const std::uint32_t value) {
+        real_seg_->set_entry_point(value);
+    }
+
+    void codeseg::set_entry_point_disabled() {
+        real_seg_->set_entry_point_disabled();
+    }
+
+    std::uint32_t codeseg::get_export(process *pr, const std::uint32_t index) {
+        std::vector<std::uint32_t> table = real_seg_->get_export_table(pr ? pr->get_process_handle() : nullptr);
+        if (table.size() < index) {
+            return 0xFFFFFFFF;
+        }
+        return table[index - 1];
+    }
+
+    std::uint32_t codeseg::get_entry_point(process *pr) {
+        return real_seg_->get_entry_point(pr ? pr->get_process_handle() : nullptr);
     }
 }
 
@@ -115,5 +148,29 @@ EKA2L1_EXPORT std::uint32_t eka2l1_codeseg_bss_size(eka2l1::scripting::codeseg *
 
 EKA2L1_EXPORT std::uint32_t eka2l1_codeseg_export_count(eka2l1::scripting::codeseg *seg) {
     return seg->get_export_count();
+}
+
+EKA2L1_EXPORT void eka2l1_codeseg_set_export(eka2l1::scripting::codeseg *seg, const std::uint32_t index, const std::uint32_t addr_or_offset) {
+    seg->set_export(index, addr_or_offset);
+}
+
+EKA2L1_EXPORT void eka2l1_codeseg_set_entry_point(eka2l1::scripting::codeseg *seg, const std::uint32_t addr_or_offset) {
+    seg->set_entry_point(addr_or_offset);
+}
+
+EKA2L1_EXPORT void eka2l1_codeseg_set_patched(eka2l1::scripting::codeseg *seg) {
+    seg->set_patched();
+}
+
+EKA2L1_EXPORT void eka2l1_codeseg_set_entry_point_disabled(eka2l1::scripting::codeseg *seg) {
+    seg->set_entry_point_disabled();
+}
+
+EKA2L1_EXPORT std::uint32_t eka2l1_codeseg_get_export(eka2l1::scripting::codeseg *seg, eka2l1::scripting::process  *pr, const std::uint32_t index) {
+    return seg->get_export(pr, index);
+}
+
+EKA2L1_EXPORT std::uint32_t eka2l1_codeseg_get_entry_point(eka2l1::scripting::codeseg *seg, eka2l1::scripting::process  *pr) {
+    return seg->get_entry_point(pr);
 }
 }

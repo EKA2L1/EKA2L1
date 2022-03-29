@@ -112,6 +112,8 @@ namespace eka2l1::manager {
 
         std::uint8_t flags_;
         std::uint32_t attached_process_;
+        std::uint32_t codeseg_uid3_;
+
         script_function *invoke_;
 
         explicit breakpoint_info();
@@ -201,8 +203,8 @@ namespace eka2l1::manager {
          * \param process_uid       The UID of the process we wants to invoke this hook.
          * \param func              The hook.
          */
-        std::uint32_t register_library_hook(const std::string &name, const std::uint32_t ord, const std::uint32_t process_uid, breakpoint_hit_func func);
-        std::uint32_t register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid, breakpoint_hit_func func);
+        std::uint32_t register_library_hook(const std::string &name, const std::uint32_t ord, const std::uint32_t process_uid, const std::uint32_t uid3, breakpoint_hit_func func);
+        std::uint32_t register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid, const std::uint32_t uid3, breakpoint_hit_func func);
         std::uint32_t register_ipc(const std::string &server_name, const int opcode, const int invoke_when, void* func);
 
         bool call_breakpoints(const std::uint32_t addr, const std::uint32_t process_uid);
@@ -243,18 +245,20 @@ namespace eka2l1::manager {
          * \brief Patch ordinal breakpoints with address based on code base address of given image.
          * 
          * \param name      The name of the library that requires patching.
+         * \param uid3      The UID3 of the library.
          * \param exports   List of export of given library.
          */
-        void patch_library_hook(const std::string &name, const std::vector<vaddress> &exports);
+        void patch_library_hook(const std::string &name, const std::uint32_t uid3, const std::vector<vaddress> &exports);
 
         /**
          * \brief Patch breakpoints that are not relocated yet.
          * 
          * \param process_uid       The process of the UID that holds the relocated image.
+         * \param uid3              The UID3 of the codeseg.
          * \param name              The name of the image that attached to the process.
          * \param new_code_addr     The new code base address of the given image.
          */
-        void patch_unrelocated_hook(const std::uint32_t process_uid, const std::string &name, const address new_code_addr);
+        void patch_unrelocated_hook(const std::uint32_t process_uid, const std::uint32_t uid3, const std::string &name, const address new_code_addr);
 
         script_function *make_function(void *func_ptr, const script_function::meta_category category, std::size_t *handle);
         void remove_function(const std::uint32_t handle);

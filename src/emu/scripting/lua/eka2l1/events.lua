@@ -39,8 +39,8 @@ ffi.cdef([[
     typedef void (__stdcall *ipc_sent_lua_func)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, thread*);
     typedef void (__stdcall *ipc_completed_lua_func)(ipc_msg*);
 
-    uint32_t eka2l1_cpu_register_lib_hook(const char *lib_name, const uint32_t ord, const uint32_t process_uid, breakpoint_hit_lua_func func);
-    uint32_t eka2l1_cpu_register_bkpt_hook(const char *image_name, const uint32_t addr, const uint32_t process_uid, breakpoint_hit_lua_func func);
+    uint32_t eka2l1_cpu_register_lib_hook(const char *lib_name, const uint32_t ord, const uint32_t process_uid, const uint32_t codesegUid3, breakpoint_hit_lua_func func);
+    uint32_t eka2l1_cpu_register_bkpt_hook(const char *image_name, const uint32_t addr, const uint32_t process_uid, const uint32_t codesegUid3, breakpoint_hit_lua_func func);
     uint32_t eka2l1_register_ipc_sent_hook(const char *server_name, const int opcode, ipc_sent_lua_func func);
     uint32_t eka2l1_register_ipc_completed_hook(const char *server_name, const int opcode, ipc_completed_lua_func func);
 
@@ -56,16 +56,17 @@ ffi.cdef([[
 --- @param libName Name of the library that contains the target library function.
 --- @param ord The ordinal of the function inside the library.
 --- @param processUid UID3 of the process you want this callback to be triggered on. Use 0 for any active process.
+--- @param codesegUid3 UID3 of the library the hook will be registered on. This is a safecheck to hook on the correct library.
 --- @param func Callback function with no parameter and no return.
 ---
 --- @return A handle to this callback (> 0), which can later be used for unregistering. `INVALID_HOOK_HANDLE` on failure.
 ---
 --- @see clearHook
 --- @see registerBreakpointHook
-function events.registerLibraryHook(libName, ord, processUid, func)
+function events.registerLibraryHook(libName, ord, processUid, codesegUid3, func)
     local libNameInC = ffi.new("char[?]", #libName + 1, libName)
 
-    return ffi.C.eka2l1_cpu_register_lib_hook(libNameInC, ord, processUid, function ()
+    return ffi.C.eka2l1_cpu_register_lib_hook(libNameInC, ord, processUid, codesegUid3, function ()
         local ran, errorMsg = pcall(func)
         if not ran then
             common.log('Error running breakpoint script, ' .. errorMsg)
@@ -85,16 +86,17 @@ end
 --- @param libName Name of the library that contains the target breakpoint. Use "constantaddr" for no library.
 --- @param addr The address of the breakpoint, relative to the library's original code base address if libName is not "constantaddr"
 --- @param processUid UID3 of the process you want this callback to be triggered on. Use 0 for any active process.
+--- @param codesegUid3 UID3 of the library the hook will be registered on. This is a safecheck to hook on the correct library.
 --- @param func Callback function with no parameter and no return.
 ---
 --- @return A handle to this callback (> 0), which can later be used for unregistering. `INVALID_HOOK_HANDLE` on failure.
 ---
 --- @see clearHook
 --- @see registerLibraryHook
-function events.registerBreakpointHook(libName, addr, processUid, func)
+function events.registerBreakpointHook(libName, addr, processUid, codesegUid3, func)
     local libNameInC = ffi.new("char[?]", #libName + 1, libName)
 
-    return ffi.C.eka2l1_cpu_register_bkpt_hook(libNameInC, addr, processUid, function ()
+    return ffi.C.eka2l1_cpu_register_bkpt_hook(libNameInC, addr, processUid, codesegUid3, function ()
         local ran, errorMsg = pcall(func)
         if not ran then
             common.log('Error running breakpoint script, ' .. errorMsg)

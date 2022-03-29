@@ -54,6 +54,7 @@
 #include <mem/mem.h>
 #include <mem/ptr.h>
 
+#include <dispatch/libraries/register.h>
 #include <dispatch/dispatcher.h>
 #include <kernel/libmanager.h>
 #include <kernel/timing.h>
@@ -81,6 +82,8 @@ namespace eka2l1 {
     enum hal_entry {
 #include <kernel/hal.def>
     };
+    
+    static const char *PATCH_FOLDER_PATH = ".//patch//";
 
     system_create_components::system_create_components()
         : graphics_(nullptr)
@@ -500,6 +503,8 @@ namespace eka2l1 {
 
         void add_new_hal(uint32_t hal_category, hal_instance &hal_com);
         epoc::hal *get_hal(uint32_t category);
+
+        void initialize_user_parties();
     };
 
     void system_impl::do_state(common::chunkyseri &seri) {
@@ -819,6 +824,20 @@ namespace eka2l1 {
         return zip_mount_error_none;
     }
 
+    void system_impl::initialize_user_parties() {
+        // Start the bootload
+        kern_->start_bootload();
+
+        get_lib_manager()->load_patch_libraries(PATCH_FOLDER_PATH);
+        dispatch::libraries::register_functions(kern_.get(), dispatcher_.get());
+
+        service::init_services_post_bootup(parent_);
+
+#ifdef ENABLE_SCRIPTING
+        scripting_->import_all_modules();
+#endif
+    }
+
     void system_impl::request_exit() {
         cpu->stop();
         exit = true;
@@ -902,14 +921,13 @@ namespace eka2l1 {
             return false;
         }
 
+#ifdef ENABLE_SCRIPTING
+        scripting_ = std::make_unique<manager::scripts>(parent_);
+#endif
+
         // Setup outsiders
         setup_outsider();
         invoke_system_reset_callbacks();
-
-#ifdef ENABLE_SCRIPTING
-        scripting_ = std::make_unique<manager::scripts>(parent_);
-        scripting_->import_all_modules();
-#endif
 
         if (lock_sys) {
             end_access();
@@ -1125,5 +1143,9 @@ namespace eka2l1 {
 
     bool system::rescan_devices(const drive_number romdrv) {
         return impl->rescan_devices(romdrv);
+    }
+
+    void system::initialize_user_parties() {
+        impl->initialize_user_parties();
     }
 }

@@ -424,7 +424,7 @@ namespace eka2l1::manager {
         }
     }
 
-    std::uint32_t scripts::register_library_hook(const std::string &name, const std::uint32_t ord, const std::uint32_t process_uid, breakpoint_hit_func func) {
+    std::uint32_t scripts::register_library_hook(const std::string &name, const std::uint32_t ord, const std::uint32_t process_uid, const std::uint32_t uid3, breakpoint_hit_func func) {
         const std::string lib_name_lower = common::lowercase_string(name);
 
         breakpoint_info info;
@@ -440,39 +440,43 @@ namespace eka2l1::manager {
         info.flags_ = breakpoint_info::FLAG_IS_ORDINAL;
         info.addr_ = ord;
         info.attached_process_ = process_uid;
+        info.codeseg_uid3_ = uid3;
 
         hle::lib_manager *manager = sys->get_lib_manager();
         if (manager) {
             if (codeseg_ptr seg = manager->load(common::utf8_to_ucs2(name))) {
-                std::vector<kernel::process*> processes = seg->attached_processes();
-                auto find_res = std::find_if(processes.begin(), processes.end(), [process_uid](kernel::process *target) {
-                    return (target->get_uid() == process_uid);
-                });
-
-                if (process_uid != 0) {
+                std::uint32_t uid3_seg = std::get<2>(seg->get_uids());
+                if ((uid3_seg == 0) || (uid3_seg == uid3)) {
+                    std::vector<kernel::process*> processes = seg->attached_processes();
                     auto find_res = std::find_if(processes.begin(), processes.end(), [process_uid](kernel::process *target) {
                         return (target->get_uid() == process_uid);
                     });
 
-                    kernel::process *finally = nullptr;
-                    if (find_res != processes.end()) {
-                        finally = *find_res;
+                    if (process_uid != 0) {
+                        auto find_res = std::find_if(processes.begin(), processes.end(), [process_uid](kernel::process *target) {
+                            return (target->get_uid() == process_uid);
+                        });
+
+                        kernel::process *finally = nullptr;
+                        if (find_res != processes.end()) {
+                            finally = *find_res;
+                        }
+
+                        processes.clear();
+                        processes.push_back(finally);
                     }
 
-                    processes.clear();
-                    processes.push_back(finally);
-                }
+                    for (kernel::process *process: processes) {
+                        info.invoke_->category_ = script_function::META_CATEGORY_BREAKPOINT;
+                        info.addr_ = seg->lookup(process, info.addr_);
+                        info.flags_ = 0;
 
-                for (kernel::process *process: processes) {
-                    info.invoke_->category_ = script_function::META_CATEGORY_BREAKPOINT;
-                    info.addr_ = seg->lookup(process, info.addr_);
-                    info.flags_ = 0;
+                        if (info.addr_ == 0) {
+                            LOG_ERROR(SCRIPTING, "Ordinal {} does not exist in library {}", ord, name);
+                            current_module->functions_.remove(handle);
 
-                    if (info.addr_ == 0) {
-                        LOG_ERROR(SCRIPTING, "Ordinal {} does not exist in library {}", ord, name);
-                        current_module->functions_.remove(handle);
-
-                        return INVALID_HOOK_HANDLE;
+                            return INVALID_HOOK_HANDLE;
+                        }
                     }
                 }
             }
@@ -491,7 +495,7 @@ namespace eka2l1::manager {
         return static_cast<std::uint32_t>(handle);
     }
 
-    std::uint32_t scripts::register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid, breakpoint_hit_func func) {
+    std::uint32_t scripts::register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid, const std::uint32_t uid3, breakpoint_hit_func func) {
         const std::string lib_name_lower = common::lowercase_string(lib_name);
         std::size_t handle = 0;
 
@@ -508,6 +512,7 @@ namespace eka2l1::manager {
 
         if (lib_name_lower == "constantaddr") {
             info.flags_ = 0;
+            info.codeseg_uid3_ = 0;
         } else {
             hle::lib_manager *manager = sys->get_lib_manager();
             if (manager) {
@@ -545,6 +550,8 @@ namespace eka2l1::manager {
                     }
                 }
             }
+
+            info.codeseg_uid3_ = uid3;
         }
 
         if (info.flags_ & breakpoint_info::FLAG_BASED_IMAGE) {
@@ -561,12 +568,13 @@ namespace eka2l1::manager {
         return static_cast<std::uint32_t>(handle);
     }
 
-    void scripts::patch_library_hook(const std::string &name, const std::vector<vaddress> &exports) {
+    void scripts::patch_library_hook(const std::string &name, const std::uint32_t uid3, const std::vector<vaddress> &exports) {
         const std::lock_guard<std::mutex> guard(smutex);
         const std::string lib_name_lower = common::lowercase_string(name);
 
         for (auto &breakpoint : breakpoint_wait_patch) {
-            if ((breakpoint.flags_ & breakpoint_info::FLAG_IS_ORDINAL) && (breakpoint.lib_name_ == lib_name_lower)) {
+            if ((breakpoint.flags_ & breakpoint_info::FLAG_IS_ORDINAL) && (breakpoint.lib_name_ == lib_name_lower) &&
+                ((breakpoint.codeseg_uid3_ == uid3) || (breakpoint.codeseg_uid3_ == 0))) {
                 breakpoint.addr_ = exports[breakpoint.addr_ - 1];
 
                 // It's now based on image. Only need rebase
@@ -576,13 +584,13 @@ namespace eka2l1::manager {
         }
     }
 
-    void scripts::patch_unrelocated_hook(const std::uint32_t process_uid, const std::string &name, const address new_code_addr) {
+    void scripts::patch_unrelocated_hook(const std::uint32_t process_uid, const std::uint32_t uid3, const std::string &name, const address new_code_addr) {
         const std::lock_guard<std::mutex> guard(smutex);
         const std::string lib_name_lower = common::lowercase_string(name);
 
         for (breakpoint_info &breakpoint : breakpoint_wait_patch) {
             if (((breakpoint.attached_process_ == 0) || (breakpoint.attached_process_ == process_uid)) && (breakpoint.lib_name_ == lib_name_lower)
-                && (breakpoint.flags_ & breakpoint_info::FLAG_BASED_IMAGE)) {
+                && ((breakpoint.codeseg_uid3_ == uid3) || (breakpoint.codeseg_uid3_ == 0)) && (breakpoint.flags_ & breakpoint_info::FLAG_BASED_IMAGE)) {
                 breakpoint_info patched = breakpoint;
 
                 patched.addr_ += new_code_addr;
@@ -697,8 +705,10 @@ namespace eka2l1::manager {
     }
 
     void scripts::handle_codeseg_loaded(const std::string &name, kernel::process *attacher, codeseg_ptr target) {
-        patch_library_hook(name, target->get_export_table_raw());
-        patch_unrelocated_hook(attacher ? (attacher->get_uid()) : 0, name, target->is_rom() ? 0 : (target->get_code_run_addr(attacher) - target->get_code_base()));
+        const std::uint32_t uid3 = std::get<2>(target->get_uids());
+
+        patch_library_hook(name, uid3, target->get_export_table_raw());
+        patch_unrelocated_hook(attacher ? (attacher->get_uid()) : 0, uid3, name, target->is_rom() ? 0 : (target->get_code_run_addr(attacher) - target->get_code_base()));
 
         kernel_system *kern = sys->get_kernel_system();
 
