@@ -29,7 +29,7 @@
 namespace eka2l1::kernel {
     codeseg::codeseg(kernel_system *kern, const std::string &name, codeseg_create_info &info)
         : kernel_obj(kern, name, nullptr, kernel::access_type::global_access)
-        , export_table_fixed_(false)
+        , patched_(false)
         , code_chunk_shared(nullptr) {
         obj_type = kernel::object_type::codeseg;
 
@@ -550,7 +550,7 @@ namespace eka2l1::kernel {
     address codeseg::lookup(kernel::process *pr, const std::uint32_t ord) {
         const address lookup_res = lookup_no_relocate(ord);
 
-        if (code_addr != 0 || !lookup_res || export_table_fixed_) {
+        if (code_addr != 0 || !lookup_res || patched_) {
             return lookup_res;
         }
 
@@ -578,7 +578,8 @@ namespace eka2l1::kernel {
         }
 
         // Add our last. Don't change order, this is how it supposed to be
-        call_list.push_back(get_entry_point(pr));
+        if (!patched_)
+            call_list.push_back(get_entry_point(pr));
     }
 
     void codeseg::unmark() {
@@ -639,8 +640,8 @@ namespace eka2l1::kernel {
         export_table[ordinal - 1] = address.ptr_address();
     }
 
-    void codeseg::set_export_table_fixed(const bool is_fixed) {
-        export_table_fixed_ = is_fixed;
+    void codeseg::set_patched(const bool is_patched) {
+        patched_ = is_patched;
     }
 
     bool codeseg::add_premade_entry_point(const address addr) {
