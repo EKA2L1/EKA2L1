@@ -115,6 +115,9 @@
     <string name="pref_screen_scale_type_fill">Заполнить (без учёта пропорций)</string>
     <string name="pref_screen_scale_type_fit">Вписать</string>
     <string name="pref_screen_scale_type_none">Как есть</string>
+    <string name="pref_screen_scale_use_shader">Использовать шейдер для масштабирования</string>
+    <string name="pref_screen_upscale_shader">Масштабирующий шейдер</string>
+    <string name="pref_screen_default_shader">По умолчанию</string>
     <string name="default_label">"%s (стандартный)"</string>
     <string name="not_saved_exists">Уже существует</string>
     <string name="error_name">Введите название!</string>
@@ -137,6 +140,7 @@
     <string name="confirmation_required">Требуется подтверждение</string>
     <string name="force_close_confirmation">Принудительное закрытие приложения может привести к потере данных или даже полной его неработоспособности!\nПродолжить?</string>
     <string name="log_saved">Лог успешно сохранён</string>
+    <string name="enter_text">Введите текст</string>
     <string name="about_icon_by">&lt;BR&gt;Иконка от: </string>
     <string name="version">Версия: </string>
     <string name="recommended_devices_note"><b>Примечание:</b> Рекомендуется использовать прошивку для установки устройств с S60v3 и выше.</string>

@@ -115,6 +115,9 @@
     <string name="pref_screen_scale_type_fill">Làm đầy cửa sổ (bỏ qua tỉ lệ khung hình)</string>
     <string name="pref_screen_scale_type_fit">Vừa với cửa sổ</string>
     <string name="pref_screen_scale_type_none">Như gốc</string>
+    <string name="pref_screen_scale_use_shader">Use shader for upscaling</string>
+    <string name="pref_screen_upscale_shader">Upscale shader</string>
+    <string name="pref_screen_default_shader">Mặc định</string>
     <string name="default_label">"%s (mặc định)"</string>
     <string name="not_saved_exists">Đã tồn tại</string>
     <string name="error_name">Nhập tên!</string>
@@ -137,6 +140,7 @@
     <string name="confirmation_required">Yêu cầu xác nhận</string>
     <string name="force_close_confirmation">Bắt buộc đóng ứng dụng có thể dẫn đến mất dữ liệu hoặc thậm chí hư hỏng!\nBạn vẫn muốn thoát?</string>
     <string name="log_saved">Log đã được lưu</string>
+    <string name="enter_text">Enter the text</string>
     <string name="about_icon_by">&lt;BR&gt;Icon bởi: </string>
     <string name="version">Phiên bản: </string>
     <string name="recommended_devices_note"><b>Chú ý:</b> Khuyên dùng firmware để cài đặt những thiết bị từ S60v3 trở lên.</string>

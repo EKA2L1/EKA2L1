@@ -7,7 +7,7 @@
     <string name="settings">Mga settings</string>
     <string name="packages">Mga pakete</string>
     <string name="devices">Mga aparato</string>
-    <string name="profiles">Profiles</string>
+    <string name="profiles">Profile</string>
     <string name="processing">Nagproproseso...</string>
     <string name="completed">Tapos na!</string>
     <string name="remove">Tanggalin</string>
@@ -17,7 +17,7 @@
     <string name="rename">I-rename</string>
     <string name="save_log">I-save ang log</string>
     <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
-    <string name="warning">Warning</string>
+    <string name="warning">Babala</string>
     <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
     <string name="install">I-install</string>
     <string name="device_dump">File mula sa aparato</string>
@@ -115,6 +115,9 @@
     <string name="pref_screen_scale_type_fill">Fill window (ignore aspect ratio)</string>
     <string name="pref_screen_scale_type_fit">Fit to window</string>
     <string name="pref_screen_scale_type_none">As is</string>
+    <string name="pref_screen_scale_use_shader">Use shader for upscaling</string>
+    <string name="pref_screen_upscale_shader">Upscale shader</string>
+    <string name="pref_screen_default_shader">Default</string>
     <string name="default_label">"%s (default)"</string>
     <string name="not_saved_exists">Already exists</string>
     <string name="error_name">Enter name!</string>
@@ -137,6 +140,7 @@
     <string name="confirmation_required">Kinakailangan ang kumpirmasyon</string>
     <string name="force_close_confirmation">Ang pwersahang pagsara ng aplikasyon ay maaaring magresulta sa pagkawala o pagkasira ng data! \nItutuloy mo pa ba ito?</string>
     <string name="log_saved">Ang file ay nai-save</string>
+    <string name="enter_text">Enter the text</string>
     <string name="about_icon_by">&lt;BR&gt;Ang icon nito ay galing kay: </string>
     <string name="version">Bersyon: </string>
     <string name="recommended_devices_note"><b>Paalala:</b> Nirerekomenda na gumamit ng firmware sa pag-iinstall ng mga aparato mula S60v3 pataas.</string>

@@ -115,6 +115,9 @@
     <string name="pref_screen_scale_type_fill">Fill window (ignore aspect ratio)</string>
     <string name="pref_screen_scale_type_fit">Fit to window</string>
     <string name="pref_screen_scale_type_none">As is</string>
+    <string name="pref_screen_scale_use_shader">Use shader for upscaling</string>
+    <string name="pref_screen_upscale_shader">Upscale shader</string>
+    <string name="pref_screen_default_shader">Default</string>
     <string name="default_label">"%s (default)"</string>
     <string name="not_saved_exists">Already exists</string>
     <string name="error_name">Enter name!</string>
@@ -137,6 +140,7 @@
     <string name="confirmation_required">التأكيد مطلوب</string>
     <string name="force_close_confirmation">فرض اغلاق التطبيق قد يؤدي لفقد بعض البيانات او تدميرها بالكامل!\nمتابعه؟</string>
     <string name="log_saved">تم حفظ السجل</string>
+    <string name="enter_text">Enter the text</string>
     <string name="about_icon_by">&lt;BR&gt;الايقونة بواسطة: </string>
     <string name="version">الإصدار: </string>
     <string name="recommended_devices_note"><b>ملاحظة:</b> ينصح باستخدام البرامج الثابتة لتثبيت الأجهزة من S60v3 وما فوق.</string>

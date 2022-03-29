@@ -68,7 +68,7 @@
     <string name="pref_device_display_name">Nombre amistoso del teléfono</string>
     <string name="action_context_delete">Eliminar</string>
     <string name="action_context_rename">Renombrar</string>
-    <string name="action_context_shortcut">Create shortcut</string>
+    <string name="action_context_shortcut">Crear acceso directo</string>
     <string name="start">Iniciar</string>
     <string name="reset_settings">Restablecer ajustes</string>
     <string name="reset_layout">Restablecer disposición del teclado</string>
@@ -115,6 +115,9 @@
     <string name="pref_screen_scale_type_fill">Ajustar a la ventana (ignorando relación de aspecto)</string>
     <string name="pref_screen_scale_type_fit">Ajustar a la ventana</string>
     <string name="pref_screen_scale_type_none">Sin escalado</string>
+    <string name="pref_screen_scale_use_shader">Use shader for upscaling</string>
+    <string name="pref_screen_upscale_shader">Upscale shader</string>
+    <string name="pref_screen_default_shader">Predeterminado</string>
     <string name="default_label">"%s (predeterminado)"</string>
     <string name="not_saved_exists">Ya existente</string>
     <string name="error_name">¡Introduzca un nombre!</string>
@@ -137,6 +140,7 @@
     <string name="confirmation_required">Se requiere confirmación</string>
     <string name="force_close_confirmation">¡Forzar el cierre de la aplicación puede resultar en pérdida de datos o incluso dañarlos permanentemente!\n¿Desea proceder?</string>
     <string name="log_saved">El log ha sido guardado</string>
+    <string name="enter_text">Enter the text</string>
     <string name="about_icon_by">&lt;BR&gt;Icono por: </string>
     <string name="version">Versión: </string>
     <string name="recommended_devices_note"><b>Nota:</b>Se recomienda usar firmware para la instalación de dispositivos S60v3 y superior.</string>

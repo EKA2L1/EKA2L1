@@ -115,6 +115,9 @@
     <string name="pref_screen_scale_type_fill">Wypełnij okno (ignoruj proporcje obrazu)</string>
     <string name="pref_screen_scale_type_fit">Dopasuj do okna</string>
     <string name="pref_screen_scale_type_none">Tak jak jest</string>
+    <string name="pref_screen_scale_use_shader">Use shader for upscaling</string>
+    <string name="pref_screen_upscale_shader">Upscale shader</string>
+    <string name="pref_screen_default_shader">Domyślne</string>
     <string name="default_label">"%s (domyślnie)"</string>
     <string name="not_saved_exists">Już istnieje</string>
     <string name="error_name">Wprowadź nazwę!</string>
@@ -137,6 +140,7 @@
     <string name="confirmation_required">Wymagane potwierdzenie</string>
     <string name="force_close_confirmation">Wymuszenie zamknięcia aplikacji może spowodować utratę danych lub nawet całkowicie ją zepsuć!\nKontynuować?</string>
     <string name="log_saved">Log został zapisany</string>
+    <string name="enter_text">Enter the text</string>
     <string name="about_icon_by">&lt;BR&gt;Ikona autorstwa: </string>
     <string name="version">Wersja: </string>
     <string name="recommended_devices_note"><b>Uwaga:</b> zalecane jest używać firmware\'u do instalacji urządzeń od S60v3 i wyżej.</string>

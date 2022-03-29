@@ -115,6 +115,9 @@
     <string name="pref_screen_scale_type_fill">填充 (忽略宽高比)</string>
     <string name="pref_screen_scale_type_fit">适应</string>
     <string name="pref_screen_scale_type_none">无</string>
+    <string name="pref_screen_scale_use_shader">使用着色器进行缩放</string>
+    <string name="pref_screen_upscale_shader">缩放着色器</string>
+    <string name="pref_screen_default_shader">默认</string>
     <string name="default_label">"%s (默认)"</string>
     <string name="not_saved_exists">已经存在</string>
     <string name="error_name">输入名称！</string>
@@ -137,6 +140,7 @@
     <string name="confirmation_required">需要确认</string>
     <string name="force_close_confirmation">强制关闭应用程序可能会导致数据丢失甚至损坏！\n继续?</string>
     <string name="log_saved">日志已保存</string>
+    <string name="enter_text">Enter the text</string>
     <string name="about_icon_by">&lt;BR&gt;图标设计： </string>
     <string name="version">版本： </string>
     <string name="recommended_devices_note"><b>注：</b> 建议安装S60v3及以上版本的设备固件。</string>
