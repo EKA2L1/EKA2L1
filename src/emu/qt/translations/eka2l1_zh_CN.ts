@@ -14,12 +14,12 @@
     <message>
       <location filename="../src/symbian_input_dialog.ui" line="14"/>
       <source>Enter the text</source>
-      <translation type="unfinished">Enter the text</translation>
+      <translation>输入文本</translation>
     </message>
     <message>
       <location filename="../src/symbian_input_dialog.ui" line="31"/>
       <source>Submit</source>
-      <translation type="unfinished">Submit</translation>
+      <translation>提交</translation>
     </message>
   </context>
   <context>
