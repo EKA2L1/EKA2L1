@@ -28,7 +28,14 @@ function patchOpenVGAccelToSw()
     replaceCodesegFromOther(segUSw, segUHw)
 end
 
+function loadNeccessaryRomDLLs()
+    -- Required by EComServer.exe. Some of these are already loaded on real phone on startup
+    kernel.loadCodeseg('z:\\sys\\bin\\domaincli.dll')
+end
+
 if (common.getCurrentSymbianVersion() >= common.SYMBIAN_VERSION_EPOC95) then
     common.log('Applying S^3 and higher patch')
+
+    loadNeccessaryRomDLLs()
     patchOpenVGAccelToSw()
 end
