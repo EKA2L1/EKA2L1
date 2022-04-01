@@ -345,7 +345,8 @@ namespace eka2l1::epoc {
     };
 
     enum {
-        NORMAL_SESSION_CACHE_ENTRY_COUNT = 512
+        NORMAL_SESSION_CACHE_ENTRY_COUNT = 512,
+        SESSION_CACHE_LIST_SESSION_COUNT = 256
     };
 
     struct open_font_glyph_offset_array {
@@ -430,7 +431,9 @@ namespace eka2l1::epoc {
      * \brief The third(?) version of the session cache. Used on build 95(?) onwards.
      */
     struct open_font_session_cache_v3 : public open_font_session_cache_base {
+        std::int32_t padding_;
         std::int64_t random_seed;
+
         open_font_glyph_offset_array offset_array;
 
         /**
@@ -453,6 +456,8 @@ namespace eka2l1::epoc {
          */
         void destroy(fbscli *cli);
     };
+
+    static_assert(sizeof(open_font_session_cache_v3) == 24);
 
     /**
      * \brief A link for open font session cache.
@@ -488,7 +493,7 @@ namespace eka2l1::epoc {
      * Used from FBS build 95 onwards.
      */
     struct open_font_session_cache_list : public common::vector_static_map<std::int32_t, std::int32_t,
-                                              NORMAL_SESSION_CACHE_ENTRY_COUNT> {
+                                              SESSION_CACHE_LIST_SESSION_COUNT> {
         open_font_session_cache_v3 *get(fbscli *cli, const std::int32_t session_handle, const bool create = false);
 
         /**

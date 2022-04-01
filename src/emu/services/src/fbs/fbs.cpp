@@ -483,6 +483,10 @@ namespace eka2l1 {
         font_obj_container.clear();
         obj_con.clear();
 
+        if (session_cache_list) {
+            session_cache_list->~open_font_session_cache_list();
+        }
+
         // Destroy chunks.
         if (shared_chunk)
             kern->destroy(shared_chunk);
