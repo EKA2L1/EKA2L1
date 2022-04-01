@@ -147,10 +147,15 @@ namespace eka2l1::kernel {
                 code_chunk = code_chunk_shared;
                 need_patch_and_reloc = false;
 
+                code_chunk->open_to(new_foe);
                 the_addr_of_code_run = code_chunk->base(new_foe).ptr_address();
             } else {
-                code_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, code_size_align, code_size_align, prot_read_write_exec, kernel::chunk_type::normal,
+                code_chunk = kern->create<kernel::chunk>(mem, code_chunk_for_reuse ? nullptr : new_foe, "", 0, code_size_align, code_size_align, prot_read_write_exec, kernel::chunk_type::normal,
                     kernel::chunk_access::code, kernel::chunk_attrib::none);
+
+                if (!code_chunk_for_reuse) {    
+                    code_chunk->open_to(new_foe);
+                }
 
                 the_addr_of_code_run = code_chunk->base(new_foe).ptr_address();
 

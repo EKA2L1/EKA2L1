@@ -44,6 +44,7 @@ namespace eka2l1::mem::flexible {
 
         vm_address fixed_addr_;
         std::unique_ptr<mapping> fixed_mapping_;
+        bool is_addr_shared_;
 
     public:
         explicit flexible_mem_model_chunk(control_base *control, const asid id);

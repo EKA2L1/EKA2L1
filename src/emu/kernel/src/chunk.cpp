@@ -151,7 +151,8 @@ namespace eka2l1 {
         }
 
         void chunk::open_to(process *own) {
-            own->get_mem_model()->attach_chunk(mmc_impl_);
+            if (own)
+                own->get_mem_model()->attach_chunk(mmc_impl_);
         }
 
         ptr<uint8_t> chunk::base(process *pr) {

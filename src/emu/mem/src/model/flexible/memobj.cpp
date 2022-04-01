@@ -31,7 +31,8 @@ namespace eka2l1::mem::flexible {
         : data_(external_host)
         , page_occupied_(page_count)
         , control_(ctrl)
-        , external_(false) {
+        , external_(false)
+        , page_arr_(page_count) {
         if (data_) {
             external_ = true;
         } else {
@@ -85,6 +86,7 @@ namespace eka2l1::mem::flexible {
             }
         }
 
+        page_arr_.alter(page_offset, static_cast<std::uint32_t>(total_pages), perm, false);
         return true;
     }
 
@@ -122,6 +124,7 @@ namespace eka2l1::mem::flexible {
             }
         }
 
+        page_arr_.alter(page_offset, static_cast<std::uint32_t>(total_pages), prot_none, true);
         return true;
     }
 
@@ -130,6 +133,8 @@ namespace eka2l1::mem::flexible {
             return false;
 
         mappings_.push_back(layout);
+        page_arr_.supply_mapping(this, layout);
+
         return true;
     }
 

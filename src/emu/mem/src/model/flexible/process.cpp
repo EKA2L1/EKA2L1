@@ -81,6 +81,15 @@ namespace eka2l1::mem::flexible {
     }
 
     bool flexible_mem_model_process::attach_chunk(mem_model_chunk *chunk) {
+        flexible_mem_model_chunk *fl_chunk = reinterpret_cast<flexible_mem_model_chunk *>(chunk);
+        if (!fl_chunk) {
+            return false;
+        }
+
+        if (fl_chunk->is_addr_shared_) {
+            return true;
+        }
+
         // Search in the attached list first if this chunk is here
         auto chunk_ite = std::find_if(attachs_.begin(), attachs_.end(), [chunk](const flexible_mem_model_chunk_attach_info &info) {
             return info.chunk_ == chunk;
@@ -91,8 +100,6 @@ namespace eka2l1::mem::flexible {
             // This chunk is already attached
             return false;
         }
-
-        flexible_mem_model_chunk *fl_chunk = reinterpret_cast<flexible_mem_model_chunk *>(chunk);
 
         // Instantiate new attach info, including new mapping for ourselves
         flexible_mem_model_chunk_attach_info attach_info;
@@ -115,6 +122,15 @@ namespace eka2l1::mem::flexible {
     }
 
     bool flexible_mem_model_process::detach_chunk(mem_model_chunk *chunk) {
+        flexible_mem_model_chunk *fl_chunk = reinterpret_cast<flexible_mem_model_chunk *>(chunk);
+        if (!fl_chunk) {
+            return false;
+        }
+
+        if (fl_chunk->is_addr_shared_) {
+            return true;
+        }
+
         // Search in the attached list first if this chunk is here
         auto chunk_ite = std::find_if(attachs_.begin(), attachs_.end(), [chunk](const flexible_mem_model_chunk_attach_info &info) {
             return info.chunk_ == chunk;
@@ -126,7 +142,6 @@ namespace eka2l1::mem::flexible {
         }
 
         // Remove the mapping attached to this memory object
-        flexible_mem_model_chunk *fl_chunk = reinterpret_cast<flexible_mem_model_chunk *>(chunk);
         fl_chunk->mem_obj_->detach_mapping(chunk_ite->map_.get());
 
         attachs_.erase(chunk_ite);

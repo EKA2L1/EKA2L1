@@ -21,8 +21,10 @@
 #include <mem/model/flexible/control.h>
 #include <mem/model/flexible/mapping.h>
 #include <mem/model/flexible/memobj.h>
+#include <mem/model/flexible/pagearray.h>
 
 #include <common/log.h>
+#include <common/algorithm.h>
 
 namespace eka2l1::mem::flexible {
     mapping::mapping(address_space *owner)
@@ -168,5 +170,64 @@ namespace eka2l1::mem::flexible {
         }
 
         return true;
+    }
+
+    void pages_segment::supply_mapping(memory_object *obj, mapping *map, const std::uint32_t segment_index, const std::uint32_t limit) {
+        std::uint32_t page_index_start = segment_index * TOTAL_PAGE_PER_SEGMENT;
+        std::uint32_t qword_check = (limit + PAGE_PER_QWORD - 1) / PAGE_PER_QWORD;
+        std::uint64_t prot_val = 0;
+        std::uint64_t prot_temp = 0;
+        std::uint32_t lim_check = 0;
+        std::uint32_t count = 0;
+        std::uint32_t start = 0;
+
+        for (std::uint32_t i = 0; i < qword_check; i++) {
+            std::uint32_t base = (i << PAGE_PER_QWORD_SHIFT);
+            if (prots_[i] != 0) {
+                std::uint32_t index = static_cast<std::uint32_t>(common::find_least_significant_bit_one(prots_[i]) << 2);
+                if (index != 0) {
+                    LOG_TRACE(MEMORY, "Debug");
+                }
+                if (index + base >= limit) {
+                    return;
+                }
+
+                prot_val = (prots_[i] >> (index << 2)) & 0b1111;
+                lim_check = common::min<std::uint32_t>(16U, limit - base);
+                start = index;
+                index++;
+                count = 1;
+
+                if (index == lim_check) {
+                    map->map(obj, page_index_start + base + start, 1, static_cast<prot>(prot_val));
+                } else {
+                    while (index < lim_check) {
+                        prot_temp = ((prots_[i] >> (index << 2))) & 0b1111;
+                        index++;
+                        
+                        if (prot_temp == prot_val) {
+                            count++;
+                        }
+                        
+                        if ((prot_temp != prot_val) || (index == lim_check)) {
+                            map->map(obj, page_index_start + base + start, count, static_cast<prot>(prot_val));
+                            
+                            count = 1;
+                            start = index - 1;
+                            prot_val = prot_temp;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void page_array::supply_mapping(memory_object *obj, mapping *map) {
+        for (std::size_t i = 0; i < total_segments_; i++) {
+            if (segments_[i]) {
+                segments_[i]->supply_mapping(obj, map, i, common::min<std::uint32_t>(pages_segment::TOTAL_PAGE_PER_SEGMENT,
+                    static_cast<std::uint32_t>(total_pages_ - i * pages_segment::TOTAL_PAGE_PER_SEGMENT)));
+            }
+        }
     }
 }

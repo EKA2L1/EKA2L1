@@ -60,8 +60,16 @@ namespace eka2l1::mem::flexible {
         return mmus_.back().get();
     }
 
+    static inline address is_address_all_visible_for_all_processes(const vm_address addr, const bool mem_map_old) {
+        if (!mem_map_old) {
+            return (((addr >= ram_code_addr) && (addr < dll_static_data_flexible)) || (addr >= rom));
+        }
+
+        return (((addr >= ram_code_addr_eka1) && (addr < ram_code_addr_eka1_end)) || (addr >= rom_eka1));
+    }
+
     void *control_flexible::get_host_pointer(const asid id, const vm_address addr) {
-        if ((id <= 0) || (addr >= (mem_map_old_ ? rom_eka1 : rom))) {
+        if ((id <= 0) || is_address_all_visible_for_all_processes(addr, mem_map_old_)) {
             // Directory của kernel
             return kern_addr_space_->dir_->get_pointer(addr);
         }
@@ -82,7 +90,7 @@ namespace eka2l1::mem::flexible {
     }
 
     page_info *control_flexible::get_page_info(const asid id, const vm_address addr) {
-        if ((id <= 0) || (addr >= (mem_map_old_ ? rom_eka1 : rom))) {
+        if ((id <= 0) || is_address_all_visible_for_all_processes(addr, mem_map_old_)) {
             // Directory của kernel
             return kern_addr_space_->dir_->get_page_info(addr);
         }

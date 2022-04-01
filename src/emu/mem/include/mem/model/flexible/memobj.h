@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <mem/model/flexible/pagearray.h>
 #include <common/types.h>
 #include <cstddef>
 #include <cstdint>
@@ -43,10 +44,10 @@ namespace eka2l1::mem::flexible {
         bool external_;
 
         std::vector<mapping *> mappings_;
+        page_array page_arr_;
 
     public:
         explicit memory_object(control_base *ctrl, const std::size_t page_count, void *external_host);
-
         ~memory_object();
 
         void *ptr() {

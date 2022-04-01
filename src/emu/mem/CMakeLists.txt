@@ -7,6 +7,7 @@ add_library(epocmem
         include/mem/model/flexible/dirmngr.h
         include/mem/model/flexible/mapping.h
         include/mem/model/flexible/memobj.h
+        include/mem/model/flexible/pagearray.h
         include/mem/model/flexible/process.h
         include/mem/model/multiple/control.h
         include/mem/model/multiple/chunk.h
@@ -29,8 +30,9 @@ add_library(epocmem
         src/model/flexible/dirmngr.cpp
         src/model/flexible/mapping.cpp
         src/model/flexible/memobj.cpp
-        src/model/flexible/process.cpp
         src/model/flexible/mmu.cpp
+        src/model/flexible/process.cpp
+        src/model/flexible/pagearray.cpp
         src/model/multiple/control.cpp
         src/model/multiple/chunk.cpp
         src/model/multiple/mmu.cpp
