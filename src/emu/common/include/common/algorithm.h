@@ -374,6 +374,14 @@ namespace eka2l1 {
         int find_most_significant_bit_one(const std::uint32_t v);
 
         /**
+         * @brief Get the least significant ON bit.
+         * 
+         * @param v         The mask to search.
+         * @return int      Index of the bit in the integer, else 64 returned if mask is 0
+         */
+        int find_least_significant_bit_one(const std::uint64_t v);
+
+        /**
          * @brief       Count the number of bits that is set.
          * @returns     Number of bits that is set in given 32-bit integer.
          */
