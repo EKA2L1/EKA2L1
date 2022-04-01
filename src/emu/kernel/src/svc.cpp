@@ -5496,6 +5496,10 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x7C, process_logon_cancel),
         BRIDGE_REGISTER(0x7F, server_create),
         BRIDGE_REGISTER(0x80, session_create),
+        BRIDGE_REGISTER(0x85, timer_create),
+        BRIDGE_REGISTER(0x86, timer_after), // Actually TimerHighRes
+        BRIDGE_REGISTER(0x87, after), // Actually AfterHighRes
+        BRIDGE_REGISTER(0x88, change_notifier_create),
         BRIDGE_REGISTER(0x9D, wait_dll_lock),
         BRIDGE_REGISTER(0x9E, release_dll_lock),
         BRIDGE_REGISTER(0x9F, library_attach),
@@ -5512,6 +5516,10 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xBF, property_attach),
         BRIDGE_REGISTER(0xC0, property_subscribe),
         BRIDGE_REGISTER(0xC1, property_cancel),
+        BRIDGE_REGISTER(0xC2, property_get_int),
+        BRIDGE_REGISTER(0xC3, property_get_bin),
+        BRIDGE_REGISTER(0xC4, property_set_int),
+        BRIDGE_REGISTER(0xC5, property_set_bin),
         BRIDGE_REGISTER(0xC6, property_find_get_int),
         BRIDGE_REGISTER(0xC7, property_find_get_bin),
         BRIDGE_REGISTER(0xC8, property_find_set_int),
