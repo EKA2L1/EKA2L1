@@ -514,6 +514,10 @@ namespace eka2l1::kernel {
     }
 
     std::uint32_t codeseg::get_exception_descriptor(kernel::process *pr) {
+        if (code_addr != 0) {
+            return exception_descriptor;
+        }
+
         // Find our stuffs
         auto attach_info_ptr = common::find_and_ret_if(attaches, [=](const std::unique_ptr<attached_info> &info) {
             return info->attached_process == pr;
