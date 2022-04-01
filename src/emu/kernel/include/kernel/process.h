@@ -204,6 +204,10 @@ namespace eka2l1::kernel {
             return --thread_count;
         }
 
+        uint32_t get_thread_count() const {
+            return thread_count;
+        }
+
         mem::mem_model_process *get_mem_model() {
             return mm_impl_.get();
         }

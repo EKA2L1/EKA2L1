@@ -2354,6 +2354,12 @@ namespace eka2l1::epoc {
         return thr->request_count();
     }
 
+    BRIDGE_FUNC(std::int32_t, thread_user_exiting, const std::int32_t reason) {
+        // Not much cleanup, just report this to the user calling it if it's the last thread
+        // in the process or not
+        return (kern->crr_process()->get_thread_count() == 1);
+    }
+
     BRIDGE_FUNC(std::int32_t, process_open_by_id, std::uint32_t id, const epoc::owner_type owner) {
         auto pr = kern->get_by_id<kernel::process>(id);
 
@@ -5530,6 +5536,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xE0, leave_start),
         BRIDGE_REGISTER(0xE1, leave_end),
         BRIDGE_REGISTER(0xE9, btrace_out),
+        BRIDGE_REGISTER(0xF6, thread_user_exiting),
         BRIDGE_REGISTER(0x10B, static_call_done),
         BRIDGE_REGISTER(0x10C, library_entry_call_start),
         BRIDGE_REGISTER(0x10D, library_load_prepare)
