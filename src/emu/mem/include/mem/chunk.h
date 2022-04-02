@@ -68,9 +68,9 @@ namespace eka2l1::mem {
          * 
          * \param size The size to find and commit. Round to page size.
          * 
-         * \returns True on success.
+         * \returns Offset to the region in bytes. Negative will contain the error code.
          */
-        virtual bool allocate(const std::size_t size) = 0;
+        virtual std::int32_t allocate(const std::size_t size) = 0;
         virtual bool adjust(const address bottom, const address top);
 
         virtual const vm_address bottom() const;

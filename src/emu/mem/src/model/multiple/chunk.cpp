@@ -231,9 +231,9 @@ namespace eka2l1::mem {
         }
     }
 
-    bool multiple_mem_model_chunk::allocate(const std::size_t size) {
+    std::int32_t multiple_mem_model_chunk::allocate(const std::size_t size) {
         if (!page_bma_) {
-            return false;
+            return -1;
         }
 
         // Actual size
@@ -245,10 +245,11 @@ namespace eka2l1::mem {
         const int off = page_bma_->allocate_from(0, num_pages_i, true);
 
         if (off == -1) {
-            return false;
+            return -1;
         }
 
-        return commit(off << control_->page_size_bits_, size_pages);
+        commit(off << control_->page_size_bits_, size_pages);
+        return static_cast<std::int32_t>(off << control_->page_size_bits_);
     }
 
     linear_section *multiple_mem_model_chunk::get_section(const std::uint32_t flags) {

@@ -61,7 +61,14 @@ namespace eka2l1::mem::flexible {
 
             base_ = sect->beg_ + (offset << owner_->control_->page_size_bits_);
         } else {
+            if (forced < sect->beg_) {
+                LOG_ERROR(MEMORY, "The forced base address is higher than the section base!");
+                return false;
+            }
+
+            // Allocate as a holder, prevent other from allocate at same address!
             base_ = forced;
+            sect->alloc_.allocate_from((base_ - sect->beg_) >> owner_->control_->page_size_bits_, total_page, false);
         }
 
         occupied_ = total_page;
@@ -185,9 +192,6 @@ namespace eka2l1::mem::flexible {
             std::uint32_t base = (i << PAGE_PER_QWORD_SHIFT);
             if (prots_[i] != 0) {
                 std::uint32_t index = static_cast<std::uint32_t>(common::find_least_significant_bit_one(prots_[i]) << 2);
-                if (index != 0) {
-                    LOG_TRACE(MEMORY, "Debug");
-                }
                 if (index + base >= limit) {
                     return;
                 }

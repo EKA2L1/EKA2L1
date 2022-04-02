@@ -1423,38 +1423,37 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
-        auto fetch = [type](chunk_ptr chunk, int a1, int a2) -> bool {
-            switch (type) {
-            case 0:
-                return chunk->adjust(a1);
+        switch (type) {
+        case 0:
+            return (chunk->adjust(a1) ? epoc::error_none : epoc::error_general);
 
-            case 1:
-                return chunk->adjust_de(a1, a2);
+        case 1:
+            return (chunk->adjust_de(a1, a2) ? epoc::error_none : epoc::error_general);
 
-            case 2:
-                return chunk->commit(a1, a2);
+        case 2:
+            return (chunk->commit(a1, a2) ? epoc::error_none : epoc::error_general);
 
-            case 3:
-                return chunk->decommit(a1, a2);
+        case 3:
+            return (chunk->decommit(a1, a2) ? epoc::error_none : epoc::error_general);
 
-            case 4: // Allocate. Afaik this adds more commit size
-                return chunk->allocate(a1);
-
-            case 5:
-            case 6:
-                return true;
+        case 4: {
+            // Allocate. Afaik this adds more commit size
+            std::int32_t result = chunk->allocate(a1);
+            if (result < 0) {
+                return epoc::error_no_memory;
             }
 
-            return false;
-        };
+            LOG_TRACE(KERNEL, "Special operation allocate result=0x{:X}", result);
 
-        bool res = fetch(chunk, a1, a2);
-
-        if (!res) {
-            return epoc::error_general;
+            return result;
         }
 
-        return epoc::error_none;
+        case 5:
+        case 6:
+            return epoc::error_none;
+        }
+
+        return epoc::error_general;
     }
 
     BRIDGE_FUNC(void, imb_range, eka2l1::ptr<void> addr, std::uint32_t size) {

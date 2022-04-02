@@ -112,7 +112,7 @@ namespace eka2l1::mem::flexible {
         committed_ -= static_cast<std::uint32_t>(total_page_to_decommit << control_->page_size_bits_);
     }
 
-    bool flexible_mem_model_chunk::allocate(const std::size_t size) {
+    std::int32_t flexible_mem_model_chunk::allocate(const std::size_t size) {
         const int total_page_to_allocate = static_cast<int>((size + control_->page_size() - 1) >> control_->page_size_bits_);
         int page_allocated = total_page_to_allocate;
 
@@ -125,11 +125,13 @@ namespace eka2l1::mem::flexible {
                 page_bma_->deallocate(page_offset, page_allocated);
             }
 
-            return false;
+            return -2;
         }
 
-        commit(page_offset << control_->page_size_bits_, size);
-        return true;
+        std::uint32_t offset_to_commit_bytes = static_cast<std::uint32_t>(page_offset << control_->page_size_bits_);
+        commit(offset_to_commit_bytes, size);
+
+        return static_cast<std::int32_t>(offset_to_commit_bytes);
     }
 
     void flexible_mem_model_chunk::unmap_from_cpu(mem_model_process *pr, mmu_base *mmu) {

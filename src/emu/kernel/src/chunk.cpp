@@ -212,9 +212,9 @@ namespace eka2l1 {
             return mmc_impl_->adjust(static_cast<address>(nbottom), static_cast<address>(ntop));
         }
 
-        bool chunk::allocate(size_t size) {
+        std::int32_t chunk::allocate(size_t size) {
             if (type != kernel::chunk_type::disconnected) {
-                return 0;
+                return -1;
             }
 
             return mmc_impl_->allocate(size);

@@ -145,7 +145,7 @@ namespace eka2l1 {
             /*! \brief The definition of this is blurry and uncleared. However,
              * afaik it commits to the top with size 
              */
-            bool allocate(size_t size);
+            std::int32_t allocate(size_t size);
 
             kernel::process *get_own_process() {
                 return reinterpret_cast<kernel::process *>(owner);
