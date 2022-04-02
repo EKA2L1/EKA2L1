@@ -305,6 +305,11 @@ namespace eka2l1 {
             local_data_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, 0x1000, 0x1000,
                 prot_read_write, chunk_type::normal, chunk_access::local, chunk_attrib::none, false);
 
+            // The thread local storage that are freely access through CP15 call
+            // The local data is different, it contains critical variable in relation to Symbian.
+            // For CP15 local storage, you can do whatever you want. Of course Symbian still uses some space!
+            address thread_free_modify_local_storage_vptr = 0;
+
             if (local_data_chunk) {
                 std::uint8_t *data = reinterpret_cast<std::uint8_t *>(local_data_chunk->host_base());
 
@@ -315,10 +320,17 @@ namespace eka2l1 {
                 ldata->scheduler = 0;
                 ldata->trap_handler = 0;
                 ldata->thread_id = 0;
-                ldata->tls_heap = 0;
+
+                static constexpr std::uint32_t TLS_MSR_DATA_SIZE = 0x400;
+
+                // Initialize space
+                std::uint8_t *thread_free_modify_local_storage_ptr = data + sizeof(thread_local_data);
+                std::memset(thread_free_modify_local_storage_ptr, 0, TLS_MSR_DATA_SIZE);
+
+                thread_free_modify_local_storage_vptr = local_data_chunk->base(owner).ptr_address() + sizeof(thread_local_data);
             }
 
-            reset_thread_ctx(epa, stack_top, local_data_chunk->base(owner).ptr_address(), initial);
+            reset_thread_ctx(epa, stack_top, thread_free_modify_local_storage_vptr, initial);
             scheduler = kern->get_thread_scheduler();
 
             // Add thread to process's thread list

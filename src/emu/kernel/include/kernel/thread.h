@@ -111,16 +111,20 @@ namespace eka2l1 {
             ptr<void> pointer;
         };
 
+        /**
+         * @brief Struct used to store critical variables that is needed for Symbian
+         * C++ thread to work properly (exception-trap, or allocator).
+         * 
+         * Compare to thread local storage, which that is only available in newer OS versions (mostly since 2009),
+         * through CP15 intercept, the data here can only be modified by the OS through system calls,
+         * while local thread storage grabbed through the pointer retrieved in CP15 call, can store data freely
+         * (Symbian does use some initial space for this same purpose of storing allocator, scheduler, etc...).
+         */
         struct thread_local_data {
             ptr<void> heap;
             ptr<void> scheduler;
             ptr<void> trap_handler;
             std::uint32_t thread_id;
-
-            // Exists two mode compiled with kernel: Kernel manages thread local data or thread
-            // manages the local data itself.
-            // So this is fine for both mode.
-            ptr<void> tls_heap;
 
             // Hash map is used here, there will hopefully not be thousand of elements 
             // and constant complexity, memory is not a worry.
