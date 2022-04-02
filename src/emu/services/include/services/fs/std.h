@@ -85,6 +85,9 @@ namespace eka2l1::epoc::fs {
     constexpr std::uint32_t drive_att_removable = 0x20;
 
     constexpr std::uint32_t media_att_write_protected = 0x08;
+    constexpr std::uint32_t ipc_arg_slot0_des = 0x10000;
+    constexpr std::uint32_t ipc_arg_slot1_des = 0x20000;
+    constexpr std::uint32_t ipc_arg_slot2_des = 0x40000;
 
     enum media_type {
         media_not_present,

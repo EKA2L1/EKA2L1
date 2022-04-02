@@ -303,7 +303,13 @@ namespace eka2l1 {
         file *vfs_file = reinterpret_cast<file *>(node->vfs_node.get());
 
         std::optional<std::int32_t> seek_mode = ctx->get_argument_value<std::int32_t>(1);
-        std::optional<std::int32_t> seek_off = ctx->get_argument_value<std::int32_t>(0);
+        std::optional<std::int64_t> seek_off = std::nullopt;
+
+        if (ctx->msg->function & epoc::fs::ipc_arg_slot0_des) {
+            seek_off = ctx->get_argument_data_from_descriptor<std::int64_t>(0);
+        } else {
+            seek_off = *ctx->get_argument_value<std::int32_t>(0);
+        }
 
         if (!seek_mode || !seek_off) {
             ctx->complete(epoc::error_argument);
@@ -499,16 +505,26 @@ namespace eka2l1 {
         file *vfs_file = reinterpret_cast<file *>(node->vfs_node.get());
 
         int read_len = *ctx->get_argument_value<std::int32_t>(1);
-        int read_pos_provided = *ctx->get_argument_value<std::int32_t>(2);
-
         std::uint64_t read_pos = 0;
         std::uint64_t last_pos = vfs_file->tell();
 
         read_pos = last_pos;
+        
+        if (ctx->msg->function & epoc::fs::ipc_arg_slot2_des) {
+            std::optional<std::uint64_t> temp = ctx->get_argument_data_from_descriptor<std::uint64_t>(2);
+            if (!temp.has_value()) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+            if (temp.value() != static_cast<std::uint64_t>(-1)) {
+                read_pos = temp.value();
+            }
+        } else {
+            std::int32_t pos_gotten = *ctx->get_argument_value<std::int32_t>(2);
 
-        // Low MaxUint64
-        if ((read_pos_provided != static_cast<int>(0x80000000)) && (read_pos_provided != -1)) {
-            read_pos = read_pos_provided;
+            if ((pos_gotten != static_cast<std::int32_t>(0x80000000)) && (pos_gotten != -1)) {
+                read_pos = static_cast<std::uint64_t>(pos_gotten);
+            }
         }
 
         vfs_file->seek(read_pos, file_seek_mode::beg);
