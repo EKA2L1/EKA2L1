@@ -100,6 +100,7 @@ private slots:
     void on_data_path_browse_clicked();
     void on_tab_changed(int index);
     void on_true_size_enable_toogled(bool val);
+    void on_show_cmd_checkbox_toggled(bool val);
 
     void on_control_profile_add_clicked();
     void on_control_profile_rename_clicked();
@@ -107,6 +108,7 @@ private slots:
     void on_control_profile_choosen_another(int index);
     void on_binding_button_clicked();
     void on_background_color_pick_button_clicked();
+    void on_log_filter_apply_clicked();
 
     void on_device_combo_choose(const int index);
     void on_device_rename_requested();

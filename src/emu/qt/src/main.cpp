@@ -26,6 +26,7 @@
 #include <common/fileutils.h>
 #include <common/path.h>
 #include <common/platform.h>
+#include <common/log.h>
 
 #include <QApplication>
 #include <QDir>

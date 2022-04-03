@@ -54,6 +54,10 @@ namespace eka2l1::common {
         const T *data() const {
             return str_.data();
         }
+        
+        const T *cstr() const {
+            return data();
+        }
 
         bool empty() const {
             return str_.empty();

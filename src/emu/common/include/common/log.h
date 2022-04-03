@@ -48,7 +48,12 @@ namespace eka2l1 {
 
         bool set_minimum_level(const log_class cls, const spdlog::level::level_enum level);
         bool is_passed(const log_class cls, const spdlog::level::level_enum level);
+        void reset_all(const spdlog::level::level_enum level);
+        void parse_filter_string(const std::string &filtering_str);
     };
+
+    static constexpr const char *LOG_FILTER_NORMAL_USE_PRESET = "*:warn Service.EFsrv:Critical Kernel:Critical";
+    static constexpr const char *LOG_FILTER_DEBUG_PRESET = "*:debug";
 
     class base_logger {
     public:
@@ -66,6 +71,8 @@ namespace eka2l1 {
          * \param extra_logger The extra logger you want to provide to the emulator.
 		*/
         void setup_log(std::shared_ptr<base_logger> extra_logger);
+        void toggle_console();
+        bool is_console_enabled();
     }
 }
 

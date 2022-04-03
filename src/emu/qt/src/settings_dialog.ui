@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>834</height>
+    <width>801</width>
+    <height>849</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -290,65 +290,110 @@
          <property name="alignment">
           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
          </property>
-         <layout class="QHBoxLayout" name="horizontalLayout">
-          <item alignment="Qt::AlignTop">
-           <widget class="QWidget" name="debugging_opts_c1_2" native="true">
-            <layout class="QVBoxLayout" name="debugging_opts_c1">
-             <item>
-              <widget class="QCheckBox" name="debugging_cpu_read_checkbox">
-               <property name="text">
-                <string>CPU read</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="debugging_cpu_write_checkbox">
-               <property name="text">
-                <string>CPU write</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="debugging_cpu_step_checkbox">
-               <property name="toolTip">
-                <string>This option will not be saved after emulator shutdown. Non-effective when GDBStub is enabled.</string>
-               </property>
-               <property name="text">
-                <string>CPU step</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
+         <layout class="QVBoxLayout" name="verticalLayout_28">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_8">
+            <item>
+             <widget class="QWidget" name="debugging_opts_c1_2" native="true">
+              <layout class="QVBoxLayout" name="debugging_opts_c1">
+               <item>
+                <widget class="QCheckBox" name="debugging_cpu_read_checkbox">
+                 <property name="text">
+                  <string>CPU read</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="debugging_cpu_write_checkbox">
+                 <property name="text">
+                  <string>CPU write</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="debugging_cpu_step_checkbox">
+                 <property name="toolTip">
+                  <string>This option will not be saved after emulator shutdown. Non-effective when GDBStub is enabled.</string>
+                 </property>
+                 <property name="text">
+                  <string>CPU step</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="debugging_opts_c2_2" native="true">
+              <layout class="QVBoxLayout" name="debugging_opts_c2">
+               <item>
+                <widget class="QCheckBox" name="debugging_system_call_checkbox">
+                 <property name="text">
+                  <string>System calls</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="debugging_ipc_checkbox">
+                 <property name="text">
+                  <string>IPC</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="debugging_enable_btrace_checkbox">
+                 <property name="toolTip">
+                  <string>Enable kernel tracing that is used in driver. Slowdown expected on enable.</string>
+                 </property>
+                 <property name="text">
+                  <string>Enable B-Trace</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
-           <widget class="QWidget" name="debugging_opts_c2_2" native="true">
-            <layout class="QVBoxLayout" name="debugging_opts_c2">
-             <item>
-              <widget class="QCheckBox" name="debugging_system_call_checkbox">
-               <property name="text">
-                <string>System calls</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="debugging_ipc_checkbox">
-               <property name="text">
-                <string>IPC</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="debugging_enable_btrace_checkbox">
-               <property name="toolTip">
-                <string>Enable kernel tracing that is used in driver. Slowdown expected on enable.</string>
-               </property>
-               <property name="text">
-                <string>Enable B-Trace</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
+           <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="2,7,1">
+            <item>
+             <widget class="QLabel" name="log_filter_text_label">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Log filter</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="log_filter_edit">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="log_filter_apply_btn">
+              <property name="text">
+               <string>Apply</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="show_cmd_checkbox">
+            <property name="text">
+             <string>Show log console (Windows only)</string>
+            </property>
            </widget>
           </item>
          </layout>

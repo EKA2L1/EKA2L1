@@ -44,6 +44,7 @@ static constexpr const char *SHOW_SCREEN_NUMBER_SETTINGS_NAME = "showScreenNumbe
 static constexpr const char *LANGUAGE_SETTING_NAME = "activeUILanguage";
 static constexpr const char *STATIC_TITLE_SETTING_NAME = "useStaticTitle";
 static constexpr const char *RECENT_BANK_FOLDER_SETTING_NAME = "recentBankFolder";
+static constexpr const char *SHOW_LOG_CONSOLE_SETTING_NAME = "showLogConsole";
 
 typedef void (*dialog_checkbox_toggled_callback)(bool toggled);
 

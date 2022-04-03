@@ -37,6 +37,9 @@
 #include <services/init.h>
 
 #include <qt/state.h>
+#include <qt/utils.h>
+
+#include <QSettings>
 
 namespace eka2l1::desktop {
     emulator::emulator()
@@ -60,10 +63,21 @@ namespace eka2l1::desktop {
         // Initialize the logger
         log::setup_log(nullptr);
 
-        LOG_INFO(FRONTEND_CMDLINE, "EKA2L1 v0.0.1 ({}-{})", GIT_BRANCH, GIT_COMMIT_HASH);
+        QSettings settings;
+        QVariant cmd_log_enabled_variant = settings.value(SHOW_LOG_CONSOLE_SETTING_NAME, true);
+
+        if (cmd_log_enabled_variant.toBool()) {
+            // Initially false. Toggle to set to true!
+            log::toggle_console();
+        }
 
         // Start to read the configs
         conf.deserialize();
+        if (log::filterings) {
+            log::filterings->parse_filter_string(conf.log_filter);
+        }
+
+        LOG_INFO(FRONTEND_CMDLINE, "EKA2L1 v0.0.1 ({}-{})", GIT_BRANCH, GIT_COMMIT_HASH);
         app_settings = std::make_unique<config::app_settings>(&conf);
 
         system_create_components comp;

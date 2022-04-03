@@ -263,12 +263,14 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     ui_->system_audio_midi_hsb_bank_edit->setText(QString::fromStdString(eka2l1::absolute_path(configuration.hsb_bank_path, current_dir)));
     ui_->system_audio_midi_sf2_bank_edit->setText(QString::fromStdString(eka2l1::absolute_path(configuration.sf2_bank_path, current_dir)));
     ui_->system_enable_hw_gles1_checkbox->setChecked(configuration.enable_hw_gles1);
+    ui_->log_filter_edit->setText(QString::fromStdString(configuration.log_filter));
 
     QSettings settings;
     ui_->interface_status_bar_checkbox->setChecked(settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
     ui_->interface_theme_combo->setCurrentIndex(settings.value(THEME_SETTING_NAME, 0).toInt());
     ui_->emulator_display_true_size_checkbox->setChecked(settings.value(TRUE_SIZE_RESIZE_SETTING_NAME, false).toBool());
     ui_->interface_disable_easter_egg_title_checkbox->setChecked(settings.value(STATIC_TITLE_SETTING_NAME, false).toBool());
+    ui_->show_cmd_checkbox->setChecked(settings.value(SHOW_LOG_CONSOLE_SETTING_NAME, true).toBool());
 
     QVariant current_language_variant = settings.value(LANGUAGE_SETTING_NAME);
 
@@ -380,6 +382,8 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->debugging_ipc_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_ipc_log_toggled);
     connect(ui_->debugging_system_call_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_syscall_log_toggled);
     connect(ui_->debugging_enable_btrace_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_btrace_enable_toggled);
+    connect(ui_->log_filter_apply_btn, &QPushButton::clicked, this, &settings_dialog::on_log_filter_apply_clicked);
+    connect(ui_->show_cmd_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_show_cmd_checkbox_toggled);
     connect(ui_->data_storage_browse_btn, &QPushButton::clicked, this, &settings_dialog::on_data_path_browse_clicked);
 
     connect(ui_->system_device_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_device_combo_choose);
@@ -1369,4 +1373,23 @@ QString settings_dialog::active_upscale_shader() const {
     }
 
     return ui_->app_config_list_shaders_upscale->currentText();
+}
+
+void settings_dialog::on_show_cmd_checkbox_toggled(bool val) {
+    QSettings settings;
+
+    if (eka2l1::log::is_console_enabled() != val) {
+        eka2l1::log::toggle_console();
+        settings.setValue(SHOW_LOG_CONSOLE_SETTING_NAME, val);
+    }
+}
+
+void settings_dialog::on_log_filter_apply_clicked() {
+    if (eka2l1::log::filterings) {
+        const std::string final_filter = ui_->log_filter_edit->text().toStdString();
+
+        eka2l1::log::filterings->parse_filter_string(final_filter);
+        configuration_.log_filter = final_filter;
+        configuration_.serialize(false);
+    }
 }

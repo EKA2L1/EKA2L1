@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <common/configure.h>
+#include <common/log.h>
 #include <config/options.inl>
 
 #include <array>
@@ -33,6 +35,12 @@ namespace eka2l1::config {
     static constexpr const char *KEYBIND_TYPE_CONTROLLER = "controller";
     static constexpr const char *KEYBIND_TYPE_MOUSE = "mouse";
     static constexpr const char *KEYBIND_DEFAULT_FILE = "keybind.yml";
+
+#if BUILD_FOR_USER
+    static constexpr const char *DEFAULT_LOG_FILTERING = eka2l1::LOG_FILTER_NORMAL_USE_PRESET;
+#else
+    static constexpr const char *DEFAULT_LOG_FILTERING = eka2l1::LOG_FILTER_DEBUG_PRESET;
+#endif
 
     enum screen_buffer_sync_option {
         screen_buffer_sync_option_preferred = 0,            ///< Let emulator chooses what platforms should it performed
@@ -128,6 +136,7 @@ namespace eka2l1::config {
         std::string midi_backend_string{ "tsf" };
         std::string hsb_bank_path{ "resources/defaultbank.hsb" };
         std::string sf2_bank_path{ "resources/defaultbank.sf2" };
+        std::string log_filter{ DEFAULT_LOG_FILTERING };
 
         screen_buffer_sync_option screen_buffer_sync{ screen_buffer_sync_option_preferred };
         midi_backend_type midi_backend{ MIDI_BACKEND_TSF };
