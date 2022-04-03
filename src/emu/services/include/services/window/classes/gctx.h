@@ -121,6 +121,9 @@ namespace eka2l1::epoc {
         void draw_box_text_optimised1(service::ipc_context &context, ws_cmd &cmd);
         void draw_box_text_optimised2(service::ipc_context &context, ws_cmd &cmd);
         void plot(service::ipc_context &context, ws_cmd &cmd);
+        void set_underline_style(service::ipc_context &context, ws_cmd &cmd);
+        void set_strikethrough_style(service::ipc_context &context, ws_cmd &cmd);
+        void set_draw_mode(service::ipc_context &context, ws_cmd &cmd);
 
         void gdi_blt_impl(service::ipc_context &context, ws_cmd &cmd, const int ver, const bool ws);
         void gdi_blt_masked(service::ipc_context &context, ws_cmd &cmd);

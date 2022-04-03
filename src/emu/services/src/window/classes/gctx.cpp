@@ -784,6 +784,21 @@ namespace eka2l1::epoc {
         }
     }
 
+    void graphic_context::set_underline_style(service::ipc_context &context, ws_cmd &cmd) {
+        // TODO: Implement set underline style
+        context.complete(epoc::error_none);
+    }
+
+    void graphic_context::set_strikethrough_style(service::ipc_context &context, ws_cmd &cmd) {
+        // TODO: Implement set strikethrough style
+        context.complete(epoc::error_none);
+    }
+    
+    void graphic_context::set_draw_mode(service::ipc_context &context, ws_cmd &cmd) {
+        // Not easy to implement under hardware acceleration, ignore for now
+        context.complete(epoc::error_none);
+    }
+
     void graphic_context::draw_text(service::ipc_context &context, ws_cmd &cmd) {
         ws_cmd_draw_text *info = reinterpret_cast<decltype(info)>(cmd.data_ptr);
         std::u16string text(reinterpret_cast<char16_t *>(reinterpret_cast<std::uint8_t *>(cmd.data_ptr) + sizeof(ws_cmd_draw_text)), info->length);
@@ -852,6 +867,9 @@ namespace eka2l1::epoc {
             { ws_gc_u139_set_pen_color, { &graphic_context::set_pen_color, false, false } },
             { ws_gc_u139_set_pen_style, { &graphic_context::set_pen_style, false, false } },
             { ws_gc_u139_set_pen_size, { &graphic_context::set_pen_size, false, false } },
+            { ws_gc_u139_set_underline_style, { &graphic_context::set_underline_style, false, false } },
+            { ws_gc_u139_set_strikethrough_style, { &graphic_context::set_strikethrough_style, false, false } },
+            { ws_gc_u139_set_draw_mode, { &graphic_context::set_draw_mode, false, false } }, 
             { ws_gc_u139_deactive, { &graphic_context::deactive, false, false } },
             { ws_gc_u139_reset, { &graphic_context::reset, false, false } },
             { ws_gc_u139_use_font, { &graphic_context::use_font, false, false } },
@@ -922,6 +940,9 @@ namespace eka2l1::epoc {
             { ws_gc_u151m2_set_pen_color, { &graphic_context::set_pen_color, false, false } },
             { ws_gc_u151m2_set_pen_style, { &graphic_context::set_pen_style, false, false } },
             { ws_gc_u151m2_set_pen_size, { &graphic_context::set_pen_size, false, false } },
+            { ws_gc_u151m2_set_underline_style, { &graphic_context::set_underline_style, false, false } },
+            { ws_gc_u151m2_set_strikethrough_style, { &graphic_context::set_strikethrough_style, false, false } },
+            { ws_gc_u151m2_set_draw_mode, { &graphic_context::set_draw_mode, false, false } }, 
             { ws_gc_u151m2_deactive, { &graphic_context::deactive, false, false } },
             { ws_gc_u151m2_reset, { &graphic_context::reset, false, false } },
             { ws_gc_u151m2_use_font, { &graphic_context::use_font, false, false } },
@@ -958,6 +979,9 @@ namespace eka2l1::epoc {
             { ws_gc_curr_set_pen_color, { &graphic_context::set_pen_color, false, false } },
             { ws_gc_curr_set_pen_style, { &graphic_context::set_pen_style, false, false } },
             { ws_gc_curr_set_pen_size, { &graphic_context::set_pen_size, false, false } },
+            { ws_gc_curr_set_underline_style, { &graphic_context::set_underline_style, false, false } },
+            { ws_gc_curr_set_strikethrough_style, { &graphic_context::set_strikethrough_style, false, false } },
+            { ws_gc_curr_set_draw_mode, { &graphic_context::set_draw_mode, false, false } }, 
             { ws_gc_curr_deactive, { &graphic_context::deactive, false, false } },
             { ws_gc_curr_reset, { &graphic_context::reset, false, false } },
             { ws_gc_curr_use_font, { &graphic_context::use_font, false, false } },
