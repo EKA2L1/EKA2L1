@@ -551,34 +551,36 @@ namespace eka2l1 {
                     continue;
                 }
 
-                entry_info info = *(inst->get_entry_info(common::utf8_to_ucs2(
-                    eka2l1::add_path(vir_path, name))));
+                const std::u16string path_to_retinfo = common::utf8_to_ucs2(eka2l1::add_path(vir_path, name));
+                std::optional<entry_info> info = inst->get_entry_info(path_to_retinfo);
 
-                if ((attribute & io_attrib_include_file) && (attribute & io_attrib_allow_uid)) {
-                    epoc::uid_type temp_uid;
+                if (info.has_value()) {
+                    if ((attribute & io_attrib_include_file) && (attribute & io_attrib_allow_uid)) {
+                        epoc::uid_type temp_uid;
 
-                    common::ro_std_file_stream temp_file_holder(eka2l1::add_path(iterator->dir_name, entry.name), true);
-                    if (temp_file_holder.read(reinterpret_cast<char *>(&temp_uid), sizeof(temp_uid))) {
-                        if (((utype.uid1 != 0) && (utype.uid1 != temp_uid.uid1)) || ((utype.uid2 != 0) && (utype.uid2 != temp_uid.uid2))
-                            || ((utype.uid3 != 0) && (utype.uid3 != temp_uid.uid3))) {
+                        common::ro_std_file_stream temp_file_holder(eka2l1::add_path(iterator->dir_name, entry.name), true);
+                        if (temp_file_holder.read(reinterpret_cast<char *>(&temp_uid), sizeof(temp_uid))) {
+                            if (((utype.uid1 != 0) && (utype.uid1 != temp_uid.uid1)) || ((utype.uid2 != 0) && (utype.uid2 != temp_uid.uid2))
+                                || ((utype.uid3 != 0) && (utype.uid3 != temp_uid.uid3))) {
+                                continue;
+                            }
+                        } else {
                             continue;
                         }
-                    } else {
-                        continue;
                     }
-                }
 
-                // Symbian usually sensitive about null terminator.
-                // It's best not include them.
-                if (info.name.back() == '\0') {
-                    info.name.erase(info.name.length() - 1);
-                }
+                    // Symbian usually sensitive about null terminator.
+                    // It's best not include them.
+                    if (info->name.back() == '\0') {
+                        info->name.erase(info->name.length() - 1);
+                    }
 
-                if (info.full_path.back() == '\0') {
-                    info.full_path.erase(info.full_path.length() - 1);
-                }
+                    if (info->full_path.back() == '\0') {
+                        info->full_path.erase(info->full_path.length() - 1);
+                    }
 
-                return info;
+                    return info.value();
+                }
             }
 
             return std::optional<entry_info>{};
