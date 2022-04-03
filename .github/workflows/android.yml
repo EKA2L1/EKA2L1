@@ -23,7 +23,7 @@ jobs:
         java-version: '11'
 
     - name: Build with Gradle
-      run: ./gradlew assembleRelease
+      run: ./gradlew assembleRelease -PciArg='-DCI=ON'
 
     - name: Sign APK
       id: sign-android-app
