@@ -717,15 +717,17 @@ namespace eka2l1::manager {
     }
 
     void scripts::handle_uid_process_change(kernel::process *aff, const std::uint32_t old_one) {
+        if (aff->get_uid() == old_one) {
+            return;
+        }
+
         kernel_system *kern = sys->get_kernel_system();
 
         for (auto &[addr, info] : breakpoints) {
             for (auto &list_hook : info.list_) {
-                if (list_hook.attached_process_ == old_one) {
-                    list_hook.attached_process_ = aff->get_uid();
-
-                    if (kern->crr_process() == aff) {
-                        write_back_breakpoint(aff, info.list_[0].addr_);
+                if (list_hook.attached_process_ != 0) {
+                    if (list_hook.attached_process_ == old_one) {
+                        list_hook.attached_process_ = aff->get_uid();
                     }
                 }
 
