@@ -41,8 +41,6 @@ namespace eka2l1::kernel {
         , core_mmu(nullptr)
         , crr_thread(nullptr)
         , crr_process(nullptr) {
-        cpu->set_asid(0);
-
         wakeup_evt = timing->get_register_event("SchedulerWakeUpThread");
 
         if (wakeup_evt == -1) {

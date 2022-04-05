@@ -101,18 +101,7 @@ namespace eka2l1::android {
 
         if (stage_two_inited) {
             register_draw_callback();
-
-            kernel_system *kern = symsys->get_kernel_system();
-            hle::lib_manager *libmngr = kern->get_lib_manager();
-            dispatch::dispatcher *disp = the_sys->get_dispatcher();
-
-            // Start the bootload
-            kern->start_bootload();
-
-            libmngr->load_patch_libraries(PATCH_FOLDER_PATH);
-            dispatch::libraries::register_functions(kern, disp);
-
-            service::init_services_post_bootup(the_sys);
+            the_sys->initialize_user_parties();
         }
     }
 
