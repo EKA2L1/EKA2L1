@@ -240,6 +240,7 @@ namespace eka2l1::manager {
             if (eka2l1::path_extension(path) == ".lua") {
                 lua_State *new_state = luaL_newstate();
                 luaL_openlibs(new_state);
+                luaL_dostring(new_state, "package.path = package.path .. ';scripts/?.lua'");
 
                 common::ro_std_file_stream script_stream(name_full, true);
                 std::string script_content(script_stream.size(), '0');
@@ -254,13 +255,13 @@ namespace eka2l1::manager {
                 }
             }
 
-            if (!call_module_entry(name.c_str())) {
-                // If the module entry failed, we still success, but not execute any futher method
-                return common::set_current_directory(crr_path);
+            if (!common::set_current_directory(crr_path)) {
+                LOG_WARN(SCRIPTING, "Can't restore the previous current directory!");
             }
 
-            if (!common::set_current_directory(crr_path)) {
-                return false;
+            if (!call_module_entry(name.c_str())) {
+                // If the module entry failed, we still success, but not execute any futher method
+                return true;
             }
 
             LOG_TRACE(SCRIPTING, "Module {} loaded!", name);
