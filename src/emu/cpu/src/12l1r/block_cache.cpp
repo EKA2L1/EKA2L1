@@ -20,10 +20,6 @@
 #include <cpu/12l1r/block_cache.h>
 
 namespace eka2l1::arm::r12l1 {
-    translated_block::hash_type make_block_hash(const vaddress start_addr, const asid aid) {
-        return (static_cast<translated_block::hash_type>(aid) << 32) | start_addr;
-    }
-
     block_link::block_link()
         : linked_(false)
         , to_(0)
@@ -51,15 +47,14 @@ namespace eka2l1::arm::r12l1 {
         return *(links_.begin() + link_pri);
     }
 
-    translated_block::translated_block(const vaddress start_addr, const asid aid)
-        : hash_(0)
+    translated_block::translated_block(const vaddress start_addr)
+        : hash_(start_addr)
         , size_(0)
         , last_inst_size_(0)
         , translated_code_(nullptr)
         , translated_size_(0)
         , inst_count_(0)
         , thumb_(false) {
-        hash_ = make_block_hash(start_addr, aid);
     }
 
     block_cache::block_cache()
@@ -67,21 +62,21 @@ namespace eka2l1::arm::r12l1 {
         // Nothing... Hee hee
     }
 
-    bool block_cache::add_block(const vaddress start_addr, const asid aid) {
+    bool block_cache::add_block(const vaddress start_addr) {
         // First, check if this block exists first...
-        auto bl_res = blocks_.find(std::make_pair(start_addr, aid));
+        auto bl_res = blocks_.find(start_addr);
         if (bl_res != blocks_.end()) {
             return false;
         }
 
-        std::unique_ptr<translated_block> new_block = std::make_unique<translated_block>(start_addr, aid);
-        blocks_.emplace(std::make_pair(start_addr, aid), std::move(new_block));
+        std::unique_ptr<translated_block> new_block = std::make_unique<translated_block>(start_addr);
+        blocks_.emplace(start_addr, std::move(new_block));
 
         return true;
     }
 
-    translated_block *block_cache::lookup_block(const vaddress start_addr, const asid aid) {
-        auto bl_res = blocks_.find(std::make_pair(start_addr, aid));
+    translated_block *block_cache::lookup_block(const vaddress start_addr) {
+        auto bl_res = blocks_.find(start_addr);
         if (bl_res != blocks_.end()) {
             return bl_res->second.get();
         }
@@ -89,26 +84,27 @@ namespace eka2l1::arm::r12l1 {
         return nullptr;
     }
 
-    void block_cache::flush_range(const vaddress range_start, const vaddress range_end, const asid aid) {
-        // TODO: This will cover all blocks, but kind of slow...
-        for (auto next = blocks_.begin(); next != blocks_.end(); ) {
-            std::unique_ptr<translated_block> &next_block = next->second;
+    void block_cache::flush_range(const vaddress range_start, const vaddress range_end) {
+        // From JitBlockCache.cpp in PPSSPP!
+        do {
+            restart:
+            auto next = blocks_.lower_bound(range_start);
+            auto last = blocks_.upper_bound(range_end);
 
-            if (next_block->address_space() == aid) {
-                if ((range_start >= next_block->current_address()) || (range_end <= next_block->start_address())) {
-                    ++next;
-                    continue;
+            for (; next != last; ++next) {
+                const vaddress block_ite_start = next->first;
+                const vaddress block_ite_end = next->second->current_address();
+
+                if ((block_ite_start < range_end) && (block_ite_end > range_start)) {
+                    if (invalidate_callback_) {
+                        invalidate_callback_(next->second.get());
+                    }
+
+                    blocks_.erase(next);
+                    goto restart;
                 }
-
-                if (invalidate_callback_) {
-                    invalidate_callback_(next_block.get());
-                }
-
-                blocks_.erase(next++);
-            } else {
-                ++next;
             }
-        }
+        } while (false);
     }
 
     void block_cache::flush_all() {

@@ -165,19 +165,7 @@ namespace eka2l1::arm {
     }
 
     void r12l1_core::imb_range(address addr, std::size_t size) {
-        big_block_->flush_range(addr, static_cast<vaddress>(addr + size), jit_state_.current_aid_);
-    }
-
-    void r12l1_core::set_asid(std::uint8_t num) {
-        jit_state_.current_aid_ = num;
-    }
-
-    std::uint8_t r12l1_core::get_asid() const {
-        return static_cast<std::uint8_t>(jit_state_.current_aid_);
-    }
-
-    std::uint8_t r12l1_core::get_max_asid_available() const {
-        return 256;
+        big_block_->flush_range(addr, static_cast<vaddress>(addr + size));
     }
 
     std::uint32_t r12l1_core::get_num_instruction_executed() {

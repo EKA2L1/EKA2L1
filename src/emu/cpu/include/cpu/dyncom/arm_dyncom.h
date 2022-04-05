@@ -71,9 +71,5 @@ namespace eka2l1::arm {
         bool should_clear_old_memory_map() const override {
             return false;
         }
-
-        void set_asid(std::uint8_t num) override;
-        std::uint8_t get_asid() const override;
-        std::uint8_t get_max_asid_available() const override;
     };
 }

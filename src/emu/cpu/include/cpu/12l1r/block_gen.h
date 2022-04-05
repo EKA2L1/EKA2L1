@@ -41,10 +41,7 @@ namespace eka2l1::arm::r12l1 {
 
     struct fast_dispatch_entry {
         std::uint32_t addr_;
-        std::uint32_t asid_;
-
         void *code_;
-        std::uint32_t padding_;
     };
 
     // In fast dispatch we favour the lower end of the address. Since it is not the common case
@@ -56,7 +53,7 @@ namespace eka2l1::arm::r12l1 {
 
     class dashixiong_block : public common::armgen::armx_codeblock {
     private:
-        std::multimap<translated_block::hash_type, translated_block *> link_to_;
+        std::multimap<vaddress, translated_block *> link_to_;
         std::array<fast_dispatch_entry, FAST_DISPATCH_ENTRY_COUNT> fast_dispatches_;
 
         block_cache cache_;
@@ -76,7 +73,7 @@ namespace eka2l1::arm::r12l1 {
 
     protected:
         void assemble_control_funcs();
-        translated_block *start_new_block(const vaddress addr, const asid aid);
+        translated_block *start_new_block(const vaddress addr);
 
     public:
         enum {
@@ -88,7 +85,7 @@ namespace eka2l1::arm::r12l1 {
         void enter_dispatch(core_state *cstate);
 
         translated_block *compile_new_block(core_state *state, const vaddress addr);
-        translated_block *get_block(const vaddress addr, const asid aid);
+        translated_block *get_block(const vaddress addr);
 
         void emit_block_links(translated_block *block);
         void emit_return_to_dispatch(translated_block *block, const bool fast_hint);
@@ -106,7 +103,7 @@ namespace eka2l1::arm::r12l1 {
 
         void clear_fast_dispatch();
 
-        void flush_range(const vaddress start, const vaddress end, const asid aid);
+        void flush_range(const vaddress start, const vaddress end);
         void flush_all();
 
         bool raise_guest_exception(const exception_type exc, const std::uint32_t usrdata);

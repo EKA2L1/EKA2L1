@@ -38,8 +38,8 @@
 namespace eka2l1::arm::r12l1 {
     static constexpr std::size_t MAX_CODE_SPACE_BYTES = common::MB(32);
 
-    static translated_block *dashixiong_get_block_proxy(dashixiong_block *self, const vaddress addr, const asid aid) {
-        return self->get_block(addr, aid);
+    static translated_block *dashixiong_get_block_proxy(dashixiong_block *self, const vaddress addr) {
+        return self->get_block(addr);
     }
 
     static translated_block *dashixiong_compile_new_block_proxy(dashixiong_block *self, core_state *state, const vaddress addr) {
@@ -70,15 +70,14 @@ namespace eka2l1::arm::r12l1 {
                 & FAST_DISPATCH_ENTRY_MASK;
             fast_dispatch_entry &entry_may_empty = fast_dispatches_[fast_dispatch_index];
 
-            if ((entry_may_empty.addr_ == to_destroy->start_address()) && (entry_may_empty.asid_ == to_destroy->address_space())) {
+            if (entry_may_empty.addr_ == to_destroy->start_address()) {
                 // Empty out this entry
                 std::memset(&entry_may_empty, 0, sizeof(fast_dispatch_entry));
             }
 
             // Remove all related link instance of this
             for (std::uint32_t i = 0; i < to_destroy->links_.size(); i++) {
-                auto link_ites = link_to_.equal_range(make_block_hash(to_destroy->links_[i].to_,
-                    to_destroy->address_space()));
+                auto link_ites = link_to_.equal_range(to_destroy->links_[i].to_);
 
                 for (auto ite = link_ites.first; ite != link_ites.second; ite++) {
                     if (ite->second == to_destroy) {
@@ -129,7 +128,6 @@ namespace eka2l1::arm::r12l1 {
 
         auto emit_get_block_code = [&]() -> common::armgen::fixup_branch {
             MOV(common::armgen::R1, common::armgen::R4);
-            LDR(common::armgen::R2, CORE_STATE_REG, offsetof(core_state, current_aid_));
             MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(this));
 
             quick_call_function(common::armgen::R12, reinterpret_cast<void *>(dashixiong_get_block_proxy));
@@ -202,28 +200,22 @@ namespace eka2l1::arm::r12l1 {
         AND(ALWAYS_SCRATCH2, ALWAYS_SCRATCH2, common::armgen::operand2(common::armgen::R0, common::armgen::ST_LSR, FAST_DISPATCH_ENTRY_ADDR_SHIFT));
 
         // Indexing the dispatch entry
-        static_assert(sizeof(fast_dispatch_entry) == 16);
-        LSL(ALWAYS_SCRATCH2, ALWAYS_SCRATCH2, 4);
+        static_assert(sizeof(fast_dispatch_entry) == 8);
+        LSL(ALWAYS_SCRATCH2, ALWAYS_SCRATCH2, 3);
         ADDI2R(ALWAYS_SCRATCH2, ALWAYS_SCRATCH2, reinterpret_cast<std::uint32_t>(fast_dispatches_.data()),
             common::armgen::R1);
 
         LDR(common::armgen::R1, ALWAYS_SCRATCH2, offsetof(fast_dispatch_entry, addr_));
-        LDR(common::armgen::R2, ALWAYS_SCRATCH2, offsetof(fast_dispatch_entry, asid_));
-        LDR(common::armgen::R5, CORE_STATE_REG, offsetof(core_state, current_aid_));
 
         // Comparing the address and address space
         CMP(common::armgen::R0, common::armgen::R1);
         auto fast_dispatch_miss = B_CC(common::CC_NEQ);
-
-        CMP(common::armgen::R2, common::armgen::R5);
-        auto fast_dispatch_miss_again = B_CC(common::CC_NEQ);
 
         // Branch to the dispatched code...
         LDR(ALWAYS_SCRATCH2, ALWAYS_SCRATCH2, offsetof(fast_dispatch_entry, code_));
         B(ALWAYS_SCRATCH2);
 
         set_jump_target(fast_dispatch_miss);
-        set_jump_target(fast_dispatch_miss_again);
 
         MOV(common::armgen::R4, common::armgen::R0);
         MOV(common::armgen::R6, ALWAYS_SCRATCH2); // Store base of entry.
@@ -232,7 +224,6 @@ namespace eka2l1::arm::r12l1 {
 
         // Add to fast dispatch, then execute the block
         STR(common::armgen::R4, common::armgen::R6, offsetof(fast_dispatch_entry, addr_));
-        STR(common::armgen::R5, common::armgen::R6, offsetof(fast_dispatch_entry, asid_));
         LDR(ALWAYS_SCRATCH1, common::armgen::R0, offsetof(translated_block, translated_code_));
         STR(ALWAYS_SCRATCH1, common::armgen::R6, offsetof(fast_dispatch_entry, code_));
 
@@ -247,14 +238,14 @@ namespace eka2l1::arm::r12l1 {
         end_write();
     }
 
-    translated_block *dashixiong_block::start_new_block(const vaddress addr, const asid aid) {
-        bool try_new_block_result = cache_.add_block(addr, aid);
+    translated_block *dashixiong_block::start_new_block(const vaddress addr) {
+        bool try_new_block_result = cache_.add_block(addr);
         if (!try_new_block_result) {
             LOG_ERROR(CPU_12L1R, "Trying to start a block that already exists!");
             return nullptr;
         }
 
-        translated_block *blck = cache_.lookup_block(addr, aid);
+        translated_block *blck = cache_.lookup_block(addr);
         blck->translated_code_ = get_code_pointer();
 
         return blck;
@@ -300,12 +291,12 @@ namespace eka2l1::arm::r12l1 {
         }
     }
 
-    translated_block *dashixiong_block::get_block(const vaddress addr, const asid aid) {
-        return cache_.lookup_block(addr, aid);
+    translated_block *dashixiong_block::get_block(const vaddress addr) {
+        return cache_.lookup_block(addr);
     }
 
-    void dashixiong_block::flush_range(const vaddress start, const vaddress end, const asid aid) {
-        cache_.flush_range(start, end, aid);
+    void dashixiong_block::flush_range(const vaddress start, const vaddress end) {
+        cache_.flush_range(start, end);
     }
 
     void dashixiong_block::flush_all() {
@@ -615,11 +606,11 @@ namespace eka2l1::arm::r12l1 {
                 set_jump_target(jump_target);
             }
 
-            link_to_.emplace(make_block_hash(link.to_, block->address_space()), block);
+            link_to_.emplace(link.to_, block);
             link.value_ = reinterpret_cast<std::uint32_t *>(get_writeable_code_ptr());
 
             // Can we link the block now?
-            if (auto link_block = get_block(link.to_, block->address_space())) {
+            if (auto link_block = get_block(link.to_)) {
                 B(link_block->translated_code_);
 
                 // Reserved three words for unlink?
@@ -699,7 +690,7 @@ namespace eka2l1::arm::r12l1 {
             flush_all();
         }
 
-        translated_block *block = start_new_block(addr, state->current_aid_);
+        translated_block *block = start_new_block(addr);
         if (!block) {
             return nullptr;
         }

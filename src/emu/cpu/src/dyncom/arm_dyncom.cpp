@@ -162,15 +162,4 @@ namespace eka2l1::arm {
     std::uint32_t dyncom_core::get_num_instruction_executed() {
         return ticks_executed_;
     }
-
-    void dyncom_core::set_asid(std::uint8_t num) {
-    }
-
-    std::uint8_t dyncom_core::get_asid() const {
-        return 0;
-    }
-
-    std::uint8_t dyncom_core::get_max_asid_available() const {
-        return 0;
-    }
 }

@@ -281,7 +281,9 @@ namespace eka2l1::arm {
         cb = std::make_unique<dynarmic_core_callback>(*this, cp15);
 
         auto monitor_bb = reinterpret_cast<dynarmic_exclusive_monitor *>(monitor);
+
         jit = make_jit(cb, tlb_obj, cp15, &monitor_bb->monitor_);
+        jit->SetAsid(0);
     }
 
     dynarmic_core::~dynarmic_core() {
@@ -420,18 +422,6 @@ namespace eka2l1::arm {
 
     std::uint32_t dynarmic_core::get_num_instruction_executed() {
         return ticks_executed;
-    }
-
-    void dynarmic_core::set_asid(std::uint8_t num) {
-        return jit->SetAsid(num);
-    }
-
-    std::uint8_t dynarmic_core::get_asid() const {
-        return jit->Asid();
-    }
-
-    std::uint8_t dynarmic_core::get_max_asid_available() const {
-        return jit->MaxAsidAvailable();
     }
 
     dynarmic_exclusive_monitor::dynarmic_exclusive_monitor(const std::size_t processor_count)

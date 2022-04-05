@@ -42,9 +42,7 @@ namespace eka2l1::arm::r12l1 {
     };
 
     struct translated_block {
-        using hash_type = std::uint64_t;
-
-        hash_type hash_;
+        vaddress hash_;
 
         std::uint32_t size_;
         std::uint32_t last_inst_size_;
@@ -62,10 +60,6 @@ namespace eka2l1::arm::r12l1 {
             return static_cast<vaddress>(hash_);
         }
 
-        asid address_space() const {
-            return static_cast<asid>((hash_ >> 32) & 0xFFFF);
-        }
-
         vaddress current_address() const {
             return static_cast<vaddress>(hash_) + size_;
         }
@@ -74,7 +68,7 @@ namespace eka2l1::arm::r12l1 {
             return common::align(current_address(), 4, 0);
         }
 
-        explicit translated_block(const vaddress start_addr, const asid aid);
+        explicit translated_block(const vaddress start_addr);
         block_link &get_or_add_link(const vaddress addr, const int link_pri = -1);
     };
 
@@ -82,7 +76,7 @@ namespace eka2l1::arm::r12l1 {
 
     class block_cache {
         using translated_block_inst = std::unique_ptr<translated_block>;
-        using translated_block_key = std::pair<vaddress, asid>;
+        using translated_block_key = vaddress;
 
         std::map<translated_block_key, translated_block_inst> blocks_;
         on_block_invalidate_callback_type invalidate_callback_;
@@ -90,18 +84,16 @@ namespace eka2l1::arm::r12l1 {
     public:
         explicit block_cache();
 
-        bool add_block(const vaddress start_addr, const asid aid);
+        bool add_block(const vaddress start_addr);
 
         // The block that is returned by this is consistent in memory
-        translated_block *lookup_block(const vaddress start_addr, const asid aid);
+        translated_block *lookup_block(const vaddress start_addr);
 
-        void flush_range(const vaddress range_start, const vaddress range_end, const asid aid);
+        void flush_range(const vaddress range_start, const vaddress range_end);
         void flush_all();
 
         void set_on_block_invalidate_callback(on_block_invalidate_callback_type cb) {
             invalidate_callback_ = cb;
         }
     };
-
-    translated_block::hash_type make_block_hash(const vaddress start_addr, const asid aid);
 }
