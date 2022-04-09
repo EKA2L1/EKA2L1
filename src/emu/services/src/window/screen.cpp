@@ -686,8 +686,23 @@ namespace eka2l1::epoc {
         }
     }
 
+    void screen::mirror_logic_scale_factor_to_display(drivers::graphics_driver *driver) {
+        float correct_display_scale_factor = 1.0f;
+
+        // We want to keep the original display size in case it's downscale.
+        if ((flags_ & FLAG_SCREEN_UPSCALE_FACTOR_LOCK) == 0) {
+            correct_display_scale_factor = common::min(logic_scale_factor_x, logic_scale_factor_y);
+
+            if (correct_display_scale_factor < 1.0f) {
+                correct_display_scale_factor = 1.0f;
+            }
+        }
+
+        try_change_display_rescale(driver, correct_display_scale_factor);
+    }
+
     void screen::set_native_scale_factor(drivers::graphics_driver *driver, const float new_scale_factor_x,
-        const float new_scale_factor_y) {
+        const float new_scale_factor_y, const bool ignore_display) {
         if (logic_scale_factor_x != new_scale_factor_x) {
             logic_scale_factor_x = new_scale_factor_x;
         }
@@ -696,17 +711,8 @@ namespace eka2l1::epoc {
             logic_scale_factor_y = new_scale_factor_y;
         }
 
-        float correct_display_scale_factor = 1.0f;
-
-        // We want to keep the original display size in case it's downscale.
-        if ((flags_ & FLAG_SCREEN_UPSCALE_FACTOR_LOCK) == 0) {
-            correct_display_scale_factor = common::min(new_scale_factor_x, new_scale_factor_y);
-
-            if (correct_display_scale_factor < 1.0f) {
-                correct_display_scale_factor = 1.0f;
-            }
+        if (!ignore_display) {
+            mirror_logic_scale_factor_to_display(driver);
         }
-
-        try_change_display_rescale(driver, correct_display_scale_factor);
     }
 }

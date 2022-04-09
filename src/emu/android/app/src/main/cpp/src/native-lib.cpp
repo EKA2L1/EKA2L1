@@ -91,14 +91,28 @@ Java_com_github_eka2l1_emu_Emulator_getApps(
 }
 
 static void redraw_screens_immediately() {
+    state->graphics_driver->wait_for(&state->present_status);
+
     eka2l1::drivers::graphics_command_builder builder;
     state->launcher->draw(builder, state->winserv ? state->winserv->get_screens() : nullptr,
                           state->window->window_fb_size().x,
-                          state->window->window_fb_size().y);
-    builder.present(nullptr);
+                          state->window->window_fb_size().y,
+                          true);
+
+    state->present_status = -100;
+    builder.present(&state->present_status);
 
     eka2l1::drivers::command_list retrieved = builder.retrieve_command_list();
     state->graphics_driver->submit_command_list(retrieved);
+
+    // After this update the bitmap content to new surface sizing
+    if (state->winserv) {
+        eka2l1::epoc::screen *scr = state->winserv->get_screens();
+        while (scr != nullptr) {
+            scr->mirror_logic_scale_factor_to_display(state->graphics_driver.get());
+            scr = scr->next;
+        }
+    }
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -119,6 +133,11 @@ Java_com_github_eka2l1_emu_Emulator_surfaceChanged(JNIEnv *env, jclass clazz, jo
     } else {
         start_threads(*state);
     }
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_github_eka2l1_emu_Emulator_surfaceRedrawNeeded(JNIEnv *env, jclass clazz) {
     redraw_screens_immediately();
 }
 

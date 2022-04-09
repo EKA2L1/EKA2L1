@@ -395,7 +395,7 @@ public class EmulatorActivity extends AppCompatActivity {
         return androidToSymbian.get(keyCode, Integer.MAX_VALUE);
     }
 
-    private class ViewCallbacks implements View.OnTouchListener, SurfaceHolder.Callback, View.OnKeyListener {
+    private class ViewCallbacks implements View.OnTouchListener, SurfaceHolder.Callback, SurfaceHolder.Callback2, View.OnKeyListener {
         private final View view;
         private final FrameLayout rootView;
 
@@ -525,6 +525,11 @@ public class EmulatorActivity extends AppCompatActivity {
                     return false;
             }
             return true;
+        }
+
+        @Override
+        public void surfaceRedrawNeeded(SurfaceHolder surfaceHolder) {
+            Emulator.surfaceRedrawNeeded();
         }
     }
 

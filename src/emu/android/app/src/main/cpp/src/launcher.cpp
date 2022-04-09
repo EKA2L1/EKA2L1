@@ -477,7 +477,8 @@ namespace eka2l1::android {
     }
 
     void launcher::draw(drivers::graphics_command_builder &builder, epoc::screen *scr,
-                        std::uint32_t window_width, std::uint32_t window_height) {
+                        std::uint32_t window_width, std::uint32_t window_height,
+                        bool system_invoked_draw) {
         eka2l1::rect viewport;
         eka2l1::rect src;
         eka2l1::rect dest;
@@ -568,7 +569,8 @@ namespace eka2l1::android {
             const float scale_x = width / static_cast<float>(size.x);
             const float scale_y = height / static_cast<float>(size.y);
 
-            scr->set_native_scale_factor(sys->get_graphics_driver(), scale_x, scale_y);
+            scr->set_native_scale_factor(sys->get_graphics_driver(), scale_x, scale_y,
+                                         system_invoked_draw);
 
             scr->absolute_pos.x = static_cast<int>(x);
             scr->absolute_pos.y = static_cast<int>(y);

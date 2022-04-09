@@ -193,7 +193,8 @@ namespace eka2l1::epoc {
          */
         void set_screen_mode(window_server *winserv, drivers::graphics_driver *drv, const int mode);
         void set_native_scale_factor(drivers::graphics_driver *driver, const float scale_factor_x,
-            const float scale_factor_y);
+            const float scale_factor_y, const bool ignore_display = false);
+        void mirror_logic_scale_factor_to_display(drivers::graphics_driver *driver);
 
         /**
          * \brief Resize the screen.
