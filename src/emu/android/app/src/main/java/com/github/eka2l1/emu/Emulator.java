@@ -309,7 +309,9 @@ public class Emulator {
 
     @SuppressLint("unused")
     public static void stopVibrate() {
-        vibrator.cancel();
+        if (vibrator != null) {
+            vibrator.cancel();
+        }
     }
 
     @SuppressLint("unused")
@@ -600,6 +602,8 @@ public class Emulator {
     public static native void surfaceChanged(Surface surface, int width, int height);
 
     public static native void surfaceDestroyed();
+
+    public static native void surfaceRedrawNeeded();
 
     public static native void pressKey(int key, int keyState);
 
