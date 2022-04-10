@@ -203,9 +203,16 @@ namespace eka2l1::drivers {
             blit_mask_ogl |= GL_STENCIL_BUFFER_BIT;
         }
 
+        GLboolean scissor_was_enabled = glIsEnabled(GL_SCISSOR_TEST);
+
+        glDisable(GL_SCISSOR_TEST);
         glBlitFramebuffer(source_rect.top.x, source_rect.top.y, source_rect.top.x + source_rect.size.x, source_rect.top.y + source_rect.size.y,
             dest_rect.top.x, dest_rect.top.y, dest_rect.top.x + dest_rect.size.x, dest_rect.top.y + dest_rect.size.y,
             blit_mask_ogl, to_filter_option(copy_filter));
+
+        if (scissor_was_enabled) {
+            glEnable(GL_SCISSOR_TEST);
+        }
 
         return true;
     }

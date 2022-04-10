@@ -80,6 +80,7 @@ namespace eka2l1::android {
         common::semaphore graphics_sema;
         common::semaphore pause_sema;
         common::semaphore pause_graphics_sema;
+        common::event graphics_init_done;
 
         config::state conf;
         window_server *winserv;

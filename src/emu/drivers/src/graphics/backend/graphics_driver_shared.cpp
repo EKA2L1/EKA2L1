@@ -134,11 +134,15 @@ namespace eka2l1::drivers {
             fb->bind(driver, framebuffer_bind_read);
             new_fb->bind(driver, framebuffer_bind_draw);
 
-            eka2l1::rect copy_region;
-            copy_region.top = { 0, 0 };
-            copy_region.size = eka2l1::object_size(common::min<int>(tex->get_size().x, new_size.x), common::min<int>(tex->get_size().y, new_size.y));
+            eka2l1::rect source_region;
+            source_region.top = { 0, 0 };
+            source_region.size = tex->get_size();
 
-            fb->blit(copy_region, copy_region, draw_buffer_bit_color_buffer, filter_option::linear);
+            eka2l1::rect dest_region;
+            dest_region.top = { 0, 0 };;
+            dest_region.size = new_size;
+
+            fb->blit(source_region, dest_region, draw_buffer_bit_color_buffer, filter_option::linear);
 
             new_fb->unbind(driver);
             fb->unbind(driver);

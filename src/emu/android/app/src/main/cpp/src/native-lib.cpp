@@ -41,7 +41,7 @@
 
 ANativeWindow *s_surf;
 std::unique_ptr<eka2l1::android::emulator> state;
-bool inited;
+bool inited = false;
 
 extern "C" jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     eka2l1::common::jni::virtual_machine = vm;
@@ -96,29 +96,18 @@ static void redraw_screens_immediately() {
     eka2l1::drivers::graphics_command_builder builder;
     state->launcher->draw(builder, state->winserv ? state->winserv->get_screens() : nullptr,
                           state->window->window_fb_size().x,
-                          state->window->window_fb_size().y,
-                          true);
+                          state->window->window_fb_size().y);
 
     state->present_status = -100;
     builder.present(&state->present_status);
 
     eka2l1::drivers::command_list retrieved = builder.retrieve_command_list();
     state->graphics_driver->submit_command_list(retrieved);
-
-    // After this update the bitmap content to new surface sizing
-    if (state->winserv) {
-        eka2l1::epoc::screen *scr = state->winserv->get_screens();
-        while (scr != nullptr) {
-            scr->mirror_logic_scale_factor_to_display(state->graphics_driver.get());
-            scr = scr->next;
-        }
-    }
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_github_eka2l1_emu_Emulator_launchApp(JNIEnv *env, jclass clazz, jint uid) {
     // Launch the real app...
-    redraw_screens_immediately();
     state->launcher->launch_app(uid);
 }
 

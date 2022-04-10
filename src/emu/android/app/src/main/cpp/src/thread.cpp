@@ -61,6 +61,8 @@ namespace eka2l1::android {
                 state.pause_graphics_sema.wait();
             }
         });
+
+        state.graphics_init_done.set();
         return 0;
     }
 
@@ -130,7 +132,9 @@ namespace eka2l1::android {
         }
 
         // Run graphics driver on main entry.
+        state.graphics_init_done.reset();
         gr_thread_obj = std::make_unique<std::thread>(graphics_driver_thread, std::ref(state));
+        state.graphics_init_done.wait();
 
         return result;
     }
