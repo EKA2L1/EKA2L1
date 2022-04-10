@@ -286,7 +286,8 @@ namespace eka2l1 {
         , shared_chunk(nullptr)
         , large_chunk(nullptr)
         , fntstr_seg(nullptr)
-        , bmp_font_vtab(0) {
+        , bmp_font_vtab(0)
+        , session_cache_list(nullptr) {
     }
 
     static void compressor_thread_func(compress_queue *queue) {

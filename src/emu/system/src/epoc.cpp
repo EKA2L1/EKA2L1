@@ -553,11 +553,14 @@ namespace eka2l1 {
     }
 
     void system_impl::set_graphics_driver(drivers::graphics_driver *graphics_driver) {
+        start_access();
         gdriver = graphics_driver;
 
         if (dispatcher_) {
             dispatcher_->set_graphics_driver(gdriver);
         }
+
+        end_access();
     }
 
     void system_impl::set_audio_driver(drivers::audio_driver *aud_driver) {
