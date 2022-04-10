@@ -256,10 +256,15 @@ namespace eka2l1::dispatch {
 
                 // 270 rotation clock-wise makes screen content comes from the top where camera lies, to down where the ports reside.
                 // That makes it a standard, non-flip landscape. 0 is obviously standard too. Therefore mode 90 and 180 needs flip.
-                const std::uint32_t flags = ((mode_info.rotation == 90) || (mode_info.rotation == 180)) ? drivers::bitmap_draw_flag_flip : 0;
+                const float rotation_draw = ((mode_info.rotation == 90) || (mode_info.rotation == 180)) ? 180.0f : 0.0f;
 
                 eka2l1::rect source_rect { eka2l1::vec2(0, 0), mode_info.size };
                 eka2l1::rect dest_rect = source_rect;
+                if (rotation_draw != 0.0f) {
+                    // Advance position for rotation origin. We can't gurantee the origin to be exactly div by 2.
+                    // So do this for safety and soverginity.
+                    dest_rect.top = dest_rect.size;
+                }
 
                 dest_rect.scale(scr->display_scale_factor);
 
@@ -269,7 +274,7 @@ namespace eka2l1::dispatch {
                 builder.set_texture_filter(scr->dsa_texture, true, filter);
                 builder.set_texture_filter(scr->dsa_texture, false, filter);
 
-                builder.draw_bitmap(scr->dsa_texture, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), 0, flags);
+                builder.draw_bitmap(scr->dsa_texture, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), rotation_draw, 0);
                 builder.bind_bitmap(0);
 
                 drivers::command_list retrieved = builder.retrieve_command_list();
