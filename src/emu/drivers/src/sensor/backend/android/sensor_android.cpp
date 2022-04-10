@@ -462,15 +462,17 @@ namespace eka2l1::drivers {
             return false;
         }
 
-        common::double_linked_queue_element *first = listening_list_.first();
-        common::double_linked_queue_element *end = listening_list_.end();
+        if (!listening_list_.empty()) {
+            common::double_linked_queue_element *first = listening_list_.first();
+            common::double_linked_queue_element *end = listening_list_.end();
 
-        do {
-            sensor_android *sensor_obj = E_LOFF(first, sensor_android, listening_link_);
-            sensor_obj->pause_data_listening();
+            do {
+                sensor_android *sensor_obj = E_LOFF(first, sensor_android, listening_link_);
+                sensor_obj->pause_data_listening();
 
-            first = first->next;
-        } while (first != end);
+                first = first->next;
+            } while (first != end);
+        }
 
         paused_ = true;
         return true;
@@ -481,15 +483,17 @@ namespace eka2l1::drivers {
             return false;
         }
 
-        common::double_linked_queue_element *first = listening_list_.first();
-        common::double_linked_queue_element *end = listening_list_.end();
+        if (!listening_list_.empty()) {
+            common::double_linked_queue_element *first = listening_list_.first();
+            common::double_linked_queue_element *end = listening_list_.end();
 
-        do {
-            sensor_android *sensor_obj = E_LOFF(first, sensor_android, listening_link_);
-            sensor_obj->resume_data_listening();
+            do {
+                sensor_android *sensor_obj = E_LOFF(first, sensor_android, listening_link_);
+                sensor_obj->resume_data_listening();
 
-            first = first->next;
-        } while (first != end);
+                first = first->next;
+            } while (first != end);
+        }
 
         paused_ = false;
         return true;
