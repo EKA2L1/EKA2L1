@@ -607,7 +607,7 @@ public class Emulator {
 
     public static native void pressKey(int key, int keyState);
 
-    public static native void touchScreen(int x, int y, int action);
+    public static native void touchScreen(int x, int y, int z, int action, int id);
 
     public static native int installApp(String path);
 

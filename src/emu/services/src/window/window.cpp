@@ -1577,6 +1577,9 @@ namespace eka2l1 {
      */
     void window_server::make_mouse_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_, epoc::screen *scr) {
         guest_evt_.type = epoc::event_code::touch;
+        guest_evt_.adv_pointer_evt_.pos_z = driver_evt_.mouse_.pos_z_;
+        guest_evt_.adv_pointer_evt_.ptr_num = driver_evt_.mouse_.mouse_id;
+        guest_evt_.adv_pointer_evt_.modifier = epoc::event_modifier_adv_pointer;
 
         switch (driver_evt_.mouse_.button_) {
         case drivers::mouse_button_left: {

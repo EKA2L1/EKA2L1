@@ -131,6 +131,7 @@ namespace eka2l1::epoc {
         event_modifier_rotate90 = 0x400000,
         event_modifier_rotate180 = 0x800000,
         event_modifier_rotate270 = 0x1000000,
+        event_modifier_adv_pointer = 0x10000000,
         event_modifier_all_mods = 0x1FFFFFFF
     };
 
@@ -392,7 +393,7 @@ namespace eka2l1::epoc {
 
     struct pointer_event {
         event_type evtype;
-        event_modifier modifier;
+        std::uint32_t modifier = 0;
         eka2l1::vec2 pos;
         eka2l1::vec2 parent_pos;
     };
@@ -414,10 +415,9 @@ namespace eka2l1::epoc {
     };
 
     struct adv_pointer_event : public pointer_event {
-        int spare1;
-        int spare2;
         int pos_z;
         std::uint8_t ptr_num; // multi touch
+        std::uint8_t padding[3];
     };
 
     enum pointer_filter_type {

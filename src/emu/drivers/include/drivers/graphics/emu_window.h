@@ -38,6 +38,9 @@ enum {
 const char *number_to_key_name(const int keycode);
 
 namespace eka2l1 {
+    static constexpr std::uint32_t MAX_SYMBIAN_SUPPORTED_POINTERS = 8;
+    static constexpr std::uint32_t PRESSURE_MAX_NUM = 0x7FFFFFFF;
+
     /**
      * \brief Contains implementation for driver.
      * 
@@ -119,18 +122,9 @@ namespace eka2l1 {
             std::function<void(void *, vec2)> resize_hook;
 
             /* Callback handler */
-            std::function<void(void *, point, int, int)> raw_mouse_event;
+            std::function<void(void *, vec3, int, int, int)> raw_mouse_event;
 
             std::function<void(void *, vec2d)> mouse_wheeling;
-
-            /*! Call when a touch input is triggered */
-            std::function<void(void *, point)> touch_pressed;
-
-            /*! Call when a touch movement is detected */
-            std::function<void(void *, point)> touch_move;
-
-            /*! Call when touch is released */
-            std::function<void(void *)> touch_released;
 
             /*! Call when a button is pressed. User sets their own call, shutdown and center button */
             std::function<void(void *, uint32_t)> button_pressed;

@@ -56,11 +56,14 @@
 #include <qt/mainwindow.h>
 #include <iostream>
 
-static eka2l1::drivers::input_event make_mouse_event_driver(const float x, const float y, const int button, const int action) {
+static eka2l1::drivers::input_event make_mouse_event_driver(const float x, const float y, const float z, const int button, const int action,
+    const int mouse_id) {
     eka2l1::drivers::input_event evt;
     evt.type_ = eka2l1::drivers::input_event_type::touch;
     evt.mouse_.pos_x_ = static_cast<int>(x);
     evt.mouse_.pos_y_ = static_cast<int>(y);
+    evt.mouse_.pos_z_ = static_cast<int>(z);
+    evt.mouse_.mouse_id = static_cast<std::uint32_t>(mouse_id);
     evt.mouse_.button_ = static_cast<eka2l1::drivers::mouse_button>(button);
     evt.mouse_.action_ = static_cast<eka2l1::drivers::mouse_action>(action);
 
@@ -73,14 +76,17 @@ static eka2l1::drivers::input_event make_mouse_event_driver(const float x, const
  * \param button       0: left, 1: right, 2: other      
  * \param action       0: press, 1: repeat(move), 2: release      
  */
-static void on_ui_window_mouse_evt(void *userdata, eka2l1::point mouse_pos, int button, int action) {
-    float mouse_pos_x = static_cast<float>(mouse_pos.x), mouse_pos_y = static_cast<float>(mouse_pos.y);
+static void on_ui_window_mouse_evt(void *userdata, eka2l1::vec3 mouse_pos, int button, int action, int mouse_id) {
+    float mouse_pos_x = static_cast<float>(mouse_pos.x), mouse_pos_y = static_cast<float>(mouse_pos.y),
+        mouse_pos_z = static_cast<float>(mouse_pos.z);
+
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
 
     const std::lock_guard<std::mutex> guard(emu->lockdown);
 
     const float scale = emu->symsys->get_config()->ui_scale;
-    auto mouse_evt = make_mouse_event_driver(mouse_pos_x / scale, mouse_pos_y / scale, button, action);
+    auto mouse_evt = make_mouse_event_driver(mouse_pos_x / scale, mouse_pos_y / scale, mouse_pos_z / scale,
+        button, action, mouse_id);
 
     if ((emu->symsys) && emu->winserv) {
         emu->winserv->queue_input_from_driver(mouse_evt);

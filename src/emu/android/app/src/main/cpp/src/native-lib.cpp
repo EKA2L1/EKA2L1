@@ -146,8 +146,8 @@ Java_com_github_eka2l1_emu_Emulator_pressKey(JNIEnv *env, jclass clazz, jint key
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_github_eka2l1_emu_Emulator_touchScreen(JNIEnv *env, jclass clazz, jint x, jint y,
-    jint action) {
-    touch_screen(*state, x, y, action);
+    jint z, jint action, jint pointer_id) {
+    touch_screen(*state, x, y, z, action, pointer_id);
 }
 
 extern "C" JNIEXPORT jint JNICALL

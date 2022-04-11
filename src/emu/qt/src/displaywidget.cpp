@@ -55,11 +55,14 @@ display_widget::display_widget(QWidget *parent)
 {
     setAttribute(Qt::WA_PaintOnScreen);
     setAttribute(Qt::WA_NativeWindow);
+    setAttribute(Qt::WA_AcceptTouchEvents);
 
     setMouseTracking(false);
 
     windowHandle()->setSurfaceType(QWindow::OpenGLSurface);
     windowHandle()->create();
+
+    reset_active_pointers();
 }
 
 display_widget::~display_widget() {
@@ -180,11 +183,7 @@ void display_widget::mousePressEvent(QMouseEvent *event) {
 
     if (raw_mouse_event) {
         const int button = eka2l1::common::find_most_significant_bit_one(event->button());
-        raw_mouse_event(userdata_, eka2l1::vec2(event->pos().x() * pixel_ratio, event->pos().y() * pixel_ratio), button, 0);
-    }
-
-    if (touch_pressed && (event->button() == Qt::LeftButton)) {
-        touch_pressed(userdata_, eka2l1::vec2(event->pos().x() * pixel_ratio, event->pos().y() * pixel_ratio));
+        raw_mouse_event(userdata_, eka2l1::vec3(event->pos().x() * pixel_ratio, event->pos().y() * pixel_ratio, 0), button, 0, 0);
     }
 }
 
@@ -193,11 +192,7 @@ void display_widget::mouseReleaseEvent(QMouseEvent *event) {
         const qreal pixel_ratio = devicePixelRatioF();
 
         const int button = eka2l1::common::find_most_significant_bit_one(event->button());
-        raw_mouse_event(userdata_, eka2l1::vec2(event->pos().x() * pixel_ratio, event->pos().y() * pixel_ratio), button, 2);
-    }
-
-    if (touch_released && (event->button() == Qt::LeftButton)) {
-        touch_released(userdata_);
+        raw_mouse_event(userdata_, eka2l1::vec3(event->pos().x() * pixel_ratio, event->pos().y() * pixel_ratio, 0), button, 2, 0);
     }
 }
 
@@ -211,10 +206,102 @@ void display_widget::mouseMoveEvent(QMouseEvent *event) {
 
     if (raw_mouse_event) {
         const int button = eka2l1::common::find_most_significant_bit_one(event->buttons());
-        raw_mouse_event(userdata_, eka2l1::vec2(event->pos().x() * pixel_ratio, event->pos().y() * pixel_ratio), button, 1);
+        raw_mouse_event(userdata_, eka2l1::vec3(event->pos().x() * pixel_ratio, event->pos().y() * pixel_ratio, 0), button, 1, 0);
+    }
+}
+
+void display_widget::reset_active_pointers() {
+    std::fill(active_pointers_.begin(), active_pointers_.end(), 0);
+}
+
+bool display_widget::event(QEvent *event) {
+    switch (event->type()) {
+    case QEvent::TouchBegin: {
+        QTouchEvent *touch_event = reinterpret_cast<QTouchEvent*>(event);
+        const QList<QTouchEvent::TouchPoint> &points = touch_event->touchPoints();
+
+        const qreal pixel_ratio = devicePixelRatioF();
+
+        for (std::size_t i = 0; i < active_pointers_.size(); i++) {
+            if (active_pointers_[i] == 0) {
+                active_pointers_[i] = points[i].id() + 1;
+                raw_mouse_event(userdata_, eka2l1::vec3(static_cast<int>(points[i].pos().x() * pixel_ratio),
+                    static_cast<int>(points[i].pos().y() * pixel_ratio),
+                    static_cast<int>(points[i].pressure() * eka2l1::PRESSURE_MAX_NUM)),
+                    0, 0, static_cast<int>(i));
+            }
+        }
+
+        return true;
     }
 
-    if (touch_move && (event->buttons() & Qt::LeftButton)) {
-        touch_move(userdata_, eka2l1::vec2(event->pos().x() * pixel_ratio, event->pos().y() * pixel_ratio));
+    case QEvent::TouchUpdate: {
+        QTouchEvent *touch_event = reinterpret_cast<QTouchEvent*>(event);
+        const QList<QTouchEvent::TouchPoint> &points = touch_event->touchPoints();
+
+        const qreal pixel_ratio = devicePixelRatioF();
+
+        for (std::size_t i = 0; i < points.size(); i++) {
+            bool found = false;
+            for (std::size_t j = 0; j < active_pointers_.size(); j++) {
+                if ((points[i].id() + 1) == active_pointers_[j]) {
+                    raw_mouse_event(userdata_, eka2l1::vec3(static_cast<int>(points[i].pos().x() * pixel_ratio),
+                        static_cast<int>(points[i].pos().y() * pixel_ratio),
+                        static_cast<int>(points[i].pressure() * eka2l1::PRESSURE_MAX_NUM)),
+                        0, 1, static_cast<int>(j));
+
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                // Start a new one somewhere
+                for (std::size_t j = 0; j < active_pointers_.size(); j++) {
+                    if (active_pointers_[j] == 0) {
+                        active_pointers_[j] = points[i].id() + 1;
+                        raw_mouse_event(userdata_, eka2l1::vec3(static_cast<int>(points[i].pos().x() * pixel_ratio),
+                            static_cast<int>(points[i].pos().y() * pixel_ratio),
+                            static_cast<int>(points[i].pressure() * eka2l1::PRESSURE_MAX_NUM)),
+                            0, 0, static_cast<int>(j));
+                    }
+                }
+            }
+        }
+
+        for (std::size_t i = 0; i < active_pointers_.size(); i++) {
+            bool found = false;
+            for (std::size_t j = 0; j < points.size(); j++) {
+                if (active_pointers_[i] == (points[j].id() + 1)) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                raw_mouse_event(userdata_, eka2l1::vec3(0, 0, 0), 0, 2, static_cast<int>(i));
+                active_pointers_[i] = 0;
+            }
+        }
+
+        return true;
     }
+
+    case QEvent::TouchEnd:
+    case QEvent::TouchCancel: {
+        for (std::size_t i = 0; i < active_pointers_.size(); i++) {
+            if (active_pointers_[i] != 0) {
+                raw_mouse_event(userdata_, eka2l1::vec3(0, 0, 0), 0, 2, static_cast<int>(i));
+                active_pointers_[i] = 0;
+            }
+        }
+
+        return true;
+    }
+
+    default:
+        break;
+    }
+
+    return QWidget::event(event);
 }

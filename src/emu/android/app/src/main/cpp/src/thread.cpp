@@ -180,11 +180,13 @@ namespace eka2l1::android {
         state.winserv->queue_input_from_driver(evt);
     }
 
-    void touch_screen(emulator &state, int x, int y, int action) {
+    void touch_screen(emulator &state, int x, int y, int z, int action, int pointer_id) {
         eka2l1::drivers::input_event evt;
         evt.type_ = eka2l1::drivers::input_event_type::touch;
         evt.mouse_.pos_x_ = static_cast<int>(x);
         evt.mouse_.pos_y_ = static_cast<int>(y);
+        evt.mouse_.pos_z_ = static_cast<int>(z);
+        evt.mouse_.mouse_id = static_cast<std::uint32_t>(pointer_id);
         evt.mouse_.button_ = eka2l1::drivers::mouse_button::mouse_button_left;
         evt.mouse_.action_ = static_cast<eka2l1::drivers::mouse_action>(action);
         state.winserv->queue_input_from_driver(evt);

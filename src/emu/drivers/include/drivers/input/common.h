@@ -120,9 +120,11 @@ namespace eka2l1::drivers {
      * Event for mouse 0/1/2 button press/move/release.
      */
     struct mouse_event {
-        int pos_x_, pos_y_;
+        // For pos z. Negative is proximity. Positive is pressure
+        int pos_x_, pos_y_, pos_z_;
         mouse_button button_;
         mouse_action action_;
+        std::uint32_t mouse_id;
     };
 
     struct input_event {

@@ -40,5 +40,5 @@ namespace eka2l1::android {
 
     void press_key(emulator &state, int key, int key_state);
 
-    void touch_screen(emulator &state, int x, int y, int action);
+    void touch_screen(emulator &state, int x, int y, int z, int action, int pointer_id);
 }

@@ -31,7 +31,10 @@ class display_widget : public QWidget, public eka2l1::drivers::emu_window {
     Q_OBJECT
 
 private:
+    std::array<int, eka2l1::MAX_SYMBIAN_SUPPORTED_POINTERS> active_pointers_;
     void *userdata_;
+
+    void reset_active_pointers();
 
 public:
     explicit display_widget(QWidget *parent = nullptr);
@@ -70,6 +73,7 @@ public:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
+    bool event(QEvent *event) override;
 };
 
 #endif // DISPLAY_WIDGET_H
