@@ -145,12 +145,16 @@ namespace eka2l1::mem::flexible {
     }
 
     const vm_address flexible_mem_model_chunk::base(mem_model_process *process) {
-        if (!process) {
+        if (!process && fixed_addr_) {
             return fixed_addr_;
         }
 
         if (is_addr_shared_ && fixed_mapping_) {
             return fixed_mapping_->base_;
+        }
+
+        if (!process) {
+            return INVALID_ADDR;
         }
 
         // Find our attacher
@@ -163,7 +167,6 @@ namespace eka2l1::mem::flexible {
             });
 
         if (info_result == process_attacher->attachs_.end()) {
-            LOG_TRACE(KERNEL, "Test");
             return INVALID_ADDR;
         }
 
