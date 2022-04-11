@@ -1443,8 +1443,6 @@ namespace eka2l1::epoc {
                 return epoc::error_no_memory;
             }
 
-            LOG_TRACE(KERNEL, "Special operation allocate result=0x{:X}", result);
-
             return result;
         }
 
@@ -5437,6 +5435,10 @@ namespace eka2l1::epoc {
         kern->crr_thread()->restore_before_exception_state();
     }
 
+    BRIDGE_FUNC(std::uint32_t, superpage_config) {
+        return 0;
+    }
+
     const eka2l1::hle::func_map svc_register_funcs_v10 = {
         /* FAST EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00800000, wait_for_any_request),
@@ -5448,8 +5450,10 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800009, set_trap_handler),
         BRIDGE_REGISTER(0x0080000A, debug_mask),
         BRIDGE_REGISTER(0x0080000B, debug_mask_index),
+        BRIDGE_REGISTER(0x0080000E, ntick_count),
         BRIDGE_REGISTER(0x00800011, user_svr_rom_header_address),
         BRIDGE_REGISTER(0x00800012, user_svr_rom_root_dir_address),
+        BRIDGE_REGISTER(0x00800014, superpage_config),
         BRIDGE_REGISTER(0x00800015, utc_offset),
         BRIDGE_REGISTER(0x00800016, get_global_userdata),
         BRIDGE_REGISTER(0x00C10000, hle_dispatch),
@@ -5460,6 +5464,9 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x03, chunk_max_size),
         BRIDGE_REGISTER(0x0C, imb_range),
         BRIDGE_REGISTER(0x0E, library_lookup),
+        BRIDGE_REGISTER(0x11, mutex_wait),
+        BRIDGE_REGISTER(0x12, mutex_signal),
+        BRIDGE_REGISTER(0x13, process_id),
         BRIDGE_REGISTER(0x15, process_resume),
         BRIDGE_REGISTER(0x16, process_filename),
         BRIDGE_REGISTER(0x17, process_command_line),
@@ -5488,10 +5495,16 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x3A, request_signal),
         BRIDGE_REGISTER(0x3B, handle_name),
         BRIDGE_REGISTER(0x3C, handle_full_name),
+        BRIDGE_REGISTER(0x3F, after),
         BRIDGE_REGISTER(0x41, message_complete),
+        BRIDGE_REGISTER(0x42, message_complete),
+        BRIDGE_REGISTER(0x43, message_complete_handle),
+        BRIDGE_REGISTER(0x44, time_now),
         BRIDGE_REGISTER(0x4D, session_send_sync),
         BRIDGE_REGISTER(0x4F, hal_function),
         BRIDGE_REGISTER(0x52, process_command_line_length),
+        BRIDGE_REGISTER(0x54, get_inactivity_time),
+        BRIDGE_REGISTER(0x55, clear_inactivity_time),
         BRIDGE_REGISTER(0x56, debug_print),
         BRIDGE_REGISTER(0x5A, exception_handler),
         BRIDGE_REGISTER(0x5E, is_exception_handled),
@@ -5530,6 +5543,11 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xAF, process_security_info),
         BRIDGE_REGISTER(0xB0, thread_security_info),
         BRIDGE_REGISTER(0xB1, message_security_info),
+        BRIDGE_REGISTER(0xB5, message_queue_create),
+        BRIDGE_REGISTER(0xB6, message_queue_send),
+        BRIDGE_REGISTER(0xB7, message_queue_receive),
+        BRIDGE_REGISTER(0xBA, message_queue_notify_data_available),
+        BRIDGE_REGISTER(0xBB, message_queue_cancel_notify_available),
         BRIDGE_REGISTER(0xBD, property_define),
         BRIDGE_REGISTER(0xBF, property_attach),
         BRIDGE_REGISTER(0xC0, property_subscribe),
@@ -5543,6 +5561,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC8, property_find_set_int),
         BRIDGE_REGISTER(0xD2, process_get_data_parameter),
         BRIDGE_REGISTER(0xD3, process_data_parameter_length),
+        BRIDGE_REGISTER(0xDC, plat_sec_diagnostic),
         BRIDGE_REGISTER(0xDE, thread_request_signal),
         BRIDGE_REGISTER(0xDD, exception_descriptor),
         BRIDGE_REGISTER(0xE0, leave_start),
