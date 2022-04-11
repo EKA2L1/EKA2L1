@@ -45,7 +45,12 @@ namespace eka2l1 {
             break;
 
         case epoc::remcon::remcon_message_register_interested_api:
-            detail_->register_interested_apis(ctx);
+            if (detail_) {
+                detail_->register_interested_apis(ctx);
+            } else {
+                LOG_TRACE(SERVICE_REMCON, "Player type not set yet to register interested API!");
+                ctx->complete(epoc::error_none);
+            }
             break;
 
         default:
