@@ -21,6 +21,7 @@
 #include <services/socket/socket.h>
 
 #include <utils/err.h>
+#include <system/epoc.h>
 
 namespace eka2l1::epoc::socket {
     std::size_t socket::get_option(const std::uint32_t option_id, const std::uint32_t option_family,
@@ -375,67 +376,132 @@ namespace eka2l1::epoc::socket {
                 break;
             }
         } else {
-            switch (ctx->msg->function) {
-            case socket_so_get_opt:
-                get_option(ctx);
-                return;
+            if (ctx->sys->get_symbian_version_use() >= epocver::epoc95) {
+                switch (ctx->msg->function) {
+                case socket_reform_so_get_opt:
+                    get_option(ctx);
+                    return;
 
-            case socket_so_close:
-                close(ctx);
-                return;
+                case socket_reform_so_close:
+                    close(ctx);
+                    return;
 
-            case socket_so_connect:
-                connect(ctx);
-                return;
+                case socket_reform_so_connect:
+                    connect(ctx);
+                    return;
 
-            case socket_so_bind:
-                bind(ctx);
-                return;
+                case socket_reform_so_bind:
+                    bind(ctx);
+                    return;
 
-            case socket_so_write:
-                write(ctx);
-                return;
+                case socket_reform_so_write:
+                    write(ctx);
+                    return;
 
-            case socket_so_send:
-                send(ctx, true, false);
-                return;
+                case socket_reform_so_send:
+                    send(ctx, true, false);
+                    return;
 
-            case socket_so_send_no_len:
-                send(ctx, false, false);
-                return;
+                case socket_reform_so_send_no_len:
+                    send(ctx, false, false);
+                    return;
 
-            case socket_so_recv:
-                recv(ctx, false, false, false);
-                return;
+                case socket_reform_so_recv:
+                    recv(ctx, false, false, false);
+                    return;
 
-            case socket_so_recv_no_len:
-                recv(ctx, true, false, false);
-                return;
+                case socket_reform_so_recv_no_len:
+                    recv(ctx, true, false, false);
+                    return;
 
-            case socket_so_recv_one_or_more:
-                recv(ctx, true, true, false);
-                return;
+                case socket_so_recv_one_or_more:
+                    recv(ctx, true, true, false);
+                    return;
 
-            case socket_so_ioctl:
-                ioctl(ctx);
-                return;
+                case socket_reform_so_ioctl:
+                    ioctl(ctx);
+                    return;
 
-            case socket_so_cancel_send:
-                cancel_send(ctx);
-                return;
+                case socket_reform_so_cancel_send:
+                    cancel_send(ctx);
+                    return;
 
-            case socket_so_cancel_recv:
-                cancel_recv(ctx);
-                return;
+                case socket_reform_so_cancel_recv:
+                    cancel_recv(ctx);
+                    return;
 
-            case socket_so_cancel_connect:
-                sock_->cancel_connect();
-                ctx->complete(epoc::error_none);
+                case socket_reform_so_cancel_connect:
+                    sock_->cancel_connect();
+                    ctx->complete(epoc::error_none);
 
-                return;
+                    return;
 
-            default:
-                break;
+                default:
+                    break;
+                }
+            } else {
+                switch (ctx->msg->function) {
+                case socket_so_get_opt:
+                    get_option(ctx);
+                    return;
+
+                case socket_so_close:
+                    close(ctx);
+                    return;
+
+                case socket_so_connect:
+                    connect(ctx);
+                    return;
+
+                case socket_so_bind:
+                    bind(ctx);
+                    return;
+
+                case socket_so_write:
+                    write(ctx);
+                    return;
+
+                case socket_so_send:
+                    send(ctx, true, false);
+                    return;
+
+                case socket_so_send_no_len:
+                    send(ctx, false, false);
+                    return;
+
+                case socket_so_recv:
+                    recv(ctx, false, false, false);
+                    return;
+
+                case socket_so_recv_no_len:
+                    recv(ctx, true, false, false);
+                    return;
+
+                case socket_so_recv_one_or_more:
+                    recv(ctx, true, true, false);
+                    return;
+
+                case socket_so_ioctl:
+                    ioctl(ctx);
+                    return;
+
+                case socket_so_cancel_send:
+                    cancel_send(ctx);
+                    return;
+
+                case socket_so_cancel_recv:
+                    cancel_recv(ctx);
+                    return;
+
+                case socket_so_cancel_connect:
+                    sock_->cancel_connect();
+                    ctx->complete(epoc::error_none);
+
+                    return;
+
+                default:
+                    break;
+                }
             }
         }
 

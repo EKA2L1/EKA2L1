@@ -132,42 +132,86 @@ namespace eka2l1 {
                 break;
             }
         } else {
-            switch (ctx->msg->function) {
-            case socket_pr_find:
-                pr_find(ctx);
-                return;
+            if (ctx->sys->get_symbian_version_use() >= epocver::epoc95) {
+                switch (ctx->msg->function) {
+                case socket_reform_pr_find:
+                    pr_find(ctx);
+                    return;
 
-            case socket_so_create:
-                so_create(ctx);
-                return;
+                case socket_reform_so_create:
+                    so_create(ctx);
+                    return;
 
-            case socket_hr_open:
-                hr_create(ctx, false);
-                return;
+                case socket_reform_hr_open:
+                    hr_create(ctx, false);
+                    return;
 
-            case socket_hr_open_with_connection:
-                hr_create(ctx, true);
-                return;
+                case socket_reform_hr_open_with_connection:
+                    hr_create(ctx, true);
+                    return;
 
-            case socket_sr_get_by_number:
-                sr_get_by_number(ctx);
-                return;
+                case socket_reform_sr_get_by_number:
+                    sr_get_by_number(ctx);
+                    return;
 
-            case socket_cn_open_with_cn_type:
-                cn_open(ctx);
-                return;
+                case socket_reform_cn_open_with_cn_type:
+                    cn_open(ctx);
+                    return;
 
-            case socket_cn_get_long_des_setting:
-                cn_get_long_des_setting(ctx);
-                return;
+                case socket_reform_cn_get_long_des_setting:
+                    cn_get_long_des_setting(ctx);
+                    return;
 
-            case socket_so_open_with_connection:
-            case socket_so_open_with_subconnection:
-                so_create_with_conn_or_subconn(ctx);
-                return;
+                case socket_reform_so_open_with_conn:
+                case socket_reform_so_open_with_subconn:
+                    so_create_with_conn_or_subconn(ctx);
+                    return;
 
-            default:
-                break;
+                case socket_reform_ss_request_optimal_dealer:
+                    ss_request_optimal_dealer(ctx);
+                    return;
+
+                default:
+                    break;
+                }
+            } else {
+                switch (ctx->msg->function) {
+                case socket_pr_find:
+                    pr_find(ctx);
+                    return;
+
+                case socket_so_create:
+                    so_create(ctx);
+                    return;
+
+                case socket_hr_open:
+                    hr_create(ctx, false);
+                    return;
+
+                case socket_hr_open_with_connection:
+                    hr_create(ctx, true);
+                    return;
+
+                case socket_sr_get_by_number:
+                    sr_get_by_number(ctx);
+                    return;
+
+                case socket_cn_open_with_cn_type:
+                    cn_open(ctx);
+                    return;
+
+                case socket_cn_get_long_des_setting:
+                    cn_get_long_des_setting(ctx);
+                    return;
+
+                case socket_so_open_with_connection:
+                case socket_so_open_with_subconnection:
+                    so_create_with_conn_or_subconn(ctx);
+                    return;
+
+                default:
+                    break;
+                }
             }
         }
 
@@ -376,5 +420,13 @@ namespace eka2l1 {
         // Write the subsession handle
         ctx->write_data_to_descriptor_argument<std::uint32_t>(3, id);
         ctx->complete(epoc::error_none);
+    }
+
+    void socket_client_session::ss_request_optimal_dealer(eka2l1::service::ipc_context *ctx) {
+        // Request optimal dealer allows client to connect to a specific server that is only able to only open
+        // specific type of protocols/sockets for specific purpose.
+        // Like the document said, for example, open a session for TCP/UDP sockets server and
+        // not SMS sockets. Too complicated for emulator, lol
+        ctx->complete(epoc::error_not_found);
     }
 }

@@ -21,6 +21,7 @@
 #include <services/socket/server.h>
 
 #include <utils/err.h>
+#include <system/epoc.h>
 
 namespace eka2l1::epoc::socket {
     socket_host_resolver::socket_host_resolver(socket_client_session *parent, std::unique_ptr<host_resolver> &resolver,
@@ -97,17 +98,32 @@ namespace eka2l1::epoc::socket {
                 break;
             }
         } else {
-            switch (ctx->msg->function) {
-            case socket_hr_get_by_name:
-                get_by_name(ctx);
-                return;
+            if (ctx->sys->get_symbian_version_use() >= epocver::epoc95) {
+                switch (ctx->msg->function) {
+                case socket_reform_hr_get_by_name:
+                    get_by_name(ctx);
+                    return;
 
-            case socket_hr_close:
-                close(ctx);
-                return;
+                case socket_reform_hr_close:
+                    close(ctx);
+                    return;
 
-            default:
-                break;
+                default:
+                    break;
+                }
+            } else {
+                switch (ctx->msg->function) {
+                case socket_hr_get_by_name:
+                    get_by_name(ctx);
+                    return;
+
+                case socket_hr_close:
+                    close(ctx);
+                    return;
+
+                default:
+                    break;
+                }
             }
         }
 

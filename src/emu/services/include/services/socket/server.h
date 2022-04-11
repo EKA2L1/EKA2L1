@@ -126,7 +126,48 @@ namespace eka2l1 {
         socket_hr_open_with_connection = 0x3E,
         socket_cn_open_with_cn_type = 0x3F,
         socket_cn_get_long_des_setting = 0x51,
-        socket_so_open_with_subconnection = 0x71
+        socket_so_open_with_subconnection = 0x71,
+    };
+
+    enum socket_opcode_reform {
+        socket_reform_so_create = 0x20,
+        socket_reform_so_send = 0x21,
+        socket_reform_so_send_no_len = 0x22,
+        socket_reform_so_recv = 0x23,
+        socket_reform_so_recv_no_len = 0x24,
+        socket_reform_so_recv_one_or_more = 0x25,
+        socket_reform_so_read = 0x27,
+        socket_reform_so_write = 0x28,
+        socket_reform_so_send_to = 0x29,
+        socket_reform_so_send_to_no_len = 0x2A,
+        socket_reform_so_recv_from = 0x2B,
+        socket_reform_so_recv_from_no_len = 0x2C,
+        socket_reform_so_connect = 0x2D,
+        socket_reform_so_bind = 0x2E,
+        socket_reform_so_set_opt = 0x31,
+        socket_reform_so_get_opt = 0x32,
+        socket_reform_so_ioctl = 0x33,
+        socket_reform_hr_open = 0x37,
+        socket_reform_hr_get_by_name = 0x38,
+        socket_reform_hr_next = 0x39,
+        socket_reform_hr_get_by_addr = 0x3A,
+        socket_reform_hr_set_host_name = 0x3C,
+        socket_reform_sr_get_by_number = 0x3F,
+        socket_reform_so_open_with_conn = 0x46,
+        socket_reform_hr_open_with_connection = 0x47,
+        socket_reform_cn_open_with_cn_type = 0x48,
+        socket_reform_cn_get_long_des_setting = 0x51,
+        socket_reform_pr_find = 0x82,
+        socket_reform_so_local_name = 0x86,
+        socket_reform_so_cancel_recv = 0x8A,
+        socket_reform_so_cancel_send = 0x8B,
+        socket_reform_so_cancel_connect = 0x8C,
+        socket_reform_so_close = 0x88,
+        socket_reform_so_cancel_ioctl = 0x89,
+        socket_reform_hr_cancel = 0x91,
+        socket_reform_hr_close = 0x92,
+        socket_reform_so_open_with_subconn = 0xBC,
+        socket_reform_ss_request_optimal_dealer = 0xBE
     };
 
     enum socket_opcode_old {
@@ -204,5 +245,6 @@ namespace eka2l1 {
         void sr_get_by_number(eka2l1::service::ipc_context *ctx);
         void cn_open(eka2l1::service::ipc_context *ctx);
         void cn_get_long_des_setting(eka2l1::service::ipc_context *ctx);
+        void ss_request_optimal_dealer(eka2l1::service::ipc_context *ctx);
     };
 }
