@@ -119,6 +119,7 @@ namespace eka2l1::epoc {
 #endif
 
         // TODO: These are stubbed!
+        // See in relation: CLocale::MonetaryLoadLocaleL in ossrv, openenvcore's libc in file localeinfo.cpp
         locale.clock_format_ = epoc::clock_digital;
         locale.start_of_week_ = epoc::monday;
         locale.date_format_ = epoc::date_format_america;
@@ -126,6 +127,7 @@ namespace eka2l1::epoc {
         locale.universal_time_offset_ = -14400;
         locale.device_time_state_ = epoc::device_user_time;
         locale.decimal_separator_ = '.';
+        locale.negative_currency_format_ = epoc::negative_currency_leading_minus_sign;
 
         locale.time_separator_[0] = 0;
         locale.time_separator_[1] = ':';
