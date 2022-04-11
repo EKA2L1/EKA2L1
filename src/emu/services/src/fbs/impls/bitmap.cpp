@@ -369,6 +369,17 @@ namespace eka2l1 {
         std::uint32_t address_offset;
     };
 
+    // Used in Belle and Anna
+    struct bmp_specs_v2 {
+        eka2l1::vec2 size_pixels;
+        eka2l1::vec2 size_twips;
+        epoc::display_mode bpp; // Ignore
+        std::uint32_t bitmap_uid;
+        std::uint32_t data_size_force;
+    };
+
+    static_assert(sizeof(bmp_specs_v2) == 28);
+
     struct bmp_specs_legacy {
         eka2l1::vec2 size;
         epoc::display_mode bpp; // Ignore
@@ -831,18 +842,38 @@ namespace eka2l1 {
 
     void fbscli::create_bitmap(service::ipc_context *ctx) {
         bmp_specs_legacy specs;
+
         const bool use_spec_legacy = ctx->get_argument_data_size(0) >= sizeof(bmp_specs_legacy);
+        const bool use_bmp_handles_writeback = (server<fbs_server>()->get_system()->get_symbian_version_use()
+            >= epocver::epoc10);
 
         if (!use_spec_legacy) {
-            std::optional<bmp_specs> specs_morden = ctx->get_argument_data_from_descriptor<bmp_specs>(0);
+            if (use_bmp_handles_writeback) {
+                std::optional<bmp_specs_v2> specs_morden_v2 = ctx->get_argument_data_from_descriptor<bmp_specs_v2>(0);
+                if (!specs_morden_v2.has_value()) {
+                    ctx->complete(epoc::error_argument);
+                    return;
+                }
 
-            if (!specs_morden) {
-                ctx->complete(epoc::error_argument);
-                return;
+                specs.size = specs_morden_v2->size_pixels;
+                specs.bpp = specs_morden_v2->bpp;
+
+                static constexpr std::uint32_t NORMAL_BITMAP_UID_REV2 = 0x9A2C;
+
+                if (specs_morden_v2->bitmap_uid != NORMAL_BITMAP_UID_REV2) {
+                    LOG_WARN(SERVICE_FBS, "Trying to create non-standard bitmap with UID 0x{:X}! Revisit soon!", specs_morden_v2->bitmap_uid);
+                }
+            } else {
+                std::optional<bmp_specs> specs_morden = ctx->get_argument_data_from_descriptor<bmp_specs>(0);
+
+                if (!specs_morden) {
+                    ctx->complete(epoc::error_argument);
+                    return;
+                }
+
+                specs.size = specs_morden->size;
+                specs.bpp = specs_morden->bpp;
             }
-
-            specs.size = specs_morden->size;
-            specs.bpp = specs_morden->bpp;
         } else {
             std::optional<bmp_specs_legacy> specs_legacy = ctx->get_argument_data_from_descriptor<bmp_specs_legacy>(0);
 
@@ -872,9 +903,6 @@ namespace eka2l1 {
         const std::uint32_t addr_off = fbss->host_ptr_to_guest_shared_offset(bmp->bitmap_);
 
         // From Anna the slot to write this moved to 1.
-        const bool use_bmp_handles_writeback = (server<fbs_server>()->get_system()->get_symbian_version_use()
-            >= epocver::epoc10);
-        ;
 
         if (use_spec_legacy) {
             specs.handle = handle_ret;

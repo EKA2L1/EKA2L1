@@ -125,19 +125,23 @@ namespace eka2l1::epoc {
         const std::int32_t *offset_ptr = find(session_handle);
         fbs_server *serv = cli->server<fbs_server>();
 
-        if (!offset_ptr && create) {
+        if (!offset_ptr) {
             // Create new one.
-            open_font_session_cache_v3 *cache = serv->allocate_general_data<open_font_session_cache_v3>();
-            const std::int32_t offset = static_cast<std::int32_t>(reinterpret_cast<std::uint8_t *>(cache) - reinterpret_cast<std::uint8_t *>(this));
+            if (create) {
+                open_font_session_cache_v3 *cache = serv->allocate_general_data<open_font_session_cache_v3>();
+                const std::int32_t offset = static_cast<std::int32_t>(reinterpret_cast<std::uint8_t *>(cache) - reinterpret_cast<std::uint8_t *>(this));
 
-            cache->session_handle = session_handle;
-            cache->random_seed = 0;
+                cache->session_handle = session_handle;
+                cache->random_seed = 0;
 
-            // Allocate offset array
-            cache->offset_array.init(cli, NORMAL_SESSION_CACHE_ENTRY_COUNT);
+                // Allocate offset array
+                cache->offset_array.init(cli, NORMAL_SESSION_CACHE_ENTRY_COUNT);
 
-            add(session_handle, offset);
-            return cache;
+                add(session_handle, offset);
+                return cache;
+            } else {
+                return nullptr;
+            }
         }
 
         if (epoc::does_client_use_pointer_instead_of_offset(cli)) {
