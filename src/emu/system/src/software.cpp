@@ -100,7 +100,12 @@ namespace eka2l1::loader {
     static std::optional<epocver> get_epocver_through_sis_name_version(const int major, const int minor) {
         switch (major) {
         case 5:
-            return epocver::epoc94;
+            if (minor == 0)
+                return epocver::epoc94;
+            else if (minor < 3)
+                return epocver::epoc95;
+            else
+                return epocver::epoc10;
 
         case 3:
             if (minor <= 1) {
