@@ -14,7 +14,7 @@
     <message>
       <location filename="../src/symbian_input_dialog.ui" line="14"/>
       <source>Enter the text</source>
-      <translation type="unfinished">Enter the text</translation>
+      <translation>Introduzca el texto</translation>
     </message>
     <message>
       <location filename="../src/symbian_input_dialog.ui" line="31"/>
