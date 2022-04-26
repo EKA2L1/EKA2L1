@@ -28,6 +28,8 @@ namespace eka2l1::dispatch {
         std::string out_decl = "";
         std::string main_body = "";
 
+        bool skinning = vertex_statuses & egl_context_es1::VERTEX_STATE_SKINNING_ENABLE;
+
         if (is_es) {
             input_decl += "#version 300 es\n"
                           "precision highp float;\n";
@@ -38,13 +40,34 @@ namespace eka2l1::dispatch {
 
         input_decl += "layout (location = 0) in vec4 inPosition;\n";
 
-        uni_decl += "uniform mat4 uViewModelMat;\n"
-                    "uniform mat4 uProjMat;\n";
+        if (skinning) {
+            uni_decl += fmt::format("uniform mat4 uPaletteMat[{}];\n", GLES1_EMU_MAX_PALETTE_MATRICES);
+        } else {
+            uni_decl += "uniform mat4 uViewModelMat;\n";
+        }
 
+        uni_decl += "uniform mat4 uProjMat;\n";
         out_decl += "out vec4 mMyPos;\n";
 
-        main_body += "void main() {\n"
-                     "\tgl_Position = uProjMat * uViewModelMat * inPosition;\n"
+        main_body += "void main() {\n";
+        if (skinning) {
+            input_decl += fmt::format("layout (location = {}) in uint uMatrixIndices[{}];\n", 3 + GLES1_EMU_MAX_TEXTURE_COUNT, GLES1_EMU_MAX_WEIGHTS_PER_VERTEX);
+            input_decl += fmt::format("layout (location = {}) in float uWeights[{}];\n", 4 + GLES1_EMU_MAX_TEXTURE_COUNT, GLES1_EMU_MAX_WEIGHTS_PER_VERTEX);
+
+            std::uint32_t weights_per_vertex_count = (vertex_statuses & egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_MASK) 
+                >> egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_BITS_POS;
+
+            main_body += "\tmat4 uViewModelMat = (";
+            for (std::uint32_t i = 0; i < weights_per_vertex_count; i++) {
+                main_body += "uWeights[{}] * uPaletteMat[uMatrixIndicies[{}]] ";
+                if (i != weights_per_vertex_count - 1) {
+                    main_body += "+ ";
+                }
+                main_body += ");\n";
+            }
+        }
+
+        main_body += "\tgl_Position = uProjMat * uViewModelMat * inPosition;\n"
                      "\tmMyPos = uViewModelMat * inPosition;\n";
 
         if (vertex_statuses & egl_context_es1::VERTEX_STATE_CLIENT_COLOR_ARRAY) {
@@ -403,7 +426,8 @@ namespace eka2l1::dispatch {
                 break;
             }
 
-            main_body += "\toColor = fogF * oColor + (1.0 - fogF) * uFogColor;\n";
+            main_body += "\tfogF = clamp(fogF, 0.0, 1.0);\n";
+            main_body += "\toColor.rgb = mix(uFogColor.rgb, oColor.rgb, fogF);\n";
         }
 
         if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_ALPHA_TEST) {

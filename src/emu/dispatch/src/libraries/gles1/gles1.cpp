@@ -437,12 +437,14 @@ namespace eka2l1::dispatch {
         , active_mat_stack_(GL_MODELVIEW_EMU)
         , binded_array_buffer_handle_(0)
         , binded_element_array_buffer_handle_(0)
+        , current_palette_mat_index_(0)
         , active_cull_face_(drivers::rendering_face::back)
         , active_front_face_rule_(drivers::rendering_face_determine_rule::vertices_counter_clockwise)
         , source_blend_factor_(drivers::blend_factor::one)
         , dest_blend_factor_(drivers::blend_factor::zero)
         , attrib_changed_(false)
         , previous_first_index_(0)
+        , skin_weights_per_ver(GLES1_EMU_MAX_WEIGHTS_PER_VERTEX)
         , material_shininess_(0.0f)
         , fog_density_(1.0f)
         , fog_start_(0.0f)
@@ -769,6 +771,9 @@ namespace eka2l1::dispatch {
         case GL_TEXTURE_EMU:
             return texture_units_[active_texture_unit_].texture_mat_stack_.top();
 
+        case GL_MATRIX_PALETTE_OES:
+            return palette_mats_[current_palette_mat_index_];
+
         default:
             break;
         }
@@ -978,7 +983,8 @@ namespace eka2l1::dispatch {
 
         dispatcher *dp = sys->get_dispatcher();
 
-        if ((mode != GL_TEXTURE_EMU) && (mode != GL_MODELVIEW_EMU) && (mode != GL_PROJECTION_EMU)) {
+        if ((mode != GL_TEXTURE_EMU) && (mode != GL_MODELVIEW_EMU) && (mode != GL_PROJECTION_EMU)
+            && (mode != GL_MATRIX_PALETTE_OES)) {
             dp->get_egl_controller().push_error(ctx, GL_INVALID_OPERATION);
             return;
         }
@@ -1025,6 +1031,10 @@ namespace eka2l1::dispatch {
             ss.push(ss.top());
             break;
         }
+
+        default:
+            controller.push_error(ctx, GL_INVALID_OPERATION);
+            return;
         }
     }
 
@@ -1064,6 +1074,10 @@ namespace eka2l1::dispatch {
 
             ctx->texture_units_[ctx->active_texture_unit_].texture_mat_stack_.pop();
             break;
+
+        default:
+            controller.push_error(ctx, GL_INVALID_OPERATION);
+            return;
         }
     }
     
@@ -2109,6 +2123,14 @@ namespace eka2l1::dispatch {
 
             break;
 
+        case GL_WEIGHT_ARRAY_OES:
+            ctx->vertex_statuses_ |= egl_context_es1::VERTEX_STATE_CLIENT_WEIGHT_ARRAY;
+            break;
+
+        case GL_MATRIX_INDEX_ARRAY_OES:
+            ctx->vertex_statuses_ |= egl_context_es1::VERTEX_STATE_CLIENT_MATRIX_INDEX_ARRAY;
+            break;
+
         default:
             controller.push_error(ctx, GL_INVALID_ENUM);
             return;
@@ -2140,6 +2162,14 @@ namespace eka2l1::dispatch {
         case GL_TEXTURE_COORD_ARRAY_EMU:
             ctx->vertex_statuses_ &= ~(1 << (egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY_POS +
                 static_cast<std::uint8_t>(ctx->active_client_texture_unit_)));
+            break;
+            
+        case GL_WEIGHT_ARRAY_OES:
+            ctx->vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_CLIENT_WEIGHT_ARRAY;
+            break;
+
+        case GL_MATRIX_INDEX_ARRAY_OES:
+            ctx->vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_CLIENT_MATRIX_INDEX_ARRAY;
             break;
 
         default:
@@ -2486,6 +2516,23 @@ namespace eka2l1::dispatch {
         case GL_FOG_DENSITY_EMU:
             ctx->fog_density_ = param;
             break;
+
+        case GL_FOG_MODE_EMU: {
+            const std::uint32_t mode_u32 = static_cast<const std::uint32_t>(param);
+            ctx->fragment_statuses_ &= ~egl_context_es1::FRAGMENT_STATE_FOG_MODE_MASK;
+            if (mode_u32 == GL_LINEAR_EMU) {
+                ctx->fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_FOG_MODE_LINEAR;
+            } else if (mode_u32 == GL_EXP_EMU) {
+                ctx->fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_FOG_MODE_EXP;
+            } else if (mode_u32 == GL_EXP2_EMU) {
+                ctx->fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_FOG_MODE_EXP2;
+            } else {
+                controller.push_error(ctx, GL_INVALID_ENUM);
+                return;
+            }
+
+            break;
+        }
 
         default:
             controller.push_error(ctx, GL_INVALID_ENUM);
@@ -3657,6 +3704,10 @@ namespace eka2l1::dispatch {
 
             break;
 
+        case GL_MATRIX_PALETTE_OES:
+            ctx->vertex_statuses_ |= egl_context_es1::VERTEX_STATE_SKINNING_ENABLE;
+            break;
+
         default:
             controller.push_error(ctx, GL_INVALID_ENUM);
             return;
@@ -3830,6 +3881,10 @@ namespace eka2l1::dispatch {
             ctx->non_shader_statuses_ &= ~egl_context_es1::NON_SHADER_STATE_POLYGON_OFFSET_FILL;
             ctx->cmd_builder_.set_feature(drivers::graphics_feature::polygon_offset_fill, false);
 
+            break;
+
+        case GL_MATRIX_PALETTE_OES:
+            ctx->vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_SKINNING_ENABLE;
             break;
 
         default:
@@ -4140,8 +4195,17 @@ namespace eka2l1::dispatch {
 
         if (var_info) {
             // Not binded by uniform buffer/constant buffer
-            ctx->cmd_builder_.set_dynamic_uniform(var_info->view_model_mat_loc_, drivers::shader_set_var_type::mat4,
-                glm::value_ptr(ctx->model_view_mat_stack_.top()), 64);
+            if (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_SKINNING_ENABLE) {
+                std::vector<std::uint8_t> palette_mats_data(64 * GLES1_EMU_MAX_PALETTE_MATRICES);
+                for (std::size_t i = 0; i < GLES1_EMU_MAX_PALETTE_MATRICES; i++) {
+                    memcpy(palette_mats_data.data() + i * 64, glm::value_ptr(ctx->palette_mats_[i]), 64);
+                }
+                ctx->cmd_builder_.set_dynamic_uniform(var_info->palette_mat_loc_, drivers::shader_set_var_type::mat4,
+                    palette_mats_data.data(), palette_mats_data.size());
+            } else {
+                ctx->cmd_builder_.set_dynamic_uniform(var_info->view_model_mat_loc_, drivers::shader_set_var_type::mat4,
+                    glm::value_ptr(ctx->model_view_mat_stack_.top()), 64);
+            }
 
             ctx->cmd_builder_.set_dynamic_uniform(var_info->proj_mat_loc_, drivers::shader_set_var_type::mat4,
                 glm::value_ptr(ctx->proj_mat_stack_.top()), 64);
@@ -4368,6 +4432,36 @@ namespace eka2l1::dispatch {
 
                         gl_enum_to_drivers_data_format(ctx->texture_units_[i].coord_attrib_.data_type_, temp_format);
                         temp_desc.set_format(ctx->texture_units_[i].coord_attrib_.size_, temp_format);
+
+                        descs.push_back(temp_desc);
+                    }
+                }
+            }
+
+            temp_desc.set_normalized(false);
+
+            if (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_SKINNING_ENABLE) {
+                if (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_MATRIX_INDEX_ARRAY) {
+                    if (retrieve_vertex_buffer_slot(ctx->matrix_index_attrib_, temp_desc.buffer_slot, temp_desc.offset)) {
+                        temp_desc.location = 6;
+                        temp_desc.stride = ctx->matrix_index_attrib_.stride_;
+                        temp_desc.set_format(ctx->matrix_index_attrib_.size_, drivers::data_format::byte);
+
+                        descs.push_back(temp_desc);
+                    }
+                }
+
+                if (ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_WEIGHT_ARRAY) {
+                    if (retrieve_vertex_buffer_slot(ctx->weight_attrib_, temp_desc.buffer_slot, temp_desc.offset)) {
+                        temp_desc.location = 7;
+                        temp_desc.stride = ctx->weight_attrib_.stride_;
+
+                        gl_enum_to_drivers_data_format(ctx->weight_attrib_.data_type_, temp_format);
+                        temp_desc.set_format(ctx->weight_attrib_.size_, temp_format);
+
+                        if (temp_format == drivers::data_format::fixed) {
+                            temp_desc.set_normalized(true);
+                        }
 
                         descs.push_back(temp_desc);
                     }
@@ -5323,5 +5417,91 @@ namespace eka2l1::dispatch {
         }
 
         return 0;
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, gl_current_palette_matrix_oes_emu, std::uint32_t index) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+        
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if (ctx->active_mat_stack_ != GL_MATRIX_PALETTE_OES) {
+            controller.push_error(ctx, GL_INVALID_OPERATION);
+            return;
+        }
+
+        if (index >= GLES1_EMU_MAX_PALETTE_MATRICES) {
+            controller.push_error(ctx, GL_INVALID_VALUE);
+            return;
+        }
+
+        ctx->current_palette_mat_index_ = index;
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, gl_load_palette_from_model_view_matrix_oes_emu) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+        
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if (ctx->active_mat_stack_ != GL_MATRIX_PALETTE_OES) {
+            controller.push_error(ctx, GL_INVALID_OPERATION);
+            return;
+        }
+
+        ctx->palette_mats_[ctx->current_palette_mat_index_] = ctx->model_view_mat_stack_.top();
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, gl_weight_pointer_oes_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if ((stride < 0) || ((type != GL_FIXED_EMU) && (type != GL_FLOAT_EMU)) || (size == 0) || (size > GLES1_EMU_MAX_WEIGHTS_PER_VERTEX)) {
+            controller.push_error(ctx, GL_INVALID_VALUE);
+            return;
+        }
+
+        if (!assign_vertex_attrib_gles1(ctx->weight_attrib_, size, type, stride, offset, ctx->binded_array_buffer_handle_)) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        ctx->attrib_changed_ = true;
+    }
+    
+    BRIDGE_FUNC_LIBRARY(void, gl_matrix_index_pointer_oes_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        if ((stride < 0) || (type != GL_UNSIGNED_BYTE_EMU) || (size == 0) || (size > GLES1_EMU_MAX_WEIGHTS_PER_VERTEX)) {
+            controller.push_error(ctx, GL_INVALID_VALUE);
+            return;
+        }
+
+        if (!assign_vertex_attrib_gles1(ctx->matrix_index_attrib_, size, type, stride, offset, ctx->binded_array_buffer_handle_)) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        // According to the documentation: the number of N is indicated by value passed to glMatrixIndexPointerOES
+        // The whole extension document is not too strict.
+        ctx->vertex_statuses_ |= ((size & 0b11) << egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_BITS_POS);
+        ctx->attrib_changed_ = true;
     }
 }

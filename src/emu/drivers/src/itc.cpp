@@ -347,6 +347,7 @@ namespace eka2l1::drivers {
 
         cmd->data_[0] = PACK_2U32_TO_U64(binding, var_type);
         cmd->data_[1] = make_data_copy(data, data_size);
+        cmd->data_[2] = data_size;
     }
 
     void graphics_command_builder::bind_texture(drivers::handle h, const int binding) {

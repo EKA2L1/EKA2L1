@@ -269,7 +269,7 @@ namespace eka2l1::dispatch {
         //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11B1, egl_query_api_emu, "eglQueryAPI"),
         //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11B2, egl_release_thread_emu, "eglReleaseThread"),
         //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11B3, egl_wait_client_emu, "eglWaitClient"),
-        //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11B4, gl_current_palette_matrix_oes_emu, "glCurrentPaletteMatrixOES"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11B4, gl_current_palette_matrix_oes_emu, "glCurrentPaletteMatrixOES"),
         //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11B5, gl_draw_texf_oes_emu, "glDrawTexfOES"),
         //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11B6, gl_draw_texfv_oes_emu, "glDrawTexfvOES"),
         //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11B7, gl_draw_texi_oes_emu, "glDrawTexiOES"),
@@ -278,8 +278,8 @@ namespace eka2l1::dispatch {
         //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11BA, gl_draw_texsv_oes_emu, "glDrawTexsvOES"),
         //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11BB, gl_draw_texx_oes_emu, "glDrawTexxOES"),
         //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11BC, gl_draw_texxv_oes_emu, "glDrawTexxvOES"),
-        //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11BD, gl_load_palette_from_model_view_matrix_oes_emu, "glLoadPaletteFromModelViewMatrixOES"),
-        //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11BE, gl_matrix_index_pointer_oes_emu, "glMatrixIndexPointerOES"),
-        //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11BF, gl_weight_pointer_oes_emu, "glWeightPointerOES"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11BD, gl_load_palette_from_model_view_matrix_oes_emu, "glLoadPaletteFromModelViewMatrixOES"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11BE, gl_matrix_index_pointer_oes_emu, "glMatrixIndexPointerOES"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11BF, gl_weight_pointer_oes_emu, "glWeightPointerOES"),
     };
 }

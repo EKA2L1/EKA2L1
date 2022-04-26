@@ -80,6 +80,13 @@ namespace eka2l1::dispatch {
 
         drivers::handle vert_module = 0;
         std::uint64_t vertex_hash = vertex_statuses | (static_cast<std::uint64_t>(active_texs) << egl_context_es1::VERTEX_STATE_REVERSED_BITS_POS);
+        
+        // These are only used for state tracking really!
+        vertex_hash &= ~(egl_context_es1::VERTEX_STATE_CLIENT_VERTEX_ARRAY | egl_context_es1::VERTEX_STATE_CLIENT_MATRIX_INDEX_ARRAY);
+
+        if ((vertex_hash & egl_context_es1::VERTEX_STATE_SKINNING_ENABLE) == 0) {
+            vertex_hash &= ~egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_MASK;
+        }
 
         if (active_texs != 0) {
             // Clean texcoord bits of unused textures...
@@ -187,7 +194,12 @@ namespace eka2l1::dispatch {
         if (metadata.is_available()) {
             info_inst = std::make_unique<gles1_shader_variables_info>();
 
-            info_inst->view_model_mat_loc_ = metadata.get_uniform_binding("uViewModelMat");
+            if ((vertex_statuses & egl_context_es1::VERTEX_STATE_SKINNING_ENABLE) == 0) {
+                info_inst->view_model_mat_loc_ = metadata.get_uniform_binding("uViewModelMat");
+            } else {
+                info_inst->palette_mat_loc_ = metadata.get_uniform_binding("uPaletteMat");
+            }
+
             info_inst->proj_mat_loc_ = metadata.get_uniform_binding("uProjMat");
 
             if ((vertex_statuses & egl_context_es1::VERTEX_STATE_CLIENT_COLOR_ARRAY) == 0)

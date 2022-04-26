@@ -1347,34 +1347,34 @@ namespace eka2l1::drivers {
 
         switch (var_type) {
         case shader_set_var_type::integer: {
-            glUniform1i(binding, *reinterpret_cast<const GLint *>(data));
+            glUniform1iv(binding, static_cast<GLsizei>((cmd.data_[2] + 3) / 4), reinterpret_cast<const GLint *>(data));
             delete[] data;
 
             return;
         }
 
         case shader_set_var_type::real:
-            glUniform1f(binding, *reinterpret_cast<const GLfloat*>(data));
+            glUniform1fv(binding, static_cast<GLsizei>((cmd.data_[2] + 3) / 4), reinterpret_cast<const GLfloat*>(data));
             delete[] data;
 
             return;
 
         case shader_set_var_type::mat4: {
-            glUniformMatrix4fv(binding, 1, GL_FALSE, reinterpret_cast<const GLfloat *>(data));
+            glUniformMatrix4fv(binding, static_cast<GLsizei>((cmd.data_[2] + 63) / 64), GL_FALSE, reinterpret_cast<const GLfloat *>(data));
             delete[] data;
 
             return;
         }
 
         case shader_set_var_type::vec3: {
-            glUniform3fv(binding, 1, reinterpret_cast<const GLfloat *>(data));
+            glUniform3fv(binding, static_cast<GLsizei>((cmd.data_[2] + 11) / 12), reinterpret_cast<const GLfloat *>(data));
             delete[] data;
 
             return;
         }
 
         case shader_set_var_type::vec4: {
-            glUniform4fv(binding, 1, reinterpret_cast<const GLfloat *>(data));
+            glUniform4fv(binding, static_cast<GLsizei>((cmd.data_[2] + 15) / 16), reinterpret_cast<const GLfloat *>(data));
             delete[] data;
 
             return;

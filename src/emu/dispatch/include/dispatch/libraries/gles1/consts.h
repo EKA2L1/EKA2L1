@@ -8,7 +8,9 @@ namespace eka2l1::dispatch {
         GLES1_EMU_MAX_TEXTURE_MIP_LEVEL = 10,
         GLES1_EMU_MAX_TEXTURE_COUNT = 3,
         GLES1_EMU_MAX_LIGHT = 8,
-        GLES1_EMU_MAX_CLIP_PLANE = 6
+        GLES1_EMU_MAX_CLIP_PLANE = 6,
+        GLES1_EMU_MAX_WEIGHTS_PER_VERTEX = 3,
+        GLES1_EMU_MAX_PALETTE_MATRICES = 9
     };
 
     enum gles1_static_string_key {
@@ -29,7 +31,8 @@ namespace eka2l1::dispatch {
         "GL_OES_texture_mirrored_repeat "
         "GL_EXT_texture_format_BGRA8888 "
         "GL_OES_vertex_buffer_object "
-        "GL_EXT_texture_lod_bias ";
+        "GL_EXT_texture_lod_bias "
+        "GL_OES_matrix_palette ";
         /**
          * "GL_OES_framebuffer_object "
          * "GL_EXT_texture_compression_s3tc "

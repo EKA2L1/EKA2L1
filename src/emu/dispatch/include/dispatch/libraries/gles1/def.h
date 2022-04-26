@@ -326,6 +326,7 @@ namespace eka2l1::dispatch {
 
         std::stack<glm::mat4> model_view_mat_stack_;
         std::stack<glm::mat4> proj_mat_stack_;
+        std::array<glm::mat4, GLES1_EMU_MAX_PALETTE_MATRICES> palette_mats_; 
 
         gles_texture_unit texture_units_[GLES1_EMU_MAX_TEXTURE_COUNT];
 
@@ -334,6 +335,7 @@ namespace eka2l1::dispatch {
         std::uint32_t active_mat_stack_;
         std::uint32_t binded_array_buffer_handle_;
         std::uint32_t binded_element_array_buffer_handle_;
+        std::uint32_t current_palette_mat_index_;
 
         drivers::rendering_face active_cull_face_;
         drivers::rendering_face_determine_rule active_front_face_rule_;
@@ -392,6 +394,11 @@ namespace eka2l1::dispatch {
             VERTEX_STATE_CLIENT_TEXCOORD5_ARRAY = 1 << 11,
             VERTEX_STATE_CLIENT_TEXCOORD6_ARRAY = 1 << 12,
             VERTEX_STATE_CLIENT_TEXCOORD7_ARRAY = 1 << 13,
+            VERTEX_STATE_CLIENT_MATRIX_INDEX_ARRAY = 1 << 14,
+            VERTEX_STATE_CLIENT_WEIGHT_ARRAY = 1 << 15,
+            VERTEX_STATE_SKINNING_ENABLE = 1 << 16,
+            VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_BITS_POS = 17,
+            VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_MASK = 0b11 << 17,
             VERTEX_STATE_REVERSED_BITS_POS = 54,
 
             NON_SHADER_STATE_BLEND_ENABLE = 1 << 0,
@@ -427,10 +434,13 @@ namespace eka2l1::dispatch {
         gles1_vertex_attrib vertex_attrib_;
         gles1_vertex_attrib color_attrib_;
         gles1_vertex_attrib normal_attrib_;
+        gles1_vertex_attrib matrix_index_attrib_;
+        gles1_vertex_attrib weight_attrib_;
         drivers::handle input_desc_;
 
         bool attrib_changed_;
         std::int32_t previous_first_index_;
+        std::uint32_t skin_weights_per_ver;
 
         float color_uniforms_[4];
         float normal_uniforms_[3];
