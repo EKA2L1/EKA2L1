@@ -82,7 +82,7 @@ namespace eka2l1::dispatch {
         std::uint64_t vertex_hash = vertex_statuses | (static_cast<std::uint64_t>(active_texs) << egl_context_es1::VERTEX_STATE_REVERSED_BITS_POS);
         
         // These are only used for state tracking really!
-        vertex_hash &= ~(egl_context_es1::VERTEX_STATE_CLIENT_VERTEX_ARRAY | egl_context_es1::VERTEX_STATE_CLIENT_MATRIX_INDEX_ARRAY);
+        vertex_hash &= ~(egl_context_es1::VERTEX_STATE_CLIENT_WEIGHT_ARRAY | egl_context_es1::VERTEX_STATE_CLIENT_MATRIX_INDEX_ARRAY);
 
         if ((vertex_hash & egl_context_es1::VERTEX_STATE_SKINNING_ENABLE) == 0) {
             vertex_hash &= ~egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_MASK;
