@@ -157,20 +157,17 @@ namespace eka2l1::mem::flexible {
             // Try to get the page table from daddy
             page_table *tbl = owner_->dir_->get_page_table(start_addr);
 
-            if (!tbl) {
-                // Oops, you are unmapping something that has not even mapped
-                // LOG_WARN(MEMORY, "Trying to unmap a region that doesn't have a page table!");
-                continue;
-            }
+            if (tbl) {
+                // Proceed with the unmapping
+                while (start_page_index < end_page_index) {
+                    page_info *info = tbl->get_page_info(start_page_index);
+                    if (info) {
+                        // Empty it out
+                        info->host_addr = nullptr;
+                    }
 
-            while (start_page_index < end_page_index) {
-                page_info *info = tbl->get_page_info(start_page_index);
-                if (info) {
-                    // Empty it out
-                    info->host_addr = nullptr;
+                    start_page_index++;
                 }
-
-                start_page_index++;
             }
 
             start_addr = next_end_addr;
