@@ -139,8 +139,8 @@ namespace eka2l1 {
                 // Life hacks sorry guys
                 auto stub_cached_real_path = sys->get_raw_path(stub_cached_path);
                 if (stub_cached_real_path.has_value()) {
-                    std::ofstream stub_cached_stream(common::ucs2_to_utf8(stub_cached_real_path.value()));
-                    stub_cached_stream.close();
+                    FILE *f = common::open_c_file(common::ucs2_to_utf8(stub_cached_real_path.value()), "wb+");
+                    fclose(f);
                 }
             }
         }
