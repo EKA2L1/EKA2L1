@@ -108,6 +108,12 @@ namespace eka2l1::kernel {
             common::double_linked_queue_element closing_lib_link;
             common::double_linked_queue_element process_link;
 
+            std::uint32_t flags = 0;
+
+            enum {
+                FLAG_EP_QUERIED = 1 << 0
+            };
+
             explicit attached_info(kernel::codeseg *parentseg, kernel::process *pr, chunk_ptr dtc, chunk_ptr cc)
                 : attached_process(pr)
                 , parent_seg(parentseg)
@@ -174,7 +180,7 @@ namespace eka2l1::kernel {
         virtual ~codeseg() {}
         int destroy() override;
 
-        void queries_call_list(kernel::process *pr, std::vector<std::uint32_t> &call_list);
+        void queries_call_list(kernel::process *pr, std::vector<std::uint32_t> &call_list, const bool for_init = true);
         void unmark();
 
         /**

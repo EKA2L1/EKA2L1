@@ -574,7 +574,7 @@ namespace eka2l1::kernel {
         return attach_info->get()->code_chunk->base(pr).ptr_address() + lookup_res - code_base;
     }
 
-    void codeseg::queries_call_list(kernel::process *pr, std::vector<std::uint32_t> &call_list) {
+    void codeseg::queries_call_list(kernel::process *pr, std::vector<std::uint32_t> &call_list, const bool for_init) {
         // Add forced entry points
         call_list.insert(call_list.end(), premade_eps.begin(), premade_eps.end());
 
@@ -582,13 +582,36 @@ namespace eka2l1::kernel {
         for (auto &dependency : dependencies) {
             if (!dependency.dep_->mark) {
                 dependency.dep_->mark = true;
-                dependency.dep_->queries_call_list(pr, call_list);
+                dependency.dep_->queries_call_list(pr, call_list, for_init);
             }
         }
 
         // Add our last. Don't change order, this is how it supposed to be
-        if (!ep_disabled_)
-            call_list.push_back(get_entry_point(pr));
+        if (!ep_disabled_) {
+            auto attach_info = common::find_and_ret_if(attaches, [=](const std::unique_ptr<attached_info> &info) {
+                return info->attached_process == pr;
+            });
+
+            if (attach_info != nullptr) {
+                bool can_push = false;
+                if (for_init) {
+                    if ((attach_info->get()->flags & attached_info::FLAG_EP_QUERIED) == 0) {
+                        attach_info->get()->flags |= attached_info::FLAG_EP_QUERIED;
+                        can_push = true;
+                    }
+                } else {
+                    can_push = true;
+                }
+
+                if (can_push) {
+                    if ((code_addr != 0) || patched_) {
+                        call_list.push_back(ep);
+                    } else {
+                        call_list.push_back(attach_info->get()->code_chunk->base(pr).ptr_address() + ep);
+                    }
+                }
+            }
+        }
     }
 
     void codeseg::unmark() {
