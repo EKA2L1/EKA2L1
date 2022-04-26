@@ -2411,11 +2411,6 @@ namespace eka2l1::dispatch {
         dispatcher *dp = sys->get_dispatcher();
         dispatch::egl_controller &controller = dp->get_egl_controller();
 
-        if (target != GL_FRONT_AND_BACK_EMU) {
-            controller.push_error(ctx, GL_INVALID_ENUM);
-            return;
-        }
-
         float *dest_params = nullptr;
         float *dest_params_2 = nullptr;
 

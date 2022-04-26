@@ -46,4 +46,5 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_LIBRARY(egl_display, egl_get_current_display_emu);
     BRIDGE_FUNC_LIBRARY(egl_surface_handle, egl_get_current_surface_emu, std::uint32_t which);
     BRIDGE_FUNC_LIBRARY(egl_boolean, egl_copy_buffers_emu, egl_display display, egl_surface_handle handle, void *native_pixmap);
+    BRIDGE_FUNC_LIBRARY(address, egl_get_proc_address_emu, const char *procname);
 }

@@ -237,6 +237,8 @@ namespace eka2l1::dispatch {
         ehui_controller hui_controller_;
 
         std::map<std::uint32_t, address> static_string_addrs_;
+        std::map<std::string, address> symbol_lookup_;
+
         bool graphics_string_added_;
 
     public:
@@ -276,5 +278,6 @@ namespace eka2l1::dispatch {
 
         address add_static_string(const std::uint32_t key, const std::string &value);
         address retrieve_static_string(const std::uint32_t key);
+        address lookup_dispatcher_function_by_symbol(const char *symbol);
     };
 }

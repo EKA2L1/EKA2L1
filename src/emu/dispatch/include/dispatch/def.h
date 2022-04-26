@@ -33,7 +33,11 @@ namespace eka2l1 {
 
 #define BRIDGE_FUNC_LIBRARY(ret, name, ...) ret name(system *sys, ##__VA_ARGS__)
 #define BRIDGE_FUNC_DISPATCHER(ret, name, ...) ret name(system *sys, const std::uint32_t func_num, ##__VA_ARGS__)
-#define BRIDGE_REGISTER_DISPATCHER(func_sid, func) \
-    {                                              \
-        func_sid, eka2l1::hle::bridge(&func)       \
+#define BRIDGE_REGISTER_DISPATCHER(func_sid, func)              \
+    {                                                           \
+        func_sid, { eka2l1::hle::bridge(&func), nullptr }       \
+    }
+#define BRIDGE_REGISTER_DISPATCHER_SYMBOL(func_sid, func, name) \
+    {                                                           \
+        func_sid, { eka2l1::hle::bridge(&func), name }          \
     }

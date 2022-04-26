@@ -96,7 +96,7 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        dispatch_find_result->second(sys, sys->get_kernel_system()->crr_process(), sys->get_cpu());
+        dispatch_find_result->second.first(sys, sys->get_kernel_system()->crr_process(), sys->get_cpu());
     }
 
     void dispatcher::shutdown(drivers::graphics_driver *driver) {
@@ -193,11 +193,30 @@ namespace eka2l1::dispatch {
 
             // TODO!!! Export table is fixed as a whole, not as an individual, this is bad for HLEing only some functions!
             seg->set_export(patches[i].ordinal_number_, entryentry);
+            
+            // Check if symbols exist for this libraries
+            auto ite = dispatch::dispatch_funcs.find(patches[i].dispatch_number_);
+            if ((ite != dispatch::dispatch_funcs.end()) && (ite->second.second != nullptr)) {
+                symbol_lookup_.emplace(ite->second.second, entryentry);
+            }
 
             trampoline_allocated_ += 12;
         }
 
         return true;
+    }
+
+    address dispatcher::lookup_dispatcher_function_by_symbol(const char *symbol) {
+        if (!symbol) {
+            return 0;
+        }
+
+        auto ite = symbol_lookup_.find(symbol);
+        if (ite == symbol_lookup_.end()) {
+            return 0;
+        }
+
+        return ite->second;
     }
 }
 
