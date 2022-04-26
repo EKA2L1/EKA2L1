@@ -115,8 +115,8 @@
     <string name="pref_screen_scale_type_fill">Ajustar a la ventana (ignorando relación de aspecto)</string>
     <string name="pref_screen_scale_type_fit">Ajustar a la ventana</string>
     <string name="pref_screen_scale_type_none">Sin escalado</string>
-    <string name="pref_screen_scale_use_shader">Use shader for upscaling</string>
-    <string name="pref_screen_upscale_shader">Upscale shader</string>
+    <string name="pref_screen_scale_use_shader">Usar sombreado para subir la escala</string>
+    <string name="pref_screen_upscale_shader">Aumentar sombreado</string>
     <string name="pref_screen_default_shader">Predeterminado</string>
     <string name="default_label">"%s (predeterminado)"</string>
     <string name="not_saved_exists">Ya existente</string>
