@@ -20,21 +20,7 @@ name: C/C++ CI
 on: [push, pull_request]
 
 jobs:
-  move-tag:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Move ci tag
-        uses: weareyipyip/walking-tag-action@master
-        with:
-          tag-name: continous
-          tag-message: |
-            Last commit build by the CI
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: github.ref == 'refs/heads/master'
-
   build:
-    needs: [move-tag]
     runs-on: ${{ matrix.os }}
     env:
       cache-version: v1
