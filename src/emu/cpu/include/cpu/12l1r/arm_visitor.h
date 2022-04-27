@@ -154,6 +154,12 @@ namespace eka2l1::arm::r12l1 {
         bool arm_MSR_imm(common::cc_flags cond, int mask, int rotate, std::uint8_t imm8);
         bool arm_MSR_reg(common::cc_flags cond, int mask, reg_index n);
 
+        // Coprocessors
+        bool arm_MCR(common::cc_flags cond, std::size_t opc1, int cr_n, reg_index t, std::size_t coproc_no,
+                     std::size_t opc2, int cr_m);
+        bool arm_MRC(common::cc_flags cond, std::size_t opc1, int cr_n, reg_index t, std::size_t coproc_no,
+                     size_t opc2, int cr_m);
+
         // Synchronization
         bool arm_STREX(common::cc_flags cond, reg_index n, reg_index d, reg_index t);
         bool arm_LDREX(common::cc_flags cond, reg_index n, reg_index t);

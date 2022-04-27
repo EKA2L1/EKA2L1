@@ -122,6 +122,7 @@ namespace eka2l1::arm {
 
         ctx.cpsr = jit_state_.cpsr_;
         ctx.fpscr = jit_state_.fpscr_;
+        ctx.wrwr = jit_state_.wrwr_;
     }
 
     void r12l1_core::load_context(const thread_context &ctx) {
@@ -135,6 +136,7 @@ namespace eka2l1::arm {
 
         jit_state_.cpsr_ = ctx.cpsr;
         jit_state_.fpscr_ = ctx.fpscr;
+        jit_state_.wrwr_ = ctx.wrwr;
 
 #if R12L1_ENABLE_FUZZ
         if (big_block_->config_flags() & r12l1::dashixiong_block::FLAG_ENABLE_FUZZ) {

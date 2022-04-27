@@ -14,9 +14,9 @@ INST(arm_BX,            "BX",                  "cccc000100101111111111110001mmmm
 // Coprocessor instructions
 //INST(arm_CDP,           "CDP",                 "cccc1110ooooNNNNDDDDppppooo0MMMM") // v2  (CDP2:  v5)
 //INST(arm_LDC,           "LDC",                 "cccc110pudw1nnnnDDDDppppvvvvvvvv") // v2  (LDC2:  v5)
-//INST(arm_MCR,           "MCR",                 "cccc1110ooo0NNNNttttppppooo1MMMM") // v2  (MCR2:  v5)
+INST(arm_MCR,           "MCR",                 "cccc1110ooo0NNNNttttppppooo1MMMM") // v2  (MCR2:  v5)
 //INST(arm_MCRR,          "MCRR",                "cccc11000100uuuuttttppppooooMMMM") // v5E (MCRR2: v6)
-//INST(arm_MRC,           "MRC",                 "cccc1110ooo1NNNNttttppppooo1MMMM") // v2  (MRC2:  v5)
+INST(arm_MRC,           "MRC",                 "cccc1110ooo1NNNNttttppppooo1MMMM") // v2  (MRC2:  v5)
 //INST(arm_MRRC,          "MRRC",                "cccc11000101uuuuttttppppooooMMMM") // v5E (MRRC2: v6)
 //INST(arm_STC,           "STC",                 "cccc110pudw0nnnnDDDDppppvvvvvvvv") // v2  (STC2:  v5)
 

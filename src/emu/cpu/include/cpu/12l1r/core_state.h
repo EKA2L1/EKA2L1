@@ -30,6 +30,7 @@ namespace eka2l1::arm::r12l1 {
         std::uint32_t cpsr_;
         std::uint32_t fprs_[64];
         std::uint32_t fpscr_;
+        std::uint32_t wrwr_;
 
         std::int32_t ticks_left_;
         std::uint32_t should_break_;
@@ -38,6 +39,7 @@ namespace eka2l1::arm::r12l1 {
         std::uint32_t fpscr_host_;
 
         tlb_entry *entries_;
+        std::uint32_t padding_;
 
         explicit core_state();
     };

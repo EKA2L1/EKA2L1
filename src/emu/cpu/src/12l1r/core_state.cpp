@@ -24,6 +24,7 @@ namespace eka2l1::arm::r12l1 {
     core_state::core_state()
         : cpsr_(0)
         , fpscr_(0)
+        , wrwr_(0)
         , ticks_left_(0)
         , should_break_(1)
         , current_aid_(0)
