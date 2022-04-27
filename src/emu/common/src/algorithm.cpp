@@ -212,7 +212,8 @@ namespace eka2l1 {
         
         int find_least_significant_bit_one(const std::uint64_t v) {
 #if defined(__GNUC__) || defined(__clang__)
-            return __builtin_ffsll(static_cast<long long>(v));
+            int res = __builtin_ffsll(static_cast<long long>(v));
+            return (res <= 0) ? 64 : (res - 1);
 #elif defined(_MSC_VER)
             DWORD lz = 64;
             _BitScanForward64(&lz, v);
