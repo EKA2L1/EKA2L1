@@ -60,6 +60,7 @@ namespace eka2l1::dispatch {
         EGL_WINDOW_BIT_EMU = 4,
         EGL_MAJOR_VERSION_EMU = 1,
         EGL_MINOR_VERSION_EMU = 4,
+        EGL_SUCCESS = 0x3000,
         EGL_BAD_ATTRIBUTE_EMU = 0x3004,
         EGL_BAD_CONFIG = 0x3005,
         EGL_BAD_CONTEXT_EMU = 0x3006,

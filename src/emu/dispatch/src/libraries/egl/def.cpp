@@ -299,7 +299,7 @@ namespace eka2l1::dispatch {
     std::uint32_t egl_controller::pop_egl_error(kernel::uid thread_id) {
         auto ite = egl_error_map_.find(thread_id);
         if (ite == egl_error_map_.end()) {
-            return GL_NO_ERROR;
+            return EGL_SUCCESS;
         }
 
         std::uint32_t result = ite->second;
