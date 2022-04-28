@@ -9,8 +9,8 @@ namespace eka2l1::dispatch {
         GLES1_EMU_MAX_TEXTURE_COUNT = 3,
         GLES1_EMU_MAX_LIGHT = 8,
         GLES1_EMU_MAX_CLIP_PLANE = 6,
-        GLES1_EMU_MAX_WEIGHTS_PER_VERTEX = 3,
-        GLES1_EMU_MAX_PALETTE_MATRICES = 9
+        GLES1_EMU_MAX_WEIGHTS_PER_VERTEX = 4,
+        GLES1_EMU_MAX_PALETTE_MATRICES = 16
     };
 
     enum gles1_static_string_key {

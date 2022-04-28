@@ -382,10 +382,10 @@ namespace eka2l1::dispatch {
 
         // Default all to modulates
         env_info_.env_mode_ = gles_texture_env_info::ENV_MODE_MODULATE;
-        env_info_.src0_rgb_ = gles_texture_env_info::SOURCE_TYPE_PREVIOUS;
-        env_info_.src0_a_ = gles_texture_env_info::SOURCE_TYPE_PREVIOUS;
-        env_info_.src1_rgb_ = gles_texture_env_info::SOURCE_TYPE_CURRENT_TEXTURE;
-        env_info_.src1_a_ = gles_texture_env_info::SOURCE_TYPE_CURRENT_TEXTURE;
+        env_info_.src0_rgb_ = gles_texture_env_info::SOURCE_TYPE_CURRENT_TEXTURE;
+        env_info_.src0_a_ = gles_texture_env_info::SOURCE_TYPE_CURRENT_TEXTURE;
+        env_info_.src1_rgb_ = gles_texture_env_info::SOURCE_TYPE_PREVIOUS;
+        env_info_.src1_a_ = gles_texture_env_info::SOURCE_TYPE_PREVIOUS;
         env_info_.src2_rgb_ = gles_texture_env_info::SOURCE_TYPE_CONSTANT;
         env_info_.src2_a_ = gles_texture_env_info::SOURCE_TYPE_CONSTANT;
 
@@ -4999,6 +4999,18 @@ namespace eka2l1::dispatch {
             *params = static_cast<T>(ctx->texture_units_[ctx->active_texture_unit_].coord_attrib_.buffer_obj_);
             break;
 
+        case GL_TEXTURE_COORD_ARRAY_SIZE_EMU:
+            *params = static_cast<T>(ctx->texture_units_[ctx->active_texture_unit_].coord_attrib_.size_);
+            break;
+
+        case GL_TEXTURE_COORD_ARRAY_STRIDE_EMU:
+            *params = static_cast<T>(ctx->texture_units_[ctx->active_texture_unit_].coord_attrib_.stride_);
+            break;
+
+        case GL_TEXTURE_COORD_ARRAY_TYPE_EMU:
+            *params = static_cast<T>(ctx->texture_units_[ctx->active_texture_unit_].coord_attrib_.data_type_);
+            break;
+
         case GL_MAX_CLIP_PLANES_EMU:
             *params = GLES1_EMU_MAX_CLIP_PLANE;
             break;
@@ -5132,6 +5144,30 @@ namespace eka2l1::dispatch {
 
             break;
         }
+
+        case GL_UNPACK_ALIGNMENT_EMU:
+            *params = static_cast<T>(ctx->unpack_alignment_);
+            break;
+
+        case GL_PACK_ALIGNMENT_EMU:
+            *params = static_cast<T>(ctx->pack_alignment_);
+            break;
+
+        case GL_ELEMENT_ARRAY_BUFFER_BINDING_EMU:
+            *params = static_cast<T>(ctx->binded_element_array_buffer_handle_);
+            break;
+
+        case GL_MAX_PALETTE_MATRICES_OES:
+            *params = static_cast<T>(GLES1_EMU_MAX_PALETTE_MATRICES);
+            break;
+
+        case GL_MAX_VERTEX_UNIT_OES:
+            *params = static_cast<T>(GLES1_EMU_MAX_WEIGHTS_PER_VERTEX);
+            break;
+
+        case GL_CURRENT_PALETTE_MATRIX_OES:
+            *params = static_cast<T>(ctx->current_palette_mat_index_);
+            break;
 
         default:
             LOG_TRACE(HLE_DISPATCHER, "Unhandled integer attribute 0x{:X}!", pname);
@@ -5503,5 +5539,13 @@ namespace eka2l1::dispatch {
         // The whole extension document is not too strict.
         ctx->vertex_statuses_ |= ((size & 0b11) << egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_BITS_POS);
         ctx->attrib_changed_ = true;
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, gl_point_size_emu, float size) {
+        // Empty
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, gl_point_sizex_emu, gl_fixed size) {
+        // Empty
     }
 }

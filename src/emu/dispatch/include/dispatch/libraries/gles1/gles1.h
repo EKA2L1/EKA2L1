@@ -156,4 +156,6 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_LIBRARY(void, gl_current_palette_matrix_oes_emu, std::uint32_t index);
     BRIDGE_FUNC_LIBRARY(void, gl_matrix_index_pointer_oes_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset);
     BRIDGE_FUNC_LIBRARY(void, gl_weight_pointer_oes_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset);
+    BRIDGE_FUNC_LIBRARY(void, gl_point_size_emu, float size);
+    BRIDGE_FUNC_LIBRARY(void, gl_point_sizex_emu, gl_fixed size);
 }
