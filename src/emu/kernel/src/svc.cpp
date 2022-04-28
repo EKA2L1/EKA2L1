@@ -5450,6 +5450,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800009, set_trap_handler),
         BRIDGE_REGISTER(0x0080000A, debug_mask),
         BRIDGE_REGISTER(0x0080000B, debug_mask_index),
+        BRIDGE_REGISTER(0x0080000D, fast_counter),
         BRIDGE_REGISTER(0x0080000E, ntick_count),
         BRIDGE_REGISTER(0x00800011, user_svr_rom_header_address),
         BRIDGE_REGISTER(0x00800012, user_svr_rom_root_dir_address),
