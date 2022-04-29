@@ -20,6 +20,9 @@
 #include <cpu/12l1r/arm_visitor.h>
 #include <cpu/12l1r/block_gen.h>
 #include <cpu/12l1r/visit_session.h>
+#include <cpu/12l1r/core_state.h>
+
+#include <functional>
 
 namespace eka2l1::arm::r12l1 {
     bool arm_translate_visitor::vfp_VMOV_reg(common::cc_flags cond, bool D, std::size_t Vd, bool sz, bool M, std::size_t Vm) {
@@ -230,12 +233,11 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
         common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source1, FLOAT_MARKER_USE_READ);
-        float_marker_.use(source2, FLOAT_MARKER_USE_READ);
-        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
-
-        big_block_->VADD(dest, source1, source2);
-        return true;
+        return vfp_vectorize(sz, dest, source1, source2, FLOAT_MARKER_USE_WRITE,
+                             [this](common::armgen::arm_reg vd, common::armgen::arm_reg vn,
+                                    common::armgen::arm_reg vm) {
+                                 big_block_->VADD(vd, vn, vm);
+                             });
     }
 
     bool arm_translate_visitor::vfp_VSUB(common::cc_flags cond, bool D, std::size_t Vn, std::size_t Vd, bool sz,
@@ -248,12 +250,11 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
         common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source1, FLOAT_MARKER_USE_READ);
-        float_marker_.use(source2, FLOAT_MARKER_USE_READ);
-        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
-
-        big_block_->VSUB(dest, source1, source2);
-        return true;
+        return vfp_vectorize(sz, dest, source1, source2, FLOAT_MARKER_USE_WRITE,
+                             [this](common::armgen::arm_reg vd, common::armgen::arm_reg vn,
+                                    common::armgen::arm_reg vm) {
+                                 big_block_->VSUB(vd, vn, vm);
+                             });
     }
 
     bool arm_translate_visitor::vfp_VMUL(common::cc_flags cond, bool D, std::size_t Vn, std::size_t Vd, bool sz, bool N,
@@ -266,12 +267,11 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
         common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source1, FLOAT_MARKER_USE_READ);
-        float_marker_.use(source2, FLOAT_MARKER_USE_READ);
-        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
-
-        big_block_->VMUL(dest, source1, source2);
-        return true;
+        return vfp_vectorize(sz, dest, source1, source2, FLOAT_MARKER_USE_WRITE,
+                             [this](common::armgen::arm_reg vd, common::armgen::arm_reg vn,
+                                    common::armgen::arm_reg vm) {
+                                 big_block_->VMUL(vd, vn, vm);
+                             });
     }
 
     bool arm_translate_visitor::vfp_VMLA(common::cc_flags cond, bool D, std::size_t Vn, std::size_t Vd, bool sz, bool N,
@@ -284,12 +284,11 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
         common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source1, FLOAT_MARKER_USE_READ);
-        float_marker_.use(source2, FLOAT_MARKER_USE_READ);
-        float_marker_.use(dest, FLOAT_MARKER_USE_READ | FLOAT_MARKER_USE_WRITE);
-
-        big_block_->VMLA(dest, source1, source2);
-        return true;
+        return vfp_vectorize(sz, dest, source1, source2, FLOAT_MARKER_USE_READ | FLOAT_MARKER_USE_WRITE,
+                             [this](common::armgen::arm_reg vd, common::armgen::arm_reg vn,
+                                    common::armgen::arm_reg vm) {
+                                 big_block_->VMLA(vd, vn, vm);
+                             });
     }
 
     bool arm_translate_visitor::vfp_VMLS(common::cc_flags cond, bool D, std::size_t Vn, std::size_t Vd, bool sz, bool N,
@@ -302,12 +301,11 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
         common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source1, FLOAT_MARKER_USE_READ);
-        float_marker_.use(source2, FLOAT_MARKER_USE_READ);
-        float_marker_.use(dest, FLOAT_MARKER_USE_READ | FLOAT_MARKER_USE_WRITE);
-
-        big_block_->VMLS(dest, source1, source2);
-        return true;
+        return vfp_vectorize(sz, dest, source1, source2, FLOAT_MARKER_USE_READ | FLOAT_MARKER_USE_WRITE,
+                             [this](common::armgen::arm_reg vd, common::armgen::arm_reg vn,
+                                    common::armgen::arm_reg vm) {
+                                 big_block_->VMLS(vd, vn, vm);
+                             });
     }
 
     bool arm_translate_visitor::vfp_VNMUL(common::cc_flags cond, bool D, std::size_t Vn, std::size_t Vd, bool sz, bool N, bool M, std::size_t Vm) {
@@ -319,12 +317,11 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
         common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source1, FLOAT_MARKER_USE_READ);
-        float_marker_.use(source2, FLOAT_MARKER_USE_READ);
-        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
-
-        big_block_->VNMUL(dest, source1, source2);
-        return true;
+        return vfp_vectorize(sz, dest, source1, source2, FLOAT_MARKER_USE_WRITE,
+                             [this](common::armgen::arm_reg vd, common::armgen::arm_reg vn,
+                                    common::armgen::arm_reg vm) {
+                                 big_block_->VNMUL(vd, vn, vm);
+                             });
     }
 
     bool arm_translate_visitor::vfp_VNMLA(common::cc_flags cond, bool D, std::size_t Vn, std::size_t Vd, bool sz, bool N, bool M, std::size_t Vm) {
@@ -336,12 +333,11 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
         common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source1, FLOAT_MARKER_USE_READ);
-        float_marker_.use(source2, FLOAT_MARKER_USE_READ);
-        float_marker_.use(dest, FLOAT_MARKER_USE_READ | FLOAT_MARKER_USE_WRITE);
-
-        big_block_->VNMLA(dest, source1, source2);
-        return true;
+        return vfp_vectorize(sz, dest, source1, source2, FLOAT_MARKER_USE_READ | FLOAT_MARKER_USE_WRITE,
+                             [this](common::armgen::arm_reg vd, common::armgen::arm_reg vn,
+                                    common::armgen::arm_reg vm) {
+                                 big_block_->VNMLA(vd, vn, vm);
+                             });
     }
 
     bool arm_translate_visitor::vfp_VNMLS(common::cc_flags cond, bool D, std::size_t Vn, std::size_t Vd, bool sz, bool N, bool M, std::size_t Vm) {
@@ -353,12 +349,11 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
         common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source1, FLOAT_MARKER_USE_READ);
-        float_marker_.use(source2, FLOAT_MARKER_USE_READ);
-        float_marker_.use(dest, FLOAT_MARKER_USE_READ | FLOAT_MARKER_USE_WRITE);
-
-        big_block_->VNMLS(dest, source1, source2);
-        return true;
+        return vfp_vectorize(sz, dest, source1, source2, FLOAT_MARKER_USE_READ | FLOAT_MARKER_USE_WRITE,
+                             [this](common::armgen::arm_reg vd, common::armgen::arm_reg vn,
+                                    common::armgen::arm_reg vm) {
+                                 big_block_->VNMLS(vd, vn, vm);
+                             });
     }
 
     bool arm_translate_visitor::vfp_VDIV(common::cc_flags cond, bool D, std::size_t Vn, std::size_t Vd, bool sz, bool N,
@@ -371,12 +366,11 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
         common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source1, FLOAT_MARKER_USE_READ);
-        float_marker_.use(source2, FLOAT_MARKER_USE_READ);
-        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
-
-        big_block_->VDIV(dest, source1, source2);
-        return true;
+        return vfp_vectorize(sz, dest, source1, source2, FLOAT_MARKER_USE_WRITE,
+                             [this](common::armgen::arm_reg vd, common::armgen::arm_reg vn,
+                                    common::armgen::arm_reg vm) {
+                                 big_block_->VDIV(vd, vn, vm);
+                             });
     }
 
     bool arm_translate_visitor::vfp_VNEG(common::cc_flags cond, bool D, std::size_t Vd, bool sz,
@@ -388,11 +382,10 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg dest = decode_fp_reg(sz, Vd, D);
         common::armgen::arm_reg source = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source, FLOAT_MARKER_USE_READ);
-        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
-
-        big_block_->VNEG(dest, source);
-        return true;
+        return vfp_vectorize(sz, dest, source, FLOAT_MARKER_USE_WRITE, [this](common::armgen::arm_reg vd, common::armgen::arm_reg vn,
+                                                                              common::armgen::arm_reg vm) {
+            big_block_->VNEG(vd, vm);
+        });
     }
 
     bool arm_translate_visitor::vfp_VABS(common::cc_flags cond, bool D, std::size_t Vd, bool sz,
@@ -404,11 +397,10 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg dest = decode_fp_reg(sz, Vd, D);
         common::armgen::arm_reg source = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source, FLOAT_MARKER_USE_READ);
-        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
-
-        big_block_->VABS(dest, source);
-        return true;
+        return vfp_vectorize(sz, dest, source, FLOAT_MARKER_USE_WRITE, [this](common::armgen::arm_reg vd, common::armgen::arm_reg vn,
+                                                                              common::armgen::arm_reg vm) {
+            big_block_->VABS(vd, vm);
+        });
     }
 
     bool arm_translate_visitor::vfp_VSQRT(common::cc_flags cond, bool D, std::size_t Vd, bool sz,
@@ -420,11 +412,10 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg dest = decode_fp_reg(sz, Vd, D);
         common::armgen::arm_reg source = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source, FLOAT_MARKER_USE_READ);
-        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
-
-        big_block_->VSQRT(dest, source);
-        return true;
+        return vfp_vectorize(sz, dest, source, FLOAT_MARKER_USE_WRITE, [this](common::armgen::arm_reg vd, common::armgen::arm_reg vn,
+                                                                              common::armgen::arm_reg vm) {
+            big_block_->VSQRT(vd, vm);
+        });
     }
 
     bool arm_translate_visitor::vfp_VLDR(common::cc_flags cond, bool U, bool D, reg_index n, std::size_t Vd, bool sz, std::uint8_t imm8) {
@@ -706,7 +697,15 @@ namespace eka2l1::arm::r12l1 {
             common::armgen::arm_reg dest = reg_index_to_gpr(t);
             dest = reg_supplier_.map(dest, ALLOCATE_FLAG_DIRTY);
 
-            big_block_->VMRS(dest);
+            if (!fpscr_ever_updated()) {
+                // Use already in supply, as it has bits preserved
+                big_block_->LDR(dest, CORE_STATE_REG, offsetof(core_state, fpscr_));
+            } else {
+                big_block_->VMRS(dest);
+                big_block_->LDR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, fpscr_));
+                big_block_->AND(ALWAYS_SCRATCH1, ALWAYS_SCRATCH1, 0b110111 << 16);
+                big_block_->ORR(dest, dest, ALWAYS_SCRATCH1);
+            }
         }
 
         return true;
@@ -725,7 +724,12 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source = reg_index_to_gpr(t);
         source = reg_supplier_.map(source, 0);
 
-        big_block_->VMSR(source);
-        return true;
+        // ARMv7 processors that support NEON just ignore some fields like STRIDE or LEN
+        // Even in their docs, they say it should be 0 all the time. But some games emit code
+        // that modify the FPSCR. So we still have to store it somewhere
+        big_block_->STR(source, CORE_STATE_REG, offsetof(core_state, fpscr_));
+        fpsr_set_already_updated();
+
+        return false;
     }
 }

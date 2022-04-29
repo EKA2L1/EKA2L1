@@ -105,6 +105,10 @@ namespace eka2l1::arm {
         state_->Cpsr = val;
     }
 
+    void dyncom_core::set_fpscr(uint32_t val) {
+        state_->VFP[1] = val;
+    }
+
     bool dyncom_core::is_thumb_mode() {
         return get_cpsr() & 0x20;
     }

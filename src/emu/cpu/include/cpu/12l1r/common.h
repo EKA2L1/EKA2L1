@@ -22,7 +22,7 @@
 #include <common/armcommon.h>
 #include <cstdint>
 
-#define R12L1_ENABLE_FUZZ 1
+#define R12L1_ENABLE_FUZZ 0
 
 namespace eka2l1::arm::r12l1 {
     using vaddress = std::uint32_t;

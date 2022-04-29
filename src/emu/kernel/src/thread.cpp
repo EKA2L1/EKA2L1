@@ -176,6 +176,7 @@ namespace eka2l1 {
 
             ctx.set_sp(stack_top);
             ctx.cpsr = ((ctx.get_pc() & 1) << 5);
+            ctx.fpscr = 0;
 
             ctx.cpu_registers[1] = stack_top;
 
