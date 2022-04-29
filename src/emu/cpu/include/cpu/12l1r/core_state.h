@@ -30,7 +30,7 @@ namespace eka2l1::arm::r12l1 {
         std::uint32_t cpsr_;
         std::uint32_t fprs_[64];
         std::uint32_t fpscr_;
-        std::uint32_t wrwr_;
+        std::uint32_t uprw_;
 
         std::int32_t ticks_left_;
         std::uint32_t should_break_;

@@ -1069,11 +1069,24 @@ namespace eka2l1::common::armgen {
     void armx_emitter::SXTH(arm_reg dest, arm_reg op2, std::uint8_t rotation) {
         SXTAH(dest, (arm_reg)15, op2, rotation);
     }
-    void armx_emitter::SXTAH(arm_reg dest, arm_reg src, arm_reg op2, std::uint8_t rotation) {
+    void armx_emitter::SXTAH(arm_reg dest, arm_reg add, arm_reg src, std::uint8_t rotation) {
         // bits ten and 11 are the rotation amount, see 8.8.232 for more
         // information
-        write32(condition | (0x6B << 20) | (src << 16) | (dest << 12) | (rotation << 10) | (7 << 4) | op2);
+        write32(condition | (0x6B << 20) | (add << 16) | (dest << 12) | (rotation << 10) | (7 << 4) | src);
     }
+
+    void armx_emitter::UXTAH(arm_reg dest, arm_reg add, arm_reg src, std::uint8_t rotation) {
+        write32(condition | (0x6F << 20) | (add << 16) | (dest << 12) | (rotation << 10) | (7 << 4) | src);
+    }
+
+    void armx_emitter::SXTAB(arm_reg dest, arm_reg add, arm_reg src, std::uint8_t rotation) {
+        write32(condition | (0x6A << 20) | (add << 16) | (dest << 12) | (rotation << 10) | (7 << 4) | src);
+    }
+
+    void armx_emitter::UXTAB(arm_reg dest, arm_reg add, arm_reg src, std::uint8_t rotation) {
+        write32(condition | (0x6E << 20) | (add << 16) | (dest << 12) | (rotation << 10) | (7 << 4) | src);
+    }
+
     void armx_emitter::RBIT(arm_reg dest, arm_reg src) {
         write32(condition | (0x6F << 20) | (0xF << 16) | (dest << 12) | (0xF3 << 4) | src);
     }
@@ -1836,11 +1849,11 @@ namespace eka2l1::common::armgen {
             // F32<->F64
             else {
                 if (single_to_double) {
-                    write32(condition | (0x1D << 23) | ((Dest & 0x1) << 22) | (0x3 << 20) | (0x7 << 16)
-                        | ((Dest & 0x1E) << 11) | (0x2B << 6) | ((Source & 0x10) << 1) | (Source & 0xF));
-                } else {
                     write32(condition | (0x1D << 23) | ((Dest & 0x10) << 18) | (0x3 << 20) | (0x7 << 16)
-                        | ((Dest & 0xF) << 12) | (0x2F << 6) | ((Source & 0x1) << 5) | (Source >> 1));
+                            | ((Dest & 0xF) << 12) | (0x2B << 6) | ((Source & 0x1) << 5) | (Source >> 1));
+                } else {
+                    write32(condition | (0x1D << 23) | ((Dest & 0x1) << 22) | (0x3 << 20) | (0x7 << 16)
+                            | ((Dest & 0x1E) << 11) | (0x2F << 6) | ((Source & 0x10) << 1) | (Source & 0xF));
                 }
             }
         } else if (single_reg) {

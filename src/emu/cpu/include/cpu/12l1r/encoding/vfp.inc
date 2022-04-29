@@ -25,7 +25,7 @@ INST(vfp_VSQRT,            "VSQRT",                   "cccc11101D110001dddd101z1
 //INST(vfp_VCVTB,            "VCVTB",                   "cccc11101D11001odddd101z01M0mmmm") // VFPv3HP
 //INST(vfp_VCVTT,            "VCVTT",                   "cccc11101D11001odddd101z11M0mmmm") // VFPv3HP
 INST(vfp_VCMP,             "VCMP",                    "cccc11101D110100dddd101zE1M0mmmm") // VFPv2
-//INST(vfp_VCMP_zero,        "VCMP (with zero)",        "cccc11101D110101dddd101zE1000000") // VFPv2
+INST(vfp_VCMP_zero,        "VCMP (with zero)",        "cccc11101D110101dddd101zE1000000") // VFPv2
 //INST(vfp_VRINTR,           "VRINTR",                  "cccc11101D110110dddd101z01M0mmmm") // VFPv5
 //INST(vfp_VRINTZ,           "VRINTZ",                  "cccc11101D110110dddd101z11M0mmmm") // VFPv5
 //INST(vfp_VRINTX,           "VRINTX",                  "cccc11101D110111dddd101z01M0mmmm") // VFPv5

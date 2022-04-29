@@ -36,9 +36,9 @@ namespace eka2l1::arm::r12l1 {
                 common::armgen::arm_reg source_real = reg_index_to_gpr(t);
                 common::armgen::arm_reg source_mapped = reg_supplier_.map(source_real, 0);
 
-                big_block_->STR(source_mapped, CORE_STATE_REG, offsetof(core_state, wrwr_));
+                big_block_->STR(source_mapped, CORE_STATE_REG, offsetof(core_state, uprw_));
             } else {
-                LOG_WARN(CPU_12L1R, "Emulator only handle access to WRWR in coprocessor, but this load requires something else!");
+                LOG_WARN(CPU_12L1R, "Emulator only handle access to UPRW in coprocessor, but this load requires something else!");
             }
         } else {
             LOG_WARN(CPU_12L1R, "Unhandled coprocessor {} for MCR instruction!", coproc_no);
@@ -58,9 +58,9 @@ namespace eka2l1::arm::r12l1 {
                 common::armgen::arm_reg dest_real = reg_index_to_gpr(t);
                 common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
-                big_block_->LDR(dest_mapped, CORE_STATE_REG, offsetof(core_state, wrwr_));
+                big_block_->LDR(dest_mapped, CORE_STATE_REG, offsetof(core_state, uprw_));
             } else {
-                LOG_WARN(CPU_12L1R, "Emulator only handle access to WRWR in coprocessor, but this store requires something else!");
+                LOG_WARN(CPU_12L1R, "Emulator only handle access to UPRW in coprocessor, but this store requires something else!");
             }
         } else {
             LOG_WARN(CPU_12L1R, "Unhandled coprocessor {} for MRC instruction!", coproc_no);

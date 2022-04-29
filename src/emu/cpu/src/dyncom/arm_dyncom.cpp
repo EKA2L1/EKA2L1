@@ -121,6 +121,7 @@ namespace eka2l1::arm {
         }
 
         ctx.fpscr = state_->VFP[1];
+        ctx.uprw = state_->CP15[CP15_THREAD_UPRW];
     }
 
     void dyncom_core::load_context(const thread_context &ctx) {
@@ -135,6 +136,8 @@ namespace eka2l1::arm {
         }
 
         set_cpsr(ctx.cpsr);
+        state_->CP15[CP15_THREAD_UPRW] = ctx.uprw;
+
         state_->VFP[1] = ctx.fpscr;
     }
 

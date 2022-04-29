@@ -184,7 +184,7 @@ namespace eka2l1 {
                 ctx.cpu_registers[4] = 1;
             }
 
-            ctx.wrwr = thr_local_data_ptr;
+            ctx.uprw = thr_local_data_ptr;
         }
 
         void thread::create_stack_metadata(std::uint8_t *stack_host_ptr, address stack_ptr, ptr<void> allocator,

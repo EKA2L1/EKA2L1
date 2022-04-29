@@ -131,6 +131,24 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool arm_translate_visitor::vfp_VCMP_zero(common::cc_flags cond, bool D, std::size_t Vd, bool sz, bool E) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg target = decode_fp_reg(sz, Vd, D);
+        float_marker_.use(target, FLOAT_MARKER_USE_READ);
+
+        if (E) {
+            big_block_->VCMPE(target);
+        } else {
+            big_block_->VCMP(target);
+        }
+
+        fpscr_changed();
+        return true;
+    }
+
     bool arm_translate_visitor::vfp_VCVT_to_u32(common::cc_flags cond, bool D, std::size_t Vd, bool sz, bool round_towards_zero,
         bool M, std::size_t Vm) {
         if (!condition_passed(cond)) {
