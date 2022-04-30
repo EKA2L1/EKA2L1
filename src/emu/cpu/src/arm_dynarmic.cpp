@@ -355,6 +355,10 @@ namespace eka2l1::arm {
         jit->SetCpsr(val);
     }
 
+    void dynarmic_core::set_fpscr(uint32_t val) {
+        jit->SetFpscr(val);
+    }
+
     void dynarmic_core::save_context(thread_context &ctx) {
         ctx.cpsr = get_cpsr();
 
