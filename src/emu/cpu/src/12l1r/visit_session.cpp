@@ -298,24 +298,31 @@ namespace eka2l1::arm::r12l1 {
             size_per_occupation = 8;
         }
 
-        auto emit_addr_modification = [&](const bool ignore_base) {
+        auto emit_addr_modification = [&](const bool ignore_base, const bool no_cmp = false) {
             // Decrement or increment guest base and host base
-            if (!ignore_base) {
+            if (!ignore_base && !no_cmp) {
                 big_block_->CMP(base, 0);
             }
             if (add) {
                 if (!ignore_base) {
-                    big_block_->set_cc(common::CC_NEQ);
+                    if (!no_cmp)
+                        big_block_->set_cc(common::CC_NEQ);
                     big_block_->ADDI2R(base, base, size_per_occupation, ALWAYS_SCRATCH1);
-                    big_block_->set_cc(common::CC_AL);
+
+                    if (!no_cmp)
+                        big_block_->set_cc(common::CC_AL);
                 }
 
                 big_block_->ADDI2R(guest_addr_reg, guest_addr_reg, size_per_occupation, ALWAYS_SCRATCH1);
             } else {
                 if (!ignore_base) {
-                    big_block_->set_cc(common::CC_NEQ);
+                    if (!no_cmp)
+                        big_block_->set_cc(common::CC_NEQ);
+
                     big_block_->SUBI2R(base, base, size_per_occupation, ALWAYS_SCRATCH1);
-                    big_block_->set_cc(common::CC_AL);
+
+                    if (!no_cmp)
+                        big_block_->set_cc(common::CC_AL);
                 }
 
                 big_block_->SUBI2R(guest_addr_reg, guest_addr_reg, size_per_occupation, ALWAYS_SCRATCH1);
@@ -407,19 +414,44 @@ namespace eka2l1::arm::r12l1 {
                     assert(false);
                 } else {
                     if (!is_first) {
-                        if (before) {
-                            emit_addr_modification(false);
+                        common::armgen::fixup_branch base_need_lookup;
+                        if (!skip_me) {
+                            big_block_->CMP(base, 0);
+                            // Still need to add address! :(
+                            big_block_->set_cc(common::CC_EQ);
+                            if (before) {
+                                emit_addr_modification(true, true);
+                            }
+                            big_block_->set_cc(common::CC_AL);
+                            base_need_lookup = big_block_->B_CC(common::CC_EQ);
+                        }
+
+                        // Skip base check, since we already check upper. Here we add address.
+                        // Decrease will have to be added after the compare. We trick a bit
+                        // by check if its gonna bypass (rounded page, then decrease)
+                        if (before && add) {
+                            emit_addr_modification(false, !skip_me);
+                        }
+
+                        if (!skip_me) {
+                            // Check if the guest address now crosses a new page
+                            bool need_add_before_check = !before && !add;
+                            if (need_add_before_check) {
+                                // For after, tricks can not be used. To check if decrease has crossed
+                                // a new page, we need to add size_per_occupation before AND
+                                big_block_->ADD(ALWAYS_SCRATCH1, guest_addr_reg, size_per_occupation);
+                            }
+                            big_block_->ANDI2R(ALWAYS_SCRATCH1, need_add_before_check ? ALWAYS_SCRATCH1 : guest_addr_reg,
+                                               CPAGE_MASK, ALWAYS_SCRATCH2);
+                            big_block_->CMP(ALWAYS_SCRATCH1, 0);
+                        }
+
+                        if (before && !add) {
+                            emit_addr_modification(false, !skip_me);
                         }
 
                         // This register may be skipping load/store. No need to referesh the base
                         if (!skip_me) {
-                            big_block_->CMP(base, 0);
-                            auto base_need_lookup = big_block_->B_CC(common::CC_EQ);
-
-                            // Check if the guest address now crosses a new page
-                            big_block_->ANDI2R(ALWAYS_SCRATCH1, guest_addr_reg, CPAGE_MASK, ALWAYS_SCRATCH2);
-                            big_block_->CMP(ALWAYS_SCRATCH1, 0);
-
                             auto done_refresh = big_block_->B_CC(common::CC_NEQ);
                             big_block_->set_jump_target(base_need_lookup);
 
