@@ -174,6 +174,7 @@ namespace eka2l1::arm {
         virtual void set_reg(size_t idx, uint32_t val) = 0;
 
         virtual void set_cpsr(uint32_t val) = 0;
+        virtual void set_fpscr(uint32_t val) = 0;
         virtual void set_pc(uint32_t val) = 0;
         virtual void set_lr(uint32_t val) = 0;
 

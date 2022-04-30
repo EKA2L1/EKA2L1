@@ -168,7 +168,6 @@ namespace eka2l1::arm::r12l1 {
         auto emit_wrap_up_dispatch = [&]() {
             // Save the CPSR and ticks
             emit_cpsr_save();
-            emit_fpscr_save(false);
             emit_fpscr_load(true);
             emit_cycles_count_save();
 
@@ -563,11 +562,19 @@ namespace eka2l1::arm::r12l1 {
 
     void dashixiong_block::emit_fpscr_save(const bool save_host) {
         VMRS(ALWAYS_SCRATCH1);
-        STR(ALWAYS_SCRATCH1, CORE_STATE_REG, save_host ? offsetof(core_state, fpscr_host_) : offsetof(core_state, fpscr_));
+        if (!save_host) {
+            LDR(ALWAYS_SCRATCH2, CORE_STATE_REG, offsetof(core_state, fpscr_));
+            AND(ALWAYS_SCRATCH2, ALWAYS_SCRATCH2, 0b110111 << 16);
+            ORR(ALWAYS_SCRATCH2, ALWAYS_SCRATCH2, ALWAYS_SCRATCH1);
+            STR(ALWAYS_SCRATCH2, CORE_STATE_REG, offsetof(core_state, fpscr_));
+        } else {
+            STR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, fpscr_host_));
+        }
     }
 
     void dashixiong_block::emit_fpscr_load(const bool load_host) {
         LDR(ALWAYS_SCRATCH1, CORE_STATE_REG, load_host ? offsetof(core_state, fpscr_host_) : offsetof(core_state, fpscr_));
+        BIC(ALWAYS_SCRATCH1, ALWAYS_SCRATCH1, 0x370000);
         VMSR(ALWAYS_SCRATCH1);
     }
 
@@ -696,12 +703,14 @@ namespace eka2l1::arm::r12l1 {
         }
 
         // When you want to start the fuzz, call fuzz_start(), and end it with fuzz_end()
-        // fuzz_start();
+        //if (addr == 0x70393258)
+        //   fuzz_start();
 
         const bool is_thumb = (state->cpsr_ & CPSR_THUMB_FLAG_MASK);
         bool should_continue = false;
 
         block->thumb_ = is_thumb;
+        current_fpscr_ = state->fpscr_;
 
         // LOG_TRACE(CPU_12L1R, "Compiling new block PC=0x{:X}, host=0x{:X}, thumb={}", addr,
         //     reinterpret_cast<std::uint32_t>(block->translated_code_), is_thumb);

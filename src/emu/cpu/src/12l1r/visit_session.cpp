@@ -115,6 +115,7 @@ namespace eka2l1::arm::r12l1 {
     bool visit_session::condition_passed(common::cc_flags cc, const bool force_end_last) {
         if (force_end_last && (flag_ != common::CC_NV)) {
             reg_supplier_.flush_all();
+            float_marker_.sync_state();
 
             if (cpsr_ever_updated_)
                 emit_cpsr_update_nzcvq();
@@ -297,24 +298,31 @@ namespace eka2l1::arm::r12l1 {
             size_per_occupation = 8;
         }
 
-        auto emit_addr_modification = [&](const bool ignore_base) {
+        auto emit_addr_modification = [&](const bool ignore_base, const bool no_cmp = false) {
             // Decrement or increment guest base and host base
-            if (!ignore_base) {
+            if (!ignore_base && !no_cmp) {
                 big_block_->CMP(base, 0);
             }
             if (add) {
                 if (!ignore_base) {
-                    big_block_->set_cc(common::CC_NEQ);
+                    if (!no_cmp)
+                        big_block_->set_cc(common::CC_NEQ);
                     big_block_->ADDI2R(base, base, size_per_occupation, ALWAYS_SCRATCH1);
-                    big_block_->set_cc(common::CC_AL);
+
+                    if (!no_cmp)
+                        big_block_->set_cc(common::CC_AL);
                 }
 
                 big_block_->ADDI2R(guest_addr_reg, guest_addr_reg, size_per_occupation, ALWAYS_SCRATCH1);
             } else {
                 if (!ignore_base) {
-                    big_block_->set_cc(common::CC_NEQ);
+                    if (!no_cmp)
+                        big_block_->set_cc(common::CC_NEQ);
+
                     big_block_->SUBI2R(base, base, size_per_occupation, ALWAYS_SCRATCH1);
-                    big_block_->set_cc(common::CC_AL);
+
+                    if (!no_cmp)
+                        big_block_->set_cc(common::CC_AL);
                 }
 
                 big_block_->SUBI2R(guest_addr_reg, guest_addr_reg, size_per_occupation, ALWAYS_SCRATCH1);
@@ -406,19 +414,44 @@ namespace eka2l1::arm::r12l1 {
                     assert(false);
                 } else {
                     if (!is_first) {
-                        if (before) {
-                            emit_addr_modification(false);
+                        common::armgen::fixup_branch base_need_lookup;
+                        if (!skip_me) {
+                            big_block_->CMP(base, 0);
+                            // Still need to add address! :(
+                            big_block_->set_cc(common::CC_EQ);
+                            if (before) {
+                                emit_addr_modification(true, true);
+                            }
+                            big_block_->set_cc(common::CC_AL);
+                            base_need_lookup = big_block_->B_CC(common::CC_EQ);
+                        }
+
+                        // Skip base check, since we already check upper. Here we add address.
+                        // Decrease will have to be added after the compare. We trick a bit
+                        // by check if its gonna bypass (rounded page, then decrease)
+                        if (before && add) {
+                            emit_addr_modification(false, !skip_me);
+                        }
+
+                        if (!skip_me) {
+                            // Check if the guest address now crosses a new page
+                            bool need_add_before_check = !before && !add;
+                            if (need_add_before_check) {
+                                // For after, tricks can not be used. To check if decrease has crossed
+                                // a new page, we need to add size_per_occupation before AND
+                                big_block_->ADD(ALWAYS_SCRATCH1, guest_addr_reg, size_per_occupation);
+                            }
+                            big_block_->ANDI2R(ALWAYS_SCRATCH1, need_add_before_check ? ALWAYS_SCRATCH1 : guest_addr_reg,
+                                               CPAGE_MASK, ALWAYS_SCRATCH2);
+                            big_block_->CMP(ALWAYS_SCRATCH1, 0);
+                        }
+
+                        if (before && !add) {
+                            emit_addr_modification(false, !skip_me);
                         }
 
                         // This register may be skipping load/store. No need to referesh the base
                         if (!skip_me) {
-                            big_block_->CMP(base, 0);
-                            auto base_need_lookup = big_block_->B_CC(common::CC_EQ);
-
-                            // Check if the guest address now crosses a new page
-                            big_block_->ANDI2R(ALWAYS_SCRATCH1, guest_addr_reg, CPAGE_MASK, ALWAYS_SCRATCH2);
-                            big_block_->CMP(ALWAYS_SCRATCH1, 0);
-
                             auto done_refresh = big_block_->B_CC(common::CC_NEQ);
                             big_block_->set_jump_target(base_need_lookup);
 
@@ -1230,9 +1263,6 @@ namespace eka2l1::arm::r12l1 {
 #endif
 
     void visit_session::cycle_next(const std::uint32_t inst_size) {
-        // Sync anyway
-        float_marker_.sync_state();
-
         if (!cond_failed_) {
             crr_block_->size_ += inst_size;
             crr_block_->last_inst_size_ = inst_size;
@@ -1292,12 +1322,13 @@ namespace eka2l1::arm::r12l1 {
 
     void visit_session::finalize() {
         big_block_->set_cc(common::CC_AL);
-
         reg_supplier_.flush_all();
-        float_marker_.sync_state();
 
         if (cpsr_ever_updated_)
             emit_cpsr_update_nzcvq();
+
+        emit_fpscr_save();
+        float_marker_.sync_state();
 
         const bool no_offered_link = (crr_block_->links_.empty());
         const bool hard_req = (flag_ != common::CC_AL) && (flag_ != common::CC_NV);
@@ -1319,5 +1350,87 @@ namespace eka2l1::arm::r12l1 {
         big_block_->edit_block_links(crr_block_, false);
 
         crr_block_->translated_size_ = big_block_->get_code_pointer() - crr_block_->translated_code_;
+    }
+
+    static inline bool is_reg_in_scalar_bank(const common::armgen::arm_reg reg) {
+        return (((reg >= common::armgen::S0) && (reg <= common::armgen::S7)) ||
+                ((reg >= common::armgen::D0) && (reg <= common::armgen::D3)) ||
+                ((reg >= common::armgen::D16) && (reg <= common::armgen::D19)));
+    }
+
+    bool visit_session::vfp_vectorize(const bool sz, common::armgen::arm_reg vd, common::armgen::arm_reg vm,
+                                           const std::uint32_t custom_dest_flags, vfp_vectorize_emit_func func) {
+        return vfp_vectorize(sz, vd, common::armgen::INVALID_REG, vm, custom_dest_flags, func);
+    }
+
+    bool visit_session::vfp_vectorize(const bool sz, common::armgen::arm_reg vd, common::armgen::arm_reg vn,
+                                           common::armgen::arm_reg vm, const std::uint32_t custom_dest_flags,
+                                           vfp_vectorize_emit_func func) {
+        // Looking at Dynarmic as reference!
+        const std::uint32_t fpscr = big_block_->current_compiling_fpscr();
+        std::uint32_t len = ((fpscr >> 16) & 0b111) + 1;
+        std::uint32_t stride = ((fpscr >> 20) & 0b11);
+
+        if (stride == 0) {
+            stride = 1;
+        } else if (stride == 0b11) {
+            stride = 2;
+        } else {
+            LOG_ERROR(CPU_12L1R, "Stride is neither 0 or 3 in FPSCR!");
+            return emit_undefined_instruction_handler();
+        }
+
+        // Note that instructions we emit will do the vectorize operation with the corresponding
+        // stride and len set. We just have to remember which registers to flush
+        std::size_t bank_size = sz ? 4 : 8;
+        if (stride * len > bank_size) {
+            LOG_ERROR(CPU_12L1R, "Instruction exceed bank size!");
+            return emit_undefined_instruction_handler();
+        }
+
+        if (len == 1) {
+            if (vn != common::armgen::INVALID_REG)
+                float_marker_.use(vn, FLOAT_MARKER_USE_READ);
+
+            float_marker_.use(vm, FLOAT_MARKER_USE_READ);
+            float_marker_.use(vd, custom_dest_flags);
+
+            func(vd, vn, vm);
+
+            return true;
+        }
+
+        bool is_d_in_scalar = is_reg_in_scalar_bank(vd);
+        bool is_m_in_scalar = is_reg_in_scalar_bank(vm);
+
+        if (is_d_in_scalar) {
+            len = 1;
+        }
+
+        for (std::uint32_t i = 0; i < len; i++) {
+            if (vn != common::armgen::INVALID_REG)
+                float_marker_.use(vn, FLOAT_MARKER_USE_READ);
+
+            float_marker_.use(vm, FLOAT_MARKER_USE_READ);
+            float_marker_.use(vd, custom_dest_flags);
+
+            func(vd, vn, vm);
+
+            // Luckily those reg numbers are aligned!
+            int vd_i = static_cast<int>(vd);
+            vd = static_cast<common::armgen::arm_reg>((vd_i / bank_size * bank_size) + (vd_i % bank_size + stride) % bank_size);
+
+            if (vn != common::armgen::INVALID_REG) {
+                int vn_i = static_cast<int>(vn);
+                vn = static_cast<common::armgen::arm_reg>((vn_i / bank_size * bank_size) + (vn_i % bank_size + stride) % bank_size);
+            }
+
+            if (!is_m_in_scalar) {
+                int vm_i = static_cast<int>(vm);
+                vm = static_cast<common::armgen::arm_reg>((vm_i / bank_size * bank_size) + (vm_i % bank_size + stride) % bank_size);
+            }
+        }
+
+        return true;
     }
 }

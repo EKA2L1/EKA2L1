@@ -23,6 +23,7 @@
 #include <cpu/12l1r/reg_cache.h>
 
 #include <cstdint>
+#include <functional>
 #include <vector>
 
 namespace eka2l1::arm::r12l1 {
@@ -36,6 +37,9 @@ namespace eka2l1::arm::r12l1 {
         ACCESS_CHAIN_REG_TYPE_S = 1,
         ACCESS_CHAIN_REG_TYPE_D = 2
     };
+
+    using vfp_vectorize_emit_func = std::function<void(common::armgen::arm_reg vd,
+            common::armgen::arm_reg vn, common::armgen::arm_reg vm)>;
 
     inline common::armgen::arm_reg reg_index_to_gpr(const reg_index idx) {
         return static_cast<common::armgen::arm_reg>(common::armgen::R0 + idx);
@@ -113,6 +117,13 @@ namespace eka2l1::arm::r12l1 {
         void sync_state();
         void finalize();
 
+        bool vfp_vectorize(const bool sz, common::armgen::arm_reg vd, common::armgen::arm_reg vn,
+                                common::armgen::arm_reg vm, const std::uint32_t custom_dest_flags,
+                                vfp_vectorize_emit_func func);
+
+        bool vfp_vectorize(const bool sz, common::armgen::arm_reg vd, common::armgen::arm_reg vm,
+                                const std::uint32_t custom_dest_flags, vfp_vectorize_emit_func func);
+
         void cpsr_nzcvq_changed() {
             cond_modified_ = true;
             cpsr_ever_updated_ = true;
@@ -124,6 +135,14 @@ namespace eka2l1::arm::r12l1 {
 
         void fpscr_changed() {
             fpscr_ever_updated_ = true;
+        }
+
+        void fpsr_set_already_updated() {
+            fpscr_ever_updated_ = false;
+        }
+
+        bool fpscr_ever_updated() const {
+            return fpscr_ever_updated_;
         }
     };
 }

@@ -63,6 +63,7 @@ namespace eka2l1::arm::r12l1 {
         const void *fast_dispatch_ent_;
 
         std::uint32_t flags_;
+        std::uint32_t current_fpscr_;
 
         r12l1_core *parent_;
 
@@ -139,6 +140,10 @@ namespace eka2l1::arm::r12l1 {
 
         std::uint32_t config_flags() const {
             return flags_;
+        }
+
+        std::uint32_t current_compiling_fpscr() const {
+            return current_fpscr_;
         }
     };
 }

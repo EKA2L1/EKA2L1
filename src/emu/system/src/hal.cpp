@@ -276,6 +276,9 @@ namespace eka2l1::epoc {
     };
 
     struct digitiser_hal : public hal {
+        // Max supported pointer count by CONE
+        static constexpr std::uint32_t MAX_POINTER_SUPPORTED = 8;
+
         window_server *winserv_;
 
         int get_xy_info(int *a1, int *a2, const std::uint16_t device_num) {
@@ -301,10 +304,38 @@ namespace eka2l1::epoc {
             return epoc::error_general;
         }
 
+        int get_3d_info(int *a1, int *a2, const std::uint16_t device_num) {
+            if (!a1) {
+                return epoc::error_argument;
+            }
+
+            assert(winserv_);
+
+            epoc::screen *scr = winserv_->get_screen(device_num);
+            if (!scr) {
+                return epoc::error_not_found;
+            }
+
+
+            epoc::des8 *package = reinterpret_cast<epoc::des8 *>(a1);
+            kernel::process *crr = sys->get_kernel_system()->crr_process();
+
+            LOG_TRACE(SYSTEM, "Get 3d info (digistier info) is incomplete!");
+
+            digitister_info_v2 *info = reinterpret_cast<digitister_info_v2 *>(package->get_pointer(crr));
+            info->offset_to_first_usable_ = { 0, 0 };
+            info->size_usable_ = scr->size();
+            info->max_pointers_ = MAX_POINTER_SUPPORTED;
+            info->number_of_pointers_ = MAX_POINTER_SUPPORTED;
+
+            return epoc::error_none;
+        }
+
         explicit digitiser_hal(system *sys)
             : hal(sys)
             , winserv_(nullptr) {
             REGISTER_HAL_FUNC(digitiser_hal_hal_xy_info, digitiser_hal, get_xy_info);
+            REGISTER_HAL_FUNC(digitiser_hal_3d_info, digitiser_hal, get_3d_info);
 
             winserv_ = reinterpret_cast<window_server *>(sys->get_kernel_system()->get_by_name<service::server>(
                 eka2l1::get_winserv_name_by_epocver(sys->get_symbian_version_use())));

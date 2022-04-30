@@ -52,6 +52,7 @@ namespace eka2l1::arm {
         uint32_t get_fpscr() override;
         uint32_t get_lr() override;
         void set_cpsr(uint32_t val) override;
+        void set_fpscr(uint32_t val) override;
 
         void save_context(thread_context &ctx) override;
         void load_context(const thread_context &ctx) override;

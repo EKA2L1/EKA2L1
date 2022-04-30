@@ -479,8 +479,7 @@ public class EmulatorActivity extends AppCompatActivity {
                     float x = event.getX(index);
                     float y = event.getY(index);
                     float z = event.getPressure(index) * 0x7FFFFFFF;    // Max pressure
-                    if ((keyboard == null || !keyboard.pointerPressed(id, x, y))
-                            && id == 0 && params.touchInput) {
+                    if ((keyboard == null || !keyboard.pointerPressed(id, x, y)) && params.touchInput) {
                         Emulator.touchScreen((int) x, (int) y, (int)z, 0, id);
                     }
                     break;
@@ -493,8 +492,7 @@ public class EmulatorActivity extends AppCompatActivity {
                             x = event.getHistoricalX(p, h);
                             y = event.getHistoricalY(p, h);
                             z = event.getHistoricalPressure(p, h) * 0x7FFFFFFF;    // Max pressure
-                            if ((keyboard == null || !keyboard.pointerDragged(id, x, y))
-                                    && id == 0 && params.touchInput) {
+                            if ((keyboard == null || !keyboard.pointerDragged(id, x, y)) && params.touchInput) {
                                 Emulator.touchScreen((int) x, (int) y, (int)z, 1, id);
                             }
                         }
@@ -504,8 +502,7 @@ public class EmulatorActivity extends AppCompatActivity {
                         x = event.getX(p);
                         y = event.getY(p);
                         z = event.getPressure(p) * 0x7FFFFFFF;    // Max pressure
-                        if ((keyboard == null || !keyboard.pointerDragged(id, x, y))
-                                && id == 0 && params.touchInput) {
+                        if ((keyboard == null || !keyboard.pointerDragged(id, x, y)) && params.touchInput) {
                             Emulator.touchScreen((int) x, (int) y, (int)z, 1, id);
                         }
                     }
@@ -519,8 +516,7 @@ public class EmulatorActivity extends AppCompatActivity {
                     id = event.getPointerId(index);
                     x = event.getX(index);
                     y = event.getY(index);
-                    if ((keyboard == null || !keyboard.pointerReleased(id, x, y))
-                            && id == 0 && params.touchInput) {
+                    if ((keyboard == null || !keyboard.pointerReleased(id, x, y)) && params.touchInput) {
                         Emulator.touchScreen((int) x, (int) y, (int)0, 2, id);
                     }
                     break;

@@ -91,6 +91,10 @@ namespace eka2l1::arm::r12l1 {
             auto next = blocks_.lower_bound(range_start);
             auto last = blocks_.upper_bound(range_end);
 
+            if (next != blocks_.begin()) {
+                --next;
+            }
+
             for (; next != last; ++next) {
                 const vaddress block_ite_start = next->first;
                 const vaddress block_ite_end = next->second->current_address();

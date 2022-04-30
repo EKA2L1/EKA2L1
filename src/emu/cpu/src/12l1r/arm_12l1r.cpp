@@ -96,7 +96,7 @@ namespace eka2l1::arm {
     }
 
     void r12l1_core::set_vfp(size_t idx, uint32_t val) {
-        jit_state_.fprs_[15] = val;
+        jit_state_.fprs_[idx] = val;
     }
 
     std::uint32_t r12l1_core::get_lr() {
@@ -109,6 +109,10 @@ namespace eka2l1::arm {
 
     std::uint32_t r12l1_core::get_fpscr() {
         return jit_state_.fpscr_;
+    }
+
+    void r12l1_core::set_fpscr(uint32_t val) {
+        jit_state_.fpscr_ = val;
     }
 
     void r12l1_core::save_context(thread_context &ctx) {
