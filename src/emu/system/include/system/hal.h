@@ -187,11 +187,6 @@ namespace eka2l1::epoc {
         eka2l1::vec2 screen_size_;
     };
 
-    struct digitiser_info_v1 {
-        eka2l1::vec2 offset_to_first_usable_;
-        eka2l1::vec2 size_usable_;
-    };
-
     enum keyboard_type : std::int32_t {
         keyboard_type_numpad = 0,
         keyboard_type_full = 1
@@ -229,6 +224,28 @@ namespace eka2l1::epoc {
         std::int32_t speed_factor_;
         std::int32_t maximum_display_color_;
     };
+
+#pragma pack(push, 1)
+    struct digitiser_info_v1 {
+        eka2l1::vec2 offset_to_first_usable_;
+        eka2l1::vec2 size_usable_;
+    };
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+    struct digitister_info_v2 : public digitiser_info_v1 {
+        std::int32_t zrange_;
+        std::uint8_t theta_supported_;
+        std::uint8_t phi_supported_;
+        std::uint8_t alpha_supported_;
+        std::uint8_t pressure_supported_;
+        std::int32_t proximity_step_;
+        std::int32_t max_pressure_;
+        std::int32_t pressure_step_;
+        std::uint8_t max_pointers_;
+        std::uint8_t number_of_pointers_;
+    };
+#pragma pack(pop)
 
     enum hal_category {
         hal_category_kernel = 0,
