@@ -160,6 +160,7 @@ namespace eka2l1 {
         // Get base time
         base_time_ = common::get_current_utc_time_in_microseconds_since_0ad();
         utc_offset_ = common::get_current_utc_offset();
+        cpu_hz_ = DEFAULT_EMULATED_CPU_HZ;
 
         locale_ = std::make_unique<std::locale>("");
 

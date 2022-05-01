@@ -43,6 +43,7 @@
 #include <kernel/server.h>
 #include <kernel/session.h>
 
+#include <common/algorithm.h>
 #include <common/container.h>
 #include <common/hash.h>
 #include <common/types.h>
@@ -152,6 +153,7 @@ namespace eka2l1 {
     static constexpr std::uint32_t FIND_HANDLE_IDX_MASK = 0xFFFFFFF;
     static constexpr std::uint32_t FIND_HANDLE_OBJ_TYPE_MASK = 0xF0000000;
     static constexpr std::uint32_t FIND_HANDLE_OBJ_TYPE_SHIFT = 28;
+    static constexpr std::uint32_t DEFAULT_EMULATED_CPU_HZ = common::MHZ(434);
 
     struct find_handle {
         std::uint32_t index; ///< Index of the object in the separate object container.
@@ -308,6 +310,7 @@ namespace eka2l1 {
         void *rom_map_;
 
         std::uint64_t base_time_;
+        std::uint32_t cpu_hz_;
         std::int32_t utc_offset_;
 
         epocver kern_ver_;
@@ -790,6 +793,14 @@ namespace eka2l1 {
 
         const bool wipeout_in_progress() const {
             return wiping_;
+        }
+
+        void set_capped_cpu_hz(const std::uint32_t hz) {
+            cpu_hz_ = hz;
+        }
+
+        const std::uint32_t capped_cpu_hz() const {
+            return cpu_hz_;
         }
     };
 

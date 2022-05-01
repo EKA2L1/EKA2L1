@@ -231,6 +231,14 @@ namespace eka2l1 {
             return gb * MB(1024);
         }
 
+        constexpr std::uint32_t MHZ(std::uint32_t mhz) {
+            return mhz * 1000000;
+        }
+
+        constexpr std::uint32_t GHZ(std::uint32_t ghz) {
+            return ghz * MHZ(1000);
+        }
+
         /**
          * \brief Find the position of the Nth appearance of a string in another string
          *

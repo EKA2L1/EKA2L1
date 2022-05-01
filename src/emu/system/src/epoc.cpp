@@ -259,6 +259,37 @@ namespace eka2l1 {
                 &ldd::get_factory_func);
         }
 
+        std::uint32_t get_preset_emulate_cpu_hz(const epocver ever) {
+            switch (ever) {
+            case epocver::epoc6:
+            case epocver::epocu6:
+                return preset::SYSTEM_CPU_HZ_S60V1;
+
+            case epocver::epoc80:
+            case epocver::epoc81a:
+            case epocver::epoc81b:
+                return preset::SYSTEM_CPU_HZ_S60V2;
+
+            case epocver::epoc93fp1:
+            case epocver::epoc93fp2:
+                return preset::SYSTEM_CPU_HZ_S60V3;
+
+            case epocver::epoc94:
+                return preset::SYSTEM_CPU_HZ_S60V5;
+
+            case epocver::epoc95:
+                return preset::SYSTEM_CPU_HZ_S3;
+
+            case epocver::epoc10:
+                return preset::SYSTEM_CPU_HZ_BELLE;
+
+            default:
+                break;
+            }
+
+            return preset::SYSTEM_CPU_HZ_S60V5;
+        }
+
         void set_symbian_version_use(const epocver ever) {
             io_->set_epoc_ver(ever);
 
@@ -270,6 +301,7 @@ namespace eka2l1 {
             // Install memory to the kernel, then set epoc version
             kern_->install_memory(mem_.get());
             kern_->set_epoc_version(ever);
+            kern_->set_capped_cpu_hz(get_preset_emulate_cpu_hz(ever));
         }
 
         void start_access() {

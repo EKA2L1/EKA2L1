@@ -23,4 +23,13 @@ namespace eka2l1::preset {
     static const char *ROM_FOLDER_PATH = "roms//";
     static const char *DRIVE_FOLDER_PATH = "drives//";
     static const char *ROM_FILENAME = "SYM.ROM";
+
+    enum system_cpu_hz {
+        SYSTEM_CPU_HZ_S60V1 = 104000000,
+        SYSTEM_CPU_HZ_S60V2 = 220000000,
+        SYSTEM_CPU_HZ_S60V3 = 369000000,
+        SYSTEM_CPU_HZ_S60V5 = 434000000,
+        SYSTEM_CPU_HZ_S3 = 680000000,
+        SYSTEM_CPU_HZ_BELLE = 1200000000
+    };
 }

@@ -105,6 +105,12 @@ namespace eka2l1 {
             priority_absolute_high = 500
         };
 
+        enum {
+            // Symbian default is 20, but we are mixing both CPU code and also HLE stuffs, so we tone
+            // it down a bit.
+            USER_THREAD_TIMESLICE_IN_MILLISECS = 10
+        };
+
         struct tls_slot {
             std::uint32_t handle = 0xFFFFFFFF;
             std::uint32_t uid = 0xFFFFFFFF;

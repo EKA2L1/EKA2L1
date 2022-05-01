@@ -259,8 +259,8 @@ namespace eka2l1 {
 
             create_time = timing->ticks();
 
-            timeslice = 20000;
-            time = 20000;
+            timeslice = kern->capped_cpu_hz() * USER_THREAD_TIMESLICE_IN_MILLISECS / 1000;
+            time = timeslice;
 
             obj_type = object_type::thread;
             state = thread_state::create; // Suspended.
