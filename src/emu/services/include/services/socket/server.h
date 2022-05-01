@@ -104,6 +104,7 @@ namespace eka2l1 {
     enum socket_opcode {
         socket_pr_find = 0x02,
         socket_so_create = 0x06,
+        socket_so_create_null = 0x07,
         socket_so_send = 0x08,
         socket_so_send_no_len = 0x09,
         socket_so_recv = 0x0A,
@@ -241,6 +242,7 @@ namespace eka2l1 {
         void hr_create(service::ipc_context *ctx, const bool with_conn);
         void so_create(service::ipc_context *ctx);
         void so_create_with_conn_or_subconn(service::ipc_context *ctx);
+        void so_create_null(service::ipc_context *ctx);
         void pr_find(service::ipc_context *ctx);
         void sr_get_by_number(eka2l1::service::ipc_context *ctx);
         void cn_open(eka2l1::service::ipc_context *ctx);

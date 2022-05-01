@@ -184,6 +184,10 @@ namespace eka2l1 {
                     so_create(ctx);
                     return;
 
+                case socket_so_create_null:
+                    so_create_null(ctx);
+                    return;
+
                 case socket_hr_open:
                     hr_create(ctx, false);
                     return;
@@ -400,6 +404,20 @@ namespace eka2l1 {
         }
 
         // Create new session
+        socket_subsession_instance so_inst = std::make_unique<epoc::socket::socket_socket>(this, sock_impl);
+
+        const std::uint32_t id = static_cast<std::uint32_t>(subsessions_.add(so_inst));
+        subsessions_.get(id)->get()->set_id(id);
+
+        // Write the subsession handle
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(3, id);
+        ctx->complete(epoc::error_none);
+    }
+
+    void socket_client_session::so_create_null(service::ipc_context *ctx) {
+        // Null session are used to receive socket returned by accept call. It's nearly the same way
+        // how BSD socket works
+        std::unique_ptr<epoc::socket::socket> sock_impl = nullptr;
         socket_subsession_instance so_inst = std::make_unique<epoc::socket::socket_socket>(this, sock_impl);
 
         const std::uint32_t id = static_cast<std::uint32_t>(subsessions_.add(so_inst));
