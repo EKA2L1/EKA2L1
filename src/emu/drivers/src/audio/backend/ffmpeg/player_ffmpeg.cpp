@@ -30,6 +30,7 @@ extern "C" {
 namespace eka2l1::drivers {
     void player_ffmpeg::deinit() {
         if (format_context_) {
+            avformat_close_input(&format_context_);
             avformat_free_context(format_context_);
         }
 
@@ -50,6 +51,7 @@ namespace eka2l1::drivers {
         if (avformat_find_stream_info(format_context_, nullptr) < 0) {
             LOG_ERROR(DRIVER_AUD, "Error while finding stream info of input {}", url_);
             avformat_free_context(format_context_);
+            format_context_ = nullptr;
 
             return false;
         }
@@ -83,6 +85,8 @@ namespace eka2l1::drivers {
             LOG_ERROR(DRIVER_AUD, "Unable to open codec of stream url {}", url_);
 
             avformat_free_context(format_context_);
+            format_context_ = nullptr;
+
             return false;
         }
 

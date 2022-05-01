@@ -134,7 +134,7 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
-        if (eplayer->impl_->is_playing()) {
+        if (eplayer->impl_ && eplayer->impl_->is_playing()) {
             eplayer->impl_->stop();
             manager.audio_renderer_semaphore()->release(eplayer);
         }
@@ -531,7 +531,9 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
-        eplayer->impl_->set_position(pos_in_micros);
+        if (eplayer->impl_)
+            eplayer->impl_->set_position(pos_in_micros);
+
         return epoc::error_none;
     }
 
