@@ -63,6 +63,14 @@ namespace eka2l1::drivers {
         return reinterpret_cast<const std::uint16_t *>(metadata_)[3];
     }
 
+    const std::uint16_t shader_program_metadata::get_attribute_max_name_length() const {
+        return reinterpret_cast<const std::uint16_t *>(metadata_)[4];
+    }
+
+    const std::uint16_t shader_program_metadata::get_uniform_max_name_length() const {
+        return reinterpret_cast<const std::uint16_t *>(metadata_)[5];
+    }
+
     static std::int32_t search_binding(const std::uint8_t *metadata, const char *name, const std::uint16_t offset,
         const std::uint16_t count) {
         const std::uint8_t *data = metadata + offset;

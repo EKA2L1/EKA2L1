@@ -44,16 +44,16 @@ namespace eka2l1::drivers {
             return fbo;
         }
 
-        explicit ogl_framebuffer(std::initializer_list<texture *> color_buffer_list,
-            texture *depth_and_stencil_buffer);
+        explicit ogl_framebuffer(const std::vector<drawable *> color_buffer_list,
+            drawable *depth_buffer, drawable *stencil_buffer);
 
         ~ogl_framebuffer() override;
 
         void bind(graphics_driver *driver, const framebuffer_bind_type type_bind) override;
         void unbind(graphics_driver *driver) override;
 
-        std::int32_t set_color_buffer(texture *tex, const std::int32_t position = -1) override;
-        bool set_depth_stencil_buffer(texture *tex) override;
+        std::int32_t set_color_buffer(drawable *tex, const std::int32_t position = -1) override;
+        bool set_depth_stencil_buffer(drawable *depth, drawable *stencil) override;
         bool set_draw_buffer(const std::int32_t attachment_id) override;
         bool set_read_buffer(const std::int32_t attachment_id) override;
 

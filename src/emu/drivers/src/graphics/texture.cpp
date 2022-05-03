@@ -35,4 +35,18 @@ namespace eka2l1::drivers {
 
         return nullptr;
     }
+    
+    renderbuffer_ptr make_renderbuffer(graphics_driver *driver) {
+        switch (driver->get_current_api()) {
+        case graphic_api::opengl: {
+            return std::make_unique<ogl_renderbuffer>();
+            break;
+        }
+
+        default:
+            break;
+        }
+
+        return nullptr;
+    }
 }

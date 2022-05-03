@@ -17,7 +17,8 @@ namespace eka2l1::drivers {
         explicit ogl_shader_module(const std::string &path, const shader_module_type type, const std::string &extra_header = "");
         explicit ogl_shader_module(const char *data, const std::size_t size, const shader_module_type type);
 
-        bool create(graphics_driver *driver, const char *data, const std::size_t size, const shader_module_type type) override;
+        bool create(graphics_driver *driver, const char *data, const std::size_t size, const shader_module_type type,
+            std::string *compile_log = nullptr) override;
 
         std::uint32_t shader_handle() const {
             return shader;
@@ -33,7 +34,7 @@ namespace eka2l1::drivers {
         explicit ogl_shader_program();
         ~ogl_shader_program() override;
 
-        bool create(graphics_driver *driver, shader_module *vertex_module, shader_module *fragment_module) override;
+        bool create(graphics_driver *driver, shader_module *vertex_module, shader_module *fragment_module, std::string *link_log = nullptr) override;
         bool use(graphics_driver *driver) override;
 
         std::uint32_t program_handle() const {

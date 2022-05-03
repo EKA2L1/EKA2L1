@@ -129,7 +129,8 @@ namespace eka2l1::drivers {
         auto ds_tex_to_replace = std::move(instantiate_bitmap_depth_stencil_texture(driver, new_size));
 
         if (fb) {
-            auto new_fb = make_framebuffer(driver, { tex_to_replace.get() }, ds_tex_to_replace.get());
+            auto new_fb = make_framebuffer(driver, { tex_to_replace.get() }, ds_tex_to_replace.get(),
+                ds_tex_to_replace.get());
 
             fb->bind(driver, framebuffer_bind_read);
             new_fb->bind(driver, framebuffer_bind_draw);
@@ -156,7 +157,7 @@ namespace eka2l1::drivers {
 
     void bitmap::init_fb(graphics_driver *driver) {
         ds_tex = std::move(instantiate_bitmap_depth_stencil_texture(driver, tex->get_size()));
-        fb = make_framebuffer(driver, { tex.get() }, ds_tex.get());
+        fb = make_framebuffer(driver, { tex.get() }, ds_tex.get(), ds_tex.get());
     }
 
     shared_graphics_driver::shared_graphics_driver(const graphic_api gr_api)
@@ -494,9 +495,10 @@ namespace eka2l1::drivers {
         const char *data = reinterpret_cast<const char*>(cmd.data_[0]);
         std::size_t data_size = static_cast<std::size_t>(cmd.data_[1]);
         drivers::shader_module_type mod_type = static_cast<drivers::shader_module_type>(cmd.data_[2]);
+        std::string *compile_log = reinterpret_cast<std::string*>(cmd.data_[4]);
 
         auto obj = make_shader_module(this);
-        if (!obj->create(this, data, data_size, mod_type)) {
+        if (!obj->create(this, data, data_size, mod_type, compile_log)) {
             LOG_ERROR(DRIVER_GRAPHICS, "Fail to create shader module!");
             finish(cmd.status_, -1);
             return;
@@ -515,13 +517,14 @@ namespace eka2l1::drivers {
         drivers::handle vert_module_handle = static_cast<drivers::handle>(cmd.data_[0]);
         drivers::handle frag_module_handle = static_cast<drivers::handle>(cmd.data_[1]);
         void **metadata = reinterpret_cast<void**>(cmd.data_[2]);
+        std::string *link_log = reinterpret_cast<std::string*>(cmd.data_[4]);
 
         auto obj = make_shader_program(this);
 
         shader_module *vert_module_obj = reinterpret_cast<shader_module*>(get_graphics_object(vert_module_handle));
         shader_module *frag_module_obj = reinterpret_cast<shader_module*>(get_graphics_object(frag_module_handle));
 
-        if (!obj->create(this, vert_module_obj, frag_module_obj)) {
+        if (!obj->create(this, vert_module_obj, frag_module_obj, link_log)) {
             LOG_ERROR(DRIVER_GRAPHICS, "Fail to create shader program!");
             finish(cmd.status_, -1);
             return;
@@ -640,7 +643,7 @@ namespace eka2l1::drivers {
             if (!obj) {
                 return;
             }
-        } else {    
+        } else {
             obj_inst = make_input_descriptors(this);
             obj = obj_inst.get();
         }
@@ -659,6 +662,86 @@ namespace eka2l1::drivers {
             std::uint8_t *data_casted = reinterpret_cast<std::uint8_t*>(descs);
             delete[] data_casted;
         }
+    }
+
+    void shared_graphics_driver::create_renderbuffer(command &cmd) {
+        eka2l1::vec2 size;
+        drivers::texture_format internal_format = drivers::texture_format::none;
+        drivers::handle existing_handle = cmd.data_[2];
+
+        unpack_u64_to_2u32(cmd.data_[0], size.x, size.y);
+        internal_format = static_cast<drivers::texture_format>(cmd.data_[1]);
+        
+        drivers::renderbuffer *obj = nullptr;
+        std::unique_ptr<drivers::renderbuffer> obj_inst = nullptr;
+
+        if (existing_handle != 0) {
+            obj = reinterpret_cast<drivers::renderbuffer*>(get_graphics_object(existing_handle));
+            if (!obj) {
+                return;
+            }
+        } else {    
+            obj_inst = make_renderbuffer(this);
+            obj = obj_inst.get();
+        }
+
+        obj->create(this, size, internal_format);
+        
+        if (obj_inst) {
+            std::unique_ptr<graphics_object> obj_casted = std::move(obj_inst);
+            drivers::handle res = append_graphics_object(obj_casted);
+
+            drivers::handle *store = reinterpret_cast<drivers::handle*>(cmd.data_[3]);
+            *store = res;
+
+            finish(cmd.status_, 0);
+        }
+    }
+
+    void shared_graphics_driver::create_framebuffer(command &cmd) {
+        drivers::handle *color_buffers = reinterpret_cast<drivers::handle*>(cmd.data_[0]);
+        std::uint32_t color_buffer_count = static_cast<std::uint32_t>(cmd.data_[1]);
+        drivers::handle depth_buffer = static_cast<drivers::handle>(cmd.data_[2]);
+        drivers::handle stencil_buffer = static_cast<drivers::handle>(cmd.data_[3]);
+
+        std::vector<drawable*> color_buffer_objs;
+        drawable *temp = nullptr;
+
+        for (std::uint32_t i = 0; i < color_buffer_count; i++) {
+            temp = reinterpret_cast<drawable*>(get_graphics_object(color_buffers[i]));
+            if (!temp) {
+                return;
+            }
+
+            color_buffer_objs.push_back(temp);
+        }
+
+        drawable *depth_buffer_obj = nullptr;
+        drawable *stencil_buffer_obj = nullptr;
+
+        if (depth_buffer) {
+            depth_buffer_obj = reinterpret_cast<drawable*>(get_graphics_object(depth_buffer));
+            if (!depth_buffer_obj) {
+                return;
+            }
+        }
+
+        if (stencil_buffer) {
+            stencil_buffer_obj = reinterpret_cast<drawable*>(get_graphics_object(stencil_buffer));
+            if (!stencil_buffer_obj) {
+                return;
+            }
+        }
+
+        framebuffer_ptr new_fb = make_framebuffer(this, color_buffer_objs, depth_buffer_obj, stencil_buffer_obj);
+
+        std::unique_ptr<graphics_object> obj_casted = std::move(new_fb);
+        drivers::handle res = append_graphics_object(obj_casted);
+
+        drivers::handle *store = reinterpret_cast<drivers::handle*>(cmd.data_[4]);
+        *store = res;
+
+        finish(cmd.status_, 0);
     }
 
     void shared_graphics_driver::use_program(command &cmd) {
@@ -882,6 +965,67 @@ namespace eka2l1::drivers {
             no_need_flip ? 0.0f : static_cast<float>(swapchain_size.y), -1.0f, 1.0f);
     }
 
+    void shared_graphics_driver::set_fb_color_buffer(command &cmd) {
+        drivers::handle h = cmd.data_[0];
+
+        if (h == 0) {
+            return;
+        }
+
+        drivers::handle color_buffer = cmd.data_[1];
+        std::int32_t pos = static_cast<std::int32_t>(cmd.data_[2]);
+
+        drivers::framebuffer *fb = reinterpret_cast<drivers::framebuffer*>(get_graphics_object(h));
+        if (!fb) {
+            return;
+        }
+
+        drivers::drawable *obj = nullptr;
+
+        if (color_buffer != 0) {
+            obj = reinterpret_cast<drivers::drawable*>(get_graphics_object(color_buffer));
+            if (!obj) {
+                return;
+            }
+        }
+
+        fb->bind(nullptr, drivers::framebuffer_bind_read_draw);
+        fb->set_color_buffer(obj, pos);
+        fb->unbind(nullptr);
+    }
+
+    void shared_graphics_driver::set_fb_depth_stencil_buffer(command &cmd) {
+        drivers::handle h = cmd.data_[0];
+
+        if (h == 0) {
+            return;
+        }
+
+        drivers::handle depth_buffer = cmd.data_[1];
+        drivers::handle stencil_buffer = cmd.data_[2];
+
+        drivers::framebuffer *fb = reinterpret_cast<drivers::framebuffer*>(get_graphics_object(h));
+        drivers::drawable *depth_buffer_obj = nullptr;
+        drivers::drawable *stencil_buffer_obj = nullptr;
+
+        if (depth_buffer != 0) {
+            depth_buffer_obj = reinterpret_cast<drivers::drawable*>(get_graphics_object(depth_buffer));
+            if (!depth_buffer_obj) {
+                return;
+            }
+        }
+
+        if (stencil_buffer != 0) {
+            stencil_buffer_obj = reinterpret_cast<drivers::drawable*>(get_graphics_object(stencil_buffer));
+            if (!stencil_buffer_obj) {
+                return;
+            }
+        }
+
+        fb->bind(nullptr, drivers::framebuffer_bind_read_draw);
+        fb->set_depth_stencil_buffer(depth_buffer_obj, stencil_buffer_obj);
+    }
+
     void shared_graphics_driver::dispatch(command &cmd) {
         switch (cmd.opcode_) {
         case graphics_driver_create_bitmap: {
@@ -937,6 +1081,15 @@ namespace eka2l1::drivers {
             create_buffer(cmd);
             break;
         }
+
+        case graphics_driver_create_renderbuffer: {
+            create_renderbuffer(cmd);
+            break;
+        }
+
+        case graphcis_driver_create_framebuffer:
+            create_framebuffer(cmd);
+            break;
 
         case graphics_driver_use_program: {
             use_program(cmd);
@@ -994,6 +1147,14 @@ namespace eka2l1::drivers {
 
         case graphics_driver_set_max_mip_level:
             set_max_mip_level(cmd);
+            break;
+
+        case graphics_driver_set_framebuffer_color_buffer:
+            set_fb_color_buffer(cmd);
+            break;
+
+        case graphics_driver_set_framebuffer_depth_stencil_buffer:
+            set_fb_depth_stencil_buffer(cmd);
             break;
 
         default:

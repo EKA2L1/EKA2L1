@@ -352,4 +352,38 @@ namespace eka2l1::drivers {
         glTexParameteri(to_gl_tex_dim(dimensions), GL_TEXTURE_MAX_LEVEL, static_cast<GLint>(max_mip));
         unbind(nullptr);
     }
+    
+    void ogl_renderbuffer::bind(graphics_driver *driver, const int binding) {
+        glGetIntegerv(GL_RENDERBUFFER_BINDING, &last_renderbuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, handle);
+    }
+
+    void ogl_renderbuffer::unbind(graphics_driver *driver) {
+        glBindRenderbuffer(GL_RENDERBUFFER_BINDING, last_renderbuffer);
+        last_renderbuffer = 0;
+    }
+
+    bool ogl_renderbuffer::create(graphics_driver *driver, const vec2 &size, const texture_format format) {
+        if (!handle) {
+            glGenRenderbuffers(1, &handle);
+        }
+
+        this->internal_format = format;
+        this->tex_size = size;
+
+        bind(nullptr, 0);
+        glRenderbufferStorage(GL_RENDERBUFFER, texture_format_to_gl_enum(format), size.x, size.y);
+        unbind(nullptr);
+
+        return true;
+    }
+
+    ogl_renderbuffer::ogl_renderbuffer() {
+    }
+
+    ogl_renderbuffer::~ogl_renderbuffer() {
+        if (handle) {
+            glDeleteRenderbuffers(1, &handle);
+        }
+    }
 }

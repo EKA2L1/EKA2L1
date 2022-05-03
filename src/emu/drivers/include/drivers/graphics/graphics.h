@@ -70,6 +70,8 @@ namespace eka2l1::drivers {
         // Mode 1: Advance - Lower access to functions
         graphics_driver_create_shader_module,
         graphics_driver_create_shader_program,
+        graphics_driver_create_renderbuffer,
+        graphcis_driver_create_framebuffer,
         graphics_driver_create_texture,
         graphics_driver_create_buffer,
         graphics_driver_destroy_object,
@@ -83,6 +85,7 @@ namespace eka2l1::drivers {
         graphics_driver_bind_texture,
         graphics_driver_bind_vertex_buffers,
         graphics_driver_bind_index_buffer,
+        graphics_driver_bind_framebuffer,
         graphics_driver_set_texture_for_shader,
         graphics_driver_draw_array,
         graphics_driver_draw_indexed,
@@ -97,6 +100,8 @@ namespace eka2l1::drivers {
         graphics_driver_bind_input_descriptor,
         graphics_driver_set_depth_bias,
         graphics_driver_set_depth_range,
+        graphics_driver_set_framebuffer_color_buffer,
+        graphics_driver_set_framebuffer_depth_stencil_buffer,
         graphics_driver_backup_state, // Backup all possible state to a struct
         graphics_driver_restore_state // Restore previously backup data
     };

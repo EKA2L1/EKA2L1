@@ -34,13 +34,17 @@ namespace eka2l1::drivers {
     static void build_metadata(GLuint program, std::vector<std::uint8_t> &data) {
         GLint total_attributes = 0;
         GLint total_uniforms = 0;
+        GLint max_attribute_name_len = 0;
+        GLint max_uniform_name_len = 0;
 
         glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &total_attributes);
         glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &total_uniforms);
+        glGetProgramiv(program, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &max_attribute_name_len);
+        glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_uniform_name_len);
 
-        data.resize(8);
+        data.resize(12);
 
-        reinterpret_cast<std::uint16_t *>(&data[0])[0] = 8;
+        reinterpret_cast<std::uint16_t *>(&data[0])[0] = 12;
 
         GLchar buf[257];
         GLint size = 0;
@@ -63,6 +67,8 @@ namespace eka2l1::drivers {
         reinterpret_cast<std::uint16_t *>(&data[0])[1] = static_cast<std::uint16_t>(data.size());
         reinterpret_cast<std::uint16_t *>(&data[0])[2] = static_cast<std::uint16_t>(total_attributes);
         reinterpret_cast<std::uint16_t *>(&data[0])[3] = static_cast<std::uint16_t>(total_uniforms);
+        reinterpret_cast<std::uint16_t *>(&data[0])[4] = static_cast<std::uint16_t>(max_attribute_name_len);
+        reinterpret_cast<std::uint16_t *>(&data[0])[5] = static_cast<std::uint16_t>(max_uniform_name_len);
 
         for (int i = 0; i < total_uniforms; i++) {
             glGetActiveUniform(program, i, 256, &name_len, &size, &type, buf);
@@ -108,7 +114,7 @@ namespace eka2l1::drivers {
             glDeleteShader(shader);
     }
 
-    bool ogl_shader_module::create(graphics_driver *driver, const char *data, const std::size_t size, const shader_module_type type) {
+    bool ogl_shader_module::create(graphics_driver *driver, const char *data, const std::size_t size, const shader_module_type type, std::string *compile_log) {
         shader = glCreateShader(((type == shader_module_type::vertex) ? GL_VERTEX_SHADER :
             ((type == shader_module_type::fragment) ? GL_FRAGMENT_SHADER : GL_GEOMETRY_SHADER)));
 
@@ -116,13 +122,23 @@ namespace eka2l1::drivers {
         glCompileShader(shader);
 
         int success;
-        char error[512] = { '\0' };
-
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
 
+        GLint log_length;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
+
+        if (compile_log) {
+            compile_log->resize(log_length);
+            glGetShaderInfoLog(shader, log_length, nullptr, compile_log->data());
+        }
+
         if (!success) {
-            glGetShaderInfoLog(shader, 512, nullptr, error);
-            LOG_ERROR(DRIVER_GRAPHICS, "Error while compiling shader: {}, abort", error);
+            if (!compile_log) {
+                std::string error_log(log_length, '\0');
+                glGetShaderInfoLog(shader, log_length, nullptr, error_log.data());
+
+                LOG_ERROR(DRIVER_GRAPHICS, "Error while compiling shader: {}, abort", error_log);
+            }
 
             glDeleteShader(shader);
             return false;
@@ -150,7 +166,7 @@ namespace eka2l1::drivers {
         }
     }
 
-    bool ogl_shader_program::create(graphics_driver *driver, shader_module *vertex_module, shader_module *fragment_module) {
+    bool ogl_shader_program::create(graphics_driver *driver, shader_module *vertex_module, shader_module *fragment_module, std::string *link_log) {
         ogl_shader_module *ogl_vertex_module = reinterpret_cast<ogl_shader_module*>(vertex_module);
         ogl_shader_module *ogl_fragment_module = reinterpret_cast<ogl_shader_module*>(fragment_module);
 
@@ -171,11 +187,21 @@ namespace eka2l1::drivers {
         glLinkProgram(program);
         glGetProgramiv(program, GL_LINK_STATUS, &success);
 
-        if (!success) {
-            char error[512] = { '\0' };
+        GLint log_length = 0;
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &log_length);
 
-            glGetProgramInfoLog(program, 512, nullptr, error);
-            LOG_ERROR(DRIVER_GRAPHICS, "Error while linking shader program: {}", error);
+        if (link_log) {
+            link_log->resize(log_length);
+            glGetProgramInfoLog(program, log_length, nullptr, link_log->data());
+        }
+
+        if (!success) {
+            if (!link_log) {
+                std::string error(log_length, '\0');
+
+                glGetProgramInfoLog(program, log_length, nullptr, error.data());
+                LOG_ERROR(DRIVER_GRAPHICS, "Error while linking shader program: {}", error);
+            }
 
             glDeleteProgram(program);
             return false;

@@ -27,18 +27,18 @@ namespace eka2l1::drivers {
             return 0;
         }
 
-        return color_buffers[attachment_id]->texture_handle();
+        return color_buffers[attachment_id]->driver_handle();
     }
 
     bool framebuffer::is_attachment_id_valid(const std::int32_t attachment_id) const {
         return !((color_buffers.size() <= attachment_id) || (color_buffers[attachment_id] == nullptr));
     }
 
-    framebuffer_ptr make_framebuffer(graphics_driver *driver, std::initializer_list<texture *> color_buffer_list,
-        texture *depth_and_stencil_buffer) {
+    framebuffer_ptr make_framebuffer(graphics_driver *driver, const std::vector<drawable *> &color_buffer_list,
+        drawable *depth_buffer, drawable *stencil_buffer) {
         switch (driver->get_current_api()) {
         case graphic_api::opengl: {
-            return std::make_unique<ogl_framebuffer>(color_buffer_list, depth_and_stencil_buffer);
+            return std::make_unique<ogl_framebuffer>(color_buffer_list, depth_buffer, stencil_buffer);
             break;
         }
 

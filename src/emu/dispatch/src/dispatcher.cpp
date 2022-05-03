@@ -74,10 +74,10 @@ namespace eka2l1::dispatch {
     void dispatcher::set_graphics_driver(drivers::graphics_driver *driver) {
         if (!graphics_string_added_) {
             // Add static strings
-            add_static_string(GLES1_STATIC_STRING_KEY_VENDOR, GLES1_STATIC_STRING_VENDOR);
-            add_static_string(GLES1_STATIC_STRING_KEY_RENDERER, GLES1_STATIC_STRING_RENDERER);
-            add_static_string(GLES1_STATIC_STRING_KEY_EXTENSIONS, dispatch::get_es1_extensions(driver));
-            add_static_string(GLES1_STATIC_STRING_KEY_VERSION, GLES1_STATIC_STRING_VERSION);
+            add_static_string(GLES_STATIC_STRING_KEY_VENDOR, GLES1_STATIC_STRING_VENDOR);
+            add_static_string(GLES_STATIC_STRING_KEY_RENDERER, GLES1_STATIC_STRING_RENDERER);
+            add_static_string(GLES_STATIC_STRING_KEY_EXTENSIONS, dispatch::get_es1_extensions(driver));
+            add_static_string(GLES_STATIC_STRING_KEY_VERSION, GLES1_STATIC_STRING_VERSION);
             add_static_string(EGL_VENDOR_EMU, EGL_STATIC_STRING_VENDOR);
             add_static_string(EGL_VERSION_EMU, EGL_STATIC_STRING_VERSION);
             add_static_string(EGL_EXTENSIONS_EMU, EGL_STATIC_STRING_EXTENSION);

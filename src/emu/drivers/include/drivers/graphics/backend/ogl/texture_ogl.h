@@ -54,8 +54,38 @@ namespace eka2l1::drivers {
             return dimensions;
         }
 
-        std::uint64_t texture_handle() override {
+        std::uint64_t driver_handle() override {
             return texture;
+        }
+    };
+    
+    class ogl_renderbuffer: public renderbuffer {
+    private:
+        vec2 tex_size;
+        texture_format internal_format;
+
+        std::uint32_t handle{ 0 };
+        std::int32_t last_renderbuffer{ 0 };
+
+    public:
+        bool create(graphics_driver *driver, const vec2 &size, const texture_format format) override;
+
+        explicit ogl_renderbuffer();
+        ~ogl_renderbuffer() override;
+
+        void bind(graphics_driver *driver, const int binding) override;
+        void unbind(graphics_driver *driver) override;
+        
+        vec2 get_size() const override {
+            return tex_size;
+        }
+
+        texture_format get_format() const override {
+            return internal_format;
+        }
+
+        std::uint64_t driver_handle() override {
+            return handle;
         }
     };
 }

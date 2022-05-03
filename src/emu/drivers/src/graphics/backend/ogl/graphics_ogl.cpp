@@ -641,11 +641,11 @@ namespace eka2l1::drivers {
         }
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(draw_texture->texture_handle()));
+        glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(draw_texture->driver_handle()));
 
         if (mask_draw_texture) {
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(mask_draw_texture->texture_handle()));
+            glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(mask_draw_texture->driver_handle()));
         }
 
         if (source_rect.size.x == 0) {
@@ -1522,6 +1522,23 @@ namespace eka2l1::drivers {
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, max_ani);
         texobj->unbind(nullptr);
     }
+    
+    void ogl_graphics_driver::bind_framebuffer(command &cmd) {
+        drivers::handle h = cmd.data_[0];
+        drivers::framebuffer_bind_type bind_type = static_cast<drivers::framebuffer_bind_type>(cmd.data_[1]);
+
+        if (h == 0) {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            return;
+        }
+
+        drivers::framebuffer *fb = reinterpret_cast<drivers::framebuffer*>(get_graphics_object(h));
+        if (!fb) {
+            return;
+        }
+
+        fb->bind(this, bind_type);
+    }
 
     void ogl_graphics_driver::save_gl_state() {
         glGetIntegerv(GL_CURRENT_PROGRAM, &backup.last_program);
@@ -1762,6 +1779,10 @@ namespace eka2l1::drivers {
 
         case graphics_driver_set_texture_anisotrophy:
             set_texture_anisotrophy(cmd);
+            break;
+
+        case graphics_driver_bind_framebuffer:
+            bind_framebuffer(cmd);
             break;
 
         default:

@@ -88,6 +88,8 @@ namespace eka2l1::drivers {
         void create_program(command &cmd);
         void create_texture(command &cmd);
         void create_buffer(command &cmd);
+        void create_renderbuffer(command &cmd);
+        void create_framebuffer(command &cmd);
         void use_program(command &cmd);
         void bind_texture(command &cmd);
         void update_buffer(command &cmd);
@@ -101,6 +103,8 @@ namespace eka2l1::drivers {
         void generate_mips(command &cmd);
         void create_input_descriptors(command &cmd);
         void set_max_mip_level(command &cmd);
+        void set_fb_color_buffer(command &cmd);
+        void set_fb_depth_stencil_buffer(command &cmd);
 
     public:
         explicit shared_graphics_driver(const graphic_api gr_api);
