@@ -24,7 +24,7 @@
 #include <vector>
 
 #define CHUNK_SIZE 0x2000
-#define CHUNK_MAX_INFLATED_SIZE 0x100000
+#define CHUNK_MAX_INFLATED_SIZE 0x200000
 
 namespace eka2l1 {
     /*! \brief Namespace contains all function related to Deflate/Inflate */
