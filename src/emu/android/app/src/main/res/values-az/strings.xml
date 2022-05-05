@@ -7,7 +7,7 @@
     <string name="settings">Tənzimləmələr</string>
     <string name="packages">Paketlər</string>
     <string name="devices">Cihazlar</string>
-    <string name="profiles">Profiles</string>
+    <string name="profiles">Profillər</string>
     <string name="processing">Emal olunur...</string>
     <string name="completed">Tamamlandı!</string>
     <string name="remove">Çıxart</string>
@@ -16,8 +16,8 @@
     <string name="exit">Çıxış</string>
     <string name="rename">Yenidən adlandır</string>
     <string name="save_log">Jurnalı saxla</string>
-    <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
-    <string name="warning">Warning</string>
+    <string name="opengl_required">Proqram OpenGL ES 3.0+ tələb edir.</string>
+    <string name="warning">Xəbərdarlıq</string>
     <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
     <string name="install">Quraşdır</string>
     <string name="device_dump">Device dump</string>
