@@ -456,26 +456,6 @@ namespace eka2l1::android {
         kern->get_app_settings()->update_setting(uid);
     }
 
-    static void advance_dsa_pos_around_origin(eka2l1::rect &origin_normal_rect, const int rotation) {
-        switch (rotation) {
-        case 90:
-            origin_normal_rect.top.x += origin_normal_rect.size.x;
-            break;
-
-        case 180:
-            origin_normal_rect.top.x += origin_normal_rect.size.x;
-            origin_normal_rect.top.y += origin_normal_rect.size.y;
-            break;
-
-        case 270:
-            origin_normal_rect.top.y += origin_normal_rect.size.y;
-            break;
-
-        default:
-            break;
-        }
-    }
-
     void launcher::draw(drivers::graphics_command_builder &builder, epoc::screen *scr,
                         std::uint32_t window_width, std::uint32_t window_height) {
         eka2l1::rect viewport;
@@ -576,7 +556,7 @@ namespace eka2l1::android {
             dest.top = eka2l1::vec2(x, y);
             dest.size = eka2l1::vec2(width, height);
 
-            advance_dsa_pos_around_origin(dest, scr->ui_rotation);
+            drivers::advance_draw_pos_around_origin(dest, scr->ui_rotation);
 
             if (scr->ui_rotation % 180 != 0) {
                 std::swap(dest.size.x, dest.size.y);

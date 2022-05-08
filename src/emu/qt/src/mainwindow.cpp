@@ -70,26 +70,6 @@ static constexpr const char *LAST_MOUNT_FOLDER_SETTING = "lastMountFolder";
 static constexpr const char *NO_DEVICE_INSTALL_DISABLE_NOF_SETTING = "disableNoDeviceInstallNotify";
 static constexpr const char *NO_TOUCHSCREEN_DISABLE_WARN_SETTING = "disableNoTouchscreenWarn";
 
-static void advance_dsa_pos_around_origin(eka2l1::rect &origin_normal_rect, const int rotation) {
-    switch (rotation) {
-    case 90:
-        origin_normal_rect.top.x += origin_normal_rect.size.x;
-        break;
-
-    case 180:
-        origin_normal_rect.top.x += origin_normal_rect.size.x;
-        origin_normal_rect.top.y += origin_normal_rect.size.y;
-        break;
-
-    case 270:
-        origin_normal_rect.top.y += origin_normal_rect.size.y;
-        break;
-
-    default:
-        break;
-    }
-}
-
 static void mode_change_screen(void *userdata, eka2l1::epoc::screen *scr, const int old_mode) {
     eka2l1::desktop::emulator *state_ptr = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
     if (!state_ptr) {
@@ -179,7 +159,7 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     dest.top = eka2l1::vec2(x, y);
     dest.size = eka2l1::vec2(width, height);
 
-    advance_dsa_pos_around_origin(dest, scr->ui_rotation);
+    eka2l1::drivers::advance_draw_pos_around_origin(dest, scr->ui_rotation);
 
     if (scr->ui_rotation % 180 != 0) {
         std::swap(dest.size.x, dest.size.y);
