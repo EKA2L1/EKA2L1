@@ -778,4 +778,9 @@ namespace eka2l1::epoc {
         eka2l1::ptr<char> am_pm_table;
         eka2l1::ptr<uint16_t> msg_table;
     };
+
+    struct locale_locale_settings {
+        char16_t currency_symbols[9];
+        std::uint32_t locale_extra_settings_dll_ptr;
+    };
 }

@@ -29,6 +29,7 @@ namespace eka2l1::epoc {
 
     const std::uint32_t LOCALE_DATA_KEY = 0x10208904;
     const std::uint32_t LOCALE_LANG_KEY = 0x10208903;
+    const std::uint32_t LOCALE_LOCALE_SETTINGS_KEY = 0x10208905;
 
     const std::uint32_t PHONE_POWER_KEY = 0x100052C5;
     const std::uint32_t SOFTWARE_INSTALL_KEY = 0x102047B7;
