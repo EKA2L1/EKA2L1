@@ -97,12 +97,9 @@ void CVideoPlayerUtility::CBody::OpenFileL(const TDesC &aPath) {
         
         return;
     }
-    
+
     if (iFeedbackHandler.CurrentState() != EVideoPlayerStateIdle) {
-        LogOut(KMcvCat, _L("Open a new video when existing video loaded into the player has not been closed!"));
-        User::Leave(KErrInUse);
-        
-        return;
+        Close();
     }
 
     TInt result = EVideoPlayerOpenUrl(0, iDispatchInstance, &aPath);
