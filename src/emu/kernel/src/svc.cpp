@@ -2673,6 +2673,22 @@ namespace eka2l1::epoc {
         timer->after(kern->crr_thread(), req_sts, us_after);
     }
 
+    BRIDGE_FUNC(void, timer_lock, kernel::handle h, eka2l1::ptr<epoc::request_status> req_sts, std::uint32_t second_fraction_enum) {
+        timer_ptr timer = kern->get<kernel::timer>(h);
+
+        if (!timer) {
+            return;
+        }
+
+        second_fraction_enum += 1;
+
+        if (second_fraction_enum >= 12) {
+            second_fraction_enum = 12;
+        }
+        
+        timer->after(kern->crr_thread(), req_sts, common::microsecs_per_sec * second_fraction_enum / 12);
+    }
+
     BRIDGE_FUNC(void, timer_after_eka1, eka2l1::ptr<epoc::request_status> req_sts, std::int32_t us_after, kernel::handle h) {
         timer_ptr timer = kern->get<kernel::timer>(h);
 
@@ -5464,6 +5480,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x02, chunk_size),
         BRIDGE_REGISTER(0x03, chunk_max_size),
         BRIDGE_REGISTER(0x05, tick_count),
+        BRIDGE_REGISTER(0x0B, math_rand),
         BRIDGE_REGISTER(0x0C, imb_range),
         BRIDGE_REGISTER(0x0E, library_lookup),
         BRIDGE_REGISTER(0x11, mutex_wait),
@@ -5486,13 +5503,17 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x23, server_cancel),
         BRIDGE_REGISTER(0x24, set_session_ptr),
         BRIDGE_REGISTER(0x25, session_send),
+        BRIDGE_REGISTER(0x26, thread_id),
         BRIDGE_REGISTER(0x27, session_share),
         BRIDGE_REGISTER(0x28, thread_resume),
         BRIDGE_REGISTER(0x29, thread_suspend),
         BRIDGE_REGISTER(0x2B, thread_set_priority),
         BRIDGE_REGISTER(0x2F, thread_set_flags),
+        BRIDGE_REGISTER(0x31, thread_exit_type),
         BRIDGE_REGISTER(0x34, timer_cancel),
         BRIDGE_REGISTER(0x35, timer_after),
+        BRIDGE_REGISTER(0x36, timer_at_utc),
+        BRIDGE_REGISTER(0x37, timer_lock),
         BRIDGE_REGISTER(0x38, change_notifier_logon),
         BRIDGE_REGISTER(0x39, change_notifier_logoff),
         BRIDGE_REGISTER(0x3A, request_signal),
@@ -5521,6 +5542,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x6E, handle_duplicate_v2),
         BRIDGE_REGISTER(0x6F, mutex_create),
         BRIDGE_REGISTER(0x70, semaphore_create),
+        BRIDGE_REGISTER(0x71, thread_open_by_id),
         BRIDGE_REGISTER(0x73, thread_kill),
         BRIDGE_REGISTER(0x78, thread_rename),
         BRIDGE_REGISTER(0x7B, process_logon),
@@ -5646,6 +5668,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x35, timer_cancel),
         BRIDGE_REGISTER(0x36, timer_after),
         BRIDGE_REGISTER(0x37, timer_at_utc),
+        BRIDGE_REGISTER(0x38, timer_lock),
         BRIDGE_REGISTER(0x39, change_notifier_logon),
         BRIDGE_REGISTER(0x3A, change_notifier_logoff),
         BRIDGE_REGISTER(0x3B, request_signal),
