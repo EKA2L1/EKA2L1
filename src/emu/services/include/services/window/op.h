@@ -448,6 +448,7 @@ enum TWsWindowOpcodes {
     EWsWinOpSendEffectCommand,
     EWsWinOpOverrideEffectBuf,
     EWsWinOpOverrideEffectIPC,
+    EWsWinOpFixNativeOrientation = 0x99,
     EWsWinOpTestLowPriorityRedraw = 0x2000, //Specific opcode for testing redraw queue priorities
 };
 

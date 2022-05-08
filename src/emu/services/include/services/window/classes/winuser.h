@@ -116,6 +116,7 @@ namespace eka2l1::epoc {
         eka2l1::rect bounding_rect() const;
         eka2l1::rect absolute_rect() const;
         eka2l1::vec2 size() const;
+        eka2l1::vec2 size_for_egl_surface() const;
 
         /**
          * \brief Set window extent in screen space.
@@ -176,6 +177,7 @@ namespace eka2l1::epoc {
         void scroll(service::ipc_context &context, ws_cmd &cmd);
         void set_shape(service::ipc_context &context, ws_cmd &cmd);
         void enable_visiblity_change_events(service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
+        void fix_native_orientation(service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
 
         epoc::window_group *get_group();
 

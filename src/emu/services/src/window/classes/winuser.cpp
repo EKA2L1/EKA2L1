@@ -217,6 +217,15 @@ namespace eka2l1::epoc {
         return abs_rect.size;
     }
 
+    eka2l1::vec2 canvas_base::size_for_egl_surface() const {
+        if ((flags & epoc::window::flag_fix_native_orientation) && (abs_rect.size == scr->current_mode().size)) {
+            // Fullscreen window, but must change the size to native orientation
+            return scr->size();
+        }
+
+        return abs_rect.size;
+    }
+
     void canvas_base::report_visiblity_change() {
         if ((flags & flag_visiblity_event_report) == 0) {
             return;
@@ -482,6 +491,25 @@ namespace eka2l1::epoc {
 
         // Resize the buffers
         max_pointer_buffer_ = alloc_params->max_points;
+        context.complete(epoc::error_none);
+    }
+    
+    void canvas_base::fix_native_orientation(service::ipc_context &context, ws_cmd &cmd) {
+        if (flags & flags_active) {
+            LOG_TRACE(SERVICE_WINDOW, "The window has already been activated, fix native orientation is illegal!");
+            context.complete(epoc::error_none);
+
+            return;
+        }
+
+        if (flags & flag_fix_native_orientation) {
+            LOG_TRACE(SERVICE_WINDOW, "Fix native orientation has already been called before, no need to recall!");
+            context.complete(epoc::error_none);
+
+            return;
+        }
+
+        flags |= flag_fix_native_orientation;
         context.complete(epoc::error_none);
     }
 
@@ -789,6 +817,10 @@ namespace eka2l1::epoc {
 
         case EWsWinOpEnableVisibilityChangeEvents:
             enable_visiblity_change_events(ctx, cmd);
+            break;
+
+        case EWsWinOpFixNativeOrientation:
+            fix_native_orientation(ctx, cmd);
             break;
 
         default: {

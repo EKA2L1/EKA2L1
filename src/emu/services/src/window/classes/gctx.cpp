@@ -845,6 +845,11 @@ namespace eka2l1::epoc {
         client->delete_object(cmd.obj_handle);
     }
 
+    void graphic_context::set_opaque(service::ipc_context &context, ws_cmd &cmd) {
+        // TODO: Unstub!
+        context.complete(epoc::error_none);
+    }
+
     bool graphic_context::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         //LOG_TRACE(SERVICE_WINDOW, "Graphics context opcode {}", cmd.header.op);
         ws_graphics_context_opcode op = static_cast<decltype(op)>(cmd.header.op);
@@ -967,6 +972,7 @@ namespace eka2l1::epoc {
             { ws_gc_u151m2_plot, { &graphic_context::plot, true, false } },
             { ws_gc_u151m2_set_faded, { nullptr, true, false } },
             { ws_gc_u151m2_set_fade_params, { nullptr, true, false } },
+            { ws_gc_u151m2_set_opaque, { &graphic_context::set_opaque, true, false } },
             { ws_gc_u151m2_free, { &graphic_context::destroy, true, true } }
         };
 
@@ -1006,6 +1012,7 @@ namespace eka2l1::epoc {
             { ws_gc_curr_plot, { &graphic_context::plot, true, false } },
             { ws_gc_curr_set_faded, { nullptr, true, false } },
             { ws_gc_curr_set_fade_params, { nullptr, true, false } },
+            { ws_gc_curr_set_opaque, { &graphic_context::set_opaque, true, false } },
             { ws_gc_curr_free, { &graphic_context::destroy, true, true } }
         };
 
