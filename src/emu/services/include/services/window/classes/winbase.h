@@ -87,7 +87,8 @@ namespace eka2l1::epoc {
             flag_winmode_fixed = 1 << 13,
             flag_visiblity_event_report = 1 << 14,
             flag_content_changed = 1 << 16,
-            flag_shape_region = 1 << 17            // Only support region and square on the emulator, others are too complicated
+            flag_shape_region = 1 << 17,            // Only support region and square on the emulator, others are too complicated
+            flag_fix_native_orientation = 1 << 18   // Surface created by EGL will retain width and height of the screen when the phone is in its normal orientation
         };
 
         std::uint32_t flags;
