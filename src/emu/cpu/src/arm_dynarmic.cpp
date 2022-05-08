@@ -317,7 +317,7 @@ namespace eka2l1::arm {
     }
 
     uint32_t dynarmic_core::get_vfp(size_t idx) {
-        return 0;
+        return jit->ExtRegs()[idx];
     }
 
     void dynarmic_core::set_reg(size_t idx, uint32_t val) {
@@ -337,6 +337,7 @@ namespace eka2l1::arm {
     }
 
     void dynarmic_core::set_vfp(size_t idx, uint32_t val) {
+        jit->ExtRegs()[idx] = val;
     }
 
     uint32_t dynarmic_core::get_lr() {
@@ -361,9 +362,14 @@ namespace eka2l1::arm {
 
     void dynarmic_core::save_context(thread_context &ctx) {
         ctx.cpsr = get_cpsr();
+        ctx.fpscr = get_fpscr();
 
         for (uint8_t i = 0; i < 16; i++) {
             ctx.cpu_registers[i] = get_reg(i);
+        }
+
+        for (uint8_t i = 0; i < 64; i++) {
+            ctx.fpu_registers[i] = get_vfp(i);
         }
 
         ctx.uprw = cb->get_cp15()->get_uprw();
@@ -374,7 +380,13 @@ namespace eka2l1::arm {
             jit->Regs()[i] = ctx.cpu_registers[i];
         }
 
+        for (uint8_t i = 0; i < 64; i++) {
+            jit->ExtRegs()[i] = ctx.fpu_registers[i];
+        }
+
         set_cpsr(ctx.cpsr);
+        set_fpscr(ctx.fpscr);
+
         cb->get_cp15()->set_uprw(ctx.uprw);
     }
 
