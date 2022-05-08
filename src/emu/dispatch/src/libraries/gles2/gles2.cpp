@@ -841,7 +841,7 @@ namespace eka2l1::dispatch {
         , binded_framebuffer_(0)
         , previous_using_program_(nullptr)
         , using_program_(nullptr)
-        , framebuffer_need_reconfigure_(false)
+        , framebuffer_need_reconfigure_(true)
         , attributes_enabled_(false)
         , previous_first_index_(0)
         , input_descs_(0) {
@@ -961,7 +961,7 @@ namespace eka2l1::dispatch {
     bool egl_context_es2::try_configure_framebuffer(drivers::graphics_driver *drv, egl_controller &controller) {
         if (framebuffer_need_reconfigure_) {
             if (!binded_framebuffer_) {
-                cmd_builder_.bind_bitmap(draw_surface_->handle_);
+                draw_surface_->scale_and_bind(this, drv);
             } else {
                 gles_framebuffer_object *fb_obj = get_binded_framebuffer_object_gles(this, controller);
                 if (!fb_obj) {

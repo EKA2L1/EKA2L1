@@ -255,6 +255,12 @@ namespace eka2l1::dispatch {
             return EGL_NO_SURFACE_EMU;
         }
 
+        if (canvas->window_size_changed_callback_) {
+            // Already one allocated
+            egl_push_error(sys, EGL_BAD_ALLOC_EMU);
+            return EGL_NO_SURFACE_EMU;
+        }
+
         drivers::handle hh = drivers::create_bitmap(driver, canvas->size_for_egl_surface() * canvas->scr->display_scale_factor, choosen_config.buffer_size());
         if (hh == 0) {
             egl_push_error(sys, EGL_BAD_CONFIG);
@@ -474,21 +480,7 @@ namespace eka2l1::dispatch {
 
         if (surface->backed_window_) {
             egl_context *ctx = surface->bounded_context_;
-            if (surface->current_scale_ != surface->backed_screen_->display_scale_factor) {
-                // Silently resize and scale
-                float new_display_factor = surface->backed_screen_->display_scale_factor;
-                eka2l1::vec2 new_scaled_size = surface->dimension_ * new_display_factor;
-
-                drivers::handle new_surface = drivers::create_bitmap(drv, new_scaled_size, 32);
-
-                ctx->cmd_builder_.bind_bitmap(new_surface);
-                ctx->cmd_builder_.draw_bitmap(surface->handle_, 0, eka2l1::rect(eka2l1::vec2(0, 0), new_scaled_size),
-                    eka2l1::rect(eka2l1::vec2(0, 0), eka2l1::vec2(0, 0)));
-                ctx->cmd_builder_.destroy_bitmap(surface->handle_);
-
-                surface->handle_ = new_surface;
-                surface->current_scale_ = surface->backed_screen_->display_scale_factor;
-            }
+            surface->scale(ctx, drv);
 
             if (ctx && surface->backed_window_->can_be_physically_seen()) {
                 drivers::graphics_command_builder &window_builder = surface->backed_window_->driver_builder_;

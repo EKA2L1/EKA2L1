@@ -163,6 +163,9 @@ namespace eka2l1::dispatch {
             return source + ".rgb";
 
         case gles_texture_env_info::SOURCE_OPERAND_ALPHA:
+            if (is_for_rgb) {
+                return "vec3(" + source + ".a)";
+            }
             return source + ".a";
 
         case gles_texture_env_info::SOURCE_OPERAND_ONE_MINUS_ALPHA: {

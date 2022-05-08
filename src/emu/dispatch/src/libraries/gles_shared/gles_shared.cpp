@@ -485,7 +485,10 @@ namespace eka2l1::dispatch {
     void egl_context_es_shared::on_surface_changed(egl_surface *prev_read, egl_surface *prev_draw) {
         // Rebind viewport
         viewport_bl_.top = eka2l1::vec2(0, 0);
-        viewport_bl_.size = draw_surface_->dimension_;
+        viewport_bl_.size = eka2l1::vec2(-1, -1);
+
+        scissor_bl_.top = eka2l1::vec2(0, 0);
+        scissor_bl_.size = eka2l1::vec2(-1, -1);
     }
 
     void egl_context_es_shared::flush_state_changes() {
@@ -499,6 +502,9 @@ namespace eka2l1::dispatch {
         }
 
         if (state_change_tracker_ & STATE_CHANGED_SCISSOR_RECT) {
+            if (scissor_bl_.size == eka2l1::vec2(-1, -1)) {
+                scissor_bl_.size = draw_surface_->dimension_;
+            }
             eka2l1::rect scissor_bl_scaled = scissor_bl_;
             scissor_bl_scaled.scale(draw_surface_->current_scale_);
             scissor_bl_scaled.size.y *= -1;
@@ -511,6 +517,9 @@ namespace eka2l1::dispatch {
         }
 
         if (state_change_tracker_ & STATE_CHANGED_VIEWPORT_RECT) {
+            if (viewport_bl_.size == eka2l1::vec2(-1, -1)) {
+                viewport_bl_.size = draw_surface_->dimension_;
+            }
             eka2l1::rect viewport_transformed = viewport_bl_;
 
             // Make viewport bottom left
@@ -653,6 +662,14 @@ namespace eka2l1::dispatch {
         cmd_builder_.set_feature(drivers::graphics_feature::sample_alpha_to_one, non_shader_statuses_ & NON_SHADER_STATE_SAMPLE_ALPHA_TO_ONE);
         cmd_builder_.set_feature(drivers::graphics_feature::sample_coverage, non_shader_statuses_ & NON_SHADER_STATE_SAMPLE_COVERAGE);
         cmd_builder_.set_feature(drivers::graphics_feature::stencil_test, non_shader_statuses_ & NON_SHADER_STATE_STENCIL_TEST_ENABLE);
+
+        if (viewport_bl_.size == eka2l1::vec2(-1, -1)) {
+            viewport_bl_.size = draw_surface_->dimension_;
+        }
+    
+        if (scissor_bl_.size == eka2l1::vec2(-1, -1)) {
+            scissor_bl_.size = draw_surface_->dimension_;
+        }
 
         eka2l1::rect viewport_transformed = viewport_bl_;
         eka2l1::rect clip_rect_transformed = scissor_bl_;

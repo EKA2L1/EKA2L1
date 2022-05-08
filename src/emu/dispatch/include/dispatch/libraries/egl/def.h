@@ -61,6 +61,7 @@ namespace eka2l1::dispatch {
         EGL_MAJOR_VERSION_EMU = 1,
         EGL_MINOR_VERSION_EMU = 4,
         EGL_SUCCESS = 0x3000,
+        EGL_BAD_ALLOC_EMU = 0x3003,
         EGL_BAD_ATTRIBUTE_EMU = 0x3004,
         EGL_BAD_CONFIG = 0x3005,
         EGL_BAD_CONTEXT_EMU = 0x3006,
@@ -502,6 +503,10 @@ namespace eka2l1::dispatch {
 
         explicit egl_surface(epoc::canvas_base *backed_window, epoc::screen *screen, eka2l1::vec2 dim,
             drivers::handle h, egl_config config);
+        ~egl_surface();
+
+        void scale_and_bind(egl_context *context, drivers::graphics_driver *drv);
+        void scale(egl_context *context, drivers::graphics_driver *drv);
     };
 
     struct egl_context {

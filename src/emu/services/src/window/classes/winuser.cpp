@@ -82,7 +82,8 @@ namespace eka2l1::epoc {
         , max_pointer_buffer_(0)
         , last_draw_(0)
         , last_fps_sync_(0)
-        , fps_count_(0) {
+        , fps_count_(0)
+        , window_size_changed_callback_(nullptr) {
         set_initial_state();
 
         abs_rect.top = reinterpret_cast<canvas_interface *>(parent)->absolute_position();
@@ -305,6 +306,10 @@ namespace eka2l1::epoc {
 
         abs_rect.top += pos_diff;
         abs_rect.size = new_size;
+
+        if (size_changed && window_size_changed_callback_) {
+            window_size_changed_callback_();
+        }
 
         pos = top;
 

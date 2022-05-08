@@ -20,6 +20,7 @@
 #include <dispatch/libraries/egl/def.h>
 #include <drivers/graphics/graphics.h>
 #include <services/window/screen.h>
+#include <services/window/classes/winuser.h>
 
 #include <common/log.h>
 
@@ -53,6 +54,43 @@ namespace eka2l1::dispatch {
         if (screen) {
             current_scale_ = screen->display_scale_factor;
         }
+
+        if (backed_window_) {
+            backed_window_->window_size_changed_callback_ = [this]() {
+                // Force a surface reset
+                dimension_ = backed_window_->size_for_egl_surface();
+                current_scale_ = 0.0f;
+            };
+        }
+    }
+    
+    egl_surface::~egl_surface() {
+        if (backed_window_) {
+            backed_window_->window_size_changed_callback_ = nullptr;
+        }
+    }
+
+    void egl_surface::scale(egl_context *context, drivers::graphics_driver *drv) {
+        if (current_scale_ != backed_screen_->display_scale_factor) {
+            // Silently resize and scale
+            float new_display_factor = backed_screen_->display_scale_factor;
+            eka2l1::vec2 new_scaled_size = dimension_ * new_display_factor;
+
+            drivers::handle new_surface = drivers::create_bitmap(drv, new_scaled_size, 32);
+
+            context->cmd_builder_.bind_bitmap(new_surface);
+            context->cmd_builder_.draw_bitmap(handle_, 0, eka2l1::rect(eka2l1::vec2(0, 0), new_scaled_size),
+                eka2l1::rect(eka2l1::vec2(0, 0), eka2l1::vec2(0, 0)));
+            context->cmd_builder_.destroy_bitmap(handle_);
+
+            handle_ = new_surface;
+            current_scale_ = backed_screen_->display_scale_factor;
+        }
+    }
+
+    void egl_surface::scale_and_bind(egl_context *context, drivers::graphics_driver *drv) {
+        scale(context, drv);
+        context->cmd_builder_.bind_bitmap(handle_);
     }
 
     void egl_context::destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) {
