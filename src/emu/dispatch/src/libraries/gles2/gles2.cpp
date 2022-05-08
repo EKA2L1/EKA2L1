@@ -1974,11 +1974,6 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        if ((index >= static_cast<std::uint32_t>(obj->active_uniforms_count())) || (index < 0)) {
-            controller.push_error(ctx, GL_INVALID_VALUE);
-            return;
-        }
-
         const drivers::shader_program_metadata *metadata = obj->get_readonly_metadata();
         if (!metadata) {
             controller.push_error(ctx, GL_INVALID_VALUE);
