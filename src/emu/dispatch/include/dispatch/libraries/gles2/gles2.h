@@ -57,4 +57,47 @@ namespace eka2l1::dispatch {
         std::uint32_t attachment_target, std::uint32_t attachment);
     BRIDGE_FUNC_LIBRARY(std::uint32_t, gl_check_framebuffer_status_emu, std::uint32_t target);
     BRIDGE_FUNC_LIBRARY(void, gl_delete_framebuffers_emu, std::int32_t count, std::uint32_t *names);
+    BRIDGE_FUNC_LIBRARY(void, gl_get_active_uniform_emu, std::uint32_t program, std::uint32_t index, std::int32_t buf_size, std::int32_t *buf_written,
+        std::int32_t *arr_len, std::uint32_t *var_type, char *name_buf);
+    BRIDGE_FUNC_LIBRARY(void, gl_get_active_attrib_emu, std::uint32_t program, std::uint32_t index, std::int32_t buf_size, std::int32_t *buf_written,
+        std::int32_t *arr_len, std::uint32_t *var_type, char *name_buf);
+    BRIDGE_FUNC_LIBRARY(void, gl_get_attached_shaders_emu, std::uint32_t program, std::int32_t max_buffer_count, std::int32_t *max_buffer_written,
+        std::uint32_t *shaders);
+    BRIDGE_FUNC_LIBRARY(std::int32_t, gl_get_uniform_location_emu, std::uint32_t program, const char *name);
+    BRIDGE_FUNC_LIBRARY(std::int32_t, gl_get_attrib_location_emu, std::uint32_t program, const char *name);
+    BRIDGE_FUNC_LIBRARY(void, gl_use_program_emu, std::uint32_t program);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_1f_emu, int location, float v0);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_2f_emu, int location, float v0, float v1);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_3f_emu, int location, float v0, float v1, float v2);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_4f_emu, int location, float v0, float v1, float v2, float v3);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_1fv_emu, int location, std::int32_t count, float *value);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_2fv_emu, int location, std::int32_t count, float *value);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_3fv_emu, int location, std::int32_t count, float *value);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_4fv_emu, int location, std::int32_t count, float *value);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_1i_emu, int location, std::int32_t i0);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_2i_emu, int location, std::int32_t i0, std::int32_t i1);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_3i_emu, int location, std::int32_t i0, std::int32_t i1, std::int32_t i2);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_4i_emu, int location, std::int32_t i0, std::int32_t i1, std::int32_t i2, std::int32_t i3);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_1iv_emu, int location, std::int32_t count, std::int32_t *value);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_2iv_emu, int location, std::int32_t count, std::int32_t *value);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_3iv_emu, int location, std::int32_t count, std::int32_t *value);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_4iv_emu, int location, std::int32_t count, std::int32_t *value);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_matrix_2fv_emu, int location, std::int32_t count, bool transpose, float *value);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_matrix_3fv_emu, int location, std::int32_t count, bool transpose, float *value);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_matrix_4fv_emu, int location, std::int32_t count, bool transpose, float *value);
+    BRIDGE_FUNC_LIBRARY(void, gl_uniform_4iv_emu, int location, std::int32_t count, std::int32_t *value);
+    BRIDGE_FUNC_LIBRARY(void, gl_enable_vertex_attrib_array_emu, int index);
+    BRIDGE_FUNC_LIBRARY(void, gl_disable_vertex_attrib_array_emu, int index);
+    BRIDGE_FUNC_LIBRARY(void, gl_vertex_attrib_1f_emu, std::uint32_t index, float v0);
+    BRIDGE_FUNC_LIBRARY(void, gl_vertex_attrib_2f_emu, std::uint32_t index, float v0, float v1);
+    BRIDGE_FUNC_LIBRARY(void, gl_vertex_attrib_3f_emu, std::uint32_t index, float v0, float v1, float v2);
+    BRIDGE_FUNC_LIBRARY(void, gl_vertex_attrib_4f_emu, std::uint32_t index, float v0, float v1, float v2, float v3);
+    BRIDGE_FUNC_LIBRARY(void, gl_vertex_attrib_1fv_emu, std::uint32_t index, float *v);
+    BRIDGE_FUNC_LIBRARY(void, gl_vertex_attrib_2fv_emu, std::uint32_t index, float *v);
+    BRIDGE_FUNC_LIBRARY(void, gl_vertex_attrib_3fv_emu, std::uint32_t index, float *v);
+    BRIDGE_FUNC_LIBRARY(void, gl_vertex_attrib_4fv_emu, std::uint32_t index, float *v);
+    BRIDGE_FUNC_LIBRARY(void, gl_vertex_attrib_pointer_emu, std::uint32_t index, std::int32_t size, std::uint32_t type, bool normalized,
+        std::int32_t stride, address offset);
+    BRIDGE_FUNC_LIBRARY(void, gl_bind_attrib_location_emu, std::uint32_t program, std::uint32_t index, const char *name);
+    BRIDGE_FUNC_LIBRARY(void, gl_delete_shader_emu, std::uint32_t shader);
 }

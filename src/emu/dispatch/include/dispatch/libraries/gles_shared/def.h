@@ -69,6 +69,10 @@ namespace eka2l1::dispatch {
             client_handle_ = h;
         }
 
+        const std::uint32_t client_handle() const {
+            return client_handle_;
+        }
+
         drivers::handle handle_value() const {
             return driver_handle_;
         }
@@ -76,6 +80,12 @@ namespace eka2l1::dispatch {
         virtual gles_object_type object_type() const {
             return GLES_OBJECT_UNDEFINED;
         }
+    };
+
+    enum gles_driver_texture_type {
+        GLES_DRIVER_TEXTURE_TYPE_NONE = 0,
+        GLES_DRIVER_TEXTURE_TYPE_2D = 1,
+        GLES_DRIVER_TEXTURE_TYPE_CUBE = 2
     };
 
     struct gles_driver_texture : public gles_driver_object {
@@ -87,14 +97,20 @@ namespace eka2l1::dispatch {
         std::uint32_t wrap_t_;
         std::uint32_t mip_count_;
         float max_anisotrophy_;
+        float current_scale_;
 
         bool auto_regen_mipmap_;
+        bool mipmap_gened_;
 
         eka2l1::vec2 size_;
+        gles_driver_texture_type texture_type_;
 
     public:
         explicit gles_driver_texture(egl_context_es_shared &ctx);
         ~gles_driver_texture() override;
+
+        std::uint32_t try_bind(const std::uint32_t type);
+        std::uint32_t target_matched(const std::uint32_t type);
 
         void set_internal_format(const std::uint32_t format) {
             internal_format_ = format;
@@ -156,6 +172,14 @@ namespace eka2l1::dispatch {
             auto_regen_mipmap_ = opt;
         }
 
+        void set_mipmap_generated(const bool opt) {
+            mipmap_gened_ = opt;
+        }
+
+        const bool is_mipmap_generated() const {
+            return mipmap_gened_;
+        }
+
         float max_anisotrophy() const {
             return max_anisotrophy_;
         }
@@ -171,6 +195,12 @@ namespace eka2l1::dispatch {
         gles_object_type object_type() const override {
             return GLES_OBJECT_TEXTURE;
         }
+
+        gles_driver_texture_type texture_type() const {
+            return texture_type_;
+        }
+
+        void try_upscale();
     };
 
     struct gles_driver_buffer : public gles_driver_object {
@@ -234,7 +264,20 @@ namespace eka2l1::dispatch {
 
     using gles_driver_object_instance = std::unique_ptr<gles_driver_object>;
 
+    enum gles_get_data_type {
+        GLES_GET_DATA_TYPE_INTEGER,
+        GLES_GET_DATA_TYPE_FLOAT,
+        GLES_GET_DATA_TYPE_FIXED,
+        GLES_GET_DATA_TYPE_BOOLEAN
+    };
+
     struct egl_context_es_shared : public egl_context {
+    protected:
+        virtual bool retrieve_vertex_buffer_slot(std::vector<drivers::handle> &vertex_buffers_alloc, drivers::graphics_driver *drv,
+            kernel::process *crr_process, const gles_vertex_attrib &attrib, const std::int32_t first_index, const std::int32_t vcount,
+            std::uint32_t &res, int &offset, bool &attrib_not_persistent);
+
+    public:
         float clear_color_[4];
         float clear_depth_;
         std::int32_t clear_stencil_;
@@ -245,12 +288,17 @@ namespace eka2l1::dispatch {
 
         drivers::rendering_face active_cull_face_;
         drivers::rendering_face_determine_rule active_front_face_rule_;
-        drivers::blend_factor source_blend_factor_;
-        drivers::blend_factor dest_blend_factor_;
+        drivers::blend_factor source_blend_factor_rgb_;
+        drivers::blend_factor dest_blend_factor_rgb_;
+        drivers::blend_factor source_blend_factor_a_;
+        drivers::blend_factor dest_blend_factor_a_;
+        drivers::blend_equation blend_equation_rgb_;
+        drivers::blend_equation blend_equation_a_;
 
         common::identity_container<gles_driver_object_instance> objects_;
 
-        std::stack<drivers::handle> texture_pools_;
+        std::stack<drivers::handle> texture_pools_2d_;
+        std::stack<drivers::handle> texture_pools_cube_;
         std::stack<drivers::handle> buffer_pools_;
         
         // Viewport
@@ -281,29 +329,39 @@ namespace eka2l1::dispatch {
             STATE_CHANGED_FRONT_FACE_RULE = 1 << 3,
             STATE_CHANGED_COLOR_MASK = 1 << 4,
             STATE_CHANGED_DEPTH_BIAS = 1 << 5,
-            STATE_CHANGED_STENCIL_MASK = 1 << 6,
+            STATE_CHANGED_STENCIL_MASK_FRONT = 1 << 6,
             STATE_CHANGED_BLEND_FACTOR = 1 << 7,
             STATE_CHANGED_LINE_WIDTH = 1 << 8,
             STATE_CHANGED_DEPTH_MASK = 1 << 9,
             STATE_CHANGED_DEPTH_PASS_COND = 1 << 10,
             STATE_CHANGED_DEPTH_RANGE = 1 << 11,
-            STATE_CHANGED_STENCIL_FUNC = 1 << 12,
-            STATE_CHANGED_STENCIL_OP = 1 << 13
+            STATE_CHANGED_STENCIL_FUNC_FRONT = 1 << 12,
+            STATE_CHANGED_STENCIL_FUNC_BACK = 1 << 13,
+            STATE_CHANGED_STENCIL_OP_FRONT = 1 << 14,
+            STATE_CHANGED_STENCIL_OP_BACK = 1 << 15,
+            STATE_CHANGED_STENCIL_MASK_BACK = 1 << 16
         };
 
         std::uint64_t non_shader_statuses_;
         std::uint64_t state_change_tracker_;
         
         std::uint8_t color_mask_;
-        std::uint32_t stencil_mask_;
+        std::uint32_t stencil_mask_front_;
+        std::uint32_t stencil_mask_back_;
         std::uint32_t depth_mask_;
         std::uint32_t depth_func_;
-        std::uint32_t stencil_func_;
-        std::uint32_t stencil_func_mask_;
-        std::int32_t stencil_func_ref_;
-        std::uint32_t stencil_fail_action_;
-        std::uint32_t stencil_depth_fail_action_;
-        std::uint32_t stencil_depth_pass_action_;
+        std::uint32_t stencil_func_front_;
+        std::uint32_t stencil_func_mask_front_;
+        std::int32_t stencil_func_ref_front_;
+        std::uint32_t stencil_fail_action_front_;
+        std::uint32_t stencil_depth_fail_action_front_;
+        std::uint32_t stencil_depth_pass_action_front_;
+        std::uint32_t stencil_func_back_;
+        std::uint32_t stencil_func_mask_back_;
+        std::int32_t stencil_func_ref_back_;
+        std::uint32_t stencil_fail_action_back_;
+        std::uint32_t stencil_depth_fail_action_back_;
+        std::uint32_t stencil_depth_pass_action_back_;
         
         float polygon_offset_factor_;
         float polygon_offset_units_;
@@ -314,6 +372,11 @@ namespace eka2l1::dispatch {
         float depth_range_min_;
         float depth_range_max_;
 
+        // Vertex and index buffers
+        gles_buffer_pusher vertex_buffer_pusher_;
+        gles_buffer_pusher index_buffer_pusher_;
+        bool attrib_changed_;
+
         explicit egl_context_es_shared();
 
         virtual gles_driver_texture *binded_texture() {
@@ -322,13 +385,21 @@ namespace eka2l1::dispatch {
 
         gles_driver_buffer *binded_buffer(const bool is_array_buffer);
 
-        void init_context_state() override;
-        void return_handle_to_pool(const gles_object_type type, const drivers::handle h);
+        virtual void init_context_state() override;
+        void return_handle_to_pool(const gles_object_type type, const drivers::handle h, const int subtype = 0);
         void on_surface_changed(egl_surface *prev_read, egl_surface *prev_draw) override;
         void flush_state_changes();
         
         virtual void flush_to_driver(drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) override;
         virtual void destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) override;
+        virtual bool prepare_for_draw(drivers::graphics_driver *driver, egl_controller &controller, kernel::process *crr_process,
+            const std::int32_t first_index, const std::uint32_t vcount) = 0;
+        virtual bool prepare_for_clear(drivers::graphics_driver *driver, egl_controller &controller);
+        virtual bool enable(const std::uint32_t feature);
+        virtual bool disable(const std::uint32_t feature);
+        virtual bool is_enabled(const std::uint32_t feature, bool &enabled);
+        virtual bool get_data(drivers::graphics_driver *drv, const std::uint32_t feature, void *data, gles_get_data_type data_type);
+        virtual std::uint32_t bind_texture(const std::uint32_t target, const std::uint32_t tex) = 0;
     };
 
     egl_context_es_shared *get_es_shared_active_context(system *sys);

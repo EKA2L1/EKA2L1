@@ -129,8 +129,8 @@ namespace eka2l1::drivers {
         auto ds_tex_to_replace = std::move(instantiate_bitmap_depth_stencil_texture(driver, new_size));
 
         if (fb) {
-            auto new_fb = make_framebuffer(driver, { tex_to_replace.get() }, ds_tex_to_replace.get(),
-                ds_tex_to_replace.get());
+            auto new_fb = make_framebuffer(driver, { tex_to_replace.get() }, { 0 }, ds_tex_to_replace.get(), 0,
+                ds_tex_to_replace.get(), 0);
 
             fb->bind(driver, framebuffer_bind_read);
             new_fb->bind(driver, framebuffer_bind_draw);
@@ -157,7 +157,7 @@ namespace eka2l1::drivers {
 
     void bitmap::init_fb(graphics_driver *driver) {
         ds_tex = std::move(instantiate_bitmap_depth_stencil_texture(driver, tex->get_size()));
-        fb = make_framebuffer(driver, { tex.get() }, ds_tex.get(), ds_tex.get());
+        fb = make_framebuffer(driver, { tex.get() }, { 0 }, ds_tex.get(), 0, ds_tex.get(), 0);
     }
 
     shared_graphics_driver::shared_graphics_driver(const graphic_api gr_api)
@@ -700,11 +700,17 @@ namespace eka2l1::drivers {
 
     void shared_graphics_driver::create_framebuffer(command &cmd) {
         drivers::handle *color_buffers = reinterpret_cast<drivers::handle*>(cmd.data_[0]);
-        std::uint32_t color_buffer_count = static_cast<std::uint32_t>(cmd.data_[1]);
-        drivers::handle depth_buffer = static_cast<drivers::handle>(cmd.data_[2]);
-        drivers::handle stencil_buffer = static_cast<drivers::handle>(cmd.data_[3]);
+        int *color_face_indicies = reinterpret_cast<int*>(cmd.data_[1]);
+        std::uint32_t color_buffer_count = static_cast<std::uint32_t>(cmd.data_[2]);
+        drivers::handle depth_buffer = static_cast<drivers::handle>(cmd.data_[3]);
+        drivers::handle stencil_buffer = static_cast<drivers::handle>(cmd.data_[4]);
+
+        int depth_face_index, stencil_face_index;
+        unpack_u64_to_2u32(cmd.data_[5], depth_face_index, stencil_face_index);
 
         std::vector<drawable*> color_buffer_objs;
+        std::vector<int> color_face_indicies_v;
+
         drawable *temp = nullptr;
 
         for (std::uint32_t i = 0; i < color_buffer_count; i++) {
@@ -714,6 +720,7 @@ namespace eka2l1::drivers {
             }
 
             color_buffer_objs.push_back(temp);
+            color_face_indicies_v.push_back(color_face_indicies[i]);
         }
 
         drawable *depth_buffer_obj = nullptr;
@@ -733,12 +740,13 @@ namespace eka2l1::drivers {
             }
         }
 
-        framebuffer_ptr new_fb = make_framebuffer(this, color_buffer_objs, depth_buffer_obj, stencil_buffer_obj);
+        framebuffer_ptr new_fb = make_framebuffer(this, color_buffer_objs, color_face_indicies_v, depth_buffer_obj,
+            depth_face_index, stencil_buffer_obj, stencil_face_index);
 
         std::unique_ptr<graphics_object> obj_casted = std::move(new_fb);
         drivers::handle res = append_graphics_object(obj_casted);
 
-        drivers::handle *store = reinterpret_cast<drivers::handle*>(cmd.data_[4]);
+        drivers::handle *store = reinterpret_cast<drivers::handle*>(cmd.data_[6]);
         *store = res;
 
         finish(cmd.status_, 0);
@@ -973,7 +981,8 @@ namespace eka2l1::drivers {
         }
 
         drivers::handle color_buffer = cmd.data_[1];
-        std::int32_t pos = static_cast<std::int32_t>(cmd.data_[2]);
+        int face_index = static_cast<int>(cmd.data_[2]);
+        std::int32_t pos = static_cast<std::int32_t>(cmd.data_[3]);
 
         drivers::framebuffer *fb = reinterpret_cast<drivers::framebuffer*>(get_graphics_object(h));
         if (!fb) {
@@ -990,7 +999,7 @@ namespace eka2l1::drivers {
         }
 
         fb->bind(nullptr, drivers::framebuffer_bind_read_draw);
-        fb->set_color_buffer(obj, pos);
+        fb->set_color_buffer(obj, face_index, pos);
         fb->unbind(nullptr);
     }
 
@@ -1003,6 +1012,9 @@ namespace eka2l1::drivers {
 
         drivers::handle depth_buffer = cmd.data_[1];
         drivers::handle stencil_buffer = cmd.data_[2];
+
+        int depth_face_index, stencil_face_index;
+        unpack_u64_to_2u32(cmd.data_[3], depth_face_index, stencil_face_index);
 
         drivers::framebuffer *fb = reinterpret_cast<drivers::framebuffer*>(get_graphics_object(h));
         drivers::drawable *depth_buffer_obj = nullptr;
@@ -1023,7 +1035,7 @@ namespace eka2l1::drivers {
         }
 
         fb->bind(nullptr, drivers::framebuffer_bind_read_draw);
-        fb->set_depth_stencil_buffer(depth_buffer_obj, stencil_buffer_obj);
+        fb->set_depth_stencil_buffer(depth_buffer_obj, stencil_buffer_obj, depth_face_index, stencil_face_index);
     }
 
     void shared_graphics_driver::dispatch(command &cmd) {

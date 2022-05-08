@@ -42,6 +42,14 @@ namespace eka2l1::drivers {
         case 3:
             return GL_TEXTURE_3D;
 
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+            return GL_TEXTURE_CUBE_MAP;
+
         default:
             break;
         }
@@ -130,6 +138,15 @@ namespace eka2l1::drivers {
                 glCompressedTexImage3D(GL_TEXTURE_3D, miplvl, texture_format_to_gl_enum(internal_format), tex_size.x, tex_size.y, tex_size.z, 0, static_cast<GLsizei>(total_size), data);
                 break;
 
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+                glCompressedTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + (dimensions - 4), miplvl, texture_format_to_gl_enum(internal_format), tex_size.x, tex_size.y, 0, static_cast<GLsizei>(total_size), data);
+                break;
+
             default: {
                 res = false;
                 break;
@@ -151,6 +168,17 @@ namespace eka2l1::drivers {
 
             case 3:
                 glTexImage3D(GL_TEXTURE_3D, miplvl, texture_format_to_gl_enum(converted_internal_format), tex_size.x, tex_size.y, tex_size.z, 0, texture_format_to_gl_enum(converted_format),
+                    texture_data_type_to_gl_enum(converted_data_type), data);
+
+                break;
+
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+                glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + (dimensions - 4), miplvl, texture_format_to_gl_enum(converted_internal_format), tex_size.x, tex_size.y, 0, texture_format_to_gl_enum(converted_format),
                     texture_data_type_to_gl_enum(converted_data_type), data);
 
                 break;
@@ -184,19 +212,19 @@ namespace eka2l1::drivers {
 
     void ogl_texture::set_filter_minmag(const bool min, const filter_option op) {
         bind(nullptr, 0);
-        glTexParameteri(GL_TEXTURE_2D, (min ? GL_TEXTURE_MIN_FILTER : GL_TEXTURE_MAG_FILTER), to_filter_option(op));
+        glTexParameteri(to_gl_tex_dim(dimensions), (min ? GL_TEXTURE_MIN_FILTER : GL_TEXTURE_MAG_FILTER), to_filter_option(op));
         unbind(nullptr);
     }
 
     void ogl_texture::set_addressing_mode(const addressing_direction dir, const addressing_option op) {
         bind(nullptr, 0);
-        glTexParameteri(GL_TEXTURE_2D, to_tex_parameter_enum(dir), to_tex_wrapping_enum(op));
+        glTexParameteri(to_gl_tex_dim(dimensions), to_tex_parameter_enum(dir), to_tex_wrapping_enum(op));
         unbind(nullptr);
     }
 
     void ogl_texture::generate_mips() {
         bind(nullptr, 0);
-        glGenerateMipmap(GL_TEXTURE_2D);
+        glGenerateMipmap(to_gl_tex_dim(dimensions));
         unbind(nullptr);
     }
 
@@ -235,11 +263,13 @@ namespace eka2l1::drivers {
             swizz_gl[i] = translate_hal_swizzle_to_gl_swizzle(swizz[i]);
         }
 
+        GLenum bind_point = to_gl_tex_dim(dimensions);
+
         bind(nullptr, 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, swizz_gl[0]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, swizz_gl[1]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, swizz_gl[2]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, swizz_gl[3]);
+        glTexParameteri(bind_point, GL_TEXTURE_SWIZZLE_R, swizz_gl[0]);
+        glTexParameteri(bind_point, GL_TEXTURE_SWIZZLE_G, swizz_gl[1]);
+        glTexParameteri(bind_point, GL_TEXTURE_SWIZZLE_B, swizz_gl[2]);
+        glTexParameteri(bind_point, GL_TEXTURE_SWIZZLE_A, swizz_gl[3]);
         unbind(nullptr);
     }
 
@@ -256,6 +286,14 @@ namespace eka2l1::drivers {
         case 3: {
             return GL_TEXTURE_BINDING_3D;
         }
+
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+            return GL_TEXTURE_BINDING_CUBE_MAP;
 
         default:
             break;

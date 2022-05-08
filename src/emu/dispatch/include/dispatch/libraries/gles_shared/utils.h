@@ -33,4 +33,5 @@ namespace eka2l1::dispatch {
     bool assign_vertex_attrib_gles(gles_vertex_attrib &attrib, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset, std::uint32_t buffer_obj);
     bool convert_gl_enum_to_primitive_mode(const std::uint32_t mode, drivers::graphics_primitive_mode &res);
     bool is_valid_gl_emu_func(const std::uint32_t func);
+    std::uint32_t driver_blend_factor_to_gl_enum(const drivers::blend_factor factor);
 }

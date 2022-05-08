@@ -26,7 +26,8 @@
 #include <common/platform.h>
 
 namespace eka2l1::drivers {
-    ogl_framebuffer::ogl_framebuffer(const std::vector<drawable *> color_buffer_list, drawable *depth_buffer, drawable *stencil_buffer)
+    ogl_framebuffer::ogl_framebuffer(const std::vector<drawable *> color_buffer_list, const std::vector<int> &face_index_of_color_buffers,
+            drawable *depth_buffer, drawable *stencil_buffer, const int face_index_of_depth_buffer, const int face_index_of_stencil_buffer)
         : framebuffer(color_buffer_list, depth_buffer, stencil_buffer)
         , last_bind_type(framebuffer_bind_read_draw)
         , last_fb(-1)
@@ -42,34 +43,49 @@ namespace eka2l1::drivers {
                 glFramebufferRenderbuffer(GL_FRAMEBUFFER, static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + i),
                     GL_RENDERBUFFER, static_cast<GLuint>(color_buffers[i]->driver_handle()));
             } else {
+                ogl_texture *otex = reinterpret_cast<ogl_texture*>(color_buffers[i]);
+
                 glFramebufferTexture2D(GL_FRAMEBUFFER, static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + i),
-                    GL_TEXTURE_2D, static_cast<GLuint>(color_buffers[i]->driver_handle()), 0);
+                    ((otex->get_total_dimensions() > 3) ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + face_index_of_color_buffers[i] : GL_TEXTURE_2D)
+                    , static_cast<GLuint>(color_buffers[i]->driver_handle()), 0);
             }
         }
 
-        if ((depth_buffer == stencil_buffer) && (depth_buffer)) {
-            if (depth_buffer->get_drawable_type() == DRAWABLE_TYPE_RENDERBUFFER) {
-                glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
-                    static_cast<GLuint>(depth_buffer->driver_handle()));
-            } else {
-                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
-                    static_cast<GLuint>(depth_buffer->driver_handle()), 0);
+        if (depth_buffer == stencil_buffer) {
+            if (depth_buffer) {
+                if (depth_buffer->get_drawable_type() == DRAWABLE_TYPE_RENDERBUFFER) {
+                    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
+                        static_cast<GLuint>(depth_buffer->driver_handle()));
+                } else {
+                    ogl_texture *odepth = reinterpret_cast<ogl_texture*>(depth_buffer);
+                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, ((odepth->get_total_dimensions() > 3)
+                        ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + face_index_of_depth_buffer : GL_TEXTURE_2D),
+                        static_cast<GLuint>(depth_buffer->driver_handle()), 0);
+                }
             }
         } else {
-            if (depth_buffer->get_drawable_type() == DRAWABLE_TYPE_RENDERBUFFER) {
-                glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,
-                    static_cast<GLuint>(depth_buffer->driver_handle()));
-            } else {
-                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
-                    static_cast<GLuint>(depth_buffer->driver_handle()), 0);
+            if (depth_buffer) {
+                if (depth_buffer->get_drawable_type() == DRAWABLE_TYPE_RENDERBUFFER) {
+                    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,
+                        static_cast<GLuint>(depth_buffer->driver_handle()));
+                } else {
+                    ogl_texture *odepth = reinterpret_cast<ogl_texture*>(depth_buffer);
+                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, ((odepth->get_total_dimensions() > 3)
+                        ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + face_index_of_depth_buffer : GL_TEXTURE_2D),
+                        static_cast<GLuint>(depth_buffer->driver_handle()), 0);
+                }
             }
             
-            if (stencil_buffer->get_drawable_type() == DRAWABLE_TYPE_RENDERBUFFER) {
-                glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
-                    static_cast<GLuint>(stencil_buffer->driver_handle()));
-            } else {
-                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
-                    static_cast<GLuint>(stencil_buffer->driver_handle()), 0);
+            if (stencil_buffer) {
+                if (stencil_buffer->get_drawable_type() == DRAWABLE_TYPE_RENDERBUFFER) {
+                    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
+                        static_cast<GLuint>(stencil_buffer->driver_handle()));
+                } else {
+                    ogl_texture *ostencil = reinterpret_cast<ogl_texture*>(stencil_buffer);
+                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, ((ostencil->get_total_dimensions() > 3)
+                        ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + face_index_of_stencil_buffer : GL_TEXTURE_2D),
+                        static_cast<GLuint>(depth_buffer->driver_handle()), 0);
+                }
             }
         }
 
@@ -137,7 +153,7 @@ namespace eka2l1::drivers {
         bind_driver = nullptr;
     }
 
-    std::int32_t ogl_framebuffer::set_color_buffer(drawable *tex, const std::int32_t position) {
+    std::int32_t ogl_framebuffer::set_color_buffer(drawable *tex, const int face_index, const std::int32_t position) {
         std::int32_t attachment_id = position;
 
         if (position == -1) {
@@ -170,14 +186,16 @@ namespace eka2l1::drivers {
             glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachment_id, GL_RENDERBUFFER,
                 static_cast<GLuint>(tex->driver_handle()));
         } else {
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachment_id, GL_TEXTURE_2D,
-                static_cast<GLuint>(color_buffers[attachment_id]->driver_handle()), 0);
+            ogl_texture *ocolour = reinterpret_cast<ogl_texture*>(color_buffers[attachment_id]);
+
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachment_id, ((ocolour->get_total_dimensions() > 3) ?
+                (GL_TEXTURE_CUBE_MAP_POSITIVE_X + face_index) : GL_TEXTURE_2D), static_cast<GLuint>(ocolour->driver_handle()), 0);
         }
 
         return attachment_id;
     }
 
-    bool ogl_framebuffer::set_depth_stencil_buffer(drawable *depth, drawable *stencil) {
+    bool ogl_framebuffer::set_depth_stencil_buffer(drawable *depth, drawable *stencil, const int depth_face_index, const int stencil_face_index) {
         if ((depth != depth_buffer) && (depth == stencil)) {
             depth_buffer = depth;
             stencil_buffer = stencil;
@@ -186,8 +204,10 @@ namespace eka2l1::drivers {
                 glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
                     static_cast<GLuint>(depth_buffer->driver_handle()));
             } else {
-                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
-                    static_cast<GLuint>(depth_buffer->driver_handle()), 0);
+                ogl_texture *odepth = reinterpret_cast<ogl_texture*>(depth_buffer);
+
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, ((odepth->get_total_dimensions() > 3) ?
+                    (GL_TEXTURE_CUBE_MAP_POSITIVE_X + depth_face_index) : GL_TEXTURE_2D), static_cast<GLuint>(depth_buffer->driver_handle()), 0);
             }
         } else {
             if (depth != depth_buffer) {
@@ -197,8 +217,10 @@ namespace eka2l1::drivers {
                     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,
                         static_cast<GLuint>(depth_buffer->driver_handle()));
                 } else {
-                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
-                        static_cast<GLuint>(depth_buffer->driver_handle()), 0);
+                    ogl_texture *odepth = reinterpret_cast<ogl_texture*>(depth_buffer);
+
+                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, ((odepth->get_total_dimensions() > 3) ?
+                        (GL_TEXTURE_CUBE_MAP_POSITIVE_X + depth_face_index) : GL_TEXTURE_2D), static_cast<GLuint>(depth_buffer->driver_handle()), 0);
                 }
             }
             
@@ -209,7 +231,10 @@ namespace eka2l1::drivers {
                     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
                         static_cast<GLuint>(stencil_buffer->driver_handle()));
                 } else {
-                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
+                    ogl_texture *ostencil = reinterpret_cast<ogl_texture*>(stencil_buffer);
+
+                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, ((ostencil->get_total_dimensions() > 3) ?
+                        (GL_TEXTURE_CUBE_MAP_POSITIVE_X + depth_face_index) : GL_TEXTURE_2D),
                         static_cast<GLuint>(stencil_buffer->driver_handle()), 0);
                 }
             }

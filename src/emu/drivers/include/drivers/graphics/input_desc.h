@@ -46,6 +46,15 @@ namespace eka2l1::drivers {
         bool is_normalized() const {
             return format & (1 << 12);
         }
+
+        void set_per_instance(const bool per_inst) {
+            format &= ~(1 << 13);
+            if (per_inst) format |= (1 << 13);
+        }
+
+        bool is_per_instance() const {
+            return format & (1 << 13);
+        }
     };
 
     class input_descriptors : public graphics_object {

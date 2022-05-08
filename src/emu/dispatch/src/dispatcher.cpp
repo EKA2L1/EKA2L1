@@ -21,6 +21,7 @@
 #include <dispatch/dispatcher.h>
 #include <dispatch/libraries/register.h>
 #include <dispatch/libraries/gles1/def.h>
+#include <dispatch/libraries/gles2/def.h>
 #include <dispatch/register.h>
 #include <dispatch/screen.h>
 #include <kernel/kernel.h>
@@ -78,6 +79,11 @@ namespace eka2l1::dispatch {
             add_static_string(GLES_STATIC_STRING_KEY_RENDERER, GLES1_STATIC_STRING_RENDERER);
             add_static_string(GLES_STATIC_STRING_KEY_EXTENSIONS, dispatch::get_es1_extensions(driver));
             add_static_string(GLES_STATIC_STRING_KEY_VERSION, GLES1_STATIC_STRING_VERSION);
+            add_static_string(GLES_STATIC_STRING_KEY_VENDOR_ES2, GLES2_STATIC_STRING_VENDOR);
+            add_static_string(GLES_STATIC_STRING_KEY_RENDERER_ES2, GLES2_STATIC_STRING_VENDOR);
+            add_static_string(GLES_STATIC_STRING_KEY_EXTENSIONS_ES2, dispatch::get_es2_extensions(driver));
+            add_static_string(GLES_STATIC_STRING_KEY_VERSION_ES2, GLES2_STATIC_STRING_VERSION);
+            add_static_string(GLES_STATIC_STRING_SHADER_LANGUAGE_VERSION_ES2, GLES2_STATIC_STRING_SHADER_LANGUAGE_VERSION);
             add_static_string(EGL_VENDOR_EMU, EGL_STATIC_STRING_VENDOR);
             add_static_string(EGL_VERSION_EMU, EGL_STATIC_STRING_VERSION);
             add_static_string(EGL_EXTENSIONS_EMU, EGL_STATIC_STRING_EXTENSION);
@@ -96,6 +102,7 @@ namespace eka2l1::dispatch {
             return;
         }
 
+        //LOG_ERROR(HLE_DISPATCHER, "Calling 0x{:X}", function_ord);
         dispatch_find_result->second.first(sys, sys->get_kernel_system()->crr_process(), sys->get_cpu());
     }
 

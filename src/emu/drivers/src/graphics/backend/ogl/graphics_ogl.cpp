@@ -1339,41 +1339,55 @@ namespace eka2l1::drivers {
     }
 
     void ogl_graphics_driver::set_uniform(command &cmd) {
-        drivers::shader_set_var_type var_type;
+        drivers::shader_var_type var_type;
         std::uint8_t *data = reinterpret_cast<std::uint8_t*>(cmd.data_[1]);
         int binding = 0;
 
         unpack_u64_to_2u32(cmd.data_[0], binding, var_type);
 
         switch (var_type) {
-        case shader_set_var_type::integer: {
+        case shader_var_type::integer: {
             glUniform1iv(binding, static_cast<GLsizei>((cmd.data_[2] + 3) / 4), reinterpret_cast<const GLint *>(data));
             delete[] data;
 
             return;
         }
 
-        case shader_set_var_type::real:
+        case shader_var_type::real:
             glUniform1fv(binding, static_cast<GLsizei>((cmd.data_[2] + 3) / 4), reinterpret_cast<const GLfloat*>(data));
             delete[] data;
 
             return;
 
-        case shader_set_var_type::mat4: {
+        case shader_var_type::mat2: {
+            glUniformMatrix2fv(binding, static_cast<GLsizei>((cmd.data_[2] + 15) / 16), GL_FALSE, reinterpret_cast<const GLfloat *>(data));
+            delete[] data;
+
+            return;
+        }
+
+        case shader_var_type::mat3: {
+            glUniformMatrix2fv(binding, static_cast<GLsizei>((cmd.data_[2] + 35) / 36), GL_FALSE, reinterpret_cast<const GLfloat *>(data));
+            delete[] data;
+
+            return;
+        }
+
+        case shader_var_type::mat4: {
             glUniformMatrix4fv(binding, static_cast<GLsizei>((cmd.data_[2] + 63) / 64), GL_FALSE, reinterpret_cast<const GLfloat *>(data));
             delete[] data;
 
             return;
         }
 
-        case shader_set_var_type::vec3: {
+        case shader_var_type::vec3: {
             glUniform3fv(binding, static_cast<GLsizei>((cmd.data_[2] + 11) / 12), reinterpret_cast<const GLfloat *>(data));
             delete[] data;
 
             return;
         }
 
-        case shader_set_var_type::vec4: {
+        case shader_var_type::vec4: {
             glUniform4fv(binding, static_cast<GLsizei>((cmd.data_[2] + 15) / 16), reinterpret_cast<const GLfloat *>(data));
             delete[] data;
 

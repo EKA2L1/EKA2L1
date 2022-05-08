@@ -35,10 +35,11 @@ namespace eka2l1::drivers {
     }
 
     framebuffer_ptr make_framebuffer(graphics_driver *driver, const std::vector<drawable *> &color_buffer_list,
-        drawable *depth_buffer, drawable *stencil_buffer) {
+        const std::vector<int> &face_indicies, drawable *depth_buffer, const int depth_face_index,
+        drawable *stencil_buffer, const int stencil_face_index) {
         switch (driver->get_current_api()) {
         case graphic_api::opengl: {
-            return std::make_unique<ogl_framebuffer>(color_buffer_list, depth_buffer, stencil_buffer);
+            return std::make_unique<ogl_framebuffer>(color_buffer_list, face_indicies, depth_buffer, stencil_buffer, depth_face_index, stencil_face_index);
             break;
         }
 

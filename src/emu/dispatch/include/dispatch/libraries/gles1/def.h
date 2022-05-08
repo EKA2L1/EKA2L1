@@ -135,6 +135,11 @@ namespace eka2l1::dispatch {
     };
 
     struct egl_context_es1 : public egl_context_es_shared {
+    private:
+        void prepare_vertex_buffer_and_descriptors(drivers::graphics_driver *drv, kernel::process *crr_process, const std::int32_t first_index, const std::uint32_t vcount, const std::uint32_t active_texs);
+        bool prepare_shader_program_for_draw(dispatch::egl_controller &controller, const std::uint32_t active_texs);
+
+    public:
         std::stack<glm::mat4> model_view_mat_stack_;
         std::stack<glm::mat4> proj_mat_stack_;
         std::array<glm::mat4, GLES1_EMU_MAX_PALETTE_MATRICES> palette_mats_; 
@@ -206,7 +211,6 @@ namespace eka2l1::dispatch {
         gles_vertex_attrib weight_attrib_;
         drivers::handle input_desc_;
 
-        bool attrib_changed_;
         std::int32_t previous_first_index_;
         std::uint32_t skin_weights_per_ver;
 
@@ -238,10 +242,6 @@ namespace eka2l1::dispatch {
         std::uint64_t fragment_statuses_;
         float alpha_test_ref_;
 
-        // Vertex and index buffers
-        gles_buffer_pusher vertex_buffer_pusher_;
-        gles_buffer_pusher index_buffer_pusher_;
-
         explicit egl_context_es1();
         glm::mat4 &active_matrix();
 
@@ -250,8 +250,15 @@ namespace eka2l1::dispatch {
             return EGL_GLES1_CONTEXT;
         }
 
+        bool prepare_for_draw(drivers::graphics_driver *driver, egl_controller &controller, kernel::process *crr_process,
+            const std::int32_t first_index, const std::uint32_t vcount) override;
         void flush_to_driver(drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) override;
         void destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) override;
+        bool enable(const std::uint32_t feature) override;
+        bool disable(const std::uint32_t feature) override;
+        bool is_enabled(const std::uint32_t feature, bool &enabled) override;
+        bool get_data(drivers::graphics_driver *drv, const std::uint32_t feature, void *data, gles_get_data_type data_type) override;
+        std::uint32_t bind_texture(const std::uint32_t target, const std::uint32_t tex) override;
     };
 
     egl_context_es1 *get_es1_active_context(system *sys);

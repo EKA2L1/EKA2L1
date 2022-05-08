@@ -164,14 +164,18 @@ namespace eka2l1::drivers {
      * 
      * @param driver                 The driver associated with the framebuffer.
      * @param color_buffers          An array containing list of color buffers that will be attached to this framebuffer.
+     * @param color_face_indicies    An array specify the index of the face (in case the drawable is a cube map) of the texture to render to.
      * @param color_buffer_count     The number of color buffer in the array upper.
      * @param depth_buffer           Handle to the depth buffer (texture/renderbuffer).
+     * @param depth_face_index       The index of the face in texture to render the depth buffer to.
      * @param stencil_buffer         Handle to the stencil buffer (texture/renderbuffer).
+     * @param stencil_face_index       The index of the face in texture to render the depth buffer to.
      * 
      * @return Non-zero handle on success.
      */
-    drivers::handle create_framebuffer(graphics_driver *driver, const drivers::handle *color_buffers, const std::uint32_t color_buffer_count,
-        drivers::handle depth_buffer, drivers::handle stencil_buffer);
+    drivers::handle create_framebuffer(graphics_driver *driver, const drivers::handle *color_buffers, const int *color_face_indicies,
+        const std::uint32_t color_buffer_count, drivers::handle depth_buffer, const int depth_face_index,
+        drivers::handle stencil_buffer, const int stencil_face_index);
 
     /**
      * @brief Read bitmap data from a region into memory buffer.
@@ -389,7 +393,7 @@ namespace eka2l1::drivers {
          * @param data          The data to set to the uniform variable.
          * @param data_size     The size of the data buffer in bytes.
          */
-        void set_dynamic_uniform(const int binding, const drivers::shader_set_var_type var_type,
+        void set_dynamic_uniform(const int binding, const drivers::shader_var_type var_type,
             const void *data, const std::size_t data_size);
 
         /**
@@ -700,8 +704,10 @@ namespace eka2l1::drivers {
 
         void recreate_renderbuffer(drivers::handle h, const eka2l1::vec2 &size, const drivers::texture_format internal_format);
 
-        void set_framebuffer_color_buffer(drivers::handle h, drivers::handle color_buffer, const std::int32_t color_index = -1);
-        void set_framebuffer_depth_stencil_buffer(drivers::handle h, drivers::handle depth, drivers::handle stencil);
+        void set_framebuffer_color_buffer(drivers::handle h, drivers::handle color_buffer, const int face_index, const std::int32_t color_index = -1);
+        void set_framebuffer_depth_stencil_buffer(drivers::handle h, drivers::handle depth, const int depth_face_index, drivers::handle stencil, const int stencil_face_index);
         void bind_framebuffer(drivers::handle h, drivers::framebuffer_bind_type bind_type);
     };
+
+    void advance_draw_pos_around_origin(eka2l1::rect &origin_normal_rect, const int rotation);
 }

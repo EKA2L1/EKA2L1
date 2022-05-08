@@ -76,7 +76,8 @@ namespace eka2l1::drivers {
          * @param       tex       The drawable to set as this framebuffer's depth stencil buffer.
          * @returns     True on success.
          */
-        virtual bool set_depth_stencil_buffer(drawable *depth, drawable *stencil) = 0;
+        virtual bool set_depth_stencil_buffer(drawable *depth, drawable *stencil,
+            const int depth_face_index, const int stencil_face_index) = 0;
 
         /**
          * @brief   Set color buffer to an attachment ID.
@@ -85,7 +86,7 @@ namespace eka2l1::drivers {
          * @param   position      The ID to set attachment to. -1 for API to choose.
          * @returns Attachment ID of the color buffer. -1 on failure.
          */
-        virtual std::int32_t set_color_buffer(drawable *tex, const std::int32_t position = -1) = 0;
+        virtual std::int32_t set_color_buffer(drawable *tex, const int face_index, const std::int32_t position = -1) = 0;
 
         /**
          * @brief       Copy content of some framebuffer to draw framebuffer.
@@ -110,5 +111,6 @@ namespace eka2l1::drivers {
     using framebuffer_ptr = std::unique_ptr<framebuffer>;
 
     framebuffer_ptr make_framebuffer(graphics_driver *driver, const std::vector<drawable *> &color_buffer_list,
-        drawable *depth_buffer, drawable *stencil_buffer);
+        const std::vector<int> &face_indicies, drawable *depth_buffer, const int depth_face_index,
+        drawable *stencil_buffer, const int stencil_face_index);
 }

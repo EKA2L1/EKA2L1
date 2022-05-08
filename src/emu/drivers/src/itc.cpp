@@ -191,17 +191,20 @@ namespace eka2l1::drivers {
         return handle_num;
     }
     
-    drivers::handle create_framebuffer(graphics_driver *driver, const drivers::handle *color_buffers, const std::uint32_t color_buffer_count,
-        drivers::handle depth_buffer, drivers::handle stencil_buffer) {
+    drivers::handle create_framebuffer(graphics_driver *driver, const drivers::handle *color_buffers, const int *color_face_indicies,
+        const std::uint32_t color_buffer_count, drivers::handle depth_buffer, const int depth_face_index,
+        drivers::handle stencil_buffer, const int stencil_face_index) {
         drivers::handle handle_num = 0;
         command cmd;
 
         cmd.opcode_ = graphcis_driver_create_framebuffer;
         cmd.data_[0] = reinterpret_cast<std::uint64_t>(color_buffers);
-        cmd.data_[1] = static_cast<std::uint64_t>(color_buffer_count);
-        cmd.data_[2] = depth_buffer;
-        cmd.data_[3] = stencil_buffer;
-        cmd.data_[4] = reinterpret_cast<std::uint64_t>(&handle_num);
+        cmd.data_[1] = reinterpret_cast<std::uint64_t>(color_face_indicies);
+        cmd.data_[2] = static_cast<std::uint64_t>(color_buffer_count);
+        cmd.data_[3] = depth_buffer;
+        cmd.data_[4] = stencil_buffer;
+        cmd.data_[5] = PACK_2U32_TO_U64(depth_face_index, stencil_face_index);
+        cmd.data_[6] = reinterpret_cast<std::uint64_t>(&handle_num);
 
         if (send_sync_command(driver, cmd) != 0) {
             return 0;
@@ -378,7 +381,7 @@ namespace eka2l1::drivers {
         cmd->data_[0] = h;
     }
 
-    void graphics_command_builder::set_dynamic_uniform(const int binding, const drivers::shader_set_var_type var_type,
+    void graphics_command_builder::set_dynamic_uniform(const int binding, const drivers::shader_var_type var_type,
         const void *data, const std::size_t data_size) {
         command *cmd = list_.retrieve_next();
         cmd->opcode_ = graphics_driver_set_uniform;
@@ -736,22 +739,24 @@ namespace eka2l1::drivers {
         cmd->data_[2] = h;
     }
 
-    void graphics_command_builder::set_framebuffer_color_buffer(drivers::handle h, drivers::handle color_buffer, const std::int32_t color_index) {
+    void graphics_command_builder::set_framebuffer_color_buffer(drivers::handle h, drivers::handle color_buffer, const int face_index, const std::int32_t color_index) {
         command *cmd = list_.retrieve_next();
 
         cmd->opcode_ = graphics_driver_set_framebuffer_color_buffer;
         cmd->data_[0] = h;
         cmd->data_[1] = color_buffer;
-        cmd->data_[2] = static_cast<std::uint64_t>(color_index);
+        cmd->data_[2] = static_cast<std::uint64_t>(face_index);
+        cmd->data_[3] = static_cast<std::uint64_t>(color_index);
     }
 
-    void graphics_command_builder::set_framebuffer_depth_stencil_buffer(drivers::handle h, drivers::handle depth, drivers::handle stencil) {
+    void graphics_command_builder::set_framebuffer_depth_stencil_buffer(drivers::handle h, drivers::handle depth, const int depth_face_index, drivers::handle stencil, const int stencil_face_index) {
         command *cmd = list_.retrieve_next();
 
         cmd->opcode_ = graphics_driver_set_framebuffer_depth_stencil_buffer;
         cmd->data_[0] = h;
         cmd->data_[1] = depth;
         cmd->data_[2] = stencil;
+        cmd->data_[3] = PACK_2U32_TO_U64(depth_face_index, stencil_face_index);
     }
 
     void graphics_command_builder::bind_framebuffer(drivers::handle h, drivers::framebuffer_bind_type bind_type) {
@@ -760,5 +765,25 @@ namespace eka2l1::drivers {
         cmd->opcode_ = graphics_driver_bind_framebuffer;
         cmd->data_[0] = h;
         cmd->data_[1] = static_cast<std::uint64_t>(bind_type);
+    }
+
+    void advance_draw_pos_around_origin(eka2l1::rect &origin_normal_rect, const int rotation) {
+        switch (rotation) {
+        case 90:
+            origin_normal_rect.top.x += origin_normal_rect.size.x;
+            break;
+
+        case 180:
+            origin_normal_rect.top.x += origin_normal_rect.size.x;
+            origin_normal_rect.top.y += origin_normal_rect.size.y;
+            break;
+
+        case 270:
+            origin_normal_rect.top.y += origin_normal_rect.size.y;
+            break;
+
+        default:
+            break;
+        }
     }
 }

@@ -28,6 +28,63 @@
 #include <sstream>
 
 namespace eka2l1::drivers {
+    static shader_var_type gl_enum_to_shader_var_type(const GLenum val) {
+        switch (val) {
+        case GL_FLOAT:
+            return shader_var_type::real;
+
+        case GL_BOOL:
+            return shader_var_type::boolean;
+
+        case GL_INT:
+            return shader_var_type::integer;
+
+        case GL_FLOAT_VEC2:
+            return shader_var_type::vec2;
+
+        case GL_FLOAT_VEC3:
+            return shader_var_type::vec3;
+
+        case GL_FLOAT_VEC4:
+            return shader_var_type::vec4;
+
+        case GL_INT_VEC2:
+            return shader_var_type::ivec2;
+
+        case GL_INT_VEC3:
+            return shader_var_type::ivec3;
+
+        case GL_INT_VEC4:
+            return shader_var_type::ivec4;
+
+        case GL_BOOL_VEC2:
+            return shader_var_type::bvec2;
+
+        case GL_SAMPLER_1D:
+            return shader_var_type::sampler1d;
+
+        case GL_SAMPLER_2D:
+            return shader_var_type::sampler2d;
+
+        case GL_SAMPLER_CUBE:
+            return shader_var_type::sampler_cube;
+
+        case GL_FLOAT_MAT2:
+            return shader_var_type::mat2;
+
+        case GL_FLOAT_MAT3:
+            return shader_var_type::mat3;
+
+        case GL_FLOAT_MAT4:
+            return shader_var_type::mat4;
+
+        default:
+            break;
+        }
+
+        return shader_var_type::real;
+    }
+
     /**
       * \brief Build a shader program's metadata. This is for client who desired performance, traded for memory.
       */
@@ -42,17 +99,20 @@ namespace eka2l1::drivers {
         glGetProgramiv(program, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &max_attribute_name_len);
         glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_uniform_name_len);
 
-        data.resize(12);
+        data.resize(16);
 
-        reinterpret_cast<std::uint16_t *>(&data[0])[0] = 12;
+        reinterpret_cast<std::uint16_t *>(&data[0])[0] = 16;
 
         GLchar buf[257];
         GLint size = 0;
         GLsizei name_len = 0;
         GLenum type = 0;
 
+        std::vector<std::uint16_t> offsets;
+
         for (int i = 0; i < total_attributes; i++) {
             glGetActiveAttrib(program, i, 256, &name_len, &size, &type, buf);
+            offsets.push_back(static_cast<std::uint16_t>(data.size()));
 
             // Push
             data.push_back(static_cast<std::uint8_t>(name_len));
@@ -61,7 +121,15 @@ namespace eka2l1::drivers {
             buf[name_len] = '\0';
 
             std::int32_t location = glGetAttribLocation(program, buf);
+            shader_var_type var_type = gl_enum_to_shader_var_type(type);
+
             data.insert(data.end(), reinterpret_cast<std::uint8_t *>(&location), reinterpret_cast<std::uint8_t *>(&location) + sizeof(location));
+            data.insert(data.end(), reinterpret_cast<std::uint8_t *>(&var_type), reinterpret_cast<std::uint8_t*>(&var_type + 1));            
+            data.insert(data.end(), reinterpret_cast<std::uint8_t *>(&size), reinterpret_cast<std::uint8_t *>(&size + 1));
+        }
+
+        for (int i = 0; i < total_attributes; i++) {
+            data.insert(data.end(), reinterpret_cast<std::uint8_t *>(&offsets[i]), reinterpret_cast<std::uint8_t *>(&offsets[i] + 1));
         }
 
         reinterpret_cast<std::uint16_t *>(&data[0])[1] = static_cast<std::uint16_t>(data.size());
@@ -70,18 +138,32 @@ namespace eka2l1::drivers {
         reinterpret_cast<std::uint16_t *>(&data[0])[4] = static_cast<std::uint16_t>(max_attribute_name_len);
         reinterpret_cast<std::uint16_t *>(&data[0])[5] = static_cast<std::uint16_t>(max_uniform_name_len);
 
+        offsets.clear();
+
         for (int i = 0; i < total_uniforms; i++) {
             glGetActiveUniform(program, i, 256, &name_len, &size, &type, buf);
 
             buf[name_len] = '\0';
 
             // Push
+            offsets.push_back(static_cast<std::uint16_t>(data.size()));
             data.push_back(static_cast<std::uint8_t>(name_len));
             data.insert(data.end(), buf, buf + name_len);
 
             std::int32_t location = glGetUniformLocation(program, buf);
+            shader_var_type var_type = gl_enum_to_shader_var_type(type);
+
             data.insert(data.end(), reinterpret_cast<std::uint8_t *>(&location), reinterpret_cast<std::uint8_t *>(&location) + sizeof(location));
+            data.insert(data.end(), reinterpret_cast<std::uint8_t *>(&var_type), reinterpret_cast<std::uint8_t*>(&var_type + 1));
+            data.insert(data.end(), reinterpret_cast<std::uint8_t *>(&size), reinterpret_cast<std::uint8_t *>(&size + 1));
         }
+        
+        for (int i = 0; i < total_uniforms; i++) {
+            data.insert(data.end(), reinterpret_cast<std::uint8_t *>(&offsets[i]), reinterpret_cast<std::uint8_t *>(&offsets[i] + 1));
+        }
+        
+        reinterpret_cast<std::uint16_t *>(&data[0])[6] = static_cast<std::uint16_t>(data.size());
+        reinterpret_cast<std::uint16_t *>(&data[0])[7] = 0;     // Reserved
     }
 
     ogl_shader_module::ogl_shader_module()
@@ -141,6 +223,8 @@ namespace eka2l1::drivers {
             }
 
             glDeleteShader(shader);
+            shader = 0;
+
             return false;
         }
 
