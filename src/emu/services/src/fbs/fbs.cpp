@@ -338,7 +338,7 @@ namespace eka2l1 {
                               "FbsLargeChunk",
                               0,
                               0,
-                              0x2000000,
+                              (kern->get_epoc_version() >= epocver::epoc95) ? 0x08000000 : 0x06000000,
                               prot_read_write,
                               kernel::chunk_type::normal,
                               kernel::chunk_access::global,
