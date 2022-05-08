@@ -54,5 +54,8 @@ namespace eka2l1::epoc::socket {
 
         virtual bool get_by_address(saddress &addr, name_entry &result) = 0;
         virtual bool get_by_name(name_entry &supply_and_result) = 0;
+        virtual bool next(name_entry &result) {
+            return false;
+        }
     };
 }

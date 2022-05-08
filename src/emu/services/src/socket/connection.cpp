@@ -23,6 +23,7 @@
 
 #include <common/log.h>
 #include <utils/err.h>
+#include <system/epoc.h>
 
 namespace eka2l1::epoc::socket {
     connection::connection(protocol *pr, saddress dest)
@@ -54,12 +55,27 @@ namespace eka2l1::epoc::socket {
                 break;
             }
         } else {
-            switch (ctx->msg->function) {
-            default:
-                LOG_ERROR(SERVICE_ESOCK, "Unimplemented socket connection opcode: {}", ctx->msg->function);
-                ctx->complete(epoc::error_none);
+            if (ctx->sys->get_symbian_version_use() >= epocver::epoc95) {
+                switch (ctx->msg->function) {
+                default:
+                    LOG_ERROR(SERVICE_ESOCK, "Unimplemented socket connection opcode: {}", ctx->msg->function);
+                    ctx->complete(epoc::error_none);
 
-                break;
+                    break;
+                }
+            } else {
+                switch (ctx->msg->function) {
+                case socket_cm_api_ext_interface_send_receive:
+                    // Async, but we should complete it in sometimes
+                    // Complete with not right result will create stuck or crash sometimes
+                    break;
+
+                default:
+                    LOG_ERROR(SERVICE_ESOCK, "Unimplemented socket connection opcode: {}", ctx->msg->function);
+                    ctx->complete(epoc::error_none);
+
+                    break;
+                }
             }
         }
     }

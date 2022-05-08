@@ -73,6 +73,18 @@ namespace eka2l1::epoc::socket {
         ctx->write_data_to_descriptor_argument(1, entry_holder);
         ctx->complete(epoc::error_none);
     }
+    
+    void socket_host_resolver::next(service::ipc_context *ctx) {
+        epoc::socket::name_entry entry_holder;
+
+        if (!resolver_->next(entry_holder)) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->write_data_to_descriptor_argument(1, entry_holder);
+        ctx->complete(epoc::error_none);
+    }
 
     void socket_host_resolver::close(service::ipc_context *ctx) {
         parent_->subsessions_.remove(id_);
@@ -106,6 +118,10 @@ namespace eka2l1::epoc::socket {
 
                 case socket_reform_hr_close:
                     close(ctx);
+                    return;
+
+                case socket_reform_hr_next:
+                    next(ctx);
                     return;
 
                 default:

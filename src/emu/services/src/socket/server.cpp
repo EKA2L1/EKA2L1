@@ -213,6 +213,10 @@ namespace eka2l1 {
                     so_create_with_conn_or_subconn(ctx);
                     return;
 
+                case socket_ss_request_optimal_dealer:
+                    ss_request_optimal_dealer(ctx);
+                    return;
+
                 default:
                     break;
                 }

@@ -31,6 +31,8 @@
 #include <thread>
 #include <vector>
 
+struct addrinfo;
+
 namespace eka2l1::epoc::internet {
     class midman;
     class inet_bridged_protocol;
@@ -73,14 +75,19 @@ namespace eka2l1::epoc::internet {
         std::uint32_t addr_family_;
         std::uint32_t protocol_id_;
 
+        addrinfo *prev_info_;
+        addrinfo *iterating_info_;
+
     public:
         explicit inet_host_resolver(inet_bridged_protocol *papa, const std::uint32_t addr_family, const std::uint32_t protocol_id);
+        ~inet_host_resolver();
 
         std::u16string host_name() const override;
         bool host_name(const std::u16string &name) override;
 
         bool get_by_address(epoc::socket::saddress &addr, epoc::socket::name_entry &result) override;
         bool get_by_name(epoc::socket::name_entry &supply_and_result) override;
+        bool next(epoc::socket::name_entry &result) override;
     };
 
     struct inet_socket : public socket::socket {

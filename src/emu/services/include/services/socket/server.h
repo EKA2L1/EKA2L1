@@ -61,6 +61,7 @@ namespace eka2l1 {
             void get_host_name(service::ipc_context *ctx);
             void set_host_name(service::ipc_context *ctx);
             void get_by_name(service::ipc_context *ctx);
+            void next(service::ipc_context *ctx);
             void close(service::ipc_context *ctx);
 
         public:
@@ -128,6 +129,8 @@ namespace eka2l1 {
         socket_cn_open_with_cn_type = 0x3F,
         socket_cn_get_long_des_setting = 0x51,
         socket_so_open_with_subconnection = 0x71,
+        socket_ss_request_optimal_dealer = 0x3EE,
+        socket_cm_api_ext_interface_send_receive = 0x3F0
     };
 
     enum socket_opcode_reform {
