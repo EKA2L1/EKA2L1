@@ -237,6 +237,10 @@ void CMMFMdaAudioOutputStream::Play() {
     iOpen.Open(this);
 }
 
+TBool CMMFMdaAudioOutputStream::HasAlreadyPlay() const {
+    return (iOpen.IsActive() || (iState != EMdaStateStop));
+}
+
 void CMMFMdaAudioOutputStream::Stop() {
     iWaitBufferEndTimer->Cancel();
 

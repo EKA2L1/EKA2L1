@@ -52,6 +52,11 @@ CMdaAudioOutputStream::CMdaAudioOutputStream()
 }
 
 void CMdaAudioOutputStream::Open(TMdaPackage *aPackage) {
+    if (iProperties->HasAlreadyPlay()) {
+        LogOut(KMcaCat, _L("WARN:: Stream has already been opened! This open call is ignored."));
+        return;
+    }
+
     TMdaAudioDataSettings *settings = reinterpret_cast<TMdaAudioDataSettings *>(aPackage);
 
     // Try to set audio properties
