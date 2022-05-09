@@ -3807,6 +3807,8 @@ SWI_INST : {
     const std::uint32_t current_pc = cpu->Reg[15];
 
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
+        SAVE_NZCVT;
+
         swi_inst *const inst_cream = (swi_inst *)inst_base->component;
         cpu->NumInstrsToExecute = num_instrs >= cpu->NumInstrsToExecute ? 0 : cpu->NumInstrsToExecute - num_instrs;
         cpu->RaiseSystemCall(inst_cream->num);
