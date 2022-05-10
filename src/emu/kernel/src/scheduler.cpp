@@ -72,7 +72,7 @@ namespace eka2l1::kernel {
 
     void thread_scheduler::switch_context(kernel::thread *oldt, kernel::thread *newt) {
         if (oldt) {
-            oldt->lrt = timing->ticks();
+            oldt->real_time_active_end();
             run_core->save_context(oldt->ctx);
 
             if (oldt->state == thread_state::run) {
@@ -95,6 +95,7 @@ namespace eka2l1::kernel {
             crr_thread = newt;
             crr_thread->state = thread_state::run;
             crr_thread->increase_access_count();
+            crr_thread->real_time_active_begin();
 
             mem::mem_model_process *mm_process = crr_process ? crr_process->get_mem_model() : nullptr;
 

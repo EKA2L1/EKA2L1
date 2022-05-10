@@ -2357,6 +2357,26 @@ namespace eka2l1::epoc {
         return (kern->crr_process()->get_thread_count() == 1);
     }
 
+    BRIDGE_FUNC(std::int32_t, thread_get_cpu_time, const kernel::handle h, std::uint64_t *time_run_in_us) {
+        kernel::thread *thr = kern->get<kernel::thread>(h);
+
+        if (!thr) {
+            LOG_ERROR(KERNEL, "Thread with handle 0x{:X} not found!", h);
+            return epoc::error_bad_handle;
+        }
+
+        if (!time_run_in_us) {
+            return epoc::error_argument;
+        }
+
+        *time_run_in_us = thr->get_real_active_time();
+        if (thr == kern->crr_thread()) {
+            *time_run_in_us += kern->get_ntimer()->microseconds() - thr->get_real_time_active_begin();
+        }
+
+        return epoc::error_none;
+    }
+
     BRIDGE_FUNC(std::int32_t, process_open_by_id, std::uint32_t id, const epoc::owner_type owner) {
         auto pr = kern->get_by_id<kernel::process>(id);
 
@@ -5557,6 +5577,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x86, timer_after), // Actually TimerHighRes
         BRIDGE_REGISTER(0x87, after), // Actually AfterHighRes
         BRIDGE_REGISTER(0x88, change_notifier_create),
+        BRIDGE_REGISTER(0x8D, thread_get_cpu_time),
         BRIDGE_REGISTER(0x9D, wait_dll_lock),
         BRIDGE_REGISTER(0x9E, release_dll_lock),
         BRIDGE_REGISTER(0x9F, library_attach),

@@ -257,7 +257,7 @@ namespace eka2l1 {
 
             increase_access_count();
 
-            create_time = timing->ticks();
+            create_time = timing->microseconds();
 
             timeslice = kern->capped_cpu_hz() * USER_THREAD_TIMESLICE_IN_MILLISECS / 1000;
             time = timeslice;
@@ -955,6 +955,14 @@ namespace eka2l1 {
                 kernel::codeseg::attached_info *info = E_LOFF(closing_libs.first()->deque(), kernel::codeseg::attached_info, closing_lib_link);
                 info->parent_seg->detach(info->attached_process);
             }
+        }
+
+        void thread::real_time_active_begin() {
+            last_run_time = timing->microseconds();
+        }
+
+        void thread::real_time_active_end() {
+            total_real_run_time += (timing->microseconds() - last_run_time);
         }
     }
 

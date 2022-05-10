@@ -176,7 +176,6 @@ namespace eka2l1 {
             memory_system *mem;
             ntimer *timing;
 
-            std::uint64_t lrt;
             int time;
             int timeslice;
 
@@ -214,6 +213,8 @@ namespace eka2l1 {
             std::vector<epoc::notify_info> rendezvous_requests;
 
             std::uint64_t create_time;
+            std::uint64_t last_run_time;
+            std::uint64_t total_real_run_time;
 
             eka2l1::ptr<epoc::request_status> sleep_nof_sts;
             eka2l1::ptr<epoc::request_status> timeout_sts;
@@ -350,6 +351,17 @@ namespace eka2l1 {
                 const std::int32_t reason);
 
             void add_ticks(const int num);
+
+            void real_time_active_begin();
+            void real_time_active_end();
+
+            std::uint64_t get_real_active_time() const {
+                return total_real_run_time;
+            }
+
+            std::uint64_t get_real_time_active_begin() const {
+                return last_run_time;
+            }
 
             thread_priority get_priority() const {
                 return priority;
