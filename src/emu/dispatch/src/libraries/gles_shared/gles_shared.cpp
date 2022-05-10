@@ -858,13 +858,6 @@ namespace eka2l1::dispatch {
 
         return stride;
     }
-    
-    drivers::handle gles_buffer_pusher::push_buffer(const std::uint8_t *data, const gles_vertex_attrib &attrib, const std::int32_t first_index, const std::size_t vert_count, std::size_t &buffer_offset) {
-        std::uint32_t stride = get_gl_attrib_stride(attrib);
-        std::size_t total_buffer_size = stride * vert_count;
-
-        return push_buffer(data + first_index * stride, total_buffer_size, buffer_offset);
-    }
 
     drivers::handle gles_buffer_pusher::push_buffer(const std::uint8_t *data_source, const std::size_t total_buffer_size, std::size_t &buffer_offset) {
         if (used_size_[current_buffer_] + total_buffer_size > size_per_buffer_) {
@@ -1091,7 +1084,10 @@ namespace eka2l1::dispatch {
         std::uint32_t &res, int &offset, bool &attrib_not_persistent) {
         drivers::handle buffer_handle_drv = 0;
         if (attrib.buffer_obj_ == 0) {
-            std::uint8_t *data_raw = eka2l1::ptr<std::uint8_t>(attrib.offset_).get(crr_process);
+            std::uint32_t stride = get_gl_attrib_stride(attrib);
+            std::size_t total_buffer_size = stride * vcount;
+
+            std::uint8_t *data_raw = eka2l1::ptr<std::uint8_t>(attrib.offset_ + stride * first_index).get(crr_process);
             if (!data_raw) {
                 LOG_ERROR(HLE_DISPATCHER, "Unable to retrieve raw pointer of non-buffer binded attribute!");
                 return false;
@@ -1102,14 +1098,14 @@ namespace eka2l1::dispatch {
             }
 
             std::size_t offset_big = 0;
-            buffer_handle_drv = vertex_buffer_pusher_.push_buffer(data_raw, attrib, first_index, vcount, offset_big);
+            buffer_handle_drv = vertex_buffer_pusher_.push_buffer(data_raw, total_buffer_size, offset_big);
 
             offset = static_cast<int>(offset_big);
 
             if (buffer_handle_drv == 0) {
                 // Buffers are full, need flushing all
                 flush_to_driver(drv);
-                buffer_handle_drv = vertex_buffer_pusher_.push_buffer(data_raw, attrib, first_index, vcount, offset_big);
+                buffer_handle_drv = vertex_buffer_pusher_.push_buffer(data_raw, total_buffer_size, offset_big);
             }
 
             if (!attrib_not_persistent) {
@@ -3068,6 +3064,8 @@ namespace eka2l1::dispatch {
                     }
 
                     indicies_data_raw = normalized_indicies;
+                    total_vert -= min_vert_index;
+
                     relocated_indicies = true;
                 } else {
                     min_vert_index = 0;
