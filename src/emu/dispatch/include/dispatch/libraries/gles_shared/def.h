@@ -339,7 +339,8 @@ namespace eka2l1::dispatch {
             STATE_CHANGED_STENCIL_FUNC_BACK = 1 << 13,
             STATE_CHANGED_STENCIL_OP_FRONT = 1 << 14,
             STATE_CHANGED_STENCIL_OP_BACK = 1 << 15,
-            STATE_CHANGED_STENCIL_MASK_BACK = 1 << 16
+            STATE_CHANGED_STENCIL_MASK_BACK = 1 << 16,
+            STATE_CHANGED_BLEND_COLOUR = 1 << 17
         };
 
         std::uint64_t non_shader_statuses_;
@@ -376,6 +377,8 @@ namespace eka2l1::dispatch {
         gles_buffer_pusher vertex_buffer_pusher_;
         gles_buffer_pusher index_buffer_pusher_;
         bool attrib_changed_;
+
+        float blend_colour_[4];
 
         explicit egl_context_es_shared();
 

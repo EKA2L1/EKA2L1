@@ -73,7 +73,11 @@ namespace eka2l1::drivers {
         one_minus_frag_out_color = 7,
         current_color = 8,
         one_minus_current_color = 9,
-        frag_out_alpha_saturate = 10
+        frag_out_alpha_saturate = 10,
+        constant_colour = 11,
+        one_minus_constant_colour = 12,
+        constant_alpha = 13,
+        one_minus_constant_alpha = 14
     };
 
     enum draw_buffer_bits : std::uint32_t  {

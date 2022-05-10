@@ -1002,6 +1002,18 @@ namespace eka2l1::drivers {
         case blend_factor::frag_out_alpha_saturate:
             return GL_SRC_ALPHA_SATURATE;
 
+        case blend_factor::constant_colour:
+            return GL_CONSTANT_COLOR;
+
+        case blend_factor::one_minus_constant_colour:
+            return GL_ONE_MINUS_CONSTANT_COLOR;
+
+        case blend_factor::constant_alpha:
+            return GL_CONSTANT_ALPHA;
+
+        case blend_factor::one_minus_constant_alpha:
+            return GL_ONE_MINUS_CONSTANT_ALPHA;
+
         default:
             break;
         }
@@ -1554,6 +1566,14 @@ namespace eka2l1::drivers {
         fb->bind(this, bind_type);
     }
 
+    void ogl_graphics_driver::set_blend_colour(command &cmd) {
+        float red, green, blue, alpha;
+        unpack_to_two_floats(cmd.data_[0], red, green);
+        unpack_to_two_floats(cmd.data_[1], blue, alpha);
+
+        glBlendColor(red, green, blue, alpha);
+    }
+
     void ogl_graphics_driver::save_gl_state() {
         glGetIntegerv(GL_CURRENT_PROGRAM, &backup.last_program);
         glGetIntegerv(GL_TEXTURE_BINDING_2D, &backup.last_texture);
@@ -1797,6 +1817,10 @@ namespace eka2l1::drivers {
 
         case graphics_driver_bind_framebuffer:
             bind_framebuffer(cmd);
+            break;
+
+        case graphics_driver_set_blend_colour:
+            set_blend_colour(cmd);
             break;
 
         default:

@@ -702,6 +702,8 @@ namespace eka2l1::drivers {
 
         void set_depth_range(const float min, const float max);
 
+        void set_blend_colour(const float colour[4]);
+
         void recreate_renderbuffer(drivers::handle h, const eka2l1::vec2 &size, const drivers::texture_format internal_format);
 
         void set_framebuffer_color_buffer(drivers::handle h, drivers::handle color_buffer, const int face_index, const std::int32_t color_index = -1);

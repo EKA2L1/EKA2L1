@@ -767,6 +767,14 @@ namespace eka2l1::drivers {
         cmd->data_[1] = static_cast<std::uint64_t>(bind_type);
     }
 
+    void graphics_command_builder::set_blend_colour(const float colour[4]) {
+        command *cmd = list_.retrieve_next();
+
+        cmd->opcode_ = graphics_driver_set_blend_colour;
+        cmd->data_[0] = pack_from_two_floats(colour[0], colour[1]);
+        cmd->data_[1] = pack_from_two_floats(colour[2], colour[3]);
+    }
+
     void advance_draw_pos_around_origin(eka2l1::rect &origin_normal_rect, const int rotation) {
         switch (rotation) {
         case 90:

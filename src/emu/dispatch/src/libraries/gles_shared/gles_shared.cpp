@@ -166,6 +166,22 @@ namespace eka2l1::dispatch {
             dest = drivers::blend_factor::frag_out_alpha_saturate;
             break;
 
+        case GL_CONSTANT_COLOR_EMU:
+            dest = drivers::blend_factor::constant_colour;
+            break;
+
+        case GL_ONE_MINUS_CONSTANT_COLOR_EMU:
+            dest = drivers::blend_factor::one_minus_constant_colour;
+            break;
+
+        case GL_CONSTANT_ALPHA_EMU:
+            dest = drivers::blend_factor::constant_alpha;
+            break;
+
+        case GL_ONE_MINUS_CONSTANT_ALPHA_EMU:
+            dest = drivers::blend_factor::one_minus_constant_alpha;
+            break;
+
         default:
             return false;
         }
@@ -430,6 +446,18 @@ namespace eka2l1::dispatch {
         case drivers::blend_factor::one_minus_frag_out_color:
             return GL_ONE_MINUS_SRC_COLOR_EMU;
 
+        case drivers::blend_factor::constant_colour:
+            return GL_CONSTANT_COLOR_EMU;
+
+        case drivers::blend_factor::one_minus_constant_colour:
+            return GL_ONE_MINUS_CONSTANT_COLOR_EMU;
+
+        case drivers::blend_factor::constant_alpha:
+            return GL_CONSTANT_ALPHA_EMU;
+
+        case drivers::blend_factor::one_minus_constant_alpha:
+            return GL_ONE_MINUS_CONSTANT_ALPHA_EMU;
+
         default:
             break;
         }
@@ -605,6 +633,10 @@ namespace eka2l1::dispatch {
                 stencil_action_depth_fail_drv, stencil_action_depth_pass_drv);
         }
 
+        if (state_change_tracker_ & STATE_CHANGED_BLEND_COLOUR) {
+            cmd_builder_.set_blend_colour(blend_colour_);
+        }
+
         state_change_tracker_ = 0;
     }
 
@@ -615,6 +647,7 @@ namespace eka2l1::dispatch {
         cmd_builder_.set_color_mask(color_mask_);
         cmd_builder_.set_stencil_mask(drivers::rendering_face::front, stencil_mask_front_);
         cmd_builder_.set_stencil_mask(drivers::rendering_face::back, stencil_mask_back_);
+        cmd_builder_.set_blend_colour(blend_colour_);
 
         drivers::condition_func depth_func_drv;
         cond_func_from_gl_enum(depth_func_, depth_func_drv);
@@ -2995,15 +3028,20 @@ namespace eka2l1::dispatch {
         }
 
         kernel_system *kern = sys->get_kernel_system();
-        const std::uint8_t *indicies_data_raw = nullptr;
+        std::uint8_t *indicies_data_raw = nullptr;
 
         std::int32_t total_vert = count;
+        std::int32_t min_vert_index = 0x7FFFFFFF;
+        bool relocated_indicies = false;
+
+        static constexpr std::int32_t RELOCATE_INDICES_THRESHOLD = 200;
 
         if (ctx->binded_element_array_buffer_handle_ == 0) {
-            indicies_data_raw = reinterpret_cast<const std::uint8_t*>(kern->crr_process()->get_ptr_on_addr_space(indices_ptr));
+            indicies_data_raw = reinterpret_cast<std::uint8_t*>(kern->crr_process()->get_ptr_on_addr_space(indices_ptr));
  
             if (indicies_data_raw) {
                 std::int32_t max_vert_index = 0;
+
                 for (std::int32_t i = 0; i < count; i++) {
                     std::int32_t index = 0;
                     if (index_type == GL_UNSIGNED_BYTE_EMU) {
@@ -3013,10 +3051,30 @@ namespace eka2l1::dispatch {
                     }
 
                     max_vert_index = common::max(index, max_vert_index);
+                    min_vert_index = common::min(min_vert_index, index);
                 }
 
                 total_vert = max_vert_index + 1;
+                
+                if (min_vert_index >= RELOCATE_INDICES_THRESHOLD) {
+                    std::uint8_t *normalized_indicies = reinterpret_cast<std::uint8_t*>(malloc((index_type == GL_UNSIGNED_BYTE_EMU) ? count : count * 2));
+                    
+                    for (std::int32_t i = 0; i < count; i++) {
+                        if (index_type == GL_UNSIGNED_BYTE_EMU) {
+                            (reinterpret_cast<std::uint8_t*>(normalized_indicies))[i] = static_cast<std::uint8_t>((reinterpret_cast<const std::uint8_t*>(indicies_data_raw))[i] - min_vert_index);
+                        } else {
+                            (reinterpret_cast<std::uint16_t*>(normalized_indicies))[i] = static_cast<std::uint16_t>((reinterpret_cast<const std::uint16_t*>(indicies_data_raw))[i] - min_vert_index);
+                        }
+                    }
+
+                    indicies_data_raw = normalized_indicies;
+                    relocated_indicies = true;
+                } else {
+                    min_vert_index = 0;
+                }
             }
+        } else {
+            min_vert_index = 0;
         }
 
         gles_driver_buffer *binded_elem_buffer_managed = ctx->binded_buffer(false);
@@ -3043,11 +3101,15 @@ namespace eka2l1::dispatch {
 
             ctx->cmd_builder_.set_index_buffer(to_bind);
             indices_ptr = static_cast<std::uint32_t>(offset_bytes);
+
+            if (relocated_indicies) {
+                free(indicies_data_raw);
+            }
         } else {
             ctx->cmd_builder_.set_index_buffer(binded_elem_buffer_managed->handle_value());
         }
 
-        if (!ctx->prepare_for_draw(drv, controller, sys->get_kernel_system()->crr_process(), 0, total_vert)) {
+        if (!ctx->prepare_for_draw(drv, controller, sys->get_kernel_system()->crr_process(), min_vert_index, total_vert)) {
             LOG_ERROR(HLE_DISPATCHER, "Error while preparing GLES draw. This should not happen!");
             return;
         }
@@ -3240,5 +3302,18 @@ namespace eka2l1::dispatch {
         }
 
         return static_cast<std::int32_t>(is_enabled_result);
+    }
+    
+    BRIDGE_FUNC_LIBRARY(void, gl_blend_color_emu, float red, float green, float blue, float alpha) {
+        egl_context_es_shared *ctx = get_es_shared_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        ctx->blend_colour_[0] = red;
+        ctx->blend_colour_[1] = green;
+        ctx->blend_colour_[2] = blue;
+        ctx->blend_colour_[3] = alpha;
+        ctx->state_change_tracker_ |= egl_context_es_shared::STATE_CHANGED_BLEND_COLOUR;
     }
 }

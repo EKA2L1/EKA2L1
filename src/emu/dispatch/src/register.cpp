@@ -287,7 +287,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11C1, gl_bind_attrib_location_emu, "glBindAttribLocation"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11C2, gl_bind_framebuffer_emu, "glBindFramebuffer"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11C3, gl_bind_renderbuffer_emu, "glBindRenderbuffer"),
-        //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11C4, gl_blend_color_emu, "glBlendColor"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11C4, gl_blend_color_emu, "glBlendColor"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11C5, gl_blend_equation_emu, "glBlendEquation"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11C6, gl_blend_equation_separate_emu, "glBlendEquationSeparate"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11C7, gl_blend_func_separate_emu, "glBlendFuncSeparate"),
