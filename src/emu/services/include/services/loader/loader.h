@@ -63,6 +63,8 @@ namespace eka2l1 {
 
         void check_library_hash(service::ipc_context &context);
 
+        void load_locale(service::ipc_context &context);
+
     public:
         explicit loader_server(system *sys);
     };

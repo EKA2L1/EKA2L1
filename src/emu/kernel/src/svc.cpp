@@ -5455,6 +5455,10 @@ namespace eka2l1::epoc {
         return 0;
     }
 
+    BRIDGE_FUNC(std::int32_t, get_locale_dll_name) {
+        return epoc::error_none;
+    }
+
     const eka2l1::hle::func_map svc_register_funcs_v10 = {
         /* FAST EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00800000, wait_for_any_request),
@@ -5597,6 +5601,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xDF, mutex_is_held),
         BRIDGE_REGISTER(0xE0, leave_start),
         BRIDGE_REGISTER(0xE1, leave_end),
+        BRIDGE_REGISTER(0xE3, get_locale_dll_name),
         BRIDGE_REGISTER(0xE6, session_security_info),
         BRIDGE_REGISTER(0xE9, btrace_out),
         BRIDGE_REGISTER(0xF6, thread_user_exiting),
