@@ -28,7 +28,7 @@
 #include <cpu/arm_interface.h>
 
 namespace eka2l1::mem {
-    std::size_t multiple_mem_model_chunk::commit(const vm_address offset, const std::size_t size) {
+    std::size_t multiple_mem_model_chunk::commit(const vm_address offset, const std::size_t size, bool ignore_committed) {
         // Align the offset
         vm_address running_offset = offset;
         vm_address end_offset = common::min(static_cast<vm_address>(max_size_),
@@ -90,6 +90,10 @@ namespace eka2l1::mem {
                         host_start_just_mapped = reinterpret_cast<std::uint8_t *>(host_base_) + (poff << control_->page_size_bits_) + pt_base;
                     }
                 } else {
+                    if (!ignore_committed) {
+                        LOG_TRACE(KERNEL, "Debug");
+                        return static_cast<std::size_t>(-1);
+                    }
                     // Map those just mapped to the CPU. It will love this
                     if (size_just_mapped != 0) {
                         for (auto &mm : mul_ctrl->mmus_) {

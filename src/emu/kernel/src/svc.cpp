@@ -1425,13 +1425,13 @@ namespace eka2l1::epoc {
 
         switch (type) {
         case 0:
-            return (chunk->adjust(a1) ? epoc::error_none : epoc::error_general);
+            return (chunk->adjust(a1) ? epoc::error_none : epoc::error_no_memory);
 
         case 1:
-            return (chunk->adjust_de(a1, a2) ? epoc::error_none : epoc::error_general);
+            return (chunk->adjust_de(a1, a2) ? epoc::error_none : epoc::error_no_memory);
 
         case 2:
-            return (chunk->commit(a1, a2) ? epoc::error_none : epoc::error_general);
+            return chunk->commit_symbian_compat(a1, a2);
 
         case 3:
             return (chunk->decommit(a1, a2) ? epoc::error_none : epoc::error_general);

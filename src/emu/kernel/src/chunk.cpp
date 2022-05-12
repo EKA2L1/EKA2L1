@@ -31,6 +31,8 @@
 #include <mem/mem.h>
 #include <mem/process.h>
 
+#include <utils/err.h>
+
 namespace eka2l1 {
     namespace kernel {
         chunk::chunk(kernel_system *kern, memory_system *mem, kernel::process *own_process, std::string name,
@@ -173,6 +175,22 @@ namespace eka2l1 {
 
         const std::uint32_t chunk::top_offset() const {
             return mmc_impl_->top();
+        }
+
+        std::int32_t chunk::commit_symbian_compat(uint32_t offset, size_t size) {
+            if (type != kernel::chunk_type::disconnected) {
+                return epoc::error_general;
+            }
+
+            std::size_t ret_value = mmc_impl_->commit(offset, size, false);
+
+            if (ret_value == 0) {
+                return epoc::error_no_memory;
+            } else if (ret_value == static_cast<std::size_t>(-1)) {
+                return epoc::error_already_exists;
+            }
+
+            return epoc::error_none;
         }
 
         bool chunk::commit(uint32_t offset, size_t size) {

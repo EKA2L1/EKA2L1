@@ -70,11 +70,16 @@ namespace eka2l1::mem::flexible {
         return 0;
     }
 
-    std::size_t flexible_mem_model_chunk::commit(const vm_address offset, const std::size_t size) { 
+    std::size_t flexible_mem_model_chunk::commit(const vm_address offset, const std::size_t size, bool ignore_committed) { 
         const vm_address dropping_place = static_cast<vm_address>(offset >> control_->page_size_bits_);
         const vm_address dropping_place_end = static_cast<vm_address>((offset + size + control_->page_size() - 1) >> control_->page_size_bits_);
 
         int total_page_to_commit = static_cast<int>(dropping_place_end - dropping_place);
+        int has_allocated = page_bma_ ? page_bma_->allocated_count(dropping_place, dropping_place_end - 1) : 0;
+
+        if ((has_allocated != 0) && !ignore_committed) {
+            return static_cast<std::size_t>(-1);
+        }
 
         // Change the protection of the correspond region in memory object.
         if (!mem_obj_->commit(dropping_place, total_page_to_commit, permission_)) {
@@ -82,7 +87,9 @@ namespace eka2l1::mem::flexible {
             return 0;
         }
 
-        committed_ += (total_page_to_commit - (page_bma_ ? (page_bma_->allocated_count(dropping_place, dropping_place_end - 1)) : 0)) << control_->page_size_bits_;
+        if (has_allocated < total_page_to_commit) {
+            committed_ += (total_page_to_commit - has_allocated) << control_->page_size_bits_;
+        }
 
         // Force fill as allocated
         if (page_bma_) {

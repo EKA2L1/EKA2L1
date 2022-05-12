@@ -79,7 +79,7 @@ namespace eka2l1::mem {
         virtual const std::size_t max() const = 0;
 
         virtual const vm_address base(mem_model_process *process) = 0;
-        virtual std::size_t commit(const vm_address offset, const std::size_t size) = 0;
+        virtual std::size_t commit(const vm_address offset, const std::size_t size, bool ignore_committed = true) = 0;
         virtual void decommit(const vm_address offset, const std::size_t size) = 0;
 
         virtual void *host_base() = 0;

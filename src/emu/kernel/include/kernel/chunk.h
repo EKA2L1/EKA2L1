@@ -110,8 +110,10 @@ namespace eka2l1 {
              * both last and first byte of two page. This will results two WHOLE pages being allocated. 
 			 * \param offset The offset to commit to.
 			 * \param size The size to commit.
-			 * \returns false if failed to commit.
+			 * \returns Error code on failure.
 			*/
+            std::int32_t commit_symbian_compat(uint32_t offset, size_t size);
+
             bool commit(uint32_t offset, size_t size);
 
             /*! \brief Decommit to a disconnected chunk.

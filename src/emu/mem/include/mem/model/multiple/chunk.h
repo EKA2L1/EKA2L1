@@ -80,7 +80,7 @@ namespace eka2l1::mem {
 
         int do_create(const mem_model_chunk_creation_info &create_info) override;
 
-        std::size_t commit(const vm_address offset, const std::size_t size) override;
+        std::size_t commit(const vm_address offset, const std::size_t size, bool ignore_committed = true) override;
         void decommit(const vm_address offset, const std::size_t size) override;
 
         std::int32_t allocate(const std::size_t size) override;
