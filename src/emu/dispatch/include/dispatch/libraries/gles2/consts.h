@@ -20,7 +20,10 @@ namespace eka2l1::dispatch {
         "GL_OES_vertex_buffer_object "
         "GL_EXT_texture_lod_bias "
         "GL_OES_framebuffer_object "
-        "GL_OES_packed_depth_stencil ";
+        "GL_OES_packed_depth_stencil "
+        "GL_OES_texture_npot "
+        "GL_EXT_shader_texture_lod "
+        "GL_IMG_texture_format_BGRA8888 ";
         /*
          * "GL_EXT_texture_compression_s3tc "
          */

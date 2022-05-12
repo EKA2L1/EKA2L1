@@ -102,4 +102,6 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_LIBRARY(std::int32_t, gl_is_enabled_emu, std::uint32_t cap);
     BRIDGE_FUNC_LIBRARY(void, gl_flush_emu);
     BRIDGE_FUNC_LIBRARY(void, gl_blend_color_emu, float red, float green, float blue, float alpha);
+    BRIDGE_FUNC_LIBRARY(void, gl_blend_color_emu, float red, float green, float blue, float alpha);
+    BRIDGE_FUNC_LIBRARY(void, gl_generate_mipmap_emu, std::uint32_t name);
 }

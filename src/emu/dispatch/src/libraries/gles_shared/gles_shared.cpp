@@ -3314,4 +3314,26 @@ namespace eka2l1::dispatch {
         ctx->blend_colour_[3] = alpha;
         ctx->state_change_tracker_ |= egl_context_es_shared::STATE_CHANGED_BLEND_COLOUR;
     }
+    
+    BRIDGE_FUNC_LIBRARY(void, gl_generate_mipmap_emu, std::uint32_t pname) {
+        egl_context_es_shared *ctx = get_es_shared_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+        gles_driver_texture *tex = ctx->binded_texture();
+        std::uint32_t match_result = tex->target_matched(pname);
+
+        if (match_result != 0) {
+            controller.push_error(ctx, match_result);
+            return;
+        }
+
+        if (!tex->is_mipmap_generated()) {
+            ctx->cmd_builder_.regenerate_mips(tex->handle_value());
+            tex->set_mipmap_generated(true);
+        }
+    }
 }

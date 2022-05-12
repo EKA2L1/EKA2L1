@@ -306,7 +306,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11D4, gl_framebuffer_texture2d_emu, "glFramebufferTexture2D"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11D5, gl_gen_framebuffers_emu, "glGenFramebuffers"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11D6, gl_gen_renderbuffers_emu, "glGenRenderbuffers"),
-        //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11D7, gl_generate_mipmap_emu, "glGenerateMipmap"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11D7, gl_generate_mipmap_emu, "glGenerateMipmap"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11D8, gl_get_active_attrib_emu, "glGetActiveAttrib"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11D9, gl_get_active_uniform_emu, "glGetActiveUniform"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11DA, gl_get_attached_shaders_emu, "glGetAttachedShaders"),

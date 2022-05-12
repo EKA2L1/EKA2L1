@@ -1392,6 +1392,13 @@ namespace eka2l1::drivers {
             return;
         }
 
+        case shader_var_type::vec2: {
+            glUniform2fv(binding, static_cast<GLsizei>((cmd.data_[2] + 7) / 8), reinterpret_cast<const GLfloat *>(data));
+            delete[] data;
+
+            return;
+        }
+
         case shader_var_type::vec3: {
             glUniform3fv(binding, static_cast<GLsizei>((cmd.data_[2] + 11) / 12), reinterpret_cast<const GLfloat *>(data));
             delete[] data;
