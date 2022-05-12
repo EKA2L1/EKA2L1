@@ -107,7 +107,7 @@ namespace eka2l1::dispatch {
         , fog_start_(0.0f)
         , fog_end_(1.0f)
         , vertex_statuses_(0)
-        , fragment_statuses_(0)
+        , fragment_statuses_(egl_context_es1::FRAGMENT_STATE_LIGHT0_ON)
         , alpha_test_ref_(0)
         , input_desc_(0) {
         material_ambient_[0] = 0.2f;
@@ -2901,6 +2901,8 @@ namespace eka2l1::dispatch {
     }
 
     BRIDGE_FUNC_LIBRARY(void, gl_weight_pointer_oes_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset) {
+        LOG_TRACE(KERNEL, "0x{:X}", sys->get_cpu()->get_lr());
+        
         egl_context_es1 *ctx = get_es1_active_context(sys);
         if (!ctx) {
             return;

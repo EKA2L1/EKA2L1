@@ -384,20 +384,25 @@ namespace eka2l1::dispatch {
                             "\tgActualMaterialDiffuse = uMaterialDiffuse;\n";
             }
 
-            main_body += "\t// Clear color to make way for lighting\n"
-                        "\toColor = vec4(0.0);\n";
+            if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_LIGHT_AROUND_MASK) {
+                main_body += "\t// Clear color to make way for lighting\n"
+                            "\toColor = uMaterialEmission + uGlobalAmbient * gActualMaterialAmbient;\n";
 
-            for (std::size_t i = 0, mask = egl_context_es1::FRAGMENT_STATE_LIGHT0_ON; i < GLES1_EMU_MAX_LIGHT; i++, mask <<= 1) {
-                if (fragment_statuses & mask) {
-                    uni_decl += fmt::format("uniform TLightInfo uLight{};\n", i);
-                    main_body += fmt::format("\toColor += calculateLight(uLight{}, ", i);
+                for (std::size_t i = 0, mask = egl_context_es1::FRAGMENT_STATE_LIGHT0_ON; i < GLES1_EMU_MAX_LIGHT; i++, mask <<= 1) {
+                    if (fragment_statuses & mask) {
+                        uni_decl += fmt::format("uniform TLightInfo uLight{};\n", i);
+                        main_body += fmt::format("\toColor += calculateLight(uLight{}, ", i);
 
-                    if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_LIGHT_TWO_SIDE) {
-                        main_body += "gl_FrontFacing ? mNormal : -mNormal, gActualMaterialAmbient, gActualMaterialDiffuse);\n";
-                    } else {
-                        main_body += "mNormal, gActualMaterialAmbient, gActualMaterialDiffuse);\n";
+                        if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_LIGHT_TWO_SIDE) {
+                            main_body += "gl_FrontFacing ? mNormal : -mNormal, gActualMaterialAmbient, gActualMaterialDiffuse);\n";
+                        } else {
+                            main_body += "mNormal, gActualMaterialAmbient, gActualMaterialDiffuse);\n";
+                        }
                     }
                 }
+
+                main_body += "\t//Alpha is always the diffuse of the material (as far as I know!)\n"
+                            "\toColor.a = gActualMaterialDiffuse.a;\n";
             }
         }
 
