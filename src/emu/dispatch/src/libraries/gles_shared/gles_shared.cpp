@@ -270,6 +270,73 @@ namespace eka2l1::dispatch {
         }
     }
 
+    static bool gl_enum_to_addressing_option(const std::uint32_t param, drivers::addressing_option &res) {
+        switch (param) {
+            case GL_REPEAT_EMU:
+                res = drivers::addressing_option::repeat;
+                break;
+
+            case GL_CLAMP_TO_EDGE_EMU:
+                res = drivers::addressing_option::clamp_to_edge;
+                break;
+
+            default:
+                return false;
+        }
+
+        return true;
+    }
+
+    static bool gl_enum_to_mag_filter(const std::uint32_t param, drivers::filter_option &opt) {
+        switch (param) {
+        case GL_LINEAR_EMU:
+            opt = drivers::filter_option::linear;
+            break;
+
+        case GL_NEAREST_EMU:
+            opt = drivers::filter_option::nearest;
+            break;
+
+        default:
+            return false;
+        }
+
+        return true;
+    }
+
+    static bool gl_enum_to_min_filter(const std::uint32_t param, drivers::filter_option &opt) {
+        switch (param) {
+        case GL_LINEAR_EMU:
+            opt = drivers::filter_option::linear;
+            break;
+
+        case GL_NEAREST_EMU:
+            opt = drivers::filter_option::nearest;
+            break;
+
+        case GL_LINEAR_MIPMAP_LINEAR_EMU:
+            opt = drivers::filter_option::linear_mipmap_linear;
+            break;
+
+        case GL_LINEAR_MIPMAP_NEAREST_EMU:
+            opt = drivers::filter_option::linear_mipmap_nearest;
+            break;
+
+        case GL_NEAREST_MIPMAP_NEAREST_EMU:
+            opt = drivers::filter_option::nearest_mipmap_nearest;
+            break;
+
+        case GL_NEAREST_MIPMAP_LINEAR_EMU:
+            opt = drivers::filter_option::nearest_mipmap_linear;
+            break;
+
+        default:
+            return false;
+        }
+
+        return true;
+    }
+
     bool cond_func_from_gl_enum(const std::uint32_t func, drivers::condition_func &drv_func) {
         switch (func) {
         case GL_ALWAYS_EMU:
@@ -1044,6 +1111,26 @@ namespace eka2l1::dispatch {
                     context_.unpack_alignment_);
             }
         }
+    }
+
+    void gles_driver_texture::sync_parameters_with_driver() {
+        if (!driver_handle_) {
+            return;
+        }
+
+        drivers::addressing_option opt_s, opt_t;
+        gl_enum_to_addressing_option(wrap_s_, opt_s);
+        gl_enum_to_addressing_option(wrap_t_, opt_t);
+
+        context_.cmd_builder_.set_texture_addressing_mode(driver_handle_, drivers::addressing_direction::s, opt_s);
+        context_.cmd_builder_.set_texture_addressing_mode(driver_handle_, drivers::addressing_direction::t, opt_t);
+
+        drivers::filter_option fil_mag, fil_min;
+        gl_enum_to_mag_filter(mag_filter_, fil_mag);
+        gl_enum_to_min_filter(min_filter_, fil_min);
+
+        context_.cmd_builder_.set_texture_filter(driver_handle_, true, fil_min);
+        context_.cmd_builder_.set_texture_filter(driver_handle_, false, fil_mag);
     }
 
     gles_driver_buffer::gles_driver_buffer(egl_context_es_shared &ctx)
@@ -1897,6 +1984,7 @@ namespace eka2l1::dispatch {
         }
 
         bool need_reinstantiate = true;
+        bool need_set_params = false;
 
         drivers::texture_format internal_format_driver;
         std::uint8_t dimension = (target == GL_TEXTURE_2D_EMU) ? 2 : static_cast<std::uint8_t>(target - GL_TEXTURE_CUBE_MAP_POSITIVE_X_EMU + 4);
@@ -1928,6 +2016,8 @@ namespace eka2l1::dispatch {
 
             // TODO: border is ignored!
             if (!tex->handle_value()) {
+                need_set_params = true;
+
                 if ((dimension > 3) && (!ctx->texture_pools_cube_.empty())) {
                     tex->assign_handle(ctx->texture_pools_cube_.top());
                     ctx->texture_pools_cube_.pop();
@@ -1954,6 +2044,10 @@ namespace eka2l1::dispatch {
                 ctx->cmd_builder_.recreate_texture(tex->handle_value(), dimension, 0, internal_format_driver,
                     internal_format_driver, dtype, data_to_pass, out_size[0], eka2l1::vec3(width, height, 0),
                     0, ctx->unpack_alignment_);
+            }
+
+            if (need_set_params) {
+                tex->sync_parameters_with_driver();
             }
 
             data_to_pass += out_size[0];
@@ -2005,6 +2099,8 @@ namespace eka2l1::dispatch {
             }
             
             if (!tex->handle_value()) {
+                need_set_params = true;
+
                 if ((dimension > 3) && (!ctx->texture_pools_cube_.empty())) {
                     tex->assign_handle(ctx->texture_pools_cube_.top());
                     ctx->texture_pools_cube_.pop();
@@ -2031,6 +2127,10 @@ namespace eka2l1::dispatch {
                 ctx->cmd_builder_.recreate_texture(tex->handle_value(), 2, static_cast<std::uint8_t>(level), internal_format_driver,
                     internal_format_driver, drivers::texture_data_type::compressed, data_pixels, image_size, eka2l1::vec3(width, height, 0),
                     0, ctx->unpack_alignment_);
+            }
+
+            if (need_set_params) {
+                tex->sync_parameters_with_driver();
             }
 
             tex->set_mip_count(common::max(tex->get_mip_count(), static_cast<std::uint32_t>(level)));
@@ -2094,6 +2194,8 @@ namespace eka2l1::dispatch {
         }
 
         bool need_reinstantiate = true;
+        bool need_set_params = false;
+
         std::uint8_t dimension = (target == GL_TEXTURE_2D_EMU) ? 2 : static_cast<std::uint8_t>(target - GL_TEXTURE_CUBE_MAP_POSITIVE_X_EMU + 4);
 
         drivers::texture_format internal_format_driver;
@@ -2105,6 +2207,8 @@ namespace eka2l1::dispatch {
 
         // TODO: border is ignored!
         if (!tex->handle_value()) {
+            need_set_params = true;
+
             if ((dimension > 3) && (!ctx->texture_pools_cube_.empty())) {
                 tex->assign_handle(ctx->texture_pools_cube_.top());
                 ctx->texture_pools_cube_.pop();
@@ -2130,6 +2234,10 @@ namespace eka2l1::dispatch {
             const std::size_t needed_size = calculate_possible_upload_size(eka2l1::vec2(width, height), format, data_type);
             ctx->cmd_builder_.recreate_texture(tex->handle_value(), dimension, static_cast<std::uint8_t>(level), internal_format_driver,
                 format_driver, dtype, data_pixels, needed_size, eka2l1::vec3(width, height, 0), 0, ctx->unpack_alignment_);
+        }
+
+        if (need_set_params) {
+            tex->sync_parameters_with_driver();
         }
 
         tex->set_internal_format(format);
@@ -2562,23 +2670,6 @@ namespace eka2l1::dispatch {
         ctx->state_change_tracker_ |= egl_context_es_shared::STATE_CHANGED_VIEWPORT_RECT;
     }
 
-    static bool gl_enum_to_addressing_option(const std::uint32_t param, drivers::addressing_option &res) {
-        switch (param) {
-        case GL_REPEAT_EMU:
-            res = drivers::addressing_option::repeat;
-            break;
-
-        case GL_CLAMP_TO_EDGE_EMU:
-            res = drivers::addressing_option::clamp_to_edge;
-            break;
-
-        default:
-            return false;
-        }
-
-        return true;
-    }
-
     BRIDGE_FUNC_LIBRARY(void, gl_tex_parameter_i_emu, std::uint32_t target, std::uint32_t pname, std::int32_t param) {
         egl_context_es_shared *ctx = get_es_shared_active_context(sys);
         if (!ctx) {
@@ -2603,16 +2694,7 @@ namespace eka2l1::dispatch {
         switch (pname) {
         case GL_TEXTURE_MAG_FILTER_EMU: {
             drivers::filter_option opt;
-            switch (param) {
-            case GL_LINEAR_EMU:
-                opt = drivers::filter_option::linear;
-                break;
-
-            case GL_NEAREST_EMU:
-                opt = drivers::filter_option::nearest;
-                break;
-
-            default:
+            if (!gl_enum_to_mag_filter(param, opt)) {
                 controller.push_error(ctx, GL_INVALID_ENUM);
                 return;
             }
@@ -2625,32 +2707,7 @@ namespace eka2l1::dispatch {
 
         case GL_TEXTURE_MIN_FILTER_EMU: {
             drivers::filter_option opt;
-            switch (param) {
-            case GL_LINEAR_EMU:
-                opt = drivers::filter_option::linear;
-                break;
-
-            case GL_NEAREST_EMU:
-                opt = drivers::filter_option::nearest;
-                break;
-
-            case GL_LINEAR_MIPMAP_LINEAR_EMU:
-                opt = drivers::filter_option::linear_mipmap_linear;
-                break;
-
-            case GL_LINEAR_MIPMAP_NEAREST_EMU:
-                opt = drivers::filter_option::linear_mipmap_nearest;
-                break;
-
-            case GL_NEAREST_MIPMAP_NEAREST_EMU:
-                opt = drivers::filter_option::nearest_mipmap_nearest;
-                break;
-
-            case GL_NEAREST_MIPMAP_LINEAR_EMU:
-                opt = drivers::filter_option::nearest_mipmap_linear;
-                break;
-
-            default:
+            if (!gl_enum_to_min_filter(param, opt)) {
                 controller.push_error(ctx, GL_INVALID_ENUM);
                 return;
             }

@@ -201,6 +201,7 @@ namespace eka2l1::dispatch {
         }
 
         void try_upscale();
+        void sync_parameters_with_driver();
     };
 
     struct gles_driver_buffer : public gles_driver_object {
