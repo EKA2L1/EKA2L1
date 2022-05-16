@@ -20,6 +20,7 @@
     <string name="warning">Warning</string>
     <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
     <string name="install">Asenna</string>
+    <string name="rescan_devices">Skannaa laitteet uudelleen</string>
     <string name="device_dump">Device dump</string>
     <string name="path_to_rpkg">Polku RPKG:hen</string>
     <string name="path_to_rom">Polku ROM:iin</string>
