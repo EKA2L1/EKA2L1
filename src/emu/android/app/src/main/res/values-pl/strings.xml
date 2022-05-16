@@ -20,6 +20,7 @@
     <string name="warning">Uwaga</string>
     <string name="scoped_storage_warning">Twoje dane użytkownika są przechowywane w lokalizacji która <b>zostanie usunięta</b> kiedy odinstalujesz aplikację:\n</string>
     <string name="install">Zainstaluj</string>
+    <string name="rescan_devices">Przeskanuj ponownie urządzenia</string>
     <string name="device_dump">Zrzut urządzenia</string>
     <string name="path_to_rpkg">Ścieżka do RPKG</string>
     <string name="path_to_rom">Ścieżka do ROM</string>
