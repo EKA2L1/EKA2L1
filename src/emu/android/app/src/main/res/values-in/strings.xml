@@ -20,6 +20,7 @@
     <string name="warning">Peringatan</string>
     <string name="scoped_storage_warning">Data pengguna Anda ditampung pada lokasi yang <b>akan dihapus</b> ketika mencopot aplikasi:\n</string>
     <string name="install">Pasang</string>
+    <string name="rescan_devices">Pindai ulang perangkat</string>
     <string name="device_dump">Dump perangkat</string>
     <string name="path_to_rpkg">Jalur ke RPKG</string>
     <string name="path_to_rom">Jalur ke ROM</string>
