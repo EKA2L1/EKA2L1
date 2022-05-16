@@ -20,6 +20,7 @@
     <string name="warning">警告</string>
     <string name="scoped_storage_warning">您的用户数据存储路径在卸载应用时<b>将被删除</b>\n</string>
     <string name="install">安装</string>
+    <string name="rescan_devices">重新扫描设备</string>
     <string name="device_dump">从设备上导出的ROM</string>
     <string name="path_to_rpkg">RPKG路径</string>
     <string name="path_to_rom">ROM路径</string>
