@@ -20,6 +20,7 @@
     <string name="warning">Cảnh báo</string>
     <string name="scoped_storage_warning">Dữ liệu người dùng của bạn đang được lưu trữ ở nơi mà <b>sẽ bị xóa</b> sau khi bạn gỡ ứng dụng:\n</string>
     <string name="install">Cài đặt</string>
+    <string name="rescan_devices">Quét lại các thiết bị</string>
     <string name="device_dump">Dump của thiết bị</string>
     <string name="path_to_rpkg">Đường dẫn tới RPKG</string>
     <string name="path_to_rom">Đường dẫn tới ROM</string>
