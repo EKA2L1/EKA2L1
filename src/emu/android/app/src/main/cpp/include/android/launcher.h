@@ -68,6 +68,7 @@ namespace eka2l1::android {
         std::vector<std::string> get_device_firwmare_codes();
         void set_current_device(std::uint32_t id, const bool temporary);
         void set_device_name(std::uint32_t id, const char *name);
+        void rescan_devices();
         std::uint32_t get_current_device();
         device_installation_error install_device(std::string &rpkg_path, std::string &rom_path, bool install_rpkg);
         bool does_rom_need_rpkg(const std::string &rom_path);

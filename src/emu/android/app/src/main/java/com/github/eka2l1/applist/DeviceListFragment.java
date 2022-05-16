@@ -154,6 +154,15 @@ public class DeviceListFragment extends Fragment {
             inputNameBuilder.show();
         });
 
+        Button rescanButton = view.findViewById(R.id.bt_rescan_devices);
+        rescanButton.setOnClickListener(v -> {
+            Emulator.rescanDevices();
+
+            updateDeviceList();
+            getParentFragmentManager().setFragmentResult(KEY_RESTART, new Bundle());
+            Toast.makeText(getContext(), R.string.completed, Toast.LENGTH_SHORT).show();
+        });
+
         ExpandableLayout recommendedDevicesLayout = view.findViewById(R.id.ex_recommended_device);
         recommendedDevicesLayout.parentLayout.setOnClickListener(v -> {
             if (recommendedDevicesLayout.isExpanded()) {

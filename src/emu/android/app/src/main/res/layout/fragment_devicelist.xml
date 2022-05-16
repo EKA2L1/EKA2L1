@@ -32,6 +32,16 @@
                 android:text="@string/rename" />
         </LinearLayout>
 
+        <Button
+            android:id="@+id/bt_rescan_devices"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:gravity="center"
+            android:text="@string/rescan_devices" />
+
         <com.skydoves.expandablelayout.ExpandableLayout
             android:id="@+id/ex_recommended_device"
             android:layout_width="match_parent"

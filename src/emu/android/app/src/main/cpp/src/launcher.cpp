@@ -355,6 +355,10 @@ namespace eka2l1::android {
         }
     }
 
+    void launcher::rescan_devices() {
+        sys->rescan_devices(drive_z);
+    }
+
     std::uint32_t launcher::get_current_device() {
         return conf->device;
     }

@@ -193,6 +193,11 @@ Java_com_github_eka2l1_emu_Emulator_setDeviceName(JNIEnv *env, jclass clazz, jin
     env->ReleaseStringUTFChars(new_name, cstr);
 }
 
+extern "C" JNIEXPORT void JNICALL
+Java_com_github_eka2l1_emu_Emulator_rescanDevices(JNIEnv *env, jclass clazz) {
+    state->launcher->rescan_devices();
+}
+
 extern "C" JNIEXPORT jint JNICALL
 Java_com_github_eka2l1_emu_Emulator_getCurrentDevice(JNIEnv *env, jclass clazz) {
     return state->launcher->get_current_device();
