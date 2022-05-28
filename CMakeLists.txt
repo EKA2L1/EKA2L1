@@ -24,6 +24,7 @@ endif()
 if (MSVC)
     add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
     add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE)
+    add_definitions(-D_DISABLE_VECTOR_ANNOTATION)
 endif(MSVC)
 
 if (EKA2L1_BUILD_VULKAN_BACKEND)
