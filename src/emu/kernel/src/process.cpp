@@ -127,7 +127,7 @@ namespace eka2l1::kernel {
             if ((common::compare_ignore_case(rel_path.substr(0, PATH_SYS_BIN_LEN), PATH_SYS_BIN) == 0) ||
                 (common::compare_ignore_case(rel_path.substr(0, PATH_SYSTEM_LIBS_LEN), PATH_SYSTEM_LIBS) == 0) ||
                 (common::compare_ignore_case(rel_path.substr(0, PATH_SYSTEM_PROGRAMS_LEN), PATH_SYSTEM_PROGRAMS) == 0)) {
-                exe_path = eka2l1::root_name(exe_path, true) + eka2l1::filename(exe_path, true);
+                exe_path = eka2l1::root_name(exe_path, true) + u'\\' + eka2l1::filename(exe_path, true);
             }
         }
 
