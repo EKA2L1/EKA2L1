@@ -156,8 +156,8 @@ set_property(TARGET microprofile PROPERTY CXX_STANDARD 11)
 target_compile_definitions(microprofile PUBLIC MICROPROFILE_ENABLED=0 MICROPROFILE_GPU_TIMERS=0)
 
 ## XXHash
-add_library(xxHash INTERFACE)
-target_include_directories(xxHash INTERFACE xxHash)
+add_library(xxHash STATIC xxHash/xxhash.c)
+target_include_directories(xxHash PUBLIC xxHash)
 
 if (BUILD_TOOLS)
     find_package(LibClang QUIET)
