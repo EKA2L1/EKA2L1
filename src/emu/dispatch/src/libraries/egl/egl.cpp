@@ -816,4 +816,24 @@ namespace eka2l1::dispatch {
 
         return sys->get_dispatcher()->lookup_dispatcher_function_by_symbol(procname);
     }
+
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_bind_api_emu, const std::uint32_t bind_api) {
+        switch (bind_api) {
+        case EGL_OPENGL_API_EMU:
+            LOG_ERROR(HLE_DISPATCHER, "OpenGL API is not supported in the emulator");
+            break;
+
+        case EGL_OPENVG_API_EMU:
+            LOG_INFO(HLE_DISPATCHER, "Trying to bind OpenVG API!");
+            break;
+
+        case EGL_OPENGL_ES_API_EMU:
+            LOG_INFO(HLE_DISPATCHER, "Trying to bind OpenGL ES API!");
+            break;
+
+        default:
+            break;
+        }
+        return EGL_TRUE;
+    }
 }

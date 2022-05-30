@@ -266,7 +266,7 @@ namespace eka2l1::dispatch {
         //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11AC, egl_bind_tex_image_emu, "eglBindTexImage"),
         //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11AD, egl_release_tex_image_emu, "eglReleaseTexImage"),
         //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11AE, egl_surface_attrib_emu, "eglSurfaceAttrib"),
-        //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11AF, egl_bind_api_emu, "eglBindAPI"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11AF, egl_bind_api_emu, "eglBindAPI"),
         //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11B0, egl_create_pbuffer_from_client_buffer_emu, "eglCreatePbufferFromClientBuffer"),
         //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11B1, egl_query_api_emu, "eglQueryAPI"),
         //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x11B2, egl_release_thread_emu, "eglReleaseThread"),

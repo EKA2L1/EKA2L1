@@ -81,7 +81,8 @@ target_link_libraries(epockern PUBLIC
         disasm
         drivers
         epocio
-        epocutils)
+        epocutils
+        xxHash)
 
 target_link_libraries(epockern PRIVATE
         epocloader
