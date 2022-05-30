@@ -20,6 +20,7 @@
 #include <dispatch/libraries/gles_shared/def.h>
 #include <dispatch/libraries/gles_shared/utils.h>
 #include <dispatch/libraries/gles_shared/gles_shared.h>
+#include <dispatch/libraries/gles2/consts.h>
 #include <services/window/screen.h>
 
 #include <dispatch/dispatcher.h>
@@ -2332,7 +2333,7 @@ namespace eka2l1::dispatch {
         dispatcher *dp = sys->get_dispatcher();
         dispatch::egl_controller &controller = dp->get_egl_controller();
 
-        if ((unit < GL_TEXTURE0_EMU) && (unit >= GL_TEXTURE0_EMU + GLES1_EMU_MAX_TEXTURE_COUNT)) {
+        if ((unit < GL_TEXTURE0_EMU) || (unit >= (GL_TEXTURE0_EMU + ((ctx->context_type() == EGL_GLES2_CONTEXT) ? GLES2_EMU_MAX_TEXTURE_UNIT_COUNT : GLES1_EMU_MAX_TEXTURE_COUNT)))) {
             controller.push_error(ctx, GL_INVALID_ENUM);
             return;
         }

@@ -243,6 +243,10 @@ namespace eka2l1::dispatch {
 
     void gles_program_object::link(drivers::graphics_driver *drv) {
         if (!one_module_changed_) {
+            if (linked_) {
+                goto APPLY_PENDING_ROUTES;
+            }
+
             return;
         }
 
@@ -258,6 +262,38 @@ namespace eka2l1::dispatch {
 
         linked_ = (driver_handle_ != 0);
         one_module_changed_ = false;
+
+APPLY_PENDING_ROUTES:
+        attrib_bind_routes_.clear();
+        attrib_bind_routes_reverse_.clear();
+
+        for (const auto &route_request: pending_attrib_binds_) {
+            const std::int32_t res = metadata_.get_attribute_binding(route_request.first.c_str());
+            if (res >= 0) {
+                attrib_bind_routes_.emplace(route_request.second, res);
+                attrib_bind_routes_reverse_.emplace(res, route_request.second);
+            }
+        }
+
+        pending_attrib_binds_.clear();
+    }
+    
+    void gles_program_object::bind_attribute_to_index(const std::string &attrib_name, const int new_index) {
+        pending_attrib_binds_[attrib_name] = new_index;
+    }
+
+    std::optional<int> gles_program_object::get_routed_attribute_num(const int original_index, const bool reverse) {
+        std::map<int, int> &map_to_search = attrib_bind_routes_;
+        if (reverse) {
+            map_to_search = attrib_bind_routes_reverse_;
+        }
+
+        auto result = map_to_search.find(original_index);
+        if (result != map_to_search.end()) {
+            return result->second;
+        }
+
+        return std::nullopt;
     }
 
     std::uint32_t gles_program_object::set_uniform_data(const int binding, const std::uint8_t *data, const std::int32_t data_size,
@@ -1059,9 +1095,9 @@ namespace eka2l1::dispatch {
                     return false;
                 }
 
-                auto route_ite = attrib_bind_routes_.find(i);
-                if (route_ite != attrib_bind_routes_.end()) {
-                    desc_temp.location = route_ite->second;
+                auto route_ite = using_program_->get_routed_attribute_num(i);
+                if (route_ite.has_value()) {
+                    desc_temp.location = route_ite.value();
                 } else {
                     desc_temp.location = static_cast<int>(i);
                 }
@@ -2094,7 +2130,21 @@ namespace eka2l1::dispatch {
             return -1;
         }
 
-        return is_uniform ? obj->get_readonly_metadata()->get_uniform_binding(name) : obj->get_readonly_metadata()->get_attribute_binding(name);
+        if (is_uniform) {
+            return obj->get_readonly_metadata()->get_uniform_binding(name);
+        } else {
+            std::int32_t res = obj->get_readonly_metadata()->get_attribute_binding(name);
+            if (res < 0) {
+                return res;
+            }
+
+            std::optional<std::int32_t> res_op = obj->get_routed_attribute_num(res, true);
+            if (res_op.has_value()) {
+                return res_op.value();
+            }
+
+            return res;
+        }
     }
 
     BRIDGE_FUNC_LIBRARY(std::int32_t, gl_get_uniform_location_emu, std::uint32_t program, const char *name) {
@@ -2474,13 +2524,6 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        const std::int32_t real_binding = program_obj->get_readonly_metadata()->get_attribute_binding(name);
-        if (real_binding >= 0) {
-            auto real_binding_stored_ite = ctx->attrib_bind_routes_.find(index);
-            if ((real_binding_stored_ite != ctx->attrib_bind_routes_.end()) && (real_binding_stored_ite->second != real_binding)) {
-                ctx->attrib_changed_ = true;
-            }
-            ctx->attrib_bind_routes_[index] = real_binding;
-        }
+        program_obj->bind_attribute_to_index(name, index);
     }
 }

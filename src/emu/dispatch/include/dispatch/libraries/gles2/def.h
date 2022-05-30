@@ -25,6 +25,7 @@
 #include <common/vecx.h>
 
 #include <array>
+#include <optional>
 #include <queue>
 #include <string>
 #include <vector>
@@ -127,6 +128,9 @@ namespace eka2l1::dispatch {
 
         std::map<int, gles_uniform_variable_data_info> uniform_datas_;
         std::set<int> dirty_uniform_locations_;
+        std::map<int, int> attrib_bind_routes_;
+        std::map<int, int> attrib_bind_routes_reverse_;
+        std::map<std::string, int> pending_attrib_binds_;
  
         void cleanup_current_driver_program();
 
@@ -141,6 +145,9 @@ namespace eka2l1::dispatch {
 
         std::uint32_t set_uniform_data(const int binding, const std::uint8_t *data, const std::int32_t data_size,
             const std::int32_t actual_count, drivers::shader_var_type var_type, const std::uint32_t extra_flags);
+
+        void bind_attribute_to_index(const std::string &attrib_name, const int new_index);
+        std::optional<int> get_routed_attribute_num(const int original_index, const bool reverse = false);
 
         bool prepare_for_draw();
 
@@ -317,7 +324,6 @@ namespace eka2l1::dispatch {
         std::int32_t previous_first_index_;
 
         drivers::handle input_descs_;
-        std::map<int, int> attrib_bind_routes_;
 
         explicit egl_context_es2();
 
