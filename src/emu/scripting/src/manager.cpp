@@ -425,7 +425,7 @@ namespace eka2l1::manager {
         }
     }
 
-    std::uint32_t scripts::register_library_hook(const std::string &name, const std::uint32_t ord, const std::uint32_t process_uid, const std::uint32_t uid3, breakpoint_hit_func func) {
+    std::uint32_t scripts::register_library_hook(const std::string &name, const std::uint32_t ord, const std::uint32_t process_uid, const std::uint32_t uid3, const std::uint32_t seghash,  breakpoint_hit_func func) {
         const std::string lib_name_lower = common::lowercase_string(name);
 
         breakpoint_info info;
@@ -442,6 +442,7 @@ namespace eka2l1::manager {
         info.addr_ = ord;
         info.attached_process_ = process_uid;
         info.codeseg_uid3_ = uid3;
+        info.codeseg_hash_ = seghash;
 
         hle::lib_manager *manager = sys->get_lib_manager();
         if (manager) {
@@ -496,7 +497,7 @@ namespace eka2l1::manager {
         return static_cast<std::uint32_t>(handle);
     }
 
-    std::uint32_t scripts::register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid, const std::uint32_t uid3, breakpoint_hit_func func) {
+    std::uint32_t scripts::register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid, const std::uint32_t uid3, const std::uint32_t seghash, breakpoint_hit_func func) {
         const std::string lib_name_lower = common::lowercase_string(lib_name);
         std::size_t handle = 0;
 
@@ -555,6 +556,8 @@ namespace eka2l1::manager {
             info.codeseg_uid3_ = uid3;
         }
 
+        info.codeseg_hash_ = seghash;
+
         if (info.flags_ & breakpoint_info::FLAG_BASED_IMAGE) {
             breakpoint_wait_patch.push_back(info);
         } else {
@@ -569,41 +572,47 @@ namespace eka2l1::manager {
         return static_cast<std::uint32_t>(handle);
     }
 
-    void scripts::patch_library_hook(const std::string &name, const std::uint32_t uid3, const std::vector<vaddress> &exports) {
+    void scripts::patch_library_hook(const codeseg_ptr &seg) {
         const std::lock_guard<std::mutex> guard(smutex);
-        const std::string lib_name_lower = common::lowercase_string(name);
+        const std::string lib_name_lower = common::lowercase_string(seg->name());
+        const std::uint32_t uid3 = std::get<2>(seg->get_uids());
 
         for (auto &breakpoint : breakpoint_wait_patch) {
             if ((breakpoint.flags_ & breakpoint_info::FLAG_IS_ORDINAL) && (breakpoint.lib_name_ == lib_name_lower) &&
                 ((breakpoint.codeseg_uid3_ == uid3) || (breakpoint.codeseg_uid3_ == 0))) {
-                breakpoint.addr_ = exports[breakpoint.addr_ - 1];
+                if ((breakpoint.codeseg_hash_ == 0) || (breakpoint.codeseg_hash_ == seg->get_hash())) {
+                    breakpoint.addr_ = seg->get_export_table_raw()[breakpoint.addr_ - 1];
 
-                // It's now based on image. Only need rebase
-                breakpoint.flags_ &= ~breakpoint_info::FLAG_IS_ORDINAL;
-                breakpoint.flags_ |= breakpoint_info::FLAG_BASED_IMAGE;
+                    // It's now based on image. Only need rebase
+                    breakpoint.flags_ &= ~breakpoint_info::FLAG_IS_ORDINAL;
+                    breakpoint.flags_ |= breakpoint_info::FLAG_BASED_IMAGE;
+                }
             }
         }
     }
 
-    void scripts::patch_unrelocated_hook(const std::uint32_t process_uid, const std::uint32_t uid3, const std::string &name, const address new_code_addr) {
+    void scripts::patch_unrelocated_hook(const std::uint32_t process_uid, const codeseg_ptr &seg, const address new_code_addr) {
         const std::lock_guard<std::mutex> guard(smutex);
-        const std::string lib_name_lower = common::lowercase_string(name);
+        const std::string lib_name_lower = common::lowercase_string(seg->name());
+        const std::uint32_t uid3 = std::get<2>(seg->get_uids());
 
         for (breakpoint_info &breakpoint : breakpoint_wait_patch) {
             if (((breakpoint.attached_process_ == 0) || (breakpoint.attached_process_ == process_uid)) && (breakpoint.lib_name_ == lib_name_lower)
                 && ((breakpoint.codeseg_uid3_ == uid3) || (breakpoint.codeseg_uid3_ == 0)) && (breakpoint.flags_ & breakpoint_info::FLAG_BASED_IMAGE)) {
-                breakpoint_info patched = breakpoint;
+                if ((breakpoint.codeseg_hash_ == 0) || (breakpoint.codeseg_hash_ == seg->get_hash())) {
+                    breakpoint_info patched = breakpoint;
 
-                patched.addr_ += new_code_addr;
-                patched.flags_ &= ~breakpoint_info::FLAG_BASED_IMAGE;
-                patched.invoke_->category_ = script_function::META_CATEGORY_BREAKPOINT;
+                    patched.addr_ += new_code_addr;
+                    patched.flags_ &= ~breakpoint_info::FLAG_BASED_IMAGE;
+                    patched.invoke_->category_ = script_function::META_CATEGORY_BREAKPOINT;
 
-                breakpoints[patched.addr_ & ~1].list_.push_back(patched);
+                    breakpoints[patched.addr_ & ~1].list_.push_back(patched);
 
-                kernel_system *kern = sys->get_kernel_system();
+                    kernel_system *kern = sys->get_kernel_system();
 
-                if (kern->crr_process())
-                    write_breakpoint_block(kern->crr_process(), patched.addr_);
+                    if (kern->crr_process())
+                        write_breakpoint_block(kern->crr_process(), patched.addr_);
+                }
             }
         }
     }
@@ -706,10 +715,8 @@ namespace eka2l1::manager {
     }
 
     void scripts::handle_codeseg_loaded(const std::string &name, kernel::process *attacher, codeseg_ptr target) {
-        const std::uint32_t uid3 = std::get<2>(target->get_uids());
-
-        patch_library_hook(name, uid3, target->get_export_table_raw());
-        patch_unrelocated_hook(attacher ? (attacher->get_uid()) : 0, uid3, name, target->is_rom() ? 0 : (target->get_code_run_addr(attacher) - target->get_code_base()));
+        patch_library_hook(target);
+        patch_unrelocated_hook(attacher ? (attacher->get_uid()) : 0, target, target->is_rom() ? 0 : (target->get_code_run_addr(attacher) - target->get_code_base()));
 
         kernel_system *kern = sys->get_kernel_system();
 

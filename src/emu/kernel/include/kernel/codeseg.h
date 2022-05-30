@@ -160,9 +160,13 @@ namespace eka2l1::kernel {
         chunk_ptr code_chunk_shared;
 
         std::vector<std::uint64_t> relocation_list;
+        std::uint32_t hash_;
 
         bool patched_{ false };
         bool ep_disabled_{ false };
+        bool hash_inited_{ false };
+
+        void calculate_hash();
 
     public:
         /*! \brief Create a new codeseg
@@ -275,6 +279,7 @@ namespace eka2l1::kernel {
         }
 
         std::vector<kernel::process*> attached_processes() const;
+        std::uint32_t get_hash();
 
         // Use for patching
         void set_export(const std::uint32_t ordinal, eka2l1::ptr<void> address);

@@ -38,6 +38,7 @@ ffi.cdef([[
     uint32_t eka2l1_codeseg_data_size(codeseg *seg);
     uint32_t eka2l1_codeseg_bss_size(codeseg *seg);
     uint32_t eka2l1_codeseg_export_count(codeseg *seg);
+    uint32_t eka2l1_codeseg_get_hash(codeseg *seg);
     void eka2l1_codeseg_set_export(codeseg *seg, const uint32_t index, const uint32_t addr_or_offset);
     void eka2l1_codeseg_set_entry_point(codeseg *seg, const uint32_t addr_or_offset);
     void eka2l1_codeseg_set_patched(codeseg *seg);
@@ -187,6 +188,12 @@ end
 --- @return A 32-bit integer containing the export count.
 function kernel.codeseg:exportCount()
     return ffi.C.eka2l1_codeseg_export_count(self.impl)
+end
+
+--- Get the 32-bit xxHash of the code data. This can be used for differentiate actions between different version of an executable.
+--- @return A 32-bit integer as the hash of the code data.
+function kernel.codeseg:hash()
+    return ffi.C.eka2l1_codeseg_get_hash(self.impl)
 end
 
 --- Set the address or offset relative to the codeseg's code section, to one of the codeseg's export.

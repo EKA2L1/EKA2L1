@@ -173,4 +173,8 @@ EKA2L1_EXPORT std::uint32_t eka2l1_codeseg_get_export(eka2l1::scripting::codeseg
 EKA2L1_EXPORT std::uint32_t eka2l1_codeseg_get_entry_point(eka2l1::scripting::codeseg *seg, eka2l1::scripting::process  *pr) {
     return seg->get_entry_point(pr);
 }
+
+EKA2L1_EXPORT std::uint32_t eka2l1_codeseg_get_hash(eka2l1::scripting::codeseg *seg) {
+    return seg->real_seg_->get_hash();
+}
 }

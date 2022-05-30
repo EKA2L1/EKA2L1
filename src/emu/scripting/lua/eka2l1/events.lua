@@ -39,8 +39,8 @@ ffi.cdef([[
     typedef void (__stdcall *ipc_sent_lua_func)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, thread*);
     typedef void (__stdcall *ipc_completed_lua_func)(ipc_msg*);
 
-    uint32_t eka2l1_cpu_register_lib_hook(const char *lib_name, const uint32_t ord, const uint32_t process_uid, const uint32_t codesegUid3, breakpoint_hit_lua_func func);
-    uint32_t eka2l1_cpu_register_bkpt_hook(const char *image_name, const uint32_t addr, const uint32_t process_uid, const uint32_t codesegUid3, breakpoint_hit_lua_func func);
+    uint32_t eka2l1_cpu_register_lib_hook(const char *lib_name, const uint32_t ord, const uint32_t process_uid, const uint32_t codesegUid3, const uint32_t codesegHash, breakpoint_hit_lua_func func);
+    uint32_t eka2l1_cpu_register_bkpt_hook(const char *image_name, const uint32_t addr, const uint32_t process_uid, const uint32_t codesegUid3, const uint32_t codesegHash, breakpoint_hit_lua_func func);
     uint32_t eka2l1_register_ipc_sent_hook(const char *server_name, const int opcode, ipc_sent_lua_func func);
     uint32_t eka2l1_register_ipc_completed_hook(const char *server_name, const int opcode, ipc_completed_lua_func func);
 
@@ -63,10 +63,15 @@ ffi.cdef([[
 ---
 --- @see clearHook
 --- @see registerBreakpointHook
-function events.registerLibraryHook(libName, ord, processUid, codesegUid3, func)
+function events.registerLibraryHook(libName, ord, processUid, codesegUid3, func, codesegHash)
     local libNameInC = ffi.new("char[?]", #libName + 1, libName)
+    local hash = codesegHash
 
-    return ffi.C.eka2l1_cpu_register_lib_hook(libNameInC, ord, processUid, codesegUid3, function ()
+    if (hash == nil) then
+        hash = 0
+    end
+
+    return ffi.C.eka2l1_cpu_register_lib_hook(libNameInC, ord, processUid, codesegUid3, hash, function ()
         local ran, errorMsg = pcall(func)
         if not ran then
             common.log('Error running breakpoint script, ' .. errorMsg)
@@ -93,10 +98,15 @@ end
 ---
 --- @see clearHook
 --- @see registerLibraryHook
-function events.registerBreakpointHook(libName, addr, processUid, codesegUid3, func)
+function events.registerBreakpointHook(libName, addr, processUid, codesegUid3, func, codesegHash)
     local libNameInC = ffi.new("char[?]", #libName + 1, libName)
+    local hash = codesegHash
 
-    return ffi.C.eka2l1_cpu_register_bkpt_hook(libNameInC, addr, processUid, codesegUid3, function ()
+    if (hash == nil) then
+        hash = 0
+    end
+
+    return ffi.C.eka2l1_cpu_register_bkpt_hook(libNameInC, addr, processUid, codesegUid3, hash, function ()
         local ran, errorMsg = pcall(func)
         if not ran then
             common.log('Error running breakpoint script, ' .. errorMsg)

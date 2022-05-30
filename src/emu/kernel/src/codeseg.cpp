@@ -23,6 +23,7 @@
 #include <kernel/codeseg.h>
 #include <kernel/kernel.h>
 #include <loader/common.h>
+#include <xxHash/xxhash.h>
 
 #include <algorithm>
 
@@ -30,7 +31,9 @@ namespace eka2l1::kernel {
     codeseg::codeseg(kernel_system *kern, const std::string &name, codeseg_create_info &info)
         : kernel_obj(kern, name, nullptr, kernel::access_type::global_access)
         , patched_(false)
-        , code_chunk_shared(nullptr) {
+        , code_chunk_shared(nullptr)
+        , hash_(0)
+        , hash_inited_(false) {
         obj_type = kernel::object_type::codeseg;
 
         std::copy(info.uids, info.uids + 3, uids);
@@ -704,5 +707,24 @@ namespace eka2l1::kernel {
         }
 
         return processes;
+    }
+
+    void codeseg::calculate_hash() {
+        XXH32_state_t *state = XXH32_createState();
+
+        XXH32_reset(state, 0x5B001101);
+        XXH32_update(state, code_data.get(), code_size);
+
+        hash_ = XXH32_digest(state);
+        XXH32_freeState(state);
+    }
+
+    std::uint32_t codeseg::get_hash() {
+        if (!hash_inited_) {
+            calculate_hash();
+            hash_inited_ = true;
+        }
+
+        return hash_;
     }
 }
