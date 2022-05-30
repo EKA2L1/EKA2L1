@@ -609,6 +609,8 @@ namespace eka2l1::epoc {
     
     void canvas_base::enable_visiblity_change_events(service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         flags |= flag_visiblity_event_report;
+
+        scr->recalculate_visible_regions();
         report_visiblity_change();
         
         ctx.complete(epoc::error_none);
