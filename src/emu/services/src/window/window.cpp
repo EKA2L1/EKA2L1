@@ -1695,6 +1695,15 @@ namespace eka2l1 {
 
             eka2l1::rect screen_rect(scr->absolute_pos, screen_size_scaled);
 
+            if (input_event.mouse_.action_ == drivers::mouse_action_release) {
+                // It may be out of the screen region, but we must still deliver it
+                int new_x = common::clamp(scr->absolute_pos.x, scr->absolute_pos.x + screen_size_scaled.x, input_event.mouse_.pos_x_);
+                int new_y = common::clamp(scr->absolute_pos.y, scr->absolute_pos.y + screen_size_scaled.y, input_event.mouse_.pos_y_);
+
+                input_event.mouse_.pos_x_ = new_x;
+                input_event.mouse_.pos_y_ = new_y;
+            }
+
             // For touch, try to map to keycode first...
             // If no correspond mapping is found as key, just treat it as touch
             if (screen_rect.contains(eka2l1::point(input_event.mouse_.pos_x_, input_event.mouse_.pos_y_))) {
@@ -1720,6 +1729,7 @@ namespace eka2l1 {
                     break;
                 }
 
+                // If the input is clamped, don't make key event
                 if (!make_key_event(input_mapping.key_input_map, input_event, guest_event)) {
                     make_mouse_event(original_input_evt, guest_event, get_current_focus_screen());
 
