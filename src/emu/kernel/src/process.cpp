@@ -21,6 +21,7 @@
 #include <common/chunkyseri.h>
 #include <common/cvt.h>
 #include <common/log.h>
+#include <common/path.h>
 #include <config/app_settings.h>
 
 #include <kernel/kernel.h>
@@ -110,6 +111,25 @@ namespace eka2l1::kernel {
         }
 
         exe_path = codeseg->get_full_path();
+
+        // EKA2 supports shortening executable path. If it's in /sys/bin/ then we can just shorten
+        // to drive and filename. Gameloft games relies on this (they use DriveAndPath to get the drive of the EXE, lol)
+        if (kern->get_epoc_version() >= epocver::eka2) {
+            const std::u16string rel_path = eka2l1::relative_path(exe_path, true);
+            
+            static const char16_t *PATH_SYS_BIN =  u"sys\\bin\\";
+            static const char16_t *PATH_SYSTEM_LIBS =  u"system\\libs\\";
+            static const char16_t *PATH_SYSTEM_PROGRAMS =  u"system\\programs\\";
+            static const std::size_t PATH_SYS_BIN_LEN = 8;
+            static const std::size_t PATH_SYSTEM_LIBS_LEN = 12;
+            static const std::size_t PATH_SYSTEM_PROGRAMS_LEN = 16;
+
+            if ((common::compare_ignore_case(rel_path.substr(0, PATH_SYS_BIN_LEN), PATH_SYS_BIN) == 0) ||
+                (common::compare_ignore_case(rel_path.substr(0, PATH_SYSTEM_LIBS_LEN), PATH_SYSTEM_LIBS) == 0) ||
+                (common::compare_ignore_case(rel_path.substr(0, PATH_SYSTEM_PROGRAMS_LEN), PATH_SYSTEM_PROGRAMS) == 0)) {
+                exe_path = eka2l1::root_name(exe_path, true) + eka2l1::filename(exe_path, true);
+            }
+        }
 
         // Base on: sprocess.cpp#L245 in kernelhwsrv package
         create_prim_thread(codeseg->get_code_run_addr(this), codeseg->get_entry_point(this), stack_size, heap_min, heap_max,
