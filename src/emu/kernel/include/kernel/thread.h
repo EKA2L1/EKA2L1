@@ -217,7 +217,6 @@ namespace eka2l1 {
             std::uint64_t total_real_run_time;
 
             eka2l1::ptr<epoc::request_status> sleep_nof_sts;
-            eka2l1::ptr<epoc::request_status> timeout_sts;
 
             common::double_link<kernel::thread> scheduler_link;
             common::double_linked_queue_element wait_link;
@@ -235,6 +234,9 @@ namespace eka2l1 {
             std::vector<address> cached_detach_eps;
             bool cached_detach;
 
+            int wait_object_timeout_callback_type;
+            bool is_in_timeout;
+
         protected:
             epoc9_std_epoc_thread_create_info *metadata;
             std::queue<std::uint32_t> last_syscalls;
@@ -250,7 +252,6 @@ namespace eka2l1 {
             bool logon_cancel(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous);
 
             void rendezvous(int rendezvous_reason);
-
             void finish_logons();
 
             /**
@@ -354,6 +355,7 @@ namespace eka2l1 {
 
             void real_time_active_begin();
             void real_time_active_end();
+            void handle_wait_object_timeout();
 
             std::uint64_t get_real_active_time() const {
                 return total_real_run_time;
@@ -410,6 +412,9 @@ namespace eka2l1 {
             void restore_before_exception_state();
 
             void owning_process(kernel::process *pr);
+
+            void start_timeout(const std::uint32_t us);
+            void end_timeout_early();
 
             std::uint32_t last_syscall() const;
             void add_last_syscall(const std::uint32_t syscall);

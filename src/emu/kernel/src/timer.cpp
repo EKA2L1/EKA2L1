@@ -38,11 +38,10 @@ namespace eka2l1 {
             , outstanding(false) {
             obj_type = object_type::timer;
 
-            callback_type = timing->get_register_event("TimerCallback" + common::to_string(uid));
+            callback_type = timing->get_register_event("TimerCallback");
 
             if (callback_type == -1) {
-                callback_type = timing->register_event("TimerCallback" + common::to_string(uid),
-                    timer_callback);
+                callback_type = timing->register_event("TimerCallback", timer_callback);
             }
         }
 

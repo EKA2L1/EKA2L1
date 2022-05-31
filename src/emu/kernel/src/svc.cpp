@@ -1522,7 +1522,7 @@ namespace eka2l1::epoc {
             LOG_WARN(KERNEL, "Semaphore timeout unimplemented");
         }
 
-        sema->wait();
+        sema->wait(timeout);
         return epoc::error_none;
     }
 

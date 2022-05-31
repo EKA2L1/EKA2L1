@@ -48,7 +48,8 @@ namespace eka2l1 {
                 kernel::access_type access = access_type::local_access);
 
             void signal(int32_t signal_count);
-            void wait();
+            void timeouted(thread *thr);
+            void wait(const std::int32_t timeout_us = 0);
 
             bool suspend_waiting_thread(thread *thr);
             bool unsuspend_waiting_thread(thread *thr);
