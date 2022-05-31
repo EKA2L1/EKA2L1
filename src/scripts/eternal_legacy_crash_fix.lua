@@ -13,4 +13,4 @@ function fixWrongGLSLCodeHash()
 end
 
 common.log('Script enabled: Eternal Legacy (Gameloft) crash fix.')
-evt.registerBreakpointHook('eternallegacy.exe', 0x00270480, 0, 0, fixWrongGLSLCodeHash, 0x7C16F812)
+evt.registerBreakpointHook('eternallegacy.exe', 0x00270488, 0, 0, fixWrongGLSLCodeHash, 0x7C16F812)
