@@ -2049,6 +2049,17 @@ namespace eka2l1::epoc {
         const std::u16string lib_filename = lib->get_codeseg()->get_full_path();
         path_to_fill->assign(kern->crr_process(), lib_filename);
     }
+    
+    BRIDGE_FUNC(void, library_filename, kernel::handle h, epoc::des8 *path_to_fill) {
+        kernel::library *lib = kern->get<kernel::library>(h);
+
+        if (!lib) {
+            return;
+        }
+
+        const std::u16string lib_filename = lib->get_codeseg()->get_full_path();
+        path_to_fill->assign(kern->crr_process(), common::ucs2_to_utf8(lib_filename));
+    }
 
     BRIDGE_FUNC(void, library_type_eka1, epoc::uid_type *type, kernel::handle h) {
         kernel::library *lib = kern->get<kernel::library>(h);
@@ -5507,6 +5518,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x0B, math_rand),
         BRIDGE_REGISTER(0x0C, imb_range),
         BRIDGE_REGISTER(0x0E, library_lookup),
+        BRIDGE_REGISTER(0x0F, library_filename),
         BRIDGE_REGISTER(0x11, mutex_wait),
         BRIDGE_REGISTER(0x12, mutex_signal),
         BRIDGE_REGISTER(0x13, process_id),
@@ -5533,6 +5545,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x29, thread_suspend),
         BRIDGE_REGISTER(0x2B, thread_set_priority),
         BRIDGE_REGISTER(0x2F, thread_set_flags),
+        BRIDGE_REGISTER(0x30, thread_request_count),
         BRIDGE_REGISTER(0x31, thread_exit_type),
         BRIDGE_REGISTER(0x34, timer_cancel),
         BRIDGE_REGISTER(0x35, timer_after),
@@ -5543,6 +5556,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x3A, request_signal),
         BRIDGE_REGISTER(0x3B, handle_name),
         BRIDGE_REGISTER(0x3C, handle_full_name),
+        BRIDGE_REGISTER(0x3E, handle_count),
         BRIDGE_REGISTER(0x3F, after),
         BRIDGE_REGISTER(0x41, message_complete),
         BRIDGE_REGISTER(0x42, message_complete),
@@ -5557,6 +5571,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x56, debug_print),
         BRIDGE_REGISTER(0x5A, exception_handler),
         BRIDGE_REGISTER(0x5E, is_exception_handled),
+        BRIDGE_REGISTER(0x5F, process_get_memory_info),
         BRIDGE_REGISTER(0x64, process_type),
         BRIDGE_REGISTER(0x68, thread_create),
         BRIDGE_REGISTER(0x6A, handle_close),
@@ -5690,6 +5705,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x2A, thread_priority),
         BRIDGE_REGISTER(0x2B, thread_set_priority),
         BRIDGE_REGISTER(0x2F, thread_set_flags),
+        BRIDGE_REGISTER(0x30, thread_request_count),
         BRIDGE_REGISTER(0x31, thread_exit_type),
         BRIDGE_REGISTER(0x35, timer_cancel),
         BRIDGE_REGISTER(0x36, timer_after),
