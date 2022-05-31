@@ -574,6 +574,15 @@ namespace eka2l1::kernel {
             return 0;
         }
 
+        if ((lookup_res >= data_base) && (lookup_res < data_base + data_size + bss_size)) {
+            if (attach_info->get()->data_chunk) {
+                return attach_info->get()->data_chunk->base(pr).ptr_address() + lookup_res - data_base;
+            } else {
+                LOG_ERROR(KERNEL, "Export address is based on .data, but no data chunk is available!");
+                return 0;
+            }
+        }
+
         return attach_info->get()->code_chunk->base(pr).ptr_address() + lookup_res - code_base;
     }
 
@@ -658,10 +667,26 @@ namespace eka2l1::kernel {
         }
 
         std::vector<std::uint32_t> new_table = export_table;
-        const std::uint32_t delta = attach_info->get()->code_chunk->base(pr).ptr_address() - code_base;
+
+        const std::uint32_t delta_code = attach_info->get()->code_chunk->base(pr).ptr_address() - code_base;
+        std::uint32_t delta_data = 0;
+        bool delta_data_calced = false;
 
         for (auto &entry : new_table) {
-            entry += delta;
+            if ((entry >= data_base) && (entry < data_base + data_size + bss_size)) {
+                if (!delta_data_calced) {
+                    if (attach_info->get()->data_chunk) {
+                        delta_data = attach_info->get()->data_chunk->base(pr).ptr_address() - data_base;
+                    } else {
+                        LOG_ERROR(KERNEL, "Export address is based on .data, but no data chunk is available!");
+                    }
+                    delta_data_calced = true;
+                }
+
+                entry += delta_data;
+            } else {
+                entry += delta_code;
+            }
         }
 
         return new_table;
