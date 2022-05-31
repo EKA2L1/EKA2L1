@@ -87,7 +87,12 @@ namespace eka2l1::scripting {
     }
 
     std::uint32_t codeseg::get_export(process *pr, const std::uint32_t index) {
-        std::vector<std::uint32_t> table = real_seg_->get_export_table(pr ? pr->get_process_handle() : nullptr);
+        std::vector<std::uint32_t> table;
+        if (pr) {
+            table = real_seg_->get_export_table(pr->get_process_handle());
+        } else {
+            table = real_seg_->get_export_table_raw();
+        }
         if (table.size() < index) {
             return 0xFFFFFFFF;
         }
