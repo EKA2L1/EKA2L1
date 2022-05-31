@@ -1518,11 +1518,7 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
-        if (!kern->is_eka1() && timeout) {
-            LOG_WARN(KERNEL, "Semaphore timeout unimplemented");
-        }
-
-        sema->wait(timeout);
+        sema->wait(kern->is_eka1() ? 0 : timeout);
         return epoc::error_none;
     }
 

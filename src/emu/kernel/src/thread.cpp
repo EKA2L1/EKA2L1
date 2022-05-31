@@ -991,7 +991,7 @@ namespace eka2l1 {
         
         void thread::start_timeout(const std::uint32_t us) {
             if (!is_in_timeout) {
-                timing->schedule_event(wait_object_timeout_callback_type, reinterpret_cast<std::uint64_t>(this), us);
+                timing->schedule_event(us, wait_object_timeout_callback_type, reinterpret_cast<std::uint64_t>(this));
                 is_in_timeout = true;
             }
         }
