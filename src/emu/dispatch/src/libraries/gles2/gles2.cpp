@@ -1164,6 +1164,10 @@ APPLY_PENDING_ROUTES:
             *params = static_cast<T>(8);
             break;
 
+        case GL_TEXTURE_BINDING_2D_EMU:
+            *params = static_cast<T>(ctx->texture_units_[ctx->active_texture_unit_]);
+            break;
+
         default:
             return false;
         }

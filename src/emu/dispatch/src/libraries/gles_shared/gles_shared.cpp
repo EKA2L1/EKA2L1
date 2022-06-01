@@ -227,6 +227,12 @@ namespace eka2l1::dispatch {
             swizzles_out = { drivers::channel_swizzle::red, drivers::channel_swizzle::green, drivers::channel_swizzle::blue, drivers::channel_swizzle::alpha };
             break;
 
+        case GL_BGRA_EXT_EMU:
+            format_out = drivers::texture_format::bgra;
+            internal_out = format_out;
+            swizzles_out = { drivers::channel_swizzle::red, drivers::channel_swizzle::green, drivers::channel_swizzle::blue, drivers::channel_swizzle::alpha };
+            break;
+
         case GL_ALPHA_EMU:
             format_out = drivers::texture_format::r;
             internal_out = drivers::texture_format::r8;
@@ -1907,7 +1913,7 @@ namespace eka2l1::dispatch {
 
     static inline std::uint32_t is_format_and_data_type_ok(const std::uint32_t format, const std::uint32_t data_type) {
         if ((format != GL_ALPHA_EMU) && (format != GL_RGB_EMU) && (format != GL_RGBA_EMU) && (format != GL_LUMINANCE_EMU)
-            && (format != GL_LUMINANCE_ALPHA_EMU)) {
+            && (format != GL_LUMINANCE_ALPHA_EMU) && (format != GL_BGRA_EXT_EMU)) {
             return GL_INVALID_ENUM;
         }
 
@@ -1939,7 +1945,7 @@ namespace eka2l1::dispatch {
                 return size.x * size.y * 2;
             }
         } else {
-            if (format == GL_RGBA_EMU) {
+            if ((format == GL_RGBA_EMU) || (format == GL_BGRA_EXT_EMU)) {
                 if (data_type == GL_UNSIGNED_BYTE_EMU) {
                     return size.x * size.y * 4;
                 } else {
@@ -2222,6 +2228,7 @@ namespace eka2l1::dispatch {
                     format_driver, dtype, data_pixels, 0, eka2l1::vec3(width, height, 0), 0, ctx->unpack_alignment_);
 
                 if (!new_h) {
+                    LOG_TRACE(KERNEL, "Shit");
                     controller.push_error(ctx, GL_INVALID_OPERATION);
                     return;
                 }
