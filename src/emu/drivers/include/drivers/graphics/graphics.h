@@ -103,6 +103,7 @@ namespace eka2l1::drivers {
         graphics_driver_set_framebuffer_color_buffer,
         graphics_driver_set_framebuffer_depth_stencil_buffer,
         graphics_driver_set_blend_colour,
+        graphics_driver_read_framebuffer,
         graphics_driver_backup_state, // Backup all possible state to a struct
         graphics_driver_restore_state // Restore previously backup data
     };

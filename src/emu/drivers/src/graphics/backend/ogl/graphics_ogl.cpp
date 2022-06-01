@@ -27,6 +27,7 @@
 #include <drivers/graphics/backend/ogl/common_ogl.h>
 #include <drivers/graphics/backend/ogl/graphics_ogl.h>
 #include <drivers/graphics/backend/ogl/buffer_ogl.h>
+#include <drivers/graphics/backend/ogl/fb_ogl.h>
 #include <glad/glad.h>
 
 #if EKA2L1_PLATFORM(ANDROID)
@@ -1581,6 +1582,31 @@ namespace eka2l1::drivers {
         glBlendColor(red, green, blue, alpha);
     }
 
+    void ogl_graphics_driver::read_framebuffer(command &cmd) {
+        drivers::handle h = cmd.data_[0];
+        drivers::ogl_framebuffer *fb = nullptr;
+
+        if (h != 0) {
+            fb = reinterpret_cast<drivers::ogl_framebuffer*>(get_graphics_object(h));
+            if (!fb) {
+                return;
+            }
+        }
+
+        GLenum format = texture_format_to_gl_enum(static_cast<drivers::texture_format>(static_cast<std::uint32_t>(cmd.data_[1])));
+        GLenum type = texture_data_type_to_gl_enum(static_cast<drivers::texture_data_type>(static_cast<std::uint32_t>(cmd.data_[1] >> 32)));
+
+        GLint last_read_fb = 0;
+        std::int32_t x, y, width, height;
+        unpack_u64_to_2u32(cmd.data_[2], x, y);
+        unpack_u64_to_2u32(cmd.data_[3], width, height);
+
+        glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &last_read_fb);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, fb ? fb->get_fbo() : 0);
+        glReadPixels(x, y, width, height, format, type, reinterpret_cast<std::uint64_t*>(cmd.data_[4]));
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, last_read_fb);
+    }
+
     void ogl_graphics_driver::save_gl_state() {
         glGetIntegerv(GL_CURRENT_PROGRAM, &backup.last_program);
         glGetIntegerv(GL_TEXTURE_BINDING_2D, &backup.last_texture);
@@ -1828,6 +1854,10 @@ namespace eka2l1::drivers {
 
         case graphics_driver_set_blend_colour:
             set_blend_colour(cmd);
+            break;
+
+        case graphics_driver_read_framebuffer:
+            read_framebuffer(cmd);
             break;
 
         default:

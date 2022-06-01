@@ -423,13 +423,7 @@ APPLY_PENDING_ROUTES:
         }
     }
 
-    std::uint32_t gles_renderbuffer_object::make_storage(drivers::graphics_driver *drv, const eka2l1::vec2 &size, const std::uint32_t format) {
-        if ((format != GL_RGBA4_EMU) && (format != GL_RGB5_A1_EMU) && (format != GL_RGB565_EMU) && (format != GL_DEPTH_COMPONENT16_EMU)
-            && (format != GL_STENCIL_INDEX8_EMU) && (format != GL_DEPTH24_STENCIL8_OES)) {
-            return GL_INVALID_ENUM;
-        }
-
-        drivers::texture_format format_driver;
+    static bool gl_enum_to_driver_texture_format_storage_fb(const std::uint32_t format, drivers::texture_format &format_driver) {
         switch (format) {
         case GL_RGBA4_EMU:
             format_driver = drivers::texture_format::rgba4;
@@ -464,6 +458,20 @@ APPLY_PENDING_ROUTES:
             break;
 
         default:
+            return false;
+        }
+
+        return true;
+    }
+
+    std::uint32_t gles_renderbuffer_object::make_storage(drivers::graphics_driver *drv, const eka2l1::vec2 &size, const std::uint32_t format) {
+        if ((format != GL_RGBA4_EMU) && (format != GL_RGB5_A1_EMU) && (format != GL_RGB565_EMU) && (format != GL_DEPTH_COMPONENT16_EMU)
+            && (format != GL_STENCIL_INDEX8_EMU) && (format != GL_DEPTH24_STENCIL8_OES)) {
+            return GL_INVALID_ENUM;
+        }
+
+        drivers::texture_format format_driver;
+        if (!gl_enum_to_driver_texture_format_storage_fb(format, format_driver)) {
             return GL_INVALID_ENUM;
         }
 
@@ -869,6 +877,73 @@ APPLY_PENDING_ROUTES:
         stencil_changed_ = false;
 
         context_.cmd_builder_.bind_framebuffer(driver_handle_, drivers::framebuffer_bind_read_draw);
+        return 0;
+    }
+
+    bool gles_framebuffer_object::get_pair_read_specs(std::uint32_t &format, std::uint32_t &ttype) const {
+        if (!attached_color_) {
+            return false;
+        }
+        
+        std::uint32_t internal_format = 0;
+        if (attached_color_->object_type() == GLES_OBJECT_TEXTURE) {
+            const gles_driver_texture *tex_color = reinterpret_cast<const gles_driver_texture*>(attached_color_);
+
+            internal_format = tex_color->internal_format();
+        } else {
+            internal_format = reinterpret_cast<const gles_renderbuffer_object*>(attached_color_)->get_format();
+        }
+
+        switch (internal_format) {
+        case GL_RGBA4_EMU:
+            format = GL_RGBA_EMU;
+            ttype = GL_UNSIGNED_SHORT_4_4_4_4_EMU;
+            break;
+
+        case GL_RGB5_A1_EMU:
+            format = GL_RGBA_EMU;
+            ttype = GL_UNSIGNED_SHORT_5_5_5_1_EMU;
+            break;
+
+        case GL_RGB565_EMU:
+            format = GL_RGB_EMU;
+            ttype = GL_UNSIGNED_SHORT_5_6_5_EMU;
+            break;
+
+        case GL_RGBA_EMU:
+            format = GL_RGBA_EMU;
+            ttype = GL_UNSIGNED_BYTE_EMU;
+            break;
+
+        case GL_RGB_EMU:
+            format = GL_RGB_EMU;
+            ttype = GL_UNSIGNED_BYTE_EMU;
+            break;
+
+        default:
+            return false;
+        }
+
+        return true;
+    }
+
+    std::uint32_t gles_framebuffer_object::format_compatible_for_read(const std::uint32_t format, const std::uint32_t type) const {
+        // This pair is always accepted.
+        if ((format == GL_RGBA_EMU) && (type == GL_UNSIGNED_BYTE_EMU)) {
+            return 0;
+        }
+
+        std::uint32_t expected_format = 0;
+        std::uint32_t expected_dt = 0;
+
+        if (!get_pair_read_specs(expected_format, expected_dt)) {
+            return GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EMU;
+        }
+
+        if ((expected_format != format) || (expected_dt != type)) {
+            return GL_INVALID_OPERATION;
+        }
+
         return 0;
     }
 
@@ -2529,5 +2604,81 @@ APPLY_PENDING_ROUTES:
         }
 
         program_obj->bind_attribute_to_index(name, index);
+    }
+    
+    BRIDGE_FUNC_LIBRARY(void, gl_read_pixels_emu, std::int32_t x, std::int32_t y, std::int32_t width, std::int32_t height, std::uint32_t format,
+        std::uint32_t type, void *data_ptr) {
+        egl_context_es2 *ctx = get_es2_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+        gles_framebuffer_object *fb_obj = get_binded_framebuffer_object_gles(ctx, controller);
+
+        // Framebuffer handle on driver side still 0 = not drawn anything yet. Don't waste time
+        // Maybe we should still read though. No one knows
+        if ((!fb_obj && (ctx->binded_framebuffer_ != 0)) || (fb_obj && !fb_obj->handle_value())) {
+            return;
+        }
+
+        if (fb_obj) {
+            std::uint32_t compatible_to_read = fb_obj->format_compatible_for_read(format, type);
+            if (compatible_to_read != 0) {
+                controller.push_error(ctx, compatible_to_read);
+                return;
+            }
+        }
+
+        drivers::graphics_driver *drv = sys->get_graphics_driver();
+        drivers::texture_format format_for_read;
+        drivers::texture_data_type data_type_for_read;
+
+        if (!gl_enum_to_driver_texture_format_storage_fb(format, format_for_read)) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        switch (type) {
+        case GL_UNSIGNED_BYTE_EMU:
+            data_type_for_read = drivers::texture_data_type::ubyte;
+            break;
+
+        case GL_UNSIGNED_SHORT_4_4_4_4_EMU:
+            data_type_for_read = drivers::texture_data_type::ushort_4_4_4_4;
+            break;
+
+        case GL_UNSIGNED_SHORT_5_6_5_EMU:
+            data_type_for_read = drivers::texture_data_type::ushort_5_6_5;
+            break;
+
+        case GL_UNSIGNED_SHORT_5_5_5_1_EMU:
+            data_type_for_read = drivers::texture_data_type::ushort_5_5_5_1;
+            break;
+
+        default:
+            controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        if (!fb_obj && ((format_for_read != drivers::texture_format::rgba) || (data_type_for_read != drivers::texture_data_type::ubyte))) {
+            controller.push_error(ctx, GL_INVALID_OPERATION);
+            return;
+        }
+
+        // Flush all pending operations
+        ctx->flush_to_driver(drv, false);
+
+        if (!fb_obj) {
+            if (!drivers::read_bitmap(drv, ctx->read_surface_->handle_, eka2l1::point(x, y), eka2l1::vec2(width, height),
+                32, reinterpret_cast<std::uint8_t*>(data_ptr))) {
+                controller.push_error(ctx, GL_INVALID_OPERATION);
+                return;
+            }
+        } else {
+            drivers::read_framebuffer(drv, fb_obj->handle_value(), eka2l1::vec2(x, y), eka2l1::vec2(width, height),
+                format_for_read, data_type_for_read, data_ptr);
+        }
     }
 }

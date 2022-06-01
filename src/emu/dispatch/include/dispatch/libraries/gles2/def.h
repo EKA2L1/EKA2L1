@@ -267,7 +267,9 @@ namespace eka2l1::dispatch {
         std::uint32_t set_attachment(gles_driver_object *object, const std::uint32_t attachment_type, const int index);
         std::uint32_t completed() const;
         std::uint32_t ready_for_draw(drivers::graphics_driver *drv);
-        
+        std::uint32_t format_compatible_for_read(const std::uint32_t format, const std::uint32_t dttype) const;
+        bool get_pair_read_specs(std::uint32_t &format, std::uint32_t &ttype) const;
+
         gles_object_type object_type() const override {
             return GLES_OBJECT_FRAMEBUFFER;
         }

@@ -100,4 +100,6 @@ namespace eka2l1::dispatch {
         std::int32_t stride, address offset);
     BRIDGE_FUNC_LIBRARY(void, gl_bind_attrib_location_emu, std::uint32_t program, std::uint32_t index, const char *name);
     BRIDGE_FUNC_LIBRARY(void, gl_delete_shader_emu, std::uint32_t shader);
+    BRIDGE_FUNC_LIBRARY(void, gl_read_pixels_emu, std::int32_t x, std::int32_t y, std::int32_t width, std::int32_t height, std::uint32_t format,
+        std::uint32_t type, void *data_ptr);
 }

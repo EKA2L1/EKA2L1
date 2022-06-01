@@ -198,7 +198,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1168, gl_pop_matrix_emu, "glPopMatrix"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1169, gl_push_matrix_emu, "glPushMatrix"),
         //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x116A, gl_query_matrixx_oes_emu, "glQueryMatrixx"),
-        //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x116B, gl_read_pixels_emu, "glReadPixels"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x116B, gl_read_pixels_emu, "glReadPixels"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x116C, gl_rotatef_emu, "glRotatef"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x116D, gl_rotatex_emu, "glRotatex"),
         //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x116E, gl_sample_coverage_emu, "glSampleCoverage"),

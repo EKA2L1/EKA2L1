@@ -184,6 +184,7 @@ namespace eka2l1::drivers {
         void set_texture_anisotrophy(command &cmd);
         void bind_framebuffer(command &cmd);
         void set_blend_colour(command &cmd);
+        void read_framebuffer(command &cmd);
 
         void save_gl_state();
         void load_gl_state();

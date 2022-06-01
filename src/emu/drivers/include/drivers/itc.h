@@ -194,6 +194,20 @@ namespace eka2l1::drivers {
     bool read_bitmap(graphics_driver *driver, drivers::handle h, const eka2l1::point &pos, const eka2l1::object_size &size,
         const std::uint32_t bpp, std::uint8_t *buffer_ptr);
 
+    /**
+     * @brief   Read framebuffer data from a region into memory buffer.
+     * 
+     * The data will also be word-aligned each line pitch.
+     * 
+     * @param h             Handle to the bitmap.
+     * @param pos           The position to start clipping framebuffer data from.
+     * @param size          The size of the clipped framebuffer region.
+     * @param format        The layout format that will be written to the memory.
+     * @param dt            The data type per component.
+     * @param data_ptr      The pointer to the framebuffer data.
+     */
+    void read_framebuffer(graphics_driver *driver, drivers::handle h, const eka2l1::vec2 pos, const eka2l1::vec2 size, drivers::texture_format format, drivers::texture_data_type dt, void *data_ptr);
+
     static constexpr std::size_t MAX_THRESHOLD_TO_FLUSH = 12000;
     static constexpr std::size_t MAX_CAP_COMMAND_COUNT = 12800;
 

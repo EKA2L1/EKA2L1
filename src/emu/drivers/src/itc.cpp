@@ -226,6 +226,19 @@ namespace eka2l1::drivers {
 
         return send_sync_command(driver, cmd);
     }
+    
+    void read_framebuffer(graphics_driver *driver, drivers::handle h, const eka2l1::vec2 pos, const eka2l1::vec2 size, drivers::texture_format format, drivers::texture_data_type dt, void *data_ptr) {
+        command cmd;
+
+        cmd.opcode_ = graphics_driver_read_framebuffer;
+        cmd.data_[0] = h;
+        cmd.data_[1] = static_cast<std::uint64_t>(static_cast<std::uint32_t>(format) | (static_cast<std::uint64_t>(dt) << 32));
+        cmd.data_[2] = PACK_2U32_TO_U64(pos.x, pos.y);
+        cmd.data_[3] = PACK_2U32_TO_U64(size.x, size.y);
+        cmd.data_[4] = reinterpret_cast<std::uint64_t>(data_ptr);
+
+        send_sync_command(driver, cmd);
+    }
 
     std::uint64_t pack_from_two_floats(const float f1, const float f2) {
         return ((static_cast<std::uint64_t>(*reinterpret_cast<const std::uint32_t*>(&f2)) << 32) | *reinterpret_cast<const std::uint32_t*>(&f1));
