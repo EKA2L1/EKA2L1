@@ -190,10 +190,6 @@ namespace eka2l1::drivers {
             }
         }
 
-        if ((internal_format == drivers::texture_format::pvrtc_4bppv1_rgb) || (internal_format == drivers::texture_format::pvrtc_2bppv1_rgb)) {
-            glTexParameteri(to_gl_tex_dim(dimensions), GL_TEXTURE_SWIZZLE_A, GL_ONE);
-        }
-
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
         unbind(driver);
 

@@ -2004,6 +2004,7 @@ namespace eka2l1::dispatch {
 
         drivers::texture_format internal_format_driver;
         std::uint8_t dimension = (target == GL_TEXTURE_2D_EMU) ? 2 : static_cast<std::uint8_t>(target - GL_TEXTURE_CUBE_MAP_POSITIVE_X_EMU + 4);
+        drivers::channel_swizzles swizz = { drivers::channel_swizzle::red, drivers::channel_swizzle::green, drivers::channel_swizzle::blue, drivers::channel_swizzle::alpha };
 
         if ((internal_format >= GL_PALETTE4_RGBA8_OES_EMU) && (internal_format <= GL_PALETTE8_RGB5_A1_OES_EMU)) {
             if (level > 0) {
@@ -2084,10 +2085,12 @@ namespace eka2l1::dispatch {
             case GL_ETC1_RGB8_OES_EMU:
                 // Backwards compatible!!!
                 internal_format_driver = drivers::texture_format::etc2_rgb8;
+                swizz[3] = drivers::channel_swizzle::one;
                 break;
 
             case GL_COMPRESSED_RGB_PVRTC_4BPPV1_EMU:
                 internal_format_driver = drivers::texture_format::pvrtc_4bppv1_rgb;
+                swizz[3] = drivers::channel_swizzle::one;
                 break;
 
             case GL_COMPRESSED_RGBA_PVRTC_4BPPV1_EMU:
@@ -2096,6 +2099,7 @@ namespace eka2l1::dispatch {
 
             case GL_COMPRESSED_RGB_PVRTC_2BPPV1_EMU:
                 internal_format_driver = drivers::texture_format::pvrtc_2bppv1_rgb;
+                swizz[3] = drivers::channel_swizzle::one;
                 break;
 
             case GL_COMPRESSED_RGBA_PVRTC_2BPPV1_EMU:
@@ -2161,6 +2165,8 @@ namespace eka2l1::dispatch {
             ctx->cmd_builder_.regenerate_mips(tex->handle_value());
             tex->set_mipmap_generated(true);
         }
+    
+        ctx->cmd_builder_.set_swizzle(tex->handle_value(), swizz[0], swizz[1], swizz[2], swizz[3]);
     }
 
     BRIDGE_FUNC_LIBRARY(void, gl_tex_image_2d_emu, std::uint32_t target, std::int32_t level, std::int32_t internal_format,
@@ -2237,7 +2243,6 @@ namespace eka2l1::dispatch {
                     format_driver, dtype, data_pixels, 0, eka2l1::vec3(width, height, 0), 0, ctx->unpack_alignment_);
 
                 if (!new_h) {
-                    LOG_TRACE(KERNEL, "Shit");
                     controller.push_error(ctx, GL_INVALID_OPERATION);
                     return;
                 }
