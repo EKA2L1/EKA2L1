@@ -2600,7 +2600,7 @@ namespace eka2l1::dispatch {
             std::uint64_t coordarray_mask = egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD0_ARRAY;
 
             for (std::uint32_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++, coordarray_mask <<= 1) {
-                if (active_texs & (1 << i)) {
+                if (active_texs & (0b11 << (i * 2))) {
                     if ((vertex_statuses_ & coordarray_mask) == 0)
                         cmd_builder_.set_dynamic_uniform(var_info->texcoord_loc_[i], drivers::shader_var_type::vec4,
                             texture_units_[i].coord_uniforms_, 16);
@@ -2827,6 +2827,35 @@ namespace eka2l1::dispatch {
 
         return arr;
     }
+    
+    static std::uint32_t retrieve_active_textures_bitarr_for_shader(egl_context_es1 *ctx) {
+        std::uint32_t arr = 0;
+        for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
+            if (!ctx->texture_units_[i].texturing_enabled_) {
+                continue;
+            }
+            auto *inst = ctx->objects_.get(ctx->texture_units_[i].binded_texture_handle_);
+            if (inst && (*inst).get()) {
+                gles_driver_texture *tex = reinterpret_cast<gles_driver_texture*>(inst->get());
+                switch (tex->internal_format()) {
+                case GL_ALPHA_EMU:
+                    arr |= 0b10 << (i * 2);
+                    break;
+
+                case GL_LUMINANCE_EMU:
+                case GL_RGB_EMU:
+                    arr |= 0b11 << (i * 2);
+                    break;
+
+                default:
+                    arr |= 0b1 << (i * 2);
+                    break;
+                }
+            }
+        }
+
+        return arr;
+    }
 
     bool egl_context_es1::prepare_for_draw(drivers::graphics_driver *drv, egl_controller &controller, kernel::process *crr_process,
         const std::int32_t first_index, const std::uint32_t vcount, bool &should_flush_after)  {
@@ -2850,6 +2879,7 @@ namespace eka2l1::dispatch {
             }
         }
 
+        active_textures_bitarr = retrieve_active_textures_bitarr_for_shader(this);
         if (!prepare_shader_program_for_draw(controller, active_textures_bitarr)) {
             return false;
         }
@@ -2901,8 +2931,6 @@ namespace eka2l1::dispatch {
     }
 
     BRIDGE_FUNC_LIBRARY(void, gl_weight_pointer_oes_emu, std::int32_t size, std::uint32_t type, std::int32_t stride, std::uint32_t offset) {
-        LOG_TRACE(KERNEL, "0x{:X}", sys->get_cpu()->get_lr());
-        
         egl_context_es1 *ctx = get_es1_active_context(sys);
         if (!ctx) {
             return;

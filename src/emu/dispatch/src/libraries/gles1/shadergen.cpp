@@ -109,7 +109,7 @@ namespace eka2l1::dispatch {
             out_decl += fmt::format("out vec4 mTexCoord{};\n", i);
             uni_decl += fmt::format("uniform mat4 uTextureMat{};\n", i);
             
-            if (active_texs & (1 << i)) {
+            if (active_texs & (0b11 << (i * 2))) {
                 if (vertex_statuses & (1 << (egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY_POS + static_cast<std::uint8_t>(i)))) {
                     input_decl += fmt::format("layout (location = {}) in vec4 inTexCoord{};\n", 3 + i, i);
                     main_body += fmt::format("\tmTexCoord{} = uTextureMat{} * inTexCoord{};\n", i, i, i);
@@ -272,37 +272,55 @@ namespace eka2l1::dispatch {
 
         if (active_texs != 0) {
             for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
-                if (active_texs & (1 << i)) {
+                if (active_texs & (0b11 << (i * 2))) {
+                    std::uint32_t mode_texture = (active_texs >> (i * 2)) & 0b11;
+
                     uni_decl += fmt::format("uniform sampler2D uTexture{};\n", i);
                     uni_decl += fmt::format("uniform vec4 uTextureEnvColor{};\n", i);
                     input_decl += fmt::format("in vec4 mTexCoord{};\n", i);
 
+                    std::string swizz_postfix = "";
+                    if (mode_texture == 0b10) {
+                        swizz_postfix = ".a";
+                    } else if (mode_texture == 0b11) {
+                        swizz_postfix = ".rgb";
+                    }
+
                     if (tex_env_infos[i].env_mode_ != gles_texture_env_info::ENV_MODE_COMBINE) {
                         switch (tex_env_infos[i].env_mode_) {
                         case gles_texture_env_info::ENV_MODE_REPLACE:
-                            main_body += fmt::format("\toColor = texture(uTexture{}, mTexCoord{}.xy);\n", i, i, i);
+                            main_body += fmt::format("\toColor{} = texture(uTexture{}, mTexCoord{}.xy){};\n", swizz_postfix, i, i, swizz_postfix);
                             break;
 
                         case gles_texture_env_info::ENV_MODE_ADD:
                             main_body += fmt::format("\tvec4 pixelTex{} = texture(uTexture{}, mTexCoord{}.xy);\n", i, i, i);
-                            main_body += fmt::format("\toColor.rgb += pixelTex{}.rgb;\n", i);
-                            main_body += fmt::format("\toColor.a *= pixelTex{}.a;\n", i);
+                            if (mode_texture != 0b10)
+                                main_body += fmt::format("\toColor.rgb += pixelTex{}.rgb;\n", i);
+
+                            if (mode_texture != 0b11)
+                                main_body += fmt::format("\toColor.a *= pixelTex{}.a;\n", i);
+
                             break;
 
                         case gles_texture_env_info::ENV_MODE_MODULATE:
-                            main_body += fmt::format("\toColor *= texture(uTexture{}, mTexCoord{}.xy);\n", i, i);
+                            main_body += fmt::format("\toColor{} *= texture(uTexture{}, mTexCoord{}.xy){};\n", swizz_postfix, i, i, swizz_postfix);
                             break;
 
                         case gles_texture_env_info::ENV_MODE_BLEND:
                             main_body += fmt::format("\tvec4 pixelTex{} = texture(uTexture{}, mTexCoord{}.xy);\n", i, i, i);
-                            main_body += fmt::format("\toColor.rgb = oColor.rgb * (vec3(1.0) - pixelTex{}.rgb) + uTextureEnvColor{}.rgb * pixelTex{}.rgb;\n", i, i, i);
-                            main_body += fmt::format("\toColor.a *= pixelTex{}.a;\n", i);
+                            if (mode_texture != 0b10)
+                                main_body += fmt::format("\toColor.rgb = oColor.rgb * (vec3(1.0) - pixelTex{}.rgb) + uTextureEnvColor{}.rgb * pixelTex{}.rgb;\n", i, i, i);
+                            if (mode_texture != 0b11)
+                                main_body += fmt::format("\toColor.a *= pixelTex{}.a;\n", i);
                             break;
 
                         case gles_texture_env_info::ENV_MODE_DECAL:
                             main_body += fmt::format("\tvec4 pixelTex{} = texture(uTexture{}, mTexCoord{}.xy);\n", i, i, i);
-                            main_body += fmt::format("\toColor.rgb = oColor.rgb * (vec3(1.0) - pixelTex{}.a) + pixelTex{}.rgb * pixelTex{}.a;\n", i, i, i);
-                            main_body += fmt::format("\toColor.a = pixelTex{}.a;\n", i);
+                            
+                            if (mode_texture != 0b10)
+                                main_body += fmt::format("\toColor.rgb = oColor.rgb * (vec3(1.0) - pixelTex{}.a) + pixelTex{}.rgb * pixelTex{}.a;\n", i, i, i);
+                            if (mode_texture != 0b11)
+                                main_body += fmt::format("\toColor.a = pixelTex{}.a;\n", i);
                             break;
 
                         default:

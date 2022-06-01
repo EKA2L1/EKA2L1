@@ -91,7 +91,7 @@ namespace eka2l1::dispatch {
         if (active_texs != 0) {
             // Clean texcoord bits of unused textures...
             for (std::uint8_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
-                if ((active_texs & (1 << i)) == 0) {
+                if ((active_texs & (0b11 << (i * 2))) == 0) {
                     vertex_hash &= ~(1 << (egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY_POS + i));
                 }
             }
@@ -131,10 +131,11 @@ namespace eka2l1::dispatch {
         // Doodle GLES1 (the seed I try to write 0_0)
         XXH64_reset(reinterpret_cast<XXH64_state_t*>(fragment_status_hasher_), 0xD00D1E61E51ULL);
         XXH64_update(reinterpret_cast<XXH64_state_t*>(fragment_status_hasher_), &cleansed_fragment_statuses, sizeof(std::uint64_t));
+        XXH64_update(reinterpret_cast<XXH64_state_t*>(fragment_status_hasher_), &active_texs, sizeof(std::uint32_t));
 
         if (active_texs != 0) {
             for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
-                if (active_texs & (1 << i)) {
+                if (active_texs & (0b11 << (i * 2))) {
                     XXH64_update(reinterpret_cast<XXH64_state_t*>(fragment_status_hasher_), tex_env_infos + i, sizeof(gles_texture_env_info));
                 }
             }
@@ -215,7 +216,7 @@ namespace eka2l1::dispatch {
             std::string clip_plane_name = "uClipPlane0";
 
             for (std::uint32_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
-                if (active_texs & (1 << i)) {
+                if (active_texs & (0b11 << (i * 2))) {
                     if ((vertex_statuses & (1 << (static_cast<std::uint8_t>(i) + egl_context_es1::VERTEX_STATE_CLIENT_TEXCOORD_ARRAY_POS))) == 0)
                         info_inst->texcoord_loc_[i] = metadata.get_uniform_binding(texcoordname.c_str());
         
