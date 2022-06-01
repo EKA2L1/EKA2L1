@@ -852,21 +852,23 @@ namespace eka2l1::dispatch {
         size_per_buffer_ = 0;
     }
 
-    void gles_buffer_pusher::initialize(drivers::graphics_driver *drv, const std::size_t size_per_buffer) {
+    void gles_buffer_pusher::initialize(const std::size_t size_per_buffer) {
         if (!size_per_buffer) {
             return;
         }
         size_per_buffer_ = size_per_buffer;
         for (std::uint8_t i = 0; i < MAX_BUFFER_SLOT; i++) {
-            buffers_[i] = drivers::create_buffer(drv, nullptr, size_per_buffer, static_cast<drivers::buffer_upload_hint>(drivers::buffer_upload_dynamic | drivers::buffer_upload_draw));
             data_[i] = new std::uint8_t[size_per_buffer];
+            buffers_[i] = 0;
             used_size_[i] = 0;
         }
     }
 
     void gles_buffer_pusher::destroy(drivers::graphics_command_builder &builder) {
         for (std::uint8_t i = 0; i < MAX_BUFFER_SLOT; i++) {
-            builder.destroy(buffers_[i]);
+            if (buffers_[i])
+                builder.destroy(buffers_[i]);
+
             delete data_[i];
         }
     }
@@ -933,14 +935,20 @@ namespace eka2l1::dispatch {
         return stride;
     }
 
-    drivers::handle gles_buffer_pusher::push_buffer(const std::uint8_t *data_source, const std::size_t total_buffer_size, std::size_t &buffer_offset) {
+    drivers::handle gles_buffer_pusher::push_buffer(drivers::graphics_driver *drv, const std::uint8_t *data_source, const std::size_t total_buffer_size, std::size_t &buffer_offset, bool &should_flush) {
         if (used_size_[current_buffer_] + total_buffer_size > size_per_buffer_) {
             current_buffer_++;
         }
 
-        if (current_buffer_ == MAX_BUFFER_SLOT) {
+        if (current_buffer_ == MAX_BUFFER_SLOT - 1) {
+            should_flush = true;
+        } else if (current_buffer_ == MAX_BUFFER_SLOT) {
             // No more slots, require flushing
             return 0;
+        }
+
+        if (!buffers_[current_buffer_]) {
+            buffers_[current_buffer_] = drivers::create_buffer(drv, nullptr, size_per_buffer_, static_cast<drivers::buffer_upload_hint>(drivers::buffer_upload_dynamic | drivers::buffer_upload_draw));
         }
 
         buffer_offset = used_size_[current_buffer_];
@@ -1175,7 +1183,7 @@ namespace eka2l1::dispatch {
 
     bool egl_context_es_shared::retrieve_vertex_buffer_slot(std::vector<drivers::handle> &vertex_buffers_alloc, drivers::graphics_driver *drv,
         kernel::process *crr_process, const gles_vertex_attrib &attrib, const std::int32_t first_index, const std::int32_t vcount,
-        std::uint32_t &res, int &offset, bool &attrib_not_persistent) {
+        std::uint32_t &res, int &offset, bool &attrib_not_persistent, bool &should_flush_after) {
         drivers::handle buffer_handle_drv = 0;
         if (attrib.buffer_obj_ == 0) {
             std::uint32_t stride = get_gl_attrib_stride(attrib);
@@ -1188,18 +1196,19 @@ namespace eka2l1::dispatch {
             }
 
             if (!vertex_buffer_pusher_.is_initialized()) {
-                vertex_buffer_pusher_.initialize(drv, common::MB(4));
+                vertex_buffer_pusher_.initialize(common::MB(8));
             }
 
             std::size_t offset_big = 0;
-            buffer_handle_drv = vertex_buffer_pusher_.push_buffer(data_raw, total_buffer_size, offset_big);
+            buffer_handle_drv = vertex_buffer_pusher_.push_buffer(drv, data_raw, total_buffer_size, offset_big, should_flush_after);
 
             offset = static_cast<int>(offset_big);
 
             if (buffer_handle_drv == 0) {
-                // Buffers are full, need flushing all
+                // Buffers are full, need flushing all. This is just emergency! Usually there's one backup buffer, so that
+                // the draw can be complete fully before we flush.
                 flush_to_driver(drv);
-                buffer_handle_drv = vertex_buffer_pusher_.push_buffer(data_raw, total_buffer_size, offset_big);
+                buffer_handle_drv = vertex_buffer_pusher_.push_buffer(drv, data_raw, total_buffer_size, offset_big, should_flush_after);
             }
 
             if (!attrib_not_persistent) {
@@ -3034,15 +3043,17 @@ namespace eka2l1::dispatch {
             controller.push_error(ctx, GL_INVALID_VALUE);
             return;
         }
+        
+        bool should_flush_after = false;
 
-        if (!ctx->prepare_for_draw(drv, controller, sys->get_kernel_system()->crr_process(), first_index, count)) {
+        if (!ctx->prepare_for_draw(drv, controller, sys->get_kernel_system()->crr_process(), first_index, count, should_flush_after)) {
             LOG_ERROR(HLE_DISPATCHER, "Error while preparing GLES draw. This should not happen!");
             return;
         }
 
         ctx->cmd_builder_.draw_arrays(prim_mode_drv, 0, count, false);
  
-        if (ctx->cmd_builder_.need_flush()) {
+        if (ctx->cmd_builder_.need_flush() || should_flush_after) {
             ctx->flush_to_driver(drv);
         }
     }
@@ -3141,6 +3152,7 @@ namespace eka2l1::dispatch {
         }
 
         gles_driver_buffer *binded_elem_buffer_managed = ctx->binded_buffer(false);
+        bool should_flush_after = false;
 
         if (!binded_elem_buffer_managed) {
             // Upload it to a temp buffer (sadly!)
@@ -3152,14 +3164,16 @@ namespace eka2l1::dispatch {
             }
 
             if (!ctx->index_buffer_pusher_.is_initialized()) {
-                ctx->index_buffer_pusher_.initialize(drv, common::MB(2));
+                ctx->index_buffer_pusher_.initialize(common::MB(2));
             }
 
             std::size_t offset_bytes = 0;
-            drivers::handle to_bind = ctx->index_buffer_pusher_.push_buffer(indicies_data_raw, size_ibuffer, offset_bytes);
+            drivers::handle to_bind = ctx->index_buffer_pusher_.push_buffer(drv, indicies_data_raw, size_ibuffer, offset_bytes, should_flush_after);
+            
+            // Only in emergency
             if (to_bind == 0) {
                 ctx->flush_to_driver(drv);
-                to_bind = ctx->index_buffer_pusher_.push_buffer(indicies_data_raw, size_ibuffer, offset_bytes);
+                to_bind = ctx->index_buffer_pusher_.push_buffer(drv, indicies_data_raw, size_ibuffer, offset_bytes, should_flush_after);
             }
 
             ctx->cmd_builder_.set_index_buffer(to_bind);
@@ -3172,14 +3186,14 @@ namespace eka2l1::dispatch {
             ctx->cmd_builder_.set_index_buffer(binded_elem_buffer_managed->handle_value());
         }
 
-        if (!ctx->prepare_for_draw(drv, controller, sys->get_kernel_system()->crr_process(), min_vert_index, total_vert)) {
+        if (!ctx->prepare_for_draw(drv, controller, sys->get_kernel_system()->crr_process(), min_vert_index, total_vert, should_flush_after)) {
             LOG_ERROR(HLE_DISPATCHER, "Error while preparing GLES draw. This should not happen!");
             return;
         }
 
         ctx->cmd_builder_.draw_indexed(prim_mode_drv, count, index_format_drv, static_cast<int>(indices_ptr), 0);
 
-        if (ctx->cmd_builder_.need_flush()) {
+        if (ctx->cmd_builder_.need_flush() || should_flush_after) {
             ctx->flush_to_driver(drv);
         }
     }

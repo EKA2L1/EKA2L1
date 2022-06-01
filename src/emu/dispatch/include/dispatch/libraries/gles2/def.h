@@ -300,9 +300,10 @@ namespace eka2l1::dispatch {
     private:
         bool retrieve_vertex_buffer_slot(std::vector<drivers::handle> &vertex_buffers_alloc, drivers::graphics_driver *drv,
             kernel::process *crr_process, const gles_vertex_attrib &attrib, const std::int32_t first_index, const std::int32_t vcount,
-            std::uint32_t &res, int &offset, bool &attrib_not_persistent) override;
+            std::uint32_t &res, int &offset, bool &attrib_not_persistent, bool &should_flush_after_draw) override;
 
-        bool prepare_vertex_attributes(drivers::graphics_driver *drv, kernel::process *crr_process, const std::int32_t first_index, const std::int32_t vcount);
+        bool prepare_vertex_attributes(drivers::graphics_driver *drv, kernel::process *crr_process, const std::int32_t first_index, const std::int32_t vcount,
+            bool &should_flush_after);
         bool try_configure_framebuffer(drivers::graphics_driver *drv, egl_controller &controller);
 
     public:
@@ -332,7 +333,7 @@ namespace eka2l1::dispatch {
         void init_context_state() override;
         void destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) override;
         bool prepare_for_draw(drivers::graphics_driver *driver, egl_controller &controller, kernel::process *crr_process,
-            const std::int32_t first_index, const std::uint32_t vcount) override;
+            const std::int32_t first_index, const std::uint32_t vcount, bool &should_flush_after_draw) override;
         bool prepare_for_clear(drivers::graphics_driver *driver, egl_controller &controller) override;
         bool get_data(drivers::graphics_driver *drv, const std::uint32_t feature, void *data, gles_get_data_type data_type) override;
 

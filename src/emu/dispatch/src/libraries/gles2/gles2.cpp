@@ -989,7 +989,7 @@ APPLY_PENDING_ROUTES:
 
     bool egl_context_es2::retrieve_vertex_buffer_slot(std::vector<drivers::handle> &vertex_buffers_alloc, drivers::graphics_driver *drv,
         kernel::process *crr_process, const gles_vertex_attrib &attrib, const std::int32_t first_index, const std::int32_t vcount,
-        std::uint32_t &res, int &offset, bool &attrib_not_persistent) {
+        std::uint32_t &res, int &offset, bool &attrib_not_persistent, bool &should_flush_after) {
         const gles2_vertex_attrib &attrib_es2 = static_cast<const gles2_vertex_attrib&>(attrib);
         if (attrib_es2.use_constant_vcomp_ != 0) {
             if (attrib_es2.constant_vcomp_count_ == 0) {
@@ -999,12 +999,19 @@ APPLY_PENDING_ROUTES:
             std::size_t offset_sizet = 0;
 
             if (!vertex_buffer_pusher_.is_initialized()) {
-                vertex_buffer_pusher_.initialize(drv, common::MB(4));
+                vertex_buffer_pusher_.initialize(common::MB(8));
             }
 
             // Upload constant data
-            drivers::handle handle_retrieved = vertex_buffer_pusher_.push_buffer(reinterpret_cast<const std::uint8_t*>(attrib_es2.constant_data_),
-                attrib_es2.constant_vcomp_count_ * 4, offset_sizet);
+            drivers::handle handle_retrieved = vertex_buffer_pusher_.push_buffer(drv, reinterpret_cast<const std::uint8_t*>(attrib_es2.constant_data_),
+                attrib_es2.constant_vcomp_count_ * 4, offset_sizet, should_flush_after);
+
+            // Emergency only!
+            if (handle_retrieved == 0) {
+                flush_to_driver(drv);
+                handle_retrieved = vertex_buffer_pusher_.push_buffer(drv, reinterpret_cast<const std::uint8_t*>(attrib_es2.constant_data_),
+                    attrib_es2.constant_vcomp_count_ * 4, offset_sizet, should_flush_after);
+            }
 
             offset = static_cast<int>(offset_sizet);
             auto ite = std::find(vertex_buffers_alloc.begin(), vertex_buffers_alloc.end(), handle_retrieved);
@@ -1021,7 +1028,7 @@ APPLY_PENDING_ROUTES:
         }
 
         return egl_context_es_shared::retrieve_vertex_buffer_slot(vertex_buffers_alloc, drv, crr_process, attrib, first_index, vcount, res,
-            offset, attrib_not_persistent);
+            offset, attrib_not_persistent, should_flush_after);
     }
 
     static gles_framebuffer_object *get_binded_framebuffer_object_gles(egl_context_es2 *ctx, dispatch::egl_controller &controller) {
@@ -1093,7 +1100,7 @@ APPLY_PENDING_ROUTES:
     }
 
     bool egl_context_es2::prepare_for_draw(drivers::graphics_driver *driver, egl_controller &controller, kernel::process *crr_process,
-        const std::int32_t first_index, const std::uint32_t vcount) {
+        const std::int32_t first_index, const std::uint32_t vcount, bool &should_flush_after) {
         if (!using_program_) {
             // What are you going to see?
             controller.push_error(this, GL_INVALID_OPERATION);
@@ -1111,7 +1118,7 @@ APPLY_PENDING_ROUTES:
             return false;
         }
 
-        if (!prepare_vertex_attributes(driver, crr_process, first_index, vcount)) {
+        if (!prepare_vertex_attributes(driver, crr_process, first_index, vcount, should_flush_after)) {
             controller.push_error(this, GL_INVALID_OPERATION);
             return false;
         }
@@ -1137,7 +1144,7 @@ APPLY_PENDING_ROUTES:
         return try_configure_framebuffer(driver, controller);
     }
 
-    bool egl_context_es2::prepare_vertex_attributes(drivers::graphics_driver *drv, kernel::process *crr_process, const std::int32_t first_index, const std::int32_t vcount) {
+    bool egl_context_es2::prepare_vertex_attributes(drivers::graphics_driver *drv, kernel::process *crr_process, const std::int32_t first_index, const std::int32_t vcount, bool &should_flush_after) {
         if (attrib_changed_ || (first_index != previous_first_index_)) {
             std::vector<drivers::input_descriptor> descs;
             std::vector<drivers::handle> vertex_buffers_alloc;
@@ -1166,7 +1173,7 @@ APPLY_PENDING_ROUTES:
                 }
 
                 if (!retrieve_vertex_buffer_slot(vertex_buffers_alloc, drv, crr_process, attributes_[i], first_index, vcount, desc_temp.buffer_slot,
-                    desc_temp.offset, attrib_not_persistent)) {
+                    desc_temp.offset, attrib_not_persistent, should_flush_after)) {
                     return false;
                 }
 
