@@ -142,13 +142,19 @@ namespace eka2l1::drivers {
 
         for (int i = 0; i < total_uniforms; i++) {
             glGetActiveUniform(program, i, 256, &name_len, &size, &type, buf);
-
-            buf[name_len] = '\0';
+            
+            // NOTE: Compliant with some GLES2 driver. Fix for Let's create pottery
+            // Our abstract layer are meant to be for emulator, so I hope this is ok to do it in here. Much easier logic
+            // See more info at https://bugs.chromium.org/p/angleproject/issues/detail?id=136
+            GLsizei insert_name_len = name_len;
+            if ((name_len > 3) && (buf[name_len - 3] == '[') && (buf[name_len - 2] == '0') && (buf[name_len - 1] == ']')) {
+                insert_name_len -= 3;
+            }
 
             // Push
             offsets.push_back(static_cast<std::uint16_t>(data.size()));
-            data.push_back(static_cast<std::uint8_t>(name_len));
-            data.insert(data.end(), buf, buf + name_len);
+            data.push_back(static_cast<std::uint8_t>(insert_name_len));
+            data.insert(data.end(), buf, buf + insert_name_len);
 
             std::int32_t location = glGetUniformLocation(program, buf);
             shader_var_type var_type = gl_enum_to_shader_var_type(type);
