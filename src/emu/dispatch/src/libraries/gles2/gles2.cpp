@@ -96,9 +96,10 @@ namespace eka2l1::dispatch {
             changed_source.erase(changed_source.begin(), changed_source.begin() + pos + 1);
         }
 
-        // Add version
+        // Add version and qualifiers for shader that is missing it
         if (drv->is_stricted()) {
             changed_source.insert(0, "#version 100\n");
+            changed_source.insert(0, "precision mediump float;\n");
         } else {
             changed_source.insert(0, "#version 120\n");
         }
