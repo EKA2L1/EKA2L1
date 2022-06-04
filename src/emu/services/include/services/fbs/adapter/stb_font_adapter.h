@@ -93,5 +93,7 @@ namespace eka2l1::epoc::adapter {
         }
 
         bool has_character(const std::size_t face_index, const std::int32_t codepoint) override;
+        bool get_table_content(const std::size_t face_index, const std::uint32_t tag4, std::uint8_t *dest,
+            std::uint32_t &dest_size) override;
     };
 }

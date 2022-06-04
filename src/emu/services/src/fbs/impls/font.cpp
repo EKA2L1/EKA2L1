@@ -1036,6 +1036,78 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    struct font_table_offset_and_size {
+        std::uint32_t offset;
+        std::uint32_t size;
+    };
+
+    void fbscli::get_font_table(service::ipc_context *ctx) {
+        fbsfont *font = get_font_object(ctx);
+        std::optional<std::uint32_t> tag = ctx->get_argument_value<std::uint32_t>(1);
+        
+        if (!font || !tag.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        font_table_offset_and_size offset_and_size;
+        
+        // Search tag in existing map
+        auto result = font->font_tables.find(tag.value());
+        if (result != font->font_tables.end()) {
+            result->second.ref_count++;
+            offset_and_size.size = result->second.length;
+            offset_and_size.offset = result->second.offset;
+        } else {
+            // Call the adapter
+            if (!font->of_info.adapter->get_table_content(font->of_info.idx, tag.value(), nullptr, offset_and_size.size)) {
+                ctx->complete(epoc::error_not_found);
+                return;
+            }
+
+            void *result_data = server<fbs_server>()->allocate_general_data_impl(offset_and_size.size);
+            font->of_info.adapter->get_table_content(font->of_info.idx, tag.value(), reinterpret_cast<std::uint8_t*>(result_data),
+                offset_and_size.size);
+
+            fbsfont::tf_table_info table_info;
+            table_info.ref_count = 1;
+            table_info.offset = static_cast<std::uint32_t>(server<fbs_server>()->host_ptr_to_guest_shared_offset(result_data));
+            table_info.length = offset_and_size.size;
+            offset_and_size.offset = table_info.offset;
+
+            font->font_tables.emplace(tag.value(), std::move(table_info));
+        }
+
+        ctx->write_data_to_descriptor_argument<font_table_offset_and_size>(2, offset_and_size);
+        ctx->complete(epoc::error_none);
+    }
+
+    void fbscli::release_font_table(service::ipc_context *ctx) {
+        fbsfont *font = get_font_object(ctx);
+        std::optional<std::uint32_t> tag = ctx->get_argument_value<std::uint32_t>(1);
+        
+        if (!font || !tag.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        // Search tag in existing map
+        auto result = font->font_tables.find(tag.value());
+        if (result != font->font_tables.end()) {
+            result->second.ref_count--;
+            if (result->second.ref_count <= 0) {
+                fbs_server *serv = server<fbs_server>();
+                if (!serv->free_general_data_impl(serv->get_shared_chunk_base() + result->second.offset)) {
+                    LOG_TRACE(SERVICE_FBS, "Unable to free font table data!");
+                }
+
+                font->font_tables.erase(result);
+            }
+        }
+
+        ctx->complete(epoc::error_none);
+    }
+
     fbsfont::~fbsfont() {
         // Free atlas + bitmap
         atlas.destroy(serv->get_graphics_driver());

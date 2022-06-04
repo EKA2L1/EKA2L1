@@ -225,6 +225,8 @@ namespace eka2l1 {
         void add_font_file_store(service::ipc_context *ctx);
         void get_font_shaping(service::ipc_context *ctx);
         void delete_font_shaping(service::ipc_context *ctx);
+        void get_font_table(service::ipc_context *ctx);
+        void release_font_table(service::ipc_context *ctx);
 
         fbsbitmap *get_clean_bitmap(fbsbitmap *bmp);
         void load_bitmap_impl(service::ipc_context *ctx, file *source);
@@ -241,6 +243,14 @@ namespace eka2l1 {
 
         epoc::font_atlas atlas;
         std::vector<std::uint8_t*> shapings;
+
+        struct tf_table_info {
+            std::uint32_t offset;
+            std::uint32_t length;
+            std::int32_t ref_count = 0;
+        };
+
+        std::map<std::uint32_t, tf_table_info> font_tables;
 
         explicit fbsfont()
             : fbsobj(fbsobj_kind::font) {

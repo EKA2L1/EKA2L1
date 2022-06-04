@@ -132,6 +132,23 @@ namespace eka2l1::epoc::adapter {
          * @param shaping_data      On return, filled shaping data. This contains the position of each glyph in the text, also the total advance.
          */
         virtual bool make_text_shape(const std::size_t face_index, const open_font_shaping_parameter &params, const std::u16string &text, const std::uint16_t font_size, open_font_shaping_header &shaping_header, std::uint8_t *shaping_data);
+
+        /**
+         * @brief Retrieve font table's content.
+         * 
+         * This is only available in supported font types like TrueType.
+         * 
+         * @param face_index    The index of the face we want to retrieve the font table from.
+         * @param tag4          The tag of the table.
+         * @param dest          Dest buffer to write's table content. Use NULL to retrieve the table size in dest_size.
+         * @param dest_size     The size of the destination buffer if it's not null. On return contains the written size.
+         * 
+         * @return True on success.
+         */
+        virtual bool get_table_content(const std::size_t face_index, const std::uint32_t tag4, std::uint8_t *dest,
+            std::uint32_t &dest_size) {
+            return false;
+        }
     };
 
     enum class font_file_adapter_kind {

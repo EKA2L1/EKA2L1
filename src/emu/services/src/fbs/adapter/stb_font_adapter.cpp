@@ -378,4 +378,42 @@ namespace eka2l1::epoc::adapter {
         const float scale_factor = static_cast<float>(font_size) / static_cast<float>(wy1 - wy0);
         return static_cast<std::uint32_t>(adv_width * scale_factor);
     }
+
+    // Forked from original stbtt
+    static std::pair<stbtt_uint32, stbtt_uint32> stbtt__find_table_with_len(stbtt_uint8 *data, stbtt_uint32 fontstart, stbtt_uint32 tag) {
+        stbtt_int32 num_tables = ttUSHORT(data+fontstart+4);
+        stbtt_uint32 tabledir = fontstart + 12;
+        stbtt_int32 i;
+        for (i=0; i < num_tables; ++i) {
+            stbtt_uint32 loc = tabledir + 16*i;
+            if (ttULONG(data+loc+0) == tag)
+                return std::make_pair(ttULONG(data+loc+8), ttULONG(data+loc+12));
+        }
+        return std::make_pair(0, 0);
+    }
+
+    bool stb_font_file_adapter::get_table_content(const std::size_t face_index, const std::uint32_t tag4, std::uint8_t *dest,
+        std::uint32_t &dest_size) {
+        int off = 0;
+        stbtt_fontinfo *info = get_or_create_info(static_cast<int>(face_index), &off);
+
+        if (!info) {
+            return false;
+        }
+
+        std::pair<stbtt_uint32, stbtt_uint32> res = stbtt__find_table_with_len(&data_[0], off, tag4);
+        if (res.first == 0) {
+            return false;
+        }
+
+        if (!dest) {
+            dest_size = res.second;
+            return true;
+        }
+
+        dest_size = common::min<std::uint32_t>(res.second, dest_size);
+        std::memcpy(dest, &data_[0] + res.first + off, dest_size);
+
+        return true;
+    }
 }

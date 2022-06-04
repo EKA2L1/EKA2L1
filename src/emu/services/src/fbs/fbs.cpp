@@ -273,6 +273,14 @@ namespace eka2l1 {
             delete_font_shaping(ctx);
             break;
 
+        case fbs_get_font_table:
+            get_font_table(ctx);
+            break;
+
+        case fbs_release_font_table:
+            release_font_table(ctx);
+            break;
+
         default: {
             LOG_ERROR(SERVICE_FBS, "Unhandled FBScli opcode 0x{:X}", ctx->msg->function);
             break;
