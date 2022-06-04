@@ -98,8 +98,17 @@ namespace eka2l1::dispatch {
 
         // Add version and qualifiers for shader that is missing it
         if (drv->is_stricted()) {
-            changed_source.insert(0, "#version 100\n");
-            changed_source.insert(0, "precision mediump float;\n");
+            std::string str_add = "#version 100\n";
+            if ((changed_source.find("precision lowp float;") == std::string::npos)
+                && (changed_source.find("precision mediump float;") == std::string::npos)
+                && (changed_source.find("precision highp float;") == std::string::npos)) {
+                if (module_type_ == drivers::shader_module_type::fragment) {
+                    str_add += "precision mediump float;\n";
+                } else {
+                    str_add += "precision highp float;\n";
+                }
+            }
+            changed_source.insert(0, str_add);
         } else {
             changed_source.insert(0, "#version 120\n");
         }
@@ -1044,6 +1053,16 @@ APPLY_PENDING_ROUTES:
 
     std::uint32_t egl_context_es2::bind_texture(const std::uint32_t target, const std::uint32_t tex) {
         auto *obj = objects_.get(tex);
+        if (!obj || !obj->get() || (*obj)->object_type() != GLES_OBJECT_TEXTURE) {
+            if (!obj->get()) {
+                // The capacity is still enough. Someone has deleted the texture that should not be ! (yes, Pet Me by mBounce)
+                LOG_WARN(HLE_DISPATCHER, "Texture name {} was previously deleted, generate a new one"
+                    " (only because the slot is empty)!", tex);
+                *obj = std::make_unique<gles_driver_texture>(*this);
+            } else {
+                return GL_INVALID_OPERATION;
+            }
+        }
         if (obj && (*obj).get()) {
             std::uint32_t bind_res = reinterpret_cast<gles_driver_texture*>((*obj).get())->try_bind(target);
             if (bind_res != 0) {

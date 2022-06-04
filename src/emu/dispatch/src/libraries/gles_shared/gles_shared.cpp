@@ -213,7 +213,8 @@ namespace eka2l1::dispatch {
 
     // This will only works on GLES1, they don't have swizzle masks yet.
     static void get_data_type_to_upload(drivers::texture_format &internal_out, drivers::texture_format &format_out, drivers::texture_data_type &type_out,
-        drivers::channel_swizzles &swizzles_out, const std::uint32_t format, const std::uint32_t data_type) {
+        drivers::channel_swizzles &swizzles_out, const std::uint32_t format, const std::uint32_t data_type,
+        bool stricted) {
         switch (format) {
         case GL_RGB_EMU:
             format_out = drivers::texture_format::rgb;
@@ -229,7 +230,7 @@ namespace eka2l1::dispatch {
 
         case GL_BGRA_EXT_EMU:
             format_out = drivers::texture_format::bgra;
-            internal_out = format_out;
+            internal_out = (stricted ? format_out : drivers::texture_format::rgba);
             swizzles_out = { drivers::channel_swizzle::red, drivers::channel_swizzle::green, drivers::channel_swizzle::blue, drivers::channel_swizzle::alpha };
             break;
 
@@ -1113,7 +1114,8 @@ namespace eka2l1::dispatch {
 
         eka2l1::vec2 size_upscaled = size_ * current_scale_;
 
-        get_data_type_to_upload(internal_format_driver, format_driver, dtype, swizzles, internal_format_, 0);
+        // In assumption no one actually use GL_BGRA as their FB base format (it's not allowed to anyway)
+        get_data_type_to_upload(internal_format_driver, format_driver, dtype, swizzles, internal_format_, 0, false);
 
         if (texture_type_ == GLES_DRIVER_TEXTURE_TYPE_2D) {
             context_.cmd_builder_.recreate_texture(driver_handle_, 2, 0, internal_format_driver, internal_format_driver,
@@ -1943,8 +1945,12 @@ namespace eka2l1::dispatch {
     }
 
     static std::uint32_t calculate_possible_upload_size(const eka2l1::vec2 size, const std::uint32_t format, const std::uint32_t data_type) {
-        if ((format == GL_LUMINANCE_ALPHA_EMU) || (format == GL_LUMINANCE_EMU) || (format == GL_ALPHA_EMU)) {
+        if ((format == GL_LUMINANCE_EMU) || (format == GL_ALPHA_EMU)) {
             return size.x * size.y;
+        }
+
+        if (format == GL_LUMINANCE_ALPHA_EMU) {
+            return size.x * size.y * 2;
         }
 
         if (format == GL_RGB_EMU) {
@@ -2077,8 +2083,8 @@ namespace eka2l1::dispatch {
                     internal_format_driver, dtype, data_to_pass, out_size[i], eka2l1::vec3(width, height, 0), 0, ctx->unpack_alignment_);            
             }
 
-            tex->set_mip_count(static_cast<std::uint32_t>(level));
-            ctx->cmd_builder_.set_texture_max_mip(tex->handle_value(), static_cast<std::uint32_t>(level));
+            tex->set_mip_count(static_cast<std::uint32_t>(level + 1));
+            ctx->cmd_builder_.set_texture_max_mip(tex->handle_value(), static_cast<std::uint32_t>(level + 1));
         } else {
             // Pass to driver as normal
             switch (internal_format) {
@@ -2153,7 +2159,7 @@ namespace eka2l1::dispatch {
                 tex->sync_parameters_with_driver();
             }
 
-            tex->set_mip_count(common::max(tex->get_mip_count(), static_cast<std::uint32_t>(level)));
+            tex->set_mip_count(common::max(tex->get_mip_count(), static_cast<std::uint32_t>(level + 1)));
             ctx->cmd_builder_.set_texture_max_mip(tex->handle_value(), tex->get_mip_count());
         }
 
@@ -2225,7 +2231,8 @@ namespace eka2l1::dispatch {
         drivers::texture_data_type dtype;
         drivers::channel_swizzles swizzles;
 
-        get_data_type_to_upload(internal_format_driver, format_driver, dtype, swizzles, format, data_type);
+        drivers::graphics_driver *drv = sys->get_graphics_driver();
+        get_data_type_to_upload(internal_format_driver, format_driver, dtype, swizzles, format, data_type, drv->is_stricted());
 
         // TODO: border is ignored!
         if (!tex->handle_value()) {
@@ -2238,7 +2245,6 @@ namespace eka2l1::dispatch {
                 tex->assign_handle(ctx->texture_pools_2d_.top());
                 ctx->texture_pools_2d_.pop();
             } else {
-                drivers::graphics_driver *drv = sys->get_graphics_driver();
                 drivers::handle new_h = drivers::create_texture(drv, dimension, static_cast<std::uint8_t>(level), internal_format_driver,
                     format_driver, dtype, data_pixels, 0, eka2l1::vec3(width, height, 0), 0, ctx->unpack_alignment_);
 
@@ -2264,7 +2270,7 @@ namespace eka2l1::dispatch {
 
         tex->set_internal_format(format);
         tex->set_size(eka2l1::vec2(width, height));
-        tex->set_mip_count(common::max(tex->get_mip_count(), static_cast<std::uint32_t>(level)));
+        tex->set_mip_count(common::max(tex->get_mip_count(), static_cast<std::uint32_t>(level + 1)));
         tex->set_mipmap_generated(false);
 
         if (tex->auto_regenerate_mipmap()) {
@@ -2330,7 +2336,7 @@ namespace eka2l1::dispatch {
         drivers::texture_data_type dtype;
         drivers::channel_swizzles swizzles;
 
-        get_data_type_to_upload(internal_format_driver, format_driver, dtype, swizzles, format, data_type);
+        get_data_type_to_upload(internal_format_driver, format_driver, dtype, swizzles, format, data_type, sys->get_graphics_driver()->is_stricted());
 
         const std::size_t needed_size = calculate_possible_upload_size(eka2l1::vec2(width, height), format, data_type);
         ctx->cmd_builder_.update_texture(tex->handle_value(), reinterpret_cast<const char*>(data_pixels), needed_size,
