@@ -98,17 +98,25 @@ namespace eka2l1::dispatch {
 
         // Add version and qualifiers for shader that is missing it
         if (drv->is_stricted()) {
-            std::string str_add = "#version 100\n";
-            if ((changed_source.find("precision lowp float;") == std::string::npos)
-                && (changed_source.find("precision mediump float;") == std::string::npos)
-                && (changed_source.find("precision highp float;") == std::string::npos)) {
-                if (module_type_ == drivers::shader_module_type::fragment) {
-                    str_add += "precision mediump float;\n";
-                } else {
-                    str_add += "precision highp float;\n";
-                }
+            changed_source.insert(0, "#version 100\n");
+
+            std::string str_precision;
+            if (module_type_ == drivers::shader_module_type::fragment) {
+                str_precision += "precision mediump float;\n";
+            } else {
+                str_precision += "precision highp float;\n";
             }
-            changed_source.insert(0, str_add);
+
+            std::size_t pos_to_insert = changed_source.rfind("extension");
+            if (pos_to_insert != std::string::npos) {
+                std::size_t pos_to_end_insert = changed_source.find("\n", pos_to_insert);
+                if (pos_to_end_insert != std::string::npos) {
+                    changed_source.insert(pos_to_end_insert + 1, str_precision);
+                }
+            } else {
+                // 13 = strlen(#version 100\n)
+                changed_source.insert(13, str_precision);
+            }
         } else {
             changed_source.insert(0, "#version 120\n");
         }
@@ -118,6 +126,7 @@ namespace eka2l1::dispatch {
 
         if (!driver_handle_) {
             compile_ok_ = false;
+            LOG_TRACE(KERNEL, "{}", compile_info_);
         } else {
             compile_ok_ = true;
         }
