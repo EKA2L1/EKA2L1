@@ -126,7 +126,6 @@ namespace eka2l1::dispatch {
 
         if (!driver_handle_) {
             compile_ok_ = false;
-            LOG_TRACE(KERNEL, "{}", compile_info_);
         } else {
             compile_ok_ = true;
         }
