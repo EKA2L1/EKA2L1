@@ -181,11 +181,18 @@ namespace eka2l1::drivers {
     void dsp_output_stream_ffmpeg::queue_data_decode(const std::uint8_t *original, const std::size_t original_size) {
         const std::lock_guard<std::mutex> guard(decode_lock_);
 
+        const bool all_zero = std::all_of(original, original + original_size, [](std::uint8_t i) { return i==0; });
+        if (all_zero) {
+            // Queue buffer
+            buffer_.push(reinterpret_cast<const std::uint16_t*>(original), (original_size + 1) / 2);
+            return;
+        }
+
         queued_data_.resize(queued_data_.size() + original_size);
         std::memcpy(queued_data_.data() + queued_data_.size() - original_size, original, original_size);
     }
 
-    bool dsp_output_stream_ffmpeg::decode_data( std::vector<std::uint8_t> &dest) {
+    bool dsp_output_stream_ffmpeg::decode_data(std::vector<std::uint8_t> &dest) {
         dest.clear();
 
         if (queued_data_.empty()) {
