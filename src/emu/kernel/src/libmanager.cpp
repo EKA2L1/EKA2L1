@@ -249,6 +249,11 @@ namespace eka2l1::hle {
             return nullptr;
         }
 
+        // Add the codeseg that trying to be loaded path to search path, for dependencies search.
+        if (!path.empty()) {
+            mngr.search_paths.insert(mngr.search_paths.begin(), eka2l1::file_directory(path, true));
+        }
+
         // Build import table so that it can patch later
         buildup_import_fixup_table(img, mem, mngr, cs);
         mngr.try_apply_patch(cs);
@@ -961,9 +966,6 @@ namespace eka2l1::hle {
         if (!io_->exist(lib_path)) {
             return nullptr;
         }
-
-        // Add the codeseg that trying to be loaded path to search path, for dependencies search.
-        search_paths.insert(search_paths.begin(), eka2l1::file_directory(lib_path, true));
 
         if (auto cs = load_depend_on_drive(lib_path)) {
             cs->set_full_path(lib_path);
