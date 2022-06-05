@@ -107,7 +107,7 @@ namespace eka2l1::dispatch {
         , fog_start_(0.0f)
         , fog_end_(1.0f)
         , vertex_statuses_(0)
-        , fragment_statuses_(egl_context_es1::FRAGMENT_STATE_LIGHT0_ON)
+        , fragment_statuses_(0)
         , alpha_test_ref_(0)
         , input_desc_(0) {
         material_ambient_[0] = 0.2f;
@@ -262,7 +262,7 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_COLOR_MATERIAL_EMU:
-            fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_COLOR_MATERIAL_ENABLE;
+            vertex_statuses_ |= egl_context_es1::VERTEX_STATE_COLOR_MATERIAL_ENABLE;
             break;
 
         case GL_FOG_EMU:
@@ -270,39 +270,39 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_LIGHTING_EMU:
-            fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_LIGHTING_ENABLE;
+            vertex_statuses_ |= egl_context_es1::VERTEX_STATE_LIGHTING_ENABLE;
             break;
 
         case GL_LIGHT0_EMU:
-            fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_LIGHT0_ON;
+            vertex_statuses_ |= egl_context_es1::VERTEX_STATE_LIGHT0_ON;
             break;
 
         case GL_LIGHT1_EMU:
-            fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_LIGHT1_ON;
+            vertex_statuses_ |= egl_context_es1::VERTEX_STATE_LIGHT1_ON;
             break;
 
         case GL_LIGHT2_EMU:
-            fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_LIGHT2_ON;
+            vertex_statuses_ |= egl_context_es1::VERTEX_STATE_LIGHT2_ON;
             break;
 
         case GL_LIGHT3_EMU:
-            fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_LIGHT3_ON;
+            vertex_statuses_ |= egl_context_es1::VERTEX_STATE_LIGHT3_ON;
             break;
 
         case GL_LIGHT4_EMU:
-            fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_LIGHT4_ON;
+            vertex_statuses_ |= egl_context_es1::VERTEX_STATE_LIGHT4_ON;
             break;
 
         case GL_LIGHT5_EMU:
-            fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_LIGHT5_ON;
+            vertex_statuses_ |= egl_context_es1::VERTEX_STATE_LIGHT5_ON;
             break;
 
         case GL_LIGHT6_EMU:
-            fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_LIGHT6_ON;
+            vertex_statuses_ |= egl_context_es1::VERTEX_STATE_LIGHT6_ON;
             break;
         
         case GL_LIGHT7_EMU:
-            fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_LIGHT7_ON;
+            vertex_statuses_ |= egl_context_es1::VERTEX_STATE_LIGHT7_ON;
             break;
 
         case GL_TEXTURE_2D_EMU:
@@ -363,7 +363,7 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_COLOR_MATERIAL_EMU:
-            fragment_statuses_ &= ~egl_context_es1::FRAGMENT_STATE_COLOR_MATERIAL_ENABLE;
+            vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_COLOR_MATERIAL_ENABLE;
             break;
 
         case GL_FOG_EMU:
@@ -371,39 +371,39 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_LIGHTING_EMU:
-            fragment_statuses_ &= ~egl_context_es1::FRAGMENT_STATE_LIGHTING_ENABLE;
+            vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_LIGHTING_ENABLE;
             break;
 
         case GL_LIGHT0_EMU:
-            fragment_statuses_ &= ~egl_context_es1::FRAGMENT_STATE_LIGHT0_ON;
+            vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_LIGHT0_ON;
             break;
 
         case GL_LIGHT1_EMU:
-            fragment_statuses_ &= ~egl_context_es1::FRAGMENT_STATE_LIGHT1_ON;
+            vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_LIGHT1_ON;
             break;
 
         case GL_LIGHT2_EMU:
-            fragment_statuses_ &= ~egl_context_es1::FRAGMENT_STATE_LIGHT2_ON;
+            vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_LIGHT2_ON;
             break;
 
         case GL_LIGHT3_EMU:
-            fragment_statuses_ &= ~egl_context_es1::FRAGMENT_STATE_LIGHT3_ON;
+            vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_LIGHT3_ON;
             break;
 
         case GL_LIGHT4_EMU:
-            fragment_statuses_ &= ~egl_context_es1::FRAGMENT_STATE_LIGHT4_ON;
+            vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_LIGHT4_ON;
             break;
 
         case GL_LIGHT5_EMU:
-            fragment_statuses_ &= ~egl_context_es1::FRAGMENT_STATE_LIGHT5_ON;
+            vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_LIGHT5_ON;
             break;
 
         case GL_LIGHT6_EMU:
-            fragment_statuses_ &= ~egl_context_es1::FRAGMENT_STATE_LIGHT6_ON;
+            vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_LIGHT6_ON;
             break;
         
         case GL_LIGHT7_EMU:
-            fragment_statuses_ &= ~egl_context_es1::FRAGMENT_STATE_LIGHT7_ON;
+            vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_LIGHT7_ON;
             break;
 
         case GL_TEXTURE_2D_EMU:
@@ -464,7 +464,7 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_COLOR_MATERIAL_EMU:
-            enabled = (fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_COLOR_MATERIAL_ENABLE) ? 1 : 0;
+            enabled = (vertex_statuses_ & egl_context_es1::VERTEX_STATE_COLOR_MATERIAL_ENABLE) ? 1 : 0;
             break;
 
         case GL_FOG_EMU:
@@ -472,39 +472,39 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_LIGHTING_EMU:
-            enabled = (fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHTING_ENABLE) ? 1 : 0;
+            enabled = (vertex_statuses_ & egl_context_es1::VERTEX_STATE_LIGHTING_ENABLE) ? 1 : 0;
             break;
 
         case GL_LIGHT0_EMU:
-            enabled = (fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHT0_ON) ? 1 : 0;
+            enabled = (vertex_statuses_ & egl_context_es1::VERTEX_STATE_LIGHT0_ON) ? 1 : 0;
             break;
 
         case GL_LIGHT1_EMU:
-            enabled = (fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHT1_ON) ? 1 : 0;
+            enabled = (vertex_statuses_ & egl_context_es1::VERTEX_STATE_LIGHT1_ON) ? 1 : 0;
             break;
 
         case GL_LIGHT2_EMU:
-            enabled = (fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHT2_ON) ? 1 : 0;
+            enabled = (vertex_statuses_ & egl_context_es1::VERTEX_STATE_LIGHT2_ON) ? 1 : 0;
             break;
 
         case GL_LIGHT3_EMU:
-            enabled = (fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHT3_ON) ? 1 : 0;
+            enabled = (vertex_statuses_ & egl_context_es1::VERTEX_STATE_LIGHT3_ON) ? 1 : 0;
             break;
 
         case GL_LIGHT4_EMU:
-            enabled = (fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHT4_ON) ? 1 : 0;
+            enabled = (vertex_statuses_ & egl_context_es1::VERTEX_STATE_LIGHT4_ON) ? 1 : 0;
             break;
 
         case GL_LIGHT5_EMU:
-            enabled = (fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHT5_ON) ? 1 : 0;
+            enabled = (vertex_statuses_ & egl_context_es1::VERTEX_STATE_LIGHT5_ON) ? 1 : 0;
             break;
 
         case GL_LIGHT6_EMU:
-            enabled = (fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHT6_ON) ? 1 : 0;
+            enabled = (vertex_statuses_ & egl_context_es1::VERTEX_STATE_LIGHT6_ON) ? 1 : 0;
             break;
         
         case GL_LIGHT7_EMU:
-            enabled = (fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHT7_ON) ? 1 : 0;
+            enabled = (vertex_statuses_ & egl_context_es1::VERTEX_STATE_LIGHT7_ON) ? 1 : 0;
             break;
 
         case GL_TEXTURE_2D_EMU:
@@ -604,7 +604,7 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_COLOR_MATERIAL_EMU:
-            *params = static_cast<T>((ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_COLOR_MATERIAL_ENABLE) ? 1 : 0);
+            *params = static_cast<T>((ctx->vertex_statuses_ & egl_context_es1::VERTEX_STATE_COLOR_MATERIAL_ENABLE) ? 1 : 0);
             break;
 
         case GL_CURRENT_COLOR_EMU:
@@ -2429,9 +2429,9 @@ namespace eka2l1::dispatch {
         }
 
         if (param != 0.0f) {
-            ctx->fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_LIGHT_TWO_SIDE;
+            ctx->vertex_statuses_ |= egl_context_es1::VERTEX_STATE_LIGHT_TWO_SIDE;
         } else {
-            ctx->fragment_statuses_ &= ~egl_context_es1::FRAGMENT_STATE_LIGHT_TWO_SIDE;
+            ctx->vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_LIGHT_TWO_SIDE;
         }
     }
 
@@ -2458,9 +2458,9 @@ namespace eka2l1::dispatch {
 
         case GL_LIGHT_MODEL_TWO_SIDE_EMU:
             if (*param != 0.0f) {
-                ctx->fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_LIGHT_TWO_SIDE;
+                ctx->vertex_statuses_ |= egl_context_es1::VERTEX_STATE_LIGHT_TWO_SIDE;
             } else {
-                ctx->fragment_statuses_ &= ~egl_context_es1::FRAGMENT_STATE_LIGHT_TWO_SIDE;
+                ctx->vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_LIGHT_TWO_SIDE;
             }
             break;
 
@@ -2489,9 +2489,9 @@ namespace eka2l1::dispatch {
 
         case GL_LIGHT_MODEL_TWO_SIDE_EMU:
             if (*param != 0) {
-                ctx->fragment_statuses_ |= egl_context_es1::FRAGMENT_STATE_LIGHT_TWO_SIDE;
+                ctx->vertex_statuses_ |= egl_context_es1::VERTEX_STATE_LIGHT_TWO_SIDE;
             } else {
-                ctx->fragment_statuses_ &= ~egl_context_es1::FRAGMENT_STATE_LIGHT_TWO_SIDE;
+                ctx->vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_LIGHT_TWO_SIDE;
             }
             break;
 
@@ -2661,9 +2661,9 @@ namespace eka2l1::dispatch {
                 }
             }
 
-            if (fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_LIGHTING_ENABLE) {
-                for (std::uint32_t i = 0, mask = egl_context_es1::FRAGMENT_STATE_LIGHT0_ON; i < GLES1_EMU_MAX_LIGHT; i++, mask <<= 1) {
-                    if (fragment_statuses_ & mask) {
+            if (vertex_statuses_ & egl_context_es1::VERTEX_STATE_LIGHTING_ENABLE) {
+                for (std::uint32_t i = 0, mask = egl_context_es1::VERTEX_STATE_LIGHT0_ON; i < GLES1_EMU_MAX_LIGHT; i++, mask <<= 1) {
+                    if (vertex_statuses_ & mask) {
                         cmd_builder_.set_dynamic_uniform(var_info->light_dir_or_pos_loc_[i], drivers::shader_var_type::vec4,
                             lights_[i].position_or_dir_transformed_, 16);
                         cmd_builder_.set_dynamic_uniform(var_info->light_ambient_loc_[i], drivers::shader_var_type::vec4,

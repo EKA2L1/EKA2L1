@@ -27,6 +27,7 @@ namespace eka2l1::dispatch {
         std::string uni_decl = "";
         std::string out_decl = "";
         std::string main_body = "";
+        std::string external_func = "";
 
         bool skinning = vertex_statuses & egl_context_es1::VERTEX_STATE_SKINNING_ENABLE;
 
@@ -72,13 +73,16 @@ namespace eka2l1::dispatch {
 
         if (vertex_statuses & egl_context_es1::VERTEX_STATE_CLIENT_COLOR_ARRAY) {
             input_decl += "layout (location = 1) in vec4 inColor;\n";
-            main_body += "\tmColor = inColor;\n";
+            main_body += "\tmFrontColor = mBackColor = inColor;\n";
         } else {
             uni_decl += "uniform vec4 uColor;\n";
-            main_body += "\tmColor = uColor;\n";
+            main_body += "\tmFrontColor = mBackColor = uColor;\n";
         }
         
-        out_decl += "out vec4 mColor;\n";
+        out_decl += "out vec4 mFrontColor;\n";
+        out_decl += "out vec4 mBackColor;\n";
+
+        main_body += "\tvec3 mNormal;\n";
 
         if (vertex_statuses & egl_context_es1::VERTEX_STATE_CLIENT_NORMAL_ARRAY) {
             input_decl += "layout (location = 2) in vec3 inNormal;\n";
@@ -103,8 +107,6 @@ namespace eka2l1::dispatch {
             main_body += "\tmNormal = normalize(mNormal);\n";
         }
 
-        out_decl += "out vec3 mNormal;\n";
-
         for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
             out_decl += fmt::format("out vec4 mTexCoord{};\n", i);
             uni_decl += fmt::format("uniform mat4 uTextureMat{};\n", i);
@@ -120,9 +122,98 @@ namespace eka2l1::dispatch {
             }
         }
 
+        uni_decl += "uniform vec4 uMaterialAmbient;\n"
+                    "uniform vec4 uMaterialDiffuse;\n"
+                    "uniform vec4 uMaterialSpecular;\n"
+                    "uniform vec4 uMaterialEmission;\n"
+                    "uniform float uMaterialShininess;\n"
+                    "uniform vec4 uGlobalAmbient;\n";
+
+        if (vertex_statuses & egl_context_es1::VERTEX_STATE_LIGHTING_ENABLE) {
+            // Apply lights
+            uni_decl +=
+                "\n"
+                "struct TLightInfo {\n"
+                "\tvec4 mDirOrPosition;\n"
+                "\tvec4 mAmbient;\n"
+                "\tvec4 mDiffuse;\n"
+                "\tvec4 mSpecular;\n"
+                "\tvec3 mSpotDir;\n"
+                "\tfloat mSpotCutoff;\n"
+                "\tfloat mSpotExponent;\n"
+                "\tvec3 mAttenuation;\n"
+                "};\n";
+
+            external_func +=
+                "vec4 calculateLight(TLightInfo info, vec3 normal, vec4 explicitAmbient, vec4 explicitDiffuse) {\n"
+                "\tvec3 lightDir = vec3(0.0);\n"
+                "\tfloat attenuation = 1.0;\n"
+                "\tif (info.mDirOrPosition.w == 0.0) {\n"
+                "\t\tlightDir = normalize(info.mDirOrPosition.xyz);\n"
+                "\t} else {\n"
+                "\t\tlightDir = normalize(info.mDirOrPosition.xyz - mMyPos.xyz);\n"
+                "\t\tfloat dist = length(info.mDirOrPosition.xyz - mMyPos.xyz);\n"
+                "\t\tattenuation = 1.0 / (info.mAttenuation.x + dist * info.mAttenuation.y + dist * dist * info.mAttenuation.z);\n"
+                "\t}\n"
+                "\tfloat diffuseFactor = max(dot(normal, lightDir), 0.0);\n"
+                "\tfloat specularFactor = max(dot(normal, normalize(lightDir + vec3(0.0, 0.0, 1.0))), 0.0);\n"
+                "\tif ((diffuseFactor > 0.0) && (specularFactor > 0.0))\n"
+                "\t\tspecularFactor = exp(uMaterialShininess * log(specularFactor));\n"
+                "\telse\n"
+                "\t\tspecularFactor = 0.0;\n"
+                "\tvec4 ambient = info.mAmbient * explicitAmbient;\n"
+                "\tvec4 diffuse = info.mDiffuse * diffuseFactor * explicitDiffuse;\n"
+                "\tvec4 specular = info.mSpecular * specularFactor * uMaterialSpecular;\n"
+                "\tfloat spotAngle = dot(lightDir, normalize(info.mSpotDir));\n"
+                "\tfloat spotConstant = 1.0;\n"
+                "\tif ((info.mDirOrPosition.w == 0.0) || (info.mSpotCutoff == 180.0)) spotConstant = 1.0;\n"
+                "\telse {\n"
+                "\t\tif (spotAngle < cos(radians(info.mSpotCutoff))) spotConstant = 0.0;\n"
+                "\t\telse spotConstant = pow(spotAngle, info.mSpotExponent);\n"
+                "\t}\n"
+                "\treturn attenuation * spotConstant * (ambient + diffuse + specular);\n"
+                "}\n";
+
+            main_body += "\tvec4 gActualMaterialAmbient;\n"
+                        "\tvec4 gActualMaterialDiffuse;\n";
+
+            if (vertex_statuses & egl_context_es1::VERTEX_STATE_COLOR_MATERIAL_ENABLE) {
+                // Texture or previous computed color is used instead of specified material...
+                main_body += "\tgActualMaterialAmbient = mFrontColor;\n"
+                            "\tgActualMaterialDiffuse = mFrontColor;\n";
+            } else {
+                main_body += "\tgActualMaterialAmbient = uMaterialAmbient;\n"
+                            "\tgActualMaterialDiffuse = uMaterialDiffuse;\n";
+            }
+
+            main_body += "\t// Clear color to make way for lighting\n"
+                        "\tmFrontColor = mBackColor = uMaterialEmission + uGlobalAmbient * gActualMaterialAmbient;\n";
+
+            if (vertex_statuses & egl_context_es1::VERTEX_STATE_LIGHT_AROUND_MASK) {
+                for (std::size_t i = 0, mask = egl_context_es1::VERTEX_STATE_LIGHT0_ON; i < GLES1_EMU_MAX_LIGHT; i++, mask <<= 1) {
+                    if (vertex_statuses & mask) {
+                        uni_decl += fmt::format("uniform TLightInfo uLight{};\n", i);
+                        main_body += fmt::format("\tmFrontColor += calculateLight(uLight{}, mNormal, gActualMaterialAmbient, gActualMaterialDiffuse);\n", i);
+
+                        if (vertex_statuses & egl_context_es1::VERTEX_STATE_LIGHT_TWO_SIDE) {
+                            main_body += fmt::format("\tmBackColor += calculateLight(uLight{}, -mNormal, gActualMaterialAmbient, gActualMaterialDiffuse);\n", i);
+                        }
+                    }
+                }
+
+                if ((vertex_statuses & egl_context_es1::VERTEX_STATE_LIGHT_TWO_SIDE) == 0) {
+                    main_body += "\tmBackColor = mFrontColor;\n";   
+                }
+
+                main_body += "\t//Alpha is always the diffuse of the material (as far as I know!)\n"
+                            "\tmFrontColor.a = mBackColor.a = gActualMaterialDiffuse.a;\n";
+            }
+        }
+
+
         main_body += "}";
 
-        return input_decl + uni_decl + out_decl + main_body;
+        return input_decl + uni_decl + out_decl + external_func + main_body;
     }
 
     static std::string generate_tex_env_gl_source_string(const std::size_t current_tex_index, const std::uint64_t source) {
@@ -130,7 +221,7 @@ namespace eka2l1::dispatch {
         // Note: They are probably asking about the original source color in the buffer...
         // Need to check again...
         case gles_texture_env_info::SOURCE_TYPE_PRIM_COLOR:
-            return "mColor";
+            return "primColor";
 
         case gles_texture_env_info::SOURCE_TYPE_CONSTANT:
             return fmt::format("uTextureEnvColor{}", current_tex_index);
@@ -238,7 +329,6 @@ namespace eka2l1::dispatch {
         std::string input_decl = "";
         std::string uni_decl = "";
         std::string main_body = "";
-        std::string external_func = "";
 
         if (is_es) {
             input_decl += "#version 300 es\n"
@@ -247,19 +337,13 @@ namespace eka2l1::dispatch {
             input_decl += "#version 140\n";
         }
 
-        input_decl += "in vec4 mColor;\n"
-                    "in vec3 mNormal;\n"
+        input_decl += "in vec4 mFrontColor;\n"
+                    "in vec4 mBackColor;\n"
                     "in vec4 mMyPos;\n";
 
-        uni_decl += "uniform vec4 uMaterialAmbient;\n"
-                    "uniform vec4 uMaterialDiffuse;\n"
-                    "uniform vec4 uMaterialSpecular;\n"
-                    "uniform vec4 uMaterialEmission;\n"
-                    "uniform float uMaterialShininess;\n"
-                    "uniform vec4 uGlobalAmbient;\n";
-
         main_body += "void main() {\n"
-                     "\toColor = mColor;\n"
+                     "\toColor = gl_FrontFacing ? mFrontColor : mBackColor;\n"
+                     "\tvec4 primColor = oColor;\n"
                      "\tfloat tempResult = 0.0;\n";
 
         for (std::uint8_t i = 0; i < GLES1_EMU_MAX_CLIP_PLANE; i++) {
@@ -344,86 +428,6 @@ namespace eka2l1::dispatch {
             }
         }
 
-
-        if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_LIGHTING_ENABLE) {
-            // Apply lights
-            uni_decl +=
-                "\n"
-                "struct TLightInfo {\n"
-                "\tvec4 mDirOrPosition;\n"
-                "\tvec4 mAmbient;\n"
-                "\tvec4 mDiffuse;\n"
-                "\tvec4 mSpecular;\n"
-                "\tvec3 mSpotDir;\n"
-                "\tfloat mSpotCutoff;\n"
-                "\tfloat mSpotExponent;\n"
-                "\tvec3 mAttenuation;\n"
-                "};\n";
-
-            external_func +=
-                "vec4 calculateLight(TLightInfo info, vec3 normal, vec4 explicitAmbient, vec4 explicitDiffuse) {\n"
-                "\tvec3 lightDir = vec3(0.0);\n"
-                "\tfloat attenuation = 1.0;\n"
-                "\tif (info.mDirOrPosition.w == 0.0) {\n"
-                "\t\tlightDir = normalize(info.mDirOrPosition.xyz);\n"
-                "\t} else {\n"
-                "\t\tlightDir = normalize(info.mDirOrPosition.xyz - mMyPos.xyz);\n"
-                "\t\tfloat dist = length(info.mDirOrPosition.xyz - mMyPos.xyz);\n"
-                "\t\tattenuation = 1.0 / (info.mAttenuation.x + dist * info.mAttenuation.y + dist * dist * info.mAttenuation.z);\n"
-                "\t}\n"
-                "\tfloat diffuseFactor = max(dot(normal, lightDir), 0.0);\n"
-                "\tfloat specularFactor = max(dot(normal, normalize(lightDir + vec3(0.0, 0.0, 1.0))), 0.0);\n"
-                "\tif ((diffuseFactor > 0.0) && (specularFactor > 0.0))\n"
-                "\t\tspecularFactor = exp(uMaterialShininess * log(specularFactor));\n"
-                "\telse\n"
-                "\t\tspecularFactor = 0.0;\n"
-                "\tvec4 ambient = info.mAmbient * explicitAmbient;\n"
-                "\tvec4 diffuse = info.mDiffuse * diffuseFactor * explicitDiffuse;\n"
-                "\tvec4 specular = info.mSpecular * specularFactor * uMaterialSpecular;\n"
-                "\tfloat spotAngle = dot(lightDir, normalize(info.mSpotDir));\n"
-                "\tfloat spotConstant = 1.0;\n"
-                "\tif ((info.mDirOrPosition.w == 0.0) || (info.mSpotCutoff == 180.0)) spotConstant = 1.0;\n"
-                "\telse {\n"
-                "\t\tif (spotAngle < cos(radians(info.mSpotCutoff))) spotConstant = 0.0;\n"
-                "\t\telse spotConstant = pow(spotAngle, info.mSpotExponent);\n"
-                "\t}\n"
-                "\treturn attenuation * spotConstant * (ambient + diffuse + specular);\n"
-                "}\n";
-
-            main_body += "\tvec4 gActualMaterialAmbient;\n"
-                        "\tvec4 gActualMaterialDiffuse;\n";
-
-            if ((fragment_statuses & egl_context_es1::FRAGMENT_STATE_COLOR_MATERIAL_ENABLE) || (active_texs != 0)) {
-                // Texture or previous computed color is used instead of specified material...
-                main_body += "\tgActualMaterialAmbient = oColor;\n"
-                            "\tgActualMaterialDiffuse = oColor;\n";
-            } else {
-                main_body += "\tgActualMaterialAmbient = uMaterialAmbient;\n"
-                            "\tgActualMaterialDiffuse = uMaterialDiffuse;\n";
-            }
-
-            if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_LIGHT_AROUND_MASK) {
-                main_body += "\t// Clear color to make way for lighting\n"
-                            "\toColor = uMaterialEmission + uGlobalAmbient * gActualMaterialAmbient;\n";
-
-                for (std::size_t i = 0, mask = egl_context_es1::FRAGMENT_STATE_LIGHT0_ON; i < GLES1_EMU_MAX_LIGHT; i++, mask <<= 1) {
-                    if (fragment_statuses & mask) {
-                        uni_decl += fmt::format("uniform TLightInfo uLight{};\n", i);
-                        main_body += fmt::format("\toColor += calculateLight(uLight{}, ", i);
-
-                        if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_LIGHT_TWO_SIDE) {
-                            main_body += "gl_FrontFacing ? mNormal : -mNormal, gActualMaterialAmbient, gActualMaterialDiffuse);\n";
-                        } else {
-                            main_body += "mNormal, gActualMaterialAmbient, gActualMaterialDiffuse);\n";
-                        }
-                    }
-                }
-
-                main_body += "\t//Alpha is always the diffuse of the material (as far as I know!)\n"
-                            "\toColor.a = gActualMaterialDiffuse.a;\n";
-            }
-        }
-
         // Apply fog
         if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_FOG_ENABLE) {
             uni_decl += "uniform vec4 uFogColor;\n";
@@ -500,6 +504,6 @@ namespace eka2l1::dispatch {
         }
 
         main_body += "}";
-        return input_decl + uni_decl + "out vec4 oColor;\n" + external_func + main_body;
+        return input_decl + uni_decl + "out vec4 oColor;\n" + main_body;
     }
 }

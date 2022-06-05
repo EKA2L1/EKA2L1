@@ -74,10 +74,6 @@ namespace eka2l1::dispatch {
             cleansed_fragment_statuses &= ~egl_context_es1::FRAGMENT_STATE_FOG_MODE_MASK;
         }
 
-        if ((fragment_statuses & egl_context_es1::FRAGMENT_STATE_LIGHTING_ENABLE) == 0) {
-            cleansed_fragment_statuses &= ~egl_context_es1::FRAGMENT_STATE_LIGHT_RELATED_MASK;
-        }
-
         drivers::handle vert_module = 0;
         std::uint64_t vertex_hash = vertex_statuses | (static_cast<std::uint64_t>(active_texs) << egl_context_es1::VERTEX_STATE_REVERSED_BITS_POS);
         
@@ -86,6 +82,10 @@ namespace eka2l1::dispatch {
 
         if ((vertex_hash & egl_context_es1::VERTEX_STATE_SKINNING_ENABLE) == 0) {
             vertex_hash &= ~egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_MASK;
+        }
+        
+        if ((vertex_hash & egl_context_es1::VERTEX_STATE_LIGHTING_ENABLE) == 0) {
+            vertex_hash &= ~egl_context_es1::VERTEX_STATE_LIGHT_RELATED_MASK;
         }
 
         if (active_texs != 0) {
@@ -260,7 +260,7 @@ namespace eka2l1::dispatch {
                 }
             }
 
-            if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_LIGHTING_ENABLE) {
+            if (vertex_statuses & egl_context_es1::VERTEX_STATE_LIGHTING_ENABLE) {
                 std::string light_variable_pos_or_dir_name = "uLight0.mDirOrPosition";
                 std::string light_ambient_name = "uLight0.mAmbient";
                 std::string light_diffuse_name = "uLight0.mDiffuse";
@@ -270,8 +270,8 @@ namespace eka2l1::dispatch {
                 std::string light_spot_exponent_name = "uLight0.mSpotExponent";
                 std::string light_attenuation_name = "uLight0.mAttenuation";
 
-                for (std::uint32_t i = 0, mask = egl_context_es1::FRAGMENT_STATE_LIGHT0_ON; i < GLES1_EMU_MAX_LIGHT; i++, mask <<= 1) {
-                    if (fragment_statuses & mask) {
+                for (std::uint32_t i = 0, mask = egl_context_es1::VERTEX_STATE_LIGHT0_ON; i < GLES1_EMU_MAX_LIGHT; i++, mask <<= 1) {
+                    if (vertex_statuses & mask) {
                         char new_light_index_c = static_cast<char>('0' + i);
 
                         light_variable_pos_or_dir_name[6] = new_light_index_c;

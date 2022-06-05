@@ -1062,7 +1062,7 @@ APPLY_PENDING_ROUTES:
     std::uint32_t egl_context_es2::bind_texture(const std::uint32_t target, const std::uint32_t tex) {
         auto *obj = objects_.get(tex);
         if (!obj || !obj->get() || (*obj)->object_type() != GLES_OBJECT_TEXTURE) {
-            if (!obj->get()) {
+            if (obj && !obj->get()) {
                 // The capacity is still enough. Someone has deleted the texture that should not be ! (yes, Pet Me by mBounce)
                 LOG_WARN(HLE_DISPATCHER, "Texture name {} was previously deleted, generate a new one"
                     " (only because the slot is empty)!", tex);
