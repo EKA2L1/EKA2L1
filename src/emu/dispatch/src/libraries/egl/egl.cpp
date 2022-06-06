@@ -260,18 +260,13 @@ namespace eka2l1::dispatch {
             return EGL_NO_SURFACE_EMU;
         }
 
-        if (canvas->window_size_changed_callback_) {
-            // Already one allocated
-            egl_push_error(sys, EGL_BAD_ALLOC_EMU);
-            return EGL_NO_SURFACE_EMU;
-        }
-
         drivers::handle hh = drivers::create_bitmap(driver, canvas->size_for_egl_surface() * canvas->scr->display_scale_factor, choosen_config.buffer_size());
         if (hh == 0) {
             egl_push_error(sys, EGL_BAD_CONFIG);
             return EGL_NO_SURFACE_EMU;
         }
 
+        // NOTE: Symbian does not seems to check for surface created previously for this window (to throw EGL_BAD_ALLOC)
         std::unique_ptr<egl_surface> result_surface = std::make_unique<egl_surface>(canvas, canvas->scr, canvas->size_for_egl_surface(), hh, choosen_config);
         egl_surface_handle result_handle = controller.add_managed_surface(result_surface);
 

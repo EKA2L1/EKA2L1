@@ -56,18 +56,19 @@ namespace eka2l1::dispatch {
         }
 
         if (backed_window_) {
-            backed_window_->window_size_changed_callback_ = [this]() {
-                // Force a surface reset
-                dimension_ = backed_window_->size_for_egl_surface();
-                current_scale_ = 0.0f;
-            };
+            backed_window_->add_canvas_observer(this);
         }
     }
     
     egl_surface::~egl_surface() {
         if (backed_window_) {
-            backed_window_->window_size_changed_callback_ = nullptr;
+            backed_window_->remove_canvas_observer(this);
         }
+    }
+    
+    void egl_surface::on_window_size_changed(epoc::canvas_interface *interface) {
+        dimension_ = backed_window_->size_for_egl_surface();
+        current_scale_ = 0.0f;
     }
 
     void egl_surface::scale(egl_context *context, drivers::graphics_driver *drv) {

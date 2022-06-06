@@ -23,6 +23,7 @@
 #include <drivers/itc.h>
 
 #include <dispatch/libraries/gles1/shaderman.h>
+#include <services/window/classes/winuser.h>
 
 #include <common/vecx.h>
 #include <common/container.h>
@@ -500,7 +501,7 @@ namespace eka2l1::dispatch {
 
     struct egl_context;
 
-    struct egl_surface {
+    struct egl_surface : public epoc::canvas_observer {
         drivers::handle handle_;
         egl_config config_;
 
@@ -520,6 +521,7 @@ namespace eka2l1::dispatch {
 
         void scale_and_bind(egl_context *context, drivers::graphics_driver *drv);
         void scale(egl_context *context, drivers::graphics_driver *drv);
+        void on_window_size_changed(epoc::canvas_interface *obj) override;
     };
 
     struct egl_context {
