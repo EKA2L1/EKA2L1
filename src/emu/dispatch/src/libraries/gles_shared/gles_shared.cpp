@@ -1187,14 +1187,39 @@ namespace eka2l1::dispatch {
         kernel::process *crr_process, const gles_vertex_attrib &attrib, const std::int32_t first_index, const std::int32_t vcount,
         std::uint32_t &res, int &offset, bool &attrib_not_persistent, bool &should_flush_after) {
         drivers::handle buffer_handle_drv = 0;
+        bool unpredictable = false;
+        std::int32_t first_index_real = first_index;
+
+        if (first_index_real == -1) {
+            unpredictable = true;
+            first_index_real = 0;
+        }
+
         if (attrib.buffer_obj_ == 0) {
             std::uint32_t stride = get_gl_attrib_stride(attrib);
             std::size_t total_buffer_size = stride * vcount;
 
-            std::uint8_t *data_raw = eka2l1::ptr<std::uint8_t>(attrib.offset_ + stride * first_index).get(crr_process);
+            std::uint8_t *data_raw = eka2l1::ptr<std::uint8_t>(attrib.offset_ + stride * first_index_real).get(crr_process);
             if (!data_raw) {
                 LOG_ERROR(HLE_DISPATCHER, "Unable to retrieve raw pointer of non-buffer binded attribute!");
                 return false;
+            }
+
+            memory_system *mem = crr_process->get_kernel_object_owner()->get_memory_system();
+            const std::uint32_t psize = static_cast<std::uint32_t>(mem->get_page_size());
+
+            // Check continuity in case we can't predict the indicies
+            if (unpredictable) {
+                address offset_rounded = (attrib.offset_ + stride * first_index_real) / psize * psize;
+                address unalign = (attrib.offset_ + stride * first_index_real) % psize;
+
+                for (std::size_t i = 1; i < (total_buffer_size + psize + unalign - 1) / psize; i++) {
+                    if (eka2l1::ptr<std::uint8_t>(static_cast<address>(offset_rounded + i * psize)).get(crr_process) != (data_raw - unalign + i * psize)) {
+                        // Stop here. Of course this is in guess that game data should be in one continous chunk in host mem
+                        total_buffer_size = common::min<std::size_t>(static_cast<std::size_t>(i * psize - unalign), total_buffer_size);
+                        break;
+                    }
+                }
             }
 
             if (!vertex_buffer_pusher_.is_initialized()) {
@@ -1218,8 +1243,8 @@ namespace eka2l1::dispatch {
             }
         } else {
             offset = static_cast<int>(attrib.offset_);
-            if (first_index) {
-                offset += first_index * get_gl_attrib_stride(attrib);
+            if (first_index_real) {
+                offset += first_index_real * get_gl_attrib_stride(attrib);
             }
             auto *buffer_inst_ptr = objects_.get(attrib.buffer_obj_);
             if (!buffer_inst_ptr || ((*buffer_inst_ptr)->object_type() != GLES_OBJECT_BUFFER)) {
@@ -3159,7 +3184,7 @@ namespace eka2l1::dispatch {
                 }
             }
         } else {
-            min_vert_index = 0;
+            min_vert_index = -1;
         }
 
         gles_driver_buffer *binded_elem_buffer_managed = ctx->binded_buffer(false);
