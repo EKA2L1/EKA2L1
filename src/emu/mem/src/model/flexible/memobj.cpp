@@ -46,6 +46,8 @@ namespace eka2l1::mem::flexible {
     }
 
     memory_object::~memory_object() {
+        decommit(0, page_occupied_);
+
         if (data_ && !external_) {
             common::unmap_memory(data_, page_occupied_ * control_->page_size());
         }
