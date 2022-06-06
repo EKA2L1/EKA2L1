@@ -90,6 +90,7 @@ namespace eka2l1::dispatch {
         EGL_WIDTH_EMU = 0x3057,
         EGL_DRAW_EMU = 0x3059,
         EGL_READ_EMU = 0x305A,
+        EGL_CONTEXT_MAJOR_VERSION_KHR_EMU = 0x3098,
         EGL_OPENGL_ES_API_EMU = 0x30A0,
         EGL_OPENVG_API_EMU = 0x30A1,
         EGL_OPENGL_API_EMU = 0x30A2,
@@ -449,7 +450,7 @@ namespace eka2l1::dispatch {
 
     static constexpr const char *EGL_STATIC_STRING_VENDOR = "EKA2L1";
     static constexpr const char *EGL_STATIC_STRING_VERSION = "1.4";
-    static constexpr const char *EGL_STATIC_STRING_EXTENSION = "";
+    static constexpr const char *EGL_STATIC_STRING_EXTENSION = "EGL_KHR_create_context";
     static constexpr std::uint32_t MAX_EGL_FB_WIDTH = 2048;
     static constexpr std::uint32_t MAX_EGL_FB_HEIGHT = 2048;
 

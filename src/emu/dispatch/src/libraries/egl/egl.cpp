@@ -128,7 +128,7 @@ namespace eka2l1::dispatch {
 
         while (attrib_lists != nullptr) {
             std::uint32_t pname = *attrib_lists++;
-            if (pname == 0) {
+            if ((pname == 0) || (pname == EGL_NONE_EMU)) {
                 break;
             }
             std::uint32_t param = *attrib_lists++;
@@ -228,6 +228,11 @@ namespace eka2l1::dispatch {
 
         if (choosen_config.buffer_size() > 32) {
             egl_push_error(sys, EGL_BAD_CONFIG);
+            return EGL_NO_SURFACE_EMU;
+        }
+        
+        if (!win) {
+            egl_push_error(sys, EGL_BAD_NATIVE_WINDOW_EMU);
             return EGL_NO_SURFACE_EMU;
         }
 
@@ -365,7 +370,25 @@ namespace eka2l1::dispatch {
         egl_config choosen_config(choosen_config_value);
         egl_context_instance context_inst = nullptr;
 
-        switch (choosen_config.get_target_context_version()) {
+        egl_config::target_context_version version = choosen_config.get_target_context_version();
+
+        while (additional_attribs_ != nullptr) {
+            std::uint32_t pname = *(additional_attribs_++);
+            if ((pname == 0) || (pname == EGL_NONE_EMU)) {
+                break;
+            }
+            std::uint32_t param = *(additional_attribs_++);
+
+            if (pname == EGL_CONTEXT_MAJOR_VERSION_KHR_EMU) {
+                if (param == 2) {
+                    version = egl_config::EGL_TARGET_CONTEXT_ES2;
+                } else {
+                    version = egl_config::EGL_TARGET_CONTEXT_ES11;
+                }
+            }
+        }
+
+        switch (version) {
         case egl_config::EGL_TARGET_CONTEXT_ES11:
             context_inst = std::make_unique<egl_context_es1>();
             break;
