@@ -23,6 +23,7 @@
 #include <services/accessory/accessory.h>
 #include <services/alarm/alarm.h>
 #include <services/applist/applist.h>
+#include <services/audio/alf/alf.h>
 #include <services/audio/keysound/keysound.h>
 #include <services/audio/mmf/audio.h>
 #include <services/audio/mmf/dev.h>
@@ -242,6 +243,7 @@ namespace eka2l1 {
             CREATE_SERVER(sys, system_agent_server);
             CREATE_SERVER(sys, unipertar_server);
             CREATE_SERVER(sys, goom_monitor_server);
+            CREATE_SERVER(sys, alf_streamer_server);
 
             // MMF server family
             {

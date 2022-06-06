@@ -12,6 +12,7 @@ add_library(epocservs
         include/services/applist/applist.h
         include/services/applist/common.h
         include/services/applist/op.h
+        include/services/audio/alf/alf.h
         include/services/audio/keysound/context.h
         include/services/audio/keysound/keysound.h
         include/services/audio/keysound/ops.h
@@ -142,6 +143,7 @@ add_library(epocservs
         src/applist/applist.cpp
         src/applist/common.cpp
         src/applist/registeration.cpp
+        src/audio/alf/alf.cpp
         src/audio/keysound/context.cpp
         src/audio/keysound/keysound.cpp
         src/audio/mmf/audio.cpp
