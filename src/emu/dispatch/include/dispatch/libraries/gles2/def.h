@@ -336,6 +336,7 @@ namespace eka2l1::dispatch {
             const std::int32_t first_index, const std::uint32_t vcount, bool &should_flush_after_draw) override;
         bool prepare_for_clear(drivers::graphics_driver *driver, egl_controller &controller) override;
         bool get_data(drivers::graphics_driver *drv, const std::uint32_t feature, void *data, gles_get_data_type data_type) override;
+        void flush_to_driver(drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) override;
 
         std::uint32_t bind_texture(const std::uint32_t target, const std::uint32_t tex) override;
         gles_driver_texture *binded_texture() override;

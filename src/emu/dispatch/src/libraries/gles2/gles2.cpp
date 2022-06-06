@@ -1005,6 +1005,12 @@ APPLY_PENDING_ROUTES:
         egl_context_es_shared::destroy(driver, builder);
     }
 
+    void egl_context_es2::flush_to_driver(drivers::graphics_driver *drv, const bool is_frame_swap_flush) {
+        // Force sync again in the list
+        previous_using_program_ = nullptr;
+        egl_context_es_shared::flush_to_driver(drv, is_frame_swap_flush);
+    }
+
     bool egl_context_es2::retrieve_vertex_buffer_slot(std::vector<drivers::handle> &vertex_buffers_alloc, drivers::graphics_driver *drv,
         kernel::process *crr_process, const gles_vertex_attrib &attrib, const std::int32_t first_index, const std::int32_t vcount,
         std::uint32_t &res, int &offset, bool &attrib_not_persistent, bool &should_flush_after) {
