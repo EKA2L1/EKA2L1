@@ -42,6 +42,7 @@ namespace eka2l1 {
         , network_bars_prop_(nullptr)
         , battery_bars_prop_(nullptr)
         , charger_status_prop_(nullptr)
+        , call_type_info_prop_(nullptr)
         , init2ed_(false) {
         init(sys->get_kernel_system());
     }
@@ -86,6 +87,14 @@ namespace eka2l1 {
         charger_status_prop_->second = epoc::ETEL_PHONE_CHARGER_STATUS_UID;
 
         charger_status_prop_->set_int(epoc::etel_charger_status_connected);
+
+        call_type_info_prop_ = kern->create<service::property>();
+        call_type_info_prop_->define(service::property_type::int_data, 4);
+
+        call_type_info_prop_->first = epoc::ETEL_CALL_INFO_PROP_UID;
+        call_type_info_prop_->second = epoc::ETEL_CALL_INFO_CALL_TYPE_KEY;
+
+        call_type_info_prop_->set_int(epoc::ETEL_CALL_INFO_PROP_CALL_NONE);
     }
 
     void etel_server::init2(kernel_system *kern, io_system *io) {

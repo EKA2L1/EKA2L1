@@ -365,7 +365,16 @@ namespace eka2l1::epoc {
     static constexpr std::uint32_t ETEL_PHONE_BATTERY_BARS_UID = 0x100052D3;
     static constexpr std::uint32_t ETEL_PHONE_NETWORK_BARS_UID = 0x100052D4;
 
+    // Check cellularsvr/telephonyserverplugins/common_tsy/commontsy/exportinc/serviceapi/ctsydomainpskeys.h
+    static constexpr std::uint32_t ETEL_CALL_INFO_PROP_UID = 0x102029AC;
+
     static constexpr std::uint32_t ETEL_MAX_BAR_LEVEL = 7;
     static constexpr std::uint32_t ETEL_MIN_BAR_LEVEL = 0;
     static constexpr std::uint32_t ETEL_BAR_MULTIPLIER = 14;
+    static constexpr std::uint32_t ETEL_CALL_INFO_CALL_TYPE_KEY = 2;
+
+    enum etel_call_info_prop_call_type {
+        ETEL_CALL_INFO_PROP_CALL_UNINIT = -1,
+        ETEL_CALL_INFO_PROP_CALL_NONE = 0,
+    };
 }
