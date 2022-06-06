@@ -414,7 +414,7 @@ namespace eka2l1::epoc::socket {
                     recv(ctx, true, false, false);
                     return;
 
-                case socket_so_recv_one_or_more:
+                case socket_reform_so_recv_one_or_more:
                     recv(ctx, true, true, false);
                     return;
 
