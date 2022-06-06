@@ -159,6 +159,7 @@ public class DeviceListFragment extends Fragment {
             Emulator.rescanDevices();
 
             updateDeviceList();
+            spDevice.setSelection(Emulator.getCurrentDevice(), false);
             getParentFragmentManager().setFragmentResult(KEY_RESTART, new Bundle());
             Toast.makeText(getContext(), R.string.completed, Toast.LENGTH_SHORT).show();
         });
