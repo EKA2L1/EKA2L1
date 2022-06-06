@@ -82,8 +82,7 @@ namespace eka2l1::epoc {
         , max_pointer_buffer_(0)
         , last_draw_(0)
         , last_fps_sync_(0)
-        , fps_count_(0)
-        , window_size_changed_callback_(nullptr) {
+        , fps_count_(0) {
         set_initial_state();
 
         abs_rect.top = reinterpret_cast<canvas_interface *>(parent)->absolute_position();
@@ -123,6 +122,20 @@ namespace eka2l1::epoc {
         }
 
         client->remove_redraws(this);
+    }
+
+    void canvas_base::add_canvas_observer(canvas_observer *ob) {
+        auto ite = std::find(observers_.begin(), observers_.end(), ob);
+        if (ite == observers_.end()) {
+            observers_.push_back(ob);
+        }
+    }
+
+    void canvas_base::remove_canvas_observer(canvas_observer *ob) {
+        auto ite = std::find(observers_.begin(), observers_.end(), ob);
+        if (ite != observers_.end()) {
+            observers_.erase(ite);
+        }
     }
 
     bool canvas_base::is_dsa_active() const {
@@ -307,8 +320,10 @@ namespace eka2l1::epoc {
         abs_rect.top += pos_diff;
         abs_rect.size = new_size;
 
-        if (size_changed && window_size_changed_callback_) {
-            window_size_changed_callback_();
+        if (size_changed && !observers_.empty()) {
+            for (auto ob: observers_) {
+                ob->on_window_size_changed(this);
+            }
         }
 
         pos = top;

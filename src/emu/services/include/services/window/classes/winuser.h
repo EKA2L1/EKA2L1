@@ -44,8 +44,12 @@ namespace eka2l1::epoc {
     struct graphic_context;
     struct window_group;
     struct dsa;
+    struct canvas_interface;
 
-
+    struct canvas_observer {
+    public:
+        virtual void on_window_size_changed(canvas_interface *obj) = 0;
+    };
 
     struct canvas_interface : public epoc::window {
         virtual std::uint32_t redraw_priority(int *shift = nullptr) = 0;
@@ -96,7 +100,7 @@ namespace eka2l1::epoc {
 
         drivers::graphics_command_builder driver_builder_;
         std::unique_ptr<epoc::gdi_store_command_segment> pending_segment_;
-        std::function<void()> window_size_changed_callback_; 
+        std::vector<canvas_observer*> observers_;
 
         explicit canvas_base(window_server_client_ptr client, screen *scr, window *parent, const epoc::window_type type_of_window, const epoc::display_mode dmode, const std::uint32_t client_handle);
         virtual ~canvas_base() override;
@@ -111,6 +115,9 @@ namespace eka2l1::epoc {
         virtual bool scroll(eka2l1::rect clip_space, const eka2l1::vec2 offset, eka2l1::rect source_rect) {
             return true;
         }
+
+        void add_canvas_observer(canvas_observer *ob);
+        void remove_canvas_observer(canvas_observer *ob);
 
         epoc::display_mode display_mode() const;
         eka2l1::vec2 absolute_position() const override;
