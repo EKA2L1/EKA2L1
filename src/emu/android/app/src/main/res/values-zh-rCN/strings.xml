@@ -20,6 +20,7 @@
     <string name="warning">警告</string>
     <string name="scoped_storage_warning">您的用户数据存储路径在卸载应用时<b>将被删除</b>\n</string>
     <string name="install">安装</string>
+    <string name="rescan_devices">重新扫描设备</string>
     <string name="device_dump">从设备上导出的ROM</string>
     <string name="path_to_rpkg">RPKG路径</string>
     <string name="path_to_rom">ROM路径</string>
@@ -140,7 +141,7 @@
     <string name="confirmation_required">需要确认</string>
     <string name="force_close_confirmation">强制关闭应用程序可能会导致数据丢失甚至损坏！\n继续?</string>
     <string name="log_saved">日志已保存</string>
-    <string name="enter_text">Enter the text</string>
+    <string name="enter_text">输入文本</string>
     <string name="about_icon_by">&lt;BR&gt;图标设计： </string>
     <string name="version">版本： </string>
     <string name="recommended_devices_note"><b>注：</b> 建议安装S60v3及以上版本的设备固件。</string>

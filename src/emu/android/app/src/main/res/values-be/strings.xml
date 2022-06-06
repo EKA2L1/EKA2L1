@@ -20,6 +20,7 @@
     <string name="warning">Увага</string>
     <string name="scoped_storage_warning">Вашы карыстацкія дадзеныя захоўваюцца ў месцы, якое<b>будзе выдаленае</b>пры выдаленні дастасавання:\n</string>
     <string name="install">Усталяваць</string>
+    <string name="rescan_devices">Перасканаваць прылады</string>
     <string name="device_dump">Дамп прылады</string>
     <string name="path_to_rpkg">Шлях да RPKG</string>
     <string name="path_to_rom">Шлях да ROM</string>
@@ -55,7 +56,7 @@
     <string name="pref_wakelock">Не выключаць экран</string>
     <string name="pref_enable_vibration">Уключыць вібрацыю</string>
     <string name="pref_emulator_dir">Працоўны каталог</string>
-    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Уключыць фільтрацыю шляхам бліжэйшага суседа</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Уключыць фільтрацыю шляхам найбліжэйшага суседа</string>
     <string name="pref_system_language_option_name">Мова</string>
     <string name="pref_system_real_time_accuracy_str">Дакладнасць у рэальным часе</string>
     <string name="pref_system_real_time_accuracy_level_name_low">Нізкая</string>

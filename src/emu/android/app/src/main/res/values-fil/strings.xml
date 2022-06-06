@@ -20,6 +20,7 @@
     <string name="warning">Babala</string>
     <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
     <string name="install">I-install</string>
+    <string name="rescan_devices">Mag-rescan ng aparato</string>
     <string name="device_dump">File mula sa aparato</string>
     <string name="path_to_rpkg">Pinaglalagayan ng RPKG</string>
     <string name="path_to_rom">Pinaglalagayan ng ROM</string>

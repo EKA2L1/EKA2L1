@@ -731,7 +731,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="466"/>
       <source>Enable nearest neighbor filtering</source>
-      <translation>Уключыць фільтрацыю шляхам бліжэйшага суседа</translation>
+      <translation>Уключыць фільтрацыю шляхам найбліжэйшага суседа</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="473"/>

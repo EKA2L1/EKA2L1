@@ -20,6 +20,7 @@
     <string name="warning">注意</string>
     <string name="scoped_storage_warning">あなたのユーザーデータは <b>アプリのアンインストール時に</b> 削除される場所に保存されます\n</string>
     <string name="install">インストール</string>
+    <string name="rescan_devices">Rescan devices</string>
     <string name="device_dump">デバイスダンプ</string>
     <string name="path_to_rpkg">RPKGへのパス</string>
     <string name="path_to_rom">RPKGへのパス</string>

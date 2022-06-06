@@ -20,6 +20,7 @@
     <string name="warning">Warning</string>
     <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
     <string name="install">ইনস্টল</string>
+    <string name="rescan_devices">পুনরায় ডিভাইসসমূহ স্ক্যান করুন</string>
     <string name="device_dump">ডিভাইস ডাম্প</string>
     <string name="path_to_rpkg">RPKG খোঁজার স্থান</string>
     <string name="path_to_rom">ROM খোঁজার স্থান</string>

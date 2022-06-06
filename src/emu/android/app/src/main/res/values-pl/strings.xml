@@ -20,6 +20,7 @@
     <string name="warning">Uwaga</string>
     <string name="scoped_storage_warning">Twoje dane użytkownika są przechowywane w lokalizacji która <b>zostanie usunięta</b> kiedy odinstalujesz aplikację:\n</string>
     <string name="install">Zainstaluj</string>
+    <string name="rescan_devices">Przeskanuj ponownie urządzenia</string>
     <string name="device_dump">Zrzut urządzenia</string>
     <string name="path_to_rpkg">Ścieżka do RPKG</string>
     <string name="path_to_rom">Ścieżka do ROM</string>
@@ -115,8 +116,8 @@
     <string name="pref_screen_scale_type_fill">Wypełnij okno (ignoruj proporcje obrazu)</string>
     <string name="pref_screen_scale_type_fit">Dopasuj do okna</string>
     <string name="pref_screen_scale_type_none">Tak jak jest</string>
-    <string name="pref_screen_scale_use_shader">Use shader for upscaling</string>
-    <string name="pref_screen_upscale_shader">Upscale shader</string>
+    <string name="pref_screen_scale_use_shader">Użyj shader\'a do skalowania</string>
+    <string name="pref_screen_upscale_shader">Shader do skalowania</string>
     <string name="pref_screen_default_shader">Domyślne</string>
     <string name="default_label">"%s (domyślnie)"</string>
     <string name="not_saved_exists">Już istnieje</string>
@@ -140,7 +141,7 @@
     <string name="confirmation_required">Wymagane potwierdzenie</string>
     <string name="force_close_confirmation">Wymuszenie zamknięcia aplikacji może spowodować utratę danych lub nawet całkowicie ją zepsuć!\nKontynuować?</string>
     <string name="log_saved">Log został zapisany</string>
-    <string name="enter_text">Enter the text</string>
+    <string name="enter_text">Wprowadź tekst</string>
     <string name="about_icon_by">&lt;BR&gt;Ikona autorstwa: </string>
     <string name="version">Wersja: </string>
     <string name="recommended_devices_note"><b>Uwaga:</b> zalecane jest używać firmware\'u do instalacji urządzeń od S60v3 i wyżej.</string>

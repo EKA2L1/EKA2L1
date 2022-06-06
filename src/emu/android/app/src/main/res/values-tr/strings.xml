@@ -7,7 +7,7 @@
     <string name="settings">Ayarlar</string>
     <string name="packages">Paketler</string>
     <string name="devices">Cihazlar</string>
-    <string name="profiles">Profiles</string>
+    <string name="profiles">Profiller</string>
     <string name="processing">İşlem devam ediyor...</string>
     <string name="completed">Tamamlandı!</string>
     <string name="remove">Kaldır</string>
@@ -20,6 +20,7 @@
     <string name="warning">Warning</string>
     <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
     <string name="install">Kur</string>
+    <string name="rescan_devices">Cihazları tekrar tara</string>
     <string name="device_dump">Cihaz dökümü</string>
     <string name="path_to_rpkg">RPKG Yolu</string>
     <string name="path_to_rom">ROM Yolu</string>

@@ -20,6 +20,7 @@
     <string name="warning">Внимание</string>
     <string name="scoped_storage_warning">Ваши пользовательские данные хранятся в папке, которая <b>будет удалена</b> при удалении приложения:\n</string>
     <string name="install">Установить</string>
+    <string name="rescan_devices">Пересканировать устройства</string>
     <string name="device_dump">Дамп устройства</string>
     <string name="path_to_rpkg">Путь к RPKG</string>
     <string name="path_to_rom">Путь к ROM</string>

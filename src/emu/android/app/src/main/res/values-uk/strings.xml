@@ -20,6 +20,7 @@
     <string name="warning">Попередження</string>
     <string name="scoped_storage_warning">Ваші дані користувача зберігаються в місці, яке <b>буде видалено</b>, коли ви видалите застосунок:\n</string>
     <string name="install">Установити</string>
+    <string name="rescan_devices">Пересканувати пристрої</string>
     <string name="device_dump">Дамп пристрою</string>
     <string name="path_to_rpkg">Шлях до RPKG</string>
     <string name="path_to_rom">Шлях до ROM</string>
