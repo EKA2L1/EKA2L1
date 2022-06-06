@@ -707,6 +707,11 @@ namespace eka2l1 {
             return;
         }
 
+        if (eka2l1::filename(target_file_path.value()).empty()) {
+            ctx->complete(epoc::error_bad_name);
+            return;
+        }
+
         if (!old_read_model && (ctx->msg->function & 0x00040000)) {
             // The position is in a package
             auto position_package = ctx->get_argument_data_from_descriptor<std::uint64_t>(2);
@@ -745,6 +750,12 @@ namespace eka2l1 {
         symfile target_file = io->open_file(target_file_path.value(), READ_MODE | BIN_MODE);
 
         if (!target_file) {
+            // Exist but not a file
+            if (io->exist(target_file_path.value())) {
+                ctx->complete(epoc::error_bad_name);
+                return;
+            }
+
             ctx->complete(epoc::error_path_not_found);
             return;
         }
