@@ -1047,6 +1047,7 @@ namespace eka2l1::epoc {
             break;
 
         case ws_cl_op_create_sprite:
+        case ws_cl_op_create_pointer_cursor:
             create_sprite(ctx, cmd);
             break;
 
