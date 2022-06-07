@@ -41,14 +41,16 @@ namespace eka2l1 {
         feature_id_japanese = 1080,
         feature_id_thai = 1081,
         feature_id_chinese = 1096,
+        feature_id_flash_lite_viewer = 1145
     };
 
     void featmgr_server::do_feature_scanning(system *sys) {
         // TODO: There is a lot of features.
         // See in here: https://github.com/SymbianSource/oss.FCL.sf.os.deviceplatformrelease/blob/master/foundation_system/sf_config/config/inc/publicruntimeids.hrh
 
-        // 1. We always welcome rendering with OpenGL ES
+        // 1. We always welcome rendering with OpenGL ES and Flash
         enable_features.push_back(feature_id_opengl_es_3d_api);
+        enable_features.push_back(feature_id_flash_lite_viewer);
 
         // 2. Are we welcoming SVG? Check for OpenVG, cause it should be there if this feature is available
         if (sys->get_io_system()->exist(u"z:\\sys\\bin\\libopenvg.dll")) {
@@ -157,6 +159,8 @@ namespace eka2l1 {
                 }
             }
         }
+
+        LOG_TRACE(SERVICE_FEATMGR, "Feature 0x{:X} result={}", feature_id, result);
 
         ctx.write_data_to_descriptor_argument(1, result);
         ctx.complete(epoc::error_none);
