@@ -749,7 +749,7 @@ namespace eka2l1 {
         io_system *io = ctx->sys->get_io_system();
         symfile target_file = io->open_file(target_file_path.value(), READ_MODE | BIN_MODE);
 
-        if (!target_file) {
+        if (!target_file || !target_file->valid()) {
             // Exist but not a file
             if (io->exist(target_file_path.value())) {
                 ctx->complete(epoc::error_bad_name);

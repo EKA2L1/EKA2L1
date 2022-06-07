@@ -85,7 +85,7 @@ namespace eka2l1::epoc::fs {
             // Temporarily open it to read UIDs
             symfile f = io->open_file(fullpath_ucs2, READ_MODE | BIN_MODE);
 
-            if (f) {
+            if (f && f->valid()) {
                 f->read_file(&sym_entry.uid1, sizeof(sym_entry.uid1), 1);
                 f->read_file(&sym_entry.uid2, sizeof(sym_entry.uid2), 1);
                 f->read_file(&sym_entry.uid3, sizeof(sym_entry.uid3), 1);
