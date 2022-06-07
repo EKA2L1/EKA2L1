@@ -37,11 +37,16 @@ namespace eka2l1 {
     enum feature_id : epoc::uid {
         feature_id_opengl_es_3d_api = 10,
         feature_id_svgt = 77,
+        feature_id_side_volume_key = 207,
+        feature_id_pen = 410,
+        feature_id_vibra = 411,
         feature_id_korean = 180,
         feature_id_japanese = 1080,
         feature_id_thai = 1081,
         feature_id_chinese = 1096,
-        feature_id_flash_lite_viewer = 1145
+        feature_id_flash_lite_viewer = 1145,
+        feature_id_pen_calibration = 1658,
+        feature_id_tactile_feedback = 1718
     };
 
     void featmgr_server::do_feature_scanning(system *sys) {
@@ -51,6 +56,11 @@ namespace eka2l1 {
         // 1. We always welcome rendering with OpenGL ES and Flash
         enable_features.push_back(feature_id_opengl_es_3d_api);
         enable_features.push_back(feature_id_flash_lite_viewer);
+        enable_features.push_back(feature_id_side_volume_key);
+        enable_features.push_back(feature_id_pen);
+        enable_features.push_back(feature_id_vibra);
+        enable_features.push_back(feature_id_pen_calibration);
+        enable_features.push_back(feature_id_tactile_feedback);
 
         // 2. Are we welcoming SVG? Check for OpenVG, cause it should be there if this feature is available
         if (sys->get_io_system()->exist(u"z:\\sys\\bin\\libopenvg.dll")) {
