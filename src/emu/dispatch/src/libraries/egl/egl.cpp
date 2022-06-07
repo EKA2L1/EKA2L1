@@ -171,16 +171,11 @@ namespace eka2l1::dispatch {
         if (surface_type == -1) {
             type = egl_config::EGL_SURFACE_TYPE_WINDOW;
         } else {
-            switch (surface_type) {
-            case EGL_PBUFFER_BIT_EMU:
+            if (surface_type & EGL_PBUFFER_BIT_EMU) {
                 type = egl_config::EGL_SURFACE_TYPE_PBUFFER;
-                break;
-
-            case EGL_WINDOW_BIT_EMU:
+            } else if (surface_type & EGL_WINDOW_BIT_EMU) {
                 type = egl_config::EGL_SURFACE_TYPE_WINDOW;
-                break;
-
-            default:
+            } else {
                 // This is not a fail. We don't support it now.
                 *num_config_choosen = 0;
                 return EGL_TRUE;
@@ -200,6 +195,7 @@ namespace eka2l1::dispatch {
                 }
 
                 if (gles_context_type & egl_version_enum) {
+                    LOG_TRACE(KERNEL, "{}", config_parser.buffer_size());
                     if ((total_color_bits_provided == -1) || (config_parser.buffer_size() >= total_color_bits_provided)) {
                         if (current_fill_index < config_array_size) {
                             configs[current_fill_index++] = config_parser;
@@ -666,6 +662,11 @@ namespace eka2l1::dispatch {
 
         case EGL_MAX_PBUFFER_HEIGHT_EMU:
             *value = MAX_EGL_FB_HEIGHT;
+            break;
+
+        case EGL_BIND_TO_TEXTURE_RGB_EMU:
+        case EGL_BIND_TO_TEXTURE_RGBA_EMU:
+            *value = EGL_TRUE;
             break;
 
         default:
