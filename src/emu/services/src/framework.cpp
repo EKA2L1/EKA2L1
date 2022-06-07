@@ -29,12 +29,12 @@ namespace eka2l1::service {
     }
 
     void normal_object_container::clear() {
-        const std::lock_guard<std::mutex> guard(obj_lock);
+        const std::lock_guard<std::recursive_mutex> guard(obj_lock);
         objs.clear();
     }
 
     bool normal_object_container::remove(epoc::ref_count_object *obj) {
-        const std::lock_guard<std::mutex> guard(obj_lock);
+        const std::lock_guard<std::recursive_mutex> guard(obj_lock);
 
         auto res = std::lower_bound(objs.begin(), objs.end(), obj,
             [](const ref_count_object_heap_ptr &lhs, const epoc::ref_count_object *rhs) {
