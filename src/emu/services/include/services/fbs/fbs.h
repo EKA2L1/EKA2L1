@@ -265,7 +265,6 @@ namespace eka2l1 {
         bool shared_{ false };
         fbsbitmap *clean_bitmap;
         bool support_dirty_bitmap;
-        bool ref_extra_ed;
         epoc::notify_info compress_done_nof;
 
         std::uint32_t reserved_height_each_side_;
@@ -278,7 +277,6 @@ namespace eka2l1 {
             , shared_(shared)
             , clean_bitmap(nullptr)
             , support_dirty_bitmap(support_dirty_bitmap)
-            , ref_extra_ed(false)
             , reserved_height_each_side_(reserved_height_each_size) {
         }
 

@@ -222,7 +222,6 @@ namespace eka2l1 {
         // Mark old bitmap as dirty
         if (bmp->support_dirty_bitmap) {
             clean_bitmap->ref();
-            clean_bitmap->ref_extra_ed = true;
 
             bmp->clean_bitmap = clean_bitmap;
             bmp->bitmap_->settings_.dirty_bitmap(true);

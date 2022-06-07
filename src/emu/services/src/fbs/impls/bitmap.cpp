@@ -392,6 +392,10 @@ namespace eka2l1 {
     fbsbitmap::~fbsbitmap() {
         if (serv_)
             serv_->free_bitmap(this);
+
+        if (clean_bitmap) {
+            clean_bitmap->deref();
+        }
     }
 
     fbsbitmap *fbsbitmap::final_clean() {
@@ -1013,8 +1017,8 @@ namespace eka2l1 {
             bmp->clean_bitmap = new_bmp;
             bmp->bitmap_->settings_.dirty_bitmap(true);
 
+            // Own a reference to the clean bitmap, until it is removed
             new_bmp->ref();
-            new_bmp->ref_extra_ed = true;
 
             obj_table_.remove(handle);
             bmp_handles handle_info;
@@ -1088,12 +1092,6 @@ namespace eka2l1 {
         handle_info.handle = obj_table_.add(bmp);
         handle_info.server_handle = bmp->id;
         handle_info.address_offset = server<fbs_server>()->host_ptr_to_guest_shared_offset(bmp->bitmap_);
-
-        // We previously do a ref to prevent duplicate instances from destroying this clean bitmap...
-        if (bmp->ref_extra_ed) {
-            bmp->deref();
-            bmp->ref_extra_ed = false;
-        }
 
         // Close the old handle. To prevent this object from being destroyed.
         // In case no clean bitmap at all!

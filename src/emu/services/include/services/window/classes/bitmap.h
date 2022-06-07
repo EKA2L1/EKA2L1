@@ -38,6 +38,7 @@ namespace eka2l1 {
                 fbsbitmap *parent = nullptr);
             ~wsbitmap() override;
 
+            fbsbitmap *get_and_update_parent();
             bool execute_command(service::ipc_context &context, ws_cmd &cmd) override;
         };
     }

@@ -40,7 +40,7 @@
 namespace eka2l1::epoc {
     static void *decide_bitmap_pointer_to_pass(wsbitmap *server_bmp, std::uint8_t &affected_flags, const bool is_mask) {
         if (server_bmp->parent_) {
-            return server_bmp->parent_;
+            return server_bmp->get_and_update_parent();
         }
 
         affected_flags |= (is_mask ? GDI_STORE_COMMAND_MASK_RAW : GDI_STORE_COMMAND_MAIN_RAW);
