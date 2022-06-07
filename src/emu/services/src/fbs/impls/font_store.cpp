@@ -29,8 +29,13 @@ namespace eka2l1::epoc {
 
         for (std::size_t i = 0; i < adapter->count(); i++) {
             epoc::open_font_face_attrib attrib;
+            epoc::open_font_metrics metrics;
 
             if (!adapter->get_face_attrib(i, attrib)) {
+                continue;
+            }
+
+            if (!adapter->get_metrics(i, metrics)) {
                 continue;
             }
 
@@ -59,6 +64,57 @@ namespace eka2l1::epoc {
                 info.adapter = adapter.get();
 
                 open_font_store.push_back(std::move(info));
+            }
+
+            bool found_typeface = false;
+
+            for (std::size_t i = 0; i < typefaces.size(); i++) {
+                if (common::compare_ignore_case(typefaces[i].info_.name.to_std_string(nullptr), fam_name) == 0) {
+                    // NOTE: Stored in here is actually pixels, they will just scale to twips later when retrieved through API
+                    typefaces[i].is_scalable_ = adapter->vectorizable();
+                    typefaces[i].num_heights_++;
+                    typefaces[i].max_height_in_twips_ = common::max<std::int32_t>(typefaces[i].max_height_in_twips_, metrics.max_height); 
+                    typefaces[i].min_height_in_twips_ = common::min<std::int32_t>(typefaces[i].min_height_in_twips_, attrib.min_size_in_pixels);
+
+                    if (attrib.style & epoc::open_font_face_attrib::serif) {
+                        typefaces[i].info_.flags |= epoc::typeface_info::tf_serif;
+                    }
+
+                    if (!(attrib.style & epoc::open_font_face_attrib::mono_width)) {
+                        typefaces[i].info_.flags |= epoc::typeface_info::tf_propotional;
+                    }
+
+                    if (attrib.style & epoc::open_font_face_attrib::symbol) {
+                        typefaces[i].info_.flags |= epoc::typeface_info::tf_symbol;
+                    }
+
+                    found_typeface = true;
+                    break;
+                }
+            }
+
+            if (!found_typeface) {
+                epoc::typeface_support support;
+                support.info_.name.assign(nullptr, fam_name);
+
+                if (attrib.style & epoc::open_font_face_attrib::serif) {
+                    support.info_.flags |= epoc::typeface_info::tf_serif;
+                }
+
+                if (!(attrib.style & epoc::open_font_face_attrib::mono_width)) {
+                    support.info_.flags |= epoc::typeface_info::tf_propotional;
+                }
+
+                if (attrib.style & epoc::open_font_face_attrib::symbol) {
+                    support.info_.flags |= epoc::typeface_info::tf_symbol;
+                }
+
+                support.num_heights_ = 1;
+                support.is_scalable_ = adapter->vectorizable();
+                support.max_height_in_twips_ = metrics.max_height;
+                support.min_height_in_twips_ = attrib.min_size_in_pixels;
+
+                typefaces.push_back(std::move(support));
             }
         }
 
@@ -159,5 +215,12 @@ namespace eka2l1::epoc {
         }
 
         return best;
+    }
+
+    epoc::typeface_support *font_store::get_typeface_support(const std::uint32_t index) {
+        if (index >= open_font_store.size()) {
+            return nullptr;
+        }
+        return &typefaces[index];
     }
 }

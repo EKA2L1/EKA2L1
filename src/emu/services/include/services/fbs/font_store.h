@@ -48,6 +48,7 @@ namespace eka2l1::epoc {
     class font_store {
         std::vector<open_font_info> open_font_store;
         std::vector<epoc::adapter::font_file_adapter_instance> font_adapters;
+        std::vector<epoc::typeface_support> typefaces;
 
         eka2l1::io_system *io;
 
@@ -64,9 +65,14 @@ namespace eka2l1::epoc {
         open_font_info *seek_the_open_font(epoc::font_spec_base &spec);
         open_font_info *seek_the_font_by_uid(const epoc::uid the_uid);
         open_font_info *seek_the_font_by_id(std::uint32_t index);
+        epoc::typeface_support *get_typeface_support(const std::uint32_t index);
 
         const std::size_t number_of_fonts() const {
             return open_font_store.size();
+        }
+
+        const std::size_t number_of_typefaces() const {
+            return typefaces.size();
         }
     };
 }

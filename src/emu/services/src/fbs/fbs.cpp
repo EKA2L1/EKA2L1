@@ -281,6 +281,10 @@ namespace eka2l1 {
             release_font_table(ctx);
             break;
 
+        case fbs_fetch_linked_typeface:
+            ctx->complete(epoc::error_not_supported);
+            break;
+
         default: {
             LOG_ERROR(SERVICE_FBS, "Unhandled FBScli opcode 0x{:X}", ctx->msg->function);
             break;
