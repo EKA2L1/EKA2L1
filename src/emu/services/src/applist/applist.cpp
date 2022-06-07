@@ -20,6 +20,7 @@
 
 #include <services/applist/applist.h>
 #include <services/applist/op.h>
+#include <services/fs/fs.h>
 #include <services/context.h>
 #include <services/fbs/fbs.h>
 
@@ -67,7 +68,8 @@ namespace eka2l1 {
     applist_server::applist_server(system *sys)
         : service::typical_server(sys, get_app_list_server_name_by_epocver(sys->get_symbian_version_use()))
         , drive_change_handle_(0)
-        , fbsserv(nullptr) {
+        , fbsserv(nullptr)
+        , fsserv(nullptr) {
     }
 
     applist_server::~applist_server() {
@@ -483,6 +485,9 @@ namespace eka2l1 {
         fbsserv = reinterpret_cast<fbs_server *>(kern->get_by_name<service::server>(
             epoc::get_fbs_server_name_by_epocver(kern->get_epoc_version())));
 
+        fsserv = kern->get_by_name<eka2l1::fs_server>(epoc::fs::get_server_name_through_epocver(
+            kern->get_epoc_version()));
+
         rescan_registries(sys->get_io_system());
 
         flags |= AL_INITED;
@@ -788,13 +793,7 @@ namespace eka2l1 {
         ctx.complete(buf_size);
     }
 
-    void applist_server::get_app_for_document(service::ipc_context &ctx) {
-        std::optional<std::u16string> path = ctx.get_argument_value<std::u16string>(2);
-        if (!path.has_value()) {
-            ctx.complete(epoc::error_argument);
-            return;
-        }
-
+    void applist_server::get_app_for_document_impl(service::ipc_context &ctx, const std::u16string &path) {
         applist_app_for_document app;
         app.uid = 0;
         app.data_type.uid = 0;
@@ -804,9 +803,13 @@ namespace eka2l1 {
         if (conf && conf->mime_detection) {
             LOG_TRACE(SERVICE_APPLIST, "AppList::AppForDocument datatype stubbed with file extension");
 
-            const std::u16string ext = eka2l1::path_extension(path.value());
+            const std::u16string ext = eka2l1::path_extension(path);
             if (!ext.empty()) {
-                app.data_type.data_type.assign(nullptr, common::uppercase_string(common::ucs2_to_utf8(ext.substr(1))));
+                if (common::compare_ignore_case(ext, u".swf") == 0) {
+                    app.data_type.data_type.assign(nullptr, "application/x-shockwave-flash");
+                } else {
+                    app.data_type.data_type.assign(nullptr, common::uppercase_string(common::ucs2_to_utf8(ext.substr(1))));
+                }
             } else {
                 app.data_type.data_type.assign(nullptr, "UNK");
             }
@@ -816,6 +819,29 @@ namespace eka2l1 {
 
         ctx.write_data_to_descriptor_argument<applist_app_for_document>(0, app);
         ctx.complete(epoc::error_none);
+    }
+
+    void applist_server::get_app_for_document_by_file_handle(service::ipc_context &ctx) {
+        session_ptr fs_target_session = ctx.sys->get_kernel_system()->get<service::session>(*(ctx.get_argument_value<std::int32_t>(2)));
+        const std::uint32_t fs_file_handle = *(ctx.get_argument_value<std::uint32_t>(3));
+        file *source_file = fsserv->get_file(fs_target_session->unique_id(), fs_file_handle);
+
+        if (!source_file) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        get_app_for_document_impl(ctx, source_file->file_name());
+    }
+
+    void applist_server::get_app_for_document(service::ipc_context &ctx) {
+        std::optional<std::u16string> path = ctx.get_argument_value<std::u16string>(2);
+        if (!path.has_value()) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        get_app_for_document_impl(ctx, path.value());
     }
 
     void applist_server::get_capability(service::ipc_context &ctx) {
@@ -951,6 +977,10 @@ namespace eka2l1 {
 
             case applist_request_app_for_document:
                 server<applist_server>()->get_app_for_document(*ctx);
+                break;
+
+            case applist_request_app_for_document_passed_by_file_handle:
+                server<applist_server>()->get_app_for_document_by_file_handle(*ctx);
                 break;
 
             default:

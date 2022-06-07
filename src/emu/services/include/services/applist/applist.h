@@ -32,6 +32,7 @@
 namespace eka2l1 {
     class io_system;
     class fbs_server;
+    class fs_server;
 
     struct fbsbitmap;
 
@@ -193,6 +194,7 @@ namespace eka2l1 {
         std::size_t drive_change_handle_{ 0 };
 
         fbs_server *fbsserv;
+        fs_server *fsserv;
 
         enum {
             AL_INITED = 0x1
@@ -277,6 +279,8 @@ namespace eka2l1 {
         void is_program(service::ipc_context &ctx);
         void get_preferred_buf_size(service::ipc_context &ctx);
         void get_app_for_document(service::ipc_context &ctx);
+        void get_app_for_document_by_file_handle(service::ipc_context &ctx);
+        void get_app_for_document_impl(service::ipc_context &ctx, const std::u16string &path);
 
         void connect(service::ipc_context &ctx) override;
 
