@@ -24,6 +24,7 @@
 #include <dispatch/def.h>
 
 #include <common/container.h>
+#include <common/linked.h>
 #include <common/vecx.h>
 
 #include <cstdint>
@@ -110,6 +111,8 @@ namespace eka2l1::dispatch {
 
     struct gles_driver_texture : public gles_driver_object {
     private:
+        friend struct egl_context_es_shared;
+
         std::uint32_t internal_format_;
         std::uint32_t min_filter_;
         std::uint32_t mag_filter_;
@@ -125,12 +128,24 @@ namespace eka2l1::dispatch {
         eka2l1::vec2 size_;
         gles_driver_texture_type texture_type_;
 
+        common::double_linked_queue_element update_link_;
+        std::uint8_t change_flags_;
+
+        enum {
+            FLAG_MIN_FILTER_CHANGED = 1 << 0,
+            FLAG_MAG_FILTER_CHANGED = 1 << 1,
+            FLAG_WRAP_S_CHANGED = 1 << 2,
+            FLAG_WRAP_T_CHANGED = 1 << 3
+        };
+
     public:
         explicit gles_driver_texture(egl_context_es_shared &ctx);
         ~gles_driver_texture() override;
 
         std::uint32_t try_bind(const std::uint32_t type);
         std::uint32_t target_matched(const std::uint32_t type);
+
+        void update();
 
         void set_internal_format(const std::uint32_t format) {
             internal_format_ = format;
@@ -144,32 +159,16 @@ namespace eka2l1::dispatch {
             size_ = size;
         }
 
-        void set_min_filter(const std::uint32_t min_filter) {
-            min_filter_ = min_filter;
-        }
-
         std::uint32_t get_min_filter() const {
             return min_filter_;
-        }
-
-        void set_mag_filter(const std::uint32_t mag_filter) {
-            mag_filter_ = mag_filter;
         }
 
         std::uint32_t get_mag_filter() const {
             return mag_filter_;
         }
 
-        void set_wrap_s(const std::uint32_t wrap_s) {
-            wrap_s_ = wrap_s;
-        }
-
         std::uint32_t get_wrap_s() const {
             return wrap_s_;
-        }
-
-        void set_wrap_t(const std::uint32_t wrap_t) {
-            wrap_t_ = wrap_t;
         }
 
         std::uint32_t get_wrap_t() const {
@@ -222,6 +221,10 @@ namespace eka2l1::dispatch {
 
         void try_upscale();
         void sync_parameters_with_driver();
+        void set_min_filter(const std::uint32_t min_filter);
+        void set_mag_filter(const std::uint32_t mag_filter);
+        void set_wrap_s(const std::uint32_t wrap_s);
+        void set_wrap_t(const std::uint32_t wrap_t);
     };
 
     struct gles_driver_buffer : public gles_driver_object {
@@ -401,6 +404,7 @@ namespace eka2l1::dispatch {
         bool attrib_changed_;
 
         float blend_colour_[4];
+        common::roundabout texture_update_list_;
 
         explicit egl_context_es_shared();
 

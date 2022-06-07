@@ -565,7 +565,13 @@ namespace eka2l1::dispatch {
         return true;    
     }
 
-    void egl_context_es_shared::flush_to_driver(drivers::graphics_driver *drv, const bool is_frame_swap_flush) {        
+    void egl_context_es_shared::flush_to_driver(drivers::graphics_driver *drv, const bool is_frame_swap_flush) {
+        // Update sampling options
+        while (!texture_update_list_.empty()) {
+            gles_driver_texture *tex = E_LOFF(texture_update_list_.first()->deque(), gles_driver_texture, update_link_);
+            tex->update();
+        }
+ 
         drivers::graphics_command_builder transfer_builder;
         vertex_buffer_pusher_.flush(transfer_builder);
         index_buffer_pusher_.flush(transfer_builder);
@@ -1018,6 +1024,8 @@ namespace eka2l1::dispatch {
         if (driver_handle_ != 0) {
             context_.return_handle_to_pool(GLES_OBJECT_TEXTURE, driver_handle_, static_cast<int>(texture_type_));
         }
+
+        update_link_.deque();
     }
     
     gles_driver_buffer::~gles_driver_buffer() {
@@ -1037,9 +1045,82 @@ namespace eka2l1::dispatch {
         , auto_regen_mipmap_(false)
         , mipmap_gened_(false)
         , texture_type_(GLES_DRIVER_TEXTURE_TYPE_NONE)
-        , max_anisotrophy_(-1.0f) {
+        , max_anisotrophy_(-1.0f)
+        , change_flags_(0) {
     }
-    
+
+    void gles_driver_texture::set_min_filter(const std::uint32_t min_filter) {
+        if (min_filter_ != min_filter) {
+            min_filter_ = min_filter;
+            if (change_flags_ == 0) {
+                context_.texture_update_list_.push(&update_link_);
+            }
+            change_flags_ |= FLAG_MIN_FILTER_CHANGED;
+        }
+    }
+
+    void gles_driver_texture::set_mag_filter(const std::uint32_t mag_filter) {
+        if (mag_filter_ != mag_filter) {
+            mag_filter_ = mag_filter;
+            if (change_flags_ == 0) {
+                context_.texture_update_list_.push(&update_link_);
+            }
+            change_flags_ |= FLAG_MAG_FILTER_CHANGED;
+        }
+    }
+
+    void gles_driver_texture::set_wrap_t(const std::uint32_t wrap_t) {
+        if (wrap_t_ != wrap_t) {
+            wrap_t_ = wrap_t;
+            if (change_flags_ == 0) {
+                context_.texture_update_list_.push(&update_link_);
+            }
+            change_flags_ |= FLAG_WRAP_T_CHANGED;
+        }
+    }
+
+    void gles_driver_texture::set_wrap_s(const std::uint32_t wrap_s) {
+        if (wrap_s_ != wrap_s) {
+            wrap_s_ = wrap_s;
+            if (change_flags_ == 0) {
+                context_.texture_update_list_.push(&update_link_);
+            }
+            change_flags_ |= FLAG_WRAP_S_CHANGED;
+        }
+    }
+
+    void gles_driver_texture::update() {
+        if (change_flags_ & FLAG_MIN_FILTER_CHANGED) {
+            drivers::filter_option opt;
+            if (gl_enum_to_mag_filter(min_filter_, opt)) {
+                context_.cmd_builder_.set_texture_filter(driver_handle_, true, opt);
+            }
+        }
+
+        if (change_flags_ & FLAG_MAG_FILTER_CHANGED) {
+            drivers::filter_option opt;
+            if (gl_enum_to_mag_filter(mag_filter_, opt)) {
+                context_.cmd_builder_.set_texture_filter(driver_handle_, false, opt);
+            }
+        }
+
+        if (change_flags_ & FLAG_WRAP_S_CHANGED) {
+            drivers::addressing_option opt_s;
+            gl_enum_to_addressing_option(wrap_s_, opt_s);
+
+            context_.cmd_builder_.set_texture_addressing_mode(driver_handle_, drivers::addressing_direction::s, opt_s);
+        }
+
+        if (change_flags_ & FLAG_WRAP_T_CHANGED) {
+            drivers::addressing_option opt_t;
+            gl_enum_to_addressing_option(wrap_t_, opt_t);
+
+            context_.cmd_builder_.set_texture_addressing_mode(driver_handle_, drivers::addressing_direction::t, opt_t);
+        }
+
+        change_flags_ = 0;
+    }
+
     std::uint32_t gles_driver_texture::try_bind(const std::uint32_t type) {
         gles_driver_texture_type ttype = GLES_DRIVER_TEXTURE_TYPE_NONE;
         switch (type) {
@@ -2761,8 +2842,6 @@ namespace eka2l1::dispatch {
             }
 
             tex->set_mag_filter(param);
-            ctx->cmd_builder_.set_texture_filter(tex->handle_value(), false, opt);
-
             break;
         }
 
@@ -2774,8 +2853,6 @@ namespace eka2l1::dispatch {
             }
 
             tex->set_min_filter(param);
-            ctx->cmd_builder_.set_texture_filter(tex->handle_value(), true, opt);
-
             break;
         }
 
@@ -2787,9 +2864,6 @@ namespace eka2l1::dispatch {
             }
 
             tex->set_wrap_s(param);
-            ctx->cmd_builder_.set_texture_addressing_mode(tex->handle_value(), drivers::addressing_direction::s,
-                opt);
-
             break;
         }
         
@@ -2801,9 +2875,6 @@ namespace eka2l1::dispatch {
             }
 
             tex->set_wrap_t(param);
-            ctx->cmd_builder_.set_texture_addressing_mode(tex->handle_value(), drivers::addressing_direction::t,
-                opt);
-
             break;
         }
 
