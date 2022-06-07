@@ -195,7 +195,6 @@ namespace eka2l1::dispatch {
                 }
 
                 if (gles_context_type & egl_version_enum) {
-                    LOG_TRACE(KERNEL, "{}", config_parser.buffer_size());
                     if ((total_color_bits_provided == -1) || (config_parser.buffer_size() >= total_color_bits_provided)) {
                         if (current_fill_index < config_array_size) {
                             configs[current_fill_index++] = config_parser;
