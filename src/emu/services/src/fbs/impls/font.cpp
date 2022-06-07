@@ -1034,9 +1034,6 @@ namespace eka2l1 {
 
         font_table_offset_and_size offset_and_size;
 
-        uint16_t *res = (uint16_t*)ctx->msg->own_thr->owning_process()->get_ptr_on_addr_space(0x70576166);
-        LOG_TRACE(SERVICE_FBS, "Result of instr 0x{:X}", *res);
-        
         // Search tag in existing map
         auto result = font->font_tables.find(tag.value());
         if (result != font->font_tables.end()) {
