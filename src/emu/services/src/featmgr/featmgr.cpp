@@ -160,8 +160,6 @@ namespace eka2l1 {
             }
         }
 
-        LOG_TRACE(SERVICE_FEATMGR, "Feature 0x{:X} result={}", feature_id, result);
-
         ctx.write_data_to_descriptor_argument(1, result);
         ctx.complete(epoc::error_none);
     }
