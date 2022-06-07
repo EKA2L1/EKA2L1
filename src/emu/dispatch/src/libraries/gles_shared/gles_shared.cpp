@@ -1627,6 +1627,14 @@ namespace eka2l1::dispatch {
             *params = static_cast<T>(ctx->binded_element_array_buffer_handle_);
             break;
 
+        case GL_NUM_COMPRESSED_TEXTURE_FORMATS_EMU:
+            *params = GLES_EMU_COMPRESSED_TEX_FORMAT_COUNT;
+            break;
+
+        case GL_COMPRESSED_TEXTURE_FORMATS_EMU:
+            std::memcpy(params, GLES_EMU_COMPRESSED_TEX_FORMATS, sizeof(GLES_EMU_COMPRESSED_TEX_FORMATS));
+            break;
+
         default:
             return false;
         }

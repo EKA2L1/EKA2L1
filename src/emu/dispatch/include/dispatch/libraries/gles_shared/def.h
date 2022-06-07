@@ -39,6 +39,26 @@ namespace eka2l1 {
 namespace eka2l1::dispatch {
     #define FIXED_32_TO_FLOAT(x) (float)(x) / 65536.0f
 
+    static const std::uint32_t GLES_EMU_COMPRESSED_TEX_FORMATS[] = {
+        GL_COMPRESSED_RGB_PVRTC_2BPPV1_EMU,
+        GL_COMPRESSED_RGB_PVRTC_4BPPV1_EMU,
+        GL_COMPRESSED_RGBA_PVRTC_2BPPV1_EMU,
+        GL_COMPRESSED_RGBA_PVRTC_4BPPV1_EMU,
+        GL_ETC1_RGB8_OES_EMU,
+        GL_PALETTE4_RGB8_OES_EMU,
+        GL_PALETTE4_RGBA8_OES_EMU,
+        GL_PALETTE4_R5_G6_B5_OES_EMU,
+        GL_PALETTE4_RGBA4_OES_EMU,
+        GL_PALETTE4_RGB5_A1_OES_EMU,
+        GL_PALETTE8_RGB8_OES_EMU,
+        GL_PALETTE8_RGBA8_OES_EMU,
+        GL_PALETTE8_R5_G6_B5_OES_EMU,
+        GL_PALETTE8_RGBA4_OES_EMU,
+        GL_PALETTE8_RGB5_A1_OES_EMU
+    };
+
+    static const std::uint32_t GLES_EMU_COMPRESSED_TEX_FORMAT_COUNT = sizeof(GLES_EMU_COMPRESSED_TEX_FORMATS) / sizeof(std::uint32_t);
+
     enum gles_object_type {
         GLES_OBJECT_UNDEFINED,
         GLES_OBJECT_TEXTURE,
