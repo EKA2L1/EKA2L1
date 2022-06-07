@@ -1,3 +1,29 @@
+0.0.9
+
+**NOTE:** Users of both Android and Desktop version, please rescan devices if you installed a S^3/Belle device before this update.
+  * For Android, go to **Devices** menu and clicked on the newly **Rescan devices** button.
+  * For Desktop, go to File/Preferences/System and clicked on the **Rescan devices** button.
+
+- Major
+  * Add basic S^3, Belle support
+  * Add support for GLES2 acceleration with supported upscaling
+     + Supported games include most Gameloft games: Real Golf 2011, Eternal Legacy, Asphalt 6: Adrenaline, The Adventures of Tintin, ...
+     + Guranteed supported extensions: GL_IMG_texture_compression_pvrtc, OES_compressed_ETC1_RGB8_texture, GL_OES_compressed_paletted_texture, GL_IMG_texture_format_BGRA8888
+     + New EGL extension: EGL_KHR_major_version. Allow specify GLES version when creating GLES context
+  * Add initial support for internet and sockets (unstable)
+     + TCP and UDP sockets are supported, and routed to the host's internet.
+     + This will enable app like Opera Mini to be able to browse internet with some frequent crashes
+     + This allow some games to launch: Transformer 3, Free Billy (most games by XIMAD)
+  * Add script hack to patch out Warhammer 40K slowness
+
+- Detail
+  * Fix ReadFileSection returned error code on reading directory. Fix stat calls on S^3's libc.
+  * Fix data export address in export table being incorrect. Fix Qt apps launching. Still not work fully.
+  * Implement GetFontTable to get table data of a TypeFace font. Needed by Qt apps. Still crashes.
+
+- Android
+  * Add rescan devices button in **Devices** menu. Use this button to scan missing device and add it to device list, or correct info about a device such as its OS version.
+
 0.0.8
 
 - Shared
