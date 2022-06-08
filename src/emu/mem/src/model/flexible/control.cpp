@@ -36,6 +36,8 @@ namespace eka2l1::mem::flexible {
     }
 
     control_flexible::~control_flexible() {
+        kern_addr_space_.reset();
+        chunk_mngr_.reset();
     }
 
     mmu_base *control_flexible::get_or_create_mmu(arm::core *cc) {
