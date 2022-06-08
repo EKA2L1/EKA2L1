@@ -43,6 +43,13 @@ namespace eka2l1 {
         uint32_t high_uid;
     };
 
+    struct feature_entry {
+        std::uint32_t feature_id_;
+        std::uint32_t flags_;
+        std::uint32_t data_;
+        std::uint32_t reserved_;
+    };
+
     class featmgr_server : public service::server {
         std::vector<epoc::uid> enable_features;
         std::vector<featmgr_config_range> enable_feature_ranges;

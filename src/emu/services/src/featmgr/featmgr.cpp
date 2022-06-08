@@ -60,7 +60,6 @@ namespace eka2l1 {
         enable_features.push_back(feature_id_pen);
         enable_features.push_back(feature_id_vibra);
         enable_features.push_back(feature_id_pen_calibration);
-        enable_features.push_back(feature_id_tactile_feedback);
 
         // 2. Are we welcoming SVG? Check for OpenVG, cause it should be there if this feature is available
         if (sys->get_io_system()->exist(u"z:\\sys\\bin\\libopenvg.dll")) {
@@ -151,9 +150,22 @@ namespace eka2l1 {
             config_loaded = true;
         }
 
+        epoc::uid feature_id = 0;
+
         // NOTE: Newer version of this server use TFeatureEntry struct. Care about this note when this server
         // mess things up.
-        const epoc::uid feature_id = *ctx.get_argument_value<epoc::uid>(0);
+        if (ctx.sys->get_symbian_version_use() >= epocver::epoc95) {
+            std::optional<feature_entry> entry = ctx.get_argument_data_from_descriptor<feature_entry>(0);
+            if (!entry.has_value()) {
+                ctx.complete(epoc::error_argument);
+                return;
+            }
+
+            feature_id = entry->feature_id_;
+        } else {
+            feature_id = *ctx.get_argument_value<epoc::uid>(0);
+        }
+
         int result = 0;
 
         // Search for the feature, first in feature list
