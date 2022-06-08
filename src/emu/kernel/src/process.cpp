@@ -455,17 +455,17 @@ namespace eka2l1::kernel {
 
         kern->destroy(dll_lock);
 
-        mm_impl_.reset();
-        bss_man_.reset();
+        if (dll_static_chunk) {
+            kern->destroy(dll_static_chunk);
+        }
 
         while (!codeseg_list.empty()) {
             kernel::codeseg::attached_info *info = E_LOFF(codeseg_list.first()->deque(), kernel::codeseg::attached_info, process_link);
             info->parent_seg->detach(this);
         }
 
-        if (dll_static_chunk) {
-            kern->destroy(dll_static_chunk);
-        }
+        mm_impl_.reset();
+        bss_man_.reset();
 
         decrease_access_count();
     }

@@ -36,8 +36,6 @@ namespace eka2l1 {
         }
 
         semaphore::~semaphore() {
-            if (owner)
-                owner->decrease_access_count();
         }
 
         void semaphore::signal(int32_t signal_count) {
