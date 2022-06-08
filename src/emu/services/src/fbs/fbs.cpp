@@ -367,7 +367,7 @@ namespace eka2l1 {
                 "FbsLargeBitmapAccess", kernel::access_type::global_access));
         } else {
             large_bitmap_access_mutex = kern->create<kernel::mutex>(kern->get_ntimer(),
-                "FbsLargeBitmapAccess", false, kernel::access_type::global_access);
+                nullptr, "FbsLargeBitmapAccess", false, kernel::access_type::global_access);
         }
 
         if (!large_bitmap_access_mutex) {

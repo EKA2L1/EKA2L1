@@ -67,6 +67,13 @@ namespace eka2l1 {
         , type(ipc_message_type_wild) {
     }
 
+    ipc_msg::~ipc_msg() {
+        if (ref_count != 0) {
+            ref_count = 1;
+            unref();
+        }
+    }
+
     void ipc_msg::ref() {
         if (ref_count == 0) {
             if (own_thr) {

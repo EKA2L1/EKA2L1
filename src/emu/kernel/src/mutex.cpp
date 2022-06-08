@@ -28,9 +28,9 @@
 
 namespace eka2l1 {
     namespace kernel {
-        mutex::mutex(kernel_system *kern, ntimer *timing, std::string name, bool init_locked,
+        mutex::mutex(kernel_system *kern, ntimer *timing, kernel::process *owner, std::string name, bool init_locked,
             kernel::access_type access)
-            : kernel_obj(kern, std::move(name), kern->crr_process(), access)
+            : kernel_obj(kern, std::move(name), owner, access)
             , timing(timing)
             , lock_count(0)
             , holding(nullptr)

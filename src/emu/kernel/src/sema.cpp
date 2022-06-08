@@ -27,13 +27,17 @@
 
 namespace eka2l1 {
     namespace kernel {
-        semaphore::semaphore(kernel_system *sys, std::string sema_name,
-            int32_t init_count,
-            kernel::access_type access)
-            : kernel_obj(sys, std::move(sema_name), sys->crr_process(), access)
+        semaphore::semaphore(kernel_system *sys, kernel::process *owner, std::string sema_name,
+            int32_t init_count, kernel::access_type access)
+            : kernel_obj(sys, std::move(sema_name), owner, access)
             , avail_count(init_count)
             , signaling(false) {
             obj_type = object_type::sema;
+        }
+
+        semaphore::~semaphore() {
+            if (owner)
+                owner->decrease_access_count();
         }
 
         void semaphore::signal(int32_t signal_count) {

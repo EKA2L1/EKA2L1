@@ -233,12 +233,12 @@ namespace eka2l1 {
 
         // Create semaphores and mutexes
         skin_chunk_sema_ = kern->create_and_add<kernel::semaphore>(kernel::owner_type::kernel,
-                                   "AknsSrvWaitSemaphore", 127, kernel::access_type::global_access)
+                                   nullptr, "AknsSrvWaitSemaphore", 127, kernel::access_type::global_access)
                                .second;
 
         // Render mutex. Use when render skins
         skin_chunk_render_mut_ = kern->create_and_add<kernel::mutex>(kernel::owner_type::kernel,
-                                         sys->get_ntimer(), "AknsSrvRenderSemaphore", false,
+                                         sys->get_ntimer(), nullptr, "AknsSrvRenderSemaphore", false,
                                          kernel::access_type::global_access)
                                      .second;
 

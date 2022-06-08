@@ -71,7 +71,7 @@ namespace eka2l1::kernel {
 
         // If this thread dies, processes booms
         primary_thread->set_process_permanent(true);
-        dll_lock = kern->create<kernel::mutex>(kern->get_ntimer(), "dllLockMutexProcess" + common::to_string(std::get<2>(uids)),
+        dll_lock = kern->create<kernel::mutex>(kern->get_ntimer(), this, "dllLockMutexProcess" + common::to_string(std::get<2>(uids)),
             false, kernel::access_type::local_access);
     }
 

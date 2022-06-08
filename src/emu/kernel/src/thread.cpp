@@ -288,7 +288,7 @@ namespace eka2l1 {
             name_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, static_cast<std::uint32_t>(common::align(name.length() * 2 + 4, mem->get_page_size())), common::align(name.length() * 2 + 4, mem->get_page_size()), prot_read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none);
 
-            request_sema = kern->create<kernel::semaphore>("requestSema" + common::to_string(eka2l1::random()), 0);
+            request_sema = kern->create<kernel::semaphore>(owning_process(), "requestSema" + common::to_string(eka2l1::random()), 0);
 
             sync_msg = kern->create_msg(owner_type::kernel);
             sync_msg->type = ipc_message_type_sync;

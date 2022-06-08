@@ -1489,7 +1489,7 @@ namespace eka2l1::epoc {
         desc8 *desname = sema_name_des.get(pr);
         kernel::owner_type owner_kern = (owner == epoc::owner_process) ? kernel::owner_type::process : kernel::owner_type::thread;
 
-        const kernel::handle sema = kern->create_and_add<kernel::semaphore>(owner_kern, !desname ? "" : desname->to_std_string(pr).c_str(),
+        const kernel::handle sema = kern->create_and_add<kernel::semaphore>(owner_kern, pr, !desname ? "" : desname->to_std_string(pr).c_str(),
                                             init_count, !desname ? kernel::access_type::local_access : kernel::access_type::global_access)
                                         .first;
 
@@ -1588,7 +1588,7 @@ namespace eka2l1::epoc {
         desc8 *desname = mutex_name_des.get(pr);
         kernel::owner_type owner_kern = (owner == epoc::owner_process) ? kernel::owner_type::process : kernel::owner_type::thread;
 
-        const kernel::handle mut = kern->create_and_add<kernel::mutex>(owner_kern, kern->get_ntimer(),
+        const kernel::handle mut = kern->create_and_add<kernel::mutex>(owner_kern, kern->get_ntimer(), pr,
                                            !desname ? "" : desname->to_std_string(pr), false,
                                            !desname ? kernel::access_type::local_access : kernel::access_type::global_access)
                                        .first;

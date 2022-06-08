@@ -55,7 +55,7 @@ namespace eka2l1 {
                 obj_type = kernel::object_type::mutex;
             }
 
-            mutex(kernel_system *kern, ntimer *timing, std::string name, bool init_locked,
+            mutex(kernel_system *kern, ntimer *timing, kernel::process *owner, std::string name, bool init_locked,
                 kernel::access_type access = kernel::access_type::local_access);
 
             int destroy() override;

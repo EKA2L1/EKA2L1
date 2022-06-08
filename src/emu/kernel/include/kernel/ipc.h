@@ -124,6 +124,7 @@ namespace eka2l1 {
         common::double_linked_queue_element delivered_msg_link;
 
         explicit ipc_msg(kernel::thread *own);
+        ~ipc_msg();
 
         void ref();
         void unref();

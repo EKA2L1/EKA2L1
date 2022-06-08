@@ -175,6 +175,7 @@ namespace eka2l1::service {
 
         (request_status.get(request_own_thread->owning_process()))->set(-3, kern->is_eka1()); // KErrCancel
         request_own_thread->signal_request();
+        request_own_thread->decrease_access_count();
 
         request_own_thread = nullptr;
         request_status = 0;
