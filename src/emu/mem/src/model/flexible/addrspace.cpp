@@ -30,6 +30,16 @@ namespace eka2l1::mem::flexible {
         dir_ = control->dir_mngr_->allocate(control);
     }
 
+    address_space::~address_space() {
+        if (dir_) {
+            control_->dir_mngr_->free_one(dir_->id());
+        }
+
+        for (std::size_t i = 0; i < used_tables_.size(); i++) {
+            control_->alloc_->free_page_table(used_tables_[i]->id());
+        }
+    }
+
     const asid address_space::id() const {
         return dir_->id();
     }

@@ -35,6 +35,8 @@ namespace eka2l1::mem::flexible {
 
             if (!dirs_[i]->occupied_) {
                 dirs_[i]->occupied_ = true;
+                dirs_[i]->reset();
+
                 return dirs_[i].get();
             }
         }

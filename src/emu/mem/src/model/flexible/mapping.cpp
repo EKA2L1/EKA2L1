@@ -112,7 +112,9 @@ namespace eka2l1::mem::flexible {
                 // Ask the MMU to create a new page table and assign it
                 tbl = control->create_new_page_table();
                 tbl->idx_ = ptoff;
+
                 owner_->dir_->set_page_table(ptoff, tbl);
+                owner_->used_tables_.push_back(tbl);
             }
 
             while (start_page_index < end_page_index) {

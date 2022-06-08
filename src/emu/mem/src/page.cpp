@@ -59,6 +59,10 @@ namespace eka2l1::mem {
         }
     }
 
+    void page_directory::reset() {
+        std::fill(page_tabs_.begin(), page_tabs_.end(), nullptr);
+    }
+
     void *page_directory::get_pointer(const vm_address addr) {
         page_table *pt = page_tabs_[addr >> page_table_index_shift_];
 

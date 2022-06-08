@@ -21,6 +21,7 @@
 #include <kernel/kernel_obj.h>
 
 #include <common/chunkyseri.h>
+#include <common/log.h>
 
 #include <cstdio>
 
@@ -65,6 +66,10 @@ namespace eka2l1 {
             }
 
             name_will_full += name();
+        }
+
+        void kernel_obj::increase_access_count() {
+            ++access_count;
         }
 
         int kernel_obj::decrease_access_count() {

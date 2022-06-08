@@ -59,6 +59,11 @@ namespace eka2l1 {
             }
 
             timing->remove_event(mutex_event_type);
+
+            kernel::process *own = reinterpret_cast<kernel::process*>(owner);
+            if (own)
+                own->decrease_access_count();
+
             return 0;
         }
 

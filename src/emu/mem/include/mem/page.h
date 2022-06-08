@@ -168,6 +168,7 @@ namespace eka2l1::mem {
         page_table *get_page_table(const vm_address addr);
 
         void set_page_table(const std::uint32_t off, page_table *tab);
+        void reset();
 
         const asid id() const {
             return id_;

@@ -35,6 +35,7 @@ namespace eka2l1::mem::flexible {
     struct address_space {
         page_directory *dir_;
         std::vector<mapping *> mappings_;
+        std::vector<page_table *> used_tables_;
 
         control_flexible *control_;
 
@@ -45,6 +46,7 @@ namespace eka2l1::mem::flexible {
 
     public:
         explicit address_space(control_flexible *ctrl);
+        ~address_space();
 
         /**
          * @brief   Get the ID of this address space.

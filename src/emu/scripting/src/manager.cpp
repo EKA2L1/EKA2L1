@@ -389,6 +389,10 @@ namespace eka2l1::manager {
     }
 
     bool scripts::write_back_breakpoint(kernel::process *pr, const vaddress target) {
+        if (pr->get_exit_type() != kernel::entity_exit_type::pending) {
+            return true;
+        }
+
         auto &sources = breakpoints[target & ~1].source_insts_;
         auto source_value = sources.find(pr->get_uid());
 
