@@ -141,10 +141,12 @@ namespace eka2l1 {
         int chunk::destroy() {
             kernel::process *own = get_own_process();
 
-            if (!mmc_impl_unq_)
-                own->get_mem_model()->delete_chunk(mmc_impl_);
-            else
+            if (!mmc_impl_unq_) {
+                if (own->get_mem_model())
+                    own->get_mem_model()->delete_chunk(mmc_impl_);
+            } else {
                 mmc_impl_unq_.reset();
+            }
 
             if (own)
                 own->decrease_access_count();

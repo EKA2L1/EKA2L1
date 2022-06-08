@@ -148,6 +148,15 @@ namespace eka2l1::mem::flexible {
         return true;
     }
 
+    flexible_mem_model_process::~flexible_mem_model_process() {
+        control_flexible *fl_control = reinterpret_cast<control_flexible *>(control_);
+
+        for (auto &attach: attachs_) {
+            attach.chunk_->mem_obj_->detach_mapping(attach.map_.get());
+            fl_control->chunk_mngr_->destroy(reinterpret_cast<flexible_mem_model_chunk *>(attach.chunk_));
+        }
+    }
+
     static bool should_do_cpu_manipulate(const std::uint32_t flags) {
         return (flags & MEM_MODEL_CHUNK_REGION_USER_LOCAL) || (flags & MEM_MODEL_CHUNK_REGION_USER_GLOBAL)
             || (flags & MEM_MODEL_CHUNK_REGION_DLL_STATIC_DATA) || (flags & MEM_MODEL_CHUNK_REGION_USER_CODE);

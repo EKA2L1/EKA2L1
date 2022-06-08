@@ -40,6 +40,7 @@ namespace eka2l1::mem::flexible {
 
     public:
         explicit flexible_mem_model_process(control_base *control);
+        ~flexible_mem_model_process() override;
 
         const asid address_space_id() const override;
         int create_chunk(mem_model_chunk *&chunk, const mem_model_chunk_creation_info &create_info) override;
