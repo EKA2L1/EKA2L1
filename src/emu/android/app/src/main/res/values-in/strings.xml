@@ -67,6 +67,7 @@
     <string name="emulated_screen_rotation_item_name">Perputaran</string>
     <string name="emulated_screen_refresh_rate_item_name">Laju refresh</string>
     <string name="pref_device_display_name">Nama ponsel yang ramah</string>
+    <string name="hide_system_apps">Hide system applications</string>
     <string name="action_context_delete">Hapus</string>
     <string name="action_context_rename">Ganti nama</string>
     <string name="action_context_shortcut">Buat pintasan</string>
