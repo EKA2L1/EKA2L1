@@ -152,6 +152,7 @@ signals:
     void theme_change_request(const QString &theme_name);
     void minimum_display_size_change();
     void window_title_setting_changed();
+    void hide_system_apps_changed();
 
 public:
     explicit settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::drivers::emu_controller *controller,

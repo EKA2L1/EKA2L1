@@ -151,6 +151,7 @@ private slots:
     void on_finished_text_input(const QString &text, const bool force_close);
     void on_input_dialog_open_request();
     void on_input_dialog_close_request();
+    void on_hide_system_apps_changed();
 
 signals:
     void progress_dialog_change(const std::size_t now, const std::size_t total);

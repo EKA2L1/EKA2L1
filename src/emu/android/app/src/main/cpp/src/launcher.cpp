@@ -62,15 +62,22 @@ namespace eka2l1::android {
         }
     }
 
+    static constexpr std::uint32_t WARE_APP_UID_START = 0x10300000;
+    static inline bool is_reg_entry_probably_system_app(const apa_app_registry &reg) {
+        return ((reg.land_drive == drive_z) && (reg.mandatory_info.uid < WARE_APP_UID_START));
+    }
+
     std::vector<std::string> launcher::get_apps() {
         std::vector<apa_app_registry> &registerations = alserv->get_registerations();
         std::vector<std::string> info;
         for (auto &reg : registerations) {
             if (!reg.caps.is_hidden) {
-                std::string name = common::ucs2_to_utf8(reg.mandatory_info.long_caption.to_std_string(nullptr));
-                std::string uid = std::to_string(reg.mandatory_info.uid);
-                info.push_back(uid);
-                info.push_back(name);
+                if (!conf || (conf && (!conf->hide_system_apps || (conf->hide_system_apps && !is_reg_entry_probably_system_app(reg))))) {
+                    std::string name = common::ucs2_to_utf8(reg.mandatory_info.long_caption.to_std_string(nullptr));
+                    std::string uid = std::to_string(reg.mandatory_info.uid);
+                    info.push_back(uid);
+                    info.push_back(name);
+                }
             }
         }
         return info;

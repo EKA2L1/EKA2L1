@@ -38,6 +38,11 @@
 
 static QSize ICON_GRID_SIZE = QSize(64, 64);
 static QSize ICON_GRID_SPACING_SIZE = QSize(20, 20);
+static constexpr std::uint32_t WARE_APP_UID_START = 0x10300000;
+
+static inline bool is_app_reg_system_app(const eka2l1::apa_app_registry *reg) {
+    return (reg->land_drive == drive_z) && (reg->mandatory_info.uid < WARE_APP_UID_START);
+}
 
 applist_search_bar::applist_search_bar(QWidget *parent)
     : QWidget(parent) {
@@ -70,14 +75,15 @@ applist_widget_item::applist_widget_item(const QIcon &icon, const QString &name,
     , registry_index_(registry_index) {
 }
 
-applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss, eka2l1::io_system *io, const bool ngage_mode)
+applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss, eka2l1::io_system *io, const bool hide_system_apps, const bool ngage_mode)
     : QWidget(parent)
     , search_bar_(nullptr)
     , list_widget_(nullptr)
     , layout_(nullptr)
     , lister_(lister)
     , fbss_(fbss)
-    , io_(io) {
+    , io_(io)
+    , hide_system_apps_(hide_system_apps) {
     search_bar_ = new applist_search_bar(this);
     list_widget_ = new QListWidget(this);
 
@@ -156,7 +162,9 @@ void applist_widget::reload_whole_list() {
     std::vector<eka2l1::apa_app_registry> &registries = lister_->get_registerations();
     for (std::size_t i = 0; i < registries.size(); i++) {
         if (!registries[i].caps.is_hidden) {
-            add_registeration_item(registries[i], static_cast<int>(i));
+            if (!hide_system_apps_ || (hide_system_apps_ && !is_app_reg_system_app(registries.data() + i))) {
+                add_registeration_item(registries[i], static_cast<int>(i));
+            }
         }
     }
 }
@@ -344,4 +352,11 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const
     newItem->setToolTip(tool_tip);
 
     list_widget_->addItem(newItem);
+}
+
+void applist_widget::set_hide_system_apps(const bool should_hide) {
+    if (should_hide != hide_system_apps_) {
+        hide_system_apps_ = should_hide;
+        reload_whole_list();
+    }
 }

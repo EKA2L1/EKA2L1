@@ -74,6 +74,7 @@ OPTION(hsb-bank-path, hsb_bank_path, "resources/defaultbank.hsb")
 OPTION(sf2-bank-path, sf2_bank_path, "resources/defaultbank.sf2")
 OPTION(enable-hw-gles1, enable_hw_gles1, true)
 OPTION(log-filter, log_filter, DEFAULT_LOG_FILTERING)
+OPTION(hide-system-apps, hide_system_apps, true)
 
 #ifdef OPTION
 #undef OPTION

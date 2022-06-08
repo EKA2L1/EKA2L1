@@ -4,4 +4,9 @@
         android:defaultValue="true"
         android:key="enable-nearest-neighbor-filter"
         android:title="@string/pref_general_utilities_nearest_neighbor_filtering_msg" />
+    <SwitchPreferenceCompat
+        android:id="@+id/switchPreferenceCompat"
+        android:defaultValue="true"
+        android:key="hide-system-apps"
+        android:title="@string/hide_system_apps" />
 </PreferenceScreen>

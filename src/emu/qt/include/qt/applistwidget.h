@@ -72,6 +72,8 @@ public:
     eka2l1::fbs_server *fbss_;
     eka2l1::io_system *io_;
 
+    bool hide_system_apps_;
+
     void add_registeration_item(eka2l1::apa_app_registry &reg, const int index);
     eka2l1::apa_app_registry *get_registry_from_widget_item(applist_widget_item *item);
 
@@ -87,11 +89,12 @@ signals:
 
 public:
     explicit applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss, eka2l1::io_system *io,
-        const bool ngage_mode = false);
+        const bool hide_system_apps = true, const bool ngage_mode = false);
     ~applist_widget();
 
     bool launch_from_widget_item(applist_widget_item *item);
     void reload_whole_list();
+    void set_hide_system_apps(const bool should_hide);
 };
 
 #endif // APPLISTWIDGET_H

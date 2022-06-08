@@ -263,6 +263,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     ui_->system_audio_midi_hsb_bank_edit->setText(QString::fromStdString(eka2l1::absolute_path(configuration.hsb_bank_path, current_dir)));
     ui_->system_audio_midi_sf2_bank_edit->setText(QString::fromStdString(eka2l1::absolute_path(configuration.sf2_bank_path, current_dir)));
     ui_->system_enable_hw_gles1_checkbox->setChecked(configuration.enable_hw_gles1);
+    ui_->app_config_hide_system_apps_checkbox->setChecked(configuration.hide_system_apps);
     ui_->log_filter_edit->setText(QString::fromStdString(configuration.log_filter));
 
     QSettings settings;
@@ -1099,6 +1100,7 @@ void settings_dialog::closeEvent(QCloseEvent *event) {
 
         if (QMessageBox::question(this, tr("Cancel closing"), reminder) == QMessageBox::Yes) {
             event->ignore();
+            return;
         } else {
             configuration_.imei = value;
             event->accept();
@@ -1107,6 +1109,9 @@ void settings_dialog::closeEvent(QCloseEvent *event) {
         configuration_.imei = value;
         event->accept();
     }
+
+    configuration_.hide_system_apps = ui_->app_config_hide_system_apps_checkbox->isChecked();
+    emit hide_system_apps_changed();
 }
 
 void settings_dialog::on_theme_changed(int value) {

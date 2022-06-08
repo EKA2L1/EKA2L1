@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>801</width>
+    <width>837</width>
     <height>849</height>
    </rect>
   </property>
@@ -48,6 +48,19 @@
           <string>Application</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_10">
+          <item row="0" column="0">
+           <widget class="QLabel" name="app_config_for_who_label">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>&lt;b&gt;Configuration for:&lt;/b&gt; None</string>
+            </property>
+           </widget>
+          </item>
           <item row="1" column="0">
            <widget class="QWidget" name="app_config_all_widget" native="true">
             <property name="sizePolicy">
@@ -260,16 +273,16 @@
             </layout>
            </widget>
           </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="app_config_for_who_label">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
+          <item row="2" column="0">
+           <widget class="QCheckBox" name="app_config_hide_system_apps_checkbox">
+            <property name="toolTip">
+             <string>Hide system applications across all devices</string>
             </property>
             <property name="text">
-             <string>&lt;b&gt;Configuration for:&lt;/b&gt; None</string>
+             <string>Hide system applications</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
