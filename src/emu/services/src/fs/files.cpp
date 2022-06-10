@@ -563,6 +563,7 @@ namespace eka2l1 {
         file *vfs_file = reinterpret_cast<file *>(node->vfs_node.get());
 
         // Reset its status, so seek back, this is just in case it got used again
+        vfs_file->flush();
         vfs_file->seek(0, file_seek_mode::beg);
 
         obj_table_.remove(*handle_res);
