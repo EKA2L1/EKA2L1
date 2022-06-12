@@ -26,6 +26,7 @@
 #include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/fileutils.h>
+#include <common/path.h>
 #include <common/flate.h>
 #include <common/log.h>
 #include <common/path.h>
@@ -187,6 +188,8 @@ namespace eka2l1::loader {
             return false;
         }
 
+        std::vector<std::u16string> more_sis;
+
         info.drives = 1 << (drive - drive_a);
         info.uid = res->header.uid1;
         info.package_name = res->comp_names[0];
@@ -249,11 +252,16 @@ namespace eka2l1::loader {
                 break;
             }
 
-            if (file->file_type != 0) {
+            if ((file->file_type != 0) && (file->file_type != 2)) {
                 continue;
             }
 
             std::u16string dest = file->dest;
+            if (file->file_type == 2) {
+                static constexpr char16_t *TEMP_SIS_FOLDER_PATH = u"E:\\system\\install\\temp\\";
+                dest = std::u16string(TEMP_SIS_FOLDER_PATH) + eka2l1::filename(file->name);
+                io->create_directories(TEMP_SIS_FOLDER_PATH);
+            }
 
             if (dest.find(u"!") != std::u16string::npos) {
                 dest[0] = drive_to_char16(drive);
@@ -354,8 +362,18 @@ namespace eka2l1::loader {
             if (!(res->header.op & 0x8))
                 inflateEnd(&stream);
 
+            std::optional<std::u16string> raw_path_dest = io->get_raw_path(dest);
+            if (raw_path_dest.has_value()) {
+                if (canceled) {
+                    common::remove(common::ucs2_to_utf8(raw_path_dest.value()));
+                } else {
+                    if (file->file_type == 2) {
+                        more_sis.push_back(raw_path_dest.value());
+                    }
+                }
+            }
+
             if (canceled) {
-                common::remove(common::ucs2_to_utf8(dest));
                 break;
             }
 
@@ -368,6 +386,14 @@ namespace eka2l1::loader {
             }
 
             return false;
+        }
+
+        for (const std::u16string &path_more_sis: more_sis) {
+            if (!install_sis_old(path_more_sis, io, drive, info, choose_lang_cb, resolver_cb, progress_cb, cancel_cb)) {
+                return false;
+            }
+
+            common::remove(common::ucs2_to_utf8(path_more_sis));
         }
 
         return true;
