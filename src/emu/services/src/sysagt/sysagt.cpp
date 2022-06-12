@@ -129,8 +129,7 @@ namespace eka2l1 {
             return;
         }
 
-        // Not check on type on purpose. TODO: This may be harmful.
-        ctx->write_data_to_descriptor_argument<std::int32_t>(1, 0);
+        ctx->write_data_to_descriptor_argument<std::int32_t>(1, prop->get_int());
         ctx->complete(epoc::error_none);
     }
 
