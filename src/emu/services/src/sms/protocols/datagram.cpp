@@ -45,7 +45,13 @@ namespace eka2l1::epoc::sms {
 
     void datagram_socket::ioctl(const std::uint32_t command, epoc::notify_info &complete_info, std::uint8_t *buffer,
         const std::size_t available_size, const std::size_t max_buffer_size, const std::uint32_t level) {
-        LOG_INFO(SERVICE_SMS, "Socket IOCTL stubbed with complete (opcode={})", command);
+        if (level == epoc::socket::SOCKET_IOCTL_LEVEL_BASE) {
+            // We have nothing to give you (yet or ever), go away!
+            if (command == epoc::socket::SOCKET_IOCTL_LEVEL_BASE_COMMAND_SELECT) {
+                return;
+            }
+        }
+
         complete_info.complete(epoc::error_none);
     }
     

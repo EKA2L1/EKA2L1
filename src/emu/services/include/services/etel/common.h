@@ -86,7 +86,8 @@ namespace eka2l1::epoc {
         etel_old_call_hang_up = 51,
         etel_old_call_set_fax_setting = 72,
         etel_old_get_tsy_version_number = 77,
-        etel_old_gsm_phone_get_phone_id = 1000
+        etel_old_gsm_phone_get_phone_id = 1000,
+        etel_old_gsm_adv_phone_get_subscriber_id = 0x877
     };
 
     enum etel_opcode {
@@ -108,7 +109,9 @@ namespace eka2l1::epoc {
         etel_line_notify_incoming_call = 71,
         etel_line_cancel_notify_incoming_call = 72,
         etel_phone_init = 75,
+        etel_mobile_phone_transition_get_identity_caps = 3015,
         etel_mobile_phone_transition_get_phone_id = 3016,
+        etel_mobile_phone_transition_get_subscriber_id = 3017,
         etel_mobile_line_get_mobile_line_status = 20023,
         etel_mobile_line_notify_status_change = 20024,
         etel_mobile_phone_get_identity_caps = 20043,
@@ -367,6 +370,7 @@ namespace eka2l1::epoc {
 
     // Check cellularsvr/telephonyserverplugins/common_tsy/commontsy/exportinc/serviceapi/ctsydomainpskeys.h
     static constexpr std::uint32_t ETEL_CALL_INFO_PROP_UID = 0x102029AC;
+    static constexpr std::uint32_t ETEL_ADV_SIMC_STATUS_PROP_UID = 0x100052E9;
 
     static constexpr std::uint32_t ETEL_MAX_BAR_LEVEL = 7;
     static constexpr std::uint32_t ETEL_MIN_BAR_LEVEL = 0;

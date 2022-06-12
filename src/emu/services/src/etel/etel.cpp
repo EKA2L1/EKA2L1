@@ -43,12 +43,14 @@ namespace eka2l1 {
         , battery_bars_prop_(nullptr)
         , charger_status_prop_(nullptr)
         , call_type_info_prop_(nullptr)
+        , sim_c_status_prop_(nullptr)
         , init2ed_(false) {
         init(sys->get_kernel_system());
     }
 
     void etel_server::init(kernel_system *kern) {
-        if (call_status_prop_ || network_bars_prop_ || battery_bars_prop_ || charger_status_prop_) {
+        if (call_status_prop_ || network_bars_prop_ || battery_bars_prop_ || charger_status_prop_ ||
+            sim_c_status_prop_) {
             return;
         }
 
@@ -60,6 +62,15 @@ namespace eka2l1 {
         call_status_prop_->second = epoc::ETEL_PHONE_CURRENT_CALL_UID;
 
         call_status_prop_->set_int(epoc::etel_phone_current_call_none);
+
+        // Make SIM C status property.
+        sim_c_status_prop_ = kern->create<service::property>();
+        sim_c_status_prop_->define(service::property_type::int_data, 4);
+
+        sim_c_status_prop_->first = eka2l1::SYSTEM_AGENT_PROPERTY_CATEGORY;
+        sim_c_status_prop_->second = epoc::ETEL_ADV_SIMC_STATUS_PROP_UID;
+
+        sim_c_status_prop_->set_int(7);
 
         // Make network bars property
         network_bars_prop_ = kern->create<service::property>();

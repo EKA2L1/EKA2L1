@@ -180,10 +180,17 @@ namespace eka2l1 {
     void etel_phone_subsession::get_subscriber_id(eka2l1::service::ipc_context *ctx) {
         config::state *conf_state = ctx->sys->get_config();
 
-        subscriber_id_info_v1 id_info;
-        id_info.the_id_.assign(nullptr, common::utf8_to_ucs2(conf_state->imei));
+        if (legacy_level_ <= ETEL_LEGACY_LEVEL_TRANSITION) {
+            epoc::buf_static<char16_t, 15> imei_buf;
+            imei_buf.assign(nullptr, common::utf8_to_ucs2(conf_state->imei));
 
-        ctx->write_data_to_descriptor_argument<subscriber_id_info_v1>(0, id_info);
+            ctx->write_data_to_descriptor_argument(0, imei_buf);
+        } else {
+            subscriber_id_info_v1 id_info;
+            id_info.the_id_.assign(nullptr, common::utf8_to_ucs2(conf_state->imei));
+
+            ctx->write_data_to_descriptor_argument<subscriber_id_info_v1>(0, id_info);
+        }
         ctx->complete(epoc::error_none);
     }
 
@@ -252,6 +259,10 @@ namespace eka2l1 {
                 get_phone_id(ctx);
                 break;
 
+            case epoc::etel_old_gsm_adv_phone_get_subscriber_id:
+                get_subscriber_id(ctx);
+                break;
+
             default:
                 LOG_ERROR(SERVICE_ETEL, "Unimplemented etel phone opcode {}", ctx->msg->function);
                 break;
@@ -276,6 +287,14 @@ namespace eka2l1 {
 
             case epoc::etel_mobile_phone_transition_get_phone_id:
                 get_phone_id(ctx);
+                break;
+
+            case epoc::etel_mobile_phone_transition_get_subscriber_id:
+                get_subscriber_id(ctx);
+                break;
+
+            case epoc::etel_mobile_phone_transition_get_identity_caps:
+                get_identity_caps(ctx);
                 break;
 
             default:

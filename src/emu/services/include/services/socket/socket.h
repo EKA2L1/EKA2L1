@@ -38,6 +38,15 @@ namespace eka2l1::epoc::socket {
         SOCKET_FLAG_DONT_WAIT_FULL = 1 << 29
     };
 
+    enum socket_ioctl_level {
+        SOCKET_IOCTL_LEVEL_BASE = 1,
+        SOCKET_IOCTL_LEVEL_SMS_PROV = 0x100
+    };
+
+    enum socket_ioctl_command_base {
+        SOCKET_IOCTL_LEVEL_BASE_COMMAND_SELECT = 1
+    };
+
     using receive_done_callback = std::function<void(const std::int64_t received)>;
 
     struct socket {
