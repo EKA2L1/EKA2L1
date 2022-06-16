@@ -386,7 +386,7 @@ namespace eka2l1 {
 
             if (actually_found) {
                 conf_->device = 0;
-                conf_->serialize();
+                conf_->serialize(false);
 
                 set_device(0);
             }
@@ -937,7 +937,7 @@ namespace eka2l1 {
 
         if (lang_undetermined || lang_not_found_in_device) {
             conf_->language = dvc->default_language_code;
-            conf_->serialize();
+            conf_->serialize(false);
         }
 
         io_->set_product_code(dvc->firmware_code);

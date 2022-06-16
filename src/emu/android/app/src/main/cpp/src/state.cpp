@@ -219,7 +219,7 @@ namespace eka2l1::android {
                 common::delete_folder(common::ucs2_to_utf8(*private_dir_e_persists));
 
                 conf.cenrep_reset = true;
-                conf.serialize();
+                conf.serialize(false);
             }
 
             // Uncomment after MTM reset changes for a while
@@ -228,7 +228,7 @@ namespace eka2l1::android {
                 common::delete_folder(common::ucs2_to_utf8(*private_mtm_c_path));
 
                 conf.mtm_reset = true;
-                conf.serialize();
+                conf.serialize(false);
             }
             
             if (!conf.mtm_reset_2) {
@@ -237,7 +237,7 @@ namespace eka2l1::android {
                 common::delete_folder(common::ucs2_to_utf8(*private_mtm_c_path));
 
                 conf.mtm_reset_2 = true;
-                conf.serialize();
+                conf.serialize(false);
             }
 
             // Copy additional DLLs
