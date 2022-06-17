@@ -258,7 +258,7 @@ namespace eka2l1::loader {
 
             std::u16string dest = file->dest;
             if (file->file_type == 2) {
-                static constexpr char16_t *TEMP_SIS_FOLDER_PATH = u"E:\\system\\install\\temp\\";
+                static const char16_t *TEMP_SIS_FOLDER_PATH = u"E:\\system\\install\\temp\\";
                 dest = std::u16string(TEMP_SIS_FOLDER_PATH) + eka2l1::filename(file->name);
                 io->create_directories(TEMP_SIS_FOLDER_PATH);
             }
