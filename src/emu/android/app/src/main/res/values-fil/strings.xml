@@ -67,6 +67,7 @@
     <string name="emulated_screen_rotation_item_name">Pag-ikot</string>
     <string name="emulated_screen_refresh_rate_item_name">Tulin ng pag-presko</string>
     <string name="pref_device_display_name">Friendly phone name</string>
+    <string name="hide_system_apps">Hide system applications</string>
     <string name="action_context_delete">Delete</string>
     <string name="action_context_rename">I-rename</string>
     <string name="action_context_shortcut">Create shortcut</string>

@@ -67,6 +67,7 @@
     <string name="emulated_screen_rotation_item_name">Rotación</string>
     <string name="emulated_screen_refresh_rate_item_name">Frecuencia de refresco</string>
     <string name="pref_device_display_name">Nombre amistoso del teléfono</string>
+    <string name="hide_system_apps">Ocultar aplicaciones del sistema</string>
     <string name="action_context_delete">Eliminar</string>
     <string name="action_context_rename">Renombrar</string>
     <string name="action_context_shortcut">Crear acceso directo</string>

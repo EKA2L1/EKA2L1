@@ -67,6 +67,7 @@
     <string name="emulated_screen_rotation_item_name">Паварот экрана</string>
     <string name="emulated_screen_refresh_rate_item_name">Частата абнаўлення</string>
     <string name="pref_device_display_name">Імя тэлефона</string>
+    <string name="hide_system_apps">Схаваць сістэмныя дастасаванні</string>
     <string name="action_context_delete">Выдаліць</string>
     <string name="action_context_rename">Перайменаваць</string>
     <string name="action_context_shortcut">Стварыць ярлык</string>

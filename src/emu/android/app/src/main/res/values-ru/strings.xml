@@ -67,6 +67,7 @@
     <string name="emulated_screen_rotation_item_name">Поворот экрана</string>
     <string name="emulated_screen_refresh_rate_item_name">Частота обновления</string>
     <string name="pref_device_display_name">Имя телефона</string>
+    <string name="hide_system_apps">Скрыть системные приложения</string>
     <string name="action_context_delete">Удалить</string>
     <string name="action_context_rename">Переименовать</string>
     <string name="action_context_shortcut">Создать ярлык</string>

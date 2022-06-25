@@ -67,6 +67,7 @@
     <string name="emulated_screen_rotation_item_name">旋转</string>
     <string name="emulated_screen_refresh_rate_item_name">刷新率</string>
     <string name="pref_device_display_name">友好的手机名称</string>
+    <string name="hide_system_apps">Hide system applications</string>
     <string name="action_context_delete">删除</string>
     <string name="action_context_rename">重命名</string>
     <string name="action_context_shortcut">创建快捷方式</string>

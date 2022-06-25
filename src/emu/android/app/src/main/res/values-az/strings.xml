@@ -67,6 +67,7 @@
     <string name="emulated_screen_rotation_item_name">Döndərmə</string>
     <string name="emulated_screen_refresh_rate_item_name">Təzələmə sürəti</string>
     <string name="pref_device_display_name">Dost telefon adı</string>
+    <string name="hide_system_apps">Hide system applications</string>
     <string name="action_context_delete">Sil</string>
     <string name="action_context_rename">Yenidən adlandır</string>
     <string name="action_context_shortcut">Yarlıq Yarat</string>
