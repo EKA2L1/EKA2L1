@@ -460,6 +460,7 @@ namespace eka2l1::epoc {
                 drawer->sleep(static_cast<std::uint32_t>(wait_time));
             }
 
+            content_changed(false);
             return wait_time;
         }
 
