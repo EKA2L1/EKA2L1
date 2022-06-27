@@ -26,6 +26,7 @@
 #include <kernel/kernel.h>
 #include <services/window/common.h>
 #include <services/window/window.h>
+#include <services/window/classes/wingroup.h>
 #include <system/epoc.h>
 
 #include <fstream>
@@ -279,6 +280,17 @@ namespace eka2l1::dispatch {
 
                 drivers::command_list retrieved = builder.retrieve_command_list();
                 driver->submit_command_list(retrieved);
+
+                if (((scr->flags_ & epoc::screen::FLAG_SCREEN_UPSCALE_FACTOR_LOCK) == 0) && scr->sync_screen_buffer) {    
+                    // The app/game updates normally, try to avoid upscaling it
+                    // Sometimes UI are mixed in, and these syncs need to sync UI's data too!
+                    // Automatically flag and save this settings
+                    if (scr->focus) {
+                        scr->focus->saved_setting.screen_upscale_method = 1;
+                        scr->restore_from_config(driver, scr->focus->saved_setting);
+                        scr->try_change_display_rescale(driver, scr->display_scale_factor);
+                    }
+                }
 
                 scr->fire_screen_redraw_callbacks(true);
             }
