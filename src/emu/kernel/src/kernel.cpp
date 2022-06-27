@@ -483,6 +483,20 @@ namespace eka2l1 {
             if (global_data_chunk_) {
                 kernel_global_data *data = reinterpret_cast<kernel_global_data *>(global_data_chunk_->host_base());
                 data->reset();
+
+                if (is_eka1()) {
+                    // Fill default table info for EKA1
+                    data->char_set_.collation_data_set_ = global_data_chunk_->base(nullptr).ptr_address() + sizeof(kernel_global_data);
+                    kernel::collation_data_set *colset = reinterpret_cast<kernel::collation_data_set*>(reinterpret_cast<std::uint8_t*>(global_data_chunk_->host_base()) + sizeof(kernel_global_data));
+                    colset->collation_datas_ = data->char_set_.collation_data_set_ + sizeof(kernel::collation_data_set);
+                    colset->count_ = 1;
+
+                    kernel::collation_data *coldata = reinterpret_cast<kernel::collation_data*>(reinterpret_cast<std::uint8_t*>(global_data_chunk_->host_base()) + sizeof(kernel_global_data) + sizeof(kernel::collation_data_set));
+                    coldata->id_ = 0;
+                    coldata->main_table_ = 0;
+                    coldata->override_table_ = 0;
+                    coldata->flags_ = 0;
+                }
             }
         }
 

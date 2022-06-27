@@ -185,7 +185,12 @@ namespace eka2l1 {
         socket_old_hr_open = 0x24,
         socket_old_hr_get_host_name = 0x28,
         socket_old_hr_set_host_name = 0x29,
-        socket_old_hr_close = 0x2B
+        socket_old_hr_close = 0x2B,
+        socket_old_cn_start = 0x44,
+        socket_old_cn_stop = 0x45,
+        socket_old_cn_progress_notification = 0x47,
+        socket_old_cn_get_int_setting = 0x4C,
+        socket_old_cn_get_des_setting = 0x4F,
     };
 
     struct protocol_description {

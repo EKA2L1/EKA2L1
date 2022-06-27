@@ -115,6 +115,18 @@ namespace eka2l1::kernel {
         address trap_handler_; ///< Pointer to trap handler.
     };
 
+    struct collation_data {
+        std::uint32_t id_ = 0;
+        address main_table_ = 0;
+        address override_table_ = 0;
+        std::uint32_t flags_ = 0;
+    };
+
+    struct collation_data_set {
+        address collation_datas_;
+        std::int32_t count_ = 1;
+    };
+
     struct char_set {
         address char_data_set_;
         address collation_data_set_;
