@@ -39,6 +39,7 @@ namespace eka2l1 {
         class socket_connection_proxy : public socket_subsession {
         private:
             connection *conn_;
+            bool progress_reported_;
 
         public:
             explicit socket_connection_proxy(socket_client_session *parent, connection *conn);
@@ -48,6 +49,8 @@ namespace eka2l1 {
             }
 
             void dispatch(service::ipc_context *ctx) override;
+            void progress_notify(service::ipc_context *ctx);
+
             socket_subsession_type type() const override {
                 return socket_subsession_type_connection;
             }
@@ -127,6 +130,11 @@ namespace eka2l1 {
         socket_so_open_with_connection = 0x3D,
         socket_hr_open_with_connection = 0x3E,
         socket_cn_open_with_cn_type = 0x3F,
+        socket_cn_start = 0x44,
+        socket_cn_stop = 0x45,
+        socket_cn_progress_notification = 0x47,
+        socket_cn_get_int_setting = 0x4C,
+        socket_cn_get_des_setting = 0x4F,
         socket_cn_get_long_des_setting = 0x51,
         socket_so_open_with_subconnection = 0x71,
         socket_ss_request_optimal_dealer = 0x3EE,
@@ -185,12 +193,7 @@ namespace eka2l1 {
         socket_old_hr_open = 0x24,
         socket_old_hr_get_host_name = 0x28,
         socket_old_hr_set_host_name = 0x29,
-        socket_old_hr_close = 0x2B,
-        socket_old_cn_start = 0x44,
-        socket_old_cn_stop = 0x45,
-        socket_old_cn_progress_notification = 0x47,
-        socket_old_cn_get_int_setting = 0x4C,
-        socket_old_cn_get_des_setting = 0x4F,
+        socket_old_hr_close = 0x2B
     };
 
     struct protocol_description {

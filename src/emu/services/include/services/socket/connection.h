@@ -39,6 +39,11 @@ namespace eka2l1::epoc::socket {
         std::uint32_t reserved_;
     };
 
+    enum conn_progress_generic_stage {
+        conn_progress_connection_opened = 3500,
+        conn_progress_connection_closed = 4500
+    };
+
     struct conn_progress {
         std::int32_t stage_;
         std::int32_t error_;

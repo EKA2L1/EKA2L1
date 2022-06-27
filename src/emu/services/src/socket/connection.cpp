@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <services/socket/common.h>
 #include <services/socket/connection.h>
 #include <services/socket/server.h>
 #include <services/socket/socket.h>
@@ -42,12 +43,31 @@ namespace eka2l1::epoc::socket {
 
     socket_connection_proxy::socket_connection_proxy(socket_client_session *parent, connection *conn)
         : socket_subsession(parent)
-        , conn_(conn) {
+        , conn_(conn)
+        , progress_reported_(false) {
+    }
+
+    void socket_connection_proxy::progress_notify(service::ipc_context *ctx) {
+        if (!progress_reported_) {
+            epoc::socket::conn_progress progress;
+            progress.error_ = 0;
+            progress.stage_ = epoc::socket::conn_progress_connection_opened;
+
+            ctx->write_data_to_descriptor_argument<epoc::socket::conn_progress>(0, progress);
+            ctx->complete(epoc::error_none);
+
+            progress_reported_ = true;
+
+            LOG_TRACE(SERVICE_ESOCK, "Connection progress notify stubbed to opened!");
+        }
+
+        // For now, since it's stubbed, nothing else will got reported :D
     }
 
     void socket_connection_proxy::dispatch(service::ipc_context *ctx) {
         if (parent_->is_oldarch()) {
             switch (ctx->msg->function) {
+            
             default:
                 LOG_ERROR(SERVICE_ESOCK, "Unimplemented socket connection opcode: {}", ctx->msg->function);
                 ctx->complete(epoc::error_none);
@@ -68,6 +88,10 @@ namespace eka2l1::epoc::socket {
                 case socket_cm_api_ext_interface_send_receive:
                     // Async, but we should complete it in sometimes
                     // Complete with not right result will create stuck or crash sometimes
+                    break;
+
+                case socket_cn_progress_notification:
+                    progress_notify(ctx);
                     break;
 
                 default:
