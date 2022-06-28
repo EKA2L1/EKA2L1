@@ -189,6 +189,7 @@ namespace eka2l1 {
         socket_old_so_create = 0x06,
         socket_old_so_set_opt = 0x13,
         socket_old_so_get_opt = 0x14,
+        socket_old_so_ioctl = 0x15,
         socket_old_so_close = 0x19,
         socket_old_hr_open = 0x24,
         socket_old_hr_get_host_name = 0x28,

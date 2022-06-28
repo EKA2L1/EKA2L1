@@ -27,6 +27,7 @@
 #include <services/audio/keysound/keysound.h>
 #include <services/audio/mmf/audio.h>
 #include <services/audio/mmf/dev.h>
+#include <services/bluetooth/bt.h>
 #include <services/bluetooth/btman.h>
 #include <services/centralrepo/centralrepo.h>
 #include <services/comm/comm.h>
@@ -230,6 +231,7 @@ namespace eka2l1 {
             CREATE_SERVER(sys, socket_server);
 
             CREATE_SERVER(sys, comm_server);
+            CREATE_SERVER(sys, bt_server);
             CREATE_SERVER(sys, btman_server);
             CREATE_SERVER(sys, accessory_server);
 

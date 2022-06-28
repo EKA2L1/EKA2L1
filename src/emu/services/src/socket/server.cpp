@@ -252,8 +252,10 @@ namespace eka2l1 {
     }
 
     static void fill_protocol_description(epoc::socket::protocol *pr, protocol_description &des) {
-        //des.addr_fam_ = pr->family_id();
-       // des.protocol_ = pr->id();
+        // NOTE: On emulator some protocols are merged for feasable implementation
+        // TODO: Make them separable for this fill
+        des.addr_fam_ = pr->family_ids()[0];
+        des.protocol_ = pr->supported_ids()[0];
         des.ver_ = pr->ver();
         des.bord_ = pr->get_byte_order();
         //des.sock_type_ = pr->sock_type();

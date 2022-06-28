@@ -23,6 +23,7 @@ add_library(epocservs
         include/services/bluetooth/protocols/btlink/btlink.h
         include/services/bluetooth/protocols/common.h
         include/services/bluetooth/protocols/overall.h
+        include/services/bluetooth/bt.h
         include/services/bluetooth/btman.h
         include/services/bluetooth/btmidman.h
         include/services/centralrepo/centralrepo.h
@@ -151,6 +152,7 @@ add_library(epocservs
         src/bluetooth/protocols/btlink/resolver.cpp
         src/bluetooth/protocols/l2cap/socket.cpp
         src/bluetooth/protocols/overall.cpp
+        src/bluetooth/bt.cpp
         src/bluetooth/btman.cpp
         src/bluetooth/btmidman.cpp
         src/centralrepo/centralrepo.cpp
