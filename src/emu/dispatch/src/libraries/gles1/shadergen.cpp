@@ -332,7 +332,7 @@ namespace eka2l1::dispatch {
 
         if (is_es) {
             input_decl += "#version 300 es\n"
-                          "precision highp float;\n";
+                          "precision mediump float;\n";
         } else {
             input_decl += "#version 140\n";
         }
