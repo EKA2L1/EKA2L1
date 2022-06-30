@@ -70,6 +70,7 @@ private:
 
     TCoeInputCapabilities iInputCapabilities;
     TBool iDialogPending;
+    TBool iInRestart;
     TBool iHasFep;
 
     CHostDialogIme iImeDialog;

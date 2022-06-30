@@ -97,18 +97,21 @@ void CHostBridgedImeFEP::OpenDialogInputL(const TBool aTranstractRestart) {
         editor->GetEditorContentForFep(initialTextPtr, 0, editor->DocumentLengthForFep());
     }
 
-    TCursorSelection selection(0, editor->DocumentLengthForFep());
+    if (!iInRestart) {
+        TCursorSelection selection(0, editor->DocumentLengthForFep());
+        editor->SetCursorSelectionForFepL(selection);
+    }
 
-    editor->SetCursorSelectionForFepL(selection);
     editor->StartFepInlineEditL(initialTextPtr, initialTextPtr.Length(), ETrue, NULL, *this, *this);
-    //LogOut(KAvkonFepCat, _L("Maximum length of document is %d"), editor->DocumentMaximumLengthForFep());
-
+    
     // Start the request
     if (!aTranstractRestart) {
         if (iImeDialog.Open(&initialTextPtr, editor->DocumentMaximumLengthForFep()) != KErrNone) {
             LogOut(KAvkonFepCat, _L("Text view is already owned (this should already been canceled in losing foreground)!"));
             User::Leave(KErrInUse);
         }
+    } else {
+        iInRestart = EFalse;
     }
     
     if (initialText) {
@@ -288,7 +291,11 @@ void CHostBridgedImeFEP::CancelTransaction() {
     MCoeFepAwareTextEditor *editor = iInputCapabilities.FepAwareTextEditor();
     if (editor && iDialogPending) {
         editor->CancelFepInlineEdit();
-        OpenDialogInputL(ETrue);
+
+        if (!iInRestart) {
+            iInRestart = ETrue;
+            OpenDialogInputL(ETrue);
+        }
     }
 }
 
