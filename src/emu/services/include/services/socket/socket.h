@@ -25,6 +25,10 @@
 #include <cstdint>
 #include <functional>
 
+#define MAKE_SOCKET_GETOPT_ERROR(error) 0xFFFFFF00ULL - error
+#define IS_SOCKET_GETOPT_ERROR(error) error > 0xFFFFFF00ULL
+#define GET_SOCKET_GETOPT_ERROR(error) -(error - 0xFFFFFF00ULL)
+
 namespace eka2l1::epoc::socket {
     struct saddress;
 
@@ -109,6 +113,26 @@ namespace eka2l1::epoc::socket {
         virtual void connect(const saddress &addr, epoc::notify_info &info);
 
         /**
+         * @brief Get the local address of a bounded socket.
+         * 
+         * @param result            The local address on success.
+         * @param result_len        The actual length of the local address struct
+         * 
+         * @return std::int32_t     KErrNone on success.
+         */
+        virtual std::int32_t local_name(saddress &result, std::uint32_t &result_len);
+        
+        /**
+         * @brief Get the remote address of a bounded socket.
+         * 
+         * @param result            The remote address on success.
+         * @param result_len        The actual length of the remote address struct
+         * 
+         * @return std::int32_t     KErrNone on success.
+         */
+        virtual std::int32_t remote_name(saddress &result, std::uint32_t &result_len);
+
+        /**
          * @brief Send data to remote host, on a non-connected or connected socket.
          * 
          * If a socket is not connected, sockaddr must not be NULL and points to a valid buffer containg
@@ -146,5 +170,11 @@ namespace eka2l1::epoc::socket {
         virtual void cancel_send();
 
         virtual void cancel_connect();
+
+        void cancel_all() {
+            cancel_connect();
+            cancel_receive();
+            cancel_send();
+        }
     };
 }

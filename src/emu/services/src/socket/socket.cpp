@@ -58,7 +58,17 @@ namespace eka2l1::epoc::socket {
 
     void socket::receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const saddress *addr,
         std::uint32_t flags, epoc::notify_info &complete_info, receive_done_callback cb) {
-        LOG_ERROR(SERVICE_ESOCK, "Receiving data from socket unimplemented!");        
+        LOG_ERROR(SERVICE_ESOCK, "Receiving data from socket unimplemented!");
+    }
+
+    std::int32_t socket::local_name(saddress &result, std::uint32_t &result_len) {
+        LOG_ERROR(SERVICE_ESOCK, "Get socket's local name unimplemented!");
+        return epoc::error_not_supported;
+    }
+    
+    std::int32_t socket::remote_name(saddress &result, std::uint32_t &result_len) {
+        LOG_ERROR(SERVICE_ESOCK, "Get socket's remote name unimplemented!");
+        return epoc::error_not_supported;
     }
 
     void socket::cancel_receive() {
@@ -283,7 +293,7 @@ namespace eka2l1::epoc::socket {
         epoc::des8 *packet_des = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[2]).get(requester);
         
         std::uint32_t *size_return = nullptr;
-        if (has_return_length) {
+        if (has_return_length && !one_or_more) {
             size_return = reinterpret_cast<std::uint32_t*>(ctx->get_descriptor_argument_ptr(0));
             if (!size_return) {
                 ctx->complete(epoc::error_argument);
@@ -295,6 +305,12 @@ namespace eka2l1::epoc::socket {
             flags = *size_return;
         } else {
             flags = ctx->get_argument_value<std::uint32_t>(0);
+
+            // On S^3 and probably older version the layout is still the same like this.
+            // First is flags, second is length pointer and third is buffer
+            if (one_or_more) {
+                size_return = reinterpret_cast<std::uint32_t*>(ctx->get_descriptor_argument_ptr(1));
+            }
         }
 
         if (!flags.has_value()) {
@@ -341,6 +357,36 @@ namespace eka2l1::epoc::socket {
         epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
         sock_->ioctl(command.value(), info, buffer, buffer_size, max_buffer_size, level.value());
     }
+
+    void socket_socket::local_name(service::ipc_context *ctx) {
+        epoc::socket::saddress addr;
+        std::uint32_t addr_real_size = 0;
+
+        const std::int32_t res = sock_->local_name(addr, addr_real_size);
+        if (res != epoc::error_none) {
+            ctx->complete(res);
+            return;
+        }
+
+        ctx->write_data_to_descriptor_argument<epoc::socket::saddress>(0, addr);
+        ctx->set_descriptor_argument_length(0, addr_real_size);
+        ctx->complete(epoc::error_none);
+    }
+    
+    void socket_socket::remote_name(service::ipc_context *ctx) {
+        epoc::socket::saddress addr;
+        std::uint32_t addr_real_size = 0;
+
+        const std::int32_t res = sock_->remote_name(addr, addr_real_size);
+        if (res != epoc::error_none) {
+            ctx->complete(res);
+            return;
+        }
+
+        ctx->write_data_to_descriptor_argument<epoc::socket::saddress>(0, addr);
+        ctx->set_descriptor_argument_length(0, addr_real_size);
+        ctx->complete(epoc::error_none);
+    }
     
     void socket_socket::cancel_send(service::ipc_context *ctx) {
         sock_->cancel_send();
@@ -349,6 +395,11 @@ namespace eka2l1::epoc::socket {
 
     void socket_socket::cancel_recv(service::ipc_context *ctx) {
         sock_->cancel_receive();
+        ctx->complete(epoc::error_none);
+    }
+
+    void socket_socket::cancel_all(service::ipc_context *ctx) {
+        sock_->cancel_all();
         ctx->complete(epoc::error_none);
     }
 
@@ -438,6 +489,18 @@ namespace eka2l1::epoc::socket {
 
                 case socket_reform_so_set_opt:
                     set_option(ctx);
+                    return;
+
+                case socket_reform_so_local_name:
+                    local_name(ctx);
+                    return;
+
+                case socket_reform_so_remote_name:
+                    remote_name(ctx);
+                    return;
+
+                case socket_reform_so_cancel_all:
+                    cancel_all(ctx);
                     return;
 
                 default:

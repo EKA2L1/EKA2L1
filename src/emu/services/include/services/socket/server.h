@@ -93,6 +93,9 @@ namespace eka2l1 {
             void recv(service::ipc_context *ctx, const bool has_return_length, const bool one_or_more, const bool has_addr);
             void cancel_send(service::ipc_context *ctx);
             void cancel_recv(service::ipc_context *ctx);
+            void cancel_all(service::ipc_context *ctx);
+            void local_name(service::ipc_context *ctx);
+            void remote_name(service::ipc_context *ctx);
 
         public:
             explicit socket_socket(socket_client_session *parent, std::unique_ptr<socket> &sock);
@@ -171,9 +174,11 @@ namespace eka2l1 {
         socket_reform_cn_get_long_des_setting = 0x51,
         socket_reform_pr_find = 0x82,
         socket_reform_so_local_name = 0x86,
+        socket_reform_so_remote_name = 0x87,
         socket_reform_so_cancel_recv = 0x8A,
         socket_reform_so_cancel_send = 0x8B,
         socket_reform_so_cancel_connect = 0x8C,
+        socket_reform_so_cancel_all = 0x8E,
         socket_reform_so_close = 0x88,
         socket_reform_so_cancel_ioctl = 0x89,
         socket_reform_hr_cancel = 0x91,
