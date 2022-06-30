@@ -663,8 +663,8 @@ namespace eka2l1::common::armgen {
         void SMLAL(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
         void SMLALS(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
 
-        void SMULxy(arm_reg dest, arm_reg rn, arm_reg rm, bool m, bool n);
-        void SMLAxy(arm_reg dest, arm_reg rn, arm_reg rm, arm_reg ra, bool m, bool n);
+        void SMULxy(arm_reg dest, arm_reg rn, arm_reg rm, bool n, bool m);
+        void SMLAxy(arm_reg dest, arm_reg rn, arm_reg rm, arm_reg ra, bool n, bool m);
         void SMULWy(arm_reg dest, arm_reg rn, arm_reg rm, bool top);
         void SMLAWy(arm_reg dest, arm_reg rn, arm_reg rm, arm_reg ra, bool top);
 

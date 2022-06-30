@@ -981,12 +981,12 @@ namespace eka2l1::common::armgen {
         write_4op_multiply(0xF, destLo, destHi, rn, rm);
     }
 
-    void armx_emitter::SMULxy(arm_reg dest, arm_reg rn, arm_reg rm, bool m, bool n) {
-        write32(condition | (0x16 << 20) | (dest << 16) | (rm << 8) | (1 << 7) | (n << 6) | (m << 5) | rn);
+    void armx_emitter::SMULxy(arm_reg dest, arm_reg rn, arm_reg rm, bool n, bool m) {
+        write32(condition | (0x16 << 20) | (dest << 16) | (rm << 8) | (1 << 7) | (m << 6) | (n << 5) | rn);
     }
 
-    void armx_emitter::SMLAxy(arm_reg dest, arm_reg rn, arm_reg rm, arm_reg ra, bool m, bool n) {
-        write32(condition | (0x10 << 20) | (dest << 16) | (ra << 12) | (rm << 8) | (1 << 7) | (n << 6) | (m << 5) | rn);
+    void armx_emitter::SMLAxy(arm_reg dest, arm_reg rn, arm_reg rm, arm_reg ra, bool n, bool m) {
+        write32(condition | (0x10 << 20) | (dest << 16) | (ra << 12) | (rm << 8) | (1 << 7) | (m << 6) | (n << 5) | rn);
     }
 
     void armx_emitter::SMULWy(arm_reg dest, arm_reg rn, arm_reg rm, bool top) {
