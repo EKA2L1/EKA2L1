@@ -26,24 +26,31 @@
 #include <common/container.h>
 #include <common/sync.h>
 
+#include <utils/des.h>
+
 #include <memory>
 #include <string>
 #include <thread>
 #include <vector>
 
 struct addrinfo;
+struct sockaddr;
 
 namespace eka2l1::epoc::internet {
     class midman;
     class inet_bridged_protocol;
 
     struct sinet_address: public socket::saddress {
+        static constexpr std::uint32_t DATA_SIZE = 12;
+
         std::uint32_t *addr_long() {
             return reinterpret_cast<std::uint32_t*>(user_data_);
         }
     };
 
     struct sinet6_address: public socket::saddress {
+        static constexpr std::uint32_t DATA_SIZE = 32;
+
         std::uint32_t *address_32x4() {
             return reinterpret_cast<std::uint32_t*>(user_data_);
         }
@@ -68,6 +75,46 @@ namespace eka2l1::epoc::internet {
             return user_data_[5];
         }
     };
+
+    enum inet_interface_status : std::uint32_t {
+        inet_interface_status_pending = 0,
+        inet_interface_status_up = 1,
+        inet_interface_status_busy = 2,
+        inet_interface_status_down = 3
+    };
+
+    struct inet_interface_info {
+        epoc::name tag_;
+        epoc::name name_;
+        inet_interface_status status_;
+        std::int32_t mtu_;
+        std::int32_t speed_metric_;
+
+        std::uint32_t features_;
+        std::uint32_t hardware_addr_len_;
+        std::uint32_t hardware_addr_max_len_;
+        socket::saddress hardware_addr_;
+        std::uint32_t addr_len_;
+        std::uint32_t addr_max_len_;
+        sinet_address addr_;
+        std::uint32_t netmask_addr_len_;
+        std::uint32_t netmask_addr_max_len_;
+        sinet_address netmask_addr_;
+        std::uint32_t broadcast_addr_len_;
+        std::uint32_t broadcast_addr_max_len_;
+        sinet_address broadcast_addr_;
+        std::uint32_t default_gateway_len_;
+        std::uint32_t default_gateway_max_len_;
+        sinet_address default_gateway_;
+        std::uint32_t primary_name_server_len_;
+        std::uint32_t primary_name_server_max_len_;
+        sinet_address primary_name_server_;
+        std::uint32_t secondary_name_server_len_;
+        std::uint32_t secondary_name_server_max_len_;
+        sinet_address secondary_name_server_; 
+    };
+
+    static_assert(sizeof(inet_interface_info) == 824);
 
     class inet_host_resolver : public socket::host_resolver {
     private:
@@ -98,6 +145,8 @@ namespace eka2l1::epoc::internet {
         void *opaque_connect_;
         void *opaque_send_info_;
         void *opaque_write_info_;
+        void *opaque_interface_info_;
+        void *opaque_interface_info_current_;
 
         std::uint32_t protocol_;
         epoc::notify_info connect_done_info_;
@@ -121,6 +170,8 @@ namespace eka2l1::epoc::internet {
 
         void close_down();
         void handle_connect_done_error_code(const int error_code);
+        bool start_enumerate_network_interfaces();
+        std::size_t retrieve_next_interface_info(std::uint8_t *buffer, const std::size_t avail_size);
 
     public:
         explicit inet_socket(inet_bridged_protocol *papa)
@@ -129,6 +180,8 @@ namespace eka2l1::epoc::internet {
             , opaque_connect_(nullptr)
             , opaque_send_info_(nullptr)
             , opaque_write_info_(nullptr)
+            , opaque_interface_info_(nullptr)
+            , opaque_interface_info_current_(nullptr)
             , protocol_(0)
             , bytes_written_(nullptr)
             , bytes_read_(nullptr)
@@ -143,9 +196,17 @@ namespace eka2l1::epoc::internet {
 
         bool open(const std::uint32_t family_id, const std::uint32_t protocol_id, const epoc::socket::socket_type sock_type);
         void connect(const epoc::socket::saddress &addr, epoc::notify_info &info) override;
+        void bind(const epoc::socket::saddress &addr, epoc::notify_info &info) override;
         void send(const std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr, std::uint32_t flags, epoc::notify_info &complete_info) override;
         void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr,
             std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) override;
+        std::int32_t local_name(epoc::socket::saddress &result, std::uint32_t &result_len) override;
+        std::int32_t remote_name(epoc::socket::saddress &result, std::uint32_t &result_len) override;
+
+        std::size_t get_option(const std::uint32_t option_id, const std::uint32_t option_family,
+            std::uint8_t *buffer, const std::size_t avail_size) override;
+        bool set_option(const std::uint32_t option_id, const std::uint32_t option_family,
+            std::uint8_t *buffer, const std::size_t avail_size) override;
 
         void cancel_receive() override;
         void cancel_send() override;
@@ -204,4 +265,6 @@ namespace eka2l1::epoc::internet {
             return std::make_unique<inet_host_resolver>(this, family_id, protocol_id);
         }
     };
+
+    void host_sockaddr_to_guest_saddress(sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len = nullptr);
 }

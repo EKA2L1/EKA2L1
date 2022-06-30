@@ -56,26 +56,50 @@ namespace eka2l1::epoc::internet {
         return true;
     }
 
+    static void host_sockaddr_v4_to_guest_saddress(sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len = nullptr) {
+        sockaddr_in *in = reinterpret_cast<sockaddr_in*>(addr);
+        dest_addr.family_ = INET_ADDRESS_FAMILY;
+
+        sinet_address &in_guest = static_cast<sinet_address&>(dest_addr);
+
+        std::memcpy(in_guest.addr_long(), &in->sin_addr, 4);
+        in_guest.port_ = ntohs(in->sin_port);
+
+        if (data_len) {
+            *data_len = sinet_address::DATA_SIZE;
+        }
+    }
+    
+    static void host_sockaddr_v6_to_guest_saddress(sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len = nullptr) {
+        dest_addr.family_ = INET6_ADDRESS_FAMILY;
+
+        sockaddr_in6 *in6 = reinterpret_cast<sockaddr_in6*>(addr);
+        dest_addr.port_ = ntohs(in6->sin6_port);
+
+        sinet6_address &in6_guest = static_cast<sinet6_address&>(dest_addr);
+        std::memcpy(in6_guest.address_32x4(), &in6->sin6_addr, 16);
+
+        *in6_guest.flow() = in6->sin6_flowinfo;
+        *in6_guest.scope() = in6->sin6_scope_id;
+
+        if (data_len) {
+            *data_len = sinet6_address::DATA_SIZE;
+        }
+    }
+
+    void host_sockaddr_to_guest_saddress(sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len) {
+        if (addr->sa_family == AF_INET6) {
+            host_sockaddr_v6_to_guest_saddress(addr, dest_addr, data_len);
+        } else {
+            host_sockaddr_v4_to_guest_saddress(addr, dest_addr, data_len);
+        }
+    }
+
     static void addrinfo_to_name_entry(epoc::socket::name_entry &supply_and_result, addrinfo *result_info) {
         if (result_info->ai_family == AF_INET6) {
-            supply_and_result.addr_.family_ = INET6_ADDRESS_FAMILY;
-
-            sockaddr_in6 *in6 = reinterpret_cast<sockaddr_in6*>(result_info->ai_addr);
-            supply_and_result.addr_.port_ = ntohs(in6->sin6_port);
-
-            sinet6_address &in6_guest = static_cast<sinet6_address&>(supply_and_result.addr_);
-            std::memcpy(in6_guest.address_32x4(), &in6->sin6_addr, 16);
-
-            *in6_guest.flow() = in6->sin6_flowinfo;
-            *in6_guest.scope() = in6->sin6_scope_id;
+            host_sockaddr_v6_to_guest_saddress(result_info->ai_addr, supply_and_result.addr_);
         } else {
-            supply_and_result.addr_.family_ = INET_ADDRESS_FAMILY;
-
-            sinet_address &in4_guest = static_cast<sinet_address&>(supply_and_result.addr_);
-            sockaddr_in *in = reinterpret_cast<sockaddr_in*>(result_info->ai_addr);
-
-            std::memcpy(in4_guest.addr_long(), &in->sin_addr, 4);
-            in4_guest.port_ = ntohs(in->sin_port);
+            host_sockaddr_v4_to_guest_saddress(result_info->ai_addr, supply_and_result.addr_);
         }
     }
 

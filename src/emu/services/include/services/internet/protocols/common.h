@@ -26,5 +26,14 @@ namespace eka2l1::epoc::internet {
         INET_ICMP_PROTCOL_ID = 1,
         INET_TCP_PROTOCOL_ID = 6,
         INET_UDP_PROTOCOL_ID = 17,
+
+        // Option family. See in_sock.h
+        INET_INTERFACE_CONTROL_OPT_FAMILY = 0x201,
+        INET_ROUTE_CONTROL_OPT_FAMILY = 0x202,
+        INET_DNS_CONTROL_OPT_FAMILY = 0x204,
+        
+        // Option in IC family
+        INET_ENUM_INTERFACES_OPT = 0x211,
+        INET_NEXT_INTERFACE_OPT = 0x212
     };
 }
