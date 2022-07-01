@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/utils.cpp" line="126"/>
       <source>EKA2L1 - Symbian OS emulator</source>
-      <translation type="unfinished">EKA2L1 - Symbian OS emulator</translation>
+      <translation>EKA2L1 - Symbian OS ඉමුලේටරය</translation>
     </message>
   </context>
   <context>
@@ -14,12 +14,12 @@
     <message>
       <location filename="../src/symbian_input_dialog.ui" line="14"/>
       <source>Enter the text</source>
-      <translation type="unfinished">Enter the text</translation>
+      <translation>පෙළ ඇතුලත් කරන්න</translation>
     </message>
     <message>
       <location filename="../src/symbian_input_dialog.ui" line="31"/>
       <source>Submit</source>
-      <translation type="unfinished">Submit</translation>
+      <translation>ඉදිරිපත් කරන්න</translation>
     </message>
   </context>
   <context>
@@ -27,7 +27,7 @@
     <message>
       <location filename="../src/aboutdialog.ui" line="14"/>
       <source>About EKA2L1</source>
-      <translation type="unfinished">About EKA2L1</translation>
+      <translation>EKA2L1 ගැන</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.ui" line="69"/>
@@ -37,37 +37,37 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="50"/>
       <source>&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</translation>
+      <translation>&lt;i&gt;කැපවීම &lt;b&gt;%1&lt;/b&gt; ශාඛාව &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="53"/>
       <source>&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;(C) 2018- EKA2L1 කණ්ඩායම&lt;/b&gt;&lt;br&gt;&lt;b&gt;ඉමුලේටරය භාවිතා කිරීම ගැන ඔබට ස්තුතියි!&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="64"/>
       <source>&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;ප්‍රධාන සංවර්ධකයින්:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="78"/>
       <source>&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;දායකයින්:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="92"/>
       <source>&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;නිරූපකය:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="106"/>
       <source>&lt;b&gt;Honors:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Honors:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;ගෞරව:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="120"/>
       <source>&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;පරිවර්තකයන්:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
   </context>
   <context>
@@ -83,7 +83,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="343"/>
       <source>&lt;br&gt;App UID: 0x%1</source>
-      <translation type="unfinished">&lt;br&gt;App UID: 0x%1</translation>
+      <translation>&lt;br&gt;යෙදුම් UID: 0x%1</translation>
     </message>
   </context>
   <context>
@@ -91,29 +91,29 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="20"/>
       <source>Device install wizard</source>
-      <translation type="unfinished">Device install wizard</translation>
+      <translation>උපාංග ස්ථාපන විශාරදයා</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="55"/>
       <location filename="../src/device_install_dialog.ui" line="174"/>
       <location filename="../src/device_install_dialog.ui" line="207"/>
       <source>Browse</source>
-      <translation type="unfinished">Browse</translation>
+      <translation>බ්‍රවුස් කරන්න</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="80"/>
       <source>Choose the installation method</source>
-      <translation type="unfinished">Choose the installation method</translation>
+      <translation>ස්ථාපන ක්රමය තෝරන්න</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="94"/>
       <source>Device dump (RPKG + ROM)</source>
-      <translation type="unfinished">Device dump (RPKG + ROM)</translation>
+      <translation>උපාංග ඩම්ප් (RPKG + ROM)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="99"/>
       <source>Firmware (VPL)</source>
-      <translation type="unfinished">Firmware (VPL)</translation>
+      <translation>ස්ථිරාංග (VPL)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="125"/>
@@ -123,112 +123,112 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="138"/>
       <source>Cancel</source>
-      <translation type="unfinished">Cancel</translation>
+      <translation>අවලංගු කරන්න</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="117"/>
       <source>Choose the firmware variant to install</source>
-      <translation type="unfinished">Choose the firmware variant to install</translation>
+      <translation>ස්ථාපනය කිරීමට ස්ථිරාංග ප්‍රභේදය තෝරන්න</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="199"/>
       <source>Installation completed</source>
-      <translation type="unfinished">Installation completed</translation>
+      <translation>ස්ථාපනය අවසන්</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="200"/>
       <source>Device %1 (%2) has been successfully installed!</source>
-      <translation type="unfinished">Device %1 (%2) has been successfully installed!</translation>
+      <translation>උපාංගය %1 (%2) සාර්ථකව ස්ථාපනය කර ඇත!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="208"/>
       <source>The device has already been installed!</source>
-      <translation type="unfinished">The device has already been installed!</translation>
+      <translation>උපාංගය දැනටමත් ස්ථාපනය කර ඇත!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="212"/>
       <source>Fail to determine product information from the dump!</source>
-      <translation type="unfinished">Fail to determine product information from the dump!</translation>
+      <translation>ඩම්ප් වෙතින් නිෂ්පාදන තොරතුරු තීරණය කිරීමට අසමත් වේ!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="216"/>
       <source>One of the FPSX files provided in the firmware is corrupted!</source>
-      <translation type="unfinished">One of the FPSX files provided in the firmware is corrupted!</translation>
+      <translation>ස්ථිරාංගයේ ලබා දී ඇති FPSX ගොනු වලින් එකක් දූෂිත වී ඇත!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="220"/>
       <source>An unknown error has occured. Please contact the developers with your log!</source>
-      <translation type="unfinished">An unknown error has occured. Please contact the developers with your log!</translation>
+      <translation>නොදන්නා දෝෂයක් සිදුවී ඇත. කරුණාකර ඔබේ ලොගය සමඟ සංවර්ධකයින් සම්බන්ධ කර ගන්න!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="224"/>
       <source>The disk space is insufficient to perform the device install! Please free your disk space!</source>
-      <translation type="unfinished">The disk space is insufficient to perform the device install! Please free your disk space!</translation>
+      <translation>උපාංගය ස්ථාපනය කිරීමට තැටි ඉඩ ප්රමාණවත් නොවේ! කරුණාකර ඔබගේ තැටියේ ඉඩ නිදහස් කරන්න!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="228"/>
       <source>Some files provided for installation do not exist anymore. Please keep them intact until the installation is done!</source>
-      <translation type="unfinished">Some files provided for installation do not exist anymore. Please keep them intact until the installation is done!</translation>
+      <translation>ස්ථාපනය සඳහා ලබා දී ඇති සමහර ගොනු තවදුරටත් නොපවතී. ස්ථාපනය අවසන් වන තුරු කරුණාකර ඒවා නොවෙනස්ව තබා ගන්න!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="232"/>
       <source>The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</source>
-      <translation type="unfinished">The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</translation>
+      <translation>ස්ථිරාංග ගොනුවේ ROFS දූෂිතයි! කරුණාකර ඔබගේ ස්ථිරාංග ගොනු දූෂිත නොවන බවට වග බලා ගන්න.</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="236"/>
       <source>Fail to copy ROM file!</source>
-      <translation type="unfinished">Fail to copy ROM file!</translation>
+      <translation>ROM ගොනුව පිටපත් කිරීමට අසමත් විය!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="240"/>
       <source>The provided ROM is corrupted! Please make sure your ROM is valid!</source>
-      <translation type="unfinished">The provided ROM is corrupted! Please make sure your ROM is valid!</translation>
+      <translation>සපයා ඇති ROM එක දූෂිතයි! කරුණාකර ඔබගේ ROM එක වලංගු බව සහතික කර ගන්න!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="244"/>
       <source>The provided RPKG is corrupted! Please make sure your RPKG is valid!</source>
-      <translation type="unfinished">The provided RPKG is corrupted! Please make sure your RPKG is valid!</translation>
+      <translation>සපයන ලද RPKG දූෂිතයි! කරුණාකර ඔබගේ RPKG වලංගු බව සහතික කර ගන්න!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="248"/>
       <source>The provided VPL file is invalid. Please check your firmware files again!</source>
-      <translation type="unfinished">The provided VPL file is invalid. Please check your firmware files again!</translation>
+      <translation>සපයන ලද VPL ගොනුව වලංගු නොවේ. කරුණාකර ඔබගේ ස්ථිරාංග ගොනු නැවත පරීක්ෂා කරන්න!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="256"/>
       <source>Installation failed</source>
-      <translation type="unfinished">Installation failed</translation>
+      <translation>ස්ථාපනය අසාර්ථක විය</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="265"/>
       <source>Choose VPL file</source>
-      <translation type="unfinished">Choose VPL file</translation>
+      <translation>VPL ගොනුව තෝරන්න</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="266"/>
       <source>VPL file (*.vpl);;All files (*.*)</source>
-      <translation type="unfinished">VPL file (*.vpl);;All files (*.*)</translation>
+      <translation>VPL ගොනුව (*.vpl);සියලු ගොනු (*.*)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="275"/>
       <source>Choose the ROM</source>
-      <translation type="unfinished">Choose the ROM</translation>
+      <translation>ROM එක තෝරන්න</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="276"/>
       <source>ROM file (*.rom *.ROM);;All files (*.*)</source>
-      <translation type="unfinished">ROM file (*.rom *.ROM);;All files (*.*)</translation>
+      <translation>ROM ගොනුව (*.rom *.ROM);;සියලු ගොනු (*.*)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="300"/>
       <source>Choose the RPKG</source>
-      <translation type="unfinished">Choose the RPKG</translation>
+      <translation>RPKG තෝරන්න</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="301"/>
       <source>RPKG file (*.rpkg *.RPKG);;All files (*.*</source>
-      <translation type="unfinished">RPKG file (*.rpkg *.RPKG);;All files (*.*</translation>
+      <translation>RPKG ගොනුව (*.rpkg *.RPKG);;සියලු ගොනු (*.*</translation>
     </message>
   </context>
   <context>
@@ -236,12 +236,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="50"/>
       <source>App launcher is unavailable.&lt;br&gt;Install a device to continue.</source>
-      <translation type="unfinished">App launcher is unavailable.&lt;br&gt;Install a device to continue.</translation>
+      <translation>යෙදුම් දියත් කිරීම නොමැත.&lt;br&gt;ඉදිරියට යාමට උපාංගයක් ස්ථාපනය කරන්න.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="69"/>
       <source>File</source>
-      <translation type="unfinished">File</translation>
+      <translation>ගොනුව</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="73"/>
@@ -251,27 +251,27 @@
     <message>
       <location filename="../src/mainwindow.ui" line="80"/>
       <source>Mount game card dump</source>
-      <translation type="unfinished">Mount game card dump</translation>
+      <translation>ගේම් කාඩ් ඩම්ප් සවි කරන්න</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="97"/>
       <source>View</source>
-      <translation type="unfinished">View</translation>
+      <translation>දැක්ම</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="101"/>
       <source>Rotate screen</source>
-      <translation type="unfinished">Rotate screen</translation>
+      <translation>තිරය කරකවන්න</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="113"/>
       <source>Help</source>
-      <translation type="unfinished">Help</translation>
+      <translation>උදව්</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="119"/>
       <source>Emulation</source>
-      <translation type="unfinished">Emulation</translation>
+      <translation>අනුකරණය</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="133"/>
@@ -281,17 +281,17 @@
     <message>
       <location filename="../src/mainwindow.ui" line="138"/>
       <source>Package</source>
-      <translation type="unfinished">Package</translation>
+      <translation>පැකේජය</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="143"/>
       <source>Device</source>
-      <translation type="unfinished">Device</translation>
+      <translation>උපාංගය</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="148"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>පැකේජ කළමනාකරු</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="153"/>
@@ -301,214 +301,214 @@
     <message>
       <location filename="../src/mainwindow.ui" line="161"/>
       <source>Pause</source>
-      <translation type="unfinished">Pause</translation>
+      <translation>නවත්වන්න</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="166"/>
       <source>Stop</source>
-      <translation type="unfinished">Stop</translation>
+      <translation>නවත්වන්න</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="171"/>
       <source>Restart</source>
-      <translation type="unfinished">Restart</translation>
+      <translation>යළි අරඹන්න</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="176"/>
       <source>Threads</source>
-      <translation type="unfinished">Threads</translation>
+      <translation>නූල්</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="181"/>
       <source>Mutexes</source>
-      <translation type="unfinished">Mutexes</translation>
+      <translation>මුටෙක්ස්</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="186"/>
       <source>Chunks</source>
-      <translation type="unfinished">Chunks</translation>
+      <translation>කුට්ටි</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="191"/>
       <source>Window tree</source>
-      <translation type="unfinished">Window tree</translation>
+      <translation>ජනෙල් ගස</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="199"/>
       <source>Fullscreen</source>
-      <translation type="unfinished">Fullscreen</translation>
+      <translation>පුන් තිරය</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="210"/>
       <source>Recent dumps</source>
-      <translation type="unfinished">Recent dumps</translation>
+      <translation>මෑත ඩම්ප්</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="250"/>
       <source>Folder</source>
-      <translation type="unfinished">Folder</translation>
+      <translation>ෆෝල්ඩරය</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="260"/>
       <source>Refresh app list</source>
-      <translation type="unfinished">Refresh app list</translation>
+      <translation>යෙදුම් ලැයිස්තුව නැවුම් කරන්න</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="242"/>
       <source>Clear menu</source>
-      <translation type="unfinished">Clear menu</translation>
+      <translation>මෙනුව හිස් කරන්න</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="305"/>
       <source>Touchscreen disabled</source>
-      <translation type="unfinished">Touchscreen disabled</translation>
+      <translation>ස්පර්ශ තිරය අබල කර ඇත</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="305"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
-      <translation type="unfinished">Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</translation>
+      <translation>ඔබගේ වත්මන් යතුරු බන්ධන සමහරක් මූසික බොත්තම් සමඟ සම්බන්ධ වේ. එබැවින් අනුකරණය කරන ලද ස්පර්ශ තිරය අක්රිය කර ඇත.&lt;br&gt;&lt;br&gt;&lt;b&gt;සටහන:&lt;/b&gt;&lt;br&gt;යතුරුපුවරු යතුරු සමඟ මූසික බොත්තම් නැවත බන්ධනය කිරීමෙන් ස්පර්ශ තිරය නැවත සක්‍රීය කළ හැක.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="306"/>
       <location filename="../src/mainwindow.cpp" line="373"/>
       <source>Don&apos;t show this again</source>
-      <translation type="unfinished">Don&apos;t show this again</translation>
+      <translation>මේක&apos;පෙන්නන්න එපා</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="372"/>
       <source>No device installed</source>
-      <translation type="unfinished">No device installed</translation>
+      <translation>උපාංගයක් ස්ථාපනය කර නැත</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="372"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
-      <translation type="unfinished">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</translation>
+      <translation>ඔබ කිසිදු උපාංගයක් ස්ථාපනය කර නැත. කරුණාකර උපාංගයක් ස්ථාපනය කරන්න හෝ EKA2L1&apos;s GitHub විකි පිටුවේ ස්ථාපන උපදෙස් අනුගමනය කරන්න.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="667"/>
       <location filename="../src/mainwindow.cpp" line="916"/>
       <source>Cancel</source>
-      <translation type="unfinished">Cancel</translation>
+      <translation>අවලංගු කරන්න</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="670"/>
       <source>Extracting game dump files</source>
-      <translation type="unfinished">Extracting game dump files</translation>
+      <translation>ක්‍රීඩා ඩම්ප් ගොනු උපුටා ගැනීම</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="691"/>
       <source>Mounting aborted</source>
-      <translation type="unfinished">Mounting aborted</translation>
+      <translation>සවිකිරීම ගබ්සා විය</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="696"/>
       <source>The ZIP file is corrupted!</source>
-      <translation type="unfinished">The ZIP file is corrupted!</translation>
+      <translation>ZIP ගොනුව දූෂිතයි!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="701"/>
       <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
-      <translation type="unfinished">The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</translation>
+      <translation>ZIP ෆෝල්ඩරය තුළ පද්ධති ෆෝල්ඩරය නොමැත. පද්ධති ෆෝල්ඩරය ක්‍රීඩා ඩම්ප් එකක තිබිය යුතුය.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="707"/>
       <source>The choosen file is not a ZIP file!</source>
-      <translation type="unfinished">The choosen file is not a ZIP file!</translation>
+      <translation>තෝරාගත් ගොනුව ZIP ගොනුවක් නොවේ!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="721"/>
       <source>Game card problem</source>
-      <translation type="unfinished">Game card problem</translation>
+      <translation>ක්‍රීඩා කාඩ්පත් ගැටලුව</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="721"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
-      <translation type="unfinished">The game card dump has case-sensitive files. This may cause problems with the emulator.</translation>
+      <translation>ගේම් කාඩ් ඩම්ප් එකේ කේස් සංවේදී ගොනු ඇත. මෙය ඉමුලේටරය සමඟ ගැටළු ඇති කළ හැකිය.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="725"/>
       <source>Game card dump folder correction</source>
-      <translation type="unfinished">Game card dump folder correction</translation>
+      <translation>ගේම් කාඩ් ඩම්ප් ෆෝල්ඩරය නිවැරදි කිරීම</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="725"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
-      <translation type="unfinished">The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</translation>
+      <translation>තෝරාගත් මාර්ගය වැරදි බව පෙනේ.&lt;br&gt;ඉමුලේටරය එය නිවැරදි කිරීමට ඔබට අවශ්‍යද?</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="781"/>
       <source>Choose the game card dump folder</source>
-      <translation type="unfinished">Choose the game card dump folder</translation>
+      <translation>ගේම් කාඩ් ඩම්ප් ෆෝල්ඩරය තෝරන්න</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="801"/>
       <source>Choose the game card zip</source>
-      <translation type="unfinished">Choose the game card zip</translation>
+      <translation>ගේම් කාඩ් zip තෝරන්න</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="880"/>
       <source>Document</source>
-      <translation type="unfinished">Document</translation>
+      <translation>ලේඛනය</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="898"/>
       <source>Choose a language for the package</source>
-      <translation type="unfinished">Choose a language for the package</translation>
+      <translation>පැකේජය සඳහා භාෂාවක් තෝරන්න</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="919"/>
       <source>Installing package progress</source>
-      <translation type="unfinished">Installing package progress</translation>
+      <translation>පැකේජය ස්ථාපනය කිරීමේ ප්‍රගතිය</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="943"/>
       <source>Installation aborted</source>
-      <translation type="unfinished">Installation aborted</translation>
+      <translation>ස්ථාපනය නතර කරන ලදී</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="943"/>
       <source>The installation has been canceled</source>
-      <translation type="unfinished">The installation has been canceled</translation>
+      <translation>ස්ථාපනය අවලංගු කර ඇත</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="948"/>
       <source>Installation failed</source>
-      <translation type="unfinished">Installation failed</translation>
+      <translation>ස්ථාපනය අසාර්ථක විය</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="948"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
-      <translation type="unfinished">Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</translation>
+      <translation>මාර්ගය: %1හි පැකේජය ස්ථාපනය කිරීමට අසමත් විය. වලංගු SIS/SISX ගොනුවකට මාර්ගය යොමු වන බව සහතික කර ගන්න.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="955"/>
       <source>Installation success</source>
-      <translation type="unfinished">Installation success</translation>
+      <translation>ස්ථාපනය සාර්ථකයි</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="955"/>
       <source>Package has been successfully installed</source>
-      <translation type="unfinished">Package has been successfully installed</translation>
+      <translation>පැකේජය සාර්ථකව ස්ථාපනය කර ඇත</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="980"/>
       <source>Choose the file to install</source>
-      <translation type="unfinished">Choose the file to install</translation>
+      <translation>ස්ථාපනය කිරීමට ගොනුව තෝරන්න</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="980"/>
       <source>SIS file (*.sis *.sisx)</source>
-      <translation type="unfinished">SIS file (*.sis *.sisx)</translation>
+      <translation>SIS ගොනුව (*.sis *.sisx)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1154"/>
       <source>Load theme failed!</source>
-      <translation type="unfinished">Load theme failed!</translation>
+      <translation>තේමාව පැටවීම අසාර්ථක විය!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1154"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
-      <translation type="unfinished">The Dark theme&apos;s style file can&apos;t be found!</translation>
+      <translation>Dark theme&apos;s style ගොනුව&apos;t සොයා ගත නොහැක!</translation>
     </message>
   </context>
   <context>
@@ -516,7 +516,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="17"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>පැකේජ කළමනාකරු</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
@@ -531,52 +531,52 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="71"/>
       <source>Name</source>
-      <translation type="unfinished">Name</translation>
+      <translation>නම</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="76"/>
       <source>Vendor</source>
-      <translation type="unfinished">Vendor</translation>
+      <translation>වෙළෙන්දා</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="81"/>
       <source>Drives</source>
-      <translation type="unfinished">Drives</translation>
+      <translation>ඩ්රයිව්ස්</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="89"/>
       <source>Uninstall</source>
-      <translation type="unfinished">Uninstall</translation>
+      <translation>අස්ථාපනය කරන්න</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="94"/>
       <source>List files</source>
-      <translation type="unfinished">List files</translation>
+      <translation>ගොනු ලැයිස්තුගත කරන්න</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="126"/>
       <source>Uninstall failed!</source>
-      <translation type="unfinished">Uninstall failed!</translation>
+      <translation>අස්ථාපනය අසාර්ථක විය!</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="126"/>
       <source>Failed to uninstall the package</source>
-      <translation type="unfinished">Failed to uninstall the package</translation>
+      <translation>පැකේජය අස්ථාපනය කිරීමට අසමත් විය</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="143"/>
       <source>%1&apos;s files</source>
-      <translation type="unfinished">%1&apos;s files</translation>
+      <translation>%1&apos;s ගොනු</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="152"/>
       <source>Installed</source>
-      <translation type="unfinished">Installed</translation>
+      <translation>ස්ථාපනය කර ඇත</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="156"/>
       <source>Delete on uninstall</source>
-      <translation type="unfinished">Delete on uninstall</translation>
+      <translation>අස්ථාපනය කිරීමේදී මකන්න</translation>
     </message>
   </context>
   <context>
@@ -589,82 +589,82 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="36"/>
       <source>General</source>
-      <translation type="unfinished">General</translation>
+      <translation>ජනරාල්</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="48"/>
       <source>Application</source>
-      <translation type="unfinished">Application</translation>
+      <translation>අයදුම්පත</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="123"/>
       <source>Time delay (0-1000us)</source>
-      <translation type="unfinished">Time delay (0-1000us)</translation>
+      <translation>කාල ප්‍රමාදය (0-1000us)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="179"/>
       <source>Screen scale factor</source>
-      <translation type="unfinished">Screen scale factor</translation>
+      <translation>තිර පරිමාණ සාධකය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="187"/>
       <source>Fit the window</source>
-      <translation type="unfinished">Fit the window</translation>
+      <translation>කවුළුව සවි කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="217"/>
       <source>Save screen scale and rotations</source>
-      <translation type="unfinished">Save screen scale and rotations</translation>
+      <translation>තිර පරිමාණය සහ භ්‍රමණය සුරකින්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="227"/>
       <source>Inherit these settings for child processes</source>
-      <translation type="unfinished">Inherit these settings for child processes</translation>
+      <translation>ළමා ක්‍රියාවලි සඳහා මෙම සැකසීම් උරුම කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="234"/>
       <source>Use shader for upscaling</source>
-      <translation type="unfinished">Use shader for upscaling</translation>
+      <translation>ඉහළ නැංවීම සඳහා සෙවන භාවිතා කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="250"/>
       <source>Upscale shader</source>
-      <translation type="unfinished">Upscale shader</translation>
+      <translation>ඉහළ මට්ටමේ සෙවන</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="272"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; None</source>
-      <translation type="unfinished">&lt;b&gt;Configuration for:&lt;/b&gt; None</translation>
+      <translation>&lt;b&gt;වින්‍යාසය සඳහා:&lt;/b&gt; නැත</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="288"/>
       <source>Debugging</source>
-      <translation type="unfinished">Debugging</translation>
+      <translation>නිදොස් කිරීම</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="300"/>
       <source>CPU read</source>
-      <translation type="unfinished">CPU read</translation>
+      <translation>CPU කියවීම</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="307"/>
       <source>CPU write</source>
-      <translation type="unfinished">CPU write</translation>
+      <translation>CPU ලිවීම</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="314"/>
       <source>This option will not be saved after emulator shutdown. Non-effective when GDBStub is enabled.</source>
-      <translation type="unfinished">This option will not be saved after emulator shutdown. Non-effective when GDBStub is enabled.</translation>
+      <translation>ඉමුලේටරය වසා දැමීමෙන් පසු මෙම විකල්පය සුරැකෙන්නේ නැත. GDBStub සබල කර ඇති විට ඵලදායී නොවේ.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="317"/>
       <source>CPU step</source>
-      <translation type="unfinished">CPU step</translation>
+      <translation>CPU පියවර</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="330"/>
       <source>System calls</source>
-      <translation type="unfinished">System calls</translation>
+      <translation>පද්ධති ඇමතුම්</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="337"/>
@@ -674,94 +674,94 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="344"/>
       <source>Enable kernel tracing that is used in driver. Slowdown expected on enable.</source>
-      <translation type="unfinished">Enable kernel tracing that is used in driver. Slowdown expected on enable.</translation>
+      <translation>ධාවක භාවිතා කරන කර්නල් ලුහුබැඳීම සබල කරන්න. සක්‍රීය කිරීමේදී මන්දගාමී වීම අපේක්ෂා කෙරේ.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="347"/>
       <source>Enable B-Trace</source>
-      <translation type="unfinished">Enable B-Trace</translation>
+      <translation>B-Trace සබල කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="360"/>
       <source>Data</source>
-      <translation type="unfinished">Data</translation>
+      <translation>දත්ත</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="368"/>
       <source>Emulator data path</source>
-      <translation type="unfinished">Emulator data path</translation>
+      <translation>ඉමුලේටර් දත්ත මාර්ගය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="378"/>
       <location filename="../src/settings_dialog.ui" line="941"/>
       <location filename="../src/settings_dialog.ui" line="982"/>
       <source>Browse</source>
-      <translation type="unfinished">Browse</translation>
+      <translation>බ්‍රවුස් කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="387"/>
       <source>Clear all UI configurations</source>
-      <translation type="unfinished">Clear all UI configurations</translation>
+      <translation>සියලුම UI වින්‍යාස කිරීම් හිස් කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="398"/>
       <source>Interface</source>
-      <translation type="unfinished">Interface</translation>
+      <translation>අතුරුමුහුණත</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="404"/>
       <source>Emulator display</source>
-      <translation type="unfinished">Emulator display</translation>
+      <translation>ඉමුලේටර් සංදර්ශකය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="436"/>
       <source>Background color</source>
-      <translation type="unfinished">Background color</translation>
+      <translation>පසුබිම් වර්ණය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="449"/>
       <source>Pick</source>
-      <translation type="unfinished">Pick</translation>
+      <translation>තෝරාගන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="459"/>
       <source>Hide mouse cursor</source>
-      <translation type="unfinished">Hide mouse cursor</translation>
+      <translation>මූසික කර්සරය සඟවන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="466"/>
       <source>Enable nearest neighbor filtering</source>
-      <translation type="unfinished">Enable nearest neighbor filtering</translation>
+      <translation>ආසන්නතම අසල්වැසි පෙරහන සබල කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="473"/>
       <source>By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</source>
-      <translation type="unfinished">By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</translation>
+      <translation>පෙරනිමියෙන්, ඉමුලේටරය ඉඩ දෙන්නේ ඉමුලේටරය සංදර්ශකය අවම වශයෙන් දුරකථන තිරයේ&apos;s ප්‍රමාණයට ප්‍රතිප්‍රමාණ කිරීමට, පද්ධති සංදර්ශක පරිමාණයෙන් ගුණ කිරීමට, බොහෝ පරිශීලකයින්ට&apos;ඇස්වලට ගැලපෙන පරිදි</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="476"/>
       <source>Allow resizing display to phone screen&apos;s true size in pixels</source>
-      <translation type="unfinished">Allow resizing display to phone screen&apos;s true size in pixels</translation>
+      <translation>පික්සලවල සැබෑ ප්‍රමාණයේ&apos;තත්ත්‍ප‍්‍රයෙන් දුරකථන තිරයට සංදර්ශකය ප්‍රතිප්‍රමාණ කිරීමට ඉඩ දෙන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="488"/>
       <source>User interface</source>
-      <translation type="unfinished">User interface</translation>
+      <translation>පරිශීලක අතුරුමුහුණත</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="496"/>
       <source>Language</source>
-      <translation type="unfinished">Language</translation>
+      <translation>භාෂාව</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="510"/>
       <source>Theme</source>
-      <translation>තේමාව</translation>
+      <translation>ප්රධාන</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="518"/>
       <source>Light</source>
-      <translation type="unfinished">Light</translation>
+      <translation>ආලෝකය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="523"/>
@@ -771,17 +771,17 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="533"/>
       <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
-      <translation type="unfinished">Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</translation>
+      <translation>මෙය සබල කරන්න කවුළුවට අමතර තොරතුරු නොමැතිව &quot;EKA2L1&quot;හි නියත නම ඇත.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="539"/>
       <source>Disable easter egg title</source>
-      <translation type="unfinished">Disable easter egg title</translation>
+      <translation>පාස්කු බිත්තර මාතෘකාව අබල කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="546"/>
       <source>Disable status bar</source>
-      <translation type="unfinished">Disable status bar</translation>
+      <translation>තත්ව තීරුව අබල කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="557"/>
@@ -791,44 +791,44 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="563"/>
       <source>Graphics</source>
-      <translation type="unfinished">Graphics</translation>
+      <translation>ග්රැෆික්ස්</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="571"/>
       <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
-      <translation type="unfinished">This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
-Preferred option will automatically enable this on S60v1/S60v2 devices.</translation>
+      <translation>මෙය අනුකරණය කරන ලද මෘදුකාංගවලට පටිගත කිරීමේ හැකියාව ඇති අතර සමහර පැරණි S60v1/S60v2 ක්‍රීඩා වල දැල්වීම වළක්වයි.
+කැමති විකල්පය S60v1/S60v2 උපාංග මත මෙය ස්වයංක්‍රීයව සබල කරයි.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="575"/>
       <source>Screen buffer sync</source>
-      <translation type="unfinished">Screen buffer sync</translation>
+      <translation>තිර බෆර සමමුහුර්තකරණය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="589"/>
       <source>Preferred</source>
-      <translation type="unfinished">Preferred</translation>
+      <translation>මනාපය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="594"/>
       <source>Disable</source>
-      <translation type="unfinished">Disable</translation>
+      <translation>අක්රිය කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="599"/>
       <source>Enable</source>
-      <translation type="unfinished">Enable</translation>
+      <translation>සබල කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="609"/>
       <source>Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</source>
-      <translation type="unfinished">Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</translation>
+      <translation>Symbian&apos;s GLES1 API සඳහා දේශීය GPU ත්වරණය සිදු කිරීමට ඉමුලේටරයට ඉඩ දෙන්න.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="612"/>
       <source>Enable GPU accelerated GLES1</source>
-      <translation type="unfinished">Enable GPU accelerated GLES1</translation>
+      <translation>GPU වේගවත් GLES1 සබල කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="622"/>
@@ -838,43 +838,43 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="639"/>
       <source>Current</source>
-      <translation type="unfinished">Current</translation>
+      <translation>වර්තමාන</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="662"/>
       <location filename="../src/settings_dialog.ui" line="1136"/>
       <source>Rename</source>
-      <translation type="unfinished">Rename</translation>
+      <translation>නැවත නම් කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="673"/>
       <source>Check for any unimported devices and correct existing one&apos;s infos.</source>
-      <translation type="unfinished">Check for any unimported devices and correct existing one&apos;s infos.</translation>
+      <translation>ආනයනය නොකළ උපාංග තිබේදැයි පරීක්ෂා කර දැනට පවතින එක්&apos;තත්ත්‍වයේ තොරතුරු නිවැරදි කරන්න.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="676"/>
       <source>Rescan devices</source>
-      <translation type="unfinished">Rescan devices</translation>
+      <translation>උපාංග නැවත පරිලෝකනය කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="683"/>
       <source>Check for faults in current device and fix them so that EKA2L1 can emulate the device.</source>
-      <translation type="unfinished">Check for faults in current device and fix them so that EKA2L1 can emulate the device.</translation>
+      <translation>වත්මන් උපාංගයේ දෝෂ සඳහා පරීක්ෂා කර EKA2L1 උපාංගය අනුකරණය කළ හැකි වන පරිදි ඒවා නිවැරදි කරන්න.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="686"/>
       <source>Validate current device</source>
-      <translation type="unfinished">Validate current device</translation>
+      <translation>වත්මන් උපාංගය වලංගු කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="704"/>
       <source>Properties</source>
-      <translation type="unfinished">Properties</translation>
+      <translation>දේපළ</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="712"/>
       <source>Battery level (0 - 100)</source>
-      <translation type="unfinished">Battery level (0 - 100)</translation>
+      <translation>බැටරි මට්ටම (0 - 100)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="741"/>
@@ -886,178 +886,178 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="758"/>
       <source>System language</source>
-      <translation type="unfinished">System language</translation>
+      <translation>පද්ධති භාෂාව</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="795"/>
       <source>Check</source>
-      <translation type="unfinished">Check</translation>
+      <translation>චෙක් පත</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="812"/>
       <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
-      <translation type="unfinished">The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</translation>
+      <translation>අනුකරණය කරන ලද යෙදුම් හෝ ක්‍රීඩා වල සංදර්ශන කෙරෙන නම. උපරිම අක්ෂර 30කට ඉඩ දෙන්න.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="815"/>
       <source>Friendly phone name</source>
-      <translation type="unfinished">Friendly phone name</translation>
+      <translation>මිත්රශීලී දුරකථන නම</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="840"/>
       <source>Hardware emulation</source>
-      <translation type="unfinished">Hardware emulation</translation>
+      <translation>දෘඪාංග අනුකරණය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="854"/>
       <source>CPU emulator</source>
-      <translation type="unfinished">CPU emulator</translation>
+      <translation>CPU ඉමුලේටරය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="862"/>
       <source>Dynarmic (CPU recompiler)</source>
-      <translation type="unfinished">Dynarmic (CPU recompiler)</translation>
+      <translation>ගතික (CPU නැවත සම්පාදනය කරන්නා)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="867"/>
       <source>Dyncom (CPU interpreter)</source>
-      <translation type="unfinished">Dyncom (CPU interpreter)</translation>
+      <translation>Dyncom (CPU පරිවර්තක)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="879"/>
       <source>Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</source>
-      <translation type="unfinished">Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</translation>
+      <translation>කාල මෙහෙයුම් සඳහා නිරවද්‍යතා මට්ටම තෝරන්න.&lt;br&gt;ඉහළ මට්ටම, වැඩි CPU බලයක් පරිභෝජනය කරයි, නමුත් සමහර යෙදුම්වල වේගවත් ක්‍රියාකාරිත්වය විය හැකිය!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="882"/>
       <source>Real-time accuracy</source>
-      <translation type="unfinished">Real-time accuracy</translation>
+      <translation>තත්‍ය කාලීන නිරවද්‍යතාවය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="890"/>
       <source>Low</source>
-      <translation type="unfinished">Low</translation>
+      <translation>අඩු</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="895"/>
       <source>Mid</source>
-      <translation type="unfinished">Mid</translation>
+      <translation>මැද</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="900"/>
       <source>High</source>
-      <translation type="unfinished">High</translation>
+      <translation>ඉහළ</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="913"/>
       <source>Audio</source>
-      <translation type="unfinished">Audio</translation>
+      <translation>ශ්රව්ය උපකරණ</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="921"/>
       <source>SF2 bank</source>
-      <translation type="unfinished">SF2 bank</translation>
+      <translation>SF2 බැංකුව</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="948"/>
       <location filename="../src/settings_dialog.ui" line="989"/>
       <source>Reset</source>
-      <translation type="unfinished">Reset</translation>
+      <translation>යළි පිහිටුවන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="962"/>
       <source>HSB bank</source>
-      <translation type="unfinished">HSB bank</translation>
+      <translation>HSB බැංකුව</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1006"/>
       <source>MIDI backend</source>
-      <translation type="unfinished">MIDI backend</translation>
+      <translation>MIDI පසුබිම</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1020"/>
       <source>TinySoundFont (High-quality, support SF2)</source>
-      <translation type="unfinished">TinySoundFont (High-quality, support SF2)</translation>
+      <translation>TinySoundFont (උසස් ගුණත්වය, සහය SF2)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1025"/>
       <source>MiniBAE (Lower-quality, support HSB)</source>
-      <translation type="unfinished">MiniBAE (Lower-quality, support HSB)</translation>
+      <translation>MiniBAE (පහළ ගුණාත්මක, HSB සහාය)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1043"/>
       <source>Volume</source>
-      <translation type="unfinished">Volume</translation>
+      <translation>පරිමාව</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1085"/>
       <source>Control</source>
-      <translation type="unfinished">Control</translation>
+      <translation>පාලනය කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1100"/>
       <source>Profile</source>
-      <translation type="unfinished">Profile</translation>
+      <translation>පැතිකඩ</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1123"/>
       <source>Add</source>
-      <translation type="unfinished">Add</translation>
+      <translation>එකතු කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1149"/>
       <source>Delete</source>
-      <translation type="unfinished">Delete</translation>
+      <translation>මකන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1167"/>
       <source>Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</source>
-      <translation type="unfinished">Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</translation>
+      <translation>සටහන: බන්ධන වලින් එකක් මූසික බොත්තමක් සමඟ සම්බන්ධ වේ, ස්පර්ශ තිර ක්‍රියාකාරීත්වය අක්‍රිය වනු ඇත.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1185"/>
       <source>Left softkey</source>
-      <translation type="unfinished">Left softkey</translation>
+      <translation>වම් softkey</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1223"/>
       <source>Up arrow</source>
-      <translation type="unfinished">Up arrow</translation>
+      <translation>ඉහළ ඊතලය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1255"/>
       <source>Right softkey</source>
-      <translation type="unfinished">Right softkey</translation>
+      <translation>නිවැරදි මෘදු යතුර</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1291"/>
       <source>Left arrow</source>
-      <translation type="unfinished">Left arrow</translation>
+      <translation>වම් ඊතලය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1323"/>
       <source>Middle softkey</source>
-      <translation type="unfinished">Middle softkey</translation>
+      <translation>මැද මෘදු යතුර</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1355"/>
       <source>Right arrow</source>
-      <translation type="unfinished">Right arrow</translation>
+      <translation>දකුණු ඊතලය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1391"/>
       <source>Green softkey</source>
-      <translation type="unfinished">Green softkey</translation>
+      <translation>හරිත මෘදු යතුර</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1423"/>
       <source>Down arrow</source>
-      <translation type="unfinished">Down arrow</translation>
+      <translation>පහළ ඊතලය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1455"/>
       <source>Red softkey</source>
-      <translation type="unfinished">Red softkey</translation>
+      <translation>රතු මෘදු යතුර</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1491"/>
@@ -1117,213 +1117,213 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="299"/>
       <source>Default</source>
-      <translation type="unfinished">Default</translation>
+      <translation>පෙරනිමිය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="433"/>
       <source>Choose the data folder</source>
-      <translation type="unfinished">Choose the data folder</translation>
+      <translation>දත්ත ෆෝල්ඩරය තෝරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="435"/>
       <location filename="../src/settings_dialog.cpp" line="1135"/>
       <location filename="../src/settings_dialog.cpp" line="1160"/>
       <source>Relaunch needed</source>
-      <translation type="unfinished">Relaunch needed</translation>
+      <translation>නැවත දියත් කිරීම අවශ්‍යයි</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="435"/>
       <source>This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</source>
-      <translation type="unfinished">This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</translation>
+      <translation>මෙම වෙනස සඳහා ඉමුලේටරය නැවත දියත් කිරීම අවශ්‍ය වේ.&lt;br&gt;ඔබට ඉදිරියට යාමට අවශ්‍යද?</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="556"/>
       <source>Please wait</source>
-      <translation type="unfinished">Please wait</translation>
+      <translation>කරුණාකර රැඳී සිටින්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="557"/>
       <source>Validation is in process. Please do not exit or launch applications until this operation is done.</source>
-      <translation type="unfinished">Validation is in process. Please do not exit or launch applications until this operation is done.</translation>
+      <translation>වලංගු කිරීම ක්‍රියාවලියේ පවතී. මෙම මෙහෙයුම සිදු කරන තෙක් කරුණාකර යෙදුම් පිටවීම හෝ දියත් නොකරන්න.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="577"/>
       <source>Validation done!</source>
-      <translation type="unfinished">Validation done!</translation>
+      <translation>වලංගු කිරීම සිදු කර ඇත!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="577"/>
       <source>The validation has successfully completed!</source>
-      <translation type="unfinished">The validation has successfully completed!</translation>
+      <translation>වලංගු කිරීම සාර්ථකව සම්පූර්ණ කර ඇත!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="588"/>
       <source>Enter new device name</source>
-      <translation type="unfinished">Enter new device name</translation>
+      <translation>නව උපාංගයේ නම ඇතුළත් කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="685"/>
       <source>Unbind</source>
-      <translation type="unfinished">Unbind</translation>
+      <translation>බන්ධන ඉවත් කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="734"/>
       <source>Waiting for input</source>
-      <translation type="unfinished">Waiting for input</translation>
+      <translation>ආදානය සඳහා රැඳී සිටිමින්</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="749"/>
       <location filename="../src/settings_dialog.cpp" line="795"/>
       <source>Mouse button %1</source>
-      <translation type="unfinished">Mouse button %1</translation>
+      <translation>මූසික බොත්තම %1</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="751"/>
       <source>Controller %1 : Button %2</source>
-      <translation type="unfinished">Controller %1 : Button %2</translation>
+      <translation>පාලක %1 : බොත්තම %2</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="862"/>
       <location filename="../src/settings_dialog.cpp" line="886"/>
       <source>Enter profile name</source>
-      <translation type="unfinished">Enter profile name</translation>
+      <translation>පැතිකඩ නම ඇතුළත් කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="870"/>
       <source>Profile creation failed</source>
-      <translation type="unfinished">Profile creation failed</translation>
+      <translation>පැතිකඩ නිර්මාණය අසාර්ථක විය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="870"/>
       <location filename="../src/settings_dialog.cpp" line="894"/>
       <source>A profile with that name already exists!</source>
-      <translation type="unfinished">A profile with that name already exists!</translation>
+      <translation>එම නම සහිත පැතිකඩක් දැනටමත් පවතී!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="894"/>
       <source>Profile rename failed</source>
-      <translation type="unfinished">Profile rename failed</translation>
+      <translation>පැතිකඩ නැවත නම් කිරීම අසාර්ථක විය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="909"/>
       <source>Profile deletion failed</source>
-      <translation type="unfinished">Profile deletion failed</translation>
+      <translation>පැතිකඩ මකා දැමීම අසාර්ථක විය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="909"/>
       <source>This is the only profile left!</source>
-      <translation type="unfinished">This is the only profile left!</translation>
+      <translation>ඉතිරිව ඇති එකම පැතිකඩ මෙයයි!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="947"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
-      <translation type="unfinished">&lt;b&gt;Configuration for:&lt;/b&gt; %1</translation>
+      <translation>&lt;b&gt;වින්‍යාසය සඳහා:&lt;/b&gt; %1</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="950"/>
       <location filename="../src/settings_dialog.cpp" line="955"/>
       <source>None</source>
-      <translation type="unfinished">None</translation>
+      <translation>කිසිවක් නැත</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1062"/>
       <source>IMEI sequence contains non-numeric character!</source>
-      <translation type="unfinished">IMEI sequence contains non-numeric character!</translation>
+      <translation>IMEI අනුපිළිවෙලෙහි සංඛ්‍යාත්මක නොවන අක්ෂර අඩංගු වේ!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1065"/>
       <source>IMEI sequence has invalid sum!</source>
-      <translation type="unfinished">IMEI sequence has invalid sum!</translation>
+      <translation>IMEI අනුපිළිවෙලට වලංගු නොවන එකතුවක් ඇත!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1068"/>
       <source>IMEI sequence length must be 15!</source>
-      <translation type="unfinished">IMEI sequence length must be 15!</translation>
+      <translation>IMEI අනුපිළිවෙල දිග 15 විය යුතුය!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1074"/>
       <source>Unidentified error!</source>
-      <translation type="unfinished">Unidentified error!</translation>
+      <translation>හඳුනා නොගත් දෝෂයක්!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1081"/>
       <source>IMEI valid!</source>
-      <translation type="unfinished">IMEI valid!</translation>
+      <translation>IMEI වලංගුයි!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1081"/>
       <source>The IMEI sequence is valid!</source>
-      <translation type="unfinished">The IMEI sequence is valid!</translation>
+      <translation>IMEI අනුපිළිවෙල වලංගු වේ!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1084"/>
       <source>IMEI invalid!</source>
-      <translation type="unfinished">IMEI invalid!</translation>
+      <translation>IMEI අවලංගුයි!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1094"/>
       <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
-      <translation type="unfinished">Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</translation>
+      <translation>ඔබගේ IMEI වලංගු නොවේ මන්ද: %1.&lt;br&gt;ඔබට වසා දැමීම වෙනුවට වත්මන් IMEI සංස්කරණය කිරීමට අවශ්‍යද? &quot;No&quot; තේරීම වත්මන් IMEI අගය සුරකිනු ඇත.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1096"/>
       <source>Cancel closing</source>
-      <translation type="unfinished">Cancel closing</translation>
+      <translation>වසා දැමීම අවලංගු කරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1135"/>
       <source>This change will be effective on the next launch of the emulator.</source>
-      <translation type="unfinished">This change will be effective on the next launch of the emulator.</translation>
+      <translation>මෙම වෙනස ඉමුලේටරයේ මීළඟ දියත් කිරීමේදී බලපැවැත්වේ.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1143"/>
       <source>Confirmation</source>
-      <translation type="unfinished">Confirmation</translation>
+      <translation>තහවුරු කිරීම</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1143"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
-      <translation type="unfinished">Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</translation>
+      <translation>ඔබට මේ ගැන විශ්වාසද? ඔබගේ වත්මන් තේමාව නැවත සකසනු ඇත, අක්‍රිය කර ඇති සියලුම පණිවිඩ පෙට්ටි නැවත සක්‍රිය කරනු ඇත, සහ මෑත කාලීන සවි කිරීම් සියල්ල හිස් කරනු ඇත.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1160"/>
       <source>The language will be updated on the next launch of the emulator.</source>
-      <translation type="unfinished">The language will be updated on the next launch of the emulator.</translation>
+      <translation>ඉමුලේටරයේ මීළඟ දියත් කිරීමේදී භාෂාව යාවත්කාලීන වේ.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1187"/>
       <source>Pick the screen background color</source>
-      <translation type="unfinished">Pick the screen background color</translation>
+      <translation>තිරයේ පසුබිම් වර්ණය තෝරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1252"/>
       <source>Successfully changed</source>
-      <translation type="unfinished">Successfully changed</translation>
+      <translation>සාර්ථකව වෙනස් විය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1252"/>
       <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
-      <translation type="unfinished">Next time the application requests to play a new MIDI, the choosen backend will be used!</translation>
+      <translation>ඊළඟ වතාවේ යෙදුම නව MIDI එකක් වාදනය කිරීමට ඉල්ලන විට, තෝරාගත් පසුපෙළ භාවිතා කරනු ඇත!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1265"/>
       <source>Choose the HSB bank file</source>
-      <translation type="unfinished">Choose the HSB bank file</translation>
+      <translation>HSB බැංකු ගොනුව තෝරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1288"/>
       <source>Choose the SF2 bank file</source>
-      <translation type="unfinished">Choose the SF2 bank file</translation>
+      <translation>SF2 බැංකු ගොනුව තෝරන්න</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1324"/>
       <source>Emulator reset needed</source>
-      <translation type="unfinished">Emulator reset needed</translation>
+      <translation>ඉමුලේටරය යළි පිහිටුවීම අවශ්‍යයි</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1324"/>
       <source>This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</source>
-      <translation type="unfinished">This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</translation>
+      <translation>අනුකරණ මෙනුව හරහා ඉමුලේටරය නැවත සැකසීමෙන් පසුව හෝ ඉමුලේටරයේ මීළඟ දියත් කිරීමේදී මෙම වෙනස බලාත්මක වනු ඇත.</translation>
     </message>
   </context>
 </TS>
