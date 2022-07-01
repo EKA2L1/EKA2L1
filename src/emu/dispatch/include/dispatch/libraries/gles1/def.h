@@ -136,8 +136,7 @@ namespace eka2l1::dispatch {
 
     struct egl_context_es1 : public egl_context_es_shared {
     private:
-        void prepare_vertex_buffer_and_descriptors(drivers::graphics_driver *drv, kernel::process *crr_process, const std::int32_t first_index, const std::uint32_t vcount, const std::uint32_t active_texs,
-            bool &should_flush_after);
+        void prepare_vertex_buffer_and_descriptors(drivers::graphics_driver *drv, kernel::process *crr_process, const std::int32_t first_index, const std::uint32_t vcount, const std::uint32_t active_texs);
         bool prepare_shader_program_for_draw(dispatch::egl_controller &controller, const std::uint32_t active_texs);
 
     public:
@@ -253,7 +252,7 @@ namespace eka2l1::dispatch {
         }
 
         bool prepare_for_draw(drivers::graphics_driver *driver, egl_controller &controller, kernel::process *crr_process,
-            const std::int32_t first_index, const std::uint32_t vcount, bool &should_flush_after_draw) override;
+            const std::int32_t first_index, const std::uint32_t vcount) override;
         void flush_to_driver(drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) override;
         void destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) override;
         bool enable(const std::uint32_t feature) override;

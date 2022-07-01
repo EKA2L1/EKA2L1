@@ -258,17 +258,18 @@ namespace eka2l1::dispatch {
     
     // General idea from PPSSPP (thanks!)
     struct gles_buffer_pusher {
-    public:
-        // Maximum of buffer in general usage before request to flush
-        static constexpr std::uint8_t MAX_BUFFER_SLOT = 10;
-
     private:
-        drivers::handle buffers_[MAX_BUFFER_SLOT];
-        std::size_t used_size_[MAX_BUFFER_SLOT];
-        std::uint8_t *data_[MAX_BUFFER_SLOT];
+        struct buffer_info {
+            drivers::handle buffer_;
+            std::size_t used_size_;
+            std::uint8_t *data_;
+        };
 
+        std::vector<buffer_info> buffers_;
         std::uint8_t current_buffer_;
         std::size_t size_per_buffer_;
+
+        void add_buffer();
 
     public:
         explicit gles_buffer_pusher();
@@ -282,7 +283,7 @@ namespace eka2l1::dispatch {
         void done_frame();
 
         drivers::handle push_buffer(drivers::graphics_driver *drv, const std::uint8_t *data, const std::size_t buffer_size,
-            std::size_t &buffer_offset, bool &need_flush);
+            std::size_t &buffer_offset);
 
         void flush(drivers::graphics_command_builder &builder);
     };
@@ -300,7 +301,7 @@ namespace eka2l1::dispatch {
     protected:
         virtual bool retrieve_vertex_buffer_slot(std::vector<drivers::handle> &vertex_buffers_alloc, drivers::graphics_driver *drv,
             kernel::process *crr_process, const gles_vertex_attrib &attrib, const std::int32_t first_index, const std::int32_t vcount,
-            std::uint32_t &res, int &offset, bool &attrib_not_persistent, bool &should_flush_after);
+            std::uint32_t &res, int &offset, bool &attrib_not_persistent);
 
     public:
         float clear_color_[4];
@@ -422,7 +423,7 @@ namespace eka2l1::dispatch {
         virtual void flush_to_driver(drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) override;
         virtual void destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) override;
         virtual bool prepare_for_draw(drivers::graphics_driver *driver, egl_controller &controller, kernel::process *crr_process,
-            const std::int32_t first_index, const std::uint32_t vcount, bool &should_flush_after_draw) = 0;
+            const std::int32_t first_index, const std::uint32_t vcount) = 0;
         virtual bool prepare_for_clear(drivers::graphics_driver *driver, egl_controller &controller);
         virtual bool enable(const std::uint32_t feature);
         virtual bool disable(const std::uint32_t feature);

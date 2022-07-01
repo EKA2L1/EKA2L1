@@ -2690,13 +2690,13 @@ namespace eka2l1::dispatch {
         return true;
     }
 
-    void egl_context_es1::prepare_vertex_buffer_and_descriptors(drivers::graphics_driver *drv, kernel::process *crr_process, const std::int32_t first_index, const std::uint32_t vcount, const std::uint32_t active_texs, bool &should_flush_after) {
+    void egl_context_es1::prepare_vertex_buffer_and_descriptors(drivers::graphics_driver *drv, kernel::process *crr_process, const std::int32_t first_index, const std::uint32_t vcount, const std::uint32_t active_texs) {
         if (attrib_changed_ || (previous_first_index_ != first_index)) {
             std::vector<drivers::handle> vertex_buffers_alloc;
             bool not_persistent = false;
 
             auto retrieve_vertex_buffer_slot = [&](gles_vertex_attrib attrib, std::uint32_t &res, int &offset) -> bool {
-                return this->retrieve_vertex_buffer_slot(vertex_buffers_alloc, drv, crr_process, attrib, first_index, vcount, res, offset, not_persistent, should_flush_after);
+                return this->retrieve_vertex_buffer_slot(vertex_buffers_alloc, drv, crr_process, attrib, first_index, vcount, res, offset, not_persistent);
             };
 
             // Remade and attach descriptors
@@ -2858,14 +2858,14 @@ namespace eka2l1::dispatch {
     }
 
     bool egl_context_es1::prepare_for_draw(drivers::graphics_driver *drv, egl_controller &controller, kernel::process *crr_process,
-        const std::int32_t first_index, const std::uint32_t vcount, bool &should_flush_after)  {
+        const std::int32_t first_index, const std::uint32_t vcount)  {
         if ((vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_VERTEX_ARRAY) == 0) {
             // No drawing needed?
             return true;
         }
 
         std::uint32_t active_textures_bitarr = retrieve_active_textures_bitarr(this);
-        prepare_vertex_buffer_and_descriptors(drv, crr_process, first_index, vcount, active_textures_bitarr, should_flush_after);
+        prepare_vertex_buffer_and_descriptors(drv, crr_process, first_index, vcount, active_textures_bitarr);
 
         flush_state_changes();
 

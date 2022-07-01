@@ -477,6 +477,8 @@ namespace eka2l1::drivers {
          */
         void update_buffer_data(drivers::handle h, const std::size_t offset, const int chunk_count, const void **chunk_ptr, const std::uint32_t *chunk_size);
 
+        void update_buffer_data_no_copy(drivers::handle h, const std::size_t offset, const void *ptr, const std::uint32_t size);
+
         /**
          * \brief Set current viewport.
          * 

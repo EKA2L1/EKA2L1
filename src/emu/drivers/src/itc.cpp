@@ -466,6 +466,15 @@ namespace eka2l1::drivers {
         cmd->data_[3] = total_chunk_size;
     }
 
+    void graphics_command_builder::update_buffer_data_no_copy(drivers::handle h, const std::size_t offset, const void *ptr, const std::uint32_t size) {
+        command *cmd = list_.retrieve_next();
+        cmd->opcode_ = graphics_driver_update_buffer;
+        cmd->data_[0] = h;
+        cmd->data_[1] = reinterpret_cast<std::uint64_t>(ptr);
+        cmd->data_[2] = offset;
+        cmd->data_[3] = size;
+    }
+
     void graphics_command_builder::set_viewport(const eka2l1::rect &viewport_rect) {
         command *cmd = list_.retrieve_next();
         cmd->opcode_ = graphics_driver_set_viewport;
