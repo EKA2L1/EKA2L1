@@ -118,7 +118,6 @@ namespace eka2l1::dispatch {
         std::uint32_t mag_filter_;
         std::uint32_t wrap_s_;
         std::uint32_t wrap_t_;
-        std::uint32_t mip_count_;
         float max_anisotrophy_;
         float current_scale_;
 
@@ -173,14 +172,6 @@ namespace eka2l1::dispatch {
 
         std::uint32_t get_wrap_t() const {
             return wrap_t_;
-        }
-
-        void set_mip_count(const std::uint32_t count) {
-            mip_count_ = count;
-        }
-
-        std::uint32_t get_mip_count() const {
-            return mip_count_;
         }
 
         bool auto_regenerate_mipmap() const {

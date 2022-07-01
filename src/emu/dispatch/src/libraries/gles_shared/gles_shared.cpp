@@ -566,12 +566,6 @@ namespace eka2l1::dispatch {
     }
 
     void egl_context_es_shared::flush_to_driver(drivers::graphics_driver *drv, const bool is_frame_swap_flush) {
-        // Update sampling options
-        while (!texture_update_list_.empty()) {
-            gles_driver_texture *tex = E_LOFF(texture_update_list_.first()->deque(), gles_driver_texture, update_link_);
-            tex->update();
-        }
- 
         drivers::graphics_command_builder transfer_builder;
         vertex_buffer_pusher_.flush(transfer_builder);
         index_buffer_pusher_.flush(transfer_builder);
@@ -601,6 +595,11 @@ namespace eka2l1::dispatch {
     }
 
     void egl_context_es_shared::flush_state_changes() {
+        while (!texture_update_list_.empty()) {
+            gles_driver_texture *tex = E_LOFF(texture_update_list_.first()->deque(), gles_driver_texture, update_link_);
+            tex->update();
+        }
+
         // Beside texture parameters still being submitted directly. This is the best for now. 
         if (state_change_tracker_ == 0) {
             return;
@@ -1048,7 +1047,6 @@ namespace eka2l1::dispatch {
         , mag_filter_(GL_LINEAR_EMU)
         , wrap_s_(GL_REPEAT_EMU)
         , wrap_t_(GL_REPEAT_EMU)
-        , mip_count_(0)
         , auto_regen_mipmap_(false)
         , mipmap_gened_(false)
         , texture_type_(GLES_DRIVER_TEXTURE_TYPE_NONE)
@@ -2196,9 +2194,6 @@ namespace eka2l1::dispatch {
                 ctx->cmd_builder_.recreate_texture(tex->handle_value(), dimension, static_cast<std::uint8_t>(i), internal_format_driver,
                     internal_format_driver, dtype, data_to_pass, out_size[i], eka2l1::vec3(width, height, 0), 0, ctx->unpack_alignment_);            
             }
-
-            tex->set_mip_count(static_cast<std::uint32_t>(level + 1));
-            ctx->cmd_builder_.set_texture_max_mip(tex->handle_value(), static_cast<std::uint32_t>(level + 1));
         } else {
             // Pass to driver as normal
             switch (internal_format) {
@@ -2272,9 +2267,6 @@ namespace eka2l1::dispatch {
             if (need_set_params) {
                 tex->sync_parameters_with_driver();
             }
-
-            tex->set_mip_count(common::max(tex->get_mip_count(), static_cast<std::uint32_t>(level + 1)));
-            ctx->cmd_builder_.set_texture_max_mip(tex->handle_value(), tex->get_mip_count());
         }
 
         tex->set_internal_format(internal_format);
@@ -2384,7 +2376,6 @@ namespace eka2l1::dispatch {
 
         tex->set_internal_format(format);
         tex->set_size(eka2l1::vec2(width, height));
-        tex->set_mip_count(common::max(tex->get_mip_count(), static_cast<std::uint32_t>(level + 1)));
         tex->set_mipmap_generated(false);
 
         if (tex->auto_regenerate_mipmap()) {
@@ -2392,7 +2383,6 @@ namespace eka2l1::dispatch {
             tex->set_mipmap_generated(true);
         }
 
-        ctx->cmd_builder_.set_texture_max_mip(tex->handle_value(), tex->get_mip_count());
         ctx->cmd_builder_.set_swizzle(tex->handle_value(), swizzles[0], swizzles[1], swizzles[2], swizzles[3]);
     }
     
