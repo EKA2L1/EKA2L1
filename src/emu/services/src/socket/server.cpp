@@ -124,8 +124,21 @@ namespace eka2l1 {
                 so_create(ctx);
                 return;
 
+            case socket_old_so_create_null:
+                so_create_null(ctx);
+                return;
+
             case socket_old_hr_open:
                 hr_create(ctx, false);
+                return;
+
+            case socket_old_ndb_open:
+            case socket_old_ndb_query:
+            case socket_old_ndb_add:
+            case socket_old_ndb_remove:
+                LOG_TRACE(SERVICE_ESOCK, "NetDatabase opcodes stubbed!");
+                ctx->complete(epoc::error_none);
+
                 return;
 
             default:

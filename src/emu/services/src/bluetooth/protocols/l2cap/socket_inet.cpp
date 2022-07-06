@@ -19,10 +19,11 @@
 
 #include <common/log.h>
 #include <services/bluetooth/btmidman.h>
-#include <services/bluetooth/protocols/l2cap/l2cap.h>
+#include <services/bluetooth/protocols/l2cap/l2cap_inet.h>
+#include <services/internet/protocols/inet.h>
 
 namespace eka2l1::epoc::bt {
-    std::size_t l2cap_socket::get_link_count(std::uint8_t *buffer, const std::size_t avail_size) {
+    std::size_t l2cap_inet_socket::get_link_count(std::uint8_t *buffer, const std::size_t avail_size) {
         LOG_TRACE(SERVICE_BLUETOOTH, "Link count stubbed with 0");
 
         if (avail_size < 4) {
@@ -33,10 +34,10 @@ namespace eka2l1::epoc::bt {
         return 4;
     }
 
-    std::size_t l2cap_socket::get_option(const std::uint32_t option_id, const std::uint32_t option_family,
+    std::size_t l2cap_inet_socket::get_option(const std::uint32_t option_id, const std::uint32_t option_family,
         std::uint8_t *buffer, const std::size_t avail_size) {
         if (option_family == SOL_BT_LINK_MANAGER) {
-            if (pr_->is_oldarch()) {
+            if (protocol_->is_oldarch()) {
                 switch (option_id) {
                 case l2cap_socket_oldarch_link_count:
                     return get_link_count(buffer, avail_size);
@@ -60,30 +61,17 @@ namespace eka2l1::epoc::bt {
         return socket::get_option(option_id, option_family, buffer, avail_size);
     }
 
-    bool l2cap_socket::set_option(const std::uint32_t option_id, const std::uint32_t option_family,
+    bool l2cap_inet_socket::set_option(const std::uint32_t option_id, const std::uint32_t option_family,
         std::uint8_t *buffer, const std::size_t avail_size) {
-        if (option_family == epoc::socket::SOCKET_OPTION_FAMILY_BASE) {
-            if (pr_->is_oldarch()) {
-                switch (option_id) {
-                case epoc::socket::SOCKET_OPTION_ID_BLOCKING_IO:
-                    LOG_INFO(SERVICE_BLUETOOTH, "Unblocking/Blocking IO stubbed");
-                    return true;
-
-                default:
-                    LOG_WARN(SERVICE_BLUETOOTH, "Unhandled option {} in socket base family", option_id);
-                    return false;
-                }
-            } else {
-                LOG_WARN(SERVICE_BLUETOOTH, "Unhandled option {} in socket base family", option_id);
-                return false;
-            }
-        }
-
         return socket::set_option(option_id, option_family, buffer, avail_size);
     }
 
-    std::int32_t l2cap_protocol::message_size() const {
+    std::int32_t l2cap_inet_protocol::message_size() const {
         // TODO: Proper size
         return epoc::socket::SOCKET_MESSAGE_SIZE_NO_LIMIT;
+    }
+
+    std::unique_ptr<epoc::socket::socket> l2cap_inet_protocol::make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket::socket_type sock_type) {
+        return std::make_unique<l2cap_inet_socket>(this, inet_protocol_->make_socket(internet::INET6_ADDRESS_FAMILY, internet::INET_TCP_PROTOCOL_ID, socket::socket_type_stream));
     }
 }

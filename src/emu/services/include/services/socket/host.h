@@ -26,6 +26,10 @@
 #include <string>
 #include <vector>
 
+namespace eka2l1::epoc {
+    struct notify_info;
+}
+
 namespace eka2l1::epoc::socket {
     struct protocol;
 
@@ -52,10 +56,10 @@ namespace eka2l1::epoc::socket {
         virtual std::u16string host_name() const = 0;
         virtual bool host_name(const std::u16string &new_name) = 0;
 
-        virtual bool get_by_address(saddress &addr, name_entry &result) = 0;
-        virtual bool get_by_name(name_entry &supply_and_result) = 0;
-        virtual bool next(name_entry &result) {
-            return false;
+        virtual void get_by_address(saddress &addr, name_entry *result, epoc::notify_info &complete_info) = 0;
+        virtual void get_by_name(name_entry *supply_and_result, epoc::notify_info &complete_info) = 0;
+        virtual void next(name_entry *result, epoc::notify_info &complete_info);
+        virtual void cancel() {
         }
     };
 }

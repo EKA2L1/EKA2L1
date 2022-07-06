@@ -64,8 +64,10 @@ namespace eka2l1 {
             void get_host_name(service::ipc_context *ctx);
             void set_host_name(service::ipc_context *ctx);
             void get_by_name(service::ipc_context *ctx);
+            void get_by_address(service::ipc_context *ctx);
             void next(service::ipc_context *ctx);
             void close(service::ipc_context *ctx);
+            void cancel(service::ipc_context *ctx);
 
         public:
             explicit socket_host_resolver(socket_client_session *parent, std::unique_ptr<host_resolver> &resolver,
@@ -93,9 +95,12 @@ namespace eka2l1 {
             void recv(service::ipc_context *ctx, const bool has_return_length, const bool one_or_more, const bool has_addr);
             void cancel_send(service::ipc_context *ctx);
             void cancel_recv(service::ipc_context *ctx);
+            void cancel_accept(service::ipc_context *ctx);
             void cancel_all(service::ipc_context *ctx);
             void local_name(service::ipc_context *ctx);
             void remote_name(service::ipc_context *ctx);
+            void listen(service::ipc_context *ctx);
+            void accept(service::ipc_context *ctx);
 
         public:
             explicit socket_socket(socket_client_session *parent, std::unique_ptr<socket> &sock);
@@ -192,14 +197,34 @@ namespace eka2l1 {
         socket_old_pr_info = 0x01,
         socket_old_pr_find = 0x02,
         socket_old_so_create = 0x06,
+        socket_old_so_create_null = 0x07,
+        socket_old_so_bind = 0x10,
+        socket_old_so_accept = 0x11,
+        socket_old_so_listen = 0x12,
         socket_old_so_set_opt = 0x13,
         socket_old_so_get_opt = 0x14,
         socket_old_so_ioctl = 0x15,
+        socket_old_so_local_name = 0x17,
+        socket_old_so_remote_name = 0x18,
         socket_old_so_close = 0x19,
+        socket_old_so_cancel_ioctl = 0x1B,
+        socket_old_so_cancel_recv = 0x1C,
+        socket_old_so_cancel_send = 0x1D,
+        socket_old_so_cancel_connect = 0x1E,
+        socket_old_so_cancel_accept = 0x1F,
+        socket_old_so_cancel_all = 0x20,
         socket_old_hr_open = 0x24,
+        socket_old_hr_get_by_name = 0x25,
+        socket_old_hr_next = 0x26,
+        socket_old_hr_get_by_address = 0x27,
         socket_old_hr_get_host_name = 0x28,
         socket_old_hr_set_host_name = 0x29,
-        socket_old_hr_close = 0x2B
+        socket_old_hr_cancel = 0x2A,
+        socket_old_hr_close = 0x2B,
+        socket_old_ndb_open = 0x33,
+        socket_old_ndb_query = 0x34,
+        socket_old_ndb_add = 0x35,
+        socket_old_ndb_remove = 0x36
     };
 
     struct protocol_description {

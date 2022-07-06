@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 EKA2L1 Team
+ * Copyright (c) 2022 EKA2L1 Team
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -19,33 +19,26 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
+#include <services/internet/protocols/inet.h>
+
+extern "C" {
+#include <uv.h>
+}
 
 namespace eka2l1::epoc::bt {
-    /**
-     * @brief Middle layer for use of communicating between host OS and
-     *        guest OS's bluetooth stack.
-     */
-    class midman {
-    public:
-        static constexpr std::size_t MAX_PORT = 60;
-
-    protected:
-        std::u16string local_name_;
-        void *native_handle_;
+    struct asker_inet {
+    private:
+        uv_udp_t *bt_asker_;
+        uv_timer_t *bt_asker_retry_timer_;
 
     public:
-        explicit midman();
+        using response_callback = std::function<void(const char *response, const ssize_t size)>;
 
-        std::u16string device_name() const {
-            return local_name_;
-        }
+    public:
+        explicit asker_inet();
+        ~asker_inet();
 
-        void device_name(const std::u16string &name) {
-            local_name_ = name;
-        }
+        void send_request_with_retries(const internet::sinet6_address &addr, char *request, const std::size_t request_size,
+            response_callback response_cb);
     };
-
-    std::unique_ptr<midman> make_bluetooth_midman(const int internet_bluetooth_port, const std::uint32_t reserved_stack_type = 0);
 }

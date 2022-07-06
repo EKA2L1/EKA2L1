@@ -20,35 +20,47 @@
 #pragma once
 
 #include <services/bluetooth/protocols/common.h>
+#include <services/bluetooth/protocols/asker_inet.h>
+#include <services/internet/protocols/inet.h>
 #include <services/socket/protocol.h>
 
 #include <string>
 
 namespace eka2l1::epoc::bt {
     class midman;
-    class btlink_protocol;
+    class btlink_inet_protocol;
 
-    class btlink_host_resolver : public socket::host_resolver {
+    class btlink_inet_host_resolver : public socket::host_resolver {
     private:
-        btlink_protocol *papa_;
+        btlink_inet_protocol *papa_;
+
+        std::uint32_t current_friend_;
+        bool need_name_;
+
+        asker_inet friend_querier_;
+
+        epoc::notify_info friend_retrieve_info_;
+        epoc::socket::name_entry *friend_name_entry_;
 
     public:
-        explicit btlink_host_resolver(btlink_protocol *papa);
+        explicit btlink_inet_host_resolver(btlink_inet_protocol *papa);
+        ~btlink_inet_host_resolver();
 
         std::u16string host_name() const override;
         bool host_name(const std::u16string &name) override;
 
-        bool get_by_address(epoc::socket::saddress &addr, epoc::socket::name_entry &result) override;
-        bool get_by_name(epoc::socket::name_entry &supply_and_result) override;
+        void get_by_address(epoc::socket::saddress &addr, epoc::socket::name_entry *result, epoc::notify_info &info) override;
+        void get_by_name(epoc::socket::name_entry *result, epoc::notify_info &info) override;
+        void next(epoc::socket::name_entry *result, epoc::notify_info &info) override;
     };
 
-    class btlink_protocol : public socket::protocol {
+    class btlink_inet_protocol : public socket::protocol {
     private:
         // lmao no
         midman *mid_;
 
     public:
-        explicit btlink_protocol(midman *mid, const bool oldarch)
+        explicit btlink_inet_protocol(midman *mid, const bool oldarch)
             : socket::protocol(oldarch)
             , mid_(mid) {
         }
@@ -88,7 +100,7 @@ namespace eka2l1::epoc::bt {
         }
 
         virtual std::unique_ptr<epoc::socket::host_resolver> make_host_resolver(const std::uint32_t id, const std::uint32_t family_id) override {
-            return std::make_unique<btlink_host_resolver>(this);
+            return std::make_unique<btlink_inet_host_resolver>(this);
         }
     };
 }

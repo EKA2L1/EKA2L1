@@ -19,11 +19,16 @@
 
 #pragma once
 
-#include <services/bluetooth/protocols/btlink/btlink.h>
+#include <services/bluetooth/protocols/btlink/btlink_inet.h>
+#include <services/bluetooth/protocols/base_inet.h>
 #include <services/socket/socket.h>
 
+namespace eka2l1::epoc::internet {
+    class inet_bridged_protocol;
+}
+
 namespace eka2l1::epoc::bt {
-    class l2cap_protocol;
+    class l2cap_inet_protocol;
 
     enum l2cap_socket_option_oldarch {
         l2cap_socket_oldarch_link_count = 0,
@@ -34,29 +39,29 @@ namespace eka2l1::epoc::bt {
         l2cap_socket_link_count = 3,
     };
 
-    class l2cap_socket : public socket::socket {
-    private:
-        l2cap_protocol *pr_;
-
+    class l2cap_inet_socket : public btinet_socket {
     protected:
         std::size_t get_link_count(std::uint8_t *buffer, const std::size_t avail_size);
 
     public:
-        explicit l2cap_socket(l2cap_protocol *pr)
-            : pr_(pr) {
+        explicit l2cap_inet_socket(l2cap_inet_protocol *pr, std::unique_ptr<epoc::socket::socket> &inet_sock)
+            : btinet_socket(reinterpret_cast<btlink_inet_protocol*>(pr), inet_sock) {
         }
 
-        virtual std::size_t get_option(const std::uint32_t option_id, const std::uint32_t option_family,
+        std::size_t get_option(const std::uint32_t option_id, const std::uint32_t option_family,
             std::uint8_t *buffer, const std::size_t avail_size) override;
-
-        virtual bool set_option(const std::uint32_t option_id, const std::uint32_t option_family,
+        bool set_option(const std::uint32_t option_id, const std::uint32_t option_family,
             std::uint8_t *buffer, const std::size_t avail_size) override;
     };
 
-    class l2cap_protocol : public btlink_protocol {
+    class l2cap_inet_protocol : public btlink_inet_protocol {
+    private:
+        epoc::internet::inet_bridged_protocol *inet_protocol_;
+
     public:
-        explicit l2cap_protocol(midman *mid, const bool oldarch)
-            : btlink_protocol(mid, oldarch) {
+        explicit l2cap_inet_protocol(midman *mid, epoc::internet::inet_bridged_protocol *inet_pro, const bool oldarch)
+            : btlink_inet_protocol(mid, oldarch)
+            , inet_protocol_(inet_pro) {
         }
 
         virtual std::u16string name() const override {
@@ -69,8 +74,6 @@ namespace eka2l1::epoc::bt {
 
         virtual std::int32_t message_size() const override;
 
-        virtual std::unique_ptr<epoc::socket::socket> make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket::socket_type sock_type) override {
-            return std::make_unique<l2cap_socket>(this);
-        }
+        virtual std::unique_ptr<epoc::socket::socket> make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket::socket_type sock_type) override;
     };
 }

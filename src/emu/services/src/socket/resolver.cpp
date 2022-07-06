@@ -24,6 +24,10 @@
 #include <system/epoc.h>
 
 namespace eka2l1::epoc::socket {
+    void host_resolver::next(name_entry *result, epoc::notify_info &complete_info) {
+        complete_info.complete(epoc::error_eof);
+    }
+
     socket_host_resolver::socket_host_resolver(socket_client_session *parent, std::unique_ptr<host_resolver> &resolver,
         connection *conn)
         : socket_subsession(parent)
@@ -62,27 +66,55 @@ namespace eka2l1::epoc::socket {
             return;
         }
 
-        epoc::socket::name_entry entry_holder;
-        entry_holder.name_ = name.value();
-
-        if (!resolver_->get_by_name(entry_holder)) {
-            ctx->complete(epoc::error_general);
+        epoc::socket::name_entry *entry = reinterpret_cast<epoc::socket::name_entry*>(ctx->get_descriptor_argument_ptr(1));
+        if (!entry) {
+            ctx->complete(epoc::error_argument);
             return;
         }
 
-        ctx->write_data_to_descriptor_argument(1, entry_holder);
-        ctx->complete(epoc::error_none);
+        entry->name_ = name.value();
+
+        epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
+        resolver_->get_by_name(entry, info);
+
+        ctx->set_descriptor_argument_length(1, sizeof(epoc::socket::name_entry));
+    }
+
+    void socket_host_resolver::get_by_address(service::ipc_context *ctx) {
+        std::optional<saddress> addr = ctx->get_argument_data_from_descriptor<saddress>(0);
+
+        if (!addr.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        epoc::socket::name_entry *entry = reinterpret_cast<epoc::socket::name_entry*>(ctx->get_descriptor_argument_ptr(1));
+        if (!entry) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
+        resolver_->get_by_address(addr.value(), entry, info);
+
+        ctx->set_descriptor_argument_length(1, sizeof(epoc::socket::name_entry));
     }
     
     void socket_host_resolver::next(service::ipc_context *ctx) {
-        epoc::socket::name_entry entry_holder;
-
-        if (!resolver_->next(entry_holder)) {
-            ctx->complete(epoc::error_not_found);
+        epoc::socket::name_entry *entry = reinterpret_cast<epoc::socket::name_entry*>(ctx->get_descriptor_argument_ptr(1));
+        if (!entry) {
+            ctx->complete(epoc::error_argument);
             return;
         }
 
-        ctx->write_data_to_descriptor_argument(1, entry_holder);
+        epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
+        resolver_->next(entry, info);
+
+        ctx->set_descriptor_argument_length(1, sizeof(epoc::socket::name_entry));
+    }
+    
+    void socket_host_resolver::cancel(service::ipc_context *ctx) {
+        resolver_->cancel();
         ctx->complete(epoc::error_none);
     }
 
@@ -104,6 +136,18 @@ namespace eka2l1::epoc::socket {
 
             case socket_old_hr_close:
                 close(ctx);
+                return;
+
+            case socket_old_hr_get_by_address:
+                get_by_address(ctx);
+                return;
+
+            case socket_old_hr_cancel:
+                cancel(ctx);
+                return;
+
+            case socket_old_hr_next:
+                next(ctx);
                 return;
 
             default:

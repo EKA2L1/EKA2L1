@@ -97,6 +97,7 @@ namespace eka2l1::config {
 
         bool enable_gdbstub{ false };
         int gdb_port{ 24689 };
+        int internet_bluetooth_port{ 35689 };
 
         std::string storage = "data"; // Set this to dot, avoid making it absolute
 

@@ -91,6 +91,10 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::close_down() {
+        if (accept_server_) {
+            accept_server_->cancel_accept();
+        }
+
         if (opaque_handle_) {
             uv_async_t *async = new uv_async_t;
             async->data = this;
@@ -286,24 +290,6 @@ namespace eka2l1::epoc::internet {
         }
     }
 
-#define GUEST_TO_BSD_ADDR(addr, dest_ptr)                                               \
-    sockaddr_in ipv4_addr;                                                              \
-    sockaddr_in6 ipv6_addr;                                                             \
-    if (addr.family_ == INET_ADDRESS_FAMILY) {                                          \
-        ipv4_addr.sin_family = AF_INET;                                                 \
-        ipv4_addr.sin_port = htons(static_cast<std::uint16_t>(addr.port_));             \
-        std::memcpy(&ipv4_addr.sin_addr, addr.user_data_, 4);                           \
-        dest_ptr = reinterpret_cast<sockaddr*>(&ipv4_addr);                             \
-    } else {                                                                            \
-        ipv6_addr.sin6_family = AF_INET6;                                               \
-        ipv6_addr.sin6_port = htons(static_cast<std::uint16_t>(addr.port_));            \
-        const sinet6_address &ipv6_guest = static_cast<const sinet6_address&>(addr);    \
-        ipv6_addr.sin6_flowinfo = ipv6_guest.get_flow();                                \
-        ipv6_addr.sin6_scope_id = ipv6_guest.get_scope();                               \
-        std::memcpy(&ipv6_addr.sin6_addr, ipv6_guest.get_address_32x4(), 16);           \
-        dest_ptr = reinterpret_cast<sockaddr*>(&ipv6_addr);                             \
-    }
-
     void inet_socket::complete_connect_done_info(const int err) {
         if (connect_done_info_.empty()) {
             return;
@@ -407,6 +393,143 @@ namespace eka2l1::epoc::internet {
 
         info.complete(epoc::error_none);
     }
+
+    void inet_socket::handle_new_connection() {
+        kernel_system *kern = nullptr;
+        if (!accept_done_info_.empty()) {
+            kern = accept_done_info_.requester->get_kernel_object_owner();
+        } else {
+            return;
+        }
+
+        if (!accept_socket_ptr_->opaque_handle_) {
+            accept_socket_ptr_->opaque_handle_ = new uv_tcp_t;
+            uv_tcp_init(uv_default_loop(), reinterpret_cast<uv_tcp_t*>(accept_socket_ptr_->opaque_handle_));
+        }
+
+        uv_accept(reinterpret_cast<uv_stream_t*>(opaque_handle_), reinterpret_cast<uv_stream_t*>(accept_socket_ptr_->opaque_handle_));
+
+        accept_socket_ptr_->accept_server_ = nullptr;
+        accept_socket_ptr_ = nullptr;
+
+        kern->lock();
+        accept_done_info_.complete(epoc::error_none);
+        kern->unlock();
+    }
+
+    std::int32_t inet_socket::listen(const std::uint32_t backlog) {
+        if (!opaque_handle_) {
+            return epoc::error_not_ready;
+        }
+
+        if (protocol_ == INET_UDP_PROTOCOL_ID) {
+            LOG_ERROR(SERVICE_INTERNET, "Listen is not supported on UDP protocol!");
+            return epoc::error_not_supported;
+        }
+
+        const int err = uv_listen(reinterpret_cast<uv_stream_t*>(opaque_handle_), backlog, [](uv_stream_t *server, int status) {
+            inet_socket *sock = reinterpret_cast<inet_socket*>(server->data);
+            if (status < 0) {
+                LOG_ERROR(SERVICE_INTERNET, "Socket new connection has error status {}", status);
+                return;
+            }
+            sock->handle_new_connection();
+        });
+
+        if (err < 0) {
+            LOG_ERROR(SERVICE_INTERNET, "libuv's socket listening failed with code {}", err);
+            return epoc::error_general;
+        }
+
+        return epoc::error_none;
+    }
+
+    void inet_socket::handle_accept_impl(std::unique_ptr<epoc::socket::socket> *pending_sock, epoc::notify_info &complete_info) {
+        kernel_system *kern = nullptr;
+        if (!complete_info.empty()) {
+            kern = complete_info.requester->get_kernel_object_owner();
+        } else {
+            return;
+        }
+
+        if (!accept_done_info_.empty()) {
+            LOG_ERROR(SERVICE_INTERNET, "Accept is called when pending accept is not yet finished!");
+            
+            kern->lock();
+            complete_info.complete(epoc::error_permission_denied);
+            kern->unlock();
+
+            accept_event_.set();
+
+            return;
+        }
+
+        accept_socket_ptr_ = reinterpret_cast<inet_socket*>(pending_sock->get());
+        accept_socket_ptr_->accept_server_ = this;
+        accept_done_info_ = complete_info;
+
+        if (!accept_socket_ptr_->opaque_handle_) {
+            accept_socket_ptr_->opaque_handle_ = new uv_tcp_t;
+            uv_tcp_init(uv_default_loop(), reinterpret_cast<uv_tcp_t*>(accept_socket_ptr_->opaque_handle_));
+        }
+
+        if (uv_accept(reinterpret_cast<uv_stream_t*>(opaque_handle_), reinterpret_cast<uv_stream_t*>(accept_socket_ptr_->opaque_handle_)) == UV_EAGAIN) {
+            // No stream is yet available, let the later connection notification handle it then!
+            accept_event_.set();
+            return;
+        }
+
+        // Well we are done, lol
+        kern->lock();
+        accept_done_info_.complete(epoc::error_none);
+        accept_socket_ptr_->accept_server_ = nullptr;
+        accept_socket_ptr_ = nullptr;
+        kern->unlock();
+
+        accept_event_.set();
+    }
+
+    void inet_socket::accept(std::unique_ptr<epoc::socket::socket> *pending_sock, epoc::notify_info &complete_info) {
+        *pending_sock = std::make_unique<inet_socket>(papa_);
+        accept_event_.reset();
+
+        struct accept_task_info {
+            std::unique_ptr<epoc::socket::socket> *socket_ptr_;
+            epoc::notify_info done_info_;
+            inet_socket *self_;
+        };
+
+        accept_task_info *task_info = new accept_task_info;
+        task_info->socket_ptr_ = pending_sock;
+        task_info->done_info_ = complete_info;
+        task_info->self_ = this;
+
+        uv_async_t *async = new uv_async_t;
+        async->data = task_info;
+
+        // Thread-safe handling
+        uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
+            accept_task_info *task_info = reinterpret_cast<accept_task_info*>(async->data);
+            task_info->self_->handle_accept_impl(task_info->socket_ptr_, task_info->done_info_);
+
+            delete task_info;
+            close_and_delete_async(async);
+        });
+
+        uv_async_send(async);
+        accept_event_.wait();
+    }
+
+    void inet_socket::cancel_accept() {
+        // NOTE: Sad race condition
+        if (accept_done_info_.empty()) {
+            return;
+        }
+
+        accept_done_info_.complete(epoc::error_cancel);
+        accept_socket_ptr_->accept_server_ = nullptr;
+        accept_socket_ptr_ = nullptr;
+    }   
 
     std::int32_t inet_socket::local_name(epoc::socket::saddress &result, std::uint32_t &result_len) {
         if (!opaque_handle_) {

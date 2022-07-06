@@ -36,17 +36,19 @@ namespace eka2l1 {
 
     btman_server::btman_server(eka2l1::system *sys)
         : service::typical_server(sys, get_btman_server_name_by_epocver(sys->get_symbian_version_use())) {
+        mid_ = epoc::bt::make_bluetooth_midman(sys->get_config()->internet_bluetooth_port);
+
         socket_server *ssock = reinterpret_cast<socket_server *>(kern->get_by_name<service::server>(
             get_socket_server_name_by_epocver(kern->get_epoc_version())));
 
         config::state *conf = sys->get_config();
 
         if (conf) {
-            mid_.device_name(common::utf8_to_ucs2(conf->device_display_name));
+            mid_->device_name(common::utf8_to_ucs2(conf->device_display_name));
         }
 
         if (ssock) {
-            epoc::bt::add_bluetooth_stack_protocols(ssock, &mid_, is_oldarch());
+            epoc::bt::add_bluetooth_stack_protocols(ssock, mid_.get(), is_oldarch());
         }
     }
 
@@ -56,7 +58,7 @@ namespace eka2l1 {
     }
 
     void btman_server::device_name(const std::u16string &new_name) {
-        mid_.device_name(new_name);
+        mid_->device_name(new_name);
     }
 
     bool btman_server::is_oldarch() {

@@ -32,6 +32,17 @@ namespace eka2l1::epoc::socket {
 
     bool socket::set_option(const std::uint32_t option_id, const std::uint32_t option_family,
         std::uint8_t *buffer, const std::size_t avail_size) {
+        if (option_family == epoc::socket::SOCKET_OPTION_FAMILY_BASE) {
+            switch (option_id) {
+            case epoc::socket::SOCKET_OPTION_ID_BLOCKING_IO:
+                LOG_INFO(SERVICE_BLUETOOTH, "Set Blocking IO stubbed");
+                return true;
+
+            default:
+                break;
+            }
+        }
+
         LOG_ERROR(SERVICE_ESOCK, "Unhandled base option family {} (id {})", option_family, option_id);
         return false;
     }
@@ -70,6 +81,16 @@ namespace eka2l1::epoc::socket {
         LOG_ERROR(SERVICE_ESOCK, "Get socket's remote name unimplemented!");
         return epoc::error_not_supported;
     }
+    
+    std::int32_t socket::listen(const std::uint32_t backlog) {
+        LOG_ERROR(SERVICE_ESOCK, "Socket listening unimplemented!");
+        return epoc::error_not_supported;
+    }
+
+    void socket::accept(std::unique_ptr<socket> *pending_sock, epoc::notify_info &complete_info) {
+        LOG_ERROR(SERVICE_ESOCK, "Socket accept unimplemented!");
+        complete_info.complete(epoc::error_not_supported);
+    }
 
     void socket::cancel_receive() {
         LOG_ERROR(SERVICE_ESOCK, "Cancel receive unimplemented!");
@@ -81,6 +102,10 @@ namespace eka2l1::epoc::socket {
 
     void socket::cancel_connect() {
         LOG_ERROR(SERVICE_ESOCK, "Cancel connect unimplemented!");
+    }
+
+    void socket::cancel_accept() {
+        LOG_ERROR(SERVICE_ESOCK, "Cancel accept unimplemented!");
     }
 
     socket_socket::socket_socket(socket_client_session *parent, std::unique_ptr<socket> &sock)
@@ -387,7 +412,43 @@ namespace eka2l1::epoc::socket {
         ctx->set_descriptor_argument_length(0, addr_real_size);
         ctx->complete(epoc::error_none);
     }
-    
+
+    void socket_socket::listen(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> backlog = ctx->get_argument_value<std::uint32_t>(0);
+        if (!backlog.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        ctx->complete(sock_->listen(backlog.value()));
+    }
+
+    void socket_socket::accept(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> subsess_id = ctx->get_argument_value<std::uint32_t>(1);
+
+        if (subsess_id .has_value() && (subsess_id.value() > 0)) {
+            socket_subsession_instance *inst = parent_->subsessions_.get(subsess_id.value());
+
+            if (inst) {
+                socket_socket *empty_socket = reinterpret_cast<socket_socket*>(inst->get());
+                if (empty_socket->type() != socket_subsession_type_socket) {
+                    LOG_ERROR(SERVICE_ESOCK, "Accepting provide non-socket handle!");
+
+                    ctx->complete(epoc::error_bad_handle);
+                    return;
+                }
+                
+                epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
+                sock_->accept(&empty_socket->sock_, info);
+            } else {
+                ctx->complete(epoc::error_bad_handle);
+                return;
+            }
+        } else {
+            ctx->complete(epoc::error_argument);
+        }
+    }
+
     void socket_socket::cancel_send(service::ipc_context *ctx) {
         sock_->cancel_send();
         ctx->complete(epoc::error_none);
@@ -395,6 +456,11 @@ namespace eka2l1::epoc::socket {
 
     void socket_socket::cancel_recv(service::ipc_context *ctx) {
         sock_->cancel_receive();
+        ctx->complete(epoc::error_none);
+    }
+
+    void socket_socket::cancel_accept(service::ipc_context *ctx) {
+        sock_->cancel_accept();
         ctx->complete(epoc::error_none);
     }
 
@@ -421,6 +487,30 @@ namespace eka2l1::epoc::socket {
 
             case socket_old_so_close:
                 close(ctx);
+                return;
+
+            case socket_old_so_ioctl:
+                ioctl(ctx);
+                return;
+
+            case socket_old_so_bind:
+                bind(ctx);
+                return;
+
+            case socket_old_so_listen:
+                listen(ctx);
+                return;
+
+            case socket_old_so_accept:
+                accept(ctx);
+                return;
+
+            case socket_old_so_cancel_accept:
+                cancel_accept(ctx);
+                return;
+
+            case socket_old_so_local_name:
+                local_name(ctx);
                 return;
 
             default:

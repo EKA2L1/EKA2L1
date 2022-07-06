@@ -17,11 +17,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <services/bluetooth/protocols/btmidman_inet.h>
 #include <services/bluetooth/btmidman.h>
 
 namespace eka2l1::epoc::bt {
     midman::midman()
         : local_name_(u"eka2l1")
         , native_handle_(nullptr) {
+    }
+    
+    std::unique_ptr<midman> make_bluetooth_midman(const int internet_bluetooth_port, const std::uint32_t reserved_stack_type) {
+        return std::make_unique<midman_inet>(internet_bluetooth_port);
     }
 }

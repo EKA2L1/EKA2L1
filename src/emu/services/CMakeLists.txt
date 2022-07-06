@@ -20,7 +20,12 @@ add_library(epocservs
         include/services/audio/keysound/ringtab.h
         include/services/audio/mmf/audio.h
         include/services/audio/mmf/dev.h
-        include/services/bluetooth/protocols/btlink/btlink.h
+        include/services/bluetooth/protocols/btlink/btlink_inet.h
+        include/services/bluetooth/protocols/l2cap/l2cap_inet.h
+        include/services/bluetooth/protocols/rfcomm/rfcomm_inet.h
+        include/services/bluetooth/protocols/asker_inet.h
+        include/services/bluetooth/protocols/base_inet.h
+        include/services/bluetooth/protocols/btmidman_inet.h
         include/services/bluetooth/protocols/common.h
         include/services/bluetooth/protocols/overall.h
         include/services/bluetooth/bt.h
@@ -149,8 +154,12 @@ add_library(epocservs
         src/audio/keysound/keysound.cpp
         src/audio/mmf/audio.cpp
         src/audio/mmf/dev.cpp
-        src/bluetooth/protocols/btlink/resolver.cpp
-        src/bluetooth/protocols/l2cap/socket.cpp
+        src/bluetooth/protocols/btlink/resolver_inet.cpp
+        src/bluetooth/protocols/l2cap/socket_inet.cpp
+        src/bluetooth/protocols/rfcomm/rfcomm_inet.cpp
+        src/bluetooth/protocols/asker_inet.cpp
+        src/bluetooth/protocols/base_inet.cpp
+        src/bluetooth/protocols/btmidman_inet.cpp
         src/bluetooth/protocols/overall.cpp
         src/bluetooth/bt.cpp
         src/bluetooth/btman.cpp
