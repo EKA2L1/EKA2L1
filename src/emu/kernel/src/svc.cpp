@@ -5345,8 +5345,8 @@ namespace eka2l1::epoc {
         std::basic_string<T> to_find_str(str, length);
 
         // Regex power. Find this for me...
-        to_find_str = std::string(1, static_cast<T>('(')) + to_find_str;
-        to_find_str += std::string(1, static_cast<T>(')'));
+        to_find_str = std::basic_string<T>(1, static_cast<T>('(')) + to_find_str;
+        to_find_str += std::basic_string<T>(1, static_cast<T>(')'));
 
         const std::size_t pos = common::match_wildcard_in_string(cvt_func(source_str), cvt_func(to_find_str), is_fold);
 
@@ -5359,6 +5359,10 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, desc8_find, epoc::desc8 *dd, const char *str, const std::int32_t length, const bool is_fold) {
         return desc_find(kern, common::utf8_to_wstr, dd, str, length, is_fold);
+    }
+
+    BRIDGE_FUNC(std::int32_t, desc16_find, epoc::desc16 *dd, const char16_t *str, const std::int32_t length, const bool is_fold) {
+        return desc_find(kern, common::ucs2_to_wstr, dd, str, length, is_fold);
     }
 
     BRIDGE_FUNC(std::uint32_t, user_language) {
@@ -6030,6 +6034,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x800054, des8_match),
         BRIDGE_REGISTER(0x800055, des16_match),
         BRIDGE_REGISTER(0x800056, desc8_find),
+        BRIDGE_REGISTER(0x800057, desc16_find),
         BRIDGE_REGISTER(0x800058, des8_locate_fold),
         BRIDGE_REGISTER(0x800059, des16_locate_fold),
         BRIDGE_REGISTER(0x80005A, handle_name_eka1),
@@ -6141,6 +6146,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x800054, des8_match),
         BRIDGE_REGISTER(0x800055, des16_match),
         BRIDGE_REGISTER(0x800056, desc8_find),
+        BRIDGE_REGISTER(0x800057, desc16_find),
         BRIDGE_REGISTER(0x800058, des8_locate_fold),
         BRIDGE_REGISTER(0x800059, des16_locate_fold),
         BRIDGE_REGISTER(0x80005A, handle_name_eka1),
@@ -6260,6 +6266,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x800054, des8_match),
         BRIDGE_REGISTER(0x800055, des16_match),
         BRIDGE_REGISTER(0x800056, desc8_find),
+        BRIDGE_REGISTER(0x800057, desc16_find),
         BRIDGE_REGISTER(0x800058, des8_locate_fold),
         BRIDGE_REGISTER(0x800059, des16_locate_fold),
         BRIDGE_REGISTER(0x80005A, handle_name_eka1),
