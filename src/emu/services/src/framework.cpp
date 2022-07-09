@@ -45,10 +45,13 @@ namespace eka2l1::service {
             return false;
         }
 
-        // For sure, reset
-        res->reset();
+        // For sure, reset. Move first, let remove happens the we remove ours
+        // For recursive purpose
+        ref_count_object_heap_ptr moved = std::move(*res);
 
         objs.erase(res);
+        moved.reset();
+
         return true;
     }
 
