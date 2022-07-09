@@ -86,10 +86,6 @@ namespace eka2l1::epoc::internet {
         return sock;
     }
 
-    void inet_socket::set_exit_event() {
-        exit_event_.set();
-    }
-
     void inet_socket::close_down() {
         if (accept_server_) {
             accept_server_->cancel_accept();
@@ -97,26 +93,17 @@ namespace eka2l1::epoc::internet {
 
         if (opaque_handle_) {
             uv_async_t *async = new uv_async_t;
-            async->data = this;
+            async->data = opaque_handle_;
 
             uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
-                inet_socket *sock = reinterpret_cast<inet_socket*>(async->data);
-                uv_handle_t *handle = reinterpret_cast<uv_handle_t*>(sock->get_opaque_handle());
-                handle->data = sock;
-
-                uv_close(handle, [](uv_handle_t *handle) {
-                    reinterpret_cast<inet_socket*>(handle->data)->set_exit_event();
+                uv_close(reinterpret_cast<uv_handle_t*>(async->data), [](uv_handle_t *handle) {
+                    delete handle;
                 });
 
                 close_and_delete_async(async);
             });
 
             uv_async_send(async);
-            exit_event_.wait();
-
-            // Delete the stored data
-            std::uint8_t *opaque_handle_casted = reinterpret_cast<std::uint8_t*>(opaque_handle_);
-            delete opaque_handle_casted;
 
             opaque_handle_ = nullptr;
             protocol_ = 0;
@@ -228,8 +215,6 @@ namespace eka2l1::epoc::internet {
 
         // Start the looper now, we might have the first customer!
         papa_->initialize_looper();
-        exit_event_.reset();
-
         open_event_.wait();
 
         if (params.result_ < 0) {
@@ -427,6 +412,8 @@ namespace eka2l1::epoc::internet {
             return epoc::error_not_supported;
         }
 
+        reinterpret_cast<uv_stream_t*>(opaque_handle_)->data = this;
+
         const int err = uv_listen(reinterpret_cast<uv_stream_t*>(opaque_handle_), backlog, [](uv_stream_t *server, int status) {
             inet_socket *sock = reinterpret_cast<inet_socket*>(server->data);
             if (status < 0) {
@@ -459,8 +446,6 @@ namespace eka2l1::epoc::internet {
             complete_info.complete(epoc::error_permission_denied);
             kern->unlock();
 
-            accept_event_.set();
-
             return;
         }
 
@@ -475,7 +460,6 @@ namespace eka2l1::epoc::internet {
 
         if (uv_accept(reinterpret_cast<uv_stream_t*>(opaque_handle_), reinterpret_cast<uv_stream_t*>(accept_socket_ptr_->opaque_handle_)) == UV_EAGAIN) {
             // No stream is yet available, let the later connection notification handle it then!
-            accept_event_.set();
             return;
         }
 
@@ -485,13 +469,10 @@ namespace eka2l1::epoc::internet {
         accept_socket_ptr_->accept_server_ = nullptr;
         accept_socket_ptr_ = nullptr;
         kern->unlock();
-
-        accept_event_.set();
     }
 
     void inet_socket::accept(std::unique_ptr<epoc::socket::socket> *pending_sock, epoc::notify_info &complete_info) {
         *pending_sock = std::make_unique<inet_socket>(papa_);
-        accept_event_.reset();
 
         struct accept_task_info {
             std::unique_ptr<epoc::socket::socket> *socket_ptr_;
@@ -517,7 +498,6 @@ namespace eka2l1::epoc::internet {
         });
 
         uv_async_send(async);
-        accept_event_.wait();
     }
 
     void inet_socket::cancel_accept() {
@@ -683,13 +663,11 @@ namespace eka2l1::epoc::internet {
                 inet_socket *parent_;
             };
 
-            uv_connect_t *connect = reinterpret_cast<uv_connect_t*>(opaque_connect_);
-
             uv_tcp_write_task_info *info = new uv_tcp_write_task_info;
             info->buf_sent_ = uv_buf_init(const_cast<char*>(reinterpret_cast<const char*>(data)), static_cast<std::uint32_t>(data_size));
             info->parent_ = this;
             info->write_ = reinterpret_cast<uv_write_t*>(opaque_write_info_);
-            info->stream_ = connect->handle;
+            info->stream_ = reinterpret_cast<uv_stream_t*>(opaque_handle_);
             info->write_->data = this;
 
             uv_async_t *async = new uv_async_t;
@@ -838,7 +816,7 @@ namespace eka2l1::epoc::internet {
         }
 
         // No need, you should stop for now
-        uv_read_stop(reinterpret_cast<uv_connect_t*>(opaque_connect_)->handle);
+        uv_read_stop(reinterpret_cast<uv_stream_t*>(opaque_handle_));
         kern->lock();
 
         if (receive_done_cb_) {
@@ -925,16 +903,16 @@ namespace eka2l1::epoc::internet {
                     recv_done_info_.complete(epoc::error_none);
                 }
             } else {
-                uv_connect_t *connect = reinterpret_cast<uv_connect_t*>(opaque_connect_);
-                connect->handle->data = this;
+                uv_stream_t *tcp_stream = reinterpret_cast<uv_stream_t*>(opaque_handle_);
+                tcp_stream->data = this;
 
                 uv_async_t *task = new uv_async_t;
-                task->data = connect;
+                task->data = tcp_stream;
 
                 uv_async_init(uv_default_loop(), task, [](uv_async_t *async) {
-                    uv_connect_t *connect = reinterpret_cast<uv_connect_t*>(async->data);
+                    uv_stream_t *tcp_stream = reinterpret_cast<uv_stream_t*>(async->data);
 
-                    uv_read_start(connect->handle, [](uv_handle_t *handle, std::size_t suggested_size, uv_buf_t *buf) {
+                    uv_read_start(tcp_stream, [](uv_handle_t *handle, std::size_t suggested_size, uv_buf_t *buf) {
                         reinterpret_cast<inet_socket*>(handle->data)->prepare_buffer_for_recv(suggested_size, buf);
                     }, [](uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
                         reinterpret_cast<inet_socket*>(stream->data)->handle_tcp_delivery(static_cast<std::int64_t>(nread), buf);
@@ -965,11 +943,10 @@ namespace eka2l1::epoc::internet {
                 close_and_delete_async(async);
             });
         } else {
-            uv_connect_t *connect = reinterpret_cast<uv_connect_t*>(opaque_connect_);
-            async->data = connect;
+            async->data = opaque_handle_;
 
             uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
-                uv_read_stop(reinterpret_cast<uv_connect_t *>(async->data)->handle);
+                uv_read_stop(reinterpret_cast<uv_stream_t*>(async->data));
                 close_and_delete_async(async);
             });
         }

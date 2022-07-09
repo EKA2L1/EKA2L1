@@ -20,7 +20,9 @@
 #pragma once
 
 #include <services/bluetooth/btmidman.h>
+#include <services/bluetooth/protocols/common.h>
 #include <services/internet/protocols/inet.h>
+#include <services/bluetooth/protocols/asker_inet.h>
 #include <common/allocator.h>
 #include <common/sync.h>
 
@@ -34,26 +36,31 @@ extern "C" {
 #include <vector>
 
 namespace eka2l1::epoc::bt {
+    struct friend_info {
+        internet::sinet6_address real_addr_;
+        device_address dvc_addr_;
+    };
+
     class midman_inet: public midman {
     public:
         static constexpr std::uint32_t MAX_INET_DEVICE_AROUND = 4;
 
     private:
         std::map<std::uint16_t, std::uint32_t> port_map_;
+        std::map<device_address, std::uint32_t> friend_device_address_mapping_;
+ 
+        device_address random_device_addr_;     // Hope it will never collide with what friends you want to add
 
-        // Address in IPv6 with the query port.
-        // The query port can give out information at runtime about:
-        // - The name of the host's device
-        // - Port mapping (from guest port to real port)
-        std::array<internet::sinet6_address, MAX_INET_DEVICE_AROUND> hosters_;
+        std::array<friend_info, MAX_INET_DEVICE_AROUND> friends_;
         common::bitmap_allocator allocated_ports_;
+        bool friend_info_cached_;
 
         uv_udp_t *virt_bt_info_server_;
-
         std::vector<char> server_recv_buf_;
         int port_;
 
-        std::mutex hosters_lock_;
+        std::mutex friends_lock_;
+        asker_inet device_addr_asker_;
 
     public:
         explicit midman_inet(const int server_port);
@@ -68,5 +75,21 @@ namespace eka2l1::epoc::bt {
         void handle_server_request(const sockaddr *requester, const uv_buf_t *buf, ssize_t nread);
 
         bool get_friend_address(const std::uint32_t index, internet::sinet6_address &addr);
+        bool get_friend_address(const device_address &friend_virt_addr, internet::sinet6_address &addr);
+
+        void add_device_address_mapping(const std::uint32_t index, const device_address &addr);
+        void refresh_friend_infos();
+
+        const int get_server_port() const {
+            return port_;
+        }
+
+        const device_address local_device_address() const {
+            return random_device_addr_;
+        }
+
+        void set_friend_info_cached() {
+            friend_info_cached_ = true;
+        }
     };
 }

@@ -42,6 +42,8 @@ namespace eka2l1::epoc::bt {
         epoc::notify_info friend_retrieve_info_;
         epoc::socket::name_entry *friend_name_entry_;
 
+        void next_impl();
+
     public:
         explicit btlink_inet_host_resolver(btlink_inet_protocol *papa);
         ~btlink_inet_host_resolver();
@@ -96,6 +98,14 @@ namespace eka2l1::epoc::bt {
 
         virtual std::unique_ptr<epoc::socket::socket> make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket::socket_type sock_type) override {
             // L2CAP will be the one handling this. This stack is currently only used for managing links.
+            return nullptr;
+        }
+
+        virtual std::unique_ptr<epoc::socket::socket> make_empty_base_link_socket() {
+            return nullptr;
+        }
+
+        virtual std::unique_ptr<epoc::socket::net_database> make_net_database(const std::uint32_t id, const std::uint32_t family_id) override {
             return nullptr;
         }
 

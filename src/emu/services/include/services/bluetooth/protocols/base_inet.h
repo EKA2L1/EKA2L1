@@ -20,6 +20,7 @@
 #pragma once
 
 #include <services/bluetooth/protocols/common.h>
+#include <services/bluetooth/protocols/asker_inet.h>
 #include <services/socket/socket.h>
 
 #include <memory>
@@ -31,11 +32,15 @@ namespace eka2l1::epoc::bt {
     struct btinet_socket: public socket::socket {
     private:
         hci_scan_enable_ioctl_val scan_value_;
+
         std::unique_ptr<epoc::socket::socket> inet_socket_;
+        asker_inet info_asker_;
 
     protected:
         btlink_inet_protocol *protocol_;
+
         std::uint16_t virtual_port_;
+        socket_device_address remote_addr_;
 
     public:
         explicit btinet_socket(btlink_inet_protocol *protocol, std::unique_ptr<epoc::socket::socket> &inet_socket);
@@ -43,10 +48,18 @@ namespace eka2l1::epoc::bt {
 
         void bind(const epoc::socket::saddress &addr, epoc::notify_info &info) override;
         void accept(std::unique_ptr<epoc::socket::socket> *pending_sock, epoc::notify_info &complete_info) override;
-        
+        void send(const std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr, std::uint32_t flags, epoc::notify_info &complete_info) override;
+        void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr,
+            std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) override;
+        void connect(const epoc::socket::saddress &addr, epoc::notify_info &info) override;
+
+        void cancel_receive() override;
+        void cancel_send() override;
+        void cancel_connect() override;
+        void cancel_accept() override;
+
         std::int32_t listen(const std::uint32_t backlog) override;
         std::int32_t local_name(epoc::socket::saddress &result, std::uint32_t &result_len) override;
-        void cancel_accept() override;
  
         void ioctl(const std::uint32_t command, epoc::notify_info &complete_info, std::uint8_t *buffer,
             const std::size_t available_size, const std::size_t max_buffer_size, const std::uint32_t level) override;

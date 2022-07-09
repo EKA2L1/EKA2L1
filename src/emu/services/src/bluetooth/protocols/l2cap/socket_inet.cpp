@@ -39,7 +39,7 @@ namespace eka2l1::epoc::bt {
         if (option_family == SOL_BT_LINK_MANAGER) {
             if (protocol_->is_oldarch()) {
                 switch (option_id) {
-                case l2cap_socket_oldarch_link_count:
+                case btlink_socket_oldarch_link_count:
                     return get_link_count(buffer, avail_size);
 
                 default:
@@ -48,13 +48,25 @@ namespace eka2l1::epoc::bt {
                 }
             } else {
                 switch (option_id) {
-                case l2cap_socket_link_count:
+                case btlink_socket_link_count:
                     return get_link_count(buffer, avail_size);
 
                 default:
                     LOG_WARN(SERVICE_BLUETOOTH, "Unhandled option {} in link manager option family", option_id);
                     return 0;
                 }
+            }
+        } else if (option_family == SOL_BT_L2CAP) {
+            switch (option_id) {
+            // All is 1024 - 4. See TBTL2CAPOptions comments
+            case l2cap_socket_get_inbound_mtu_for_best_perf:
+            case l2cap_socket_get_outbound_mtu_for_best_perf:
+                *reinterpret_cast<std::uint32_t *>(buffer) = 1020;
+                return 4;
+
+            default:
+                LOG_WARN(SERVICE_BLUETOOTH, "Unhandled option {} in L2CAP option family", option_id);
+                return 0;
             }
         }
 

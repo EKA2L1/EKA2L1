@@ -133,12 +133,7 @@ namespace eka2l1 {
                 return;
 
             case socket_old_ndb_open:
-            case socket_old_ndb_query:
-            case socket_old_ndb_add:
-            case socket_old_ndb_remove:
-                LOG_TRACE(SERVICE_ESOCK, "NetDatabase opcodes stubbed!");
-                ctx->complete(epoc::error_none);
-
+                ndb_create(ctx);
                 return;
 
             default:
@@ -389,6 +384,45 @@ namespace eka2l1 {
         socket_subsession_instance so_inst = std::make_unique<epoc::socket::socket_socket>(this, sock_impl);
 
         const std::uint32_t id = static_cast<std::uint32_t>(subsessions_.add(so_inst));
+        subsessions_.get(id)->get()->set_id(id);
+
+        // Write the subsession handle
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(3, id);
+        ctx->complete(epoc::error_none);
+    }
+
+    void socket_client_session::ndb_create(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> addr_family = ctx->get_argument_value<std::uint32_t>(0);
+        std::optional<std::uint32_t> protocol = ctx->get_argument_value<std::uint32_t>(1);
+
+        if (!addr_family || !protocol) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        // Find the protocol that satifies our condition first
+        epoc::socket::protocol *target_pr = server<socket_server>()->find_protocol(addr_family.value(), protocol.value());
+        if (!target_pr) {
+            LOG_ERROR(SERVICE_ESOCK, "Unable to find Net Database protocol with address={}, protocol={}", addr_family.value(), protocol.value());
+            ctx->complete(epoc::error_not_found);
+
+            return;
+        }
+
+        // Try to instantiate the net database
+        std::unique_ptr<epoc::socket::net_database> netdb_impl = target_pr->make_net_database(addr_family.value(), protocol.value());
+        if (!netdb_impl) {
+            LOG_ERROR(SERVICE_ESOCK, "The protocol {} does not support net database!", common::ucs2_to_utf8(target_pr->name()));
+            ctx->complete(epoc::error_not_supported);
+
+            return;
+        }
+
+        // Create new session
+        socket_subsession_instance hr_inst = std::make_unique<epoc::socket::socket_net_database>(
+            this, netdb_impl);
+
+        const std::uint32_t id = static_cast<std::uint32_t>(subsessions_.add(hr_inst));
         subsessions_.get(id)->get()->set_id(id);
 
         // Write the subsession handle

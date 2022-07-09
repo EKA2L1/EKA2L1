@@ -168,9 +168,7 @@ namespace eka2l1::epoc::internet {
         epoc::socket::receive_done_callback receive_done_cb_;
 
         std::unique_ptr<common::ring_buffer<char, 0x80000>> stream_data_buffer_;
-        common::event exit_event_;
         common::event open_event_;
-        common::event accept_event_;
 
         void close_down();
         void handle_connect_done_error_code(const int error_code);
@@ -229,7 +227,6 @@ namespace eka2l1::epoc::internet {
         void handle_new_connection();
         void handle_accept_impl(std::unique_ptr<epoc::socket::socket> *pending_sock, epoc::notify_info &complete_info);
 
-        void set_exit_event();
         void *get_opaque_handle() {
             return opaque_handle_;
         }
@@ -271,6 +268,10 @@ namespace eka2l1::epoc::internet {
         }
 
         std::unique_ptr<epoc::socket::socket> make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket::socket_type sock_type) override;
+
+        virtual std::unique_ptr<epoc::socket::net_database> make_net_database(const std::uint32_t id, const std::uint32_t family_id) override {
+            return nullptr;
+        }
 
         virtual std::unique_ptr<epoc::socket::host_resolver> make_host_resolver(const std::uint32_t family_id, const std::uint32_t protocol_id) override {
             return std::make_unique<inet_host_resolver>(this, family_id, protocol_id);

@@ -263,6 +263,29 @@ namespace eka2l1::epoc::socket {
         sock_->send(packet_buffer, static_cast<std::uint32_t>(packet_size), nullptr, nullptr, 0, info);
     }
 
+    void socket_socket::read(service::ipc_context *ctx) {
+        std::uint8_t *packet_buffer = ctx->get_descriptor_argument_ptr(2);
+        std::size_t packet_size = ctx->get_argument_max_data_size(2);
+
+        if (!packet_buffer || !packet_size) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+        
+        kernel::process *requester = ctx->msg->own_thr->owning_process();
+        epoc::des8 *packet_des = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[2]).get(requester);
+        
+        epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
+        sock_->receive(packet_buffer, static_cast<std::uint32_t>(packet_size), nullptr, nullptr, 0, info,
+            [packet_des, requester](const std::int64_t length) {
+                if (length < 0) {
+                    packet_des->set_length(requester, 0);
+                } else {
+                    packet_des->set_length(requester, common::min<std::uint32_t>(static_cast<std::uint32_t>(length), packet_des->get_max_length(requester)));
+                }
+            });
+    }
+
     void socket_socket::send(service::ipc_context *ctx, const bool has_return_length, const bool has_addr) {
         std::optional<std::uint32_t> flags = std::nullopt;
         std::uint8_t *packet_buffer = ctx->get_descriptor_argument_ptr(2);
@@ -366,7 +389,67 @@ namespace eka2l1::epoc::socket {
                 }
             });
     }
+    
+    void socket_socket::send_old(service::ipc_context *ctx, const bool has_addr) {
+        std::uint8_t *packet_buffer = ctx->get_descriptor_argument_ptr(2);
+        std::size_t packet_size = ctx->get_argument_data_size(2);
 
+        if (!packet_buffer || !packet_size) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+        
+        std::optional<socket_old_rw_req_info> req_info = ctx->get_argument_data_from_descriptor<socket_old_rw_req_info>(0);
+        if (!req_info.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        kernel::process *requester = ctx->msg->own_thr->owning_process();
+        epoc::des8 *size_return_des = eka2l1::ptr<epoc::des8>(req_info->size_return_).get(requester);
+        saddress *optional_addr = (has_addr ? eka2l1::ptr<saddress>(req_info->sock_addr_).get(requester) : nullptr);
+
+        epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
+        sock_->send(packet_buffer, static_cast<std::uint32_t>(packet_size), reinterpret_cast<std::uint32_t*>(size_return_des->get_pointer_raw(requester)),
+            optional_addr, req_info->flags_, info);
+    }
+
+    void socket_socket::recv_old(service::ipc_context *ctx, const bool one_or_more, const bool has_addr) {
+        std::uint8_t *packet_buffer = ctx->get_descriptor_argument_ptr(2);
+        std::size_t packet_size = ctx->get_argument_max_data_size(2);
+
+        if (!packet_buffer || !packet_size) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        std::optional<socket_old_rw_req_info> req_info = ctx->get_argument_data_from_descriptor<socket_old_rw_req_info>(0);
+        if (!req_info.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        kernel::process *requester = ctx->msg->own_thr->owning_process();
+        epoc::des8 *packet_des = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[2]).get(requester);
+
+        if (one_or_more) {
+            req_info->flags_ |= SOCKET_FLAG_DONT_WAIT_FULL;
+        }
+
+        epoc::des8 *size_return_des = eka2l1::ptr<epoc::des8>(req_info->size_return_).get(requester);
+        saddress *optional_addr = (has_addr ? eka2l1::ptr<saddress>(req_info->sock_addr_).get(requester) : nullptr);
+
+        epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
+        sock_->receive(packet_buffer, static_cast<std::uint32_t>(packet_size), reinterpret_cast<std::uint32_t*>(size_return_des->get_pointer_raw(requester)), optional_addr, req_info->flags_, info,
+            [packet_des, requester](const std::int64_t length) {
+                if (length < 0) {
+                    packet_des->set_length(requester, 0);
+                } else {
+                    packet_des->set_length(requester, common::min<std::uint32_t>(static_cast<std::uint32_t>(length), packet_des->get_max_length(requester)));
+                }
+            });
+    }
+    
     void socket_socket::ioctl(service::ipc_context *ctx) {
         std::optional<std::uint32_t> command = ctx->get_argument_value<std::uint32_t>(0);
         std::optional<std::uint32_t> level = ctx->get_argument_value<std::uint32_t>(2);
@@ -437,7 +520,7 @@ namespace eka2l1::epoc::socket {
                     ctx->complete(epoc::error_bad_handle);
                     return;
                 }
-                
+
                 epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
                 sock_->accept(&empty_socket->sock_, info);
             } else {
@@ -511,6 +594,52 @@ namespace eka2l1::epoc::socket {
 
             case socket_old_so_local_name:
                 local_name(ctx);
+                return;
+
+            case socket_old_so_write:
+                write(ctx);
+                return;
+
+            case socket_old_so_read:
+                read(ctx);
+                return;
+
+            case socket_old_so_send:
+                send_old(ctx, false);
+                return;
+
+            case socket_old_so_recv:
+                recv_old(ctx, false, false);
+                return;
+
+            case socket_old_so_recv_one_or_more:
+                recv_old(ctx, true, false);
+                return;
+
+            case socket_old_so_recvfrom:
+                recv_old(ctx, false, true);
+                return;
+
+            case socket_old_so_sendto:
+                send_old(ctx, true);
+                return;
+
+            case socket_old_so_cancel_send:
+                cancel_send(ctx);
+                return;
+
+            case socket_old_so_cancel_recv:
+                cancel_recv(ctx);
+                return;
+
+            case socket_old_so_cancel_connect:
+                sock_->cancel_connect();
+                ctx->complete(epoc::error_none);
+
+                return;
+
+            case socket_old_so_connect:
+                connect(ctx);
                 return;
 
             default:

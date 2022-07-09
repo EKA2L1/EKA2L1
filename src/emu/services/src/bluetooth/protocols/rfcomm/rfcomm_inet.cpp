@@ -20,16 +20,18 @@
 #include <common/log.h>
 #include <services/bluetooth/btmidman.h>
 #include <services/bluetooth/protocols/rfcomm/rfcomm_inet.h>
+#include <services/bluetooth/protocols/btmidman_inet.h>
 #include <services/internet/protocols/inet.h>
 
 namespace eka2l1::epoc::bt {
     std::size_t rfcomm_inet_socket::get_option(const std::uint32_t option_id, const std::uint32_t option_family,
         std::uint8_t *buffer, const std::size_t avail_size) {
+        midman_inet *midman = reinterpret_cast<midman_inet*>(protocol_->get_midman());
+
         if (option_family == SOL_BT_RFCOMM) {
             switch (option_id) {
-            // Since we are using INET as a base, return 0 so that the port will be automatically picked by the network stack
             case rfcomm_opt_get_available_server_channel:
-                *reinterpret_cast<std::uint32_t*>(buffer) = 0;
+                *reinterpret_cast<std::uint32_t*>(buffer) = midman->get_free_port();
                 return 4;
 
             default:

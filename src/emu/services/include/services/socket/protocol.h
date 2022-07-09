@@ -20,6 +20,7 @@
 #pragma once
 
 #include <services/socket/host.h>
+#include <services/socket/netdb.h>
 #include <services/socket/socket.h>
 
 #include <utils/version.h>
@@ -67,5 +68,6 @@ namespace eka2l1::epoc::socket {
 
         virtual std::unique_ptr<host_resolver> make_host_resolver(const std::uint32_t family_id, const std::uint32_t protocol_id) = 0;
         virtual std::unique_ptr<socket> make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket_type sock_type) = 0;
+        virtual std::unique_ptr<net_database> make_net_database(const std::uint32_t family_id, const std::uint32_t protocol_id) = 0;
     };
 };

@@ -20,6 +20,7 @@
 #include <services/bluetooth/protocols/btlink/btlink_inet.h>
 #include <services/bluetooth/protocols/l2cap/l2cap_inet.h>
 #include <services/bluetooth/protocols/rfcomm/rfcomm_inet.h>
+#include <services/bluetooth/protocols/sdp/sdp_inet.h>
 #include <services/bluetooth/protocols/overall.h>
 #include <services/internet/protocols/inet.h>
 #include <services/socket/server.h>
@@ -34,6 +35,7 @@ namespace eka2l1::epoc::bt {
         std::unique_ptr<epoc::socket::protocol> btlink_pr = std::make_unique<btlink_inet_protocol>(mm, oldarch);
         std::unique_ptr<epoc::socket::protocol> l2cap_pr = std::make_unique<l2cap_inet_protocol>(mm, protocol, oldarch);
         std::unique_ptr<epoc::socket::protocol> rfcomm_pr = std::make_unique<rfcomm_inet_protocol>(mm, protocol, oldarch);
+        std::unique_ptr<epoc::socket::protocol> sdp_pr = std::make_unique<sdp_inet_protocol>(mm, oldarch);
 
         if (!sock->add_protocol(btlink_pr)) {
             LOG_ERROR(SERVICE_BLUETOOTH, "Failed to add BTLink protocol");
@@ -42,9 +44,13 @@ namespace eka2l1::epoc::bt {
         if (!sock->add_protocol(l2cap_pr)) {
             LOG_ERROR(SERVICE_BLUETOOTH, "Failed to add L2CAP protocol");
         }
-        
+
         if (!sock->add_protocol(rfcomm_pr)) {
             LOG_ERROR(SERVICE_BLUETOOTH, "Failed to add L2CAP protocol");
+        }
+
+        if (!sock->add_protocol(sdp_pr)) {
+            LOG_ERROR(SERVICE_BLUETOOTH, "Failed to add SDP protocol");
         }
     }
 }

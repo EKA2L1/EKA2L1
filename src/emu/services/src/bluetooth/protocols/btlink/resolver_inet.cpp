@@ -68,6 +68,55 @@ namespace eka2l1::epoc::bt {
         info.complete(epoc::error_not_supported);
     }
 
+    void btlink_inet_host_resolver::next_impl() {
+        midman_inet *midman = reinterpret_cast<midman_inet*>(papa_->get_midman());
+        internet::sinet6_address addr;
+
+        if (!midman->get_friend_address(current_friend_, addr)) {
+            midman->set_friend_info_cached();
+            friend_retrieve_info_.complete(epoc::error_eof);
+
+            return;
+        }
+
+        inquiry_socket_address &cast_addr = static_cast<inquiry_socket_address&>(friend_name_entry_->addr_);
+        inquiry_info *info_addr_in = cast_addr.get_inquiry_info();
+
+        info_addr_in->major_service_class_ = MAJOR_SERVICE_TELEPHONY;
+        info_addr_in->major_device_class_ = MAJOR_DEVICE_PHONE;
+        info_addr_in->minor_device_class_ = MINOR_DEVICE_PHONE_CECULLAR;
+        cast_addr.family_ = BTADDR_PROTOCOL_FAMILY_ID;
+
+        friend_querier_.send_request_with_retries(addr, "a", 1, [this, addr, midman](const char *result, const ssize_t bytes) {
+            if (bytes <= 0) {
+                current_friend_++;
+                next_impl();
+            } else {
+                inquiry_socket_address &cast_addr = static_cast<inquiry_socket_address&>(friend_name_entry_->addr_);
+                inquiry_info *info_addr_in = cast_addr.get_inquiry_info();
+
+                std::memcpy(&info_addr_in->addr_, result, sizeof(device_address));
+                midman->add_device_address_mapping(current_friend_, info_addr_in->addr_);
+
+                friend_querier_.send_request_with_retries(addr, "n", 1, [this](const char *result, const ssize_t bytes) {            
+                    kernel_system *kern = friend_retrieve_info_.requester->get_kernel_object_owner();
+                    kern->lock();
+
+                    if (bytes < 0) {
+                        friend_name_entry_->name_.assign(nullptr, u"Unknown o_o");
+                    } else {
+                        std::u16string result_u16 = common::utf8_to_ucs2(std::string(result, bytes));
+                        friend_name_entry_->name_.assign(nullptr, result_u16);
+                    }
+                    
+                    current_friend_++;
+                    friend_retrieve_info_.complete(epoc::error_none);
+                    kern->unlock();
+                });
+            }
+        });
+    }
+
     void btlink_inet_host_resolver::next(epoc::socket::name_entry *result, epoc::notify_info &info) {
         if (!friend_retrieve_info_.empty()) {
             info.complete(epoc::error_server_busy);
@@ -79,54 +128,9 @@ namespace eka2l1::epoc::bt {
             return;
         }
 
-        midman_inet *midman = reinterpret_cast<midman_inet*>(papa_->get_midman());
-        internet::sinet6_address addr;
-
-        if (!midman->get_friend_address(current_friend_, addr)) {
-            info.complete(epoc::error_eof);
-            return;
-        }
-
         friend_retrieve_info_ = info;
         friend_name_entry_ = result;
 
-        inquiry_socket_address &cast_addr = static_cast<inquiry_socket_address&>(result->addr_);
-        inquiry_info *info_addr_in = cast_addr.get_inquiry_info();
-
-        info_addr_in->major_service_class_ = MAJOR_SERVICE_TELEPHONY;
-        info_addr_in->major_device_class_ = MAJOR_DEVICE_PHONE;
-        info_addr_in->minor_device_class_ = MINOR_DEVICE_PHONE_CECULLAR;
-
-        std::uint32_t friend_number = current_friend_ + 1;
-
-        info_addr_in->addr_.addr_[0] = 'E';
-        info_addr_in->addr_.addr_[1] = 'K';
-        info_addr_in->addr_.addr_[2] = 'A';
-        info_addr_in->addr_.addr_[3] = (friend_number >> 16) & 0xFF;
-        info_addr_in->addr_.addr_[4] = (friend_number >> 8) & 0xFF;
-        info_addr_in->addr_.addr_[5] = friend_number & 0xFF;
-
-        result->addr_.family_ = BTADDR_PROTOCOL_FAMILY_ID;
-
-        if (!need_name_) {
-            info.complete(epoc::error_none);
-            return;
-        }
-
-        friend_querier_.send_request_with_retries(addr, "n", 1, [this](const char *result, const ssize_t bytes) {            
-            kernel_system *kern = friend_retrieve_info_.requester->get_kernel_object_owner();
-            kern->lock();
-
-            if (bytes < 0) {
-                friend_name_entry_->name_.assign(nullptr, u"Offline v_v");
-            } else {
-                std::u16string result_u16 = common::utf8_to_ucs2(std::string(result, bytes));
-                friend_name_entry_->name_.assign(nullptr, result_u16);
-            }
-            
-            current_friend_++;
-            friend_retrieve_info_.complete(epoc::error_none);
-            kern->unlock();
-        });
+        next_impl();
     }
 }

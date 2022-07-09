@@ -18,6 +18,7 @@
  */
 
 #include <services/bluetooth/protocols/btmidman_inet.h>
+#include <common/random.h>
 #include <common/log.h>
 #include <common/algorithm.h>
 
@@ -29,17 +30,25 @@ namespace eka2l1::epoc::bt {
         , port_(port) {
         /** ================================= DEBUG ====================================== */
         // Leave it here for the comeback later
-        /*
-        hosters_[0].family_ = hosters_[1].family_ = hosters_[2].family_ = hosters_[3].family_ = 0;
-        hosters_[0].family_ = epoc::internet::INET6_ADDRESS_FAMILY;
+        friends_[0].dvc_addr_.padding_ = 1;
 
-        uint16_t *arr_ip = reinterpret_cast<uint16_t*>(hosters_[0].address_32x4());
+        friends_[0].real_addr_.family_ = friends_[1].real_addr_.family_ = friends_[2].real_addr_.family_ = friends_[3].real_addr_.family_ = 0;
+        friends_[0].real_addr_.family_ = epoc::internet::INET6_ADDRESS_FAMILY;
+
+        uint16_t *arr_ip = reinterpret_cast<uint16_t*>(friends_[0].real_addr_.address_32x4());
         std::memset(arr_ip, 0, 16);
         arr_ip[7] = 256;
 
-        hosters_[0].port_ = 46689;
-        */
+        if (port_ == 46689) {
+            friends_[0].real_addr_.port_ = 35689;
+        } else {
+            friends_[0].real_addr_.port_ = 46689;
+        }
+        
         /** ================================= END DEBUG ====================================== */
+        for (std::uint32_t i = 0; i < 6; i++) {
+            random_device_addr_.addr_[i] = static_cast<std::uint8_t>(random_range(0, 0xFF));
+        }
 
         virt_bt_info_server_ = new uv_udp_t;
         if (uv_udp_init(uv_default_loop(), virt_bt_info_server_) < 0) {
@@ -93,6 +102,8 @@ namespace eka2l1::epoc::bt {
             temp_uint = lookup_host_port(virtual_port);
 
             local_buf = uv_buf_init(reinterpret_cast<char*>(&temp_uint), 4);
+        } else if (buf->base[0] == 'a') {
+            local_buf = uv_buf_init(reinterpret_cast<char*>(&random_device_addr_), sizeof(random_device_addr_));
         }
 
         uv_udp_send(send_req, virt_bt_info_server_, &local_buf, 1, requester, [](uv_udp_send_t *send_info, int status) {
@@ -100,14 +111,66 @@ namespace eka2l1::epoc::bt {
         });
     }
 
+    bool midman_inet::get_friend_address(const device_address &friend_addr, internet::sinet6_address &addr) {
+        const std::lock_guard<std::mutex> guard(friends_lock_);
+
+lookup:
+        for (std::size_t i = 0; i < friends_.size(); i++) {
+            if (std::memcmp(friend_addr.addr_, friends_[i].dvc_addr_.addr_, 6) == 0) {
+                addr = friends_[i].real_addr_;
+                return true;
+            }
+        }
+
+        if (!friend_info_cached_) {
+            // Try to refresh the local cache. It's not really ideal, but anyway resolver always redo
+            // a full rescan...
+            refresh_friend_infos();
+            goto lookup;
+        }
+
+        return false;
+    }
+
     bool midman_inet::get_friend_address(const std::uint32_t index, internet::sinet6_address &addr) {
-        const std::lock_guard<std::mutex> guard(hosters_lock_);
-        if ((index >= hosters_.size()) && (hosters_[index].family_ == 0)) {
+        const std::lock_guard<std::mutex> guard(friends_lock_);
+        if ((index >= friends_.size()) && (friends_[index].real_addr_.family_ == 0)) {
             return false;
         }
 
-        addr = hosters_[index];
+        addr = friends_[index].real_addr_;
         return true;
+    }
+
+    void midman_inet::add_device_address_mapping(const std::uint32_t index, const device_address &addr) {
+        const std::lock_guard<std::mutex> guard(friends_lock_);
+
+        if ((friends_[index].dvc_addr_.padding_ == 1) || (std::memcmp(friends_[index].dvc_addr_.addr_, addr.addr_, 6) != 0)) {
+            friends_[index].dvc_addr_ = addr;
+            friends_[index].dvc_addr_.padding_ = 0;
+        }
+    }
+
+    void midman_inet::refresh_friend_infos() {
+        if (friend_info_cached_) {
+            return;
+        }
+
+        common::event done_event;
+
+        for (std::uint32_t i = 0; i < static_cast<std::uint32_t>(friends_.size()); i++) {
+            done_event.reset();
+            device_addr_asker_.send_request_with_retries(friends_[i].real_addr_, "a", 1, [this, i, &done_event](const char *result, const ssize_t bytes) {
+                if (bytes > 0) {
+                    std::memcpy(&friends_[i].dvc_addr_, result, sizeof(device_address));
+                    friend_device_address_mapping_.emplace(friends_[i].dvc_addr_, i);
+                }
+                done_event.set();
+            });
+            done_event.wait();
+        }
+
+        friend_info_cached_ = true;
     }
 
     std::uint32_t midman_inet::lookup_host_port(const std::uint16_t virtual_port) {
@@ -135,8 +198,9 @@ namespace eka2l1::epoc::bt {
     }
     
     std::uint16_t midman_inet::get_free_port() {
+        // Reserve first 10 ports for system
         int size = 1;
-        const int offset = allocated_ports_.allocate_from(0, size, false);
+        const int offset = allocated_ports_.allocate_from(10, size, false);
         if (offset < 0) {
             return 0;
         }

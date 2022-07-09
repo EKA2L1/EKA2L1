@@ -30,13 +30,18 @@ namespace eka2l1::epoc::internet {
 namespace eka2l1::epoc::bt {
     class l2cap_inet_protocol;
 
-    enum l2cap_socket_option_oldarch {
-        l2cap_socket_oldarch_link_count = 0,
-        l2cap_socket_oldarch_link_array = 1
+    enum btlink_socket_option_oldarch {
+        btlink_socket_oldarch_link_count = 0,
+        btlink_socket_oldarch_link_array = 1
+    };
+
+    enum btlink_socket_option {
+        btlink_socket_link_count = 3,
     };
 
     enum l2cap_socket_option {
-        l2cap_socket_link_count = 3,
+        l2cap_socket_get_outbound_mtu_for_best_perf = 0,
+        l2cap_socket_get_inbound_mtu_for_best_perf = 2
     };
 
     class l2cap_inet_socket : public btinet_socket {
@@ -75,5 +80,9 @@ namespace eka2l1::epoc::bt {
         virtual std::int32_t message_size() const override;
 
         virtual std::unique_ptr<epoc::socket::socket> make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket::socket_type sock_type) override;
+
+        virtual std::unique_ptr<epoc::socket::socket> make_empty_base_link_socket() override {
+            return std::make_unique<l2cap_inet_socket>(this, std::unique_ptr<epoc::socket::socket>(nullptr));
+        }
     };
 }

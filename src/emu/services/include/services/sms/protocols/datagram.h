@@ -86,6 +86,10 @@ namespace eka2l1::epoc::sms {
             return nullptr;
         }
         
+        virtual std::unique_ptr<epoc::socket::net_database> make_net_database(const std::uint32_t addr_family, const std::uint32_t protocol_id) override {
+            return nullptr;
+        }
+
         virtual std::unique_ptr<epoc::socket::socket> make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket::socket_type sock_type) override;
     };
 }

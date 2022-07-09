@@ -168,7 +168,7 @@ namespace eka2l1::epoc::bt {
     }
 
     void asker_inet::send_request_with_retries(const internet::sinet6_address &addr, char *request, const std::size_t request_size,
-        response_callback response_cb) {
+        response_callback response_cb, const bool request_dynamically_allocated) {
         if (!bt_asker_) {
             bt_asker_ = new uv_udp_t;
 
@@ -194,7 +194,44 @@ namespace eka2l1::epoc::bt {
         vars_ptr->timeout_timer_ = bt_asker_retry_timer_;
         std::memcpy(&vars_ptr->addr_, addr_host, sizeof(sockaddr_in6));
 
+        if (request_dynamically_allocated) {
+            vars_ptr->dynamic_buf_data_ = request;
+        }
+
         vars_ptr->response_cb_ = response_cb;
         keep_sending_data(bt_asker_, vars_ptr);
+    }
+
+    std::uint32_t asker_inet::ask_for_routed_port(const std::uint16_t virtual_port, const internet::sinet6_address &dev_addr) {
+        ask_routed_port_wait_evt_.reset();
+        std::uint32_t local_result = 0;
+
+        ask_for_routed_port_async(virtual_port, dev_addr, [&local_result, this](const std::int64_t res) {
+            if (res <= 0) {
+                local_result = 0;
+            } else {
+                local_result = static_cast<std::uint32_t>(res);
+            }
+
+            ask_routed_port_wait_evt_.set();
+        });
+
+        ask_routed_port_wait_evt_.wait();
+        return local_result;
+    }
+
+    void asker_inet::ask_for_routed_port_async(const std::uint16_t virtual_port, const internet::sinet6_address &dev_addr, port_ask_done_callback cb) {
+        char *buf = new char[3];
+        buf[0] = 'p';
+        buf[1] = static_cast<char>(virtual_port & 0xFF);
+        buf[2] = static_cast<char>((virtual_port >> 8) & 0xFF);
+
+        send_request_with_retries(dev_addr, buf, 3, [cb](const char *response, const ssize_t size) {
+            if (size <= 0) {
+                cb(static_cast<std::int64_t>(size));
+            } else {
+                cb(*reinterpret_cast<const std::int64_t*>(response));
+            }
+        }, true);
     }
 }

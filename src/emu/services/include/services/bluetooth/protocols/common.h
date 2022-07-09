@@ -21,6 +21,7 @@
 
 #include <services/socket/common.h>
 #include <cstdint>
+#include <cstring>
 
 namespace eka2l1::epoc::bt {
     enum hci_scan_enable_ioctl_val {
@@ -45,13 +46,39 @@ namespace eka2l1::epoc::bt {
 
         HCI_READ_SCAN_ENABLE = 14,
         HCI_WRITE_SCAN_ENABLE = 15,
+        HCI_LOCAL_ADDRESS = 25,
 
         LINK_MANAGER_DISCONNECT_ALL_ACL_CONNECTIONS = 0
+    };
+
+    enum sdp_query {
+        SDP_QUERY_CONNECT = 1,
+        SDP_QUERY_SERVICE = 2,
+        SDP_QUERY_ATTRIBUTE = 3,
+        SDP_QUERY_ENCODED = 4,
+        SDP_QUERY_CANCEL = 5,
+        SDP_QUERY_RETRIEVE_RESULT_BUFFER = 0x7F,
+        SDP_QUERY_STORE_TO_NETDB_BUFFER_FIRST_FLAG = 0x80,
+        SDP_QUERY_TYPE_MASK = 0x7F
+    };
+
+    enum sdp_pdu_id {
+        SDP_PDU_ERROR_RESPONE = 1,
+        SDP_PDU_SERVICE_SEARCH_REQUEST = 2,
+        SDP_PDU_SERVICE_SEARCH_RESPONSE = 3,
+        SDP_PDU_SERVICE_ATTRIBUTE_REQUEST = 4,
+        SDP_PDU_SERVICE_ATTRIBUTE_RESPONSE = 5,
+        SDP_PDU_SERVICE_SEARCH_ATTRIBUTE_REQUEST = 6,
+        SDP_PDU_SERVICE_SEARCH_ATTRIBUTE_RESPONSE = 7
     };
 
     struct device_address {
         std::uint8_t addr_[6];
         std::uint16_t padding_;
+
+        bool operator < (const device_address &rhs) const {
+            return strncmp(reinterpret_cast<const char*>(addr_), reinterpret_cast<const char*>(rhs.addr_), 6) == -1;
+        }
     };
 
     static_assert(sizeof(device_address) == 8);
@@ -77,6 +104,10 @@ namespace eka2l1::epoc::bt {
 
         device_address *get_device_address() {
             return reinterpret_cast<device_address*>(user_data_);
+        }
+
+        const device_address *get_device_address_const() const {
+            return reinterpret_cast<const device_address*>(user_data_);
         }
     };
 
@@ -135,5 +166,46 @@ namespace eka2l1::epoc::bt {
         inquiry_info *get_inquiry_info() {
             return reinterpret_cast<inquiry_info*>(user_data_);
         }
+    };
+
+    struct uuid {
+        std::uint8_t data_[16];
+
+        const std::uint8_t *shortest_form(std::uint32_t &size) const;
+    };
+
+    struct uuid_new : public uuid {
+        std::uint32_t padding_[2];
+    };
+
+    struct sdp_query_base {
+        std::uint32_t query_type_;
+    };
+
+    struct sdp_connect_query : public sdp_query_base {
+        device_address addr_;
+    };
+
+    struct sdp_service_query : public sdp_query_base {
+        std::uint16_t max_record_return_count_;
+        std::uint16_t padding_n0_;
+        uuid uuid_;
+        std::uint8_t state_length_;
+        std::uint8_t padding_n1_[3];
+        std::uint8_t continuation_state_[16];
+    };
+
+    struct sdp_service_query_new : public sdp_query_base {
+        std::uint16_t max_record_return_count_;
+        std::uint16_t padding_n0_;
+        uuid_new uuid_;
+        std::uint8_t state_length_;
+        std::uint8_t padding_n1_[3];
+        std::uint8_t continuation_state_[16];
+    };
+
+    struct sdp_encoded_query : public sdp_query_base {
+        std::uint8_t pdu_id_;
+        std::uint8_t padding_[3];
     };
 }

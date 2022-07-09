@@ -91,16 +91,50 @@ namespace eka2l1::epoc::bt {
         virtual_port_ = guest_port;
     }
 
+    void btinet_socket::connect(const epoc::socket::saddress &addr, epoc::notify_info &info) {
+        midman_inet *midman = reinterpret_cast<midman_inet*>(protocol_->get_midman());
+  
+        if (addr.family_ != BTADDR_PROTOCOL_FAMILY_ID) {
+            // If 0, they just want to change the port. Well, acceptable
+            LOG_ERROR(SERVICE_BLUETOOTH, "Address to bind is not a Bluetooth family address!");
+            info.complete(epoc::error_argument);
+            return;
+        }
+
+        const socket_device_address &dvc_addr = static_cast<const socket_device_address&>(addr);
+        epoc::internet::sinet6_address real_addr;
+
+        // NOTE: Need real address actually T_T
+        if (!midman->get_friend_address(*dvc_addr.get_device_address_const(), real_addr)) {
+            LOG_ERROR(SERVICE_BLUETOOTH, "Can't retrieve real INET address!");
+            info.complete(epoc::error_could_not_connect);
+            return;
+        }
+
+        info_asker_.ask_for_routed_port_async(addr.port_, real_addr, [info, real_addr, this](const std::int64_t res) {
+            epoc::notify_info info_copy = info;
+
+            if (res <= 0) {
+                LOG_ERROR(SERVICE_BLUETOOTH, "Retrieve real port of Virtual bluetooth address failed with error code {}", res);
+                info_copy.complete(epoc::error_could_not_connect);
+            } else {
+                epoc::internet::sinet6_address addr_copy = real_addr;
+                addr_copy.port_ = static_cast<std::uint32_t>(res);
+
+                inet_socket_->connect(addr_copy, info_copy);
+            }
+        });
+    }
+
     std::int32_t btinet_socket::local_name(epoc::socket::saddress &result, std::uint32_t &result_len) {
         socket_device_address &addr = static_cast<socket_device_address&>(result);
-        device_address *addr_dvc = addr.get_device_address();
 
-        addr_dvc->addr_[0] = 'E';
-        addr_dvc->addr_[1] = 'K';
-        addr_dvc->addr_[2] = 'A';
-        addr_dvc->addr_[3] = '2';
-        addr_dvc->addr_[4] = 'L';
-        addr_dvc->addr_[5] = '0';
+        device_address *addr_dvc = addr.get_device_address();
+        midman_inet *midman = reinterpret_cast<midman_inet*>(protocol_->get_midman());
+
+        *addr_dvc = midman->local_device_address();
+
+        addr.family_ = BTADDR_PROTOCOL_FAMILY_ID;
         addr.port_ = virtual_port_;
 
         result_len = socket_device_address::DATA_LEN;
@@ -113,9 +147,33 @@ namespace eka2l1::epoc::bt {
     }
 
     void btinet_socket::accept(std::unique_ptr<epoc::socket::socket> *pending_sock, epoc::notify_info &complete_info) {
-        inet_socket_->accept(pending_sock, complete_info);
+        *pending_sock = protocol_->make_empty_base_link_socket();
+        btinet_socket *casted_pending_sock_ptr = reinterpret_cast<btinet_socket*>(pending_sock->get());
+
+        inet_socket_->accept(&casted_pending_sock_ptr->inet_socket_, complete_info);
     }
-    
+
+    void btinet_socket::send(const std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr, std::uint32_t flags, epoc::notify_info &complete_info) {
+        inet_socket_->send(data, data_size, sent_size, addr, flags, complete_info);
+    }
+
+    void btinet_socket::receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *recv_size, const epoc::socket::saddress *addr,
+        std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) {
+        inet_socket_->receive(data, data_size, recv_size, addr, flags | epoc::socket::SOCKET_FLAG_DONT_WAIT_FULL, complete_info, done_callback);
+    }
+
+    void btinet_socket::cancel_receive() {
+        inet_socket_->cancel_receive();
+    }
+
+    void btinet_socket::cancel_send() {
+        inet_socket_->cancel_send();
+    }
+
+    void btinet_socket::cancel_connect() {
+        inet_socket_->cancel_connect();
+    }
+
     void btinet_socket::cancel_accept() {
         inet_socket_->cancel_accept();
     }
@@ -135,6 +193,16 @@ namespace eka2l1::epoc::bt {
                 *reinterpret_cast<hci_scan_enable_ioctl_val*>(buffer) = scan_value_;
                 complete_info.complete(epoc::error_none);
                 return;
+
+            case HCI_LOCAL_ADDRESS: {
+                midman_inet *midman = reinterpret_cast<midman_inet*>(protocol_->get_midman());
+
+                device_address *addr = reinterpret_cast<device_address*>(buffer);
+                *addr = midman->local_device_address();
+
+                complete_info.complete(epoc::error_none);
+                return;
+            }
 
             default:
                 break;
