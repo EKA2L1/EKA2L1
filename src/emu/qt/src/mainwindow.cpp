@@ -158,12 +158,16 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
 
     dest.top = eka2l1::vec2(x, y);
     dest.size = eka2l1::vec2(width, height);
+    src.size = crr_mode.size;
 
     eka2l1::drivers::advance_draw_pos_around_origin(dest, scr->ui_rotation);
 
     if (scr->ui_rotation % 180 != 0) {
         std::swap(dest.size.x, dest.size.y);
+        std::swap(src.size.x, src.size.y);
     }
+
+    src.size *= scr->display_scale_factor;
 
     builder.set_texture_filter(scr->screen_texture, true, filter);
     builder.set_texture_filter(scr->screen_texture, false, filter);
