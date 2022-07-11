@@ -21,31 +21,27 @@
 #include <common/random.h>
 #include <common/log.h>
 #include <common/algorithm.h>
+#include <config/config.h>
 
 namespace eka2l1::epoc::bt {
-    midman_inet::midman_inet(const int port)
+    midman_inet::midman_inet(const config::state &conf)
         : midman()
         , allocated_ports_(MAX_PORT)
         , virt_bt_info_server_(nullptr)
-        , port_(port) {
-        /** ================================= DEBUG ====================================== */
-        // Leave it here for the comeback later
-        friends_[0].dvc_addr_.padding_ = 1;
+        , friend_info_cached_(false)
+        , port_(conf.internet_bluetooth_port) {
+        std::vector<std::uint64_t> errs;
+        update_friend_list(conf.friend_addresses, errs);
 
-        friends_[0].real_addr_.family_ = friends_[1].real_addr_.family_ = friends_[2].real_addr_.family_ = friends_[3].real_addr_.family_ = 0;
-        friends_[0].real_addr_.family_ = epoc::internet::INET6_ADDRESS_FAMILY;
-
-        uint16_t *arr_ip = reinterpret_cast<uint16_t*>(friends_[0].real_addr_.address_32x4());
-        std::memset(arr_ip, 0, 16);
-        arr_ip[7] = 256;
-
-        if (port_ == 46689) {
-            friends_[0].real_addr_.port_ = 35689;
-        } else {
-            friends_[0].real_addr_.port_ = 46689;
+        for (std::size_t i = 0; i < errs.size(); i++) {
+            std::uint32_t index = static_cast<std::uint32_t>(errs[i] & 0xFFFFFFFF);
+            if (errs[i] & FRIEND_UPDATE_ERROR_INVALID_PORT_NUMBER) {
+                LOG_ERROR(SERVICE_BLUETOOTH, "Bluetooth netplay friend address number {} has invalid port number ({})", index + 1, conf.friend_addresses[index].port_);
+            } else if (errs[i] & FRIEND_UPDATE_ERROR_INVALID_ADDR) {
+                LOG_ERROR(SERVICE_BLUETOOTH, "Bluetooth netplay friend address number {} has invalid address ({})", index + 1, conf.friend_addresses[index].addr_);
+            }
         }
-        
-        /** ================================= END DEBUG ====================================== */
+
         for (std::uint32_t i = 0; i < 6; i++) {
             random_device_addr_.addr_[i] = static_cast<std::uint8_t>(random_range(0, 0xFF));
         }
@@ -57,13 +53,12 @@ namespace eka2l1::epoc::bt {
 
         virt_bt_info_server_->data = this;
 
-        sockaddr_in6 addr_bind;
-        std::memset(&addr_bind, 0, sizeof(sockaddr_in6));
-        addr_bind.sin6_family = AF_INET6;
-        addr_bind.sin6_port = htons(static_cast<std::uint16_t>(port));
-        addr_bind.sin6_scope_id = 0;
+        sockaddr_in addr_bind;
+        std::memset(&addr_bind, 0, sizeof(sockaddr_in));
+        addr_bind.sin_family = AF_INET;
+        addr_bind.sin_port = htons(static_cast<std::uint16_t>(port_));
 
-        uv_udp_bind(virt_bt_info_server_, reinterpret_cast<const sockaddr*>(&addr_bind), UV_UDP_IPV6ONLY);
+        uv_udp_bind(virt_bt_info_server_, reinterpret_cast<const sockaddr*>(&addr_bind), 0);
         uv_udp_recv_start(virt_bt_info_server_, [](uv_handle_t* handle, std::size_t suggested_size, uv_buf_t* buf) {
             reinterpret_cast<midman_inet*>(handle->data)->prepare_server_recv_buffer(buf, suggested_size);
         }, [](uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags) {
@@ -111,7 +106,7 @@ namespace eka2l1::epoc::bt {
         });
     }
 
-    bool midman_inet::get_friend_address(const device_address &friend_addr, internet::sinet6_address &addr) {
+    bool midman_inet::get_friend_address(const device_address &friend_addr, epoc::socket::saddress &addr) {
         const std::lock_guard<std::mutex> guard(friends_lock_);
 
 lookup:
@@ -132,7 +127,7 @@ lookup:
         return false;
     }
 
-    bool midman_inet::get_friend_address(const std::uint32_t index, internet::sinet6_address &addr) {
+    bool midman_inet::get_friend_address(const std::uint32_t index, epoc::socket::saddress &addr) {
         const std::lock_guard<std::mutex> guard(friends_lock_);
         if ((index >= friends_.size()) && (friends_[index].real_addr_.family_ == 0)) {
             return false;
@@ -159,15 +154,17 @@ lookup:
         common::event done_event;
 
         for (std::uint32_t i = 0; i < static_cast<std::uint32_t>(friends_.size()); i++) {
-            done_event.reset();
-            device_addr_asker_.send_request_with_retries(friends_[i].real_addr_, "a", 1, [this, i, &done_event](const char *result, const ssize_t bytes) {
-                if (bytes > 0) {
-                    std::memcpy(&friends_[i].dvc_addr_, result, sizeof(device_address));
-                    friend_device_address_mapping_.emplace(friends_[i].dvc_addr_, i);
-                }
-                done_event.set();
-            });
-            done_event.wait();
+            if (friends_[i].real_addr_.family_ != 0) {
+                done_event.reset();
+                device_addr_asker_.send_request_with_retries(friends_[i].real_addr_, "a", 1, [this, i, &done_event](const char *result, const ssize_t bytes) {
+                    if (bytes > 0) {
+                        std::memcpy(&friends_[i].dvc_addr_, result, sizeof(device_address));
+                        friend_device_address_mapping_.emplace(friends_[i].dvc_addr_, i);
+                    }
+                    done_event.set();
+                });
+                done_event.wait();
+            }
         }
 
         friend_info_cached_ = true;
@@ -210,5 +207,37 @@ lookup:
 
     void midman_inet::close_port(const std::uint16_t virtual_port) {
         allocated_ports_.deallocate(virtual_port - 1, 1);
+    }
+
+    void midman_inet::update_friend_list(const std::vector<config::friend_address> &addrs, std::vector<std::uint64_t> &invalid_address_indicies) {
+        const std::lock_guard<std::mutex> guard(friends_lock_);
+
+        std::uint32_t current_friend = 0;
+        sockaddr_in6 in_temp;
+        int res = 0;
+
+        for (std::size_t i = 0; i < friends_.size(); i++) {
+            friends_[i].real_addr_.family_ = 0;
+            friends_[i].dvc_addr_.padding_ = 1;
+        }
+
+        for (std::size_t i = 0; i < common::min<std::size_t>(addrs.size(), MAX_INET_DEVICE_AROUND); i++) {
+            // Max TCP port number
+            if (addrs[i].port_ > 65535) {
+                invalid_address_indicies.push_back(FRIEND_UPDATE_ERROR_INVALID_PORT_NUMBER | static_cast<std::uint32_t>(i));
+            } else {
+                if (addrs[i].addr_.find(':') != std::string::npos) {
+                    res = uv_ip6_addr(addrs[i].addr_.data(), addrs[i].port_, &in_temp);
+                } else {
+                    res = uv_ip4_addr(addrs[i].addr_.data(), addrs[i].port_, reinterpret_cast<sockaddr_in*>(&in_temp));
+                }
+
+                if (res != 0) {
+                    invalid_address_indicies.push_back(FRIEND_UPDATE_ERROR_INVALID_ADDR | static_cast<std::uint32_t>(i));
+                } else {
+                    internet::host_sockaddr_to_guest_saddress(reinterpret_cast<sockaddr*>(&in_temp), friends_[current_friend++].real_addr_);
+                }
+            }
+        }
     }
 }

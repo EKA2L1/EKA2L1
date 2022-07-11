@@ -77,6 +77,11 @@ namespace eka2l1::config {
         void deserialize(const std::string &file = KEYBIND_DEFAULT_FILE);
     };
 
+    struct friend_address {
+        std::string addr_;
+        std::uint32_t port_;
+    };
+
     struct state {
         float ui_scale{ 1.0 };
         std::string bkg_path;
@@ -144,6 +149,7 @@ namespace eka2l1::config {
         midi_backend_type midi_backend{ MIDI_BACKEND_TSF };
 
         std::atomic<std::uint32_t> display_background_color{ 0xFFD0D0D0 };
+        std::vector<friend_address> friend_addresses;
 
         void serialize(const bool with_bindings = true);
         void deserialize(const bool with_bindings = true);

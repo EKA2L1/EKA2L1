@@ -57,6 +57,9 @@ namespace eka2l1::epoc::bt {
             std::uint8_t *buffer, const std::size_t avail_size) override;
         bool set_option(const std::uint32_t option_id, const std::uint32_t option_family,
             std::uint8_t *buffer, const std::size_t avail_size) override;
+            
+        void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr,
+            std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) override;
     };
 
     class l2cap_inet_protocol : public btlink_inet_protocol {
@@ -82,7 +85,8 @@ namespace eka2l1::epoc::bt {
         virtual std::unique_ptr<epoc::socket::socket> make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket::socket_type sock_type) override;
 
         virtual std::unique_ptr<epoc::socket::socket> make_empty_base_link_socket() override {
-            return std::make_unique<l2cap_inet_socket>(this, std::unique_ptr<epoc::socket::socket>(nullptr));
+            std::unique_ptr<epoc::socket::socket> empty_socket = std::unique_ptr<epoc::socket::socket>(nullptr);
+            return std::make_unique<l2cap_inet_socket>(this, empty_socket);
         }
     };
 }

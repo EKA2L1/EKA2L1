@@ -168,7 +168,10 @@ namespace eka2l1::epoc::internet {
         epoc::socket::receive_done_callback receive_done_cb_;
 
         std::unique_ptr<common::ring_buffer<char, 0x80000>> stream_data_buffer_;
+
         common::event open_event_;
+        common::event listen_event_;
+        int listen_event_result_;
 
         void close_down();
         void handle_connect_done_error_code(const int error_code);
@@ -218,6 +221,8 @@ namespace eka2l1::epoc::internet {
         void cancel_send() override;
         void cancel_connect() override;
         void cancel_accept() override;
+
+        void set_listen_event(const int result);
 
         void complete_connect_done_info(const int err);
         void complete_send_done_info(const int err);

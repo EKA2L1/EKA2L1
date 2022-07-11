@@ -42,10 +42,10 @@ namespace eka2l1::epoc::bt {
         explicit asker_inet();
         ~asker_inet();
 
-        void send_request_with_retries(const internet::sinet6_address &addr, char *request, const std::size_t request_size,
+        void send_request_with_retries(const epoc::socket::saddress &addr, char *request, const std::size_t request_size,
             response_callback response_cb, const bool request_dynamically_allocated = false);
 
-        std::uint32_t ask_for_routed_port(const std::uint16_t virtual_port, const internet::sinet6_address &dev_addr);
-        void ask_for_routed_port_async(const std::uint16_t virtual_port, const internet::sinet6_address &dev_addr, port_ask_done_callback cb);
+        std::uint32_t ask_for_routed_port(const std::uint16_t virtual_port, const epoc::socket::saddress &dev_addr);
+        void ask_for_routed_port_async(const std::uint16_t virtual_port, const epoc::socket::saddress &dev_addr, port_ask_done_callback cb);
     };
 }

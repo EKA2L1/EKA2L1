@@ -42,7 +42,7 @@ namespace eka2l1::epoc::bt {
         }
     }
 
-    static constexpr std::uint32_t SEND_TIMEOUT_RETRY = 100;
+    static constexpr std::uint32_t SEND_TIMEOUT_RETRY = 20000000;
     struct send_data_vars {
         uv_buf_t buf_;
         sockaddr_in6 addr_;
@@ -59,7 +59,8 @@ namespace eka2l1::epoc::bt {
 
     enum {
         BT_COMM_INET_ERROR_SEND_FAILED = -1,
-        BT_COMM_INET_ERROR_RECV_FAILED = -2
+        BT_COMM_INET_ERROR_RECV_FAILED = -2,
+        BT_COMM_INET_INVALID_ADDR = -3
     };
 
     static void free_send_data_vars_struct(send_data_vars *vars_ptr) {
@@ -167,26 +168,35 @@ namespace eka2l1::epoc::bt {
         uv_async_send(async);
     }
 
-    void asker_inet::send_request_with_retries(const internet::sinet6_address &addr, char *request, const std::size_t request_size,
+    void asker_inet::send_request_with_retries(const epoc::socket::saddress &addr, char *request, const std::size_t request_size,
         response_callback response_cb, const bool request_dynamically_allocated) {
+        sockaddr *addr_host = nullptr;
+        GUEST_TO_BSD_ADDR(addr, addr_host);
+
+        if (addr_host == nullptr) {
+            response_cb(nullptr, BT_COMM_INET_INVALID_ADDR);
+            if (request_dynamically_allocated) {
+                free(request);
+            }
+
+            return;
+        }
+
         if (!bt_asker_) {
             bt_asker_ = new uv_udp_t;
 
-            sockaddr_in6 bind6;
-            std::memset(&bind6, 0, sizeof(sockaddr_in6));
-            bind6.sin6_family = AF_INET6;
+            sockaddr_in bind;
+            std::memset(&bind, 0, sizeof(sockaddr_in));
+            bind.sin_family = AF_INET;
 
             uv_udp_init(uv_default_loop(), bt_asker_);
-            uv_udp_bind(bt_asker_, reinterpret_cast<const sockaddr*>(&bind6), UV_UDP_IPV6ONLY);
+            uv_udp_bind(bt_asker_, reinterpret_cast<const sockaddr*>(&bind), 0);
         }
 
         if (!bt_asker_retry_timer_) {
             bt_asker_retry_timer_ = new uv_timer_t;
             uv_timer_init(uv_default_loop(), bt_asker_retry_timer_);
         }
-
-        sockaddr *addr_host;
-        GUEST_TO_BSD_ADDR(addr, addr_host);
 
         send_data_vars *vars_ptr = new send_data_vars;
 
@@ -202,7 +212,7 @@ namespace eka2l1::epoc::bt {
         keep_sending_data(bt_asker_, vars_ptr);
     }
 
-    std::uint32_t asker_inet::ask_for_routed_port(const std::uint16_t virtual_port, const internet::sinet6_address &dev_addr) {
+    std::uint32_t asker_inet::ask_for_routed_port(const std::uint16_t virtual_port, const epoc::socket::saddress &dev_addr) {
         ask_routed_port_wait_evt_.reset();
         std::uint32_t local_result = 0;
 
@@ -220,7 +230,7 @@ namespace eka2l1::epoc::bt {
         return local_result;
     }
 
-    void asker_inet::ask_for_routed_port_async(const std::uint16_t virtual_port, const internet::sinet6_address &dev_addr, port_ask_done_callback cb) {
+    void asker_inet::ask_for_routed_port_async(const std::uint16_t virtual_port, const epoc::socket::saddress &dev_addr, port_ask_done_callback cb) {
         char *buf = new char[3];
         buf[0] = 'p';
         buf[1] = static_cast<char>(virtual_port & 0xFF);

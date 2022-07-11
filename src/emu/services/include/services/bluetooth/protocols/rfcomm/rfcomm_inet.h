@@ -69,7 +69,8 @@ namespace eka2l1::epoc::bt {
         virtual std::unique_ptr<epoc::socket::socket> make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket::socket_type sock_type) override;
 
         virtual std::unique_ptr<epoc::socket::socket> make_empty_base_link_socket() override {
-            return std::make_unique<rfcomm_inet_socket>(this, std::unique_ptr<epoc::socket::socket>(nullptr));
+            std::unique_ptr<epoc::socket::socket> empty_socket = std::unique_ptr<epoc::socket::socket>(nullptr);
+            return std::make_unique<rfcomm_inet_socket>(this, empty_socket);
         }
     };
 }

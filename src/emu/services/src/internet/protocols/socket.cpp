@@ -96,8 +96,13 @@ namespace eka2l1::epoc::internet {
             async->data = opaque_handle_;
 
             uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
-                uv_close(reinterpret_cast<uv_handle_t*>(async->data), [](uv_handle_t *handle) {
-                    delete handle;
+                uv_shutdown_t *shut = new uv_shutdown_t;
+                uv_shutdown(shut, reinterpret_cast<uv_stream_t*>(async->data), [](uv_shutdown_t *shut, int status) {
+                    uv_close(reinterpret_cast<uv_handle_t*>(shut->handle), [](uv_handle_t *handle) {
+                        delete handle;
+                    });
+
+                    delete shut;
                 });
 
                 close_and_delete_async(async);
@@ -402,6 +407,11 @@ namespace eka2l1::epoc::internet {
         kern->unlock();
     }
 
+    void inet_socket::set_listen_event(const int listen_event_result) {
+        listen_event_.set();
+        listen_event_result_ = listen_event_result;
+    }
+
     std::int32_t inet_socket::listen(const std::uint32_t backlog) {
         if (!opaque_handle_) {
             return epoc::error_not_ready;
@@ -412,19 +422,46 @@ namespace eka2l1::epoc::internet {
             return epoc::error_not_supported;
         }
 
-        reinterpret_cast<uv_stream_t*>(opaque_handle_)->data = this;
+        struct listen_info {
+            uv_stream_t *stream_;
+            int backlog_;
+        };
 
-        const int err = uv_listen(reinterpret_cast<uv_stream_t*>(opaque_handle_), backlog, [](uv_stream_t *server, int status) {
-            inet_socket *sock = reinterpret_cast<inet_socket*>(server->data);
-            if (status < 0) {
-                LOG_ERROR(SERVICE_INTERNET, "Socket new connection has error status {}", status);
-                return;
-            }
-            sock->handle_new_connection();
+        listen_info *info = new listen_info;
+        info->stream_ = reinterpret_cast<uv_stream_t*>(opaque_handle_);
+        info->backlog_ = backlog;
+
+        uv_async_t *async = new uv_async_t;
+        async->data = info;
+
+        reinterpret_cast<uv_stream_t*>(opaque_handle_)->data = this;
+        listen_event_.reset();
+
+        uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
+            listen_info *info = reinterpret_cast<listen_info*>(async->data);
+            inet_socket *sock = reinterpret_cast<inet_socket*>(info->stream_->data);
+
+            const int err = uv_listen(info->stream_, info->backlog_, [](uv_stream_t *server, int status) {
+                inet_socket *sock = reinterpret_cast<inet_socket*>(server->data);
+                if (status < 0) {
+                    LOG_ERROR(SERVICE_INTERNET, "Socket new connection has error status {}", status);
+                    return;
+                }
+                sock->handle_new_connection();
+            });
+
+            sock->set_listen_event(err);
+
+            delete info;
+            close_and_delete_async(async);
         });
 
-        if (err < 0) {
-            LOG_ERROR(SERVICE_INTERNET, "libuv's socket listening failed with code {}", err);
+        uv_async_send(async);
+
+        listen_event_.wait();
+
+        if (listen_event_result_ < 0) {
+            LOG_ERROR(SERVICE_INTERNET, "libuv's socket listening failed with code {}", listen_event_result_);
             return epoc::error_general;
         }
 
@@ -749,9 +786,13 @@ namespace eka2l1::epoc::internet {
         if (bytes_read_arg == UV_EOF) {
             // Not suppose to happen? But maybe maybe
             error_code = epoc::error_eof;
-        } else if (bytes_read_arg < 0) {
-            LOG_ERROR(SERVICE_INTERNET, "Receive data failed with error {}. Please handle!", bytes_read_arg);
-            error_code = epoc::error_general;
+        } else if (bytes_read_arg <= 0) {
+            if ((bytes_read_arg == UV_ECONNRESET) || (bytes_read_arg == 0)) {
+                error_code = epoc::error_disconnected;
+            } else {
+                LOG_ERROR(SERVICE_INTERNET, "Receive data failed with error {}. Please handle!", bytes_read_arg);
+                error_code = epoc::error_general;
+            }
         } else {
             const std::size_t to_write_byte_count = std::min<const std::size_t>(static_cast<std::size_t>(bytes_read_arg), recv_size_);
             std::memcpy(read_dest_, temp_buffer_.data(), to_write_byte_count);
@@ -780,20 +821,29 @@ namespace eka2l1::epoc::internet {
         }
 
         int error_code = epoc::error_none;
+        std::uint32_t bytes_taken = 0;
 
         if (bytes_read_arg == UV_EOF) {
             // Not suppose to happen? But maybe maybe
             error_code = epoc::error_eof;
-        } else if (bytes_read_arg < 0) {
-            LOG_ERROR(SERVICE_INTERNET, "Receive data failed with error {}. Please handle!", bytes_read_arg);
-            error_code = epoc::error_general;
+        } else if (bytes_read_arg <= 0) {
+            if ((bytes_read_arg == UV_ECONNRESET) || (bytes_read_arg == 0)) {
+                error_code = epoc::error_disconnected;
+            } else {
+                LOG_ERROR(SERVICE_INTERNET, "Receive data failed with error {}. Please handle!", bytes_read_arg);
+                error_code = epoc::error_general;
+            }
         } else {
-            if (take_available_only_ && (recv_size_ > static_cast<std::size_t>(bytes_read_arg))) {
+            // We must ensure that if we want to take the data immediately, there must be nothing left in the ring buffer
+            // Else we would create data disorder, leading to corruption
+            if (take_available_only_ && (!stream_data_buffer_ || (stream_data_buffer_->size() == 0))
+                && (recv_size_ >= static_cast<std::size_t>(bytes_read_arg))) {
                 // Avoid adding things overhead, so we just gonna copy paste, and done :)
                 memcpy(read_dest_, buf->base, static_cast<std::size_t>(bytes_read_arg));
                 if (bytes_read_) {
                     *bytes_read_ = static_cast<std::uint32_t>(bytes_read_arg);
                 }
+                bytes_taken = static_cast<std::uint32_t>(bytes_read_arg);
             } else {
                 // Push to the queue and pop, see if we got it (accounting case also for RecvOneOrMore)
                 if (!stream_data_buffer_) {
@@ -809,6 +859,8 @@ namespace eka2l1::epoc::internet {
                     if (bytes_read_) {
                         *bytes_read_ = static_cast<std::uint32_t>(got_data.size());
                     }
+
+                    bytes_taken = static_cast<std::uint32_t>(got_data.size());
                 } else {
                     return;
                 }
@@ -820,7 +872,7 @@ namespace eka2l1::epoc::internet {
         kern->lock();
 
         if (receive_done_cb_) {
-            receive_done_cb_(bytes_read_arg);
+            receive_done_cb_(bytes_taken);
             receive_done_cb_ = nullptr;
         }
 
@@ -885,7 +937,7 @@ namespace eka2l1::epoc::internet {
             uv_async_send(task);
         } else {
             if (stream_data_buffer_ && stream_data_buffer_->size()) {
-                if (take_available_only_ || (data_size >= stream_data_buffer_->size())) {
+                if (take_available_only_ || (data_size <= stream_data_buffer_->size())) {
                     std::size_t size_to_pop = common::min<std::size_t>(data_size, stream_data_buffer_->size());
                     std::vector<char> data_result = stream_data_buffer_->pop(size_to_pop);
 
@@ -901,28 +953,29 @@ namespace eka2l1::epoc::internet {
                     }
 
                     recv_done_info_.complete(epoc::error_none);
+                    return;
                 }
-            } else {
-                uv_stream_t *tcp_stream = reinterpret_cast<uv_stream_t*>(opaque_handle_);
-                tcp_stream->data = this;
+            }
 
-                uv_async_t *task = new uv_async_t;
-                task->data = tcp_stream;
+            uv_stream_t *tcp_stream = reinterpret_cast<uv_stream_t*>(opaque_handle_);
+            tcp_stream->data = this;
 
-                uv_async_init(uv_default_loop(), task, [](uv_async_t *async) {
-                    uv_stream_t *tcp_stream = reinterpret_cast<uv_stream_t*>(async->data);
+            uv_async_t *task = new uv_async_t;
+            task->data = tcp_stream;
 
-                    uv_read_start(tcp_stream, [](uv_handle_t *handle, std::size_t suggested_size, uv_buf_t *buf) {
-                        reinterpret_cast<inet_socket*>(handle->data)->prepare_buffer_for_recv(suggested_size, buf);
-                    }, [](uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
-                        reinterpret_cast<inet_socket*>(stream->data)->handle_tcp_delivery(static_cast<std::int64_t>(nread), buf);
-                    });
+            uv_async_init(uv_default_loop(), task, [](uv_async_t *async) {
+                uv_stream_t *tcp_stream = reinterpret_cast<uv_stream_t*>(async->data);
 
-                    close_and_delete_async(async);
+                uv_read_start(tcp_stream, [](uv_handle_t *handle, std::size_t suggested_size, uv_buf_t *buf) {
+                    reinterpret_cast<inet_socket*>(handle->data)->prepare_buffer_for_recv(suggested_size, buf);
+                }, [](uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
+                    reinterpret_cast<inet_socket*>(stream->data)->handle_tcp_delivery(static_cast<std::int64_t>(nread), buf);
                 });
 
-                uv_async_send(task);
-            }
+                close_and_delete_async(async);
+            });
+
+            uv_async_send(task);
         }
     }
 

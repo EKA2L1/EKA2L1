@@ -78,12 +78,19 @@ namespace eka2l1::epoc::bt {
         return socket::set_option(option_id, option_family, buffer, avail_size);
     }
 
+    void l2cap_inet_socket::receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr,
+        std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) {
+        btinet_socket::receive(data, data_size, sent_size, addr, flags | epoc::socket::SOCKET_FLAG_DONT_WAIT_FULL, complete_info,
+            done_callback);
+    }
+
     std::int32_t l2cap_inet_protocol::message_size() const {
         // TODO: Proper size
         return epoc::socket::SOCKET_MESSAGE_SIZE_NO_LIMIT;
     }
 
     std::unique_ptr<epoc::socket::socket> l2cap_inet_protocol::make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket::socket_type sock_type) {
-        return std::make_unique<l2cap_inet_socket>(this, inet_protocol_->make_socket(internet::INET6_ADDRESS_FAMILY, internet::INET_TCP_PROTOCOL_ID, socket::socket_type_stream));
+        std::unique_ptr<epoc::socket::socket> net_socket = inet_protocol_->make_socket(internet::INET6_ADDRESS_FAMILY, internet::INET_TCP_PROTOCOL_ID, socket::socket_type_stream);
+        return std::make_unique<l2cap_inet_socket>(this, net_socket);
     }
 }

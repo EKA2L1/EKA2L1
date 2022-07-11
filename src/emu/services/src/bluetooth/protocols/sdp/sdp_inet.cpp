@@ -109,8 +109,12 @@ namespace eka2l1::epoc::bt {
 
     void sdp_inet_net_database::handle_new_pdu_packet(const char *buffer, const ssize_t nread) {
         if (nread < 0) {
-            LOG_ERROR(SERVICE_BLUETOOTH, "Receive SDP data failed with libuv error code {}", nread);
-            return;
+            if (nread == UV_ECONNRESET) {
+                // TODO: Close and reconnect
+            } else {
+                LOG_ERROR(SERVICE_BLUETOOTH, "Receive SDP data failed with libuv error code {}", nread);
+                return;
+            }
         }
 
         if (nread < pdu_builder::PDU_HEADER_SIZE) {
@@ -187,7 +191,7 @@ namespace eka2l1::epoc::bt {
         const sdp_connect_query *query = reinterpret_cast<const sdp_connect_query*>(record_buf);
         midman_inet *midman = reinterpret_cast<midman_inet*>(protocol_->get_midman());
 
-        epoc::internet::sinet6_address friend_addr_real;
+        epoc::socket::saddress friend_addr_real;
         if (!midman->get_friend_address(query->addr_, friend_addr_real)) {
             current_query_notify_.complete(epoc::error_could_not_connect);
             return;
@@ -209,17 +213,14 @@ namespace eka2l1::epoc::bt {
 
         uv_async_t *async_connect = new uv_async_t;
         struct async_sdp_connect_data {
-            sockaddr_in6 addr_;
+            epoc::socket::saddress addr_;
             uv_tcp_t *tcp_;
             sdp_inet_net_database *self_;
         };
 
         async_sdp_connect_data *data = new async_sdp_connect_data;
-        data->addr_.sin6_family = AF_INET6;
-        std::memcpy(&data->addr_.sin6_addr, friend_addr_real.address_32x4(), 16);
-        data->addr_.sin6_flowinfo = friend_addr_real.get_flow();
-        data->addr_.sin6_scope_id = friend_addr_real.get_scope();
-        data->addr_.sin6_port = htons(sdp_port_real);
+        data->addr_ = friend_addr_real;
+        data->addr_.port_ = sdp_port_real;
         data->tcp_ = sdp_connect_;
         data->self_ = this;
 
@@ -230,7 +231,10 @@ namespace eka2l1::epoc::bt {
             uv_connect_t *conn = new uv_connect_t;
             conn->data = data;
 
-            uv_tcp_connect(conn, data->tcp_, reinterpret_cast<const sockaddr*>(&data->addr_), [](uv_connect_t *req, int status) {
+            sockaddr *addr_translated = nullptr;
+            GUEST_TO_BSD_ADDR(data->addr_, addr_translated);
+
+            uv_tcp_connect(conn, data->tcp_, addr_translated, [](uv_connect_t *req, int status) {
                 async_sdp_connect_data *data = reinterpret_cast<async_sdp_connect_data*>(req->data);
                 data->self_->handle_connect_done(status);
 

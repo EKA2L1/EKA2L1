@@ -336,7 +336,7 @@ namespace eka2l1::epoc::socket {
             ctx->complete(epoc::error_argument);
             return;
         }
-        
+
         kernel::process *requester = ctx->msg->own_thr->owning_process();
         epoc::des8 *packet_des = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[2]).get(requester);
         

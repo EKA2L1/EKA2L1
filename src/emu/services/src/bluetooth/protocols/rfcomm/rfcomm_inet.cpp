@@ -49,6 +49,7 @@ namespace eka2l1::epoc::bt {
     }
 
     std::unique_ptr<epoc::socket::socket> rfcomm_inet_protocol::make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket::socket_type sock_type) {
-        return std::make_unique<rfcomm_inet_socket>(this, inet_protocol_->make_socket(internet::INET6_ADDRESS_FAMILY, internet::INET_TCP_PROTOCOL_ID, socket::socket_type_stream));
+        std::unique_ptr<epoc::socket::socket> net_socket = inet_protocol_->make_socket(internet::INET6_ADDRESS_FAMILY, internet::INET_TCP_PROTOCOL_ID, socket::socket_type_stream);
+        return std::make_unique<rfcomm_inet_socket>(this, net_socket);
     }
 }

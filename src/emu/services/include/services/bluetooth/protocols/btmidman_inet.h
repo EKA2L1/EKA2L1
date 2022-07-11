@@ -25,6 +25,7 @@
 #include <services/bluetooth/protocols/asker_inet.h>
 #include <common/allocator.h>
 #include <common/sync.h>
+#include <config/config.h>
 
 extern "C" {
 #include <uv.h>
@@ -37,13 +38,18 @@ extern "C" {
 
 namespace eka2l1::epoc::bt {
     struct friend_info {
-        internet::sinet6_address real_addr_;
+        epoc::socket::saddress real_addr_;
         device_address dvc_addr_;
+    };
+
+    enum friend_update_error : std::uint64_t {
+        FRIEND_UPDATE_ERROR_INVALID_PORT_NUMBER = 1ULL << 32,
+        FRIEND_UPDATE_ERROR_INVALID_ADDR = 2ULL << 32
     };
 
     class midman_inet: public midman {
     public:
-        static constexpr std::uint32_t MAX_INET_DEVICE_AROUND = 4;
+        static constexpr std::uint32_t MAX_INET_DEVICE_AROUND = 10;
 
     private:
         std::map<std::uint16_t, std::uint32_t> port_map_;
@@ -63,7 +69,7 @@ namespace eka2l1::epoc::bt {
         asker_inet device_addr_asker_;
 
     public:
-        explicit midman_inet(const int server_port);
+        explicit midman_inet(const config::state &conf);
         ~midman_inet();
 
         std::uint32_t lookup_host_port(const std::uint16_t virtual_port);
@@ -74,11 +80,13 @@ namespace eka2l1::epoc::bt {
         void prepare_server_recv_buffer(uv_buf_t *buf, const std::size_t suggested_size);
         void handle_server_request(const sockaddr *requester, const uv_buf_t *buf, ssize_t nread);
 
-        bool get_friend_address(const std::uint32_t index, internet::sinet6_address &addr);
-        bool get_friend_address(const device_address &friend_virt_addr, internet::sinet6_address &addr);
+        bool get_friend_address(const std::uint32_t index, epoc::socket::saddress &addr);
+        bool get_friend_address(const device_address &friend_virt_addr, epoc::socket::saddress &addr);
 
         void add_device_address_mapping(const std::uint32_t index, const device_address &addr);
         void refresh_friend_infos();
+
+        void update_friend_list(const std::vector<config::friend_address> &addrs, std::vector<std::uint64_t> &invalid_address_indicies);
 
         const int get_server_port() const {
             return port_;
@@ -90,6 +98,10 @@ namespace eka2l1::epoc::bt {
 
         void set_friend_info_cached() {
             friend_info_cached_ = true;
+        }
+        
+        midman_type type() const override {
+            return MIDMAN_INET_BT;
         }
     };
 }

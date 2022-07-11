@@ -27,7 +27,7 @@
         ipv4_addr.sin_port = htons(static_cast<std::uint16_t>(addr.port_));                             \
         std::memcpy(&ipv4_addr.sin_addr, addr.user_data_, 4);                                           \
         dest_ptr = reinterpret_cast<sockaddr*>(&ipv4_addr);                                             \
-    } else {                                                                                            \
+    } else if (addr.family_ == epoc::internet::INET6_ADDRESS_FAMILY) {                                                                                            \
         ipv6_addr.sin6_family = AF_INET6;                                                               \
         ipv6_addr.sin6_port = htons(static_cast<std::uint16_t>(addr.port_));                            \
         const epoc::internet::sinet6_address &ipv6_guest =                                              \

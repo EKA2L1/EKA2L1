@@ -102,7 +102,7 @@ namespace eka2l1::epoc::bt {
         }
 
         const socket_device_address &dvc_addr = static_cast<const socket_device_address&>(addr);
-        epoc::internet::sinet6_address real_addr;
+        epoc::socket::saddress real_addr;
 
         // NOTE: Need real address actually T_T
         if (!midman->get_friend_address(*dvc_addr.get_device_address_const(), real_addr)) {
@@ -118,7 +118,7 @@ namespace eka2l1::epoc::bt {
                 LOG_ERROR(SERVICE_BLUETOOTH, "Retrieve real port of Virtual bluetooth address failed with error code {}", res);
                 info_copy.complete(epoc::error_could_not_connect);
             } else {
-                epoc::internet::sinet6_address addr_copy = real_addr;
+                epoc::socket::saddress addr_copy = real_addr;
                 addr_copy.port_ = static_cast<std::uint32_t>(res);
 
                 inet_socket_->connect(addr_copy, info_copy);
@@ -159,7 +159,7 @@ namespace eka2l1::epoc::bt {
 
     void btinet_socket::receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *recv_size, const epoc::socket::saddress *addr,
         std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) {
-        inet_socket_->receive(data, data_size, recv_size, addr, flags | epoc::socket::SOCKET_FLAG_DONT_WAIT_FULL, complete_info, done_callback);
+        inet_socket_->receive(data, data_size, recv_size, addr, flags, complete_info, done_callback);
     }
 
     void btinet_socket::cancel_receive() {

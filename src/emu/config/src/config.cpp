@@ -197,6 +197,23 @@ namespace eka2l1::config {
 #include <config/options.inl>
 #undef OPTION
 
+        emitter << YAML::Key << "internet-bluetooth-friends" << YAML::Value;
+        
+        {
+            emitter << YAML::BeginSeq;
+            {
+                for (std::size_t i = 0; i < friend_addresses.size(); i++) {
+                    emitter << YAML::BeginMap;
+                    {
+                        emitter << YAML::Key << "address" << YAML::Value << friend_addresses[i].addr_;
+                        emitter << YAML::Key << "port" << YAML::Value << friend_addresses[i].port_;
+                    }
+                    emitter<< YAML::EndMap;
+                }
+            }
+            emitter << YAML::EndSeq;
+        }
+
         emitter << YAML::EndMap;
 
         {
@@ -231,6 +248,22 @@ namespace eka2l1::config {
 #define OPTION(name, variable, default_value) get_yaml_value(node, #name, &variable, default_value);
 #include <config/options.inl>
 #undef OPTION
+
+        try {
+            auto net_bluetooth_friend_nodes = node["internet-bluetooth-friends"];
+            
+            for (auto friend_node: net_bluetooth_friend_nodes) {
+                friend_address addr;
+                addr.addr_ = friend_node["address"].as<std::string>();
+                try {
+                    addr.port_ = friend_node["port"].as<std::uint32_t>();
+                } catch (...) {
+                    addr.port_ = 35689;
+                }
+                friend_addresses.push_back(std::move(addr));
+            }
+        } catch (...) {
+        }
 
         audio_master_volume = common::clamp(0, 100, audio_master_volume);
         screen_buffer_sync = get_screen_buffer_sync_option_from_string(screen_buffer_sync_string);
