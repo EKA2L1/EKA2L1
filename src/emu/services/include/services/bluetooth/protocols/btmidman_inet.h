@@ -27,10 +27,6 @@
 #include <common/sync.h>
 #include <config/config.h>
 
-extern "C" {
-#include <uv.h>
-}
-
 #include <functional>
 #include <map>
 #include <mutex>
@@ -44,13 +40,12 @@ namespace eka2l1::epoc::bt {
 
     enum friend_update_error : std::uint64_t {
         FRIEND_UPDATE_ERROR_INVALID_PORT_NUMBER = 1ULL << 32,
-        FRIEND_UPDATE_ERROR_INVALID_ADDR = 2ULL << 32
+        FRIEND_UPDATE_ERROR_INVALID_ADDR = 2ULL << 32,
+        FRIEND_UPDATE_ERROR_MASK = 0xFFFFFFFF00000000ULL,
+        FRIEND_UPDATE_INDEX_FAULT_MASK = 0x00000000FFFFFFFFULL
     };
 
     class midman_inet: public midman {
-    public:
-        static constexpr std::uint32_t MAX_INET_DEVICE_AROUND = 10;
-
     private:
         std::map<std::uint16_t, std::uint32_t> port_map_;
         std::map<device_address, std::uint32_t> friend_device_address_mapping_;
@@ -61,7 +56,7 @@ namespace eka2l1::epoc::bt {
         common::bitmap_allocator allocated_ports_;
         bool friend_info_cached_;
 
-        uv_udp_t *virt_bt_info_server_;
+        void *virt_bt_info_server_;
         std::vector<char> server_recv_buf_;
         int port_;
 
@@ -77,8 +72,8 @@ namespace eka2l1::epoc::bt {
         void close_port(const std::uint16_t virtual_port);
         std::uint16_t get_free_port();
 
-        void prepare_server_recv_buffer(uv_buf_t *buf, const std::size_t suggested_size);
-        void handle_server_request(const sockaddr *requester, const uv_buf_t *buf, ssize_t nread);
+        void prepare_server_recv_buffer(void *buf_trans, const std::size_t suggested_size);
+        void handle_server_request(const sockaddr *requester, const void *buf, std::int64_t nread);
 
         bool get_friend_address(const std::uint32_t index, epoc::socket::saddress &addr);
         bool get_friend_address(const device_address &friend_virt_addr, epoc::socket::saddress &addr);

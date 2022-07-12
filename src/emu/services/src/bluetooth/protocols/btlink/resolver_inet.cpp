@@ -87,7 +87,7 @@ namespace eka2l1::epoc::bt {
         info_addr_in->minor_device_class_ = MINOR_DEVICE_PHONE_CECULLAR;
         cast_addr.family_ = BTADDR_PROTOCOL_FAMILY_ID;
 
-        friend_querier_.send_request_with_retries(addr, "a", 1, [this, addr, midman](const char *result, const ssize_t bytes) {
+        friend_querier_.send_request_with_retries(addr, "a", 1, [this, addr, midman](const char *result, const std::int64_t bytes) {
             if (bytes <= 0) {
                 current_friend_++;
                 next_impl();
@@ -98,7 +98,7 @@ namespace eka2l1::epoc::bt {
                 std::memcpy(&info_addr_in->addr_, result, sizeof(device_address));
                 midman->add_device_address_mapping(current_friend_, info_addr_in->addr_);
 
-                friend_querier_.send_request_with_retries(addr, "n", 1, [this](const char *result, const ssize_t bytes) {            
+                friend_querier_.send_request_with_retries(addr, "n", 1, [this](const char *result, const std::int64_t bytes) {
                     kernel_system *kern = friend_retrieve_info_.requester->get_kernel_object_owner();
                     kern->lock();
 

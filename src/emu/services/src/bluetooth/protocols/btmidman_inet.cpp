@@ -23,12 +23,16 @@
 #include <common/algorithm.h>
 #include <config/config.h>
 
+extern "C" {
+#include <uv.h>
+}
+
 namespace eka2l1::epoc::bt {
     midman_inet::midman_inet(const config::state &conf)
         : midman()
         , allocated_ports_(MAX_PORT)
-        , virt_bt_info_server_(nullptr)
         , friend_info_cached_(false)
+        , virt_bt_info_server_(nullptr)
         , port_(conf.internet_bluetooth_port) {
         std::vector<std::uint64_t> errs;
         update_friend_list(conf.friend_addresses, errs);
@@ -46,20 +50,22 @@ namespace eka2l1::epoc::bt {
             random_device_addr_.addr_[i] = static_cast<std::uint8_t>(random_range(0, 0xFF));
         }
 
-        virt_bt_info_server_ = new uv_udp_t;
-        if (uv_udp_init(uv_default_loop(), virt_bt_info_server_) < 0) {
+        uv_udp_t *virt_bt_info_server_detail = new uv_udp_t;
+        virt_bt_info_server_ = virt_bt_info_server_detail;
+
+        if (uv_udp_init(uv_default_loop(), virt_bt_info_server_detail) < 0) {
             LOG_ERROR(SERVICE_BLUETOOTH, "Failed to initialize INET Bluetooth info server!");
         }
 
-        virt_bt_info_server_->data = this;
+        virt_bt_info_server_detail->data = this;
 
         sockaddr_in addr_bind;
         std::memset(&addr_bind, 0, sizeof(sockaddr_in));
         addr_bind.sin_family = AF_INET;
         addr_bind.sin_port = htons(static_cast<std::uint16_t>(port_));
 
-        uv_udp_bind(virt_bt_info_server_, reinterpret_cast<const sockaddr*>(&addr_bind), 0);
-        uv_udp_recv_start(virt_bt_info_server_, [](uv_handle_t* handle, std::size_t suggested_size, uv_buf_t* buf) {
+        uv_udp_bind(virt_bt_info_server_detail, reinterpret_cast<const sockaddr*>(&addr_bind), 0);
+        uv_udp_recv_start(virt_bt_info_server_detail, [](uv_handle_t* handle, std::size_t suggested_size, uv_buf_t* buf) {
             reinterpret_cast<midman_inet*>(handle->data)->prepare_server_recv_buffer(buf, suggested_size);
         }, [](uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags) {
             if (nread <= 0) {
@@ -71,20 +77,23 @@ namespace eka2l1::epoc::bt {
     }
 
     midman_inet::~midman_inet() {
-        uv_udp_recv_stop(virt_bt_info_server_);
+        uv_udp_recv_stop(reinterpret_cast<uv_udp_t*>(virt_bt_info_server_));
         uv_close(reinterpret_cast<uv_handle_t*>(virt_bt_info_server_), [](uv_handle_t *hh) {
             delete hh;
         });
     }
 
-    void midman_inet::prepare_server_recv_buffer(uv_buf_t *buf, const std::size_t suggested_size) {
+    void midman_inet::prepare_server_recv_buffer(void *buf_void, const std::size_t suggested_size) {
+        uv_buf_t *buf = reinterpret_cast<uv_buf_t*>(buf_void);
         server_recv_buf_.resize(suggested_size);
         
         buf->base = server_recv_buf_.data();
         buf->len = static_cast<std::uint32_t>(suggested_size);
     }
 
-    void midman_inet::handle_server_request(const sockaddr *requester, const uv_buf_t *buf, ssize_t nread) {
+    void midman_inet::handle_server_request(const sockaddr *requester, const void *buf_void, std::int64_t nread) {
+        const uv_buf_t *buf = reinterpret_cast<const uv_buf_t*>(buf_void);
+
         uv_udp_send_t *send_req = new uv_udp_send_t;
         uv_buf_t local_buf;
         std::uint32_t temp_uint;
@@ -101,7 +110,7 @@ namespace eka2l1::epoc::bt {
             local_buf = uv_buf_init(reinterpret_cast<char*>(&random_device_addr_), sizeof(random_device_addr_));
         }
 
-        uv_udp_send(send_req, virt_bt_info_server_, &local_buf, 1, requester, [](uv_udp_send_t *send_info, int status) {
+        uv_udp_send(send_req, reinterpret_cast<uv_udp_t*>(virt_bt_info_server_), &local_buf, 1, requester, [](uv_udp_send_t *send_info, int status) {
             delete send_info;
         });
     }

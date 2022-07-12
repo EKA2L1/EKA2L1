@@ -23,6 +23,10 @@
 #include <services/bluetooth/protocols/btmidman_inet.h>
 #include <utils/err.h>
 
+extern "C" {
+#include <uv.h>
+}
+
 namespace eka2l1::epoc::bt {
     btinet_socket::btinet_socket(btlink_inet_protocol *protocol, std::unique_ptr<epoc::socket::socket> &inet_socket)
         : inet_socket_(std::move(inet_socket))

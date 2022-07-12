@@ -24,6 +24,10 @@
 #include <kernel/thread.h>
 #include <utils/err.h>
 
+extern "C" {
+#include <uv.h>
+}
+
 namespace eka2l1::epoc::bt {
     enum {
         error_sdp_peer_error = -6401,
@@ -107,7 +111,7 @@ namespace eka2l1::epoc::bt {
         current_query_notify_.complete(epoc::error_none);
     }
 
-    void sdp_inet_net_database::handle_new_pdu_packet(const char *buffer, const ssize_t nread) {
+    void sdp_inet_net_database::handle_new_pdu_packet(const char *buffer, const std::int64_t nread) {
         if (nread < 0) {
             if (nread == UV_ECONNRESET) {
                 // TODO: Close and reconnect
@@ -205,10 +209,11 @@ namespace eka2l1::epoc::bt {
 
         // Establish TCP connect
         if (!sdp_connect_) {
-            sdp_connect_ = new uv_tcp_t;
-            uv_tcp_init(uv_default_loop(), sdp_connect_);
+            uv_tcp_t *sdp_connect_impl = new uv_tcp_t;
+            uv_tcp_init(uv_default_loop(), sdp_connect_impl);
             
-            sdp_connect_->data = this;
+            sdp_connect_impl->data = this;
+            sdp_connect_ = sdp_connect_impl;
         }
 
         uv_async_t *async_connect = new uv_async_t;
@@ -221,7 +226,7 @@ namespace eka2l1::epoc::bt {
         async_sdp_connect_data *data = new async_sdp_connect_data;
         data->addr_ = friend_addr_real;
         data->addr_.port_ = sdp_port_real;
-        data->tcp_ = sdp_connect_;
+        data->tcp_ = reinterpret_cast<uv_tcp_t*>(sdp_connect_);
         data->self_ = this;
 
         async_connect->data = data;
@@ -268,7 +273,7 @@ namespace eka2l1::epoc::bt {
         send_pdu_packet_data *info_data = new send_pdu_packet_data;
         info_data->buf_copy_ = reinterpret_cast<char*>(malloc(buf_size));
         info_data->buf_size_ = buf_size;
-        info_data->tcp_handle_ = sdp_connect_;
+        info_data->tcp_handle_ = reinterpret_cast<uv_tcp_t*>(sdp_connect_);
         info_data->self_ = this;
 
         std::memcpy(info_data->buf_copy_, buf, buf_size);

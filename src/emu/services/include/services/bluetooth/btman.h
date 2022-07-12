@@ -46,6 +46,10 @@ namespace eka2l1 {
         void device_name(const std::u16string &new_name);
 
         bool is_oldarch();
+
+        epoc::bt::midman *get_midman() {
+            return mid_.get();
+        }
     };
 
     struct btman_client_session : public service::typical_session {

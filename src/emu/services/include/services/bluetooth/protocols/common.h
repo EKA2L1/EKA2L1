@@ -72,6 +72,8 @@ namespace eka2l1::epoc::bt {
         SDP_PDU_SERVICE_SEARCH_ATTRIBUTE_RESPONSE = 7
     };
 
+    static constexpr std::uint32_t MAX_INET_DEVICE_AROUND = 10;
+
     struct device_address {
         std::uint8_t addr_[6];
         std::uint16_t padding_;

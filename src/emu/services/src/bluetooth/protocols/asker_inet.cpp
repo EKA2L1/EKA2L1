@@ -19,6 +19,10 @@
 
 #include <services/bluetooth/protocols/asker_inet.h>
 
+extern "C" {
+#include <uv.h>
+}
+
 namespace eka2l1::epoc::bt {
     asker_inet::asker_inet()
         : bt_asker_(nullptr)
@@ -28,14 +32,14 @@ namespace eka2l1::epoc::bt {
     
     asker_inet::~asker_inet() {
         if (bt_asker_retry_timer_) {
-            uv_timer_stop(bt_asker_retry_timer_);
+            uv_timer_stop(reinterpret_cast<uv_timer_t*>(bt_asker_retry_timer_));
             uv_close(reinterpret_cast<uv_handle_t*>(bt_asker_retry_timer_), [](uv_handle_t *hh) {
                 delete hh;
             });
         }
 
         if (bt_asker_) {
-            uv_udp_recv_stop(bt_asker_);
+            uv_udp_recv_stop(reinterpret_cast<uv_udp_t*>(bt_asker_));
             uv_close(reinterpret_cast<uv_handle_t*>(bt_asker_), [](uv_handle_t *hh) {
                 delete hh;
             });
@@ -183,25 +187,27 @@ namespace eka2l1::epoc::bt {
         }
 
         if (!bt_asker_) {
-            bt_asker_ = new uv_udp_t;
+            uv_udp_t *bt_asker_impl = new uv_udp_t;
 
             sockaddr_in bind;
             std::memset(&bind, 0, sizeof(sockaddr_in));
             bind.sin_family = AF_INET;
 
-            uv_udp_init(uv_default_loop(), bt_asker_);
-            uv_udp_bind(bt_asker_, reinterpret_cast<const sockaddr*>(&bind), 0);
+            uv_udp_init(uv_default_loop(), bt_asker_impl);
+            uv_udp_bind(bt_asker_impl, reinterpret_cast<const sockaddr*>(&bind), 0);
+
+            bt_asker_ = bt_asker_impl;
         }
 
         if (!bt_asker_retry_timer_) {
             bt_asker_retry_timer_ = new uv_timer_t;
-            uv_timer_init(uv_default_loop(), bt_asker_retry_timer_);
+            uv_timer_init(uv_default_loop(), reinterpret_cast<uv_timer_t*>(bt_asker_retry_timer_));
         }
 
         send_data_vars *vars_ptr = new send_data_vars;
 
         vars_ptr->buf_ = uv_buf_init(request, static_cast<std::uint32_t>(request_size));
-        vars_ptr->timeout_timer_ = bt_asker_retry_timer_;
+        vars_ptr->timeout_timer_ = reinterpret_cast<uv_timer_t*>(bt_asker_retry_timer_);
         std::memcpy(&vars_ptr->addr_, addr_host, sizeof(sockaddr_in6));
 
         if (request_dynamically_allocated) {
@@ -209,7 +215,7 @@ namespace eka2l1::epoc::bt {
         }
 
         vars_ptr->response_cb_ = response_cb;
-        keep_sending_data(bt_asker_, vars_ptr);
+        keep_sending_data(reinterpret_cast<uv_udp_t*>(bt_asker_), vars_ptr);
     }
 
     std::uint32_t asker_inet::ask_for_routed_port(const std::uint16_t virtual_port, const epoc::socket::saddress &dev_addr) {

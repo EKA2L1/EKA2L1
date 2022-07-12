@@ -25,10 +25,6 @@
 #include <services/bluetooth/protocols/sdp/pdu_builder.h>
 #include <services/socket/netdb.h>
 
-extern "C" {
-#include <uv.h>
-}
-
 #include <string>
 
 namespace eka2l1::epoc::bt {
@@ -41,7 +37,7 @@ namespace eka2l1::epoc::bt {
         asker_inet bt_port_asker_;
         epoc::notify_info current_query_notify_;
 
-        uv_tcp_t *sdp_connect_;
+        void *sdp_connect_;
         bool connected_;
         pdu_builder pdu_packet_builder_;
         std::vector<char> pdu_response_buffer_;
@@ -69,7 +65,7 @@ namespace eka2l1::epoc::bt {
         void handle_connect_done(const int status);
         void handle_send_done(const int status);
         char *prepare_read_buffer(const std::size_t suggested_size);
-        void handle_new_pdu_packet(const char *buffer, const ssize_t nread);
+        void handle_new_pdu_packet(const char *buffer, const std::int64_t nread);
     };
 
     class sdp_inet_protocol : public socket::protocol {

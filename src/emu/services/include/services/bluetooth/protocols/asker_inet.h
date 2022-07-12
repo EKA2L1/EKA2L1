@@ -22,20 +22,16 @@
 #include <services/internet/protocols/inet.h>
 #include <common/sync.h>
 
-extern "C" {
-#include <uv.h>
-}
-
 namespace eka2l1::epoc::bt {
     struct asker_inet {
     private:
-        uv_udp_t *bt_asker_;
-        uv_timer_t *bt_asker_retry_timer_;
+        void *bt_asker_;
+        void *bt_asker_retry_timer_;
 
         common::event ask_routed_port_wait_evt_;
 
     public:
-        using response_callback = std::function<void(const char *response, const ssize_t size)>;
+        using response_callback = std::function<void(const char *response, const std::int64_t size)>;
         using port_ask_done_callback = std::function<void(std::int64_t port_result)>;
 
     public:
