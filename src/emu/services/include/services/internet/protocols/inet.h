@@ -132,14 +132,16 @@ namespace eka2l1::epoc::internet {
         std::u16string host_name() const override;
         bool host_name(const std::u16string &name) override;
 
-        bool get_by_address(epoc::socket::saddress &addr, epoc::socket::name_entry &result) override;
-        bool get_by_name(epoc::socket::name_entry &supply_and_result) override;
-        bool next(epoc::socket::name_entry &result) override;
+        void get_by_address(epoc::socket::saddress &addr, epoc::socket::name_entry *result, epoc::notify_info &complete_info) override;
+        void get_by_name(epoc::socket::name_entry *supply_and_resul, epoc::notify_info &complete_infot) override;
+        void next(epoc::socket::name_entry *result, epoc::notify_info &complete_info) override;
     };
 
     struct inet_socket : public socket::socket {
     private:
         inet_bridged_protocol *papa_;
+        inet_socket *accept_socket_ptr_;
+        inet_socket *accept_server_;
 
         void *opaque_handle_;
         void *opaque_connect_;
@@ -152,6 +154,7 @@ namespace eka2l1::epoc::internet {
         epoc::notify_info connect_done_info_;
         epoc::notify_info send_done_info_;
         epoc::notify_info recv_done_info_;
+        epoc::notify_info accept_done_info_;
 
         std::uint32_t *bytes_written_;
         std::uint32_t *bytes_read_;
@@ -165,8 +168,10 @@ namespace eka2l1::epoc::internet {
         epoc::socket::receive_done_callback receive_done_cb_;
 
         std::unique_ptr<common::ring_buffer<char, 0x80000>> stream_data_buffer_;
-        common::event exit_event_;
+
         common::event open_event_;
+        common::event listen_event_;
+        int listen_event_result_;
 
         void close_down();
         void handle_connect_done_error_code(const int error_code);
@@ -176,6 +181,8 @@ namespace eka2l1::epoc::internet {
     public:
         explicit inet_socket(inet_bridged_protocol *papa)
             : papa_(papa)
+            , accept_socket_ptr_(nullptr)
+            , accept_server_(nullptr)
             , opaque_handle_(nullptr)
             , opaque_connect_(nullptr)
             , opaque_send_info_(nullptr)
@@ -200,8 +207,10 @@ namespace eka2l1::epoc::internet {
         void send(const std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr, std::uint32_t flags, epoc::notify_info &complete_info) override;
         void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr,
             std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) override;
+        void accept(std::unique_ptr<epoc::socket::socket> *pending_sock, epoc::notify_info &complete_info) override;
         std::int32_t local_name(epoc::socket::saddress &result, std::uint32_t &result_len) override;
         std::int32_t remote_name(epoc::socket::saddress &result, std::uint32_t &result_len) override;
+        std::int32_t listen(const std::uint32_t backlog) override;
 
         std::size_t get_option(const std::uint32_t option_id, const std::uint32_t option_family,
             std::uint8_t *buffer, const std::size_t avail_size) override;
@@ -211,14 +220,18 @@ namespace eka2l1::epoc::internet {
         void cancel_receive() override;
         void cancel_send() override;
         void cancel_connect() override;
+        void cancel_accept() override;
+
+        void set_listen_event(const int result);
 
         void complete_connect_done_info(const int err);
         void complete_send_done_info(const int err);
         void prepare_buffer_for_recv(const std::size_t suggested_size, void *buf_ptr);
         void handle_udp_delivery(const std::int64_t bytes_read, const void *buf_ptr, const void *addr);
         void handle_tcp_delivery(const std::int64_t bytes_read, const void *buf_ptr);
+        void handle_new_connection();
+        void handle_accept_impl(std::unique_ptr<epoc::socket::socket> *pending_sock, epoc::notify_info &complete_info);
 
-        void set_exit_event();
         void *get_opaque_handle() {
             return opaque_handle_;
         }
@@ -260,6 +273,10 @@ namespace eka2l1::epoc::internet {
         }
 
         std::unique_ptr<epoc::socket::socket> make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket::socket_type sock_type) override;
+
+        virtual std::unique_ptr<epoc::socket::net_database> make_net_database(const std::uint32_t id, const std::uint32_t family_id) override {
+            return nullptr;
+        }
 
         virtual std::unique_ptr<epoc::socket::host_resolver> make_host_resolver(const std::uint32_t family_id, const std::uint32_t protocol_id) override {
             return std::make_unique<inet_host_resolver>(this, family_id, protocol_id);

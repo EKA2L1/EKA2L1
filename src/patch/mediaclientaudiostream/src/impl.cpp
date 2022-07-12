@@ -262,12 +262,14 @@ void CMMFMdaAudioOutputStream::Stop() {
         // Cancel is the definite return code for MMF-based audio output stream, and MMF-based
         // audio stream are implemented from 7.0 onwards
         // Citing: https://www.25yearsofprogramming.com/c-4/output-streaming.html (they took it out of some book)
-        // On S60v1, the words are very ambiguous, and does not look like PlayComplete is called. I don't
-        // have a phone sadly. But let's guess this.
+        // On S60v1, the words are very ambiguous. I don't have a phone sadly to verify what it return. But let's guess this.
         // KoF needs PlayComplete to be either not called or called with KErrNone,
         // else while free, the object will call Stop and then call free inneath PlayComplete.
+        // Choose to call KErrNone because Ashen needs it to unstuck audio thread
         if (result == KErrNone) {
             iCallback.MaoscPlayComplete(KErrCancel);
+        } else {
+            iCallback.MaoscPlayComplete(KErrNone);
         }
     }
 }

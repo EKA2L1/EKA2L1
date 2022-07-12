@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 EKA2L1 Team
+ * Copyright (c) 2022 EKA2L1 Team
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -17,16 +17,24 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/bluetooth/protocols/btmidman_inet.h>
-#include <services/bluetooth/btmidman.h>
+#include <services/bluetooth/protocols/common.h>
+#include <cstring>
 
 namespace eka2l1::epoc::bt {
-    midman::midman()
-        : local_name_(u"eka2l1")
-        , native_handle_(nullptr) {
-    }
-    
-    std::unique_ptr<midman> make_bluetooth_midman(const eka2l1::config::state &conf, const std::uint32_t reserved_stack_type) {
-        return std::make_unique<midman_inet>(conf);
+    static const std::uint8_t BLUETOOTH_BASE_UUID[] = {
+        0x00, 0x00, 0x10, 0x00, 0x80, 0x00,0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB
+	};
+
+    const std::uint8_t *uuid::shortest_form(std::uint32_t &size) const {
+        if (std::memcmp(data_ + 4, BLUETOOTH_BASE_UUID, 12) == 0) {
+            size = 4;
+        }
+
+        if ((size == 4) && *reinterpret_cast<const std::uint16_t*>(data_) == 0) {
+            size = 2;
+            return data_ + 2;
+        }
+
+        return data_;
     }
 }

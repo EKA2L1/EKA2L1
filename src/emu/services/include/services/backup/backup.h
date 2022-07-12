@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 EKA2L1 Team
+ * Copyright (c) 2022 EKA2L1 Team
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -17,16 +17,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/bluetooth/protocols/btmidman_inet.h>
-#include <services/bluetooth/btmidman.h>
+#pragma once
 
-namespace eka2l1::epoc::bt {
-    midman::midman()
-        : local_name_(u"eka2l1")
-        , native_handle_(nullptr) {
-    }
-    
-    std::unique_ptr<midman> make_bluetooth_midman(const eka2l1::config::state &conf, const std::uint32_t reserved_stack_type) {
-        return std::make_unique<midman_inet>(conf);
-    }
+#include <kernel/server.h>
+#include <services/framework.h>
+
+namespace eka2l1 {
+    class backup_old_server : public service::typical_server {
+    public:
+        explicit backup_old_server(eka2l1::system *sys);
+        void connect(service::ipc_context &context) override;
+    };
+
+    struct backup_old_session : public service::typical_session {
+        explicit backup_old_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
+
+        void fetch(service::ipc_context *ctx) override;
+    };
 }

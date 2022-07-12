@@ -40,6 +40,20 @@ namespace eka2l1::common {
     constexpr endian_type get_system_endian_type() {
         return ((0xFFFFFFFF & 0x1) == little_endian) ? little_endian : big_endian;
     }
+    
+    template <typename T>
+    T to_network_order(T val) {
+        if (get_system_endian_type() == big_endian) {
+            return val;
+        }
+
+        return byte_swap<T>(val);
+    }
+
+    template <typename T>
+    T to_host_order(T val) {
+        return to_network_order<T>(val);
+    }
 
     template <typename T>
     T extract_bits(const T num, const std::uint8_t p, const std::uint8_t n) {

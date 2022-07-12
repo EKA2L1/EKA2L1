@@ -27,6 +27,7 @@
 #include <services/audio/keysound/keysound.h>
 #include <services/audio/mmf/audio.h>
 #include <services/audio/mmf/dev.h>
+#include <services/backup/backup.h>
 #include <services/bluetooth/bt.h>
 #include <services/bluetooth/btman.h>
 #include <services/centralrepo/centralrepo.h>
@@ -244,18 +245,23 @@ namespace eka2l1 {
 
             CREATE_SERVER(sys, system_agent_server);
             CREATE_SERVER(sys, unipertar_server);
-            CREATE_SERVER(sys, goom_monitor_server);
-            CREATE_SERVER(sys, alf_streamer_server);
 
-            // MMF server family
-            {
-                std::unique_ptr<service::server> dev_serv = std::make_unique<mmf_dev_server>(sys);
-                std::unique_ptr<service::server> aud_serv = std::make_unique<mmf_audio_server>(sys,
-                    reinterpret_cast<mmf_dev_server *>(dev_serv.get()));
+            if (sys->get_symbian_version_use() <= epocver::eka2) {
+                CREATE_SERVER(sys, backup_old_server);
+            } else {
+                CREATE_SERVER(sys, goom_monitor_server);
+                CREATE_SERVER(sys, alf_streamer_server);
 
-                kernel_system *kern = sys->get_kernel_system();
-                kern->add_custom_server(dev_serv);
-                kern->add_custom_server(aud_serv);
+                // MMF server family
+                {
+                    std::unique_ptr<service::server> dev_serv = std::make_unique<mmf_dev_server>(sys);
+                    std::unique_ptr<service::server> aud_serv = std::make_unique<mmf_audio_server>(sys,
+                        reinterpret_cast<mmf_dev_server *>(dev_serv.get()));
+
+                    kernel_system *kern = sys->get_kernel_system();
+                    kern->add_custom_server(dev_serv);
+                    kern->add_custom_server(aud_serv);
+                }
             }
 
             epoc::initialize_system_properties(sys, cfg);

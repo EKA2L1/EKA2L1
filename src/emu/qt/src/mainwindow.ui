@@ -61,7 +61,7 @@
      <x>0</x>
      <y>0</y>
      <width>900</width>
-     <height>20</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_file">
@@ -79,7 +79,7 @@
      <property name="title">
       <string>Mount game card dump</string>
      </property>
-      <addaction name="separator"/>
+     <addaction name="separator"/>
      <addaction name="action_mount_game_card_folder"/>
      <addaction name="action_mount_game_card_zip"/>
     </widget>
@@ -122,9 +122,22 @@
     <addaction name="action_restart"/>
     <addaction name="separator"/>
    </widget>
+   <widget class="QMenu" name="menu_bluetooth">
+    <property name="title">
+     <string>Bluetooth</string>
+    </property>
+    <widget class="QMenu" name="menu_netplay">
+     <property name="title">
+      <string>Netplay</string>
+     </property>
+     <addaction name="action_mod_netplay_friends"/>
+    </widget>
+    <addaction name="menu_netplay"/>
+   </widget>
    <addaction name="menu_file"/>
    <addaction name="menu_emulation"/>
    <addaction name="menu_view"/>
+   <addaction name="menu_bluetooth"/>
    <addaction name="menu_help"/>
   </widget>
   <widget class="QStatusBar" name="status_bar"/>
@@ -260,9 +273,13 @@
     <string>Refresh app list</string>
    </property>
   </action>
+  <action name="action_mod_netplay_friends">
+   <property name="text">
+    <string>Friends's IP addresses</string>
+   </property>
+  </action>
  </widget>
  <resources>
-  <include location="../eka2l1.qrc"/>
   <include location="../eka2l1.qrc"/>
  </resources>
  <connections/>

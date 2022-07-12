@@ -32,6 +32,8 @@
 #include <netinet/ip.h>
 #endif
 
+#include <utils/err.h>
+
 namespace eka2l1::epoc::internet {
     inet_host_resolver::inet_host_resolver(inet_bridged_protocol *papa, const std::uint32_t address_family, const std::uint32_t protocol_id)
         : papa_(papa)
@@ -103,25 +105,26 @@ namespace eka2l1::epoc::internet {
         }
     }
 
-    bool inet_host_resolver::next(epoc::socket::name_entry &result) {
+    void inet_host_resolver::next(epoc::socket::name_entry *result, epoc::notify_info &complete_info) {
         if (!iterating_info_) {
-            return false;
+            complete_info.complete(epoc::error_eof);
+            return;
         }
 
-        addrinfo_to_name_entry(result, iterating_info_);
+        addrinfo_to_name_entry(*result, iterating_info_);
         iterating_info_ = iterating_info_->ai_next;
 
-        return true;
+        complete_info.complete(epoc::error_none);
     }
 
-    bool inet_host_resolver::get_by_address(epoc::socket::saddress &addr, epoc::socket::name_entry &result) {
+    void inet_host_resolver::get_by_address(epoc::socket::saddress &addr, epoc::socket::name_entry *result, epoc::notify_info &complete_info) {
         LOG_WARN(SERVICE_INTERNET, "Get host by address stubbed to not found");
-        return false;
+        complete_info.complete(epoc::error_not_supported);
     }
 
-    bool inet_host_resolver::get_by_name(epoc::socket::name_entry &supply_and_result) {
-        const std::string name_utf8 = common::ucs2_to_utf8(supply_and_result.name_.to_std_string(nullptr));
-        
+    void inet_host_resolver::get_by_name(epoc::socket::name_entry *supply_and_result, epoc::notify_info &complete_info) {
+        const std::string name_utf8 = common::ucs2_to_utf8(supply_and_result->name_.to_std_string(nullptr));
+    
         if (prev_info_) {
             freeaddrinfo(prev_info_);
         }
@@ -139,19 +142,19 @@ namespace eka2l1::epoc::internet {
 
         if (result_code != 0) {
             LOG_ERROR(SERVICE_INTERNET, "Get address by name failed with code {}", result_code);
-            return false;
+            complete_info.complete(epoc::error_general);
         }
 
         if (!result_info || !result_info->ai_addr) {
             LOG_ERROR(SERVICE_INTERNET, "Address retrieve is not fullfilled!");
-            return false;
+            complete_info.complete(epoc::error_not_found);
         }
 
-        addrinfo_to_name_entry(supply_and_result, result_info);
+        addrinfo_to_name_entry(*supply_and_result, result_info);
 
         prev_info_ = result_info;
         iterating_info_ = result_info->ai_next;
 
-        return true;
+        complete_info.complete(epoc::error_none);
     }
 }

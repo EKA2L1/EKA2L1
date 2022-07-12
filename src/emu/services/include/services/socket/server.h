@@ -23,6 +23,7 @@
 #include <services/socket/common.h>
 #include <services/socket/connection.h>
 #include <services/socket/host.h>
+#include <services/socket/netdb.h>
 #include <services/socket/protocol.h>
 
 #include <common/container.h>
@@ -64,8 +65,10 @@ namespace eka2l1 {
             void get_host_name(service::ipc_context *ctx);
             void set_host_name(service::ipc_context *ctx);
             void get_by_name(service::ipc_context *ctx);
+            void get_by_address(service::ipc_context *ctx);
             void next(service::ipc_context *ctx);
             void close(service::ipc_context *ctx);
+            void cancel(service::ipc_context *ctx);
 
         public:
             explicit socket_host_resolver(socket_client_session *parent, std::unique_ptr<host_resolver> &resolver,
@@ -86,16 +89,22 @@ namespace eka2l1 {
             void set_option(service::ipc_context *ctx);
             void bind(service::ipc_context *ctx);
             void write(service::ipc_context *ctx);
+            void read(service::ipc_context *ctx);
             void ioctl(service::ipc_context *ctx);
             void close(service::ipc_context *ctx);
             void connect(service::ipc_context *ctx);
             void send(service::ipc_context *ctx, const bool has_return_length, const bool has_addr);
             void recv(service::ipc_context *ctx, const bool has_return_length, const bool one_or_more, const bool has_addr);
+            void send_old(service::ipc_context *ctx, const bool has_addr);
+            void recv_old(service::ipc_context *ctx, const bool one_or_more, const bool has_addr);
             void cancel_send(service::ipc_context *ctx);
             void cancel_recv(service::ipc_context *ctx);
+            void cancel_accept(service::ipc_context *ctx);
             void cancel_all(service::ipc_context *ctx);
             void local_name(service::ipc_context *ctx);
             void remote_name(service::ipc_context *ctx);
+            void listen(service::ipc_context *ctx);
+            void accept(service::ipc_context *ctx);
 
         public:
             explicit socket_socket(socket_client_session *parent, std::unique_ptr<socket> &sock);
@@ -104,6 +113,24 @@ namespace eka2l1 {
 
             socket_subsession_type type() const override {
                 return socket_subsession_type_socket;
+            }
+        };
+        
+        class socket_net_database : public socket_subsession {
+            std::unique_ptr<net_database> net_db_;
+
+        protected:
+            void query(service::ipc_context *ctx);
+            void cancel(service::ipc_context *ctx);
+            void close(service::ipc_context *ctx);
+
+        public:
+            explicit socket_net_database(socket_client_session *parent, std::unique_ptr<net_database> &net_db);
+
+            void dispatch(service::ipc_context *ctx) override;
+
+            socket_subsession_type type() const override {
+                return socket_subsession_type_net_database;
             }
         };
     }
@@ -192,14 +219,44 @@ namespace eka2l1 {
         socket_old_pr_info = 0x01,
         socket_old_pr_find = 0x02,
         socket_old_so_create = 0x06,
+        socket_old_so_create_null = 0x07,
+        socket_old_so_send = 0x08,
+        socket_old_so_recv = 0x09,
+        socket_old_so_recv_one_or_more = 0x0A,
+        socket_old_so_read = 0x0B,
+        socket_old_so_write = 0x0C,
+        socket_old_so_sendto = 0x0D,
+        socket_old_so_recvfrom = 0x0E,
+        socket_old_so_connect = 0x0F,
+        socket_old_so_bind = 0x10,
+        socket_old_so_accept = 0x11,
+        socket_old_so_listen = 0x12,
         socket_old_so_set_opt = 0x13,
         socket_old_so_get_opt = 0x14,
         socket_old_so_ioctl = 0x15,
+        socket_old_so_local_name = 0x17,
+        socket_old_so_remote_name = 0x18,
         socket_old_so_close = 0x19,
+        socket_old_so_cancel_ioctl = 0x1B,
+        socket_old_so_cancel_recv = 0x1C,
+        socket_old_so_cancel_send = 0x1D,
+        socket_old_so_cancel_connect = 0x1E,
+        socket_old_so_cancel_accept = 0x1F,
+        socket_old_so_cancel_all = 0x20,
         socket_old_hr_open = 0x24,
+        socket_old_hr_get_by_name = 0x25,
+        socket_old_hr_next = 0x26,
+        socket_old_hr_get_by_address = 0x27,
         socket_old_hr_get_host_name = 0x28,
         socket_old_hr_set_host_name = 0x29,
-        socket_old_hr_close = 0x2B
+        socket_old_hr_cancel = 0x2A,
+        socket_old_hr_close = 0x2B,
+        socket_old_ndb_open = 0x33,
+        socket_old_ndb_query = 0x34,
+        socket_old_ndb_add = 0x35,
+        socket_old_ndb_remove = 0x36,
+        socket_old_ndb_cancel = 0x37,
+        socket_old_ndb_close = 0x38
     };
 
     struct protocol_description {
@@ -221,6 +278,12 @@ namespace eka2l1 {
         std::uint32_t protocol_;
         std::uint32_t handle_;
         std::int32_t reserved_;
+    };
+
+    struct socket_old_rw_req_info {
+        address size_return_;
+        std::uint32_t flags_;
+        address sock_addr_;
     };
 
     std::string get_socket_server_name_by_epocver(const epocver ver);
@@ -247,6 +310,7 @@ namespace eka2l1 {
     private:
         friend class epoc::socket::socket_host_resolver;
         friend class epoc::socket::socket_socket;
+        friend class epoc::socket::socket_net_database;
 
         common::identity_container<socket_subsession_instance> subsessions_;
 
@@ -264,6 +328,7 @@ namespace eka2l1 {
         void sr_get_by_number(eka2l1::service::ipc_context *ctx);
         void cn_open(eka2l1::service::ipc_context *ctx);
         void cn_get_long_des_setting(eka2l1::service::ipc_context *ctx);
+        void ndb_create(service::ipc_context *ctx);
         void ss_request_optimal_dealer(eka2l1::service::ipc_context *ctx);
     };
 }

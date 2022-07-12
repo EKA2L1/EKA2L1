@@ -50,12 +50,14 @@ namespace eka2l1::epoc::socket {
     };
 
     static constexpr std::uint32_t SOCKET_OPTION_FAMILY_BASE = 1;
+    static constexpr std::uint32_t SOCKET_OPTION_ID_NON_BLOCKING_IO = 4;
     static constexpr std::uint32_t SOCKET_OPTION_ID_BLOCKING_IO = 5;
 
     enum socket_subsession_type {
         socket_subsession_type_host_resolver,
         socket_subsession_type_connection,
-        socket_subsession_type_socket
+        socket_subsession_type_socket,
+        socket_subsession_type_net_database
     };
 
     class socket_subsession {

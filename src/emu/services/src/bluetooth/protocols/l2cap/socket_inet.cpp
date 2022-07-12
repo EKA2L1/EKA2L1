@@ -19,10 +19,11 @@
 
 #include <common/log.h>
 #include <services/bluetooth/btmidman.h>
-#include <services/bluetooth/protocols/l2cap/l2cap.h>
+#include <services/bluetooth/protocols/l2cap/l2cap_inet.h>
+#include <services/internet/protocols/inet.h>
 
 namespace eka2l1::epoc::bt {
-    std::size_t l2cap_socket::get_link_count(std::uint8_t *buffer, const std::size_t avail_size) {
+    std::size_t l2cap_inet_socket::get_link_count(std::uint8_t *buffer, const std::size_t avail_size) {
         LOG_TRACE(SERVICE_BLUETOOTH, "Link count stubbed with 0");
 
         if (avail_size < 4) {
@@ -33,12 +34,12 @@ namespace eka2l1::epoc::bt {
         return 4;
     }
 
-    std::size_t l2cap_socket::get_option(const std::uint32_t option_id, const std::uint32_t option_family,
+    std::size_t l2cap_inet_socket::get_option(const std::uint32_t option_id, const std::uint32_t option_family,
         std::uint8_t *buffer, const std::size_t avail_size) {
         if (option_family == SOL_BT_LINK_MANAGER) {
-            if (pr_->is_oldarch()) {
+            if (protocol_->is_oldarch()) {
                 switch (option_id) {
-                case l2cap_socket_oldarch_link_count:
+                case btlink_socket_oldarch_link_count:
                     return get_link_count(buffer, avail_size);
 
                 default:
@@ -47,43 +48,49 @@ namespace eka2l1::epoc::bt {
                 }
             } else {
                 switch (option_id) {
-                case l2cap_socket_link_count:
+                case btlink_socket_link_count:
                     return get_link_count(buffer, avail_size);
 
                 default:
                     LOG_WARN(SERVICE_BLUETOOTH, "Unhandled option {} in link manager option family", option_id);
                     return 0;
                 }
+            }
+        } else if (option_family == SOL_BT_L2CAP) {
+            switch (option_id) {
+            // All is 1024 - 4. See TBTL2CAPOptions comments
+            case l2cap_socket_get_inbound_mtu_for_best_perf:
+            case l2cap_socket_get_outbound_mtu_for_best_perf:
+                *reinterpret_cast<std::uint32_t *>(buffer) = 1020;
+                return 4;
+
+            default:
+                LOG_WARN(SERVICE_BLUETOOTH, "Unhandled option {} in L2CAP option family", option_id);
+                return 0;
             }
         }
 
         return socket::get_option(option_id, option_family, buffer, avail_size);
     }
 
-    bool l2cap_socket::set_option(const std::uint32_t option_id, const std::uint32_t option_family,
+    bool l2cap_inet_socket::set_option(const std::uint32_t option_id, const std::uint32_t option_family,
         std::uint8_t *buffer, const std::size_t avail_size) {
-        if (option_family == epoc::socket::SOCKET_OPTION_FAMILY_BASE) {
-            if (pr_->is_oldarch()) {
-                switch (option_id) {
-                case epoc::socket::SOCKET_OPTION_ID_BLOCKING_IO:
-                    LOG_INFO(SERVICE_BLUETOOTH, "Unblocking/Blocking IO stubbed");
-                    return true;
-
-                default:
-                    LOG_WARN(SERVICE_BLUETOOTH, "Unhandled option {} in socket base family", option_id);
-                    return false;
-                }
-            } else {
-                LOG_WARN(SERVICE_BLUETOOTH, "Unhandled option {} in socket base family", option_id);
-                return false;
-            }
-        }
-
         return socket::set_option(option_id, option_family, buffer, avail_size);
     }
 
-    std::int32_t l2cap_protocol::message_size() const {
+    void l2cap_inet_socket::receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr,
+        std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) {
+        btinet_socket::receive(data, data_size, sent_size, addr, flags | epoc::socket::SOCKET_FLAG_DONT_WAIT_FULL, complete_info,
+            done_callback);
+    }
+
+    std::int32_t l2cap_inet_protocol::message_size() const {
         // TODO: Proper size
         return epoc::socket::SOCKET_MESSAGE_SIZE_NO_LIMIT;
+    }
+
+    std::unique_ptr<epoc::socket::socket> l2cap_inet_protocol::make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket::socket_type sock_type) {
+        std::unique_ptr<epoc::socket::socket> net_socket = inet_protocol_->make_socket(internet::INET6_ADDRESS_FAMILY, internet::INET_TCP_PROTOCOL_ID, socket::socket_type_stream);
+        return std::make_unique<l2cap_inet_socket>(this, net_socket);
     }
 }

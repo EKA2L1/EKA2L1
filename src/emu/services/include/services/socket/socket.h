@@ -165,16 +165,34 @@ namespace eka2l1::epoc::socket {
         virtual void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *recv_size, const saddress *addr,
             const std::uint32_t flags, epoc::notify_info &complete_info, receive_done_callback done_callback = nullptr);
 
+        /**
+         * @brief Start a listen queue for incoming connnections.
+         * 
+         * @param backlog Size of the listening queue.
+         */
+        virtual std::int32_t listen(const std::uint32_t backlog);
+
+        /**
+         * @brief Accept a pending connection, or wait if there's none
+         * 
+         * @param pending_sock      Pointer to the socket object to be created.
+         * @param complete_info     Notify info signaled when accept process is done.
+         */
+        virtual void accept(std::unique_ptr<socket> *pending_sock, epoc::notify_info &complete_info);
+
         virtual void cancel_receive();
 
         virtual void cancel_send();
 
         virtual void cancel_connect();
 
+        virtual void cancel_accept();
+
         void cancel_all() {
             cancel_connect();
             cancel_receive();
             cancel_send();
+            cancel_accept();
         }
     };
 }

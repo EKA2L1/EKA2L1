@@ -181,7 +181,7 @@ namespace eka2l1::common {
     }
 
     int bitmap_allocator::allocate_from(const std::uint32_t start_offset, int &size, const bool best_fit) {
-        std::uint32_t *word = &words_[0] + (start_offset << 5);
+        std::uint32_t *word = &words_[0] + (start_offset >> 5);
 
         // We have arrived at le word that still have free position (bit 1)
         std::uint32_t *word_end = &words_[words_.size() - 1];
@@ -201,7 +201,7 @@ namespace eka2l1::common {
                 int boff = 0;
                 std::uint32_t *bword = nullptr;
 
-                int cursor = 31;
+                int cursor = 31 - (soc & 31);
 
                 while (cursor > 0) {
                     if (((wv >> cursor) & 1) == 1) {
