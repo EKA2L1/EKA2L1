@@ -39,6 +39,7 @@ QT_END_NAMESPACE
 
 static constexpr std::size_t MAX_RECENT_ENTRIES = 5;
 class symbian_input_dialog;
+struct btnetplay_friends_dialog;
 
 namespace eka2l1 {
     class system;
@@ -95,6 +96,7 @@ private:
     int input_text_max_len_;
 
     symbian_input_dialog *input_dialog_;
+    btnetplay_friends_dialog *bt_netplay_dialog_;
 
     void setup_screen_draw();
     void setup_app_list();
@@ -152,6 +154,8 @@ private slots:
     void on_input_dialog_open_request();
     void on_input_dialog_close_request();
     void on_hide_system_apps_changed();
+    void on_bt_netplay_mod_friends_clicked();
+    void on_btnetplay_friends_dialog_finished(int status);
 
 signals:
     void progress_dialog_change(const std::size_t now, const std::size_t total);

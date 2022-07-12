@@ -20,6 +20,7 @@
 #include "./ui_mainwindow.h"
 #include <qt/aboutdialog.h>
 #include <qt/applistwidget.h>
+#include <qt/btnetplay_friends_dialog.h>
 #include <qt/device_install_dialog.h>
 #include <qt/displaywidget.h>
 #include <qt/mainwindow.h>
@@ -44,6 +45,7 @@
 
 #include <package/manager.h>
 #include <services/applist/applist.h>
+#include <services/bluetooth/btman.h>
 #include <services/fbs/fbs.h>
 #include <services/ui/cap/oom_app.h>
 #include <services/window/classes/wingroup.h>
@@ -198,6 +200,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     , input_complete_callback_(nullptr)
     , input_text_max_len_(0x7FFFFFFF)
     , input_dialog_(nullptr)
+    , bt_netplay_dialog_(nullptr)
     , ui_(new Ui::main_window)
     , applist_(nullptr)
     , displayer_(nullptr) {
@@ -312,6 +315,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     connect(ui_->action_restart, &QAction::triggered, this, &main_window::on_restart_requested);
     connect(ui_->action_package_manager, &QAction::triggered, this, &main_window::on_package_manager_triggered);
     connect(ui_->action_refresh_app_list, &QAction::triggered, this, &main_window::on_refresh_app_list_requested);
+    connect(ui_->action_mod_netplay_friends, &QAction::triggered, this, &main_window::on_bt_netplay_mod_friends_clicked);
 
     connect(rotate_group_, &QActionGroup::triggered, this, &main_window::on_another_rotation_triggered);
 
@@ -481,6 +485,11 @@ void main_window::on_package_uninstalled() {
 }
 
 void main_window::on_device_set_requested(const int index) {
+    if (bt_netplay_dialog_) {
+        bt_netplay_dialog_->close();
+        bt_netplay_dialog_ = nullptr;
+    }
+
     ui_->action_rotate_drop_menu->setEnabled(false);
 
     save_ui_layouts();
@@ -1263,4 +1272,34 @@ void main_window::on_hide_system_apps_changed() {
     if (applist_) {
         applist_->set_hide_system_apps(emulator_state_.conf.hide_system_apps);
     }
+}
+
+void main_window::on_bt_netplay_mod_friends_clicked() {
+    if (!bt_netplay_dialog_) {
+        QMessageBox::StandardButton result = QMessageBox::warning(this, tr("Continue to modify friends' IP addresses"),
+                                                                  tr("This dialog will show all stored IP addresses, which has the potential of revealing others' personal information.<br>"
+                                                                     "Do you wish to continue?"), QMessageBox::Yes | QMessageBox::No);
+
+        if (result == QMessageBox::Yes) {
+            eka2l1::kernel_system *kernel = emulator_state_.symsys->get_kernel_system();
+            const std::string btman_server_name = eka2l1::get_btman_server_name_by_epocver(kernel->get_epoc_version());
+            eka2l1::btman_server *btman_serv = kernel->get_by_name<eka2l1::btman_server>(btman_server_name);
+
+            if (btman_serv) {
+                // TODO: Check for other type of midman (real bluetooth for example!)
+                bt_netplay_dialog_ = new btnetplay_friends_dialog(this, reinterpret_cast<eka2l1::epoc::bt::midman_inet*>(btman_serv->get_midman()), emulator_state_.conf);
+                connect(bt_netplay_dialog_, &QDialog::finished, this, &main_window::on_btnetplay_friends_dialog_finished);
+
+                bt_netplay_dialog_->show();
+            } else {
+                QMessageBox::critical(this, tr("Bluetooth manager service not available!"), tr("The emulated device does not have a bluetooth manager service! Bluetooth is not supported."));
+            }
+        }
+    } else {
+        bt_netplay_dialog_->setFocus();
+    }
+}
+
+void main_window::on_btnetplay_friends_dialog_finished(int status) {
+    bt_netplay_dialog_ = nullptr;
 }
