@@ -39,7 +39,7 @@ QT_END_NAMESPACE
 
 static constexpr std::size_t MAX_RECENT_ENTRIES = 5;
 class symbian_input_dialog;
-struct btnetplay_friends_dialog;
+class btnetplay_friends_dialog;
 
 namespace eka2l1 {
     class system;
