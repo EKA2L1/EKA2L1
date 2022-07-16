@@ -136,7 +136,7 @@ namespace eka2l1::loader {
     }
 
     static bool determine_rpkg_symbian_version_through_series60_sis(const std::string &extracted_path, epocver &ver) {
-        const std::string sis_path = add_path(extracted_path, "system\\install\\series60v*.sis");
+        std::string sis_path = add_path(extracted_path, "system\\install\\series60v*.sis");
 
         auto directory = common::make_directory_iterator(sis_path);
         if (!directory) {
@@ -169,6 +169,14 @@ namespace eka2l1::loader {
                     ver = discovered.value();
                     found = true;
                 }
+            }
+        }
+
+        if (!found) {
+            if (common::exists(add_path(extracted_path, "system\\install\\series80v20.sis"))) {
+                // It's funny))
+                ver = epocver::epoc80;
+                return true;
             }
         }
 
