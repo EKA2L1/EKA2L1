@@ -189,6 +189,7 @@ namespace eka2l1::android {
         evt.mouse_.mouse_id = static_cast<std::uint32_t>(pointer_id);
         evt.mouse_.button_ = eka2l1::drivers::mouse_button::mouse_button_left;
         evt.mouse_.action_ = static_cast<eka2l1::drivers::mouse_action>(action);
+        evt.mouse_.raw_screen_pos_ = false;
         state.winserv->queue_input_from_driver(evt);
     }
 }

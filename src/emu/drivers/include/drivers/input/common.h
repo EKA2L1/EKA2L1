@@ -38,7 +38,8 @@ namespace eka2l1::drivers {
 
     enum class button_state {
         pressed,
-        released
+        released,
+        joy
     };
 
     enum mouse_button {
@@ -96,7 +97,9 @@ namespace eka2l1::drivers {
         CONTROLLER_BUTTON_CODE_RIGHT_STICK_DOWN,
         CONTROLLER_BUTTON_CODE_RIGHT_STICK_UP,
         CONTROLLER_BUTTON_CODE_LEFT_TRIGGER,
-        CONTROLLER_BUTTON_CODE_RIGHT_TRIGGER
+        CONTROLLER_BUTTON_CODE_RIGHT_TRIGGER,
+		CONTROLLER_BUTTON_CODE_LEFT_STICK,
+		CONTROLLER_BUTTON_CODE_RIGHT_STICK
     };
 
     /**
@@ -114,6 +117,7 @@ namespace eka2l1::drivers {
         int controller_;
         int button_;
         button_state state_;
+        float axis_[2];
     };
 
     /**
@@ -125,6 +129,9 @@ namespace eka2l1::drivers {
         mouse_button button_;
         mouse_action action_;
         std::uint32_t mouse_id;
+
+        // Position and info are 1-1 to emulated device
+        bool raw_screen_pos_;
     };
 
     struct input_event {

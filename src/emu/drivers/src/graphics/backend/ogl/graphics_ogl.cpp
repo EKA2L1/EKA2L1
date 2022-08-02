@@ -856,6 +856,8 @@ namespace eka2l1::drivers {
     }
 
     void ogl_graphics_driver::set_viewport(const eka2l1::rect &viewport) {
+        shared_graphics_driver::set_viewport(viewport);
+
         glViewport(viewport.top.x, ((viewport.size.y < 0) ? viewport.top.y : (current_fb_height - (viewport.top.y + viewport.size.y))), viewport.size.x, common::abs(viewport.size.y));
     }
 

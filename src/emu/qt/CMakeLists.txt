@@ -48,6 +48,13 @@ if (WIN32)
 endif()
 
 set(PROJECT_SOURCES
+        include/qt/btnmap/aim.h
+        include/qt/btnmap/base.h
+        include/qt/btnmap/editor.h
+        include/qt/btnmap/editor_widget.h
+        include/qt/btnmap/executor.h
+        include/qt/btnmap/joystick.h
+        include/qt/btnmap/singletouch.h
         include/qt/aboutdialog.h
         include/qt/applistwidget.h
         include/qt/btnetplay_friends_dialog.h
@@ -63,6 +70,14 @@ set(PROJECT_SOURCES
         include/qt/symbian_input_dialog.h
         include/qt/thread.h
         include/qt/utils.h
+        src/btnmap/aim.cpp
+        src/btnmap/base.cpp
+        src/btnmap/editor.cpp
+        src/btnmap/editor_widget.cpp
+        src/btnmap/editor_widget.ui
+        src/btnmap/executor.cpp
+        src/btnmap/joystick.cpp
+        src/btnmap/singletouch.cpp
         src/aboutdialog.cpp
         src/aboutdialog.ui
         src/applistwidget.cpp

@@ -23,6 +23,7 @@
 #include <drivers/input/common.h>
 #include <drivers/graphics/context.h>
 #include <drivers/ui/input_dialog.h>
+#include <drivers/itc.h>
 
 #include <QActionGroup>
 #include <QListWidgetItem>
@@ -40,6 +41,7 @@ QT_END_NAMESPACE
 static constexpr std::size_t MAX_RECENT_ENTRIES = 5;
 class symbian_input_dialog;
 class btnetplay_friends_dialog;
+class editor_widget;
 
 namespace eka2l1 {
     class system;
@@ -56,6 +58,10 @@ namespace eka2l1 {
     namespace epoc {
         struct screen;
         struct window_group;
+    }
+
+    namespace qt::btnmap {
+        struct executor;
     }
 }
 
@@ -97,10 +103,13 @@ private:
 
     symbian_input_dialog *input_dialog_;
     btnetplay_friends_dialog *bt_netplay_dialog_;
+    editor_widget *editor_widget_;
+    eka2l1::qt::btnmap::executor *map_executor_;
 
     void setup_screen_draw();
     void setup_app_list();
     void setup_package_installer_ui_hooks();
+    void reprepare_touch_mappings();
     void refresh_recent_mounts();
     void refresh_current_device_label();
     void refresh_mount_availbility();
@@ -156,6 +165,9 @@ private slots:
     void on_hide_system_apps_changed();
     void on_bt_netplay_mod_friends_clicked();
     void on_btnetplay_friends_dialog_finished(int status);
+    void on_mapping_editor_hidden();
+    void on_action_button_mapping_editor_triggered();
+    void on_action_touch_mapping_editor_triggered();
 
 signals:
     void progress_dialog_change(const std::size_t now, const std::size_t total);
@@ -179,6 +191,12 @@ public:
     void closeEvent(QCloseEvent *event) override;
 
     void setup_and_switch_to_game_mode();
+    void draw_enabled_overlay(eka2l1::drivers::graphics_driver *driver,
+        eka2l1::drivers::graphics_command_builder &builder, const float scale_factor);
+
+    bool deliver_overlay_mouse_event(const eka2l1::vec3 &pos, const int button_id, const int action_id,
+        const int mouse_id);
+    bool deliver_key_event(const std::uint32_t code, const bool is_press);
 
     display_widget *render_window() {
         return displayer_;

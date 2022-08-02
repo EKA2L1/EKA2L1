@@ -60,6 +60,7 @@ static eka2l1::drivers::input_event make_mouse_event_driver(const float x, const
     const int mouse_id) {
     eka2l1::drivers::input_event evt;
     evt.type_ = eka2l1::drivers::input_event_type::touch;
+    evt.mouse_.raw_screen_pos_ = false;
     evt.mouse_.pos_x_ = static_cast<int>(x);
     evt.mouse_.pos_y_ = static_cast<int>(y);
     evt.mouse_.pos_z_ = static_cast<int>(z);
@@ -83,6 +84,9 @@ static void on_ui_window_mouse_evt(void *userdata, eka2l1::vec3 mouse_pos, int b
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
 
     const std::lock_guard<std::mutex> guard(emu->lockdown);
+    if (emu->ui_main && emu->ui_main->deliver_overlay_mouse_event(mouse_pos, button, action, mouse_id)) {
+        return;
+    }
 
     const float scale = emu->symsys->get_config()->ui_scale;
     auto mouse_evt = make_mouse_event_driver(mouse_pos_x / scale, mouse_pos_y / scale, mouse_pos_z / scale,
@@ -103,6 +107,18 @@ static eka2l1::drivers::input_event make_controller_event_driver(int jid, int bu
     return evt;
 }
 
+static eka2l1::drivers::input_event make_controller_event_driver(int jid, int button, float axisx, float axisy) {
+    eka2l1::drivers::input_event evt;
+    evt.type_ = eka2l1::drivers::input_event_type::button;
+    evt.button_.button_ = button;
+    evt.button_.controller_ = jid;
+    evt.button_.axis_[0] = axisx;
+    evt.button_.axis_[1] = axisy;
+    evt.button_.state_ = eka2l1::drivers::button_state::joy;
+
+    return evt;
+}
+
 static eka2l1::drivers::input_event make_key_event_driver(const int key, const eka2l1::drivers::key_state key_state) {
     eka2l1::drivers::input_event evt;
     evt.type_ = eka2l1::drivers::input_event_type::key;
@@ -117,6 +133,9 @@ static void on_ui_window_key_release(void *userdata, const int key) {
     auto key_evt = make_key_event_driver(key, eka2l1::drivers::key_state::released);
 
     const std::lock_guard<std::mutex> guard(emu->lockdown);
+    if (emu->ui_main && emu->ui_main->deliver_key_event(static_cast<std::uint32_t>(key), false)) {
+        return;
+    }
     if (emu->winserv)
         emu->winserv->queue_input_from_driver(key_evt);
 }
@@ -126,6 +145,9 @@ static void on_ui_window_key_press(void *userdata, const int key) {
     auto key_evt = make_key_event_driver(key, eka2l1::drivers::key_state::pressed);
 
     const std::lock_guard<std::mutex> guard(emu->lockdown);
+    if (emu->ui_main && emu->ui_main->deliver_key_event(static_cast<std::uint32_t>(key), true)) {
+        return;
+    }
     if (emu->winserv)
         emu->winserv->queue_input_from_driver(key_evt);
 }
@@ -181,6 +203,12 @@ namespace eka2l1::desktop {
             if (state.ui_main->controller_event_handler(evt) && state.winserv) {
                 state.winserv->queue_input_from_driver(evt);
             }
+        };
+        state.joystick_controller->on_joy_move = [&](int jid, int button, float axisx, float axisy) {
+            const std::lock_guard<std::mutex> guard(state.lockdown);
+            auto evt = make_controller_event_driver(jid, button, axisx, axisy);
+
+            state.ui_main->controller_event_handler(evt);
         };
 
         // Signal that the initialization is done

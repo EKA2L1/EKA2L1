@@ -380,17 +380,19 @@ namespace eka2l1::drivers {
         bmp->fb->bind(this, bind_type);
         binding = bmp;
 
-        bool no_need_flip = !(!binding && (get_current_api() == drivers::graphic_api::opengl));
-
-        // Build projection matrixx
-        projection_matrix = glm::identity<glm::mat4>();
-        projection_matrix = glm::ortho(0.0f, static_cast<float>(bmp->tex->get_size().x), no_need_flip ? static_cast<float>(bmp->tex->get_size().y) : 0,
-            no_need_flip ? 0.0f : static_cast<float>(bmp->tex->get_size().y), -1.0f, 1.0f);
-
+        // Build projection matrix
         current_fb_height = bmp->tex->get_size().y;
         current_fb_width = bmp->tex->get_size().x;
 
         set_viewport(eka2l1::rect(eka2l1::vec2(0, 0), bmp->tex->get_size()));
+    }
+
+    void shared_graphics_driver::set_viewport(const eka2l1::rect &new_rect) {
+        bool no_need_flip = !(!binding && (get_current_api() == drivers::graphic_api::opengl));
+
+        projection_matrix = glm::identity<glm::mat4>();
+        projection_matrix = glm::ortho(0.0f, static_cast<float>(new_rect.size.x), no_need_flip ? static_cast<float>(new_rect.size.y) : 0,
+            no_need_flip ? 0.0f : static_cast<float>(new_rect.size.y), -1.0f, 1.0f);
     }
 
     void shared_graphics_driver::read_bitmap(command &cmd) {

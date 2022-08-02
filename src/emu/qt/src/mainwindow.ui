@@ -134,9 +134,17 @@
     </widget>
     <addaction name="menu_netplay"/>
    </widget>
+   <widget class="QMenu" name="menu_control">
+    <property name="title">
+     <string>Control</string>
+    </property>
+    <addaction name="action_button_mapping_editor"/>
+    <addaction name="action_touch_mapping_editor"/>
+   </widget>
    <addaction name="menu_file"/>
    <addaction name="menu_emulation"/>
    <addaction name="menu_view"/>
+   <addaction name="menu_control"/>
    <addaction name="menu_bluetooth"/>
    <addaction name="menu_help"/>
   </widget>
@@ -276,6 +284,16 @@
   <action name="action_mod_netplay_friends">
    <property name="text">
     <string>Friends's IP addresses</string>
+   </property>
+  </action>
+  <action name="action_button_mapping_editor">
+   <property name="text">
+    <string>Button mapping editor</string>
+   </property>
+  </action>
+  <action name="action_touch_mapping_editor">
+   <property name="text">
+    <string>Touch mapping editor</string>
    </property>
   </action>
  </widget>

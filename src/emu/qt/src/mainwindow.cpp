@@ -29,6 +29,8 @@
 #include <qt/settings_dialog.h>
 #include <qt/state.h>
 #include <qt/utils.h>
+#include <qt/btnmap/editor_widget.h>
+#include <qt/btnmap/executor.h>
 
 #include <kernel/kernel.h>
 #include <system/devices.h>
@@ -177,6 +179,11 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     builder.draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(scr->ui_rotation),
         (scr->flags_ & eka2l1::epoc::screen::FLAG_SCREEN_UPSCALE_FACTOR_LOCK) ? eka2l1::drivers::bitmap_draw_flag_use_upscale_shader : 0);
 
+    if (state_ptr->ui_main) {
+        builder.set_viewport(dest);
+        state_ptr->ui_main->draw_enabled_overlay(state_ptr->graphics_driver.get(), builder, mult);
+    }
+
     builder.load_backup_state();
 
     state_ptr->present_status = -100;
@@ -201,6 +208,8 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     , input_text_max_len_(0x7FFFFFFF)
     , input_dialog_(nullptr)
     , bt_netplay_dialog_(nullptr)
+    , editor_widget_(nullptr)
+    , map_executor_(nullptr)
     , ui_(new Ui::main_window)
     , applist_(nullptr)
     , displayer_(nullptr) {
@@ -280,6 +289,11 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     ui_->status_bar->setVisible(!settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
     active_screen_number_ = settings.value(SHOW_SCREEN_NUMBER_SETTINGS_NAME, 0).toInt();
 
+    map_executor_ = new eka2l1::qt::btnmap::executor(nullptr, emulator_state_.symsys->get_ntimer());
+    editor_widget_ = new editor_widget(this, map_executor_);
+    addDockWidget(Qt::RightDockWidgetArea, editor_widget_);
+    editor_widget_->setVisible(false);
+
     restore_ui_layouts();
     on_theme_change_requested(QString("%1").arg(settings.value(THEME_SETTING_NAME, 0).toInt()));
 
@@ -300,6 +314,8 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
             }
         }
     }
+
+    reprepare_touch_mappings();
     
     QColor default_color = settings.value(BACKGROUND_COLOR_DISPLAY_SETTING_NAME, QColor(0xD0, 0xD0, 0xD0)).value<QColor>();
     emulator_state_.conf.display_background_color = default_color.rgba();
@@ -327,6 +343,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     connect(this, &main_window::input_dialog_open_request, this, &main_window::on_input_dialog_open_request);
     connect(this, &main_window::input_dialog_close_request, this, &main_window::on_input_dialog_close_request);
 
+    connect(editor_widget_, &editor_widget::editor_hidden, this, &main_window::on_mapping_editor_hidden);
     setAcceptDrops(true);
 }
 
@@ -385,6 +402,10 @@ void main_window::setup_package_installer_ui_hooks() {
     };
 }
 
+void main_window::reprepare_touch_mappings() {
+    map_executor_->set_window_server(::get_window_server_through_system(emulator_state_.symsys.get()));
+}
+
 eka2l1::epoc::screen *main_window::get_current_active_screen() {
     return ::get_current_active_screen(emulator_state_.symsys.get(), active_screen_number_);
 }
@@ -406,6 +427,7 @@ main_window::~main_window() {
         delete input_dialog_;
     }
 
+    delete editor_widget_;
     delete recent_mount_folder_menu_;
     delete recent_mount_clear_;
 
@@ -417,6 +439,8 @@ main_window::~main_window() {
     delete screen_status_label_;
 
     delete rotate_group_;
+    delete map_executor_;
+
     delete ui_;
 }
 
@@ -455,6 +479,7 @@ void main_window::on_settings_triggered() {
         connect(this, &main_window::screen_focus_group_changed, settings_dialog_.data(), &settings_dialog::refresh_app_configuration_details);
         connect(this, &main_window::restart_requested, settings_dialog_.data(), &settings_dialog::on_restart_requested_from_main);
 
+        settings_dialog_->set_active_tab(0);
         settings_dialog_->show();
     } else {
         settings_dialog_->raise();
@@ -526,6 +551,7 @@ void main_window::on_device_set_requested(const int index) {
     setup_app_list();
     refresh_current_device_label();
     refresh_mount_availbility();
+    reprepare_touch_mappings();
     screen_status_label_->clear();
 
     ui_->action_pause->setEnabled(false);
@@ -586,6 +612,7 @@ void main_window::on_new_device_added() {
 
         refresh_current_device_label();
         setup_app_list();
+        reprepare_touch_mappings();
     }
 }
 
@@ -822,6 +849,8 @@ void main_window::setup_screen_draw() {
 
             mode_change_screen(&emulator_state_, scr, 0);
         }
+
+        editor_widget_->hear_active_app(system);
     }
 }
 
@@ -1027,7 +1056,18 @@ void main_window::closeEvent(QCloseEvent *event) {
 
 bool main_window::controller_event_handler(eka2l1::drivers::input_event &event) {
     emit controller_button_press(event);
-    return (displayer_ && displayer_->isVisible() && displayer_->hasFocus());
+    if (displayer_ && displayer_->isVisible() && displayer_->hasFocus()) {
+        if (editor_widget_->isVisible() && editor_widget_->handle_controller_event(event)) {
+            return false;
+        }
+        if (event.button_.state_ == eka2l1::drivers::button_state::joy) {
+            return !map_executor_->execute((static_cast<std::uint64_t>(eka2l1::qt::btnmap::MAP_TYPE_GAMEPAD) << 32) | event.button_.button_,
+                                          event.button_.axis_[0], event.button_.axis_[1]);
+        }
+        return !map_executor_->execute((static_cast<std::uint64_t>(eka2l1::qt::btnmap::MAP_TYPE_GAMEPAD) << 32) | event.button_.button_,
+                                      event.button_.state_ == eka2l1::drivers::button_state::pressed);
+    }
+    return false;
 }
 
 void main_window::make_default_binding_profile() {
@@ -1204,6 +1244,8 @@ void main_window::restore_ui_layouts() {
         state_variant = settings.value(LAST_UI_WINDOW_STATE);
     }
 
+    const bool was_visible = editor_widget_->isVisible();
+
     if (geo_variant.isValid()) {
         restoreGeometry(geo_variant.toByteArray());
     }
@@ -1211,6 +1253,9 @@ void main_window::restore_ui_layouts() {
     if (state_variant.isValid()) {
         restoreState(state_variant.toByteArray());
     }
+
+    if (!was_visible)
+        editor_widget_->setVisible(false);
 }
 
 bool main_window::input_dialog_open(const std::u16string &inital_text, const int max_length, eka2l1::drivers::ui::input_dialog_complete_callback complete_callback) {
@@ -1302,4 +1347,62 @@ void main_window::on_bt_netplay_mod_friends_clicked() {
 
 void main_window::on_btnetplay_friends_dialog_finished(int status) {
     bt_netplay_dialog_ = nullptr;
+}
+
+void main_window::draw_enabled_overlay(eka2l1::drivers::graphics_driver *driver, eka2l1::drivers::graphics_command_builder &builder, const float scale_factor) {
+    if (!editor_widget_->isVisible()) {
+        return;
+    }
+    editor_widget_->draw(driver, builder, scale_factor);
+}
+
+bool main_window::deliver_overlay_mouse_event(const eka2l1::vec3 &pos, const int button_id, const int action_id,
+    const int mouse_id) {
+    if (!emulator_state_.winserv) {
+        return false;
+    }
+
+    if (!editor_widget_->isVisible()) {
+        return false;
+    }
+
+    eka2l1::epoc::screen *scr = emulator_state_.winserv->get_screens();
+    eka2l1::vec3 readjusted_pos = (pos - eka2l1::vec3(scr->absolute_pos, 0));
+
+    readjusted_pos.x = (readjusted_pos.x < 0 ? 0 : readjusted_pos.x);
+    readjusted_pos.y = (readjusted_pos.y < 0 ? 0 : readjusted_pos.y);
+    readjusted_pos.z = (readjusted_pos.z < 0 ? 0 : readjusted_pos.z);
+
+    const bool result = editor_widget_->handle_mouse_action(readjusted_pos, button_id, action_id, mouse_id);
+    if (result) {
+        // For some reason it can't regain focus when you mess around
+        if (!displayer_->hasFocus()) {
+            displayer_->setFocus();
+        }
+    }
+
+    return result;
+}
+
+void main_window::on_mapping_editor_hidden() {
+    if (!displayer_->hasFocus()) {
+        displayer_->setFocus();
+    }
+}
+
+bool main_window::deliver_key_event(const std::uint32_t code, const bool is_press) {
+    if (is_press && editor_widget_->isVisible() && editor_widget_->handle_key_press(code)) {
+        return true;
+    }
+
+    return map_executor_->execute(code, is_press);
+}
+
+void main_window::on_action_button_mapping_editor_triggered() {
+    on_settings_triggered();
+    settings_dialog_->set_active_tab(settings_dialog::CONTROL_TAB_INDEX);
+}
+
+void main_window::on_action_touch_mapping_editor_triggered() {
+    editor_widget_->setVisible(true);
 }

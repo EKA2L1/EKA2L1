@@ -1604,10 +1604,15 @@ namespace eka2l1 {
 
         scr->screen_mutex.lock();
 
-        guest_evt_.adv_pointer_evt_.pos.x = static_cast<int>(static_cast<float>(driver_evt_.mouse_.pos_x_ - scr->absolute_pos.x)
-            / scr->logic_scale_factor_x);
-        guest_evt_.adv_pointer_evt_.pos.y = static_cast<int>(static_cast<float>(driver_evt_.mouse_.pos_y_ - scr->absolute_pos.y)
-            / scr->logic_scale_factor_y);
+        if (driver_evt_.mouse_.raw_screen_pos_) {
+            guest_evt_.adv_pointer_evt_.pos.x = driver_evt_.mouse_.pos_x_;
+            guest_evt_.adv_pointer_evt_.pos.y = driver_evt_.mouse_.pos_y_;
+        } else {
+            guest_evt_.adv_pointer_evt_.pos.x = static_cast<int>(static_cast<float>(driver_evt_.mouse_.pos_x_ - scr->absolute_pos.x)
+                / scr->logic_scale_factor_x);
+            guest_evt_.adv_pointer_evt_.pos.y = static_cast<int>(static_cast<float>(driver_evt_.mouse_.pos_y_ - scr->absolute_pos.y)
+                / scr->logic_scale_factor_y);
+        }
 
         const int orgx = guest_evt_.adv_pointer_evt_.pos.x;
         const int orgy = guest_evt_.adv_pointer_evt_.pos.y;
@@ -1696,7 +1701,7 @@ namespace eka2l1 {
 
             eka2l1::rect screen_rect(scr->absolute_pos, screen_size_scaled);
 
-            if (input_event.mouse_.action_ == drivers::mouse_action_release) {
+            if (!input_event.mouse_.raw_screen_pos_ && (input_event.mouse_.action_ == drivers::mouse_action_release)) {
                 // It may be out of the screen region, but we must still deliver it
                 int new_x = common::clamp(scr->absolute_pos.x, scr->absolute_pos.x + screen_size_scaled.x, input_event.mouse_.pos_x_);
                 int new_y = common::clamp(scr->absolute_pos.y, scr->absolute_pos.y + screen_size_scaled.y, input_event.mouse_.pos_y_);
@@ -1707,7 +1712,7 @@ namespace eka2l1 {
 
             // For touch, try to map to keycode first...
             // If no correspond mapping is found as key, just treat it as touch
-            if (screen_rect.contains(eka2l1::point(input_event.mouse_.pos_x_, input_event.mouse_.pos_y_))) {
+            if (input_event.mouse_.raw_screen_pos_ || screen_rect.contains(eka2l1::point(input_event.mouse_.pos_x_, input_event.mouse_.pos_y_))) {
                 drivers::input_event original_input_evt = input_event;
 
                 input_event.key_.code_ = epoc::KEYBIND_TYPE_MOUSE_CODE_BASE + input_event.mouse_.button_;

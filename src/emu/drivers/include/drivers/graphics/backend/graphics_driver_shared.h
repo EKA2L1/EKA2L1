@@ -113,6 +113,7 @@ namespace eka2l1::drivers {
 
         void update_bitmap(drivers::handle h, const std::size_t size, const eka2l1::vec2 &offset, const eka2l1::vec2 &dim,
             const void *data, const std::size_t pixels_per_line = 0) override;
+        void set_viewport(const eka2l1::rect &viewport) override;
 
         virtual void dispatch(command &cmd);
 

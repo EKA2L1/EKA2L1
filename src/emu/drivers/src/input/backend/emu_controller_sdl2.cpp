@@ -97,6 +97,18 @@ namespace eka2l1::drivers {
                     }
                 }
 
+                if (on_joy_move) {
+                    float axisx = SDL_GameControllerGetAxis(controller, ::SDL_CONTROLLER_AXIS_LEFTX) / 32767.0f;
+                    float axisy = SDL_GameControllerGetAxis(controller, ::SDL_CONTROLLER_AXIS_LEFTY) / 32767.0f;
+
+                    on_joy_move(jid, CONTROLLER_BUTTON_CODE_LEFT_STICK, axisx, axisy);
+
+                    axisx = SDL_GameControllerGetAxis(controller, ::SDL_CONTROLLER_AXIS_RIGHTX) / 32767.0f;
+                    axisy = SDL_GameControllerGetAxis(controller, ::SDL_CONTROLLER_AXIS_RIGHTY) / 32767.0f;
+
+                    on_joy_move(jid, CONTROLLER_BUTTON_CODE_RIGHT_STICK, axisx, axisy);
+                }
+
                 for (int i = 0; i < SDL_CONTROLLER_AXIS_MAX; i++) {
                     float axis = SDL_GameControllerGetAxis(controller, static_cast<SDL_GameControllerAxis>(static_cast<int>(SDL_CONTROLLER_AXIS_LEFTX) + i)) / 32767.0f;
 

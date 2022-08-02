@@ -44,7 +44,17 @@ namespace eka2l1 {
              * \params: button id.
              * \params: true if the button was pressed, false if release.
              */
-            std::function<void(int, int, bool)> on_button_event;
+            std::function<void(int, int, bool)> on_button_event = nullptr;
+
+            /**
+             * @brief Callback on joystick movement detected.
+             *
+             * @param Controller ID
+             * @param Button ID
+             * @param The current X axis, in the range of -1 to 1
+             * @param The current Y axis, in the range of -1 to 1.
+             */
+            std::function<void(int, int, float, float)> on_joy_move = nullptr;
         };
 
         enum class controller_type {

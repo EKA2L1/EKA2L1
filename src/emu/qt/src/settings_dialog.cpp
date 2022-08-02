@@ -1398,3 +1398,7 @@ void settings_dialog::on_log_filter_apply_clicked() {
         configuration_.serialize(false);
     }
 }
+
+void settings_dialog::set_active_tab(const int tab_index) {
+    ui_->settings_tab->setCurrentIndex(tab_index);
+}

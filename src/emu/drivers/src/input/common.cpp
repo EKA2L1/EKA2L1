@@ -80,6 +80,12 @@ namespace eka2l1::drivers {
         case CONTROLLER_BUTTON_CODE_RIGHT_TRIGGER:
             return "Right trigger";
 
+        case CONTROLLER_BUTTON_CODE_LEFT_STICK:
+            return "LS";
+
+        case CONTROLLER_BUTTON_CODE_RIGHT_STICK:
+            return "RS";
+
         default:
             break;
         }

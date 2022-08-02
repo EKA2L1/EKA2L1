@@ -61,6 +61,9 @@ void make_default_keybind_profile(eka2l1::config::keybind_profile &profile);
 class settings_dialog : public QDialog {
     Q_OBJECT
 
+public:
+    static constexpr int CONTROL_TAB_INDEX = 3;
+
 private:
     eka2l1::config::state &configuration_;
     eka2l1::system *system_;
@@ -161,6 +164,7 @@ public:
 
     bool eventFilter(QObject *obj, QEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
+    void set_active_tab(const int tab_index);
 
     QString active_upscale_shader() const;
 

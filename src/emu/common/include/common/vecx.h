@@ -128,6 +128,10 @@ namespace eka2l1 {
             return vec2(x / rhs, y / rhs);
         }
         
+        vec2 operator /(const float rhs) const {
+            return vec2(static_cast<int>(x / rhs), static_cast<int>(y / rhs));
+        }
+        
         vec2 operator*(const float rhs) const {
             return vec2(static_cast<int>(x * rhs), static_cast<int>(y * rhs));
         }
@@ -146,6 +150,14 @@ namespace eka2l1 {
 
         bool operator>(const vec2 &rhs) const {
             return (x > rhs.x && y > rhs.y);
+        }
+
+        bool operator>=(const vec2 &rhs) const {
+            return (x >= rhs.x && y >= rhs.y);
+        }
+
+        bool operator<=(const vec2 &rhs) const {
+            return (x <= rhs.x && y <= rhs.y);
         }
 
         void operator+=(const vec2 &rhs) {
@@ -168,8 +180,12 @@ namespace eka2l1 {
             y = rhs.y;
         }
 
-        vec2 abs() {
+        vec2 abs() const {
             return { x < 0 ? -x : x, y < 0 ? -y : y };
+        }
+
+        double length() const {
+            return std::sqrt(x * x + y * y);
         }
     };
 
@@ -181,6 +197,11 @@ namespace eka2l1 {
         vec3(const int x, const int y, const int z)
             : vec2(x, y)
             , z(z) {}
+
+        vec3(const vec2 &v, const int z)
+            : vec2(v)
+            , z(z) {
+        }
 
         vec3 operator+(const vec3 &rhs) const {
             return vec3(x + rhs.x, y + rhs.y, z + rhs.z);
