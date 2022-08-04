@@ -237,12 +237,13 @@ namespace eka2l1::epoc::bt {
     }
 
     void asker_inet::ask_for_routed_port_async(const std::uint16_t virtual_port, const epoc::socket::saddress &dev_addr, port_ask_done_callback cb) {
-        char *buf = new char[3];
+        char *buf = new char[4];
         buf[0] = 'p';
-        buf[1] = static_cast<char>(virtual_port & 0xFF);
-        buf[2] = static_cast<char>((virtual_port >> 8) & 0xFF);
+        buf[1] = 'l';
+        buf[2] = static_cast<char>(virtual_port & 0xFF);
+        buf[3] = static_cast<char>((virtual_port >> 8) & 0xFF);
 
-        send_request_with_retries(dev_addr, buf, 3, [cb](const char *response, const ssize_t size) {
+        send_request_with_retries(dev_addr, buf, 4, [cb](const char *response, const ssize_t size) {
             if (size <= 0) {
                 cb(static_cast<std::int64_t>(size));
             } else {

@@ -68,7 +68,7 @@ namespace eka2l1 {
 
     epoc::socket::protocol *socket_server::find_protocol_by_name(const std::u16string &name) {
         for (auto &pr : protocols_) {
-            if (pr->name() == name) {
+            if (common::compare_ignore_case(pr->name(), name) == 0) {
                 return pr.get();
             }
         }

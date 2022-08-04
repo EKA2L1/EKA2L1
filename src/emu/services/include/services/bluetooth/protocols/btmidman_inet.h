@@ -47,7 +47,7 @@ namespace eka2l1::epoc::bt {
 
     class midman_inet: public midman {
     private:
-        std::map<std::uint16_t, std::uint32_t> port_map_;
+        std::map<std::uint16_t, std::uint64_t> port_map_;
         std::map<device_address, std::uint32_t> friend_device_address_mapping_;
  
         device_address random_device_addr_;     // Hope it will never collide with what friends you want to add
@@ -70,7 +70,11 @@ namespace eka2l1::epoc::bt {
         std::uint32_t lookup_host_port(const std::uint16_t virtual_port);
         void add_host_port(const std::uint16_t virtual_port, const std::uint32_t host_port);
         void close_port(const std::uint16_t virtual_port);
+        void ref_port(const std::uint16_t virtual_port);
         std::uint16_t get_free_port();
+
+        std::vector<std::uint32_t> get_friend_index_with_address(epoc::socket::saddress &addr);
+        bool get_friend_device_address(const std::uint32_t index, device_address &result);
 
         void prepare_server_recv_buffer(void *buf_trans, const std::size_t suggested_size);
         void handle_server_request(const sockaddr *requester, const void *buf, std::int64_t nread);

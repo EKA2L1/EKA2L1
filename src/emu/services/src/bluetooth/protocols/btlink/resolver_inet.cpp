@@ -35,11 +35,19 @@ namespace eka2l1::epoc::bt {
         : papa_(papa)
         , friend_name_entry_(nullptr)
         , current_friend_(0xFFFFFFFF)
-        , need_name_(false) {
+        , need_name_(false)
+        , delay_emu_evt_(-1) {
     }
 
     btlink_inet_host_resolver::~btlink_inet_host_resolver() {
-        friend_retrieve_info_.complete(epoc::error_cancel);
+        if (!friend_retrieve_info_.empty()) {
+            if (in_completion_) {
+                ntimer *timing = friend_retrieve_info_.requester->get_kernel_object_owner()->get_ntimer();
+                timing->unschedule_event(delay_emu_evt_, reinterpret_cast<std::uint64_t>(this));
+            }
+
+            friend_retrieve_info_.complete(epoc::error_cancel);
+        }
     }
 
     std::u16string btlink_inet_host_resolver::host_name() const {
@@ -68,13 +76,48 @@ namespace eka2l1::epoc::bt {
         info.complete(epoc::error_not_supported);
     }
 
+    void btlink_inet_host_resolver::complete_background_find_device_delay_emulation() {
+        if (friend_retrieve_info_.empty()) {
+            return;
+        }
+        
+        kernel_system *kern = friend_retrieve_info_.requester->get_kernel_object_owner();
+        kern->lock();
+
+        friend_retrieve_info_.complete(epoc::error_eof);
+        in_completion_ = false;
+
+        kern->unlock();
+    }
+
     void btlink_inet_host_resolver::next_impl() {
+        if (in_completion_) {
+            return;
+        }
+
         midman_inet *midman = reinterpret_cast<midman_inet*>(papa_->get_midman());
         internet::sinet6_address addr;
 
         if (!midman->get_friend_address(current_friend_, addr)) {
             midman->set_friend_info_cached();
-            friend_retrieve_info_.complete(epoc::error_eof);
+            
+            static const char *FIND_DEVICE_DELAY_EMU_NAME = "FindNextDeviceCompleteDelayEmulation";
+            static const std::int64_t FIND_DEVICE_DELAY_EMU_DURATION = 2000000;
+
+            ntimer *timing = friend_retrieve_info_.requester->get_kernel_object_owner()->get_ntimer();
+
+            if (delay_emu_evt_ < 0) {
+                delay_emu_evt_ = timing->get_register_event(FIND_DEVICE_DELAY_EMU_NAME);
+            }
+            
+            if (delay_emu_evt_ < 0) {
+                delay_emu_evt_ = timing->register_event(FIND_DEVICE_DELAY_EMU_NAME, [](std::uint64_t userdata, std::int64_t late) {
+                    reinterpret_cast<btlink_inet_host_resolver*>(userdata)->complete_background_find_device_delay_emulation();
+                });
+            }
+
+            timing->schedule_event(FIND_DEVICE_DELAY_EMU_DURATION, delay_emu_evt_, reinterpret_cast<std::uint64_t>(this));            
+            in_completion_ = true;
 
             return;
         }

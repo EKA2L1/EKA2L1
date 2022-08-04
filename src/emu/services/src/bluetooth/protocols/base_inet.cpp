@@ -32,7 +32,8 @@ namespace eka2l1::epoc::bt {
         : inet_socket_(std::move(inet_socket))
         , scan_value_(HCI_INQUIRY_AND_PAGE_SCAN)
         , protocol_(protocol)
-        , virtual_port_(0) {
+        , virtual_port_(0)
+        , remote_calculated_(false) {
 
     }
  
@@ -64,7 +65,7 @@ namespace eka2l1::epoc::bt {
         }
 
         std::memset(addr_to_bind.user_data_, 0, sizeof(addr_to_bind.user_data_));
-        addr_to_bind.family_ = internet::INET6_ADDRESS_FAMILY;
+        addr_to_bind.family_ = internet::INET_ADDRESS_FAMILY;
 
         std::uint32_t result_len;
         std::uint16_t guest_port = addr_to_bind.port_;
@@ -115,6 +116,13 @@ namespace eka2l1::epoc::bt {
             return;
         }
 
+        // There's no mechanism exposed to client to know whether it's correct, just an absolute fact that it's
+        // gonna be a valid value when the socket is connected. Set it here won't hurt
+        remote_addr_ = dvc_addr;
+        remote_addr_.family_ = BTADDR_PROTOCOL_FAMILY_ID;
+
+        remote_calculated_ = true;
+
         info_asker_.ask_for_routed_port_async(addr.port_, real_addr, [info, real_addr, this](const std::int64_t res) {
             epoc::notify_info info_copy = info;
 
@@ -146,13 +154,88 @@ namespace eka2l1::epoc::bt {
         return epoc::error_none;
     }
 
+    std::int32_t btinet_socket::remote_name(epoc::socket::saddress &result, std::uint32_t &result_len) {
+        if (!remote_calculated_) {
+            epoc::socket::saddress addr_real;
+            std::uint32_t len_temp;
+
+            const std::int32_t res = inet_socket_->remote_name(addr_real, len_temp);
+            if (res != epoc::error_none) {
+                LOG_ERROR(SERVICE_BLUETOOTH, "Getting bluetooth's remote name failed with code {}!", res);
+                return res;
+            }
+            
+            midman_inet *midman = reinterpret_cast<midman_inet*>(protocol_->get_midman());
+            std::vector<std::uint32_t> list_indicies = midman->get_friend_index_with_address(addr_real);
+
+            std::uint32_t correct_index = 0;
+
+            if (list_indicies.size() > 1) {
+                correct_index = static_cast<std::uint32_t>(-1);
+                std::uint32_t correct_port = addr_real.port_;
+                
+                std::vector<char> request_data;
+                request_data.push_back('p');
+                request_data.push_back('e');
+                request_data.push_back(static_cast<char>(correct_port));
+                request_data.push_back(static_cast<char>(correct_port >> 8));
+                request_data.push_back(static_cast<char>(correct_port >> 16));
+                request_data.push_back(static_cast<char>(correct_port >> 24));
+
+                for (std::size_t i = 0; i < list_indicies.size(); i++) {
+                    midman->get_friend_address(list_indicies[i], addr_real);
+
+                    port_exist_ask_done_event_.reset();
+                    bool have_it = false;
+
+                    info_asker_.send_request_with_retries(addr_real, request_data.data(), request_data.size(), [this, &have_it](const char *result, const ssize_t bytes) {
+                        if (bytes >= 1) {
+                            have_it = (result[0] == '1');
+                        }
+                        port_exist_ask_done_event_.set();
+                    });
+
+                    port_exist_ask_done_event_.wait();
+
+                    if (have_it) {
+                        correct_index = static_cast<std::uint32_t>(i);
+                        break;
+                    }
+                }
+
+                if (correct_index == static_cast<std::uint32_t>(-1)) {
+                    LOG_ERROR(SERVICE_BLUETOOTH, "Can't find which friend address connected to socket (too many to choose!)");
+                    return epoc::error_general;
+                }
+            }
+        
+            if (!midman->get_friend_device_address(correct_index, *remote_addr_.get_device_address())) {
+                LOG_WARN(SERVICE_BLUETOOTH, "Failed to get bluetooth device address from friend index {}", list_indicies[0]);
+                return epoc::error_could_not_connect;
+            }
+
+            remote_addr_.family_ = BTADDR_PROTOCOL_FAMILY_ID;
+            remote_calculated_ = true;
+        }
+
+        static_cast<socket_device_address&>(result) = remote_addr_;
+        result_len = socket_device_address::DATA_LEN;
+
+        return epoc::error_none;
+    }
+
     std::int32_t btinet_socket::listen(const std::uint32_t backlog) {
         return inet_socket_->listen(backlog);
     }
 
     void btinet_socket::accept(std::unique_ptr<epoc::socket::socket> *pending_sock, epoc::notify_info &complete_info) {
         *pending_sock = protocol_->make_empty_base_link_socket();
+
         btinet_socket *casted_pending_sock_ptr = reinterpret_cast<btinet_socket*>(pending_sock->get());
+        casted_pending_sock_ptr->virtual_port_ = virtual_port_;
+
+        midman_inet *midman = reinterpret_cast<midman_inet*>(protocol_->get_midman());
+        midman->ref_port(virtual_port_);
 
         inet_socket_->accept(&casted_pending_sock_ptr->inet_socket_, complete_info);
     }

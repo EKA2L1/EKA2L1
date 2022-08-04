@@ -97,15 +97,33 @@ namespace eka2l1::epoc::bt {
         uv_udp_send_t *send_req = new uv_udp_send_t;
         uv_buf_t local_buf;
         std::uint32_t temp_uint;
+        char temp_char;
         
         if (buf->base[0] == 'n') {
             std::string device_name_utf8 = common::ucs2_to_utf8(device_name());
             local_buf = uv_buf_init(device_name_utf8.data(), static_cast<std::uint32_t>(device_name_utf8.length()));
         } else if (buf->base[0] == 'p') {
-            std::uint16_t virtual_port = buf->base[1] | (static_cast<std::uint16_t>(buf->base[2]) << 8);
-            temp_uint = lookup_host_port(virtual_port);
+            if (buf->base[1] == 'e') {
+                std::uint32_t requested_port = static_cast<std::uint8_t>(buf->base[2]) |
+                    (static_cast<std::uint32_t>(static_cast<std::uint8_t>(buf->base[3])) << 8) | 
+                    (static_cast<std::uint32_t>(static_cast<std::uint8_t>(buf->base[4])) << 16) |
+                    (static_cast<std::uint32_t>(static_cast<std::uint8_t>(buf->base[5])) << 24);
+                temp_char = '0';
 
-            local_buf = uv_buf_init(reinterpret_cast<char*>(&temp_uint), 4);
+                for (auto &[virt_port, port]: port_map_) {
+                    if (static_cast<std::uint32_t>(port & 0xFFFFFFFF) == requested_port) {
+                        temp_char = '1';
+                        break;
+                    }
+                }
+
+                local_buf = uv_buf_init(&temp_char, 1);
+            } else if (buf->base[1] == 'l') {
+                std::uint16_t virtual_port = buf->base[2] | (static_cast<std::uint16_t>(buf->base[3]) << 8);
+                temp_uint = lookup_host_port(virtual_port);
+
+                local_buf = uv_buf_init(reinterpret_cast<char*>(&temp_uint), 4);
+            }
         } else if (buf->base[0] == 'a') {
             local_buf = uv_buf_init(reinterpret_cast<char*>(&random_device_addr_), sizeof(random_device_addr_));
         }
@@ -185,7 +203,7 @@ lookup:
             return 0;
         }
 
-        return result->second;
+        return static_cast<std::uint32_t>(result->second & 0xFFFFFFFF);
     }
 
     void midman_inet::add_host_port(const std::uint16_t virtual_port, const std::uint32_t host_port) {
@@ -199,7 +217,7 @@ lookup:
             return;
         }
 
-        port_map_[virtual_port] = host_port;
+        port_map_[virtual_port] = (1ULL << 32) | host_port;
         allocated_ports_.force_fill(virtual_port - 1, 1);
     }
     
@@ -214,7 +232,24 @@ lookup:
         return static_cast<std::uint16_t>(offset + 1);
     }
 
+    void midman_inet::ref_port(const std::uint16_t virtual_port) {
+        std::uint64_t val = port_map_[virtual_port];
+        std::uint32_t ref_count = static_cast<std::uint32_t>(val >> 32);
+
+        port_map_[virtual_port] = ((static_cast<std::uint64_t>(ref_count + 1) << 32) | (val & 0xFFFFFFFF));
+    }
+
     void midman_inet::close_port(const std::uint16_t virtual_port) {
+        auto ite = port_map_.find(virtual_port);
+        if (ite != port_map_.end()) {
+            std::uint32_t ref_count = static_cast<std::uint32_t>(ite->second >> 32);
+            if (ref_count > 1) {
+                ite->second = ((static_cast<std::uint64_t>(ref_count - 1) << 32) | (ite->second & 0xFFFFFFFF));
+                return;
+            } else {
+                port_map_.erase(ite);
+            }
+        } 
         allocated_ports_.deallocate(virtual_port - 1, 1);
     }
 
@@ -248,5 +283,50 @@ lookup:
                 }
             }
         }
+    }
+
+    std::vector<std::uint32_t> midman_inet::get_friend_index_with_address(epoc::socket::saddress &addr) {
+        bool is_ipv4 = (addr.family_ == epoc::internet::INET_ADDRESS_FAMILY);
+        std::vector<std::uint32_t> indicies;
+
+        for (std::uint32_t i = 0; i < static_cast<std::uint32_t>(friends_.size()); i++) {
+            if (friends_[i].real_addr_.family_ == 0) {
+                continue;
+            }
+
+            bool is_current_ipv4 = (friends_[i].real_addr_.family_ == epoc::internet::INET_ADDRESS_FAMILY);
+            if (is_current_ipv4 != is_ipv4) {
+                continue;
+            }
+
+            if (is_ipv4 && (*static_cast<epoc::internet::sinet_address&>(friends_[i].real_addr_).addr_long() == 
+                *(static_cast<epoc::internet::sinet_address&>(addr).addr_long()))) {
+                indicies.push_back(i);
+            } else if (!is_ipv4 && (std::memcmp(static_cast<epoc::internet::sinet6_address&>(friends_[i].real_addr_).address_32x4(),
+                static_cast<epoc::internet::sinet6_address&>(addr).address_32x4(), sizeof(std::uint32_t) * 4) == 0)) {
+                indicies.push_back(i);
+            }
+        }
+
+        return indicies;
+    }
+
+    bool midman_inet::get_friend_device_address(const std::uint32_t index, device_address &result) {
+        if (index >= friends_.size()) {
+            return false;
+        }
+
+        if (!friend_info_cached_) {
+            // Try to refresh the local cache. It's not really ideal, but anyway resolver always redo
+            // a full rescan...
+            refresh_friend_infos();
+        }
+
+        if (friends_[index].real_addr_.family_ == 0) {
+            return false;
+        }
+
+        result = friends_[index].dvc_addr_;
+        return true;
     }
 }

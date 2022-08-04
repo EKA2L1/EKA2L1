@@ -341,7 +341,6 @@ namespace eka2l1::epoc::internet {
 
             if (!opaque_connect_) {
                 opaque_connect_ = new uv_connect_t;
-                reinterpret_cast<uv_connect_t*>(opaque_connect_)->data = this;
             }
 
             uv_tcp_connect_params *params = new uv_tcp_connect_params;
@@ -350,15 +349,18 @@ namespace eka2l1::epoc::internet {
             
             std::memcpy(&params->addr_, ip_addr_ptr, sizeof(sockaddr_in6));
             async->data = params;
+            reinterpret_cast<uv_connect_t*>(opaque_connect_)->data = params;
 
             uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
                 uv_tcp_connect_params *params = reinterpret_cast<uv_tcp_connect_params*>(async->data);
 
                 uv_tcp_connect(params->connect_, params->tcp_, reinterpret_cast<const sockaddr*>(&params->addr_), [](uv_connect_t *connect, const int err) {
-                    reinterpret_cast<inet_socket*>(connect->data)->complete_connect_done_info(err);
+                    uv_tcp_connect_params *params = reinterpret_cast<uv_tcp_connect_params*>(connect->data);
+                    reinterpret_cast<inet_socket*>(params->tcp_->data)->complete_connect_done_info(err);
+
+                    delete params;
                 });
 
-                delete params;
                 close_and_delete_async(async);
             });
         }

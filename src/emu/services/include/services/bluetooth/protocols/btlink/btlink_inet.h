@@ -24,6 +24,7 @@
 #include <services/internet/protocols/inet.h>
 #include <services/socket/protocol.h>
 
+#include <atomic>
 #include <string>
 
 namespace eka2l1::epoc::bt {
@@ -42,6 +43,9 @@ namespace eka2l1::epoc::bt {
         epoc::notify_info friend_retrieve_info_;
         epoc::socket::name_entry *friend_name_entry_;
 
+        std::atomic<bool> in_completion_;
+        int delay_emu_evt_;
+
         void next_impl();
 
     public:
@@ -54,6 +58,8 @@ namespace eka2l1::epoc::bt {
         void get_by_address(epoc::socket::saddress &addr, epoc::socket::name_entry *result, epoc::notify_info &info) override;
         void get_by_name(epoc::socket::name_entry *result, epoc::notify_info &info) override;
         void next(epoc::socket::name_entry *result, epoc::notify_info &info) override;
+
+        void complete_background_find_device_delay_emulation();
     };
 
     class btlink_inet_protocol : public socket::protocol {

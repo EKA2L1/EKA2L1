@@ -596,6 +596,10 @@ namespace eka2l1::epoc::socket {
                 local_name(ctx);
                 return;
 
+            case socket_old_so_remote_name:
+                remote_name(ctx);
+                return;
+
             case socket_old_so_write:
                 write(ctx);
                 return;
@@ -636,6 +640,10 @@ namespace eka2l1::epoc::socket {
                 sock_->cancel_connect();
                 ctx->complete(epoc::error_none);
 
+                return;
+
+            case socket_old_so_cancel_all:
+                cancel_all(ctx);
                 return;
 
             case socket_old_so_connect:

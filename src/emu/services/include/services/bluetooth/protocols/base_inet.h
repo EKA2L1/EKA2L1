@@ -22,6 +22,7 @@
 #include <services/bluetooth/protocols/common.h>
 #include <services/bluetooth/protocols/asker_inet.h>
 #include <services/socket/socket.h>
+#include <common/sync.h>
 
 #include <memory>
 
@@ -41,6 +42,9 @@ namespace eka2l1::epoc::bt {
 
         std::uint16_t virtual_port_;
         socket_device_address remote_addr_;
+        bool remote_calculated_;
+
+        common::event port_exist_ask_done_event_;
 
     public:
         explicit btinet_socket(btlink_inet_protocol *protocol, std::unique_ptr<epoc::socket::socket> &inet_socket);
@@ -60,6 +64,7 @@ namespace eka2l1::epoc::bt {
 
         std::int32_t listen(const std::uint32_t backlog) override;
         std::int32_t local_name(epoc::socket::saddress &result, std::uint32_t &result_len) override;
+        std::int32_t remote_name(epoc::socket::saddress &result, std::uint32_t &result_len) override;
  
         void ioctl(const std::uint32_t command, epoc::notify_info &complete_info, std::uint8_t *buffer,
             const std::size_t available_size, const std::size_t max_buffer_size, const std::uint32_t level) override;
