@@ -81,16 +81,32 @@ applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, 
     , list_widget_(nullptr)
     , layout_(nullptr)
     , lister_(lister)
+    , no_app_visible_normal_label_(nullptr)
+    , no_app_visible_hide_sysapp_label_(nullptr)
     , fbss_(fbss)
     , io_(io)
     , hide_system_apps_(hide_system_apps) {
     search_bar_ = new applist_search_bar(this);
     list_widget_ = new QListWidget(this);
 
+    no_app_visible_normal_label_ = new QLabel("No app installed on the device!");
+    no_app_visible_hide_sysapp_label_ = new QLabel("No non-system app installed on the device!");
+
+    static const char *EMPTY_APP_LIST_TEXT_STYLESHEET = "QLabel { font-size: 24px; }";
+
+    no_app_visible_normal_label_->setStyleSheet(EMPTY_APP_LIST_TEXT_STYLESHEET);
+    no_app_visible_hide_sysapp_label_->setStyleSheet(EMPTY_APP_LIST_TEXT_STYLESHEET);
+
     layout_ = new QGridLayout(this);
     layout_->addWidget(search_bar_);
     layout_->addWidget(list_widget_);
+    layout_->addWidget(no_app_visible_normal_label_);
+    layout_->addWidget(no_app_visible_hide_sysapp_label_);
     layout_->setContentsMargins(0, 0, 0, 0);
+    layout_->setAlignment(Qt::AlignCenter);
+
+    no_app_visible_normal_label_->hide();
+    no_app_visible_hide_sysapp_label_->hide();
 
     setLayout(layout_);
 
@@ -166,6 +182,25 @@ void applist_widget::reload_whole_list() {
                 add_registeration_item(registries[i], static_cast<int>(i));
             }
         }
+    }
+
+    if (list_widget_->count() == 0) {
+        search_bar_->hide();
+        list_widget_->hide();
+
+        if (hide_system_apps_) {
+            no_app_visible_normal_label_->hide();
+            no_app_visible_hide_sysapp_label_->show();
+        } else {
+            no_app_visible_normal_label_->show();
+            no_app_visible_hide_sysapp_label_->hide();
+        }
+    } else {
+        search_bar_->show();
+        list_widget_->show();
+
+        no_app_visible_normal_label_->hide();
+        no_app_visible_hide_sysapp_label_->hide();
     }
 }
 eka2l1::apa_app_registry *applist_widget::get_registry_from_widget_item(applist_widget_item *item) {

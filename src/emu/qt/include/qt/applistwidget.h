@@ -68,6 +68,9 @@ public:
     QListWidget *list_widget_;
     QGridLayout *layout_;
 
+    QLabel *no_app_visible_normal_label_;
+    QLabel *no_app_visible_hide_sysapp_label_;
+
     eka2l1::applist_server *lister_;
     eka2l1::fbs_server *fbss_;
     eka2l1::io_system *io_;
