@@ -1516,12 +1516,6 @@ namespace eka2l1::epoc {
             return false;
         }
 
-        if (!content_changed()) {
-            if ((scr->flags_ & screen::FLAG_CLIENT_REDRAW_PENDING) && !(scr->flags_ & screen::FLAG_SERVER_REDRAW_PENDING)) {
-                return false;
-            }
-        }
-
         builder.set_feature(drivers::graphics_feature::blend, false);
         builder.clip_bitmap_region(visible_region, scr->display_scale_factor);
 
