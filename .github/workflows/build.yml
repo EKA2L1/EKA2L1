@@ -174,7 +174,7 @@ jobs:
 
   roll-release:
    needs: [build-android, build-desktop]
-   runs-on: "ubuntu-lastest"
+   runs-on: "ubuntu-latest"
    if: github.ref == 'refs/heads/pent0-patch-3'
    steps:
     - name: Compute git short sha
