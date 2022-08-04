@@ -1,0 +1,226 @@
+# Vita3K emulator project
+# Copyright (C) 2018 Vita3K team
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+name: C/C++ CI
+
+on: [push, pull_request]
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./src/emu/android
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        submodules: recursive
+
+    - name: Set up JDK 11
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'adopt'
+        java-version: '11'
+
+    - name: Build with Gradle
+      run: ./gradlew assembleRelease -PciArg='-DCI=ON'
+
+    - name: Sign APK
+      id: sign-android-app
+      uses: r0adkll/sign-android-release@v1.0.4
+      with:
+        releaseDirectory: ./src/emu/android/app/build/outputs/apk/release
+        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+        alias: ${{ secrets.ALIAS }}
+        keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+        keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+    - name: Compute git short sha
+      id: git_short_sha
+      run: echo "::set-output name=value::$(git rev-parse --short HEAD)"
+
+    - name: Rename APK
+      run: |
+        mv ${{ steps.sign-android-app.outputs.signedReleaseFile }} eka2l1-${{ steps.git_short_sha.outputs.value }}.apk
+        cp eka2l1-${{ steps.git_short_sha.outputs.value }}.apk android-latest.apk
+      working-directory: ${{ github.workspace }}
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v1
+      with:
+        name: eka2l1-${{ steps.git_short_sha.outputs.value }}
+        path: eka2l1-${{ steps.git_short_sha.outputs.value }}.apk
+
+  build-desktop:
+    runs-on: ${{ matrix.os }}
+    env:
+      cache-version: v1
+      MACOSX_DEPLOYMENT_TARGET: 10.9
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+        config: [Release]
+
+    steps:
+    - name: Set up build environment (macos-latest)
+      run: |
+        sudo xcode-select -s "/Applications/Xcode_11.7.app"
+        brew install ccache
+        echo "/usr/local/opt/ccache/libexec" >> $GITHUB_PATH
+        echo "CCACHE_DIR=/tmp/ccache" >> $GITHUB_ENV
+      if: matrix.os == 'macos-latest'
+
+    - name: Set up build environment (ubuntu-latest)
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install ccache libgtk-3-dev libpulse-dev libasound2-dev libsdl2-dev pulseaudio
+        echo "CCACHE_DIR=/tmp/ccache" >> $GITHUB_ENV
+      if: matrix.os == 'ubuntu-latest'
+
+    - uses: actions/cache@v1
+      with:
+        path: /tmp/ccache
+        key: ccache-${{ env.cache-version }}-${{ matrix.os }}-${{ matrix.config }}-${{ github.sha }}
+        restore-keys: ccache-${{ env.cache-version }}-${{ matrix.os }}-${{ matrix.config }}-
+      if: matrix.os != 'windows-latest'
+
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        submodules: recursive
+          
+    - name: Cache Qt
+      id: cache-qt
+      uses: actions/cache@v1
+      with:
+        path: ../Qt
+        key: ${{ runner.os }}-QtCacheV3
+
+    - name: Install Qt5
+      uses: jurplel/install-qt-action@v2
+      with:
+        version: '5.15.2'
+        cached: ${{ steps.cache-qt.outputs.cache-hit }}
+
+    - name: Set up SDL 2.0.20 (ubuntu-latest)
+      run: |
+        SDL2VER=2.0.20
+        if [[ ! -e ~/.ccache ]]; then
+          mkdir ~/.ccache
+        fi  
+        cd ~/.ccache
+        if [[ ! -e SDL2-${SDL2VER} ]]; then
+          curl -sLO https://libsdl.org/release/SDL2-${SDL2VER}.tar.gz
+          tar -xzf SDL2-${SDL2VER}.tar.gz
+          cd SDL2-${SDL2VER}
+          ./configure --prefix=/usr/local
+          make && cd ../
+          rm SDL2-${SDL2VER}.tar.gz
+        fi
+        sudo make -C SDL2-${SDL2VER} install
+      if: matrix.os == 'ubuntu-latest'
+
+    - name: CMake configure
+      run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_SCRIPTING_ABILITY=OFF -DEKA2L1_DEPLOY_DMG=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DCMAKE_PREFIX_PATH=${{ env.Qt5_DIR }} -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+      if: matrix.os == 'macos-latest'
+
+    - name: CMake configure
+      run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_NO_TERMINAL=ON -DCMAKE_PREFIX_PATH=${{ env.Qt5_DIR }} -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+      if: matrix.os != 'macos-latest'
+
+    - name: CMake build
+      run: cmake --build build --config ${{ matrix.config }} --parallel 2 --target eka2l1_qt
+
+    - name: Generate AppImage
+      run: |
+        chmod u+x scripts/generate_appimage.sh
+        ./scripts/generate_appimage.sh
+      if: matrix.os == 'ubuntu-latest'
+
+    - name: Compute git short sha
+      id: git_short_sha
+      run: echo "::set-output name=value::$(git rev-parse --short HEAD)"
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: eka2l1-${{ steps.git_short_sha.outputs.value }}-${{ matrix.os }}
+        path: build/bin
+      if: matrix.os != 'ubuntu-latest'
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: eka2l1-${{ steps.git_short_sha.outputs.value }}-${{ matrix.os }}
+        path: build/eka2l1-qt-x64.AppImage
+      if: matrix.os == 'ubuntu-latest'
+
+  roll-release:
+   needs: [build-android, build-desktop]
+   runs-on: "ubuntu-lastest"
+   if: github.ref == 'refs/heads/master'
+   steps:
+    - name: Compute git short sha
+      id: git_short_sha
+      run: echo "::set-output name=value::$(git rev-parse --short HEAD)"
+      
+    - name: Download Windows Artifacts
+      uses: actions/download-artifact@v1
+      with:
+        name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-windows-latest"
+
+    - name: Download MacOS Artifact
+      uses: actions/download-artifact@v1
+      with:
+        name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-macos-latest"
+        
+    - name: Download Ubuntu Artifact
+      uses: actions/download-artifact@v1
+      with:
+        name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-ubuntu-latest"
+        
+    - name: Download Android Artifact
+      uses: actions/download-artifact@v1
+      with:
+        name: "eka2l1-${{ steps.git_short_sha.outputs.value }}"
+        
+    - name: Rename artifacts for release
+      run: |
+        mv eka2l1-${{ steps.git_short_sha.outputs.value }}-windows-latest.zip windows-latest.zip
+        mv eka2l1-${{ steps.git_short_sha.outputs.value }}-macos-latest.zip macos-latest.zip
+        unzip eka2l1-${{ steps.git_short_sha.outputs.value }}-ubuntu-latest.zip
+        mv eka2l1-qt-x64.AppImage ubuntu-latest.AppImage
+        unzip eka2l1-${{ steps.git_short_sha.outputs.value }}
+        mv eka2l1-${{ steps.git_short_sha.outputs.value }}.apk android-latest.apk
+
+    - name: Create release
+      if: github.ref == 'refs/heads/pent0-patch-3'
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "test"
+        prerelease: true
+        title: "I love Monday"
+        files: |
+          windows-latest.zip
+          macos-latest.zip
+          ubuntu-latest.AppImage
+          android-latest.apk
+
