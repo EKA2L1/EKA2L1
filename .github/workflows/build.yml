@@ -177,8 +177,10 @@ jobs:
    runs-on: "ubuntu-latest"
    if: github.ref == 'refs/heads/pent0-patch-3'
    steps:
-    - name: Shallow checkout
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        submodules: recursive
     
     - name: Compute git short sha
       id: git_short_sha
