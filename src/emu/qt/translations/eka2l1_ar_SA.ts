@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/utils.cpp" line="126"/>
       <source>EKA2L1 - Symbian OS emulator</source>
-      <translation type="unfinished">EKA2L1 - Symbian OS emulator</translation>
+      <translation>EKA2L1 - محاكي نظام سيمبيان</translation>
     </message>
   </context>
   <context>
@@ -14,12 +14,12 @@
     <message>
       <location filename="../src/symbian_input_dialog.ui" line="14"/>
       <source>Enter the text</source>
-      <translation type="unfinished">Enter the text</translation>
+      <translation>أدخل النص</translation>
     </message>
     <message>
       <location filename="../src/symbian_input_dialog.ui" line="31"/>
       <source>Submit</source>
-      <translation type="unfinished">Submit</translation>
+      <translation>إرسال</translation>
     </message>
   </context>
   <context>
@@ -208,7 +208,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="266"/>
       <source>VPL file (*.vpl);;All files (*.*)</source>
-      <translation type="unfinished">VPL file (*.vpl);;All files (*.*)</translation>
+      <translation>ملف VPL (*.vpl);;جميع الملفات (*.*)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="275"/>
@@ -218,7 +218,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="276"/>
       <source>ROM file (*.rom *.ROM);;All files (*.*)</source>
-      <translation type="unfinished">ROM file (*.rom *.ROM);;All files (*.*)</translation>
+      <translation>ملف ROM (*.rom *.ROM)؛؛ جميع الملفات (*.*)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="300"/>
@@ -228,7 +228,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="301"/>
       <source>RPKG file (*.rpkg *.RPKG);;All files (*.*</source>
-      <translation type="unfinished">RPKG file (*.rpkg *.RPKG);;All files (*.*</translation>
+      <translation>ملف RPKG (*.rpkg *.RPKG)؛؛ جميع الملفات (*.*</translation>
     </message>
   </context>
   <context>
@@ -351,7 +351,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="260"/>
       <source>Refresh app list</source>
-      <translation type="unfinished">Refresh app list</translation>
+      <translation>تحديث قائمة التطبيقات</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="242"/>
@@ -599,17 +599,17 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="123"/>
       <source>Time delay (0-1000us)</source>
-      <translation type="unfinished">Time delay (0-1000us)</translation>
+      <translation>تأخير الوقت (0-1000us)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="179"/>
       <source>Screen scale factor</source>
-      <translation type="unfinished">Screen scale factor</translation>
+      <translation>عامل مقياس الشاشة</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="187"/>
       <source>Fit the window</source>
-      <translation type="unfinished">Fit the window</translation>
+      <translation>ملاءمة النافذة</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="217"/>
@@ -624,12 +624,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="234"/>
       <source>Use shader for upscaling</source>
-      <translation type="unfinished">Use shader for upscaling</translation>
+      <translation>استخدام المظلل لتعزيز الجودة</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="250"/>
       <source>Upscale shader</source>
-      <translation type="unfinished">Upscale shader</translation>
+      <translation>ضل معزز الجودة</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="272"/>
@@ -771,12 +771,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="533"/>
       <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
-      <translation type="unfinished">Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</translation>
+      <translation>تمكين هذا سيجعل النافذة تحمل الاسم الثابت من &quot;EKA2L1&quot;، بدون معلومات إضافية.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="539"/>
       <source>Disable easter egg title</source>
-      <translation type="unfinished">Disable easter egg title</translation>
+      <translation>تعطيل عنوان بيضة يوم الفصح</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="546"/>
@@ -791,44 +791,44 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="563"/>
       <source>Graphics</source>
-      <translation type="unfinished">Graphics</translation>
+      <translation>الرسومات</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="571"/>
       <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
-      <translation type="unfinished">This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
-Preferred option will automatically enable this on S60v1/S60v2 devices.</translation>
+      <translation>هذا يسمح للبرمجيات المحاكاة للحصول على قدرات التسجيل، ومنع الوميض في بعض الألعاب S60v1/S60v2 القديمة.
+الخيار المفضل سيمكن هذا تلقائيا على أجهزة S60v1/S60v2.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="575"/>
       <source>Screen buffer sync</source>
-      <translation type="unfinished">Screen buffer sync</translation>
+      <translation>مزامنة شاشة التخزين المؤقت</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="589"/>
       <source>Preferred</source>
-      <translation type="unfinished">Preferred</translation>
+      <translation>مفضّل</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="594"/>
       <source>Disable</source>
-      <translation type="unfinished">Disable</translation>
+      <translation>تعطيل</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="599"/>
       <source>Enable</source>
-      <translation type="unfinished">Enable</translation>
+      <translation>تمكين</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="609"/>
       <source>Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</source>
-      <translation type="unfinished">Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</translation>
+      <translation>السماح لمحاكي بإجراء تسارع GPU الأصلي لـ API السيمبيان&apos;s GLES1.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="612"/>
       <source>Enable GPU accelerated GLES1</source>
-      <translation type="unfinished">Enable GPU accelerated GLES1</translation>
+      <translation>تمكين GPU مسرع GLES1</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="622"/>
@@ -896,12 +896,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="812"/>
       <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
-      <translation type="unfinished">The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</translation>
+      <translation>الاسم الذي سيتم عرضه في تطبيقات أو ألعاب محاكاة. السماح بحد أقصى 30 حرفاً.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="815"/>
       <source>Friendly phone name</source>
-      <translation type="unfinished">Friendly phone name</translation>
+      <translation>اسم الهاتف الودي</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="840"/>
@@ -956,7 +956,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="921"/>
       <source>SF2 bank</source>
-      <translation type="unfinished">SF2 bank</translation>
+      <translation>بنك SF2</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="948"/>
@@ -967,22 +967,22 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="962"/>
       <source>HSB bank</source>
-      <translation type="unfinished">HSB bank</translation>
+      <translation>بنك HSB</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1006"/>
       <source>MIDI backend</source>
-      <translation type="unfinished">MIDI backend</translation>
+      <translation>خلفية MIDI</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1020"/>
       <source>TinySoundFont (High-quality, support SF2)</source>
-      <translation type="unfinished">TinySoundFont (High-quality, support SF2)</translation>
+      <translation>TinySoundFont (عالي الجودة، دعم SF2)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1025"/>
       <source>MiniBAE (Lower-quality, support HSB)</source>
-      <translation type="unfinished">MiniBAE (Lower-quality, support HSB)</translation>
+      <translation>مصغر (جودة منخفضة، دعم HSB)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1043"/>
@@ -1117,7 +1117,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="299"/>
       <source>Default</source>
-      <translation type="unfinished">Default</translation>
+      <translation>الافتراضي</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="433"/>
@@ -1298,32 +1298,32 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="1252"/>
       <source>Successfully changed</source>
-      <translation type="unfinished">Successfully changed</translation>
+      <translation>تم التعديل بنجاح</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1252"/>
       <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
-      <translation type="unfinished">Next time the application requests to play a new MIDI, the choosen backend will be used!</translation>
+      <translation>في المرة القادمة التي يطلب فيها التطبيق لتشغيل MIDI جديد، سيتم استخدام الخلفية المختارة!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1265"/>
       <source>Choose the HSB bank file</source>
-      <translation type="unfinished">Choose the HSB bank file</translation>
+      <translation>اختر ملف بنك HSB</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1288"/>
       <source>Choose the SF2 bank file</source>
-      <translation type="unfinished">Choose the SF2 bank file</translation>
+      <translation>اختر ملف SF2 البنكي</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1324"/>
       <source>Emulator reset needed</source>
-      <translation type="unfinished">Emulator reset needed</translation>
+      <translation>مطلوب إعادة تعيين المحاكي</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1324"/>
       <source>This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</source>
-      <translation type="unfinished">This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</translation>
+      <translation>سيكون هذا التغيير فعالا بعد إعادة تعيين المحاكي من خلال قائمة الصياغة، أو عند الإطلاق التالي للمحاكي.</translation>
     </message>
   </context>
 </TS>
