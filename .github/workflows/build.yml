@@ -187,32 +187,32 @@ jobs:
       run: echo "::set-output name=value::$(git rev-parse --short HEAD)"
       
     - name: Download Windows Artifacts
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v3
       with:
         name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-windows-latest"
+        path: windows-files
 
     - name: Download MacOS Artifact
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v3
       with:
         name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-macos-latest"
+        path: mac-files
         
     - name: Download Ubuntu Artifact
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v3
       with:
         name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-ubuntu-latest"
         
     - name: Download Android Artifact
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v3
       with:
         name: "eka2l1-${{ steps.git_short_sha.outputs.value }}"
         
     - name: Rename artifacts for release
       run: |
-        mv eka2l1-${{ steps.git_short_sha.outputs.value }}-windows-latest.zip windows-latest.zip
-        mv eka2l1-${{ steps.git_short_sha.outputs.value }}-macos-latest.zip macos-latest.zip
-        unzip eka2l1-${{ steps.git_short_sha.outputs.value }}-ubuntu-latest.zip
+        (cd windows-files && zip -r ../windows-latest.zip . && cd ..)
+        (cd mac-files && zip -r ../macos-latest.zip . && cd ..)
         mv eka2l1-qt-x64.AppImage ubuntu-latest.AppImage
-        unzip eka2l1-${{ steps.git_short_sha.outputs.value }}
         mv eka2l1-${{ steps.git_short_sha.outputs.value }}.apk android-latest.apk
 
     - name: Create release
