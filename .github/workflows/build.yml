@@ -175,7 +175,7 @@ jobs:
   roll-release:
    needs: [build-android, build-desktop]
    runs-on: "ubuntu-latest"
-   if: github.ref == 'refs/heads/pent0-patch-3'
+   if: github.ref == 'refs/heads/master'
    steps:
     - uses: actions/checkout@v2
       with:
@@ -219,9 +219,9 @@ jobs:
       uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "test"
-        prerelease: true
-        title: "I love Monday"
+        automatic_release_tag: "continous"
+        prerelease: false
+        title: "Automatic CI builds"
         files: |
           windows-latest.zip
           macos-latest.zip
