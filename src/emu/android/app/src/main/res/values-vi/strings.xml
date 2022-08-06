@@ -67,10 +67,10 @@
     <string name="emulated_screen_rotation_item_name">Xoay màn hình</string>
     <string name="emulated_screen_refresh_rate_item_name">Tần số làm mới</string>
     <string name="pref_device_display_name">Tên điện thoại thân thiện</string>
-    <string name="hide_system_apps">Hide system applications</string>
+    <string name="hide_system_apps">Ẩn ứng dụng hệ thống</string>
     <string name="action_context_delete">Xóa</string>
     <string name="action_context_rename">Đổi tên</string>
-    <string name="action_context_shortcut">Create shortcut</string>
+    <string name="action_context_shortcut">Tạo đường dẫn</string>
     <string name="start">Bắt đầu</string>
     <string name="reset_settings">Đặt lại thiết đặt</string>
     <string name="reset_layout">Đặt lại bố cục phím</string>
@@ -85,7 +85,7 @@
     <string name="pref_touch_input">Cảm ứng</string>
     <string name="pref_vk_back">Nút</string>
     <string name="pref_vk_fore">Nhãn</string>
-    <string name="pref_vk_outline">Outline</string>
+    <string name="pref_vk_outline">Đường viền</string>
     <string name="pref_vk_alpha">Độ mờ: </string>
     <string name="pref_vk_hide_delay">Ẩn trễ: </string>
     <string name="pref_unit_ms">ms</string>
@@ -142,7 +142,7 @@
     <string name="confirmation_required">Yêu cầu xác nhận</string>
     <string name="force_close_confirmation">Bắt buộc đóng ứng dụng có thể dẫn đến mất dữ liệu hoặc thậm chí hư hỏng!\nBạn vẫn muốn thoát?</string>
     <string name="log_saved">Log đã được lưu</string>
-    <string name="enter_text">Enter the text</string>
+    <string name="enter_text">Nhập văn bản ở trên</string>
     <string name="about_icon_by">&lt;BR&gt;Icon bởi: </string>
     <string name="version">Phiên bản: </string>
     <string name="recommended_devices_note"><b>Chú ý:</b> Khuyên dùng firmware để cài đặt những thiết bị từ S60v3 trở lên.</string>
