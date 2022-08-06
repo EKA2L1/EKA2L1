@@ -164,7 +164,9 @@ void editor_widget::on_profile_add_btn_clicked() {
         QMessageBox::critical(this, tr("Error creating profile!"), tr("Profile name contains special characters or system error encountered!"));
     } else {
         file.close();
+
         ui_->profile_combo_box->addItem(result);
+        ui_->profile_combo_box->setCurrentIndex(ui_->profile_combo_box->count() - 1);
     }
 }
 
