@@ -609,7 +609,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="187"/>
       <source>Fit the window</source>
-      <translation type="unfinished">Fit the window</translation>
+      <translation>Vừa với cửa sổ màn hình</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="217"/>
@@ -624,12 +624,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="234"/>
       <source>Use shader for upscaling</source>
-      <translation type="unfinished">Use shader for upscaling</translation>
+      <translation>Sử dụng hiệu ứng đổ bóng để tăng chất lượng hình ảnh</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="250"/>
       <source>Upscale shader</source>
-      <translation type="unfinished">Upscale shader</translation>
+      <translation>Nâng cấp hiệu ứng đổ bóng</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="272"/>
@@ -823,12 +823,12 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/settings_dialog.ui" line="609"/>
       <source>Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</source>
-      <translation type="unfinished">Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</translation>
+      <translation>Cho phép hệ thống giả lập tăng tốc GPU GLES1 API của Symbian &apos;.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="612"/>
       <source>Enable GPU accelerated GLES1</source>
-      <translation type="unfinished">Enable GPU accelerated GLES1</translation>
+      <translation>Bật GPU để tăng tốc GLES1</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="622"/>
@@ -972,7 +972,7 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/settings_dialog.ui" line="1006"/>
       <source>MIDI backend</source>
-      <translation type="unfinished">MIDI backend</translation>
+      <translation>Phần bổ trợ MIDI</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1020"/>
@@ -1318,12 +1318,12 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/settings_dialog.cpp" line="1324"/>
       <source>Emulator reset needed</source>
-      <translation type="unfinished">Emulator reset needed</translation>
+      <translation>Hệ thống giả lập cần khởi động lại</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1324"/>
       <source>This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</source>
-      <translation type="unfinished">This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</translation>
+      <translation>Thay đổi này sẽ có hiệu lực khi bạn khởi động lại hệ thống giả lập.</translation>
     </message>
   </context>
 </TS>
