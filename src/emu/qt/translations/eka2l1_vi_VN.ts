@@ -14,12 +14,12 @@
     <message>
       <location filename="../src/symbian_input_dialog.ui" line="14"/>
       <source>Enter the text</source>
-      <translation type="unfinished">Enter the text</translation>
+      <translation>Nhập văn bản ở trên</translation>
     </message>
     <message>
       <location filename="../src/symbian_input_dialog.ui" line="31"/>
       <source>Submit</source>
-      <translation type="unfinished">Submit</translation>
+      <translation>Xác nhận</translation>
     </message>
   </context>
   <context>
@@ -228,7 +228,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="301"/>
       <source>RPKG file (*.rpkg *.RPKG);;All files (*.*</source>
-      <translation type="unfinished">RPKG file (*.rpkg *.RPKG);;All files (*.*</translation>
+      <translation>Tệp tin RPKG (thường là *.rpkg hoặc *.RPKG); Áp dụng với tất cả tệp tin (*.*)</translation>
     </message>
   </context>
   <context>
@@ -351,7 +351,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="260"/>
       <source>Refresh app list</source>
-      <translation type="unfinished">Refresh app list</translation>
+      <translation>Làm mới gói ứng dụng</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="242"/>
@@ -604,7 +604,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="179"/>
       <source>Screen scale factor</source>
-      <translation type="unfinished">Screen scale factor</translation>
+      <translation>Tỉ lệ màn hình</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="187"/>
