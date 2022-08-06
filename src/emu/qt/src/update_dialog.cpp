@@ -29,6 +29,7 @@
 #include <QMessageBox>
 
 #include <common/algorithm.h>
+#include <common/configure.h>
 #include <common/version.h>
 #include <common/fileutils.h>
 #include <common/platform.h>
@@ -43,8 +44,10 @@
 #include <QProcess>
 #include <QSettings>
 
-#if EKA2L1_PLATFORM(WIN32) && !BUILD_FOR_USER
+#if EKA2L1_PLATFORM(WIN32) && BUILD_FOR_USER
 #define ENABLE_UPDATER 1
+#else
+#define ENABLE_UPDATER 0
 #endif
 
 // Code takes many reference from DuckStation!

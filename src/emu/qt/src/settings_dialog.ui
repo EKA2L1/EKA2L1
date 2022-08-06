@@ -594,7 +594,7 @@
              <string/>
             </property>
             <property name="text">
-             <string>Disable easter egg title</string>
+             <string>Disable title with Git version</string>
             </property>
            </widget>
           </item>
