@@ -74,6 +74,7 @@
      </property>
      <addaction name="action_package"/>
      <addaction name="action_device"/>
+     <addaction name="action_ngage_card_game"/>
     </widget>
     <widget class="QMenu" name="menu_mount_game_card_dump">
      <property name="title">
@@ -113,6 +114,7 @@
      <string>Help</string>
     </property>
     <addaction name="action_about"/>
+    <addaction name="action_check_for_update"/>
    </widget>
    <widget class="QMenu" name="menu_emulation">
     <property name="title">
@@ -296,8 +298,19 @@
     <string>Touch mapping editor</string>
    </property>
   </action>
+  <action name="action_ngage_card_game">
+   <property name="text">
+    <string>N-Gage card game</string>
+   </property>
+  </action>
+  <action name="action_check_for_update">
+   <property name="text">
+    <string>Check for update</string>
+   </property>
+  </action>
  </widget>
  <resources>
+  <include location="../eka2l1.qrc"/>
   <include location="../eka2l1.qrc"/>
  </resources>
  <connections/>

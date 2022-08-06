@@ -27,6 +27,7 @@
 #include <qt/symbian_input_dialog.h>
 #include <qt/package_manager_dialog.h>
 #include <qt/settings_dialog.h>
+#include <qt/update_dialog.h>
 #include <qt/state.h>
 #include <qt/utils.h>
 #include <qt/btnmap/editor_widget.h>
@@ -71,6 +72,7 @@ static constexpr const char *LAST_EMULATED_DISPLAY_GEOMETRY_SETTING = "lastEmula
 static constexpr const char *LAST_EMULATED_DISPLAY_STATE = "lastEmulatedDisplayState";
 static constexpr const char *LAST_PACKAGE_FOLDER_SETTING = "lastPackageFolder";
 static constexpr const char *LAST_MOUNT_FOLDER_SETTING = "lastMountFolder";
+static constexpr const char *LAST_INSTALL_NGAGE_GAME_CARD_FOLDER_SETTING = "lastNGageGameCardFolder";
 static constexpr const char *NO_DEVICE_INSTALL_DISABLE_NOF_SETTING = "disableNoDeviceInstallNotify";
 static constexpr const char *NO_TOUCHSCREEN_DISABLE_WARN_SETTING = "disableNoTouchscreenWarn";
 
@@ -210,6 +212,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     , bt_netplay_dialog_(nullptr)
     , editor_widget_(nullptr)
     , map_executor_(nullptr)
+    , update_dialog_(nullptr)
     , ui_(new Ui::main_window)
     , applist_(nullptr)
     , displayer_(nullptr) {
@@ -294,6 +297,9 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     addDockWidget(Qt::RightDockWidgetArea, editor_widget_);
     editor_widget_->setVisible(false);
 
+    update_dialog_ = new update_dialog(this);
+    update_dialog_->check_for_update(false);
+
     restore_ui_layouts();
     on_theme_change_requested(QString("%1").arg(settings.value(THEME_SETTING_NAME, 0).toInt()));
 
@@ -324,6 +330,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     connect(ui_->action_settings, &QAction::triggered, this, &main_window::on_settings_triggered);
     connect(ui_->action_package, &QAction::triggered, this, &main_window::on_package_install_clicked);
     connect(ui_->action_device, &QAction::triggered, this, &main_window::on_device_install_clicked);
+    connect(ui_->action_ngage_card_game, &QAction::triggered, this, &main_window::on_install_ngage_card_game_clicked);
     connect(ui_->action_mount_game_card_folder, &QAction::triggered, this, &main_window::on_mount_card_clicked);
     connect(ui_->action_mount_game_card_zip, &QAction::triggered, this, &main_window::on_mount_zip_clicked);
     connect(ui_->action_fullscreen, &QAction::toggled, this, &main_window::on_fullscreen_toogled);
@@ -337,13 +344,16 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
 
     connect(this, &main_window::progress_dialog_change, this, &main_window::on_progress_dialog_change, Qt::QueuedConnection);
     connect(this, &main_window::status_bar_update, this, &main_window::on_status_bar_update, Qt::QueuedConnection);
+    connect(this, &main_window::install_ngage_game_name_available, this, &main_window::on_install_ngage_game_name_available, Qt::QueuedConnection);
     connect(this, &main_window::package_install_text_ask, this, &main_window::on_package_install_text_ask, Qt::BlockingQueuedConnection);
     connect(this, &main_window::package_install_language_choose, this, &main_window::on_package_install_language_choose, Qt::BlockingQueuedConnection);
     connect(this, &main_window::screen_focus_group_changed, this, &main_window::on_screen_current_group_change_callback, Qt::QueuedConnection);
     connect(this, &main_window::input_dialog_open_request, this, &main_window::on_input_dialog_open_request);
     connect(this, &main_window::input_dialog_close_request, this, &main_window::on_input_dialog_close_request);
 
-    connect(editor_widget_, &editor_widget::editor_hidden, this, &main_window::on_mapping_editor_hidden);
+    connect(editor_widget_, &editor_widget::editor_hidden, this, &main_window::on_mapping_editor_hidden);    
+    connect(update_dialog_, &update_dialog::exit_for_update_request, this, &main_window::on_exit_for_update_requested);
+
     setAcceptDrops(true);
 }
 
@@ -428,6 +438,7 @@ main_window::~main_window() {
     }
 
     delete editor_widget_;
+    delete update_dialog_;
     delete recent_mount_folder_menu_;
     delete recent_mount_clear_;
 
@@ -623,6 +634,88 @@ void main_window::on_device_install_clicked() {
     install_diag->show();
 }
 
+void main_window::on_install_ngage_game_name_available(QString name) {
+    ngage_game_installing_name_ = name;
+    if (current_progress_dialog_) {
+        current_progress_dialog_->setLabelText(tr("Installing <b>%1</b>").arg(name));
+    }
+}
+
+void main_window::on_install_ngage_card_game_clicked() {
+    QSettings settings;
+    QString last_install_dir;
+
+    QVariant last_install_dir_variant = settings.value(LAST_INSTALL_NGAGE_GAME_CARD_FOLDER_SETTING);
+    if (last_install_dir_variant.isValid()) {
+        last_install_dir = last_install_dir_variant.toString();
+    }
+
+    QString install_folder = QFileDialog::getExistingDirectory(this, tr("Choose the N-Gage game card folder"), last_install_dir);
+    if (!install_folder.isEmpty()) {
+        settings.setValue(LAST_INSTALL_NGAGE_GAME_CARD_FOLDER_SETTING, install_folder);
+
+        current_progress_dialog_ = new QProgressDialog(QString{}, "", 0, 100, this);
+        ngage_game_installing_name_ = "";
+
+        current_progress_dialog_->setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint & ~Qt::WindowMaximizeButtonHint & ~Qt::WindowCloseButtonHint);
+        current_progress_dialog_->setWindowTitle(tr("Installing N-Gage game..."));
+        current_progress_dialog_->setWindowModality(Qt::ApplicationModal);
+        current_progress_dialog_->setAttribute(Qt::WA_DeleteOnClose, true);
+        current_progress_dialog_->setCancelButton(nullptr);
+        current_progress_dialog_->show();
+
+        QFuture<eka2l1::ngage_game_card_install_error> install_future = QtConcurrent::run([this, install_folder]() -> eka2l1::ngage_game_card_install_error {
+            return emulator_state_.symsys->install_ngage_game_card(install_folder.toStdString(), [this](const std::string &game_name) {
+                emit install_ngage_game_name_available(QString::fromStdString(game_name));
+            }, [this](const std::size_t done, const std::size_t total) {
+                emit progress_dialog_change(done, total);
+            });
+        });
+
+        while (!install_future.isFinished()) {
+            QCoreApplication::processEvents();
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+
+        current_progress_dialog_->close();
+        const eka2l1::ngage_game_card_install_error install_future_result = install_future.result();
+
+        if (install_future_result == eka2l1::ngage_game_card_install_success) {
+            QMessageBox::information(this, tr("Install success!"), tr("Successfully install N-Gage card game: <b>%1</b>").arg(ngage_game_installing_name_));
+            force_refresh_applist();
+        } else {
+            QString error_str;
+            switch (install_future_result) {
+            case eka2l1::ngage_game_card_no_game_data_folder:
+                error_str = tr("Can't find the game data folder!");
+                break;
+
+            case eka2l1::ngage_game_card_more_than_one_data_folder:
+                error_str = tr("There is more than one game in the given card game folder!");
+                break;
+
+            case eka2l1::ngage_game_card_no_game_registeration_info:
+                error_str = tr("The game information file does not exist in the card game folder!");
+                break;
+
+            case eka2l1::ngage_game_card_registeration_corrupted:
+                error_str = tr("The game information file has been corrupted. Please check your data's validity!");
+                break;
+
+            default:
+                error_str = tr("General error occured...");
+                break;
+            }
+
+            if (ngage_game_installing_name_.isEmpty()) {
+                QMessageBox::critical(this, tr("Install failed"), tr("Installation failed with error:\n  -%1").arg(error_str));
+            } else {
+                QMessageBox::critical(this, tr("Install failed"), tr("Installation of %1% failed with error:\n  -%2").arg(ngage_game_installing_name_, error_str));
+            }
+        }
+    }
+}
+
 void main_window::on_fullscreen_toogled(bool checked) {
     if (!displayer_->isVisible()) {
         return;
@@ -691,6 +784,7 @@ void main_window::mount_game_card_dump(QString mount_path) {
         current_progress_dialog_->setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint & ~Qt::WindowMaximizeButtonHint & ~Qt::WindowCloseButtonHint);
         current_progress_dialog_->setWindowTitle(tr("Extracting game dump files"));
         current_progress_dialog_->setWindowModality(Qt::ApplicationModal);
+        current_progress_dialog_->setAttribute(Qt::WA_DeleteOnClose, true);
         current_progress_dialog_->show();
 
         QFuture<eka2l1::zip_mount_error> extract_future = QtConcurrent::run([this, mount_path]() -> eka2l1::zip_mount_error {
@@ -941,6 +1035,7 @@ void main_window::spawn_package_install_camper(QString package_file_path) {
 
             current_progress_dialog_->setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint & ~Qt::WindowMaximizeButtonHint & ~Qt::WindowCloseButtonHint);
             current_progress_dialog_->setWindowTitle(tr("Installing package progress"));
+            current_progress_dialog_->setAttribute(Qt::WA_DeleteOnClose, true);
             current_progress_dialog_->show();
 
             QFuture<eka2l1::package::installation_result> install_future = QtConcurrent::run([this, pkgmngr, package_file_path]() {
@@ -1125,6 +1220,7 @@ void main_window::on_app_setting_changed() {
 void main_window::refresh_mount_availbility() {
     ui_->action_mount_recent_dumps->setEnabled(false);
     ui_->menu_mount_game_card_dump->setEnabled(false);
+    ui_->action_ngage_card_game->setEnabled(false);
 
     eka2l1::system *system = emulator_state_.symsys.get();
     if (system) {
@@ -1133,6 +1229,7 @@ void main_window::refresh_mount_availbility() {
             if (kern->is_eka1()) {
                 ui_->menu_mount_game_card_dump->setEnabled(true);
                 ui_->action_mount_recent_dumps->setEnabled(true);
+                ui_->action_ngage_card_game->setEnabled(true);
             }
         }
     }
@@ -1405,4 +1502,12 @@ void main_window::on_action_button_mapping_editor_triggered() {
 
 void main_window::on_action_touch_mapping_editor_triggered() {
     editor_widget_->setVisible(true);
+}
+
+void main_window::on_exit_for_update_requested() {
+    close();
+}
+
+void main_window::on_action_check_for_update_triggered() {
+    update_dialog_->check_for_update(true);
 }

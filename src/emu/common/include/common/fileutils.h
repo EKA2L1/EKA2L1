@@ -43,7 +43,8 @@ namespace eka2l1::common {
     };
 
     enum folder_copy_flags {
-        FOLDER_COPY_FLAG_LOWERCASE_NAME = 1 << 0
+        FOLDER_COPY_FLAG_LOWERCASE_NAME = 1 << 0,
+        FOLDER_COPY_FLAG_FILE_NO_OVERWRITE_IF_EXIST = 1 << 1
     };
 
     std::int64_t file_size(const std::string &path);
@@ -92,7 +93,8 @@ namespace eka2l1::common {
      * 
      * @returns True on success.
      */
-    bool copy_folder(const std::string &target_folder, const std::string &dest_folder_to_reside, const std::uint32_t flags, std::atomic<int> *progress);
+    bool copy_folder(const std::string &target_folder, const std::string &dest_folder_to_reside, const std::uint32_t flags, progress_changed_callback progress_callback = nullptr,
+                     cancel_requested_callback cancel_cb = nullptr);
 
     bool delete_folder(const std::string &target_folder);
 
@@ -166,4 +168,16 @@ namespace eka2l1::common {
      * @return Instance of the suitable directory iterator on success.
      */
     std::unique_ptr<dir_iterator> make_directory_iterator(const std::string &path);
+
+    /**
+     * @brief Given a filename, find the file/folder that matches this name by case-insensitive comparasion.
+     * 
+     * @param folder_path       The path of the folder to search for the insensitive filename/folder name.
+     * @param insensitive_name  The insensitve file name to search
+     * @param type              The type of entry to match (file or folder?)
+     * 
+     * @return std::string      Sensitive filename/folder name. Empty on not found.
+     */
+    std::string find_case_sensitive_file_name(const std::string &folder_path, const std::string &insensitive_name,
+        const file_type type);
 }

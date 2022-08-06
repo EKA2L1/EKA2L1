@@ -281,6 +281,11 @@ namespace eka2l1::epoc::bt {
                 complete_info.complete(epoc::error_none);
                 return;
 
+            case HCI_WRITE_DISCOVERABLITY:
+            case HCI_READ_DISCOVERABILITY:
+                complete_info.complete(epoc::error_none);
+                return;
+
             case HCI_LOCAL_ADDRESS: {
                 midman_inet *midman = reinterpret_cast<midman_inet*>(protocol_->get_midman());
 

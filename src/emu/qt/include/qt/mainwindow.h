@@ -69,6 +69,7 @@ class applist_widget;
 class applist_widget_item;
 class display_widget;
 class settings_dialog;
+class update_dialog;
 
 class main_window : public QMainWindow {
     Q_OBJECT
@@ -101,10 +102,13 @@ private:
     std::u16string input_initial_text_;
     int input_text_max_len_;
 
+    QString ngage_game_installing_name_;
+
     symbian_input_dialog *input_dialog_;
     btnetplay_friends_dialog *bt_netplay_dialog_;
     editor_widget *editor_widget_;
     eka2l1::qt::btnmap::executor *map_executor_;
+    update_dialog *update_dialog_;
 
     void setup_screen_draw();
     void setup_app_list();
@@ -132,6 +136,7 @@ private slots:
     void on_package_manager_triggered();
     void on_package_install_clicked();
     void on_device_install_clicked();
+    void on_install_ngage_card_game_clicked();
     void on_progress_dialog_change(const std::size_t now, const std::size_t total);
     bool on_package_install_text_ask(const char *text, const bool one_button);
     void on_new_device_added();
@@ -168,6 +173,9 @@ private slots:
     void on_mapping_editor_hidden();
     void on_action_button_mapping_editor_triggered();
     void on_action_touch_mapping_editor_triggered();
+    void on_action_check_for_update_triggered();
+    void on_install_ngage_game_name_available(QString name);
+    void on_exit_for_update_requested();
 
 signals:
     void progress_dialog_change(const std::size_t now, const std::size_t total);
@@ -180,6 +188,7 @@ signals:
     void screen_focus_group_changed();
     void input_dialog_open_request();
     void input_dialog_close_request();
+    void install_ngage_game_name_available(QString name);
 
 public:
     main_window(QApplication &app, QWidget *parent, eka2l1::desktop::emulator &emulator_state);

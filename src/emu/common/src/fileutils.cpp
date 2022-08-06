@@ -400,6 +400,23 @@ namespace eka2l1::common {
 
         return std::make_unique<standard_dir_iterator>(path);
     }
+    
+    std::string find_case_sensitive_file_name(const std::string &folder_path, const std::string &insensitive_name, const file_type type) {
+        auto ite = make_directory_iterator(folder_path);
+        const std::u16string insensitive_name_u16 = common::utf8_to_ucs2(insensitive_name);
+
+        common::dir_entry entry;
+
+        while (ite->next_entry(entry) == 0) {
+            if (type == entry.type) {
+                if (common::compare_ignore_case(common::utf8_to_ucs2(entry.name), insensitive_name_u16) == 0) {
+                    return entry.name;
+                }
+            }
+        }
+
+        return "";
+    }
 
     int resize(const std::string &path, const std::uint64_t size) {
 #if EKA2L1_PLATFORM(WIN32)
@@ -752,7 +769,8 @@ namespace eka2l1::common {
 #endif
     }
 
-    bool copy_folder(const std::string &target_folder, const std::string &dest_folder_to_reside, const std::uint32_t flags, std::atomic<int> *progress) {
+    bool copy_folder(const std::string &target_folder, const std::string &dest_folder_to_reside, const std::uint32_t flags, progress_changed_callback progress_cb,
+        cancel_requested_callback cancel_cb) {
         if (!exists(target_folder)) {
             return false;
         }
@@ -762,6 +780,8 @@ namespace eka2l1::common {
         if (target_folder == dest_folder_to_reside) {
             no_copy = true;
         }
+
+        const bool overwrite_on_file_exist = ((flags & FOLDER_COPY_FLAG_FILE_NO_OVERWRITE_IF_EXIST) == 0);
 
         std::uint64_t total_size = 0;
         std::uint64_t total_copied = 0;
@@ -773,6 +793,9 @@ namespace eka2l1::common {
             folder_stacks.push(std::string(1, eka2l1::get_separator()));
 
             while (!folder_stacks.empty()) {
+                if (cancel_cb && cancel_cb()) {
+                    break;
+                }
                 if (!is_measuring)
                     create_directories(eka2l1::add_path(dest_folder_to_reside, folder_stacks.top()));
 
@@ -787,6 +810,10 @@ namespace eka2l1::common {
                 folder_stacks.pop();
 
                 while (iterator->next_entry(entry) == 0) {
+                    if (cancel_cb && cancel_cb()) {
+                        break;
+                    }
+
                     if ((entry.name == ".") || (entry.name == ".."))
                         continue;
 
@@ -802,9 +829,9 @@ namespace eka2l1::common {
                                         return false;
                                     }
 
-                                    if (progress) {
+                                    if (progress_cb) {
                                         total_copied += entry.size;
-                                        *progress = static_cast<int>(total_copied * 100 / total_size);
+                                        progress_cb(total_copied, total_size);
                                     }
                                 }
                             }
@@ -820,13 +847,17 @@ namespace eka2l1::common {
                             total_size += entry.size;
                         } else {
                             if (!no_copy) {
-                                if (!common::copy_file(iterator->dir_name + entry.name, eka2l1::add_path(dest_folder_to_reside, top_path) + eka2l1::get_separator() + name_to_use, true)) {
+                                if (cancel_cb && cancel_cb()) {
+                                    continue;
+                                }
+
+                                if (!common::copy_file(iterator->dir_name + entry.name, eka2l1::add_path(dest_folder_to_reside, top_path) + eka2l1::get_separator() + name_to_use, overwrite_on_file_exist)) {
                                     return false;
                                 }
 
-                                if (progress) {
+                                if (progress_cb) {
                                     total_copied += entry.size;
-                                    *progress = static_cast<int>(total_copied * 100ULL / total_size);
+                                    progress_cb(total_copied, total_size);
                                 }
                             }
                         };
@@ -837,7 +868,7 @@ namespace eka2l1::common {
             return true;
         };
 
-        if (progress) {
+        if (progress_cb) {
             do_copy_stuffs(true);
         }
 

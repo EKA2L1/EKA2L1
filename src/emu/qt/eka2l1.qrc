@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>assets/duck_tank.png</file>
         <file>assets/credits.yml</file>
+        <file>assets/duck_tank_fedora.png</file>
     </qresource>
 </RCC>
