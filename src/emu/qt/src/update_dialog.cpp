@@ -83,6 +83,8 @@ update_dialog::update_dialog(QWidget *parent)
     ui_->manual_check_checkbox->setChecked(dont_auto_update);
 
     setWindowFlags(windowFlags() & ~Qt::WindowCloseButtonHint);
+    setAttribute(Qt::WA_DeleteOnClose);
+
     setVisible(false);
 }
 
@@ -230,6 +232,7 @@ void update_dialog::on_changelog_request_complete(QNetworkReply *reply) {
     ui_->changelog_label->setText(tr("Changelog (update commit: %1)").arg(QString::fromStdString(new_commit_hash_)));
 
     setWindowFlags(windowFlags() & ~Qt::WindowCloseButtonHint);
+    setAttribute(Qt::WA_DeleteOnClose);
     setVisible(true);
 }
 
@@ -248,15 +251,18 @@ void update_dialog::check_for_update(const bool explicit_request) {
 #if !ENABLE_UPDATER
     if (explicit_request) {
         QMessageBox::information(this, tr("Updater unsupported"), tr("The updater is not yet supported on your platform!"));
+        close();
         return;
     }
 #else
     if (strcmp(GIT_COMMIT_HASH, "Stable") == 0) {
+        close();
         return;
     }
 
     if (!explicit_request) {
         if (ui_->manual_check_checkbox->isChecked()) {
+            close();
             return;
         }
     }
@@ -309,7 +315,7 @@ void update_dialog::on_update_button_clicked() {
 }
 
 void update_dialog::on_ignore_button_clicked() {
-    hide();
+    close();
 }
 
 void update_dialog::revert_ui_to_update_wait() {
@@ -336,7 +342,7 @@ void update_dialog::on_cancel_button_clicked() {
     QDir().remove(UPDATE_FILE_STORE_PATH);
 
     revert_ui_to_update_wait();
-    hide();
+    close();
 }
 
 void update_dialog::on_new_update_download_read_ready() {
@@ -445,5 +451,6 @@ void update_dialog::on_new_update_download_finished(QNetworkReply *reply) {
 #endif
 
         emit exit_for_update_request();
+        close();
     }
 }

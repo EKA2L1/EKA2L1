@@ -28,6 +28,7 @@
 #include <qt/package_manager_dialog.h>
 #include <qt/settings_dialog.h>
 #include <qt/update_dialog.h>
+#include <qt/update_notice_dialog.h>
 #include <qt/state.h>
 #include <qt/utils.h>
 #include <qt/btnmap/editor_widget.h>
@@ -212,7 +213,6 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     , bt_netplay_dialog_(nullptr)
     , editor_widget_(nullptr)
     , map_executor_(nullptr)
-    , update_dialog_(nullptr)
     , ui_(new Ui::main_window)
     , applist_(nullptr)
     , displayer_(nullptr) {
@@ -297,8 +297,12 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     addDockWidget(Qt::RightDockWidgetArea, editor_widget_);
     editor_widget_->setVisible(false);
 
-    update_dialog_ = new update_dialog(this);
-    update_dialog_->check_for_update(false);
+    update_dialog *diag = new update_dialog(this);
+    connect(diag, &update_dialog::exit_for_update_request, this, &main_window::on_exit_for_update_requested);
+
+    diag->check_for_update(false);
+
+    update_notice_dialog::spawn(this);
 
     restore_ui_layouts();
     on_theme_change_requested(QString("%1").arg(settings.value(THEME_SETTING_NAME, 0).toInt()));
@@ -352,7 +356,6 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     connect(this, &main_window::input_dialog_close_request, this, &main_window::on_input_dialog_close_request);
 
     connect(editor_widget_, &editor_widget::editor_hidden, this, &main_window::on_mapping_editor_hidden);    
-    connect(update_dialog_, &update_dialog::exit_for_update_request, this, &main_window::on_exit_for_update_requested);
 
     setAcceptDrops(true);
 }
@@ -438,7 +441,6 @@ main_window::~main_window() {
     }
 
     delete editor_widget_;
-    delete update_dialog_;
     delete recent_mount_folder_menu_;
     delete recent_mount_clear_;
 
@@ -1509,5 +1511,8 @@ void main_window::on_exit_for_update_requested() {
 }
 
 void main_window::on_action_check_for_update_triggered() {
-    update_dialog_->check_for_update(true);
+    update_dialog *diag = new update_dialog(this);
+    connect(diag, &update_dialog::exit_for_update_request, this, &main_window::on_exit_for_update_requested);
+
+    diag->check_for_update(true);
 }

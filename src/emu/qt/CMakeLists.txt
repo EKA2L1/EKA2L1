@@ -70,6 +70,7 @@ set(PROJECT_SOURCES
         include/qt/symbian_input_dialog.h
         include/qt/thread.h
         include/qt/update_dialog.h
+        include/qt/update_notice_dialog.h
         include/qt/utils.h
         src/btnmap/aim.cpp
         src/btnmap/base.cpp
@@ -102,6 +103,8 @@ set(PROJECT_SOURCES
         src/thread.cpp
         src/update_dialog.cpp
         src/update_dialog.ui
+        src/update_notice_dialog.cpp
+        src/update_notice_dialog.ui
         src/utils.cpp
         ${RESOURCE_FILES}
 )

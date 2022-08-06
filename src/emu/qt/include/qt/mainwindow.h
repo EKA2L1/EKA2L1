@@ -108,7 +108,6 @@ private:
     btnetplay_friends_dialog *bt_netplay_dialog_;
     editor_widget *editor_widget_;
     eka2l1::qt::btnmap::executor *map_executor_;
-    update_dialog *update_dialog_;
 
     void setup_screen_draw();
     void setup_app_list();
