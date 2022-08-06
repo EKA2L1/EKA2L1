@@ -20,7 +20,7 @@
     * XCode 12.4 or higher.
 
 - Linux:
-    * clang/g++: Clang 10.0/GCC 10.1 or higher is recommended.
+    * clang/g++: Clang 10.0/GCC 10.1 or higher is recommended. Note that Clang is not tested or built on the CI, but it should compile fine if compliation with GCC goes OK. If not, please open an issue.
 
 ### Optional
 
