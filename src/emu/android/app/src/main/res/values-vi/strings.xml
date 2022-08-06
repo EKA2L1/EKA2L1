@@ -117,8 +117,8 @@
     <string name="pref_screen_scale_type_fill">Làm đầy cửa sổ (bỏ qua tỉ lệ khung hình)</string>
     <string name="pref_screen_scale_type_fit">Vừa với cửa sổ</string>
     <string name="pref_screen_scale_type_none">Như gốc</string>
-    <string name="pref_screen_scale_use_shader">Use shader for upscaling</string>
-    <string name="pref_screen_upscale_shader">Upscale shader</string>
+    <string name="pref_screen_scale_use_shader">Sử dụng hiệu ứng đổ bóng để tăng chất lượng hình ảnh</string>
+    <string name="pref_screen_upscale_shader">Nâng cấp hiệu ứng đổ bóng</string>
     <string name="pref_screen_default_shader">Mặc định</string>
     <string name="default_label">"%s (mặc định)"</string>
     <string name="not_saved_exists">Đã tồn tại</string>
