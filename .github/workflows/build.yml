@@ -149,6 +149,11 @@ jobs:
 
     - name: CMake build
       run: cmake --build build --config ${{ matrix.config }} --parallel 2 --target eka2l1_qt
+      if: matrix.os != 'windows-latest'
+    
+    - name: CMake build
+      run: cmake --build build --config ${{ matrix.config }} --parallel 2 --target eka2l1_qt updater
+      if: matrix.os == 'windows-latest'
 
     - name: Generate AppImage
       run: |

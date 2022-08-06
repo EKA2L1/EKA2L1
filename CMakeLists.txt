@@ -27,6 +27,12 @@ if (MSVC)
     add_definitions(-D_DISABLE_VECTOR_ANNOTATION)
 endif(MSVC)
 
+# Clang set default bracket depth (expansion of items in array) to be by default at 256
+# It's not enough for the emulator and some dependencies like Dynarmic
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options( -fbracket-depth=2048)
+endif()
+
 if (EKA2L1_BUILD_VULKAN_BACKEND)
     set (BUILD_WITH_VULKAN 1)
 else()
