@@ -81,7 +81,7 @@
 <context>
     <name>applist_widget</name>
     <message>
-        <location filename="../src/applistwidget.cpp" line="351"/>
+        <location filename="../src/applistwidget.cpp" line="386"/>
         <source>&lt;br&gt;App UID: 0x%1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -310,18 +310,18 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/btnmap/editor_widget.ui" line="212"/>
-        <source>Edit</source>
+        <location filename="../src/btnmap/editor_widget.ui" line="26"/>
+        <source>&lt;b&gt;Mapping elements&lt;/b&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/btnmap/editor_widget.ui" line="222"/>
-        <source>Delete</source>
+        <location filename="../src/btnmap/editor_widget.ui" line="40"/>
+        <source>Joystick</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/btnmap/editor_widget.ui" line="136"/>
-        <source>Profile</source>
+        <location filename="../src/btnmap/editor_widget.ui" line="45"/>
+        <source>Single touch</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -331,8 +331,13 @@
     </message>
     <message>
         <location filename="../src/btnmap/editor_widget.ui" line="105"/>
-        <location filename="../src/btnmap/editor_widget.cpp" line="237"/>
+        <location filename="../src/btnmap/editor_widget.cpp" line="274"/>
         <source>Save and hide editor</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/btnmap/editor_widget.ui" line="136"/>
+        <source>Profile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -351,47 +356,42 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/btnmap/editor_widget.ui" line="26"/>
-        <source>&lt;b&gt;Mapping elements&lt;/b&gt;</source>
+        <location filename="../src/btnmap/editor_widget.ui" line="212"/>
+        <source>Edit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/btnmap/editor_widget.ui" line="40"/>
-        <source>Joystick</source>
+        <location filename="../src/btnmap/editor_widget.ui" line="222"/>
+        <source>Delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/btnmap/editor_widget.ui" line="45"/>
-        <source>Single touch</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/btnmap/editor_widget.cpp" line="31"/>
+        <location filename="../src/btnmap/editor_widget.cpp" line="50"/>
         <source>Please wait for a game to be active!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/btnmap/editor_widget.cpp" line="70"/>
+        <location filename="../src/btnmap/editor_widget.cpp" line="89"/>
         <source>For app: %1 (0x%2)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/btnmap/editor_widget.cpp" line="116"/>
+        <location filename="../src/btnmap/editor_widget.cpp" line="151"/>
         <source>Enter profile name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/btnmap/editor_widget.cpp" line="129"/>
+        <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
         <source>Error creating profile!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/btnmap/editor_widget.cpp" line="129"/>
+        <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
         <source>Profile name contains special characters or system error encountered!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/btnmap/editor_widget.cpp" line="248"/>
+        <location filename="../src/btnmap/editor_widget.cpp" line="285"/>
         <source>Show editor</source>
         <translation type="unfinished"></translation>
     </message>
@@ -414,299 +414,392 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="80"/>
+        <location filename="../src/mainwindow.ui" line="81"/>
         <source>Mount game card dump</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="97"/>
+        <location filename="../src/mainwindow.ui" line="98"/>
         <source>View</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="101"/>
+        <location filename="../src/mainwindow.ui" line="102"/>
         <source>Rotate screen</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="113"/>
+        <location filename="../src/mainwindow.ui" line="114"/>
         <source>Help</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="119"/>
+        <location filename="../src/mainwindow.ui" line="121"/>
         <source>Emulation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="127"/>
+        <location filename="../src/mainwindow.ui" line="129"/>
         <source>Bluetooth</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="131"/>
+        <location filename="../src/mainwindow.ui" line="133"/>
         <source>Netplay</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="146"/>
-        <source>About</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.ui" line="151"/>
-        <source>Package</source>
+        <location filename="../src/mainwindow.ui" line="141"/>
+        <source>Control</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="156"/>
-        <source>Device</source>
+        <source>About</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="161"/>
-        <source>Package manager</source>
+        <source>Package</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="166"/>
+        <source>Device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="171"/>
+        <source>Package manager</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="176"/>
         <source>Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="174"/>
+        <location filename="../src/mainwindow.ui" line="184"/>
         <source>Pause</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="179"/>
+        <location filename="../src/mainwindow.ui" line="189"/>
         <source>Stop</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="184"/>
+        <location filename="../src/mainwindow.ui" line="194"/>
         <source>Restart</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="189"/>
+        <location filename="../src/mainwindow.ui" line="199"/>
         <source>Threads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="194"/>
+        <location filename="../src/mainwindow.ui" line="204"/>
         <source>Mutexes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="199"/>
+        <location filename="../src/mainwindow.ui" line="209"/>
         <source>Chunks</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="204"/>
+        <location filename="../src/mainwindow.ui" line="214"/>
         <source>Window tree</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="212"/>
+        <location filename="../src/mainwindow.ui" line="222"/>
         <source>Fullscreen</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="223"/>
+        <location filename="../src/mainwindow.ui" line="233"/>
         <source>Recent dumps</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="263"/>
+        <location filename="../src/mainwindow.ui" line="273"/>
         <source>Folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="273"/>
+        <location filename="../src/mainwindow.ui" line="283"/>
         <source>Refresh app list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="278"/>
+        <location filename="../src/mainwindow.ui" line="288"/>
         <source>Friends&apos;s IP addresses</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="238"/>
+        <location filename="../src/mainwindow.ui" line="293"/>
+        <source>Button mapping editor</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="298"/>
+        <source>Touch mapping editor</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="303"/>
+        <source>N-Gage card game</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="308"/>
+        <source>Check for update</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="241"/>
         <source>Clear menu</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="301"/>
+        <location filename="../src/mainwindow.cpp" line="316"/>
         <source>Touchscreen disabled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="301"/>
+        <location filename="../src/mainwindow.cpp" line="316"/>
         <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="302"/>
-        <location filename="../src/mainwindow.cpp" line="377"/>
+        <location filename="../src/mainwindow.cpp" line="317"/>
+        <location filename="../src/mainwindow.cpp" line="391"/>
         <source>Don&apos;t show this again</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="376"/>
+        <location filename="../src/mainwindow.cpp" line="390"/>
         <source>No device installed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="376"/>
+        <location filename="../src/mainwindow.cpp" line="390"/>
         <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../src/mainwindow.cpp" line="642"/>
+        <source>Installing &lt;b&gt;%1&lt;/b&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="655"/>
+        <source>Choose the N-Gage game card folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="663"/>
+        <source>Installing N-Gage game...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../src/mainwindow.cpp" line="686"/>
-        <location filename="../src/mainwindow.cpp" line="937"/>
-        <source>Cancel</source>
+        <source>Install success!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="689"/>
-        <source>Extracting game dump files</source>
+        <location filename="../src/mainwindow.cpp" line="686"/>
+        <source>Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="710"/>
-        <source>Mounting aborted</source>
+        <location filename="../src/mainwindow.cpp" line="692"/>
+        <source>Can&apos;t find the game data folder!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="696"/>
+        <source>There is more than one game in the given card game folder!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="700"/>
+        <source>The game information file does not exist in the card game folder!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="704"/>
+        <source>The game information file has been corrupted. Please check your data&apos;s validity!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="708"/>
+        <source>General error occured...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="713"/>
+        <location filename="../src/mainwindow.cpp" line="715"/>
+        <source>Install failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="713"/>
+        <source>Installation failed with error:
+  -%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="715"/>
+        <source>Installation of %1% failed with error:
+  -%2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="784"/>
+        <location filename="../src/mainwindow.cpp" line="1036"/>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="787"/>
+        <source>Extracting game dump files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="809"/>
+        <source>Mounting aborted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="814"/>
         <source>The ZIP file is corrupted!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="720"/>
+        <location filename="../src/mainwindow.cpp" line="819"/>
         <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="726"/>
+        <location filename="../src/mainwindow.cpp" line="825"/>
         <source>The choosen file is not a ZIP file!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="740"/>
+        <location filename="../src/mainwindow.cpp" line="839"/>
         <source>Game card problem</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="740"/>
+        <location filename="../src/mainwindow.cpp" line="839"/>
         <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="744"/>
+        <location filename="../src/mainwindow.cpp" line="843"/>
         <source>Game card dump folder correction</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="744"/>
+        <location filename="../src/mainwindow.cpp" line="843"/>
         <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="800"/>
+        <location filename="../src/mainwindow.cpp" line="899"/>
         <source>Choose the game card dump folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="820"/>
+        <location filename="../src/mainwindow.cpp" line="919"/>
         <source>Choose the game card zip</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="901"/>
+        <location filename="../src/mainwindow.cpp" line="1000"/>
         <source>Document</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="919"/>
+        <location filename="../src/mainwindow.cpp" line="1018"/>
         <source>Choose a language for the package</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="940"/>
+        <location filename="../src/mainwindow.cpp" line="1039"/>
         <source>Installing package progress</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="964"/>
+        <location filename="../src/mainwindow.cpp" line="1064"/>
         <source>Installation aborted</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="964"/>
+        <location filename="../src/mainwindow.cpp" line="1064"/>
         <source>The installation has been canceled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="969"/>
+        <location filename="../src/mainwindow.cpp" line="1069"/>
         <source>Installation failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="969"/>
+        <location filename="../src/mainwindow.cpp" line="1069"/>
         <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="976"/>
+        <location filename="../src/mainwindow.cpp" line="1076"/>
         <source>Installation success</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="976"/>
+        <location filename="../src/mainwindow.cpp" line="1076"/>
         <source>Package has been successfully installed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1001"/>
+        <location filename="../src/mainwindow.cpp" line="1101"/>
         <source>Choose the file to install</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1001"/>
+        <location filename="../src/mainwindow.cpp" line="1101"/>
         <source>SIS file (*.sis *.sisx)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1191"/>
+        <location filename="../src/mainwindow.cpp" line="1293"/>
         <source>Load theme failed!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1191"/>
+        <location filename="../src/mainwindow.cpp" line="1293"/>
         <source>The Dark theme&apos;s style file can&apos;t be found!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1316"/>
+        <location filename="../src/mainwindow.cpp" line="1423"/>
         <source>Continue to modify friends&apos; IP addresses</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1317"/>
+        <location filename="../src/mainwindow.cpp" line="1424"/>
         <source>This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1332"/>
+        <location filename="../src/mainwindow.cpp" line="1439"/>
         <source>Bluetooth manager service not available!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1332"/>
+        <location filename="../src/mainwindow.cpp" line="1439"/>
         <source>The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -797,6 +890,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../src/settings_dialog.ui" line="60"/>
+        <source>&lt;b&gt;Configuration for:&lt;/b&gt; None</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../src/settings_dialog.ui" line="136"/>
         <source>Time delay (0-1000us)</source>
         <translation type="unfinished"></translation>
@@ -829,11 +927,6 @@
     <message>
         <location filename="../src/settings_dialog.ui" line="263"/>
         <source>Upscale shader</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="60"/>
-        <source>&lt;b&gt;Configuration for:&lt;/b&gt; None</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1000,7 +1093,7 @@
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="597"/>
-        <source>Disable easter egg title</source>
+        <source>Disable title with Git version</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1547,6 +1640,203 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/settings_dialog.cpp" line="1333"/>
         <source>This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>update_dialog</name>
+    <message>
+        <location filename="../src/update_dialog.ui" line="14"/>
+        <source>New update available</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.ui" line="43"/>
+        <source>A new update has been released on Github!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.ui" line="61"/>
+        <source>Changelog</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.ui" line="84"/>
+        <source>Downloading update ... %p%</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.ui" line="91"/>
+        <source>Do not automatically check for update when startup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.ui" line="126"/>
+        <source>Update</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.ui" line="139"/>
+        <source>Ignore</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.ui" line="149"/>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.cpp" line="107"/>
+        <source>Update success</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.cpp" line="113"/>
+        <source>Update failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.cpp" line="142"/>
+        <source>The emulator is already updated to lastest version!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.cpp" line="151"/>
+        <source>The release channel is not available. Please check your internet connection!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.cpp" line="157"/>
+        <source>Failed to get information about the newest update from Github!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.cpp" line="189"/>
+        <source>Can&apos;t find the download link of newest update for your platform!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.cpp" line="195"/>
+        <source>Failed to get update download link from Github!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.cpp" line="213"/>
+        <source>Error retrieving changelog from Github...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.cpp" line="235"/>
+        <source>Changelog (update commit: %1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.cpp" line="256"/>
+        <source>Updater unsupported</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.cpp" line="256"/>
+        <source>The updater is not yet supported on your platform!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.cpp" line="300"/>
+        <location filename="../src/update_dialog.cpp" line="360"/>
+        <source>Update error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.cpp" line="300"/>
+        <source>Can&apos;t not open temporary file for storing the update files!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.cpp" line="384"/>
+        <source>Failed to download update with error: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.cpp" line="392"/>
+        <source>Downloaded update is not in zip format!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.cpp" line="421"/>
+        <source>Failed to update the updater program!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.cpp" line="429"/>
+        <source>Update zip file is corrupted!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/update_dialog.cpp" line="436"/>
+        <location filename="../src/update_dialog.cpp" line="451"/>
+        <source>Can&apos;t find the updater program in the update archive file!</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>update_notice_dialog</name>
+    <message>
+        <location filename="../src/update_notice_dialog.ui" line="14"/>
+        <source>Update news</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>update_window</name>
+    <message>
+        <location filename="../src/updater.ui" line="14"/>
+        <source>EKA2L1 Updater</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/updater.ui" line="59"/>
+        <source>Updating...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/updater.ui" line="85"/>
+        <source>Extracting ... %p%</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/updater.cpp" line="91"/>
+        <source>Update failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/updater.cpp" line="99"/>
+        <source>Downloaded update is not a zip file!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/updater.cpp" line="122"/>
+        <location filename="../src/updater.cpp" line="175"/>
+        <source>The downloaded archive zip is corrupted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/updater.cpp" line="178"/>
+        <source>Extracted: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/updater.cpp" line="197"/>
+        <source>Update&apos;s archive file does not exist!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/updater.cpp" line="212"/>
+        <source>Update success</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/updater.cpp" line="212"/>
+        <source>Update success. Relaunch the emulator?</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
