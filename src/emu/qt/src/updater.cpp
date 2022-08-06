@@ -36,6 +36,8 @@
 #include <miniz.h>
 #include <memory>
 
+#include <cstdio>
+
 using namespace eka2l1;
 
 static const char *ZIP_STAGING_FILENAME = "..\\staging\\update.zip";
@@ -247,8 +249,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
     int argc = static_cast<int>(args.size());
     QApplication a(argc, arg_cstr);
 
-    if (argc > 1) {
-        std::int64_t pid_or_false = args[1].as_int<std::int64_t>(-1);
+    if (argc >= 1) {
+        std::int64_t pid_or_false = args[0].as_int<std::int64_t>(-1);
         if (pid_or_false >= 0) {
             wait_for_emulator_to_close(static_cast<std::uint32_t>(pid_or_false));
         }
