@@ -1425,10 +1425,12 @@ void main_window::on_bt_netplay_mod_friends_clicked() {
                                                                      "Do you wish to continue?"), QMessageBox::Yes | QMessageBox::No);
 
         if (result == QMessageBox::Yes) {
-            eka2l1::kernel_system *kernel = emulator_state_.symsys->get_kernel_system();
-            const std::string btman_server_name = eka2l1::get_btman_server_name_by_epocver(kernel->get_epoc_version());
-            eka2l1::btman_server *btman_serv = kernel->get_by_name<eka2l1::btman_server>(btman_server_name);
-
+            eka2l1::btman_server *btman_serv = nullptr;
+            if (emulator_state_.symsys) {
+                eka2l1::kernel_system *kernel = emulator_state_.symsys->get_kernel_system();
+                const std::string btman_server_name = eka2l1::get_btman_server_name_by_epocver(kernel->get_epoc_version());
+                btman_serv = kernel->get_by_name<eka2l1::btman_server>(btman_server_name);
+            }
             if (btman_serv) {
                 // TODO: Check for other type of midman (real bluetooth for example!)
                 bt_netplay_dialog_ = new btnetplay_friends_dialog(this, reinterpret_cast<eka2l1::epoc::bt::midman_inet*>(btman_serv->get_midman()), emulator_state_.conf);
