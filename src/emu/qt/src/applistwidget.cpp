@@ -20,7 +20,9 @@
 #include <QBitmap>
 #include <QLineEdit>
 #include <QPainter>
+#include <QMovie>
 #include <QtSvg/QSvgRenderer>
+#include <QtConcurrent/QtConcurrent>
 
 #include <common/buffer.h>
 #include <common/cvt.h>
@@ -67,6 +69,10 @@ applist_search_bar::~applist_search_bar() {
     delete search_layout_;
     delete search_line_edit_;
     delete search_label_;
+}
+
+const QString applist_search_bar::value() const {
+    return search_line_edit_->text();
 }
 
 void applist_search_bar::on_search_bar_content_changed(QString content) {
@@ -128,6 +134,8 @@ applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, 
     , list_widget_(nullptr)
     , layout_(nullptr)
     , bar_widget_(nullptr)
+    , loading_gif_(nullptr)
+    , loading_label_(nullptr)
     , lister_(lister)
     , no_app_visible_normal_label_(nullptr)
     , no_app_visible_hide_sysapp_label_(nullptr)
@@ -137,6 +145,12 @@ applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, 
     search_bar_ = new applist_search_bar;
     device_combo_bar_ = new applist_device_combo;
     list_widget_ = new QListWidget;
+
+    loading_label_ = new QLabel;
+    loading_gif_ = new QMovie(":/assets/loading.gif");
+    loading_label_->setMovie(loading_gif_);
+    loading_gif_->setScaledSize(ICON_GRID_SIZE - QSize(2, 2));
+    loading_label_->setFixedSize(ICON_GRID_SIZE);
 
     no_app_visible_normal_label_ = new QLabel("No app installed on the device!");
     no_app_visible_hide_sysapp_label_ = new QLabel("No non-system app installed on the device!");
@@ -160,11 +174,16 @@ applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, 
     layout_->addWidget(list_widget_);
     layout_->addWidget(no_app_visible_normal_label_);
     layout_->addWidget(no_app_visible_hide_sysapp_label_);
+    layout_->addWidget(loading_label_);
     layout_->setContentsMargins(0, 0, 0, 0);
     layout_->setAlignment(Qt::AlignCenter);
 
     no_app_visible_normal_label_->hide();
     no_app_visible_hide_sysapp_label_->hide();
+    bar_widget_->hide();
+    list_widget_->hide();
+    loading_label_->show();
+    loading_gif_->start();
 
     setLayout(layout_);
 
@@ -181,16 +200,17 @@ applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, 
     list_widget_->setMovement(QListWidget::Movement::Static);
     list_widget_->setMinimumHeight(ICON_GRID_SIZE.height() + ICON_GRID_SPACING_SIZE.height() + 200);
 
-    reload_whole_list();
-
     connect(list_widget_, &QListWidget::itemClicked, this, &applist_widget::on_list_widget_item_clicked);
     connect(search_bar_, &applist_search_bar::new_search, this, &applist_widget::on_search_content_changed);
     connect(device_combo_bar_, &applist_device_combo::device_combo_changed, this, &applist_widget::on_device_change_request);
+    connect(this, &applist_widget::new_registeration_item_come, this, &applist_widget::on_new_registeration_item_come, Qt::QueuedConnection);
 }
 
 applist_widget::~applist_widget() {
     delete search_bar_;
     delete device_combo_bar_;
+    delete loading_gif_;
+    delete loading_label_;
 
     delete layout_;
     delete bar_widget_;
@@ -233,31 +253,21 @@ void applist_widget::on_list_widget_item_clicked(QListWidgetItem *item) {
     emit app_launch(item_translated);
 }
 
-void applist_widget::reload_whole_list() {
-    list_widget_->clear();
-
-    // This vector icon list is synced with
-    std::vector<eka2l1::apa_app_registry> &registries = lister_->get_registerations();
-    for (std::size_t i = 0; i < registries.size(); i++) {
-        if (!registries[i].caps.is_hidden) {
-            if (!hide_system_apps_ || (hide_system_apps_ && !is_app_reg_system_app(registries.data() + i))) {
-                add_registeration_item(registries[i], static_cast<int>(i));
-            }
-        }
+void applist_widget::on_new_registeration_item_come(QListWidgetItem *item) {
+    if (item->text().contains(search_bar_->value(), Qt::CaseInsensitive)) {
+        item->setHidden(false);
+    } else {
+        item->setHidden(true);
     }
 
-    if (list_widget_->count() == 0) {
-        bar_widget_->hide();
-        list_widget_->hide();
+    list_widget_->addItem(item);
 
-        if (hide_system_apps_) {
-            no_app_visible_normal_label_->hide();
-            no_app_visible_hide_sysapp_label_->show();
-        } else {
-            no_app_visible_normal_label_->show();
-            no_app_visible_hide_sysapp_label_->hide();
-        }
-    } else {
+    if (!loading_label_->isHidden()) {
+        loading_label_->hide();
+        loading_gif_->stop();
+    }
+
+    if (bar_widget_->isHidden()) {
         bar_widget_->show();
         list_widget_->show();
 
@@ -265,6 +275,46 @@ void applist_widget::reload_whole_list() {
         no_app_visible_hide_sysapp_label_->hide();
     }
 }
+
+void applist_widget::reload_whole_list() {
+    list_widget_->clear();
+
+    bar_widget_->hide();
+    list_widget_->hide();
+    no_app_visible_normal_label_->hide();
+    no_app_visible_hide_sysapp_label_->hide();
+    loading_label_->show();
+    loading_gif_->start();
+
+    // This vector icon list is synced with
+    QFuture<void> future = QtConcurrent::run([this]() {
+        std::vector<eka2l1::apa_app_registry> &registries = lister_->get_registerations();
+        for (std::size_t i = 0; i < registries.size(); i++) {
+            if (!registries[i].caps.is_hidden) {
+                if (!hide_system_apps_ || (hide_system_apps_ && !is_app_reg_system_app(registries.data() + i))) {
+                    add_registeration_item(registries[i], static_cast<int>(i));
+                }
+            }
+        }
+    });
+
+    while (!future.isFinished()) {
+        QCoreApplication::processEvents();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    if (list_widget_->count() == 0) {
+        loading_label_->hide();
+        if (hide_system_apps_) {
+            no_app_visible_normal_label_->hide();
+            no_app_visible_hide_sysapp_label_->show();
+        } else {
+            no_app_visible_normal_label_->show();
+            no_app_visible_hide_sysapp_label_->hide();
+        }
+    }
+}
+
 eka2l1::apa_app_registry *applist_widget::get_registry_from_widget_item(applist_widget_item *item) {
     if (!item) {
         return nullptr;
@@ -448,7 +498,7 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const
     QString tool_tip = app_name + tr("<br>App UID: 0x%1").arg(reg.mandatory_info.uid, 0, 16);
     newItem->setToolTip(tool_tip);
 
-    list_widget_->addItem(newItem);
+    emit new_registeration_item_come(newItem);
 }
 
 void applist_widget::set_hide_system_apps(const bool should_hide) {

@@ -60,6 +60,8 @@ signals:
 public:
     applist_search_bar(QWidget *parent = nullptr);
     ~applist_search_bar();
+
+    const QString value() const;
 };
 
 class applist_device_combo: public QWidget {
@@ -93,6 +95,8 @@ public:
     QListWidget *list_widget_;
     QGridLayout *layout_;
     QWidget *bar_widget_;
+    QMovie *loading_gif_;
+    QLabel *loading_label_;
 
     QLabel *no_app_visible_normal_label_;
     QLabel *no_app_visible_hide_sysapp_label_;
@@ -114,10 +118,12 @@ public:
 private slots:
     void on_list_widget_item_clicked(QListWidgetItem *item);
     void on_device_change_request(int index);
+    void on_new_registeration_item_come(QListWidgetItem *item);
 
 signals:
     void app_launch(applist_widget_item *item);
     void device_change_request(int index);
+    void new_registeration_item_come(QListWidgetItem *item);
 
 public:
     explicit applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss, eka2l1::io_system *io,

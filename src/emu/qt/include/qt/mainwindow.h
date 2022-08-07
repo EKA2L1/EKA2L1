@@ -110,7 +110,7 @@ private:
     eka2l1::qt::btnmap::executor *map_executor_;
 
     void setup_screen_draw();
-    void setup_app_list();
+    void setup_app_list(const bool load_now = false);
     void setup_package_installer_ui_hooks();
     void reprepare_touch_mappings();
     void refresh_recent_mounts();
@@ -201,6 +201,7 @@ public:
     void setup_and_switch_to_game_mode();
     void draw_enabled_overlay(eka2l1::drivers::graphics_driver *driver,
         eka2l1::drivers::graphics_command_builder &builder, const float scale_factor);
+    void load_and_show();
 
     bool deliver_overlay_mouse_event(const eka2l1::vec3 &pos, const int button_id, const int action_id,
         const int mouse_id);

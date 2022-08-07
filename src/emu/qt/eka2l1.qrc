@@ -4,5 +4,6 @@
         <file>assets/credits.yml</file>
         <file>assets/duck_tank_fedora.png</file>
         <file>assets/update_notices/20220807_update_notice.png</file>
+        <file>assets/loading.gif</file>
     </qresource>
 </RCC>

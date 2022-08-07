@@ -360,7 +360,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     setAcceptDrops(true);
 }
 
-void main_window::setup_app_list() {
+void main_window::setup_app_list(const bool load_now) {
     if (applist_)
         return;
 
@@ -381,6 +381,9 @@ void main_window::setup_app_list() {
             connect(applist_, &applist_widget::device_change_request, this, &main_window::on_device_set_requested, Qt::QueuedConnection);
 
             applist_->update_devices(system->get_device_manager());
+            if (load_now) {
+                applist_->reload_whole_list();
+            }
         }
     }
 
@@ -567,7 +570,6 @@ void main_window::on_device_set_requested(const int index) {
     }
 
     restore_ui_layouts();
-    setup_app_list();
     refresh_current_device_label();
     refresh_mount_availbility();
     reprepare_touch_mappings();
@@ -576,6 +578,8 @@ void main_window::on_device_set_requested(const int index) {
     ui_->action_pause->setEnabled(false);
     ui_->action_restart->setEnabled(false);
     ui_->action_pause->setChecked(false);
+
+    setup_app_list(true);
 }
 
 void main_window::on_restart_requested() {
@@ -630,8 +634,8 @@ void main_window::on_new_device_added() {
         emulator_state_.init_event.wait();
 
         refresh_current_device_label();
-        setup_app_list();
         reprepare_touch_mappings();
+        setup_app_list(true);
     }
 }
 
@@ -1523,4 +1527,11 @@ void main_window::on_action_check_for_update_triggered() {
     connect(diag, &update_dialog::exit_for_update_request, this, &main_window::on_exit_for_update_requested);
 
     diag->check_for_update(true);
+}
+
+void main_window::load_and_show() {
+    show();
+    if (applist_) {
+        applist_->reload_whole_list();
+    }
 }

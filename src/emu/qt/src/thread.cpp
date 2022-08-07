@@ -391,8 +391,8 @@ namespace eka2l1::desktop {
         }
 
         state.ui_main = new main_window(application, nullptr, state);
-        state.ui_main->show();
         state.ui_main->setWindowTitle(get_emulator_window_title());
+        state.ui_main->load_and_show();
 
         eka2l1::drivers::ui::main_window_instance = state.ui_main;
         state.window = state.ui_main->render_window();
