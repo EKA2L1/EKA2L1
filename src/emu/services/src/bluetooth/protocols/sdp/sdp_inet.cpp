@@ -47,6 +47,12 @@ namespace eka2l1::epoc::bt {
     }
 
     sdp_inet_net_database::~sdp_inet_net_database() {
+        close_connect_handle();
+    }
+
+    void sdp_inet_net_database::close_connect_handle() {
+        const std::lock_guard<std::mutex> guard(access_lock_);
+
         if (sdp_connect_) {
             uv_async_t *async = new uv_async_t;
             async->data = sdp_connect_;
@@ -59,6 +65,7 @@ namespace eka2l1::epoc::bt {
             });
 
             uv_async_send(async);
+            sdp_connect_ = nullptr;
         }
     }
 
@@ -113,12 +120,13 @@ namespace eka2l1::epoc::bt {
 
     void sdp_inet_net_database::handle_new_pdu_packet(const char *buffer, const std::int64_t nread) {
         if (nread < 0) {
-            if (nread == UV_ECONNRESET) {
-                // TODO: Close and reconnect
+            if ((nread == UV_ECONNRESET) || (nread == UV_EOF)) {
+                close_connect_handle();
             } else {
                 LOG_ERROR(SERVICE_BLUETOOTH, "Receive SDP data failed with libuv error code {}", nread);
-                return;
             }
+
+            return;
         }
 
         if (nread < pdu_builder::PDU_HEADER_SIZE) {
@@ -239,6 +247,11 @@ namespace eka2l1::epoc::bt {
             sockaddr *addr_translated = nullptr;
             GUEST_TO_BSD_ADDR(data->addr_, addr_translated);
 
+            sockaddr_in6 bind_any;
+            std::memset(&bind_any, 0, sizeof(sockaddr_in6));
+            bind_any.sin6_family = AF_INET6;
+
+            uv_tcp_bind(data->tcp_, reinterpret_cast<const sockaddr*>(&bind_any), 0);
             uv_tcp_connect(conn, data->tcp_, addr_translated, [](uv_connect_t *req, int status) {
                 async_sdp_connect_data *data = reinterpret_cast<async_sdp_connect_data*>(req->data);
                 data->self_->handle_connect_done(status);

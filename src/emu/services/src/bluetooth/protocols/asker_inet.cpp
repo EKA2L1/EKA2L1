@@ -46,7 +46,7 @@ namespace eka2l1::epoc::bt {
         }
     }
 
-    static constexpr std::uint32_t SEND_TIMEOUT_RETRY = 20000000;
+    static constexpr std::uint32_t SEND_TIMEOUT_RETRY = 10000;
     struct send_data_vars {
         uv_buf_t buf_;
         sockaddr_in6 addr_;
@@ -105,46 +105,46 @@ namespace eka2l1::epoc::bt {
         uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
             send_data_vars *vars_ptr = reinterpret_cast<send_data_vars*>(async->data);
 
-            uv_udp_send(vars_ptr->send_req, vars_ptr->send_udp_handle_, &vars_ptr->buf_, 1, reinterpret_cast<sockaddr*>(&vars_ptr->addr_), [](uv_udp_send_t *send_info, int status) {
+            uv_udp_recv_start(vars_ptr->send_udp_handle_, [](uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
+                send_data_vars *vars = reinterpret_cast<send_data_vars*>(handle->data);
+                if (!vars->response_ptr_) {
+                    vars->response_ptr_ = reinterpret_cast<char*>(malloc(suggested_size));
+                    vars->response_size_ = suggested_size;
+                } else {
+                    if (suggested_size > vars->response_size_) {
+                        vars->response_ptr_ = reinterpret_cast<char*>(realloc(vars->response_ptr_, suggested_size));
+                        vars->response_size_ = suggested_size;
+                    }
+                }
+                buf->base = vars->response_ptr_;
+                buf->len = static_cast<std::uint32_t>(suggested_size);
+            }, [](uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags) {
+                send_data_vars *vars = reinterpret_cast<send_data_vars*>(handle->data);
+
+                uv_timer_stop(vars->timeout_timer_);
+                uv_udp_recv_stop(handle);
+
+                if (nread < 0) {
+                    if (vars->times_ >= 3) {
+                        vars->response_cb_(nullptr, BT_COMM_INET_ERROR_RECV_FAILED);
+                        free_send_data_vars_struct(vars);
+                    } else {
+                        keep_sending_data(handle, vars);
+                    }
+                    return;
+                }
+
+                vars->response_cb_(buf->base, nread);
+                free_send_data_vars_struct(vars);
+
+                return;
+            });
+            
+            const int result = uv_udp_send(vars_ptr->send_req, vars_ptr->send_udp_handle_, &vars_ptr->buf_, 1, reinterpret_cast<sockaddr*>(&vars_ptr->addr_), [](uv_udp_send_t *send_info, int status) {
                 send_data_vars *vars = reinterpret_cast<send_data_vars*>(send_info->data);
                 vars->times_++;
 
                 if (status >= 0) {
-                    uv_udp_recv_start(send_info->handle, [](uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
-                        send_data_vars *vars = reinterpret_cast<send_data_vars*>(handle->data);
-                        if (!vars->response_ptr_) {
-                            vars->response_ptr_ = reinterpret_cast<char*>(malloc(suggested_size));
-                            vars->response_size_ = suggested_size;
-                        } else {
-                            if (suggested_size > vars->response_size_) {
-                                vars->response_ptr_ = reinterpret_cast<char*>(realloc(vars->response_ptr_, suggested_size));
-                                vars->response_size_ = suggested_size;
-                            }
-                        }
-                        buf->base = vars->response_ptr_;
-                        buf->len = static_cast<std::uint32_t>(suggested_size);
-                    }, [](uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags) {
-                        send_data_vars *vars = reinterpret_cast<send_data_vars*>(handle->data);
-
-                        uv_timer_stop(vars->timeout_timer_);
-                        uv_udp_recv_stop(handle);
-
-                        if (nread < 0) {
-                            if (vars->times_ >= 3) {
-                                vars->response_cb_(nullptr, BT_COMM_INET_ERROR_RECV_FAILED);
-                                free_send_data_vars_struct(vars);
-                            } else {
-                                keep_sending_data(handle, vars);
-                            }
-                            return;
-                        }
-
-                        vars->response_cb_(buf->base, nread);
-                        free_send_data_vars_struct(vars);
-
-                        return;
-                    });
-
                     uv_timer_start(vars->timeout_timer_, [](uv_timer_t *timer) {
                         send_data_vars *vars = reinterpret_cast<send_data_vars*>(timer->data);
 
@@ -157,6 +157,8 @@ namespace eka2l1::epoc::bt {
                         }
                     }, SEND_TIMEOUT_RETRY, 0);
                 } else {
+                    uv_udp_recv_stop(send_info->handle);
+
                     if (vars->times_ >= 3) {
                         vars->response_cb_(nullptr, BT_COMM_INET_ERROR_SEND_FAILED);
                         free_send_data_vars_struct(vars);
@@ -167,6 +169,18 @@ namespace eka2l1::epoc::bt {
                     }
                 }
             });
+
+            if (result != 0) {
+                LOG_TRACE(SERVICE_BLUETOOTH, "Send asking host info failed with libuv code {}", result);
+                if (vars_ptr->times_ >= 3) {
+                    vars_ptr->response_cb_(nullptr, BT_COMM_INET_ERROR_SEND_FAILED);
+                    free_send_data_vars_struct(vars_ptr);
+
+                    return;
+                } else {
+                    keep_sending_data(vars_ptr->send_udp_handle_, vars_ptr);
+                }
+            }
         });
 
         uv_async_send(async);
@@ -189,9 +203,9 @@ namespace eka2l1::epoc::bt {
         if (!bt_asker_) {
             uv_udp_t *bt_asker_impl = new uv_udp_t;
 
-            sockaddr_in bind;
-            std::memset(&bind, 0, sizeof(sockaddr_in));
-            bind.sin_family = AF_INET;
+            sockaddr_in6 bind;
+            std::memset(&bind, 0, sizeof(sockaddr_in6));
+            bind.sin6_family = AF_INET6;
 
             uv_udp_init(uv_default_loop(), bt_asker_impl);
             uv_udp_bind(bt_asker_impl, reinterpret_cast<const sockaddr*>(&bind), 0);

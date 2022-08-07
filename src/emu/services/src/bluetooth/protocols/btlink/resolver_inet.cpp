@@ -36,6 +36,7 @@ namespace eka2l1::epoc::bt {
         , friend_name_entry_(nullptr)
         , current_friend_(0xFFFFFFFF)
         , need_name_(false)
+        , in_completion_(false)
         , delay_emu_evt_(-1) {
     }
 

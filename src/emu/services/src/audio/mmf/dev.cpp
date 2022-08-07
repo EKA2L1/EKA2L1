@@ -834,8 +834,13 @@ namespace eka2l1 {
                 set_volume_ramp(ctx);
                 break;
 
+            case 52:
+                ctx->complete(epoc::error_none);
+                break;
+
             default:
                 LOG_ERROR(SERVICE_MMFAUD, "Unimplemented MMF dev server session opcode {}", ctx->msg->function);
+                
                 break;
             }
         } else {

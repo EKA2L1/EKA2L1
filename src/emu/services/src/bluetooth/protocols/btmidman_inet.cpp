@@ -59,10 +59,10 @@ namespace eka2l1::epoc::bt {
 
         virt_bt_info_server_detail->data = this;
 
-        sockaddr_in addr_bind;
-        std::memset(&addr_bind, 0, sizeof(sockaddr_in));
-        addr_bind.sin_family = AF_INET;
-        addr_bind.sin_port = htons(static_cast<std::uint16_t>(port_));
+        sockaddr_in6 addr_bind;
+        std::memset(&addr_bind, 0, sizeof(sockaddr_in6));
+        addr_bind.sin6_family = AF_INET6;
+        addr_bind.sin6_port = htons(static_cast<std::uint16_t>(port_));
 
         uv_udp_bind(virt_bt_info_server_detail, reinterpret_cast<const sockaddr*>(&addr_bind), 0);
         uv_udp_recv_start(virt_bt_info_server_detail, [](uv_handle_t* handle, std::size_t suggested_size, uv_buf_t* buf) {
@@ -270,11 +270,12 @@ lookup:
             if (addrs[i].port_ > 65535) {
                 invalid_address_indicies.push_back(FRIEND_UPDATE_ERROR_INVALID_PORT_NUMBER | static_cast<std::uint32_t>(i));
             } else {
-                if (addrs[i].addr_.find(':') != std::string::npos) {
-                    res = uv_ip6_addr(addrs[i].addr_.data(), addrs[i].port_, &in_temp);
-                } else {
-                    res = uv_ip4_addr(addrs[i].addr_.data(), addrs[i].port_, reinterpret_cast<sockaddr_in*>(&in_temp));
+                std::string ip_str = addrs[i].addr_;
+                if (addrs[i].addr_.find(':') == std::string::npos) {
+                    ip_str = std::string("::ffff:") + ip_str;
                 }
+
+                res = uv_ip6_addr(ip_str.data(), addrs[i].port_, &in_temp);
 
                 if (res != 0) {
                     invalid_address_indicies.push_back(FRIEND_UPDATE_ERROR_INVALID_ADDR | static_cast<std::uint32_t>(i));

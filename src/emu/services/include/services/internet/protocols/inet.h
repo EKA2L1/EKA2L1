@@ -36,6 +36,10 @@
 struct addrinfo;
 struct sockaddr;
 
+namespace eka2l1 {
+    class kernel_system;
+}
+
 namespace eka2l1::epoc::internet {
     class midman;
     class inet_bridged_protocol;
@@ -68,11 +72,11 @@ namespace eka2l1::epoc::internet {
         }
 
         std::uint32_t get_flow() const {
-            return user_data_[4];
+            return reinterpret_cast<const std::uint32_t*>(user_data_)[4];
         }
 
         std::uint32_t get_scope() const {
-            return user_data_[5];
+            return reinterpret_cast<const std::uint32_t*>(user_data_)[5];
         }
     };
 
@@ -240,9 +244,10 @@ namespace eka2l1::epoc::internet {
     class inet_bridged_protocol : public socket::protocol {
     private:
         std::unique_ptr<std::thread> loop_thread_;
+        kernel_system *kern_;
 
     public:
-        explicit inet_bridged_protocol(const bool oldarch);
+        explicit inet_bridged_protocol(kernel_system *kern, const bool oldarch);
         ~inet_bridged_protocol() override;
 
         void initialize_looper();
@@ -280,6 +285,10 @@ namespace eka2l1::epoc::internet {
 
         virtual std::unique_ptr<epoc::socket::host_resolver> make_host_resolver(const std::uint32_t family_id, const std::uint32_t protocol_id) override {
             return std::make_unique<inet_host_resolver>(this, family_id, protocol_id);
+        }
+
+        kernel_system *get_kernel_system() {
+            return kern_;
         }
     };
 

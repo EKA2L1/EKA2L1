@@ -219,8 +219,14 @@ namespace eka2l1::epoc::internet {
         uv_async_send(async);
 
         // Start the looper now, we might have the first customer!
+        // Also unlock the kernel at this time, allow free modification, so that the socket thread can
+        // proceed to deal with data and get to our open request >D<
+        kernel_system *kern = papa_->get_kernel_system();
         papa_->initialize_looper();
+
+        kern->unlock();
         open_event_.wait();
+        kern->lock();
 
         if (params.result_ < 0) {
             LOG_ERROR(SERVICE_INTERNET, "Socket failed to be initialize, error code={}", errno);
@@ -460,7 +466,12 @@ namespace eka2l1::epoc::internet {
 
         uv_async_send(async);
 
+        kernel_system *kern = papa_->get_kernel_system();
+        kern->unlock();
+
         listen_event_.wait();
+
+        kern->lock();
 
         if (listen_event_result_ < 0) {
             LOG_ERROR(SERVICE_INTERNET, "libuv's socket listening failed with code {}", listen_event_result_);

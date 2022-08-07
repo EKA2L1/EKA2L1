@@ -26,6 +26,7 @@
 #include <services/socket/netdb.h>
 
 #include <string>
+#include <mutex>
 
 namespace eka2l1::epoc::bt {
     class midman;
@@ -46,12 +47,15 @@ namespace eka2l1::epoc::bt {
         epoc::des8 *provided_result_;
         bool store_to_temp_buffer_;
 
+        std::mutex access_lock_;
+
         void handle_connect_query(const char *record_buf, const std::uint32_t record_size);
         void handle_service_query(const char *record_buf, const std::uint32_t record_size);
         void handle_encoded_query(const char *record_buf, const std::uint32_t record_size);
         void handle_retrieve_buffer_query();
         void send_pdu_packet(const char *buf, const std::uint32_t buf_size);
         void handle_normal_query_complete(const std::uint8_t *param, const std::uint32_t param_len);
+        void close_connect_handle();
 
     public:
         explicit sdp_inet_net_database(sdp_inet_protocol *protocol);

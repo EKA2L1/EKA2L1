@@ -65,7 +65,7 @@ namespace eka2l1::epoc::bt {
         }
 
         std::memset(addr_to_bind.user_data_, 0, sizeof(addr_to_bind.user_data_));
-        addr_to_bind.family_ = internet::INET_ADDRESS_FAMILY;
+        addr_to_bind.family_ = internet::INET6_ADDRESS_FAMILY;
 
         std::uint32_t result_len;
         std::uint16_t guest_port = addr_to_bind.port_;
