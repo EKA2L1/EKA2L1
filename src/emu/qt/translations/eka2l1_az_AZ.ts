@@ -73,7 +73,7 @@
   <context>
     <name>applist_search_bar</name>
     <message>
-      <location filename="../src/applistwidget.cpp" line="46"/>
+      <location filename="../src/applistwidget.cpp" line="51"/>
       <source>Search</source>
       <translation>Axtar</translation>
     </message>
@@ -81,9 +81,83 @@
   <context>
     <name>applist_widget</name>
     <message>
-      <location filename="../src/applistwidget.cpp" line="343"/>
+      <location filename="../src/applistwidget.cpp" line="386"/>
       <source>&lt;br&gt;App UID: 0x%1</source>
       <translation>&lt;br&gt;Tətbiq UID: 0x%1</translation>
+    </message>
+  </context>
+  <context>
+    <name>btnetplay_friends_dialog</name>
+    <message>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="51"/>
+      <source>Modify friends&apos; IP addresses</source>
+      <translation type="unfinished">Modify friends&apos; IP addresses</translation>
+    </message>
+    <message>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="66"/>
+      <source>IP address (IPv4 or IPv6)</source>
+      <translation type="unfinished">IP address (IPv4 or IPv6)</translation>
+    </message>
+    <message>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="71"/>
+      <source>Port (can be empty)</source>
+      <translation type="unfinished">Port (can be empty)</translation>
+    </message>
+    <message>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="114"/>
+      <source>Add more</source>
+      <translation type="unfinished">Add more</translation>
+    </message>
+    <message>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="115"/>
+      <source>Remove</source>
+      <translation>Çıxart</translation>
+    </message>
+    <message>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="116"/>
+      <source>Update</source>
+      <translation type="unfinished">Update</translation>
+    </message>
+    <message>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="182"/>
+      <source>Update friends success!</source>
+      <translation type="unfinished">Update friends success!</translation>
+    </message>
+    <message>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="182"/>
+      <source>Friends&apos; IP addresses have been successfully saved!</source>
+      <translation type="unfinished">Friends&apos; IP addresses have been successfully saved!</translation>
+    </message>
+    <message>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="195"/>
+      <source>Friend %1 has empty IP address!
+</source>
+      <translation type="unfinished">Friend %1 has empty IP address!
+</translation>
+    </message>
+    <message>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="197"/>
+      <source>Friend %1 has invalid IP address!
+</source>
+      <translation type="unfinished">Friend %1 has invalid IP address!
+</translation>
+    </message>
+    <message>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="202"/>
+      <source>Friend %1 has invalid port number (must be between 0 and 65535)!
+</source>
+      <translation type="unfinished">Friend %1 has invalid port number (must be between 0 and 65535)!
+</translation>
+    </message>
+    <message>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="229"/>
+      <source>Some errors in updating friends!</source>
+      <translation type="unfinished">Some errors in updating friends!</translation>
+    </message>
+    <message>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="230"/>
+      <source>Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</source>
+      <translation type="unfinished">Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</translation>
     </message>
   </context>
   <context>
@@ -232,6 +306,100 @@
     </message>
   </context>
   <context>
+    <name>editor_widget</name>
+    <message>
+      <location filename="../src/btnmap/editor_widget.ui" line="17"/>
+      <source>Touch mapping editor</source>
+      <translation type="unfinished">Touch mapping editor</translation>
+    </message>
+    <message>
+      <location filename="../src/btnmap/editor_widget.ui" line="26"/>
+      <source>&lt;b&gt;Mapping elements&lt;/b&gt;</source>
+      <translation type="unfinished">&lt;b&gt;Mapping elements&lt;/b&gt;</translation>
+    </message>
+    <message>
+      <location filename="../src/btnmap/editor_widget.ui" line="40"/>
+      <source>Joystick</source>
+      <translation type="unfinished">Joystick</translation>
+    </message>
+    <message>
+      <location filename="../src/btnmap/editor_widget.ui" line="45"/>
+      <source>Single touch</source>
+      <translation type="unfinished">Single touch</translation>
+    </message>
+    <message>
+      <location filename="../src/btnmap/editor_widget.ui" line="64"/>
+      <source>For app: </source>
+      <translation type="unfinished">For app: </translation>
+    </message>
+    <message>
+      <location filename="../src/btnmap/editor_widget.ui" line="105"/>
+      <location filename="../src/btnmap/editor_widget.cpp" line="274"/>
+      <source>Save and hide editor</source>
+      <translation type="unfinished">Save and hide editor</translation>
+    </message>
+    <message>
+      <location filename="../src/btnmap/editor_widget.ui" line="136"/>
+      <source>Profile</source>
+      <translation>Profillər</translation>
+    </message>
+    <message>
+      <location filename="../src/btnmap/editor_widget.ui" line="146"/>
+      <source>Add</source>
+      <translation>Əlavə et</translation>
+    </message>
+    <message>
+      <location filename="../src/btnmap/editor_widget.ui" line="153"/>
+      <source>Remove</source>
+      <translation>Çıxart</translation>
+    </message>
+    <message>
+      <location filename="../src/btnmap/editor_widget.ui" line="181"/>
+      <source>Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</source>
+      <translation type="unfinished">Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</translation>
+    </message>
+    <message>
+      <location filename="../src/btnmap/editor_widget.ui" line="212"/>
+      <source>Edit</source>
+      <translation>Düzəliş et</translation>
+    </message>
+    <message>
+      <location filename="../src/btnmap/editor_widget.ui" line="222"/>
+      <source>Delete</source>
+      <translation>Sil</translation>
+    </message>
+    <message>
+      <location filename="../src/btnmap/editor_widget.cpp" line="50"/>
+      <source>Please wait for a game to be active!</source>
+      <translation type="unfinished">Please wait for a game to be active!</translation>
+    </message>
+    <message>
+      <location filename="../src/btnmap/editor_widget.cpp" line="89"/>
+      <source>For app: %1 (0x%2)</source>
+      <translation type="unfinished">For app: %1 (0x%2)</translation>
+    </message>
+    <message>
+      <location filename="../src/btnmap/editor_widget.cpp" line="151"/>
+      <source>Enter profile name</source>
+      <translation>Profil adını daxil edin</translation>
+    </message>
+    <message>
+      <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
+      <source>Error creating profile!</source>
+      <translation type="unfinished">Error creating profile!</translation>
+    </message>
+    <message>
+      <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
+      <source>Profile name contains special characters or system error encountered!</source>
+      <translation type="unfinished">Profile name contains special characters or system error encountered!</translation>
+    </message>
+    <message>
+      <location filename="../src/btnmap/editor_widget.cpp" line="285"/>
+      <source>Show editor</source>
+      <translation type="unfinished">Show editor</translation>
+    </message>
+  </context>
+  <context>
     <name>main_window</name>
     <message>
       <location filename="../src/mainwindow.ui" line="50"/>
@@ -249,266 +417,396 @@
       <translation>Quraşdır</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="80"/>
+      <location filename="../src/mainwindow.ui" line="81"/>
       <source>Mount game card dump</source>
       <translation>Oyun kartı zibilxanasını quraşdırın</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="97"/>
+      <location filename="../src/mainwindow.ui" line="98"/>
       <source>View</source>
       <translation>Görünüş</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="101"/>
+      <location filename="../src/mainwindow.ui" line="102"/>
       <source>Rotate screen</source>
       <translation>Ekranı döndər</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="113"/>
+      <location filename="../src/mainwindow.ui" line="114"/>
       <source>Help</source>
       <translation>Kömək</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="119"/>
+      <location filename="../src/mainwindow.ui" line="121"/>
       <source>Emulation</source>
       <translation>Emulyasiya</translation>
     </message>
     <message>
+      <location filename="../src/mainwindow.ui" line="129"/>
+      <source>Bluetooth</source>
+      <translation type="unfinished">Bluetooth</translation>
+    </message>
+    <message>
       <location filename="../src/mainwindow.ui" line="133"/>
+      <source>Netplay</source>
+      <translation type="unfinished">Netplay</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.ui" line="141"/>
+      <source>Control</source>
+      <translation>İdarəetmə</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.ui" line="156"/>
       <source>About</source>
       <translation>Haqqında</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="138"/>
+      <location filename="../src/mainwindow.ui" line="161"/>
       <source>Package</source>
       <translation>Paket</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="143"/>
+      <location filename="../src/mainwindow.ui" line="166"/>
       <source>Device</source>
       <translation>Cihaz</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="148"/>
+      <location filename="../src/mainwindow.ui" line="171"/>
       <source>Package manager</source>
       <translation>Paket meneceri</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="153"/>
+      <location filename="../src/mainwindow.ui" line="176"/>
       <source>Settings</source>
       <translation>Tənzimləmələr</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="161"/>
+      <location filename="../src/mainwindow.ui" line="184"/>
       <source>Pause</source>
       <translation>Fasilə</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="166"/>
+      <location filename="../src/mainwindow.ui" line="189"/>
       <source>Stop</source>
       <translation>Dayandır</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="171"/>
+      <location filename="../src/mainwindow.ui" line="194"/>
       <source>Restart</source>
       <translation>Yenidən başlat</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="176"/>
+      <location filename="../src/mainwindow.ui" line="199"/>
       <source>Threads</source>
       <translation>Mövzular</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="181"/>
+      <location filename="../src/mainwindow.ui" line="204"/>
       <source>Mutexes</source>
       <translation>Mutex-lər</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="186"/>
+      <location filename="../src/mainwindow.ui" line="209"/>
       <source>Chunks</source>
       <translation>Parçalar</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="191"/>
+      <location filename="../src/mainwindow.ui" line="214"/>
       <source>Window tree</source>
       <translation>Pəncərə ağacı</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="199"/>
+      <location filename="../src/mainwindow.ui" line="222"/>
       <source>Fullscreen</source>
       <translation>Tam ekran</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="210"/>
+      <location filename="../src/mainwindow.ui" line="233"/>
       <source>Recent dumps</source>
       <translation>Son zibilliklər</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="250"/>
+      <location filename="../src/mainwindow.ui" line="273"/>
       <source>Folder</source>
       <translation>Qovluq</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="260"/>
+      <location filename="../src/mainwindow.ui" line="283"/>
       <source>Refresh app list</source>
       <translation>Siyahını yenilə</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="242"/>
+      <location filename="../src/mainwindow.ui" line="288"/>
+      <source>Friends&apos;s IP addresses</source>
+      <translation type="unfinished">Friends&apos;s IP addresses</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.ui" line="293"/>
+      <source>Button mapping editor</source>
+      <translation type="unfinished">Button mapping editor</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.ui" line="298"/>
+      <source>Touch mapping editor</source>
+      <translation type="unfinished">Touch mapping editor</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.ui" line="303"/>
+      <source>N-Gage card game</source>
+      <translation type="unfinished">N-Gage card game</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.ui" line="308"/>
+      <source>Check for update</source>
+      <translation type="unfinished">Check for update</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="241"/>
       <source>Clear menu</source>
       <translation>Menyunu təmizlə</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="305"/>
+      <location filename="../src/mainwindow.cpp" line="316"/>
       <source>Touchscreen disabled</source>
       <translation>Toxunaqlı ekran sıradan çıxarıldı</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="305"/>
+      <location filename="../src/mainwindow.cpp" line="316"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
       <translation>Cari düymə bağlarınızdan bəziləri siçan düymələri ilə əlaqələndirilir. Buna görə də, təqlid edilmiş sensor ekran deaktiv edilib.&lt;br&gt;&lt;br&gt;&lt;b&gt;Qeyd:&lt;/b&gt;&lt;br&gt;Toxunma ekranı klaviatura düymələri ilə siçan düymələrini yenidən birləşdirməklə yenidən aktivləşdirilə bilər.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="306"/>
-      <location filename="../src/mainwindow.cpp" line="373"/>
+      <location filename="../src/mainwindow.cpp" line="317"/>
+      <location filename="../src/mainwindow.cpp" line="391"/>
       <source>Don&apos;t show this again</source>
       <translation>Bunu bir daha göstərmə</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="372"/>
+      <location filename="../src/mainwindow.cpp" line="390"/>
       <source>No device installed</source>
       <translation>Qurulu cihaz yoxdur</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="372"/>
+      <location filename="../src/mainwindow.cpp" line="390"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
       <translation>Siz heç bir cihaz quraşdırmamısınız. Zəhmət olmasa cihaz quraşdırın və ya EKA2L1-in Github səhifəsinə baxış keçirin.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="667"/>
-      <location filename="../src/mainwindow.cpp" line="916"/>
+      <location filename="../src/mainwindow.cpp" line="642"/>
+      <source>Installing &lt;b&gt;%1&lt;/b&gt;</source>
+      <translation type="unfinished">Installing &lt;b&gt;%1&lt;/b&gt;</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="655"/>
+      <source>Choose the N-Gage game card folder</source>
+      <translation type="unfinished">Choose the N-Gage game card folder</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="663"/>
+      <source>Installing N-Gage game...</source>
+      <translation type="unfinished">Installing N-Gage game...</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="686"/>
+      <source>Install success!</source>
+      <translation type="unfinished">Install success!</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="686"/>
+      <source>Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</source>
+      <translation type="unfinished">Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="692"/>
+      <source>Can&apos;t find the game data folder!</source>
+      <translation type="unfinished">Can&apos;t find the game data folder!</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="696"/>
+      <source>There is more than one game in the given card game folder!</source>
+      <translation type="unfinished">There is more than one game in the given card game folder!</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="700"/>
+      <source>The game information file does not exist in the card game folder!</source>
+      <translation type="unfinished">The game information file does not exist in the card game folder!</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="704"/>
+      <source>The game information file has been corrupted. Please check your data&apos;s validity!</source>
+      <translation type="unfinished">The game information file has been corrupted. Please check your data&apos;s validity!</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="708"/>
+      <source>General error occured...</source>
+      <translation type="unfinished">General error occured...</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="713"/>
+      <location filename="../src/mainwindow.cpp" line="715"/>
+      <source>Install failed</source>
+      <translation type="unfinished">Install failed</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="713"/>
+      <source>Installation failed with error:
+  -%1</source>
+      <translation type="unfinished">Installation failed with error:
+  -%1</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="715"/>
+      <source>Installation of %1% failed with error:
+  -%2</source>
+      <translation type="unfinished">Installation of %1% failed with error:
+  -%2</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="784"/>
+      <location filename="../src/mainwindow.cpp" line="1036"/>
       <source>Cancel</source>
       <translation>İmtina</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="670"/>
+      <location filename="../src/mainwindow.cpp" line="787"/>
       <source>Extracting game dump files</source>
       <translation>Oyun dump fayllarının çıxarılması</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="691"/>
+      <location filename="../src/mainwindow.cpp" line="809"/>
       <source>Mounting aborted</source>
       <translation>Quraşdırma dayandırıldı</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="696"/>
+      <location filename="../src/mainwindow.cpp" line="814"/>
       <source>The ZIP file is corrupted!</source>
       <translation>Fayl zədələnib</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="701"/>
+      <location filename="../src/mainwindow.cpp" line="819"/>
       <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
       <translation>ZIP-in kök qovluğunda Sistem qovluğu yoxdur. Sistem qovluğu oyun zibilində mövcud olmalıdır.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="707"/>
+      <location filename="../src/mainwindow.cpp" line="825"/>
       <source>The choosen file is not a ZIP file!</source>
       <translation>Seçilmiş fayl ZIP faylı deyil!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="721"/>
+      <location filename="../src/mainwindow.cpp" line="839"/>
       <source>Game card problem</source>
       <translation>Oyun kartı problemi</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="721"/>
+      <location filename="../src/mainwindow.cpp" line="839"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
       <translation>Oyun kartı zibil qutusunda hərflərə həssas fayllar var. Bu, emulyatorda problemlər yarada bilər.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="725"/>
+      <location filename="../src/mainwindow.cpp" line="843"/>
       <source>Game card dump folder correction</source>
       <translation>Oyun kartı dump qovluğuna düzəliş</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="725"/>
+      <location filename="../src/mainwindow.cpp" line="843"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
       <translation>Seçilmiş yol yanlış görünür.&lt;br&gt;Emulatorun onu düzəltməsini istəyirsiniz?</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="781"/>
+      <location filename="../src/mainwindow.cpp" line="899"/>
       <source>Choose the game card dump folder</source>
       <translation>Oyun kartı boşaltma qovluğunu seçin</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="801"/>
+      <location filename="../src/mainwindow.cpp" line="919"/>
       <source>Choose the game card zip</source>
       <translation>Oyun kartı zipini seçin</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="880"/>
+      <location filename="../src/mainwindow.cpp" line="1000"/>
       <source>Document</source>
       <translation>Sənədlər</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="898"/>
+      <location filename="../src/mainwindow.cpp" line="1018"/>
       <source>Choose a language for the package</source>
       <translation>Bu paket üçün dili seçin</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="919"/>
+      <location filename="../src/mainwindow.cpp" line="1039"/>
       <source>Installing package progress</source>
       <translation>Paketin quraşdırılması prosesi</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="943"/>
+      <location filename="../src/mainwindow.cpp" line="1064"/>
       <source>Installation aborted</source>
       <translation>Quraşdırma tamamlandı</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="943"/>
+      <location filename="../src/mainwindow.cpp" line="1064"/>
       <source>The installation has been canceled</source>
       <translation>Abunəliyiniz ləğv edildi.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="948"/>
+      <location filename="../src/mainwindow.cpp" line="1069"/>
       <source>Installation failed</source>
       <translation>Quraşdırılmadı</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="948"/>
+      <location filename="../src/mainwindow.cpp" line="1069"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
       <translation>Yolda paketi quraşdırmaq uğursuz oldu: %1. Yolun etibarlı SIS/SISX faylına işarə etdiyinə əmin olun.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="955"/>
+      <location filename="../src/mainwindow.cpp" line="1076"/>
       <source>Installation success</source>
       <translation>Quraşdırılmadı</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="955"/>
+      <location filename="../src/mainwindow.cpp" line="1076"/>
       <source>Package has been successfully installed</source>
       <translation> Paket uğurla quraşdırıldı</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="980"/>
+      <location filename="../src/mainwindow.cpp" line="1101"/>
       <source>Choose the file to install</source>
       <translation>Quraşdırılacaq faylı seçin</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="980"/>
+      <location filename="../src/mainwindow.cpp" line="1101"/>
       <source>SIS file (*.sis *.sisx)</source>
       <translation>SIS faylı (*.sis *.sisx)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1154"/>
+      <location filename="../src/mainwindow.cpp" line="1293"/>
       <source>Load theme failed!</source>
       <translation>yükləmək alınmadı!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1154"/>
+      <location filename="../src/mainwindow.cpp" line="1293"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
       <translation>Qaranlıq mövzunun stil faylını tapmaq mümkün deyil!</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="1423"/>
+      <source>Continue to modify friends&apos; IP addresses</source>
+      <translation type="unfinished">Continue to modify friends&apos; IP addresses</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="1424"/>
+      <source>This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</source>
+      <translation type="unfinished">This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="1439"/>
+      <source>Bluetooth manager service not available!</source>
+      <translation type="unfinished">Bluetooth manager service not available!</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="1439"/>
+      <source>The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</source>
+      <translation type="unfinished">The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</translation>
     </message>
   </context>
   <context>
@@ -597,732 +895,954 @@
       <translation>Tətbiqetmə</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="123"/>
-      <source>Time delay (0-1000us)</source>
-      <translation>Vaxt gecikməsi (0-1000us)</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="179"/>
-      <source>Screen scale factor</source>
-      <translation>Ekran miqyası faktoru</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="187"/>
-      <source>Fit the window</source>
-      <translation>Genişliyə uyğunlaşdır</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="217"/>
-      <source>Save screen scale and rotations</source>
-      <translation>Ekran miqyasını və fırlanmaları yadda saxlayın</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="227"/>
-      <source>Inherit these settings for child processes</source>
-      <translation>Uşaq prosesləri üçün bu parametrləri devralın</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="234"/>
-      <source>Use shader for upscaling</source>
-      <translation>Ölçəyi yüksəltmək üçün şeyderdən istifadə edin</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="250"/>
-      <source>Upscale shader</source>
-      <translation>Yüksək səviyyəli şeyder</translation>
-    </message>
-    <message>
-      <location filename="../src/settings_dialog.ui" line="272"/>
+      <location filename="../src/settings_dialog.ui" line="60"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; None</source>
       <translation>&lt;b&gt;Konfiqurasiya:&lt;/b&gt; Heç biri</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="288"/>
+      <location filename="../src/settings_dialog.ui" line="136"/>
+      <source>Time delay (0-1000us)</source>
+      <translation>Vaxt gecikməsi (0-1000us)</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="192"/>
+      <source>Screen scale factor</source>
+      <translation>Ekran miqyası faktoru</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="200"/>
+      <source>Fit the window</source>
+      <translation>Genişliyə uyğunlaşdır</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="230"/>
+      <source>Save screen scale and rotations</source>
+      <translation>Ekran miqyasını və fırlanmaları yadda saxlayın</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="240"/>
+      <source>Inherit these settings for child processes</source>
+      <translation>Uşaq prosesləri üçün bu parametrləri devralın</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="247"/>
+      <source>Use shader for upscaling</source>
+      <translation>Ölçəyi yüksəltmək üçün şeyderdən istifadə edin</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="263"/>
+      <source>Upscale shader</source>
+      <translation>Yüksək səviyyəli şeyder</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="279"/>
+      <source>Hide system applications across all devices</source>
+      <translation type="unfinished">Hide system applications across all devices</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="282"/>
+      <source>Hide system applications</source>
+      <translation type="unfinished">Hide system applications</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="301"/>
       <source>Debugging</source>
       <translation>Sazlama</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="300"/>
+      <location filename="../src/settings_dialog.ui" line="315"/>
       <source>CPU read</source>
       <translation>CPU oxuma</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="307"/>
+      <location filename="../src/settings_dialog.ui" line="322"/>
       <source>CPU write</source>
       <translation>CPU yazma</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="314"/>
+      <location filename="../src/settings_dialog.ui" line="329"/>
       <source>This option will not be saved after emulator shutdown. Non-effective when GDBStub is enabled.</source>
       <translation>Bu seçim emulyator söndürüldükdən sonra saxlanılmayacaq. GDBStub fəal olduqda təsiri yoxdur.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="317"/>
+      <location filename="../src/settings_dialog.ui" line="332"/>
       <source>CPU step</source>
       <translation>CPU addımı</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="330"/>
+      <location filename="../src/settings_dialog.ui" line="345"/>
       <source>System calls</source>
       <translation>Sistem zəngləri</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="337"/>
+      <location filename="../src/settings_dialog.ui" line="352"/>
       <source>IPC</source>
       <translation>IPC</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="344"/>
+      <location filename="../src/settings_dialog.ui" line="359"/>
       <source>Enable kernel tracing that is used in driver. Slowdown expected on enable.</source>
       <translation>Sürücüdə istifadə olunan "kernel tracing"-i aktiv et. Aktiv olduqda yavaşlama gözlənilir.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="347"/>
+      <location filename="../src/settings_dialog.ui" line="362"/>
       <source>Enable B-Trace</source>
       <translation>B-Trace aktivləşdir</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="360"/>
+      <location filename="../src/settings_dialog.ui" line="382"/>
+      <source>Log filter</source>
+      <translation type="unfinished">Log filter</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="399"/>
+      <source>Apply</source>
+      <translation type="unfinished">Apply</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="408"/>
+      <source>Show log console (Windows only)</source>
+      <translation type="unfinished">Show log console (Windows only)</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="418"/>
       <source>Data</source>
       <translation>Məlumat</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="368"/>
+      <location filename="../src/settings_dialog.ui" line="426"/>
       <source>Emulator data path</source>
       <translation>Emulator məlumat yolu</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="378"/>
-      <location filename="../src/settings_dialog.ui" line="941"/>
-      <location filename="../src/settings_dialog.ui" line="982"/>
+      <location filename="../src/settings_dialog.ui" line="436"/>
+      <location filename="../src/settings_dialog.ui" line="999"/>
+      <location filename="../src/settings_dialog.ui" line="1040"/>
       <source>Browse</source>
       <translation>Nəzər yetir</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="387"/>
+      <location filename="../src/settings_dialog.ui" line="445"/>
       <source>Clear all UI configurations</source>
       <translation>Bütün UI konfiqurasiyalarını silin</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="398"/>
+      <location filename="../src/settings_dialog.ui" line="456"/>
       <source>Interface</source>
       <translation>Arayüz</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="404"/>
+      <location filename="../src/settings_dialog.ui" line="462"/>
       <source>Emulator display</source>
       <translation>Emulator ekranı</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="436"/>
+      <location filename="../src/settings_dialog.ui" line="494"/>
       <source>Background color</source>
       <translation>Arxaplan rəngi</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="449"/>
+      <location filename="../src/settings_dialog.ui" line="507"/>
       <source>Pick</source>
       <translation>Seç</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="459"/>
+      <location filename="../src/settings_dialog.ui" line="517"/>
       <source>Hide mouse cursor</source>
       <translation>Siçan kursorunu gizlədin</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="466"/>
+      <location filename="../src/settings_dialog.ui" line="524"/>
       <source>Enable nearest neighbor filtering</source>
       <translation>Ən yaxın qonşu filtrləməsini fəallaşdır</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="473"/>
+      <location filename="../src/settings_dialog.ui" line="531"/>
       <source>By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</source>
       <translation>Varsayılan olaraq, emulyator yalnız əksər istifadəçilərin gözünə uyğun olmaq üçün emulator displeyini telefon ekranının minimum ölçüsünə dəyişməyə, sistemin ekran miqyası ilə çoxaltmağa imkan verir.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="476"/>
+      <location filename="../src/settings_dialog.ui" line="534"/>
       <source>Allow resizing display to phone screen&apos;s true size in pixels</source>
       <translation>Ekranın telefon ekranının həqiqi ölçüsünü piksellə dəyişməsinə icazə verin</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="488"/>
+      <location filename="../src/settings_dialog.ui" line="546"/>
       <source>User interface</source>
       <translation>İstifadəçi interfeysi</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="496"/>
+      <location filename="../src/settings_dialog.ui" line="554"/>
       <source>Language</source>
       <translation>Dil</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="510"/>
+      <location filename="../src/settings_dialog.ui" line="568"/>
       <source>Theme</source>
       <translation>Tema</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="518"/>
+      <location filename="../src/settings_dialog.ui" line="576"/>
       <source>Light</source>
       <translation>Açıq</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="523"/>
+      <location filename="../src/settings_dialog.ui" line="581"/>
       <source>Dark</source>
       <translation>Tünd</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="533"/>
+      <location filename="../src/settings_dialog.ui" line="591"/>
       <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
       <translation>Bunu aktiv etsəniz, pəncərə heç bir əlavə məlumat olmadan daimi olaraq &quot;EKA2L1&quot; olacaq.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="539"/>
-      <source>Disable easter egg title</source>
-      <translation>Pasxa yumurtası başlığını deaktiv edin</translation>
+      <location filename="../src/settings_dialog.ui" line="597"/>
+      <source>Disable title with Git version</source>
+      <translation type="unfinished">Disable title with Git version</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="546"/>
+      <location filename="../src/settings_dialog.ui" line="604"/>
       <source>Disable status bar</source>
       <translation>Status panelini deaktiv edin</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="557"/>
+      <location filename="../src/settings_dialog.ui" line="615"/>
       <source>System</source>
       <translation>Sistem</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="563"/>
+      <location filename="../src/settings_dialog.ui" line="621"/>
       <source>Graphics</source>
       <translation>Qrafika</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="571"/>
+      <location filename="../src/settings_dialog.ui" line="629"/>
       <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
       <translation>Bu, emulyasiya edilmiş proqramların qeyd qabiliyyətinə malik olmasına və bəzi köhnə S60v1/S60v2 oyunlarında yanıb-sönmənin qarşısını almağa imkan verir. Tercih edilən seçim bunu S60v1/S60v2 cihazlarında avtomatik aktivləşdirəcək.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="575"/>
+      <location filename="../src/settings_dialog.ui" line="633"/>
       <source>Screen buffer sync</source>
       <translation>Ekran buferinin sinxronizasiyası</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="589"/>
+      <location filename="../src/settings_dialog.ui" line="647"/>
       <source>Preferred</source>
       <translation>Üstünlük verilir</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="594"/>
+      <location filename="../src/settings_dialog.ui" line="652"/>
       <source>Disable</source>
       <translation>Qeyri aktif</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="599"/>
+      <location filename="../src/settings_dialog.ui" line="657"/>
       <source>Enable</source>
       <translation>Aktiv</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="609"/>
+      <location filename="../src/settings_dialog.ui" line="667"/>
       <source>Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</source>
       <translation>Emulatora Symbian-ın GLES1 API üçün yerli GPU sürətləndirilməsini həyata keçirməyə icazə verin.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="612"/>
+      <location filename="../src/settings_dialog.ui" line="670"/>
       <source>Enable GPU accelerated GLES1</source>
       <translation>GPU sürətləndirilmiş GLES1-i aktivləşdirin</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="622"/>
+      <location filename="../src/settings_dialog.ui" line="680"/>
       <source>Devices</source>
       <translation>Cihazlar</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="639"/>
+      <location filename="../src/settings_dialog.ui" line="697"/>
       <source>Current</source>
       <translation>Hazırki</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="662"/>
-      <location filename="../src/settings_dialog.ui" line="1136"/>
+      <location filename="../src/settings_dialog.ui" line="720"/>
+      <location filename="../src/settings_dialog.ui" line="1194"/>
       <source>Rename</source>
       <translation>Yenidən adlandır</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="673"/>
+      <location filename="../src/settings_dialog.ui" line="731"/>
       <source>Check for any unimported devices and correct existing one&apos;s infos.</source>
       <translation>Daxil edilməyən cihazları və hazırki cihazların məlumatlarını yoxlayın.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="676"/>
+      <location filename="../src/settings_dialog.ui" line="734"/>
       <source>Rescan devices</source>
       <translation>Cihazları təkrar axtar</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="683"/>
+      <location filename="../src/settings_dialog.ui" line="741"/>
       <source>Check for faults in current device and fix them so that EKA2L1 can emulate the device.</source>
       <translation>Hazırki cihazdakı xətaları aşkarlayıb düzəldin ki, EKA2L1 cihazı emulyasiya edə bilsin.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="686"/>
+      <location filename="../src/settings_dialog.ui" line="744"/>
       <source>Validate current device</source>
       <translation>Cari cihazı təsdiqləyin</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="704"/>
+      <location filename="../src/settings_dialog.ui" line="762"/>
       <source>Properties</source>
       <translation>Xüsusiyyətlər</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="712"/>
+      <location filename="../src/settings_dialog.ui" line="770"/>
       <source>Battery level (0 - 100)</source>
       <translation>Batareya səviyyəsi (0 - 100)</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="741"/>
-      <location filename="../src/settings_dialog.ui" line="1066"/>
-      <location filename="../src/settings_dialog.ui" line="1817"/>
+      <location filename="../src/settings_dialog.ui" line="799"/>
+      <location filename="../src/settings_dialog.ui" line="1124"/>
+      <location filename="../src/settings_dialog.ui" line="1875"/>
       <source>0</source>
       <translation type="unfinished">0</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="758"/>
+      <location filename="../src/settings_dialog.ui" line="816"/>
       <source>System language</source>
       <translation>Sistem dili</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="795"/>
+      <location filename="../src/settings_dialog.ui" line="853"/>
       <source>Check</source>
       <translation>Yoxla</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="812"/>
+      <location filename="../src/settings_dialog.ui" line="870"/>
       <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
       <translation>Təqlid edilmiş proqramlarda və ya oyunlarda göstəriləcək ad. Maksimum 30 simvola icazə verin.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="815"/>
+      <location filename="../src/settings_dialog.ui" line="873"/>
       <source>Friendly phone name</source>
       <translation>Dost telefon adı</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="840"/>
+      <location filename="../src/settings_dialog.ui" line="898"/>
       <source>Hardware emulation</source>
       <translation>Avadanlıq emulyasiyası</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="854"/>
+      <location filename="../src/settings_dialog.ui" line="912"/>
       <source>CPU emulator</source>
       <translation>CPU emulyatoru</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="862"/>
+      <location filename="../src/settings_dialog.ui" line="920"/>
       <source>Dynarmic (CPU recompiler)</source>
       <translation>Dinamik (CPU rekompilyatoru)</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="867"/>
+      <location filename="../src/settings_dialog.ui" line="925"/>
       <source>Dyncom (CPU interpreter)</source>
       <translation>Dyncom (CPU tərcüməçisi)</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="879"/>
+      <location filename="../src/settings_dialog.ui" line="937"/>
       <source>Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</source>
       <translation>Zamanlama əməliyyatları üçün dəqiqlik səviyyəsini seçin.&lt;br&gt;Səviyyə nə qədər yüksək olarsa, CPU gücü bir o qədər çox istehlak edilir, lakin bəzi proqramlarda potensial olaraq daha sürətli əməliyyat olur!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="882"/>
+      <location filename="../src/settings_dialog.ui" line="940"/>
       <source>Real-time accuracy</source>
       <translation>Gerçək zamanlı dəqiqlik</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="890"/>
+      <location filename="../src/settings_dialog.ui" line="948"/>
       <source>Low</source>
       <translation>Aşağı</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="895"/>
+      <location filename="../src/settings_dialog.ui" line="953"/>
       <source>Mid</source>
       <translation>Orta</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="900"/>
+      <location filename="../src/settings_dialog.ui" line="958"/>
       <source>High</source>
       <translation>Yüksək</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="913"/>
+      <location filename="../src/settings_dialog.ui" line="971"/>
       <source>Audio</source>
       <translation>Səs</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="921"/>
+      <location filename="../src/settings_dialog.ui" line="979"/>
       <source>SF2 bank</source>
       <translation>SF2 bank</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="948"/>
-      <location filename="../src/settings_dialog.ui" line="989"/>
+      <location filename="../src/settings_dialog.ui" line="1006"/>
+      <location filename="../src/settings_dialog.ui" line="1047"/>
       <source>Reset</source>
       <translation>Sıfırla</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="962"/>
+      <location filename="../src/settings_dialog.ui" line="1020"/>
       <source>HSB bank</source>
       <translation>HSB bank</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1006"/>
+      <location filename="../src/settings_dialog.ui" line="1064"/>
       <source>MIDI backend</source>
       <translation>MIDI backend</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1020"/>
+      <location filename="../src/settings_dialog.ui" line="1078"/>
       <source>TinySoundFont (High-quality, support SF2)</source>
       <translation>TinySoundFont (Yüksək keyfiyyətli, SF2 dəstəyi)</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1025"/>
+      <location filename="../src/settings_dialog.ui" line="1083"/>
       <source>MiniBAE (Lower-quality, support HSB)</source>
       <translation>MiniBAE (Aşağı keyfiyyətli, HSB dəstəyi)</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1043"/>
+      <location filename="../src/settings_dialog.ui" line="1101"/>
       <source>Volume</source>
       <translation>Səs səviyyələri</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1085"/>
+      <location filename="../src/settings_dialog.ui" line="1143"/>
       <source>Control</source>
       <translation>İdarəetmə</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1100"/>
+      <location filename="../src/settings_dialog.ui" line="1158"/>
       <source>Profile</source>
       <translation>Profillər</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1123"/>
+      <location filename="../src/settings_dialog.ui" line="1181"/>
       <source>Add</source>
       <translation>Əlavə et</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1149"/>
+      <location filename="../src/settings_dialog.ui" line="1207"/>
       <source>Delete</source>
       <translation>Sil</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1167"/>
+      <location filename="../src/settings_dialog.ui" line="1225"/>
       <source>Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</source>
       <translation>Qeyd: Bağlamalardan biri siçan düyməsi ilə bağlıdır, toxunma ekranı funksiyaları deaktiv ediləcək.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1185"/>
+      <location filename="../src/settings_dialog.ui" line="1243"/>
       <source>Left softkey</source>
       <translation>Sol yumşaq düymə</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1223"/>
+      <location filename="../src/settings_dialog.ui" line="1281"/>
       <source>Up arrow</source>
       <translation>Yuxarı ox</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1255"/>
+      <location filename="../src/settings_dialog.ui" line="1313"/>
       <source>Right softkey</source>
       <translation>Sağ softkey</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1291"/>
+      <location filename="../src/settings_dialog.ui" line="1349"/>
       <source>Left arrow</source>
       <translation>Left arrow</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1323"/>
+      <location filename="../src/settings_dialog.ui" line="1381"/>
       <source>Middle softkey</source>
       <translation>Orta proqram düyməsi</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1355"/>
+      <location filename="../src/settings_dialog.ui" line="1413"/>
       <source>Right arrow</source>
       <translation>Right arrow</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1391"/>
+      <location filename="../src/settings_dialog.ui" line="1449"/>
       <source>Green softkey</source>
       <translation>Yaşıl yumşaq düymə</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1423"/>
+      <location filename="../src/settings_dialog.ui" line="1481"/>
       <source>Down arrow</source>
       <translation>Aşağı ox</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1455"/>
+      <location filename="../src/settings_dialog.ui" line="1513"/>
       <source>Red softkey</source>
       <translation>Sol yumşaq düymə</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1491"/>
+      <location filename="../src/settings_dialog.ui" line="1549"/>
       <source>1</source>
       <translation type="unfinished">1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1523"/>
+      <location filename="../src/settings_dialog.ui" line="1581"/>
       <source>2</source>
       <translation type="unfinished">2</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1555"/>
+      <location filename="../src/settings_dialog.ui" line="1613"/>
       <source>3</source>
       <translation type="unfinished">3</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1591"/>
+      <location filename="../src/settings_dialog.ui" line="1649"/>
       <source>4</source>
       <translation type="unfinished">4</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1623"/>
+      <location filename="../src/settings_dialog.ui" line="1681"/>
       <source>5</source>
       <translation type="unfinished">5</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1655"/>
+      <location filename="../src/settings_dialog.ui" line="1713"/>
       <source>6</source>
       <translation type="unfinished">6</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1685"/>
+      <location filename="../src/settings_dialog.ui" line="1743"/>
       <source>7</source>
       <translation type="unfinished">7</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1717"/>
+      <location filename="../src/settings_dialog.ui" line="1775"/>
       <source>8</source>
       <translation type="unfinished">8</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1749"/>
+      <location filename="../src/settings_dialog.ui" line="1807"/>
       <source>9</source>
       <translation type="unfinished">9</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1785"/>
+      <location filename="../src/settings_dialog.ui" line="1843"/>
       <source>*</source>
       <translation type="unfinished">*</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1849"/>
+      <location filename="../src/settings_dialog.ui" line="1907"/>
       <source>#</source>
       <translation type="unfinished">#</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="299"/>
+      <location filename="../src/settings_dialog.cpp" line="302"/>
       <source>Default</source>
       <translation>Standart</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="433"/>
+      <location filename="../src/settings_dialog.cpp" line="438"/>
       <source>Choose the data folder</source>
       <translation>Məlumat qovluğunu seçin</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="435"/>
-      <location filename="../src/settings_dialog.cpp" line="1135"/>
-      <location filename="../src/settings_dialog.cpp" line="1160"/>
+      <location filename="../src/settings_dialog.cpp" line="440"/>
+      <location filename="../src/settings_dialog.cpp" line="1144"/>
+      <location filename="../src/settings_dialog.cpp" line="1169"/>
       <source>Relaunch needed</source>
       <translation>Yenidən işə salmaq lazımdır</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="435"/>
+      <location filename="../src/settings_dialog.cpp" line="440"/>
       <source>This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</source>
       <translation>Bu dəyişiklik emulyatorun yenidən işə salınmasını tələb edir.&lt;br&gt;Davam etmək istəyirsiniz?</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="556"/>
+      <location filename="../src/settings_dialog.cpp" line="561"/>
       <source>Please wait</source>
       <translation>Lütfən gözləyin</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="557"/>
+      <location filename="../src/settings_dialog.cpp" line="562"/>
       <source>Validation is in process. Please do not exit or launch applications until this operation is done.</source>
       <translation>Doğrulama prosesindədir. Lütfən, bu əməliyyat tamamlanana qədər proqramlardan çıxmayın və ya işə salmayın.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="577"/>
+      <location filename="../src/settings_dialog.cpp" line="582"/>
       <source>Validation done!</source>
       <translation>Doğrulama tamamlandı!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="577"/>
+      <location filename="../src/settings_dialog.cpp" line="582"/>
       <source>The validation has successfully completed!</source>
       <translation>Doğrulama uğurla tamamlandı!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="588"/>
+      <location filename="../src/settings_dialog.cpp" line="593"/>
       <source>Enter new device name</source>
       <translation>Cihaz adını daxil edin</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="685"/>
+      <location filename="../src/settings_dialog.cpp" line="690"/>
       <source>Unbind</source>
       <translation>Açın</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="734"/>
+      <location filename="../src/settings_dialog.cpp" line="739"/>
       <source>Waiting for input</source>
       <translation>Daxil edilməsi gözlənilir</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="749"/>
-      <location filename="../src/settings_dialog.cpp" line="795"/>
+      <location filename="../src/settings_dialog.cpp" line="754"/>
+      <location filename="../src/settings_dialog.cpp" line="800"/>
       <source>Mouse button %1</source>
       <translation>Siçan düyməsi %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="751"/>
+      <location filename="../src/settings_dialog.cpp" line="756"/>
       <source>Controller %1 : Button %2</source>
       <translation>Nəzarətçi %1 : Düymə %2</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="862"/>
-      <location filename="../src/settings_dialog.cpp" line="886"/>
+      <location filename="../src/settings_dialog.cpp" line="867"/>
+      <location filename="../src/settings_dialog.cpp" line="891"/>
       <source>Enter profile name</source>
       <translation>Profil adını daxil edin</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="870"/>
+      <location filename="../src/settings_dialog.cpp" line="875"/>
       <source>Profile creation failed</source>
       <translation>Göndərişi yaratmaq alınmadı</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="870"/>
-      <location filename="../src/settings_dialog.cpp" line="894"/>
+      <location filename="../src/settings_dialog.cpp" line="875"/>
+      <location filename="../src/settings_dialog.cpp" line="899"/>
       <source>A profile with that name already exists!</source>
       <translation>Bu adla qrupu artıq mövcuddur</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="894"/>
+      <location filename="../src/settings_dialog.cpp" line="899"/>
       <source>Profile rename failed</source>
       <translation>Göndərişi yaratmaq alınmadı</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="909"/>
+      <location filename="../src/settings_dialog.cpp" line="914"/>
       <source>Profile deletion failed</source>
       <translation>Göndərişi yaratmaq alınmadı</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="909"/>
+      <location filename="../src/settings_dialog.cpp" line="914"/>
       <source>This is the only profile left!</source>
       <translation>Qalan yeganə profil budur!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="947"/>
+      <location filename="../src/settings_dialog.cpp" line="952"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
       <translation>&lt;b&gt;Konfiqurasiya:&lt;/b&gt; %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="950"/>
       <location filename="../src/settings_dialog.cpp" line="955"/>
+      <location filename="../src/settings_dialog.cpp" line="960"/>
       <source>None</source>
       <translation>Heç biri</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1062"/>
+      <location filename="../src/settings_dialog.cpp" line="1067"/>
       <source>IMEI sequence contains non-numeric character!</source>
       <translation>IMEI ardıcıllığı rəqəmsiz simvol ehtiva edir!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1065"/>
+      <location filename="../src/settings_dialog.cpp" line="1070"/>
       <source>IMEI sequence has invalid sum!</source>
       <translation>IMEI ardıcıllığında yanlış məbləğ var!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1068"/>
+      <location filename="../src/settings_dialog.cpp" line="1073"/>
       <source>IMEI sequence length must be 15!</source>
       <translation>IMEI ardıcıllığının uzunluğu 15 olmalıdır!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1074"/>
+      <location filename="../src/settings_dialog.cpp" line="1079"/>
       <source>Unidentified error!</source>
       <translation>Naməlum xəta!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1081"/>
+      <location filename="../src/settings_dialog.cpp" line="1086"/>
       <source>IMEI valid!</source>
       <translation>IMEI etibarlıdır!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1081"/>
+      <location filename="../src/settings_dialog.cpp" line="1086"/>
       <source>The IMEI sequence is valid!</source>
       <translation>IMEI ardıcıllığı etibarlıdır!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1084"/>
+      <location filename="../src/settings_dialog.cpp" line="1089"/>
       <source>IMEI invalid!</source>
       <translation>IMEI etibarlıdır!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1094"/>
+      <location filename="../src/settings_dialog.cpp" line="1099"/>
       <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
       <translation>IMEI-niz etibarsızdır, çünki: %1.&lt;br&gt;Bağlamaq əvəzinə cari IMEI-ni redaktə etmək istəyirsiniz? &quot;Xeyr&quot; cari IMEI dəyərini saxlayacaq.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1096"/>
+      <location filename="../src/settings_dialog.cpp" line="1101"/>
       <source>Cancel closing</source>
       <translation>Bağlanmağı ləğv edin</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1135"/>
+      <location filename="../src/settings_dialog.cpp" line="1144"/>
       <source>This change will be effective on the next launch of the emulator.</source>
       <translation>Dil emulyatorun növbəti buraxılışında yenilənəcək.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1143"/>
+      <location filename="../src/settings_dialog.cpp" line="1152"/>
       <source>Confirmation</source>
       <translation>Təsdiq</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1143"/>
+      <location filename="../src/settings_dialog.cpp" line="1152"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
       <translation>Bu barədə əminsinizmi? Cari mövzunuz sıfırlanacaq, deaktiv edilmiş bütün mesaj qutuları yenidən aktivləşdiriləcək və bütün son montajlar silinəcək.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1160"/>
+      <location filename="../src/settings_dialog.cpp" line="1169"/>
       <source>The language will be updated on the next launch of the emulator.</source>
       <translation>Dil emulyatorun növbəti buraxılışında yenilənəcək.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1187"/>
+      <location filename="../src/settings_dialog.cpp" line="1196"/>
       <source>Pick the screen background color</source>
       <translation>Ekranın fon rəngini seçin</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1252"/>
+      <location filename="../src/settings_dialog.cpp" line="1261"/>
       <source>Successfully changed</source>
       <translation>Link Ugurla Redakt Edildi</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1252"/>
+      <location filename="../src/settings_dialog.cpp" line="1261"/>
       <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
       <translation>Növbəti dəfə proqram yeni MIDI oynatmaq üçün sorğu göndərdikdə, seçilmiş backend istifadə olunacaq!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1265"/>
+      <location filename="../src/settings_dialog.cpp" line="1274"/>
       <source>Choose the HSB bank file</source>
       <translation>HSB bank faylını seçin</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1288"/>
+      <location filename="../src/settings_dialog.cpp" line="1297"/>
       <source>Choose the SF2 bank file</source>
       <translation>HSB bank faylını seçin</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1324"/>
+      <location filename="../src/settings_dialog.cpp" line="1333"/>
       <source>Emulator reset needed</source>
       <translation>Emulator sıfırlaması lazımdır</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1324"/>
+      <location filename="../src/settings_dialog.cpp" line="1333"/>
       <source>This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</source>
       <translation>Bu dəyişiklik emulyatoru Emulyasiya menyusu vasitəsilə sıfırladıqdan sonra və ya emulyatorun növbəti işə salınmasından sonra qüvvəyə minəcək.</translation>
+    </message>
+  </context>
+  <context>
+    <name>update_dialog</name>
+    <message>
+      <location filename="../src/update_dialog.ui" line="14"/>
+      <source>New update available</source>
+      <translation type="unfinished">New update available</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.ui" line="43"/>
+      <source>A new update has been released on Github!</source>
+      <translation type="unfinished">A new update has been released on Github!</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.ui" line="61"/>
+      <source>Changelog</source>
+      <translation type="unfinished">Changelog</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.ui" line="84"/>
+      <source>Downloading update ... %p%</source>
+      <translation type="unfinished">Downloading update ... %p%</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.ui" line="91"/>
+      <source>Do not automatically check for update when startup</source>
+      <translation type="unfinished">Do not automatically check for update when startup</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.ui" line="126"/>
+      <source>Update</source>
+      <translation type="unfinished">Update</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.ui" line="139"/>
+      <source>Ignore</source>
+      <translation type="unfinished">Ignore</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.ui" line="149"/>
+      <source>Cancel</source>
+      <translation>İmtina</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.cpp" line="107"/>
+      <source>Update success</source>
+      <translation type="unfinished">Update success</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.cpp" line="113"/>
+      <source>Update failed</source>
+      <translation type="unfinished">Update failed</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.cpp" line="142"/>
+      <source>The emulator is already updated to lastest version!</source>
+      <translation type="unfinished">The emulator is already updated to lastest version!</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.cpp" line="151"/>
+      <source>The release channel is not available. Please check your internet connection!</source>
+      <translation type="unfinished">The release channel is not available. Please check your internet connection!</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.cpp" line="157"/>
+      <source>Failed to get information about the newest update from Github!</source>
+      <translation type="unfinished">Failed to get information about the newest update from Github!</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.cpp" line="189"/>
+      <source>Can&apos;t find the download link of newest update for your platform!</source>
+      <translation type="unfinished">Can&apos;t find the download link of newest update for your platform!</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.cpp" line="195"/>
+      <source>Failed to get update download link from Github!</source>
+      <translation type="unfinished">Failed to get update download link from Github!</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.cpp" line="213"/>
+      <source>Error retrieving changelog from Github...</source>
+      <translation type="unfinished">Error retrieving changelog from Github...</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.cpp" line="235"/>
+      <source>Changelog (update commit: %1)</source>
+      <translation type="unfinished">Changelog (update commit: %1)</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.cpp" line="256"/>
+      <source>Updater unsupported</source>
+      <translation type="unfinished">Updater unsupported</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.cpp" line="256"/>
+      <source>The updater is not yet supported on your platform!</source>
+      <translation type="unfinished">The updater is not yet supported on your platform!</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.cpp" line="300"/>
+      <location filename="../src/update_dialog.cpp" line="360"/>
+      <source>Update error</source>
+      <translation type="unfinished">Update error</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.cpp" line="300"/>
+      <source>Can&apos;t not open temporary file for storing the update files!</source>
+      <translation type="unfinished">Can&apos;t not open temporary file for storing the update files!</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.cpp" line="384"/>
+      <source>Failed to download update with error: %1</source>
+      <translation type="unfinished">Failed to download update with error: %1</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.cpp" line="392"/>
+      <source>Downloaded update is not in zip format!</source>
+      <translation type="unfinished">Downloaded update is not in zip format!</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.cpp" line="421"/>
+      <source>Failed to update the updater program!</source>
+      <translation type="unfinished">Failed to update the updater program!</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.cpp" line="429"/>
+      <source>Update zip file is corrupted!</source>
+      <translation type="unfinished">Update zip file is corrupted!</translation>
+    </message>
+    <message>
+      <location filename="../src/update_dialog.cpp" line="436"/>
+      <location filename="../src/update_dialog.cpp" line="451"/>
+      <source>Can&apos;t find the updater program in the update archive file!</source>
+      <translation type="unfinished">Can&apos;t find the updater program in the update archive file!</translation>
+    </message>
+  </context>
+  <context>
+    <name>update_notice_dialog</name>
+    <message>
+      <location filename="../src/update_notice_dialog.ui" line="14"/>
+      <source>Update news</source>
+      <translation type="unfinished">Update news</translation>
+    </message>
+  </context>
+  <context>
+    <name>update_window</name>
+    <message>
+      <location filename="../src/updater.ui" line="14"/>
+      <source>EKA2L1 Updater</source>
+      <translation type="unfinished">EKA2L1 Updater</translation>
+    </message>
+    <message>
+      <location filename="../src/updater.ui" line="59"/>
+      <source>Updating...</source>
+      <translation type="unfinished">Updating...</translation>
+    </message>
+    <message>
+      <location filename="../src/updater.ui" line="85"/>
+      <source>Extracting ... %p%</source>
+      <translation type="unfinished">Extracting ... %p%</translation>
+    </message>
+    <message>
+      <location filename="../src/updater.cpp" line="91"/>
+      <source>Update failed</source>
+      <translation type="unfinished">Update failed</translation>
+    </message>
+    <message>
+      <location filename="../src/updater.cpp" line="99"/>
+      <source>Downloaded update is not a zip file!</source>
+      <translation type="unfinished">Downloaded update is not a zip file!</translation>
+    </message>
+    <message>
+      <location filename="../src/updater.cpp" line="122"/>
+      <location filename="../src/updater.cpp" line="175"/>
+      <source>The downloaded archive zip is corrupted</source>
+      <translation type="unfinished">The downloaded archive zip is corrupted</translation>
+    </message>
+    <message>
+      <location filename="../src/updater.cpp" line="178"/>
+      <source>Extracted: %1</source>
+      <translation type="unfinished">Extracted: %1</translation>
+    </message>
+    <message>
+      <location filename="../src/updater.cpp" line="197"/>
+      <source>Update&apos;s archive file does not exist!</source>
+      <translation type="unfinished">Update&apos;s archive file does not exist!</translation>
+    </message>
+    <message>
+      <location filename="../src/updater.cpp" line="212"/>
+      <source>Update success</source>
+      <translation type="unfinished">Update success</translation>
+    </message>
+    <message>
+      <location filename="../src/updater.cpp" line="212"/>
+      <source>Update success. Relaunch the emulator?</source>
+      <translation type="unfinished">Update success. Relaunch the emulator?</translation>
     </message>
   </context>
 </TS>
