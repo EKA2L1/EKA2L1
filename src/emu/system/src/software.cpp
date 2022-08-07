@@ -182,17 +182,33 @@ namespace eka2l1::loader {
 
         return found;
     }
+    
+    static bool does_epoc_version_need_series60_check(const epocver ver) {
+        return (ver == epocver::epoc93fp2);
+    }
 
     epocver determine_rpkg_symbian_version(const std::string &extracted_path) {
         epocver target_ver = epocver::epoc94;
 
-        if (!determine_rpkg_symbian_version_through_series60_sis(extracted_path, target_ver)) {
+        // Some shipped s60v3 firmware some reason includes series60v5 SIS into install directory
+        // So we will check for platform file first. And if the version is suspicous, we can reconfirm
+        // with series SIS
+        if (!determine_rpkg_symbian_version_through_platform_file(extracted_path, target_ver)) {
             LOG_WARN(SYSTEM, "First method determining Symbian version failed, second one begins");
 
-            if (!determine_rpkg_symbian_version_through_platform_file(extracted_path, target_ver)) {
+            if (!determine_rpkg_symbian_version_through_series60_sis(extracted_path, target_ver)) {
                 LOG_ERROR(SYSTEM, "Second method determining Symbian version failed! Default version is 9.4!");
                 LOG_INFO(SYSTEM, "You can manually edit the Symbian version in devices.yml after this device successfully installed.");
                 LOG_INFO(SYSTEM, "Contact the developer to help improve the automation this process");
+            }
+        } else {
+            if (does_epoc_version_need_series60_check(target_ver)) {
+                epocver temp_ver;
+                if (determine_rpkg_symbian_version_through_series60_sis(extracted_path, temp_ver)) {
+                    if (target_ver == epocver::epoc93fp2) {
+                        target_ver = (temp_ver > epocver::epoc93fp2) ? epocver::epoc93fp2 : temp_ver;
+                    }
+                }
             }
         }
 
