@@ -55,3 +55,4 @@ eka2l1::config::app_setting *get_active_app_setting(eka2l1::system *sys, eka2l1:
 std::optional<eka2l1::akn_running_app_info> get_active_app_info(eka2l1::system *sys, const int provided_num = -1);
 QMessageBox::StandardButton make_dialog_with_checkbox_and_choices(const QString &title, const QString &text, const QString &checkbox_text, const bool checkbox_state, dialog_checkbox_toggled_callback checkbox_callback, const bool two_choices);
 QString get_emulator_window_title();
+QString epocver_to_symbian_readable_name(const epocver ver);

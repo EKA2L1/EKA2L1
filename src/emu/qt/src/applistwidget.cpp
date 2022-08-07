@@ -27,8 +27,10 @@
 #include <common/path.h>
 #include <common/pystr.h>
 #include <qt/applistwidget.h>
+#include <qt/utils.h>
 #include <services/applist/applist.h>
 #include <services/fbs/fbs.h>
+#include <system/devices.h>
 #include <utils/apacmd.h>
 
 #include <vector>
@@ -54,6 +56,7 @@ applist_search_bar::applist_search_bar(QWidget *parent)
     search_layout_ = new QHBoxLayout(this);
     search_layout_->addWidget(search_label_);
     search_layout_->addWidget(search_line_edit_);
+    search_layout_->setContentsMargins(10, 0, 0, 0);
 
     setLayout(search_layout_);
 
@@ -70,6 +73,49 @@ void applist_search_bar::on_search_bar_content_changed(QString content) {
     emit new_search(content);
 }
 
+applist_device_combo::applist_device_combo(QWidget *parent)
+    : QWidget(parent)
+    , current_index_(-1) {
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+
+    device_label_ = new QLabel(tr("Device"));
+    device_label_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+    device_combo_ = new QComboBox;
+
+    device_layout_ = new QHBoxLayout;
+    device_layout_->addWidget(device_label_);
+    device_layout_->addWidget(device_combo_);
+
+    setLayout(device_layout_);
+
+    connect(device_combo_, QOverload<int>::of(&QComboBox::activated), this, &applist_device_combo::on_device_combo_changed);
+}
+
+applist_device_combo::~applist_device_combo() {
+    delete device_layout_;
+    delete device_combo_;
+    delete device_label_;
+}
+
+void applist_device_combo::update_devices(const QStringList &devices, const int index) {
+    device_combo_->clear();
+    for (const QString &device: devices) {
+        device_combo_->addItem(device);
+    }
+    device_combo_->setCurrentIndex(index);
+    current_index_ = index;
+}
+
+void applist_device_combo::on_device_combo_changed(int index) {
+    if (current_index_ == index) {
+        return;
+    }
+
+    current_index_ = index;
+    emit device_combo_changed(index);
+}
+
 applist_widget_item::applist_widget_item(const QIcon &icon, const QString &name, int registry_index, QListWidget *parent)
     : QListWidgetItem(icon, name, parent)
     , registry_index_(registry_index) {
@@ -78,16 +124,19 @@ applist_widget_item::applist_widget_item(const QIcon &icon, const QString &name,
 applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss, eka2l1::io_system *io, const bool hide_system_apps, const bool ngage_mode)
     : QWidget(parent)
     , search_bar_(nullptr)
+    , device_combo_bar_(nullptr)
     , list_widget_(nullptr)
     , layout_(nullptr)
+    , bar_widget_(nullptr)
     , lister_(lister)
     , no_app_visible_normal_label_(nullptr)
     , no_app_visible_hide_sysapp_label_(nullptr)
     , fbss_(fbss)
     , io_(io)
     , hide_system_apps_(hide_system_apps) {
-    search_bar_ = new applist_search_bar(this);
-    list_widget_ = new QListWidget(this);
+    search_bar_ = new applist_search_bar;
+    device_combo_bar_ = new applist_device_combo;
+    list_widget_ = new QListWidget;
 
     no_app_visible_normal_label_ = new QLabel("No app installed on the device!");
     no_app_visible_hide_sysapp_label_ = new QLabel("No non-system app installed on the device!");
@@ -98,7 +147,16 @@ applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, 
     no_app_visible_hide_sysapp_label_->setStyleSheet(EMPTY_APP_LIST_TEXT_STYLESHEET);
 
     layout_ = new QGridLayout(this);
-    layout_->addWidget(search_bar_);
+
+    bar_widget_ = new QWidget;
+    QHBoxLayout *temp_layout = new QHBoxLayout;
+
+    temp_layout->addWidget(search_bar_, 3);
+    temp_layout->addWidget(device_combo_bar_, 1);
+    temp_layout->setContentsMargins(0, 0, 0, 0);
+    bar_widget_->setLayout(temp_layout);
+
+    layout_->addWidget(bar_widget_);
     layout_->addWidget(list_widget_);
     layout_->addWidget(no_app_visible_normal_label_);
     layout_->addWidget(no_app_visible_hide_sysapp_label_);
@@ -127,11 +185,15 @@ applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, 
 
     connect(list_widget_, &QListWidget::itemClicked, this, &applist_widget::on_list_widget_item_clicked);
     connect(search_bar_, &applist_search_bar::new_search, this, &applist_widget::on_search_content_changed);
+    connect(device_combo_bar_, &applist_device_combo::device_combo_changed, this, &applist_widget::on_device_change_request);
 }
 
 applist_widget::~applist_widget() {
-    delete layout_;
     delete search_bar_;
+    delete device_combo_bar_;
+
+    delete layout_;
+    delete bar_widget_;
     delete list_widget_;
 }
 
@@ -185,7 +247,7 @@ void applist_widget::reload_whole_list() {
     }
 
     if (list_widget_->count() == 0) {
-        search_bar_->hide();
+        bar_widget_->hide();
         list_widget_->hide();
 
         if (hide_system_apps_) {
@@ -196,7 +258,7 @@ void applist_widget::reload_whole_list() {
             no_app_visible_hide_sysapp_label_->hide();
         }
     } else {
-        search_bar_->show();
+        bar_widget_->show();
         list_widget_->show();
 
         no_app_visible_normal_label_->hide();
@@ -394,4 +456,28 @@ void applist_widget::set_hide_system_apps(const bool should_hide) {
         hide_system_apps_ = should_hide;
         reload_whole_list();
     }
+}
+
+void applist_widget::update_devices(const QStringList &devices, const int index) {
+    device_combo_bar_->update_devices(devices, index);
+}
+
+void applist_widget::on_device_change_request(int index) {
+    emit device_change_request(index);
+}
+
+void applist_widget::update_devices(eka2l1::device_manager *device_mngr) {
+    const std::lock_guard<std::mutex> guard(device_mngr->lock);
+    QStringList list_devices;
+
+    for (std::size_t i = 0; i < device_mngr->total(); i++) {
+        eka2l1::device *dvc = device_mngr->get(static_cast<std::uint8_t>(i));
+        if (dvc) {
+            QString item_des = QString("%1 (%2 - %3)").arg(QString::fromUtf8(dvc->model.c_str()), QString::fromUtf8(dvc->firmware_code.c_str()),
+                                                           epocver_to_symbian_readable_name(dvc->ver));
+            list_devices.append(item_des);
+        }
+    }
+
+    update_devices(list_devices, device_mngr->get_current_index());
 }

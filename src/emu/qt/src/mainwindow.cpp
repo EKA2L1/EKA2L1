@@ -378,6 +378,9 @@ void main_window::setup_app_list() {
             ui_->layout_main->addWidget(applist_);
 
             connect(applist_, &applist_widget::app_launch, this, &main_window::on_app_clicked);
+            connect(applist_, &applist_widget::device_change_request, this, &main_window::on_device_set_requested, Qt::QueuedConnection);
+
+            applist_->update_devices(system->get_device_manager());
         }
     }
 
@@ -544,6 +547,9 @@ void main_window::on_device_set_requested(const int index) {
             active_screen_draw_callback_ = 0;
             active_screen_mode_change_callback_ = 0;
             active_screen_focus_change_callback_ = 0;
+        }
+        if (system->get_device_manager()) {
+            system->get_device_manager()->save_devices();
         }
     }
 

@@ -20,8 +20,10 @@
 #ifndef APPLISTWIDGET_H
 #define APPLISTWIDGET_H
 
-#include <QGridLayout>
+#include <QComboBox>
 #include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QGridLayout>
 #include <QLabel>
 #include <QListWidget>
 
@@ -31,6 +33,7 @@ namespace eka2l1 {
     class io_system;
 
     struct apa_app_registry;
+    class device_manager;
 }
 
 class applist_widget_item : public QListWidgetItem {
@@ -46,7 +49,6 @@ class applist_search_bar : public QWidget {
 private:
     QLabel *search_label_;
     QLineEdit *search_line_edit_;
-
     QHBoxLayout *search_layout_;
 
 private slots:
@@ -60,13 +62,37 @@ public:
     ~applist_search_bar();
 };
 
+class applist_device_combo: public QWidget {
+    Q_OBJECT;
+
+private:
+    QLabel *device_label_;
+    QComboBox *device_combo_;
+    QHBoxLayout *device_layout_;
+    int current_index_;
+
+private slots:
+    void on_device_combo_changed(int index);
+
+signals:
+    void device_combo_changed(int index);
+
+public:
+    applist_device_combo(QWidget *parent = nullptr);
+    ~applist_device_combo();
+
+    void update_devices(const QStringList &devices, const int index);
+};
+
 class applist_widget : public QWidget {
     Q_OBJECT;
 
 public:
     applist_search_bar *search_bar_;
+    applist_device_combo *device_combo_bar_;
     QListWidget *list_widget_;
     QGridLayout *layout_;
+    QWidget *bar_widget_;
 
     QLabel *no_app_visible_normal_label_;
     QLabel *no_app_visible_hide_sysapp_label_;
@@ -83,12 +109,15 @@ public:
     void hide_all();
     void show_all();
     void on_search_content_changed(QString content);
+    void update_devices(const QStringList &devices, const int index);
 
 private slots:
     void on_list_widget_item_clicked(QListWidgetItem *item);
+    void on_device_change_request(int index);
 
 signals:
     void app_launch(applist_widget_item *item);
+    void device_change_request(int index);
 
 public:
     explicit applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss, eka2l1::io_system *io,
@@ -98,6 +127,7 @@ public:
     bool launch_from_widget_item(applist_widget_item *item);
     void reload_whole_list();
     void set_hide_system_apps(const bool should_hide);
+    void update_devices(eka2l1::device_manager *mngr);
 };
 
 #endif // APPLISTWIDGET_H

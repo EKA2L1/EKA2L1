@@ -471,45 +471,6 @@ void settings_dialog::on_btrace_enable_toggled(bool val) {
     configuration_.enable_btrace = val;
 }
 
-static QString epocver_to_symbian_readable_name(const epocver ver) {
-    switch (ver) {
-    case epocver::epocu6:
-        return QString("epocu6");
-
-    case epocver::epoc6:
-        return QString("S60v1");
-
-    case epocver::epoc80:
-        return QString("S60v2 - 8.0");
-
-    case epocver::epoc81a:
-        return QString("S60v2 - 8.1a");
-
-    case epocver::epoc81b:
-        return QString("S60v2 - 8.1b");
-
-    case epocver::epoc93fp1:
-        return QString("S60v3 FP1");
-
-    case epocver::epoc93fp2:
-        return QString("S60v3 FP2");
-
-    case epocver::epoc94:
-        return QString("S60v5");
-
-    case epocver::epoc95:
-        return QString("S^3");
-
-    case epocver::epoc10:
-        return QString("Belle");
-
-    default:
-        break;
-    }
-
-    return QString("Unknown");
-}
-
 void settings_dialog::update_device_settings() {
     eka2l1::device_manager *device_mngr = system_->get_device_manager();
     if (device_mngr) {
