@@ -96,7 +96,7 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="66"/>
       <source>IP address (IPv4 or IPv6)</source>
-      <translation type="unfinished">IP address (IPv4 or IPv6)</translation>
+      <translation>Endereço IP (IPv4 ou IPv6)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="71"/>
@@ -106,7 +106,7 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="114"/>
       <source>Add more</source>
-      <translation type="unfinished">Add more</translation>
+      <translation>Adicionar mais</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="115"/>
@@ -132,7 +132,7 @@
       <location filename="../src/btnetplay_friends_dialog.cpp" line="195"/>
       <source>Friend %1 has empty IP address!
 </source>
-      <translation type="unfinished">Friend %1 has empty IP address!
+      <translation>Amigo %1 tem um endereço IP vazio!
 </translation>
     </message>
     <message>
