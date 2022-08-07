@@ -636,6 +636,10 @@ void main_window::on_new_device_added() {
         refresh_current_device_label();
         reprepare_touch_mappings();
         setup_app_list(true);
+    } else {
+        if (emulator_state_.symsys) {
+            applist_->update_devices(emulator_state_.symsys->get_device_manager());
+        }
     }
 }
 
