@@ -134,12 +134,13 @@ void update_dialog::on_tag_request_complete(QNetworkReply *reply) {
                     const int commit_length = eka2l1::common::min<int>(static_cast<int>(current_sha.length()),
                                                                        static_cast<int>(strlen(GIT_COMMIT_HASH)));
 
-                    if (current_sha.substr(commit_length) != (std::string(GIT_COMMIT_HASH).substr(commit_length))) {
+                    if (current_sha.substr(0, commit_length) != (std::string(GIT_COMMIT_HASH).substr(0, commit_length))) {
                         // Hash different, need update
-                        new_commit_hash_ = current_sha.substr(commit_length);
+                        new_commit_hash_ = current_sha.substr(0, commit_length);
                         tag_download_link_request();
                     } else {
                         report_info(tr("The emulator is already updated to lastest version!"));
+                        close();
                     }
 
                     found = true;
@@ -219,6 +220,8 @@ void update_dialog::on_changelog_request_complete(QNetworkReply *reply) {
         QJsonDocument doc = QJsonDocument::fromJson(reply_data, &parse_error);
 
         if (doc.isObject()) {
+            ui_->changelog_textedit->clear();
+
             QJsonArray commit_array = doc["commits"].toArray();
 
             for (const QJsonValue &commit: commit_array) {
@@ -226,7 +229,7 @@ void update_dialog::on_changelog_request_complete(QNetworkReply *reply) {
                 QString author = value_arr["author"].toObject()["name"].toString();
                 QString message = value_arr["message"].toString();
 
-                ui_->changelog_textedit->append(QString("- %1 (%2)\n").arg(author, message));
+                ui_->changelog_textedit->append(QString("- %1 (%2)\n").arg(message, author));
             }
         }
     }
