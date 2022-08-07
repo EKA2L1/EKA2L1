@@ -551,10 +551,10 @@ void main_window::on_device_set_requested(const int index) {
             active_screen_mode_change_callback_ = 0;
             active_screen_focus_change_callback_ = 0;
         }
-        if (system->get_device_manager()) {
-            system->get_device_manager()->save_devices();
-        }
     }
+
+    emulator_state_.conf.device = index;
+    emulator_state_.conf.serialize();
 
     if (applist_) {
         delete applist_;
