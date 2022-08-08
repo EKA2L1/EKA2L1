@@ -904,10 +904,12 @@ namespace eka2l1::dispatch {
         }
 
         // Move on, these others might still be used
-        current_buffer_++;
-        
-        if (current_buffer_ >= buffers_.size()) {
-            add_buffer();
+        if (size_per_buffer_ != 0) {
+            current_buffer_++;
+            
+            if (current_buffer_ >= buffers_.size()) {
+                add_buffer();
+            }
         }
     }
 

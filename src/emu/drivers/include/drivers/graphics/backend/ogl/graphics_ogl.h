@@ -217,5 +217,9 @@ namespace eka2l1::drivers {
         bool get_supported_feature(const std::uint32_t feature_mask) const {
             return feature_flags_ & feature_mask;
         }
+
+        bool aborted() const override {
+            return should_stop.load();
+        }
     };
 }

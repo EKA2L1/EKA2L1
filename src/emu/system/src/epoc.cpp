@@ -148,6 +148,10 @@ namespace eka2l1 {
         explicit system_impl(system *parent, system_create_components &param);
 
         ~system_impl() {
+#if ENABLE_SCRIPTING
+            scripting_.reset();
+#endif
+
             // Reset dispatchers...
             if (dispatcher_)
                 dispatcher_->shutdown(gdriver);
@@ -158,10 +162,6 @@ namespace eka2l1 {
             // and if we let it go in destructor it would be messy! :D
             if (kern_)
                 kern_->wipeout();
-
-#if ENABLE_SCRIPTING
-            scripting_.reset();
-#endif
 
             kern_.reset();
             mem_.reset();

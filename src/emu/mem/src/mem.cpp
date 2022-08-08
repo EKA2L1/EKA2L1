@@ -44,6 +44,9 @@ namespace eka2l1 {
         if (rom_map_) {
             common::unmap_file(rom_map_);
         }
+
+        impl_.reset();
+        alloc_.reset();
     }
 
     mem::mmu_base *memory_system::get_mmu(arm::core *cc) {

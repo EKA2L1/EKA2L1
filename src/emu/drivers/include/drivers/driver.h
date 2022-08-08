@@ -105,6 +105,9 @@ namespace eka2l1::drivers {
         virtual ~driver() {}
         virtual void run() = 0;
         virtual void abort() = 0;
+        virtual bool aborted() const {
+            return false;
+        }
 
         virtual void wait_for(int *status) {
             std::unique_lock<std::mutex> ulock(mut_);
@@ -113,7 +116,7 @@ namespace eka2l1::drivers {
                 return;
             }
 
-            cond_.wait(ulock, [&]() { return *status != -100; });
+            cond_.wait(ulock, [&]() { return (*status != -100) && !aborted(); });
         }
 
         void finish(int *status, const int code) {

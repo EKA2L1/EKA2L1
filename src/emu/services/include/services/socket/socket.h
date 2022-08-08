@@ -27,7 +27,7 @@
 
 #define MAKE_SOCKET_GETOPT_ERROR(error) 0xFFFFFF00ULL - error
 #define IS_SOCKET_GETOPT_ERROR(error) error > 0xFFFFFF00ULL
-#define GET_SOCKET_GETOPT_ERROR(error) -(error - 0xFFFFFF00ULL)
+#define GET_SOCKET_GETOPT_ERROR(error) -static_cast<int64_t>(error - 0xFFFFFF00ULL)
 
 namespace eka2l1::epoc::socket {
     struct saddress;

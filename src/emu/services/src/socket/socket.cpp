@@ -162,10 +162,8 @@ namespace eka2l1::epoc::socket {
         }
 
         const std::size_t res = sock_->get_option(option_name.value(), option_fam.value(), dest_buffer, max_size);
-        if (res == static_cast<std::size_t>(-1)) {
-            LOG_ERROR(SERVICE_ESOCK, "Fail to get value of socket option!");
-            ctx->complete(epoc::error_general);
-
+        if (IS_SOCKET_GETOPT_ERROR(res)) {
+            ctx->complete(static_cast<int>(GET_SOCKET_GETOPT_ERROR(res)));
             return;
         }
 
