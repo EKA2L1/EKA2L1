@@ -169,7 +169,7 @@ void btnetplay_friends_dialog::on_save_clicked() {
         addr_temp.port_ = addr_field->get_port_value();
 
         if (addr_temp.port_ == 0xFFFFFFFF) {
-            addr_temp.port_ = 35678;        // Default port
+            addr_temp.port_ = 35689;        // Default port
         }
 
         friend_collection.push_back(addr_temp);
