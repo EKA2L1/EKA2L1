@@ -213,8 +213,7 @@ void CMMFMdaAudioUtility::Play() {
 }
 
 void CMMFMdaAudioUtility::Stop() {
-    TransitionState(EMdaStateReady, 1);
-    EAudioPlayerStop(0, iDispatchInstance);
+    TransitionState(EMdaStateReady, EAudioPlayerStop(0, iDispatchInstance) ? 2 : 1);
 
     // Do cancel
     Cancel();
@@ -317,7 +316,7 @@ void CMMFMdaAudioPlayerUtility::OnStateChanged(const TMdaState aCurrentState, co
     switch (aCurrentState) {
     case EMdaStateReady:
         if (aPrevState != EMdaStateIdle) {
-            if (aErr != 1) {
+            if (aErr < 1) {
                 iCallback.MapcPlayComplete(aErr);
             }
         } else {
@@ -379,8 +378,15 @@ void CMMFMdaAudioRecorderUtility::OnStateChanged(const TMdaState aCurrentState, 
     }
 
     TInt realError = aError;
-    if (aError == 1)
+    if (aError == 1)  {
         realError = 0;
+    } else if ((aError == 2) && (currentTrans == CMdaAudioClipUtility::EOpen)) {
+        // Cite from Symbian OS C++ for Mobile Phones: Programming with Extended Functionality, page 269 and page 267
+        // If record/play complete, call again with KErrNone signaling manual Stop()
+        // And in page 269 it says signal again with the ERecording as the current state. The situation though does seems sure to be changed in S60v3
+        currentTrans = prevTrans;
+        realError = 0;
+    }
 
     iObserver.MoscoStateChangeEvent(this, prevTrans, currentTrans, realError);
 }
