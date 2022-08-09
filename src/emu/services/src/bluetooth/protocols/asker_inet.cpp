@@ -67,6 +67,17 @@ namespace eka2l1::epoc::bt {
         BT_COMM_INET_INVALID_ADDR = -3
     };
 
+    static void free_async_workload(send_data_vars *vars_ptr) {
+        if (vars_ptr->async_workload_) {
+            uv_close(reinterpret_cast<uv_handle_t*>(vars_ptr->async_workload_), [](uv_handle_t *hh) {
+                uv_async_t *async_hh = reinterpret_cast<uv_async_t*>(hh);
+                delete async_hh;
+            });
+
+            vars_ptr->async_workload_ = nullptr;
+        }
+    }
+
     static void free_send_data_vars_struct(send_data_vars *vars_ptr) {
         if (vars_ptr->response_ptr_) {
             free(vars_ptr->response_ptr_);
@@ -80,12 +91,7 @@ namespace eka2l1::epoc::bt {
             delete vars_ptr->dynamic_buf_data_;
         }
 
-        if (vars_ptr->async_workload_) {
-            uv_close(reinterpret_cast<uv_handle_t*>(vars_ptr->async_workload_), [](uv_handle_t *hh) {
-                uv_async_t *async_hh = reinterpret_cast<uv_async_t*>(hh);
-                delete async_hh;
-            });
-        }
+        free_async_workload(vars_ptr);
 
         delete vars_ptr;
     }
@@ -129,6 +135,7 @@ namespace eka2l1::epoc::bt {
                         vars->response_cb_(nullptr, BT_COMM_INET_ERROR_RECV_FAILED);
                         free_send_data_vars_struct(vars);
                     } else {
+                        free_async_workload(vars);
                         keep_sending_data(handle, vars);
                     }
                     return;
@@ -165,6 +172,7 @@ namespace eka2l1::epoc::bt {
 
                         return;
                     } else {
+                        free_async_workload(vars);
                         keep_sending_data(vars->send_req->handle, vars);
                     }
                 }
@@ -178,6 +186,7 @@ namespace eka2l1::epoc::bt {
 
                     return;
                 } else {
+                    free_async_workload(vars_ptr);
                     keep_sending_data(vars_ptr->send_udp_handle_, vars_ptr);
                 }
             }
