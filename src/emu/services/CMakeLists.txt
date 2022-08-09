@@ -93,6 +93,7 @@ add_library(epocservs
         include/services/msv/store.h
         include/services/notifier/notifier.h
         include/services/notifier/queries.h
+        include/services/redir/redir.h
         include/services/remcon/common.h
         include/services/remcon/controller.h
         include/services/remcon/remcon.h
@@ -228,6 +229,7 @@ add_library(epocservs
         src/msv/store.cpp
         src/notifier/notifier.cpp
         src/notifier/queries.cpp
+        src/redir/redir.cpp
         src/remcon/common.cpp
         src/remcon/controller.cpp
         src/remcon/remcon.cpp

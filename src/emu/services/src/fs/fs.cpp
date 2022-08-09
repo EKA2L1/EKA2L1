@@ -131,7 +131,7 @@ namespace eka2l1 {
         }
 
         // Check if the path has a root directory
-        if (!eka2l1::has_root_dir(target_path)) {
+        if (!eka2l1::has_root_name(target_path)) {
             return eka2l1::add_path(session_path, target_path, true);
         }
 

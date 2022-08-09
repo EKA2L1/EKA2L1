@@ -75,6 +75,8 @@ LOGCLASS(SERVICE_WINDOW, "Service.Window", "Window service")
 LOGCLASS(SERVICE_MMFAUD, "Service.MMFAudio", "MMF Audio service")
 LOGCLASS(SERVICE_INSTALL, "Service.Install", "Install service")
 LOGCLASS(SERVICE_GOOMMONITOR, "Service.GOOMMonitor", "Global out-of-memory monitor service")
+LOGCLASS(SERVICE_REDIR, "Service.Redir", "Standard in/out redirect server")
+LOGCLASS(EMULATED_STDOUT, "Emulated.Stdout", "Symbian's standard output")
 
 LOGCLASS(DRIVER_AUD, "Driver.Audio", "Audio driver")
 LOGCLASS(DRIVER_GRAPHICS, "Driver.Graphics", "Graphics driver")

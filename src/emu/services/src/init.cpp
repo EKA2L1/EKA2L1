@@ -46,6 +46,7 @@
 #include <services/loader/loader.h>
 #include <services/msv/msv.h>
 #include <services/notifier/notifier.h>
+#include <services/redir/redir.h>
 #include <services/remcon/remcon.h>
 #include <services/sensor/sensor.h>
 #include <services/shutdown/shutdown.h>
@@ -247,6 +248,7 @@ namespace eka2l1 {
             CREATE_SERVER(sys, unipertar_server);
 
             if (sys->get_symbian_version_use() <= epocver::eka2) {
+                CREATE_SERVER(sys, redir_server);
                 CREATE_SERVER(sys, backup_old_server);
             } else {
                 CREATE_SERVER(sys, goom_monitor_server);
