@@ -142,7 +142,7 @@ namespace eka2l1 {
 
             /*! \brief Adjust the size by setting the top and bottom of a chunk
             */
-            bool adjust_de(size_t top, size_t bottom);
+            bool adjust_de(size_t nbottom, size_t ntop);
 
             /*! \brief The definition of this is blurry and uncleared. However,
              * afaik it commits to the top with size 

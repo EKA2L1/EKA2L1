@@ -146,6 +146,7 @@ namespace eka2l1::epoc {
             execute_v6_undertaker_logon_cancel = 0x46,
             execute_v6_create_chunk_double_ended = 0x4C,
             execute_v6_create_chunk_double_ended_global = 0x4D,
+            execute_v6_adjust_chunk_double_ended = 0x4E,
             execute_v6_free_up_system = 0x52, ///< Free system memory (Unconfirmed).
             execute_v6_share_session = 0x54
         };

@@ -224,7 +224,7 @@ namespace eka2l1 {
             return mmc_impl_->adjust(0xFFFFFFFF, static_cast<address>(adj_size));
         }
 
-        bool chunk::adjust_de(size_t ntop, size_t nbottom) {
+        bool chunk::adjust_de(size_t nbottom, size_t ntop) {
             if (type != kernel::chunk_type::double_ended) {
                 return false;
             }

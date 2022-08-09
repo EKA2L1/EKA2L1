@@ -3797,6 +3797,25 @@ namespace eka2l1::epoc {
         return result;
     }
 
+    std::int32_t chunk_adjust_double_ended_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::chunk *chunk = kern->get<kernel::chunk>(create_info->arg0_);
+
+        if (!chunk) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
+            return epoc::error_bad_handle;
+        }
+
+        std::int32_t result = epoc::error_none;
+
+        if (!chunk->adjust_de(create_info->arg1_, create_info->arg2_)) {
+            result = epoc::error_no_memory;
+        }
+
+        finish_status_request_eka1(target_thread, finish_signal, result);
+        return result;
+    }
+
     std::int32_t thread_panic_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         kernel::thread *thr = kern->get<kernel::thread>(create_info->arg0_);
@@ -4624,6 +4643,9 @@ namespace eka2l1::epoc {
 
             case epoc::eka1_executor::execute_v6_chunk_adjust:
                 return chunk_adjust_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v6_adjust_chunk_double_ended:
+                return chunk_adjust_double_ended_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
             case epoc::eka1_executor::execute_v6_create_mutex:
                 return mutex_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
