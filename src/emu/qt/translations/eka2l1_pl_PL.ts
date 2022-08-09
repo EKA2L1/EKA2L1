@@ -91,22 +91,22 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="51"/>
       <source>Modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Modify friends&apos; IP addresses</translation>
+      <translation>Zmodyfikuj adresy IP przyjaciół</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="66"/>
       <source>IP address (IPv4 or IPv6)</source>
-      <translation type="unfinished">IP address (IPv4 or IPv6)</translation>
+      <translation>Adresy IP (IPv4 lub IPv6)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="71"/>
       <source>Port (can be empty)</source>
-      <translation type="unfinished">Port (can be empty)</translation>
+      <translation>Port (może być puste)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="114"/>
       <source>Add more</source>
-      <translation type="unfinished">Add more</translation>
+      <translation>Dodaj więcej</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="115"/>
@@ -116,48 +116,48 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="116"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>Zaktualizuj</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="182"/>
       <source>Update friends success!</source>
-      <translation type="unfinished">Update friends success!</translation>
+      <translation>Aktualizacja przyjaciół udana!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="182"/>
       <source>Friends&apos; IP addresses have been successfully saved!</source>
-      <translation type="unfinished">Friends&apos; IP addresses have been successfully saved!</translation>
+      <translation>Adresy IP przyjaciół zostały poprawnie zapisane!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="195"/>
       <source>Friend %1 has empty IP address!
 </source>
-      <translation type="unfinished">Friend %1 has empty IP address!
+      <translation>Przyjaciel %1 ma pusty adres IP!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="197"/>
       <source>Friend %1 has invalid IP address!
 </source>
-      <translation type="unfinished">Friend %1 has invalid IP address!
+      <translation>Przyjaciel %1 ma nieprawidłowy adres IP!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="202"/>
       <source>Friend %1 has invalid port number (must be between 0 and 65535)!
 </source>
-      <translation type="unfinished">Friend %1 has invalid port number (must be between 0 and 65535)!
+      <translation>Przyjaciel %1 ma nieprawidłowy numer portu (musi być między 0 a 65535)!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="229"/>
       <source>Some errors in updating friends!</source>
-      <translation type="unfinished">Some errors in updating friends!</translation>
+      <translation>Wystąpiły błędy w aktualizacji przyjaciół!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="230"/>
       <source>Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</source>
-      <translation type="unfinished">Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</translation>
+      <translation>Niektóre adresy IP przyjaciół nie mogą być zaktualizowane (patrz szczegóły).&lt;br&gt;Adresy, które udało się zaktualizować, zostały zapisane.</translation>
     </message>
   </context>
   <context>
@@ -310,33 +310,33 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="17"/>
       <source>Touch mapping editor</source>
-      <translation type="unfinished">Touch mapping editor</translation>
+      <translation>Edytor mapowania dotyku</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="26"/>
       <source>&lt;b&gt;Mapping elements&lt;/b&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Mapping elements&lt;/b&gt;</translation>
+      <translation>&lt;b&gt;Elementy mapowania&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="40"/>
       <source>Joystick</source>
-      <translation type="unfinished">Joystick</translation>
+      <translation>Joystick</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="45"/>
       <source>Single touch</source>
-      <translation type="unfinished">Single touch</translation>
+      <translation>Pojedynczy dotyk</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="64"/>
       <source>For app: </source>
-      <translation type="unfinished">For app: </translation>
+      <translation>Do aplikacji: </translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="105"/>
       <location filename="../src/btnmap/editor_widget.cpp" line="274"/>
       <source>Save and hide editor</source>
-      <translation type="unfinished">Save and hide editor</translation>
+      <translation>Zapisz i ukryj edytor</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="136"/>
@@ -356,7 +356,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="181"/>
       <source>Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</source>
-      <translation type="unfinished">Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</translation>
+      <translation>Profile są zapisywane na aplikację/grę. Naciśnij &lt;b&gt;Edytuj&lt;/b&gt;, aby przejść do trybu edycji. Aby usunąć element mapowania, naciśnij &lt;b&gt;Usuń&lt;/b&gt; i kliknij element, który chcesz usunąć.</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="212"/>
@@ -371,12 +371,12 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="50"/>
       <source>Please wait for a game to be active!</source>
-      <translation type="unfinished">Please wait for a game to be active!</translation>
+      <translation>Poczekaj, aż gra będzie aktywna!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="89"/>
       <source>For app: %1 (0x%2)</source>
-      <translation type="unfinished">For app: %1 (0x%2)</translation>
+      <translation>Dla aplikacji: %1 (0x%2)</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="151"/>
@@ -386,17 +386,17 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
       <source>Error creating profile!</source>
-      <translation type="unfinished">Error creating profile!</translation>
+      <translation>Bład w tworzeniu profilu!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
       <source>Profile name contains special characters or system error encountered!</source>
-      <translation type="unfinished">Profile name contains special characters or system error encountered!</translation>
+      <translation>Nazwa profilu zawiera znaki specjalne albo napotkano błąd systemu!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="285"/>
       <source>Show editor</source>
-      <translation type="unfinished">Show editor</translation>
+      <translation>Pokaż edytor</translation>
     </message>
   </context>
   <context>
@@ -444,12 +444,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="129"/>
       <source>Bluetooth</source>
-      <translation type="unfinished">Bluetooth</translation>
+      <translation>Bluetooth</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="133"/>
       <source>Netplay</source>
-      <translation type="unfinished">Netplay</translation>
+      <translation>Gra internetowa</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="141"/>
@@ -539,27 +539,27 @@
     <message>
       <location filename="../src/mainwindow.ui" line="288"/>
       <source>Friends&apos;s IP addresses</source>
-      <translation type="unfinished">Friends&apos;s IP addresses</translation>
+      <translation>Adresy IP przyjaciół</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="293"/>
       <source>Button mapping editor</source>
-      <translation type="unfinished">Button mapping editor</translation>
+      <translation>Edytor mapowania przycisków</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="298"/>
       <source>Touch mapping editor</source>
-      <translation type="unfinished">Touch mapping editor</translation>
+      <translation>Edytor mapowania dotyku</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="303"/>
       <source>N-Gage card game</source>
-      <translation type="unfinished">N-Gage card game</translation>
+      <translation>Gra karty N-Gage</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="308"/>
       <source>Check for update</source>
-      <translation type="unfinished">Check for update</translation>
+      <translation>Sprawdź aktualizacje</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="241"/>
@@ -595,71 +595,71 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="642"/>
       <source>Installing &lt;b&gt;%1&lt;/b&gt;</source>
-      <translation type="unfinished">Installing &lt;b&gt;%1&lt;/b&gt;</translation>
+      <translation>Instalowanie &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="655"/>
       <source>Choose the N-Gage game card folder</source>
-      <translation type="unfinished">Choose the N-Gage game card folder</translation>
+      <translation>Wybierz folder do gry karty N-Gage</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="663"/>
       <source>Installing N-Gage game...</source>
-      <translation type="unfinished">Installing N-Gage game...</translation>
+      <translation>Instalowanie gry N-Gage...</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="686"/>
       <source>Install success!</source>
-      <translation type="unfinished">Install success!</translation>
+      <translation>Instalacja powiodła się!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="686"/>
       <source>Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</source>
-      <translation type="unfinished">Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</translation>
+      <translation>Poprawnie zainstalowano grę karty N-Gage: &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="692"/>
       <source>Can&apos;t find the game data folder!</source>
-      <translation type="unfinished">Can&apos;t find the game data folder!</translation>
+      <translation>Nie można odnaleźć folder danych gry!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="696"/>
       <source>There is more than one game in the given card game folder!</source>
-      <translation type="unfinished">There is more than one game in the given card game folder!</translation>
+      <translation>Jest więcej niż jedna gra w podanym folderze gry karty!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="700"/>
       <source>The game information file does not exist in the card game folder!</source>
-      <translation type="unfinished">The game information file does not exist in the card game folder!</translation>
+      <translation>Plik informacji o grze nie istnieje w folderze gry karty!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="704"/>
       <source>The game information file has been corrupted. Please check your data&apos;s validity!</source>
-      <translation type="unfinished">The game information file has been corrupted. Please check your data&apos;s validity!</translation>
+      <translation>Plik informacji o grze został uszkodzony. Sprawdź poprawność danych!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="708"/>
       <source>General error occured...</source>
-      <translation type="unfinished">General error occured...</translation>
+      <translation>Wystąpił ogólny błąd...</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="713"/>
       <location filename="../src/mainwindow.cpp" line="715"/>
       <source>Install failed</source>
-      <translation type="unfinished">Install failed</translation>
+      <translation>Instalacja nie powiodła się</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="713"/>
       <source>Installation failed with error:
   -%1</source>
-      <translation type="unfinished">Installation failed with error:
+      <translation>Instalacja nie powiodła się z błędem:
   -%1</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="715"/>
       <source>Installation of %1% failed with error:
   -%2</source>
-      <translation type="unfinished">Installation of %1% failed with error:
+      <translation>Instalacja %1% nie powiodła się z błędem:
   -%2</translation>
     </message>
     <message>
@@ -791,22 +791,22 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1423"/>
       <source>Continue to modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Continue to modify friends&apos; IP addresses</translation>
+      <translation>Kontynuuj modyfikacje adresów IP przyjaciół</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1424"/>
       <source>This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</source>
-      <translation type="unfinished">This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</translation>
+      <translation>To okno pokaże wszystkie przechowywane adresy IP, potencjalnie odkrywając inne prywatne informacje.&lt;br&gt;Czy chcesz kontynuować?</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1439"/>
       <source>Bluetooth manager service not available!</source>
-      <translation type="unfinished">Bluetooth manager service not available!</translation>
+      <translation>Usługa menedżera Bluetooth jest niedostępna!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1439"/>
       <source>The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</source>
-      <translation type="unfinished">The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</translation>
+      <translation>Emulowane urządzenie nie ma usługi menadżera Bluetooth! Bluetooth nie jest wspierany.</translation>
     </message>
   </context>
   <context>
@@ -937,12 +937,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="279"/>
       <source>Hide system applications across all devices</source>
-      <translation type="unfinished">Hide system applications across all devices</translation>
+      <translation>Ukryj aplikacje systemowe na wszystkich urządzeniach</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="282"/>
       <source>Hide system applications</source>
-      <translation type="unfinished">Hide system applications</translation>
+      <translation>Ukryj aplikacje systemowe</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="301"/>
@@ -992,17 +992,17 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="382"/>
       <source>Log filter</source>
-      <translation type="unfinished">Log filter</translation>
+      <translation>Filtr logu</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="399"/>
       <source>Apply</source>
-      <translation type="unfinished">Apply</translation>
+      <translation>Zatwierdź</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="408"/>
       <source>Show log console (Windows only)</source>
-      <translation type="unfinished">Show log console (Windows only)</translation>
+      <translation>Pokaż konsolę logów (tylko Windows)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="418"/>
@@ -1099,7 +1099,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="597"/>
       <source>Disable title with Git version</source>
-      <translation type="unfinished">Disable title with Git version</translation>
+      <translation>Wyłącz tytuł z tą wersją Git</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="604"/>
@@ -1654,37 +1654,37 @@ Preferowana opcja automatycznie włączy to na urządzeniach S60v1/S60v2.</trans
     <message>
       <location filename="../src/update_dialog.ui" line="14"/>
       <source>New update available</source>
-      <translation type="unfinished">New update available</translation>
+      <translation>Dostępna nowa aktualizacja</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="43"/>
       <source>A new update has been released on Github!</source>
-      <translation type="unfinished">A new update has been released on Github!</translation>
+      <translation>Nowa aktualizacja została wydana na GitHubie!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="61"/>
       <source>Changelog</source>
-      <translation type="unfinished">Changelog</translation>
+      <translation>Lista zmian</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="84"/>
       <source>Downloading update ... %p%</source>
-      <translation type="unfinished">Downloading update ... %p%</translation>
+      <translation>Pobieranie aktualizacji ... %p%</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="91"/>
       <source>Do not automatically check for update when startup</source>
-      <translation type="unfinished">Do not automatically check for update when startup</translation>
+      <translation>Nie sprawdzaj automatycznie aktualizacji podczas startu</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="126"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>Zaktualizuj</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="139"/>
       <source>Ignore</source>
-      <translation type="unfinished">Ignore</translation>
+      <translation>Ignoruj</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="149"/>
@@ -1694,12 +1694,12 @@ Preferowana opcja automatycznie włączy to na urządzeniach S60v1/S60v2.</trans
     <message>
       <location filename="../src/update_dialog.cpp" line="107"/>
       <source>Update success</source>
-      <translation type="unfinished">Update success</translation>
+      <translation>Aktualizacja udana</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="113"/>
       <source>Update failed</source>
-      <translation type="unfinished">Update failed</translation>
+      <translation>Aktualizacja nieudana</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="142"/>
@@ -1812,7 +1812,7 @@ Preferowana opcja automatycznie włączy to na urządzeniach S60v1/S60v2.</trans
     <message>
       <location filename="../src/updater.cpp" line="91"/>
       <source>Update failed</source>
-      <translation type="unfinished">Update failed</translation>
+      <translation>Aktualizacja nieudana</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="99"/>
@@ -1838,7 +1838,7 @@ Preferowana opcja automatycznie włączy to na urządzeniach S60v1/S60v2.</trans
     <message>
       <location filename="../src/updater.cpp" line="212"/>
       <source>Update success</source>
-      <translation type="unfinished">Update success</translation>
+      <translation>Aktualizacja udana</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="212"/>
