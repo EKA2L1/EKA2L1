@@ -1052,6 +1052,12 @@ namespace eka2l1 {
 
         exit = false;
 
+#ifdef ENABLE_SCRIPTING
+        if (scripting_) {
+            scripting_.reset();
+        }
+#endif
+
         // Unregister HLE stuffs
         kern_->unregister_ldd_factory_request_callback(ldd_request_load_callback_handle_);
         kern_->unregister_breakpoint_hit_callback(gdb_stub_breakpoint_callback_handle_);
@@ -1071,12 +1077,6 @@ namespace eka2l1 {
         if (timing_) {
             timing_->reset();
         }
-
-#ifdef ENABLE_SCRIPTING
-        if (scripting_) {
-            scripting_.reset();
-        }
-#endif
 
         hals_.clear();
 
