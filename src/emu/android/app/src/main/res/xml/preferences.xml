@@ -10,5 +10,8 @@
     <Preference
         android:key="pref_system"
         android:title="@string/pref_system_title" />
+    <Preference
+        android:key="pref_bt_netplay"
+        android:title="@string/pref_bt_netplay" />
 
 </PreferenceScreen>

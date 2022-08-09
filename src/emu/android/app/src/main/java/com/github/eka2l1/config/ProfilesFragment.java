@@ -137,7 +137,7 @@ public class ProfilesFragment extends ListFragment implements AdapterView.OnItem
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
         MenuInflater inflater = getActivity().getMenuInflater();
-        inflater.inflate(R.menu.profile, menu);
+        inflater.inflate(R.menu.context_profile, menu);
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
         final Profile profile = adapter.getItem(info.position);
         if (!profile.hasConfig()) {

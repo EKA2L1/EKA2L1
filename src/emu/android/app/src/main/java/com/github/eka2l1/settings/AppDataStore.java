@@ -36,6 +36,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -50,6 +51,7 @@ public class AppDataStore extends PreferenceDataStore {
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         Constructor constructor = new Constructor();
         StringRepresenter representer = new StringRepresenter();
+        representer.addClassTag(BTNetplayAddress.class, Tag.MAP);
         StringResolver resolver = new StringResolver();
         yaml = new Yaml(constructor, representer, options, resolver);
         configFile = file;
@@ -115,6 +117,11 @@ public class AppDataStore extends PreferenceDataStore {
         return v != null ? v : defValues;
     }
 
+    public ArrayList<?> getArrayList(String key, ArrayList<Object> defValues) {
+        ArrayList<?> v = (ArrayList<?>) configMap.get(key);
+        return v != null ? v : defValues;
+    }
+
     @Override
     public void putBoolean(String key, boolean value) {
         configMap.put(key, value);
@@ -142,6 +149,10 @@ public class AppDataStore extends PreferenceDataStore {
 
     @Override
     public void putStringSet(String key, Set<String> values) {
+        configMap.put(key, values);
+    }
+
+    public void putArrayList(String key, ArrayList<?> values) {
         configMap.put(key, values);
     }
 

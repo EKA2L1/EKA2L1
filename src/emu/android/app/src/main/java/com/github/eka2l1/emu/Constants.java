@@ -35,6 +35,9 @@ public class Constants {
     public static final String KEY_PROFILE_LOADED = "profileLoaded";
     public static final String KEY_NAME = "name";
     public static final String KEY_ID = "id";
+    public static final String KEY_ADDRESS = "address";
+    public static final String KEY_PORT = "port";
+    public static final String KEY_ADDRESS_CHANGED = "addressChanged";
 
     public static final String KEY_APP_UID = "appUid";
     public static final String KEY_APP_NAME = "appName";
@@ -54,4 +57,5 @@ public class Constants {
     public static final String PREF_ANDROID = "pref_android";
     public static final String PREF_GENERAL = "pref_general";
     public static final String PREF_SYSTEM= "pref_system";
+    public static final String PREF_BT_NETPLAY= "pref_bt_netplay";
 }
