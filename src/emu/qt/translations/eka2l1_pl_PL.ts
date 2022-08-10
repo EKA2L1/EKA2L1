@@ -1704,84 +1704,84 @@ Preferowana opcja automatycznie włączy to na urządzeniach S60v1/S60v2.</trans
     <message>
       <location filename="../src/update_dialog.cpp" line="142"/>
       <source>The emulator is already updated to lastest version!</source>
-      <translation type="unfinished">The emulator is already updated to lastest version!</translation>
+      <translation>Emulator jest gotowy do aktualizacji do ostatniej wersji!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="151"/>
       <source>The release channel is not available. Please check your internet connection!</source>
-      <translation type="unfinished">The release channel is not available. Please check your internet connection!</translation>
+      <translation>Kanał wydania nie jest dostępny. Sprawdź swoje połączenie internetowe!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="157"/>
       <source>Failed to get information about the newest update from Github!</source>
-      <translation type="unfinished">Failed to get information about the newest update from Github!</translation>
+      <translation>Nie udało się uzyskać informacji o najnowszej aktualizacji z GitHuba!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="189"/>
       <source>Can&apos;t find the download link of newest update for your platform!</source>
-      <translation type="unfinished">Can&apos;t find the download link of newest update for your platform!</translation>
+      <translation>Nie można znaleźć odnośnika do pobrania najnowszej aktualizacji na twoją platformę!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="195"/>
       <source>Failed to get update download link from Github!</source>
-      <translation type="unfinished">Failed to get update download link from Github!</translation>
+      <translation>Nie udało się pobrać odnośnika pobierania z GitHuba!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="213"/>
       <source>Error retrieving changelog from Github...</source>
-      <translation type="unfinished">Error retrieving changelog from Github...</translation>
+      <translation>Bład pobierania listy zmian z GitHuba...</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="235"/>
       <source>Changelog (update commit: %1)</source>
-      <translation type="unfinished">Changelog (update commit: %1)</translation>
+      <translation>Lista zmian (commit aktualizacji: %1)</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="256"/>
       <source>Updater unsupported</source>
-      <translation type="unfinished">Updater unsupported</translation>
+      <translation>Aktualizator nieobsługiwany</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="256"/>
       <source>The updater is not yet supported on your platform!</source>
-      <translation type="unfinished">The updater is not yet supported on your platform!</translation>
+      <translation>Aktualizator nie jest jeszcze dostępny na twojej platformie!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="300"/>
       <location filename="../src/update_dialog.cpp" line="360"/>
       <source>Update error</source>
-      <translation type="unfinished">Update error</translation>
+      <translation>Błąd aktualizacji</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="300"/>
       <source>Can&apos;t not open temporary file for storing the update files!</source>
-      <translation type="unfinished">Can&apos;t not open temporary file for storing the update files!</translation>
+      <translation>Nie można otworzyć tymczasowego pliku do przechowywania plików aktualizacji!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="384"/>
       <source>Failed to download update with error: %1</source>
-      <translation type="unfinished">Failed to download update with error: %1</translation>
+      <translation>Nie udało się pobrać aktualizacji z błędem: %1</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="392"/>
       <source>Downloaded update is not in zip format!</source>
-      <translation type="unfinished">Downloaded update is not in zip format!</translation>
+      <translation>Pobrana aktualizacja nie jest w formacie zip!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="421"/>
       <source>Failed to update the updater program!</source>
-      <translation type="unfinished">Failed to update the updater program!</translation>
+      <translation>Nie udało się pobrać programu aktualizującego!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="429"/>
       <source>Update zip file is corrupted!</source>
-      <translation type="unfinished">Update zip file is corrupted!</translation>
+      <translation>Plik zip aktualizacji jest uszkodzony!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="436"/>
       <location filename="../src/update_dialog.cpp" line="451"/>
       <source>Can&apos;t find the updater program in the update archive file!</source>
-      <translation type="unfinished">Can&apos;t find the updater program in the update archive file!</translation>
+      <translation>Nie można znaleźć programu aktualizującego w pliku archiwum aktualizacji!</translation>
     </message>
   </context>
   <context>
@@ -1789,7 +1789,7 @@ Preferowana opcja automatycznie włączy to na urządzeniach S60v1/S60v2.</trans
     <message>
       <location filename="../src/update_notice_dialog.ui" line="14"/>
       <source>Update news</source>
-      <translation type="unfinished">Update news</translation>
+      <translation>Nowości aktualizacji</translation>
     </message>
   </context>
   <context>
@@ -1797,17 +1797,17 @@ Preferowana opcja automatycznie włączy to na urządzeniach S60v1/S60v2.</trans
     <message>
       <location filename="../src/updater.ui" line="14"/>
       <source>EKA2L1 Updater</source>
-      <translation type="unfinished">EKA2L1 Updater</translation>
+      <translation>Aktualizator EKA2L1</translation>
     </message>
     <message>
       <location filename="../src/updater.ui" line="59"/>
       <source>Updating...</source>
-      <translation type="unfinished">Updating...</translation>
+      <translation>Aktualizacja...</translation>
     </message>
     <message>
       <location filename="../src/updater.ui" line="85"/>
       <source>Extracting ... %p%</source>
-      <translation type="unfinished">Extracting ... %p%</translation>
+      <translation>Wypakowanie ... %p%</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="91"/>
@@ -1817,23 +1817,23 @@ Preferowana opcja automatycznie włączy to na urządzeniach S60v1/S60v2.</trans
     <message>
       <location filename="../src/updater.cpp" line="99"/>
       <source>Downloaded update is not a zip file!</source>
-      <translation type="unfinished">Downloaded update is not a zip file!</translation>
+      <translation>Pobrana aktualizacja nie jest plikiem zip!</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="122"/>
       <location filename="../src/updater.cpp" line="175"/>
       <source>The downloaded archive zip is corrupted</source>
-      <translation type="unfinished">The downloaded archive zip is corrupted</translation>
+      <translation>Pobrane archiwum zip jest uszkodzone</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="178"/>
       <source>Extracted: %1</source>
-      <translation type="unfinished">Extracted: %1</translation>
+      <translation>Wypakowano: %1</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="197"/>
       <source>Update&apos;s archive file does not exist!</source>
-      <translation type="unfinished">Update&apos;s archive file does not exist!</translation>
+      <translation>Plik archiwum aktualizacji nie istnieje!</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="212"/>
@@ -1843,7 +1843,7 @@ Preferowana opcja automatycznie włączy to na urządzeniach S60v1/S60v2.</trans
     <message>
       <location filename="../src/updater.cpp" line="212"/>
       <source>Update success. Relaunch the emulator?</source>
-      <translation type="unfinished">Update success. Relaunch the emulator?</translation>
+      <translation>Aktualizacja powiodła się. Uruchomić ponownie emulator?</translation>
     </message>
   </context>
 </TS>
