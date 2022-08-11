@@ -68,6 +68,9 @@
     <string name="emulated_screen_refresh_rate_item_name">معدل التحديث</string>
     <string name="pref_device_display_name">اسم الهاتف الودي</string>
     <string name="hide_system_apps">إخفاء تطبيقات النظام</string>
+    <string name="enter_address">Enter address</string>
+    <string name="address">Address</string>
+    <string name="port">Port</string>
     <string name="action_context_delete">حذف</string>
     <string name="action_context_rename">إعادة التسمية</string>
     <string name="action_context_shortcut">إنشاء إختصار</string>
