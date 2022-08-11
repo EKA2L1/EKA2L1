@@ -68,6 +68,9 @@
     <string name="emulated_screen_refresh_rate_item_name">නැවුම් කිරීමේ අනුපාතය</string>
     <string name="pref_device_display_name">මිත්රශීලී දුරකථන නම</string>
     <string name="hide_system_apps">පද්ධති යෙදුම් සඟවන්න</string>
+    <string name="enter_address">Enter address</string>
+    <string name="address">Address</string>
+    <string name="port">Port</string>
     <string name="action_context_delete">මකන්න</string>
     <string name="action_context_rename">නැවත නම් කරන්න</string>
     <string name="action_context_shortcut">කෙටිමං සාදන්න</string>
