@@ -68,6 +68,9 @@
     <string name="emulated_screen_refresh_rate_item_name">Частота оновлення</string>
     <string name="pref_device_display_name">Ім\'я телефона</string>
     <string name="hide_system_apps">Приховати системні застосунки</string>
+    <string name="enter_address">Enter address</string>
+    <string name="address">Address</string>
+    <string name="port">Port</string>
     <string name="action_context_delete">Видалити</string>
     <string name="action_context_rename">Перейменувати</string>
     <string name="action_context_shortcut">Створити ярлик</string>
