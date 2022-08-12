@@ -790,7 +790,6 @@ namespace eka2l1::epoc {
         epoc::screen *scr = get_ws().get_screen(screen_num);
 
         if (!scr) {
-            LOG_ERROR(SERVICE_WINDOW, "Can't find screen object with number {}, using the default screen", screen_num);
             scr = get_ws().get_current_focus_screen();
         }
 
