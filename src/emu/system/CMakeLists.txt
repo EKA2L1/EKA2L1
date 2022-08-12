@@ -29,6 +29,7 @@ target_link_libraries(epoc PRIVATE
         epocservs
         FAT
         gdbstub
+        j2me
         miniz
         pugixml)
 

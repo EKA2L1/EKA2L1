@@ -21,7 +21,6 @@
 #pragma once
 
 #include <common/types.h>
-#include <package/manager.h>
 
 #include <functional>
 #include <memory>
@@ -77,6 +76,10 @@ namespace eka2l1 {
     namespace manager {
         class packages;
         class scripts;
+    }
+
+    namespace j2me {
+        class app_list;
     }
 
     class debugger_base;
@@ -163,6 +166,7 @@ namespace eka2l1 {
         arm::core *get_cpu();
         config::state *get_config();
         dispatch::dispatcher *get_dispatcher();
+        j2me::app_list *get_j2me_applist();
 
         void set_config(config::state *conf);
 
@@ -178,7 +182,7 @@ namespace eka2l1 {
         bool unpause();
 
         bool set_device(const std::uint8_t idx);
-        package::installation_result install_package(std::u16string path, drive_number drv);
+        int install_package(std::u16string path, drive_number drv);
 
         void request_exit();
         bool should_exit() const;

@@ -320,11 +320,11 @@ namespace eka2l1 {
 
             str.erase(new_end, str.end());
 
-            while ((str.length() > 0) && (static_cast<char>(str[0]) == ' ')) {
+            while ((str.length() > 0) && ((static_cast<char>(str[0]) == ' ') || (static_cast<char>(str[0]) == '\r'))) {
                 str.erase(str.begin());
             }
 
-            while ((str.length() > 0) && (static_cast<char>(str.back()) == ' ')) {
+            while ((str.length() > 0) && ((static_cast<char>(str.back()) == ' ') || (static_cast<char>(str.back()) == '\r'))) {
                 str.erase(str.length() - 1);
             }
 

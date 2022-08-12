@@ -58,10 +58,12 @@
 
 #include <dispatch/libraries/register.h>
 #include <dispatch/dispatcher.h>
+#include <j2me/applist.h>
 #include <kernel/libmanager.h>
 #include <kernel/timing.h>
 #include <ldd/collection.h>
 #include <loader/rom.h>
+#include <package/manager.h>
 #include <services/init.h>
 #include <vfs/vfs.h>
 
@@ -115,6 +117,7 @@ namespace eka2l1 {
         std::unique_ptr<gdbstub> stub_;
         std::unique_ptr<dispatch::dispatcher> dispatcher_;
         std::unique_ptr<manager::packages> packages_;
+        std::unique_ptr<j2me::app_list> j2me_applist_;
 
 #if ENABLE_SCRIPTING
         std::unique_ptr<manager::scripts> scripting_;
@@ -181,7 +184,6 @@ namespace eka2l1 {
 
             // Try to set system language
             set_system_language(static_cast<language>(conf_->language));
-
             epoc::init_hal(parent_);
 
             // Initialize HLE finally
@@ -259,6 +261,8 @@ namespace eka2l1 {
 
             ldd_request_load_callback_handle_ = kern_->register_ldd_factory_request_callback(
                 &ldd::get_factory_func);
+
+            j2me_applist_ = std::make_unique<j2me::app_list>(*conf_);
         }
 
         std::uint32_t get_preset_emulate_cpu_hz(const epocver ever) {
@@ -519,6 +523,10 @@ namespace eka2l1 {
 
         dispatch::dispatcher *get_dispatcher() {
             return dispatcher_.get();
+        }
+
+        j2me::app_list *get_j2me_applist() {
+            return j2me_applist_.get();
         }
 
         void mount(drive_number drv, const drive_media media, std::string path, const std::uint32_t attrib = io_attrib_none);
@@ -1278,6 +1286,10 @@ namespace eka2l1 {
         return impl->get_dispatcher();
     }
 
+    j2me::app_list *system::get_j2me_applist() {
+        return impl->get_j2me_applist();
+    }
+
     void system::mount(drive_number drv, const drive_media media, std::string path,
         const std::uint32_t attrib) {
         return impl->mount(drv, media, path, attrib);
@@ -1295,8 +1307,8 @@ namespace eka2l1 {
         return impl->reset(true);
     }
 
-    package::installation_result system::install_package(std::u16string path, drive_number drv) {
-        return impl->install_package(path, drv);
+    int system::install_package(std::u16string path, drive_number drv) {
+        return static_cast<int>(impl->install_package(path, drv));
     }
 
     void system::request_exit() {
