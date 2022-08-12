@@ -203,7 +203,7 @@ namespace eka2l1::common {
 
                 int cursor = 31 - (soc & 31);
 
-                while (cursor > 0) {
+                while (cursor >= 0) {
                     if (((wv >> cursor) & 1) == 1) {
                         boff = cursor;
                         bflen = 0;
