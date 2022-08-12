@@ -112,6 +112,7 @@ namespace eka2l1 {
             obj->destroy();                 \
     }                                       \
     container.clear();
+    
 
         // Delete one by one in order. Do not change the order
         OBJECT_CONTAINER_CLEANUP(sessions_);
@@ -124,6 +125,11 @@ namespace eka2l1 {
         OBJECT_CONTAINER_CLEANUP(prop_refs_);
         OBJECT_CONTAINER_CLEANUP(props_);
         OBJECT_CONTAINER_CLEANUP(chunks_);
+
+        for (std::size_t i = 0; i < msgs_.size(); i++) {
+            msgs_[i].reset();   
+        }
+
         OBJECT_CONTAINER_CLEANUP(threads_);
         OBJECT_CONTAINER_CLEANUP(processes_);
         OBJECT_CONTAINER_CLEANUP(libraries_);
