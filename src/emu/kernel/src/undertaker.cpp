@@ -60,7 +60,7 @@ namespace eka2l1::kernel {
 
     void undertaker::complete(kernel::thread *req) {
         if (!req_info_.empty()) {
-            kernel::handle *hptr = thread_handle_.get(req->owning_process());
+            kernel::handle *hptr = thread_handle_.get(req_info_.requester->owning_process());
             if (hptr) {
                 kernel::handle hopened = kern->open_handle_with_thread(req_info_.requester, req, kernel::owner_type::thread);
                 if (hopened == INVALID_HANDLE) {
