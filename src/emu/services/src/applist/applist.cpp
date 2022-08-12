@@ -1007,7 +1007,15 @@ namespace eka2l1 {
     static constexpr std::uint8_t ENVIRONMENT_SLOT_MAIN = 1;
 
     bool applist_server::launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id, kernel::process *requester) {
-        process_ptr pr = kern->spawn_new_process(exe_path, (legacy_level() < APA_LEGACY_LEVEL_MORDEN) ? cmd : u"");
+        static constexpr std::uint32_t MINIMAL_LAUNCH_STACK_SIZE_EKA2 = 0x8000;
+        static constexpr std::uint32_t MINIMAL_LAUNCH_STACK_SIZE_EKA1 = 0x4000;
+
+        // Some S^3 app has very low stack size for some reason. So we replace the stack size if it's too low
+        // Note that on the actual source code, app is launched with possible stack override
+        // For reference: see variable KMinApplicationStackSize and this line at file:
+        // https://github.com/SymbianSource/oss.FCL.sf.mw.appsupport/blob/master/appfw/apparchitecture/apgrfx/apgstart.cpp#L164
+        process_ptr pr = kern->spawn_new_process(exe_path, (legacy_level() < APA_LEGACY_LEVEL_MORDEN) ? cmd : u"",
+            0, (kern->is_eka1() ? MINIMAL_LAUNCH_STACK_SIZE_EKA1 : MINIMAL_LAUNCH_STACK_SIZE_EKA2));
 
         if (!pr) {
             return false;
