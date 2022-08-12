@@ -72,6 +72,17 @@ namespace eka2l1 {
         }
     }
 
+    fs_node::~fs_node() {
+        if (temporary) {
+            io_system *io = serv->get_system()->get_io_system();
+
+            if (vfs_node->type == io_component_type::file) { 
+                file *vfs_file = reinterpret_cast<file *>(vfs_node.get());
+                io->delete_entry(vfs_file->file_name());
+            }
+        }
+    }
+
     void fs_node::deref() {
         if (vfs_node->type == io_component_type::file) {        
             file *vfs_file = reinterpret_cast<file *>(vfs_node.get());
@@ -84,10 +95,6 @@ namespace eka2l1 {
                     serv->attribs.erase(ite);
                 }
             }
-        }
-
-        if (count == 1) {
-            vfs_node.reset();
         }
 
         epoc::ref_count_object::deref();
@@ -936,6 +943,7 @@ namespace eka2l1 {
         new_node->mix_mode = real_mode;
         new_node->open_mode = access_mode;
         new_node->process = own_pr_uid;
+        new_node->temporary = temporary;
         new_node->serv = server<fs_server>();
 
         return obj_table_.add(new_node);

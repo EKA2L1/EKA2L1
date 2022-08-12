@@ -88,6 +88,7 @@ namespace eka2l1 {
         kernel::uid process{ 0 };
 
         void deref() override;
+        ~fs_node() override;
     };
 
     struct fs_path_case_insensitive_hasher {
