@@ -40,7 +40,7 @@
          </font>
         </property>
         <property name="text">
-         <string>A new update has been released on Github!</string>
+         <string>A new update has been released on GitHub!</string>
         </property>
        </widget>
       </item>

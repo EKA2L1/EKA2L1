@@ -58,7 +58,7 @@ static const char *UPDATE_TAG_NAME = "continous";
 static const char *UPDATE_FILE_STORE_FOLDER = "staging";
 static const char *UPDATE_FILE_STORE_PATH = "staging\\update.zip";
 
-static const char *INVALID_JSON_ERR_STR = "Invalid response from Github about newest update! Please check your internet connection!";
+static const char *INVALID_JSON_ERR_STR = "Invalid response from GitHub about newest update! Please check your internet connection!";
 static const char *NO_AUTO_CHECK_UPDATE_SETTING = "noAutoCheckUpdate";
 
 static QString get_platform_release_filename() {
@@ -155,7 +155,7 @@ void update_dialog::on_tag_request_complete(QNetworkReply *reply) {
             report_error(tr(INVALID_JSON_ERR_STR));
         }
     } else {
-        report_error(tr("Failed to get information about the newest update from Github!"));
+        report_error(tr("Failed to get information about the newest update from GitHub!"));
     }
 }
 
@@ -193,7 +193,7 @@ void update_dialog::on_tag_download_link_request_complete(QNetworkReply *reply) 
             report_error(tr(INVALID_JSON_ERR_STR));
         }
     } else {
-        report_error(tr("Failed to get update download link from Github!"));
+        report_error(tr("Failed to get update download link from GitHub!"));
     }
 }
 
@@ -211,7 +211,7 @@ void update_dialog::on_changelog_request_complete(QNetworkReply *reply) {
     access_manager_->disconnect(this);
     reply->deleteLater();
 
-    ui_->changelog_textedit->setText(tr("Error retrieving changelog from Github..."));
+    ui_->changelog_textedit->setText(tr("Error retrieving changelog from GitHub..."));
 
     if (reply->error() == QNetworkReply::NoError) {
         QByteArray reply_data = reply->readAll();
