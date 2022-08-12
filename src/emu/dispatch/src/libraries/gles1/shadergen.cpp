@@ -200,14 +200,17 @@ namespace eka2l1::dispatch {
                         }
                     }
                 }
-
-                if ((vertex_statuses & egl_context_es1::VERTEX_STATE_LIGHT_TWO_SIDE) == 0) {
-                    main_body += "\tmBackColor = mFrontColor;\n";   
-                }
-
-                main_body += "\t//Alpha is always the diffuse of the material (as far as I know!)\n"
-                            "\tmFrontColor.a = mBackColor.a = gActualMaterialDiffuse.a;\n";
             }
+
+            if ((vertex_statuses & egl_context_es1::VERTEX_STATE_LIGHT_TWO_SIDE) == 0) {
+                main_body += "\tmBackColor = mFrontColor;\n";   
+            }
+
+            main_body += 
+                        "\tmBackColor = clamp(mBackColor, 0.0, 1.0);\n"
+                        "\tmFrontColor = clamp(mFrontColor, 0.0, 1.0);\n"
+                        "\t//Alpha is always the diffuse of the material (as far as I know!)\n"
+                        "\tmFrontColor.a = mBackColor.a = gActualMaterialDiffuse.a;\n";
         }
 
 
