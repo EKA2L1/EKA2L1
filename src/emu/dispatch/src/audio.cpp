@@ -289,7 +289,7 @@ namespace eka2l1::dispatch {
             manager.audio_renderer_semaphore()->destroy();
         }
 
-        return (sys->get_symbian_version_use() <= epocver::eka1) ? 1 : epoc::error_none;
+        return (sys->get_symbian_version_use() <= epocver::eka2) ? 1 : epoc::error_none;
     }
 
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_pause, eka2l1::ptr<void> handle) {
