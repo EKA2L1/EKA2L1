@@ -62,6 +62,7 @@ set(PROJECT_SOURCES
         include/qt/device_install_dialog.h
         include/qt/displaywidget.h
         include/qt/input_dialog_driver.h
+        include/qt/launch_process_dialog.h
         include/qt/mainwindow.h
         include/qt/package_manager_dialog.h
         include/qt/seh_handler.h
@@ -89,6 +90,8 @@ set(PROJECT_SOURCES
         src/device_install_dialog.ui
         src/displaywidget.cpp
         src/input_dialog_driver.cpp
+        src/launch_process_dialog.cpp
+        src/launch_process_dialog.ui
         src/main.cpp
         src/mainwindow.cpp
         src/mainwindow.ui
@@ -181,6 +184,7 @@ target_link_libraries(eka2l1_qt PRIVATE
     epockern
     epocpkg
     gdbstub
+    j2me
     yaml-cpp)
 	
 set_target_properties(eka2l1_qt PROPERTIES OUTPUT_NAME eka2l1_qt

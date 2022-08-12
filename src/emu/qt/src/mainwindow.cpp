@@ -29,6 +29,7 @@
 #include <qt/settings_dialog.h>
 #include <qt/update_dialog.h>
 #include <qt/update_notice_dialog.h>
+#include <qt/launch_process_dialog.h>
 #include <qt/state.h>
 #include <qt/utils.h>
 #include <qt/btnmap/editor_widget.h>
@@ -56,6 +57,9 @@
 #include <services/window/screen.h>
 #include <services/window/window.h>
 
+#include <j2me/interface.h>
+#include <j2me/applist.h>
+
 #include <QCheckBox>
 #include <QDragEnterEvent>
 #include <QDropEvent>
@@ -65,6 +69,7 @@
 #include <QMessageBox>
 #include <QProgressDialog>
 #include <QSettings>
+#include <QLineEdit>
 #include <QtConcurrent/QtConcurrent>
 
 static constexpr const char *LAST_UI_WINDOW_GEOMETRY_SETTING = "lastWindowGeometry";
@@ -72,6 +77,7 @@ static constexpr const char *LAST_UI_WINDOW_STATE = "lastWindowState";
 static constexpr const char *LAST_EMULATED_DISPLAY_GEOMETRY_SETTING = "lastEmulatedDisplayGeometry";
 static constexpr const char *LAST_EMULATED_DISPLAY_STATE = "lastEmulatedDisplayState";
 static constexpr const char *LAST_PACKAGE_FOLDER_SETTING = "lastPackageFolder";
+static constexpr const char *LAST_JAR_FOLDER_SETTING = "lastJarFolder";
 static constexpr const char *LAST_MOUNT_FOLDER_SETTING = "lastMountFolder";
 static constexpr const char *LAST_INSTALL_NGAGE_GAME_CARD_FOLDER_SETTING = "lastNGageGameCardFolder";
 static constexpr const char *NO_DEVICE_INSTALL_DISABLE_NOF_SETTING = "disableNoDeviceInstallNotify";
@@ -374,7 +380,7 @@ void main_window::setup_app_list(const bool load_now) {
         eka2l1::fbs_server *fbs_serv = reinterpret_cast<eka2l1::fbs_server *>(kernel->get_by_name<eka2l1::service::server>(fbs_server_name));
 
         if (al_serv && fbs_serv) {
-            applist_ = new applist_widget(this, al_serv, fbs_serv, system->get_io_system(), emulator_state_.conf.hide_system_apps, true);
+            applist_ = new applist_widget(this, al_serv, fbs_serv, system->get_io_system(), system->get_j2me_applist(), emulator_state_.conf, emulator_state_.conf.hide_system_apps, true);
             ui_->layout_main->addWidget(applist_);
 
             connect(applist_, &applist_widget::app_launch, this, &main_window::on_app_clicked);
@@ -382,7 +388,7 @@ void main_window::setup_app_list(const bool load_now) {
 
             applist_->update_devices(system->get_device_manager());
             if (load_now) {
-                applist_->reload_whole_list();
+                applist_->request_reload();
             }
         }
     }
@@ -508,7 +514,7 @@ void main_window::on_settings_triggered() {
 void main_window::force_refresh_applist() {
     // Try to refersh app lists
     if (applist_ && applist_->lister_->rescan_registries(applist_->io_)) {
-        applist_->reload_whole_list();
+        applist_->request_reload(false);
     }
 }
 
@@ -879,7 +885,7 @@ void main_window::mount_game_card_dump(QString mount_path) {
     refresh_recent_mounts();
 
     if (applist_) {
-        applist_->reload_whole_list();
+        applist_->request_reload(false);
     }
 }
 
@@ -990,11 +996,18 @@ void main_window::on_app_clicked(applist_widget_item *item) {
         setup_screen_draw();
     }
 
-    if (applist_->launch_from_widget_item(item)) {
+    bool launch_ok = false;
+    if (item->is_j2me_) {
+        launch_ok = eka2l1::j2me::launch(emulator_state_.symsys.get(), static_cast<std::uint32_t>(item->registry_index_));
+    } else  {
+        launch_ok = applist_->launch_from_widget_item(item);
+    }
+
+    if (launch_ok) {
         switch_to_game_display_mode();
         emit app_launching();
     } else {
-        LOG_ERROR(eka2l1::FRONTEND_UI, "Fail to launch the selected application!");
+        QMessageBox::critical(this, tr("Launch failed"), tr("Fail to launch the selected application!"));
     }
 }
 
@@ -1237,6 +1250,7 @@ void main_window::refresh_mount_availbility() {
     ui_->action_mount_recent_dumps->setEnabled(false);
     ui_->menu_mount_game_card_dump->setEnabled(false);
     ui_->action_ngage_card_game->setEnabled(false);
+    ui_->action_jar->setEnabled(false);
 
     eka2l1::system *system = emulator_state_.symsys.get();
     if (system) {
@@ -1247,6 +1261,8 @@ void main_window::refresh_mount_availbility() {
                 ui_->action_mount_recent_dumps->setEnabled(true);
                 ui_->action_ngage_card_game->setEnabled(true);
             }
+
+            ui_->action_jar->setEnabled(true);
         }
     }
 }
@@ -1536,6 +1552,79 @@ void main_window::on_action_check_for_update_triggered() {
 void main_window::load_and_show() {
     show();
     if (applist_) {
-        applist_->reload_whole_list();
+        applist_->request_reload();
+    }
+}
+
+void main_window::on_action_launch_process_triggered() {
+    launch_process_dialog *diag = new launch_process_dialog(this, emulator_state_.symsys->get_kernel_system());
+    connect(diag, &launch_process_dialog::launched, this, &main_window::on_launch_process_requested);
+    diag->show();
+}
+
+void main_window::on_launch_process_requested() {
+    if (displayer_ && !displayer_->isVisible()) {
+        switch_to_game_display_mode();
+    }
+}
+
+void main_window::on_action_jar_triggered() {
+    QSettings settings;
+    QString last_install_dir;
+
+    QVariant last_install_dir_variant = settings.value(LAST_JAR_FOLDER_SETTING);
+    if (last_install_dir_variant.isValid()) {
+        last_install_dir = last_install_dir_variant.toString();
+    }
+
+    QString package_file_path = QFileDialog::getOpenFileName(this, tr("Choose the JAR file to install"), last_install_dir, tr("JAR file (*.jar)"));
+    if (!package_file_path.isEmpty()) {
+        settings.setValue(LAST_JAR_FOLDER_SETTING, QFileInfo(package_file_path).absoluteDir().path());
+
+        eka2l1::j2me::app_entry entry_res;
+        const eka2l1::j2me::install_error err = eka2l1::j2me::install(emulator_state_.symsys.get(), package_file_path.toStdString(), entry_res);
+
+        if (err == eka2l1::j2me::INSTALL_ERROR_JAR_SUCCESS) {
+            QString info_str = tr("%1 version %2 (by %3) has been installed!").arg(QString::fromStdString(entry_res.title_),
+                QString::fromStdString(entry_res.version_), QString::fromStdString(entry_res.author_));
+
+            QMessageBox::information(this, tr("Install success"), info_str);
+            
+            eka2l1::j2me::app_list *list = emulator_state_.symsys->get_j2me_applist();
+            list->flush();
+
+            if (applist_) {
+                applist_->request_reload(true);
+            }
+        } else {
+            QString error_str;
+            switch (err) {
+            case eka2l1::j2me::INSTALL_ERROR_JAR_CANT_ADD_TO_DB:
+                error_str = tr("Can not add the JAR to the apps database!");
+                break;
+
+            case eka2l1::j2me::INSTALL_ERROR_JAR_INVALID:
+                error_str = tr("The given file is not a valid JAR file!");
+                break;
+
+            case eka2l1::j2me::INSTALL_ERROR_JAR_NOT_FOUND:
+                error_str = tr("Can not find the JAR file!");
+                break;
+
+            case eka2l1::j2me::INSTALL_ERROR_JAR_ONLY_MIDP1_SUPPORTED:
+                error_str = tr("The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!");
+                break;
+
+            case eka2l1::j2me::INSTALL_ERROR_NOT_SUPPORTED_FOR_PLAT:
+                error_str = tr("The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment");
+                break;
+
+            default:
+                error_str = tr("An unexpected error has happened. Error code: %1").arg(static_cast<int>(err));
+                break;
+            }
+
+            QMessageBox::critical(this, tr("Install failed"), error_str);
+        }
     }
 }

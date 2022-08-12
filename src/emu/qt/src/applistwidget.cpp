@@ -21,6 +21,9 @@
 #include <QLineEdit>
 #include <QPainter>
 #include <QMovie>
+#include <QSettings>
+#include <QMenu>
+#include <QInputDialog>
 #include <QtSvg/QSvgRenderer>
 #include <QtConcurrent/QtConcurrent>
 
@@ -28,12 +31,15 @@
 #include <common/cvt.h>
 #include <common/path.h>
 #include <common/pystr.h>
+#include <config/config.h>
 #include <qt/applistwidget.h>
 #include <qt/utils.h>
 #include <services/applist/applist.h>
 #include <services/fbs/fbs.h>
 #include <system/devices.h>
 #include <utils/apacmd.h>
+#include <j2me/applist.h>
+#include <j2me/interface.h>
 
 #include <vector>
 
@@ -43,6 +49,7 @@
 static QSize ICON_GRID_SIZE = QSize(64, 64);
 static QSize ICON_GRID_SPACING_SIZE = QSize(20, 20);
 static constexpr std::uint32_t WARE_APP_UID_START = 0x10300000;
+static const char *J2ME_MODE_ENABLED_SETTING = "J2MEModeEnabled";
 
 static inline bool is_app_reg_system_app(const eka2l1::apa_app_registry *reg) {
     return (reg->land_drive == drive_z) && (reg->mandatory_info.uid < WARE_APP_UID_START);
@@ -58,7 +65,7 @@ applist_search_bar::applist_search_bar(QWidget *parent)
     search_layout_ = new QHBoxLayout(this);
     search_layout_->addWidget(search_label_);
     search_layout_->addWidget(search_line_edit_);
-    search_layout_->setContentsMargins(10, 0, 0, 0);
+    search_layout_->setContentsMargins(0, 0, 0, 0);
 
     setLayout(search_layout_);
 
@@ -122,29 +129,59 @@ void applist_device_combo::on_device_combo_changed(int index) {
     emit device_combo_changed(index);
 }
 
-applist_widget_item::applist_widget_item(const QIcon &icon, const QString &name, int registry_index, QListWidget *parent)
+applist_widget_item::applist_widget_item(const QIcon &icon, const QString &name, int registry_index, bool is_j2me, QListWidget *parent)
     : QListWidgetItem(icon, name, parent)
-    , registry_index_(registry_index) {
+    , registry_index_(registry_index)
+    , is_j2me_(is_j2me) {
 }
 
-applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss, eka2l1::io_system *io, const bool hide_system_apps, const bool ngage_mode)
+static void configure_list_widget_to_grid(QListWidget *list_widget) {
+    list_widget->setFrameShape(QFrame::NoFrame);
+    list_widget->viewport()->setAutoFillBackground(false);
+    list_widget->setFlow(QListWidget::Flow::LeftToRight);
+    list_widget->setResizeMode(QListWidget::ResizeMode::Adjust);
+    list_widget->setSpacing(100);
+    list_widget->setGridSize(ICON_GRID_SIZE + ICON_GRID_SPACING_SIZE);
+    list_widget->setIconSize(ICON_GRID_SIZE);
+    list_widget->setViewMode(QListWidget::ViewMode::IconMode);
+    list_widget->setMovement(QListWidget::Movement::Static);
+    list_widget->setMinimumHeight(ICON_GRID_SIZE.height() + ICON_GRID_SPACING_SIZE.height() + 200);
+}
+
+applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss, eka2l1::io_system *io, eka2l1::j2me::app_list *lister_j2me, eka2l1::config::state &conf, const bool hide_system_apps, const bool ngage_mode)
     : QWidget(parent)
     , search_bar_(nullptr)
     , device_combo_bar_(nullptr)
     , list_widget_(nullptr)
     , layout_(nullptr)
     , bar_widget_(nullptr)
+    , loading_widget_(nullptr)
     , loading_gif_(nullptr)
     , loading_label_(nullptr)
+    , j2me_mode_btn_(nullptr)
     , lister_(lister)
+    , lister_j2me_(lister_j2me)
     , no_app_visible_normal_label_(nullptr)
     , no_app_visible_hide_sysapp_label_(nullptr)
     , fbss_(fbss)
     , io_(io)
-    , hide_system_apps_(hide_system_apps) {
+    , hide_system_apps_(hide_system_apps)
+    , conf_(conf)
+    , should_dead_(false)
+    , context_j2me_item_(nullptr) {
     search_bar_ = new applist_search_bar;
     device_combo_bar_ = new applist_device_combo;
+    j2me_mode_btn_ = new QPushButton;
+
+    loaded_[0] = loaded_[1] = false;
+
+    QSettings settings;
+    j2me_mode_btn_->setCheckable(true);
+    j2me_mode_btn_->setChecked(settings.value(J2ME_MODE_ENABLED_SETTING, false).toBool());
+    update_j2me_button_name();
+
     list_widget_ = new QListWidget;
+    list_j2me_widget_ = new QListWidget;
 
     loading_label_ = new QLabel;
     loading_gif_ = new QMovie(":/assets/loading.gif");
@@ -160,27 +197,48 @@ applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, 
     no_app_visible_normal_label_->setStyleSheet(EMPTY_APP_LIST_TEXT_STYLESHEET);
     no_app_visible_hide_sysapp_label_->setStyleSheet(EMPTY_APP_LIST_TEXT_STYLESHEET);
 
-    layout_ = new QGridLayout(this);
+    layout_ = new QVBoxLayout(this);
 
     bar_widget_ = new QWidget;
     QHBoxLayout *temp_layout = new QHBoxLayout;
 
-    temp_layout->addWidget(search_bar_, 3);
-    temp_layout->addWidget(device_combo_bar_, 1);
+    temp_layout->addWidget(search_bar_, 10);
+    temp_layout->addWidget(device_combo_bar_, 4);
+    temp_layout->addWidget(j2me_mode_btn_, 1);
     temp_layout->setContentsMargins(0, 0, 0, 0);
+    j2me_mode_btn_->setContentsMargins(0, 0, 10, 0);
     bar_widget_->setLayout(temp_layout);
+
+    j2me_mode_btn_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    bar_widget_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
     layout_->addWidget(bar_widget_);
     layout_->addWidget(list_widget_);
+    layout_->addWidget(list_j2me_widget_);
     layout_->addWidget(no_app_visible_normal_label_);
     layout_->addWidget(no_app_visible_hide_sysapp_label_);
-    layout_->addWidget(loading_label_);
+
+    loading_widget_ = new QWidget;
+    QGridLayout *temp_containing_grid_layout = new QGridLayout;
+
+    loading_widget_->setLayout(temp_containing_grid_layout);
+    loading_label_->setAlignment(Qt::AlignCenter);
+
+    temp_containing_grid_layout->setSizeConstraint(QLayout::SetMaximumSize);
+    temp_containing_grid_layout->addWidget(loading_label_);
+    temp_containing_grid_layout->setAlignment(Qt::AlignCenter);
+
+    layout_->addWidget(loading_widget_);
     layout_->setContentsMargins(0, 0, 0, 0);
-    layout_->setAlignment(Qt::AlignCenter);
+
+    no_app_visible_hide_sysapp_label_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    no_app_visible_hide_sysapp_label_->setAlignment(Qt::AlignCenter);
+
+    no_app_visible_normal_label_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    no_app_visible_normal_label_->setAlignment(Qt::AlignCenter);
 
     no_app_visible_normal_label_->hide();
     no_app_visible_hide_sysapp_label_->hide();
-    bar_widget_->hide();
     list_widget_->hide();
     loading_label_->show();
     loading_gif_->start();
@@ -188,33 +246,42 @@ applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, 
     setLayout(layout_);
 
     // Well, just make it a part of the window. Hehe
-    list_widget_->setFrameShape(QFrame::NoFrame);
-    list_widget_->viewport()->setAutoFillBackground(false);
+    configure_list_widget_to_grid(list_widget_);
+    configure_list_widget_to_grid(list_j2me_widget_);
 
-    list_widget_->setFlow(QListWidget::Flow::LeftToRight);
-    list_widget_->setResizeMode(QListWidget::ResizeMode::Adjust);
-    list_widget_->setSpacing(100);
-    list_widget_->setGridSize(ICON_GRID_SIZE + ICON_GRID_SPACING_SIZE);
-    list_widget_->setIconSize(ICON_GRID_SIZE);
-    list_widget_->setViewMode(QListWidget::ViewMode::IconMode);
-    list_widget_->setMovement(QListWidget::Movement::Static);
-    list_widget_->setMinimumHeight(ICON_GRID_SIZE.height() + ICON_GRID_SPACING_SIZE.height() + 200);
+    list_j2me_widget_->setContextMenuPolicy(Qt::CustomContextMenu);
 
     connect(list_widget_, &QListWidget::itemClicked, this, &applist_widget::on_list_widget_item_clicked);
+    connect(list_j2me_widget_, &QListWidget::itemClicked, this, &applist_widget::on_list_widget_item_clicked);
+    connect(list_j2me_widget_, &QListWidget::customContextMenuRequested, this, &applist_widget::on_j2me_list_widget_custom_menu_requested);
     connect(search_bar_, &applist_search_bar::new_search, this, &applist_widget::on_search_content_changed);
     connect(device_combo_bar_, &applist_device_combo::device_combo_changed, this, &applist_widget::on_device_change_request);
+    connect(j2me_mode_btn_, &QPushButton::clicked, this, &applist_widget::on_j2me_mode_btn_clicked);
     connect(this, &applist_widget::new_registeration_item_come, this, &applist_widget::on_new_registeration_item_come, Qt::QueuedConnection);
 }
 
 applist_widget::~applist_widget() {
+    exit_mutex_.lock();
+
+    scanning_done_evt_.reset();
+    should_dead_ = true;
+
+    exit_mutex_.unlock();
+
+    if (scanning_) {
+        scanning_done_evt_.wait();
+    }
+
     delete search_bar_;
     delete device_combo_bar_;
     delete loading_gif_;
     delete loading_label_;
+    delete loading_widget_;
 
     delete layout_;
     delete bar_widget_;
     delete list_widget_;
+    delete list_j2me_widget_;
 }
 
 void applist_widget::hide_all() {
@@ -260,16 +327,23 @@ void applist_widget::on_new_registeration_item_come(QListWidgetItem *item) {
         item->setHidden(true);
     }
 
-    list_widget_->addItem(item);
+    const bool in_j2me = j2me_mode_btn_->isChecked();
+
+    if (in_j2me) {
+        list_j2me_widget_->addItem(item);
+    } else {
+        list_widget_->addItem(item);
+    }
 
     if (!loading_label_->isHidden()) {
         loading_label_->hide();
         loading_gif_->stop();
-    }
 
-    if (bar_widget_->isHidden()) {
-        bar_widget_->show();
-        list_widget_->show();
+        if (in_j2me) {
+            list_j2me_widget_->show();
+        } else {
+            list_widget_->show();
+        }
 
         no_app_visible_normal_label_->hide();
         no_app_visible_hide_sysapp_label_->hide();
@@ -277,41 +351,139 @@ void applist_widget::on_new_registeration_item_come(QListWidgetItem *item) {
 }
 
 void applist_widget::reload_whole_list() {
-    list_widget_->clear();
+    if (should_dead_) {
+        scanning_done_evt_.set();
+        return;
+    }
 
-    bar_widget_->hide();
     list_widget_->hide();
+    list_j2me_widget_->hide();
     no_app_visible_normal_label_->hide();
     no_app_visible_hide_sysapp_label_->hide();
+    
+    if (loaded_[0] && j2me_mode_btn_->isChecked()) {
+        const bool app_avail = list_j2me_widget_->count() > 0;
+        list_j2me_widget_->setVisible(app_avail);
+        list_widget_->hide();
+
+        if (!app_avail)
+            show_no_apps_avail();
+
+        return;
+    }
+
+    if (loaded_[1] && !j2me_mode_btn_->isChecked()) {
+        const bool app_avail = list_widget_->count() > 0;
+        list_widget_->setVisible(app_avail);
+        list_j2me_widget_->hide();
+
+        if (!app_avail)
+            show_no_apps_avail();
+
+        return;
+    }
+
+    if (j2me_mode_btn_->isChecked()) {
+        loaded_[0] = true;
+        list_j2me_widget_->clear();
+    } else {
+        loaded_[1] = true;
+        list_widget_->clear();
+    }
+
     loading_label_->show();
     loading_gif_->start();
 
     // This vector icon list is synced with
-    QFuture<void> future = QtConcurrent::run([this]() {
-        std::vector<eka2l1::apa_app_registry> &registries = lister_->get_registerations();
-        for (std::size_t i = 0; i < registries.size(); i++) {
-            if (!registries[i].caps.is_hidden) {
-                if (!hide_system_apps_ || (hide_system_apps_ && !is_app_reg_system_app(registries.data() + i))) {
-                    add_registeration_item(registries[i], static_cast<int>(i));
+    QFuture<void> future;
+    
+    if (j2me_mode_btn_->isChecked()) {
+        future = QtConcurrent::run([this]() {
+            exit_mutex_.lock();
+            scanning_ = true;
+            exit_mutex_.unlock();
+
+            exit_mutex_.lock();
+
+            if (should_dead_) {
+                scanning_done_evt_.set();
+                return;
+            }
+
+            std::vector<eka2l1::j2me::app_entry> entries = lister_j2me_->get_entries();
+            exit_mutex_.unlock();
+
+            if (entries.size() == 0) {
+                show_no_apps_avail();
+            } else {
+                for (std::size_t i = 0; i < entries.size(); i++) {
+                    const std::lock_guard<std::mutex> guard(exit_mutex_);
+                    if (should_dead_) {
+                        scanning_done_evt_.set();
+                        return;
+                    }
+
+                    add_registeration_item_j2me(entries[i]);
                 }
             }
-        }
-    });
+
+            const std::lock_guard<std::mutex> guard(exit_mutex_);
+            scanning_ = false;
+            scanning_done_evt_.set();
+        });
+    } else {
+        future = QtConcurrent::run([this]() {
+            exit_mutex_.lock();
+            scanning_ = true;
+            exit_mutex_.unlock();
+
+            exit_mutex_.lock();
+            if (should_dead_) {
+                scanning_done_evt_.set();
+                return;
+            }
+            std::vector<eka2l1::apa_app_registry> &registries = lister_->get_registerations();
+            exit_mutex_.unlock();
+
+            if (registries.size() == 0) {
+                show_no_apps_avail();
+            } else {
+                for (std::size_t i = 0; i < registries.size(); i++) {
+                    const std::lock_guard<std::mutex> guard(exit_mutex_);
+                    if (should_dead_) {
+                        scanning_done_evt_.set();
+                        return;
+                    }
+
+                    if (!registries[i].caps.is_hidden) {
+                        if (!hide_system_apps_ || (hide_system_apps_ && !is_app_reg_system_app(registries.data() + i))) {
+                            add_registeration_item_native(registries[i], static_cast<int>(i));
+                        }
+                    }
+                }
+            }
+
+            const std::lock_guard<std::mutex> guard(exit_mutex_);
+
+            scanning_ = false;
+            scanning_done_evt_.set();
+        });
+    }
 
     while (!future.isFinished()) {
         QCoreApplication::processEvents();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
+}
 
-    if (list_widget_->count() == 0) {
-        loading_label_->hide();
-        if (hide_system_apps_) {
-            no_app_visible_normal_label_->hide();
-            no_app_visible_hide_sysapp_label_->show();
-        } else {
-            no_app_visible_normal_label_->show();
-            no_app_visible_hide_sysapp_label_->hide();
-        }
+void applist_widget::show_no_apps_avail() {
+    loading_label_->hide();
+    if (hide_system_apps_) {
+        no_app_visible_normal_label_->hide();
+        no_app_visible_hide_sysapp_label_->show();
+    } else {
+        no_app_visible_normal_label_->show();
+        no_app_visible_hide_sysapp_label_->hide();
     }
 }
 
@@ -341,7 +513,29 @@ bool applist_widget::launch_from_widget_item(applist_widget_item *item) {
     return false;
 }
 
-void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const int index) {
+void applist_widget::add_registeration_item_j2me(const eka2l1::j2me::app_entry &entry) {
+    QIcon display_icon;
+    QString icon_path_relocalized = QString::fromStdString(eka2l1::add_path(conf_.storage, entry.icon_path_));
+
+    if (entry.icon_path_.empty() || !QDir().exists(icon_path_relocalized)) {
+        display_icon = QIcon(":/assets/duck_tank.png");
+    } else {
+        QPixmap pixmap(icon_path_relocalized);
+        pixmap = pixmap.scaled(ICON_GRID_SIZE - QSize(4, 4));
+
+        display_icon = QIcon(pixmap);
+    }
+
+    QListWidgetItem *newItem = new applist_widget_item(display_icon, QString::fromStdString(entry.title_),
+        static_cast<int>(entry.id_), true, list_j2me_widget_);
+
+    newItem->setSizeHint(ICON_GRID_SIZE + QSize(20, 20));
+    newItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignBottom);
+
+    emit new_registeration_item_come(newItem);
+}
+
+void applist_widget::add_registeration_item_native(eka2l1::apa_app_registry &reg, const int index) {
     QString app_name = QString::fromUtf16(reg.mandatory_info.long_caption.to_std_string(nullptr).data(), reg.mandatory_info.long_caption.get_length());
 
     bool icon_pair_rendered = false;
@@ -490,7 +684,7 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const
         }
     }
 
-    QListWidgetItem *newItem = new applist_widget_item(final_icon, app_name, index, list_widget_);
+    QListWidgetItem *newItem = new applist_widget_item(final_icon, app_name, index, false, list_widget_);
     newItem->setSizeHint(ICON_GRID_SIZE + QSize(20, 20));
     newItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignBottom);
 
@@ -530,4 +724,88 @@ void applist_widget::update_devices(eka2l1::device_manager *device_mngr) {
     }
 
     update_devices(list_devices, device_mngr->get_current_index());
+}
+
+void applist_widget::update_j2me_button_name() {
+    if (j2me_mode_btn_->isChecked()) {
+        j2me_mode_btn_->setText("J2ME");
+    } else {
+        j2me_mode_btn_->setText("Symbian");
+    }
+}
+
+void applist_widget::on_j2me_mode_btn_clicked() {
+    QSettings settings;
+    settings.setValue(J2ME_MODE_ENABLED_SETTING, j2me_mode_btn_->isChecked());
+
+    update_j2me_button_name();
+    reload_whole_list();
+}
+
+void applist_widget::request_reload(const bool j2me) {
+    if (j2me) {
+        loaded_[0] = false;
+    } else {
+        loaded_[1] = false;
+    }
+
+    if ((j2me && j2me_mode_btn_->isChecked()) || (!j2me && !j2me_mode_btn_->isChecked())) {
+        reload_whole_list();
+    }
+}
+
+void applist_widget::request_reload() {
+    reload_whole_list();
+}
+
+void applist_widget::on_action_rename_j2me_app_triggered() {
+    // 打开输入窗口
+    bool is_ok = false;
+    const QString result = QInputDialog::getText(this, tr("Enter a new name"), QString(), QLineEdit::Normal, context_j2me_item_->text(),
+        &is_ok);
+    
+    // 重命名了就马上更新db
+    if (!is_ok) {
+        return;
+    }
+
+    if (!lister_j2me_->update_name(static_cast<std::uint32_t>(context_j2me_item_->registry_index_), result.toStdString())) {
+        QMessageBox::critical(this, tr("Update name failed"), tr("An error occured while trying to rename the app!"));
+    } else {
+        context_j2me_item_->setText(result);
+        lister_j2me_->flush();
+    }
+}
+
+void applist_widget::on_action_delete_j2me_app_triggered() {
+    if (!eka2l1::j2me::uninstall(lister_->get_system(), static_cast<std::uint32_t>(context_j2me_item_->registry_index_))) {
+        QMessageBox::critical(this, tr("Delete app failed"), tr("An error occured while trying to delete the app!"));
+    } else {
+        list_j2me_widget_->removeItemWidget(context_j2me_item_);
+        lister_j2me_->flush();
+
+        delete context_j2me_item_;
+        context_j2me_item_ = nullptr;
+    }
+}
+
+void applist_widget::on_j2me_list_widget_custom_menu_requested(const QPoint &pos) {
+    applist_widget_item *item = reinterpret_cast<applist_widget_item*>(list_j2me_widget_->itemAt(pos));
+    if (item == nullptr) {
+        return;
+    }
+
+    context_j2me_item_ = item;
+
+    QMenu menu;
+
+    QAction rename_action(tr("Rename"), list_j2me_widget_);
+    QAction delete_action(tr("Delete"), list_j2me_widget_);
+
+    connect(&rename_action, &QAction::triggered, this, &applist_widget::on_action_rename_j2me_app_triggered);
+    connect(&delete_action, &QAction::triggered, this, &applist_widget::on_action_delete_j2me_app_triggered);
+
+    menu.addAction(&rename_action);
+    menu.addAction(&delete_action);
+    menu.exec(mapToGlobal(pos));
 }

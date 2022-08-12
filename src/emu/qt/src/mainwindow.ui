@@ -74,7 +74,9 @@
      </property>
      <addaction name="action_package"/>
      <addaction name="action_device"/>
+     <addaction name="separator"/>
      <addaction name="action_ngage_card_game"/>
+     <addaction name="action_jar"/>
     </widget>
     <widget class="QMenu" name="menu_mount_game_card_dump">
      <property name="title">
@@ -123,6 +125,8 @@
     <addaction name="action_pause"/>
     <addaction name="action_restart"/>
     <addaction name="separator"/>
+    <addaction name="separator"/>
+    <addaction name="action_launch_process"/>
    </widget>
    <widget class="QMenu" name="menu_bluetooth">
     <property name="title">
@@ -306,6 +310,16 @@
   <action name="action_check_for_update">
    <property name="text">
     <string>Check for update</string>
+   </property>
+  </action>
+  <action name="action_launch_process">
+   <property name="text">
+    <string>Launch process</string>
+   </property>
+  </action>
+  <action name="action_jar">
+   <property name="text">
+    <string notr="true">JAR</string>
    </property>
   </action>
  </widget>

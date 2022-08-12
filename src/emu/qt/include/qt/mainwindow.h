@@ -173,8 +173,11 @@ private slots:
     void on_action_button_mapping_editor_triggered();
     void on_action_touch_mapping_editor_triggered();
     void on_action_check_for_update_triggered();
+    void on_action_launch_process_triggered();
+    void on_action_jar_triggered();
     void on_install_ngage_game_name_available(QString name);
     void on_exit_for_update_requested();
+    void on_launch_process_requested();
 
 signals:
     void progress_dialog_change(const std::size_t now, const std::size_t total);
