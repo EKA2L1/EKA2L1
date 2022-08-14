@@ -91,22 +91,22 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="51"/>
       <source>Modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Modify friends&apos; IP addresses</translation>
+      <translation>Измените IP-адреса друзей</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="66"/>
       <source>IP address (IPv4 or IPv6)</source>
-      <translation type="unfinished">IP address (IPv4 or IPv6)</translation>
+      <translation>IP адрес (IPv4 или IPv6)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="71"/>
       <source>Port (can be empty)</source>
-      <translation type="unfinished">Port (can be empty)</translation>
+      <translation>Порт (может быть пустым)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="114"/>
       <source>Add more</source>
-      <translation type="unfinished">Add more</translation>
+      <translation>Добавить ещё</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="115"/>
@@ -116,48 +116,48 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="116"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>Обновить</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="182"/>
       <source>Update friends success!</source>
-      <translation type="unfinished">Update friends success!</translation>
+      <translation>Друзья успешно обновлены!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="182"/>
       <source>Friends&apos; IP addresses have been successfully saved!</source>
-      <translation type="unfinished">Friends&apos; IP addresses have been successfully saved!</translation>
+      <translation>IP-адреса друзей были успешно сохранены!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="195"/>
       <source>Friend %1 has empty IP address!
 </source>
-      <translation type="unfinished">Friend %1 has empty IP address!
+      <translation>У друга %1 пустой IP-адрес!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="197"/>
       <source>Friend %1 has invalid IP address!
 </source>
-      <translation type="unfinished">Friend %1 has invalid IP address!
+      <translation>У друга %1 неверный IP-адрес!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="202"/>
       <source>Friend %1 has invalid port number (must be between 0 and 65535)!
 </source>
-      <translation type="unfinished">Friend %1 has invalid port number (must be between 0 and 65535)!
+      <translation>У друга %1 неверный номер порта (должен быть от 0 до 65535)!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="229"/>
       <source>Some errors in updating friends!</source>
-      <translation type="unfinished">Some errors in updating friends!</translation>
+      <translation>Ошибки при обновлении друзей!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="230"/>
       <source>Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</source>
-      <translation type="unfinished">Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</translation>
+      <translation>Некоторые IP-адреса друзей не могут быть обновлены (см. подробный текст).&lt;br&gt;Были сохранены адреса, которые можно обновить.</translation>
     </message>
   </context>
   <context>
@@ -310,33 +310,33 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="17"/>
       <source>Touch mapping editor</source>
-      <translation type="unfinished">Touch mapping editor</translation>
+      <translation>Редактор назначений тачскрина</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="26"/>
       <source>&lt;b&gt;Mapping elements&lt;/b&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Mapping elements&lt;/b&gt;</translation>
+      <translation>&lt;b&gt;Назначаемые элементы&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="40"/>
       <source>Joystick</source>
-      <translation type="unfinished">Joystick</translation>
+      <translation>Джойстик</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="45"/>
       <source>Single touch</source>
-      <translation type="unfinished">Single touch</translation>
+      <translation>Одиночное касание</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="64"/>
       <source>For app: </source>
-      <translation type="unfinished">For app: </translation>
+      <translation>Для приложения: </translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="105"/>
       <location filename="../src/btnmap/editor_widget.cpp" line="274"/>
       <source>Save and hide editor</source>
-      <translation type="unfinished">Save and hide editor</translation>
+      <translation>Сохранить и закрыть редактор</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="136"/>
@@ -356,7 +356,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="181"/>
       <source>Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</source>
-      <translation type="unfinished">Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</translation>
+      <translation>Профили сохраняются в каждом приложении/игре. Нажмите &lt;b&gt;Изменить&lt;/b&gt; для входа в режим редактирования. Чтобы удалить назначенный элемент, нажмите &lt;b&gt;Удалить&lt;/b&gt; и нажмите на элемент, который вы хотите удалить.</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="212"/>
@@ -371,12 +371,12 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="50"/>
       <source>Please wait for a game to be active!</source>
-      <translation type="unfinished">Please wait for a game to be active!</translation>
+      <translation>Пожалуйста, подождите пока игра будет активна!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="89"/>
       <source>For app: %1 (0x%2)</source>
-      <translation type="unfinished">For app: %1 (0x%2)</translation>
+      <translation>Для приложения: %1 (0x%2)</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="151"/>
@@ -386,17 +386,17 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
       <source>Error creating profile!</source>
-      <translation type="unfinished">Error creating profile!</translation>
+      <translation>Ошибка при создании профиля!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
       <source>Profile name contains special characters or system error encountered!</source>
-      <translation type="unfinished">Profile name contains special characters or system error encountered!</translation>
+      <translation>Имя профиля содержит спецсимволы или произошла системная ошибка!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="285"/>
       <source>Show editor</source>
-      <translation type="unfinished">Show editor</translation>
+      <translation>Показать редактор</translation>
     </message>
   </context>
   <context>
@@ -444,12 +444,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="129"/>
       <source>Bluetooth</source>
-      <translation type="unfinished">Bluetooth</translation>
+      <translation>Bluetooth</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="133"/>
       <source>Netplay</source>
-      <translation type="unfinished">Netplay</translation>
+      <translation>Сетевая игра</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="141"/>
@@ -539,27 +539,27 @@
     <message>
       <location filename="../src/mainwindow.ui" line="288"/>
       <source>Friends&apos;s IP addresses</source>
-      <translation type="unfinished">Friends&apos;s IP addresses</translation>
+      <translation>IP-адреса друзей</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="293"/>
       <source>Button mapping editor</source>
-      <translation type="unfinished">Button mapping editor</translation>
+      <translation>Редактор назначений кнопок</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="298"/>
       <source>Touch mapping editor</source>
-      <translation type="unfinished">Touch mapping editor</translation>
+      <translation>Редактор назначений тачскрина</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="303"/>
       <source>N-Gage card game</source>
-      <translation type="unfinished">N-Gage card game</translation>
+      <translation>Игра с карты N-Gage</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="308"/>
       <source>Check for update</source>
-      <translation type="unfinished">Check for update</translation>
+      <translation>Проверить обновления</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="241"/>
@@ -595,71 +595,71 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="642"/>
       <source>Installing &lt;b&gt;%1&lt;/b&gt;</source>
-      <translation type="unfinished">Installing &lt;b&gt;%1&lt;/b&gt;</translation>
+      <translation>Установка &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="655"/>
       <source>Choose the N-Gage game card folder</source>
-      <translation type="unfinished">Choose the N-Gage game card folder</translation>
+      <translation>Выберите папку с игровой картой N-Gage</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="663"/>
       <source>Installing N-Gage game...</source>
-      <translation type="unfinished">Installing N-Gage game...</translation>
+      <translation>Установка игры N-Gage...</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="686"/>
       <source>Install success!</source>
-      <translation type="unfinished">Install success!</translation>
+      <translation>Установка завершена!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="686"/>
       <source>Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</source>
-      <translation type="unfinished">Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</translation>
+      <translation>Успешно установлена игра с карты N-Gage: &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="692"/>
       <source>Can&apos;t find the game data folder!</source>
-      <translation type="unfinished">Can&apos;t find the game data folder!</translation>
+      <translation>Невозможно найти папку с игровыми данными!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="696"/>
       <source>There is more than one game in the given card game folder!</source>
-      <translation type="unfinished">There is more than one game in the given card game folder!</translation>
+      <translation>В данной папке находится более одной игры!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="700"/>
       <source>The game information file does not exist in the card game folder!</source>
-      <translation type="unfinished">The game information file does not exist in the card game folder!</translation>
+      <translation>Файл информации об игре не существует в папке с игровой карточкой!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="704"/>
       <source>The game information file has been corrupted. Please check your data&apos;s validity!</source>
-      <translation type="unfinished">The game information file has been corrupted. Please check your data&apos;s validity!</translation>
+      <translation>Файл информации об игре поврежден. Пожалуйста, проверьте корректность ваших данных!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="708"/>
       <source>General error occured...</source>
-      <translation type="unfinished">General error occured...</translation>
+      <translation>Произошла ошибка...</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="713"/>
       <location filename="../src/mainwindow.cpp" line="715"/>
       <source>Install failed</source>
-      <translation type="unfinished">Install failed</translation>
+      <translation>Ошибка установки</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="713"/>
       <source>Installation failed with error:
   -%1</source>
-      <translation type="unfinished">Installation failed with error:
+      <translation>Установка завершилась с ошибкой:
   -%1</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="715"/>
       <source>Installation of %1% failed with error:
   -%2</source>
-      <translation type="unfinished">Installation of %1% failed with error:
+      <translation>Установка %1% завершилась с ошибкой:
   -%2</translation>
     </message>
     <message>
@@ -791,22 +791,22 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1423"/>
       <source>Continue to modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Continue to modify friends&apos; IP addresses</translation>
+      <translation>Продолжить изменение IP-адресов друзей</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1424"/>
       <source>This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</source>
-      <translation type="unfinished">This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</translation>
+      <translation>В этом диалоге будут показаны все сохраненные IP адреса, которые могут раскрыть личную информацию других людей.&lt;br&gt;Вы хотите продолжить?</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1439"/>
       <source>Bluetooth manager service not available!</source>
-      <translation type="unfinished">Bluetooth manager service not available!</translation>
+      <translation>Служба Bluetooth-менеджера недоступна!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1439"/>
       <source>The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</source>
-      <translation type="unfinished">The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</translation>
+      <translation>Эмулированное устройство не имеет службы Bluetooth-менеджера! Bluetooth не поддерживается.</translation>
     </message>
   </context>
   <context>
@@ -937,7 +937,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="279"/>
       <source>Hide system applications across all devices</source>
-      <translation type="unfinished">Hide system applications across all devices</translation>
+      <translation>Скрыть системные приложения на всех устройствах</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="282"/>
@@ -992,17 +992,17 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="382"/>
       <source>Log filter</source>
-      <translation type="unfinished">Log filter</translation>
+      <translation>Фильтр лога</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="399"/>
       <source>Apply</source>
-      <translation type="unfinished">Apply</translation>
+      <translation>Применить</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="408"/>
       <source>Show log console (Windows only)</source>
-      <translation type="unfinished">Show log console (Windows only)</translation>
+      <translation>Показать консоль с логом (только для Windows)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="418"/>
@@ -1099,7 +1099,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="597"/>
       <source>Disable title with Git version</source>
-      <translation type="unfinished">Disable title with Git version</translation>
+      <translation>Отключить заголовок с Git-версией</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="604"/>
@@ -1654,37 +1654,37 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.ui" line="14"/>
       <source>New update available</source>
-      <translation type="unfinished">New update available</translation>
+      <translation>Доступно новое обновление</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="43"/>
       <source>A new update has been released on Github!</source>
-      <translation type="unfinished">A new update has been released on Github!</translation>
+      <translation>Вышло новое обновление на Github!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="61"/>
       <source>Changelog</source>
-      <translation type="unfinished">Changelog</translation>
+      <translation>Список изменений</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="84"/>
       <source>Downloading update ... %p%</source>
-      <translation type="unfinished">Downloading update ... %p%</translation>
+      <translation>Загрузка обновления ... %p%</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="91"/>
       <source>Do not automatically check for update when startup</source>
-      <translation type="unfinished">Do not automatically check for update when startup</translation>
+      <translation>Не проверять наличие обновлений при запуске</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="126"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>Обновить</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="139"/>
       <source>Ignore</source>
-      <translation type="unfinished">Ignore</translation>
+      <translation>Игнорировать</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="149"/>
@@ -1694,94 +1694,94 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.cpp" line="107"/>
       <source>Update success</source>
-      <translation type="unfinished">Update success</translation>
+      <translation>Успешно обновлено</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="113"/>
       <source>Update failed</source>
-      <translation type="unfinished">Update failed</translation>
+      <translation>Ошибка обновления</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="142"/>
       <source>The emulator is already updated to lastest version!</source>
-      <translation type="unfinished">The emulator is already updated to lastest version!</translation>
+      <translation>Эмулятор уже обновлен до последней версии!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="151"/>
       <source>The release channel is not available. Please check your internet connection!</source>
-      <translation type="unfinished">The release channel is not available. Please check your internet connection!</translation>
+      <translation>Канал релизов недоступен. Пожалуйста, проверьте подключение к Интернету!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="157"/>
       <source>Failed to get information about the newest update from Github!</source>
-      <translation type="unfinished">Failed to get information about the newest update from Github!</translation>
+      <translation>Не удалось получить информацию о новом обновлении с Github!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="189"/>
       <source>Can&apos;t find the download link of newest update for your platform!</source>
-      <translation type="unfinished">Can&apos;t find the download link of newest update for your platform!</translation>
+      <translation>Невозможно найти ссылку на скачивание новейших обновлений для вашей платформы!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="195"/>
       <source>Failed to get update download link from Github!</source>
-      <translation type="unfinished">Failed to get update download link from Github!</translation>
+      <translation>Не удалось получить ссылку для обновления с Github!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="213"/>
       <source>Error retrieving changelog from Github...</source>
-      <translation type="unfinished">Error retrieving changelog from Github...</translation>
+      <translation>Ошибка при получении списка изменений с Github...</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="235"/>
       <source>Changelog (update commit: %1)</source>
-      <translation type="unfinished">Changelog (update commit: %1)</translation>
+      <translation>Список изменений (коммит обновления: %1)</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="256"/>
       <source>Updater unsupported</source>
-      <translation type="unfinished">Updater unsupported</translation>
+      <translation>Обновление не поддерживается</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="256"/>
       <source>The updater is not yet supported on your platform!</source>
-      <translation type="unfinished">The updater is not yet supported on your platform!</translation>
+      <translation>Обновление пока не поддерживается на вашей платформе!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="300"/>
       <location filename="../src/update_dialog.cpp" line="360"/>
       <source>Update error</source>
-      <translation type="unfinished">Update error</translation>
+      <translation>Ошибка обновления</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="300"/>
       <source>Can&apos;t not open temporary file for storing the update files!</source>
-      <translation type="unfinished">Can&apos;t not open temporary file for storing the update files!</translation>
+      <translation>Невозможно открыть временный файл для хранения файлов обновлений!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="384"/>
       <source>Failed to download update with error: %1</source>
-      <translation type="unfinished">Failed to download update with error: %1</translation>
+      <translation>Сбой загрузки обновления с ошибкой: %1</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="392"/>
       <source>Downloaded update is not in zip format!</source>
-      <translation type="unfinished">Downloaded update is not in zip format!</translation>
+      <translation>Загруженное обновление не является zip-файлом!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="421"/>
       <source>Failed to update the updater program!</source>
-      <translation type="unfinished">Failed to update the updater program!</translation>
+      <translation>Не удалось обновить программу обновления!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="429"/>
       <source>Update zip file is corrupted!</source>
-      <translation type="unfinished">Update zip file is corrupted!</translation>
+      <translation>Файл обновления поврежден!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="436"/>
       <location filename="../src/update_dialog.cpp" line="451"/>
       <source>Can&apos;t find the updater program in the update archive file!</source>
-      <translation type="unfinished">Can&apos;t find the updater program in the update archive file!</translation>
+      <translation>Невозможно найти программу обновления в файле архива обновления!</translation>
     </message>
   </context>
   <context>
@@ -1789,7 +1789,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_notice_dialog.ui" line="14"/>
       <source>Update news</source>
-      <translation type="unfinished">Update news</translation>
+      <translation>Новости обновлений</translation>
     </message>
   </context>
   <context>
@@ -1797,53 +1797,53 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/updater.ui" line="14"/>
       <source>EKA2L1 Updater</source>
-      <translation type="unfinished">EKA2L1 Updater</translation>
+      <translation>Обновление EKA2L1</translation>
     </message>
     <message>
       <location filename="../src/updater.ui" line="59"/>
       <source>Updating...</source>
-      <translation type="unfinished">Updating...</translation>
+      <translation>Обновление...</translation>
     </message>
     <message>
       <location filename="../src/updater.ui" line="85"/>
       <source>Extracting ... %p%</source>
-      <translation type="unfinished">Extracting ... %p%</translation>
+      <translation>Извлечение ... %p%</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="91"/>
       <source>Update failed</source>
-      <translation type="unfinished">Update failed</translation>
+      <translation>Ошибка обновления</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="99"/>
       <source>Downloaded update is not a zip file!</source>
-      <translation type="unfinished">Downloaded update is not a zip file!</translation>
+      <translation>Загруженное обновление не является zip-файлом!</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="122"/>
       <location filename="../src/updater.cpp" line="175"/>
       <source>The downloaded archive zip is corrupted</source>
-      <translation type="unfinished">The downloaded archive zip is corrupted</translation>
+      <translation>Загруженный zip-архив поврежден</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="178"/>
       <source>Extracted: %1</source>
-      <translation type="unfinished">Extracted: %1</translation>
+      <translation>Извлечено: %1</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="197"/>
       <source>Update&apos;s archive file does not exist!</source>
-      <translation type="unfinished">Update&apos;s archive file does not exist!</translation>
+      <translation>Файл архива обновления не существует!</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="212"/>
       <source>Update success</source>
-      <translation type="unfinished">Update success</translation>
+      <translation>Успешно обновлено</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="212"/>
       <source>Update success. Relaunch the emulator?</source>
-      <translation type="unfinished">Update success. Relaunch the emulator?</translation>
+      <translation>Успешно обновлено. Перезапустить эмулятор?</translation>
     </message>
   </context>
 </TS>
