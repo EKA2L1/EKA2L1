@@ -68,8 +68,8 @@
     <string name="emulated_screen_refresh_rate_item_name">Częstotliwość odświeżania</string>
     <string name="pref_device_display_name">Przyjazna nazwa telefonu</string>
     <string name="hide_system_apps">Ukryj aplikacje systemowe</string>
-    <string name="enter_address">Enter address</string>
-    <string name="address">Address</string>
+    <string name="enter_address">Wprowadź adres</string>
+    <string name="address">Adres</string>
     <string name="port">Port</string>
     <string name="action_context_delete">Usuń</string>
     <string name="action_context_rename">Zmień nazwę</string>
