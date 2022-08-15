@@ -625,12 +625,12 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="696"/>
       <source>There is more than one game in the given card game folder!</source>
-      <translation type="unfinished">There is more than one game in the given card game folder!</translation>
+      <translation>Há mais de um jogo na pasta de jogos fornecida!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="700"/>
       <source>The game information file does not exist in the card game folder!</source>
-      <translation type="unfinished">The game information file does not exist in the card game folder!</translation>
+      <translation>O arquivo de informações do jogo não existe na pasta do jogo de cartas!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="704"/>
