@@ -216,7 +216,21 @@ namespace eka2l1::drivers {
             av_format_->pb = io_;
             av_format_->flags |= AVFMT_FLAG_CUSTOM_IO;
 
-            if (avformat_open_input(&av_format_, sample_filename, nullptr, nullptr) < 0) {
+            const AVInputFormat *format_target = nullptr;
+            switch (format_) {
+            case AMR_FOUR_CC_CODE:
+                format_target = av_find_input_format("amrnb");
+                break;
+
+            case MP3_FOUR_CC_CODE:
+                format_target = av_find_input_format("mp3");
+                break;
+
+            default:
+                break;
+            }
+
+            if (avformat_open_input(&av_format_, sample_filename, format_target, nullptr) < 0) {
                 LOG_ERROR(DRIVER_AUD, "This attempt fail to open FFMPEG DSP input, retry later");
                 avformat_free_context(av_format_);
 
