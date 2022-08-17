@@ -215,7 +215,7 @@ EXPORT_C void CMdaAudioPlayerUtility::RegisterForAudioLoadingNotification(MAudio
 }
 
 EXPORT_C void CMdaAudioPlayerUtility::GetAudioLoadingProgressL(TInt &aPercentageComplete) {
-    LogOut(KMcaCat, _L("Unimplemented function get audio loading progress!"));
+    aPercentageComplete = 100;
 }
 
 EXPORT_C const CMMFControllerImplementationInformation &CMdaAudioPlayerUtility::ControllerImplementationInformationL() {
@@ -226,20 +226,24 @@ EXPORT_C const CMMFControllerImplementationInformation &CMdaAudioPlayerUtility::
 
 EXPORT_C TInt CMdaAudioPlayerUtility::CustomCommandSync(const TMMFMessageDestinationPckg &aDestination, TInt aFunction, const TDesC8 &aDataTo1, const TDesC8 &aDataTo2, TDes8 &aDataFrom) {
     LogOut(KMcaCat, _L("Custom command not supported!"));
-    return KErrNotSupported;
+    return 0;
 }
 
 EXPORT_C TInt CMdaAudioPlayerUtility::CustomCommandSync(const TMMFMessageDestinationPckg &aDestination, TInt aFunction, const TDesC8 &aDataTo1, const TDesC8 &aDataTo2) {
     LogOut(KMcaCat, _L("Custom command not supported!"));
-    return KErrNotSupported;
+    return 0;
 }
 
 EXPORT_C void CMdaAudioPlayerUtility::CustomCommandAsync(const TMMFMessageDestinationPckg &aDestination, TInt aFunction, const TDesC8 &aDataTo1, const TDesC8 &aDataTo2, TDes8 &aDataFrom, TRequestStatus &aStatus) {
     LogOut(KMcaCat, _L("Custom command not supported!"));
+    TRequestStatus *statusPtr = &aStatus;
+    User::RequestComplete(statusPtr, KErrNone);
 }
 
 EXPORT_C void CMdaAudioPlayerUtility::CustomCommandAsync(const TMMFMessageDestinationPckg &aDestination, TInt aFunction, const TDesC8 &aDataTo1, const TDesC8 &aDataTo2, TRequestStatus &aStatus) {
     LogOut(KMcaCat, _L("Custom command not supported!"));
+    TRequestStatus *statusPtr = &aStatus;
+    User::RequestComplete(statusPtr, KErrNone);
 }
 
 void CMdaAudioPlayerUtility::SetRepeats(TInt aRepeatNumberOfTimes, const TTimeIntervalMicroSeconds &aTrailingSilence) {
