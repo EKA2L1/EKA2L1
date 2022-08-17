@@ -178,6 +178,9 @@ namespace eka2l1::epoc::adapter {
         if (!info) {
             return false;
         }
+        if (code & 0x80000000) {
+            return (idx < info->numGlyphs);
+        }
         return stbtt_FindGlyphIndex(info, code) != 0;
     }
 
