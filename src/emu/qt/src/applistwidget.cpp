@@ -698,7 +698,7 @@ void applist_widget::add_registeration_item_native(eka2l1::apa_app_registry &reg
 void applist_widget::set_hide_system_apps(const bool should_hide) {
     if (should_hide != hide_system_apps_) {
         hide_system_apps_ = should_hide;
-        reload_whole_list();
+        request_reload(false);
     }
 }
 
