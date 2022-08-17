@@ -846,6 +846,11 @@ namespace eka2l1::epoc {
             fix_native_orientation(ctx, cmd);
             break;
 
+        case EWsWinOpSetSurfaceTransparency:
+        case EWsWinOpSendEffectCommand:
+            ctx.complete(epoc::error_none);
+            break;
+
         default: {
             did_it = false;
             break;
