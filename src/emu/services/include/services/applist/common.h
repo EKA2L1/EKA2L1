@@ -98,5 +98,17 @@ namespace eka2l1 {
         void do_it(common::chunkyseri &seri);
     };
 
+#pragma pack(push, 1)
+    struct recog_data_type {
+        epoc::buf_static<char, 256> type_name_;
+        std::uint32_t uid_;
+    };
+#pragma pack(pop)
+
+    struct data_recog_result {
+        recog_data_type type_;
+        std::uint32_t confidence_rating_;
+    };
+
     static_assert(sizeof(apa_capability) == 64);
 }
