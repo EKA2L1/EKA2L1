@@ -19,6 +19,8 @@
 
 #pragma once
 
+// NOTE: This macro makes use of stack variable, so make sure this macro is called in the outer
+// block or in the same block you want to use the address.
 #define GUEST_TO_BSD_ADDR(addr, dest_ptr)                                                               \
     sockaddr_in ipv4_addr;                                                                              \
     sockaddr_in6 ipv6_addr;                                                                             \
@@ -50,9 +52,13 @@ namespace eka2l1::epoc::internet {
         INET_INTERFACE_CONTROL_OPT_FAMILY = 0x201,
         INET_ROUTE_CONTROL_OPT_FAMILY = 0x202,
         INET_DNS_CONTROL_OPT_FAMILY = 0x204,
+        INET_TCP_SOCK_OPT_LEVEL = 0x106,
         
         // Option in IC family
         INET_ENUM_INTERFACES_OPT = 0x211,
-        INET_NEXT_INTERFACE_OPT = 0x212
+        INET_NEXT_INTERFACE_OPT = 0x212,
+
+        // Option in TCP socket option level
+        INET_TCP_NO_DELAY_OPT = 0x304
     };
 }

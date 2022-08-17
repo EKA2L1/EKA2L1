@@ -419,4 +419,9 @@ namespace eka2l1::epoc {
         std::uint64_t read(void *buf, const std::uint64_t read_size) override;
         std::uint64_t write(const void *buf, const std::uint64_t write_size) override;
     };
+
+    inline void set_descriptor_length_variable(std::uint32_t &var, std::uint32_t newlen) {
+        var &= ~0xFFFFFF;
+        var |= (newlen & 0xFFFFFF);
+    }
 }

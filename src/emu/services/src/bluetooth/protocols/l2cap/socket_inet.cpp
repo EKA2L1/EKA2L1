@@ -78,7 +78,7 @@ namespace eka2l1::epoc::bt {
         return socket::set_option(option_id, option_family, buffer, avail_size);
     }
 
-    void l2cap_inet_socket::receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr,
+    void l2cap_inet_socket::receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, epoc::socket::saddress *addr,
         std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) {
         btinet_socket::receive(data, data_size, sent_size, addr, flags | epoc::socket::SOCKET_FLAG_DONT_WAIT_FULL, complete_info,
             done_callback);

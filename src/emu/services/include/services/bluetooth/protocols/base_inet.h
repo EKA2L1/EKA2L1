@@ -53,7 +53,7 @@ namespace eka2l1::epoc::bt {
         void bind(const epoc::socket::saddress &addr, epoc::notify_info &info) override;
         void accept(std::unique_ptr<epoc::socket::socket> *pending_sock, epoc::notify_info &complete_info) override;
         void send(const std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr, std::uint32_t flags, epoc::notify_info &complete_info) override;
-        void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr,
+        void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, epoc::socket::saddress *addr,
             std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) override;
         void connect(const epoc::socket::saddress &addr, epoc::notify_info &info) override;
 

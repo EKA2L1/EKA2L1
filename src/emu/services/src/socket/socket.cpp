@@ -67,7 +67,7 @@ namespace eka2l1::epoc::socket {
         LOG_ERROR(SERVICE_ESOCK, "Sending data to socket unimplemented!");
     }
 
-    void socket::receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const saddress *addr,
+    void socket::receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, saddress *addr,
         std::uint32_t flags, epoc::notify_info &complete_info, receive_done_callback cb) {
         LOG_ERROR(SERVICE_ESOCK, "Receiving data from socket unimplemented!");
     }
@@ -314,7 +314,7 @@ namespace eka2l1::epoc::socket {
 
         std::optional<saddress> optional_addr = std::nullopt;
         if (has_addr) {
-            optional_addr = ctx->get_argument_data_from_descriptor<saddress>(1);
+            optional_addr = ctx->get_argument_data_from_descriptor<saddress>(1, true);
             if (!optional_addr.has_value()) {
                 ctx->complete(epoc::error_argument);
                 return;
@@ -339,7 +339,7 @@ namespace eka2l1::epoc::socket {
         epoc::des8 *packet_des = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[2]).get(requester);
         
         std::uint32_t *size_return = nullptr;
-        if (has_return_length && !one_or_more) {
+        if (has_return_length && (!one_or_more || has_addr)) {
             size_return = reinterpret_cast<std::uint32_t*>(ctx->get_descriptor_argument_ptr(0));
             if (!size_return) {
                 ctx->complete(epoc::error_argument);
@@ -354,7 +354,7 @@ namespace eka2l1::epoc::socket {
 
             // On S^3 and probably older version the layout is still the same like this.
             // First is flags, second is length pointer and third is buffer
-            if (one_or_more) {
+            if (one_or_more && has_return_length) {
                 size_return = reinterpret_cast<std::uint32_t*>(ctx->get_descriptor_argument_ptr(1));
             }
         }
@@ -364,10 +364,10 @@ namespace eka2l1::epoc::socket {
             return;
         }
 
-        std::optional<saddress> optional_addr = std::nullopt;
+        saddress *address_ptr = nullptr;
         if (has_addr) {
-            optional_addr = ctx->get_argument_data_from_descriptor<saddress>(1);
-            if (!optional_addr.has_value()) {
+            address_ptr = reinterpret_cast<saddress*>(ctx->get_descriptor_argument_ptr(1));
+            if (!address_ptr) {
                 ctx->complete(epoc::error_argument);
                 return;
             }
@@ -378,7 +378,7 @@ namespace eka2l1::epoc::socket {
         }
 
         epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
-        sock_->receive(packet_buffer, static_cast<std::uint32_t>(packet_size), size_return, optional_addr.has_value() ? &optional_addr.value() : nullptr, flags.value(), info,
+        sock_->receive(packet_buffer, static_cast<std::uint32_t>(packet_size), size_return, address_ptr, flags.value(), info,
             [packet_des, requester](const std::int64_t length) {
                 if (length < 0) {
                     packet_des->set_length(requester, 0);
@@ -726,6 +726,22 @@ namespace eka2l1::epoc::socket {
 
                 case socket_reform_so_cancel_all:
                     cancel_all(ctx);
+                    return;
+
+                case socket_reform_so_send_to_no_len:
+                    send(ctx, false, true);
+                    return;
+
+                case socket_reform_so_recv_from:
+                    recv(ctx, true, true, true);
+                    return;
+
+                case socket_reform_so_accept:
+                    accept(ctx);
+                    return;
+
+                case socket_reform_so_listen:
+                    listen(ctx);
                     return;
 
                 default:

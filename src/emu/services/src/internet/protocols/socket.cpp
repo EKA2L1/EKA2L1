@@ -19,6 +19,7 @@
 
 #include <services/internet/protocols/inet.h>
 #include <common/platform.h>
+#include <utils/des.h>
 #include <utils/err.h>
 #include <kernel/kernel.h>
 #include <common/thread.h>
@@ -52,9 +53,10 @@ namespace eka2l1::epoc::internet {
         if (!loop_thread_) {
             loop_thread_ = std::make_unique<std::thread>([&]() {
                 common::set_thread_name("UV socket looper thread");
+                common::set_thread_priority(common::thread_priority_high);
 
                 while (uv_run(uv_default_loop(), UV_RUN_DEFAULT) == 0) {
-                    std::this_thread::sleep_for(std::chrono::microseconds(50));
+                    std::this_thread::sleep_for(std::chrono::microseconds(5));
                 }
 
                 uv_loop_close(uv_default_loop());
@@ -95,18 +97,31 @@ namespace eka2l1::epoc::internet {
             uv_async_t *async = new uv_async_t;
             async->data = opaque_handle_;
 
-            uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
-                uv_shutdown_t *shut = new uv_shutdown_t;
-                uv_shutdown(shut, reinterpret_cast<uv_stream_t*>(async->data), [](uv_shutdown_t *shut, int status) {
-                    uv_close(reinterpret_cast<uv_handle_t*>(shut->handle), [](uv_handle_t *handle) {
+            if (protocol_ == INET_TCP_PROTOCOL_ID) {
+                uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
+                    uv_shutdown_t *shut = new uv_shutdown_t;
+                    uv_shutdown(shut, reinterpret_cast<uv_stream_t*>(async->data), [](uv_shutdown_t *shut, int status) {
+                        uv_close(reinterpret_cast<uv_handle_t*>(shut->handle), [](uv_handle_t *handle) {
+                            delete handle;
+                        });
+
+                        delete shut;
+                    });
+
+                    close_and_delete_async(async);
+                });
+            } else {
+                uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
+                    uv_udp_t *udp_h = reinterpret_cast<uv_udp_t*>(async->data);
+                    uv_udp_recv_stop(udp_h);
+
+                    uv_close(reinterpret_cast<uv_handle_t*>(udp_h), [](uv_handle_t *handle) {
                         delete handle;
                     });
 
-                    delete shut;
+                    close_and_delete_async(async);
                 });
-
-                close_and_delete_async(async);
-            });
+            }
 
             uv_async_send(async);
 
@@ -138,14 +153,6 @@ namespace eka2l1::epoc::internet {
 
     inet_socket::~inet_socket() {
         close_down();
-
-#if EKA2L1_PLATFORM(WIN32)
-        if (opaque_interface_info_) {
-            free(opaque_interface_info_);
-        }
-#else
-        freeifaddrs(reinterpret_cast<struct ifaddrs*>(opaque_interface_info_));
-#endif
     }
 
     bool inet_socket::open(const std::uint32_t family_id, const std::uint32_t protocol_id, const epoc::socket::socket_type sock_type) {
@@ -210,8 +217,8 @@ namespace eka2l1::epoc::internet {
             uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
                 uv_sock_init_params *params = reinterpret_cast<uv_sock_init_params*>(async->data);
                 params->result_ = uv_udp_init(uv_default_loop(), reinterpret_cast<uv_udp_t*>(params->opaque_handle_));
-                params->done_evt_->set();
 
+                params->done_evt_->set();
                 close_and_delete_async(async);
             });
         }
@@ -402,6 +409,7 @@ namespace eka2l1::epoc::internet {
 
         if (!accept_socket_ptr_->opaque_handle_) {
             accept_socket_ptr_->opaque_handle_ = new uv_tcp_t;
+            accept_socket_ptr_->protocol_ = INET_TCP_PROTOCOL_ID;
             uv_tcp_init(uv_default_loop(), reinterpret_cast<uv_tcp_t*>(accept_socket_ptr_->opaque_handle_));
         }
 
@@ -505,6 +513,7 @@ namespace eka2l1::epoc::internet {
 
         if (!accept_socket_ptr_->opaque_handle_) {
             accept_socket_ptr_->opaque_handle_ = new uv_tcp_t;
+            accept_socket_ptr_->protocol_ = INET_TCP_PROTOCOL_ID;
             uv_tcp_init(uv_default_loop(), reinterpret_cast<uv_tcp_t*>(accept_socket_ptr_->opaque_handle_));
         }
 
@@ -637,8 +646,55 @@ namespace eka2l1::epoc::internet {
         }
 
         sockaddr *ip_addr_ptr = nullptr;
+        epoc::socket::saddress addr_guest_temp;
+
         if (addr_ptr != nullptr) {
-            GUEST_TO_BSD_ADDR((*addr_ptr), ip_addr_ptr);
+            addr_guest_temp = *addr_ptr;
+            // The special broadcast address has been broken even on Android since who knows when
+            // In here we pick the most likely one that is running.
+            // On Windows it just sends it to the top one active
+            if (addr_guest_temp.family_ == epoc::internet::INET_ADDRESS_FAMILY) {
+                sinet_address &addr_inet = static_cast<sinet_address&>(addr_guest_temp);
+                if (*addr_inet.addr_long() == 0xFFFFFFFF) {
+                    std::uint32_t prev_port = addr_guest_temp.port_;
+                    if (!broadcast_translate_cached_) {
+                        inet_interface_info info_temp;
+                        inet_socket_interface_iterator iterator;
+
+                        if (iterator.start()) {
+                            while (iterator.next(info_temp) == sizeof(inet_interface_info)) {
+                                if ((info_temp.addr_.family_ == epoc::internet::INET_ADDRESS_FAMILY) &&
+                                    (info_temp.addr_.user_data_[0] != 127) && (*info_temp.addr_.addr_long() != 0)) {
+                                    addr_guest_temp = info_temp.broadcast_addr_;
+                                    addr_guest_temp.port_ = 0;
+
+                                    broadcast_translate_cached_ = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!broadcast_translate_cached_) {
+                            LOG_ERROR(SERVICE_ESOCK, "Could not translate 255.255.255.255 special broadcast to local Internet interface!");
+                            complete_info.complete(epoc::error_could_not_connect);
+
+                            return;
+                        } else {
+                            cached_broadcast_translate_ = static_cast<sinet_address&>(addr_guest_temp);
+                        }
+                    } else {
+                        addr_guest_temp = cached_broadcast_translate_;
+                    }
+
+                    addr_guest_temp.port_ = prev_port;
+                }
+            }
+        }
+
+        GUEST_TO_BSD_ADDR(addr_guest_temp, ip_addr_ptr);
+
+        if (addr_ptr == nullptr)  {
+            ip_addr_ptr = nullptr;
         }
 
         bytes_written_ = sent_size;
@@ -665,6 +721,7 @@ namespace eka2l1::epoc::internet {
                 uv_udp_send_t *send_;
                 uv_udp_t *udp_;
                 sockaddr_in6 *addr_ = nullptr;
+                inet_socket *self_;
             };
 
             uv_udp_t *udp_handle = reinterpret_cast<uv_udp_t*>(opaque_handle_);
@@ -680,22 +737,31 @@ namespace eka2l1::epoc::internet {
                 std::memcpy(task_info->addr_, ip_addr_ptr, sizeof(sockaddr_in6));
             }
 
-            send_info_ptr->data = this;
+            task_info->self_ = this;
+            send_info_ptr->data = task_info;
 
             uv_async_t *async = new uv_async_t;
             async->data = task_info;
 
             uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
                 uv_udp_send_task_info *task_info = reinterpret_cast<uv_udp_send_task_info*>(async->data);
-                uv_udp_send(task_info->send_, task_info->udp_, &task_info->buf_sent_, 1, reinterpret_cast<const sockaddr*>(task_info->addr_), [](uv_udp_send_t *send_info, int status) {
-                    reinterpret_cast<inet_socket*>(send_info->data)->complete_send_done_info(status);
+
+                uv_udp_set_broadcast(task_info->udp_, 1);
+                const int res = uv_udp_send(task_info->send_, task_info->udp_, &task_info->buf_sent_, 1, reinterpret_cast<const sockaddr*>(task_info->addr_), [](uv_udp_send_t *send_info, int status) {
+                    uv_udp_send_task_info *task_info = reinterpret_cast<uv_udp_send_task_info*>(send_info->data);
+                    task_info->self_->complete_send_done_info(status);
+  
+                    if (task_info->addr_) {
+                        delete task_info->addr_;
+                    }
+
+                    delete task_info;
                 });
 
-                if (task_info->addr_) {
-                    delete task_info->addr_;
+                if (res < 0) {
+                    LOG_ERROR(SERVICE_INTERNET, "Sending UDP packet failed with libuv's code {}", res);
                 }
 
-                delete task_info;
                 close_and_delete_async(async);
             });
 
@@ -746,43 +812,13 @@ namespace eka2l1::epoc::internet {
         buf->len = static_cast<std::uint32_t>(suggested_size);
     }
 
-    static bool is_same_address(const epoc::socket::saddress &addr_requested, const sockaddr *addr_to_check) {
-        if (addr_requested.family_ == INET_ADDRESS_FAMILY) {
-            if (addr_to_check->sa_family != AF_INET) {
-                return false;
-            }
-
-            const sockaddr_in *addr_ipv4_check = reinterpret_cast<const sockaddr_in*>(addr_to_check);
-            if ((addr_ipv4_check->sin_port != addr_requested.port_) || (memcmp(&addr_ipv4_check->sin_addr, addr_requested.user_data_, 4) != 0)) {
-                return false;
-            }
-        } else {
-            if (addr_to_check->sa_family != AF_INET6) {
-                return false;
-            }
-
-            const sockaddr_in6 *addr_ipv6_check = reinterpret_cast<const sockaddr_in6*>(addr_to_check);
-            const sinet6_address &addr_ipv6_guest = static_cast<const sinet6_address&>(addr_requested);
-
-            if ((addr_ipv6_check->sin6_port != addr_ipv6_guest.port_) || (addr_ipv6_check->sin6_scope_id != addr_ipv6_guest.get_scope())
-                || (addr_ipv6_check->sin6_flowinfo != addr_ipv6_guest.get_flow()) || (memcmp(&addr_ipv6_check->sin6_addr, addr_ipv6_guest.get_address_32x4(), 16) != 0)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     void inet_socket::handle_udp_delivery(const std::int64_t bytes_read_arg, const void *buf_ptr, const void *addr) {
         const uv_buf_t *buf = reinterpret_cast<const uv_buf_t*>(buf_ptr);
         const sockaddr *recv_addr = reinterpret_cast<const sockaddr*>(addr);
 
-        if (listen_addr_.family_ != epoc::socket::INVALID_FAMILY_ID) {
-            // Must check if address matches
-            // If not, we continue listen
-            if (!is_same_address(listen_addr_, recv_addr)) {
-                return;
-            }
+        if (recv_addr_) {
+            // sorry...
+            host_sockaddr_to_guest_saddress(const_cast<sockaddr*>(recv_addr), *recv_addr_);
         }
 
         // No need, you should stop for now
@@ -813,10 +849,14 @@ namespace eka2l1::epoc::internet {
             if (bytes_read_) {
                 *bytes_read_ = static_cast<std::uint32_t>(to_write_byte_count);
             }
+
+            if (receive_done_cb_) {
+                receive_done_cb_(static_cast<std::uint32_t>(to_write_byte_count));
+                receive_done_cb_ = nullptr;
+            }
         }
 
         kern->lock();
-
         // Just complete now!
         if (!recv_done_info_.empty()) {
             recv_done_info_.complete(error_code);
@@ -897,7 +937,7 @@ namespace eka2l1::epoc::internet {
         kern->unlock();
     }
 
-    void inet_socket::receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *recv_size, const epoc::socket::saddress *addr_ptr,
+    void inet_socket::receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *recv_size, epoc::socket::saddress *addr_ptr,
         std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback callback) {
         if (!recv_done_info_.empty()) {
             complete_info.complete(epoc::error_in_use);
@@ -909,6 +949,7 @@ namespace eka2l1::epoc::internet {
         recv_size_ = data_size;
         take_available_only_ = false;
         receive_done_cb_ = callback;
+        recv_addr_ = addr_ptr;
 
         if (flags & epoc::socket::SOCKET_FLAG_DONT_WAIT_FULL) {
             take_available_only_ = true;
@@ -922,13 +963,11 @@ namespace eka2l1::epoc::internet {
             LOG_TRACE(SERVICE_INTERNET, "Receive data with non-zero flags, please notice! (flag={})", flags);
         }
 
-        listen_addr_.family_ = epoc::socket::INVALID_FAMILY_ID;
+        if (recv_addr_) {
+            recv_addr_->family_ = epoc::socket::INVALID_FAMILY_ID;
+        }
 
         if (protocol_ == INET_UDP_PROTOCOL_ID) {
-            if (addr_ptr) {
-                listen_addr_ = *addr_ptr;
-            }
-
             uv_udp_t *udp = reinterpret_cast<uv_udp_t*>(opaque_handle_);
             udp->data = this;
 
@@ -938,6 +977,7 @@ namespace eka2l1::epoc::internet {
             uv_async_init(uv_default_loop(), task, [](uv_async_t *async) {
                 uv_udp_t *udp = reinterpret_cast<uv_udp_t*>(async->data);
                 
+                uv_udp_set_broadcast(udp, 1);
                 uv_udp_recv_start(udp, [](uv_handle_t *handle, std::size_t suggested_size, uv_buf_t *buf) {
                     reinterpret_cast<inet_socket*>(handle->data)->prepare_buffer_for_recv(suggested_size, buf);
                 }, [](uv_udp_t *handle, ssize_t bytes_read, const uv_buf_t *buf, const sockaddr *addr_recv, std::uint32_t flags) {
@@ -1053,11 +1093,24 @@ namespace eka2l1::epoc::internet {
         if (option_family == INET_INTERFACE_CONTROL_OPT_FAMILY) {
             switch (option_id) {
             case INET_ENUM_INTERFACES_OPT: {
-                return start_enumerate_network_interfaces();
+                return interface_iterator_.start();
 
             default:
                 break;
             }
+            }
+        } else if (option_family == INET_TCP_SOCK_OPT_LEVEL) {
+            if (protocol_ != INET_TCP_PROTOCOL_ID) {
+                LOG_TRACE(SERVICE_ESOCK, "Calling TCP socket option while the socket is UDP!");
+                return false;
+            }
+            switch (option_id) {
+            case INET_TCP_NO_DELAY_OPT:
+                uv_tcp_nodelay(reinterpret_cast<uv_tcp_t*>(opaque_handle_), *reinterpret_cast<int*>(buffer));
+                return true;
+
+            default:
+                break;
             }
         }
 
@@ -1065,64 +1118,138 @@ namespace eka2l1::epoc::internet {
     }
 
     std::size_t inet_socket::retrieve_next_interface_info(std::uint8_t *buffer, const std::size_t avail_size) {
+        if (avail_size != sizeof(inet_interface_info)) {
+            LOG_ERROR(SERVICE_ESOCK, "Size of buffer is not correct!");
+            return MAKE_SOCKET_GETOPT_ERROR(epoc::error_argument);
+        }
+
+        return interface_iterator_.next(*reinterpret_cast<inet_interface_info*>(buffer));
+    }
+
+    std::size_t inet_socket_interface_iterator::next(inet_interface_info &info) {
         if (!opaque_interface_info_) {
             return MAKE_SOCKET_GETOPT_ERROR(epoc::error_not_ready);
+        }
+
+        if (!pending_interface_infos_.empty()) {
+            info = pending_interface_infos_.front();
+            pending_interface_infos_.pop();
+
+            return sizeof(inet_interface_info);
         }
 
         if (!opaque_interface_info_current_) {
             return MAKE_SOCKET_GETOPT_ERROR(epoc::error_eof);
         }
 
-        if (avail_size != sizeof(inet_interface_info)) {
-            LOG_ERROR(SERVICE_ESOCK, "Size of buffer is not correct!");
-            return MAKE_SOCKET_GETOPT_ERROR(epoc::error_argument);
-        }
-
-        inet_interface_info *interface_info = reinterpret_cast<inet_interface_info*>(buffer);
-
 #if EKA2L1_PLATFORM(WIN32)
         IP_ADAPTER_ADDRESSES *adapter_info_current = reinterpret_cast<IP_ADAPTER_ADDRESSES*>(opaque_interface_info_current_);
-        interface_info->name_.assign(nullptr, std::u16string(reinterpret_cast<const char16_t*>(adapter_info_current->FriendlyName)));
-        interface_info->status_ = (adapter_info_current->OperStatus == IfOperStatusDown) ? inet_interface_status_down : inet_interface_status_up;
-        interface_info->mtu_ = adapter_info_current->Mtu;
-        interface_info->speed_metric_ = static_cast<std::int32_t>(adapter_info_current->ReceiveLinkSpeed / 1024);   // In kbps
-        interface_info->features_ = 0;
-        std::memcpy(interface_info->hardware_addr_.user_data_, adapter_info_current->PhysicalAddress, adapter_info_current->PhysicalAddressLength);     // Should not be able to overflow, Windows max is 8
-        interface_info->hardware_addr_len_ = 8 + adapter_info_current->PhysicalAddressLength;
-
-        host_sockaddr_to_guest_saddress(adapter_info_current->FirstUnicastAddress->Address.lpSockaddr, interface_info->addr_, &interface_info->addr_len_);
-
-        // TODO: For IPv6 too!
-        if (adapter_info_current->FirstUnicastAddress->Address.lpSockaddr->sa_family == AF_INET) {
-            ULONG mask_value = 0;
-            ConvertLengthToIpv4Mask(adapter_info_current->FirstUnicastAddress->OnLinkPrefixLength, &mask_value);
-            
-            *interface_info->netmask_addr_.addr_long() = static_cast<std::uint32_t>(mask_value);
-            *interface_info->broadcast_addr_.addr_long() = *interface_info->addr_.addr_long() | (~*interface_info->netmask_addr_.addr_long());
+        CHAR interface_name[IF_NAMESIZE];
         
-            interface_info->netmask_addr_.family_ = INET_ADDRESS_FAMILY;
-            interface_info->broadcast_addr_.family_ = INET_ADDRESS_FAMILY;
-            interface_info->netmask_addr_len_ = sinet_address::DATA_SIZE;
-            interface_info->broadcast_addr_len_ = sinet_address::DATA_SIZE;
-        }
+        // Some games just grab interfaces that is just there...
+        do {
+            if (adapter_info_current == nullptr) {    
+                return MAKE_SOCKET_GETOPT_ERROR(epoc::error_eof);
+            }
+            bool skip_this_interface = false;
+            if (((adapter_info_current->IfIndex != 0) && if_indextoname(adapter_info_current->IfIndex, interface_name)) ||
+                ((adapter_info_current->IfIndex != 0) && if_indextoname(adapter_info_current->Ipv6IfIndex, interface_name))) {
+                if (strncmp(interface_name, "iftype", 6) == 0) {
+                    skip_this_interface = true;
+                }
+            } else {
+                skip_this_interface = true;
+            }
+            if (!skip_this_interface && (adapter_info_current->OperStatus == IfOperStatusDown)) {
+                skip_this_interface = true;
+            }
+            std::u16string description = std::u16string(reinterpret_cast<const char16_t*>(adapter_info_current->Description));
+            if (!skip_this_interface && ((description.find(u"Virtual") != std::string::npos) ||
+                (description.find(u"Virtual") != std::string::npos))) {
+                skip_this_interface = true;
+            }
+            if (!skip_this_interface) {
+                break;
+            }
+            opaque_interface_info_current_ =  adapter_info_current->Next;
+            adapter_info_current = reinterpret_cast<IP_ADAPTER_ADDRESSES*>(opaque_interface_info_current_);
+        } while (true);
+
+        info.name_.assign(nullptr, std::u16string(reinterpret_cast<const char16_t*>(adapter_info_current->FriendlyName)));
+        info.status_ = (adapter_info_current->OperStatus == IfOperStatusDown) ? inet_interface_status_down : inet_interface_status_up;
+        info.mtu_ = adapter_info_current->Mtu;
+        info.speed_metric_ = static_cast<std::int32_t>(adapter_info_current->ReceiveLinkSpeed / 1024);   // In kbps
+        info.features_ = 0;
+        std::memcpy(info.hardware_addr_.user_data_, adapter_info_current->PhysicalAddress, adapter_info_current->PhysicalAddressLength);     // Should not be able to overflow, Windows max is 8
+        info.hardware_addr_len_ = 8 + adapter_info_current->PhysicalAddressLength;
+
+        auto fill_interface_addr_info = [](inet_interface_info &info, PIP_ADAPTER_UNICAST_ADDRESS_LH addr_from_raw) {
+            host_sockaddr_to_guest_saddress(addr_from_raw->Address.lpSockaddr, info.addr_, &info.addr_len_, true);
+            // TODO: For IPv6 too!
+            if (addr_from_raw->Address.lpSockaddr->sa_family == AF_INET) {
+                ULONG mask_value = 0;
+                ConvertLengthToIpv4Mask(addr_from_raw->OnLinkPrefixLength, &mask_value);
+
+                *info.netmask_addr_.addr_long() = static_cast<std::uint32_t>(mask_value);
+                *info.broadcast_addr_.addr_long() = *info.addr_.addr_long() | (~*info.netmask_addr_.addr_long());
+            
+                info.netmask_addr_.family_ = INET_ADDRESS_FAMILY;
+                info.broadcast_addr_.family_ = INET_ADDRESS_FAMILY;
+
+                epoc::set_descriptor_length_variable(info.netmask_addr_len_, sinet_address::DATA_SIZE);
+                epoc::set_descriptor_length_variable(info.broadcast_addr_len_, sinet_address::DATA_SIZE);
+
+                info.netmask_addr_max_len_ = sinet_address::DATA_SIZE;
+                info.broadcast_addr_max_len_ = sinet_address::DATA_SIZE;
+
+                info.addr_max_len_ = sinet_address::DATA_SIZE;
+            }
+        };
+
+        fill_interface_addr_info(info, adapter_info_current->FirstUnicastAddress);
 
         if (adapter_info_current->FirstDnsServerAddress) {
-            host_sockaddr_to_guest_saddress(adapter_info_current->FirstDnsServerAddress->Address.lpSockaddr, interface_info->primary_name_server_, &interface_info->primary_name_server_len_);
+            host_sockaddr_to_guest_saddress(adapter_info_current->FirstDnsServerAddress->Address.lpSockaddr, info.primary_name_server_, &info.primary_name_server_len_, true);
         }
         
         if (adapter_info_current->FirstGatewayAddress) {
-            host_sockaddr_to_guest_saddress(adapter_info_current->FirstGatewayAddress->Address.lpSockaddr, interface_info->default_gateway_, &interface_info->default_gateway_len_);
+            host_sockaddr_to_guest_saddress(adapter_info_current->FirstGatewayAddress->Address.lpSockaddr, info.default_gateway_, &info.default_gateway_len_, true);
+        }
+
+        if (adapter_info_current->FirstUnicastAddress->Next != nullptr) {
+            inet_interface_info info_temp = info;
+            IP_ADAPTER_UNICAST_ADDRESS_LH *unicast_addr = adapter_info_current->FirstUnicastAddress->Next;
+        
+            while (unicast_addr) {
+                fill_interface_addr_info(info_temp, unicast_addr);
+                pending_interface_infos_.push(info_temp);
+
+                unicast_addr = unicast_addr->Next;
+            }
         }
 
         opaque_interface_info_current_ = adapter_info_current->Next;
 #else
         ifaddrs *current_addr_info_posix = reinterpret_cast<ifaddrs*>(opaque_interface_info_current_);
-        interface_info->name_.assign(nullptr, common::utf8_to_ucs2(current_addr_info_posix->ifa_name));
-        host_sockaddr_to_guest_saddress(current_addr_info_posix->ifa_addr, interface_info->addr_, &interface_info->addr_len_);
-        host_sockaddr_to_guest_saddress(current_addr_info_posix->ifa_netmask, interface_info->netmask_addr_, &interface_info->netmask_addr_len_);
+        while (current_addr_info_posix && ((strncmp(current_addr_info_posix->ifa_name, "vmnet", 5) == 0) ||
+                ((current_addr_info_posix->ifa_flags & IFF_RUNNING) != IFF_RUNNING))) {
+            current_addr_info_posix = current_addr_info_posix->ifa_next;
+            opaque_interface_info_current_ = current_addr_info_posix;
+            continue;
+        }
+        info.name_.assign(nullptr, common::utf8_to_ucs2(current_addr_info_posix->ifa_name));
+        host_sockaddr_to_guest_saddress(current_addr_info_posix->ifa_addr, info.addr_, &info.addr_len_, true);
+        host_sockaddr_to_guest_saddress(current_addr_info_posix->ifa_netmask, info.netmask_addr_, &info.netmask_addr_len_, true);
 
 #if !EKA2L1_PLATFORM(ANDROID)
-        host_sockaddr_to_guest_saddress(current_addr_info_posix->ifa_broadaddr, interface_info->broadcast_addr_, &interface_info->broadcast_addr_len_);
+        host_sockaddr_to_guest_saddress(current_addr_info_posix->ifa_broadaddr, info.broadcast_addr_, &info.broadcast_addr_len_, true);
+#else
+        if (info.addr_.family_ == INET_ADDRESS_FAMILY) {
+            epoc::set_descriptor_length_variable(info.broadcast_addr_len_, sinet_address::DATA_SIZE);
+            info.broadcast_addr_max_len_ = sinet_address::DATA_SIZE;
+            info.broadcast_addr_.family_ = INET_ADDRESS_FAMILY;
+            *info.broadcast_addr_.addr_long() = *info.addr_.addr_long() | (~*info.netmask_addr_.addr_long());
+        }
 #endif
 
         opaque_interface_info_current_ = current_addr_info_posix->ifa_next;
@@ -1131,7 +1258,17 @@ namespace eka2l1::epoc::internet {
         return sizeof(inet_interface_info);
     }
 
-    bool inet_socket::start_enumerate_network_interfaces() {
+    inet_socket_interface_iterator::~inet_socket_interface_iterator() {
+#if EKA2L1_PLATFORM(WIN32)
+        if (opaque_interface_info_) {
+            free(opaque_interface_info_);
+        }
+#else
+        freeifaddrs(reinterpret_cast<struct ifaddrs*>(opaque_interface_info_));
+#endif
+    }
+
+    bool inet_socket_interface_iterator::start() {
         if (opaque_interface_info_) {
             // Restart existing info
 #if EKA2L1_PLATFORM(WIN32)

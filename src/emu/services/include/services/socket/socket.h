@@ -157,12 +157,12 @@ namespace eka2l1::epoc::socket {
          * @param   data                    Data to be received from remote.
          * @param   data_size               Size of data to be read. For stream socket, to receive the data pack available only, use the flag SOCKET_FLAG_DONT_WAIT_FULL.
          * @param   sent_size               Optional arugment that on completion contains the amount of data read. Can be NULL.
-         * @param   sockaddr                The address to receive the data from. On a connected socket, this address will only be used if not NULL and the socket is stream.
+         * @param   sockaddr                The address that sends the data, filled when this request is done. On a connected socket, this address will only be used if not NULL and the socket is stream.
          * @param   flags                   Flags that specified how to process this packet.
          * @param   complete_info           A notify info that is signaled when the receive is done, can contain the error code.
          * @param   done_callback           Function that will be called when receive is done (asynchronously).
          */
-        virtual void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *recv_size, const saddress *addr,
+        virtual void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *recv_size, saddress *addr,
             const std::uint32_t flags, epoc::notify_info &complete_info, receive_done_callback done_callback = nullptr);
 
         /**

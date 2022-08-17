@@ -179,6 +179,10 @@ namespace eka2l1 {
                     ss_request_optimal_dealer(ctx);
                     return;
 
+                case socket_reform_so_create_null:
+                    so_create_null(ctx);
+                    return;
+
                 default:
                     break;
                 }

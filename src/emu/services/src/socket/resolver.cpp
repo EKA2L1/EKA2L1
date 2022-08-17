@@ -160,6 +160,14 @@ namespace eka2l1::epoc::socket {
                     get_by_name(ctx);
                     return;
 
+                case socket_reform_hr_get_by_addr:
+                    get_by_address(ctx);
+                    return;
+
+                case socket_reform_hr_get_host_name:
+                    get_host_name(ctx);
+                    return;
+
                 case socket_reform_hr_close:
                     close(ctx);
                     return;

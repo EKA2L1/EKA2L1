@@ -32,6 +32,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <queue>
 
 struct addrinfo;
 struct sockaddr;
@@ -141,6 +142,26 @@ namespace eka2l1::epoc::internet {
         void next(epoc::socket::name_entry *result, epoc::notify_info &complete_info) override;
     };
 
+    struct inet_socket_interface_iterator {
+    private:
+        void *opaque_interface_info_;
+        void *opaque_interface_info_current_;
+
+        std::queue<inet_interface_info> pending_interface_infos_;
+
+    public:
+        explicit inet_socket_interface_iterator()
+            : opaque_interface_info_(nullptr)
+            , opaque_interface_info_current_(nullptr) {
+
+        }
+
+        ~inet_socket_interface_iterator();
+
+        bool start();
+        std::size_t next(inet_interface_info &info);
+    };
+
     struct inet_socket : public socket::socket {
     private:
         inet_bridged_protocol *papa_;
@@ -151,8 +172,6 @@ namespace eka2l1::epoc::internet {
         void *opaque_connect_;
         void *opaque_send_info_;
         void *opaque_write_info_;
-        void *opaque_interface_info_;
-        void *opaque_interface_info_current_;
 
         std::uint32_t protocol_;
         epoc::notify_info connect_done_info_;
@@ -168,8 +187,12 @@ namespace eka2l1::epoc::internet {
         bool take_available_only_;
 
         std::vector<char> temp_buffer_;
-        epoc::socket::saddress listen_addr_;
+        epoc::socket::saddress *recv_addr_;
         epoc::socket::receive_done_callback receive_done_cb_;
+        inet_socket_interface_iterator interface_iterator_;
+
+        sinet_address cached_broadcast_translate_;
+        bool broadcast_translate_cached_;
 
         std::unique_ptr<common::ring_buffer<char, 0x80000>> stream_data_buffer_;
 
@@ -179,7 +202,6 @@ namespace eka2l1::epoc::internet {
 
         void close_down();
         void handle_connect_done_error_code(const int error_code);
-        bool start_enumerate_network_interfaces();
         std::size_t retrieve_next_interface_info(std::uint8_t *buffer, const std::size_t avail_size);
 
     public:
@@ -191,8 +213,6 @@ namespace eka2l1::epoc::internet {
             , opaque_connect_(nullptr)
             , opaque_send_info_(nullptr)
             , opaque_write_info_(nullptr)
-            , opaque_interface_info_(nullptr)
-            , opaque_interface_info_current_(nullptr)
             , protocol_(0)
             , bytes_written_(nullptr)
             , bytes_read_(nullptr)
@@ -200,7 +220,8 @@ namespace eka2l1::epoc::internet {
             , recv_size_(0)
             , take_available_only_(false)
             , stream_data_buffer_(nullptr)
-            , receive_done_cb_(nullptr) {
+            , receive_done_cb_(nullptr)
+            , broadcast_translate_cached_(false) {
         }
 
         ~inet_socket() override;
@@ -209,7 +230,7 @@ namespace eka2l1::epoc::internet {
         void connect(const epoc::socket::saddress &addr, epoc::notify_info &info) override;
         void bind(const epoc::socket::saddress &addr, epoc::notify_info &info) override;
         void send(const std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr, std::uint32_t flags, epoc::notify_info &complete_info) override;
-        void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr,
+        void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, epoc::socket::saddress *addr,
             std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) override;
         void accept(std::unique_ptr<epoc::socket::socket> *pending_sock, epoc::notify_info &complete_info) override;
         std::int32_t local_name(epoc::socket::saddress &result, std::uint32_t &result_len) override;
@@ -292,5 +313,6 @@ namespace eka2l1::epoc::internet {
         }
     };
 
-    void host_sockaddr_to_guest_saddress(sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len = nullptr);
+    void host_sockaddr_to_guest_saddress(sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len = nullptr,
+        bool for_descriptor = false);
 }

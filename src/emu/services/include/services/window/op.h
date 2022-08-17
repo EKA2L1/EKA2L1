@@ -441,9 +441,7 @@ enum TWsWindowOpcodes {
     EWsWinOpClearRedrawStore = EWsWinOpGetBackgroundSurfaceConfig + 2, //One message removed
     EWsWinOpScreenNumber,
     EWsWinOpEnableAdvancedPointers,
-#ifdef SYMBIAN_GRAPHICS_WSERV_QT_EFFECTS
     EWsWinOpSetSurfaceTransparency,
-#endif
     EWsWinOpSetPurpose,
     EWsWinOpSendEffectCommand,
     EWsWinOpOverrideEffectBuf,

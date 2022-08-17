@@ -58,7 +58,7 @@ namespace eka2l1::epoc::bt {
         bool set_option(const std::uint32_t option_id, const std::uint32_t option_family,
             std::uint8_t *buffer, const std::size_t avail_size) override;
             
-        void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr,
+        void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, epoc::socket::saddress *addr,
             std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) override;
     };
 

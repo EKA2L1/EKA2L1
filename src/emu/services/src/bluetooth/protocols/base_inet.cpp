@@ -244,8 +244,9 @@ namespace eka2l1::epoc::bt {
         inet_socket_->send(data, data_size, sent_size, addr, flags, complete_info);
     }
 
-    void btinet_socket::receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *recv_size, const epoc::socket::saddress *addr,
+    void btinet_socket::receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *recv_size, epoc::socket::saddress *addr,
         std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) {
+        // TODO: Hook back in case of receiving address (convert it to virtual BT addr)
         inet_socket_->receive(data, data_size, recv_size, addr, flags, complete_info, done_callback);
     }
 

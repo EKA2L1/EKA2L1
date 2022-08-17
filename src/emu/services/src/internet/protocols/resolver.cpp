@@ -32,6 +32,7 @@
 #include <netinet/ip.h>
 #endif
 
+#include <utils/des.h>
 #include <utils/err.h>
 
 namespace eka2l1::epoc::internet {
@@ -58,7 +59,7 @@ namespace eka2l1::epoc::internet {
         return true;
     }
 
-    static void host_sockaddr_v4_to_guest_saddress(sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len = nullptr) {
+    static void host_sockaddr_v4_to_guest_saddress(sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len = nullptr, const bool for_des = false) {
         sockaddr_in *in = reinterpret_cast<sockaddr_in*>(addr);
         dest_addr.family_ = INET_ADDRESS_FAMILY;
 
@@ -68,11 +69,15 @@ namespace eka2l1::epoc::internet {
         in_guest.port_ = ntohs(in->sin_port);
 
         if (data_len) {
-            *data_len = sinet_address::DATA_SIZE;
+            if (for_des) {
+                epoc::set_descriptor_length_variable(*data_len, sinet_address::DATA_SIZE);
+            } else {
+                *data_len = sinet_address::DATA_SIZE;
+            }
         }
     }
     
-    static void host_sockaddr_v6_to_guest_saddress(sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len = nullptr) {
+    static void host_sockaddr_v6_to_guest_saddress(sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len = nullptr, const bool for_des = false) {
         dest_addr.family_ = INET6_ADDRESS_FAMILY;
 
         sockaddr_in6 *in6 = reinterpret_cast<sockaddr_in6*>(addr);
@@ -85,15 +90,19 @@ namespace eka2l1::epoc::internet {
         *in6_guest.scope() = in6->sin6_scope_id;
 
         if (data_len) {
-            *data_len = sinet6_address::DATA_SIZE;
+            if (for_des) {
+                epoc::set_descriptor_length_variable(*data_len, sinet6_address::DATA_SIZE);
+            } else {
+                *data_len = sinet6_address::DATA_SIZE;
+            }
         }
     }
 
-    void host_sockaddr_to_guest_saddress(sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len) {
+    void host_sockaddr_to_guest_saddress(sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len, const bool for_des) {
         if (addr->sa_family == AF_INET6) {
-            host_sockaddr_v6_to_guest_saddress(addr, dest_addr, data_len);
+            host_sockaddr_v6_to_guest_saddress(addr, dest_addr, data_len, for_des);
         } else {
-            host_sockaddr_v4_to_guest_saddress(addr, dest_addr, data_len);
+            host_sockaddr_v4_to_guest_saddress(addr, dest_addr, data_len, for_des);
         }
     }
 

@@ -187,6 +187,7 @@ namespace eka2l1 {
         void drive(service::ipc_context *ctx);
         void volume(service::ipc_context *ctx);
         void is_file_opened(service::ipc_context *ctx);
+        void filesystem_name(service::ipc_context *ctx);
 
         bool is_file_opened_here(const std::u16string &path);
 
