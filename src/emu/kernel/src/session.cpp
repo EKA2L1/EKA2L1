@@ -73,6 +73,8 @@ namespace eka2l1 {
             if (owner) {
                 owner->increase_access_count();
             }
+            
+            disconnect_msg_->own_thr->increase_access_count();
         }
 
         // Disconnect
@@ -217,6 +219,8 @@ namespace eka2l1 {
                     svr->process_accepted_msg();
                 }
             }
+
+            disconnect_msg_->own_thr->decrease_access_count();
 
             // Free the message pool anyway
             for (const auto &msg : msgs_pool) {
