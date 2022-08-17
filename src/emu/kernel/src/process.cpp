@@ -435,17 +435,13 @@ namespace eka2l1::kernel {
         exit_reason = reason;
         exit_category = category;
 
-        common::double_linked_queue_element *elem = thread_list.first();
-        common::double_linked_queue_element *end = thread_list.end();
-
-        do {
-            if (!elem) {
-                break;
+        while (!thread_list.empty()) {
+            kernel::thread *thr = E_LOFF(thread_list.first()->deque(), kernel::thread, process_thread_link);
+            if (thr->exit_type == kernel::entity_exit_type::pending) {
+                thr->kill(ext, u"Domino", reason);
             }
-
-            E_LOFF(elem, kernel::thread, process_thread_link)->kill(ext, u"Domino", reason);
-            elem = elem->next;
-        } while (elem != end);
+            thr->decrease_access_count();
+        }
 
         // Cleanup resources
         if (!kern->wipeout_in_progress()) {
