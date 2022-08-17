@@ -133,6 +133,7 @@ namespace eka2l1::dispatch {
         std::map<std::string, int> pending_attrib_binds_;
  
         void cleanup_current_driver_program();
+        void delete_from_object_store();
 
     public:
         explicit gles_program_object(egl_context_es_shared &ctx);
@@ -142,6 +143,8 @@ namespace eka2l1::dispatch {
         bool detach(gles_shader_object *obj);
 
         void link(drivers::graphics_driver *drv);
+        void on_unbound();
+        void delete_object();
 
         std::uint32_t set_uniform_data(const int binding, const std::uint8_t *data, const std::int32_t data_size,
             const std::int32_t actual_count, drivers::shader_var_type var_type, const std::uint32_t extra_flags);

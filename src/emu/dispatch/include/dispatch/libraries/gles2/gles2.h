@@ -102,4 +102,6 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_LIBRARY(void, gl_delete_shader_emu, std::uint32_t shader);
     BRIDGE_FUNC_LIBRARY(void, gl_read_pixels_emu, std::int32_t x, std::int32_t y, std::int32_t width, std::int32_t height, std::uint32_t format,
         std::uint32_t type, void *data_ptr);
+    BRIDGE_FUNC_LIBRARY(void, gl_delete_renderbuffers_emu, std::int32_t n, std::uint32_t *rbs);
+    BRIDGE_FUNC_LIBRARY(void, gl_delete_program_emu, std::uint32_t program);
 }

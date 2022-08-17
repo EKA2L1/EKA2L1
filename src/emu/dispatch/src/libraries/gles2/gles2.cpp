@@ -207,6 +207,26 @@ namespace eka2l1::dispatch {
         }
     }
 
+    void gles_program_object::delete_from_object_store() {
+        egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context_);
+        es2_ctx.objects_.remove(client_handle_);
+    }
+
+    void gles_program_object::on_unbound() {
+        if (delete_pending_) {
+            delete_from_object_store();
+        }
+    }
+
+    void gles_program_object::delete_object() {
+        egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context_);
+        if (es2_ctx.using_program_ == this)  {
+            set_delete_pending();
+        } else {
+            delete_from_object_store();
+        }
+    }
+
     bool gles_program_object::attach(gles_shader_object *obj) {
         if (!obj) {
             return false;
@@ -301,13 +321,13 @@ APPLY_PENDING_ROUTES:
     }
 
     std::optional<int> gles_program_object::get_routed_attribute_num(const int original_index, const bool reverse) {
-        std::map<int, int> &map_to_search = attrib_bind_routes_;
+        std::map<int, int> *map_to_search = &attrib_bind_routes_;
         if (reverse) {
-            map_to_search = attrib_bind_routes_reverse_;
+            map_to_search = &attrib_bind_routes_reverse_;
         }
 
-        auto result = map_to_search.find(original_index);
-        if (result != map_to_search.end()) {
+        auto result = map_to_search->find(original_index);
+        if (result != map_to_search->end()) {
             return result->second;
         }
 
@@ -890,6 +910,9 @@ APPLY_PENDING_ROUTES:
             }
         }
 
+        // Flush passed renderpass
+        context_.flush_to_driver(drv);
+
         color_changed_ = false;
         depth_changed_ = false;
         stencil_changed_ = false;
@@ -1008,6 +1031,8 @@ APPLY_PENDING_ROUTES:
     void egl_context_es2::flush_to_driver(drivers::graphics_driver *drv, const bool is_frame_swap_flush) {
         // Force sync again in the list
         previous_using_program_ = nullptr;
+        framebuffer_need_reconfigure_ = true;
+
         egl_context_es_shared::flush_to_driver(drv, is_frame_swap_flush);
     }
 
@@ -1059,6 +1084,10 @@ APPLY_PENDING_ROUTES:
     }
 
     std::uint32_t egl_context_es2::bind_texture(const std::uint32_t target, const std::uint32_t tex) {
+        if (tex == 0) {
+            texture_units_[active_texture_unit_] = 0;
+            return 0;
+        }
         auto *obj = objects_.get(tex);
         if (!obj || !obj->get() || (*obj)->object_type() != GLES_OBJECT_TEXTURE) {
             if (obj && !obj->get()) {
@@ -1154,8 +1183,15 @@ APPLY_PENDING_ROUTES:
             if (texture_units_[i] != 0) {
                 auto *obj = objects_.get(texture_units_[i]);
 
-                if (obj && obj->get())
-                    cmd_builder_.bind_texture((*obj)->handle_value(), static_cast<int>(i));
+                if (obj && obj->get()) {
+                    if (obj->get()->object_type() != GLES_OBJECT_TEXTURE) {
+                        // Probably this texture unit texture was deleted.
+                        // Set this to 0 for future
+                        texture_units_[i] = 0;
+                    } else {
+                        cmd_builder_.bind_texture((*obj)->handle_value(), static_cast<int>(i));
+                    }
+                }
             }
         }
 
@@ -1164,11 +1200,11 @@ APPLY_PENDING_ROUTES:
     }
 
     bool egl_context_es2::prepare_for_clear(drivers::graphics_driver *driver, egl_controller &controller) {
-        if (!egl_context_es_shared::prepare_for_clear(driver, controller)) {
+        if (!try_configure_framebuffer(driver, controller)) {
             return false;
         }
 
-        return try_configure_framebuffer(driver, controller);
+        return egl_context_es_shared::prepare_for_clear(driver, controller);
     }
 
     bool egl_context_es2::prepare_vertex_attributes(drivers::graphics_driver *drv, kernel::process *crr_process, const std::int32_t first_index, const std::int32_t vcount) {
@@ -1946,8 +1982,6 @@ APPLY_PENDING_ROUTES:
         if (ctx->binded_framebuffer_ != fb) {
             ctx->binded_framebuffer_ = fb;
             ctx->framebuffer_need_reconfigure_ = true;
-
-            ctx->flush_to_driver(sys->get_graphics_driver());
         }
     }
 
@@ -2716,5 +2750,26 @@ APPLY_PENDING_ROUTES:
             drivers::read_framebuffer(drv, fb_obj->handle_value(), eka2l1::vec2(x, y), eka2l1::vec2(width, height),
                 format_for_read, data_type_for_read, data_ptr);
         }
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, gl_delete_renderbuffers_emu, std::int32_t n, std::uint32_t *rbs) {
+        delete_gles_objects_generic(sys, GLES_OBJECT_RENDERBUFFER, n, rbs);
+    }
+    
+    BRIDGE_FUNC_LIBRARY(void, gl_delete_program_emu, std::uint32_t program) {
+        egl_context_es2 *ctx = get_es2_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+        gles_program_object *program_obj = get_program_object_gles(ctx, controller, program);
+
+        if (!program_obj) {
+            return;
+        }
+
+        program_obj->delete_object();
     }
 }

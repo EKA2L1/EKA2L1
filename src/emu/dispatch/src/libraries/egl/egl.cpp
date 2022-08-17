@@ -122,16 +122,16 @@ namespace eka2l1::dispatch {
         }
 
         std::int32_t surface_type = -1;
-        std::uint32_t total_color_bits_calculated = -1;
-        std::uint32_t total_color_bits_provided = -1;
-        std::uint32_t gles_context_type = EGL_OPENGL_ES1_BIT;
+        std::int32_t total_color_bits_calculated = -1;
+        std::int32_t total_color_bits_provided = -1;
+        std::int32_t gles_context_type = EGL_OPENGL_ES1_BIT;
 
         while (attrib_lists != nullptr) {
             std::uint32_t pname = *attrib_lists++;
             if ((pname == 0) || (pname == EGL_NONE_EMU)) {
                 break;
             }
-            std::uint32_t param = *attrib_lists++;
+            std::int32_t param = *attrib_lists++;
 
             switch (pname) {
             case EGL_SURFACE_TYPE_EMU:
@@ -161,9 +161,11 @@ namespace eka2l1::dispatch {
             }
         }
 
-        if (total_color_bits_provided == -1) {
-            if (total_color_bits_calculated != -1) {
+        if (total_color_bits_provided <= 0) {
+            if (total_color_bits_calculated > 0) {
                 total_color_bits_provided = total_color_bits_calculated;
+            } else {
+                total_color_bits_provided = 32;
             }
         }
 
@@ -195,9 +197,13 @@ namespace eka2l1::dispatch {
                 }
 
                 if (gles_context_type & egl_version_enum) {
-                    if ((total_color_bits_provided == -1) || (config_parser.buffer_size() >= total_color_bits_provided)) {
-                        if (current_fill_index < config_array_size) {
-                            configs[current_fill_index++] = config_parser;
+                    if ((total_color_bits_provided <= 0) || (config_parser.buffer_size() >= total_color_bits_provided)) {
+                        if (!configs) {
+                            current_fill_index++;
+                        } else {
+                            if (current_fill_index < config_array_size) {
+                                configs[current_fill_index++] = config_parser;
+                            }
                         }
                     }
                 }

@@ -74,11 +74,19 @@ namespace eka2l1::drivers {
     static bool search_binding(const std::uint8_t *metadata, const char *name, const std::uint16_t offset,
         const std::uint16_t count, std::int32_t &binding, shader_var_type &var_type, std::int32_t &array_size) {
         const std::uint8_t *data = metadata + offset;
+        const std::size_t name_search_len = strlen(name);
+        const bool has_first_elem_bracket = (name_search_len > 3) && (name[name_search_len - 1] == ']') && (name[name_search_len - 2] == '0')
+            && (name[name_search_len - 3] == '[');
 
         for (std::uint16_t i = 0; i < count; i++) {
             std::uint16_t name_len = *data;
+            bool name_matched = (strncmp(name, reinterpret_cast<const char *>(data + 1), strlen(name)) == 0);
 
-            if (strncmp(name, reinterpret_cast<const char *>(data + 1), strlen(name)) == 0) {
+            if ((strncmp(name, reinterpret_cast<const char *>(data + 1), name_len) == 0) && has_first_elem_bracket) {
+                name_matched = true;
+            }
+
+            if (name_matched) {
                 // For ARM also. So just do this
                 std::memcpy(&binding, &data[name_len + 1], sizeof(std::int32_t));
                 std::memcpy(&var_type, &data[name_len + 1] + sizeof(std::int32_t), sizeof(shader_var_type));

@@ -92,7 +92,7 @@ namespace eka2l1::drivers {
         const GLenum framebuffer_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
         if (framebuffer_status != GL_FRAMEBUFFER_COMPLETE) {
-            LOG_ERROR(DRIVER_GRAPHICS, "Framebuffer not complete!");
+            LOG_ERROR(DRIVER_GRAPHICS, "Framebuffer not complete! Reason {}", framebuffer_status);
         }
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
