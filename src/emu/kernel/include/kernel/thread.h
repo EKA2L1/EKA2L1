@@ -131,11 +131,17 @@ namespace eka2l1 {
             ptr<void> scheduler;
             ptr<void> trap_handler;
             std::uint32_t thread_id;
+            ptr<void> tls_heap_allocator;
+            std::uint32_t tls_array_data[40];
 
             // Hash map is used here, there will hopefully not be thousand of elements 
             // and constant complexity, memory is not a worry.
             std::unordered_map<std::uint32_t, tls_slot> tls_slots;
+
+            explicit thread_local_data(const std::uint32_t uid);
         };
+
+        static constexpr std::size_t NATIVE_THREAD_LOCAL_DATA_COPY_SIZE = offsetof(thread_local_data, tls_slots);
 
         class thread : public kernel_obj {
         private:
