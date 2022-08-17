@@ -43,7 +43,11 @@ static TInt OnWaitBufferTimeout(void *aUserdata) {
 }
 
 CMMFMdaOutputBufferQueue::CMMFMdaOutputBufferQueue(CMMFMdaAudioOutputStream *aStream)
+#ifdef EKA2
+    : CActive(CActive::EPriorityHigh)
+#else
     : CActive(CActive::EPriorityStandard)
+#endif
     , iStream(aStream)
     , iCopied(NULL) {
 }
