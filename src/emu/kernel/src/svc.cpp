@@ -1618,7 +1618,7 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
-        mut->wait();
+        mut->wait(kern->crr_thread());
         return epoc::error_none;
     }
 
@@ -1630,13 +1630,13 @@ namespace eka2l1::epoc {
         }
 
         if (timeout == 0) {
-            mut->wait();
+            mut->wait(kern->crr_thread());
             return epoc::error_none;
         }
 
         if (timeout == -1) {
             // Try lock
-            mut->try_wait();
+            mut->try_wait(kern->crr_thread());
             return epoc::error_none;
         }
 
@@ -1689,6 +1689,53 @@ namespace eka2l1::epoc {
         }
 
         return mut->count();
+    }
+    
+    BRIDGE_FUNC(std::int32_t, condvar_create, eka2l1::ptr<desc8> mutex_name_des, epoc::owner_type owner) {
+        process_ptr pr = kern->crr_process();
+
+        desc8 *desname = mutex_name_des.get(pr);
+        kernel::owner_type owner_kern = (owner == epoc::owner_process) ? kernel::owner_type::process : kernel::owner_type::thread;
+
+        const kernel::handle cv = kern->create_and_add<kernel::condvar>(owner_kern, kern->get_ntimer(), pr,
+                                           !desname ? "" : desname->to_std_string(pr),
+                                           !desname ? kernel::access_type::local_access : kernel::access_type::global_access)
+                                       .first;
+
+        if (cv == kernel::INVALID_HANDLE) {
+            return epoc::error_general;
+        }
+
+        return cv;
+    }
+
+    BRIDGE_FUNC(std::int32_t, condvar_wait, kernel::handle condvar_h, kernel::handle mutex_h, std::int32_t timeout) {
+        kernel::condvar *cv = kern->get<kernel::condvar>(condvar_h);
+        kernel::mutex *mut = kern->get<kernel::mutex>(mutex_h);
+
+        if (!cv || !mut) {
+            return epoc::error_bad_handle;
+        }
+
+        return (cv->wait(kern->crr_thread(), mut, timeout) ? epoc::error_none : epoc::error_general);
+    }
+    
+    BRIDGE_FUNC(void, condvar_signal, kernel::handle condvar_h) {
+        kernel::condvar *cv = kern->get<kernel::condvar>(condvar_h);
+        if (cv) {
+            cv->signal();
+        } else {
+            LOG_ERROR(KERNEL, "Condition variable is null (handle={})", condvar_h);
+        }
+    }
+    
+    BRIDGE_FUNC(void, condvar_broadcast, kernel::handle condvar_h) {
+        kernel::condvar *cv = kern->get<kernel::condvar>(condvar_h);
+        if (cv) {
+            cv->broadcast();
+        } else {
+            LOG_ERROR(KERNEL, "Condition variable is null (handle={})", condvar_h);
+        }
     }
 
     BRIDGE_FUNC(void, wait_for_any_request) {
@@ -5656,6 +5703,10 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC9, property_find_set_bin),
         BRIDGE_REGISTER(0xD2, process_get_data_parameter),
         BRIDGE_REGISTER(0xD3, process_data_parameter_length),
+        BRIDGE_REGISTER(0xD8, condvar_create),
+        BRIDGE_REGISTER(0xD9, condvar_wait),
+        BRIDGE_REGISTER(0xDA, condvar_signal),
+        BRIDGE_REGISTER(0xDB, condvar_broadcast),
         BRIDGE_REGISTER(0xDC, plat_sec_diagnostic),
         BRIDGE_REGISTER(0xDD, exception_descriptor),
         BRIDGE_REGISTER(0xDE, thread_request_signal),

@@ -24,6 +24,7 @@
 #include <kernel/chunk.h>
 #include <kernel/codeseg.h>
 #include <kernel/common.h>
+#include <kernel/condvar.h>
 #include <kernel/kernel_obj.h>
 #include <kernel/ldd.h>
 #include <kernel/legacy/mutex.h>
@@ -144,6 +145,8 @@ namespace eka2l1 {
             return kernel::object_type::logical_channel;
         } else if constexpr (std::is_base_of_v<kernel::undertaker, T>) {
             return kernel::object_type::undertaker;
+        } else if constexpr (std::is_base_of_v<kernel::condvar, T>) {
+            return kernel::object_type::condvar;
         } else {
             throw std::runtime_error("Unknown kernel object type. Make sure to add new type here");
             return kernel::object_type::unk;
@@ -278,6 +281,7 @@ namespace eka2l1 {
         std::vector<kernel_obj_unq_ptr> chunks_;
         std::vector<kernel_obj_unq_ptr> mutexes_;
         std::vector<kernel_obj_unq_ptr> semas_;
+        std::vector<kernel_obj_unq_ptr> condvars_;
         std::vector<kernel_obj_unq_ptr> change_notifiers_;
         std::vector<kernel_obj_unq_ptr> libraries_;
         std::vector<kernel_obj_unq_ptr> codesegs_;
@@ -602,6 +606,7 @@ namespace eka2l1 {
 
                 OBJECT_SEARCH(mutex, mutexes_)
                 OBJECT_SEARCH(sema, semas_)
+                OBJECT_SEARCH(condvar, condvars_)
                 OBJECT_SEARCH(chunk, chunks_)
                 OBJECT_SEARCH(thread, threads_)
                 OBJECT_SEARCH(process, processes_)
@@ -657,6 +662,7 @@ namespace eka2l1 {
 
                 OBJECT_SEARCH(mutex, mutexes_)
                 OBJECT_SEARCH(sema, semas_)
+                OBJECT_SEARCH(condvar, condvars_)
                 OBJECT_SEARCH(chunk, chunks_)
                 OBJECT_SEARCH(thread, threads_)
                 OBJECT_SEARCH(process, processes_)
@@ -704,6 +710,7 @@ namespace eka2l1 {
                 ADD_OBJECT_TO_CONTAINER(kernel::object_type::timer, timers_, )
                 ADD_OBJECT_TO_CONTAINER(kernel::object_type::mutex, mutexes_, )
                 ADD_OBJECT_TO_CONTAINER(kernel::object_type::sema, semas_, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::condvar, condvars_, )
                 ADD_OBJECT_TO_CONTAINER(kernel::object_type::change_notifier, change_notifiers_, )
                 ADD_OBJECT_TO_CONTAINER(kernel::object_type::codeseg, codesegs_, )
                 ADD_OBJECT_TO_CONTAINER(kernel::object_type::msg_queue, message_queues_, )

@@ -29,6 +29,7 @@
 #include <kernel/kernel.h>
 #include <kernel/mutex.h>
 #include <kernel/sema.h>
+#include <kernel/condvar.h>
 #include <kernel/thread.h>
 #include <mem/mem.h>
 #include <mem/ptr.h>
@@ -604,6 +605,10 @@ namespace eka2l1 {
                     break;
                 }
 
+                case object_type::condvar:
+                    reinterpret_cast<condvar *>(wait_obj)->priority_change();
+                    break;
+
                 default:
                     break;
                 }
@@ -684,6 +689,11 @@ namespace eka2l1 {
                         break;
                     }
 
+                    case object_type::condvar: {
+                        res = reinterpret_cast<condvar *>(wait_obj)->suspend_thread(this);
+                        break;
+                    }
+
                     default:
                         break;
                     }
@@ -733,6 +743,11 @@ namespace eka2l1 {
 
                     case object_type::sema: {
                         res = reinterpret_cast<semaphore *>(wait_obj)->unsuspend_waiting_thread(this);
+                        break;
+                    }
+
+                    case object_type::condvar: {
+                        res = reinterpret_cast<condvar *>(wait_obj)->unsuspend_thread(this);
                         break;
                     }
 

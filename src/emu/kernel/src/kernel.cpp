@@ -118,6 +118,7 @@ namespace eka2l1 {
         OBJECT_CONTAINER_CLEANUP(sessions_);
         OBJECT_CONTAINER_CLEANUP(servers_);
         OBJECT_CONTAINER_CLEANUP(timers_);
+        OBJECT_CONTAINER_CLEANUP(condvars_);
         OBJECT_CONTAINER_CLEANUP(mutexes_);
         OBJECT_CONTAINER_CLEANUP(semas_);
         OBJECT_CONTAINER_CLEANUP(change_notifiers_);
@@ -757,6 +758,7 @@ namespace eka2l1 {
 
             OBJECT_SEARCH(mutex, mutexes_)
             OBJECT_SEARCH(sema, semas_)
+            OBJECT_SEARCH(condvar, condvars_)
             OBJECT_SEARCH(chunk, chunks_)
             OBJECT_SEARCH(thread, threads_)
             OBJECT_SEARCH(process, processes_)
@@ -1158,6 +1160,7 @@ namespace eka2l1 {
 
             OBJECT_SEARCH(mutex, mutexes_)
             OBJECT_SEARCH(sema, semas_)
+            OBJECT_SEARCH(condvar, condvars_)
             OBJECT_SEARCH(chunk, chunks_)
             OBJECT_SEARCH(thread, threads_)
             OBJECT_SEARCH(process, processes_)
@@ -1196,6 +1199,7 @@ namespace eka2l1 {
     }
             GET_OBJECT(mutex, mutexes_)
             GET_OBJECT(sema, semas_)
+            GET_OBJECT(condvar, condvars_)
             GET_OBJECT(chunk, chunks_)
             GET_OBJECT(thread, threads_)
             GET_OBJECT(process, processes_)

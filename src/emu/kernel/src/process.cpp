@@ -528,7 +528,7 @@ namespace eka2l1::kernel {
     }
 
     void process::wait_dll_lock() {
-        dll_lock->wait();
+        dll_lock->wait(kern->crr_thread());
     }
 
     void process::signal_dll_lock(kernel::thread *callee) {

@@ -17,6 +17,7 @@ add_library(epockern
         include/kernel/chunk.h
         include/kernel/codeseg.h
         include/kernel/common.h
+        include/kernel/condvar.h
         include/kernel/ipc.h
         include/kernel/ldd.h
         include/kernel/libmanager.h
@@ -45,6 +46,7 @@ add_library(epockern
         src/change_notifier.cpp
         src/chunk.cpp
         src/codeseg.cpp
+        src/condvar.cpp
         src/ldd.cpp
         src/libmanager.cpp
         src/library.cpp

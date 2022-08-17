@@ -81,8 +81,10 @@ namespace eka2l1 {
             stop,
             wait_fast_sema, // Wait for semaphore
             wait_mutex,
+            wait_condvar,
             wait_mutex_suspend,
             wait_fast_sema_suspend,
+            wait_condvar_suspend,
             hold_mutex_pending,
             wait_dfc, // Unused
             wait_hle // Wait in case an HLE event is taken place - e.g GUI
@@ -158,6 +160,7 @@ namespace eka2l1 {
             friend class thread_scheduler;
             friend class mutex;
             friend class semaphore;
+            friend class condvar;
             friend class process;
             friend class codeseg;
             friend class service::faker;

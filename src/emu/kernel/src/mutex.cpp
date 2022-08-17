@@ -41,7 +41,7 @@ namespace eka2l1 {
                 std::bind(&mutex::waking_up_from_suspension, this, std::placeholders::_1, std::placeholders::_2));
 
             if (init_locked) {
-                wait();
+                wait(kern->crr_thread());
             }
         }
 
@@ -67,9 +67,9 @@ namespace eka2l1 {
             return 0;
         }
 
-        void mutex::wait() {
+        void mutex::wait(thread *thr) {
             if (!holding) {
-                holding = kern->crr_thread();
+                holding = thr;
 
                 if (holding->state == thread_state::hold_mutex_pending) {
                     holding->state = thread_state::ready;
@@ -79,12 +79,12 @@ namespace eka2l1 {
                 }
             }
 
-            if (holding == kern->crr_thread()) {
+            if (holding == thr) {
                 ++lock_count;
             } else {
                 assert(!holding->wait_obj);
 
-                kernel::thread *calm_down = kern->crr_thread();
+                kernel::thread *calm_down = thr;
                 waits.push(calm_down);
 
                 calm_down->get_scheduler()->wait(calm_down);
@@ -94,9 +94,9 @@ namespace eka2l1 {
             }
         }
 
-        void mutex::try_wait() {
+        void mutex::try_wait(thread *thr) {
             if (!holding) {
-                holding = kern->crr_thread();
+                holding = thr;
 
                 if (holding->state == thread_state::hold_mutex_pending) {
                     holding->state = thread_state::ready;
@@ -106,7 +106,7 @@ namespace eka2l1 {
                 }
             }
 
-            if (holding == kern->crr_thread()) {
+            if (holding == thr) {
                 lock_count++;
             }
         }
@@ -153,7 +153,7 @@ namespace eka2l1 {
         }
 
         void mutex::wait_for(int usecs) {
-            wait();
+            wait(kern->crr_thread());
 
             // Schedule event to wake up
             timing->schedule_event(usecs, mutex_event_type, reinterpret_cast<std::uint64_t>(kern->crr_thread()));
@@ -282,6 +282,14 @@ namespace eka2l1 {
                 break;
             }
             }
+        }
+
+        void mutex::transfer_suspend_from_condvar(thread *thr) {
+            suspended.push(&thr->suspend_link);
+
+            suspend_count++;
+            thr->state = thread_state::wait_mutex_suspend;
+            thr->wait_obj = this;
         }
 
         bool mutex::suspend_thread(thread *thr) {

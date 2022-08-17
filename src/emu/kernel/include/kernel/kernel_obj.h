@@ -71,7 +71,7 @@ namespace eka2l1 {
             undertaker,
             msg_queue,
             prop_ref,
-            // Nonstandard
+            condvar,
             codeseg,
             prop,
             unk
