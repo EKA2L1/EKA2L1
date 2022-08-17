@@ -87,7 +87,7 @@ namespace eka2l1 {
              * \sa       get_argument_data_from_descriptor
              */
             template <typename T>
-            std::optional<T> get_argument_data_from_descriptor(const int idx) {
+            std::optional<T> get_argument_data_from_descriptor(const int idx, const bool ignore_size_diff = false) {
                 std::uint8_t *data = get_descriptor_argument_ptr(idx);
 
                 if (!data) {
@@ -96,7 +96,7 @@ namespace eka2l1 {
 
                 const std::size_t packed_size = get_argument_data_size(idx);
 
-                if (packed_size != sizeof(T)) {
+                if ((packed_size != sizeof(T)) && !ignore_size_diff) {
                     LOG_WARN(SERVICE_TRACK, "Getting packed struct with mismatch size ({} vs {}), size to get "
                                             "will be automatically clamped",
                         packed_size, sizeof(T));

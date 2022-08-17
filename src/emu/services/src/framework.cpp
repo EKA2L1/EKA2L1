@@ -18,6 +18,7 @@
  */
 
 #include <common/log.h>
+#include <config/config.h>
 #include <system/epoc.h>
 
 #include <services/framework.h>
@@ -108,6 +109,11 @@ namespace eka2l1::service {
                 process_msg->msg_session->unique_id());
 
             return;
+        }
+
+        config::state *conf = sys->get_config();
+        if (conf->log_ipc) {
+            LOG_INFO(SERVICE_TRACK, "Calling service: {}, id: {}", raw_name(), process_msg->function);
         }
 
         ss_ite->second->fetch(&context);
