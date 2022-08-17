@@ -844,6 +844,54 @@ namespace eka2l1 {
         get_app_for_document_impl(ctx, path.value());
     }
 
+    std::string applist_server::recognize_data_impl(common::ro_stream &stream) {
+        std::uint8_t magic4[4] = { 0, 0, 0, 0 };
+
+        stream.seek(0, common::seek_where::beg);
+        stream.read(magic4, 4);
+
+        // MP3
+        if ((magic4[0] == 0xFF) && ((magic4[1] == 0xFB) || (magic4[1] == 0xF3) || (magic4[1] == 0xF2))) {
+            return "audio/mpeg";
+        }
+
+        // MP3 ver2
+        if ((magic4[0] == 0x49) && (magic4[1] == 0x44) && (magic4[2] == 0x33)) {
+            return "audio/mpeg";
+        }
+
+        return "";
+    }
+
+    void applist_server::recognize_data_by_file_handle(service::ipc_context &ctx) {
+        session_ptr fs_target_session = ctx.sys->get_kernel_system()->get<service::session>(*(ctx.get_argument_value<std::int32_t>(1)));
+        const std::uint32_t fs_file_handle = *(ctx.get_argument_value<std::uint32_t>(2));
+        file *source_file = fsserv->get_file(fs_target_session->unique_id(), fs_file_handle);
+
+        if (!source_file) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        const std::uint64_t current_pos = source_file->tell();
+        ro_file_stream stream_read(source_file);
+
+        const std::string mime_res = recognize_data_impl(stream_read);
+        source_file->seek(current_pos, file_seek_mode::beg);
+
+        if (mime_res.empty()) {
+            LOG_WARN(SERVICE_APPLIST, "File MIME data is not recognizable (filename: {})!", common::ucs2_to_utf8(source_file->file_name()));
+            ctx.complete(epoc::error_not_supported);
+        }
+
+        data_recog_result result;
+        result.confidence_rating_ = 10;             // TODO: Fill with actual value
+        result.type_.type_name_.assign(nullptr, mime_res);
+
+        ctx.write_data_to_descriptor_argument<data_recog_result>(0, result);
+        ctx.complete(epoc::error_none);
+    }
+
     void applist_server::get_capability(service::ipc_context &ctx) {
         const epoc::uid app_uid = *ctx.get_argument_value<epoc::uid>(1);
         apa_app_registry *reg = get_registration(app_uid);
@@ -981,6 +1029,10 @@ namespace eka2l1 {
 
             case applist_request_app_for_document_passed_by_file_handle:
                 server<applist_server>()->get_app_for_document_by_file_handle(*ctx);
+                break;
+
+            case applist_request_recognize_data_passed_by_file_handle:
+                server<applist_server>()->recognize_data_by_file_handle(*ctx);
                 break;
 
             default:
