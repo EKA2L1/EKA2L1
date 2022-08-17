@@ -207,7 +207,12 @@ namespace eka2l1 {
 
     void mmf_dev_server_session::complete_play(const std::int32_t error) {
         stop();
-        finish_info_.complete(error);
+
+        if (evt_msg_queue_) {
+            send_event_to_msg_queue(epoc::mmf_dev_sound_queue_item(epoc::mmf_dev_newarch_play_error_evt, error));
+        } else {
+            finish_info_.complete(error);
+        }
     }
 
     void mmf_dev_server_session::init_stream_through_state() {
@@ -240,7 +245,7 @@ namespace eka2l1 {
                 if (last_buffer_) {
                     complete_play(epoc::error_underflow);
                 } else {
-                    do_get_buffer_to_be_filled();
+                    do_report_buffer_to_be_filled();
                 }
 
                 kern->unlock();
@@ -347,6 +352,9 @@ namespace eka2l1 {
             return;
         }
 
+        kernel_system *kern = ctx->sys->get_kernel_system();
+        evt_msg_queue_ = kern->get<kernel::msg_queue>(ctx->get_argument_value<std::uint32_t>(2).value());
+
         std::optional<epoc::mmf_dev_sound_proxy_settings> state_settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(1);
 
@@ -368,12 +376,29 @@ namespace eka2l1 {
 
         if (!stream_->format(target_fourcc)) {
             LOG_ERROR(SERVICE_MMFAUD, "Failed to set target audio format");
-            ctx->complete(epoc::error_general);
+
+            if (!evt_msg_queue_) {
+                ctx->complete(epoc::error_general);
+            } else {
+                send_event_to_msg_queue(epoc::mmf_dev_sound_queue_item(epoc::mmf_dev_newarch_init_complete_evt,
+                    epoc::error_general));
+
+                ctx->complete(epoc::error_none);
+            }
 
             return;
         }
 
+        send_event_to_msg_queue(epoc::mmf_dev_sound_queue_item(epoc::mmf_dev_newarch_init_complete_evt));
         ctx->complete(epoc::error_none);
+    }
+
+    void mmf_dev_server_session::send_event_to_msg_queue(const epoc::mmf_dev_sound_queue_item &item) {
+        if (!evt_msg_queue_) {
+            return;
+        }
+
+        evt_msg_queue_->send(&item, sizeof(epoc::mmf_dev_sound_queue_item));
     }
 
     void mmf_dev_server_session::init0(service::ipc_context *ctx) {
@@ -381,6 +406,9 @@ namespace eka2l1 {
             ctx->complete(epoc::error_in_use);
             return;
         }
+
+        kernel_system *kern = ctx->sys->get_kernel_system();
+        evt_msg_queue_ = kern->get<kernel::msg_queue>(ctx->get_argument_value<std::uint32_t>(2).value());
 
         std::optional<epoc::mmf_dev_sound_proxy_settings> state_settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(1);
@@ -398,6 +426,7 @@ namespace eka2l1 {
 
         desired_state_ = state_wanted;
         init_stream_through_state();
+        send_event_to_msg_queue(epoc::mmf_dev_sound_queue_item(epoc::mmf_dev_newarch_init_complete_evt));
 
         ctx->complete(epoc::error_none);
     }
@@ -545,7 +574,7 @@ namespace eka2l1 {
         stream_state_ = desired_state_;
 
         // Launch the first buffer ready to be filled
-        do_get_buffer_to_be_filled();
+        do_report_buffer_to_be_filled();
         stream_->start();
 
         ctx->complete(epoc::error_none);
@@ -592,7 +621,38 @@ namespace eka2l1 {
         }
     }
 
-    void mmf_dev_server_session::do_get_buffer_to_be_filled() {
+    void mmf_dev_server_session::do_report_buffer_to_be_filled() {
+        mmf_dev_server *serv = server<mmf_dev_server>();
+
+        kernel_system *kern = serv->get_kernel_object_owner();
+        epocver ver_use = kern->get_epoc_version();
+
+        bool first_time = !buffer_chunk_;
+
+        if (evt_msg_queue_) {
+            send_event_to_msg_queue(epoc::mmf_dev_sound_queue_item(epoc::mmf_dev_newarch_btbf_evt));
+        } else {
+            if (buffer_fill_info_.empty()) {
+                return;
+            }
+
+            do_set_buffer_to_be_filled();
+        }
+
+        if (!first_time && serv->report_inactive_underflow()) {
+            ntimer *timing = kern->get_ntimer();
+            if (!underflow_event_) {
+                underflow_event_ = timing->register_event("MMFUnderflowEvent", [](std::uint64_t userdata, const int late) {
+                    mmf_dev_server_session *session = reinterpret_cast<mmf_dev_server_session*>(userdata);
+                    session->complete_play(epoc::error_underflow);
+                });
+            }
+
+            timing->schedule_event(100000, underflow_event_, reinterpret_cast<std::uint64_t>(this));
+        }
+    }
+
+    void mmf_dev_server_session::do_set_buffer_to_be_filled() {
         if (buffer_fill_info_.empty()) {
             return;
         }
@@ -603,7 +663,6 @@ namespace eka2l1 {
         epocver ver_use = kern->get_epoc_version();
 
         kernel::handle return_value = 0;
-        bool first_time = !buffer_chunk_;
 
         if (!buffer_chunk_ || (buffer_chunk_->max_size() < conf_.buffer_size_)) {
             deref_audio_buffer_chunk();
@@ -651,18 +710,6 @@ namespace eka2l1 {
         }
 
         buffer_fill_info_.complete(return_value);
-
-        if (!first_time && serv->report_inactive_underflow()) {
-            ntimer *timing = kern->get_ntimer();
-            if (!underflow_event_) {
-                underflow_event_ = timing->register_event("MMFUnderflowEvent", [](std::uint64_t userdata, const int late) {
-                    mmf_dev_server_session *session = reinterpret_cast<mmf_dev_server_session*>(userdata);
-                    session->complete_play(epoc::error_underflow);
-                });
-            }
-
-            timing->schedule_event(100000, underflow_event_, reinterpret_cast<std::uint64_t>(this));
-        }
     }
 
     void mmf_dev_server_session::get_buffer_to_be_filled(service::ipc_context *ctx) {
@@ -680,6 +727,14 @@ namespace eka2l1 {
         if (!buffer_fill_buf_) {
             buffer_fill_info_.complete(epoc::error_argument);
             return;
+        }
+
+        mmf_dev_server *serv = server<mmf_dev_server>();
+        kernel_system *kern = serv->get_kernel_object_owner();
+
+        if (kern->get_epoc_version() >= epocver::epoc95) {
+            // This must be called after a BTBF is reported
+            do_set_buffer_to_be_filled();
         }
     }
 
@@ -844,7 +899,64 @@ namespace eka2l1 {
                 break;
             }
         } else {
-            LOG_ERROR(SERVICE_MMFAUD, "Unimplemented MMF dev server session opcode {}", ctx->msg->function);
+            switch (ctx->msg->function) {
+            case epoc::mmf_dev_newarch_post_open:
+                // Nothing todo... :D
+                ctx->complete(epoc::error_none);
+                break;
+
+            case epoc::mmf_dev_newarch_init0:
+                init0(ctx);
+                break;
+
+            case epoc::mmf_dev_newarch_init3:
+                init3(ctx);
+                break;
+
+            case epoc::mmf_dev_newarch_config:
+                get_config(ctx);
+                break;
+
+            case epoc::mmf_dev_newarch_set_config:
+                set_config(ctx);
+                break;
+
+            case epoc::mmf_dev_newarch_capabilities:
+                capabilities(ctx);
+                break;
+
+            case epoc::mmf_dev_newarch_volume:
+                volume(ctx);
+                break;
+
+            case epoc::mmf_dev_newarch_max_volume:
+                max_volume(ctx);
+                break;
+
+            case epoc::mmf_dev_newarch_set_volume:
+                set_volume(ctx);
+                break;
+
+            case epoc::mmf_dev_newarch_play_init:
+                play_init(ctx);
+                break;
+
+            case epoc::mmf_dev_newarch_play_data:
+                play_data(ctx);
+                break;
+
+            case epoc::mmf_dev_newarch_btbf_data:
+                get_buffer_to_be_filled(ctx);
+                break;
+
+            case epoc::mmf_dev_newarch_samples_played:
+                samples_played(ctx);
+                break;
+
+            default:
+                LOG_ERROR(SERVICE_MMFAUD, "Unimplemented MMF dev server session opcode {}", ctx->msg->function);
+                break;
+            }
         }
     }
 }

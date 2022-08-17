@@ -32,6 +32,10 @@ namespace eka2l1 {
         class chunk;
     }
 
+    namespace kernel {
+        class msg_queue;
+    }
+
     constexpr std::uint32_t make_four_cc(const char c1, const char c2,
         const char c3, const char c4) {
         return (c1 | (c2 << 8) | (c3 << 16) | (c4 << 24));
@@ -77,10 +81,14 @@ namespace eka2l1 {
 
         int underflow_event_;
 
+        kernel::msg_queue *evt_msg_queue_;
+
     protected:
-        void do_get_buffer_to_be_filled();
+        void do_set_buffer_to_be_filled();
+        void do_report_buffer_to_be_filled();
         void init_stream_through_state();
         void deref_audio_buffer_chunk();
+        void send_event_to_msg_queue(const epoc::mmf_dev_sound_queue_item &item);
         void stop();
 
     public:

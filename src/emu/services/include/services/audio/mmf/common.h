@@ -126,6 +126,76 @@ namespace eka2l1::epoc {
         mmf_dev_set_priority_settings = 44
     };
 
+    // Should/near the same as the one on Symbian OSS
+    // The S^3 version does not call server to register callback (request like BufferToBeFilled or Emptied),
+    // but rather run a message queue and respond accordingly to reported back event
+    // For example if a event named new BTBF is received from message queue, they will call GetBufferToBeFilled
+    enum mmf_dev_server_newarch_opcode {
+        mmf_dev_newarch_post_open = 0,
+        mmf_dev_newarch_init0 = 1,
+        mmf_dev_newarch_init1 = 2,
+        mmf_dev_newarch_init2 = 3,
+        mmf_dev_newarch_init3 = 4,
+        mmf_dev_newarch_capabilities = 5,
+        mmf_dev_newarch_config = 6,
+        mmf_dev_newarch_set_config = 7,
+        mmf_dev_newarch_max_volume = 8,
+        mmf_dev_newarch_volume = 9,
+        mmf_dev_newarch_set_volume = 10,
+        mmf_dev_newarch_max_gain = 11,
+        mmf_dev_newarch_gain = 12,
+        mmf_dev_newarch_set_gain = 13,
+        mmf_dev_newarch_play_balance = 14,
+        mmf_dev_newarch_set_play_balance = 15,
+        mmf_dev_newarch_record_balance = 16,
+        mmf_dev_newarch_set_record_balance = 17,
+        // The list here are event codes
+        mmf_dev_newarch_init_complete_evt = 18,
+        mmf_dev_newarch_btbf_evt = 19,
+        mmf_dev_newarch_btbe_evt = 20,
+        mmf_dev_newarch_play_error_evt = 21,
+        mmf_dev_newarch_record_error_evt = 22,
+        mmf_dev_newarch_tone_done_evt = 23,
+        mmf_dev_newarch_send_evt_to_cli_complete_evt = 24,
+        // End event code
+        mmf_dev_newarch_play_init = 25,
+        mmf_dev_newarch_record_init = 26,
+        mmf_dev_newarch_play_data = 27,
+        mmf_dev_newarch_record_data = 28,
+        mmf_dev_newarch_stop = 29,
+        mmf_dev_newarch_pause = 30,
+        mmf_dev_newarch_play_tone = 31,
+        mmf_dev_newarch_play_dual_tone = 32,
+        mmf_dev_newarch_play_dtmf_string = 33,
+        mmf_dev_newarch_play_dtmf_string_len = 34,
+        mmf_dev_newarch_play_tone_seq = 35,
+        mmf_dev_newarch_play_fixed_seq = 36,
+        mmf_dev_newarch_set_dtmf_len = 37,
+        mmf_dev_newarch_set_volume_ramp = 38,
+        mmf_dev_newarch_get_supported_input_data_types = 39,
+        mmf_dev_newarch_get_supported_output_data_types = 40,
+        mmf_dev_newarch_copy_fourcc_array_data = 41,
+        mmf_dev_newarch_samples_recorded = 42,
+        mmf_dev_newarch_samples_played = 43,
+        mmf_dev_newarch_set_tone_repeats = 44,
+        mmf_dev_newarch_set_priority_settings = 45,
+        mmf_dev_newarch_fixed_sequence_name = 46,
+        mmf_dev_newarch_custom_interface = 47,
+        mmf_dev_newarch_fixed_sequence_count = 48,
+        mmf_dev_newarch_request_resource_nof = 49,
+        mmf_dev_newarch_cancel_request_resource_nof = 50,
+        mmf_dev_newarch_get_resources_nof_data = 51,
+        mmf_dev_newarch_will_resume_play = 52,
+        mmf_dev_newarch_empty_buffers = 53,
+        mmf_dev_newarch_cancel_init = 54,
+        mmf_dev_newarch_btbf_data = 55,
+        mmf_dev_newarch_btbe_data = 56,
+        mmf_dev_newarch_close = 62,
+        mmf_dev_newarch_paused_record_complete_evt = 63,
+        mmf_dev_newarch_is_resume_supported = 66,
+        mmf_dev_newarch_resume = 67
+    };
+
     struct mmf_msg_destination {
         std::uint32_t interface_id_;
         std::int32_t dest_handle_;
@@ -157,4 +227,28 @@ namespace eka2l1::epoc {
         mmf_dev_chunk_op chunk_op_; ///< Request that the client side should reopen the chunk handle.
             ///< May occur due to chunk recreating
     };
+
+    struct mmf_event {
+        std::uint32_t type_;
+        std::uint32_t error_code_;
+        std::uint32_t reserved1_;
+        std::uint32_t aligned_padding_;
+    };
+
+#pragma pack(push, 1)
+    struct mmf_dev_sound_queue_item {
+        std::uint32_t event_code_;
+        std::uint32_t padding_;
+        std::uint32_t event_struct_size_ = sizeof(mmf_event);
+        std::uint32_t event_max_struct_size_ = sizeof(mmf_event);
+        mmf_event event_;
+        std::uint32_t error_code_;
+        std::uint32_t padding2_;
+
+        explicit mmf_dev_sound_queue_item(const std::uint32_t code, const std::uint32_t error = 0)
+            : event_code_(code)
+            , error_code_(error) {
+        }
+    };
+#pragma pack(pop)
 }
