@@ -30,12 +30,16 @@
 namespace eka2l1::arm {
     class dynarmic_core_cp15 : public Dynarmic::A32::Coprocessor {
         std::uint32_t uprw;
+        std::uint32_t data_sync_barrier;
+        std::uint32_t data_memory_barrier;
 
     public:
         using coproc_reg = Dynarmic::A32::CoprocReg;
 
         explicit dynarmic_core_cp15()
-            : uprw(0) {
+            : uprw(0)
+            , data_sync_barrier(0)
+            , data_memory_barrier(0) {
         }
 
         ~dynarmic_core_cp15() override {
@@ -57,6 +61,17 @@ namespace eka2l1::arm {
 
         CallbackOrAccessOneWord CompileSendOneWord(bool two, unsigned opc1, coproc_reg CRn,
             coproc_reg CRm, unsigned opc2) override {
+            if (!two && (CRn == coproc_reg::C7) && (opc1 == 0) && (CRm == coproc_reg::C10)) {
+                switch (opc2) {
+                case 4:
+                    return &data_sync_barrier;
+                case 5:
+                    return &data_memory_barrier;
+                default:
+                    return CallbackOrAccessOneWord{};
+                }
+            }
+
             return CallbackOrAccessOneWord{};
         }
 
