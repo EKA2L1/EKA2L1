@@ -66,7 +66,7 @@ end
 --- @param addr The address to perform the read.
 --- @param data The byte to write.
 --- @return True if the write operation performed successfully.
-function mem.readWord(addr, data)
+function mem.writeWord(addr, data)
     return (ffi.C.eka2l1_mem_write_word(addr, data) == 0) and false or true
 end
 
@@ -74,7 +74,7 @@ end
 --- @param addr The address to perform the read.
 --- @param data The byte to write.
 --- @return True if the write operation performed successfully.
-function mem.readDword(addr, data)
+function mem.writeDword(addr, data)
     return (ffi.C.eka2l1_mem_write_dword(addr, data) == 0) and false or true
 end
 
@@ -82,7 +82,7 @@ end
 --- @param addr The address to perform the read.
 --- @param data The byte to write.
 --- @return True if the write operation performed successfully.
-function mem.readQword(addr, data)
+function mem.writeQword(addr, data)
     return (ffi.C.eka2l1_mem_write_qword(addr, data) == 0) and false or true
 end
 
