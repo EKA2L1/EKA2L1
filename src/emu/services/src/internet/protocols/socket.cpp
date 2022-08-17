@@ -37,6 +37,7 @@ extern "C" {
 // SDK 21 does not have ifaddrs. From SDK 24 there is one implementation
 #include <common/android/ifaddrs.h>
 #else
+#include <net/if.h>
 #include <ifaddrs.h>
 #endif
 #endif
