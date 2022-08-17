@@ -245,12 +245,16 @@ namespace eka2l1::loader {
             return false;
         }
 
-        common::dynamic_ifile sw_file(add_path(version_folder, "sw.txt"));
+        common::dynamic_ifile sw_file(add_path(version_folder, "langsw.txt"));
         std::string line_buffer;
 
         if (sw_file.fail()) {
-            LOG_ERROR(SYSTEM, "Can't load sw.txt!");
-            return false;
+            sw_file = common::dynamic_ifile(add_path(version_folder, "sw.txt"));
+
+            if (sw_file.fail()) {
+                LOG_ERROR(SYSTEM, "Can't load sw.txt!");
+                return false;
+            }
         }
 
         sw_file.getline(line_buffer);
