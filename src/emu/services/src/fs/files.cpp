@@ -216,7 +216,20 @@ namespace eka2l1 {
             return;
         }
 
-        int size = *ctx->get_argument_value<std::int32_t>(0);
+        std::uint64_t size = 0;
+
+        // UINT64 is passed in a descriptor
+        if (ctx->msg->function & 0x10000) {
+            std::optional<std::uint64_t> size_opt = ctx->get_argument_data_from_descriptor<std::uint64_t>(0);
+            if (!size_opt.value()) {
+                ctx->complete(epoc::error_argument);
+            } else {
+                size = size_opt.value();
+            }
+        } else {
+            size = static_cast<std::uint64_t>(ctx->get_argument_value<std::int32_t>(0).value());
+        }
+
         file *f = reinterpret_cast<file *>(node->vfs_node.get());
         std::size_t fsize = f->size();
 
