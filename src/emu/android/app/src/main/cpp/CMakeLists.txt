@@ -36,6 +36,7 @@ target_link_libraries(native-lib PRIVATE
 
 target_include_directories(native-lib PRIVATE include)
 add_dependencies(native-lib
+        audiooutputrouting
         avkonfep
         ecam
         scdv

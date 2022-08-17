@@ -208,6 +208,7 @@ if (WIN32)
 endif()
 
 add_dependencies(eka2l1_qt
+    audiooutputrouting
     avkonfep
     ecam
     scdv

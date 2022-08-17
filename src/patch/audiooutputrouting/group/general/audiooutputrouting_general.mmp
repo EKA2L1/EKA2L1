@@ -1,0 +1,20 @@
+TARGET		  audiooutputrouting_general.dll
+TARGETTYPE	  dll
+UID			 0x10003B19 0xee000009
+
+USERINCLUDE	    ..\..\inc
+SYSTEMINCLUDE   \epoc32\include ..\..\..\priv\inc
+
+SOURCEPATH	    ..\..\src
+
+SOURCE          audiooutput.cpp
+
+nostrictdef
+
+LIBRARY		    euser.lib
+STATICLIBRARY   priv.lib
+
+DEFFILE ..\..\eabi\audiooutputrouting_general.def
+
+DEBUGGABLE_UDEBONLY
+

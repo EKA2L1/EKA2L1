@@ -1,0 +1,11 @@
+EXPORTS
+	_ZN12CAudioOutput4NewLER12CMMFDevSound @ 1 NONAME R3UNUSED
+	_ZN12CAudioOutput4NewLER14MCustomCommand @ 2 NONAME R3UNUSED
+	_ZN12CAudioOutput4NewLER16MCustomInterface @ 3 NONAME R3UNUSED
+	_ZN12CAudioOutput4NewLER18CMidiClientUtility @ 4 NONAME R3UNUSED
+	_ZN12CAudioOutput4NewLER20CMdaAudioToneUtility @ 5 NONAME R3UNUSED
+	_ZN12CAudioOutput4NewLER21CMdaAudioOutputStream @ 6 NONAME R3UNUSED
+	_ZN12CAudioOutput4NewLER22CMdaAudioPlayerUtility @ 7 NONAME R3UNUSED
+	_ZN12CAudioOutput4NewLER24CMdaAudioRecorderUtilityi @ 8 NONAME R3UNUSED
+	_ZN12CAudioOutput4NewLER17CDrmPlayerUtility @ 9 NONAME R3UNUSED
+	_ZN12CAudioOutput4NewLER19CVideoPlayerUtility @ 10 NONAME R3UNUSED
