@@ -649,7 +649,7 @@ namespace eka2l1 {
         auto res = std::lower_bound(obj_map.begin(), obj_map.end(), nullptr, [&](const auto &lhs, const auto &rhs) { \
             return lhs->unique_id() < uid;                                                                           \
         });                                                                                                          \
-        if (res != obj_map.end()) {                                                                                  \
+        if ((res != obj_map.end()) && (res->get()->unique_id() == uid)) {                                                                                  \
             return reinterpret_cast<T *>(res->get());                                                                \
         }                                                                                                            \
         return nullptr;                                                                                              \
