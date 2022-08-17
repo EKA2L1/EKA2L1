@@ -294,6 +294,7 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(server<fs_server>()->set_default_system_path, epoc::fs_msg_set_default_path, "Fs::SetDefaultPath");
             HANDLE_CLIENT_IPC(server<fs_server>()->get_default_system_path, epoc::fs_msg_default_path, "Fs::DefaultPath");
             HANDLE_CLIENT_IPC(is_file_opened, epoc::fs_msg_is_file_open, "Fs::IsFileOpen");
+            HANDLE_CLIENT_IPC(filesystem_name, epoc::fs_msg_filesystem_name, "Fs::IsFileOpen");
 
         case epoc::fs_msg_base_close:
             if (ctx->sys->get_symbian_version_use() < epocver::eka2) {
@@ -870,6 +871,21 @@ namespace eka2l1 {
         const std::int32_t result = server<fs_server>()->is_file_opened(final_path);
 
         ctx->write_data_to_descriptor_argument<std::int32_t>(1, result);
+        ctx->complete(epoc::error_none);
+    }
+
+    void fs_server_client::filesystem_name(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> drv_val = ctx->get_argument_value<std::uint32_t>(1);
+
+        if (!drv_val.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        drive_number drv = static_cast<drive_number>(drv_val.value());
+        std::u16string fs_stub_name = (drv == drive_z) ? u"ROFS" : u"FAT";
+
+        ctx->write_arg(0, fs_stub_name);
         ctx->complete(epoc::error_none);
     }
 }
