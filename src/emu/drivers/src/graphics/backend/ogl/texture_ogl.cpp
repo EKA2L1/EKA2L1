@@ -393,7 +393,7 @@ namespace eka2l1::drivers {
     }
 
     void ogl_renderbuffer::unbind(graphics_driver *driver) {
-        glBindRenderbuffer(GL_RENDERBUFFER_BINDING, last_renderbuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, last_renderbuffer);
         last_renderbuffer = 0;
     }
 
