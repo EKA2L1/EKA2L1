@@ -28,12 +28,20 @@
 
 namespace eka2l1::mem::flexible {
     mapping::mapping(address_space *owner)
-        : owner_(owner) {
+        : owner_(owner)
+        , region_flags_(0)
+        , off_start_in_page_quantity_(0) {
     }
 
     mapping::~mapping() {
         // Unmap all memory mapped
         unmap(0, occupied_);
+
+        // Free allocated region
+        linear_section *sect = owner_->section(region_flags_);
+        if (sect) {
+            sect->alloc_.deallocate(static_cast<std::uint32_t>(off_start_in_page_quantity_), occupied_);
+        }
     }
 
     bool mapping::instantiate(const std::size_t page_occupied, const std::uint32_t flags, const vm_address forced) {
@@ -60,6 +68,7 @@ namespace eka2l1::mem::flexible {
             }
 
             base_ = sect->beg_ + (offset << owner_->control_->page_size_bits_);
+            off_start_in_page_quantity_ = offset;
         } else {
             if (forced < sect->beg_) {
                 LOG_ERROR(MEMORY, "The forced base address is higher than the section base!");
@@ -68,10 +77,13 @@ namespace eka2l1::mem::flexible {
 
             // Allocate as a holder, prevent other from allocate at same address!
             base_ = forced;
-            sect->alloc_.allocate_from((base_ - sect->beg_) >> owner_->control_->page_size_bits_, total_page, false);
+            off_start_in_page_quantity_ = static_cast<int>((base_ - sect->beg_) >> owner_->control_->page_size_bits_);
+
+            sect->alloc_.allocate_from(off_start_in_page_quantity_, total_page, false);
         }
 
         occupied_ = total_page;
+        region_flags_ = flags;
 
         // We are going to the prom! Yes, me, the mapping.
         owner_->mappings_.push_back(this);

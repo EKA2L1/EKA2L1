@@ -37,6 +37,8 @@ namespace eka2l1::mem::flexible {
         address_space *owner_;
 
         std::size_t occupied_;
+        std::uint32_t region_flags_;
+        int off_start_in_page_quantity_;
 
     public:
         explicit mapping(address_space *owner);
