@@ -33,6 +33,12 @@
 
 static const TUint32 KWaitBufferTimeInMicroseconds = 100000;
 
+// This sits between the redraw priority (50) and ws events priority (100) of the UI framework.
+// Audio is intensive, we don't want redraw too take two much time, but at same time, we also
+// want input or other events to be responsive and not missing out any events.
+// Only apply to EKA2 onwards
+static const TInt KMMFMdaOutputBufferPriority = 70;
+
 static TInt OnWaitBufferTimeout(void *aUserdata) {
     CMMFMdaAudioOutputStream *stream = reinterpret_cast<CMMFMdaAudioOutputStream *>(aUserdata);
     if (stream) {
@@ -44,7 +50,7 @@ static TInt OnWaitBufferTimeout(void *aUserdata) {
 
 CMMFMdaOutputBufferQueue::CMMFMdaOutputBufferQueue(CMMFMdaAudioOutputStream *aStream)
 #ifdef EKA2
-    : CActive(CActive::EPriorityHigh)
+    : CActive(KMMFMdaOutputBufferPriority)
 #else
     : CActive(CActive::EPriorityStandard)
 #endif
