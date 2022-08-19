@@ -18,18 +18,43 @@
  */
 
 #include <kernel/legacy/mutex.h>
+#include <kernel/kernel.h>
+
+#include <common/log.h>
 
 namespace eka2l1::kernel::legacy {
     mutex::mutex(kernel_system *kern, const std::string mut_name, kernel::access_type access)
-        : sync_object_base(kern, mut_name, 1, access) {
+        : sync_object_base(kern, mut_name, 1, access)
+        , holding_(nullptr)
+        , hold_count_(0) {
         obj_type = kernel::object_type::mutex;
     }
 
     void mutex::wait() {
+        kernel::thread *crr_thread = kern->crr_thread();
+        if (!holding_) {
+            holding_ = crr_thread;
+            hold_count_++;
+        } else {
+            if (holding_ == crr_thread) {
+                hold_count_++;
+                return;
+            }
+        }
+
         wait_impl(thread_state::wait_mutex);
     }
 
     void mutex::signal() {
+        kernel::thread *crr_thread = kern->crr_thread();
+        if (holding_ == crr_thread) {
+            if (--hold_count_ == 0) {
+                holding_ = nullptr;
+            } else {
+                return;
+            }
+        }
+
         signal_impl(1);
     }
 

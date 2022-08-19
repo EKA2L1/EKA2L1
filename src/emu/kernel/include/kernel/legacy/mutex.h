@@ -21,8 +21,16 @@
 
 #include <kernel/legacy/sync_object.h>
 
+namespace eka2l1::kernel {
+    class thread;
+}
+
 namespace eka2l1::kernel::legacy {
     class mutex : public sync_object_base {
+    private:
+        kernel::thread *holding_;
+        std::uint32_t hold_count_;
+
     public:
         explicit mutex(kernel_system *kern, const std::string mut_name, kernel::access_type access = access_type::local_access);
 
