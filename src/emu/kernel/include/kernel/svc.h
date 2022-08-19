@@ -197,6 +197,7 @@ namespace eka2l1::epoc {
             execute_v80_msg2_client = 0x3B,
             execute_v80_set_tls = 0x3C,
             execute_v80_free_tls = 0x3D,
+            execute_v80_create_change_notifier = 0x3E,
             execute_v80_dll_global_allocate = 0x3F,
             execute_v80_open_debug = 0x47,
             execute_v80_close_debug = 0x48,

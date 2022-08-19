@@ -4965,6 +4965,9 @@ namespace eka2l1::epoc {
             case epoc::eka1_executor::execute_v80_msgqueue_cancel_data_available:
                 return msgqueue_cancel_data_available_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
+            case epoc::eka1_executor::execute_v80_create_change_notifier:
+                return change_notifier_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
             default:
                 LOG_ERROR(KERNEL, "Unimplemented object executor for function 0x{:X}", attribute & 0xFF);
                 break;
