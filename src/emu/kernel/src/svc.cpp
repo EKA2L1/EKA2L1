@@ -5580,6 +5580,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00C10000, hle_dispatch),
         BRIDGE_REGISTER(0x00C10001, hle_dispatch_2),
         /* SLOW EXECUTIVE CALL */
+        BRIDGE_REGISTER(0x00, object_next),
         BRIDGE_REGISTER(0x01, chunk_base),
         BRIDGE_REGISTER(0x02, chunk_size),
         BRIDGE_REGISTER(0x03, chunk_max_size),
