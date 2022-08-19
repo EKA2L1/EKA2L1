@@ -31,7 +31,7 @@ namespace eka2l1::drivers::hwrm {
         explicit vibrator_sdl2();
         ~vibrator_sdl2() override;
 
-        void vibrate(const std::uint32_t millisecs, const std::int16_t intensity = MIN_INTENSITY - 1) override;
+        void vibrate(const std::uint32_t millisecs, const std::int16_t intensity = 0) override;
         void stop_vibrate() override;
     };
 }

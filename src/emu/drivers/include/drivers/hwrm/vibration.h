@@ -38,7 +38,7 @@ namespace eka2l1::drivers::hwrm {
          * @param intensity     Intensity of the vibration. Range from MIN_INTENSITY to MAX_INTENSITY.
          *                      Falling out of that range will cause the vibration to vibrates with default intensity.
          */
-        virtual void vibrate(const std::uint32_t millisecs, const std::int16_t intensity = MIN_INTENSITY - 1) = 0;
+        virtual void vibrate(const std::uint32_t millisecs, const std::int16_t intensity = 0) = 0;
 
         /**
          * @brief Stop any current vibration.
