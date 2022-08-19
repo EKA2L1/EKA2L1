@@ -114,6 +114,12 @@ namespace eka2l1::loader {
             for (const std::size_t i : index_to_loads) {
                 if (!do_load_header(i))
                     return false;
+
+                if (is_rom_version && ((i + 1) < trailer.sbm_offsets.size())) {
+                    if (!do_load_header(i + 1)) {
+                        return false;
+                    }
+                }
             }
 
             index_to_loads.clear();

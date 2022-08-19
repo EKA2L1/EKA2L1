@@ -609,9 +609,30 @@ namespace eka2l1 {
 
         if (!bmp) {
             // Let's load the MBM from file first
-            eka2l1::ro_file_stream stream_(source);
+            // Some OS version request to load MBM inside AIF, so we do a check too (S80)
+            eka2l1::ro_file_stream stream(source);
+            std::unique_ptr<common::ro_stream> ref_stream;
 
-            loader::mbm_file mbmf_(reinterpret_cast<common::ro_stream *>(&stream_));
+            common::ro_stream *stream_for_mbm_read = reinterpret_cast<common::ro_stream *>(&stream);
+
+            std::uint32_t aif_v2_uid = 0;
+            static constexpr std::uint32_t expected_aifv2_uid = 0x101FB032;
+
+            if ((stream.read(&aif_v2_uid, 4) == 4) && (aif_v2_uid == expected_aifv2_uid)) {
+                std::uint32_t data_size = 0;
+                stream.seek(12, common::seek_where::cur);
+                if (stream.read(&data_size, 4) == 4) {
+                    std::uint32_t ptr_start = data_size + (4 - (data_size % 4)) + 16;
+                    if (stream.size() > ptr_start) {
+                        ref_stream = std::make_unique<common::ro_window_ref_stream>(stream, ptr_start,
+                            stream.size() - ptr_start);
+
+                        stream_for_mbm_read = ref_stream.get();
+                    }
+                }
+            }
+
+            loader::mbm_file mbmf_(stream_for_mbm_read);
             mbmf_.index_to_loads.push_back(load_options->bitmap_id);
 
             if (!mbmf_.do_read_headers()) {
