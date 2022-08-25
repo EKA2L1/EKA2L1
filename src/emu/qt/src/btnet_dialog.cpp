@@ -20,6 +20,7 @@
 #include "ui_btnet_dialog.h"
 #include <qt/btnet_dialog.h>
 #include <config/config.h>
+#include <common/random.h>
 
 #include <common/algorithm.h>
 #include <services/bluetooth/protocols/btmidman_inet.h>
@@ -139,12 +140,12 @@ void btnet_dialog::on_password_clear_btn_clicked() {
 
 void btnet_dialog::on_password_gen_random_btn_clicked() {
     static const QString chars_dict("abcdefghijklmnoupqrstuvwxyz0123456789ABCDEFGHIJKLMNOUPQRSTUVWYZ");
-    static const int chars_dict_count = chars_dict.length();
+    static const std::uint32_t chars_dict_count = static_cast<std::uint32_t>(chars_dict.length());
 
     QString result_string;
 
     for (std::uint32_t i = 0; i < MAX_PASSWORD_LENGTH; i++) {
-        result_string.push_back(chars_dict.at(qrand() % chars_dict_count));
+        result_string.push_back(chars_dict.at(eka2l1::random_range(0, chars_dict_count - 1)));
     }
 
     ui_->password_line_edit->setText(result_string);

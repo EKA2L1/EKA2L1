@@ -51,6 +51,7 @@ namespace eka2l1::epoc::bt {
         , hearing_timeout_timer_(nullptr)
         , port_(conf.internet_bluetooth_port)
         , current_active_observer_(nullptr)
+        , password_(conf.btnet_password)
         , discovery_mode_(static_cast<discovery_mode>(conf.btnet_discovery_mode)) {
         if (discovery_mode_ == DISCOVERY_MODE_OFF) {
             return;
@@ -289,8 +290,6 @@ namespace eka2l1::epoc::bt {
     }
 
     void midman_inet::reset_friend_timeout_timer(uv_timer_t *timer) {
-        LOG_ERROR(SERVICE_BLUETOOTH, "Task requested!");
-
         uv_timer_start(timer, [](uv_timer_t *timer) {
             uv_timer_stop(timer);
 
@@ -471,7 +470,7 @@ namespace eka2l1::epoc::bt {
     void midman_inet::send_login() {
         std::string login_package("l0");
         login_package.push_back(static_cast<char>(password_.length()));
-        login_package.insert(login_package.begin(), password_.begin(), password_.end());
+        login_package.insert(login_package.end(), password_.begin(), password_.end());
 
         uv_buf_t buf = uv_buf_init(login_package.data(), static_cast<std::uint32_t>(login_package.size()));
         uv_write_t *write_req = new uv_write_t;
@@ -818,7 +817,7 @@ lookup:
 
         if (discovery_mode_ == DISCOVERY_MODE_LOCAL_LAN) {
             request_data->call_request_.push_back(static_cast<char>(password_.length()));
-            request_data->call_request_.insert(request_data->call_request_.begin(), password_.begin(), password_.end());
+            request_data->call_request_.insert(request_data->call_request_.end(), password_.begin(), password_.end());
         }
 
         sockaddr *addr_ptr = nullptr;
