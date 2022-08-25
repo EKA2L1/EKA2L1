@@ -57,5 +57,8 @@ public class Constants {
     public static final String PREF_ANDROID = "pref_android";
     public static final String PREF_GENERAL = "pref_general";
     public static final String PREF_SYSTEM= "pref_system";
-    public static final String PREF_BT_NETPLAY= "pref_bt_netplay";
+    public static final String PREF_BT_NETPLAY = "pref_bt_netplay";
+    public static final String PREF_BT_NETPLAY_DIRECT_IP_MAN = "pref_bt_netplay_direct_ips_manager";
+    public static final String PREF_BT_NETPLAY_PORT_OFFSET = "btnet-port-offset";
+    public static final String PREF_BT_NETPLAY_PASSWORD = "btnet-password";
 }

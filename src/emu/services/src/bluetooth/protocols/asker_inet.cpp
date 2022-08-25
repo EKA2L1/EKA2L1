@@ -33,6 +33,7 @@ namespace eka2l1::epoc::bt {
     asker_inet::~asker_inet() {
         if (bt_asker_retry_timer_) {
             uv_timer_stop(reinterpret_cast<uv_timer_t*>(bt_asker_retry_timer_));
+
             uv_close(reinterpret_cast<uv_handle_t*>(bt_asker_retry_timer_), [](uv_handle_t *hh) {
                 delete hh;
             });
@@ -46,7 +47,7 @@ namespace eka2l1::epoc::bt {
         }
     }
 
-    static constexpr std::uint32_t SEND_TIMEOUT_RETRY = 10000;
+    static constexpr std::uint32_t SEND_TIMEOUT_RETRY = 100;
     struct send_data_vars {
         uv_buf_t buf_;
         sockaddr_in6 addr_;

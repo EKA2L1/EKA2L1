@@ -46,14 +46,14 @@ import com.github.eka2l1.emu.Emulator;
 
 import java.util.ArrayList;
 
-public class BTNetplayFragment extends ListFragment implements AdapterView.OnItemClickListener {
-    private BTNetplayAdapter adapter;
+public class BTNetplayDirectAddressesFragment extends ListFragment implements AdapterView.OnItemClickListener {
+    private BTNetplayDirectAddressesAdapter adapter;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ArrayList<BTNetplayAddress> addresses = BTNetplayManager.getAddresses();
-        adapter = new BTNetplayAdapter(getContext(), addresses);
+        ArrayList<BTNetplayAddress> addresses = BTNetplayDirectAddressesManager.getAddresses();
+        adapter = new BTNetplayDirectAddressesAdapter(getContext(), addresses);
         getParentFragmentManager().setFragmentResultListener(KEY_ADDRESS_CHANGED, this, (requestKey, bundle) -> {
             int id = bundle.getInt(KEY_ID);
             final String address = bundle.getString(KEY_ADDRESS);
@@ -72,7 +72,7 @@ public class BTNetplayFragment extends ListFragment implements AdapterView.OnIte
     @Override
     public void onPause() {
         super.onPause();
-        BTNetplayManager.saveAddresses(adapter.getItems());
+        BTNetplayDirectAddressesManager.saveAddresses(adapter.getItems());
         Emulator.loadConfig();
     }
 
@@ -90,7 +90,7 @@ public class BTNetplayFragment extends ListFragment implements AdapterView.OnIte
         getListView().setOnItemClickListener(this);
         ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setTitle(R.string.pref_bt_netplay);
+        actionBar.setTitle(R.string.pref_bt_netplay_direct_ips_manager);
     }
 
     @Override

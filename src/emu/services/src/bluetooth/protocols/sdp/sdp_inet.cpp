@@ -43,29 +43,55 @@ namespace eka2l1::epoc::bt {
         , sdp_connect_(nullptr)
         , connected_(false)
         , provided_result_(nullptr)
-        , store_to_temp_buffer_(false) {
+        , store_to_temp_buffer_(false)
+        , should_notify_done_(false) {
     }
 
     sdp_inet_net_database::~sdp_inet_net_database() {
-        close_connect_handle();
+        close_connect_handle(true);
     }
 
-    void sdp_inet_net_database::close_connect_handle() {
+    void sdp_inet_net_database::close_connect_handle(const bool should_wait) {
         const std::lock_guard<std::mutex> guard(access_lock_);
 
         if (sdp_connect_) {
+            if (should_wait) {
+                close_done_evt_.reset();
+                should_notify_done_ = true;
+            } else {
+                should_notify_done_ = false;
+            }
+
             uv_async_t *async = new uv_async_t;
             async->data = sdp_connect_;
 
+            // While shutdown it calls EOF again
+            sdp_connect_ = nullptr;
+
             uv_async_init(uv_default_loop(), async, [](uv_async_t *close_async) {
-                uv_handle_t *h = reinterpret_cast<uv_handle_t*>(close_async->data);
-                uv_read_stop(reinterpret_cast<uv_stream_t*>(h));
-                uv_close(h, [](uv_handle_t *hh) { delete hh; });
+                uv_stream_t *h = reinterpret_cast<uv_stream_t*>(close_async->data);
+                uv_shutdown_t *shut = new uv_shutdown_t;
+
+                uv_shutdown(shut, h, [](uv_shutdown_t *shut, int status) {
+                    uv_close(reinterpret_cast<uv_handle_t*>(shut->handle), [](uv_handle_t *handle) {
+                        sdp_inet_net_database *sdp = reinterpret_cast<sdp_inet_net_database*>(handle->data);
+                        if (sdp->should_notify_done_) {
+                            sdp->close_done_evt_.set();
+                        }
+                        delete handle;
+                    });
+
+                    delete shut;
+                });
+
                 uv_close(reinterpret_cast<uv_handle_t*>(close_async), [](uv_handle_t *hh) { delete hh; });
             });
 
             uv_async_send(async);
-            sdp_connect_ = nullptr;
+
+            if (should_wait) {
+                close_done_evt_.wait();
+            }
         }
     }
 
@@ -119,8 +145,8 @@ namespace eka2l1::epoc::bt {
     }
 
     void sdp_inet_net_database::handle_new_pdu_packet(const char *buffer, const std::int64_t nread) {
-        if (nread < 0) {
-            if ((nread == UV_ECONNRESET) || (nread == UV_EOF)) {
+        if (nread <= 0) {
+            if ((nread == UV_ECONNRESET) || (nread == UV_EOF) || (nread == 0) || (nread == -1)) {
                 close_connect_handle();
             } else {
                 LOG_ERROR(SERVICE_BLUETOOTH, "Receive SDP data failed with libuv error code {}", nread);

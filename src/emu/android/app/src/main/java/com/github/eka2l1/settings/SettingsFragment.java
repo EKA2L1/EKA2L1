@@ -52,7 +52,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         setPreferenceClickListener(new AndroidSettingsFragment(), PREF_ANDROID);
         setPreferenceClickListener(new GeneralSettingsFragment(), PREF_GENERAL);
         setPreferenceClickListener(new SystemSettingsFragment(), PREF_SYSTEM);
-        setPreferenceClickListener(new BTNetplayFragment(), PREF_BT_NETPLAY);
+        setPreferenceClickListener(new BTNetplaySettingsFragment(), PREF_BT_NETPLAY);
     }
 
     private void setPreferenceClickListener(Fragment fragment, String preferenceName) {

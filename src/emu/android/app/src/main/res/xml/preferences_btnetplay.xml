@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ListPreference
+        android:defaultValue="0"
+        android:entries="@array/pref_bt_netplay_mode"
+        android:entryValues="@array/pref_bt_netplay_values"
+        android:key="btnet-discovery-mode"
+        android:title="@string/mode" />
+    <EditTextPreference
+        android:defaultValue="15000"
+        android:key="btnet-port-offset"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/pref_bt_netplay_port_offset" />
+    <EditTextPreference
+        android:defaultValue="btnetplay.12z1.com"
+        android:key="bt-central-server-url"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/pref_bt_netplay_server_address" />
+    <EditTextPreference
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/pref_bt_netplay_password"
+        app:key="btnet-password" />
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="enable-upnp"
+        android:title="@string/pref_bt_netplay_enable_upnp" />
+    <Preference
+        android:id="@+id/Preference"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:key="pref_bt_netplay_direct_ips_manager"
+        android:title="@string/pref_bt_netplay_direct_ips_manager" />
+</PreferenceScreen>

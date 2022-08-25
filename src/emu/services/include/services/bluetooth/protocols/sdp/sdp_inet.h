@@ -24,6 +24,7 @@
 #include <services/bluetooth/protocols/asker_inet.h>
 #include <services/bluetooth/protocols/sdp/pdu_builder.h>
 #include <services/socket/netdb.h>
+#include <common/sync.h>
 
 #include <string>
 #include <mutex>
@@ -48,6 +49,8 @@ namespace eka2l1::epoc::bt {
         bool store_to_temp_buffer_;
 
         std::mutex access_lock_;
+        common::event close_done_evt_;
+        bool should_notify_done_;
 
         void handle_connect_query(const char *record_buf, const std::uint32_t record_size);
         void handle_service_query(const char *record_buf, const std::uint32_t record_size);
@@ -55,11 +58,11 @@ namespace eka2l1::epoc::bt {
         void handle_retrieve_buffer_query();
         void send_pdu_packet(const char *buf, const std::uint32_t buf_size);
         void handle_normal_query_complete(const std::uint8_t *param, const std::uint32_t param_len);
-        void close_connect_handle();
+        void close_connect_handle(const bool should_wait = false);
 
     public:
         explicit sdp_inet_net_database(sdp_inet_protocol *protocol);
-        ~sdp_inet_net_database();
+        ~sdp_inet_net_database() override;
 
         void query(const char *query_data, const std::uint32_t query_size, epoc::des8 *result_buffer, epoc::notify_info &complete_info) override;
         void add(const char *record_buf, const std::uint32_t record_size, epoc::notify_info &complete_info) override;

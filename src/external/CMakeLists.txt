@@ -267,6 +267,15 @@ set(LIBUV_BUILD_BENCH "Build bench for libuv" CACHE INTERNAL OFF)
 
 add_subdirectory(libuv)
 
+# UPNP
+
+option (UPNPC_BUILD_SHARED "Build shared library" FALSE)
+option (UPNPC_BUILD_TESTS "Build test executables" FALSE)
+option (UPNPC_BUILD_SAMPLE "Build sample executables" FALSE)
+option (UPNPC_NO_INSTALL "Disable installation" TRUE)
+
+add_subdirectory(miniupnp/miniupnpc)
+
 set (capstone_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/capstone/include" PARENT_SCOPE)
 set (YAML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp/include" PARENT_SCOPE)
 set (LIBCXXABI_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libcxxabi/include" PARENT_SCOPE)

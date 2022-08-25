@@ -28,6 +28,7 @@
 
 #include <utils/des.h>
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <thread>
@@ -162,6 +163,8 @@ namespace eka2l1::epoc::internet {
         std::size_t next(inet_interface_info &info);
     };
 
+    bool retrieve_local_ip_info(epoc::socket::saddress &broadcast, epoc::socket::saddress *myip = nullptr);
+
     struct inet_socket : public socket::socket {
     private:
         inet_bridged_protocol *papa_;
@@ -200,6 +203,9 @@ namespace eka2l1::epoc::internet {
         common::event listen_event_;
         int listen_event_result_;
 
+        std::function<void(void*)> socket_accepted_hook_;
+        std::mutex hook_lock_;
+
         void close_down();
         void handle_connect_done_error_code(const int error_code);
         std::size_t retrieve_next_interface_info(std::uint8_t *buffer, const std::size_t avail_size);
@@ -221,7 +227,8 @@ namespace eka2l1::epoc::internet {
             , take_available_only_(false)
             , stream_data_buffer_(nullptr)
             , receive_done_cb_(nullptr)
-            , broadcast_translate_cached_(false) {
+            , broadcast_translate_cached_(false)
+            , socket_accepted_hook_(nullptr) {
         }
 
         ~inet_socket() override;
@@ -233,6 +240,7 @@ namespace eka2l1::epoc::internet {
         void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, epoc::socket::saddress *addr,
             std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) override;
         void accept(std::unique_ptr<epoc::socket::socket> *pending_sock, epoc::notify_info &complete_info) override;
+
         std::int32_t local_name(epoc::socket::saddress &result, std::uint32_t &result_len) override;
         std::int32_t remote_name(epoc::socket::saddress &result, std::uint32_t &result_len) override;
         std::int32_t listen(const std::uint32_t backlog) override;
@@ -259,6 +267,11 @@ namespace eka2l1::epoc::internet {
 
         void *get_opaque_handle() {
             return opaque_handle_;
+        }
+
+        void set_socket_accepted_hook(std::function<void(void*)> hook) {
+            const std::lock_guard<std::mutex> guard(hook_lock_);
+            socket_accepted_hook_ = hook;
         }
     };
 
@@ -313,6 +326,8 @@ namespace eka2l1::epoc::internet {
         }
     };
 
-    void host_sockaddr_to_guest_saddress(sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len = nullptr,
+    void host_sockaddr_to_guest_saddress(const sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len = nullptr,
         bool for_descriptor = false);
+        
+    void addrinfo_to_name_entry(epoc::socket::name_entry &supply_and_result, addrinfo *result_info);
 }

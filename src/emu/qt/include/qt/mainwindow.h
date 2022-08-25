@@ -41,6 +41,7 @@ QT_END_NAMESPACE
 static constexpr std::size_t MAX_RECENT_ENTRIES = 5;
 class symbian_input_dialog;
 class btnetplay_friends_dialog;
+class btnet_dialog;
 class editor_widget;
 
 namespace eka2l1 {
@@ -106,6 +107,7 @@ private:
 
     symbian_input_dialog *input_dialog_;
     btnetplay_friends_dialog *bt_netplay_dialog_;
+    btnet_dialog *btnet_dialog_;
     editor_widget *editor_widget_;
     eka2l1::qt::btnmap::executor *map_executor_;
 
@@ -122,6 +124,7 @@ private:
     void on_screen_current_group_change_callback();
     void switch_to_game_display_mode();
     void force_refresh_applist();
+    void spawn_btnet_friends_dialog(bool is_from_configure);
 
     eka2l1::epoc::screen *get_current_active_screen();
     eka2l1::config::app_setting *get_active_app_setting();
@@ -178,6 +181,8 @@ private slots:
     void on_install_ngage_game_name_available(QString name);
     void on_exit_for_update_requested();
     void on_launch_process_requested();
+    void on_action_netplay_configure_triggered();
+    void on_btnet_friends_dialog_requested_from_conf();
 
 signals:
     void progress_dialog_change(const std::size_t now, const std::size_t total);

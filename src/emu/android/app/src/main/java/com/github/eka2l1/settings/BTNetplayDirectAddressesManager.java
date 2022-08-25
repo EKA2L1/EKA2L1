@@ -37,7 +37,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public class BTNetplayManager {
+public class BTNetplayDirectAddressesManager {
 
     static ArrayList<BTNetplayAddress> getAddresses() {
         ArrayList<BTNetplayAddress> addresses = new ArrayList<>();

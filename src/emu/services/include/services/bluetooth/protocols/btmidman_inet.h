@@ -32,6 +32,9 @@
 #include <mutex>
 #include <vector>
 
+typedef struct uv_timer_s uv_timer_t;
+typedef struct uv_buf_t uv_buf_t;
+
 namespace eka2l1::epoc::bt {
     struct friend_info {
         epoc::socket::saddress real_addr_;
@@ -45,30 +48,65 @@ namespace eka2l1::epoc::bt {
         FRIEND_UPDATE_INDEX_FAULT_MASK = 0x00000000FFFFFFFFULL
     };
 
+    enum discovery_mode {
+        DISCOVERY_MODE_OFF = 0,
+        DISCOVERY_MODE_DIRECT_IP = 1,
+        DISCOVERY_MODE_LOCAL_LAN = 2,
+        DISCOVERY_MODE_PROXY_SERVER = 3
+    };
+
+    struct inet_stranger_call_observer {
+    public:
+        virtual void on_stranger_call(epoc::socket::saddress &addr, std::uint32_t index_in_list) = 0;
+        virtual void on_no_more_strangers() = 0;
+    };
+
     class midman_inet: public midman {
     private:
-        std::map<std::uint16_t, std::uint64_t> port_map_;
         std::map<device_address, std::uint32_t> friend_device_address_mapping_;
  
         device_address random_device_addr_;     // Hope it will never collide with what friends you want to add
 
-        std::array<friend_info, MAX_INET_DEVICE_AROUND> friends_;
+        std::vector<friend_info> friends_;
         common::bitmap_allocator allocated_ports_;
+        std::array<std::uint16_t, MAX_PORT> port_refs_;
+        std::uint32_t port_offset_;
+        bool enable_upnp_;
+
         bool friend_info_cached_;
 
         void *virt_bt_info_server_;
+        void *virt_server_socket_;
+        void *hearing_timeout_timer_;
+
         std::vector<char> server_recv_buf_;
         int port_;
 
         std::mutex friends_lock_;
         asker_inet device_addr_asker_;
 
+        inet_stranger_call_observer *current_active_observer_;
+        std::vector<inet_stranger_call_observer*> pending_observers_;
+
+        std::string password_;
+        discovery_mode discovery_mode_;
+
+        epoc::socket::saddress server_addr_;
+        epoc::socket::saddress local_addr_;
+
+        void send_call_for_strangers();
+        void handle_meta_server_msg(std::int64_t nread, const uv_buf_t *buf_ptr);
+        void send_login();
+        
+        static void reset_friend_timeout_timer(uv_timer_t *timer);
+        bool should_upnp_apply_to_port();
+
     public:
         explicit midman_inet(const config::state &conf);
         ~midman_inet();
 
         std::uint32_t lookup_host_port(const std::uint16_t virtual_port);
-        void add_host_port(const std::uint16_t virtual_port, const std::uint32_t host_port);
+        void add_host_port(const std::uint16_t virtual_port);
         void close_port(const std::uint16_t virtual_port);
         void ref_port(const std::uint16_t virtual_port);
         std::uint16_t get_free_port();
@@ -86,6 +124,10 @@ namespace eka2l1::epoc::bt {
         void refresh_friend_infos();
 
         void update_friend_list(const std::vector<config::friend_address> &addrs, std::vector<std::uint64_t> &invalid_address_indicies);
+        void add_or_update_friend(const epoc::socket::saddress &addr);
+
+        void begin_hearing_stranger_call(inet_stranger_call_observer *observer);
+        void unregister_stranger_call_observer(inet_stranger_call_observer *observer);
 
         const int get_server_port() const {
             return port_;
@@ -98,9 +140,23 @@ namespace eka2l1::epoc::bt {
         void set_friend_info_cached() {
             friend_info_cached_ = true;
         }
-        
+
+        void clear_friend_info_cached() {
+            friend_info_cached_ = false;
+        }
+ 
         midman_type type() const override {
             return MIDMAN_INET_BT;
         }
+
+        discovery_mode get_discovery_mode() const {
+            return discovery_mode_;
+        }
+
+        std::uint32_t get_port_offset() const {
+            return port_offset_;
+        }
+
+        static void send_logout(void *hh, bool close_and_reset = false);
     };
 }

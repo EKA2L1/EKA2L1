@@ -136,6 +136,7 @@
      <property name="title">
       <string>Netplay</string>
      </property>
+     <addaction name="action_netplay_configure"/>
      <addaction name="action_mod_netplay_friends"/>
     </widget>
     <addaction name="menu_netplay"/>
@@ -320,6 +321,11 @@
   <action name="action_jar">
    <property name="text">
     <string notr="true">JAR</string>
+   </property>
+  </action>
+  <action name="action_netplay_configure">
+   <property name="text">
+    <string>Configure</string>
    </property>
   </action>
  </widget>

@@ -417,6 +417,14 @@ namespace eka2l1::epoc::internet {
         uv_accept(reinterpret_cast<uv_stream_t*>(opaque_handle_), reinterpret_cast<uv_stream_t*>(accept_socket_ptr_->opaque_handle_));
 
         accept_socket_ptr_->accept_server_ = nullptr;
+
+        {
+            const std::lock_guard<std::mutex> guard(hook_lock_);
+            if (socket_accepted_hook_) {
+                socket_accepted_hook_(accept_socket_ptr_->opaque_handle_);
+            }
+        }
+
         accept_socket_ptr_ = nullptr;
 
         kern->lock();
@@ -521,6 +529,13 @@ namespace eka2l1::epoc::internet {
         if (uv_accept(reinterpret_cast<uv_stream_t*>(opaque_handle_), reinterpret_cast<uv_stream_t*>(accept_socket_ptr_->opaque_handle_)) == UV_EAGAIN) {
             // No stream is yet available, let the later connection notification handle it then!
             return;
+        }
+
+        {
+            const std::lock_guard<std::mutex> guard(hook_lock_);
+            if (socket_accepted_hook_) {
+                socket_accepted_hook_(accept_socket_ptr_->opaque_handle_);
+            }
         }
 
         // Well we are done, lol
@@ -639,6 +654,30 @@ namespace eka2l1::epoc::internet {
         bytes_written_ = nullptr;
         kern->unlock();
     }
+    
+    bool retrieve_local_ip_info(epoc::socket::saddress &broadcast, epoc::socket::saddress *my_selfip) {
+        inet_interface_info info_temp;
+        inet_socket_interface_iterator iterator;
+
+        if (iterator.start()) {
+            while (iterator.next(info_temp) == sizeof(inet_interface_info)) {
+                if ((info_temp.addr_.family_ == epoc::internet::INET_ADDRESS_FAMILY) &&
+                    (info_temp.addr_.user_data_[0] != 127) && (*info_temp.addr_.addr_long() != 0)) {
+                    broadcast = info_temp.broadcast_addr_;
+                    broadcast.port_ = 0;
+
+                    if (my_selfip) {
+                        *my_selfip = info_temp.addr_;
+                        my_selfip->port_ = 0;
+                    }
+
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 
     void inet_socket::send(const std::uint8_t *data, std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr_ptr, std::uint32_t flags, epoc::notify_info &complete_info) {
         if (!send_done_info_.empty()) {
@@ -659,21 +698,7 @@ namespace eka2l1::epoc::internet {
                 if (*addr_inet.addr_long() == 0xFFFFFFFF) {
                     std::uint32_t prev_port = addr_guest_temp.port_;
                     if (!broadcast_translate_cached_) {
-                        inet_interface_info info_temp;
-                        inet_socket_interface_iterator iterator;
-
-                        if (iterator.start()) {
-                            while (iterator.next(info_temp) == sizeof(inet_interface_info)) {
-                                if ((info_temp.addr_.family_ == epoc::internet::INET_ADDRESS_FAMILY) &&
-                                    (info_temp.addr_.user_data_[0] != 127) && (*info_temp.addr_.addr_long() != 0)) {
-                                    addr_guest_temp = info_temp.broadcast_addr_;
-                                    addr_guest_temp.port_ = 0;
-
-                                    broadcast_translate_cached_ = true;
-                                    break;
-                                }
-                            }
-                        }
+                        broadcast_translate_cached_ = retrieve_local_ip_info(addr_guest_temp, nullptr);
 
                         if (!broadcast_translate_cached_) {
                             LOG_ERROR(SERVICE_ESOCK, "Could not translate 255.255.255.255 special broadcast to local Internet interface!");
