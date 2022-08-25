@@ -181,6 +181,7 @@ namespace eka2l1::epoc::internet {
         epoc::notify_info send_done_info_;
         epoc::notify_info recv_done_info_;
         epoc::notify_info accept_done_info_;
+        epoc::notify_info shutdown_info_;
 
         std::uint32_t *bytes_written_;
         std::uint32_t *bytes_read_;
@@ -240,6 +241,7 @@ namespace eka2l1::epoc::internet {
         void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, epoc::socket::saddress *addr,
             std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) override;
         void accept(std::unique_ptr<epoc::socket::socket> *pending_sock, epoc::notify_info &complete_info) override;
+        void shutdown(epoc::notify_info &complete_info, int reason) override;
 
         std::int32_t local_name(epoc::socket::saddress &result, std::uint32_t &result_len) override;
         std::int32_t remote_name(epoc::socket::saddress &result, std::uint32_t &result_len) override;
@@ -259,6 +261,7 @@ namespace eka2l1::epoc::internet {
 
         void complete_connect_done_info(const int err);
         void complete_send_done_info(const int err);
+        void complete_shutdown_info(const int err);
         void prepare_buffer_for_recv(const std::size_t suggested_size, void *buf_ptr);
         void handle_udp_delivery(const std::int64_t bytes_read, const void *buf_ptr, const void *addr);
         void handle_tcp_delivery(const std::int64_t bytes_read, const void *buf_ptr);

@@ -280,6 +280,10 @@ namespace eka2l1::epoc::bt {
         inet_socket_->receive(data, data_size, recv_size, addr, flags, complete_info, done_callback);
     }
 
+    void btinet_socket::shutdown(epoc::notify_info &complete_info, int reason) {
+        inet_socket_->shutdown(complete_info, reason);
+    }
+
     void btinet_socket::cancel_receive() {
         inet_socket_->cancel_receive();
     }

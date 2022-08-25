@@ -101,13 +101,19 @@ namespace eka2l1::epoc::internet {
             if (protocol_ == INET_TCP_PROTOCOL_ID) {
                 uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
                     uv_shutdown_t *shut = new uv_shutdown_t;
-                    uv_shutdown(shut, reinterpret_cast<uv_stream_t*>(async->data), [](uv_shutdown_t *shut, int status) {
+                    if (uv_shutdown(shut, reinterpret_cast<uv_stream_t*>(async->data), [](uv_shutdown_t *shut, int status) {
                         uv_close(reinterpret_cast<uv_handle_t*>(shut->handle), [](uv_handle_t *handle) {
                             delete handle;
                         });
 
                         delete shut;
-                    });
+                    }) < 0) {
+                        uv_close(reinterpret_cast<uv_handle_t*>(async->data), [](uv_handle_t *handle) {
+                            delete handle;
+                        });
+
+                        delete shut;
+                    }
 
                     close_and_delete_async(async);
                 });
@@ -223,6 +229,8 @@ namespace eka2l1::epoc::internet {
                 close_and_delete_async(async);
             });
         }
+
+        reinterpret_cast<uv_handle_t*>(opaque_handle_)->data = this;
 
         uv_async_send(async);
 
@@ -368,12 +376,19 @@ namespace eka2l1::epoc::internet {
             uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
                 uv_tcp_connect_params *params = reinterpret_cast<uv_tcp_connect_params*>(async->data);
 
-                uv_tcp_connect(params->connect_, params->tcp_, reinterpret_cast<const sockaddr*>(&params->addr_), [](uv_connect_t *connect, const int err) {
+                int err = uv_tcp_connect(params->connect_, params->tcp_, reinterpret_cast<const sockaddr*>(&params->addr_), [](uv_connect_t *connect, const int err) {
                     uv_tcp_connect_params *params = reinterpret_cast<uv_tcp_connect_params*>(connect->data);
                     reinterpret_cast<inet_socket*>(params->tcp_->data)->complete_connect_done_info(err);
 
                     delete params;
                 });
+
+                if (err < 0) {
+                    LOG_ERROR(SERVICE_INTERNET, "Connect socket failed with libuv code {}", err);
+                    reinterpret_cast<inet_socket*>(params->tcp_->data)->complete_connect_done_info(err);
+
+                    delete params;
+                }
 
                 close_and_delete_async(async);
             });
@@ -786,6 +801,13 @@ namespace eka2l1::epoc::internet {
 
                 if (res < 0) {
                     LOG_ERROR(SERVICE_INTERNET, "Sending UDP packet failed with libuv's code {}", res);
+                    task_info->self_->complete_send_done_info(res);
+  
+                    if (task_info->addr_) {
+                        delete task_info->addr_;
+                    }
+
+                    delete task_info;
                 }
 
                 close_and_delete_async(async);
@@ -1096,6 +1118,56 @@ namespace eka2l1::epoc::internet {
 
     void inet_socket::cancel_connect() {
         connect_done_info_.complete(epoc::error_cancel);
+    }
+
+    void inet_socket::complete_shutdown_info(const int err) {
+        if (err < 0) {
+            LOG_ERROR(SERVICE_INTERNET, "Shutdown encountered libuv error code {}", err);
+            shutdown_info_.complete(epoc::error_general);
+
+            return;
+        }
+
+        shutdown_info_.complete(epoc::error_none);
+    }
+
+    void inet_socket::shutdown(epoc::notify_info &complete_info, int reason) {
+        if (!shutdown_info_.empty()) {
+            complete_info.complete(epoc::error_in_use);
+            return;
+        }
+
+        shutdown_info_ = complete_info;
+
+        uv_async_t *async = new uv_async_t;
+        async->data = opaque_handle_;
+
+        if (protocol_ == INET_TCP_PROTOCOL_ID) {
+            uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
+                uv_shutdown_t *shut = new uv_shutdown_t;
+                int res = uv_shutdown(shut, reinterpret_cast<uv_stream_t*>(async->data), [](uv_shutdown_t *shut, int status) {
+                    reinterpret_cast<inet_socket*>(shut->handle->data)->complete_shutdown_info(status);
+                    delete shut;
+                });
+
+                if (res < 0) {
+                    reinterpret_cast<inet_socket*>(shut->handle->data)->complete_shutdown_info(res);
+                    delete shut;
+                }
+
+                close_and_delete_async(async);
+            });
+        } else {
+            uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
+                uv_udp_t *udp_h = reinterpret_cast<uv_udp_t*>(async->data);
+                uv_udp_recv_stop(udp_h);
+                
+                reinterpret_cast<inet_socket*>(udp_h->data)->complete_shutdown_info(0);
+                close_and_delete_async(async);
+            });
+        }
+
+        uv_async_send(async);
     }
 
     std::size_t inet_socket::get_option(const std::uint32_t option_id, const std::uint32_t option_family,

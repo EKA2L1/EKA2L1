@@ -56,6 +56,7 @@ namespace eka2l1::epoc::bt {
         void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, epoc::socket::saddress *addr,
             std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) override;
         void connect(const epoc::socket::saddress &addr, epoc::notify_info &info) override;
+        void shutdown(epoc::notify_info &complete_info, int reason) override;
 
         void cancel_receive() override;
         void cancel_send() override;
