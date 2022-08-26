@@ -5592,7 +5592,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x0C, imb_range),
         BRIDGE_REGISTER(0x0E, library_lookup),
         BRIDGE_REGISTER(0x0F, library_filename),
-        BRIDGE_REGISTER(0x11, mutex_wait),
+        BRIDGE_REGISTER(0x11, mutex_wait_ver2),
         BRIDGE_REGISTER(0x12, mutex_signal),
         BRIDGE_REGISTER(0x13, process_id),
         BRIDGE_REGISTER(0x14, dll_filename),

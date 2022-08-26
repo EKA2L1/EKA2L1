@@ -34,7 +34,8 @@ namespace eka2l1 {
             , timing(timing)
             , lock_count(0)
             , holding(nullptr)
-            , suspend_count(0) {
+            , suspend_count(0)
+            , wait_for_timeout(false) {
             obj_type = object_type::mutex;
 
             mutex_event_type = timing->register_event("MutexWaking" + common::to_string(uid),
@@ -113,16 +114,28 @@ namespace eka2l1 {
 
         void mutex::waking_up_from_suspension(std::uint64_t userdata, int cycles_late) {
             kernel::thread *thread_to_wake = reinterpret_cast<kernel::thread *>(userdata);
+            kernel_system *kern = thread_to_wake->get_kernel_object_owner();
+
+            kern->lock();
+
+            if (!wait_for_timeout) {
+                kern->unlock();
+                return;
+            }
+            
+            wait_for_timeout = false;
 
             if (!thread_to_wake || thread_to_wake->get_object_type() != kernel::object_type::thread) {
                 LOG_ERROR(KERNEL, "Waking up invalid object!!!!!");
+                kern->unlock();
                 return;
             }
 
             switch (thread_to_wake->current_state()) {
             case thread_state::hold_mutex_pending: {
                 if (thread_to_wake->pending_link.alone()) {
-                    LOG_ERROR(KERNEL, "Thread request to wake up with this mutex is not in hold pending queue");
+                    LOG_ERROR(KERNEL, "Thread request to wake up with this mutex is not in hold pending queue"); 
+                    kern->unlock();
                     return;
                 }
 
@@ -136,6 +149,8 @@ namespace eka2l1 {
 
                 if (thr_ite == waits.end()) {
                     LOG_ERROR(KERNEL, "Thread request to wake up with this mutex is not in hold pending queue");
+                    kern->unlock();
+
                     return;
                 }
 
@@ -145,18 +160,32 @@ namespace eka2l1 {
 
             default: {
                 LOG_ERROR(KERNEL, "Unknown thread state to wake up");
+                kern->unlock();
                 return;
             }
             }
 
+            if (thread_to_wake->wait_obj == this) {
+                thread_to_wake->wait_obj = nullptr;
+            }
+
             thread_to_wake->scheduler->dewait(thread_to_wake);
+            kern->unlock();
         }
 
         void mutex::wait_for(int usecs) {
+            bool should_schedule = false;
+            if (!holding) {
+                should_schedule = true;
+            }
+
             wait(kern->crr_thread());
 
             // Schedule event to wake up
-            timing->schedule_event(usecs, mutex_event_type, reinterpret_cast<std::uint64_t>(kern->crr_thread()));
+            if (should_schedule) {
+                wait_for_timeout = true;
+                timing->schedule_event(usecs, mutex_event_type, reinterpret_cast<std::uint64_t>(kern->crr_thread()));
+            }
         }
 
         bool mutex::signal(kernel::thread *callee) {
@@ -180,7 +209,11 @@ namespace eka2l1 {
                 pendings.push(&top_wait->pending_link);
 
                 assert(top_wait->wait_obj == this);
-                timing->unschedule_event(mutex_event_type, reinterpret_cast<std::uint64_t>(top_wait));
+
+                if (wait_for_timeout) {
+                    timing->unschedule_event(mutex_event_type, reinterpret_cast<std::uint64_t>(top_wait));
+                    wait_for_timeout = false;
+                }
 
                 top_wait->state = kernel::thread_state::hold_mutex_pending;
             };
