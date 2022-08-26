@@ -181,8 +181,8 @@ jobs:
       
     - name: Copy OpenSSL binaries
       run: |
-        Copy-Item ${{ runner.workspace }}\Qt\Tools\OpenSSL\Win_x64\bin\libcrypto-1_1-x64.dll -Destination build\bin
-        Copy-Item ${{ runner.workspace }}\Qt\Tools\OpenSSL\Win_x64\bin\libssl-1_1-x64.dll -Destination build\bin
+        Copy-Item ${{ runner.workspace }}\Qt\Tools\OpenSSL\Win_x64\bin\libcrypto-1_1-x64.dll -Destination build\bin\libcrypto-1_1.dll
+        Copy-Item ${{ runner.workspace }}\Qt\Tools\OpenSSL\Win_x64\bin\libssl-1_1-x64.dll -Destination build\bin\libssl-1_1.dll
       shell: pwsh
       if: matrix.os == 'windows-latest'
 
