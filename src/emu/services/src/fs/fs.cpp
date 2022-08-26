@@ -699,7 +699,7 @@ namespace eka2l1 {
             return;
         }
 
-        dir.value() = eka2l1::absolute_path(dir.value(), ss_path, true);
+        dir.value() = get_full_symbian_path(ss_path, dir.value());
 
         if (!check_path_capabilities_pass(dir.value(), ctx->msg->own_thr->owning_process(), epoc::fs::private_comp_access_policy, epoc::fs::sys_resource_modify_access_policy, epoc::fs::sys_resource_modify_access_policy)) {
             ctx->complete(epoc::error_permission_denied);
