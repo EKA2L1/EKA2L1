@@ -807,6 +807,14 @@ namespace eka2l1::epoc::socket {
 
                     return;
 
+                case socket_so_local_name:
+                    local_name(ctx);
+                    return;
+
+                case socket_so_remote_name:
+                    remote_name(ctx);
+                    return;
+
                 default:
                     break;
                 }

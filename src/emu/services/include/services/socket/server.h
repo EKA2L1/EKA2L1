@@ -149,6 +149,8 @@ namespace eka2l1 {
         socket_so_bind = 0x14,
         socket_so_get_opt = 0x18,
         socket_so_ioctl = 0x19,
+        socket_so_local_name = 0x1B,
+        socket_so_remote_name = 0x1C,
         socket_so_close = 0x1D,
         socket_so_cancel_recv = 0x20,
         socket_so_cancel_send = 0x21,
