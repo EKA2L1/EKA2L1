@@ -28,6 +28,7 @@
     <string name="path_to_firmware">VPL වෙත මාර්ගය</string>
     <string name="install_method">ස්ථාපන ක්රමය</string>
     <string name="enter_new_name">අලුත් නමක් ඇතුල් කරන්න</string>
+    <string name="mode">Mode</string>
     <string name="no_device_dialog_title">උපාංගයක් ස්ථාපනය කර නැත!</string>
     <string name="no_device_installed">කරුණාකර උපාංගයක් ස්ථාපනය කරන්න. ස්ථාපනය සඳහා Symbian උපාංගයක ගොනු සහ ROM අවශ්‍ය වේ.\n\n<b>සටහන:</b> සෑම යෙදුමකටම ක්‍රියාත්මක වීමට සුදුසු Symbian උපාංගයක් අවශ්‍ය වේ.</string>
     <string name="install_device_note_may_need_rpkg">S60v2 හෝ ඊට වැඩි උපාංග සඳහා, ඔබට RPKG ලෙස හැඳින්වෙන අතිරේක ගොනුවක් සැපයීමට අවශ්‍ය විය හැක. ස්ථාපකය එහි අවශ්‍යතාවය හඳුනා ගන්නේ නම් මාර්ග තේරීම උත්පතන වනු ඇත.</string>
@@ -68,9 +69,18 @@
     <string name="emulated_screen_refresh_rate_item_name">නැවුම් කිරීමේ අනුපාතය</string>
     <string name="pref_device_display_name">මිත්රශීලී දුරකථන නම</string>
     <string name="hide_system_apps">පද්ධති යෙදුම් සඟවන්න</string>
+    <string name="pref_bt_netplay_direct_ips_manager">Direct IPs manager</string>
     <string name="enter_address">Enter address</string>
     <string name="address">Address</string>
     <string name="port">Port</string>
+    <string name="pref_bt_netplay_mode_off">Off</string>
+    <string name="pref_bt_netplay_mode_direct_ip">Direct IP</string>
+    <string name="pref_bt_netplay_mode_lan">LAN</string>
+    <string name="pref_bt_netplay_mode_server">Server</string>
+    <string name="pref_bt_netplay_enable_upnp">Enable UPnP (for IPv4 public play)</string>
+    <string name="pref_bt_netplay_server_address">Server address</string>
+    <string name="pref_bt_netplay_password">Password</string>
+    <string name="pref_bt_netplay_port_offset">Port offset</string>
     <string name="action_context_delete">මකන්න</string>
     <string name="action_context_rename">නැවත නම් කරන්න</string>
     <string name="action_context_shortcut">කෙටිමං සාදන්න</string>
