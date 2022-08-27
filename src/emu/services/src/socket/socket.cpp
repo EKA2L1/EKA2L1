@@ -108,6 +108,10 @@ namespace eka2l1::epoc::socket {
         LOG_ERROR(SERVICE_ESOCK, "Cancel accept unimplemented!");
     }
 
+    void socket::shutdown(epoc::notify_info &complete_info, int reason) {
+        LOG_ERROR(SERVICE_ESOCK, "Shutdown not implemented!");
+    }
+
     socket_socket::socket_socket(socket_client_session *parent, std::unique_ptr<socket> &sock)
         : socket_subsession(parent)
         , sock_(std::move(sock)) {
@@ -555,6 +559,13 @@ namespace eka2l1::epoc::socket {
         ctx->complete(epoc::error_none);
     }
 
+    void socket_socket::shutdown(service::ipc_context *ctx) {
+        epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
+        std::optional<int> reason = ctx->get_argument_value<int>(0);
+
+        sock_->shutdown(info, reason.value());
+    }
+
     void socket_socket::dispatch(service::ipc_context *ctx) {
         if (parent_->is_oldarch()) {
             switch (ctx->msg->function) {
@@ -646,6 +657,10 @@ namespace eka2l1::epoc::socket {
 
             case socket_old_so_connect:
                 connect(ctx);
+                return;
+
+            case socket_old_so_shutdown:
+                shutdown(ctx);
                 return;
 
             default:

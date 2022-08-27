@@ -83,3 +83,6 @@
 [submodule "src/external/libuv"]
 	path = src/external/libuv
 	url = https://github.com/libuv/libuv
+[submodule "src/external/miniupnp"]
+	path = src/external/miniupnp
+	url = https://github.com/miniupnp/miniupnp

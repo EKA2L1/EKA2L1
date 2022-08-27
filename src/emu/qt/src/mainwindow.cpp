@@ -21,6 +21,7 @@
 #include <qt/aboutdialog.h>
 #include <qt/applistwidget.h>
 #include <qt/btnetplay_friends_dialog.h>
+#include <qt/btnet_dialog.h>
 #include <qt/device_install_dialog.h>
 #include <qt/displaywidget.h>
 #include <qt/mainwindow.h>
@@ -216,6 +217,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     , input_text_max_len_(0x7FFFFFFF)
     , input_dialog_(nullptr)
     , bt_netplay_dialog_(nullptr)
+    , btnet_dialog_(nullptr)
     , editor_widget_(nullptr)
     , map_executor_(nullptr)
     , ui_(new Ui::main_window)
@@ -1447,7 +1449,7 @@ void main_window::on_hide_system_apps_changed() {
     }
 }
 
-void main_window::on_bt_netplay_mod_friends_clicked() {
+void main_window::spawn_btnet_friends_dialog(bool is_from_configure) {
     if (!bt_netplay_dialog_) {
         QMessageBox::StandardButton result = QMessageBox::warning(this, tr("Continue to modify friends' IP addresses"),
                                                                   tr("This dialog will show all stored IP addresses, which has the potential of revealing others' personal information.<br>"
@@ -1462,7 +1464,7 @@ void main_window::on_bt_netplay_mod_friends_clicked() {
             }
             if (btman_serv) {
                 // TODO: Check for other type of midman (real bluetooth for example!)
-                bt_netplay_dialog_ = new btnetplay_friends_dialog(this, reinterpret_cast<eka2l1::epoc::bt::midman_inet*>(btman_serv->get_midman()), emulator_state_.conf);
+                bt_netplay_dialog_ = new btnetplay_friends_dialog(is_from_configure ? static_cast<QWidget*>(btnet_dialog_) : static_cast<QWidget*>(this), reinterpret_cast<eka2l1::epoc::bt::midman_inet*>(btman_serv->get_midman()), emulator_state_.conf);
                 connect(bt_netplay_dialog_, &QDialog::finished, this, &main_window::on_btnetplay_friends_dialog_finished);
 
                 bt_netplay_dialog_->show();
@@ -1473,6 +1475,10 @@ void main_window::on_bt_netplay_mod_friends_clicked() {
     } else {
         bt_netplay_dialog_->setFocus();
     }
+}
+
+void main_window::on_bt_netplay_mod_friends_clicked() {
+    spawn_btnet_friends_dialog(false);
 }
 
 void main_window::on_btnetplay_friends_dialog_finished(int status) {
@@ -1626,4 +1632,15 @@ void main_window::on_action_jar_triggered() {
             QMessageBox::critical(this, tr("Install failed"), error_str);
         }
     }
+}
+
+void main_window::on_btnet_friends_dialog_requested_from_conf() {
+    spawn_btnet_friends_dialog(true);
+}
+
+void main_window::on_action_netplay_configure_triggered() {
+    btnet_dialog_ = new btnet_dialog(this, emulator_state_.conf);
+    connect(btnet_dialog_, &btnet_dialog::direct_ip_editor_requested, this, &main_window::on_btnet_friends_dialog_requested_from_conf);
+
+    btnet_dialog_->show();
 }

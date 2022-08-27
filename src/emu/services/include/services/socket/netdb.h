@@ -33,6 +33,8 @@ namespace eka2l1::epoc {
 namespace eka2l1::epoc::socket {
     class net_database {
     public:
+        virtual ~net_database() = default;
+
         virtual void query(const char *query_data, const std::uint32_t query_size, epoc::des8 *result_buffer, epoc::notify_info &complete_info) = 0;
         virtual void add(const char *record_buf, const std::uint32_t record_size, epoc::notify_info &complete_info) = 0;
         virtual void remove(const char *record_buf, const std::uint32_t record_size, epoc::notify_info &complete_info) = 0;

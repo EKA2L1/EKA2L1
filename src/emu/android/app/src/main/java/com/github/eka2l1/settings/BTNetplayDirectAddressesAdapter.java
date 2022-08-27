@@ -30,11 +30,11 @@ import com.github.eka2l1.R;
 
 import java.util.ArrayList;
 
-public class BTNetplayAdapter extends BaseAdapter {
+public class BTNetplayDirectAddressesAdapter extends BaseAdapter {
     private ArrayList<BTNetplayAddress> list;
     private final LayoutInflater layoutInflater;
 
-    BTNetplayAdapter(Context context, ArrayList<BTNetplayAddress> list) {
+    BTNetplayDirectAddressesAdapter(Context context, ArrayList<BTNetplayAddress> list) {
         if (list != null) {
             this.list = list;
         }

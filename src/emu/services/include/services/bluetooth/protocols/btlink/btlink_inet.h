@@ -21,22 +21,33 @@
 
 #include <services/bluetooth/protocols/common.h>
 #include <services/bluetooth/protocols/asker_inet.h>
+#include <services/bluetooth/protocols/btmidman_inet.h>
 #include <services/internet/protocols/inet.h>
 #include <services/socket/protocol.h>
 
 #include <atomic>
+#include <mutex>
+#include <queue>
+#include <set>
 #include <string>
+#include <tuple>
 
 namespace eka2l1::epoc::bt {
     class midman;
     class btlink_inet_protocol;
 
-    class btlink_inet_host_resolver : public socket::host_resolver {
+    class btlink_inet_host_resolver : public socket::host_resolver, public inet_stranger_call_observer {
     private:
         btlink_inet_protocol *papa_;
 
         std::uint32_t current_friend_;
         bool need_name_;
+
+        bool no_more_friends_;
+        bool in_async_searching_;
+
+        std::set<std::uint32_t> searched_list_async_;
+        std::queue<std::pair<epoc::socket::saddress, std::uint32_t>> new_friends_wait_;
 
         asker_inet friend_querier_;
 
@@ -46,7 +57,11 @@ namespace eka2l1::epoc::bt {
         std::atomic<bool> in_completion_;
         int delay_emu_evt_;
 
+        std::mutex lock_;
+
         void next_impl();
+        void report_search_end_to_client();
+        void search_next_friend_and_report_to_client(epoc::socket::saddress &addr, std::uint32_t index);
 
     public:
         explicit btlink_inet_host_resolver(btlink_inet_protocol *papa);
@@ -60,6 +75,9 @@ namespace eka2l1::epoc::bt {
         void next(epoc::socket::name_entry *result, epoc::notify_info &info) override;
 
         void complete_background_find_device_delay_emulation();
+        
+        void on_stranger_call(epoc::socket::saddress &addr, std::uint32_t index_in_list) override;
+        void on_no_more_strangers() override;
     };
 
     class btlink_inet_protocol : public socket::protocol {

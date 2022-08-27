@@ -105,6 +105,7 @@ namespace eka2l1 {
             void remote_name(service::ipc_context *ctx);
             void listen(service::ipc_context *ctx);
             void accept(service::ipc_context *ctx);
+            void shutdown(service::ipc_context *ctx);
 
         public:
             explicit socket_socket(socket_client_session *parent, std::unique_ptr<socket> &sock);
@@ -243,6 +244,7 @@ namespace eka2l1 {
         socket_old_so_local_name = 0x17,
         socket_old_so_remote_name = 0x18,
         socket_old_so_close = 0x19,
+        socket_old_so_shutdown = 0x1A,
         socket_old_so_cancel_ioctl = 0x1B,
         socket_old_so_cancel_recv = 0x1C,
         socket_old_so_cancel_send = 0x1D,

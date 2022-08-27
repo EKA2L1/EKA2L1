@@ -116,7 +116,7 @@ namespace eka2l1::drivers {
                 return;
             }
 
-            cond_.wait(ulock, [&]() { return (*status != -100) && !aborted(); });
+            cond_.wait(ulock, [&]() { return (*status != -100) || aborted(); });
         }
 
         void finish(int *status, const int code) {

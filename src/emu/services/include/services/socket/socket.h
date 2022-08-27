@@ -180,6 +180,8 @@ namespace eka2l1::epoc::socket {
          */
         virtual void accept(std::unique_ptr<socket> *pending_sock, epoc::notify_info &complete_info);
 
+        virtual void shutdown(epoc::notify_info &complete_info, int reason);
+
         virtual void cancel_receive();
 
         virtual void cancel_send();

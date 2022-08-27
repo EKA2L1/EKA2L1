@@ -59,8 +59,8 @@ namespace eka2l1::epoc::internet {
         return true;
     }
 
-    static void host_sockaddr_v4_to_guest_saddress(sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len = nullptr, const bool for_des = false) {
-        sockaddr_in *in = reinterpret_cast<sockaddr_in*>(addr);
+    static void host_sockaddr_v4_to_guest_saddress(const sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len = nullptr, const bool for_des = false) {
+        const sockaddr_in *in = reinterpret_cast<const sockaddr_in*>(addr);
         dest_addr.family_ = INET_ADDRESS_FAMILY;
 
         sinet_address &in_guest = static_cast<sinet_address&>(dest_addr);
@@ -77,10 +77,10 @@ namespace eka2l1::epoc::internet {
         }
     }
     
-    static void host_sockaddr_v6_to_guest_saddress(sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len = nullptr, const bool for_des = false) {
+    static void host_sockaddr_v6_to_guest_saddress(const sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len = nullptr, const bool for_des = false) {
         dest_addr.family_ = INET6_ADDRESS_FAMILY;
 
-        sockaddr_in6 *in6 = reinterpret_cast<sockaddr_in6*>(addr);
+        const sockaddr_in6 *in6 = reinterpret_cast<const sockaddr_in6*>(addr);
         dest_addr.port_ = ntohs(in6->sin6_port);
 
         sinet6_address &in6_guest = static_cast<sinet6_address&>(dest_addr);
@@ -98,7 +98,7 @@ namespace eka2l1::epoc::internet {
         }
     }
 
-    void host_sockaddr_to_guest_saddress(sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len, const bool for_des) {
+    void host_sockaddr_to_guest_saddress(const sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len, const bool for_des) {
         if (addr->sa_family == AF_INET6) {
             host_sockaddr_v6_to_guest_saddress(addr, dest_addr, data_len, for_des);
         } else {
@@ -106,7 +106,7 @@ namespace eka2l1::epoc::internet {
         }
     }
 
-    static void addrinfo_to_name_entry(epoc::socket::name_entry &supply_and_result, addrinfo *result_info) {
+    void addrinfo_to_name_entry(epoc::socket::name_entry &supply_and_result, addrinfo *result_info) {
         if (result_info->ai_family == AF_INET6) {
             host_sockaddr_v6_to_guest_saddress(result_info->ai_addr, supply_and_result.addr_);
         } else {

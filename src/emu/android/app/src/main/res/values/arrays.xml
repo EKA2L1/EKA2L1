@@ -50,4 +50,16 @@
         <item>@string/pref_screen_gravity_right</item>
         <item>@string/pref_screen_gravity_bottom</item>
     </string-array>
+    <string-array name="pref_bt_netplay_mode">
+        <item>@string/pref_bt_netplay_mode_off</item>
+        <item>@string/pref_bt_netplay_mode_direct_ip</item>
+        <item>@string/pref_bt_netplay_mode_lan</item>
+        <item>@string/pref_bt_netplay_mode_server</item>
+    </string-array>
+    <string-array name="pref_bt_netplay_values" translatable="false">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
 </resources>

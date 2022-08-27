@@ -73,9 +73,14 @@ OPTION(device-display-name, device_display_name, "EKA2L1")
 OPTION(midi-backend, midi_backend_string, "tsf")
 OPTION(hsb-bank-path, hsb_bank_path, "resources/defaultbank.hsb")
 OPTION(sf2-bank-path, sf2_bank_path, "resources/defaultbank.sf2")
+OPTION(bt-central-server-url, bt_central_server_url, "btnetplay.12z1.com")
 OPTION(enable-hw-gles1, enable_hw_gles1, true)
 OPTION(log-filter, log_filter, DEFAULT_LOG_FILTERING)
 OPTION(hide-system-apps, hide_system_apps, true)
+OPTION(btnet-port-offset, btnet_port_offset, 15000)
+OPTION(btnet-password, btnet_password, "")
+OPTION(btnet-discovery-mode, btnet_discovery_mode, 0)
+OPTION(enable-upnp, enable_upnp, true)
 
 #ifdef OPTION
 #undef OPTION

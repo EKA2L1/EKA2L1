@@ -34,13 +34,43 @@ namespace eka2l1::epoc::bt {
         , protocol_(protocol)
         , virtual_port_(0)
         , remote_calculated_(false) {
+        midman_inet *mid = reinterpret_cast<midman_inet*>(protocol_->get_midman());
+        if (inet_socket_) {
+            int opt_value = 1;
+            inet_socket_->set_option(internet::INET_TCP_NO_DELAY_OPT, internet::INET_TCP_SOCK_OPT_LEVEL, reinterpret_cast<std::uint8_t*>(&opt_value), 4);
+        }
+        if (inet_socket_ && (mid->get_discovery_mode() != DISCOVERY_MODE_DIRECT_IP)) {
+            reinterpret_cast<epoc::internet::inet_socket*>(inet_socket_.get())->set_socket_accepted_hook([this](void *opaque_handle) {
+                midman_inet *mid = reinterpret_cast<midman_inet*>(protocol_->get_midman());
 
+                sockaddr_in6 addr;
+                int addr_structlen = sizeof(sockaddr_in6);
+
+                epoc::socket::saddress addr_dest;
+                std::memset(&addr_dest, 0, sizeof(epoc::socket::saddress));
+
+                uv_tcp_getpeername(reinterpret_cast<uv_tcp_t*>(opaque_handle), reinterpret_cast<sockaddr*>(&addr), &addr_structlen);                
+                uv_tcp_nodelay(reinterpret_cast<uv_tcp_t*>(opaque_handle), 1);
+
+                epoc::internet::host_sockaddr_to_guest_saddress(reinterpret_cast<const sockaddr*>(&addr), addr_dest);
+
+                addr_dest.port_ = static_cast<std::uint16_t>(mid->get_server_port());
+
+                mid->add_or_update_friend(addr_dest);
+                mid->clear_friend_info_cached();
+            });
+        }
     }
  
     btinet_socket::~btinet_socket() {
+        midman_inet *midman = reinterpret_cast<midman_inet*>(protocol_->get_midman());
+
         if (virtual_port_ != 0) {
-            midman_inet *midman = reinterpret_cast<midman_inet*>(protocol_->get_midman());
             midman->close_port(virtual_port_);
+        }
+
+        if (inet_socket_ && (midman->get_discovery_mode() != DISCOVERY_MODE_DIRECT_IP)) {
+            reinterpret_cast<epoc::internet::inet_socket*>(inet_socket_.get())->set_socket_accepted_hook(nullptr);
         }
     }
 
@@ -87,7 +117,7 @@ namespace eka2l1::epoc::bt {
             inet_socket_->bind(addr_to_bind, info);
             inet_socket_->local_name(addr_to_bind, result_len);
 
-            midman->add_host_port(guest_port, addr_to_bind.port_);
+            midman->add_host_port(guest_port);
         } else {
             addr_to_bind.port_ = host_port;
             inet_socket_->bind(addr_to_bind, info);
@@ -248,6 +278,10 @@ namespace eka2l1::epoc::bt {
         std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) {
         // TODO: Hook back in case of receiving address (convert it to virtual BT addr)
         inet_socket_->receive(data, data_size, recv_size, addr, flags, complete_info, done_callback);
+    }
+
+    void btinet_socket::shutdown(epoc::notify_info &complete_info, int reason) {
+        inet_socket_->shutdown(complete_info, reason);
     }
 
     void btinet_socket::cancel_receive() {

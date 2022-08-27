@@ -43,29 +43,55 @@ namespace eka2l1::epoc::bt {
         , sdp_connect_(nullptr)
         , connected_(false)
         , provided_result_(nullptr)
-        , store_to_temp_buffer_(false) {
+        , store_to_temp_buffer_(false)
+        , should_notify_done_(false) {
     }
 
     sdp_inet_net_database::~sdp_inet_net_database() {
-        close_connect_handle();
+        close_connect_handle(true);
     }
 
-    void sdp_inet_net_database::close_connect_handle() {
+    void sdp_inet_net_database::close_connect_handle(const bool should_wait) {
         const std::lock_guard<std::mutex> guard(access_lock_);
 
         if (sdp_connect_) {
+            if (should_wait) {
+                close_done_evt_.reset();
+                should_notify_done_ = true;
+            } else {
+                should_notify_done_ = false;
+            }
+
             uv_async_t *async = new uv_async_t;
             async->data = sdp_connect_;
 
+            // While shutdown it calls EOF again
+            sdp_connect_ = nullptr;
+
             uv_async_init(uv_default_loop(), async, [](uv_async_t *close_async) {
-                uv_handle_t *h = reinterpret_cast<uv_handle_t*>(close_async->data);
-                uv_read_stop(reinterpret_cast<uv_stream_t*>(h));
-                uv_close(h, [](uv_handle_t *hh) { delete hh; });
+                uv_stream_t *h = reinterpret_cast<uv_stream_t*>(close_async->data);
+                uv_shutdown_t *shut = new uv_shutdown_t;
+
+                uv_shutdown(shut, h, [](uv_shutdown_t *shut, int status) {
+                    uv_close(reinterpret_cast<uv_handle_t*>(shut->handle), [](uv_handle_t *handle) {
+                        sdp_inet_net_database *sdp = reinterpret_cast<sdp_inet_net_database*>(handle->data);
+                        if (sdp->should_notify_done_) {
+                            sdp->close_done_evt_.set();
+                        }
+                        delete handle;
+                    });
+
+                    delete shut;
+                });
+
                 uv_close(reinterpret_cast<uv_handle_t*>(close_async), [](uv_handle_t *hh) { delete hh; });
             });
 
             uv_async_send(async);
-            sdp_connect_ = nullptr;
+
+            if (should_wait) {
+                close_done_evt_.wait();
+            }
         }
     }
 
@@ -119,8 +145,8 @@ namespace eka2l1::epoc::bt {
     }
 
     void sdp_inet_net_database::handle_new_pdu_packet(const char *buffer, const std::int64_t nread) {
-        if (nread < 0) {
-            if ((nread == UV_ECONNRESET) || (nread == UV_EOF)) {
+        if (nread <= 0) {
+            if ((nread == UV_ECONNRESET) || (nread == UV_EOF) || (nread == 0) || (nread == -1)) {
                 close_connect_handle();
             } else {
                 LOG_ERROR(SERVICE_BLUETOOTH, "Receive SDP data failed with libuv error code {}", nread);
@@ -209,61 +235,62 @@ namespace eka2l1::epoc::bt {
             return;
         }
 
-        const std::uint32_t sdp_port_real = bt_port_asker_.ask_for_routed_port(1, friend_addr_real);
-        if (sdp_port_real == 0) {
-            current_query_notify_.complete(epoc::error_could_not_connect);
-            return;
-        }
+        bt_port_asker_.ask_for_routed_port_async(1, friend_addr_real, [this, friend_addr_real](std::int64_t port_result) {
+            if (port_result <= 0) {
+                handle_connect_done(static_cast<int>(port_result));
+                return;
+            } else {
+                // Establish TCP connect
+                if (!sdp_connect_) {
+                    uv_tcp_t *sdp_connect_impl = new uv_tcp_t;
+                    uv_tcp_init(uv_default_loop(), sdp_connect_impl);
+                    
+                    sdp_connect_impl->data = this;
+                    sdp_connect_ = sdp_connect_impl;
+                }
 
-        // Establish TCP connect
-        if (!sdp_connect_) {
-            uv_tcp_t *sdp_connect_impl = new uv_tcp_t;
-            uv_tcp_init(uv_default_loop(), sdp_connect_impl);
-            
-            sdp_connect_impl->data = this;
-            sdp_connect_ = sdp_connect_impl;
-        }
+                uv_async_t *async_connect = new uv_async_t;
+                struct async_sdp_connect_data {
+                    epoc::socket::saddress addr_;
+                    uv_tcp_t *tcp_;
+                    sdp_inet_net_database *self_;
+                };
 
-        uv_async_t *async_connect = new uv_async_t;
-        struct async_sdp_connect_data {
-            epoc::socket::saddress addr_;
-            uv_tcp_t *tcp_;
-            sdp_inet_net_database *self_;
-        };
+                async_sdp_connect_data *data = new async_sdp_connect_data;
+                data->addr_ = friend_addr_real;
+                data->addr_.port_ = static_cast<std::uint32_t>(port_result);
+                data->tcp_ = reinterpret_cast<uv_tcp_t*>(sdp_connect_);
+                data->self_ = this;
 
-        async_sdp_connect_data *data = new async_sdp_connect_data;
-        data->addr_ = friend_addr_real;
-        data->addr_.port_ = sdp_port_real;
-        data->tcp_ = reinterpret_cast<uv_tcp_t*>(sdp_connect_);
-        data->self_ = this;
+                async_connect->data = data;
 
-        async_connect->data = data;
+                uv_async_init(uv_default_loop(), async_connect, [](uv_async_t *async) {
+                    async_sdp_connect_data *data = reinterpret_cast<async_sdp_connect_data*>(async->data);
+                    uv_connect_t *conn = new uv_connect_t;
+                    conn->data = data;
 
-        uv_async_init(uv_default_loop(), async_connect, [](uv_async_t *async) {
-            async_sdp_connect_data *data = reinterpret_cast<async_sdp_connect_data*>(async->data);
-            uv_connect_t *conn = new uv_connect_t;
-            conn->data = data;
+                    sockaddr *addr_translated = nullptr;
+                    GUEST_TO_BSD_ADDR(data->addr_, addr_translated);
 
-            sockaddr *addr_translated = nullptr;
-            GUEST_TO_BSD_ADDR(data->addr_, addr_translated);
+                    sockaddr_in6 bind_any;
+                    std::memset(&bind_any, 0, sizeof(sockaddr_in6));
+                    bind_any.sin6_family = AF_INET6;
 
-            sockaddr_in6 bind_any;
-            std::memset(&bind_any, 0, sizeof(sockaddr_in6));
-            bind_any.sin6_family = AF_INET6;
+                    uv_tcp_bind(data->tcp_, reinterpret_cast<const sockaddr*>(&bind_any), 0);
+                    uv_tcp_connect(conn, data->tcp_, addr_translated, [](uv_connect_t *req, int status) {
+                        async_sdp_connect_data *data = reinterpret_cast<async_sdp_connect_data*>(req->data);
+                        data->self_->handle_connect_done(status);
 
-            uv_tcp_bind(data->tcp_, reinterpret_cast<const sockaddr*>(&bind_any), 0);
-            uv_tcp_connect(conn, data->tcp_, addr_translated, [](uv_connect_t *req, int status) {
-                async_sdp_connect_data *data = reinterpret_cast<async_sdp_connect_data*>(req->data);
-                data->self_->handle_connect_done(status);
+                        delete data;
+                        delete req;
+                    });
 
-                delete data;
-                delete req;
-            });
+                    uv_close(reinterpret_cast<uv_handle_t*>(async), [](uv_handle_t *hh) { delete hh; });
+                });
 
-            uv_close(reinterpret_cast<uv_handle_t*>(async), [](uv_handle_t *hh) { delete hh; });
+                uv_async_send(async_connect);
+            }
         });
-
-        uv_async_send(async_connect);
     }
 
     void sdp_inet_net_database::handle_send_done(const int status) {

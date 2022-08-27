@@ -58,6 +58,7 @@ set(PROJECT_SOURCES
         include/qt/aboutdialog.h
         include/qt/applistwidget.h
         include/qt/btnetplay_friends_dialog.h
+        include/qt/btnet_dialog.h
         include/qt/cmdhandler.h
         include/qt/device_install_dialog.h
         include/qt/displaywidget.h
@@ -85,6 +86,8 @@ set(PROJECT_SOURCES
         src/aboutdialog.ui
         src/applistwidget.cpp
         src/btnetplay_friends_dialog.cpp
+        src/btnet_dialog.cpp
+        src/btnet_dialog.ui
         src/cmdhandler.cpp
         src/device_install_dialog.cpp
         src/device_install_dialog.ui
