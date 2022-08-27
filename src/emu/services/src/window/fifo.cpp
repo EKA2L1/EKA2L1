@@ -46,6 +46,20 @@ namespace eka2l1::epoc {
             do_purge();
         }
 
+        if ((evt.type == epoc::event_code::touch) && ((evt.adv_pointer_evt_.evtype == epoc::event_type::drag) ||
+            (evt.adv_pointer_evt_.evtype == epoc::event_type::move))) {
+            if (!q_.empty()) {
+                epoc::event &evt_last = q_.back().evt;
+                
+                // Same delivery
+                if ((evt_last.handle == evt.handle) && (evt_last.type == evt.type) && (evt_last.adv_pointer_evt_.evtype == evt.adv_pointer_evt_.evtype)
+                    && (evt_last.adv_pointer_evt_.ptr_num == evt.adv_pointer_evt_.ptr_num)) {
+                    evt_last = evt;
+                    return static_cast<std::uint32_t>(q_.size());;
+                }
+            }
+        }
+
         std::uint32_t result = queue_event_dont_care(evt);
         trigger_notification();
 
