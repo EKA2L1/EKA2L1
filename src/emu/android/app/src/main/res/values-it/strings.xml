@@ -28,6 +28,7 @@
     <string name="path_to_firmware">Percorso VPL</string>
     <string name="install_method">Metodo d\'installazione</string>
     <string name="enter_new_name">Inserisci un nuovo nome</string>
+    <string name="mode">Mode</string>
     <string name="no_device_dialog_title">Nessun dispositivo installato!</string>
     <string name="no_device_installed">Installa un dispositivo. Hai bisogno dei File e della ROM di un dispositivo Symbian per l\'installazione.\n\n<b>Nota:</b> Ogni app avrà bisogno di un dispositivo Symbian compatibile per l\'esecuzione.</string>
     <string name="install_device_note_may_need_rpkg">Per i dispositivi con S60v2 o superiore, potrebbe essere richiesto il file aggiuntivo chiamato RPKG. Se il file RPKG dovesse essere necessario, ne verrà richiesto il percorso in fase di installazione.</string>
@@ -68,9 +69,18 @@
     <string name="emulated_screen_refresh_rate_item_name">Frequenza di aggiornamento</string>
     <string name="pref_device_display_name">Nome telefono familiare</string>
     <string name="hide_system_apps">Hide system applications</string>
+    <string name="pref_bt_netplay_direct_ips_manager">Direct IPs manager</string>
     <string name="enter_address">Enter address</string>
     <string name="address">Address</string>
     <string name="port">Port</string>
+    <string name="pref_bt_netplay_mode_off">Off</string>
+    <string name="pref_bt_netplay_mode_direct_ip">Direct IP</string>
+    <string name="pref_bt_netplay_mode_lan">LAN</string>
+    <string name="pref_bt_netplay_mode_server">Server</string>
+    <string name="pref_bt_netplay_enable_upnp">Enable UPnP (for IPv4 public play)</string>
+    <string name="pref_bt_netplay_server_address">Server address</string>
+    <string name="pref_bt_netplay_password">Password</string>
+    <string name="pref_bt_netplay_port_offset">Port offset</string>
     <string name="action_context_delete">Elimina</string>
     <string name="action_context_rename">Rinomina</string>
     <string name="action_context_shortcut">Crea collegamento</string>
