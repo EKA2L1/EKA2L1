@@ -91,22 +91,22 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="51"/>
       <source>Modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Modify friends&apos; IP addresses</translation>
+      <translation>修改朋友的IP地址</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="66"/>
       <source>IP address (IPv4 or IPv6)</source>
-      <translation type="unfinished">IP address (IPv4 or IPv6)</translation>
+      <translation>IP地址 (IPv4或IPv6)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="71"/>
       <source>Port (can be empty)</source>
-      <translation type="unfinished">Port (can be empty)</translation>
+      <translation>端口（可以留空）</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="114"/>
       <source>Add more</source>
-      <translation type="unfinished">Add more</translation>
+      <translation>添加更多</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="115"/>
@@ -116,43 +116,43 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="116"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>更新</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="182"/>
       <source>Update friends success!</source>
-      <translation type="unfinished">Update friends success!</translation>
+      <translation>更新好友成功！</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="182"/>
       <source>Friends&apos; IP addresses have been successfully saved!</source>
-      <translation type="unfinished">Friends&apos; IP addresses have been successfully saved!</translation>
+      <translation>好友的IP地址已成功保存！</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="195"/>
       <source>Friend %1 has empty IP address!
 </source>
-      <translation type="unfinished">Friend %1 has empty IP address!
+      <translation>朋友%1的IP地址为空！
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="197"/>
       <source>Friend %1 has invalid IP address!
 </source>
-      <translation type="unfinished">Friend %1 has invalid IP address!
+      <translation>好友%1的IP地址无效！
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="202"/>
       <source>Friend %1 has invalid port number (must be between 0 and 65535)!
 </source>
-      <translation type="unfinished">Friend %1 has invalid port number (must be between 0 and 65535)!
+      <translation>好友%1的端口号无效（必须在0至65535之间）！
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="229"/>
       <source>Some errors in updating friends!</source>
-      <translation type="unfinished">Some errors in updating friends!</translation>
+      <translation>更新好友时出现一些错误！</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="230"/>
@@ -1679,7 +1679,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.ui" line="126"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>更新</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="139"/>
