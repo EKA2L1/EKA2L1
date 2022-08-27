@@ -28,6 +28,7 @@
     <string name="path_to_firmware">VPL খোঁজার স্থান</string>
     <string name="install_method">ইনস্টল পদ্ধতি</string>
     <string name="enter_new_name">নতুন নাম লিখুন</string>
+    <string name="mode">Mode</string>
     <string name="no_device_dialog_title">কোনো ডিভাইস ইনস্টল করা হয়নি!</string>
     <string name="no_device_installed">অনুগ্রহ করে একটি ডিভাইস ইনস্টল করুন। ইনস্টলেশনের জন্য একটি সিম্বিয়ান ডিভাইসের ফাইল ও রম লাগবে।\n\n<b>নোট:</b> প্রতিটি অ্যাপ চালাতে উপযুক্ত সিম্বিয়ান ডিভাইস লাগবে।.</string>
     <string name="install_device_note_may_need_rpkg">For S60v2 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
@@ -68,9 +69,18 @@
     <string name="emulated_screen_refresh_rate_item_name">রিফ্রেশ রেট</string>
     <string name="pref_device_display_name">Friendly phone name</string>
     <string name="hide_system_apps">Hide system applications</string>
+    <string name="pref_bt_netplay_direct_ips_manager">Direct IPs manager</string>
     <string name="enter_address">Enter address</string>
     <string name="address">Address</string>
     <string name="port">Port</string>
+    <string name="pref_bt_netplay_mode_off">Off</string>
+    <string name="pref_bt_netplay_mode_direct_ip">Direct IP</string>
+    <string name="pref_bt_netplay_mode_lan">LAN</string>
+    <string name="pref_bt_netplay_mode_server">Server</string>
+    <string name="pref_bt_netplay_enable_upnp">Enable UPnP (for IPv4 public play)</string>
+    <string name="pref_bt_netplay_server_address">Server address</string>
+    <string name="pref_bt_netplay_password">Password</string>
+    <string name="pref_bt_netplay_port_offset">Port offset</string>
     <string name="action_context_delete">Delete</string>
     <string name="action_context_rename">পুনঃনামকরণ</string>
     <string name="action_context_shortcut">Create shortcut</string>
