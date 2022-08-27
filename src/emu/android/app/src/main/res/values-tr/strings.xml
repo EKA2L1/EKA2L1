@@ -28,6 +28,7 @@
     <string name="path_to_firmware">VPL yolu</string>
     <string name="install_method">Kurulum yöntemi</string>
     <string name="enter_new_name">Yeni bir ad girin</string>
+    <string name="mode">Mode</string>
     <string name="no_device_dialog_title">Hiçbir cihaz kurulu değil!</string>
     <string name="no_device_installed">Lütfen bir cihaz kurun. Kurulum için bir Symbian cihazının dosyaları ve \n\n ROM\'una ihtiyaç vardır. <b>Not:</b> Her uygulamanın çalışması için uygun Symbian cihazına ihtiyacı olacaktır.</string>
     <string name="install_device_note_may_need_rpkg">S60v2 ve üzeri cihaz yazılım kurulumlarında, ilave bir RPKG dosyası sağlamanız gerekebilir. Yükleyici, bu dosyanın gerektiğini algılarsa dosya seçicisi açılacaktır.</string>
@@ -68,9 +69,18 @@
     <string name="emulated_screen_refresh_rate_item_name">Yenileme hızı</string>
     <string name="pref_device_display_name">Friendly phone name</string>
     <string name="hide_system_apps">Hide system applications</string>
+    <string name="pref_bt_netplay_direct_ips_manager">Direct IPs manager</string>
     <string name="enter_address">Enter address</string>
     <string name="address">Address</string>
     <string name="port">Port</string>
+    <string name="pref_bt_netplay_mode_off">Off</string>
+    <string name="pref_bt_netplay_mode_direct_ip">Direct IP</string>
+    <string name="pref_bt_netplay_mode_lan">LAN</string>
+    <string name="pref_bt_netplay_mode_server">Server</string>
+    <string name="pref_bt_netplay_enable_upnp">Enable UPnP (for IPv4 public play)</string>
+    <string name="pref_bt_netplay_server_address">Server address</string>
+    <string name="pref_bt_netplay_password">Password</string>
+    <string name="pref_bt_netplay_port_offset">Port offset</string>
     <string name="action_context_delete">Delete</string>
     <string name="action_context_rename">Adlandır</string>
     <string name="action_context_shortcut">Create shortcut</string>
