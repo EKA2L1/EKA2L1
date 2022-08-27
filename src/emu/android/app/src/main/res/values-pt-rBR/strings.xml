@@ -28,6 +28,7 @@
     <string name="path_to_firmware">Caminho para VPL</string>
     <string name="install_method">Método de instalação</string>
     <string name="enter_new_name">Insira o novo nome</string>
+    <string name="mode">Mode</string>
     <string name="no_device_dialog_title">Nenhum dispositivo instalado!</string>
     <string name="no_device_installed">Por favor instale um dispositivo. Arquivos e ROM de um dispositivo Symbian são necessários para a instalação.\n\n<b>Nota:</b> Cada aplicativo precisará de um dispositivo Symbian adequado para ser executado.</string>
     <string name="install_device_note_may_need_rpkg">Para dispositivos S60v2 ou superior, você pode precisar fornecer um arquivo adicional chamado RPKG. O selecionador de caminhos irá aparecer se o instalador detectar a necessidade disso.</string>
@@ -68,9 +69,18 @@
     <string name="emulated_screen_refresh_rate_item_name">Taxa de atualização</string>
     <string name="pref_device_display_name">Nome de telefone amigável</string>
     <string name="hide_system_apps">Ocultar aplicativos do sistema</string>
+    <string name="pref_bt_netplay_direct_ips_manager">Direct IPs manager</string>
     <string name="enter_address">Enter address</string>
     <string name="address">Address</string>
     <string name="port">Port</string>
+    <string name="pref_bt_netplay_mode_off">Off</string>
+    <string name="pref_bt_netplay_mode_direct_ip">Direct IP</string>
+    <string name="pref_bt_netplay_mode_lan">LAN</string>
+    <string name="pref_bt_netplay_mode_server">Server</string>
+    <string name="pref_bt_netplay_enable_upnp">Enable UPnP (for IPv4 public play)</string>
+    <string name="pref_bt_netplay_server_address">Server address</string>
+    <string name="pref_bt_netplay_password">Password</string>
+    <string name="pref_bt_netplay_port_offset">Port offset</string>
     <string name="action_context_delete">Apagar</string>
     <string name="action_context_rename">Renomear</string>
     <string name="action_context_shortcut">Criar atalho</string>
