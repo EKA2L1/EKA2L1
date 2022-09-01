@@ -91,22 +91,22 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="51"/>
       <source>Modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Modify friends&apos; IP addresses</translation>
+      <translation>Ubah teman&apos; alamat IP</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="66"/>
       <source>IP address (IPv4 or IPv6)</source>
-      <translation type="unfinished">IP address (IPv4 or IPv6)</translation>
+      <translation>Alamat IP (IPV4 ATAU IPV6)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="71"/>
       <source>Port (can be empty)</source>
-      <translation type="unfinished">Port (can be empty)</translation>
+      <translation>Port (dapat dikosongkan)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="114"/>
       <source>Add more</source>
-      <translation type="unfinished">Add more</translation>
+      <translation>Tambahkan yang lain</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="115"/>
