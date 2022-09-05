@@ -83,7 +83,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="386"/>
       <source>&lt;br&gt;App UID: 0x%1</source>
-      <translation type="unfinished">&lt;br&gt;App UID: 0x%1</translation>
+      <translation>&lt;br&gt;UID do Aplicativo: 0x%1</translation>
     </message>
   </context>
   <context>
