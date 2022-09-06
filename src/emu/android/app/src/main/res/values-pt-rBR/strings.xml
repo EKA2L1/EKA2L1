@@ -80,7 +80,7 @@
     <string name="pref_bt_netplay_enable_upnp">Ativar UPnP (para reprodução pública IPv4)</string>
     <string name="pref_bt_netplay_server_address">Endereço do servidor</string>
     <string name="pref_bt_netplay_password">Senha</string>
-    <string name="pref_bt_netplay_port_offset">Port offset</string>
+    <string name="pref_bt_netplay_port_offset">Deslocamento de porta</string>
     <string name="action_context_delete">Apagar</string>
     <string name="action_context_rename">Renomear</string>
     <string name="action_context_shortcut">Criar atalho</string>
@@ -130,8 +130,8 @@
     <string name="pref_screen_scale_type_fill">Preencher janela (ignorar proporção de aspecto)</string>
     <string name="pref_screen_scale_type_fit">Ajustar a janela</string>
     <string name="pref_screen_scale_type_none">Como é</string>
-    <string name="pref_screen_scale_use_shader">Usar Sombra para aumentar</string>
-    <string name="pref_screen_upscale_shader">Sombra de Upscale</string>
+    <string name="pref_screen_scale_use_shader">Usar shader para ampliação</string>
+    <string name="pref_screen_upscale_shader">Shader de Upscale</string>
     <string name="pref_screen_default_shader">Padrão</string>
     <string name="default_label">"[%s] (padrão)"</string>
     <string name="not_saved_exists">Já existe</string>
