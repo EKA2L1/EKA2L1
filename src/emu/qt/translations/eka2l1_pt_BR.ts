@@ -37,7 +37,7 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="50"/>
       <source>&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</translation>
+      <translation>&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; ramo &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="53"/>
@@ -91,7 +91,7 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="51"/>
       <source>Modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Modify friends&apos; IP addresses</translation>
+      <translation>Modificar endereços IP de amigos</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="66"/>
@@ -101,7 +101,7 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="71"/>
       <source>Port (can be empty)</source>
-      <translation type="unfinished">Port (can be empty)</translation>
+      <translation>Porta (pode estar vazia)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="114"/>
@@ -116,17 +116,17 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="116"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>Atualizar</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="182"/>
       <source>Update friends success!</source>
-      <translation type="unfinished">Update friends success!</translation>
+      <translation>Amigos atualizados com sucesso!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="182"/>
       <source>Friends&apos; IP addresses have been successfully saved!</source>
-      <translation type="unfinished">Friends&apos; IP addresses have been successfully saved!</translation>
+      <translation>Endereços IP dos amigos foram salvos com sucesso!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="195"/>
@@ -139,25 +139,25 @@
       <location filename="../src/btnetplay_friends_dialog.cpp" line="197"/>
       <source>Friend %1 has invalid IP address!
 </source>
-      <translation type="unfinished">Friend %1 has invalid IP address!
+      <translation>O amigo %1 tem um endereço IP inválido!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="202"/>
       <source>Friend %1 has invalid port number (must be between 0 and 65535)!
 </source>
-      <translation type="unfinished">Friend %1 has invalid port number (must be between 0 and 65535)!
+      <translation>O amigo %1 tem um número de porta inválido (deve estar entre 0 e 65535)!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="229"/>
       <source>Some errors in updating friends!</source>
-      <translation type="unfinished">Some errors in updating friends!</translation>
+      <translation>Alguns erros ao atualizar amigos!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="230"/>
       <source>Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</source>
-      <translation type="unfinished">Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</translation>
+      <translation>O endereço IP de alguns amigos não pode ser atualizado (veja texto detalhado).&lt;br&gt;Endereços que estão aptos a atualizar foram salvos.</translation>
     </message>
   </context>
   <context>
@@ -182,7 +182,7 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="94"/>
       <source>Device dump (RPKG + ROM)</source>
-      <translation>Despejo de dispositivos (RPKG + ROM)</translation>
+      <translation>Dump de dispositivos (RPKG + ROM)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="99"/>
@@ -222,7 +222,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="212"/>
       <source>Fail to determine product information from the dump!</source>
-      <translation>Falha ao determinar informações do produto!</translation>
+      <translation>Falha ao determinar informações do produto a partir do dump!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="216"/>
@@ -310,33 +310,33 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="17"/>
       <source>Touch mapping editor</source>
-      <translation type="unfinished">Touch mapping editor</translation>
+      <translation>Editor para mapeamento de toque</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="26"/>
       <source>&lt;b&gt;Mapping elements&lt;/b&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Mapping elements&lt;/b&gt;</translation>
+      <translation>&lt;b&gt;Mapeamento dos elementos&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="40"/>
       <source>Joystick</source>
-      <translation type="unfinished">Joystick</translation>
+      <translation>Controle</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="45"/>
       <source>Single touch</source>
-      <translation type="unfinished">Single touch</translation>
+      <translation>Toque único</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="64"/>
       <source>For app: </source>
-      <translation type="unfinished">For app: </translation>
+      <translation>Para o aplicativo: </translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="105"/>
       <location filename="../src/btnmap/editor_widget.cpp" line="274"/>
       <source>Save and hide editor</source>
-      <translation type="unfinished">Save and hide editor</translation>
+      <translation>Salvar e ocultar editor</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="136"/>
@@ -356,7 +356,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="181"/>
       <source>Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</source>
-      <translation type="unfinished">Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</translation>
+      <translation>Perfis são salvos por app/jogo. Pressione &lt;b&gt;Editar&lt;/b&gt; para entrar no modo de edição. Para apagar o elemento de mapeamento, pressione &lt;b&gt;Excluir&lt;/b&gt; e clique no elemento que você deseja remover.</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="212"/>
@@ -371,12 +371,12 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="50"/>
       <source>Please wait for a game to be active!</source>
-      <translation type="unfinished">Please wait for a game to be active!</translation>
+      <translation>Por favor, espere um jogo estar ativo!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="89"/>
       <source>For app: %1 (0x%2)</source>
-      <translation type="unfinished">For app: %1 (0x%2)</translation>
+      <translation>Para o aplicativo: %1 (0x%2)</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="151"/>
@@ -386,17 +386,17 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
       <source>Error creating profile!</source>
-      <translation type="unfinished">Error creating profile!</translation>
+      <translation>Erro ao criar perfil!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
       <source>Profile name contains special characters or system error encountered!</source>
-      <translation type="unfinished">Profile name contains special characters or system error encountered!</translation>
+      <translation>O nome do perfil contém caracteres especiais ou erro de sistema encontrado!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="285"/>
       <source>Show editor</source>
-      <translation type="unfinished">Show editor</translation>
+      <translation>Mostrar editor</translation>
     </message>
   </context>
   <context>
@@ -444,12 +444,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="129"/>
       <source>Bluetooth</source>
-      <translation type="unfinished">Bluetooth</translation>
+      <translation>Bluetooth</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="133"/>
       <source>Netplay</source>
-      <translation type="unfinished">Netplay</translation>
+      <translation>Netplay</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="141"/>
@@ -534,32 +534,32 @@
     <message>
       <location filename="../src/mainwindow.ui" line="283"/>
       <source>Refresh app list</source>
-      <translation>Atualizar lista</translation>
+      <translation>Atualizar lista de aplicativos</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="288"/>
       <source>Friends&apos;s IP addresses</source>
-      <translation type="unfinished">Friends&apos;s IP addresses</translation>
+      <translation>Endereços IP de amigos</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="293"/>
       <source>Button mapping editor</source>
-      <translation type="unfinished">Button mapping editor</translation>
+      <translation>Editor para mapeamento de botões</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="298"/>
       <source>Touch mapping editor</source>
-      <translation type="unfinished">Touch mapping editor</translation>
+      <translation>Editor para mapeamento de toque</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="303"/>
       <source>N-Gage card game</source>
-      <translation type="unfinished">N-Gage card game</translation>
+      <translation>Cartucho de jogo N-Gage</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="308"/>
       <source>Check for update</source>
-      <translation type="unfinished">Check for update</translation>
+      <translation>Procurar atualizações</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="241"/>
@@ -595,32 +595,32 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="642"/>
       <source>Installing &lt;b&gt;%1&lt;/b&gt;</source>
-      <translation type="unfinished">Installing &lt;b&gt;%1&lt;/b&gt;</translation>
+      <translation>Instalando &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="655"/>
       <source>Choose the N-Gage game card folder</source>
-      <translation type="unfinished">Choose the N-Gage game card folder</translation>
+      <translation>Escolha a pasta do cartucho de jogo N-Gage</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="663"/>
       <source>Installing N-Gage game...</source>
-      <translation type="unfinished">Installing N-Gage game...</translation>
+      <translation>Instalando jogo N-Gage...</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="686"/>
       <source>Install success!</source>
-      <translation type="unfinished">Install success!</translation>
+      <translation>Instalação bem sucedida!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="686"/>
       <source>Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</source>
-      <translation type="unfinished">Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</translation>
+      <translation>Sucesso ao instalar o cartucho de jogo N-Gage: &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="692"/>
       <source>Can&apos;t find the game data folder!</source>
-      <translation type="unfinished">Can&apos;t find the game data folder!</translation>
+      <translation>Não é possível encontrar a pasta de dados do jogo!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="696"/>
@@ -630,36 +630,36 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="700"/>
       <source>The game information file does not exist in the card game folder!</source>
-      <translation>O arquivo de informações do jogo não existe na pasta do jogo de cartas!</translation>
+      <translation>O arquivo de informações do jogo não existe na pasta do cartucho do jogo!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="704"/>
       <source>The game information file has been corrupted. Please check your data&apos;s validity!</source>
-      <translation type="unfinished">The game information file has been corrupted. Please check your data&apos;s validity!</translation>
+      <translation>O arquivo de informações do jogo foi corrompido. Por favor, verifique a validade de seus dados!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="708"/>
       <source>General error occured...</source>
-      <translation type="unfinished">General error occured...</translation>
+      <translation>Ocorreu um erro geral...</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="713"/>
       <location filename="../src/mainwindow.cpp" line="715"/>
       <source>Install failed</source>
-      <translation type="unfinished">Install failed</translation>
+      <translation>Falha na instalação</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="713"/>
       <source>Installation failed with error:
   -%1</source>
-      <translation type="unfinished">Installation failed with error:
+      <translation>A instalação falhou com o erro:
   -%1</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="715"/>
       <source>Installation of %1% failed with error:
   -%2</source>
-      <translation type="unfinished">Installation of %1% failed with error:
+      <translation>Instalação de %1% falhou com erro:
   -%2</translation>
     </message>
     <message>
@@ -696,17 +696,17 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="839"/>
       <source>Game card problem</source>
-      <translation>Problema no cartão do jogo</translation>
+      <translation>Problema no cartucho do jogo</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="839"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
-      <translation>O despejo de cartucho tem arquivos que diferenciam maiúsculas de minúsculas. Isso pode causar problemas com o emulador.</translation>
+      <translation>O dump do cartucho tem arquivos que diferenciam maiúsculas de minúsculas. Isso pode causar problemas com o emulador.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="843"/>
       <source>Game card dump folder correction</source>
-      <translation>Correção de despejo de cartão do jogo</translation>
+      <translation>Correção da pasta de dump do cartucho de jogo</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="843"/>
@@ -716,7 +716,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="899"/>
       <source>Choose the game card dump folder</source>
-      <translation>Escolha a pasta de despejo de cartucho</translation>
+      <translation>Escolha a pasta de dump do cartucho</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="919"/>
@@ -786,27 +786,27 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1293"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
-      <translation>O arquivo de estilo tema escuro&apos;s pode ser encontrado&apos;t!</translation>
+      <translation>O arquivo de estilo do tema escuro não pode ser encontrado!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1423"/>
       <source>Continue to modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Continue to modify friends&apos; IP addresses</translation>
+      <translation>Continuar a modificar os endereços IP dos amigos</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1424"/>
       <source>This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</source>
-      <translation type="unfinished">This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</translation>
+      <translation>Esta caixa de diálogo mostrará todos os endereços IP armazenados, que têm o potencial de revelar informações pessoais de outras pessoas.&lt;br&gt;Você deseja continuar?</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1439"/>
       <source>Bluetooth manager service not available!</source>
-      <translation type="unfinished">Bluetooth manager service not available!</translation>
+      <translation>Serviço de gerenciamento Bluetooth indisponível!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1439"/>
       <source>The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</source>
-      <translation type="unfinished">The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</translation>
+      <translation>O dispositivo emulado não possui um serviço de gerenciamento bluetooth! O Bluetooth não é suportado.</translation>
     </message>
   </context>
   <context>
@@ -824,7 +824,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="66"/>
       <source>UID</source>
-      <translation type="unfinished">UID</translation>
+      <translation>UID</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="71"/>
@@ -927,17 +927,17 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="247"/>
       <source>Use shader for upscaling</source>
-      <translation>Usar Sombra para aumentar</translation>
+      <translation>Usar shader para ampliação</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="263"/>
       <source>Upscale shader</source>
-      <translation>Sombra de Upscale</translation>
+      <translation>Shader de Upscale</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="279"/>
       <source>Hide system applications across all devices</source>
-      <translation type="unfinished">Hide system applications across all devices</translation>
+      <translation>Ocultar aplicativos do sistema em todos os dispositivos</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="282"/>
@@ -992,17 +992,17 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="382"/>
       <source>Log filter</source>
-      <translation type="unfinished">Log filter</translation>
+      <translation>Filtro de log</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="399"/>
       <source>Apply</source>
-      <translation type="unfinished">Apply</translation>
+      <translation>Aplicar</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="408"/>
       <source>Show log console (Windows only)</source>
-      <translation type="unfinished">Show log console (Windows only)</translation>
+      <translation>Mostrar console de log (apenas janela)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="418"/>
@@ -1059,12 +1059,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="531"/>
       <source>By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</source>
-      <translation>Por padrão, o emulador só permite o redimensionamento da exibição do emulador até o mínimo da tela do telefone&apos;s, multiplicar com a escala de exibição do sistema, para atender a maioria dos usuários&apos;s olhos</translation>
+      <translation>Por padrão, o emulador só permite redimensionar a tela do emulador para o mínimo do tamanho da tela do telefone, multiplicar pela escala de exibição do sistema, para se adequar aos olhos da maioria dos usuários</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="534"/>
       <source>Allow resizing display to phone screen&apos;s true size in pixels</source>
-      <translation>Permitir redimensionamento da tela do telefone&apos;tamanho verdadeiro em pixels</translation>
+      <translation>Permitir redimensionar a exibição para o tamanho real da tela do telefone em pixels</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="546"/>
@@ -1099,7 +1099,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="597"/>
       <source>Disable title with Git version</source>
-      <translation type="unfinished">Disable title with Git version</translation>
+      <translation>Desabilitar título com versão do Git</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="604"/>
@@ -1146,7 +1146,7 @@ A opção de preferência ativará isso automaticamente em dispositivos S60v1/S6
     <message>
       <location filename="../src/settings_dialog.ui" line="667"/>
       <source>Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</source>
-      <translation>Permitir que o emulador execute uma aceleração nativa da GPU para a API Symbian&apos;s GLES1.</translation>
+      <translation>Permitir que o emulador execute uma aceleração nativa da GPU para a API GLES1 do Symbian.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="670"/>
@@ -1172,7 +1172,7 @@ A opção de preferência ativará isso automaticamente em dispositivos S60v1/S6
     <message>
       <location filename="../src/settings_dialog.ui" line="731"/>
       <source>Check for any unimported devices and correct existing one&apos;s infos.</source>
-      <translation>Verifique qualquer dispositivo não importado e corrija as informações do existente.</translation>
+      <translation>Verifique qualquer dispositivos não importados e corrija as informações dos existentes.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="734"/>
@@ -1654,37 +1654,37 @@ A opção de preferência ativará isso automaticamente em dispositivos S60v1/S6
     <message>
       <location filename="../src/update_dialog.ui" line="14"/>
       <source>New update available</source>
-      <translation type="unfinished">New update available</translation>
+      <translation>Nova atualização disponível</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="43"/>
       <source>A new update has been released on Github!</source>
-      <translation type="unfinished">A new update has been released on Github!</translation>
+      <translation>Uma nova atualização foi lançada no Github!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="61"/>
       <source>Changelog</source>
-      <translation type="unfinished">Changelog</translation>
+      <translation>Relatório de Mudanças</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="84"/>
       <source>Downloading update ... %p%</source>
-      <translation type="unfinished">Downloading update ... %p%</translation>
+      <translation>Baixando atualizações... %p%</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="91"/>
       <source>Do not automatically check for update when startup</source>
-      <translation type="unfinished">Do not automatically check for update when startup</translation>
+      <translation>Não verificar automaticamente por atualizações ao iniciar</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="126"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>Atualizar</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="139"/>
       <source>Ignore</source>
-      <translation type="unfinished">Ignore</translation>
+      <translation>Ignorar</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="149"/>
@@ -1694,42 +1694,42 @@ A opção de preferência ativará isso automaticamente em dispositivos S60v1/S6
     <message>
       <location filename="../src/update_dialog.cpp" line="107"/>
       <source>Update success</source>
-      <translation type="unfinished">Update success</translation>
+      <translation>Atualização bem-sucedida</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="113"/>
       <source>Update failed</source>
-      <translation type="unfinished">Update failed</translation>
+      <translation>Falha ao atualizar</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="142"/>
       <source>The emulator is already updated to lastest version!</source>
-      <translation type="unfinished">The emulator is already updated to lastest version!</translation>
+      <translation>O emulador já está atualizado para a última versão!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="151"/>
       <source>The release channel is not available. Please check your internet connection!</source>
-      <translation type="unfinished">The release channel is not available. Please check your internet connection!</translation>
+      <translation>O canal de lançamento não está disponível. Por favor, verifique sua conexão de internet!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="157"/>
       <source>Failed to get information about the newest update from Github!</source>
-      <translation type="unfinished">Failed to get information about the newest update from Github!</translation>
+      <translation>Falha ao obter informações sobre a atualização mais recente do Github!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="189"/>
       <source>Can&apos;t find the download link of newest update for your platform!</source>
-      <translation type="unfinished">Can&apos;t find the download link of newest update for your platform!</translation>
+      <translation>Não é possível encontrar o link de download da atualização mais recente para sua plataforma!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="195"/>
       <source>Failed to get update download link from Github!</source>
-      <translation type="unfinished">Failed to get update download link from Github!</translation>
+      <translation>Falha ao obter o link de download da atualização do Github!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="213"/>
       <source>Error retrieving changelog from Github...</source>
-      <translation type="unfinished">Error retrieving changelog from Github...</translation>
+      <translation>Erro ao recuperar o changelog do Github...</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="235"/>
@@ -1755,33 +1755,33 @@ A opção de preferência ativará isso automaticamente em dispositivos S60v1/S6
     <message>
       <location filename="../src/update_dialog.cpp" line="300"/>
       <source>Can&apos;t not open temporary file for storing the update files!</source>
-      <translation type="unfinished">Can&apos;t not open temporary file for storing the update files!</translation>
+      <translation>Não é possível abrir o arquivo temporário para armazenar os arquivos de atualização!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="384"/>
       <source>Failed to download update with error: %1</source>
-      <translation type="unfinished">Failed to download update with error: %1</translation>
+      <translation>Falha ao baixar a atualização por erro: %1</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="392"/>
       <source>Downloaded update is not in zip format!</source>
-      <translation type="unfinished">Downloaded update is not in zip format!</translation>
+      <translation>A atualização baixada não está no formato zip!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="421"/>
       <source>Failed to update the updater program!</source>
-      <translation type="unfinished">Failed to update the updater program!</translation>
+      <translation>Falha ao atualizar o programa de atualização!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="429"/>
       <source>Update zip file is corrupted!</source>
-      <translation type="unfinished">Update zip file is corrupted!</translation>
+      <translation>Arquivo zip da atualização está corrompido!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="436"/>
       <location filename="../src/update_dialog.cpp" line="451"/>
       <source>Can&apos;t find the updater program in the update archive file!</source>
-      <translation type="unfinished">Can&apos;t find the updater program in the update archive file!</translation>
+      <translation>Não é possível encontrar o programa de atualização no arquivo de atualização!</translation>
     </message>
   </context>
   <context>
@@ -1789,7 +1789,7 @@ A opção de preferência ativará isso automaticamente em dispositivos S60v1/S6
     <message>
       <location filename="../src/update_notice_dialog.ui" line="14"/>
       <source>Update news</source>
-      <translation type="unfinished">Update news</translation>
+      <translation>Novidades da atualização</translation>
     </message>
   </context>
   <context>
@@ -1797,53 +1797,53 @@ A opção de preferência ativará isso automaticamente em dispositivos S60v1/S6
     <message>
       <location filename="../src/updater.ui" line="14"/>
       <source>EKA2L1 Updater</source>
-      <translation type="unfinished">EKA2L1 Updater</translation>
+      <translation>EKA2L1 Updater</translation>
     </message>
     <message>
       <location filename="../src/updater.ui" line="59"/>
       <source>Updating...</source>
-      <translation type="unfinished">Updating...</translation>
+      <translation>Atualizando...</translation>
     </message>
     <message>
       <location filename="../src/updater.ui" line="85"/>
       <source>Extracting ... %p%</source>
-      <translation type="unfinished">Extracting ... %p%</translation>
+      <translation>Extraindo... %p%</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="91"/>
       <source>Update failed</source>
-      <translation type="unfinished">Update failed</translation>
+      <translation>Falha ao atualizar</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="99"/>
       <source>Downloaded update is not a zip file!</source>
-      <translation type="unfinished">Downloaded update is not a zip file!</translation>
+      <translation>A atualização baixada não está no formato zip!</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="122"/>
       <location filename="../src/updater.cpp" line="175"/>
       <source>The downloaded archive zip is corrupted</source>
-      <translation type="unfinished">The downloaded archive zip is corrupted</translation>
+      <translation>O arquivo arquivo zip baixado está corrompido</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="178"/>
       <source>Extracted: %1</source>
-      <translation type="unfinished">Extracted: %1</translation>
+      <translation>Extraído: %1</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="197"/>
       <source>Update&apos;s archive file does not exist!</source>
-      <translation type="unfinished">Update&apos;s archive file does not exist!</translation>
+      <translation>O arquivo de atualização não existe!</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="212"/>
       <source>Update success</source>
-      <translation type="unfinished">Update success</translation>
+      <translation>Atualização bem-sucedida</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="212"/>
       <source>Update success. Relaunch the emulator?</source>
-      <translation type="unfinished">Update success. Relaunch the emulator?</translation>
+      <translation>Atualização bem sucedida. Reiniciar o emulador?</translation>
     </message>
   </context>
 </TS>
