@@ -618,6 +618,8 @@ namespace eka2l1 {
             std::uint32_t aif_v2_uid = 0;
             static constexpr std::uint32_t expected_aifv2_uid = 0x101FB032;
 
+            bool found_embedded = false;
+
             if ((stream.read(&aif_v2_uid, 4) == 4) && (aif_v2_uid == expected_aifv2_uid)) {
                 std::uint32_t data_size = 0;
                 stream.seek(12, common::seek_where::cur);
@@ -628,8 +630,13 @@ namespace eka2l1 {
                             stream.size() - ptr_start);
 
                         stream_for_mbm_read = ref_stream.get();
+                        found_embedded = true;
                     }
                 }
+            }
+
+            if (!found_embedded) {
+                stream_for_mbm_read->seek(0, common::seek_where::beg);
             }
 
             loader::mbm_file mbmf_(stream_for_mbm_read);
