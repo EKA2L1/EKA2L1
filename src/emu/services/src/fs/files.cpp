@@ -78,7 +78,7 @@ namespace eka2l1 {
 
             if (vfs_node->type == io_component_type::file) { 
                 file *vfs_file = reinterpret_cast<file *>(vfs_node.get());
-                io->delete_entry(vfs_file->file_name());
+                serv->temporary_file_cleanset_.emplace(common::lowercase_ucs2_string(vfs_file->file_name()));
             }
         }
     }

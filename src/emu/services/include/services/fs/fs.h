@@ -321,10 +321,13 @@ namespace eka2l1 {
         };
 
         std::uint32_t flags;
+        std::set<std::u16string> temporary_file_cleanset_;
+
         void init();
 
     public:
         explicit fs_server(system *sys);
+        ~fs_server() override;
 
         service::uid get_owner_secure_uid() const override {
             return 0x100039E3;

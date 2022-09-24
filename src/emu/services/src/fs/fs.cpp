@@ -174,6 +174,13 @@ namespace eka2l1 {
         system_drive_prop->second = static_cast<int>(SYSTEM_DRIVE_KEY);
     }
 
+    fs_server::~fs_server() {
+        io_system *io = sys->get_io_system();
+        for (const std::u16string &path: temporary_file_cleanset_) {
+            io->delete_entry(path);
+        }
+    }
+
     void fs_server_client::fetch(service::ipc_context *ctx) {
         const epocver version = server<fs_server>()->sys->get_symbian_version_use();
 
