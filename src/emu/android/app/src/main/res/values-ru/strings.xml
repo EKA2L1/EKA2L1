@@ -73,7 +73,7 @@
     <string name="enter_address">Введите адрес</string>
     <string name="address">Адрес</string>
     <string name="port">Порт</string>
-    <string name="pref_bt_netplay_mode_off">Выкл</string>
+    <string name="pref_bt_netplay_mode_off">Выкл.</string>
     <string name="pref_bt_netplay_mode_direct_ip">Прямой IP-адрес</string>
     <string name="pref_bt_netplay_mode_lan">Локальная сеть</string>
     <string name="pref_bt_netplay_mode_server">Сервер</string>
