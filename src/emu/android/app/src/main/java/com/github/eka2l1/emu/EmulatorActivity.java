@@ -94,6 +94,11 @@ public class EmulatorActivity extends AppCompatActivity {
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        Intent intent = getIntent();
+        if (intent.getBooleanExtra(KEY_APP_IS_SHORTCUT, false)) {
+            Emulator.initializeForShortcutLaunch(this);
+        }
+
         AppDataStore dataStore = AppDataStore.getAndroidStore();
         setTheme(dataStore.getString(PREF_THEME, "light"));
         super.onCreate(savedInstanceState);
@@ -122,12 +127,7 @@ public class EmulatorActivity extends AppCompatActivity {
             getSupportActionBar().hide();
         }
 
-        Intent intent = getIntent();
-        if (intent.getBooleanExtra(KEY_APP_IS_SHORTCUT, false)) {
-            Emulator.initializeForShortcutLaunch(this);
-        } else {
-            Emulator.setContext(this);
-        }
+        Emulator.setContext(this);
 
         uid = intent.getLongExtra(KEY_APP_UID, -1);
 
