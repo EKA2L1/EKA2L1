@@ -17,6 +17,7 @@
  */
 
 #include <common/algorithm.h>
+#include <common/fileutils.h>
 #include <common/log.h>
 #include <common/platform.h>
 #include <common/pystr.h>
@@ -198,6 +199,12 @@ namespace eka2l1 {
 
         void setup_log(std::shared_ptr<base_logger> gui_logger) {
             const char *log_file_name = "EKA2L1.log";
+            const char *log_file_name_prev = "EKA2L1_TakeThis.log";
+
+            if (common::exists(log_file_name)) {
+                common::move_file(log_file_name, log_file_name_prev);
+            }
+
             std::vector<spdlog::sink_ptr> sinks;
 
 #if EKA2L1_PLATFORM(WIN32)
