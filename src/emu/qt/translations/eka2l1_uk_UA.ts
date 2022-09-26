@@ -91,22 +91,22 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="51"/>
       <source>Modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Modify friends&apos; IP addresses</translation>
+      <translation>Змініть IP-адреси друзів</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="66"/>
       <source>IP address (IPv4 or IPv6)</source>
-      <translation type="unfinished">IP address (IPv4 or IPv6)</translation>
+      <translation>IP-адреса (IPv4 або IPv6)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="71"/>
       <source>Port (can be empty)</source>
-      <translation type="unfinished">Port (can be empty)</translation>
+      <translation>Порт (може бути порожнім)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="114"/>
       <source>Add more</source>
-      <translation type="unfinished">Add more</translation>
+      <translation>Додати ще</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="115"/>
@@ -116,24 +116,23 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="116"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>Оновити</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="182"/>
       <source>Update friends success!</source>
-      <translation type="unfinished">Update friends success!</translation>
+      <translation>Друзів успішно оновлено!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="182"/>
       <source>Friends&apos; IP addresses have been successfully saved!</source>
-      <translation type="unfinished">Friends&apos; IP addresses have been successfully saved!</translation>
+      <translation>IP-адреси друзів успішно збережено!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="195"/>
       <source>Friend %1 has empty IP address!
 </source>
-      <translation type="unfinished">Friend %1 has empty IP address!
-</translation>
+      <translation>Друг %1 має порожню IP-адресу!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="197"/>
@@ -1679,7 +1678,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.ui" line="126"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>Оновити</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="139"/>
