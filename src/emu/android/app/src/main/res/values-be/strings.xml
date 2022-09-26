@@ -28,7 +28,7 @@
     <string name="path_to_firmware">Шлях да VPL</string>
     <string name="install_method">Спосаб усталёўкі</string>
     <string name="enter_new_name">Увядзіце новае імя</string>
-    <string name="mode">Mode</string>
+    <string name="mode">Рэжым</string>
     <string name="no_device_dialog_title">Няма ўсталяваных прылад!</string>
     <string name="no_device_installed">Калі ласка, усталюйце прыладу. Для ўсталёўкі патрэбныя файлы і ПЗП (ROM) прылады Symbian.\n\n<b>Заўвага:</b> Кожнаму дастасаванню для запуску спатрэбіцца адпаведная прылада Symbian.</string>
     <string name="install_device_note_may_need_rpkg">Для прылад S60v2 ці вышэй вам можа спатрэбіцца падаць дадатковы файл пад назвай RPKG. Сродак выбару шляху з\'явіцца, калі ўсталёўшчык выявіць неабходнасць у ім.</string>
@@ -76,7 +76,7 @@
     <string name="pref_bt_netplay_mode_off">Off</string>
     <string name="pref_bt_netplay_mode_direct_ip">Direct IP</string>
     <string name="pref_bt_netplay_mode_lan">LAN</string>
-    <string name="pref_bt_netplay_mode_server">Server</string>
+    <string name="pref_bt_netplay_mode_server">Сервер</string>
     <string name="pref_bt_netplay_enable_upnp">Enable UPnP (for IPv4 public play)</string>
     <string name="pref_bt_netplay_server_address">Server address</string>
     <string name="pref_bt_netplay_password">Password</string>
