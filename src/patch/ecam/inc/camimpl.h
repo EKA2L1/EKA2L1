@@ -37,19 +37,28 @@ enum TCameraParameter {
 class CCameraImageBufferImpl: public MCameraBuffer {
 private:
 	HBufC8 *iDataBuffer;
+	CFbsBitmap *iDataBitmap;
 
 public:
 	CCameraImageBufferImpl();
+
+	virtual ~CCameraImageBufferImpl() {
+		Release();
+	}
+
 	void ConstructL(TInt aDataSize);
+	void ConstructBitmapL(TSize aSize, TInt aFormat);
 
 	TUint8 *DataPtr();
+	void EndDataAccess();
 
 	TBool IsFree() {
-		return !iDataBuffer;
+		return (!iDataBuffer && !iDataBitmap);
 	}
 	
 	void Clear() {
 		iDataBuffer = NULL;
+		iDataBitmap = NULL;
 	}
 
 	virtual TInt NumFrames() {
@@ -116,9 +125,15 @@ class CCameraImageCaptureObject : public CActive {
 private:
 	TAny *iDispatch;
     TAny *iObserver;
+
     HBufC8 *iDataBuffer;
+    CFbsBitmap *iDataBitmap;
 
 	TInt iObserverVersion;
+	TInt iBitmapDisplayMode;
+
+	TSize iBitmapSize;
+
 	RPointerArray<CCameraImageBufferImpl> iImageBuffers;
 
 public:
@@ -130,6 +145,8 @@ public:
     virtual ~CCameraImageCaptureObject();
     
     void ConstructL(TAny *aDispatch, void *aObserver, TInt aObserverVersion);
+
+    void PrepareImageCaptureL(TInt aIndex, CCamera::TFormat aFormat, TInt aVersion);
     TBool StartCapture(TInt aIndex, CCamera::TFormat aFormat, TRect *aClipRect);
  
     void HandleCompleteV1();
@@ -173,6 +190,38 @@ public:
     virtual void DoCancel();
 };
 
+class CCameraViewfinderBitmapObject: public CActive {
+private:
+	TAny *iDispatch;
+	TAny *iObserver;
+	TInt iObserverVersion;
+
+	RPointerArray<CCameraImageBufferImpl> iBitmapBuffers;
+	CFbsBitmap *iDataBitmap;
+
+	enum TCameraBufferProperties {
+		CAMERA_MAX_BITMAP_BUFFER = 10
+	};
+
+	TInt iScreenDisplayMode;
+	TSize iBitmapSize;
+
+private:
+	void CleanBuffers();
+	void HandleCompleteV1();
+	void HandleCompleteV2();
+
+public:
+	CCameraViewfinderBitmapObject();
+	virtual ~CCameraViewfinderBitmapObject();
+
+	void ConstructL(TAny *aDispatch, void *aObserver, TInt aObserverVersion);
+	void StartL(TSize &aSize);
+
+	virtual void RunL();
+	virtual void DoCancel();
+};
+
 class CCameraPlugin : public CCamera {
 private:
     TAny *iDispatchInstance;
@@ -181,6 +230,7 @@ private:
 
 	CCameraImageCaptureObject iImageCapture;
 	CCameraVideoCaptureObject iVideoCapture;
+	CCameraViewfinderBitmapObject iViewfinderBitmapCapture;
 
 	CIdle *iEventCompleteIdle;
 

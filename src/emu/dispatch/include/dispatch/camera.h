@@ -19,11 +19,30 @@
 
 #pragma once
 
+#include <common/vecx.h>
 #include <dispatch/def.h>
 #include <mem/ptr.h>
 #include <utils/des.h>
 #include <utils/reqsts.h>
 
+namespace eka2l1::drivers::camera {
+    struct info;
+}
+
 namespace eka2l1::dispatch {
     BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_number_of_cameras);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_create, std::int32_t index, drivers::camera::info *cam_info);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_claim, std::uint32_t handle);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_power_on, std::uint32_t handle);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_power_off, std::uint32_t handle);
+    BRIDGE_FUNC_DISPATCHER(void, ecam_release, std::uint32_t handle);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_query_still_image_size, std::uint32_t handle,
+                           std::uint32_t format, std::int32_t size_index, eka2l1::vec2 *size);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_take_image, std::uint32_t handle, std::int32_t size_index,
+                           std::int32_t format, eka2l1::rect *clip_rect, eka2l1::ptr<epoc::request_status> status);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_receive_image, std::uint32_t handle, std::int32_t *size, void *data_ptr);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_start_viewfinder, std::uint32_t handle, eka2l1::vec2 *size,
+                           std::int32_t display_mode, eka2l1::ptr<epoc::request_status> status);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_next_viewfinder_frame, std::uint32_t handle, eka2l1::ptr<epoc::request_status> status);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_stop_viewfinder_frame, std::uint32_t handle);
 }

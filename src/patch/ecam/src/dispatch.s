@@ -37,6 +37,9 @@
 .global ECamReceiveVideoBuffer
 .global ECamCancelTakeVideo
 .global ECamDuplicate
+.global ECamStartViewfinder
+.global ECamNextViewfinderFrame
+.global ECamStopViewfinder
 
 ECamGetNumberOfCameras:
     CallHleDispatch 0x60
@@ -91,3 +94,12 @@ ECamCancelTakeVideo:
 
 ECamDuplicate:
     CallHleDispatch 0x71
+
+ECamStartViewfinder:
+    CallHleDispatch 0x72
+
+ECamNextViewfinderFrame:
+    CallHleDispatch 0x73
+
+ECamStopViewfinder:
+    CallHleDispatch 0x74

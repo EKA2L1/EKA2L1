@@ -186,6 +186,7 @@ void CCameraVideoCaptureObject::StartCaptureL(TInt aSizeIndex, TInt aFrameRateIn
         User::Leave(KErrInUse);
     }
 
+    iStatus = KRequestPending;
     TInt error = ECamTakeVideo(0, iDispatch, aSizeIndex, aFrameRateIndex, (TInt)aFormat, aFramePerBuffer, aClipRect, iStatus);
     
     if (error != KErrNone) {

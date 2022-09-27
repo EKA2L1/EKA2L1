@@ -27,6 +27,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -128,6 +129,7 @@ public class EmulatorActivity extends AppCompatActivity {
         }
 
         Emulator.setContext(this);
+        EmulatorCamera.setActivity(this);
 
         uid = intent.getLongExtra(KEY_APP_UID, -1);
 
@@ -255,6 +257,12 @@ public class EmulatorActivity extends AppCompatActivity {
             handleVkOptions(id);
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        EmulatorCamera.handleOrientationChangeForAllInstances();
+        super.onConfigurationChanged(newConfig);
     }
 
     private void saveLog() {
@@ -531,5 +539,4 @@ public class EmulatorActivity extends AppCompatActivity {
             Emulator.surfaceRedrawNeeded();
         }
     }
-
 }

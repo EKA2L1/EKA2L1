@@ -26,6 +26,7 @@
 
 #include <drivers/audio/dsp.h>
 #include <drivers/audio/player.h>
+#include <drivers/camera/camera.h>
 #include <dispatch/video.h>
 #include <dispatch/hui.h>
 
@@ -34,6 +35,7 @@
 #include <utils/des.h>
 #include <utils/reqsts.h>
 
+#include <array>
 #include <atomic>
 #include <memory>
 #include <vector>
@@ -219,6 +221,26 @@ namespace eka2l1::dispatch {
             std::int32_t screen_index, std::uint8_t *data, eka2l1::vec2 size, std::int32_t format);
     };
 
+    struct epoc_camera {
+        static constexpr std::size_t QUEUE_MAX_PENDING = 5;
+
+        epoc::notify_info done_notify_;
+        drivers::camera::info cached_info_;
+
+        std::array<std::vector<char>, QUEUE_MAX_PENDING> received_image_frame_;
+        std::int32_t current_frame_index_;
+
+        std::map<drivers::camera::frame_format, std::vector<eka2l1::vec2>> cached_frame_sizes_;
+        std::unique_ptr<drivers::camera::instance> impl_;
+
+        std::mutex lock_;
+
+        explicit epoc_camera(std::unique_ptr<drivers::camera::instance> &camera)
+            : impl_(std::move(camera))
+            , current_frame_index_(-1) {
+        }
+    };
+
     struct dispatcher {
     private:
         kernel::chunk *trampoline_chunk_;
@@ -247,6 +269,7 @@ namespace eka2l1::dispatch {
 
         // Well, we gonna share it anyway... So as well as just make it public.
         object_manager<epoc_video_player> video_player_container_;
+        object_manager<epoc_camera> cameras_;
 
         explicit dispatcher(kernel_system *kern, ntimer *timing);
         ~dispatcher();

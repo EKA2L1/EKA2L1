@@ -100,8 +100,6 @@ else()
         include/drivers/hwrm/backend/vibration_jdk.h
         src/camera/backend/android/camera_android.cpp
         src/camera/backend/android/camera_collection_android.cpp
-        src/camera/backend/android/emulator_camera_jni.cpp
-        src/camera/backend/android/emulator_camera_jni.h
         src/hwrm/backend/vibration_jdk.cpp
         src/sensor/backend/android/sensor_android.cpp
         src/sensor/backend/android/sensor_android.h)

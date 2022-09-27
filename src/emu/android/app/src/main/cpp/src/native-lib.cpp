@@ -26,6 +26,9 @@
 #include <common/fileutils.h>
 #include <common/path.h>
 #include <drivers/audio/audio.h>
+#include <drivers/camera/backend/android/emulator_camera_jni_public.h>
+#include <drivers/camera/camera_collection.h>
+#include <drivers/camera/backend/android/camera_collection_android.h>
 #include <drivers/graphics/graphics.h>
 
 #include <common/android/jniutils.h>
@@ -72,6 +75,7 @@ Java_com_github_eka2l1_emu_Emulator_startNative(
     jclass clazz) {
     eka2l1::common::jni::init_classloader();
     eka2l1::common::android::register_storage_callbacks(env);
+    eka2l1::drivers::android::register_camera_callbacks(env);
 
     state = std::make_unique<eka2l1::android::emulator>();
     return emulator_entry(*state);
@@ -336,4 +340,30 @@ Java_com_github_eka2l1_emu_Emulator_submitInput(JNIEnv *env, jclass clazz, jstri
     const char *cstr = env->GetStringUTFChars(text, nullptr);
     std::string ctext = std::string(cstr);
     state->launcher->on_finished_text_input(ctext, false);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_github_eka2l1_emu_EmulatorCamera_onCaptureImageDelivered(JNIEnv *env, jclass clazz,
+                                                                  jint index, jbyteArray raw_data,
+                                                                  jint error_code) {
+    eka2l1::drivers::camera::collection_android *collection = reinterpret_cast
+            <eka2l1::drivers::camera::collection_android *>(eka2l1::drivers::camera::get_collection());
+
+    if (collection) {
+        jboolean is_data_copy = false;
+        jsize data_size = env->GetArrayLength(raw_data);
+        jbyte *data = env->GetByteArrayElements(raw_data, &is_data_copy);
+        collection->handle_image_capture_delivered(index, data, static_cast<int>(data_size), error_code);
+        env->ReleaseByteArrayElements(raw_data, data, 0);
+    }
+}
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_github_eka2l1_emu_EmulatorCamera_doesCameraAllowNewFrame(JNIEnv *env, jclass clazz,
+                                                                  jint index) {
+    eka2l1::drivers::camera::collection_android *collection = reinterpret_cast
+            <eka2l1::drivers::camera::collection_android *>(eka2l1::drivers::camera::get_collection());
+
+    return collection->reserved_wants_new_frame(index);
 }

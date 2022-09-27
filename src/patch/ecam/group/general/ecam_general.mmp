@@ -25,7 +25,7 @@ SOURCE          dispatch.s
 
 nostrictdef
 
-LIBRARY		    euser.lib
+LIBRARY		    euser.lib fbscli.lib ws32.lib
 STATICLIBRARY   priv.lib
 
 DEFFILE ..\..\eabi\ecam_general.def
