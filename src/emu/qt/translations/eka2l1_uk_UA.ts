@@ -138,8 +138,7 @@
       <location filename="../src/btnetplay_friends_dialog.cpp" line="197"/>
       <source>Friend %1 has invalid IP address!
 </source>
-      <translation type="unfinished">Friend %1 has invalid IP address!
-</translation>
+      <translation>Друг %1 має хибну IP-адресу!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="202"/>
@@ -319,7 +318,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="40"/>
       <source>Joystick</source>
-      <translation type="unfinished">Joystick</translation>
+      <translation>Джойстик</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="45"/>
@@ -329,7 +328,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="64"/>
       <source>For app: </source>
-      <translation type="unfinished">For app: </translation>
+      <translation>Для застосунку: </translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="105"/>
@@ -375,7 +374,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="89"/>
       <source>For app: %1 (0x%2)</source>
-      <translation type="unfinished">For app: %1 (0x%2)</translation>
+      <translation>Для застосунку: %1 (0x%2)</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="151"/>
