@@ -80,10 +80,13 @@ namespace eka2l1::drivers {
 
         for (std::uint16_t i = 0; i < count; i++) {
             std::uint16_t name_len = *data;
-            bool name_matched = (strncmp(name, reinterpret_cast<const char *>(data + 1), strlen(name)) == 0);
+            bool name_matched = (name_len == name_search_len) && (strncmp(name, reinterpret_cast<const char *>(data + 1), name_search_len) == 0);
 
-            if ((strncmp(name, reinterpret_cast<const char *>(data + 1), name_len) == 0) && has_first_elem_bracket) {
-                name_matched = true;
+            if (!name_matched) {
+                // Search in case of for example "example[0]"
+                if (has_first_elem_bracket && ((name_len + 3) == name_search_len) && (strncmp(name, reinterpret_cast<const char *>(data + 1), name_len) == 0)) {
+                    name_matched = true;
+                }
             }
 
             if (name_matched) {
