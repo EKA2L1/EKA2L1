@@ -144,8 +144,7 @@
       <location filename="../src/btnetplay_friends_dialog.cpp" line="202"/>
       <source>Friend %1 has invalid port number (must be between 0 and 65535)!
 </source>
-      <translation type="unfinished">Friend %1 has invalid port number (must be between 0 and 65535)!
-</translation>
+      <translation>Друг %1 має хибний номер порту (повинен бути від 0 до 65535)!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="229"/>
