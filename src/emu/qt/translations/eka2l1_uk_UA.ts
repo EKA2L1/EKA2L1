@@ -442,7 +442,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="129"/>
       <source>Bluetooth</source>
-      <translation type="unfinished">Bluetooth</translation>
+      <translation>Bluetooth</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="133"/>
