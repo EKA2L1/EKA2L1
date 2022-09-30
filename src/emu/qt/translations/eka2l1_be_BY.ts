@@ -1739,7 +1739,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.cpp" line="256"/>
       <source>Updater unsupported</source>
-      <translation type="unfinished">Updater unsupported</translation>
+      <translation>Абнаўляльнік не падтрымліваецца</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="256"/>
