@@ -149,12 +149,12 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="229"/>
       <source>Some errors in updating friends!</source>
-      <translation type="unfinished">Some errors in updating friends!</translation>
+      <translation>Якісь помилки в оновленні друзів!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="230"/>
       <source>Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</source>
-      <translation type="unfinished">Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</translation>
+      <translation>IP-адреси деяких друзів не можуть бути оновлені (див. докладний текст).&lt;br&gt;Адреси, які можна оновити, збережено.</translation>
     </message>
   </context>
   <context>
@@ -602,7 +602,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="663"/>
       <source>Installing N-Gage game...</source>
-      <translation type="unfinished">Installing N-Gage game...</translation>
+      <translation>Установлення гри N-Gage...</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="686"/>
@@ -1736,7 +1736,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.cpp" line="256"/>
       <source>Updater unsupported</source>
-      <translation type="unfinished">Updater unsupported</translation>
+      <translation>Оновлювач не підтримується</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="256"/>
