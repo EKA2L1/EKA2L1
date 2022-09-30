@@ -446,7 +446,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="133"/>
       <source>Netplay</source>
-      <translation type="unfinished">Netplay</translation>
+      <translation>Мережева гра</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="141"/>
@@ -551,12 +551,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="303"/>
       <source>N-Gage card game</source>
-      <translation type="unfinished">N-Gage card game</translation>
+      <translation>Гра з картки N-Gage</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="308"/>
       <source>Check for update</source>
-      <translation type="unfinished">Check for update</translation>
+      <translation>Перевірити оновлення</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="241"/>
@@ -994,7 +994,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="399"/>
       <source>Apply</source>
-      <translation type="unfinished">Apply</translation>
+      <translation>Застосувати</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="408"/>
@@ -1666,7 +1666,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.ui" line="84"/>
       <source>Downloading update ... %p%</source>
-      <translation type="unfinished">Downloading update ... %p%</translation>
+      <translation>Завантаження оновлення ... %p%</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="91"/>
@@ -1681,7 +1681,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.ui" line="139"/>
       <source>Ignore</source>
-      <translation type="unfinished">Ignore</translation>
+      <translation>Ігнорувати</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="149"/>
