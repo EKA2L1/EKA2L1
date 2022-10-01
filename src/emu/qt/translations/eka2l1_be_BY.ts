@@ -1797,7 +1797,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/updater.ui" line="14"/>
       <source>EKA2L1 Updater</source>
-      <translation type="unfinished">EKA2L1 Updater</translation>
+      <translation>Абнаўляльнік EKA2L1</translation>
     </message>
     <message>
       <location filename="../src/updater.ui" line="59"/>
