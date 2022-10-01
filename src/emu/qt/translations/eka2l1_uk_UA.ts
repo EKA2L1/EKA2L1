@@ -1096,7 +1096,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="597"/>
       <source>Disable title with Git version</source>
-      <translation type="unfinished">Disable title with Git version</translation>
+      <translation>Вимкнути заголовок з версією Git</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="604"/>
