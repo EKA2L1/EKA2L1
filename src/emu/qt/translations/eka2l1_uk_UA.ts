@@ -269,7 +269,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="256"/>
       <source>Installation failed</source>
-      <translation>Не вдалося встановити</translation>
+      <translation>Установлення не вдалося</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="265"/>
@@ -368,7 +368,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="50"/>
       <source>Please wait for a game to be active!</source>
-      <translation type="unfinished">Please wait for a game to be active!</translation>
+      <translation>Будь ласка, зачекайте, поки гра буде активна!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="89"/>
@@ -643,20 +643,20 @@
       <location filename="../src/mainwindow.cpp" line="713"/>
       <location filename="../src/mainwindow.cpp" line="715"/>
       <source>Install failed</source>
-      <translation type="unfinished">Install failed</translation>
+      <translation>Не вдалося встановити</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="713"/>
       <source>Installation failed with error:
   -%1</source>
-      <translation type="unfinished">Installation failed with error:
+      <translation>Установлення завершилося з помилкою:
   -%1</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="715"/>
       <source>Installation of %1% failed with error:
   -%2</source>
-      <translation type="unfinished">Installation of %1% failed with error:
+      <translation>Установлення %1% завершилося з помилкою:
   -%2</translation>
     </message>
     <message>
@@ -748,7 +748,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1069"/>
       <source>Installation failed</source>
-      <translation>Не вдалося встановити</translation>
+      <translation>Установлення не вдалося</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1069"/>
@@ -1696,7 +1696,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.cpp" line="113"/>
       <source>Update failed</source>
-      <translation type="unfinished">Update failed</translation>
+      <translation>Оновлення не вдалося</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="142"/>
@@ -1747,7 +1747,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
       <location filename="../src/update_dialog.cpp" line="300"/>
       <location filename="../src/update_dialog.cpp" line="360"/>
       <source>Update error</source>
-      <translation type="unfinished">Update error</translation>
+      <translation>Помилка оновлення</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="300"/>
@@ -1786,7 +1786,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_notice_dialog.ui" line="14"/>
       <source>Update news</source>
-      <translation type="unfinished">Update news</translation>
+      <translation>Новини оновлень</translation>
     </message>
   </context>
   <context>
@@ -1794,22 +1794,22 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/updater.ui" line="14"/>
       <source>EKA2L1 Updater</source>
-      <translation type="unfinished">EKA2L1 Updater</translation>
+      <translation>Оновлювач EKA2L1</translation>
     </message>
     <message>
       <location filename="../src/updater.ui" line="59"/>
       <source>Updating...</source>
-      <translation type="unfinished">Updating...</translation>
+      <translation>Оновлення...</translation>
     </message>
     <message>
       <location filename="../src/updater.ui" line="85"/>
       <source>Extracting ... %p%</source>
-      <translation type="unfinished">Extracting ... %p%</translation>
+      <translation>Витягнення ... %p%</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="91"/>
       <source>Update failed</source>
-      <translation type="unfinished">Update failed</translation>
+      <translation>Оновлення не вдалося</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="99"/>
@@ -1825,7 +1825,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/updater.cpp" line="178"/>
       <source>Extracted: %1</source>
-      <translation type="unfinished">Extracted: %1</translation>
+      <translation>Витягнено: %1</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="197"/>
