@@ -536,7 +536,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="288"/>
       <source>Friends&apos;s IP addresses</source>
-      <translation type="unfinished">Friends&apos;s IP addresses</translation>
+      <translation>IP-адреси друзів</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="293"/>
@@ -592,7 +592,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="642"/>
       <source>Installing &lt;b&gt;%1&lt;/b&gt;</source>
-      <translation type="unfinished">Installing &lt;b&gt;%1&lt;/b&gt;</translation>
+      <translation>Установлення &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="655"/>
@@ -607,7 +607,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="686"/>
       <source>Install success!</source>
-      <translation type="unfinished">Install success!</translation>
+      <translation>Успішно встановлено!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="686"/>
@@ -1661,7 +1661,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.ui" line="61"/>
       <source>Changelog</source>
-      <translation type="unfinished">Changelog</translation>
+      <translation>Список змін</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="84"/>
@@ -1691,7 +1691,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.cpp" line="107"/>
       <source>Update success</source>
-      <translation type="unfinished">Update success</translation>
+      <translation>Успішно оновлено</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="113"/>
@@ -1835,7 +1835,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/updater.cpp" line="212"/>
       <source>Update success</source>
-      <translation type="unfinished">Update success</translation>
+      <translation>Успішно оновлено</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="212"/>
