@@ -307,7 +307,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="17"/>
       <source>Touch mapping editor</source>
-      <translation type="unfinished">Touch mapping editor</translation>
+      <translation>Редактор сенсорного керування</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="26"/>
@@ -541,12 +541,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="293"/>
       <source>Button mapping editor</source>
-      <translation type="unfinished">Button mapping editor</translation>
+      <translation>Редактор кнопкового керування</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="298"/>
       <source>Touch mapping editor</source>
-      <translation type="unfinished">Touch mapping editor</translation>
+      <translation>Редактор сенсорного керування</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="303"/>
@@ -1651,12 +1651,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.ui" line="14"/>
       <source>New update available</source>
-      <translation type="unfinished">New update available</translation>
+      <translation>Доступне оновлення</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="43"/>
       <source>A new update has been released on Github!</source>
-      <translation type="unfinished">A new update has been released on Github!</translation>
+      <translation>На GitHub вийшло оновлення!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="61"/>
