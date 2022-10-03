@@ -312,7 +312,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="26"/>
       <source>&lt;b&gt;Mapping elements&lt;/b&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Mapping elements&lt;/b&gt;</translation>
+      <translation>&lt;b&gt;Призначувані елементи&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="40"/>
@@ -353,7 +353,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="181"/>
       <source>Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</source>
-      <translation type="unfinished">Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</translation>
+      <translation>Профілі зберігаються в кожному застосунку/грі. Натисніть &lt;b&gt;Редагувати&lt;/b&gt;, щоб перейти в режим редагування. Щоб видалити призначений елемент, натисніть &lt;b&gt;Видалити&lt;/b&gt; та клацніть по елементу, який ви хочете видалити.</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="212"/>
@@ -597,7 +597,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="655"/>
       <source>Choose the N-Gage game card folder</source>
-      <translation type="unfinished">Choose the N-Gage game card folder</translation>
+      <translation>Виберіть теку з ігровою карткою N-Gage</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="663"/>
@@ -612,12 +612,12 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="686"/>
       <source>Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</source>
-      <translation type="unfinished">Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</translation>
+      <translation>Успішно встановлено гру з картки N-Gage: &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="692"/>
       <source>Can&apos;t find the game data folder!</source>
-      <translation type="unfinished">Can&apos;t find the game data folder!</translation>
+      <translation>Не вдається знайти теку з ігровими даними!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="696"/>
@@ -934,7 +934,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="279"/>
       <source>Hide system applications across all devices</source>
-      <translation type="unfinished">Hide system applications across all devices</translation>
+      <translation>Приховати системні застосунки на всіх пристроях</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="282"/>
@@ -989,7 +989,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="382"/>
       <source>Log filter</source>
-      <translation type="unfinished">Log filter</translation>
+      <translation>Фільтр логу</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="399"/>
@@ -999,7 +999,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="408"/>
       <source>Show log console (Windows only)</source>
-      <translation type="unfinished">Show log console (Windows only)</translation>
+      <translation>Показати консоль з логом (тільки для Windows)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="418"/>
@@ -1741,7 +1741,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.cpp" line="256"/>
       <source>The updater is not yet supported on your platform!</source>
-      <translation type="unfinished">The updater is not yet supported on your platform!</translation>
+      <translation>Оновлювач ще не підтримується на вашій платформі!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="300"/>
@@ -1820,7 +1820,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
       <location filename="../src/updater.cpp" line="122"/>
       <location filename="../src/updater.cpp" line="175"/>
       <source>The downloaded archive zip is corrupted</source>
-      <translation type="unfinished">The downloaded archive zip is corrupted</translation>
+      <translation>Завантажений архів ZIP пошкоджений</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="178"/>
@@ -1830,7 +1830,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/updater.cpp" line="197"/>
       <source>Update&apos;s archive file does not exist!</source>
-      <translation type="unfinished">Update&apos;s archive file does not exist!</translation>
+      <translation>Файлу архіву оновлення не існує!</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="212"/>
@@ -1840,7 +1840,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/updater.cpp" line="212"/>
       <source>Update success. Relaunch the emulator?</source>
-      <translation type="unfinished">Update success. Relaunch the emulator?</translation>
+      <translation>Успішно оновлено. Перезапустити емулятор?</translation>
     </message>
   </context>
 </TS>
