@@ -1762,7 +1762,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.cpp" line="392"/>
       <source>Downloaded update is not in zip format!</source>
-      <translation type="unfinished">Downloaded update is not in zip format!</translation>
+      <translation>Завантажене оновлення не у форматі ZIP!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="421"/>
@@ -1772,7 +1772,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.cpp" line="429"/>
       <source>Update zip file is corrupted!</source>
-      <translation type="unfinished">Update zip file is corrupted!</translation>
+      <translation>Файл оновлення ZIP пошкоджений!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="436"/>
@@ -1814,7 +1814,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/updater.cpp" line="99"/>
       <source>Downloaded update is not a zip file!</source>
-      <translation type="unfinished">Downloaded update is not a zip file!</translation>
+      <translation>Завантажене оновлення не є файлом ZIP!</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="122"/>
