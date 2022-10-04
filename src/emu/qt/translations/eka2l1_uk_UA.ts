@@ -627,7 +627,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="700"/>
       <source>The game information file does not exist in the card game folder!</source>
-      <translation type="unfinished">The game information file does not exist in the card game folder!</translation>
+      <translation>Файлу інформації про гру не існує в теці з ігровою карткою!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="704"/>
@@ -788,7 +788,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1423"/>
       <source>Continue to modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Continue to modify friends&apos; IP addresses</translation>
+      <translation>Продовжити змінювати IP-адреси друзів</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1424"/>
@@ -1701,7 +1701,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.cpp" line="142"/>
       <source>The emulator is already updated to lastest version!</source>
-      <translation type="unfinished">The emulator is already updated to lastest version!</translation>
+      <translation>Емулятор уже оновлено до останньої версії!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="151"/>
