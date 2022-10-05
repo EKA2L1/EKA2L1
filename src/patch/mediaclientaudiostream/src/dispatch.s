@@ -28,8 +28,7 @@
 .global EAudioDspStreamSetFormat
 .global EAudioDspOutStreamSetVolume
 .global EAudioDspOutStreamMaxVolume
-.global EAudioDspStreamNotifyBufferSentToDriver
-.global EAudioDspStreamNotifyEnd
+.global EAudioDspStreamNotifyBufferReady
 .global EAudioDspStreamDestroy
 .global EAudioDspOutStreamGetVolume
 .global EAudioDspStreamSetBalance
@@ -37,8 +36,10 @@
 .global EAudioDspStreamBytesRendered
 .global EAudioDspStreamPosition
 .global EAudioDspStreamGetFormat
-.global EAudioDspStreamCancelNotifyBufferSentToDriver
+.global EAudioDspStreamNotifyBufferReadyCancel
 .global EAudioDspStreamResetStat
+.global EAudioDspInStreamCreate
+.global EAudioDspInStreamRead
 
 EAudioDspOutStreamCreate:
     CallHleDispatch 0x40
@@ -67,10 +68,10 @@ EAudioDspOutStreamSetVolume:
 EAudioDspOutStreamMaxVolume:
     CallHleDispatch 0x48
 
-EAudioDspStreamNotifyBufferSentToDriver:
+EAudioDspStreamNotifyBufferReady:
     CallHleDispatch 0x49
 
-EAudioDspStreamNotifyEnd:
+EAudioDspInStreamCreate:
     CallHleDispatch 0x4A
 
 EAudioDspStreamDestroy:
@@ -94,8 +95,11 @@ EAudioDspStreamPosition:
 EAudioDspStreamGetFormat:
     CallHleDispatch 0x51
 
-EAudioDspStreamCancelNotifyBufferSentToDriver:
+EAudioDspStreamNotifyBufferReadyCancel:
     CallHleDispatch 0x52
 
 EAudioDspStreamResetStat:
     CallHleDispatch 0x53
+
+EAudioDspInStreamRead:
+    CallHleDispatch 0x54

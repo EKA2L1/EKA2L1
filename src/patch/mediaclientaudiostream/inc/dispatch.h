@@ -32,7 +32,9 @@ typedef unsigned long long TUint64;
 extern "C" {
 // DSP functions
 HLE_DISPATCH_FUNC(TAny *, EAudioDspOutStreamCreate, void *aNot);
+HLE_DISPATCH_FUNC(TAny *, EAudioDspInStreamCreate, void *aNot);
 HLE_DISPATCH_FUNC(TInt, EAudioDspOutStreamWrite, TAny *aInstance, const TUint8 *aData, const TUint32 aSize);
+HLE_DISPATCH_FUNC(TInt, EAudioDspInStreamRead, TAny *aInstance, const TUint8 *aData, const TUint32 aSize);
 
 HLE_DISPATCH_FUNC(TInt, EAudioDspStreamSetProperties, TAny *aInstance, TInt aFrequency, TInt aChannels);
 HLE_DISPATCH_FUNC(TInt, EAudioDspStreamStart, TAny *aInstance);
@@ -47,9 +49,8 @@ HLE_DISPATCH_FUNC(TInt, EAudioDspOutStreamMaxVolume, TAny *aInstance);
 HLE_DISPATCH_FUNC(TInt, EAudioDspOutStreamGetVolume, TAny *aInstance);
 
 // Notify that a frame has been wrote to the audio driver's buffer on HLE side.
-HLE_DISPATCH_FUNC(TInt, EAudioDspStreamNotifyBufferSentToDriver, TAny *aInstance, TRequestStatus &aStatus);
-HLE_DISPATCH_FUNC(TInt, EAudioDspStreamNotifyEnd, TAny *aInstance, TRequestStatus &aStatus);
-HLE_DISPATCH_FUNC(TInt, EAudioDspStreamCancelNotifyBufferSentToDriver, TAny *aInstance);
+HLE_DISPATCH_FUNC(TInt, EAudioDspStreamNotifyBufferReady, TAny *aInstance, TRequestStatus &aStatus);
+HLE_DISPATCH_FUNC(TInt, EAudioDspStreamNotifyBufferReadyCancel, TAny *aInstance);
 
 HLE_DISPATCH_FUNC(TInt, EAudioDspStreamDestroy, TAny *aInstance);
 

@@ -210,6 +210,176 @@ TInt CMdaAudioOutputStream::RequestStop() {
     return iProperties->RequestStop();
 }
 
+//==================================== AUDIO INPUT STREAM ========================================= //
+CMdaAudioInputStream* CMdaAudioInputStream::NewL(MMdaAudioInputStreamCallback& aCallBack) {
+    CMdaAudioInputStream *stream = new (ELeave) CMdaAudioInputStream();
+    CleanupStack::PushL(stream);
+    stream->iProperties = CMMFMdaAudioInputStream::NewL(aCallBack, 0, EMdaPriorityPreferenceTimeAndQuality);
+    CleanupStack::Pop(stream);
+
+    return stream;
+}
+
+CMdaAudioInputStream* CMdaAudioInputStream::NewL(MMdaAudioInputStreamCallback& aCallBack,
+    TInt aPriority,	TMdaPriorityPreference aPref) {
+    CMdaAudioInputStream *stream = new (ELeave) CMdaAudioInputStream();
+    CleanupStack::PushL(stream);
+    stream->iProperties = CMMFMdaAudioInputStream::NewL(aCallBack, aPriority, aPref);
+    CleanupStack::Pop(stream);
+
+    return stream;
+}
+
+CMdaAudioInputStream::CMdaAudioInputStream()
+    : iProperties(NULL) {
+
+}
+
+CMdaAudioInputStream::~CMdaAudioInputStream() {
+    delete iProperties;
+}
+
+void CMdaAudioInputStream::SetAudioPropertiesL(TInt aSampleRate, TInt aChannels) {
+    const TInt result = iProperties->SetAudioPropertiesWithMdaEnum(aSampleRate, aChannels);
+
+    if (result != KErrNone) {
+        LogOut(KMcaCat, _L("ERR:: Set audio properties failed!"));
+        User::Leave(result);
+    }
+}
+
+void CMdaAudioInputStream::Open(TMdaPackage* aPackage) {
+    if (iProperties->HasAlreadyPlay()) {
+        LogOut(KMcaCat, _L("WARN:: Stream has already been opened! This open call is ignored."));
+        return;
+    }
+
+    TMdaAudioDataSettings *settings = reinterpret_cast<TMdaAudioDataSettings *>(aPackage);
+
+    // Try to set audio properties
+    TInt realFreq = 0;
+    TInt numChannels = 0;
+
+    if (settings) {
+        realFreq = ConvertFreqEnumToNumber(settings->iSampleRate);
+        numChannels = ConvertChannelEnumToNum(settings->iChannels);
+
+        if (realFreq == -1) {
+            realFreq = settings->iSampleRate;
+        }
+
+        if (numChannels == -1) {
+            numChannels = settings->iChannels;
+        }
+    } else {
+        // Default properties...
+        realFreq = 8000;
+        numChannels = 1;
+    }
+
+    const TInt result = iProperties->SetAudioPropertiesRaw(realFreq, numChannels);
+
+    if (result != KErrNone) {
+        LogOut(KMcaCat, _L("ERR:: Unable to set audio properties on stream opening!"));
+
+        // Further error should not enable stream write.
+        iProperties->iCallback.MaiscOpenComplete(result);
+        return;
+    }
+
+    iProperties->NotifyOpenComplete();
+    iProperties->Play();
+}
+
+void CMdaAudioInputStream::SetGain(TInt aNewGain) {
+    LogOut(KMcaCat, _L("WARN:: Set input gain unimplmented!!"));
+
+}
+
+TInt CMdaAudioInputStream::Gain() const {
+    LogOut(KMcaCat, _L("WARN:: Get input gain unimplmented!!"));
+    return 50;
+}
+
+TInt CMdaAudioInputStream::MaxGain() const {
+    LogOut(KMcaCat, _L("WARN:: Get max input gain unimplmented!!"));
+    return 100;
+}
+
+void CMdaAudioInputStream::SetBalanceL(TInt aBalance) {
+    User::LeaveIfError(iProperties->SetBalance(aBalance));
+}
+
+TInt CMdaAudioInputStream::GetBalanceL() const {
+    const TInt balance = iProperties->GetBalance();
+    User::LeaveIfError(balance);
+
+    return balance;
+}
+
+void CMdaAudioInputStream::SetPriority(TInt aPriority, TMdaPriorityPreference aPref) {
+    if (iProperties->IsPriorityUnimplNotified()) {
+        return;
+    }
+
+    LogOut(KMcaCat, _L("WARN:: Set priority unimplemented %d!"), aPriority);
+    iProperties->SetPriorityUnimplNotified();
+}
+
+void CMdaAudioInputStream::ReadL(TDes8& aData) {
+    iProperties->ReadWithQueueL(aData);
+}
+
+void CMdaAudioInputStream::Stop() {
+    iProperties->Stop();
+}
+
+const TTimeIntervalMicroSeconds& CMdaAudioInputStream::Position() {
+    return iProperties->Position();
+}
+
+TInt CMdaAudioInputStream::GetBytes() {
+    return static_cast<TInt>(iProperties->BytesRendered());
+}
+
+void CMdaAudioInputStream::SetDataTypeL(TFourCC aAudioType) {
+    User::LeaveIfError(iProperties->SetDataType(aAudioType));
+}
+
+TFourCC CMdaAudioInputStream::DataType() const {
+    TFourCC format = 0;
+    const TInt result = iProperties->DataType(format);
+
+    if (result != KErrNone) {
+        LogOut(KMcaCat, _L("ERR:: Unable to get data type!"));
+    }
+
+    return format;
+}
+
+void CMdaAudioInputStream::GetSupportedBitRatesL(RArray<TInt>& aSupportedBitRates) {
+
+}
+
+TInt CMdaAudioInputStream::BitRateL() const {
+}
+
+void CMdaAudioInputStream::SetBitRateL(TInt aBitRate) {
+
+}
+
+TAny* CMdaAudioInputStream::CustomInterface(TUid aInterfaceId) {
+    return NULL;
+}
+
+void CMdaAudioInputStream::SetSingleBufferMode(TBool aSingleMode) {
+
+}
+
+void CMdaAudioInputStream::RequestStop() {
+    iProperties->RequestStop();
+}
+
 #ifndef EKA2
 EXPORT_C TInt E32Dll(TDllReason reason) {
     return 0;

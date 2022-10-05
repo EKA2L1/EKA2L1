@@ -122,43 +122,6 @@ namespace eka2l1::drivers {
         return true;
     }
 
-    void dsp_output_stream_shared::register_callback(dsp_stream_notification_type nof_type, dsp_stream_notification_callback callback,
-        void *userdata) {
-        const std::lock_guard<std::mutex> guard(callback_lock_);
-
-        switch (nof_type) {
-        case dsp_stream_notification_done:
-            complete_callback_ = callback;
-            complete_userdata_ = userdata;
-            break;
-
-        case dsp_stream_notification_more_buffer:
-            more_buffer_userdata_ = userdata;
-            more_buffer_callback_ = callback;
-            break;
-
-        default:
-            LOG_ERROR(DRIVER_AUD, "Unsupport notification type!");
-            break;
-        }
-    }
-
-    void *dsp_output_stream_shared::get_userdata(dsp_stream_notification_type nof_type) {
-        switch (nof_type) {
-        case dsp_stream_notification_done:
-            return complete_userdata_;
-
-        case dsp_stream_notification_more_buffer:
-            return more_buffer_userdata_;
-
-        default:
-            LOG_ERROR(DRIVER_AUD, "Unsupport notification type!");
-            break;
-        }
-
-        return nullptr;
-    }
-
     bool dsp_output_stream_shared::write(const std::uint8_t *data, const std::uint32_t data_size) {
         // Copy buffer to queue
         if (format_ != PCM16_FOUR_CC_CODE) {
@@ -239,5 +202,154 @@ namespace eka2l1::drivers {
         }
 
         return frame_streamed * channels_ * 1000000ULL / freq_;
+    }
+
+    dsp_input_stream_shared::dsp_input_stream_shared(drivers::audio_driver *aud)
+        : dsp_input_stream()
+        , aud_(aud)
+        , stream_(nullptr)
+        , read_bytes_(0) {
+
+    }
+
+    dsp_input_stream_shared::~dsp_input_stream_shared() {
+        if (stream_) {
+            stream_->stop();
+        }
+    }
+
+    bool dsp_input_stream_shared::set_properties(const std::uint32_t freq, const std::uint8_t channels) {
+        if ((channels_ == channels) && (freq_ == freq)) {
+            return true;
+        }
+
+        if ((channels == 0) || (freq == 0)) {
+            return true;
+        }
+
+        bool was_recording = stream_ && stream_->is_recording();
+
+        if (stream_) {
+            stream_->stop();
+            stream_.reset();
+        }
+
+        channels_ = channels;
+        freq_ = freq;
+
+        stream_ = aud_->new_input_stream(freq, channels, [this](std::int16_t *buffer, const std::size_t nb_frames) {
+            return this->record_data_callback(buffer, nb_frames);
+        });
+
+        if (was_recording) {
+            stream_->start();
+        }
+
+        return true;
+    }
+
+    bool dsp_input_stream_shared::start() {
+        if (!stream_) {
+            channels_ = 1;
+            freq_ = 8000;
+
+            // Create default stream. This follows default MMFDevSound default setting closely
+            // Even though this is a generic stream... ;)
+            stream_ = aud_->new_input_stream(8000, 1, [this](std::int16_t *buffer, const std::size_t nb_frames) {
+                return this->record_data_callback(buffer, nb_frames);
+            });
+        }
+
+        if (stream_->is_recording()) {
+            return false;
+        }
+
+        return stream_->start();
+    }
+
+    bool dsp_input_stream_shared::stop() {
+        if (stream_ && stream_->is_recording()) {
+            bool result = stream_->stop();
+
+            {
+                const std::lock_guard<std::mutex> guard(callback_lock_);
+                if (complete_callback_) {
+                    complete_callback_(complete_userdata_);
+                }
+            }
+
+            return result;
+        }
+
+        return false;
+    }
+
+    std::uint64_t dsp_input_stream_shared::real_time_position() {
+        std::uint64_t frame_streamed = 0;
+        if (!stream_->current_frame_position(&frame_streamed)) {
+            LOG_ERROR(DRIVER_AUD, "Fail to retrieve streamed sample count!");
+            return 0;
+        }
+
+        return frame_streamed * channels_ * 1000000ULL / freq_;
+    }
+
+    std::uint64_t dsp_input_stream_shared::position() {
+        return samples_played_ * 1000000ULL / freq_;
+    }
+
+    std::size_t dsp_input_stream_shared::record_data_callback(std::int16_t *buffer, std::size_t frames) {
+        if (read_queue_.empty()) {
+            ring_buffer_.push(buffer, frames * channels_);
+            return frames;
+        }
+
+        const input_read_request &request = read_queue_.front();
+
+        if (ring_buffer_.size() != 0) {
+            std::uint32_t max_copy = ((read_bytes_ + ring_buffer_.size()) >= request.second) ? static_cast<std::uint32_t>(request.second - read_bytes_)
+                : static_cast<std::uint32_t>(ring_buffer_.size());
+
+            ring_buffer_.pop(request.first + read_bytes_, max_copy / sizeof(std::uint16_t));
+            read_bytes_ += max_copy;
+        }
+
+        std::size_t bytes_here = frames * channels_ * sizeof(std::int16_t);
+        std::uint32_t bytes_to_copy = 0;
+        std::size_t bytes_left = bytes_here;
+
+        if (read_bytes_ < request.second) {
+            bytes_to_copy = ((read_bytes_ + bytes_here) >= request.second) ? static_cast<std::uint32_t>(request.second - read_bytes_)
+                : static_cast<std::uint32_t>(bytes_here);
+
+            if (bytes_to_copy != 0) {
+                std::memcpy(request.first, buffer, bytes_to_copy);
+            }
+
+            bytes_left = bytes_here - bytes_to_copy;
+        }
+
+        if (bytes_left > 0) {
+            ring_buffer_.push(buffer + (bytes_to_copy / sizeof(std::int16_t)), bytes_left / sizeof(std::int16_t)); 
+        }
+
+        if (bytes_to_copy + read_bytes_ >= request.second) {
+            {
+                const std::lock_guard<std::mutex> guard(callback_lock_);
+                if (more_buffer_callback_) {
+                    more_buffer_callback_(more_buffer_userdata_);
+                }
+            }
+
+            read_bytes_ = 0;
+            read_queue_.pop();
+        }
+
+        return frames;
+    }
+
+    bool dsp_input_stream_shared::read(std::uint8_t *data, const std::uint32_t max_data_size) {
+        read_queue_.push(std::make_pair(data, max_data_size));
+        return true;
     }
 }

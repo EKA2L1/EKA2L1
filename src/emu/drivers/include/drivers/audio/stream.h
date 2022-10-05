@@ -58,4 +58,31 @@ namespace eka2l1::drivers {
             return sample_rate;
         }
     };
+
+    struct audio_input_stream {
+    protected:
+        audio_driver *driver_;
+
+        std::uint32_t sample_rate_;
+        std::uint8_t channels_;
+
+    public:
+        explicit audio_input_stream(audio_driver *driver, const std::uint32_t sample_rate, const std::uint8_t channels);
+        virtual ~audio_input_stream() = default;
+
+        virtual bool start() = 0;
+        virtual bool stop() = 0;
+
+        virtual bool is_recording() = 0;
+
+        virtual bool current_frame_position(std::uint64_t *pos) = 0;
+
+        const std::uint8_t get_channels() {
+            return channels_;
+        }
+
+        const std::uint32_t get_sample_rate() {
+            return sample_rate_;
+        }
+    };
 };

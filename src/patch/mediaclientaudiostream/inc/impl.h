@@ -36,33 +36,46 @@ struct TMMFMdaBufferNode : public TDblQueLink {
     const TDesC8 *iBuffer;
 };
 
-struct CMMFMdaOutputBufferQueue : public CActive {
-    CMMFMdaAudioOutputStream *iStream;
+class CMMFMdaAudioStream;
+
+struct CMMFMdaBufferQueue : public CActive {
+    CMMFMdaAudioStream *iStream;
     TDblQue<TMMFMdaBufferNode> iBufferNodes;
 
-    TMMFMdaBufferNode *iCopied;
+    explicit CMMFMdaBufferQueue(CMMFMdaAudioStream *aStream);
+    virtual ~CMMFMdaBufferQueue();
 
-    explicit CMMFMdaOutputBufferQueue(CMMFMdaAudioOutputStream *aStream);
-
-    void WriteAndWait();
-    ~CMMFMdaOutputBufferQueue();
-
-    void FixupActiveStatus();
-
-    void StartTransfer();
-    void CleanQueue();
-
-    virtual void RunL();
+    virtual void FixupActiveStatus();
+    virtual void CleanQueue();
     virtual void DoCancel();
 };
 
-class CMMFMdaAudioOutputStream;
+struct CMMFMdaOutputBufferQueue : public CMMFMdaBufferQueue {
+    TMMFMdaBufferNode *iCopied;
+
+    explicit CMMFMdaOutputBufferQueue(CMMFMdaAudioStream *aStream);
+
+    void WriteAndWait();
+    void StartTransfer();
+
+    virtual void CleanQueue();
+    virtual void RunL();
+};
+
+struct CMMFMdaInputBufferQueue: public CMMFMdaBufferQueue {
+    explicit CMMFMdaInputBufferQueue(CMMFMdaAudioStream *aStream);
+
+    virtual void RunL();
+    virtual void CleanQueue();
+
+    void ReadAndWait();
+};
 
 class CMMFMdaOutputOpen : public CTimer {
 protected:
     TBool iIsFixup;
     TBool iConstructed;
-    CMMFMdaAudioOutputStream *iParent;
+    CMMFMdaAudioStream *iParent;
 
 public:
     explicit CMMFMdaOutputOpen();
@@ -72,58 +85,38 @@ public:
 
     virtual void RunL();
 
-    void Open(CMMFMdaAudioOutputStream *iStream);
+    void Open(CMMFMdaAudioStream *iStream);
     void DoCancel();
 };
 
-class CMMFMdaAudioOutputStream {
-    friend struct CMMFMdaOutputBufferQueue;
-
+class CMMFMdaAudioStream {
+protected:
     TAny *iDispatchInstance;
+
     TInt iPriority;
     TMdaPriorityPreference iPref;
     TMdaState iState;
+    TBool iSetPriorityUnimplNotified;
+    TBool iKeepOpenAtEnd;
     TTimeIntervalMicroSeconds iPosition;
 
-    CMMFMdaOutputBufferQueue iBufferQueue;
     CMMFMdaOutputOpen iOpen;
 
-    TBool iSetPriorityUnimplNotified;
-    
-    CPeriodic *iWaitBufferEndTimer;
-    TBool iKeepOpenAtEnd;
-
 public:
-    MMdaAudioOutputStreamCallback &iCallback;
+    explicit CMMFMdaAudioStream(const TInt aPriority, const TMdaPriorityPreference aPref);
+    virtual ~CMMFMdaAudioStream();
 
-    CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
-    ~CMMFMdaAudioOutputStream();
+    void RegisterNotifyBufferSent(TRequestStatus &aStatus);
+    void CancelRegisterNotifyBufferSent();
 
-    void NotifyOpenComplete();
+    virtual void NotifyOpenComplete() = 0;
 
-    static CMMFMdaAudioOutputStream *NewL(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
-
-    TBool HasAlreadyPlay() const;
-
-    void ConstructL();
+    void ConstructBaseL(TBool aIsIn);
     void StartRaw();
 
-    void Play();
-    void Stop();
+    virtual void Play();
+
     TInt RequestStop();
-
-    void DataWaitTimeout();
-    void HandleBufferInsufficient();
-
-    TInt Pause();
-    TInt Resume();
-
-    void WriteL(const TDesC8 &aData);
-    void WriteWithQueueL(const TDesC8 &aData);
-
-    TInt MaxVolume() const;
-    TInt SetVolume(const TInt aNewVolume);
-    TInt GetVolume() const;
 
     TInt SetAudioPropertiesRaw(const TInt aFreq, const TInt aChannels);
     TInt SetAudioPropertiesWithMdaEnum(const TInt aFreq, const TInt aChannels);
@@ -137,15 +130,67 @@ public:
     TInt SetDataType(const TFourCC aFormat);
     TInt DataType(TFourCC &aFormat);
 
-    void RegisterNotifyBufferSent(TRequestStatus &aStatus);
-    void CancelRegisterNotifyBufferSent();
-
     TBool IsPriorityUnimplNotified() const;
     void SetPriorityUnimplNotified();
+    
+    TBool HasAlreadyPlay() const;
+};
+
+class CMMFMdaAudioOutputStream : public CMMFMdaAudioStream {
+    friend struct CMMFMdaOutputBufferQueue;
+
+    CMMFMdaOutputBufferQueue iBufferQueue;
+    CPeriodic *iWaitBufferEndTimer;
+
+public:
+    MMdaAudioOutputStreamCallback &iCallback;
+
+    CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
+    
+    virtual ~CMMFMdaAudioOutputStream();
+    virtual void NotifyOpenComplete();
+
+    static CMMFMdaAudioOutputStream *NewL(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
+
+    void Stop();
+    void ConstructL();
+    void DataWaitTimeout();
+    void HandleBufferInsufficient();
+
+    TInt Pause();
+    TInt Resume();
+
+    void WriteL(const TDesC8 &aData);
+    void WriteWithQueueL(const TDesC8 &aData);
+
+    TInt MaxVolume() const;
+    TInt SetVolume(const TInt aNewVolume);
+    TInt GetVolume() const;
 
     TInt KeepOpenAtEnd();
-    
     void StartWaitBufferTimeoutTimer();
+};
+
+class CMMFMdaAudioInputStream: public CMMFMdaAudioStream {
+private:
+    friend struct CMMFMdaInputBufferQueue;
+    CMMFMdaInputBufferQueue iBufferQueue;
+
+public:
+    MMdaAudioInputStreamCallback &iCallback;
+
+    CMMFMdaAudioInputStream(MMdaAudioInputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
+    
+    virtual ~CMMFMdaAudioInputStream();
+    virtual void NotifyOpenComplete();
+
+    static CMMFMdaAudioInputStream *NewL(MMdaAudioInputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
+
+    void Stop();
+    void ConstructL();
+
+    void ReadL(TDes8 &aData);
+    void ReadWithQueueL(TDes8 &aData);
 };
 
 #endif

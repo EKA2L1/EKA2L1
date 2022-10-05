@@ -20,6 +20,8 @@
 #include <drivers/audio/backend/ffmpeg/dsp_ffmpeg.h>
 #include <drivers/audio/dsp.h>
 
+#include <common/log.h>
+
 namespace eka2l1::drivers {
     dsp_stream::dsp_stream()
         : samples_played_(0)
@@ -42,10 +44,60 @@ namespace eka2l1::drivers {
         samples_copied_ = 0;
     }
 
+    void dsp_stream::register_callback(dsp_stream_notification_type nof_type, dsp_stream_notification_callback callback,
+        void *userdata) {
+        const std::lock_guard<std::mutex> guard(callback_lock_);
+
+        switch (nof_type) {
+        case dsp_stream_notification_done:
+            complete_callback_ = callback;
+            complete_userdata_ = userdata;
+            break;
+
+        case dsp_stream_notification_more_buffer:
+            more_buffer_userdata_ = userdata;
+            more_buffer_callback_ = callback;
+            break;
+
+        default:
+            LOG_ERROR(DRIVER_AUD, "Unsupport notification type!");
+            break;
+        }
+    }
+
+    void *dsp_stream::get_userdata(dsp_stream_notification_type nof_type) {
+        switch (nof_type) {
+        case dsp_stream_notification_done:
+            return complete_userdata_;
+
+        case dsp_stream_notification_more_buffer:
+            return more_buffer_userdata_;
+
+        default:
+            LOG_ERROR(DRIVER_AUD, "Unsupport notification type!");
+            break;
+        }
+
+        return nullptr;
+    }
+
+
     std::unique_ptr<dsp_stream> new_dsp_out_stream(drivers::audio_driver *aud, const dsp_stream_backend dsp_backend) {
         switch (dsp_backend) {
         case dsp_stream_backend_ffmpeg:
             return std::make_unique<dsp_output_stream_ffmpeg>(aud);
+
+        default:
+            break;
+        }
+
+        return nullptr;
+    }
+
+    std::unique_ptr<dsp_stream> new_dsp_in_stream(drivers::audio_driver *aud, const dsp_stream_backend dsp_backend) {
+        switch (dsp_backend) {
+        case dsp_stream_backend_ffmpeg:
+            return std::make_unique<dsp_input_stream_shared>(aud);
 
         default:
             break;

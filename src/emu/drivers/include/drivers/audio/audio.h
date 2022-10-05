@@ -75,6 +75,9 @@ namespace eka2l1::drivers {
             const std::uint8_t channels, data_callback callback)
             = 0;
 
+        virtual std::unique_ptr<audio_input_stream> new_input_stream(const std::uint32_t sample_rate,
+            const std::uint8_t channels, data_callback callback) = 0;
+
         virtual std::uint32_t native_sample_rate() = 0;
 
         std::uint32_t master_volume() const {

@@ -68,6 +68,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER(0x47, eaudio_dsp_out_stream_set_volume),
         BRIDGE_REGISTER_DISPATCHER(0x48, eaudio_dsp_out_stream_max_volume),
         BRIDGE_REGISTER_DISPATCHER(0x49, eaudio_dsp_stream_notify_buffer_ready),
+        BRIDGE_REGISTER_DISPATCHER(0x4A, eaudio_dsp_in_stream_create),
         BRIDGE_REGISTER_DISPATCHER(0x4B, eaudio_dsp_stream_destroy),
         BRIDGE_REGISTER_DISPATCHER(0x4C, eaudio_dsp_out_stream_volume),
         BRIDGE_REGISTER_DISPATCHER(0x4F, eaudio_dsp_stream_bytes_rendered),

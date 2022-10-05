@@ -27,6 +27,8 @@
 #include <mutex>
 #include <vector>
 
+#include <queue>
+
 namespace eka2l1::drivers {
     using dsp_buffer = std::vector<std::uint8_t>;
 
@@ -39,8 +41,6 @@ namespace eka2l1::drivers {
         std::unique_ptr<drivers::audio_output_stream> stream_;
 
         common::ring_buffer<std::uint16_t, RING_BUFFER_MAX_SAMPLE_COUNT> buffer_;
-
-        std::mutex callback_lock_;
         std::size_t avg_frame_count_;
 
         bool virtual_stop;
@@ -63,11 +63,6 @@ namespace eka2l1::drivers {
         void volume(const std::uint32_t new_volume) override;
         bool set_properties(const std::uint32_t freq, const std::uint8_t channels) override;
 
-        void register_callback(dsp_stream_notification_type nof_type, dsp_stream_notification_callback callback,
-            void *userdata) override;
-
-        void *get_userdata(dsp_stream_notification_type nof_type) override;
-
         virtual bool start() override;
         virtual bool stop() override;
 
@@ -76,6 +71,47 @@ namespace eka2l1::drivers {
 
         virtual bool is_playing() const override {
             return !virtual_stop;
+        }
+    };
+    
+    struct dsp_input_stream_shared : public dsp_input_stream {
+    private:
+        using input_read_request = std::pair<std::uint8_t*, std::uint32_t>;
+
+        static constexpr std::size_t RING_BUFFER_MAX_SAMPLE_COUNT = 0x20000;
+
+        std::unique_ptr<audio_input_stream> stream_;
+        drivers::audio_driver *aud_;
+
+        common::ring_buffer<std::uint16_t, RING_BUFFER_MAX_SAMPLE_COUNT> ring_buffer_;
+        std::mutex callback_lock_;
+
+        std::queue<input_read_request> read_queue_;
+        std::uint32_t read_bytes_; 
+
+    protected:
+        std::size_t record_data_callback(std::int16_t *buffer, std::size_t frames);
+
+    public:
+        explicit dsp_input_stream_shared(drivers::audio_driver *aud);
+        virtual ~dsp_input_stream_shared() override;
+
+        bool read(std::uint8_t *data, const std::uint32_t max_data_size) override;
+
+        bool set_properties(const std::uint32_t freq, const std::uint8_t channels) override;
+
+        virtual bool start() override;
+        virtual bool stop() override;
+
+        virtual std::uint64_t real_time_position() override;
+        std::uint64_t position() override;
+        
+        bool is_recording() const override {
+            return stream_->is_recording();
+        }
+ 
+        virtual void get_supported_formats(std::vector<four_cc> &cc_list) override {
+            cc_list.clear();
         }
     };
 }

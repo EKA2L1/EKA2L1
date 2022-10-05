@@ -34,6 +34,10 @@ namespace eka2l1::drivers {
 
         std::unique_ptr<audio_output_stream> new_output_stream(const std::uint32_t sample_rate,
             const std::uint8_t channels, data_callback callback) override;
+
+        std::unique_ptr<audio_input_stream> new_input_stream(const std::uint32_t sample_rate,
+            const std::uint8_t channels, data_callback callback) override;
+
         std::uint32_t native_sample_rate() override;
     };
 }

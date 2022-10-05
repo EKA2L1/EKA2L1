@@ -13,4 +13,26 @@ EXPORTS
     SetBalanceL__21CMdaAudioOutputStreami @ 12 NONAME R3UNUSED ; CMdaAudioOutputStream::SetBalanceL(int)
     SetDataTypeL__21CMdaAudioOutputStreamG7TFourCC @ 13 NONAME R3UNUSED ; CMdaAudioOutputStream::SetDataTypeL(TFourCC)
     CustomInterface__21CMdaAudioOutputStreamG4TUid @ 14 NONAME R3UNUSED ; CMdaAudioOutputStream::CustomInterface(TUid)
+	CustomInterface__20CMdaAudioInputStreamG4TUid @ 15 NONAME R3UNUSED ; CMdaAudioInputStream::CustomInterface(TUid)
+	DataType__C20CMdaAudioInputStream @ 16 NONAME R3UNUSED ; CMdaAudioInputStream::DataType(void) const
+	Gain__C20CMdaAudioInputStream @ 17 NONAME R3UNUSED ; CMdaAudioInputStream::Gain(void) const
+	GetBalanceL__C20CMdaAudioInputStream @ 18 NONAME R3UNUSED ; CMdaAudioInputStream::GetBalanceL(void) const
+	GetBytes__20CMdaAudioInputStream @ 19 NONAME R3UNUSED ; CMdaAudioInputStream::GetBytes(void)
+	GetSupportedBitRatesL__20CMdaAudioInputStreamRt6RArray1Zi @ 20 NONAME R3UNUSED ; CMdaAudioInputStream::GetSupportedBitRatesL(RArray<int> &)
+	MaxGain__C20CMdaAudioInputStream @ 21 NONAME R3UNUSED ; CMdaAudioInputStream::MaxGain(void) const
+	NewL__20CMdaAudioInputStreamR28MMdaAudioInputStreamCallback @ 22 NONAME R3UNUSED ; CMdaAudioInputStream::NewL(MMdaAudioInputStreamCallback &)
+	NewL__20CMdaAudioInputStreamR28MMdaAudioInputStreamCallbacki22TMdaPriorityPreference @ 23 NONAME R3UNUSED ; CMdaAudioInputStream::NewL(MMdaAudioInputStreamCallback &, int, TMdaPriorityPreference)
+	Open__20CMdaAudioInputStreamP11TMdaPackage @ 24 NONAME R3UNUSED ; CMdaAudioInputStream::Open(TMdaPackage *)
+	Position__20CMdaAudioInputStream @ 25 NONAME R3UNUSED ; CMdaAudioInputStream::Position(void)
+	ReadL__20CMdaAudioInputStreamR5TDes8 @ 26 NONAME R3UNUSED ; CMdaAudioInputStream::ReadL(TDes8 &)
+	RequestStop__20CMdaAudioInputStream @ 27 NONAME R3UNUSED ; CMdaAudioInputStream::RequestStop(void)
+	SetAudioPropertiesL__20CMdaAudioInputStreamii @ 28 NONAME R3UNUSED ; CMdaAudioInputStream::SetAudioPropertiesL(int, int)
+	SetBalanceL__20CMdaAudioInputStreami @ 29 NONAME R3UNUSED ; CMdaAudioInputStream::SetBalanceL(int)
+	SetBitRateL__20CMdaAudioInputStreami @ 30 NONAME R3UNUSED ; CMdaAudioInputStream::SetBitRateL(int)
+	SetDataTypeL__20CMdaAudioInputStreamG7TFourCC @ 31 NONAME R3UNUSED ; CMdaAudioInputStream::SetDataTypeL(TFourCC)
+	SetGain__20CMdaAudioInputStreami @ 32 NONAME R3UNUSED ; CMdaAudioInputStream::SetGain(int)
+	SetPriority__20CMdaAudioInputStreami22TMdaPriorityPreference @ 33 NONAME R3UNUSED ; CMdaAudioInputStream::SetPriority(int, TMdaPriorityPreference)
+	SetSingleBufferMode__20CMdaAudioInputStreami @ 34 NONAME R3UNUSED ; CMdaAudioInputStream::SetSingleBufferMode(int)
+	Stop__20CMdaAudioInputStream @ 35 NONAME R3UNUSED ; CMdaAudioInputStream::Stop(void)
+	BitRateL__C20CMdaAudioInputStream @ 36 NONAME R3UNUSED ; CMdaAudioInputStream::BitRateL(void) const
 

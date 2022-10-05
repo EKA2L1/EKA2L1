@@ -23,23 +23,46 @@
 #include <drivers/audio/stream.h>
 
 namespace eka2l1::drivers {
-    struct cubeb_audio_output_stream : public audio_output_stream {
-    private:
+    struct cubeb_audio_stream_base {
+    protected:
         cubeb_stream *stream_;
         data_callback callback_;
-        bool playing_;
+        
+        std::uint64_t idled_frames_;
+        std::uint8_t internal_channels_;
+
+        bool in_action_;
+
+    protected:
+        bool current_frame_position_impl(std::uint64_t *val);
+        bool start_impl();
+        bool stop_impl();
+
+        virtual bool should_stream_idle() = 0;
+
+    public:
+        explicit cubeb_audio_stream_base(cubeb *context, const std::uint32_t sample_rate,
+            const std::uint8_t channels, data_callback callback, bool is_recording = false);
+
+        virtual ~cubeb_audio_stream_base();
+
+        std::size_t call_callback(std::int16_t *output_buffer, const long frames);
+    };
+
+    struct cubeb_audio_output_stream : public audio_output_stream, public cubeb_audio_stream_base {
+    private:
+        data_callback callback_;
         bool pausing_;
         float volume_;
 
-        std::uint64_t idled_frames_;
+    protected:
+        bool should_stream_idle() override;
 
     public:
         explicit cubeb_audio_output_stream(audio_driver *driver, cubeb *context, const std::uint32_t sample_rate,
             const std::uint8_t channels, data_callback callback);
 
         ~cubeb_audio_output_stream() override;
-
-        std::size_t call_callback(std::int16_t *output_buffer, const long frames);
 
         bool start() override;
         bool stop() override;
@@ -51,6 +74,28 @@ namespace eka2l1::drivers {
         bool set_volume(const float volume) override;
         float get_volume() const override;
         
+        bool current_frame_position(std::uint64_t *pos) override;
+    };
+
+    struct cubeb_audio_input_stream : public audio_input_stream, public cubeb_audio_stream_base {
+    protected:
+        cubeb_stream *stream_;
+        data_callback callback_;
+
+        std::uint64_t idled_frames_;
+
+    protected:
+        bool should_stream_idle() override;
+
+    public:
+        explicit cubeb_audio_input_stream(audio_driver *driver, cubeb *context, const std::uint32_t sample_rate, const std::uint8_t channels,
+            data_callback callback);
+        virtual ~cubeb_audio_input_stream();
+
+        bool start() override;
+        bool stop() override;
+
+        bool is_recording() override;
         bool current_frame_position(std::uint64_t *pos) override;
     };
 }

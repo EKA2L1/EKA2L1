@@ -16,4 +16,42 @@ EXPORTS
 	_ZNK21CMdaAudioOutputStream8DataTypeEv @ 15 NONAME
 	_ZTI21CMdaAudioOutputStream @ 16 NONAME
 	_ZTV21CMdaAudioOutputStream @ 17 NONAME
+	_ZN20CMdaAudioInputStream11RequestStopEv @ 18 NONAME
+	_ZN20CMdaAudioInputStream11SetBalanceLEi @ 19 NONAME
+	_ZN20CMdaAudioInputStream11SetBitRateLEi @ 20 NONAME
+	_ZN20CMdaAudioInputStream11SetPriorityEi22TMdaPriorityPreference @ 21 NONAME
+	_ZN20CMdaAudioInputStream12SetDataTypeLE7TFourCC @ 22 NONAME
+	_ZN20CMdaAudioInputStream15CustomInterfaceE4TUid @ 23 NONAME
+	_ZN20CMdaAudioInputStream19SetAudioPropertiesLEii @ 24 NONAME
+	_ZN20CMdaAudioInputStream19SetSingleBufferModeEi @ 25 NONAME
+	_ZN20CMdaAudioInputStream21GetSupportedBitRatesLER6RArrayIiE @ 26 NONAME
+	_ZN20CMdaAudioInputStream4NewLER28MMdaAudioInputStreamCallback @ 27 NONAME
+	_ZN20CMdaAudioInputStream4NewLER28MMdaAudioInputStreamCallbacki22TMdaPriorityPreference @ 28 NONAME
+	_ZN20CMdaAudioInputStream4OpenEP11TMdaPackage @ 29 NONAME
+	_ZN20CMdaAudioInputStream4StopEv @ 30 NONAME
+	_ZN20CMdaAudioInputStream5ReadLER5TDes8 @ 31 NONAME
+	_ZN20CMdaAudioInputStream7SetGainEi @ 32 NONAME
+	_ZN20CMdaAudioInputStream8GetBytesEv @ 33 NONAME
+	_ZN20CMdaAudioInputStream8PositionEv @ 34 NONAME
+	_ZNK20CMdaAudioInputStream11GetBalanceLEv @ 35 NONAME
+	_ZNK20CMdaAudioInputStream4GainEv @ 36 NONAME
+	_ZNK20CMdaAudioInputStream7MaxGainEv @ 37 NONAME
+	_ZNK20CMdaAudioInputStream8BitRateLEv @ 38 NONAME
+	_ZNK20CMdaAudioInputStream8DataTypeEv @ 39 NONAME
+	_ZTI17CMMFMdaOutputOpen @ 40 NONAME
+	_ZTI18CMMFMdaAudioStream @ 41 NONAME
+	_ZTI18CMMFMdaBufferQueue @ 42 NONAME
+	_ZTI20CMdaAudioInputStream @ 43 NONAME
+	_ZTI23CMMFMdaAudioInputStream @ 44 NONAME
+	_ZTI23CMMFMdaInputBufferQueue @ 45 NONAME
+	_ZTI24CMMFMdaAudioOutputStream @ 46 NONAME
+	_ZTI24CMMFMdaOutputBufferQueue @ 47 NONAME
+	_ZTV17CMMFMdaOutputOpen @ 48 NONAME
+	_ZTV18CMMFMdaAudioStream @ 49 NONAME
+	_ZTV18CMMFMdaBufferQueue @ 50 NONAME
+	_ZTV20CMdaAudioInputStream @ 51 NONAME
+	_ZTV23CMMFMdaAudioInputStream @ 52 NONAME
+	_ZTV23CMMFMdaInputBufferQueue @ 53 NONAME
+	_ZTV24CMMFMdaAudioOutputStream @ 54 NONAME
+	_ZTV24CMMFMdaOutputBufferQueue @ 55 NONAME
 

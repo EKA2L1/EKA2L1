@@ -62,6 +62,8 @@ namespace eka2l1::drivers {
         dsp_stream_userdata complete_userdata_;
         dsp_stream_userdata more_buffer_userdata_;
 
+        std::mutex callback_lock_;
+
     public:
         explicit dsp_stream();
         virtual ~dsp_stream() = default;
@@ -105,10 +107,9 @@ namespace eka2l1::drivers {
         virtual bool stop() = 0;
 
         virtual void register_callback(dsp_stream_notification_type nof_type, dsp_stream_notification_callback callback,
-            void *userdata)
-            = 0;
+            void *userdata);
 
-        virtual void *get_userdata(dsp_stream_notification_type nof_type) = 0;
+        virtual void *get_userdata(dsp_stream_notification_type nof_type);
         virtual void reset_stat();
 
         virtual bool is_playing() const = 0;
@@ -146,9 +147,26 @@ namespace eka2l1::drivers {
         }
     };
 
+    struct dsp_input_stream : public dsp_stream {
+    public:
+        explicit dsp_input_stream() = default;
+        virtual ~dsp_input_stream() = default;
+
+        virtual bool read(std::uint8_t *data, const std::uint32_t max_data_size) = 0;
+
+        virtual bool is_playing() const override {
+            return false;
+        }
+
+        virtual bool is_recording() const override {
+            return false;
+        }
+    };
+
     enum dsp_stream_backend {
         dsp_stream_backend_ffmpeg = 0
     };
 
     std::unique_ptr<dsp_stream> new_dsp_out_stream(drivers::audio_driver *aud, const dsp_stream_backend dsp_backend);
+    std::unique_ptr<dsp_stream> new_dsp_in_stream(drivers::audio_driver *aud, const dsp_stream_backend dsp_backend);
 }
