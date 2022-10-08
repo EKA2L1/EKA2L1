@@ -96,7 +96,7 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="66"/>
       <source>IP address (IPv4 or IPv6)</source>
-      <translation type="unfinished">IP address (IPv4 or IPv6)</translation>
+      <translation>Địa chỉ IP (IPv4 hoặc IPv6)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="71"/>
@@ -937,7 +937,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="279"/>
       <source>Hide system applications across all devices</source>
-      <translation type="unfinished">Hide system applications across all devices</translation>
+      <translation>Ẩn các ứng dụng hệ thống trên tất cả các thiết bị</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="282"/>
@@ -1684,7 +1684,7 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/update_dialog.ui" line="139"/>
       <source>Ignore</source>
-      <translation type="unfinished">Ignore</translation>
+      <translation>Bỏ qua</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="149"/>
@@ -1843,7 +1843,7 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/updater.cpp" line="212"/>
       <source>Update success. Relaunch the emulator?</source>
-      <translation type="unfinished">Update success. Relaunch the emulator?</translation>
+      <translation>Cập nhật thành công. Khởi động lại?</translation>
     </message>
   </context>
 </TS>
