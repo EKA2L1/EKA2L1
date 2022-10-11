@@ -48,7 +48,14 @@ namespace eka2l1::dispatch {
         drivers::camera::collection *collection = drivers::camera::get_collection();
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
 
+        // Creation may sometimes wait for the main thread to ask for permission
+        // Unlock the kernel a bit here so we are not pushing deadlock to other workers! (Seems like a hack)
+        kernel_system *kern = sys->get_kernel_system();
+
+        kern->unlock();
         std::unique_ptr<drivers::camera::instance> inst = collection->make_camera(static_cast<std::uint32_t>(index));
+        kern->lock();
+
         if (inst == nullptr) {
             LOG_ERROR(HLE_DISPATCHER, "Instantiate new camera access instance failed!");
             return epoc::error_general;

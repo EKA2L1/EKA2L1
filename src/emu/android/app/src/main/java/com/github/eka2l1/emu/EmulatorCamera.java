@@ -40,7 +40,6 @@ public class EmulatorCamera {
     private static AppCompatActivity applicationActivity;
 
     private static final String TAG = "EKA2L1_Camera";
-    private static final int REQUEST_CODE = 1080;
     private static final int FLASH_MODE_SPECIAL_TORCH = 0x1000;
 
     // TODO: Add YUV... But game commonly uses RGBA8888 or 565 (YES, games)
@@ -116,7 +115,14 @@ public class EmulatorCamera {
             }
 
             if (ActivityCompat.checkSelfPermission(applicationActivity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(applicationActivity, new String[]{ Manifest.permission.CAMERA }, REQUEST_CODE);
+                if (applicationActivity instanceof EmulatorActivity) {
+                    ((EmulatorActivity) applicationActivity).requestPermissionsAndWait(new String[]{ Manifest.permission.CAMERA });
+                }
+
+                if (ActivityCompat.checkSelfPermission(applicationActivity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                    Log.i(TAG, "Permission denied accessing camera, return null camera instance!");
+                    return -1;
+                }
             }
 
             EmulatorCamera newCam = new EmulatorCamera(index);
