@@ -1,4 +1,4 @@
-source="mediaclientaudiostream"
+source=mediaclientaudiostream
 
 [epoc95]
 19 1        ; _ZN20CMdaAudioInputStream11SetBalanceLEi
