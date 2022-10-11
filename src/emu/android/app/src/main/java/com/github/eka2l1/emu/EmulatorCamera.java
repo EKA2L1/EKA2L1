@@ -12,7 +12,6 @@ import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Looper;
 import android.util.Log;
 import android.util.Size;
-import android.view.OrientationEventListener;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,10 +28,8 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public class EmulatorCamera {
@@ -540,7 +537,7 @@ public class EmulatorCamera {
                                         decodedBitmap = BitmapFactory.decodeByteArray(dataBufferDecoded, 0,
                                                 dataBufferDecoded.length, opt);
                                     } catch (Exception ex) {
-                                        Log.i(TAG, "Decoding bitmap encountered exception: " + ex.toString());
+                                        Log.i(TAG, "Decoding bitmap encountered exception: " + ex);
                                     }
 
                                     if (imageRot != 0) {

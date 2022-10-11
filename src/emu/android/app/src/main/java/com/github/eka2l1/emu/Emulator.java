@@ -597,6 +597,7 @@ public class Emulator {
         Process.killProcess(Process.myPid());
     }
 
+    @SuppressLint("unused")
     public static void prepareAudioRecord() throws InterruptedException {
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             if (context instanceof EmulatorActivity) {
