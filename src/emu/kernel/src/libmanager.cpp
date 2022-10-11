@@ -417,12 +417,33 @@ namespace eka2l1::hle {
 
                 std::string patch_dll_map;
 
+                // Look for map file. These describes the export maps.
+                // This function will replace original ROM subroutines with route to these functions.
+                common::ini_file map_file_parser;
+                map_file_parser.load(patch_map_path.c_str());
+
+                std::string source_dll_name_from_patch = eka2l1::replace_extension(original_map_name, "_");
+                common::ini_node_ptr pair_source_node = map_file_parser.find("source");
+                if (pair_source_node != nullptr) {
+                    common::ini_pair *pair = pair_source_node->get_as<common::ini_pair>();
+                    if (pair != nullptr) {
+                        if (pair->get_value_count() >= 1) {
+                            std::vector<std::string> sources_dll_list(1);
+                            pair->get(sources_dll_list);
+
+                            if (sources_dll_list.size() >= 1) {
+                                source_dll_name_from_patch = sources_dll_list[0] + "_";
+                            }
+                        }
+                    }
+                }
+
                 while (true) {
                     if (start_ver >= epocver::epocverend) {
                         break;
                     }
 
-                    const std::string source_dll_name = eka2l1::replace_extension(original_map_name, "_") + epocver_to_plat_suffix(start_ver) + ".dll";
+                    const std::string source_dll_name = source_dll_name_from_patch + epocver_to_plat_suffix(start_ver) + ".dll";
                     patch_dll_map = eka2l1::add_path(patch_folder, source_dll_name);
 
                     if (!common::exists(patch_dll_map)) {
@@ -437,7 +458,7 @@ namespace eka2l1::hle {
                 }
 
                 if (patch_dll_map.empty()) {
-                    const std::string source_dll_name = eka2l1::replace_extension(original_map_name, "_") + "general.dll";
+                    const std::string source_dll_name = source_dll_name_from_patch + "general.dll";
                     patch_dll_map = eka2l1::add_path(patch_folder, source_dll_name);
 
                     if (!common::exists(patch_dll_map)) {
@@ -455,11 +476,6 @@ namespace eka2l1::hle {
                 the_patch.patch_ = nullptr;
                 the_patch.req_uid2_ = 0;
                 the_patch.req_uid3_ = 0;
-
-                // Look for map file. These describes the export maps.
-                // This function will replace original ROM subroutines with route to these functions.
-                common::ini_file map_file_parser;
-                map_file_parser.load(patch_map_path.c_str());
 
                 // Get the requirements
                 common::ini_section *req_section = map_file_parser.find("requirements")->get_as<common::ini_section>();
@@ -512,48 +528,61 @@ namespace eka2l1::hle {
         const std::uint32_t last_add_mode = additional_mode_;
         additional_mode_ = 0;
 
+        std::unordered_map<std::string, codeseg_ptr> patch_segs_lookup;
+
         for (std::size_t i = 0; i < patch_image_paths.size(); i++) {
-            // We want to patch ROM image though. Do it.
-            auto e32imgfile = eka2l1::physical_file_proxy(patch_image_paths[i], READ_MODE | BIN_MODE);
-            eka2l1::ro_file_stream image_data_stream(e32imgfile.get());
+            codeseg_ptr patch_seg = nullptr;
+            auto lookup_result = patch_segs_lookup.find(patch_image_paths[i]);
 
-            // Try to load them to ROM section
-            auto e32img = loader::parse_e32img(reinterpret_cast<common::ro_stream *>(&image_data_stream));
+            if (lookup_result != patch_segs_lookup.end()) {
+                patch_seg = lookup_result->second;
+            } else {
+                // We want to patch ROM image though. Do it.
+                auto e32imgfile = eka2l1::physical_file_proxy(patch_image_paths[i], READ_MODE | BIN_MODE);
+                eka2l1::ro_file_stream image_data_stream(e32imgfile.get());
 
-            if (!e32img) {
-                // Ignore.
-                continue;
+                // Try to load them to ROM section
+                auto e32img = loader::parse_e32img(reinterpret_cast<common::ro_stream *>(&image_data_stream));
+
+                if (!e32img) {
+                    // Ignore.
+                    continue;
+                }
+
+                // Create the code chunk in ROM
+                kernel::chunk *code_chunk = kern_->create<kernel::chunk>(kern_->get_memory_system(), nullptr, "",
+                    0, static_cast<eka2l1::address>(e32img->header.code_size), e32img->header.code_size, prot_read_write_exec,
+                    kernel::chunk_type::normal, kernel::chunk_access::rom, kernel::chunk_attrib::anonymous);
+
+                if (!code_chunk) {
+                    continue;
+                }
+
+                // Relocate imports (yes we want to make codeseg object think this is a ROM image)
+                const std::uint32_t code_delta = code_chunk->base(nullptr).ptr_address() - e32img->header.code_base;
+
+                for (auto &export_entry : e32img->ed.syms) {
+                    export_entry += code_delta;
+                }
+
+                memory_system *mem = kern_->get_memory_system();
+
+                // Relocate! Import
+                std::memcpy(code_chunk->host_base(), e32img->data.data() + e32img->header.code_offset, e32img->header.code_size);
+                patch_seg = import_e32img(&e32img.value(), mem, kern_, *this, common::utf8_to_ucs2(patch_image_paths[i]),
+                    code_chunk->base(nullptr).ptr_address());
+
+                patch_segs_lookup.emplace(patch_image_paths[i], patch_seg);
+
+                if (patch_seg) {
+                    patch_seg->attach(nullptr, true);
+                    patch_seg->unmark();
+                }
             }
-
-            // Create the code chunk in ROM
-            kernel::chunk *code_chunk = kern_->create<kernel::chunk>(kern_->get_memory_system(), nullptr, "",
-                0, static_cast<eka2l1::address>(e32img->header.code_size), e32img->header.code_size, prot_read_write_exec,
-                kernel::chunk_type::normal, kernel::chunk_access::rom, kernel::chunk_attrib::anonymous);
-
-            if (!code_chunk) {
-                continue;
-            }
-
-            // Relocate imports (yes we want to make codeseg object think this is a ROM image)
-            const std::uint32_t code_delta = code_chunk->base(nullptr).ptr_address() - e32img->header.code_base;
-
-            for (auto &export_entry : e32img->ed.syms) {
-                export_entry += code_delta;
-            }
-
-            memory_system *mem = kern_->get_memory_system();
-
-            // Relocate! Import
-            std::memcpy(code_chunk->host_base(), e32img->data.data() + e32img->header.code_offset, e32img->header.code_size);
-            codeseg_ptr patch_seg = import_e32img(&e32img.value(), mem, kern_, *this, common::utf8_to_ucs2(patch_image_paths[i]),
-                code_chunk->base(nullptr).ptr_address());
 
             if (!patch_seg) {
                 continue;
             }
-
-            patch_seg->attach(nullptr, true);
-            patch_seg->unmark();
 
             patches_[i].patch_ = patch_seg;
         }
