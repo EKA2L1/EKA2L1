@@ -853,7 +853,7 @@ public class VirtualKeyboard implements Overlay, Runnable {
                             Emulator.pressKey(associatedKeys[pointer].getSecondKeyCode(), 0);
                         }
                         repaint();
-                        break;
+                        return true;
                     }
                 }
                 break;
@@ -902,7 +902,7 @@ public class VirtualKeyboard implements Overlay, Runnable {
                     return checkPointerHandled(x, y);
                 }
                 if (associatedKeys[pointer] == null) {
-                    pointerPressed(pointer, x, y);
+                    return pointerPressed(pointer, x, y);
                 } else if (!associatedKeys[pointer].contains(x, y)) {
                     Emulator.pressKey(associatedKeys[pointer].getKeyCode(), 1);
                     if (associatedKeys[pointer].getSecondKeyCode() != 0) {
@@ -912,6 +912,8 @@ public class VirtualKeyboard implements Overlay, Runnable {
                     associatedKeys[pointer] = null;
                     repaint();
                     pointerPressed(pointer, x, y);
+
+                    return true;
                 }
                 break;
             case LAYOUT_KEYS:
@@ -986,6 +988,8 @@ public class VirtualKeyboard implements Overlay, Runnable {
                 associatedKeys[pointer].setSelected(false);
                 associatedKeys[pointer] = null;
                 repaint();
+
+                return true;
             }
         } else if (layoutEditMode == LAYOUT_KEYS) {
             editedIndex = -1;
