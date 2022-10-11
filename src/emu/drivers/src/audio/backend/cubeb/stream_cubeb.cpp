@@ -28,7 +28,9 @@ namespace eka2l1::drivers {
     static long data_callback_redirector(cubeb_stream *stm, void *user,
         const void *input_buffer, void *output_buffer, long nframes) {
         cubeb_audio_stream_base *stream = reinterpret_cast<cubeb_audio_stream_base *>(user);
-        return static_cast<long>(stream->call_callback(reinterpret_cast<std::int16_t *>(output_buffer), nframes));
+        return static_cast<long>(stream->call_callback(input_buffer ? 
+            reinterpret_cast<std::int16_t *>(const_cast<void*>(input_buffer))
+            : reinterpret_cast<std::int16_t *>(output_buffer), nframes));
     }
 
     void state_callback_redirector(cubeb_stream *stream, void *user_data, cubeb_state state) {
@@ -158,7 +160,7 @@ namespace eka2l1::drivers {
 
     bool cubeb_audio_output_stream::stop() {
         if (cubeb_audio_stream_base::stop_impl()) {
-            pausing_ = true;
+            pausing_ = false;
             return true;
         }
 
@@ -221,6 +223,6 @@ namespace eka2l1::drivers {
     }
 
     bool cubeb_audio_input_stream::should_stream_idle() {
-        return in_action_;
+        return driver_->suspending();
     }
 }

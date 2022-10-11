@@ -307,8 +307,8 @@ namespace eka2l1::drivers {
         const input_read_request &request = read_queue_.front();
 
         if (ring_buffer_.size() != 0) {
-            std::uint32_t max_copy = ((read_bytes_ + ring_buffer_.size()) >= request.second) ? static_cast<std::uint32_t>(request.second - read_bytes_)
-                : static_cast<std::uint32_t>(ring_buffer_.size());
+            std::uint32_t max_copy = ((read_bytes_ + ring_buffer_.size() * sizeof(std::uint16_t)) >= request.second) ? static_cast<std::uint32_t>(request.second - read_bytes_)
+                : static_cast<std::uint32_t>(ring_buffer_.size() * sizeof(std::uint16_t));
 
             ring_buffer_.pop(request.first + read_bytes_, max_copy / sizeof(std::uint16_t));
             read_bytes_ += max_copy;
@@ -323,7 +323,7 @@ namespace eka2l1::drivers {
                 : static_cast<std::uint32_t>(bytes_here);
 
             if (bytes_to_copy != 0) {
-                std::memcpy(request.first, buffer, bytes_to_copy);
+                std::memcpy(request.first + read_bytes_, buffer, bytes_to_copy);
             }
 
             bytes_left = bytes_here - bytes_to_copy;
@@ -343,6 +343,8 @@ namespace eka2l1::drivers {
 
             read_bytes_ = 0;
             read_queue_.pop();
+        } else {
+            read_bytes_ += bytes_to_copy;
         }
 
         return frames;

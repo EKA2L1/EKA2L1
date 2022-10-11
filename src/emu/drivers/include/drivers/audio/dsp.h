@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <common/algorithm.h>
+
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -148,6 +150,9 @@ namespace eka2l1::drivers {
     };
 
     struct dsp_input_stream : public dsp_stream {
+    private:
+        std::uint8_t gain_;
+
     public:
         explicit dsp_input_stream() = default;
         virtual ~dsp_input_stream() = default;
@@ -160,6 +165,18 @@ namespace eka2l1::drivers {
 
         virtual bool is_recording() const override {
             return false;
+        }
+
+        virtual std::uint8_t max_gain() const {
+            return 10;
+        }
+
+        virtual void gain(const std::uint8_t new_gain) {
+            gain_ = common::clamp<std::uint8_t>(0, 10, new_gain);
+        }
+
+        virtual std::uint8_t gain() const {
+            return gain_;
         }
     };
 

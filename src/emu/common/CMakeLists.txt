@@ -104,9 +104,11 @@ add_library(common
 
 if (ANDROID)
     target_sources(common PRIVATE
+        include/common/android/audio.h
         include/common/android/storage.h
         include/common/android/jniutils.h
         include/common/android/contenturi.h
+        src/android/audio.cpp
         src/android/storage.cpp
         src/android/jniutils.cpp
         )

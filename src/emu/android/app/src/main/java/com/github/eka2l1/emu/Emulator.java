@@ -22,9 +22,12 @@ package com.github.eka2l1.emu;
 
 import static com.github.eka2l1.emu.Constants.PREF_VIBRATION;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -33,6 +36,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelFileDescriptor;
+import android.os.Process;
 import android.os.Vibrator;
 import android.provider.DocumentsContract;
 import android.view.Surface;
@@ -42,6 +46,8 @@ import android.widget.LinearLayout;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.PermissionChecker;
 import androidx.documentfile.provider.DocumentFile;
 
 import com.github.eka2l1.BuildConfig;
@@ -585,6 +591,18 @@ public class Emulator {
                 inputDialog = null;
             }
         });
+    }
+
+    public static void exitInstance() {
+        Process.killProcess(Process.myPid());
+    }
+
+    public static void prepareAudioRecord() throws InterruptedException {
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            if (context instanceof EmulatorActivity) {
+                ((EmulatorActivity) context).requestPermissionsAndWait(new String[] { Manifest.permission.RECORD_AUDIO });
+            }
+        }
     }
 
     public static boolean isInitialized() {
