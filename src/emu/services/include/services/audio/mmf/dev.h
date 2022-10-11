@@ -65,8 +65,8 @@ namespace eka2l1 {
         kernel::handle last_buffer_handle_;
 
         epoc::notify_info finish_info_;
-        epoc::notify_info buffer_fill_info_;
-        epoc::mmf_dev_hw_buf_v2 *buffer_fill_buf_;
+        epoc::notify_info buffer_info_;
+        epoc::mmf_dev_hw_buf_v2 *buffer_buf_;
 
         epoc::mmf_capabilities get_caps();
         void get_supported_input_data_types();
@@ -84,12 +84,24 @@ namespace eka2l1 {
         kernel::msg_queue *evt_msg_queue_;
 
     protected:
+        kernel::handle do_set_buffer_buf_and_get_return_value();
         void do_set_buffer_to_be_filled();
+        void do_submit_buffer_data_receive();
         void do_report_buffer_to_be_filled();
+        void do_report_buffer_to_be_emptied();
         void init_stream_through_state();
         void deref_audio_buffer_chunk();
+        bool prepare_audio_buffer_chunk();
         void send_event_to_msg_queue(const epoc::mmf_dev_sound_queue_item &item);
         void stop();
+
+        bool is_recording_stream() const {
+            return (desired_state_ == epoc::mmf_state_recording);
+        }
+        
+        drivers::dsp_input_stream *recording_stream() {
+            return static_cast<drivers::dsp_input_stream*>(stream_.get());
+        }
 
     public:
         explicit mmf_dev_server_session(service::typical_server *serv, kernel::uid client_ss_uid, epoc::version client_version);
@@ -102,6 +114,9 @@ namespace eka2l1 {
         void set_volume(service::ipc_context *ctx);
         void volume(service::ipc_context *ctx);
         void max_volume(service::ipc_context *ctx);
+        void set_gain(service::ipc_context *ctx);
+        void gain(service::ipc_context *ctx);
+        void max_gain(service::ipc_context *ctx);
         void set_play_balance(service::ipc_context *ctx);
         void play_balance(service::ipc_context *ctx);
         void set_priority_settings(service::ipc_context *ctx);
@@ -113,18 +128,21 @@ namespace eka2l1 {
         void samples_played(service::ipc_context *ctx);
         void stop(service::ipc_context *ctx);
         void play_init(service::ipc_context *ctx);
+        void record_init(service::ipc_context *ctx);
         void async_command(service::ipc_context *ctx);
         void request_resource_notification(service::ipc_context *ctx);
-        void get_buffer_to_be_filled(service::ipc_context *ctx);
-        void cancel_play_error(service::ipc_context *ctx);
-        void cancel_buffer_to_be_filled(service::ipc_context *ctx);
+        void get_buffer(service::ipc_context *ctx);
+        void cancel_complete_error(service::ipc_context *ctx);
+        void complete_error(service::ipc_context *ctx);
+        void cancel_get_buffer(service::ipc_context *ctx);
         void set_volume_ramp(service::ipc_context *ctx);
 
         // Play sync, when finish complete the status
-        void play_error(service::ipc_context *ctx);
         void play_data(service::ipc_context *ctx);
+        void record_data(service::ipc_context *ctx);
 
         void complete_play(const std::int32_t code);
+        void complete_record(const std::int32_t code);
     };
 
     class mmf_dev_server : public service::typical_server {
