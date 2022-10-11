@@ -56,6 +56,7 @@ namespace eka2l1 {
 
 namespace eka2l1::kernel {
     class thread_scheduler;
+    class process;
 
     struct process_info {
         ptr<void> code_where;
@@ -103,6 +104,7 @@ namespace eka2l1::kernel {
 
     using process_uid_type_change_callback = std::function<void(void *, const process_uid_type &)>;
     using process_uid_type_change_callback_elem = std::pair<void *, process_uid_type_change_callback>;
+    using process_logon_callback = std::function<void(process *pr)>;
 
     /**
      * This ROM BSS manager works on the assumption that:
@@ -185,6 +187,7 @@ namespace eka2l1::kernel {
         // Это оскорбления, первое слово оскорбляет человека, а второе говорят для
         // увеличения эмоций.
         common::identity_container<process_uid_type_change_callback_elem> uid_change_callbacks;
+        common::identity_container<process_logon_callback> logon_requests_emu;
 
     protected:
         std::int32_t refresh_generation();
@@ -218,6 +221,9 @@ namespace eka2l1::kernel {
 
         void logon(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous);
         bool logon_cancel(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous);
+
+        std::size_t logon(process_logon_callback callback);
+        void logon_cancel(const std::size_t handle);
 
         void rendezvous(int rendezvous_reason);
 

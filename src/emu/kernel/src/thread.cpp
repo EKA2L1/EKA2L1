@@ -360,9 +360,8 @@ namespace eka2l1 {
                 wait_object_timeout_callback_type = timing->register_event("ThreadWaitObjectTimeoutCallbackType", wait_object_timeout_callback);
             }
 
-            // Add thread to process's thread list. Increase self's access count, which will be freed in deque
+            // Add thread to process's thread list
             owner->get_thread_list().push(&process_thread_link);
-            increase_access_count();
         }
 
         int thread::destroy() {

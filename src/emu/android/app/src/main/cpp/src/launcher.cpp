@@ -275,7 +275,14 @@ namespace eka2l1::android {
         cmdline.launch_cmd_ = epoc::apa::command_create;
 
         kern->lock();
-        alserv->launch_app(*reg, cmdline, nullptr);
+        alserv->launch_app(*reg, cmdline, nullptr, [&]() {
+            JNIEnv *env = common::jni::environment();
+            jclass clazz = common::jni::find_class("com/github/eka2l1/emu/Emulator");
+            jmethodID exit_method = env->GetStaticMethodID(clazz, "exitInstance", "()V");
+
+            env->CallStaticVoidMethod(clazz, exit_method);
+        });
+
         kern->unlock();
     }
 
