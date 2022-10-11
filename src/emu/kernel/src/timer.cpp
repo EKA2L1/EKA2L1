@@ -59,7 +59,7 @@ namespace eka2l1 {
             info.done_nof = epoc::notify_info(sts, requester);
             info.own_timer = this;
 
-            static constexpr std::uint64_t MINIMUM_US_AFTER = 10;
+            static constexpr std::uint64_t MINIMUM_US_AFTER = 30;
 
             // Simulate some timeslice delay, and not finish immediately
             // Some games just set the microseconds to signal to 1, and then when it's report superfast, it acts weird!
