@@ -59,9 +59,14 @@ namespace eka2l1 {
             info.done_nof = epoc::notify_info(sts, requester);
             info.own_timer = this;
 
-            timing->schedule_event(us_signal, callback_type, reinterpret_cast<std::uint64_t>(&info));
+            static constexpr std::uint64_t MINIMUM_US_AFTER = 10;
 
-            return false;
+            // Simulate some timeslice delay, and not finish immediately
+            // Some games just set the microseconds to signal to 1, and then when it's report superfast, it acts weird!
+            // For example: DDragon, which signals an object that has not yet been set to active in time! (cancel was called but ineffective cause finish got to it first)
+            timing->schedule_event(common::max<std::uint64_t>(MINIMUM_US_AFTER, us_signal), 
+                callback_type, reinterpret_cast<std::uint64_t>(&info));
+            return true;
         }
         
         bool timer::after_ticks(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts,
