@@ -39,6 +39,8 @@ namespace eka2l1::epoc::remcon {
 
     enum remcon_message {
         remcon_message_set_player_type = 4,
+        remcon_receive = 13,
+        remcon_receive_cancel = 14,
         remcon_message_register_interested_api = 19
     };
 

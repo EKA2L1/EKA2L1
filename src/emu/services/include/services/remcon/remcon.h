@@ -35,6 +35,7 @@ namespace eka2l1 {
     class remcon_session : public service::typical_session {
         epoc::remcon::player_type_information information_;
         epoc::remcon::client_type type_;
+        epoc::notify_info receive_notify_;
         std::string name_;
 
         std::unique_ptr<epoc::remcon::base_detail_session> detail_;
@@ -44,5 +45,7 @@ namespace eka2l1 {
 
         void fetch(service::ipc_context *ctx) override;
         void set_player_type(service::ipc_context *ctx);
+        void receive(service::ipc_context *ctx);
+        void receive_cancel(service::ipc_context *ctx);
     };
 }

@@ -26,6 +26,7 @@
 #include <utils/des.h>
 #include <vfs/vfs.h>
 
+#include <functional>
 #include <mutex>
 #include <vector>
 
@@ -288,7 +289,7 @@ namespace eka2l1 {
 
     protected:
         bool launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id,
-            kernel::process *requester = nullptr);
+            kernel::process *requester = nullptr, std::function<void()> app_exit_callback = nullptr);
 
     public:
         explicit applist_server(system *sys);
@@ -299,7 +300,9 @@ namespace eka2l1 {
          */
         int legacy_level();
 
-        bool launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter, kernel::uid *thread_id);
+        bool launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter, kernel::uid *thread_id,
+                        std::function<void()> app_exit_callback = nullptr);
+
         std::optional<apa_app_masked_icon_bitmap> get_icon(apa_app_registry &registry, const std::int8_t index);
 
         std::mutex list_access_mut_;

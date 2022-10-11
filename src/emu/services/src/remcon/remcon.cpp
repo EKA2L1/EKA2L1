@@ -44,6 +44,14 @@ namespace eka2l1 {
             set_player_type(ctx);
             break;
 
+        case epoc::remcon::remcon_receive:
+            receive(ctx);
+            break;
+
+        case epoc::remcon::remcon_receive_cancel:
+            receive_cancel(ctx);
+            break;
+
         case epoc::remcon::remcon_message_register_interested_api:
             if (detail_) {
                 detail_->register_interested_apis(ctx);
@@ -56,6 +64,20 @@ namespace eka2l1 {
         default:
             LOG_ERROR(SERVICE_REMCON, "Unimplemented remcon opcode {}", ctx->msg->function);
         }
+    }
+
+    void remcon_session::receive(service::ipc_context *ctx) {
+        if (!receive_notify_.empty()) {
+            ctx->complete(epoc::error_in_use);
+            return;
+        }
+
+        receive_notify_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+    }
+
+    void remcon_session::receive_cancel(service::ipc_context *ctx) {
+        receive_notify_.complete(epoc::error_cancel);
+        ctx->complete(epoc::error_none);
     }
 
     void remcon_session::set_player_type(service::ipc_context *ctx) {

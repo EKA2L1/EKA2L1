@@ -1058,7 +1058,8 @@ namespace eka2l1 {
 
     static constexpr std::uint8_t ENVIRONMENT_SLOT_MAIN = 1;
 
-    bool applist_server::launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id, kernel::process *requester) {
+    bool applist_server::launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id,
+                                    kernel::process *requester, std::function<void()> app_exit_callback) {
         static constexpr std::size_t MINIMAL_LAUNCH_STACK_SIZE = 0x8000;
 
         // Some S^3 app has very low stack size for some reason. So we replace the stack size if it's too low
@@ -1082,16 +1083,21 @@ namespace eka2l1 {
             requester->add_child_process(pr);
         }
 
+        if (app_exit_callback) {
+            pr->logon([app_exit_callback](kernel::process *) { app_exit_callback(); });
+        }
+
         // Add it into our app running list
         return pr->run();
     }
 
-    bool applist_server::launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter, kernel::uid *thread_id) {
+    bool applist_server::launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter, kernel::uid *thread_id,
+                                    std::function<void()> app_exit_callback) {
         std::u16string executable_to_run;
         registry.get_launch_parameter(executable_to_run, parameter);
 
         std::u16string apacmddat = parameter.to_string(legacy_level() < APA_LEGACY_LEVEL_MORDEN);
-        return launch_app(executable_to_run, apacmddat, thread_id);
+        return launch_app(executable_to_run, apacmddat, thread_id, nullptr, app_exit_callback);
     }
 
     std::optional<apa_app_masked_icon_bitmap> applist_server::get_icon(apa_app_registry &registry, const std::int8_t index) {

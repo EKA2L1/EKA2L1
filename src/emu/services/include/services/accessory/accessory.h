@@ -50,6 +50,7 @@ namespace eka2l1 {
 
         bool fetch(service::ipc_context *ctx) override;
         void notify_new_accessory_connected(service::ipc_context *ctx);
+        void cancel_notify_new_accessory_connected(service::ipc_context *ctx);
         void get_accessory_connection_status(service::ipc_context *ctx);
     };
 

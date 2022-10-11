@@ -418,6 +418,8 @@ namespace eka2l1 {
             break;
         }
 
+        // TODO: Really check if owner matches
+        case view_opcode_deactivate_active_view_if_owner_match:
         case view_opcode_deactivate_active_view: {
             deactive_view(ctx, false);
             break;

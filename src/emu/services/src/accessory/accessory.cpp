@@ -57,6 +57,11 @@ namespace eka2l1 {
         accessory_connected_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
 
+    void accessory_single_connection_subsession::cancel_notify_new_accessory_connected(service::ipc_context *ctx) {
+        accessory_connected_nof_.complete(epoc::error_cancel);
+        ctx->complete(epoc::error_none);
+    }
+
     bool accessory_single_connection_subsession::fetch(service::ipc_context *ctx) {
         kernel_system *kern = serv_->get_kernel_object_owner();
 
@@ -68,6 +73,10 @@ namespace eka2l1 {
 
             case epoc::acc::opcode_s60v3_get_accessory_connection_status:
                 get_accessory_connection_status(ctx);
+                break;
+
+            case epoc::acc::opcode_s60v3_cancel_notify_new_accessory_connected:
+                cancel_notify_new_accessory_connected(ctx);
                 break;
 
             default:

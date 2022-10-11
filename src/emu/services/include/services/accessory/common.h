@@ -30,7 +30,8 @@ namespace eka2l1::epoc::acc {
     enum opcode_s60v3 {
         opcode_s60v3_create_accessory_connection_subsession = 7,
         opcode_s60v3_get_accessory_connection_status = 9,
-        opcode_s60v3_notify_new_accessory_connected = 11
+        opcode_s60v3_notify_new_accessory_connected = 11,
+        opcode_s60v3_cancel_notify_new_accessory_connected = 12
     };
 
 #pragma pack(push, 1)
