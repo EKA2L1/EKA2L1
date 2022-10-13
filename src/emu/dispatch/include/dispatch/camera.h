@@ -45,4 +45,5 @@ namespace eka2l1::dispatch {
                            std::int32_t display_mode, eka2l1::ptr<epoc::request_status> status);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_next_viewfinder_frame, std::uint32_t handle, eka2l1::ptr<epoc::request_status> status);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_stop_viewfinder_frame, std::uint32_t handle);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_set_parameter, std::uint32_t handle, std::uint32_t key, std::uint32_t value);
 }

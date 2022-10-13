@@ -308,7 +308,8 @@ namespace eka2l1::dispatch {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_stop_viewfinder_frame, std::uint32_t handle) {dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_stop_viewfinder_frame, std::uint32_t handle) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         epoc_camera *cam = dispatcher->cameras_.get_object(handle);
 
         if (!cam) {
@@ -323,6 +324,22 @@ namespace eka2l1::dispatch {
         }
 
         cam->current_frame_index_ = -1;
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_set_parameter, std::uint32_t handle, std::uint32_t key, std::uint32_t value) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        epoc_camera *cam = dispatcher->cameras_.get_object(handle);
+
+        if (!cam) {
+            return epoc::error_bad_handle;
+        }
+
+        const std::lock_guard<std::mutex> guard(cam->lock_);
+        if (!cam->impl_->set_parameter(static_cast<drivers::camera::parameter_key>(key), value)) {
+            return epoc::error_not_supported;
+        }
+
         return epoc::error_none;
     }
 }

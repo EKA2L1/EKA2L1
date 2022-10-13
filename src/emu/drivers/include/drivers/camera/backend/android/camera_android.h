@@ -40,6 +40,9 @@ namespace eka2l1::drivers::camera {
         bool should_dispose_callback_after_done_;
         std::mutex callback_lock_;
 
+        std::uint32_t stub_exposure_;
+        std::uint32_t stub_digital_zoom_;
+
     public:
         explicit instance_android(collection_android *collection, const int index);
         ~instance_android() override;

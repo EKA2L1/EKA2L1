@@ -32,7 +32,9 @@ namespace eka2l1::drivers::camera {
         , managed_handle_(-1)
         , active_capture_img_callback_(nullptr)
         , wants_new_frame_callback_(nullptr)
-        , should_dispose_callback_after_done_(false) {
+        , should_dispose_callback_after_done_(false)
+        , stub_exposure_(EXPOSURE_MODE_AUTO)
+        , stub_digital_zoom_(1) {
         managed_handle_ = android::emulator_camera_initialize(index_);
         if (managed_handle_ < 0) {
             LOG_ERROR(DRIVER_CAM, "Unable to grab camera managed instance!");
@@ -50,6 +52,14 @@ namespace eka2l1::drivers::camera {
             case PARAMETER_KEY_FLASH:
                 return android::emulator_camera_set_flash_mode(managed_handle_, static_cast<int>(value));
 
+            case PARAMETER_KEY_EXPOSURE:
+                stub_exposure_ = value;
+                return true;
+
+            case PARAMETER_KEY_DIGITAL_ZOOM:
+                stub_digital_zoom_ = value;
+                return true;
+
             default:
                 LOG_WARN(DRIVER_CAM, "Unsupported parameter key {} to set value", static_cast<int>(key));
                 break;
@@ -64,6 +74,14 @@ namespace eka2l1::drivers::camera {
         switch (key) {
             case PARAMETER_KEY_FLASH:
                 value = static_cast<std::uint32_t>(android::emulator_camera_get_flash_mode(managed_handle_));
+                break;
+
+            case PARAMETER_KEY_EXPOSURE:
+                value = stub_exposure_;
+                break;
+
+            case PARAMETER_KEY_DIGITAL_ZOOM:
+                value = stub_digital_zoom_;
                 break;
 
             default:
@@ -112,6 +130,7 @@ namespace eka2l1::drivers::camera {
         result.num_image_sizes_supported_ = static_cast<std::int32_t>(
                 android::emulator_camera_get_output_image_sizes(managed_handle_).size());
         result.flash_modes_supported_ = FLASH_MODE_OFF | FLASH_MODE_AUTO | FLASH_MODE_FORCED | FLASH_MODE_VIDEO_LIGHT;
+        result.options_supported_ = CAPTURE_OPTION_ALL;
         result.supported_image_formats_ = 0;
 
         std::vector<int> supported_frame_formats = android::emulator_camera_get_supported_image_output_formats();
