@@ -209,34 +209,13 @@ namespace eka2l1::android {
 
             io_system *io = symsys->get_io_system();
 
-            if (!conf.cenrep_reset) {
-                auto private_dir_c_persists = io->get_raw_path(u"C:\\Private\\10202be9\\persists\\");
-                auto private_dir_d_persists = io->get_raw_path(u"D:\\Private\\10202be9\\persists\\");
-                auto private_dir_e_persists = io->get_raw_path(u"E:\\Private\\10202be9\\persists\\");
+            std::string current_dir;
+            common::get_current_directory(current_dir);
 
-                common::delete_folder(common::ucs2_to_utf8(*private_dir_c_persists));
-                common::delete_folder(common::ucs2_to_utf8(*private_dir_d_persists));
-                common::delete_folder(common::ucs2_to_utf8(*private_dir_e_persists));
+            if (!conf.svg_icon_cache_reset) {
+                common::delete_folder(eka2l1::absolute_path("cache", current_dir));
 
-                conf.cenrep_reset = true;
-                conf.serialize(false);
-            }
-
-            // Uncomment after MTM reset changes for a while
-            if (!conf.mtm_reset) {
-                auto private_mtm_c_path = io->get_raw_path(u"C:\\Private\\1000484b\\");
-                common::delete_folder(common::ucs2_to_utf8(*private_mtm_c_path));
-
-                conf.mtm_reset = true;
-                conf.serialize(false);
-            }
-            
-            if (!conf.mtm_reset_2) {
-                auto private_mtm_c_path = io->get_raw_path(u"C:\\System\\Mtm\\");
-
-                common::delete_folder(common::ucs2_to_utf8(*private_mtm_c_path));
-
-                conf.mtm_reset_2 = true;
+                conf.svg_icon_cache_reset = true;
                 conf.serialize(false);
             }
 
@@ -262,8 +241,6 @@ namespace eka2l1::android {
                         common::move_file(where_to_copy_u8, where_to_copy_u8 + ".bak");
                     }
                     std::string source_copy = std::get<1>(dlls_need_to_copy[i]);
-                    std::string current_dir;
-                    common::get_current_directory(current_dir);
                     source_copy = eka2l1::absolute_path(source_copy, current_dir);
                     common::copy_file(source_copy, where_to_copy_u8, true);
                 }

@@ -3,7 +3,7 @@
 
 #include <QSettings>
 
-#define UPDATE_NOTICE_DATE "20220807"
+#define UPDATE_NOTICE_DATE "20221225"
 
 static const char *UPDATE_NOTICE_SHOWN_SETTING = "updateNotice" UPDATE_NOTICE_DATE "Shown";
 

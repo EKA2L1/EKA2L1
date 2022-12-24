@@ -121,18 +121,27 @@ namespace eka2l1::android {
             eka2l1::common::create_directories("cache");
 
             if (file_route) {
+                const std::uint64_t mif_last_modified = file_route->last_modify_since_0ad();
+                const std::string cached_path = fmt::format("cache/debinarized_{}.svg",
+                    common::pystr(app_name).strip_reserverd().strip().std_str());
+
+                std::unique_ptr<lunasvg::Document> document;
+
+                if (eka2l1::common::exists(cached_path)) {
+                    if (eka2l1::common::get_last_modifiy_since_ad(eka2l1::common::utf8_to_ucs2(cached_path)) >= mif_last_modified) {
+                        document = lunasvg::Document::loadFromFile(cached_path.c_str());
+                    }
+                }
+                
                 eka2l1::ro_file_stream file_route_stream(file_route.get());
                 eka2l1::loader::mif_file file_mif_parser(reinterpret_cast<eka2l1::common::ro_stream *>(&file_route_stream));
 
-                if (file_mif_parser.do_parse()) {
+                if (!document && file_mif_parser.do_parse()) {
                     std::vector<std::uint8_t> data;
                     int dest_size = 0;
                     if (file_mif_parser.read_mif_entry(0, nullptr, dest_size)) {
                         data.resize(dest_size);
                         file_mif_parser.read_mif_entry(0, data.data(), dest_size);
-
-                        const std::string cached_path = fmt::format("cache/debinarized_{}.svg",
-                            common::pystr(app_name).strip_reserverd().strip().std_str());
 
                         eka2l1::common::ro_buf_stream inside_stream(data.data(), data.size());
                         std::unique_ptr<eka2l1::common::wo_std_file_stream> outfile_stream =
@@ -144,42 +153,41 @@ namespace eka2l1::android {
                         std::vector<eka2l1::loader::svgb_convert_error_description> errors;
 
                         if (header.type == eka2l1::loader::mif_icon_type_svg) {
-                            std::unique_ptr<lunasvg::Document> document;
                             if (!eka2l1::loader::convert_svgb_to_svg(inside_stream, *outfile_stream, errors)) {
                                 if (errors[0].reason_ == eka2l1::loader::svgb_convert_error_invalid_file) {
-                                    const char *char_data = reinterpret_cast<const char *>(data.data()) + sizeof(eka2l1::loader::mif_icon_header);
-                                    document = lunasvg::Document::loadFromData(char_data, data.size() - sizeof(eka2l1::loader::mif_icon_header));
+                                    outfile_stream->write(reinterpret_cast<const char *>(data.data()) + sizeof(eka2l1::loader::mif_icon_header), data.size() - sizeof(eka2l1::loader::mif_icon_header));
                                 }
-                            } else {
-                                outfile_stream.reset();
-                                document = lunasvg::Document::loadFromFile(cached_path.c_str());
                             }
 
-                            if (document) {
-                                std::uint32_t width = document->width();
-                                std::uint32_t height = document->height();
-                                jobject source_bitmap = make_new_bitmap(env, width, height);
-                                void *data_to_write = nullptr;
-                                int result = AndroidBitmap_lockPixels(env, source_bitmap, &data_to_write);
-                                if (result < 0) {
-                                    env->DeleteLocalRef(source_bitmap);
-                                    env->DeleteLocalRef(jicons);
-                                    return nullptr;
-                                }
-
-                                auto bitmap = lunasvg::Bitmap(reinterpret_cast<std::uint8_t *>(data_to_write), width, height, width * 4);
-                                lunasvg::Matrix matrix{ 1, 0, 0, 1, 0, 0 };
-                                document->render(bitmap, matrix, 0);
-
-                                AndroidBitmap_unlockPixels(env, source_bitmap);
-
-                                env->SetObjectArrayElement(jicons, 0, source_bitmap);
-                                return jicons;
-                            }
+                            outfile_stream.reset();
+                            document = lunasvg::Document::loadFromFile(cached_path.c_str());
                         } else {
-                            LOG_ERROR(eka2l1::FRONTEND_UI, "Unknown icon type {} for app {}", header.type, app_name);
+                            LOG_ERROR(eka2l1::FRONTEND_UI, "Unknown icon type {} for app {}", header.type, app_name);    
+                            eka2l1::common::remove(cached_path);
                         }
                     }
+                }
+                
+                if (document) {
+                    std::uint32_t width = document->width();
+                    std::uint32_t height = document->height();
+                    jobject source_bitmap = make_new_bitmap(env, width, height);
+                    void *data_to_write = nullptr;
+                    int result = AndroidBitmap_lockPixels(env, source_bitmap, &data_to_write);
+                    if (result < 0) {
+                        env->DeleteLocalRef(source_bitmap);
+                        env->DeleteLocalRef(jicons);
+                        return nullptr;
+                    }
+
+                    auto bitmap = lunasvg::Bitmap(reinterpret_cast<std::uint8_t *>(data_to_write), width, height, width * 4);
+                    lunasvg::Matrix matrix{ 1, 0, 0, 1, 0, 0 };
+                    document->render(bitmap, matrix, 0);
+
+                    AndroidBitmap_unlockPixels(env, source_bitmap);
+
+                    env->SetObjectArrayElement(jicons, 0, source_bitmap);
+                    return jicons;
                 }
             }
         } else if (path_ext == u".mbm") {

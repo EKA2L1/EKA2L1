@@ -170,36 +170,10 @@ namespace eka2l1::desktop {
 
             io_system *io = symsys->get_io_system();
 
-            // Uncomment after cenrep changes
-            if (!conf.cenrep_reset) {
-                auto private_dir_c_persists = io->get_raw_path(u"C:\\Private\\10202be9\\persists\\");
-                auto private_dir_d_persists = io->get_raw_path(u"D:\\Private\\10202be9\\persists\\");
-                auto private_dir_e_persists = io->get_raw_path(u"E:\\Private\\10202be9\\persists\\");
+            if (!conf.svg_icon_cache_reset) {
+                common::delete_folder("cache\\");
 
-                common::delete_folder(common::ucs2_to_utf8(*private_dir_c_persists));
-                common::delete_folder(common::ucs2_to_utf8(*private_dir_d_persists));
-                common::delete_folder(common::ucs2_to_utf8(*private_dir_e_persists));
-
-                conf.cenrep_reset = true;
-                conf.serialize(false);
-            }
-
-            // Uncomment after MTM reset changes for a while
-            if (!conf.mtm_reset) {
-                auto private_mtm_c_path = io->get_raw_path(u"C:\\Private\\1000484b\\");
-
-                common::delete_folder(common::ucs2_to_utf8(*private_mtm_c_path));
-
-                conf.mtm_reset = true;
-                conf.serialize(false);
-            }
-
-            if (!conf.mtm_reset_2) {
-                auto private_mtm_c_path = io->get_raw_path(u"C:\\System\\Mtm\\");
-
-                common::delete_folder(common::ucs2_to_utf8(*private_mtm_c_path));
-
-                conf.mtm_reset_2 = true;
+                conf.svg_icon_cache_reset = true;
                 conf.serialize(false);
             }
 

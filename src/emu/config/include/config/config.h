@@ -125,9 +125,7 @@ namespace eka2l1::config {
         std::string rtos_level;
 
         bool ui_new_style{ true };
-        bool cenrep_reset{ false };
-        bool mtm_reset{ false };
-        bool mtm_reset_2{ false };
+        bool svg_icon_cache_reset{ false };
         bool report_mmfdev_underflow{ false };
         bool disable_display_content_scale { false };
         bool enable_hw_gles1 { true };

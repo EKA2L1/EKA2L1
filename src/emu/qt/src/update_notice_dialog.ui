@@ -23,7 +23,7 @@
       <string/>
      </property>
      <property name="pixmap">
-      <pixmap resource="../eka2l1.qrc">:/assets/update_notices/20220807_update_notice.png</pixmap>
+      <pixmap resource="../eka2l1.qrc">:/assets/update_notices/20221225_update_notice.png</pixmap>
      </property>
      <property name="scaledContents">
       <bool>true</bool>
