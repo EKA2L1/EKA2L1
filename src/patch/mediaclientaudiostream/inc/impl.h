@@ -32,8 +32,13 @@ enum TMdaState {
     EMdaStateWaitWorkThenStop = 3
 };
 
-struct TMMFMdaBufferNode : public TDblQueLink {
+struct TMMFMdaBufferNode {
     const TDesC8 *iBuffer;
+    TDblQueLink iLink;
+
+    TMMFMdaBufferNode()
+        : iBuffer(NULL) {
+    }
 };
 
 class CMMFMdaAudioStream;

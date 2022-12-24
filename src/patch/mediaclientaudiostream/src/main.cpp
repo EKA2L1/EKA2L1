@@ -90,7 +90,6 @@ void CMdaAudioOutputStream::Open(TMdaPackage *aPackage) {
         return;
     }
 
-    iProperties->NotifyOpenComplete();
     iProperties->Play();
 }
 

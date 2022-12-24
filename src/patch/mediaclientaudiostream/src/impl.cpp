@@ -54,7 +54,8 @@ CMMFMdaBufferQueue::CMMFMdaBufferQueue(CMMFMdaAudioStream *aStream)
 #else
     : CActive(CActive::EPriorityStandard)
 #endif
-    , iStream(aStream) {
+    , iStream(aStream)
+    , iBufferNodes(_FOFF(TMMFMdaBufferNode, iLink)) {
 }
 
 CMMFMdaBufferQueue::~CMMFMdaBufferQueue() {
@@ -72,7 +73,7 @@ void CMMFMdaBufferQueue::CleanQueue() {
     // Flush all stored buffers
     while (!iBufferNodes.IsEmpty()) {
         TMMFMdaBufferNode *node = iBufferNodes.First();
-        node->Deque();
+        node->iLink.Deque();
 
         delete node;
     }
@@ -120,7 +121,7 @@ void CMMFMdaOutputBufferQueue::RunL() {
             outputStream->iCallback.MaoscBufferCopied(KErrNone, *iCopied->iBuffer);
 
         if (iCopied) {
-            iCopied->Deque();
+            iCopied->iLink.Deque();
             delete iCopied;
         }
     }
@@ -547,7 +548,7 @@ void CMMFMdaInputBufferQueue::RunL() {
     static_cast<TDes8&>(const_cast<TDesC8&>(*node->iBuffer)).SetLength(node->iBuffer->Length());
     inputStream->iCallback.MaiscBufferCopied(iStatus.Int(), *node->iBuffer);
 
-    node->Deque();
+    node->iLink.Deque();
     delete node;
 
     ReadAndWait();
