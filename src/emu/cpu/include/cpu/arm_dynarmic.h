@@ -22,9 +22,9 @@
 #include <cpu/arm_interface.h>
 #include <cpu/dyncom/arm_dyncom.h>
 
-#include <dynarmic/A32/a32.h>
-#include <dynarmic/A32/config.h>
-#include <dynarmic/exclusive_monitor.h>
+#include <dynarmic/interface/A32/a32.h>
+#include <dynarmic/interface/A32/config.h>
+#include <dynarmic/interface/exclusive_monitor.h>
 
 #include <map>
 #include <memory>
