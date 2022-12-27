@@ -77,13 +77,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [macos-latest, ubuntu-20.04, windows-latest]
         config: [Release]
 
     steps:
     - name: Set up build environment (macos-latest)
       run: |
-        sudo xcode-select -s "/Applications/Xcode_11.7.app"
         brew install ccache
         echo "/usr/local/opt/ccache/libexec" >> $GITHUB_PATH
         echo "CCACHE_DIR=/tmp/ccache" >> $GITHUB_ENV
@@ -94,7 +93,7 @@ jobs:
         sudo apt-get update
         sudo apt-get -y install ccache libgtk-3-dev libpulse-dev libasound2-dev libsdl2-dev pulseaudio
         echo "CCACHE_DIR=/tmp/ccache" >> $GITHUB_ENV
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-20.04'
   
     - uses: actions/cache@v1
       with:
@@ -124,7 +123,7 @@ jobs:
       if: matrix.os != 'windows-latest'
         
     - name: Install Qt5 (Windows)
-      uses: jurplel/install-qt-action@v2
+      uses: jurplel/install-qt-action@v3
       with:
         version: '5.15.2'
         cached: ${{ steps.cache-qt.outputs.cache-hit }}
@@ -132,7 +131,7 @@ jobs:
         host: 'windows'
         target: 'desktop'
         arch: 'win64_msvc2019_64'
-        tools: 'tools_openssl_x64,1.1.1-10,qt.tools.openssl.win_x64'
+        tools: 'tools_openssl_x64'
       if: matrix.os == 'windows-latest'
 
     - name: Set up SDL 2.0.20 (ubuntu-latest)
@@ -151,7 +150,7 @@ jobs:
           rm SDL2-${SDL2VER}.tar.gz
         fi
         sudo make -C SDL2-${SDL2VER} install
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-20.04'
 
     - name: CMake configure
       run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_SCRIPTING_ABILITY=OFF -DEKA2L1_DEPLOY_DMG=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DCMAKE_PREFIX_PATH=${{ env.Qt5_DIR }} -DCMAKE_BUILD_TYPE=${{ matrix.config }}
@@ -173,7 +172,7 @@ jobs:
       run: |
         chmod u+x scripts/generate_appimage.sh
         ./scripts/generate_appimage.sh
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-20.04'
 
     - name: Compute git short sha
       id: git_short_sha
@@ -190,13 +189,13 @@ jobs:
       with:
         name: eka2l1-${{ steps.git_short_sha.outputs.value }}-${{ matrix.os }}
         path: build/bin
-      if: matrix.os != 'ubuntu-latest'
+      if: matrix.os != 'ubuntu-20.04'
 
     - uses: actions/upload-artifact@v2
       with:
         name: eka2l1-${{ steps.git_short_sha.outputs.value }}-${{ matrix.os }}
         path: build/eka2l1-qt-x64.AppImage
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-20.04'
 
   roll-release:
    needs: [build-android, build-desktop]
