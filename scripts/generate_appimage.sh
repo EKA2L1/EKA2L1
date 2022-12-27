@@ -21,4 +21,5 @@ chmod a+x linuxdeploy-plugin-appimage-x86_64.AppImage
 mkdir -p eka2l1.AppDir/usr/bin/
 cp -a bin/. eka2l1.AppDir/usr/bin/
 
-OUTPUT="eka2l1-qt-x64.AppImage" ./linuxdeploy-x86_64.AppImage --appdir=eka2l1.AppDir --executable=bin/eka2l1_qt --desktop-file=bin/eka2l1.desktop --icon-file=bin/duck_tank.png --plugin=qt --output appimage
+./linuxdeploy-x86_64.AppImage --appimage-extract
+OUTPUT="eka2l1-qt-x64.AppImage" ./squashfs-root/AppRun --appdir=eka2l1.AppDir --executable=bin/eka2l1_qt --desktop-file=bin/eka2l1.desktop --icon-file=bin/duck_tank.png --plugin=qt --output appimage
