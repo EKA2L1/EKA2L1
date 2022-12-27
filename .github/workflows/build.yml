@@ -91,7 +91,7 @@ jobs:
     - name: Set up build environment (ubuntu-latest)
       run: |
         sudo apt-get update
-        sudo apt-get -y install ccache libgtk-3-dev libpulse-dev libasound2-dev libsdl2-dev pulseaudio
+        sudo apt-get -y install ccache libgtk-3-dev libpulse-dev libasound2-dev libsdl2-dev pulseaudio gcc-11 g++-11
         echo "CCACHE_DIR=/tmp/ccache" >> $GITHUB_ENV
       if: matrix.os == 'ubuntu-20.04'
   
@@ -226,7 +226,7 @@ jobs:
     - name: Download Ubuntu Artifact
       uses: actions/download-artifact@v3
       with:
-        name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-ubuntu-latest"
+        name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-ubuntu-20.04"
         
     - name: Download Android Artifact
       uses: actions/download-artifact@v3
