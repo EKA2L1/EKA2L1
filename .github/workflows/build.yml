@@ -83,7 +83,6 @@ jobs:
     steps:
     - name: Set up build environment (macos-latest)
       run: |
-        sudo xcode-select -s "/Applications/Xcode_11.7.app"
         brew install ccache
         echo "/usr/local/opt/ccache/libexec" >> $GITHUB_PATH
         echo "CCACHE_DIR=/tmp/ccache" >> $GITHUB_ENV
@@ -124,7 +123,7 @@ jobs:
       if: matrix.os != 'windows-latest'
         
     - name: Install Qt5 (Windows)
-      uses: jurplel/install-qt-action@v2
+      uses: jurplel/install-qt-action@v3
       with:
         version: '5.15.2'
         cached: ${{ steps.cache-qt.outputs.cache-hit }}
@@ -132,7 +131,7 @@ jobs:
         host: 'windows'
         target: 'desktop'
         arch: 'win64_msvc2019_64'
-        tools: 'tools_openssl_x64,1.1.1-10,qt.tools.openssl.win_x64'
+        tools: 'tools_openssl_x64'
       if: matrix.os == 'windows-latest'
 
     - name: Set up SDL 2.0.20 (ubuntu-latest)
