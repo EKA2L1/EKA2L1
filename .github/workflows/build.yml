@@ -93,6 +93,8 @@ jobs:
         sudo apt-get update
         sudo apt-get -y install ccache libgtk-3-dev libpulse-dev libasound2-dev libsdl2-dev pulseaudio gcc-11 g++-11
         echo "CCACHE_DIR=/tmp/ccache" >> $GITHUB_ENV
+        echo "CC=gcc-11" >> $GITHUB_ENV
+        echo "CXX=g++-11" >> $GITHUB_ENV
       if: matrix.os == 'ubuntu-20.04'
   
     - uses: actions/cache@v1
