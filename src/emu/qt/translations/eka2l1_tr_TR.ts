@@ -942,7 +942,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="282"/>
       <source>Hide system applications</source>
-      <translation type="unfinished">Hide system applications</translation>
+      <translation>Sistem uygulamalarını gizle</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="301"/>
