@@ -360,7 +360,7 @@ namespace eka2l1::drivers {
 
         const AVCodec *new_codec = avcodec_find_encoder(codec_id);
         if (!new_codec) {
-            LOG_ERROR(DRIVER_AUD, "Unable to find new encoder for codec id {}", codec_id);
+            LOG_ERROR(DRIVER_AUD, "Unable to find new encoder for codec id {}", static_cast<int>(codec_id));
             return false;
         }
 

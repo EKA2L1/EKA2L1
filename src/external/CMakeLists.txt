@@ -1,10 +1,11 @@
 ﻿include(ExternalProject)
+include(CheckSymbolExists)
 
 add_library(miniz miniz/miniz.h miniz/miniz.c)
 target_include_directories(miniz PUBLIC miniz)
 
 # Force Boost directory for Dynarmic - we never use one
-set (BOOST_INCLUDEDIR "${CMAKE_CURRENT_SOURCE_DIR}/ext-boost/" CACHE PATH "Boost include directory")
+set (Boost_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext-boost/" CACHE PATH "Boost include directory")
 if (ANDROID)
     add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY
             -DBOOST_SYSTEM_NO_LIB
@@ -14,7 +15,7 @@ if (ANDROID)
             )
     set (BOOST_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/ext-boost/")
     add_library(boost INTERFACE)
-    target_include_directories(boost SYSTEM INTERFACE ${BOOST_INCLUDEDIR})
+    target_include_directories(boost SYSTEM INTERFACE ${Boost_INCLUDE_DIR})
 endif()
 
 # PugiXML
@@ -115,7 +116,6 @@ add_subdirectory(glm)
 
 # Dynarmic: disable tests
 option(DYNARMIC_TESTS "Enable dynarmic tests" ON)
-option(DYNARMIC_NO_BUNDLED_FMT "No bundled fmt for Dynarmic" ON)
 
 if (NOT ARCHITECTURE_ARM32)
     add_subdirectory(dynarmic)
@@ -186,7 +186,12 @@ target_link_libraries(Vulkan INTERFACE ${Vulkan_LIBRARIES})
 # Cubeb
 option (BUILD_TOOLS "Build tools" OFF)
 option (BUILD_TESTS "Build cubeb tests" OFF)
+
+# Forcefully disable AAudio (we build with API target 21 minimum)
+set (USE_AAUDIO FALSE CACHE INTERNAL "" FORCE)
+
 add_subdirectory(cubeb)
+
 
 # FFMPEG
 add_subdirectory(ffmpeg)

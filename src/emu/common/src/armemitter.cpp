@@ -707,7 +707,7 @@ namespace eka2l1::common::armgen {
 
     void armx_emitter::B_CC(cc_flags Cond, const void *fnptr) {
         ptrdiff_t distance = (intptr_t)fnptr - ((intptr_t)(code) + 8);
-        LOG_ERROR_IF(COMMON, (distance <= -0x2000000) || (distance >= 0x2000000), "B_CC out of range ({} calls {})", code, fnptr);
+        LOG_ERROR_IF(COMMON, (distance <= -0x2000000) || (distance >= 0x2000000), "B_CC out of range ({} calls {})", fmt::ptr(code), fmt::ptr(fnptr));
         write32((Cond << 28) | 0x0A000000 | ((distance >> 2) & 0x00FFFFFF));
     }
 
@@ -722,8 +722,8 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::set_jump_target(fixup_branch const &branch) {
         ptrdiff_t distance = ((intptr_t)(code)-8) - (intptr_t)branch.ptr;
-        LOG_ERROR_IF(COMMON, (distance <= -0x2000000) || (distance >= 0x2000000), "SetJumpTarget out of range ({} calls {})", code,
-            branch.ptr);
+        LOG_ERROR_IF(COMMON, (distance <= -0x2000000) || (distance >= 0x2000000), "SetJumpTarget out of range ({} calls {})", fmt::ptr(code),
+            fmt::ptr(branch.ptr));
 
         std::uint32_t instr = (std::uint32_t)(branch.condition | ((distance >> 2) & 0x00FFFFFF));
         instr |= branch.type == 0 ? /* B */ 0x0A000000 : /* BL */ 0x0B000000;
@@ -731,7 +731,7 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::B(const void *fnptr) {
         ptrdiff_t distance = (intptr_t)fnptr - (intptr_t(code) + 8);
-        LOG_ERROR_IF(COMMON, (distance <= -0x2000000) || (distance >= 0x2000000), "B out of range ({} calls {})", code, fnptr);
+        LOG_ERROR_IF(COMMON, (distance <= -0x2000000) || (distance >= 0x2000000), "B out of range ({} calls {})", fmt::ptr(code), fmt::ptr(fnptr));
 
         write32(condition | 0x0A000000 | ((distance >> 2) & 0x00FFFFFF));
     }
@@ -752,7 +752,8 @@ namespace eka2l1::common::armgen {
 
     void armx_emitter::BL(const void *fnptr) {
         ptrdiff_t distance = (intptr_t)fnptr - (intptr_t(code) + 8);
-        LOG_ERROR_IF(COMMON, (distance <= -0x2000000) || (distance >= 0x2000000), "BL out of range ({} calls {})", code, fnptr);
+        LOG_ERROR_IF(COMMON, (distance <= -0x2000000) || (distance >= 0x2000000), "BL out of range ({} calls {})", 
+            fmt::ptr(code), fmt::ptr(fnptr));
         write32(condition | 0x0B000000 | ((distance >> 2) & 0x00FFFFFF));
     }
     void armx_emitter::BL(arm_reg src) {
@@ -1164,7 +1165,7 @@ namespace eka2l1::common::armgen {
         bool SignedLoad = false;
 
         if (op == -1)
-            LOG_ERROR(COMMON, "{} does not support {}", LoadStoreNames[Op], Rm.get_type());
+            LOG_ERROR(COMMON, "{} does not support {}", LoadStoreNames[Op], static_cast<int>(Rm.get_type()));
 
         switch (Op) {
         case 4: // STRH
@@ -2008,7 +2009,7 @@ namespace eka2l1::common::armgen {
         write32((0xF2 << 24) | (1 << 20) | EncodeVn(Vn) | encode_vd(Vd) | (0x11 << 4) | (register_quad << 6) | EncodeVm(Vm));
     }
     void armx_emitter::VEOR(arm_reg Vd, arm_reg Vn, arm_reg Vm) {
-        LOG_ERROR_IF(COMMON, Vd < D0, "Pass invalid register to %s: %i", Vd);
+        LOG_ERROR_IF(COMMON, Vd < D0, "Pass invalid register to %i", static_cast<int>(Vd));
         LOG_ERROR_IF(COMMON, !(context_info.bNEON), "Can't use %s when CPU doesn't support it");
         bool register_quad = Vd >= Q0;
 
@@ -2946,7 +2947,7 @@ namespace eka2l1::common::armgen {
         return;
 
     error:
-        LOG_ERROR(COMMON, "Bad Size or type specified in %s: Size %i Type %i", (int)Size, type);
+        LOG_ERROR(COMMON, "Bad Size or type specified: Size %i Type %i", (int)Size, (int)type);
     }
 
     void armx_emitter::VMOV_immf(arm_reg Vd, float value) { // This only works with a select few values. I've hardcoded 1.0f.

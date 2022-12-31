@@ -24,8 +24,8 @@
 #include <cpu/arm_dynarmic.h>
 #include <cpu/arm_utils.h>
 
-#include <dynarmic/A32/context.h>
-#include <dynarmic/A32/coprocessor.h>
+#include <dynarmic/interface/A32/context.h>
+#include <dynarmic/interface/A32/coprocessor.h>
 
 namespace eka2l1::arm {
     class dynarmic_core_cp15 : public Dynarmic::A32::Coprocessor {
@@ -149,16 +149,15 @@ namespace eka2l1::arm {
             return false;
         }
 
-        std::uint32_t MemoryReadCode(Dynarmic::A32::VAddr addr) override {
+        std::optional<std::uint32_t> MemoryReadCode(Dynarmic::A32::VAddr addr) override {
             std::uint32_t code_result = 0;
-            constexpr std::uint32_t UNDEFINED_WORD = 0xE11EFF2F;
 
             bool status = parent.read_code(addr, &code_result);
             if (handle_read_status(status, addr)) {
                 status = parent.read_code(addr, &code_result);
             }
 
-            return status ? code_result : UNDEFINED_WORD;
+            return status ? std::make_optional<std::uint32_t>(code_result) : std::nullopt;
         }
 
         uint8_t MemoryRead8(Dynarmic::A32::VAddr addr) override {
@@ -312,9 +311,11 @@ namespace eka2l1::arm {
         Dynarmic::A32::UserConfig config;
         config.callbacks = callback.get();
         config.coprocessors[15] = cp15;
-        config.tlb_entries = tlb_obj.entries;
+        config.tlb_entries = tlb_obj.entries.data();
+        config.tlb_index_mask_bits = 9;
         config.global_monitor = monitor;
         config.define_unpredictable_behaviour = true;
+        config.arch_version = Dynarmic::A32::ArchVersion::v6T2;
 
         return std::make_unique<Dynarmic::A32::Jit>(config);
     }
@@ -329,7 +330,6 @@ namespace eka2l1::arm {
         auto monitor_bb = reinterpret_cast<dynarmic_exclusive_monitor *>(monitor);
 
         jit = make_jit(cb, tlb_obj, cp15, &monitor_bb->monitor_);
-        jit->SetAsid(0);
     }
 
     dynarmic_core::~dynarmic_core() {
@@ -441,22 +441,22 @@ namespace eka2l1::arm {
     }
 
     void dynarmic_core::set_tlb_page(address vaddr, std::uint8_t *ptr, prot protection) {
-        std::uint32_t prot_flags = 0;
+        Dynarmic::MemoryPermission prot_flags = Dynarmic::MemoryPermission::Read;
         switch (protection) {
         case prot_read:
-            prot_flags |= Dynarmic::MemoryPermissionRead;
+            prot_flags |= Dynarmic::MemoryPermission::Read;
             break;
 
         case prot_read_write:
-            prot_flags |= (Dynarmic::MemoryPermissionRead | Dynarmic::MemoryPermissionWrite);
+            prot_flags |= Dynarmic::MemoryPermission::ReadWrite;
             break;
 
         case prot_read_exec:
-            prot_flags |= (Dynarmic::MemoryPermissionRead | Dynarmic::MemoryPermissionExecute);
+            prot_flags |= (Dynarmic::MemoryPermission::Read | Dynarmic::MemoryPermission::Execute);
             break;
 
         case prot_read_write_exec:
-            prot_flags |= (Dynarmic::MemoryPermissionRead | Dynarmic::MemoryPermissionWrite | Dynarmic::MemoryPermissionExecute);
+            prot_flags |= (Dynarmic::MemoryPermission::Read | Dynarmic::MemoryPermission::Write | Dynarmic::MemoryPermission::Execute);
             break;
 
         default:

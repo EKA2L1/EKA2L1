@@ -39,7 +39,7 @@ namespace eka2l1 {
         cs_err err = cs_open(CS_ARCH_ARM, CS_MODE_THUMB, &cp_handle);
 
         if (err != CS_ERR_OK) {
-            LOG_ERROR(DISASM, "Capstone open errored! Error code: {}", err);
+            LOG_ERROR(DISASM, "Capstone open errored! Error code: {}", static_cast<int>(err));
             return;
         }
 
