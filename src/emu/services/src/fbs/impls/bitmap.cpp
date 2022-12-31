@@ -1048,7 +1048,6 @@ namespace eka2l1 {
             // Own a reference to the clean bitmap, until it is removed
             new_bmp->ref();
 
-            obj_table_.remove(handle);
             bmp_handles handle_info;
 
             // Add this object to the object table!
@@ -1057,6 +1056,7 @@ namespace eka2l1 {
             handle_info.address_offset = server<fbs_server>()->host_ptr_to_guest_shared_offset(new_bmp->bitmap_);
 
             ctx->write_data_to_descriptor_argument(3, handle_info);
+            obj_table_.remove(handle);
 
             // Notify dirty
             if (fbss->compressor)
