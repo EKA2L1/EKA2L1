@@ -146,7 +146,7 @@
       <location filename="../src/btnetplay_friends_dialog.cpp" line="202"/>
       <source>Friend %1 has invalid port number (must be between 0 and 65535)!
 </source>
-      <translation type="unfinished">Friend %1 has invalid port number (must be between 0 and 65535)!
+      <translation>Friend %1 has invalid port number (must be between 0 and 65535)!
 </translation>
     </message>
     <message>
