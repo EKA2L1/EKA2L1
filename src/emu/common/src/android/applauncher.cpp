@@ -18,9 +18,16 @@
  */
 
 #include <common/applauncher.h>
+#include <common/android/jniutils.h>
 
 namespace eka2l1::common {
     bool launch_browser(const std::string &url) {
-        return true;
+        auto env = jni::environment();
+
+        jstring j_url = env->NewStringUTF(url.c_str());
+        jclass clazz = common::jni::find_class("com/github/eka2l1/emu/Emulator");
+        jmethodID launch_url_method = env->GetStaticMethodID(clazz, "openWebPage", "(Ljava/lang/String;)Z");
+
+        return env->CallStaticBooleanMethod(clazz, launch_url_method, j_url);
     }
 }

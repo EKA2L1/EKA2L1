@@ -27,6 +27,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -603,6 +604,20 @@ public class Emulator {
             if (context instanceof EmulatorActivity) {
                 ((EmulatorActivity) context).requestPermissionsAndWait(new String[] { Manifest.permission.RECORD_AUDIO });
             }
+        }
+    }
+
+    @SuppressLint("unused")
+    public static boolean openWebPage(String url) {
+        Uri webpage = Uri.parse(url);
+        Intent intent = new Intent(Intent.ACTION_VIEW, webpage);
+
+        try {
+            context.startActivity(intent);
+            return true;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
         }
     }
 
