@@ -127,6 +127,7 @@ namespace eka2l1::kernel {
     };
 
     class process : public kernel_obj {
+    private:
         friend class eka2l1::kernel_system;
         friend class thread_scheduler;
         friend class thread;
@@ -141,8 +142,6 @@ namespace eka2l1::kernel {
         mem::mem_model_process_impl mm_impl_;
 
         process_uid_type uids;
-        thread_ptr primary_thread;
-
         std::string process_name;
 
         codeseg_ptr codeseg;
@@ -190,6 +189,8 @@ namespace eka2l1::kernel {
         common::identity_container<process_logon_callback> logon_requests_emu;
 
     protected:
+        thread_ptr primary_thread;
+
         std::int32_t refresh_generation();
 
         void reload_compat_setting();
@@ -197,6 +198,10 @@ namespace eka2l1::kernel {
             uint32_t heap_max, kernel::thread_priority pri);
 
         void detatch_from_parent();
+
+        virtual bool handle_rendezvous_request(epoc::notify_info &info) {
+            return false;
+        }
 
     public:
         uint32_t increase_thread_count() {
@@ -233,13 +238,14 @@ namespace eka2l1::kernel {
             const process_priority pri);
 
         explicit process(kernel_system *kern, memory_system *mem, const std::string &process_name,
-            const std::u16string &exe_path, const std::u16string &cmd_args);
+            const std::u16string &exe_path, const std::u16string &cmd_args, bool use_memory = true);
 
         ~process() = default;
 
         int destroy() override;
-        bool run();
-        void kill(const entity_exit_type ext, const std::u16string &category, const std::int32_t reason);
+        
+        virtual bool run();
+        virtual void kill(const entity_exit_type ext, const std::u16string &category, const std::int32_t reason);
 
         std::string name() const override;
         std::string raw_name() const;

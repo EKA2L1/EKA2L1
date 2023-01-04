@@ -89,6 +89,7 @@ set(PROJECT_SOURCES
         src/btnet_dialog.cpp
         src/btnet_dialog.ui
         src/cmdhandler.cpp
+        src/common_library_plugin.cpp
         src/device_install_dialog.cpp
         src/device_install_dialog.ui
         src/displaywidget.cpp

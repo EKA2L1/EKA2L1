@@ -13,6 +13,7 @@ else ()
 endif ()
 
 add_library(common
+        include/common/applauncher.h
         include/common/arghandler.h
         include/common/atomic.h
         include/common/advstream.h
@@ -109,6 +110,7 @@ if (ANDROID)
         include/common/android/jniutils.h
         include/common/android/contenturi.h
         src/android/audio.cpp
+        src/android/applauncher.cpp
         src/android/storage.cpp
         src/android/jniutils.cpp
         )

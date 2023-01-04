@@ -4,6 +4,7 @@ add_library(epocservs
         include/services/context.h
         include/services/faker.h
         include/services/framework.h
+        include/services/host_launch.h
         include/services/init.h
         include/services/utils.h
         include/services/accessory/accessory.h
@@ -41,6 +42,7 @@ add_library(epocservs
         include/services/internet/protocols/common.h
         include/services/internet/protocols/inet.h
         include/services/internet/protocols/overall.h
+        include/services/internet/browser.h
         include/services/internet/connmonitor.h
         include/services/internet/nifman.h
         include/services/drm/notifier/events.h
@@ -132,6 +134,7 @@ add_library(epocservs
         include/services/ui/view/common.h
         include/services/ui/view/queue.h
         include/services/ui/view/view.h
+        include/services/ui/appserver.h
         include/services/ui/eikappui.h
         include/services/uiss/uiss.h
         include/services/unipertar/unipertar.h
@@ -145,6 +148,7 @@ add_library(epocservs
         src/context.cpp
         src/faker.cpp
         src/framework.cpp
+        src/host_launch.cpp
         src/init.cpp
         src/utils.cpp
         src/accessory/accessory.cpp
@@ -179,6 +183,7 @@ add_library(epocservs
         src/internet/protocols/overall.cpp
         src/internet/protocols/resolver.cpp
         src/internet/protocols/socket.cpp
+        src/internet/browser.cpp
         src/internet/connmonitor.cpp
         src/internet/nifman.cpp
         src/drm/notifier/events.cpp
@@ -271,6 +276,7 @@ add_library(epocservs
         src/ui/skin/utils.cpp
         src/ui/view/queue.cpp
         src/ui/view/view.cpp
+        src/ui/appserver.cpp
         src/ui/eikappui.cpp
         src/uiss/uiss.cpp
         src/unipertar/unipertar.cpp

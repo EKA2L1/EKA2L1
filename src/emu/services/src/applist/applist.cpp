@@ -564,8 +564,16 @@ namespace eka2l1 {
             ctx.complete(epoc::error_not_found);
             return;
         }
+        
+        apa_app_info info_copy = reg->mandatory_info;
+        auto map_to_host_ite = uids_app_to_executable.find(app_uid);
 
-        ctx.write_data_to_descriptor_argument<apa_app_info>(1, reg->mandatory_info);
+        if (map_to_host_ite != uids_app_to_executable.end()) {
+            info_copy.app_path = std::u16string(MAPPED_EXECUTABLE_HEAD_STRING) + u"_" + map_to_host_ite->second +
+                UNIQUE_MAPPED_EXTENSION_STRING;
+        }
+
+        ctx.write_data_to_descriptor_argument<apa_app_info>(1, info_copy);
         ctx.complete(epoc::error_none);
     }
 
@@ -755,6 +763,13 @@ namespace eka2l1 {
             return;
         }
 
+        if ((path->find(MAPPED_EXECUTABLE_HEAD_STRING) == 0) && (path->find(UNIQUE_MAPPED_EXTENSION_STRING) != std::u16string::npos)) {
+            ctx.write_arg(0, kernel::BRIDAGED_EXECUTABLE_NAME);
+            ctx.complete(epoc::error_none);
+
+            return;
+        }
+
         hle::lib_manager *lmngr = kern->get_lib_manager();
 
         if (!lmngr->load(path.value())) {
@@ -905,6 +920,37 @@ namespace eka2l1 {
         ctx.complete(epoc::error_none);
     }
 
+    void applist_server::get_app_executable_name_given_app_uid(service::ipc_context &ctx) {
+        std::optional<epoc::uid> app_uid = ctx.get_argument_value<epoc::uid>(2);
+
+        if (!app_uid.has_value()) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        auto executable_map_result = uids_app_to_executable.find(app_uid.value());
+        if (executable_map_result != uids_app_to_executable.end()) {
+            ctx.write_arg(0, kernel::BRIDAGED_EXECUTABLE_NAME);
+            ctx.write_arg(1, executable_map_result->second);
+
+            // Return value is opaque data length. Nothing like that at the moment
+            ctx.complete(0);
+            
+            return;
+        }
+
+        apa_app_registry *reg = get_registration(app_uid.value());
+
+        if (!reg) {
+            ctx.complete(epoc::error_not_found);
+            return;
+        }
+
+        // Return value is opaque data length. Nothing like that at the moment
+        ctx.write_arg(0, reg->mandatory_info.app_path.to_std_string(nullptr));
+        ctx.complete(0);
+    }
+
     applist_session::applist_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver)
         : typical_session(svr, client_ss_uid, client_ver) {
     }
@@ -1035,6 +1081,10 @@ namespace eka2l1 {
                 server<applist_server>()->recognize_data_by_file_handle(*ctx);
                 break;
 
+            case applist_request_get_executable_name_given_app_uid:
+                server<applist_server>()->get_app_executable_name_given_app_uid(*ctx);
+                break;
+
             default:
                 LOG_ERROR(SERVICE_APPLIST, "Unimplemented applist opcode 0x{:X}", ctx->msg->function);
                 break;
@@ -1060,14 +1110,16 @@ namespace eka2l1 {
 
     bool applist_server::launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id,
                                     kernel::process *requester, std::function<void()> app_exit_callback) {
-        static constexpr std::size_t MINIMAL_LAUNCH_STACK_SIZE = 0x8000;
+        static constexpr std::size_t MINIMAL_LAUNCH_STACK_SIZE = 0x10000;
+        static constexpr std::size_t MINIMAL_LAUNCH_STACK_SIZE_S3 = 0x80000;
 
-        // Some S^3 app has very low stack size for some reason. So we replace the stack size if it's too low
+        // Some S^3 and other OS apps has very low stack size for some reason. So we replace the stack size if it's too low
         // Note that on the actual source code, app is launched with possible stack override
         // For reference: see variable KMinApplicationStackSize and this line at file:
         // https://github.com/SymbianSource/oss.FCL.sf.mw.appsupport/blob/master/appfw/apparchitecture/apgrfx/apgstart.cpp#L164
+        // Value of S^3 is based on the proud Doodle Farm (for some reason using 0.3mb of stack in a single function when in EXE it ask for 0.1mb)
         process_ptr pr = kern->spawn_new_process(exe_path, (legacy_level() < APA_LEGACY_LEVEL_MORDEN) ? cmd : u"",
-            0, MINIMAL_LAUNCH_STACK_SIZE);
+            0, (kern->get_epoc_version() >= epocver::epoc10) ? MINIMAL_LAUNCH_STACK_SIZE_S3 : MINIMAL_LAUNCH_STACK_SIZE);
 
         if (!pr) {
             return false;
@@ -1123,5 +1175,9 @@ namespace eka2l1 {
             real_mask_bmp = eka2l1::ptr<epoc::bitwise_bitmap>(registry.app_icons[index * 2 + 1].bmp_rom_addr_).get(sys->get_memory_system());
 
         return std::make_optional(std::make_pair(real_bmp, real_mask_bmp));
+    }
+
+    void applist_server::add_app_uid_to_host_launch_name(const epoc::uid app_uid, const std::u16string &host_launch_name) {
+        uids_app_to_executable.emplace(app_uid, host_launch_name);
     }
 }

@@ -64,6 +64,7 @@
 #include <services/uiss/uiss.h>
 #include <services/unipertar/unipertar.h>
 #include <services/window/window.h>
+#include <services/host_launch.h>
 
 #include <services/init.h>
 #include <system/epoc.h>
@@ -267,6 +268,7 @@ namespace eka2l1 {
             }
 
             epoc::initialize_system_properties(sys, cfg);
+            init_symbian_app_launch_to_host_launch(sys);
         }
         
         void init_services_post_bootup(system *sys) {

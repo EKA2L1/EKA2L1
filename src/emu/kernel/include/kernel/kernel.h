@@ -256,6 +256,15 @@ namespace eka2l1 {
      */
     using uid_of_process_change_callback = std::function<void(kernel::process *, kernel::process_uid_type)>;
 
+    /**
+     * @brief Callback when a guomen process's is requested to run, used to handle host launch request.
+     * 
+     * @param process       Pointer to the guomen process that is requested to be ran.
+     * 
+     * @returns False if the callback will not handle this run.
+     */
+    using guomen_process_run_callback = std::function<bool(kernel::process *)>;
+
     struct kernel_global_data {
         kernel::char_set char_set_;
 
@@ -334,6 +343,7 @@ namespace eka2l1 {
         common::identity_container<imb_range_callback> imb_range_callback_funcs_;
         common::identity_container<ldd_factory_request_callback> ldd_factory_req_callback_funcs_;
         common::identity_container<uid_of_process_change_callback> uid_of_process_callback_funcs_;
+        common::identity_container<guomen_process_run_callback> guomen_process_run_callback_funcs_;
 
         std::unique_ptr<arm::arm_analyser> analyser_;
 
@@ -390,6 +400,7 @@ namespace eka2l1 {
         void run_codeseg_loaded_callback(const std::string &lib_name, kernel::process *attacher, codeseg_ptr target);
         void run_imb_range_callback(kernel::process *caller, address range_addr, const std::size_t range_size);
         void run_uid_of_process_change_callback(kernel::process *aff, kernel::process_uid_type type);
+        bool handle_guomen_process_run(kernel::process *guomen_process);
 
         std::size_t register_ipc_send_callback(ipc_send_callback callback);
         std::size_t register_ipc_complete_callback(ipc_complete_callback callback);
@@ -400,6 +411,7 @@ namespace eka2l1 {
         std::size_t register_imb_range_callback(imb_range_callback callback);
         std::size_t register_ldd_factory_request_callback(ldd_factory_request_callback callback);
         std::size_t register_uid_process_change_callback(uid_of_process_change_callback callback);
+        std::size_t register_guomen_process_run_callback(guomen_process_run_callback callback);
 
         bool unregister_codeseg_loaded_callback(const std::size_t handle);
         bool unregister_ipc_send_callback(const std::size_t handle);
@@ -410,6 +422,7 @@ namespace eka2l1 {
         bool unregister_imb_range_callback(const std::size_t handle);
         bool unregister_ldd_factory_request_callback(const std::size_t handle);
         bool unregister_uid_of_process_change_callback(const std::size_t handle);
+        bool unregister_guomen_process_run_callback(const std::size_t handle);
 
         ldd::factory_instantiate_func suitable_ldd_instantiate_func(const char *name);
 
@@ -736,6 +749,14 @@ namespace eka2l1 {
 
             return add_object<T>(obj);
         }
+        
+        template <typename T, typename... args>
+        T *create_no_kernel_param(args... creation_arg) {
+            constexpr kernel::object_type obj_type = get_object_type<T>();
+            std::unique_ptr<T> obj = std::make_unique<T>(creation_arg...);
+
+            return add_object<T>(obj);
+        }
 
         template <typename T, typename... args>
         std::pair<kernel::handle, T *> create_and_add(kernel::owner_type owner,
@@ -748,6 +769,13 @@ namespace eka2l1 {
         std::pair<kernel::handle, T *> create_and_add_thread(kernel::owner_type owner,
             kernel::thread *thr, args... creation_args) {
             T *obj = create<T>(creation_args...);
+            return std::make_pair(open_handle_with_thread(thr, obj, owner), obj);
+        }
+        
+        template <typename T, typename... args>
+        std::pair<kernel::handle, T *> create_no_kernel_param_and_add_thread(kernel::owner_type owner,
+            kernel::thread *thr, args... creation_args) {
+            T *obj = create_no_kernel_param<T>(creation_args...);
             return std::make_pair(open_handle_with_thread(thr, obj, owner), obj);
         }
 

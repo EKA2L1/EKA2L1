@@ -111,4 +111,14 @@ namespace eka2l1 {
     };
 
     static_assert(sizeof(apa_capability) == 64);
+
+    static constexpr char16_t *MAPPED_EXECUTABLE_HEAD_STRING = u"MappedExecutable";
+
+    // Someone maybe using .exe with the same name constructed from the mapped string
+    // and we may accidentally run the executable that is supposed to not exist?
+    // So better add an extension.
+    static constexpr char16_t *UNIQUE_MAPPED_EXTENSION_STRING = u".mapper";
+    
+    static constexpr std::size_t MAPPED_EXECUTABLE_HEAD_STRING_LENGTH = std::char_traits<char16_t>::length(MAPPED_EXECUTABLE_HEAD_STRING);
+    static constexpr std::size_t UNIQUE_MAPPED_EXTENSION_STRING_LENGTH = std::char_traits<char16_t>::length(UNIQUE_MAPPED_EXTENSION_STRING);
 }

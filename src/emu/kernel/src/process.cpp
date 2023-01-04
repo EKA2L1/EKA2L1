@@ -210,7 +210,7 @@ namespace eka2l1::kernel {
     }
 
     process::process(kernel_system *kern, memory_system *mem, const std::string &process_name, const std::u16string &exe_path,
-        const std::u16string &cmd_args)
+        const std::u16string &cmd_args, bool use_memory)
         : kernel_obj(kern, process_name, nullptr, access_type::local_access)
         , mm_impl_(nullptr)
         , dll_static_chunk(nullptr)
@@ -239,7 +239,10 @@ namespace eka2l1::kernel {
         }
 
         // Create mem model implementation
-        mm_impl_ = mem::make_new_mem_model_process(mem->get_control(), mem->get_model_type());
+        if (use_memory) {
+            mm_impl_ = mem::make_new_mem_model_process(mem->get_control(), mem->get_model_type());
+        }
+
         generation_ = refresh_generation();
     }
 
@@ -478,13 +481,18 @@ namespace eka2l1::kernel {
 
             return;
         }
+        epoc::notify_info info(logon_request, kern->crr_thread());
 
         if (rendezvous) {
-            rendezvous_requests.emplace_back(logon_request, kern->crr_thread());
+            if (handle_rendezvous_request(info)) {
+                return;
+            }
+
+            rendezvous_requests.push_back(info);
             return;
         }
 
-        logon_requests.emplace_back(logon_request, kern->crr_thread());
+        logon_requests.push_back(info);
     }
 
     bool process::logon_cancel(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous) {

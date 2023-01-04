@@ -180,4 +180,5 @@ namespace eka2l1::kernel {
 
     static constexpr std::uint32_t INVALID_HANDLE = 0xFFFFFFFF;
     static const char16_t *KERN_EXEC_CAT = u"KERN-EXEC";
+    static const char16_t *BRIDAGED_EXECUTABLE_NAME = u"native://EKA2L1_HostLaunch.exe";
 }

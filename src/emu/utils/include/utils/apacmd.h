@@ -27,6 +27,8 @@ namespace eka2l1::common {
 }
 
 namespace eka2l1::epoc::apa {
+    static constexpr std::uint8_t PROCESS_ENVIRONMENT_ARG_SLOT_MAIN = 1;
+
     enum command {
         command_open = 0,
         command_create = 1,

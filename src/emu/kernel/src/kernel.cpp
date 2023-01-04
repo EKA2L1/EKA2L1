@@ -41,6 +41,7 @@
 
 #include <kernel/kernel.h>
 #include <kernel/libmanager.h>
+#include <kernel/guomen_process.h>
 #include <kernel/scheduler.h>
 #include <kernel/thread.h>
 #include <loader/romimage.h>
@@ -663,6 +664,10 @@ namespace eka2l1 {
     std::size_t kernel_system::register_uid_process_change_callback(uid_of_process_change_callback callback) {
         return uid_of_process_callback_funcs_.add(callback);
     }
+    
+    std::size_t kernel_system::register_guomen_process_run_callback(guomen_process_run_callback callback) {
+        return guomen_process_run_callback_funcs_.add(callback);
+    }
 
     bool kernel_system::unregister_ipc_send_callback(const std::size_t handle) {
         return ipc_send_callbacks_.remove(handle);
@@ -698,6 +703,10 @@ namespace eka2l1 {
 
     bool kernel_system::unregister_uid_of_process_change_callback(const std::size_t handle) {
         return uid_of_process_callback_funcs_.remove(handle);
+    }
+    
+    bool kernel_system::unregister_guomen_process_run_callback(const std::size_t handle) {
+        return guomen_process_run_callback_funcs_.remove(handle);
     }
 
     ldd::factory_instantiate_func kernel_system::suitable_ldd_instantiate_func(const char *name) {
@@ -787,6 +796,11 @@ namespace eka2l1 {
     // We can support also ELF!
     process_ptr kernel_system::spawn_new_process(const std::u16string &path, const std::u16string &cmd_arg, const kernel::uid promised_uid3,
         const std::uint32_t stack_size) {
+        if (path == kernel::BRIDAGED_EXECUTABLE_NAME) {
+            // Spawn a fake process that's linked to a real process
+            return create<kernel::guomen_process>(mem_, cmd_arg);
+        }
+
         std::u16string full_path;
         auto imgs = lib_mngr_->try_search_and_parse(path, &full_path);
 
@@ -1314,6 +1328,16 @@ namespace eka2l1 {
 
         dll_global_data_last_offset_ += size;
         return true;
+    }
+
+    bool kernel_system::handle_guomen_process_run(kernel::process *guomen_process) {
+        for (auto func: guomen_process_run_callback_funcs_) {
+            if (func(guomen_process)) {
+                return true;
+            }
+        }
+
+        return false;
     }
     
     bool kernel_system::should_panic_be_blocked(kernel::thread *thr, const std::string &category, const std::int32_t code) {

@@ -13,6 +13,7 @@ add_library(epockern
         include/kernel/smp/core.h
         include/kernel/smp/scheduler.h
         include/kernel/btrace.h
+        include/kernel/guomen_process.h
         include/kernel/change_notifier.h
         include/kernel/chunk.h
         include/kernel/codeseg.h
@@ -42,6 +43,7 @@ add_library(epockern
         src/legacy/mutex.cpp
         src/legacy/sema.cpp
         src/smp/avail.cpp
+        src/guomen_process.cpp
         src/btrace.cpp
         src/change_notifier.cpp
         src/chunk.cpp

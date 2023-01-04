@@ -32,8 +32,8 @@ namespace eka2l1::epoc::apa {
     }
 
     void command_line::do_it_newarch(common::chunkyseri &seri) {
-        epoc::absorb_des_string(executable_path_, seri, true);
         epoc::absorb_des_string(document_name_, seri, true);
+        epoc::absorb_des_string(executable_path_, seri, true);
         epoc::absorb_des_string(opaque_data_, seri, false);
         epoc::absorb_des_string(tail_end_, seri, false);
 

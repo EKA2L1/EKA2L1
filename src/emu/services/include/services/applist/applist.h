@@ -187,6 +187,7 @@ namespace eka2l1 {
         friend class applist_session;
 
         std::vector<apa_app_registry> regs;
+        std::unordered_map<epoc::uid, std::u16string> uids_app_to_executable;
 
         std::uint32_t flags{ 0 };
         std::uint32_t avail_drives_{ 0 };
@@ -283,6 +284,7 @@ namespace eka2l1 {
         void get_app_for_document(service::ipc_context &ctx);
         void get_app_for_document_by_file_handle(service::ipc_context &ctx);
         void get_app_for_document_impl(service::ipc_context &ctx, const std::u16string &path);
+        void get_app_executable_name_given_app_uid(service::ipc_context &ctx);
         void recognize_data_by_file_handle(service::ipc_context &ctx);
 
         void connect(service::ipc_context &ctx) override;
@@ -321,5 +323,7 @@ namespace eka2l1 {
          * \brief Get all app registerations.
          */
         std::vector<apa_app_registry> &get_registerations();
+
+        void add_app_uid_to_host_launch_name(const epoc::uid app_uid, const std::u16string &host_launch_name);
     };
 }
