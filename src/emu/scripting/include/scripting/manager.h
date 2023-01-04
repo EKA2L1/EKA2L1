@@ -252,12 +252,14 @@ namespace eka2l1::manager {
         /**
          * \brief Write back instruction that was overwritted by bkpt.
          * 
-         * \param pr        The target process we want to give back the instruction.
-         * \param target    The address to write back instruction.
+         * \param pr                The target process we want to give back the instruction.
+         * \param target            The address to write back instruction.
+         * \param should_full_flush Pointer to a boolean variable suggesting that a full flush should be done
+         *                          after this write or not.
          * 
          * \returns True on success and the bkpt was written before.
          */
-        bool write_back_breakpoint(kernel::process *pr, const vaddress target);
+        bool write_back_breakpoint(kernel::process *pr, const vaddress target, bool *should_full_flush = nullptr);
 
         script_function *make_function(void *func_ptr, const script_function::meta_category category, std::size_t *handle);
         void remove_function(const std::uint32_t handle);
