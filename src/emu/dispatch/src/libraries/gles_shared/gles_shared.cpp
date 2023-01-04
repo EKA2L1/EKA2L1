@@ -3129,6 +3129,13 @@ namespace eka2l1::dispatch {
         // Empty
     }
     
+    BRIDGE_FUNC_LIBRARY(void, gl_point_parameter_f_emu, std::uint32_t pname, float param) {
+        // Empty
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, gl_point_parameter_fv_emu, std::uint32_t pname, const float *param) {
+        // Empty
+    }
 
     BRIDGE_FUNC_LIBRARY(void, gl_draw_arrays_emu, std::uint32_t mode, std::int32_t first_index, std::int32_t count) {
         egl_context_es_shared *ctx = get_es_shared_active_context(sys);
