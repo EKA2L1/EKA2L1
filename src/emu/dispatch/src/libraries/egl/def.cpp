@@ -186,7 +186,9 @@ namespace eka2l1::dispatch {
 
         if (context_to_set) {
             active_context_[thread_id] = context_to_set;
+
             context_to_set->associated_thread_uid_ = thread_id;
+            context_to_set->on_being_set_current();
         } else {
             active_context_.erase(thread_id);
         }

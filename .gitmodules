@@ -86,3 +86,9 @@
 [submodule "src/external/miniupnp"]
 	path = src/external/miniupnp
 	url = https://github.com/miniupnp/miniupnp
+[submodule "src/external/libtess2"]
+	path = src/external/libtess2
+	url = https://github.com/memononen/libtess2
+[submodule "src/external/RectangleBinPack"]
+	path = src/external/RectangleBinPack
+	url = https://github.com/juj/RectangleBinPack

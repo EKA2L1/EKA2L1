@@ -23,6 +23,8 @@
 #include <drivers/itc.h>
 
 #include <dispatch/libraries/gles1/shaderman.h>
+#include <dispatch/libraries/vg/gnuVG_shaderman.hh>
+
 #include <services/window/classes/winuser.h>
 
 #include <common/vecx.h>
@@ -497,7 +499,8 @@ namespace eka2l1::dispatch {
 
     enum egl_context_type {
         EGL_GLES1_CONTEXT,
-        EGL_GLES2_CONTEXT
+        EGL_GLES2_CONTEXT,
+        EGL_VG_CONTEXT
     };
 
     using egl_context_handle = std::uint32_t;
@@ -550,6 +553,7 @@ namespace eka2l1::dispatch {
         virtual egl_context_type context_type() const = 0;
         virtual void init_context_state() = 0;
         virtual void on_surface_changed(egl_surface *prev_read, egl_surface *prev_draw) {}
+        virtual void on_being_set_current() {}
     };
 
     using egl_context_instance = std::unique_ptr<egl_context>;
@@ -564,6 +568,7 @@ namespace eka2l1::dispatch {
         std::map<kernel::uid, std::uint32_t> egl_error_map_;
 
         gles1_shaderman es1_shaderman_;
+        gnuVG::ShaderMan vg_shaderman_;
 
         drivers::graphics_driver *driver_;
 
@@ -575,6 +580,10 @@ namespace eka2l1::dispatch {
 
         gles1_shaderman &get_es1_shaderman() {
             return es1_shaderman_;
+        }
+
+        gnuVG::ShaderMan &get_vg_shaderman() {
+            return vg_shaderman_;
         }
 
         std::uint32_t add_managed_surface(egl_surface_instance &inst);

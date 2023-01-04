@@ -148,7 +148,8 @@ namespace eka2l1::drivers {
 
     enum class addressing_option : std::uint16_t {
         clamp_to_edge,
-        repeat
+        repeat,
+        mirrored_repeat
     };
 
     enum class addressing_direction : std::uint16_t {

@@ -281,6 +281,29 @@ option (UPNPC_NO_INSTALL "Disable installation" TRUE)
 
 add_subdirectory(miniupnp/miniupnpc)
 
+# libtess2
+
+add_library(libtess2
+    libtess2/Source/bucketalloc.c
+    libtess2/Source/bucketalloc.h
+    libtess2/Source/dict.c
+    libtess2/Source/dict.h
+    libtess2/Source/geom.c
+    libtess2/Source/geom.h
+    libtess2/Source/mesh.c
+    libtess2/Source/mesh.h
+    libtess2/Source/priorityq.c
+    libtess2/Source/priorityq.h
+    libtess2/Source/sweep.c
+    libtess2/Source/sweep.h
+    libtess2/Source/tess.c
+    libtess2/Source/tess.h)
+
+target_include_directories(libtess2 PUBLIC libtess2/Include)
+
+# RectangleBinPack
+add_subdirectory(RectangleBinPack)
+
 set (capstone_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/capstone/include" PARENT_SCOPE)
 set (YAML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp/include" PARENT_SCOPE)
 set (LIBCXXABI_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libcxxabi/include" PARENT_SCOPE)

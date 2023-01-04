@@ -847,76 +847,6 @@ namespace eka2l1::dispatch {
         egl_context::destroy(driver, builder);
     }
 
-    gles_buffer_pusher::gles_buffer_pusher() {
-        current_buffer_ = 0;
-        size_per_buffer_ = 0;
-    }
-    
-    void gles_buffer_pusher::add_buffer() {
-        if (!size_per_buffer_) {
-            return;
-        }
-
-        buffer_info info;
-        info.data_ = new std::uint8_t[size_per_buffer_];
-        info.used_size_ = 0;
-        info.buffer_ = 0;
-
-        buffers_.push_back(info);
-    }
-
-    void gles_buffer_pusher::initialize(const std::size_t size_per_buffer) {
-        if (!size_per_buffer) {
-            return;
-        }
-        size_per_buffer_ = size_per_buffer;
-        add_buffer();
-    }
-
-    void gles_buffer_pusher::destroy(drivers::graphics_command_builder &builder) {
-        for (std::size_t i = 0; i < buffers_.size(); i++) {
-            if (buffers_[i].buffer_)
-                builder.destroy(buffers_[i].buffer_);
-
-            if (buffers_[i].data_) {
-                delete buffers_[i].data_;
-            }
-        }
-    }
-
-    void gles_buffer_pusher::flush(drivers::graphics_command_builder &builder) {
-        for (std::uint8_t i = 0; i <= current_buffer_; i++) {
-            if (i == buffers_.size()) {
-                break;
-            }
-
-            const void *buffer_data_casted = buffers_[i].data_;
-            const std::uint32_t buffer_size = static_cast<std::uint32_t>(buffers_[i].used_size_);
-
-            if (buffer_size == 0) {
-                continue;
-            }
-
-            builder.update_buffer_data_no_copy(buffers_[i].buffer_, 0, buffer_data_casted, buffer_size);
-    
-            buffers_[i].data_ = nullptr;
-            buffers_[i].used_size_ = 0;
-        }
-
-        // Move on, these others might still be used
-        if (size_per_buffer_ != 0) {
-            current_buffer_++;
-            
-            if (current_buffer_ >= buffers_.size()) {
-                add_buffer();
-            }
-        }
-    }
-
-    void gles_buffer_pusher::done_frame() {
-        current_buffer_ = 0;
-    }
-
     std::uint32_t get_gl_attrib_stride(const gles_vertex_attrib &attrib) {
         std::uint32_t stride = attrib.stride_;
         if (!stride) {
@@ -949,7 +879,7 @@ namespace eka2l1::dispatch {
         return stride;
     }
 
-    drivers::handle gles_buffer_pusher::push_buffer(drivers::graphics_driver *drv, const std::uint8_t *data_source, const std::size_t total_buffer_size, std::size_t &buffer_offset) {
+    drivers::handle graphics_buffer_pusher::push_buffer(drivers::graphics_driver *drv, const std::uint8_t *data_source, const std::size_t total_buffer_size, std::size_t &buffer_offset) {
         if (buffers_[current_buffer_].used_size_ + total_buffer_size > size_per_buffer_) {
             current_buffer_++;
         }
@@ -3129,6 +3059,13 @@ namespace eka2l1::dispatch {
         // Empty
     }
     
+    BRIDGE_FUNC_LIBRARY(void, gl_point_parameter_f_emu, std::uint32_t pname, float value) {
+        // Empty
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, gl_point_parameter_fv_emu, std::uint32_t pname, float *values) {
+        // Empty
+    }
 
     BRIDGE_FUNC_LIBRARY(void, gl_draw_arrays_emu, std::uint32_t mode, std::int32_t first_index, std::int32_t count) {
         egl_context_es_shared *ctx = get_es_shared_active_context(sys);

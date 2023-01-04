@@ -21,6 +21,7 @@
 
 #include <dispatch/libraries/egl/def.h>
 #include <dispatch/libraries/gles_shared/consts.h>
+#include <dispatch/libraries/buffer_pusher.h>
 #include <dispatch/def.h>
 
 #include <common/container.h>
@@ -246,38 +247,6 @@ namespace eka2l1::dispatch {
         std::uint32_t offset_;
         std::uint32_t buffer_obj_ = 0;
     };
-    
-    // General idea from PPSSPP (thanks!)
-    struct gles_buffer_pusher {
-    private:
-        struct buffer_info {
-            drivers::handle buffer_;
-            std::size_t used_size_;
-            std::uint8_t *data_;
-        };
-
-        std::vector<buffer_info> buffers_;
-        std::uint8_t current_buffer_;
-        std::size_t size_per_buffer_;
-
-        void add_buffer();
-
-    public:
-        explicit gles_buffer_pusher();
-
-        bool is_initialized() const {
-            return (size_per_buffer_ != 0);
-        }
-
-        void initialize(const std::size_t size_per_buffer);
-        void destroy(drivers::graphics_command_builder &builder);
-        void done_frame();
-
-        drivers::handle push_buffer(drivers::graphics_driver *drv, const std::uint8_t *data, const std::size_t buffer_size,
-            std::size_t &buffer_offset);
-
-        void flush(drivers::graphics_command_builder &builder);
-    };
 
     using gles_driver_object_instance = std::unique_ptr<gles_driver_object>;
 
@@ -391,8 +360,8 @@ namespace eka2l1::dispatch {
         float depth_range_max_;
 
         // Vertex and index buffers
-        gles_buffer_pusher vertex_buffer_pusher_;
-        gles_buffer_pusher index_buffer_pusher_;
+        graphics_buffer_pusher vertex_buffer_pusher_;
+        graphics_buffer_pusher index_buffer_pusher_;
         bool attrib_changed_;
 
         float blend_colour_[4];
