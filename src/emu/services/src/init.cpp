@@ -132,6 +132,7 @@ namespace eka2l1::epoc {
         locale.universal_time_offset_ = -14400;
         locale.device_time_state_ = epoc::device_user_time;
         locale.decimal_separator_ = '.';
+        locale.thousands_separator_ = ',';
         locale.negative_currency_format_ = epoc::negative_currency_leading_minus_sign;
 
         locale.time_separator_[0] = 0;
