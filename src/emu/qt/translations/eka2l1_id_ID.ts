@@ -1002,7 +1002,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="408"/>
       <source>Show log console (Windows only)</source>
-      <translation type="unfinished">Show log console (Windows only)</translation>
+      <translation>Tampilkan konsol log (Khusus Windows)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="418"/>
@@ -1099,7 +1099,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="597"/>
       <source>Disable title with Git version</source>
-      <translation type="unfinished">Disable title with Git version</translation>
+      <translation>Nonaktifkan judul dengan versi Git</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="604"/>
@@ -1654,27 +1654,27 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.ui" line="14"/>
       <source>New update available</source>
-      <translation type="unfinished">New update available</translation>
+      <translation>Pembaruan terbaru tersedia</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="43"/>
       <source>A new update has been released on Github!</source>
-      <translation type="unfinished">A new update has been released on Github!</translation>
+      <translation>Pembaruan baru telah dirilis di Github!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="61"/>
       <source>Changelog</source>
-      <translation type="unfinished">Changelog</translation>
+      <translation>Catatan perubahan</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="84"/>
       <source>Downloading update ... %p%</source>
-      <translation type="unfinished">Downloading update ... %p%</translation>
+      <translation>Mengunduh pembaruan ... %p%</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="91"/>
       <source>Do not automatically check for update when startup</source>
-      <translation type="unfinished">Do not automatically check for update when startup</translation>
+      <translation>Jangan secara otomatis memeriksa pembaruan saat startup</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="126"/>
@@ -1684,7 +1684,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.ui" line="139"/>
       <source>Ignore</source>
-      <translation type="unfinished">Ignore</translation>
+      <translation>Abaikan</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="149"/>
@@ -1694,94 +1694,94 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.cpp" line="107"/>
       <source>Update success</source>
-      <translation type="unfinished">Update success</translation>
+      <translation>Berhasil diperbarui</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="113"/>
       <source>Update failed</source>
-      <translation type="unfinished">Update failed</translation>
+      <translation>Pembaruan gagal</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="142"/>
       <source>The emulator is already updated to lastest version!</source>
-      <translation type="unfinished">The emulator is already updated to lastest version!</translation>
+      <translation>Emulator sudah diperbarui ke versi terbaru!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="151"/>
       <source>The release channel is not available. Please check your internet connection!</source>
-      <translation type="unfinished">The release channel is not available. Please check your internet connection!</translation>
+      <translation>Saluran rilis tidak tersedia. Silakan periksa koneksi internet Anda!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="157"/>
       <source>Failed to get information about the newest update from Github!</source>
-      <translation type="unfinished">Failed to get information about the newest update from Github!</translation>
+      <translation>Gagal mendapatkan informasi tentang update terbaru dari Github!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="189"/>
       <source>Can&apos;t find the download link of newest update for your platform!</source>
-      <translation type="unfinished">Can&apos;t find the download link of newest update for your platform!</translation>
+      <translation>Tidak dapa&apos;t menemukan tautan unduhan pembaruan terbaru untuk platform Anda!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="195"/>
       <source>Failed to get update download link from Github!</source>
-      <translation type="unfinished">Failed to get update download link from Github!</translation>
+      <translation>Gagal mendapatkan tautan unduhan pembaruan dari Github!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="213"/>
       <source>Error retrieving changelog from Github...</source>
-      <translation type="unfinished">Error retrieving changelog from Github...</translation>
+      <translation>Kesalahan saat mengambil log perubahan dari Github...</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="235"/>
       <source>Changelog (update commit: %1)</source>
-      <translation type="unfinished">Changelog (update commit: %1)</translation>
+      <translation>Changelog (update commit: %1)</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="256"/>
       <source>Updater unsupported</source>
-      <translation type="unfinished">Updater unsupported</translation>
+      <translation>Pembaruan tidak didukung</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="256"/>
       <source>The updater is not yet supported on your platform!</source>
-      <translation type="unfinished">The updater is not yet supported on your platform!</translation>
+      <translation>Pembaruan belum didukung di platform Anda!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="300"/>
       <location filename="../src/update_dialog.cpp" line="360"/>
       <source>Update error</source>
-      <translation type="unfinished">Update error</translation>
+      <translation>Pembaharuan gagal</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="300"/>
       <source>Can&apos;t not open temporary file for storing the update files!</source>
-      <translation type="unfinished">Can&apos;t not open temporary file for storing the update files!</translation>
+      <translation>Tidak dapa&apos;t membuka file sementara untuk menyimpan file pembaruan!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="384"/>
       <source>Failed to download update with error: %1</source>
-      <translation type="unfinished">Failed to download update with error: %1</translation>
+      <translation>Gagal mengunduh file perbaruan: %1</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="392"/>
       <source>Downloaded update is not in zip format!</source>
-      <translation type="unfinished">Downloaded update is not in zip format!</translation>
+      <translation>Pembaruan yang diunduh tidak dalam format zip!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="421"/>
       <source>Failed to update the updater program!</source>
-      <translation type="unfinished">Failed to update the updater program!</translation>
+      <translation>Gagal memperbarui program pembaru!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="429"/>
       <source>Update zip file is corrupted!</source>
-      <translation type="unfinished">Update zip file is corrupted!</translation>
+      <translation>Berkas Perbarui file zip rusak!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="436"/>
       <location filename="../src/update_dialog.cpp" line="451"/>
       <source>Can&apos;t find the updater program in the update archive file!</source>
-      <translation type="unfinished">Can&apos;t find the updater program in the update archive file!</translation>
+      <translation>Tidak dapa&apos;t menemukan program pembaru di berkas arsip pemutakhiran!</translation>
     </message>
   </context>
   <context>
@@ -1789,7 +1789,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_notice_dialog.ui" line="14"/>
       <source>Update news</source>
-      <translation type="unfinished">Update news</translation>
+      <translation>Berita pembaruran</translation>
     </message>
   </context>
   <context>
@@ -1797,53 +1797,53 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/updater.ui" line="14"/>
       <source>EKA2L1 Updater</source>
-      <translation type="unfinished">EKA2L1 Updater</translation>
+      <translation>Pembaruan EKA2L1</translation>
     </message>
     <message>
       <location filename="../src/updater.ui" line="59"/>
       <source>Updating...</source>
-      <translation type="unfinished">Updating...</translation>
+      <translation>Memperbarui...</translation>
     </message>
     <message>
       <location filename="../src/updater.ui" line="85"/>
       <source>Extracting ... %p%</source>
-      <translation type="unfinished">Extracting ... %p%</translation>
+      <translation>Mengekstrak ... %p%</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="91"/>
       <source>Update failed</source>
-      <translation type="unfinished">Update failed</translation>
+      <translation>Pembaruan gagal</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="99"/>
       <source>Downloaded update is not a zip file!</source>
-      <translation type="unfinished">Downloaded update is not a zip file!</translation>
+      <translation>Pembaruan yang diunduh tidak dalam format zip!</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="122"/>
       <location filename="../src/updater.cpp" line="175"/>
       <source>The downloaded archive zip is corrupted</source>
-      <translation type="unfinished">The downloaded archive zip is corrupted</translation>
+      <translation>Zip arsip yang terunduh rusak</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="178"/>
       <source>Extracted: %1</source>
-      <translation type="unfinished">Extracted: %1</translation>
+      <translation>Mengekstrak: %1</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="197"/>
       <source>Update&apos;s archive file does not exist!</source>
-      <translation type="unfinished">Update&apos;s archive file does not exist!</translation>
+      <translation>Fil&apos;e arsip pembaruan tidak ada!</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="212"/>
       <source>Update success</source>
-      <translation type="unfinished">Update success</translation>
+      <translation>Berhasil diperbarui</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="212"/>
       <source>Update success. Relaunch the emulator?</source>
-      <translation type="unfinished">Update success. Relaunch the emulator?</translation>
+      <translation>Pembaruan sukses. Luncurkan ulang emulator?</translation>
     </message>
   </context>
 </TS>
