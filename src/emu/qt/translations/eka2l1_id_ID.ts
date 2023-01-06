@@ -620,47 +620,47 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="692"/>
       <source>Can&apos;t find the game data folder!</source>
-      <translation type="unfinished">Can&apos;t find the game data folder!</translation>
+      <translation>Tidak dapa&apos;t menemukan folder data permainan!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="696"/>
       <source>There is more than one game in the given card game folder!</source>
-      <translation type="unfinished">There is more than one game in the given card game folder!</translation>
+      <translation>Ada lebih dari satu permainan di folder card game yang diberikan!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="700"/>
       <source>The game information file does not exist in the card game folder!</source>
-      <translation type="unfinished">The game information file does not exist in the card game folder!</translation>
+      <translation>File informasi permainan tidak ada di folder card game!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="704"/>
       <source>The game information file has been corrupted. Please check your data&apos;s validity!</source>
-      <translation type="unfinished">The game information file has been corrupted. Please check your data&apos;s validity!</translation>
+      <translation>File informasi game telah rusak. Harap periksa validitas data&apos;s Anda!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="708"/>
       <source>General error occured...</source>
-      <translation type="unfinished">General error occured...</translation>
+      <translation>Terjadi kesalahan...</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="713"/>
       <location filename="../src/mainwindow.cpp" line="715"/>
       <source>Install failed</source>
-      <translation type="unfinished">Install failed</translation>
+      <translation>Instalasi gagal</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="713"/>
       <source>Installation failed with error:
   -%1</source>
-      <translation type="unfinished">Installation failed with error:
+      <translation>Pemasangan gagal dengan eror:
   -%1</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="715"/>
       <source>Installation of %1% failed with error:
   -%2</source>
-      <translation type="unfinished">Installation of %1% failed with error:
-  -%2</translation>
+      <translation>Pemasangan gagal %1% dengan eror:
+    -%2</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="784"/>
@@ -791,22 +791,22 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1423"/>
       <source>Continue to modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Continue to modify friends&apos; IP addresses</translation>
+      <translation>Ubah teman&apos; alamat IP</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1424"/>
       <source>This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</source>
-      <translation type="unfinished">This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</translation>
+      <translation>Dialog ini akan menampilkan semua alamat IP yang tersimpan, yang berpotensi menampilkan alamat IP orang&apos; lain. informasi pribadi.&lt;br&gt;Apakah Anda ingin melanjutkan?</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1439"/>
       <source>Bluetooth manager service not available!</source>
-      <translation type="unfinished">Bluetooth manager service not available!</translation>
+      <translation>Layanan pengelola Bluetooth tidak tersedia!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1439"/>
       <source>The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</source>
-      <translation type="unfinished">The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</translation>
+      <translation>Perangkat tidak memiliki layanan pengelola bluetooth! Bluetooth tidak didukung.</translation>
     </message>
   </context>
   <context>
@@ -937,7 +937,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="279"/>
       <source>Hide system applications across all devices</source>
-      <translation type="unfinished">Hide system applications across all devices</translation>
+      <translation>Sembunyikan aplikasi sistem di semua perangkat</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="282"/>
@@ -992,12 +992,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="382"/>
       <source>Log filter</source>
-      <translation type="unfinished">Log filter</translation>
+      <translation>Penyaring log</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="399"/>
       <source>Apply</source>
-      <translation type="unfinished">Apply</translation>
+      <translation>Terapkan</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="408"/>
