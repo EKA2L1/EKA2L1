@@ -249,6 +249,28 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void etel_phone_subsession::get_battery_info(eka2l1::service::ipc_context *ctx) {
+        std::optional<epoc::etel_battery_info_v1> battery_info = ctx->get_argument_data_from_descriptor<epoc::etel_battery_info_v1>(0);
+        if (!battery_info.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+        battery_info->charge_level_ = 10;
+        battery_info->battery_status_ = epoc::etel_battery_status_powered_by_battery;
+
+        ctx->write_data_to_descriptor_argument<epoc::etel_battery_info_v1>(0, battery_info.value(), nullptr, true);
+        ctx->complete(epoc::error_none);
+    }
+
+    void etel_phone_subsession::notify_battery_info(eka2l1::service::ipc_context *ctx) {
+        battery_info_change_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+    }
+    
+    void etel_phone_subsession::notify_battery_info_cancel(eka2l1::service::ipc_context *ctx) {
+        battery_info_change_nof_.complete(epoc::error_cancel);
+        ctx->complete(epoc::error_none);
+    }
+
     void etel_phone_subsession::dispatch(service::ipc_context *ctx) {
         if (legacy_level_ == ETEL_LEGACY_LEVEL_LEGACY) {
             switch (ctx->msg->function) {
@@ -394,6 +416,18 @@ namespace eka2l1 {
 
             case epoc::etel_mobile_phone_notify_indicator_changes_cancel:
                 cancel_indicator_change(ctx);
+                break;
+
+            case epoc::etel_mobile_phone_get_battery_info:
+                get_battery_info(ctx);
+                break;
+
+            case epoc::etel_mobile_phone_notify_battery_info_change:
+                notify_battery_info(ctx);
+                break;
+
+            case epoc::etel_mobile_phone_notify_battery_info_change_cancel:
+                notify_battery_info_cancel(ctx);
                 break;
 
             default:

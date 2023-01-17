@@ -114,17 +114,21 @@ namespace eka2l1::epoc {
         etel_mobile_phone_transition_get_subscriber_id = 3017,
         etel_mobile_line_get_mobile_line_status = 20023,
         etel_mobile_line_notify_status_change = 20024,
+        etel_mobile_phone_get_battery_info = 20030,
         etel_mobile_phone_get_identity_caps = 20043,
         etel_mobile_phone_get_indicator = 20046,
         etel_mobile_phone_get_indicator_caps = 20047,
         etel_mobile_phone_get_network_caps = 20052,
         etel_mobile_phone_get_network_registration_status = 20054,
         etel_mobile_phone_get_signal_strength = 20060,
+        etel_mobile_phone_notify_battery_info_change = 20067,
         etel_mobile_phone_notify_indicator_changes = 20084,
         etel_mobile_phone_notify_network_registration_status_change = 20092,
         etel_mobile_phone_notify_signal_strength_change = 20097,
+        // cancel = original + 500
         etel_mobile_line_cancel_notify_status_change = 20524,
         etel_mobile_phone_get_network_registration_status_cancel = 20554,
+        etel_mobile_phone_notify_battery_info_change_cancel = 20567,
         etel_mobile_phone_notify_indicator_changes_cancel = 20584,
         etel_mobile_phone_get_home_network = 22004,
         etel_mobile_phone_get_phone_id = 22012,
@@ -345,6 +349,14 @@ namespace eka2l1::epoc {
         etel_charger_status_not_charging = 2
     };
 
+    enum etel_battery_status {
+        etel_battery_status_unknown = 0,
+        etel_battery_status_powered_by_battery = 1,
+        etel_battery_status_battery_with_external_power = 2,
+        etel_battery_status_no_battery = 3,
+        etel_battery_power_fault = 4
+    };
+
     enum {
         MAX_MANUFACTURER_ID_LENGTH = 50,
         MAX_MODEL_ID_LENGTH = 50,
@@ -363,6 +375,11 @@ namespace eka2l1::epoc {
 
     struct etel_phone_id_v1 : public etel_multimode_type {
         etel_phone_id_v0 detail_;
+    };
+
+    struct etel_battery_info_v1 : public etel_multimode_type {
+        etel_battery_status battery_status_;
+        std::uint32_t charge_level_;
     };
 
     static constexpr std::uint32_t ETEL_PHONE_CHARGER_STATUS_UID = 0x100052C9;
