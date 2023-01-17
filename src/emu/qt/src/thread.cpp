@@ -74,7 +74,7 @@ static eka2l1::drivers::input_event make_mouse_event_driver(const float x, const
 /**
  * \brief Callback when a host mouse event is triggered
  * \param mouse_pos    position of mouse pointer          
- * \param button       0: left, 1: right, 2: other      
+ * \param button       0: left, 1: right, 2: other, -1: no button     
  * \param action       0: press, 1: repeat(move), 2: release      
  */
 static void on_ui_window_mouse_evt(void *userdata, eka2l1::vec3 mouse_pos, int button, int action, int mouse_id) {

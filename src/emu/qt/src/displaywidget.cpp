@@ -198,14 +198,10 @@ void display_widget::mouseReleaseEvent(QMouseEvent *event) {
 
 void display_widget::mouseMoveEvent(QMouseEvent *event) {
     // Even with mouse tracking disabled, they still keep coming
-    if (event->buttons() == Qt::NoButton) {
-        return;
-    }
-
     const qreal pixel_ratio = devicePixelRatioF();
 
     if (raw_mouse_event) {
-        const int button = eka2l1::common::find_most_significant_bit_one(event->buttons());
+        const int button = (event->buttons() == Qt::NoButton) ? -1 : eka2l1::common::find_most_significant_bit_one(event->buttons());
         raw_mouse_event(userdata_, eka2l1::vec3(event->pos().x() * pixel_ratio, event->pos().y() * pixel_ratio, 0), button, 1, 0);
     }
 }

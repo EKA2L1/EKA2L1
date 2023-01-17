@@ -55,7 +55,8 @@ namespace eka2l1::drivers {
         mouse_button_10 = 9,
         mouse_button_left = mouse_button_1,
         mouse_button_right = mouse_button_2,
-        mouse_button_middle = mouse_button_3
+        mouse_button_middle = mouse_button_3,
+        mouse_button_none = -1
     };
 
     enum mouse_action {

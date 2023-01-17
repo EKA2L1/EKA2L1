@@ -1502,6 +1502,10 @@ bool main_window::deliver_overlay_mouse_event(const eka2l1::vec3 &pos, const int
         return false;
     }
 
+    if (mouse_id == -1) {
+        return false;
+    }
+
     eka2l1::epoc::screen *scr = emulator_state_.winserv->get_screens();
     eka2l1::vec3 readjusted_pos = (pos - eka2l1::vec3(scr->absolute_pos, 0));
 
