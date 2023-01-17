@@ -291,7 +291,8 @@ namespace eka2l1 {
 
     protected:
         bool launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id,
-            kernel::process *requester = nullptr, std::function<void()> app_exit_callback = nullptr);
+            kernel::process *requester = nullptr, const epoc::uid known_uid = 0,
+            std::function<void()> app_exit_callback = nullptr);
 
     public:
         explicit applist_server(system *sys);
