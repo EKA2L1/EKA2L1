@@ -32,13 +32,14 @@
 #include <common/fileutils.h>
 #include <loader/mif.h>
 #include <loader/svgb.h>
+#include <loader/nvg.h>
 #include <services/fbs/fbs.h>
 #include <system/installation/firmware.h>
 #include <system/installation/rpkg.h>
 #include <utils/locale.h>
 #include <utils/system.h>
 
-#include <document.h>
+#include <lunasvg.h>
 #include <jni.h>
 
 namespace eka2l1::android {
@@ -151,6 +152,7 @@ namespace eka2l1::android {
                         inside_stream.read(&header, sizeof(eka2l1::loader::mif_icon_header));
 
                         std::vector<eka2l1::loader::svgb_convert_error_description> errors;
+                        std::vector<eka2l1::loader::nvg_convert_error_description> errors_nvg;
 
                         if (header.type == eka2l1::loader::mif_icon_type_svg) {
                             if (!eka2l1::loader::convert_svgb_to_svg(inside_stream, *outfile_stream, errors)) {
@@ -162,8 +164,18 @@ namespace eka2l1::android {
                             outfile_stream.reset();
                             document = lunasvg::Document::loadFromFile(cached_path.c_str());
                         } else {
-                            LOG_ERROR(eka2l1::FRONTEND_UI, "Unknown icon type {} for app {}", header.type, app_name);    
-                            eka2l1::common::remove(cached_path);
+                            inside_stream = eka2l1::common::ro_buf_stream(data.data() + sizeof(eka2l1::loader::mif_icon_header),
+                                                                          data.size() - sizeof(eka2l1::loader::mif_icon_header));
+
+                            if (eka2l1::loader::convert_nvg_to_svg(inside_stream, *outfile_stream, errors_nvg)) {
+                                outfile_stream.reset();
+                                document = lunasvg::Document::loadFromFile(cached_path.c_str());
+                            } else  {
+                                LOG_ERROR(eka2l1::FRONTEND_UI, "Icon for app {} can't be decoded!", header.type, app_name);
+                                outfile_stream.reset();
+
+                                eka2l1::common::remove(cached_path);
+                            }
                         }
                     }
                 }
@@ -180,9 +192,11 @@ namespace eka2l1::android {
                         return nullptr;
                     }
 
-                    auto bitmap = lunasvg::Bitmap(reinterpret_cast<std::uint8_t *>(data_to_write), width, height, width * 4);
+                    auto bitmap = lunasvg::Bitmap(reinterpret_cast<std::uint8_t *>(data_to_write),
+                                                  width, height, width * 4);
                     lunasvg::Matrix matrix{ 1, 0, 0, 1, 0, 0 };
-                    document->render(bitmap, matrix, 0);
+                    document->render(bitmap, matrix);
+                    bitmap.convertToRGBA();
 
                     AndroidBitmap_unlockPixels(env, source_bitmap);
 
@@ -673,5 +687,10 @@ namespace eka2l1::android {
             input_complete_callback_(common::utf8_to_ucs2(text));
             input_complete_callback_ = nullptr;
         }
+    }
+
+    int launcher::install_ngage_game(const std::string &path) {
+        return static_cast<int>(sys->install_ngage_game_card(path,
+                                                             nullptr, nullptr));
     }
 }

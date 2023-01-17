@@ -45,6 +45,7 @@
 
 #include <loader/mif.h>
 #include <loader/svgb.h>
+#include <loader/nvg.h>
 
 static QSize ICON_GRID_SIZE = QSize(64, 64);
 static QSize ICON_GRID_SPACING_SIZE = QSize(20, 20);
@@ -576,6 +577,7 @@ void applist_widget::add_registeration_item_native(eka2l1::apa_app_registry &reg
                     inside_stream.read(&header, sizeof(eka2l1::loader::mif_icon_header));
 
                     std::vector<eka2l1::loader::svgb_convert_error_description> errors;
+                    std::vector<eka2l1::loader::nvg_convert_error_description> errors_nvg;
 
                     if (header.type == eka2l1::loader::mif_icon_type_svg) {
                         if (!eka2l1::loader::convert_svgb_to_svg(inside_stream, *outfile_stream, errors)) {
@@ -587,10 +589,18 @@ void applist_widget::add_registeration_item_native(eka2l1::apa_app_registry &reg
                         outfile_stream.reset();
                         renderer = std::make_unique<QSvgRenderer>(QString::fromUtf8(cached_path.c_str()));
                     } else {
-                        LOG_ERROR(eka2l1::FRONTEND_UI, "Unknown icon type {} for app {}", header.type, app_name.toStdString());
-                        outfile_stream.reset();
+                        inside_stream = eka2l1::common::ro_buf_stream(data.data() + sizeof(eka2l1::loader::mif_icon_header),
+                            data.size() - sizeof(eka2l1::loader::mif_icon_header));
 
-                        eka2l1::common::remove(cached_path);
+                        if (eka2l1::loader::convert_nvg_to_svg(inside_stream, *outfile_stream, errors_nvg)) {
+                            outfile_stream.reset();
+                            renderer = std::make_unique<QSvgRenderer>(QString::fromUtf8(cached_path.c_str()));
+                        } else  {
+                            LOG_ERROR(eka2l1::FRONTEND_UI, "Icon for app {} can't be decoded!", header.type, app_name.toStdString());
+                            outfile_stream.reset();
+
+                            eka2l1::common::remove(cached_path);
+                        }  
                     }
                 }
             }
