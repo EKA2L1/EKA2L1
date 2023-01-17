@@ -99,6 +99,24 @@ namespace eka2l1::common::android {
             return uri;
         }
 
+        content_uri navigate_forward(const std::string &path) {
+            if (root.empty()) {
+                LOG_ERROR(COMMON, "NavigateForward cannot be used with single file URIs.");
+                return *this;
+            }
+
+            content_uri uri = *this;
+            if (uri.file.empty()) {
+                uri.file = uri.root;
+            }
+
+            if (!path.empty()) {
+                uri.file += "/" + path;
+            }
+
+            return uri;
+        }
+
         content_uri with_component(const std::string &file_path) {
             content_uri uri = *this;
             uri.file = uri.file + "/" + file_path;

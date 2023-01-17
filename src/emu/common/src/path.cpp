@@ -330,9 +330,12 @@ namespace eka2l1 {
 #if EKA2L1_PLATFORM(ANDROID)
         if (is_content_uri(path1)) {
             std::string child = add_path_impl<char>("", path2, symbian_use, get_separator);
+            if (!child.empty() && (child[0] == get_separator(symbian_use))) {
+                child.erase(0, 1);
+            }
 
             common::android::content_uri root_uri =  common::android::content_uri(path1);
-            common::android::content_uri uri = root_uri.with_root_file_path(child);
+            common::android::content_uri uri = root_uri.navigate_forward(child);
             return uri.to_string();
         }
 #endif
