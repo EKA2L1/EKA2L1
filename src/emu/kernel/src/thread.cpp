@@ -1050,6 +1050,15 @@ namespace eka2l1 {
 
             is_in_timeout = false;
         }
+
+        stack_info thread::get_stack_info() {
+            stack_info info;
+            info.limit_ = stack_chunk->base(owning_process()).ptr_address();
+            info.expandable_limit_ = info.limit_;
+            info.base_ = info.limit_ + stack_size - sizeof(epoc9_std_epoc_thread_create_info);
+
+            return info;
+        }
     }
 
     namespace epoc {

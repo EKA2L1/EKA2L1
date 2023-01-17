@@ -2431,6 +2431,22 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC(std::int32_t, thread_stack_info, const kernel::handle h, kernel::stack_info *info) {
+        kernel::thread *thr = kern->get<kernel::thread>(h);
+
+        if (!thr) {
+            LOG_ERROR(KERNEL, "Thread with handle 0x{:X} not found!", h);
+            return epoc::error_bad_handle;
+        }
+
+        if (!info) {
+            return epoc::error_argument;
+        }
+
+        *info = thr->get_stack_info();
+        return epoc::error_none;
+    }
+
     BRIDGE_FUNC(std::int32_t, process_open_by_id, std::uint32_t id, const epoc::owner_type owner) {
         auto pr = kern->get_by_id<kernel::process>(id);
 
@@ -3034,15 +3050,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        LOG_TRACE(KERNEL, "{}", tdes->to_std_string(kern->crr_process()));
-    }
-
-    BRIDGE_FUNC(void, debug_print16, desc16 *tdes) {
-        if (!tdes) {
-            return;
-        }
-
-        LOG_TRACE(KERNEL, "{}", common::ucs2_to_utf8(tdes->to_std_string(kern->crr_process())));
+        LOG_TRACE(EMULATED_STDOUT, "{}", tdes->to_std_string(kern->crr_process()));
     }
 
     std::int32_t debug_command_do_read_write(kernel_system *kern, const std::uint32_t thread_id,
@@ -3111,7 +3119,7 @@ namespace eka2l1::epoc {
             return epoc::error_argument;
         }
 
-        LOG_TRACE(KERNEL, "stdout: {}", common::ucs2_to_utf8(buf->to_std_string(crr)));
+        LOG_TRACE(EMULATED_STDOUT, "{}", common::ucs2_to_utf8(buf->to_std_string(crr)));
         return epoc::error_none;
     }
 
@@ -5648,6 +5656,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x5F, process_get_memory_info),
         BRIDGE_REGISTER(0x64, process_type),
         BRIDGE_REGISTER(0x68, thread_create),
+        BRIDGE_REGISTER(0x69, handle_open_object_by_find_handle),
         BRIDGE_REGISTER(0x6A, handle_close),
         BRIDGE_REGISTER(0x6B, chunk_new),
         BRIDGE_REGISTER(0x6C, chunk_adjust),
@@ -5710,6 +5719,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xD1, process_get_handle_parameter),
         BRIDGE_REGISTER(0xD2, process_get_data_parameter),
         BRIDGE_REGISTER(0xD3, process_data_parameter_length),
+        BRIDGE_REGISTER(0xD5, thread_stack_info),
         BRIDGE_REGISTER(0xD8, condvar_create),
         BRIDGE_REGISTER(0xD9, condvar_wait),
         BRIDGE_REGISTER(0xDA, condvar_signal),
@@ -5816,9 +5826,10 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x5B, set_exception_handler),
         BRIDGE_REGISTER(0x5E, is_exception_handled),
         BRIDGE_REGISTER(0x5F, process_get_memory_info),
-        BRIDGE_REGISTER(0x6A, handle_close),
         BRIDGE_REGISTER(0x64, process_type),
         BRIDGE_REGISTER(0x68, thread_create),
+        BRIDGE_REGISTER(0x69, handle_open_object_by_find_handle),
+        BRIDGE_REGISTER(0x6A, handle_close),
         BRIDGE_REGISTER(0x6B, chunk_new),
         BRIDGE_REGISTER(0x6C, chunk_adjust),
         BRIDGE_REGISTER(0x6D, handle_open_object),
