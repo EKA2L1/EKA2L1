@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 
 project (EKA2L1)
 
+# Clang 14 is required to compile nicely with C++ 20
 set (CMAKE_CXX_STANDARD 17)
 
 option(EKA2L1_BUILD_TOOLS "Build EKA2L1's tool" ON)
@@ -10,6 +11,7 @@ option(EKA2L1_ENABLE_SCRIPTING_ABILITY "Enable to script with Python or Lua" ON)
 option(EKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER "Enable EKA2L1 to dump unexpected exception" OFF)
 option(EKA2L1_BUILD_VULKAN_BACKEND "Build Vulkan backend" OFF)
 option(EKA2L1_DEPLOY_DMG "Deploy EKA2L1 as .dmg" OFF)
+option(EKA2L1_BUILD_PATCH "Enable building Symbian's DLL patches using Symbian SDK" OFF)
 
 set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set (ROOT ${CMAKE_CURRENT_SOURCE_DIR})

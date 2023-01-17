@@ -1,17 +1,20 @@
 # Add a Symbian project for building in release mode
 function(add_symbian_project FOLDER)
     add_custom_target(${FOLDER})
-    add_custom_command(
-        TARGET ${FOLDER}
-        COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/patch_build.py ${CMAKE_CURRENT_SOURCE_DIR}/${FOLDER}/group)
 
-    get_property(LAST_TARGET GLOBAL PROPERTY LAST_SYMBIAN_PROJECT_TARGET)
+	if (EKA2L1_BUILD_PATCH)
+		add_custom_command(
+			TARGET ${FOLDER}
+			COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/patch_build.py ${CMAKE_CURRENT_SOURCE_DIR}/${FOLDER}/group)
+	endif()
 
-    if (LAST_TARGET)
-        add_dependencies(${FOLDER} ${LAST_TARGET})
-    endif()
+	get_property(LAST_TARGET GLOBAL PROPERTY LAST_SYMBIAN_PROJECT_TARGET)
 
-    set_property(GLOBAL PROPERTY LAST_SYMBIAN_PROJECT_TARGET "${FOLDER}")
+	if (LAST_TARGET)
+		add_dependencies(${FOLDER} ${LAST_TARGET})
+	endif()
+
+	set_property(GLOBAL PROPERTY LAST_SYMBIAN_PROJECT_TARGET "${FOLDER}")
 endfunction()
 
 function(add_symbian_patch NAME)
