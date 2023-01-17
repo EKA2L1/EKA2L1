@@ -81,6 +81,15 @@
 #include <miniz.h>
 
 namespace eka2l1 {
+    // https://www.techiedelight.com/check-if-a-string-ends-with-another-string-in-cpp/
+    // This should be in C++ 20. So put a temporary for now here.
+    static bool std_string_ends_with(std::string const &str, std::string const &suffix) {
+        if (str.length() < suffix.length()) {
+            return false;
+        }
+        return str.compare(str.length() - suffix.length(), suffix.length(), suffix) == 0;
+    }
+
 #define HAL_ENTRY(generic_name, display_name, num, num_old) hal_entry_##generic_name = num,
 
     enum hal_entry {
@@ -585,7 +594,7 @@ namespace eka2l1 {
 #if EKA2L1_ARCH(ARM)
         cpu_type = arm_emulator_type::r12l1;
 #else
-        cpu_type = arm::string_to_arm_emulator_type(conf_->cpu_backend);
+        cpu_type = /*arm::string_to_arm_emulator_type(conf_->cpu_backend);*/ arm_emulator_type::dynarmic;
 #endif
         dvcmngr_ = std::make_unique<device_manager>(conf_);
 
@@ -900,6 +909,8 @@ namespace eka2l1 {
         apps_folder_ite->detail = true;
 
         std::string specific_app;
+        std::string specific_app_2;
+
         if (apps_folder_ite->is_valid()) {
             common::dir_entry app_folder_entry;
             while (apps_folder_ite->next_entry(app_folder_entry) == 0) {
@@ -910,9 +921,14 @@ namespace eka2l1 {
                         continue;
                     }
                     if (!specific_app.empty()) {
-                        return ngage_game_card_more_than_one_data_folder;
+                        if (specific_app_2.empty()) {
+                            specific_app_2 = app_folder_entry.name;
+                        } else {
+                            return ngage_game_card_more_than_one_data_folder;
+                        }
+                    } else {
+                        specific_app = app_folder_entry.name;
                     }
-                    specific_app = app_folder_entry.name;
                 }
             }
 
@@ -921,6 +937,22 @@ namespace eka2l1 {
             }
         } else {
             return ngage_game_card_no_game_data_folder;
+        }
+
+        // Handle game fix folder
+        if (!specific_app_2.empty()) {
+            const bool app1_ends_with1 = std_string_ends_with(specific_app, "_1");
+            const bool app2_ends_with1 = std_string_ends_with(specific_app_2, "_1");
+            if (!app1_ends_with1 && !app2_ends_with1) {
+                return ngage_game_card_more_than_one_data_folder;
+            }
+
+            if (app1_ends_with1) {
+                if (app2_ends_with1) {
+                    return ngage_game_card_more_than_one_data_folder;
+                }
+                std::swap(specific_app, specific_app_2);
+            }
         }
 
         const std::string aif_file = eka2l1::add_path(system_apps_folder_path, eka2l1::add_path(specific_app, specific_app + ".aif"));
@@ -947,8 +979,11 @@ namespace eka2l1 {
             return ngage_game_card_general_error;
         }
 
-        std::string drive_e_path_root = drive_e_path;
-        drive_e_path = eka2l1::add_path(drive_e_path, "system\\");
+        std::string current_dir;
+        common::get_current_directory(current_dir);
+
+        std::string drive_e_path_root = eka2l1::absolute_path(drive_e_path, current_dir);
+        drive_e_path = eka2l1::add_path(drive_e_path_root, "system\\");
 
         if (!common::exists(drive_e_path)) {
             common::create_directories(drive_e_path);
@@ -988,10 +1023,19 @@ namespace eka2l1 {
 
         common::copy_folder(folder_path, drive_e_path_root, common::is_platform_case_sensitive() ? common::FOLDER_COPY_FLAG_LOWERCASE_NAME : 0, 
             [&](const std::size_t copied, const std::size_t total) {
-                progress_cb(copied * 100 / total, total_percentage);
+                if (progress_cb)
+                    progress_cb(copied * 100 / total, total_percentage);
             });
 
-        progress_cb(100, total_percentage);
+        // Remove the app registeration file of the original
+        if (!specific_app_2.empty()) {
+            const std::string real_aif_remove = eka2l1::add_path(drive_e_path, eka2l1::add_path(
+                    "\\apps\\", eka2l1::add_path(specific_app, specific_app + ".aif")));
+            common::remove(real_aif_remove);
+        }
+
+        if (progress_cb)
+            progress_cb(100, total_percentage);
 
         if (!explicit_lib_copy.empty() || !explicit_program_copy.empty()) {
             std::uint32_t percentage_per_explicit_copy = (!explicit_lib_copy.empty() && !explicit_program_copy.empty()) ? 50 : 100;
@@ -1005,7 +1049,8 @@ namespace eka2l1 {
             if (!explicit_lib_copy.empty()) {
                 common::copy_folder(eka2l1::add_path(system_folder_path, explicit_lib_copy + "\\"), app_folder_dest,
                                     flags_copy, [&](const std::size_t copied, const std::size_t total) {
-                    progress_cb(current_perct + (copied * percentage_per_explicit_copy / total), total_percentage);
+                    if (progress_cb)
+                        progress_cb(current_perct + (copied * percentage_per_explicit_copy / total), total_percentage);
                 });
 
                 current_perct += percentage_per_explicit_copy;
@@ -1014,14 +1059,16 @@ namespace eka2l1 {
             if (!explicit_program_copy.empty()) {
                 common::copy_folder(eka2l1::add_path(system_folder_path, explicit_program_copy + "\\"), app_folder_dest,
                                     flags_copy, [&](const std::size_t copied, const std::size_t total) {
-                    progress_cb(current_perct + (copied * percentage_per_explicit_copy / total), total_percentage);
+                    if (progress_cb)
+                        progress_cb(current_perct + (copied * percentage_per_explicit_copy / total), total_percentage);
                 });
 
                 current_perct += percentage_per_explicit_copy;
             }
         }
 
-        progress_cb(total_percentage, total_percentage);
+        if (progress_cb)
+            progress_cb(total_percentage, total_percentage);
 
         return ngage_game_card_install_success;
     }
