@@ -349,7 +349,7 @@ namespace gnuVG {
 
 using namespace gnuVG;
 
-namespace eka2l1 {
+namespace eka2l1::dispatch {
 	BRIDGE_FUNC_LIBRARY(VGPaint, vg_create_paint_emu) {
 		Context *context = gnuVG::get_active_context(sys);
 
@@ -419,7 +419,7 @@ namespace eka2l1 {
 		}
 
 		auto p = context->get<Paint>(paint);
-		auto i = context->get<Image>(pattern);
+		auto i = (pattern == 0) ? nullptr : context->get<Image>(pattern);
 
 		if(p)
 			p->vgPaintPattern(i);

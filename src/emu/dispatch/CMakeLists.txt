@@ -16,7 +16,7 @@ set(GNUVG_SOURCES
         include/dispatch/libraries/vg/gnuVG_shader.hh
         include/dispatch/libraries/vg/gnuVG_shaderman.hh
         include/dispatch/libraries/vg/gnuVG_simplified_path.hh
-        #include/dispatch/libraries/vg/gnuVG_vgu.hh
+        include/dispatch/libraries/vg/gnuVG_vgu.hh
         src/libraries/vg/gnuVG_context.cc
         src/libraries/vg/gnuVG_emuutils.cc
         src/libraries/vg/gnuVG_filter.cc
@@ -31,8 +31,7 @@ set(GNUVG_SOURCES
         src/libraries/vg/gnuVG_shader.cc
         src/libraries/vg/gnuVG_shaderman.cc
         src/libraries/vg/gnuVG_simplified_path.cc
-        # Handle the VGU library also
-        #src/libraries/vg/gnuVG_vgu.cc
+        src/libraries/vg/gnuVG_vgu.cc
 )
 
 add_library(epocdispatch

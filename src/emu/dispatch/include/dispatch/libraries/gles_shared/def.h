@@ -377,10 +377,10 @@ namespace eka2l1::dispatch {
 
         virtual void init_context_state() override;
         void return_handle_to_pool(const gles_object_type type, const drivers::handle h, const int subtype = 0);
-        void on_surface_changed(egl_surface *prev_read, egl_surface *prev_draw) override;
+        void on_surface_changed(drivers::graphics_driver *driver, egl_surface *prev_read, egl_surface *prev_draw) override;
         void flush_state_changes();
         
-        virtual void flush_to_driver(drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) override;
+        virtual void flush_to_driver(egl_controller &controller, drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) override;
         virtual void destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) override;
         virtual bool prepare_for_draw(drivers::graphics_driver *driver, egl_controller &controller, kernel::process *crr_process,
             const std::int32_t first_index, const std::uint32_t vcount) = 0;

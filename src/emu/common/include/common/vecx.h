@@ -214,6 +214,16 @@ namespace eka2l1 {
         vec3 operator*(const int rhs) const {
             return vec3(x * rhs, y * rhs, z * rhs);
         }
+
+        vec3 operator*(const float rhs) const {
+            return vec3(static_cast<int>(x * rhs), static_cast<int>(y * rhs), static_cast<int>(z * rhs));
+        }
+
+        void operator*=(const float rhs) {
+            x = static_cast<int>(x * rhs);
+            y = static_cast<int>(y * rhs);
+            z = static_cast<int>(z * rhs);
+        }
     };
 
     struct vec4 : public vec3 {

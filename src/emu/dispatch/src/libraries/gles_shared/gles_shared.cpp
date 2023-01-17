@@ -565,7 +565,7 @@ namespace eka2l1::dispatch {
         return true;    
     }
 
-    void egl_context_es_shared::flush_to_driver(drivers::graphics_driver *drv, const bool is_frame_swap_flush) {
+    void egl_context_es_shared::flush_to_driver(egl_controller &controller, drivers::graphics_driver *drv, const bool is_frame_swap_flush) {
         drivers::graphics_command_builder transfer_builder;
         vertex_buffer_pusher_.flush(transfer_builder);
         index_buffer_pusher_.flush(transfer_builder);
@@ -585,7 +585,7 @@ namespace eka2l1::dispatch {
         }
     }
 
-    void egl_context_es_shared::on_surface_changed(egl_surface *prev_read, egl_surface *prev_draw) {
+    void egl_context_es_shared::on_surface_changed(eka2l1::drivers::graphics_driver *driver, egl_surface *prev_read, egl_surface *prev_draw) {
         // Rebind viewport
         viewport_bl_.top = eka2l1::vec2(0, 0);
         viewport_bl_.size = eka2l1::vec2(-1, -1);
@@ -840,7 +840,7 @@ namespace eka2l1::dispatch {
 
             buffer_pools_.pop();
         }
-        
+
         vertex_buffer_pusher_.destroy(builder);
         index_buffer_pusher_.destroy(builder);
 
@@ -877,30 +877,6 @@ namespace eka2l1::dispatch {
         }
 
         return stride;
-    }
-
-    drivers::handle graphics_buffer_pusher::push_buffer(drivers::graphics_driver *drv, const std::uint8_t *data_source, const std::size_t total_buffer_size, std::size_t &buffer_offset) {
-        if (buffers_[current_buffer_].used_size_ + total_buffer_size > size_per_buffer_) {
-            current_buffer_++;
-        }
-        
-        if (current_buffer_ == buffers_.size()) {
-            add_buffer();
-        }
-
-        if (!buffers_[current_buffer_].buffer_) {
-            buffers_[current_buffer_].buffer_ = drivers::create_buffer(drv, nullptr, size_per_buffer_, static_cast<drivers::buffer_upload_hint>(drivers::buffer_upload_dynamic | drivers::buffer_upload_draw));
-        }
-
-        if (!buffers_[current_buffer_].data_) {
-            buffers_[current_buffer_].data_ = new std::uint8_t[size_per_buffer_];
-        }
-
-        buffer_offset = buffers_[current_buffer_].used_size_;
-        std::memcpy(buffers_[current_buffer_].data_ + buffer_offset, data_source, total_buffer_size);
-
-        buffers_[current_buffer_].used_size_ += (((total_buffer_size + 3) / 4) * 4);
-        return buffers_[current_buffer_].buffer_;
     }
 
     egl_context_es_shared::egl_context_es_shared()
@@ -1751,7 +1727,7 @@ namespace eka2l1::dispatch {
         ctx->cmd_builder_.clear(clear_parameters, flags_driver);
 
         if (ctx->cmd_builder_.need_flush()) {
-            ctx->flush_to_driver(sys->get_graphics_driver());
+            ctx->flush_to_driver(sys->get_dispatcher()->get_egl_controller(), sys->get_graphics_driver());
         }
     }
 
@@ -2924,7 +2900,7 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        ctx->flush_to_driver(sys->get_graphics_driver());
+        ctx->flush_to_driver(sys->get_dispatcher()->get_egl_controller(), sys->get_graphics_driver());
     }
     
     BRIDGE_FUNC_LIBRARY(void, gl_polygon_offset_emu, float factors, float units) {
@@ -3096,7 +3072,7 @@ namespace eka2l1::dispatch {
         ctx->cmd_builder_.draw_arrays(prim_mode_drv, 0, count, false);
  
         if (ctx->cmd_builder_.need_flush()) {
-            ctx->flush_to_driver(drv);
+            ctx->flush_to_driver(controller, drv);
         }
     }
 
@@ -3229,7 +3205,7 @@ namespace eka2l1::dispatch {
         ctx->cmd_builder_.draw_indexed(prim_mode_drv, count, index_format_drv, static_cast<int>(indices_ptr), 0);
 
         if (ctx->cmd_builder_.need_flush()) {
-            ctx->flush_to_driver(drv);
+            ctx->flush_to_driver(controller, drv);
         }
     }
 

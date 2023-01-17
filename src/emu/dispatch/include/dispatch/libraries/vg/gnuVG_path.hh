@@ -32,8 +32,9 @@
 namespace gnuVG {
 	class Path : public Object {
 	public:
-		GvgVector<VGubyte> s_segments;
-		GvgVector<VGfloat> s_coordinates;
+		std::vector<VGubyte> s_segments;
+		std::vector<VGfloat> s_coordinates;
+		std::vector<std::size_t> s_segment_start_offset_in_coords;
 
 	protected:
 		VGPathDatatype dataType;
@@ -100,6 +101,8 @@ namespace gnuVG {
 
 			while(remaining_segments) {
 				s_segments.push_back((*sgmt));
+				s_segment_start_offset_in_coords.push_back(s_coordinates.size());
+
 				switch( (*sgmt) & (~0x00000001) ) {
 					/* commands with ZERO parameters */
 				case VG_CLOSE_PATH:
@@ -205,11 +208,46 @@ namespace gnuVG {
 				sgmt++;
 				remaining_segments--;
 			}
-			s_segments.append(pathSegments, numSegments);
-			s_coordinates.append(pathData, nrcoords);
+			s_segments.insert(s_segments.end(), pathSegments, pathSegments + numSegments);
+			s_coordinates.insert(s_coordinates.end(), pathData, pathData + nrcoords);
 		}
 
-		void vgModifyPathCoords(VGint startIndex, VGint numSegments, const void *pathData);
+		template <typename T>
+		VGErrorCode vgModifyPathCoords(VGint startIndex, VGint numSegments, const T *pathData) {
+			if (numSegments == 0) {
+				return VG_NO_ERROR;
+			}
+
+			if ((startIndex < 0) || (startIndex + numSegments > s_segments.size())) {
+				return VG_ILLEGAL_ARGUMENT_ERROR;
+			}
+
+			path_dirty = true;
+			size_t nrcoords = 0;
+
+			for (VGint i = 0; i < numSegments; i++) {
+				std::size_t num_coords = 0;
+				std::size_t start_offset = s_segment_start_offset_in_coords[startIndex + i];
+				if ((startIndex + i + 1) >= s_segments.size()) {
+					num_coords = s_coordinates.size() - start_offset;
+				} else {
+					num_coords = s_segment_start_offset_in_coords[startIndex + i + 1] - start_offset;
+				}
+
+				if constexpr (std::is_same_v<T, float>) {
+					std::memcpy(s_coordinates.data() + start_offset, pathData, num_coords * sizeof(float));
+				} else {
+					for (std::size_t i = 0; i < num_coords; i++) {
+						s_coordinates[start_offset + i] = (VGfloat)pathData[i];
+					}
+				}
+
+				pathData += num_coords;
+			}
+
+			return VG_NO_ERROR;
+		}
+
 		void vgTransformPath(std::shared_ptr<Path> srcPath);
 		VGboolean vgInterpolatePath(std::shared_ptr<Path> startPath,
 					    std::shared_ptr<Path> endPath, VGfloat amount);

@@ -269,7 +269,7 @@ namespace eka2l1::dispatch {
 
         std::uint32_t set_attachment(gles_driver_object *object, const std::uint32_t attachment_type, const int index);
         std::uint32_t completed() const;
-        std::uint32_t ready_for_draw(drivers::graphics_driver *drv);
+        std::uint32_t ready_for_draw(egl_controller &controller, drivers::graphics_driver *drv);
         std::uint32_t format_compatible_for_read(const std::uint32_t format, const std::uint32_t dttype) const;
         bool get_pair_read_specs(std::uint32_t &format, std::uint32_t &ttype) const;
 
@@ -338,7 +338,7 @@ namespace eka2l1::dispatch {
             const std::int32_t first_index, const std::uint32_t vcount) override;
         bool prepare_for_clear(drivers::graphics_driver *driver, egl_controller &controller) override;
         bool get_data(drivers::graphics_driver *drv, const std::uint32_t feature, void *data, gles_get_data_type data_type) override;
-        void flush_to_driver(drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) override;
+        void flush_to_driver(egl_controller &controller, drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) override;
 
         std::uint32_t bind_texture(const std::uint32_t target, const std::uint32_t tex) override;
         gles_driver_texture *binded_texture() override;

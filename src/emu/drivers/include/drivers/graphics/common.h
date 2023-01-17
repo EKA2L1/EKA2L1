@@ -30,6 +30,10 @@ namespace eka2l1::drivers {
     };
 
     class graphics_object {
+    public:
+        virtual ~graphics_object() = default;
+
+    private:
         virtual int holder() {
             return 0;
         }

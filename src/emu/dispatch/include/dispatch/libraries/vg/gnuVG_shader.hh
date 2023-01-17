@@ -55,23 +55,9 @@ namespace gnuVG {
 			do_horizontal_gaussian	= 0x00000400,
 			do_vertical_gaussian	= 0x00000800,
 			do_color_transform	= 0x01000000,
-			do_texture_alpha	= 0x02000000,
 
 			// gaussian kernel configuration
 			gauss_krn_diameter_mask = 0x00ff0000,
-		};
-
-		enum Blending {
-			blend_src_over      	= 0x00000000, // default
-			blend_src		= 0x00001000,
-			blend_dst_over      	= 0x00002000,
-			blend_src_in      	= 0x00003000,
-			blend_dst_in      	= 0x00004000,
-			blend_multiply      	= 0x00005000,
-			blend_screen      	= 0x00006000,
-			blend_darken      	= 0x00007000,
-			blend_lighten      	= 0x00008000,
-			blend_additive      	= 0x00009000
 		};
 
 		static eka2l1::drivers::handle create_program(eka2l1::drivers::graphics_driver *driver,
@@ -80,8 +66,6 @@ namespace gnuVG {
 			eka2l1::drivers::shader_program_metadata *metadata);
 
 		void use_shader();
-
-		void set_blending(Blending bmode);
 
 		void set_matrix(const float *mtrx);
 		void set_pre_translation(const float *ptrans);

@@ -37,6 +37,8 @@ namespace eka2l1::drivers {
 
     class drawable: public graphics_object {
     public:
+        virtual ~drawable() = default;
+
         virtual void bind(graphics_driver *driver, const int binding) = 0;
         virtual void unbind(graphics_driver *driver) = 0;
 
@@ -59,7 +61,7 @@ namespace eka2l1::drivers {
             const std::uint32_t unpack_alignment = 4)
             = 0;
 
-        virtual ~texture(){};
+        virtual ~texture() = default;
 
         virtual void set_filter_minmag(const bool min, const filter_option op) = 0;
         virtual void set_addressing_mode(const addressing_direction dir, const addressing_option op) = 0;

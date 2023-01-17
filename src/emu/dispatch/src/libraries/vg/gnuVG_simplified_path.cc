@@ -23,6 +23,8 @@
 #include <dispatch/libraries/vg/gnuVG_context.hh>
 #include <dispatch/libraries/vg/gnuVG_debug.hh>
 
+#include <vector>
+
 // Max recursion depth for cubic subdivision
 #define MAX_RENDER_SUBDIVISION 16
 
@@ -46,8 +48,8 @@ namespace gnuVG {
 	static bool start_new_contour;
 
 	static unsigned int nr_vertices;
-	static GvgVector<VGfloat> v_array; // vertices
-	static GvgVector<unsigned int> t_array; // triangle vertice indices
+	static std::vector<VGfloat> v_array; // vertices
+	static std::vector<unsigned int> t_array; // triangle vertice indices
 	static unsigned int previous_segment[4]; // indices for previous segment
 	static unsigned int current_segment[4]; // indices for current segment
 	static unsigned int first_segment[4]; // indices for current segment
@@ -708,18 +710,18 @@ namespace gnuVG {
 	}
 
 	void SimplifiedPath::tesselate_fill_shape(TESStesselator* tess) {
-		static GvgVector<VGfloat> outline_vertices_vector;
+		static std::vector<VGfloat> outline_vertices_vector(4);
 
 		VGfloat *outline_vertices = outline_vertices_vector.data();
-		int outline_floats_count = 0, max_floats_capacity = outline_vertices_vector.capacity();
+		int outline_floats_count = 0, max_floats_capacity = outline_vertices_vector.size();
 
 		auto add_vertice =
 			[this, &outline_vertices,
 			 &outline_floats_count, &max_floats_capacity](const Point &p) {
 			if(outline_floats_count == max_floats_capacity) {
-				outline_vertices_vector.double_capacity();
-					outline_vertices = outline_vertices_vector.data();
-				max_floats_capacity = outline_vertices_vector.capacity();
+				outline_vertices_vector.resize(outline_vertices_vector.size() * 2);
+				outline_vertices = outline_vertices_vector.data();
+				max_floats_capacity = outline_vertices_vector.size();
 			}
 			outline_vertices[outline_floats_count++] = p.x;
 			outline_vertices[outline_floats_count++] = p.y;

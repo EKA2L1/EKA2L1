@@ -23,7 +23,6 @@
 #include <dispatch/libraries/vg/gnuVG_debug.hh>
 
 namespace gnuVG {
-
 	std::map<void*, GvgArray*> GvgAllocator::active_arrays;
 	std::vector<GvgArray*> GvgAllocator::unused_arrays;
 
@@ -66,7 +65,9 @@ namespace gnuVG {
 			auto gvga = (*i).second;
 			active_arrays.erase(i);
 			unused_arrays.push_back(gvga);
-		}
+		} else {
+			GNUVG_DEBUG("WTF");
+        }
 	}
 
 };

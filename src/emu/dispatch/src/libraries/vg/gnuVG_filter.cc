@@ -22,7 +22,7 @@
 
 using namespace gnuVG;
 
-namespace eka2l1 {
+namespace eka2l1::dispatch {
 	BRIDGE_FUNC_LIBRARY(void, vg_gaussian_blur_emu, VGImage dst, VGImage src, VGfloat stdDeviationX, VGfloat stdDeviationY, VGTilingMode tilingMode) {
 		GraphicState state;
 		Context *context = gnuVG::get_active_context(sys, &state);

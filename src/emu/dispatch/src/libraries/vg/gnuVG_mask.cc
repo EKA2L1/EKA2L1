@@ -21,6 +21,8 @@
 
 #include <dispatch/libraries/vg/gnuVG_mask.hh>
 #include <dispatch/libraries/vg/gnuVG_emuutils.hh>
+#include <dispatch/dispatcher.h>
+#include <system/epoc.h>
 
 #define MASK_R_CHANNEL_VALUE 0.0f
 #define MASK_G_CHANNEL_VALUE 0.0f
@@ -112,7 +114,7 @@ namespace gnuVG {
 
 using namespace gnuVG;
 
-namespace eka2l1 {
+namespace eka2l1::dispatch {
 	BRIDGE_FUNC_LIBRARY(VGMaskLayer, vg_create_mask_layer_emu, VGint width, VGint height) {
 		GraphicState state;
 		Context *context = gnuVG::get_active_context(sys, &state);
@@ -233,6 +235,10 @@ namespace eka2l1 {
 			context->set_error(VG_BAD_HANDLE_ERROR);
 			return;
 		}
+
+        if (context->cmd_builder_.need_flush()) {
+            context->flush_to_driver(sys->get_dispatcher()->get_egl_controller(), state.driver);
+        }
 	}
 
 	// TODO: Move static global variable to cache somewhere somewhere

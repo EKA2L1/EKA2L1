@@ -22,6 +22,7 @@
 #include <dispatch/libraries/register.h>
 #include <dispatch/libraries/gles1/def.h>
 #include <dispatch/libraries/gles2/def.h>
+#include <dispatch/libraries/vg/consts.h>
 #include <dispatch/register.h>
 #include <dispatch/screen.h>
 #include <kernel/kernel.h>
@@ -87,6 +88,10 @@ namespace eka2l1::dispatch {
             add_static_string(EGL_VENDOR_EMU, EGL_STATIC_STRING_VENDOR);
             add_static_string(EGL_VERSION_EMU, EGL_STATIC_STRING_VERSION);
             add_static_string(EGL_EXTENSIONS_EMU, EGL_STATIC_STRING_EXTENSION);
+            add_static_string(VG_VENDOR_EMU, EKA2L1_GNUVG_VENDOR);
+            add_static_string(VG_RENDERER_EMU, EKA2L1_GNUVG_RENDERER);
+            add_static_string(VG_VERSION_EMU, EKA2L2_GNUVG_VERSION);
+            add_static_string(VG_EXTENSIONS_EMU, EKA2L2_GNUVG_EXTENSIONS);
 
             graphics_string_added_ = true;
         }
@@ -102,7 +107,13 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        //LOG_ERROR(HLE_DISPATCHER, "Calling 0x{:X}", function_ord);
+        /*
+        if (dispatch_find_result->second.second) {
+            LOG_TRACE(HLE_DISPATCHER, "Calling {}", dispatch_find_result->second.second);
+        } else {
+            LOG_TRACE(HLE_DISPATCHER, "Calling 0x{:X}", function_ord);
+        }*/
+
         dispatch_find_result->second.first(sys, sys->get_kernel_system()->crr_process(), sys->get_cpu());
     }
 

@@ -20,7 +20,10 @@
 #include <dispatch/libraries/vg/gnuVG_emuutils.hh>
 #include <dispatch/libraries/vg/gnuVG_path.hh>
 #include <dispatch/libraries/vg/gnuVG_debug.hh>
+#include <dispatch/dispatcher.h>
 #include <string.h>
+
+#include <system/epoc.h>
 
 #define TESS_POLY_SIZE 3
 
@@ -105,7 +108,7 @@ namespace gnuVG {
 		case VG_PATH_FORMAT:
 			return VG_PATH_FORMAT_STANDARD;
 		case VG_PATH_DATATYPE:
-			return VG_PATH_DATATYPE_F;
+			return dataType;
 		case VG_PATH_NUM_SEGMENTS:
 			return (VGint)s_segments.size();
 		case VG_PATH_NUM_COORDS:
@@ -166,12 +169,16 @@ namespace gnuVG {
 
 	Path::~Path() {
 		vgClearPath(capabilities);
-	}
+
+		if (tess)
+            tessDeleteTess(tess);
+    }
 
 	void Path::vgClearPath(VGbitfield _capabilities) {
 		path_dirty = true;
 		s_segments.clear();
 		s_coordinates.clear();
+		s_segment_start_offset_in_coords.clear();
 	}
 
 	VGbitfield Path::vgGetPathCapabilities() {
@@ -180,11 +187,6 @@ namespace gnuVG {
 
 
 	void Path::vgAppendPath(std::shared_ptr<Path> srcPath) {
-		path_dirty = true;
-		/* XXX not implemented */
-	}
-
-	void Path::vgModifyPathCoords(VGint startIndex, VGint numSegments, const void *pathData) {
 		path_dirty = true;
 		/* XXX not implemented */
 	}
@@ -282,7 +284,7 @@ namespace gnuVG {
 //			GNUVG_DEBUG("    vgDrawPath: vertices(%p), indices(%p), nr indices(%d)\n", vertices, indices, nr_indices);
 				context->use_pipeline(state, Context::GNUVG_SIMPLE_PIPELINE,
 								     VG_FILL_PATH);
-				context->setup_buffers_and_descriptors(state.driver, vertices, nr_vertices * sizeof(float),
+				context->setup_buffers_and_descriptors(state.driver, vertices, nr_vertices * 2 * sizeof(float),
 					0, nullptr, 0, 0);
 
 				context->render_elements(state, indices, nr_indices);
@@ -314,7 +316,7 @@ namespace gnuVG {
 					if(stroke_data.nr_vertices) {
 						context_copy->setup_buffers_and_descriptors(state.driver,
 							stroke_data.vertices,
-							stroke_data.nr_vertices * sizeof(float),
+							stroke_data.nr_vertices * 2 * sizeof(float),
 							0, nullptr, 0, 0);
 						context_copy->render_elements(
 							state,
@@ -330,7 +332,7 @@ namespace gnuVG {
 
 using namespace gnuVG;
 
-namespace eka2l1 {
+namespace eka2l1::dispatch {
 	BRIDGE_FUNC_LIBRARY(VGPath, vg_create_path_emu, VGint pathFormat, VGPathDatatype datatype,
 		VGfloat scale, VGfloat bias, VGint segmentCapacityHint, VGint coordCapacityHint,
 		VGbitfield capabilities) {
@@ -435,6 +437,38 @@ namespace eka2l1 {
 
 	BRIDGE_FUNC_LIBRARY(void, vg_modify_path_coords_emu, VGPath dstPath, VGint startIndex,
 		VGint numSegments, const void * pathData) {
+		Context *context = gnuVG::get_active_context(sys);
+
+		if (!context) {
+			return;
+		}
+
+		auto p = context->get<Path>(dstPath);
+		if(!p)
+			return;
+
+		VGErrorCode error = VG_NO_ERROR;
+
+		switch(p->get_dataType()) {
+		case VG_PATH_DATATYPE_FORCE_SIZE:
+			break;
+		case VG_PATH_DATATYPE_S_8:
+			error = p->vgModifyPathCoords<int8_t>(startIndex, numSegments, (const int8_t *)pathData);
+			break;
+		case VG_PATH_DATATYPE_S_16:
+			error = p->vgModifyPathCoords<int16_t>(startIndex, numSegments, (const int16_t *)pathData);
+			break;
+		case VG_PATH_DATATYPE_S_32:
+			error = p->vgModifyPathCoords<int32_t>(startIndex, numSegments, (const int32_t *)pathData);
+			break;
+		case VG_PATH_DATATYPE_F:
+			error = p->vgModifyPathCoords<VGfloat>(startIndex, numSegments, (const VGfloat *)pathData);
+			break;
+		}
+
+		if (error != VG_NO_ERROR) {
+			context->set_error(error);
+		}
 	}
 
 	BRIDGE_FUNC_LIBRARY(void, vg_transform_path_emu, VGPath dstPath, VGPath srcPath) {
@@ -543,8 +577,13 @@ namespace eka2l1 {
 
 		context->select_conversion_matrix(Context::GNUVG_MATRIX_PATH_USER_TO_SURFACE);
 		context->reset_pre_translation();
+		context->apply_state_changes(state);
 
 		p->vgDrawPath(state, paintModes);
+
+        if (context->cmd_builder_.need_flush()) {
+            context->flush_to_driver(sys->get_dispatcher()->get_egl_controller(), state.driver);
+        }
 	}
 
 }

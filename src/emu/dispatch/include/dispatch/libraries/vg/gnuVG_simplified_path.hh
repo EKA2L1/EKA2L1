@@ -48,7 +48,7 @@ namespace gnuVG {
 			uintptr_t nr_vertices, nr_indices;
 		};
 
-		GvgVector<Segment> segments;
+		std::vector<Segment> segments;
 
 		void simplify_path(const VGubyte* pathSegments,
 				   const VGfloat* pathData,

@@ -75,6 +75,8 @@ typedef std::int32_t VGint;
 typedef std::uint32_t VGuint;
 typedef std::uint32_t VGbitfield;
 typedef eka2l1::address VGHandle;
+typedef bool VGboolean;
+typedef std::uint32_t VGUErrorCode;
 
 typedef VGHandle VGPath;
 typedef VGHandle VGImage;
@@ -83,13 +85,8 @@ typedef VGHandle VGFont;
 typedef VGHandle VGPaint;
 
 #define VG_INVALID_HANDLE ((VGHandle)0)
-
-typedef enum {
-  VG_FALSE               = 0,
-  VG_TRUE                = 1,
-
-  VG_BOOLEAN_FORCE_SIZE  = VG_MAX_ENUM
-} VGboolean;
+#define VG_FALSE 0
+#define VG_TRUE 1
 
 typedef enum {
   VG_NO_ERROR                                 = 0,
@@ -104,6 +101,25 @@ typedef enum {
 
   VG_ERROR_CODE_FORCE_SIZE                    = VG_MAX_ENUM
 } VGErrorCode;
+
+enum {
+  VGU_NO_ERROR                                 = 0,
+  VGU_BAD_HANDLE_ERROR                         = 0xF000,
+  VGU_ILLEGAL_ARGUMENT_ERROR                   = 0xF001,
+  VGU_OUT_OF_MEMORY_ERROR                      = 0xF002,
+  VGU_PATH_CAPABILITY_ERROR                    = 0xF003,
+  VGU_BAD_WARP_ERROR                           = 0xF004,
+
+  VGU_ERROR_CODE_FORCE_SIZE                    = VG_MAX_ENUM
+};
+
+typedef enum {
+  VGU_ARC_OPEN                                 = 0xF100,
+  VGU_ARC_CHORD                                = 0xF101,
+  VGU_ARC_PIE                                  = 0xF102,
+
+  VGU_ARC_TYPE_FORCE_SIZE                      = VG_MAX_ENUM
+} VGUArcType;
 
 typedef enum {
   /* Mode settings */
@@ -500,10 +516,15 @@ typedef enum {
 } VGHardwareQueryResult;
 
 typedef enum {
-  VG_VENDOR                                   = 0x2300,
-  VG_RENDERER                                 = 0x2301,
-  VG_VERSION                                  = 0x2302,
-  VG_EXTENSIONS                               = 0x2303,
+  VG_VENDOR_EMU                                   = 0x2300,
+  VG_RENDERER_EMU                                 = 0x2301,
+  VG_VERSION_EMU                                  = 0x2302,
+  VG_EXTENSIONS_EMU                               = 0x2303,
 
   VG_STRING_ID_FORCE_SIZE                     = VG_MAX_ENUM
 } VGStringID;
+
+static constexpr const char *EKA2L1_GNUVG_VENDOR = "Anton Persson";
+static constexpr const char *EKA2L1_GNUVG_RENDERER = "gnuVG (modified for EKA2L1)";
+static constexpr const char *EKA2L2_GNUVG_VERSION = "1.1";
+static constexpr const char *EKA2L2_GNUVG_EXTENSIONS = "";

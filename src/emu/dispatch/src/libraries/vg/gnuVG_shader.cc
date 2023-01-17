@@ -26,45 +26,6 @@
 namespace gnuVG {
 	void Shader::use_shader() {
 		current_cmdbuilder_->use_program(program_id);
-		set_blending(blend_src_over);
-	}
-
-	void Shader::set_blending(Blending bmode) {
-		switch(bmode) {
-		case blend_src: // blend_src equals no blending
-			current_cmdbuilder_->set_feature(eka2l1::drivers::graphics_feature::blend, false);
-			break;
-
-		case blend_src_in:
-			current_cmdbuilder_->set_feature(eka2l1::drivers::graphics_feature::blend, true);
-			current_cmdbuilder_->blend_formula(eka2l1::drivers::blend_equation::add,
-				eka2l1::drivers::blend_equation::add,
-				eka2l1::drivers::blend_factor::frag_out_alpha,
-				eka2l1::drivers::blend_factor::one_minus_current_alpha,
-				eka2l1::drivers::blend_factor::current_alpha,
-				eka2l1::drivers::blend_factor::zero);
-			break;
-
-		case blend_dst_over:
-		case blend_dst_in:
-		case blend_multiply:
-		case blend_screen:
-		case blend_darken:
-		case blend_lighten:
-		case blend_additive:
-		default:
-		case blend_src_over:
-			// everything not supported
-			// will default into src_over
-			current_cmdbuilder_->set_feature(eka2l1::drivers::graphics_feature::blend, true);
-			current_cmdbuilder_->blend_formula(eka2l1::drivers::blend_equation::add,
-				eka2l1::drivers::blend_equation::add,
-				eka2l1::drivers::blend_factor::frag_out_alpha,
-				eka2l1::drivers::blend_factor::one_minus_current_alpha,
-				eka2l1::drivers::blend_factor::frag_out_alpha,
-				eka2l1::drivers::blend_factor::one_minus_current_alpha);
-			break;
-		}
 	}
 
 	void Shader::set_matrix(const float *m) {
@@ -73,7 +34,7 @@ namespace gnuVG {
 	}
 
 	void Shader::set_pre_translation(const float *ptrans) {
-		current_cmdbuilder_->set_dynamic_uniform(preTranslation, eka2l1::drivers::shader_var_type::mat4,
+		current_cmdbuilder_->set_dynamic_uniform(preTranslation, eka2l1::drivers::shader_var_type::vec2,
 			ptrans, 2 * sizeof(float));
 	}
 
@@ -83,6 +44,7 @@ namespace gnuVG {
 	}
 
 	void Shader::set_mask_texture(eka2l1::drivers::handle tex) {
+		current_cmdbuilder_->bind_texture(tex, 1);
 		current_cmdbuilder_->set_texture_for_shader(1, maskTexture, eka2l1::drivers::shader_module_type::fragment);
 	}
 
@@ -110,7 +72,8 @@ namespace gnuVG {
 		current_cmdbuilder_->set_texture_addressing_mode(tex, eka2l1::drivers::addressing_direction::s, wrap_mod);
 		current_cmdbuilder_->set_texture_addressing_mode(tex, eka2l1::drivers::addressing_direction::t, wrap_mod);
 
-		current_cmdbuilder_->set_texture_for_shader(2, tex, eka2l1::drivers::shader_module_type::fragment);
+		current_cmdbuilder_->bind_texture(tex, 2);
+		current_cmdbuilder_->set_texture_for_shader(2, patternTexture, eka2l1::drivers::shader_module_type::fragment);
 	}
 
 	void Shader::set_color_transform(const float *scale, const float *bias) {
@@ -161,7 +124,8 @@ namespace gnuVG {
 	}
 
 	void Shader::set_texture(eka2l1::drivers::handle tex) {
-		current_cmdbuilder_->set_texture_for_shader(3, tex, eka2l1::drivers::shader_module_type::fragment);
+		current_cmdbuilder_->bind_texture(tex, 3);
+		current_cmdbuilder_->set_texture_for_shader(3, textureSampler_handle, eka2l1::drivers::shader_module_type::fragment);
 	}
 
 	void Shader::render_triangles(std::int32_t first, std::int32_t count) {
@@ -203,19 +167,18 @@ namespace gnuVG {
 				"out vec4 p_textureCoord;\n"
 				;
 
-		if(((caps & primary_mode_mask) == do_texture)
-			||
-		   (caps & do_texture_alpha)
-			)
+		if ((caps & primary_mode_mask) == do_texture)
 			vshad <<
 				"layout (location = 1) in vec2 a_textureCoord;\n"
 				"uniform mat3 u_textureMatrix;\n"
 				"out vec2 v_textureCoord;\n"
 				;
 
-		if(caps & gradient_spread_mask)
-			vshad <<
-				"out vec2 gradient_coord;\n";
+		if(caps & gradient_spread_mask) {
+			// gradient coordinates are in paint space - use surface2paint conversion matrix
+			vshad << "uniform mat4 surf2paint;\n";
+			vshad << "out vec2 gradient_coord;\n";
+		}
 
 		vshad <<
 			"void main() {\n"
@@ -238,13 +201,9 @@ namespace gnuVG {
 				"  p_textureCoord = p_projection * vec4(gl_Position.xy, 0.0, 1.0);\n"
 				;
 
-		if(((caps & primary_mode_mask) == do_texture)
-		   ||
-		   (caps & do_texture_alpha)
-			)
+		if((caps & primary_mode_mask) == do_texture)
 			vshad <<
-				"  vec3 atxc = u_textureMatrix * vec3(a_textureCoord, 1.0);\n"
-				"  v_textureCoord = atxc.xy;\n"
+				"  v_textureCoord = a_textureCoord;\n"
 //				"  v_textureCoord = a_textureCoord.xy;\n"
 				;
 
@@ -277,9 +236,10 @@ namespace gnuVG {
 			"precision highp float;\n"
 			;
 
-		if(caps & gradient_spread_mask)
-			fshad <<
-				"in vec2 gradient_coord;\n";
+		fshad << "out vec4 o_color;\n";
+
+		if (caps & gradient_spread_mask)
+			fshad << "in vec2 gradient_coord;\n";
 
 		if(caps & do_mask)
 			fshad <<
@@ -294,8 +254,6 @@ namespace gnuVG {
 		auto primary_mode = caps & primary_mode_mask;
 		if(primary_mode == do_linear_gradient ||
 		   primary_mode == do_radial_gradient) {
-			// gradient coordinates are in paint space - use surface2paint conversion matrix
-			fshad << "uniform mat4 surf2paint;\n";
 			fshad <<
 				"uniform vec4 stop_colors[32];\n" // stop position, R, G, B, A
 				"uniform float stop_invfactor[32];\n" // used to calculate distance between stops
@@ -326,7 +284,7 @@ namespace gnuVG {
 				"uniform vec4 v_color;\n"
 				;
 
-		if((primary_mode == do_texture) || (caps & do_texture_alpha))
+		if(primary_mode == do_texture)
 			fshad <<
 				"in vec2 v_textureCoord;\n"
 				"uniform sampler2D u_textureSampler;\n";
@@ -350,12 +308,7 @@ namespace gnuVG {
 
 		if(caps & do_mask)
 			fshad <<
-				"  vec4 m = texture2D( m_texture, v_maskCoord );\n";
-
-		if(caps & do_texture_alpha)
-			fshad <<
-				"  vec4 t = texture2D( u_textureSampler, v_textureCoord.xy );\n";
-
+				"  vec4 m = texture( m_texture, v_maskCoord );\n";
 
 		switch(primary_mode) {
 		case do_flat_color:
@@ -423,33 +376,29 @@ namespace gnuVG {
 					;
 			} else {
 				fshad <<
-					"  vec4 c = texture2D( p_texture, p_textureCoord.xy );\n";
+					"  vec4 c = texture( p_texture, p_textureCoord.xy );\n";
 			}
 			break;
 
 		case do_texture:
 			fshad <<
-				"  vec4 c = texture2D( u_textureSampler, v_textureCoord.xy );\n";
+				"  vec4 c = texture( u_textureSampler, v_textureCoord.xy );\n";
 			break;
 		}
 
 		if(caps & do_mask)
 			fshad << "  c = m.a * c;\n";
 
-		if(caps & do_texture_alpha)
-			fshad << "  c = t.a * c;\n";
-//			fshad << "  c = t;\n";
-
 		if(caps & do_color_transform)
 			fshad <<
-				"  gl_FragColor.r = c.r * ctransform_scale.r + ctransform_bias.r;\n"
-				"  gl_FragColor.g = c.g * ctransform_scale.g + ctransform_bias.g;\n"
-				"  gl_FragColor.b = c.b * ctransform_scale.b + ctransform_bias.b;\n"
-				"  gl_FragColor.a = c.a * ctransform_scale.a + ctransform_bias.a;\n"
+				"  o_color.r = c.r * ctransform_scale.r + ctransform_bias.r;\n"
+				"  o_color.g = c.g * ctransform_scale.g + ctransform_bias.g;\n"
+				"  o_color.b = c.b * ctransform_scale.b + ctransform_bias.b;\n"
+				"  o_color.a = c.a * ctransform_scale.a + ctransform_bias.a;\n"
 				;
 		else
 			fshad <<
-				"  gl_FragColor = c;\n"
+				"  o_color = c;\n"
 				;
 
 		fshad <<
@@ -490,7 +439,9 @@ namespace gnuVG {
 		builder.destroy(vertex_module);
 		builder.destroy(fragment_module);
 
-		drv->submit_command_list(builder.retrieve_command_list());
+		eka2l1::drivers::command_list final_list = builder.retrieve_command_list();
+		drv->submit_command_list(final_list);
+
 		return program_handle;
 	}
 
@@ -523,6 +474,17 @@ namespace gnuVG {
 
 		print_shader("Vertex Shader:", vertex_shader);
 		print_shader("Fragment Shader:", fragment_shader);
+
+		std::string version = "";
+
+		if (drv->is_stricted()) {
+			version = "#version 300 es\n";
+		} else {
+			version = "#version 140\n#extension GL_ARB_explicit_attrib_location : require\n";
+		}
+
+		vertex_shader.insert(0, version);
+		fragment_shader.insert(0, version);
 
 		eka2l1::drivers::shader_program_metadata metadata;
 		program_id = create_program(drv, vertex_shader.c_str(), fragment_shader.c_str(),

@@ -209,8 +209,8 @@ namespace gnuVG {
 		shaderCode += "    for( int i = 0; i < stepCount; i++ )                                                                                                                             " + eol;
 		shaderCode += "    {                                                                                                                                                                " + eol;
 		shaderCode += "        vec2 texCoordOffset = gOffsets[i] * pixelOffset;                                                                                                           " + eol;
-		shaderCode += "        vec4 c1 = texture2D( tex0, centreUV + texCoordOffset );" + eol;
-		shaderCode += "        vec4 c2 = texture2D( tex0, centreUV - texCoordOffset );" + eol;
+		shaderCode += "        vec4 c1 = texture( tex0, centreUV + texCoordOffset );" + eol;
+		shaderCode += "        vec4 c2 = texture( tex0, centreUV - texCoordOffset );" + eol;
 		shaderCode += "        vec4 col = c1 + c2;" + eol;
 		shaderCode += "        colOut += gWeights[i] * col;                                                                                                                               " + eol;
 		shaderCode += "    }                                                                                                                                                                " + eol;

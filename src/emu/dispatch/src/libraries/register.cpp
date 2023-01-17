@@ -23,6 +23,7 @@
 #include <dispatch/libraries/egl/register.h>
 #include <dispatch/libraries/gles1/register.h>
 #include <dispatch/libraries/gles2/register.h>
+#include <dispatch/libraries/vg/register.h>
 
 #include <kernel/kernel.h>
 #include <config/config.h>
@@ -40,6 +41,11 @@ namespace eka2l1::dispatch::libraries {
                 disp->patch_libraries(u"Z:\\Sys\\Bin\\libegl.dll", LIBEGL_PATCH_INFOS, LIBEGL_PATCH_COUNT);
                 disp->patch_libraries(u"Z:\\Sys\\Bin\\libglesv1_cm.dll", LIBGLES_V1_CM_PATCH_INFOS, LIBGLES_V1_CM_PATCH_COUNT);
                 disp->patch_libraries(u"Z:\\Sys\\Bin\\libglesv2.dll", LIBGLESV2_PATCH_INFOS, LIBGLESV2_PATCH_COUNT);
+            }
+            
+            if (kern->get_epoc_version() >= epocver::epoc10) {
+                disp->patch_libraries(u"Z:\\Sys\\Bin\\libopenvg.dll", LIBOPENVG11_PATCH_INFOS, LIBOPENVG11_PATCH_COUNT);
+                disp->patch_libraries(u"Z:\\Sys\\Bin\\libopenvgu.dll", LIBOPENVGU11_PATCH_INFOS, LIBOPENVGU11_PATCH_COUNT);
             }
         }
     }

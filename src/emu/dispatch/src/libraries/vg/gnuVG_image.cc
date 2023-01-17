@@ -25,34 +25,75 @@ namespace gnuVG {
 		     VGint width, VGint height,
 		     VGbitfield allowedQuality)
 		: Object(ctx) {
-		if(!ctx->create_framebuffer(state, &framebuffer, format, width, height, allowedQuality))
+		framebuffer = new Context::FrameBuffer;
+		if (!ctx->create_framebuffer(state, framebuffer, format, width, height, allowedQuality, true)) {
+			delete framebuffer;
 			throw FailedToCreateImageException();
+		}
 	}
 
+	Image::Image(Context *ctx, Image *parent, int subx, int suby, int width, int height)
+		: Object(ctx)
+		, parent(parent) {
+		int parent_height = (parent->parent) ? parent->subset_info.subset_height : parent->framebuffer->height;
+		int parent_width = (parent->parent) ? parent->subset_info.subset_width : parent->framebuffer->width;
+
+		if ((subx < 0) || ((subx + width) > parent_width)) {
+			throw FailedToCreateImageException();
+		}
+		
+		if ((suby < 0) || ((suby + height) > parent_height)) {
+			throw FailedToCreateImageException();
+		}
+
+		subset_info.subset_x = subx + ((parent->parent) ? parent->subset_info.subset_x : 0);
+		subset_info.subset_y = suby + ((parent->parent) ? parent->subset_info.subset_y : 0);
+		subset_info.original_subset_x = subx;
+		subset_info.original_subset_y = suby;
+		subset_info.subset_width = width;
+		subset_info.subset_height = height;
+
+		framebuffer = parent->framebuffer;
+		framebuffer->ref_count++;
+
+		parent->child_list.push(&child_link);
+    }
+
 	void Image::free_resources(const GraphicState &state) {
-		if (context) {
-			context->delete_framebuffer(state, &framebuffer);
+		framebuffer->ref_count--;
+		if (context && (framebuffer->ref_count == 0)) {
+			context->delete_framebuffer(state, framebuffer);
+			delete framebuffer;
 		}
 	}
 
 	Image::~Image() {
+		while (!child_list.empty()) {
+			Image *child = E_LOFF(child_list.first(), Image, child_link);
+			child->parent = nullptr;
+		}
+
+		if (parent != nullptr) {
+			child_link.deque();
+		}
 	}
 
 	void Image::vgClearImage(const GraphicState &state, VGint x, VGint y, VGint width, VGint height) {
 		if(context) {
 			context->save_current_framebuffer();
-			context->render_to_framebuffer(state, &framebuffer);
+			context->render_to_framebuffer(state, framebuffer);
 			context->clear(state, x, y, width, height);
 			context->restore_current_framebuffer(state);
 		}
 	}
 
-	void Image::vgImageSubData(const void * data, VGint dataStride,
+	void Image::vgImageSubData(const GraphicState &state, const void * data, VGint dataStride,
 				   VGImageFormat dataFormat,
 				   VGint x, VGint y, VGint width, VGint height) {
 		if(context) {
 			context->copy_memory_to_framebuffer(
-				&framebuffer,
+				state,
+				framebuffer,
 				data, dataStride,
 				dataFormat,
 				x, y,
@@ -66,7 +107,7 @@ namespace gnuVG {
 				      VGint width, VGint height) {
 		if (context) {
 			context->copy_framebuffer_to_memory(
-				&framebuffer,
+				framebuffer,
 				data, dataStride,
 				dataFormat,
 				x, y,
@@ -74,8 +115,27 @@ namespace gnuVG {
 		}
 	}
 
-	Image* Image::vgChildImage(VGint x, VGint y, VGint width, VGint height) {
-		return VG_INVALID_HANDLE;
+	VGImage Image::vgChildImage(VGint x, VGint y, VGint width, VGint height) {
+		// Check if there was a child that match this same property or not
+		auto beg = child_list.first();
+		auto end = child_list.end();
+
+		while (beg != end) {
+			Image *child = E_LOFF(beg, Image, child_link);
+			if ((child->subset_info.original_subset_x == x) && (child->subset_info.original_subset_y == y) &&
+				(child->subset_info.subset_width == width) && (child->subset_info.subset_height == height)) {
+				return child->get_handle();
+			}
+
+			beg = beg->next;
+		}
+
+		auto registered = context->create<Image>(this, x, y, width, height);
+		if (registered) {
+			return registered->get_handle();
+		}
+
+		return VG_OUT_OF_MEMORY_ERROR;
 	}
 
 	Image* Image::vgGetParent() {
@@ -90,14 +150,14 @@ namespace gnuVG {
 		if (context) {
 			context->copy_framebuffer_to_framebuffer(
 				state,
-				&framebuffer, &src->framebuffer,
+				framebuffer, src->framebuffer,
 				dx, dy, sx, sy, width, height);
 		}
 	}
 
-	void Image::vgDrawImage(const GraphicState &state) {
+	void Image::vgDrawImage(const GraphicState &state, const bool for_glyph) {
 		if(context)
-			context->trivial_render_framebuffer(state, &framebuffer);
+			context->trivial_render_framebuffer(state, framebuffer, 1, 1, VG_TILE_FILL, &subset_info, for_glyph);
 	}
 
 	void Image::vgSetPixels(const GraphicState &state, VGint dx, VGint dy,
@@ -106,7 +166,7 @@ namespace gnuVG {
 		if (context) {
 			auto fbuf = context->get_internal_framebuffer(Context::GNUVG_CURRENT_FRAMEBUFFER);
 			context->copy_framebuffer_to_framebuffer(state,
-				fbuf, &framebuffer,
+				fbuf, framebuffer,
 				dx, dy, sx, sy, width, height);
 		}
 	}
@@ -117,7 +177,7 @@ namespace gnuVG {
 		if (context) {
 			auto fbuf = context->get_internal_framebuffer(Context::GNUVG_CURRENT_FRAMEBUFFER);
 			context->copy_framebuffer_to_framebuffer(state,
-				&framebuffer, fbuf,
+				framebuffer, fbuf,
 				dx, dy, sx, sy, width, height);
 		}
 	}
@@ -144,11 +204,11 @@ namespace gnuVG {
 	VGint Image::vgGetParameteri(VGint paramType) {
 		switch(paramType) {
 		case VG_IMAGE_FORMAT:
-			return VG_sRGBA_8888;
+			return framebuffer->format;
 		case VG_IMAGE_WIDTH:
-			return framebuffer.width;
+			return framebuffer->width;
 		case VG_IMAGE_HEIGHT:
-			return framebuffer.height;
+			return framebuffer->height;
 		}
 		context->set_error(VG_ILLEGAL_ARGUMENT_ERROR);
 		return -1;
@@ -181,7 +241,7 @@ namespace gnuVG {
 
 using namespace gnuVG;
 
-namespace eka2l1 {
+namespace eka2l1::dispatch {
 	BRIDGE_FUNC_LIBRARY(VGImage, vg_create_image_emu, VGImageFormat format, VGint width, VGint height,
 		VGbitfield allowedQuality) {
 		GraphicState state;
@@ -227,7 +287,8 @@ namespace eka2l1 {
 
 	BRIDGE_FUNC_LIBRARY(void, vg_image_subdata_emu, VGImage image, const void * data, VGint dataStride,
 		VGImageFormat dataFormat, VGint x, VGint y, VGint width, VGint height) {
-		Context *context = gnuVG::get_active_context(sys);
+		GraphicState state;
+		Context *context = gnuVG::get_active_context(sys, &state);
 
 		if (!context) {
 			return;
@@ -235,7 +296,7 @@ namespace eka2l1 {
 
 		auto i = context->get<Image>(image);
 		if(i)
-			i->vgImageSubData(data, dataStride, dataFormat, x, y, width, height);
+			i->vgImageSubData(state, data, dataStride, dataFormat, x, y, width, height);
 	}
 
 	BRIDGE_FUNC_LIBRARY(void, vg_get_image_subdata_emu, VGImage image, void * data, VGint dataStride,
@@ -251,12 +312,40 @@ namespace eka2l1 {
 			i->vgGetImageSubData(data, dataStride, dataFormat, x, y, width, height);
 	}
 
+	// What the fuck is this
 	BRIDGE_FUNC_LIBRARY(VGImage, vg_child_image_emu, VGImage parent, VGint x, VGint y, VGint width, VGint height) {
+		Context *context = gnuVG::get_active_context(sys);
+
+		if (!context) {
+			return VG_INVALID_HANDLE;
+		}
+
+		auto i = context->get<Image>(parent);
+		if(i) {
+			return i->vgChildImage(x, y, width, height);
+		}
+
 		return VG_INVALID_HANDLE;
 	}
 
 	BRIDGE_FUNC_LIBRARY(VGImage, vg_get_parent_emu, VGImage image) {
-		return VG_INVALID_HANDLE;
+		Context *context = gnuVG::get_active_context(sys);
+
+		if (!context) {
+			return VG_NO_CONTEXT_ERROR;
+		}
+
+		auto i = context->get<Image>(image);
+		if (i) {
+			Image *parent = i->vgGetParent();
+            if (parent) {
+				return parent->get_handle();
+			}
+
+			return image;
+		}
+
+		return VG_BAD_HANDLE_ERROR;
 	}
 
 	BRIDGE_FUNC_LIBRARY(void, vg_copy_image_emu, VGImage dst, VGint dx, VGint dy,
@@ -317,11 +406,13 @@ namespace eka2l1 {
 
 	BRIDGE_FUNC_LIBRARY(void, vg_write_pixels_emu, const void * data, VGint dataStride, VGImageFormat dataFormat,
 		VGint dx, VGint dy, VGint width, VGint height) {
-		Context *context = gnuVG::get_active_context(sys);
+		GraphicState state;
+		Context *context = gnuVG::get_active_context(sys, &state);
 
 		if (context) {
 			auto fbuf = context->get_internal_framebuffer(Context::GNUVG_CURRENT_FRAMEBUFFER);
 			context->copy_memory_to_framebuffer(
+				state,
 				fbuf,
 				data, dataStride,
 				dataFormat,

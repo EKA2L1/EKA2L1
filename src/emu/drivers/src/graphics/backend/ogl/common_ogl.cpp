@@ -63,6 +63,12 @@ namespace eka2l1::drivers {
         case texture_format::rgba4:
             return GL_RGBA4;
 
+        case texture_format::rgb565:
+            return GL_RGB565;
+
+        case texture_format::rgb5_a1:
+            return GL_RGB5_A1;
+
         case texture_format::depth24_stencil8:
             return GL_DEPTH24_STENCIL8;
 

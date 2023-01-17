@@ -86,6 +86,30 @@ namespace eka2l1::dispatch {
         }
     }
 
+    drivers::handle graphics_buffer_pusher::push_buffer(drivers::graphics_driver *drv, const std::uint8_t *data_source, const std::size_t total_buffer_size, std::size_t &buffer_offset) {
+        if (buffers_[current_buffer_].used_size_ + total_buffer_size > size_per_buffer_) {
+            current_buffer_++;
+        }
+        
+        if (current_buffer_ == buffers_.size()) {
+            add_buffer();
+        }
+
+        if (!buffers_[current_buffer_].buffer_) {
+            buffers_[current_buffer_].buffer_ = drivers::create_buffer(drv, nullptr, size_per_buffer_, static_cast<drivers::buffer_upload_hint>(drivers::buffer_upload_dynamic | drivers::buffer_upload_draw));
+        }
+
+        if (!buffers_[current_buffer_].data_) {
+            buffers_[current_buffer_].data_ = new std::uint8_t[size_per_buffer_];
+        }
+
+        buffer_offset = buffers_[current_buffer_].used_size_;
+        std::memcpy(buffers_[current_buffer_].data_ + buffer_offset, data_source, total_buffer_size);
+
+        buffers_[current_buffer_].used_size_ += (((total_buffer_size + 3) / 4) * 4);
+        return buffers_[current_buffer_].buffer_;
+    }
+
     void graphics_buffer_pusher::done_frame() {
         current_buffer_ = 0;
     }

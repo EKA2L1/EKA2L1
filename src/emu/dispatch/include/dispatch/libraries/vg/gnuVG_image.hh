@@ -24,37 +24,49 @@
 
 #include <dispatch/libraries/vg/gnuVG_context.hh>
 #include <dispatch/libraries/vg/gnuVG_object.hh>
+#include <common/linked.h>
 
 namespace gnuVG {
 
 	class Image : public Object {
 	private:
 		Image* parent = NULL;
-		Context::FrameBuffer framebuffer;
+
+		Context::FrameBuffer *framebuffer;
+		Context::FrameBufferSubsetInfo subset_info;
+		
+		eka2l1::common::roundabout child_list;
+		eka2l1::common::double_linked_queue_element child_link;
 
 	public:
 		class FailedToCreateImageException {};
 
-		const Context::FrameBuffer* get_framebuffer() {
-			return &framebuffer;
+		Context::FrameBuffer* get_framebuffer() {
+			return framebuffer;
+		}
+
+		const Context::FrameBufferSubsetInfo &get_subset_info() const {
+			return subset_info;
 		}
 
 		Image(Context* ctx, const GraphicState &state, VGImageFormat format,
 		      VGint width, VGint height,
 		      VGbitfield allowedQuality);
 
+		Image(Context *ctx, Image *parent, int subx, int suby, int width, int height);
+
 		virtual ~Image();
 
 		/* OpenVG equivalent API - image manipulation */
 		void vgClearImage(const GraphicState &state, VGint x, VGint y, VGint width, VGint height);
-		void vgImageSubData(const void * data, VGint dataStride,
+		void vgImageSubData(const GraphicState &state, const void * data, VGint dataStride,
 				    VGImageFormat dataFormat,
 				    VGint x, VGint y, VGint width, VGint height);
 		void vgGetImageSubData(void * data, VGint dataStride,
 				       VGImageFormat dataFormat,
 				       VGint x, VGint y,
 				       VGint width, VGint height);
-		Image* vgChildImage(VGint x, VGint y, VGint width, VGint height);
+		VGImage vgChildImage(VGint x, VGint y, VGint width, VGint height);
 		Image* vgGetParent();
 		void vgCopyImage(const GraphicState &state,
 				 VGint dx, VGint dy,
@@ -62,7 +74,7 @@ namespace gnuVG {
 				 VGint sx, VGint sy,
 				 VGint width, VGint height,
 				 VGboolean dither);
-		void vgDrawImage(const GraphicState &state);
+		void vgDrawImage(const GraphicState &state, const bool for_glyph = false);
 		void vgSetPixels(const GraphicState &state, VGint dx, VGint dy,
 				 VGint sx, VGint sy,
 				 VGint width, VGint height);

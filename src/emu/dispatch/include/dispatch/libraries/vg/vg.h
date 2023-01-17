@@ -3,7 +3,7 @@
 #include <dispatch/libraries/vg/consts.h>
 #include <dispatch/def.h>
 
-namespace eka2l1 {
+namespace eka2l1::dispatch {
     BRIDGE_FUNC_LIBRARY(void, vg_gaussian_blur_emu, VGImage dst, VGImage src, VGfloat stdDeviationX, VGfloat stdDeviationY, VGTilingMode tilingMode);
 	BRIDGE_FUNC_LIBRARY(VGErrorCode, vg_get_error_emu);
 	BRIDGE_FUNC_LIBRARY(void, vg_setf_emu, VGParamType type, VGfloat value);
@@ -19,8 +19,6 @@ namespace eka2l1 {
 	BRIDGE_FUNC_LIBRARY(void, vg_set_parameteri_emu, VGHandle object, VGint paramType, VGint value);
 	BRIDGE_FUNC_LIBRARY(void, vg_set_parameterfv_emu, VGHandle object, VGint paramType,
 		VGint count, const VGfloat * values);
-	BRIDGE_FUNC_LIBRARY(void, vg_set_parameteriv_emu, VGHandle object, VGint paramType,
-		VGint count, const VGint * values);
 	BRIDGE_FUNC_LIBRARY(void, vg_set_parameteriv_emu, VGHandle object, VGint paramType,
 		VGint count, const VGint * values);
 	BRIDGE_FUNC_LIBRARY(VGfloat, vg_get_parameterf_emu, VGHandle object, VGint paramType);
@@ -113,4 +111,19 @@ namespace eka2l1 {
 	BRIDGE_FUNC_LIBRARY(void, vg_draw_glyphs_emu, VGFont font, VGint glyphCount, const VGuint *glyphIndices,
 		const VGfloat *adjustments_x, const VGfloat *adjustments_y, VGbitfield paintModes,
 		VGboolean allowAutoHinting);
+	BRIDGE_FUNC_LIBRARY(address, vg_get_string_emu, std::uint32_t pname);
+	BRIDGE_FUNC_LIBRARY(void, vg_draw_path_emu, VGPath path, VGbitfield paintModes);
+	BRIDGE_FUNC_LIBRARY(void, vg_modify_path_coords_emu, VGPath dstPath, VGint startIndex,
+		VGint numSegments, const void *pathData);
+
+        // VGU
+	BRIDGE_FUNC_LIBRARY(VGUErrorCode, vgu_line_emu, VGPath path, VGfloat x0, VGfloat y0, VGfloat x1, VGfloat y1);
+	BRIDGE_FUNC_LIBRARY(VGUErrorCode, vgu_polygon_emu, VGPath path, const VGfloat *points, VGint count, VGboolean closed);
+	BRIDGE_FUNC_LIBRARY(VGUErrorCode, vgu_rect_emu, VGPath path, VGfloat x, VGfloat y, VGfloat width, VGfloat height);
+	BRIDGE_FUNC_LIBRARY(VGUErrorCode, vgu_round_rect_emu, VGPath path, VGfloat x, VGfloat y, VGfloat width, VGfloat height, VGfloat arcWidth, VGfloat arcHeight);
+	BRIDGE_FUNC_LIBRARY(VGUErrorCode, vgu_ellipse_emu, VGPath path, VGfloat cx, VGfloat cy, VGfloat width, VGfloat height);
+	BRIDGE_FUNC_LIBRARY(VGUErrorCode, vgu_arc_emu, VGPath path, VGfloat x, VGfloat y, VGfloat width, VGfloat height, VGfloat startAngle, VGfloat angleExtent, VGUArcType arcType);
+	BRIDGE_FUNC_LIBRARY(VGUErrorCode, vgu_compute_warp_quad_to_square_emu, VGfloat sx0, VGfloat sy0, VGfloat sx1, VGfloat sy1, VGfloat sx2, VGfloat sy2, VGfloat sx3, VGfloat sy3, VGfloat * matrix);
+	BRIDGE_FUNC_LIBRARY(VGUErrorCode, vgu_compute_warp_square_to_quad_emu, VGfloat dx0, VGfloat dy0, VGfloat dx1, VGfloat dy1, VGfloat dx2, VGfloat dy2, VGfloat dx3, VGfloat dy3, VGfloat *matrix);
+	BRIDGE_FUNC_LIBRARY(VGUErrorCode, vgu_compute_warp_quad_to_quad_emu, VGfloat dx0, VGfloat dy0, VGfloat dx1, VGfloat dy1, VGfloat dx2, VGfloat dy2, VGfloat dx3, VGfloat dy3, VGfloat sx0, VGfloat sy0, VGfloat sx1, VGfloat sy1, VGfloat sx2, VGfloat sy2, VGfloat sx3, VGfloat sy3, VGfloat *matrix);
 }

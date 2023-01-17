@@ -857,7 +857,7 @@ APPLY_PENDING_ROUTES:
         }
     }
 
-    std::uint32_t gles_framebuffer_object::ready_for_draw(drivers::graphics_driver *drv) {
+    std::uint32_t gles_framebuffer_object::ready_for_draw(egl_controller &controller, drivers::graphics_driver *drv) {
         std::uint32_t err = completed();
         
         if (err != GL_FRAMEBUFFER_COMPLETE_EMU) {
@@ -911,7 +911,7 @@ APPLY_PENDING_ROUTES:
         }
 
         // Flush passed renderpass
-        context_.flush_to_driver(drv);
+        context_.flush_to_driver(controller, drv);
 
         color_changed_ = false;
         depth_changed_ = false;
@@ -1028,12 +1028,12 @@ APPLY_PENDING_ROUTES:
         egl_context_es_shared::destroy(driver, builder);
     }
 
-    void egl_context_es2::flush_to_driver(drivers::graphics_driver *drv, const bool is_frame_swap_flush) {
+    void egl_context_es2::flush_to_driver(egl_controller &controller, drivers::graphics_driver *drv, const bool is_frame_swap_flush) {
         // Force sync again in the list
         previous_using_program_ = nullptr;
         framebuffer_need_reconfigure_ = true;
 
-        egl_context_es_shared::flush_to_driver(drv, is_frame_swap_flush);
+        egl_context_es_shared::flush_to_driver(controller, drv, is_frame_swap_flush);
     }
 
     bool egl_context_es2::retrieve_vertex_buffer_slot(std::vector<drivers::handle> &vertex_buffers_alloc, drivers::graphics_driver *drv,
@@ -1142,7 +1142,7 @@ APPLY_PENDING_ROUTES:
                     return false;
                 }
 
-                std::uint32_t result = fb_obj->ready_for_draw(drv);
+                std::uint32_t result = fb_obj->ready_for_draw(controller, drv);
                 if (result != 0) {
                     controller.push_error(this, result);
                     return false;
@@ -2738,7 +2738,7 @@ APPLY_PENDING_ROUTES:
         }
 
         // Flush all pending operations
-        ctx->flush_to_driver(drv, false);
+        ctx->flush_to_driver(controller, drv, false);
 
         if (!fb_obj) {
             if (!drivers::read_bitmap(drv, ctx->read_surface_->handle_, eka2l1::point(x, y), eka2l1::vec2(width, height),

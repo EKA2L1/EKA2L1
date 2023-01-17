@@ -172,8 +172,8 @@ namespace eka2l1::dispatch {
         fragment_statuses_ |= FRAGMENT_STATE_FOG_MODE_EXP;
     }
 
-    void egl_context_es1::flush_to_driver(drivers::graphics_driver *drv, const bool is_frame_swap_flush) {
-        egl_context_es_shared::flush_to_driver(drv, is_frame_swap_flush);
+    void egl_context_es1::flush_to_driver(egl_controller &controller, drivers::graphics_driver *drv, const bool is_frame_swap_flush) {
+        egl_context_es_shared::flush_to_driver(controller, drv, is_frame_swap_flush);
     }
 
     void egl_context_es1::destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) {
