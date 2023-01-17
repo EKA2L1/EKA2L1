@@ -29,13 +29,21 @@
 #include <utils/err.h>
 
 namespace eka2l1::dispatch {
+    bool posting_target_free_check_func(epoc_video_posting_target &data) {
+        return !data.target_window_;
+    }
+
+    void posting_target_free_func(epoc_video_posting_target &data) {
+        data.target_window_ = nullptr;
+    }
+
     epoc_video_player::epoc_video_player(drivers::graphics_driver *grdrv, drivers::audio_driver *auddrv)
         : image_handle_(0)
         , video_player_(nullptr)
-        , target_window_(nullptr)
         , driver_(grdrv)
         , custom_stream_(nullptr)
-        , rotation_(ROTATION_TYPE_NONE) {
+        , rotation_(ROTATION_TYPE_NONE)
+        , postings_(posting_target_free_check_func, posting_target_free_func) {
         video_player_ = drivers::new_best_video_player(auddrv);
         video_player_->set_image_frame_available_callback([](void *userdata, const std::uint8_t *data, const std::size_t data_size) {
             epoc_video_player *self = reinterpret_cast<epoc_video_player*>(userdata);
@@ -62,36 +70,61 @@ namespace eka2l1::dispatch {
         }
     }
 
-    bool epoc_video_player::set_target_window(kernel_system *kern, window_server *serv, const std::uint32_t wss_handle, const std::uint32_t win_handle) {
+    std::int32_t epoc_video_player::register_window(kernel_system *kern, window_server *serv, const std::uint32_t wss_handle, const std::uint32_t win_handle) {
         if (!serv) {
-            return false;
+            return -1;
         }
 
         service::session *ss = kern->get<service::session>(wss_handle);
         if (!ss) {
             LOG_ERROR(HLE_DISPATCHER, "Can't find window session with handle 0x{:X}", wss_handle);
-            return false;
+            return -1;
         }
 
         epoc::window_server_client *real_client = serv->get_client(ss->unique_id());
         if (!real_client) {
             LOG_ERROR(HLE_DISPATCHER, "Unable to find real window session with ID 0x{:X}", ss->unique_id());
-            return false;
+            return -1;
         }
 
         // Get the window
         epoc::canvas_base *the_canvas = reinterpret_cast<epoc::canvas_base*>(real_client->get_object(win_handle));
         if (!the_canvas) {
             LOG_ERROR(HLE_DISPATCHER, "Unable to retrieve the drawable window object! (ID=0x{:X}, WCID=0x{:X})", win_handle, ss->unique_id());
-            return false;
+            return -1;
         }
 
-        target_window_ = the_canvas;
-        return true;
+        auto find_res = std::find_if(postings_.begin(), postings_.end(), [the_canvas](const epoc_video_posting_target &target) {
+            return target.target_window_ == the_canvas;
+        });
+
+        if (find_res != postings_.end()) {
+            LOG_ERROR(HLE_DISPATCHER, "Window already registered for video posting! (ID=0x{:X})", the_canvas->id);
+            return -1;
+        }
+
+        epoc_video_posting_target post_target;
+        post_target.target_window_ = the_canvas;
+
+        return static_cast<std::int32_t>(postings_.add(post_target));
     }
 
-    void epoc_video_player::set_target_rect(const eka2l1::rect &display_rect) {
-        display_rect_ = display_rect;
+    void epoc_video_player::set_target_rect(const std::int32_t managed_handle, const eka2l1::rect &display_rect) {
+        if (managed_handle <= 0) {
+            return;
+        }
+
+        epoc_video_posting_target *target = postings_.get(static_cast<std::size_t>(managed_handle));
+        if (target != nullptr) {
+            target->display_rect_ = display_rect;
+        }
+    }
+
+    void epoc_video_player::unregister_window(const std::int32_t managed_handle) {
+        if (managed_handle <= 0) {
+            return;
+        }
+        postings_.remove(static_cast<std::size_t>(managed_handle));
     }
 
     std::uint32_t epoc_video_player::max_volume() const {
@@ -123,6 +156,10 @@ namespace eka2l1::dispatch {
             image_handle_ = 0;
         }
     }
+    
+    void epoc_video_player::stop() {
+        video_player_->stop();
+    }
 
     bool epoc_video_player::open_file(const std::u16string &real_path) {
         return video_player_->open_file(common::ucs2_to_utf8(real_path));
@@ -145,49 +182,59 @@ namespace eka2l1::dispatch {
         const eka2l1::vec2 vid_size = video_player_->get_video_size();
         const eka2l1::vec3 vid_size_v3 = eka2l1::vec3(vid_size.x, vid_size.y, 0);
 
-        const std::lock_guard<std::mutex> guard(target_window_->scr->screen_mutex);
+        for (auto &posting: postings_) {
+            if (posting.target_window_ == nullptr) {
+                continue;
+            }
 
-        if (!image_handle_) {
-            image_handle_ = drivers::create_texture(driver_, 2, 0, drivers::texture_format::rgba, drivers::texture_format::rgba,
-                drivers::texture_data_type::ubyte, buffer_data, buffer_size, vid_size_v3);
-        } else {
-            target_window_->driver_builder_.update_texture(image_handle_, reinterpret_cast<const char*>(buffer_data), buffer_size, 0, drivers::texture_format::rgba,
-                drivers::texture_data_type::ubyte, eka2l1::vec3(0, 0, 0), vid_size_v3);
+            const std::lock_guard<std::mutex> guard(posting.target_window_->scr->screen_mutex);
+
+            if (!image_handle_) {
+                image_handle_ = drivers::create_texture(driver_, 2, 0, drivers::texture_format::rgba, drivers::texture_format::rgba,
+                    drivers::texture_data_type::ubyte, buffer_data, buffer_size, vid_size_v3);
+            } else {
+                posting.target_window_->driver_builder_.update_texture(image_handle_, reinterpret_cast<const char*>(buffer_data), buffer_size, 0, drivers::texture_format::rgba,
+                    drivers::texture_data_type::ubyte, eka2l1::vec3(0, 0, 0), vid_size_v3);
+            }
+
+            eka2l1::rect dest_rect = posting.display_rect_;
+            dest_rect.top += posting.target_window_->abs_rect.top;
+            dest_rect.scale(posting.target_window_->scr->display_scale_factor);
+
+            // Try to change position for good rotation
+            switch (rotation_) {
+            case 1:
+                dest_rect.top.x += dest_rect.size.x;
+                break;
+
+            case 2:
+                dest_rect.top.x += dest_rect.size.x;
+                dest_rect.top.y += dest_rect.size.y;
+                break;
+
+            case 3:
+                dest_rect.top.y += dest_rect.size.y;
+                break;
+
+            default:
+                break;
+            }
+
+            if (rotation_ & 1) {
+                std::swap(dest_rect.size.x, dest_rect.size.y);
+            }
+
+            posting.target_window_->driver_builder_.set_texture_filter(image_handle_, false, drivers::filter_option::linear);
+            posting.target_window_->driver_builder_.set_texture_filter(image_handle_, true, drivers::filter_option::linear);
+            posting.target_window_->driver_builder_.draw_bitmap(image_handle_, 0, dest_rect, eka2l1::rect(eka2l1::vec2(0, 0), eka2l1::vec2(0, 0)), eka2l1::vec2(0, 0), rotation_ * 90.0f);
+            posting.target_window_->content_changed(true);
+
+            posting.target_window_->try_update(nullptr);
         }
+    }
 
-        eka2l1::rect dest_rect = display_rect_;
-        dest_rect.top += target_window_->abs_rect.top;
-        dest_rect.scale(target_window_->scr->display_scale_factor);
-
-        // Try to change position for good rotation
-        switch (rotation_) {
-        case 1:
-            dest_rect.top.x += dest_rect.size.x;
-            break;
-
-        case 2:
-            dest_rect.top.x += dest_rect.size.x;
-            dest_rect.top.y += dest_rect.size.y;
-            break;
-
-        case 3:
-            dest_rect.top.y += dest_rect.size.y;
-            break;
-
-        default:
-            break;
-        }
-
-        if (rotation_ & 1) {
-            std::swap(dest_rect.size.x, dest_rect.size.y);
-        }
-
-        target_window_->driver_builder_.set_texture_filter(image_handle_, false, drivers::filter_option::linear);
-        target_window_->driver_builder_.set_texture_filter(image_handle_, true, drivers::filter_option::linear);
-        target_window_->driver_builder_.draw_bitmap(image_handle_, 0, dest_rect, eka2l1::rect(eka2l1::vec2(0, 0), eka2l1::vec2(0, 0)), eka2l1::vec2(0, 0), rotation_ * 90.0f);
-        target_window_->content_changed(true);
-
-        target_window_->try_update(nullptr);
+    std::uint64_t epoc_video_player::position() const {
+        return video_player_ ? video_player_->position() : 0;
     }
 
     bool epoc_video_player::set_done_notify(epoc::notify_info &info) {
@@ -225,7 +272,7 @@ namespace eka2l1::dispatch {
         return dispatcher->video_player_container_.remove_object(handle);
     }
     
-    BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_set_owned_window, const std::uint32_t handle, const std::uint32_t wss_handle, const std::uint32_t win_ws_handle) {
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_register_window, const std::uint32_t handle, const std::uint32_t wss_handle, const std::uint32_t win_ws_handle) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         dispatch::epoc_video_player *player = dispatcher->video_player_container_.get_object(handle);
 
@@ -233,14 +280,16 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
-        if (!player->set_target_window(sys->get_kernel_system(), dispatcher->winserv_, wss_handle, win_ws_handle)) {
+        const std::int32_t result = player->register_window(sys->get_kernel_system(), dispatcher->winserv_, wss_handle, win_ws_handle);
+
+        if (result < 0) {
             return epoc::error_bad_handle;
         }
 
-        return epoc::error_none;
+        return result;
     }
 
-    BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_set_display_rect, const std::uint32_t handle, const eka2l1::rect *disp_rect) {
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_set_display_rect, const std::uint32_t handle, const std::int32_t managed_win_handle, const eka2l1::rect *disp_rect) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         dispatch::epoc_video_player *player = dispatcher->video_player_container_.get_object(handle);
 
@@ -251,7 +300,19 @@ namespace eka2l1::dispatch {
         eka2l1::rect transformed_rect = *disp_rect;
         transformed_rect.transform_from_symbian_rectangle();
 
-        player->set_target_rect(transformed_rect);
+        player->set_target_rect(managed_win_handle, transformed_rect);
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_unregister_window, const std::uint32_t handle, const std::int32_t managed_handle) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        dispatch::epoc_video_player *player = dispatcher->video_player_container_.get_object(handle);
+
+        if (!player) {
+            return epoc::error_bad_handle;
+        }
+
+        player->unregister_window(managed_handle);
         return epoc::error_none;
     }
     
@@ -398,6 +459,31 @@ namespace eka2l1::dispatch {
         }
 
         player->close();
+        return epoc::error_none;
+    }
+
+    
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_stop, const std::uint32_t handle) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        dispatch::epoc_video_player *player = dispatcher->video_player_container_.get_object(handle);
+
+        if (!player) {
+            return epoc::error_bad_handle;
+        }
+
+        player->stop();
+        return epoc::error_none;
+    }
+    
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_position, const std::uint32_t handle, std::uint64_t *position_us) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        dispatch::epoc_video_player *player = dispatcher->video_player_container_.get_object(handle);
+
+        if (!player) {
+            return epoc::error_bad_handle;
+        }
+
+        *position_us = player->position();
         return epoc::error_none;
     }
 }

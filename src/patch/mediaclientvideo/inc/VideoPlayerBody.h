@@ -1,7 +1,7 @@
 #ifndef MEDIACLIENTVIDEO_VIDEO_PLAYER_BODY_H
 #define MEDIACLIENTVIDEO_VIDEO_PLAYER_BODY_H
 
-#include <VideoPlayer.h>
+#include "VideoPlayer1P2.h"
 
 enum TVideoPlayerState {
     EVideoPlayerStateIdle = 0,
@@ -22,7 +22,8 @@ public:
     void OpenComplete(const TInt aError);
     void PrepareComplete(const TInt aError);
     void PlayComplete(const TInt aError);
-    
+
+    void Play();
     void Pause();
     
     const TVideoPlayerState CurrentState() const {
@@ -33,10 +34,16 @@ public:
 class CVideoPlayerUtility::CBody : public CActive {
 private:
     CVideoPlayerFeedbackHandler iFeedbackHandler;
-    
-    RWindowBase *iWindow;
-    TRect iDisplayRect;
-    
+
+    struct TDisplayWindowInfo {
+        const RWindowBase *iWindow;
+        TInt iManagedHandle;
+    };
+
+    RArray<TDisplayWindowInfo> iWindowInfos;
+    RWindowBase *iActiveWindow;
+    TRect iActiveClipRect;
+
     TAny *iDispatchInstance;
     TReal32 iVideoFps;
     TInt iVideoBitRate;
@@ -45,18 +52,25 @@ private:
     TVideoRotation iCurrentRotation;
     
     CIdle *iCompleteIdle;
+    TInt iVersion;
 
-    CBody(MVideoPlayerUtilityObserver &aObserver);
+    CBody(MVideoPlayerUtilityObserver &aObserver, TInt aVersion);
 
     void ConstructL(RWsSession &aWsSession, RWindowBase &aWindow, const TRect &aClipRect);
+    void Construct2L();
     
 public:
     static CBody *NewL(MVideoPlayerUtilityObserver &aObserver, RWsSession &aWsSession, RWindowBase &aWindow, const TRect &aClipRect);
+    static CBody *New2L(MVideoPlayerUtilityObserver &aObserver);
+
     ~CBody();
 
     void SetOwnedWindowL(RWsSession &aSession, RWindowBase &aWindow);
     void SetDisplayRectL(const TRect &aClipRect);
-    
+    void AddDisplayWindowL(RWsSession &aSession, RWindowBase &aWindow);
+    void SetDisplayRectForWindowL(const RWindow &aWindow, const TRect &aClipRect);
+    void RemoveDisplayWindow(const RWindow &aWindow);
+
     void OpenFileL(const TDesC &aPath);
     void OpenDesL(const TDesC8 &aContent);
     void Close();
@@ -89,7 +103,7 @@ public:
     virtual void DoCancel();
 
     void GetDisplayRect(TRect &aClipRect) {
-        aClipRect = iDisplayRect;
+        aClipRect = iActiveClipRect;
     }
 };
 

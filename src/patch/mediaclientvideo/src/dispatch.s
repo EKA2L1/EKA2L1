@@ -20,7 +20,7 @@
 .include "../../../priv/inc/sv.S"
 
 .global EVideoPlayerCreate
-.global EVideoPlayerSetOwnedWindow
+.global EVideoPlayerRegisterWindow
 .global EVideoPlayerSetClipRect
 .global EVideoPlayerOpenUrl
 .global EVideoPlayerOpenDes
@@ -41,11 +41,12 @@
 .global EVideoPlayerCurrentVolume
 .global EVideoPlayerSetVolume
 .global EVideoPlayerSetRotation
+.global EVideoPlayerUnregisterWindow
 
 EVideoPlayerCreate:
     CallHleDispatch 0x80
 
-EVideoPlayerSetOwnedWindow:
+EVideoPlayerRegisterWindow:
     CallHleDispatch 0x81
 
 EVideoPlayerSetClipRect:
@@ -107,3 +108,6 @@ EVideoPlayerSetVolume:
 
 EVideoPlayerSetRotation:
 	CallHleDispatch 0x95
+
+EVideoPlayerUnregisterWindow:
+	CallHleDispatch 0x96

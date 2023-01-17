@@ -27,8 +27,8 @@
 
 extern "C" {
 HLE_DISPATCH_FUNC(TAny*, EVideoPlayerCreate);
-HLE_DISPATCH_FUNC(TInt, EVideoPlayerSetOwnedWindow, TAny *aInstance, TInt aWsSsHandle, TInt aWindowHandle);
-HLE_DISPATCH_FUNC(TInt, EVideoPlayerSetClipRect, TAny *aInstance, const TRect *aRect);
+HLE_DISPATCH_FUNC(TInt, EVideoPlayerRegisterWindow, TAny *aInstance, TInt aWsSsHandle, TInt aWindowHandle);
+HLE_DISPATCH_FUNC(TInt, EVideoPlayerSetClipRect, TAny *aInstance, TInt aWindowManagedHandle, const TRect *aRect);
 HLE_DISPATCH_FUNC(TInt, EVideoPlayerOpenUrl, TAny *aInstance, const TDesC *aUrl);
 HLE_DISPATCH_FUNC(TInt, EVideoPlayerOpenDes, TAny *aInstance, const TDesC8 *aDescContent);
 HLE_DISPATCH_FUNC(TInt, EVideoPlayerPlay, TAny *aInstance, const TTimeIntervalMicroSeconds *aRange);
@@ -48,6 +48,7 @@ HLE_DISPATCH_FUNC(TInt, EVideoPlayerMaxVolume, TAny *aInstance);
 HLE_DISPATCH_FUNC(TInt, EVideoPlayerCurrentVolume, TAny *aInstance);
 HLE_DISPATCH_FUNC(TInt, EVideoPlayerSetVolume, TAny *aInstance, TInt aNewVolume);
 HLE_DISPATCH_FUNC(TInt, EVideoPlayerSetRotation, TAny *aInstance, TInt aRotation);
+HLE_DISPATCH_FUNC(TInt, EVideoPlayerUnregisterWindow, TAny *aInstance, TInt aManagedWindowHandle);
 }
 
 #endif
