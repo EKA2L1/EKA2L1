@@ -52,6 +52,7 @@
 
 #include <mem/ptr.h>
 #include <cstdint>
+#include <cmath>
 
 #ifndef VG_MAXSHORT
 #define VG_MAXSHORT 0x7FFF
@@ -65,7 +66,9 @@
 #define VG_MAX_ENUM 0x7FFFFFFF
 #endif
 
+#ifndef M_PI
 #define M_PI 3.141592653589793238462643383279502884L
+#endif
 
 typedef float VGfloat;
 typedef std::int8_t VGbyte;
