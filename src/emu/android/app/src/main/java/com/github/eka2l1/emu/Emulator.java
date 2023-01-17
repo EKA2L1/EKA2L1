@@ -87,6 +87,14 @@ public class Emulator {
     private static final int STORAGE_ERROR_DISK_FULL = -3;
     private static final int STORAGE_ERROR_ALREADY_EXISTS = -4;
 
+    public static final int INSTALL_NG_GAME_ERROR_NONE = 0;
+    public static final int INSTALL_NG_GAME_ERROR_NO_GAME_DATA_FOLDER = 1;
+    public static final int INSTALL_NG_GAME_ERROR_MORE_THAN_ONE_DATA_FOLDER = 2;
+    public static final int INSTALL_NG_GAME_ERROR_NO_GAME_REGISTERATION_INFO = 3;
+    public static final int INSTALL_NG_GAME_ERROR_REGISTERATION_CORRUPTED = 4;
+    public static final int INSTALL_NG_GAME_ERROR_GENERAL = 5;
+
+
     private static final String[] columns = new String[] {
         DocumentsContract.Document.COLUMN_DISPLAY_NAME,
         DocumentsContract.Document.COLUMN_SIZE,
@@ -651,6 +659,8 @@ public class Emulator {
     public static native void uninstallPackage(int uid, int extIndex);
 
     public static native void mountSdCard(String path);
+
+    public static native int installNGageGame(String path);
 
     public static native void loadConfig();
 

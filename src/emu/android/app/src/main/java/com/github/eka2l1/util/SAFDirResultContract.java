@@ -22,6 +22,8 @@ package com.github.eka2l1.util;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
+import android.provider.DocumentsContract;
 
 import androidx.activity.result.contract.ActivityResultContract;
 import androidx.annotation.NonNull;
@@ -40,7 +42,11 @@ public class SAFDirResultContract extends ActivityResultContract<Void, String> {
     @Override
     public String parseResult(int resultCode, @Nullable Intent intent) {
         if (resultCode == Activity.RESULT_OK && intent != null) {
-            return intent.getData().toString();
+            // Transform the URI into something that work with ContentResolver
+            Uri uriOriginal = intent.getData();
+            uriOriginal = DocumentsContract.buildDocumentUriUsingTree(uriOriginal, DocumentsContract.getTreeDocumentId(uriOriginal));
+
+            return uriOriginal.toString();
         }
         return null;
     }
