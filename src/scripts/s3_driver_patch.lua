@@ -37,5 +37,5 @@ if (common.getCurrentSymbianVersion() >= common.SYMBIAN_VERSION_EPOC95) then
     common.log('Applying S^3 and higher patch')
 
     loadNeccessaryRomDLLs()
-    patchOpenVGAccelToSw()
+    --patchOpenVGAccelToSw()
 end
