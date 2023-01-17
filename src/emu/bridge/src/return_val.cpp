@@ -43,6 +43,11 @@ namespace eka2l1 {
         }
 
         template <>
+        void write_return_value(arm::core *cpu, float ret) {
+            cpu->set_reg(0, *reinterpret_cast<std::uint32_t*>(&ret));
+        }
+
+        template <>
         uint16_t read_return_value(arm::core *cpu) {
             return cpu->get_reg(0);
         }
