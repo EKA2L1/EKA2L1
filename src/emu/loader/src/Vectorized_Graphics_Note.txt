@@ -1,0 +1,7 @@
+Symbian supports two formats of storing vectorized-graphics:
+
+- SVGB: Binary-coded SVG format. Here contains full Nokia flavor
+- NVG: Literally store vectorized-draw commands. There are two variants of commands, TLV and direct, which TLV is just direct mapped OpenVG 1.0. And Direct is simplified OpenVG 1.0 sets.
+
+SVGB decoder is a fork of svgb2svg from https://sourceforge.net/projects/svgb2svg/
+While NVG and its two data variant decoder is written by emulator author. NVG decoder tries its best to decompile raw OpenVG commands to readable SVG.
