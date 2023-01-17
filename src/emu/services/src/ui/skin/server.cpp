@@ -34,6 +34,8 @@
 #include <loader/e32img.h>
 
 namespace eka2l1 {
+    static const epoc::pid DEFAULT_ALWAYS_EXIST_SKIN_PID = epoc::pid(0x101F84B9, 0);
+
     akn_skin_server_session::akn_skin_server_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version)
         : service::typical_session(svr, client_ss_uid, client_version) {
     }
@@ -195,13 +197,19 @@ namespace eka2l1 {
             }
         }
 
-        const std::optional<std::u16string> skin_path = epoc::find_skin_file(io, skin_pid);
-        const std::optional<std::u16string> resource_path = epoc::get_resource_path_of_skin(io, skin_pid);
-
+        std::optional<std::u16string> skin_path = epoc::find_skin_file(io, skin_pid);
         if (!skin_path.has_value()) {
-            LOG_ERROR(SERVICE_UI, "Unable to find active skin file!");
-            return;
+            skin_pid = DEFAULT_ALWAYS_EXIST_SKIN_PID;
+            skin_path = epoc::find_skin_file(io, skin_pid);
+            
+            if (!skin_path.has_value()) {
+                // What?
+                LOG_ERROR(SERVICE_UI, "Unable to find active skin file!");
+                return;
+            }
         }
+
+        std::optional<std::u16string> resource_path = epoc::get_resource_path_of_skin(io, skin_pid);
 
         symfile skin_file_obj = io->open_file(skin_path.value(), READ_MODE | BIN_MODE);
         eka2l1::ro_file_stream skin_file_stream(skin_file_obj.get());
@@ -227,7 +235,7 @@ namespace eka2l1 {
         // Create skin chunk
         skin_chunk_ = kern->create_and_add<kernel::chunk>(kernel::owner_type::kernel,
                               sys->get_memory_system(), nullptr, "AknsSrvSharedMemoryChunk",
-                              0, 160 * 1024, 384 * 1024, prot_read_write, kernel::chunk_type::normal,
+                              0, 384 * 1024, 384 * 1024, prot_read_write, kernel::chunk_type::normal,
                               kernel::chunk_access::global, kernel::chunk_attrib::none)
                           .second;
 

@@ -325,6 +325,10 @@ namespace eka2l1::epoc {
 
         bool store_scalable_gfx(const pid item_id, const skn_layout_info layout_info, fbsbitmap *bmp, fbsbitmap *mask);
 
+        bool set_wallpaper(const std::u16string &path, const std::u16string &base_path);
+
+        bool inject_skin_background(const std::u16string &path, const std::u16string &base_path);
+
         const std::uint32_t level() const {
             return level_;
         }
