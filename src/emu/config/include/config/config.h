@@ -154,6 +154,7 @@ namespace eka2l1::config {
         bool enable_upnp{ true };
 		std::string btnet_password;
 		std::uint32_t btnet_discovery_mode{ 0 };
+        bool extensive_logging{ false };
 
         void serialize(const bool with_bindings = true);
         void deserialize(const bool with_bindings = true);
