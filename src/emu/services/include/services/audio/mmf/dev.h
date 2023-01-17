@@ -136,6 +136,7 @@ namespace eka2l1 {
         void complete_error(service::ipc_context *ctx);
         void cancel_get_buffer(service::ipc_context *ctx);
         void set_volume_ramp(service::ipc_context *ctx);
+        void close(service::ipc_context *ctx);
 
         // Play sync, when finish complete the status
         void play_data(service::ipc_context *ctx);
