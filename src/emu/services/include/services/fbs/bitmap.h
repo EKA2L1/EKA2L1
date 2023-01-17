@@ -36,6 +36,15 @@ namespace eka2l1 {
 namespace eka2l1::epoc {
     static constexpr epoc::uid bitwise_bitmap_uid = 0x10000040;
     static constexpr std::uint32_t LEGACY_BMP_COMPRESS_IN_MEMORY_TYPE_BASE = 50;
+    
+    static constexpr std::uint32_t NORMAL_BITMAP_UID_REV2 = 0x9A2C;
+    static constexpr std::uint32_t NVG_BITMAP_UID_REV2 = 0x39B9273E;
+
+    static const std::uint32_t SUPPORTED_REV2_UIDS[] = {
+        NVG_BITMAP_UID_REV2
+    };
+
+    static const std::size_t SUPPORTED_REV2_UID_COUNT = sizeof(SUPPORTED_REV2_UIDS) / sizeof(std::uint32_t);
 
     enum bitmap_file_compression {
         bitmap_file_no_compression = 0,

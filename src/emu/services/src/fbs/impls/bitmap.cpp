@@ -217,7 +217,7 @@ namespace eka2l1 {
                 return (max_line_ < pos_.y);
             }
 
-            std::uint64_t tell() const override {
+            std::uint64_t tell() override {
                 return dest_byte_width_ * pos_.y + pos_.x;
             }
 
@@ -879,6 +879,9 @@ namespace eka2l1 {
         const bool use_bmp_handles_writeback = (server<fbs_server>()->get_system()->get_symbian_version_use()
             >= epocver::epoc10);
 
+        std::uint32_t assign_uid = epoc::NORMAL_BITMAP_UID_REV2;
+        std::uint32_t force_size = 0;
+
         if (!use_spec_legacy) {
             if (use_bmp_handles_writeback) {
                 std::optional<bmp_specs_v2> specs_morden_v2 = ctx->get_argument_data_from_descriptor<bmp_specs_v2>(0);
@@ -889,12 +892,9 @@ namespace eka2l1 {
 
                 specs.size = specs_morden_v2->size_pixels;
                 specs.bpp = specs_morden_v2->bpp;
+                force_size = specs_morden_v2->data_size_force;
 
-                static constexpr std::uint32_t NORMAL_BITMAP_UID_REV2 = 0x9A2C;
-
-                if (specs_morden_v2->bitmap_uid != NORMAL_BITMAP_UID_REV2) {
-                    LOG_WARN(SERVICE_FBS, "Trying to create non-standard bitmap with UID 0x{:X}! Revisit soon!", specs_morden_v2->bitmap_uid);
-                }
+                assign_uid = specs_morden_v2->bitmap_uid;
             } else {
                 std::optional<bmp_specs> specs_morden = ctx->get_argument_data_from_descriptor<bmp_specs>(0);
 
@@ -922,12 +922,34 @@ namespace eka2l1 {
         fbs_bitmap_data_info info;
         info.size_ = specs.size;
         info.dpm_ = specs.bpp;
+        info.data_size_ = force_size;
 
         fbsbitmap *bmp = fbss->create_bitmap(info, true, support_current_display_mode, support_dirty_bitmap);
 
         if (!bmp) {
             ctx->complete(epoc::error_no_memory);
             return;
+        }
+
+        if (use_bmp_handles_writeback) {
+            // For maximum compability, in normal situation even if the app requested special bitmap type through UID
+            // We still assign standard bitmap type UID to the bitmap
+            // Special bitmap type that is supported on the emulator can have its UID be added to the array: SUPPORTED_REV2_UIDS
+            if (assign_uid != epoc::NORMAL_BITMAP_UID_REV2) {
+                bool supported = false;
+                for (std::size_t i = 0; i < epoc::SUPPORTED_REV2_UID_COUNT; i++) {
+                    if (epoc::SUPPORTED_REV2_UIDS[i] == assign_uid) {
+                        bmp->bitmap_->uid_ = assign_uid;
+                        supported = true;
+
+                        break;
+                    }
+                }
+
+                if (!supported) {
+                    LOG_WARN(SERVICE_FBS, "Trying to create non-standard bitmap with UID 0x{:X}! Revisit soon!", assign_uid);
+                }
+            }
         }
 
         const std::uint32_t handle_ret = obj_table_.add(bmp);

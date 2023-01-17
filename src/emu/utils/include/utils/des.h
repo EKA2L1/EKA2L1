@@ -413,7 +413,7 @@ namespace eka2l1::epoc {
         void seek(const std::int64_t amount, common::seek_where wh) override;
         bool valid() override;
         std::uint64_t left() override;
-        std::uint64_t tell() const override;
+        std::uint64_t tell() override;
         std::uint64_t size() override;
 
         std::uint64_t read(void *buf, const std::uint64_t read_size) override;

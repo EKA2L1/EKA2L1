@@ -463,7 +463,7 @@ namespace eka2l1 {
         void seek(const std::int64_t amount, common::seek_where wh) override;
         bool valid() override;
         std::uint64_t left() override;
-        uint64_t tell() const override;
+        uint64_t tell() override;
         uint64_t size() override;
 
         std::uint64_t read(void *buf, const std::uint64_t read_size) override;
@@ -480,7 +480,7 @@ namespace eka2l1 {
         void seek(const std::int64_t amount, common::seek_where wh) override;
         bool valid() override;
         std::uint64_t left() override;
-        uint64_t tell() const override;
+        uint64_t tell() override;
         uint64_t size() override;
 
         std::uint64_t write(const void *buf, const std::uint64_t write_size) override;
