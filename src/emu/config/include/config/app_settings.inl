@@ -28,6 +28,7 @@ SETTING(screen-rotation, screen_rotation, 0)
 SETTING(screen-upscale, screen_upscale, -1.0f)
 SETTING(screen-upscale-method, screen_upscale_method, 0)
 SETTING(filter-shader-path, filter_shader_path, "")
+SETTING(t9-bypass-hack, t9_bypass_hack, false)
 
 #ifdef SETTING
 #undef SETTING

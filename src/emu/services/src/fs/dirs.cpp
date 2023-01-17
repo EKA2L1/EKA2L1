@@ -29,6 +29,8 @@
 #include <common/cvt.h>
 #include <common/log.h>
 #include <common/path.h>
+#include <kernel/kernel.h>
+#include <config/app_settings.h>
 
 #include <utils/err.h>
 
@@ -42,7 +44,24 @@ namespace eka2l1 {
             return;
         }
 
-        dir.value() = get_full_symbian_path(ss_path, dir.value());
+        std::u16string path_relative = ss_path;
+        kernel_system *kern = ctx->sys->get_kernel_system();
+
+        if (kern->is_eka1()) {
+            static constexpr const char16_t *T9LDB_PATH_FULL = u"Z:\\system\\t9ldb\\";
+
+            // Check for T9 hack
+            config::app_settings *settings = kern->get_app_settings();
+            config::app_setting *setting = settings->get_setting(ctx->msg->own_thr->owning_process()->get_uid());
+
+            if (setting && setting->t9_bypass_hack) {
+                if ((common::compare_ignore_case(dir.value(), u"*.dll") == 0) || ((common::compare_ignore_case(dir.value(), u"*.rsc") == 0))) {
+                    path_relative = T9LDB_PATH_FULL;
+                }
+            }
+        }
+
+        dir.value() = get_full_symbian_path(path_relative, dir.value());
         LOG_TRACE(SERVICE_EFSRV, "Opening directory: {}", common::ucs2_to_utf8(*dir));
 
         if (!dir || !utype.has_value()) {
