@@ -115,15 +115,13 @@ option (GLM_TEST_ENABLE "Enable glm tests" OFF)
 add_subdirectory(glm)
 
 # Dynarmic: disable tests
-option(DYNARMIC_TESTS "Enable dynarmic tests" ON)
+option(DYNARMIC_TESTS "Enable dynarmic tests" OFF)
 
 if (NOT ARCHITECTURE_ARM32)
     add_subdirectory(dynarmic)
 endif()
 
-if (ANDROID)
-    add_subdirectory(lunasvg)
-endif()
+add_subdirectory(lunasvg)
 
 option(YAML_CPP_BUILD_TESTS "Enable YAML cpp testing" OFF)
 add_subdirectory(yaml-cpp)
