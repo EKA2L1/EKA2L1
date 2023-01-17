@@ -190,6 +190,7 @@ namespace eka2l1::epoc {
         void create_anim_dll(service::ipc_context &ctx, ws_cmd &cmd);
         void create_click_dll(service::ipc_context &ctx, ws_cmd &cmd);
         void create_sprite(service::ipc_context &ctx, ws_cmd &cmd);
+        void create_pointer_cursor(service::ipc_context &ctx, ws_cmd &cmd);
         void create_wsbmp(service::ipc_context &ctx, ws_cmd &cmd);
         void create_graphic(service::ipc_context &ctx, ws_cmd &cmd);
         void get_window_group_list(service::ipc_context &ctx, ws_cmd &cmd);
@@ -222,6 +223,7 @@ namespace eka2l1::epoc {
         void get_focus_screen(service::ipc_context &ctx, ws_cmd &cmd);
         void event_ready_cancel(service::ipc_context &ctx, ws_cmd &cmd);
         void redraw_ready_cancel(service::ipc_context &ctx, ws_cmd &cmd);
+        void get_double_click_settings(service::ipc_context &ctx, ws_cmd &cmd);
 
     public:
         ~window_server_client();

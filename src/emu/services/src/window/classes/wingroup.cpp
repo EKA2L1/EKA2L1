@@ -125,10 +125,6 @@ namespace eka2l1::epoc {
         }
     }
 
-    eka2l1::vec2 window_group::get_origin() {
-        return { 0, 0 };
-    }
-
     void window_group::queue_message_data(const std::uint8_t *data, const std::size_t data_size) {
         message_data data_vec;
         data_vec.resize(data_size);

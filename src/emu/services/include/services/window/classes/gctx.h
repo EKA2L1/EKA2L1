@@ -138,7 +138,9 @@ namespace eka2l1::epoc {
         void reset(service::ipc_context &context, ws_cmd &cmd);
         void destroy(service::ipc_context &context, ws_cmd &cmd);
         void set_clipping_rect(service::ipc_context &context, ws_cmd &cmd);
+        void set_clipping_region(service::ipc_context &context, ws_cmd &cmd);
         void cancel_clipping_rect(service::ipc_context &context, ws_cmd &cmd);
+        void cancel_clipping_region(service::ipc_context &context, ws_cmd &cmd);
         void set_opaque(service::ipc_context &context, ws_cmd &cmd);
 
         bool execute_command(service::ipc_context &context, ws_cmd &cmd) override;

@@ -120,7 +120,8 @@ namespace eka2l1::epoc {
             FLAG_AUTO_CLEAR_BACKGROUND = 1 << 2,
             FLAG_SERVER_REDRAW_PENDING = 1 << 3,
             FLAG_CLIENT_REDRAW_PENDING = 1 << 4,
-            FLAG_SCREEN_UPSCALE_FACTOR_LOCK = 1 << 5
+            FLAG_SCREEN_UPSCALE_FACTOR_LOCK = 1 << 5,
+            FLAG_IS_SCREENPLAY = 1 << 6
         };
 
         using focus_change_callback = std::pair<void *, focus_change_callback_handler>;
@@ -253,6 +254,18 @@ namespace eka2l1::epoc {
 
         void set_client_draw_pending() {
             flags_ |= FLAG_CLIENT_REDRAW_PENDING;
+        }
+        
+        void set_is_screenplay_architecture(bool is_screenplay) {
+            if (!is_screenplay) {
+                flags_ &= ~FLAG_IS_SCREENPLAY;
+                return;
+            }
+            flags_ |= FLAG_IS_SCREENPLAY;
+        }
+
+        bool is_screenplay_architecture() const {
+            return flags_ & FLAG_IS_SCREENPLAY;
         }
 
         void need_update_visible_regions(const bool value);

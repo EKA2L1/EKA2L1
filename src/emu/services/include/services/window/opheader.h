@@ -66,6 +66,10 @@ namespace eka2l1 {
         int flags;
     };
 
+    struct ws_cmd_create_pointer_cursor_header {
+        int flags;
+    };
+
     struct ws_cmd_ordinal_pos_pri {
         int pri2;
         int pri1;

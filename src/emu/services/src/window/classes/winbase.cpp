@@ -94,10 +94,10 @@ namespace eka2l1::epoc {
     }
 
     window::~window() {
-    }
-
-    eka2l1::vec2 window::get_origin() {
-        return { 0, 0 };
+        while (child != nullptr) {
+            child->parent = nullptr;
+            child = child->sibling;
+        }
     }
 
     void window::set_position(const int new_pos) {
@@ -245,22 +245,6 @@ namespace eka2l1::epoc {
         return count;
     }
 
-    void window::inquire_offset(service::ipc_context &ctx, ws_cmd &cmd) {
-        // The data given is a 32 bit handle.
-        // We are suppose to write back the offset distance between the given window and this.
-        const std::uint32_t handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
-        epoc::window *win = reinterpret_cast<epoc::window *>(client->get_object(handle));
-
-        if (!win) {
-            ctx.complete(epoc::error_not_found);
-            return;
-        }
-
-        eka2l1::vec2 offset_dist = get_origin() - win->get_origin();
-        ctx.write_data_to_descriptor_argument(0, offset_dist);
-        ctx.complete(epoc::error_none);
-    }
-
     void window::set_fade(service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         ws_cmd_set_fade *fade_param = reinterpret_cast<ws_cmd_set_fade *>(cmd.data_ptr);
 
@@ -399,11 +383,6 @@ namespace eka2l1::epoc {
             return true;
         }
 
-        case EWsWinOpInquireOffset: {
-            inquire_offset(ctx, cmd);
-            return true;
-        }
-
         case EWsWinOpSetFade: {
             set_fade(ctx, cmd);
             return true;
@@ -411,6 +390,10 @@ namespace eka2l1::epoc {
 
         case EWsWinOpWindowGroupId:
             window_group_id(ctx, cmd);
+            return true;
+
+        case EWsWinOpClientHandle:
+            ctx.complete(static_cast<int>(client_handle));
             return true;
 
         default: {
