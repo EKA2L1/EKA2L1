@@ -388,6 +388,7 @@ namespace eka2l1::drivers {
         std::size_t frame_buffer_size = 0;
 
         std::uint64_t amount_to_sleep = static_cast<std::uint64_t>(common::microsecs_per_sec / fps_);
+        bool complete_callback_called = false;
 
         while (!should_stop_) {
             int result = av_read_frame(format_ctx_, temp_packet);
@@ -401,6 +402,7 @@ namespace eka2l1::drivers {
                 if (result == AVERROR_EOF) {
                     if (play_complete_callback_) {
                         play_complete_callback_(play_complete_callback_userdata_, 0);
+                        complete_callback_called = true;
                     }
 
                     break;
@@ -409,6 +411,7 @@ namespace eka2l1::drivers {
 
                     if (play_complete_callback_) {
                         play_complete_callback_(play_complete_callback_userdata_, -1);
+                        complete_callback_called = true;
                     }
 
                     break;
@@ -423,6 +426,7 @@ namespace eka2l1::drivers {
 
                     if (play_complete_callback_) {
                         play_complete_callback_(play_complete_callback_userdata_, -1);
+                        complete_callback_called = true;
                     }
 
                     break;
@@ -492,5 +496,11 @@ namespace eka2l1::drivers {
         }
 
         av_free(frame_buffer);
+
+        if (!complete_callback_called) {            
+            if (play_complete_callback_) {
+                play_complete_callback_(play_complete_callback_userdata_, 0);
+            }
+        }
     }
 }

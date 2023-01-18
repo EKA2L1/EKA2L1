@@ -179,9 +179,10 @@ namespace eka2l1::epoc {
         builder.set_feature(eka2l1::drivers::graphics_feature::cull, false);
         builder.set_feature(eka2l1::drivers::graphics_feature::depth_test, false);
         builder.set_feature(eka2l1::drivers::graphics_feature::blend, false);
+        builder.set_feature(eka2l1::drivers::graphics_feature::clipping, false);
 
-        builder.clear(eka2l1::vecx<float, 6>({ 0.0, 0.0, 0.0, 1.0, 1.0, 0.0 }), drivers::draw_buffer_bit_depth_buffer
-            | drivers::draw_buffer_bit_stencil_buffer);
+        builder.clear(eka2l1::vecx<float, 6>({ 0.0, 0.0, 0.0, 0.0, 1.0, 0.0 }), drivers::draw_buffer_bit_depth_buffer
+            | drivers::draw_buffer_bit_stencil_buffer | ((flags_ & FLAG_SERVER_REDRAW_PENDING) ? drivers::draw_buffer_bit_color_buffer : 0));
 
         builder.blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
             drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,

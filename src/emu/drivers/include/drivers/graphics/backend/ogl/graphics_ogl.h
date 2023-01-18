@@ -59,6 +59,7 @@ namespace eka2l1::drivers {
         OGL_FEATURE_SUPPORT_ETC2 = 1 << 0,
         OGL_FEATURE_SUPPORT_PVRTC = 1 << 1,
         OGL_FEATURE_SUPPORT_ANISOTROPHY = 1 << 2,
+        OGL_FEATURE_COMPABILITY_ES31 = 1 << 3,
         OGL_MAX_FEATURE = 2
     };
 

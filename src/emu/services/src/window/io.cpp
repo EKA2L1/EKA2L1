@@ -35,15 +35,14 @@ namespace eka2l1::epoc {
         epoc::canvas_base *user = reinterpret_cast<epoc::canvas_base *>(win);
         // Stop, we found it!
         // Send it right now
-        evt.adv_pointer_evt_.pos = scr_coord_ - user->abs_rect.top;
+        evt.adv_pointer_evt_.pos = scr_coord_ - user->absolute_position();
 
         if (user->parent->type == epoc::window_kind::top_client) {
             evt.adv_pointer_evt_.parent_pos = scr_coord_;
         } else {
             // It must be client kind
             assert(user->parent->type == epoc::window_kind::client);
-            evt.adv_pointer_evt_.parent_pos = reinterpret_cast<epoc::canvas_base *>(user->parent)->pos
-                + evt.adv_pointer_evt_.pos;
+            evt.adv_pointer_evt_.parent_pos = scr_coord_ - reinterpret_cast<epoc::canvas_base *>(user->parent)->absolute_position();
         }
 
         evt.handle = win->get_client_handle();
@@ -82,11 +81,12 @@ namespace eka2l1::epoc {
             const bool filter_enter_exit = ((evt.type == epoc::event_code::touch_enter) || (evt.type == epoc::event_code::touch_exit))
                 && (user->filter & epoc::pointer_filter_type::pointer_enter);
 
-            const bool filter_drag = evt.adv_pointer_evt_.evtype == epoc::event_type::drag && (user->filter & epoc::pointer_filter_type::pointer_drag);
+            const bool filter_drag = (evt.adv_pointer_evt_.evtype == epoc::event_type::drag) && (user->filter & epoc::pointer_filter_type::pointer_drag);
+            const bool filter_move = (evt.adv_pointer_evt_.evtype == epoc::event_type::move) && (user->filter & epoc::pointer_filter_type::pointer_move);
 
             // Filter out events, assuming move event never exist (phone)
-            // When you use touch on your phone, you drag your finger. Move your mouse simply doesn't exist.
-            if (filter_enter_exit || filter_drag) {
+            // When you use touch on your phone, you drag your finger. Move your mouse (2023 correct:) is on PC (~~simply doesn't exist~~ is on mobile).
+            if (filter_enter_exit || filter_drag || filter_move) {
                 continue;
             }
 

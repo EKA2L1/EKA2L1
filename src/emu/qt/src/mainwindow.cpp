@@ -1502,6 +1502,10 @@ bool main_window::deliver_overlay_mouse_event(const eka2l1::vec3 &pos, const int
         return false;
     }
 
+    if (mouse_id == -1) {
+        return false;
+    }
+
     eka2l1::epoc::screen *scr = emulator_state_.winserv->get_screens();
     eka2l1::vec3 readjusted_pos = (pos - eka2l1::vec3(scr->absolute_pos, 0));
 
@@ -1643,4 +1647,31 @@ void main_window::on_action_netplay_configure_triggered() {
     connect(btnet_dialog_, &btnet_dialog::direct_ip_editor_requested, this, &main_window::on_btnet_friends_dialog_requested_from_conf);
 
     btnet_dialog_->show();
+}
+
+int main_window::map_mouse_id_to_touch_index(int mouse_id, const bool on_release) {
+    if (!map_executor_->is_active()) {
+        if (!mouse_to_touch_index_emu_.empty()) {
+            for (auto ite: mouse_to_touch_index_emu_) {
+                map_executor_->free_allocated_pointer(static_cast<std::uint8_t>(ite.second));
+            }
+            mouse_to_touch_index_emu_.clear();
+        }
+        return mouse_id;
+    }
+    auto ite = mouse_to_touch_index_emu_.find(mouse_id);
+    if (ite != mouse_to_touch_index_emu_.end()) {
+        if (on_release) {
+            map_executor_->free_allocated_pointer(static_cast<std::uint8_t>(ite->second));
+            mouse_to_touch_index_emu_.erase(mouse_id);
+        }
+        return ite->second;
+    }
+    if (on_release) {
+        return 0;
+    }
+    int new_ptr_index = static_cast<int>(map_executor_->allocate_free_pointer());
+    mouse_to_touch_index_emu_.emplace(mouse_id, new_ptr_index);
+
+    return new_ptr_index;
 }

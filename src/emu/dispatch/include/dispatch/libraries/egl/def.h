@@ -23,6 +23,8 @@
 #include <drivers/itc.h>
 
 #include <dispatch/libraries/gles1/shaderman.h>
+#include <dispatch/libraries/vg/gnuVG_shaderman.hh>
+
 #include <services/window/classes/winuser.h>
 
 #include <common/vecx.h>
@@ -81,6 +83,7 @@ namespace eka2l1::dispatch {
         EGL_CONFIG_CAVEAT_EMU = 0x3027,
         EGL_MAX_PBUFFER_HEIGHT_EMU = 0x302A,
         EGL_MAX_PBUFFER_WIDTH_EMU = 0x302C,
+        EGL_SAMPLE_BUFFERS_EMU = 0x3032,
         EGL_SURFACE_TYPE_EMU = 0x3033,
         EGL_NONE_EMU = 0x3038,
         EGL_BIND_TO_TEXTURE_RGB_EMU = 0x3039,
@@ -93,6 +96,9 @@ namespace eka2l1::dispatch {
         EGL_WIDTH_EMU = 0x3057,
         EGL_DRAW_EMU = 0x3059,
         EGL_READ_EMU = 0x305A,
+        EGL_SWAP_BEHAVIOUR = 0x3093,
+        EGL_SWAP_BUFFER_PRESERVED = 0x3094,
+        EGL_SWAP_BUFFER_DESTROYED = 0x3095,
         EGL_CONTEXT_MAJOR_VERSION_KHR_EMU = 0x3098,
         EGL_OPENGL_ES_API_EMU = 0x30A0,
         EGL_OPENVG_API_EMU = 0x30A1,
@@ -471,7 +477,8 @@ namespace eka2l1::dispatch {
 
         enum target_context_version {
             EGL_TARGET_CONTEXT_ES11 = 0,
-            EGL_TARGET_CONTEXT_ES2 = 1
+            EGL_TARGET_CONTEXT_ES2 = 1,
+            EGL_TARGET_CONTEXT_VG = 2
         };
 
         std::uint32_t config_;
@@ -488,16 +495,14 @@ namespace eka2l1::dispatch {
         std::uint8_t blue_bits() const;
         std::uint8_t alpha_bits() const;
 
-        void set_surface_type(const surface_type type);
-        surface_type get_surface_type() const;
-
         target_context_version get_target_context_version();
         void set_target_context_version(const target_context_version ver);
     };
 
     enum egl_context_type {
         EGL_GLES1_CONTEXT,
-        EGL_GLES2_CONTEXT
+        EGL_GLES2_CONTEXT,
+        EGL_VG_CONTEXT
     };
 
     using egl_context_handle = std::uint32_t;
@@ -528,6 +533,8 @@ namespace eka2l1::dispatch {
         void on_window_size_changed(epoc::canvas_interface *obj) override;
     };
 
+    struct egl_controller;
+
     struct egl_context {
         drivers::graphics_command_builder cmd_builder_;
 
@@ -546,10 +553,11 @@ namespace eka2l1::dispatch {
         virtual ~egl_context() = default;
 
         virtual void destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder);
-        virtual void flush_to_driver(drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) = 0;
+        virtual void flush_to_driver(egl_controller &controller, drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) = 0;
         virtual egl_context_type context_type() const = 0;
         virtual void init_context_state() = 0;
-        virtual void on_surface_changed(egl_surface *prev_read, egl_surface *prev_draw) {}
+        virtual void on_surface_changed(drivers::graphics_driver *driver, egl_surface *prev_read, egl_surface *prev_draw) {}
+        virtual void on_being_set_current() {}
     };
 
     using egl_context_instance = std::unique_ptr<egl_context>;
@@ -564,6 +572,7 @@ namespace eka2l1::dispatch {
         std::map<kernel::uid, std::uint32_t> egl_error_map_;
 
         gles1_shaderman es1_shaderman_;
+        gnuVG::ShaderMan vg_shaderman_;
 
         drivers::graphics_driver *driver_;
 
@@ -575,6 +584,10 @@ namespace eka2l1::dispatch {
 
         gles1_shaderman &get_es1_shaderman() {
             return es1_shaderman_;
+        }
+
+        gnuVG::ShaderMan &get_vg_shaderman() {
+            return vg_shaderman_;
         }
 
         std::uint32_t add_managed_surface(egl_surface_instance &inst);

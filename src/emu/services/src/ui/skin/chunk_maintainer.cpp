@@ -6,11 +6,11 @@
 #include <services/ui/skin/skn.h>
 
 namespace eka2l1::epoc {
-    constexpr std::int64_t AKNS_CHUNK_ITEM_DEF_HASH_BASE_SIZE_GRAN = -4;
-    constexpr std::int64_t AKNS_CHUNK_ITEM_DEF_AREA_BASE_SIZE_GRAN = 11;
-    constexpr std::int64_t AKNS_CHUNK_DATA_AREA_BASE_SIZE_GRAN = 20;
-    constexpr std::int64_t AKNS_CHUNK_FILENAME_AREA_BASE_SIZE_GRAN = 1;
-    constexpr std::int64_t AKNS_CHUNK_SCALEABLE_GFX_AREA_BASE_SIZE_GRAN = 1;
+    constexpr std::int64_t AKNS_CHUNK_ITEM_DEF_HASH_BASE_SIZE_GRAN = 2;
+    constexpr std::int64_t AKNS_CHUNK_ITEM_DEF_AREA_BASE_SIZE_GRAN = 25;
+    constexpr std::int64_t AKNS_CHUNK_DATA_AREA_BASE_SIZE_GRAN = 55;
+    constexpr std::int64_t AKNS_CHUNK_FILENAME_AREA_BASE_SIZE_GRAN = 6;
+    constexpr std::int64_t AKNS_CHUNK_SCALEABLE_GFX_AREA_BASE_SIZE_GRAN = 6;
 
     // ======================= DEFINITION FOR CHUNK STRUCT =======================
     struct akns_srv_bitmap_def {
@@ -917,5 +917,86 @@ namespace eka2l1::epoc {
             std::copy(new_data, new_data + sizeof(def), dest);
         }
         return true;
+    }
+
+    bool akn_skin_chunk_maintainer::inject_skin_background(const std::u16string &path, const std::u16string &base_path) {
+        return true;
+    }
+
+    // https://github.com/SymbianSource/oss.FCL.sf.mw.uiresources/blob/b78660bec78835802edd6575b96897d4aba58376/skins/AknSkins/srvsrc/AknsSrvChunkMaintainer.cpp#L238
+    bool akn_skin_chunk_maintainer::set_wallpaper(const std::u16string &path, const std::u16string &base_path) {
+        akns_item_def wallpaper_def;
+        wallpaper_def.id_.first = AKN_SKIN_MAJOR_UID;
+        wallpaper_def.id_.second = AKN_SKIN_MINOR_WALLPAPER_UID;
+        wallpaper_def.type_ = akns_item_type_effect_queue;
+
+        if (!update_filename(AKN_WALLPAPER_FILENAME_ID, path, base_path)) {
+            return false;
+        }
+
+        skn_effect_queue effect_queue;
+        effect_queue.id_hash = AKN_SKIN_MAJOR_UID | (static_cast<std::uint64_t>(AKN_SKIN_MINOR_WALLPAPER_UID) << 32);
+        effect_queue.ref_major = 0;
+        effect_queue.ref_minor = 0;
+        effect_queue.input_layer_index = 0;
+        effect_queue.input_layer_mode = 2;  // RGB
+        effect_queue.output_layer_index = 0;
+        effect_queue.output_layer_mode = 2; // RGB
+
+        skn_effect apply_gfx_effect;
+        apply_gfx_effect.uid = 0x101F8748;
+        apply_gfx_effect.input_layer_a_index = 0;
+        apply_gfx_effect.input_layer_a_mode = 1;
+        apply_gfx_effect.input_layer_b_index = 0;
+        apply_gfx_effect.input_layer_b_mode = 1;
+        apply_gfx_effect.output_layer_index = 1;
+        apply_gfx_effect.output_layer_mode = 8; //  1/RGBA
+
+        skn_effect_parameter apply_gfx_params;
+        apply_gfx_params.type = 2;
+        apply_gfx_params.data.resize(2 * sizeof(std::uint16_t) + 3 * sizeof(std::uint32_t));
+
+        char *apply_gfx_param_data_ptr = apply_gfx_params.data.data();
+        reinterpret_cast<std::uint16_t *>(apply_gfx_param_data_ptr)[0] = 1;
+        reinterpret_cast<std::uint16_t *>(apply_gfx_param_data_ptr)[1] = 'f';
+        reinterpret_cast<std::uint32_t *>(apply_gfx_param_data_ptr + 2 * sizeof(std::uint16_t))[0] = 0;
+        reinterpret_cast<std::uint32_t *>(apply_gfx_param_data_ptr + 2 * sizeof(std::uint16_t))[1] = 0;
+        reinterpret_cast<std::uint32_t *>(apply_gfx_param_data_ptr + 2 * sizeof(std::uint16_t))[2] = AKN_WALLPAPER_FILENAME_ID;
+
+        skn_effect_parameter apply_gfx_params2;
+        apply_gfx_params2.type = 0;
+        apply_gfx_params2.data.resize(2 * sizeof(std::uint32_t));
+
+        char *apply_gfx_param2_data_ptr = apply_gfx_params2.data.data();
+        reinterpret_cast<std::uint16_t *>(apply_gfx_param2_data_ptr)[0] = 1;
+        reinterpret_cast<std::uint16_t *>(apply_gfx_param2_data_ptr)[1] = 'g';
+        reinterpret_cast<std::uint32_t *>(apply_gfx_param2_data_ptr + 2 * sizeof(std::uint16_t))[0] = 1;
+
+        apply_gfx_effect.parameters.push_back(apply_gfx_params);
+        apply_gfx_effect.parameters.push_back(apply_gfx_params2);
+
+        skn_effect alpha_blend_effect;
+        alpha_blend_effect.uid = 0x10204add;
+        alpha_blend_effect.input_layer_a_index = 0;
+        alpha_blend_effect.input_layer_a_mode = 8; // RGBA
+        alpha_blend_effect.input_layer_b_index = 1;
+        alpha_blend_effect.input_layer_b_mode = 8; // RGBA
+        alpha_blend_effect.output_layer_index = 2;
+        alpha_blend_effect.output_layer_mode = 2; // RGB
+
+        skn_effect_parameter alpha_blend_params;
+        alpha_blend_params.type = 0; // int
+        alpha_blend_params.data.resize(2 * sizeof(std::uint32_t));
+
+        char *alpha_blend_param_data_ptr = alpha_blend_params.data.data();
+        reinterpret_cast<std::uint16_t *>(alpha_blend_param_data_ptr)[0] = 1;
+        reinterpret_cast<std::uint16_t *>(alpha_blend_param_data_ptr)[1] = 'm';
+        reinterpret_cast<std::uint32_t *>(alpha_blend_param_data_ptr + 2 * sizeof(std::uint16_t))[0] = 1;
+
+        alpha_blend_effect.parameters.push_back(alpha_blend_params);
+        effect_queue.effects.push_back(apply_gfx_effect);
+        effect_queue.effects.push_back(alpha_blend_effect);
+
+        return import_effect_queue(effect_queue);
     }
 }

@@ -432,7 +432,7 @@ namespace eka2l1::epoc {
             // For non alpha blending we always want to take color buffer's alpha.
             builder_.blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
                 drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
-                (alpha_blending ? drivers::blend_factor::frag_out_alpha : drivers::blend_factor::one),
+                (alpha_blending ? drivers::blend_factor::one : drivers::blend_factor::one),
                 (alpha_blending ? drivers::blend_factor::one_minus_frag_out_alpha : drivers::blend_factor::one));
         }
 

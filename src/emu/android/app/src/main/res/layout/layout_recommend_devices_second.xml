@@ -37,4 +37,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/recommended_devices_s60v5" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/recommended_devices_s3_belle" />
 </LinearLayout>

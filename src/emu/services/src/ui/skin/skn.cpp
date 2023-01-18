@@ -419,6 +419,7 @@ namespace eka2l1::epoc {
 
             // Let's read the parameters!
             process_effect_parameters(base_offset, effects[i].parameters);
+            base_offset += 1;   // Why?
         }
     }
 

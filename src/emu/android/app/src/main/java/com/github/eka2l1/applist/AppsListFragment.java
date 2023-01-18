@@ -43,6 +43,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -92,6 +93,10 @@ public class AppsListFragment extends ListFragment {
     private final ActivityResultLauncher<Void> openSDCardLauncher = registerForActivityResult(
             FileUtils.getDirPicker(),
             this::onSDCardResult);
+    private final ActivityResultLauncher<Void> openNGageGameLauncher = registerForActivityResult(
+            FileUtils.getDirPicker(),
+            this::onNGageGameResult
+    );
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -211,6 +216,17 @@ public class AppsListFragment extends ListFragment {
         mountSdCard(path);
     }
 
+    private void onNGageGameResult(String path) {
+        if (!Emulator.isInitialized()) {
+            Toast.makeText(getContext(), R.string.error, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (path == null) {
+            return;
+        }
+        installNGageGame(path);
+    }
+
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @SuppressLint("CheckResult")
     private void installApp(String path) {
@@ -235,6 +251,37 @@ public class AppsListFragment extends ListFragment {
         Emulator.mountSdCard(path);
         Toast.makeText(getContext(), R.string.completed, Toast.LENGTH_SHORT).show();
         prepareApps();
+    }
+
+    private void installNGageGame(String path) {
+        int result = Emulator.installNGageGame(path);
+        if (result == 0) {
+            Toast.makeText(getContext(), R.string.completed, Toast.LENGTH_SHORT).show();
+            restart();
+        } else {
+            int errorResId = R.string.error;
+            switch (result) {
+                case Emulator.INSTALL_NG_GAME_ERROR_NO_GAME_DATA_FOLDER:
+                    errorResId = R.string.install_ng_game_cant_find_data_folder;
+                    break;
+
+                case Emulator.INSTALL_NG_GAME_ERROR_MORE_THAN_ONE_DATA_FOLDER:
+                    errorResId = R.string.install_ng_game_more_than_one_game;
+                    break;
+
+                case Emulator.INSTALL_NG_GAME_ERROR_NO_GAME_REGISTERATION_INFO:
+                    errorResId = R.string.install_ng_game_no_game_info_file;
+                    break;
+
+                case Emulator.INSTALL_NG_GAME_ERROR_REGISTERATION_CORRUPTED:
+                    errorResId = R.string.install_ng_game_corrupted_game_info;
+                    break;
+
+                default:
+                    break;
+            }
+            Toast.makeText(getContext(), errorResId, Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -310,6 +357,8 @@ public class AppsListFragment extends ListFragment {
                     .replace(R.id.container, profilesFragment)
                     .addToBackStack(null)
                     .commit();
+        } else if (itemId == R.id.action_install_ng_game) {
+            openNGageGameLauncher.launch(null);
         }
         return super.onOptionsItemSelected(item);
     }

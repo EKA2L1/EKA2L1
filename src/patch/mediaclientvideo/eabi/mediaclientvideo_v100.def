@@ -133,14 +133,14 @@ EXPORTS
 	_ZNK21CVideoRecorderUtility13VideoEnabledLEv @ 132 NONAME ABSENT
 	_ZNK21CVideoRecorderUtility13VideoQualityLEv @ 133 NONAME ABSENT
 	_ZNK21CVideoRecorderUtility20VideoFrameRateFixedLEv @ 134 NONAME ABSENT
-	_ZN20CVideoPlayerUtility215SetVideoExtentLERK7RWindowRK5TRect @ 135 NONAME ABSENT
-	_ZN20CVideoPlayerUtility217AddDisplayWindowLER10RWsSessionR15CWsScreenDeviceR7RWindow @ 136 NONAME ABSENT
-	_ZN20CVideoPlayerUtility217AddDisplayWindowLER10RWsSessionR15CWsScreenDeviceR7RWindowRK5TRectS8_ @ 137 NONAME ABSENT
-	_ZN20CVideoPlayerUtility218SetWindowClipRectLERK7RWindowRK5TRect @ 138 NONAME ABSENT
-	_ZN20CVideoPlayerUtility219RemoveDisplayWindowER7RWindow @ 139 NONAME ABSENT
-	_ZN20CVideoPlayerUtility24NewLER27MVideoPlayerUtilityObserverii @ 140 NONAME ABSENT
-	_ZTI20CVideoPlayerUtility2 @ 141 NONAME ABSENT
-	_ZTV20CVideoPlayerUtility2 @ 142 NONAME ABSENT
+	_ZN20CVideoPlayerUtility215SetVideoExtentLERK7RWindowRK5TRect @ 135 NONAME
+	_ZN20CVideoPlayerUtility217AddDisplayWindowLER10RWsSessionR15CWsScreenDeviceR7RWindow @ 136 NONAME
+	_ZN20CVideoPlayerUtility217AddDisplayWindowLER10RWsSessionR15CWsScreenDeviceR7RWindowRK5TRectS8_ @ 137 NONAME
+	_ZN20CVideoPlayerUtility218SetWindowClipRectLERK7RWindowRK5TRect @ 138 NONAME
+	_ZN20CVideoPlayerUtility219RemoveDisplayWindowER7RWindow @ 139 NONAME
+	_ZN20CVideoPlayerUtility24NewLER27MVideoPlayerUtilityObserverii @ 140 NONAME
+	_ZTI20CVideoPlayerUtility2 @ 141 NONAME
+	_ZTV20CVideoPlayerUtility2 @ 142 NONAME
 	_ZN20CVideoPlayerUtility212SetRotationLERK7RWindow14TVideoRotation @ 143 NONAME ABSENT
 	_ZN20CVideoPlayerUtility213SetAutoScaleLERK7RWindow14TAutoScaleType @ 144 NONAME ABSENT
 	_ZN20CVideoPlayerUtility213SetAutoScaleLERK7RWindow14TAutoScaleTypeii @ 145 NONAME ABSENT

@@ -67,6 +67,7 @@ namespace eka2l1::epoc {
             return 24;
         case epoc::display_mode::color16mu:
         case epoc::display_mode::color16ma:
+        case epoc::display_mode::color16map:
             return 32;
         default:
             return 24;

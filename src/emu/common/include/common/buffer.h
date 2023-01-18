@@ -51,7 +51,7 @@ namespace eka2l1 {
             virtual void seek(const std::int64_t amount, seek_where wh) = 0;
             virtual bool valid() = 0;
             virtual std::uint64_t left() = 0;
-            virtual uint64_t tell() const = 0;
+            virtual uint64_t tell() = 0;
             virtual uint64_t size() = 0;
         };
 
@@ -101,7 +101,7 @@ namespace eka2l1 {
             virtual void seek(const std::int64_t amount, seek_where wh) override {}
             virtual bool valid() override { return true; };
             virtual std::uint64_t left() override { return 0; };
-            virtual uint64_t tell() const override { return 0; };
+            virtual uint64_t tell() override { return 0; };
             virtual uint64_t size() override { return 0; };
             virtual std::uint64_t read(void *buf, const std::uint64_t read_size) override { return 0; }
             virtual std::uint64_t write(const void *buf, const std::uint64_t write_size) override { return 0; }
@@ -146,7 +146,7 @@ namespace eka2l1 {
                 return end - beg;
             }
 
-            uint64_t tell() const override {
+            uint64_t tell() override {
                 return crr_pos;
             }
 
@@ -179,6 +179,55 @@ namespace eka2l1 {
             }
         };
 
+        class wo_growable_buf_stream: public wo_stream {
+        private:
+            std::ostringstream stream_;
+        
+        public:
+            explicit wo_growable_buf_stream() {
+            }
+
+            ~wo_growable_buf_stream() {
+            }
+
+            std::string content() const {
+                return stream_.str();
+            }
+
+            bool valid() override {
+                return stream_.good();
+            }
+
+            std::uint64_t size() override {
+                auto pos = stream_.tellp();
+                stream_.seekp(0, std::ios_base::end);
+
+                std::uint64_t size_of_stream = stream_.tellp();
+                stream_.seekp(pos, std::ios_base::beg);
+
+                return size_of_stream;
+            }
+
+            uint64_t tell() override {
+                return stream_.tellp();
+            }
+
+            uint64_t left() override {
+                return 0xFFFFFFFFFFFFFFFF;
+            }
+
+            void seek(const std::int64_t amount, seek_where wh) override {
+                stream_.seekp(amount, (wh == seek_where::beg) ? std::ios::beg : ((wh == seek_where::cur) ? std::ios::cur : std::ios::end));
+            }
+
+            std::uint64_t write(const void *buf, const std::uint64_t size) override {
+                auto pos = stream_.tellp();
+                stream_.write(reinterpret_cast<const char *>(buf), size);
+
+                return stream_.tellp() - pos;
+            }
+        };
+
         class wo_buf_stream : public buffer_stream_base, public wo_stream {
         public:
             wo_buf_stream(uint8_t *beg, std::size_t max_size = 0xFFFFFFFF)
@@ -192,7 +241,7 @@ namespace eka2l1 {
                 return end - beg;
             }
 
-            uint64_t tell() const override {
+            uint64_t tell() override {
                 return crr_pos;
             }
 
@@ -278,7 +327,7 @@ namespace eka2l1 {
                 return size() - tell();
             }
 
-            std::uint64_t tell() const override {
+            std::uint64_t tell() override {
                 return ftell(fi_);
             }
 
@@ -344,7 +393,7 @@ namespace eka2l1 {
                 return 0xFFFFFFFF;
             }
 
-            std::uint64_t tell() const override {
+            std::uint64_t tell() override {
                 if (!fo_) {
                     return 0;
                 }
@@ -413,7 +462,7 @@ namespace eka2l1 {
                 return start_ + size_ - ref_.tell();
             }
 
-            std::uint64_t tell() const override {
+            std::uint64_t tell() override {
                 return ref_.tell();
             }
 

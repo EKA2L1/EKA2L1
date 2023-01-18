@@ -90,6 +90,7 @@ namespace eka2l1::android {
                              drivers::ui::input_dialog_complete_callback complete_callback);
         void close_input_view();
         void on_finished_text_input(const std::string &text, const bool force_close);
+        int install_ngage_game(const std::string &path);
 
         fbs_server *get_fbs_serv() {
             return fbsserv;

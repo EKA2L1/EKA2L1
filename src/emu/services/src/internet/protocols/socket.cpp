@@ -53,10 +53,9 @@ namespace eka2l1::epoc::internet {
     void inet_bridged_protocol::initialize_looper() {
         if (!loop_thread_) {
             loop_thread_ = std::make_unique<std::thread>([&]() {
-                common::set_thread_name("UV socket looper thread");
                 common::set_thread_priority(common::thread_priority_high);
 
-                while (uv_run(uv_default_loop(), UV_RUN_DEFAULT) == 0) {
+                while ((uv_run(uv_default_loop(), UV_RUN_DEFAULT) == 0) && (!stopped_)) {
                     std::this_thread::sleep_for(std::chrono::microseconds(5));
                 }
 
@@ -74,6 +73,8 @@ namespace eka2l1::epoc::internet {
             });
 
             uv_async_send(async);
+            stopped_ = true;
+
             loop_thread_->join();
         }
     }

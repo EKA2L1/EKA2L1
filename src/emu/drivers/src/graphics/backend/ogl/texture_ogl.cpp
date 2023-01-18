@@ -25,6 +25,7 @@
 #include <glad/glad.h>
 
 #include <common/bytes.h>
+#include <common/log.h>
 #include <cassert>
 
 void decompressBlockETC2(unsigned int block_part1, unsigned int block_part2, std::uint8_t *img, int width, int height, int startx, int starty);

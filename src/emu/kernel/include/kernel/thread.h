@@ -143,6 +143,12 @@ namespace eka2l1 {
             explicit thread_local_data(const std::uint32_t uid);
         };
 
+        struct stack_info {
+            address base_;
+            address limit_;
+            address expandable_limit_;
+        };
+        
         static constexpr std::size_t NATIVE_THREAD_LOCAL_DATA_COPY_SIZE = offsetof(thread_local_data, tls_slots);
 
         class thread : public kernel_obj {
@@ -473,6 +479,8 @@ namespace eka2l1 {
             std::uint32_t last_handle() {
                 return thread_handles.last_handle();
             }
+
+            stack_info get_stack_info();
         };
 
         using thread_ptr = kernel::thread *;

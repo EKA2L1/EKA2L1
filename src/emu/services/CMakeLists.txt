@@ -321,6 +321,7 @@ target_link_libraries(epocservs PRIVATE
         epockern
         epocpkg
         drivers
+        lunasvg
         stb
         uv_a
         xxHash

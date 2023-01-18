@@ -19,6 +19,7 @@
     <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
     <string name="warning">Warning</string>
     <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
+    <string name="install_ng_game">Install N-Gage game</string>
 
     <string name="install">Install</string>
     <string name="rescan_devices">Rescan devices</string>
@@ -159,6 +160,7 @@
     <string name="enter_name">Enter name</string>
     <string name="set_default_profile_description">Select this profile as a standard settings for all apps that will be installed later</string>
     <string name="error_name_exists">Already exists, enter other name</string>
+    <string name="extensive_logging">Extensive logging</string>
 
     <string name="virtual_key_left_soft" translatable="false">L</string>
     <string name="virtual_key_right_soft" translatable="false">R</string>
@@ -209,4 +211,10 @@
     <string name="recommended_devices_s60v2" translatable="false"><b>S60v2:</b> Nokia N70</string>
     <string name="recommended_devices_s60v3" translatable="false"><b>S60v3:</b> Nokia 5320 XpressMusic, Nokia E5</string>
     <string name="recommended_devices_s60v5" translatable="false"><b>S60v5:</b> Nokia 5800 XpressMusic, Nokia 5230</string>
+    <string name="recommended_devices_s3_belle" translatable="false"><b>S^3, Belle:</b> Nokia C7-00, Nokia X7-00</string>
+
+    <string name="install_ng_game_cant_find_data_folder">Can\'t find the game data folder!</string>
+    <string name="install_ng_game_more_than_one_game">There is more than one game in the given card game folder!</string>
+    <string name="install_ng_game_no_game_info_file">The game information file does not exist in the card game folder!</string>
+    <string name="install_ng_game_corrupted_game_info">The game information file has been corrupted. Please check your data\'s validity!</string>
 </resources>

@@ -152,11 +152,15 @@ namespace eka2l1::epoc::internet {
         if (result_code != 0) {
             LOG_ERROR(SERVICE_INTERNET, "Get address by name failed with code {}", result_code);
             complete_info.complete(epoc::error_general);
+
+            return;
         }
 
         if (!result_info || !result_info->ai_addr) {
             LOG_ERROR(SERVICE_INTERNET, "Address retrieve is not fullfilled!");
             complete_info.complete(epoc::error_not_found);
+
+            return;
         }
 
         addrinfo_to_name_entry(*supply_and_result, result_info);

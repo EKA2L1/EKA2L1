@@ -119,6 +119,15 @@ namespace eka2l1::dispatch {
             }
         } else {
             changed_source.insert(0, "#version 120\n");
+
+            if (!drv->support_extension(drivers::graphics_driver_extension_float_precision_qualifier)) {
+                changed_source = common::replace_all(changed_source, "precision mediump float", "");
+                changed_source = common::replace_all(changed_source, "precision highp float", "");
+                changed_source = common::replace_all(changed_source, "precision lowp float", "");
+                changed_source = common::replace_all(changed_source, "highp", "");
+                changed_source = common::replace_all(changed_source, "lowp", "");
+                changed_source = common::replace_all(changed_source, "mediump", "");
+            }
         }
 
         cleanup_current_driver_module();
@@ -635,17 +644,33 @@ APPLY_PENDING_ROUTES:
         }
     }
 
+    void gles_framebuffer_object::on_texture_destruction(gles_driver_texture *texture) {
+        force_detach(texture);
+    }
+
     gles_framebuffer_object::~gles_framebuffer_object() {
-        if (attached_color_ && (attached_color_->object_type() == GLES_OBJECT_RENDERBUFFER)) {
-            reinterpret_cast<gles_renderbuffer_object*>(attached_color_)->detach_from(this);
+        if (attached_color_) {
+            if (attached_color_->object_type() == GLES_OBJECT_RENDERBUFFER) {
+                reinterpret_cast<gles_renderbuffer_object*>(attached_color_)->detach_from(this);
+            } else {
+                reinterpret_cast<gles_driver_texture*>(attached_color_)->remove_texture_observer(this);
+            }
         }
 
-        if (attached_stencil_ && (attached_stencil_->object_type() == GLES_OBJECT_RENDERBUFFER)) {
-            reinterpret_cast<gles_renderbuffer_object*>(attached_stencil_)->detach_from(this);
+        if (attached_depth_) {
+            if (attached_stencil_->object_type() == GLES_OBJECT_RENDERBUFFER) {
+                reinterpret_cast<gles_renderbuffer_object*>(attached_depth_)->detach_from(this);
+            } else {
+                reinterpret_cast<gles_driver_texture*>(attached_depth_)->remove_texture_observer(this);
+            }
         }
 
-        if (attached_stencil_ && (attached_stencil_ != attached_depth_) && (attached_stencil_->object_type() == GLES_OBJECT_RENDERBUFFER)) {
-            reinterpret_cast<gles_renderbuffer_object*>(attached_stencil_)->detach_from(this);
+        if (attached_stencil_ && (attached_stencil_ != attached_depth_)) {
+            if (attached_stencil_->object_type() == GLES_OBJECT_RENDERBUFFER) {
+                reinterpret_cast<gles_renderbuffer_object*>(attached_stencil_)->detach_from(this);
+            } else {
+                reinterpret_cast<gles_driver_texture*>(attached_stencil_)->remove_texture_observer(this);
+            }
         }
 
         if (driver_handle_) {
@@ -662,14 +687,22 @@ APPLY_PENDING_ROUTES:
         switch (attachment_type) {
         case GL_COLOR_ATTACHMENT0_EMU:
             if (attached_color_ != object) {
-                if (attached_color_ && (attached_color_->object_type() == GLES_OBJECT_RENDERBUFFER)) {
-                    reinterpret_cast<gles_renderbuffer_object*>(attached_color_)->detach_from(this);
+                if (attached_color_) {
+                    if (attached_color_->object_type() == GLES_OBJECT_RENDERBUFFER) {
+                        reinterpret_cast<gles_renderbuffer_object*>(attached_color_)->detach_from(this);
+                    } else {
+                        reinterpret_cast<gles_driver_texture*>(attached_color_)->remove_texture_observer(this);
+                    }
                 }
 
                 attached_color_ = object;
 
-                if (attached_color_ && (attached_color_->object_type() == GLES_OBJECT_RENDERBUFFER)) {
-                    reinterpret_cast<gles_renderbuffer_object*>(attached_color_)->attach_to(this);
+                if (attached_color_) {
+                    if (attached_color_->object_type() == GLES_OBJECT_RENDERBUFFER) {
+                        reinterpret_cast<gles_renderbuffer_object*>(attached_color_)->attach_to(this);
+                    } else {
+                        reinterpret_cast<gles_driver_texture*>(attached_color_)->add_texture_observer(this);
+                    }
                 }
 
                 color_changed_ = true;
@@ -684,14 +717,22 @@ APPLY_PENDING_ROUTES:
 
         case GL_DEPTH_ATTACHMENT_EMU:
             if (attached_depth_ != object) {
-                if (attached_depth_ && (attached_depth_->object_type() == GLES_OBJECT_RENDERBUFFER)) {
-                    reinterpret_cast<gles_renderbuffer_object*>(attached_depth_)->detach_from(this);
+                if (attached_depth_) {
+                    if (attached_depth_->object_type() == GLES_OBJECT_RENDERBUFFER) {
+                        reinterpret_cast<gles_renderbuffer_object*>(attached_depth_)->detach_from(this);
+                    } else {
+                        reinterpret_cast<gles_driver_texture*>(attached_depth_)->remove_texture_observer(this);
+                    }
                 }
 
                 attached_depth_ = object;
                 
-                if (attached_depth_ && (attached_depth_->object_type() == GLES_OBJECT_RENDERBUFFER)) {
-                    reinterpret_cast<gles_renderbuffer_object*>(attached_depth_)->attach_to(this);
+                if (attached_depth_) {
+                    if (attached_depth_->object_type() == GLES_OBJECT_RENDERBUFFER) {
+                        reinterpret_cast<gles_renderbuffer_object*>(attached_depth_)->attach_to(this);
+                    } else {
+                        reinterpret_cast<gles_driver_texture*>(attached_depth_)->add_texture_observer(this);
+                    }
                 }
 
                 depth_changed_ = true;
@@ -706,14 +747,22 @@ APPLY_PENDING_ROUTES:
 
         case GL_STENCIL_ATTACHMENT_EMU:
             if (attached_stencil_ != object) {
-                if (attached_stencil_ && (attached_stencil_->object_type() == GLES_OBJECT_RENDERBUFFER)) {
-                    reinterpret_cast<gles_renderbuffer_object*>(attached_stencil_)->detach_from(this);
+                if (attached_stencil_) {
+                    if (attached_stencil_->object_type() == GLES_OBJECT_RENDERBUFFER) {
+                        reinterpret_cast<gles_renderbuffer_object*>(attached_stencil_)->detach_from(this);
+                    } else {
+                        reinterpret_cast<gles_driver_texture*>(attached_stencil_)->remove_texture_observer(this);
+                    }
                 }
 
                 attached_stencil_ = object;
 
-                if (attached_stencil_ && (attached_stencil_->object_type() == GLES_OBJECT_RENDERBUFFER)) {
-                    reinterpret_cast<gles_renderbuffer_object*>(attached_stencil_)->attach_to(this);
+                if (attached_stencil_) {
+                    if (attached_stencil_->object_type() == GLES_OBJECT_RENDERBUFFER) {
+                        reinterpret_cast<gles_renderbuffer_object*>(attached_stencil_)->attach_to(this);
+                    } else {
+                        reinterpret_cast<gles_driver_texture*>(attached_stencil_)->add_texture_observer(this);
+                    }
                 }
 
                 stencil_changed_ = true;
@@ -728,15 +777,23 @@ APPLY_PENDING_ROUTES:
 
         case GL_DEPTH_STENCIL_OES_EMU:
             if (attached_depth_ != object) {
-                if (attached_depth_ && (attached_depth_->object_type() == GLES_OBJECT_RENDERBUFFER)) {
-                    reinterpret_cast<gles_renderbuffer_object*>(attached_depth_)->detach_from(this);
+                if (attached_depth_) {
+                    if (attached_depth_->object_type() == GLES_OBJECT_RENDERBUFFER) {
+                        reinterpret_cast<gles_renderbuffer_object*>(attached_depth_)->detach_from(this);
+                    } else {
+                        reinterpret_cast<gles_driver_texture*>(attached_depth_)->remove_texture_observer(this);
+                    }
                 }
 
                 attached_depth_ = object;
                 attached_stencil_ = object;
 
-                if (attached_depth_ && (attached_depth_->object_type() == GLES_OBJECT_RENDERBUFFER)) {
-                    reinterpret_cast<gles_renderbuffer_object*>(attached_depth_)->attach_to(this);
+                if (attached_depth_) {
+                    if (attached_depth_->object_type() == GLES_OBJECT_RENDERBUFFER) {
+                        reinterpret_cast<gles_renderbuffer_object*>(attached_depth_)->attach_to(this);
+                    } else {
+                        reinterpret_cast<gles_driver_texture*>(attached_depth_)->add_texture_observer(this);
+                    }
                 }
 
                 depth_changed_ = true;
@@ -857,7 +914,7 @@ APPLY_PENDING_ROUTES:
         }
     }
 
-    std::uint32_t gles_framebuffer_object::ready_for_draw(drivers::graphics_driver *drv) {
+    std::uint32_t gles_framebuffer_object::ready_for_draw(egl_controller &controller, drivers::graphics_driver *drv) {
         std::uint32_t err = completed();
         
         if (err != GL_FRAMEBUFFER_COMPLETE_EMU) {
@@ -911,7 +968,7 @@ APPLY_PENDING_ROUTES:
         }
 
         // Flush passed renderpass
-        context_.flush_to_driver(drv);
+        context_.flush_to_driver(controller, drv);
 
         color_changed_ = false;
         depth_changed_ = false;
@@ -1028,12 +1085,12 @@ APPLY_PENDING_ROUTES:
         egl_context_es_shared::destroy(driver, builder);
     }
 
-    void egl_context_es2::flush_to_driver(drivers::graphics_driver *drv, const bool is_frame_swap_flush) {
+    void egl_context_es2::flush_to_driver(egl_controller &controller, drivers::graphics_driver *drv, const bool is_frame_swap_flush) {
         // Force sync again in the list
         previous_using_program_ = nullptr;
         framebuffer_need_reconfigure_ = true;
 
-        egl_context_es_shared::flush_to_driver(drv, is_frame_swap_flush);
+        egl_context_es_shared::flush_to_driver(controller, drv, is_frame_swap_flush);
     }
 
     bool egl_context_es2::retrieve_vertex_buffer_slot(std::vector<drivers::handle> &vertex_buffers_alloc, drivers::graphics_driver *drv,
@@ -1142,7 +1199,7 @@ APPLY_PENDING_ROUTES:
                     return false;
                 }
 
-                std::uint32_t result = fb_obj->ready_for_draw(drv);
+                std::uint32_t result = fb_obj->ready_for_draw(controller, drv);
                 if (result != 0) {
                     controller.push_error(this, result);
                     return false;
@@ -2738,7 +2795,7 @@ APPLY_PENDING_ROUTES:
         }
 
         // Flush all pending operations
-        ctx->flush_to_driver(drv, false);
+        ctx->flush_to_driver(controller, drv, false);
 
         if (!fb_obj) {
             if (!drivers::read_bitmap(drv, ctx->read_surface_->handle_, eka2l1::point(x, y), eka2l1::vec2(width, height),

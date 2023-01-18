@@ -33,6 +33,9 @@
 #include <drivers/graphics/graphics.h>
 #include <drivers/itc.h>
 
+#include <loader/nvg.h>
+#include <utils/guest/akn.h>
+
 #include <algorithm>
 
 #include <common/buffer.h>
@@ -42,6 +45,9 @@
 
 #define XXH_INLINE_ALL
 #include <xxhash.h>
+
+// LunaSVG
+#include <lunasvg.h>
 
 namespace eka2l1::epoc {
     bitmap_cache::bitmap_cache(kernel_system *kern_)
@@ -181,6 +187,11 @@ namespace eka2l1::epoc {
     }
 
     static std::uint32_t get_suitable_bpp_for_bitmap(epoc::bitwise_bitmap *bmp) {
+        if (bmp->uid_ != epoc::bitwise_bitmap_uid) {
+            // Extended bitmap, will be converted to RGBA8888
+            return 32;
+        }
+
         if (is_palette_bitmap(bmp) || (bmp->header_.bit_per_pixels == 1) || (bmp->header_.bit_per_pixels == 4)) {
             return 24;
         }
@@ -303,101 +314,157 @@ namespace eka2l1::epoc {
         if (should_upload) {
             char *data_pointer = reinterpret_cast<char *>(bmp->data_pointer(fbss_));
             std::uint32_t raw_size = 0;
+            std::size_t pixels_per_line = 0;
 
-            const bitmap_file_compression comp = bmp->compression_type();
+            const std::uint32_t compressed_size = bmp->header_.bitmap_size - bmp->header_.header_len;
 
-            if (comp != bitmap_file_no_compression) {
-                raw_size = bmp->byte_width_ * bmp->header_.size_pixels.y;
-                char *new_data_allocated = new char[raw_size];
+            if (bmp->uid_ == epoc::NVG_BITMAP_UID_REV2) {
+                // Skip the header!!
+                utils::akn_icon_header *header_icon = reinterpret_cast<utils::akn_icon_header *>(data_pointer);
+                data_pointer += header_icon->header_size_;
 
-                const std::uint32_t compressed_size = bmp->header_.bitmap_size - bmp->header_.header_len;
-                std::size_t final_size = raw_size;
+                std::size_t pixmap_size = bmp->header_.size_pixels.x * bmp->header_.size_pixels.y * 4;
+                pixels_per_line = bmp->header_.size_pixels.x;
 
-                switch (comp) {
-                case bitmap_file_byte_rle_compression:
-                    eka2l1::decompress_rle_fast_route<8>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, reinterpret_cast<std::uint8_t*>(new_data_allocated), final_size);
-                    break;
+                const bool is_mask = header_icon->is_mask_;
 
-                case bitmap_file_twelve_bit_rle_compression:
-                    eka2l1::decompress_rle_fast_route<12>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, reinterpret_cast<std::uint8_t*>(new_data_allocated), final_size);
-                    break;
+                if (!is_mask && (header_icon->icon_color_ & 0xFFFFFF)) {
+                    // TODO: Seems like actually force RGB fill and keep alpha!
+                    // https://github.com/SymbianSource/oss.FCL.sf.mw.uiaccelerator/blob/773fc5e215e04584c3e00a1b1fa05c5a8c50440a/uiacceltk/hitchcock/coretoolkit/rendervg10/src/HuiVg10Texture.cpp#L1704
+                    data_pointer = new char[pixmap_size];
+                    std::fill(reinterpret_cast<std::uint32_t *>(data_pointer), reinterpret_cast<std::uint32_t *>(data_pointer + pixmap_size),
+                        ((header_icon->icon_color_ & 0xFFFFFF) << 8) | 0xFF);
+                } else {
+                    common::ro_buf_stream nvg_in_stream(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size);
+                    common::wo_growable_buf_stream svg_out_stream;
 
-                case bitmap_file_sixteen_bit_rle_compression:
-                    eka2l1::decompress_rle_fast_route<16>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, reinterpret_cast<std::uint8_t*>(new_data_allocated), final_size);
-                    break;
+                    std::vector<loader::nvg_convert_error_description> errors;
 
-                case bitmap_file_twenty_four_bit_rle_compression:
-                    eka2l1::decompress_rle_fast_route<24>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, reinterpret_cast<std::uint8_t*>(new_data_allocated), final_size);
+                    loader::nvg_options cvt_options;
+                    cvt_options.width = bmp->header_.size_pixels.x;
+                    cvt_options.height = bmp->header_.size_pixels.y;
+                    cvt_options.aspect_ratio_mode_ = static_cast<loader::nvg_aspect_ratio_mode>(header_icon->aspect_ratio_);
+
+                    if (!loader::convert_nvg_to_svg(nvg_in_stream, svg_out_stream, errors, &cvt_options)) {
+                        data_pointer = new char[pixmap_size];
+                        std::memset(data_pointer, 0, pixmap_size);
+
+                        LOG_ERROR(SERVICE_WINDOW, "Failed to convert NVG bitmap to SVG for rendering!");
+                    } else {
+                        data_pointer = new char[pixmap_size];
+
+                        // Render in-memory using lunasvg
+                        // Hope the performance is good! The icon/bitmap seems very small
+                        std::memset(data_pointer, 0, pixmap_size);
+
+                        const std::string svg_out_content = svg_out_stream.content();
+                        //LOG_DEBUG(SERVICE_WINDOW, "{}", svg_out_content);
+
+                        auto nvg_doc = lunasvg::Document::loadFromData(svg_out_content);
+                        if (!nvg_doc) {
+                            LOG_ERROR(SERVICE_WINDOW, "Error loading SVG in-memory, SVG content: {}", svg_out_content);
+                        } else {
+                            auto bitmap = lunasvg::Bitmap(reinterpret_cast<std::uint8_t *>(data_pointer), bmp->header_.size_pixels.x,
+                                bmp->header_.size_pixels.y, bmp->header_.size_pixels.x * 4);
+
+                            lunasvg::Matrix matrix{ 1, 0, 0, 1, 0, 0 };
+                            nvg_doc->render(bitmap, matrix);
+                        }
+                    }
+                }
+            } else {
+                const bitmap_file_compression comp = bmp->compression_type();
+
+                if (comp != bitmap_file_no_compression) {
+                    raw_size = bmp->byte_width_ * bmp->header_.size_pixels.y;
+                    char *new_data_allocated = new char[raw_size];
+                    std::size_t final_size = raw_size;
+
+                    switch (comp) {
+                    case bitmap_file_byte_rle_compression:
+                        eka2l1::decompress_rle_fast_route<8>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, reinterpret_cast<std::uint8_t*>(new_data_allocated), final_size);
+                        break;
+
+                    case bitmap_file_twelve_bit_rle_compression:
+                        eka2l1::decompress_rle_fast_route<12>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, reinterpret_cast<std::uint8_t*>(new_data_allocated), final_size);
+                        break;
+
+                    case bitmap_file_sixteen_bit_rle_compression:
+                        eka2l1::decompress_rle_fast_route<16>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, reinterpret_cast<std::uint8_t*>(new_data_allocated), final_size);
+                        break;
+
+                    case bitmap_file_twenty_four_bit_rle_compression:
+                        eka2l1::decompress_rle_fast_route<24>(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size, reinterpret_cast<std::uint8_t*>(new_data_allocated), final_size);
+                        break;
+
+                    default:
+                        LOG_ERROR(SERVICE_WINDOW, "Unsupported bitmap format to decode {}", static_cast<std::uint32_t>(comp));
+                        break;
+                    }
+
+                    data_pointer = new_data_allocated;
+                } else {
+                    raw_size = bmp->header_.bitmap_size - bmp->header_.header_len;
+
+                    char *new_data_pointer = new char[raw_size];
+                    std::memcpy(new_data_pointer, data_pointer, raw_size);
+
+                    data_pointer = new_data_pointer;
+                }
+
+                std::uint32_t bpp = bmp->header_.bit_per_pixels;
+
+                if ((bmp->header_.bit_per_pixels % 8) == 0) {
+                    pixels_per_line = bmp->byte_width_ / (bmp->header_.bit_per_pixels >> 3);
+                }
+
+                std::size_t raw_size_big = 0;
+                
+                epoc::display_mode dsp = bmp->settings_.current_display_mode();
+                if (dsp == epoc::display_mode::none) {
+                    dsp = bmp->settings_.initial_display_mode();
+                }
+
+                // GPU don't support them. Convert them on CPU
+                if (is_palette_bitmap(bmp) || (dsp == epoc::display_mode::gray16)) {
+                    char *new_pointer = nullptr;
+                    if (dsp == epoc::display_mode::gray16) {
+                        new_pointer = converted_gray_four_bpp_to_twenty_four_bpp_bitmap(bmp, reinterpret_cast<const std::uint8_t *>(data_pointer), raw_size_big);
+                    } else {
+                        new_pointer = converted_palette_bitmap_to_twenty_four_bitmap(bmp, reinterpret_cast<const std::uint8_t *>(data_pointer),
+                            epoc::get_suitable_palette_256(kern->get_epoc_version()), epoc::color_16_palette, raw_size_big);
+                    }
+
+                    bpp = 24;
+                    raw_size = static_cast<std::uint32_t>(raw_size_big);
+
+                    delete[] data_pointer;
+                    data_pointer = new_pointer;
+
+                    // Use default
+                    pixels_per_line = 0;
+                }
+
+                char *newly_pointer = nullptr;
+
+                switch (bpp) {
+                case 1:
+                    newly_pointer = converted_one_bpp_to_twenty_four_bpp_bitmap(bmp, reinterpret_cast<const std::uint32_t *>(data_pointer),
+                        raw_size_big);
+                    bpp = 24;
+                    raw_size = static_cast<std::uint32_t>(raw_size_big);
+                    pixels_per_line = 0;
+
                     break;
 
                 default:
-                    LOG_ERROR(SERVICE_WINDOW, "Unsupported bitmap format to decode {}", static_cast<std::uint32_t>(comp));
                     break;
                 }
 
-                data_pointer = new_data_allocated;
-            } else {
-                raw_size = bmp->header_.bitmap_size - bmp->header_.header_len;
-
-                char *new_data_pointer = new char[raw_size];
-                std::memcpy(new_data_pointer, data_pointer, raw_size);
-
-                data_pointer = new_data_pointer;
-            }
-
-            std::uint32_t bpp = bmp->header_.bit_per_pixels;
-            std::size_t pixels_per_line = 0;
-
-            if ((bmp->header_.bit_per_pixels % 8) == 0) {
-                pixels_per_line = bmp->byte_width_ / (bmp->header_.bit_per_pixels >> 3);
-            }
-
-            std::size_t raw_size_big = 0;
-            
-            epoc::display_mode dsp = bmp->settings_.current_display_mode();
-            if (dsp == epoc::display_mode::none) {
-                dsp = bmp->settings_.initial_display_mode();
-            }
-
-            // GPU don't support them. Convert them on CPU
-            if (is_palette_bitmap(bmp) || (dsp == epoc::display_mode::gray16)) {
-                char *new_pointer = nullptr;
-                if (dsp == epoc::display_mode::gray16) {
-                    new_pointer = converted_gray_four_bpp_to_twenty_four_bpp_bitmap(bmp, reinterpret_cast<const std::uint8_t *>(data_pointer), raw_size_big);
-                } else {
-                    new_pointer = converted_palette_bitmap_to_twenty_four_bitmap(bmp, reinterpret_cast<const std::uint8_t *>(data_pointer),
-                        epoc::get_suitable_palette_256(kern->get_epoc_version()), epoc::color_16_palette, raw_size_big);
+                if (newly_pointer) {
+                    delete[] data_pointer;
+                    data_pointer = newly_pointer;
                 }
-
-                bpp = 24;
-                raw_size = static_cast<std::uint32_t>(raw_size_big);
-
-                delete[] data_pointer;
-                data_pointer = new_pointer;
-
-                // Use default
-                pixels_per_line = 0;
-            }
-
-            char *newly_pointer = nullptr;
-
-            switch (bpp) {
-            case 1:
-                newly_pointer = converted_one_bpp_to_twenty_four_bpp_bitmap(bmp, reinterpret_cast<const std::uint32_t *>(data_pointer),
-                    raw_size_big);
-                bpp = 24;
-                raw_size = static_cast<std::uint32_t>(raw_size_big);
-                pixels_per_line = 0;
-
-                break;
-
-            default:
-                break;
-            }
-
-            if (newly_pointer) {
-                delete[] data_pointer;
-                data_pointer = newly_pointer;
             }
 
             if (builder) {
@@ -417,17 +484,51 @@ namespace eka2l1::epoc {
 
             hashes[idx] = hash;
 
-            if (dsp == epoc::display_mode::color16mu) {
-                if (builder) {
-                    builder->set_swizzle(driver_textures[idx], drivers::channel_swizzle::red, drivers::channel_swizzle::green,
-                        drivers::channel_swizzle::blue, drivers::channel_swizzle::one);
-                }
+            if (bmp->uid_ == epoc::NVG_BITMAP_UID_REV2) {
+                // Used for blending mostly, where only alpha is relevant
+                const auto display_mode = bmp->settings_.current_display_mode();
+                if (epoc::is_display_mode_mono(display_mode)) {
+                    if (builder) {
+                        builder->set_swizzle(driver_textures[idx], drivers::channel_swizzle::alpha, drivers::channel_swizzle::alpha,
+                            drivers::channel_swizzle::alpha, drivers::channel_swizzle::alpha);
+                    }
 
-                if (update_cmd) {
-                    gdi_store_command_update_texture_data &data = update_cmd->get_data_struct<gdi_store_command_update_texture_data>();
-                    data.do_swizz_ = true;
-                    data.swizz_ = { drivers::channel_swizzle::red, drivers::channel_swizzle::green,
-                        drivers::channel_swizzle::blue, drivers::channel_swizzle::one };
+                    if (update_cmd) {
+                        gdi_store_command_update_texture_data &data = update_cmd->get_data_struct<gdi_store_command_update_texture_data>();
+                        data.do_swizz_ = true;
+                        data.swizz_ = { drivers::channel_swizzle::alpha, drivers::channel_swizzle::alpha,
+                            drivers::channel_swizzle::alpha, drivers::channel_swizzle::alpha };
+                    }
+                } else {
+                    if (builder) {
+                        builder->set_swizzle(driver_textures[idx], drivers::channel_swizzle::red,
+                            drivers::channel_swizzle::green,
+                            drivers::channel_swizzle::blue,
+                            epoc::is_display_mode_alpha(display_mode) ? drivers::channel_swizzle::alpha : drivers::channel_swizzle::one);
+                    }
+
+                    if (update_cmd) {
+                        gdi_store_command_update_texture_data &data = update_cmd->get_data_struct<gdi_store_command_update_texture_data>();
+                        data.do_swizz_ = true;
+                        data.swizz_ = { drivers::channel_swizzle::red,
+                            drivers::channel_swizzle::green,
+                            drivers::channel_swizzle::blue, 
+                            epoc::is_display_mode_alpha(display_mode) ? drivers::channel_swizzle::alpha : drivers::channel_swizzle::one };
+                    }
+                }
+            } else {
+                if (bmp->settings_.current_display_mode() == epoc::display_mode::color16mu) {
+                    if (builder) {
+                        builder->set_swizzle(driver_textures[idx], drivers::channel_swizzle::red, drivers::channel_swizzle::green,
+                            drivers::channel_swizzle::blue, drivers::channel_swizzle::one);
+                    }
+
+                    if (update_cmd) {
+                        gdi_store_command_update_texture_data &data = update_cmd->get_data_struct<gdi_store_command_update_texture_data>();
+                        data.do_swizz_ = true;
+                        data.swizz_ = { drivers::channel_swizzle::red, drivers::channel_swizzle::green,
+                            drivers::channel_swizzle::blue, drivers::channel_swizzle::one };
+                    }
                 }
             }
 

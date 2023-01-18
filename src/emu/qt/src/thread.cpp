@@ -74,7 +74,7 @@ static eka2l1::drivers::input_event make_mouse_event_driver(const float x, const
 /**
  * \brief Callback when a host mouse event is triggered
  * \param mouse_pos    position of mouse pointer          
- * \param button       0: left, 1: right, 2: other      
+ * \param button       0: left, 1: right, 2: other, -1: no button     
  * \param action       0: press, 1: repeat(move), 2: release      
  */
 static void on_ui_window_mouse_evt(void *userdata, eka2l1::vec3 mouse_pos, int button, int action, int mouse_id) {
@@ -90,7 +90,7 @@ static void on_ui_window_mouse_evt(void *userdata, eka2l1::vec3 mouse_pos, int b
 
     const float scale = emu->symsys->get_config()->ui_scale;
     auto mouse_evt = make_mouse_event_driver(mouse_pos_x / scale, mouse_pos_y / scale, mouse_pos_z / scale,
-        button, action, mouse_id);
+        button, action, emu->ui_main->map_mouse_id_to_touch_index(mouse_id, (action == 2)));
 
     if ((emu->symsys) && emu->winserv) {
         emu->winserv->queue_input_from_driver(mouse_evt);

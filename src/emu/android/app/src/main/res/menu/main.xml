@@ -25,6 +25,10 @@
         android:title="@string/devices"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_install_ng_game"
+        android:title="@string/install_ng_game"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_mount_sd"
         android:title="@string/mount_sd"
         app:showAsAction="never" />

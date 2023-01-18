@@ -154,6 +154,10 @@ namespace eka2l1::drivers {
                 anisotrophy_max_ = 1.0f;
                 glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &anisotrophy_max_);
             }
+
+            if (strcmp(reinterpret_cast<const char*>(next_extension), "GL_ARB_ES3_1_compatibility") == 0) {
+                feature_flags_ |= OGL_FEATURE_COMPABILITY_ES31;
+            }
         }
 
         std::string feature = "";
@@ -168,6 +172,10 @@ namespace eka2l1::drivers {
 
         if (feature_flags_ & OGL_FEATURE_SUPPORT_ANISOTROPHY) {
             feature += "AnisotrophyFiltering;";
+        }
+
+        if (feature_flags_ & OGL_FEATURE_COMPABILITY_ES31) {
+            feature += "ES3.1_Compability;";
         }
 
         if (!feature.empty()) {
@@ -198,6 +206,10 @@ namespace eka2l1::drivers {
     bool ogl_graphics_driver::support_extension(const graphics_driver_extension ext) {
         if (ext == graphics_driver_extension_anisotrophy_filtering) {
             return (feature_flags_ & OGL_FEATURE_SUPPORT_ANISOTROPHY);
+        }
+
+        if (ext == graphics_driver_extension_float_precision_qualifier) {
+            return is_gles || (feature_flags_ & OGL_FEATURE_COMPABILITY_ES31);
         }
 
         return false;

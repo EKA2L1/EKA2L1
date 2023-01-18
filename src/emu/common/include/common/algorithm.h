@@ -351,6 +351,10 @@ namespace eka2l1 {
             return str;
         }
 
+        inline std::string replace_all(std::string str, const char *from, const char *to) {
+            return replace_all(str, std::string(from), std::string(to));
+        }
+
         /**
          * \brief Lowercase the string.
          * 

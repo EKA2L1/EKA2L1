@@ -158,7 +158,7 @@ namespace eka2l1::epoc {
         return des_->get_max_length(pr_) - current_pos_;
     }
 
-    std::uint64_t rw_des_stream::tell() const {
+    std::uint64_t rw_des_stream::tell() {
         return current_pos_;
     }
 

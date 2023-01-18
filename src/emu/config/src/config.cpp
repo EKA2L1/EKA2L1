@@ -22,6 +22,7 @@
 #include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
+#include <common/configure.h>
 
 #include <config/config.h>
 #include <fstream>
@@ -279,5 +280,16 @@ namespace eka2l1::config {
 
         if (with_bindings)
             keybinds.deserialize(fmt::format("bindings/{}.yml", current_keybind_profile));
+
+#if BUILD_FOR_USER
+        // If not yet been modified by user, see extensive logging option
+        if (log_filter.empty() || (log_filter == DEFAULT_LOG_FILTERING)) {
+            if (extensive_logging) {
+                log_filter = LOG_FILTER_DEBUG_PRESET;
+            } else {
+                log_filter = LOG_FILTER_NORMAL_USE_PRESET;
+            }
+        }
+#endif
     }
 }

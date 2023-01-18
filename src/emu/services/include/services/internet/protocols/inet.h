@@ -281,6 +281,7 @@ namespace eka2l1::epoc::internet {
     class inet_bridged_protocol : public socket::protocol {
     private:
         std::unique_ptr<std::thread> loop_thread_;
+        std::atomic<bool> stopped_;
         kernel_system *kern_;
 
     public:

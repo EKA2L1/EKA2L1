@@ -380,6 +380,13 @@ namespace eka2l1::epoc {
         ctx.complete(add_object(spr));
     }
 
+    void window_server_client::create_pointer_cursor(service::ipc_context &ctx, ws_cmd &cmd) {
+        //ws_cmd_create_pointer_cursor_header *pointer_cursor_header = reinterpret_cast<decltype(pointer_cursor_header)>(cmd.data_ptr);
+
+        window_client_obj_ptr spr = std::make_unique<epoc::sprite>(this, nullptr, nullptr, eka2l1::vec2(0, 0));
+        ctx.complete(add_object(spr));
+    }
+
     void window_server_client::create_graphic(service::ipc_context &ctx, ws_cmd &cmd) {
         LOG_TRACE(SERVICE_WINDOW, "Create graphic drawer stubbed!");
 
@@ -932,6 +939,21 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_none);
     }
 
+    void window_server_client::get_double_click_settings(service::ipc_context &ctx, ws_cmd &cmd) {
+        struct double_click_settings_data {
+            std::uint32_t max_interval_us_;
+            std::int32_t max_distance_between_click_pixels_;
+        } value_return;
+
+        // TODO: Probably not much, but maybe a proper retrieve from host?
+        value_return.max_interval_us_ = 500 * 1000;        // half a second
+        value_return.max_distance_between_click_pixels_ = 20;
+
+        ctx.write_data_to_descriptor_argument<double_click_settings_data>(reply_slot,
+            value_return);
+        ctx.complete(epoc::error_none);
+    }
+
     void window_server_client::event_ready_cancel(service::ipc_context &ctx, ws_cmd &cmd) {
         events.cancel_listener();
         ctx.complete(epoc::error_none);
@@ -1046,8 +1068,11 @@ namespace eka2l1::epoc {
             break;
 
         case ws_cl_op_create_sprite:
-        case ws_cl_op_create_pointer_cursor:
             create_sprite(ctx, cmd);
+            break;
+
+        case ws_cl_op_create_pointer_cursor:
+            create_pointer_cursor(ctx, cmd);
             break;
 
         case ws_cl_op_create_anim_dll:
@@ -1173,6 +1198,10 @@ namespace eka2l1::epoc {
             // No modifiers (Ctrl, Alt, ...) are considered yet.
             // Apps known to use this: Frogger (Lonely Cat Games)
             ctx.complete(epoc::error_none);
+            break;
+
+        case ws_cl_op_get_double_click_settings:
+            get_double_click_settings(ctx, cmd);
             break;
 
         default:
@@ -1599,6 +1628,10 @@ namespace eka2l1 {
             guest_evt_.adv_pointer_evt_.evtype = driver_evt_.mouse_.action_ == drivers::mouse_action_press ? epoc::event_type::button3down : epoc::event_type::button3up;
             break;
         }
+        case drivers::mouse_button_none: {
+            guest_evt_.adv_pointer_evt_.evtype = epoc::event_type::move;
+            break;
+        }
         }
 
         scr->screen_mutex.lock();
@@ -1786,15 +1819,19 @@ namespace eka2l1 {
 
     void window_server::init_screens() {
         kernel_system *kern = get_kernel_system();
+        const bool is_screenplay = (kern->get_epoc_version() >= epocver::epoc10);
 
         // Create first screen
         screens = new epoc::screen(0, get_screen_config(0));
+        screens->set_is_screenplay_architecture(is_screenplay);
+
         epoc::screen *crr = screens;
         create_screen_buffer_for_dsa(kern, crr);
 
         // Create other available screens. Plugged in screen later will be created explicitly
         for (std::size_t i = 0; i < screen_configs.size() - 1; i++) {
             crr->next = new epoc::screen(1, get_screen_config(1));
+            crr->next->set_is_screenplay_architecture(is_screenplay);
 
             crr = crr->next;
 

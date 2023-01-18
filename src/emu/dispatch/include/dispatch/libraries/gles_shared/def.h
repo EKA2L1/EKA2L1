@@ -21,6 +21,7 @@
 
 #include <dispatch/libraries/egl/def.h>
 #include <dispatch/libraries/gles_shared/consts.h>
+#include <dispatch/libraries/buffer_pusher.h>
 #include <dispatch/def.h>
 
 #include <common/container.h>
@@ -109,6 +110,13 @@ namespace eka2l1::dispatch {
         GLES_DRIVER_TEXTURE_TYPE_CUBE = 2
     };
 
+    struct gles_driver_texture;
+
+    struct gles_driver_texture_observer {
+    public:
+        virtual void on_texture_destruction(gles_driver_texture *texture) = 0;
+    };
+
     struct gles_driver_texture : public gles_driver_object {
     private:
         friend struct egl_context_es_shared;
@@ -129,6 +137,8 @@ namespace eka2l1::dispatch {
 
         common::double_linked_queue_element update_link_;
         std::uint8_t change_flags_;
+
+        std::vector<gles_driver_texture_observer *> texture_observers_;
 
         enum {
             FLAG_MIN_FILTER_CHANGED = 1 << 0,
@@ -216,6 +226,8 @@ namespace eka2l1::dispatch {
         void set_mag_filter(const std::uint32_t mag_filter);
         void set_wrap_s(const std::uint32_t wrap_s);
         void set_wrap_t(const std::uint32_t wrap_t);
+        void add_texture_observer(gles_driver_texture_observer *observer);
+        void remove_texture_observer(gles_driver_texture_observer *observer);
     };
 
     struct gles_driver_buffer : public gles_driver_object {
@@ -245,38 +257,6 @@ namespace eka2l1::dispatch {
         std::int32_t stride_;
         std::uint32_t offset_;
         std::uint32_t buffer_obj_ = 0;
-    };
-    
-    // General idea from PPSSPP (thanks!)
-    struct gles_buffer_pusher {
-    private:
-        struct buffer_info {
-            drivers::handle buffer_;
-            std::size_t used_size_;
-            std::uint8_t *data_;
-        };
-
-        std::vector<buffer_info> buffers_;
-        std::uint8_t current_buffer_;
-        std::size_t size_per_buffer_;
-
-        void add_buffer();
-
-    public:
-        explicit gles_buffer_pusher();
-
-        bool is_initialized() const {
-            return (size_per_buffer_ != 0);
-        }
-
-        void initialize(const std::size_t size_per_buffer);
-        void destroy(drivers::graphics_command_builder &builder);
-        void done_frame();
-
-        drivers::handle push_buffer(drivers::graphics_driver *drv, const std::uint8_t *data, const std::size_t buffer_size,
-            std::size_t &buffer_offset);
-
-        void flush(drivers::graphics_command_builder &builder);
     };
 
     using gles_driver_object_instance = std::unique_ptr<gles_driver_object>;
@@ -391,8 +371,8 @@ namespace eka2l1::dispatch {
         float depth_range_max_;
 
         // Vertex and index buffers
-        gles_buffer_pusher vertex_buffer_pusher_;
-        gles_buffer_pusher index_buffer_pusher_;
+        graphics_buffer_pusher vertex_buffer_pusher_;
+        graphics_buffer_pusher index_buffer_pusher_;
         bool attrib_changed_;
 
         float blend_colour_[4];
@@ -408,10 +388,10 @@ namespace eka2l1::dispatch {
 
         virtual void init_context_state() override;
         void return_handle_to_pool(const gles_object_type type, const drivers::handle h, const int subtype = 0);
-        void on_surface_changed(egl_surface *prev_read, egl_surface *prev_draw) override;
+        void on_surface_changed(drivers::graphics_driver *driver, egl_surface *prev_read, egl_surface *prev_draw) override;
         void flush_state_changes();
         
-        virtual void flush_to_driver(drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) override;
+        virtual void flush_to_driver(egl_controller &controller, drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) override;
         virtual void destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) override;
         virtual bool prepare_for_draw(drivers::graphics_driver *driver, egl_controller &controller, kernel::process *crr_process,
             const std::int32_t first_index, const std::uint32_t vcount) = 0;

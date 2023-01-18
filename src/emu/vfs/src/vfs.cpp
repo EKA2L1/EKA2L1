@@ -1474,7 +1474,7 @@ namespace eka2l1 {
         return f_->size() - f_->tell();
     }
 
-    std::uint64_t ro_file_stream::tell() const {
+    std::uint64_t ro_file_stream::tell() {
         return f_->tell();
     }
 
@@ -1503,7 +1503,7 @@ namespace eka2l1 {
         return f_->size() - f_->tell();
     }
 
-    std::uint64_t wo_file_stream::tell() const {
+    std::uint64_t wo_file_stream::tell() {
         return f_->tell();
     }
 

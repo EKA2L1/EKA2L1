@@ -43,7 +43,12 @@ namespace eka2l1::epoc {
         AVKON_UID = 0x101F876E,
         PERSONALISATION_UID = 0x101F876F,
         THEMES_UID = 0x102818E8,
-        ICON_CAPTION_UID = 0x1028583D
+        ICON_CAPTION_UID = 0x1028583D,
+        AKN_SKIN_MAJOR_UID = 0x10005a26,
+        AKN_WALLPAPER_FILENAME_ID = 0xC0DEF00D,
+    
+        // Specifics
+        AKN_SKIN_MINOR_WALLPAPER_UID = 0x1180
     };
 
     using pid = std::pair<std::int32_t, std::int32_t>;

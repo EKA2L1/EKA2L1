@@ -339,7 +339,9 @@ namespace eka2l1::epoc {
     void graphic_context::submit_queue_commands(kernel::thread *rq) {
         if (!flushed) {
             // Content of the window changed, so call the handler
-            attached_window->try_update(rq);
+            if ((attached_window->flags & window::flags_in_redraw) == 0) {
+                attached_window->try_update(rq);
+            }
             flushed = true;
         }
     }
@@ -833,8 +835,28 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
+    void graphic_context::set_clipping_region(service::ipc_context &context, ws_cmd &cmd) {
+        std::optional<common::region> region = get_region_from_context(context, cmd);
+        if (!region.has_value()) {
+            context.complete(epoc::error_argument);
+            return;
+        }
+
+        clipping_region = region.value();
+        do_submit_clipping();
+
+        context.complete(epoc::error_none);
+    }
+
     void graphic_context::cancel_clipping_rect(service::ipc_context &context, ws_cmd &cmd) {
         clipping_rect.make_empty();    
+        do_submit_clipping();
+
+        context.complete(epoc::error_none);    
+    }
+
+    void graphic_context::cancel_clipping_region(service::ipc_context &context, ws_cmd &cmd) {
+        clipping_region.make_empty();    
         do_submit_clipping();
 
         context.complete(epoc::error_none);    
@@ -867,6 +889,8 @@ namespace eka2l1::epoc {
             { ws_gc_u139_active, { &graphic_context::active, false, false } },
             { ws_gc_u139_set_clipping_rect, { &graphic_context::set_clipping_rect, false, false } },
             { ws_gc_u139_cancel_clipping_rect, { &graphic_context::cancel_clipping_rect, false, false } },
+            { ws_gc_u139_set_clipping_region, { &graphic_context::set_clipping_region, false, false } },
+            { ws_gc_u139_cancel_clipping_region, { &graphic_context::cancel_clipping_region, false, false } },
             { ws_gc_u139_set_brush_color, { &graphic_context::set_brush_color, false, false } },
             { ws_gc_u139_set_brush_style, { &graphic_context::set_brush_style, false, false } },
             { ws_gc_u139_set_pen_color, { &graphic_context::set_pen_color, false, false } },
@@ -905,6 +929,8 @@ namespace eka2l1::epoc {
             { ws_gc_u151m1_active, { &graphic_context::active, false, false } },
             { ws_gc_u151m1_set_clipping_rect, { &graphic_context::set_clipping_rect, false, false } },
             { ws_gc_u151m1_cancel_clipping_rect, { &graphic_context::cancel_clipping_rect, false, false } },
+            { ws_gc_u151m1_set_clipping_region, { &graphic_context::set_clipping_region, false, false } },
+            { ws_gc_u151m1_cancel_clipping_region, { &graphic_context::cancel_clipping_region, false, false } },
             { ws_gc_u151m1_set_brush_color, { &graphic_context::set_brush_color, false, false } },
             { ws_gc_u151m1_set_brush_style, { &graphic_context::set_brush_style, false, false } },
             { ws_gc_u151m1_set_pen_color, { &graphic_context::set_pen_color, false, false } },
@@ -940,6 +966,8 @@ namespace eka2l1::epoc {
             { ws_gc_u151m2_active, { &graphic_context::active, false, false } },
             { ws_gc_u151m2_set_clipping_rect, { &graphic_context::set_clipping_rect, false, false } },
             { ws_gc_u151m2_cancel_clipping_rect, { &graphic_context::cancel_clipping_rect, false, false } },
+            { ws_gc_u151m2_set_clipping_region, { &graphic_context::set_clipping_region, false, false } },
+            { ws_gc_u151m2_cancel_clipping_region, { &graphic_context::cancel_clipping_region, false, false } },
             { ws_gc_u151m2_set_brush_color, { &graphic_context::set_brush_color, false, false } },
             { ws_gc_u151m2_set_brush_style, { &graphic_context::set_brush_style, false, false } },
             { ws_gc_u151m2_set_pen_color, { &graphic_context::set_pen_color, false, false } },
@@ -980,6 +1008,8 @@ namespace eka2l1::epoc {
             { ws_gc_curr_active, { &graphic_context::active, false, false } },
             { ws_gc_curr_set_clipping_rect, { &graphic_context::set_clipping_rect, false, false } },
             { ws_gc_curr_cancel_clipping_rect, { &graphic_context::cancel_clipping_rect, false, false } },
+            { ws_gc_curr_set_clipping_region, { &graphic_context::set_clipping_region, false, false } },
+            { ws_gc_curr_cancel_clipping_region, { &graphic_context::cancel_clipping_region, false, false } },
             { ws_gc_curr_set_brush_color, { &graphic_context::set_brush_color, false, false } },
             { ws_gc_curr_set_brush_style, { &graphic_context::set_brush_style, false, false } },
             { ws_gc_curr_set_pen_color, { &graphic_context::set_pen_color, false, false } },

@@ -186,7 +186,9 @@ namespace eka2l1::dispatch {
 
         if (context_to_set) {
             active_context_[thread_id] = context_to_set;
+
             context_to_set->associated_thread_uid_ = thread_id;
+            context_to_set->on_being_set_current();
         } else {
             active_context_.erase(thread_id);
         }
@@ -230,7 +232,7 @@ namespace eka2l1::dispatch {
         if (inst && inst->get()) {
             bool can_del_imm = true;
 
-            for (auto ite = active_context_.begin(); ite != active_context_.end(); ) {
+            for (auto ite = active_context_.begin(); ite != active_context_.end(); ite++) {
                 if ((ite->second->draw_surface_ == inst->get()) || (ite->second->read_surface_ == inst->get())) {
                     inst->get()->dead_pending_ = true;
                     can_del_imm = false;
@@ -370,21 +372,12 @@ namespace eka2l1::dispatch {
         return (((config_ >> 1) & 0b11) + 1) << 3;
     }
 
-    void egl_config::set_surface_type(const surface_type type) {;
-        config_ &= ~0b1;
-        config_ |= (static_cast<std::uint32_t>(type) & 0b1);
-    }
-
-    egl_config::surface_type egl_config::get_surface_type() const {
-        return static_cast<surface_type>(config_ & 0b1);
-    }
-
     egl_config::target_context_version egl_config::get_target_context_version() {
-        return static_cast<target_context_version>((config_ >> 3) & 0b1);
+        return static_cast<target_context_version>((config_ >> 3) & 0b11);
     }
 
     void egl_config::set_target_context_version(const target_context_version ver) {
-        config_ |= (ver & 1) << 3;
+        config_ |= (ver & 0b11) << 3;
     }
 
     std::uint8_t egl_config::red_bits() const {

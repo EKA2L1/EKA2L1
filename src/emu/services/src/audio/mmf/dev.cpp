@@ -655,6 +655,11 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void mmf_dev_server_session::close(service::ipc_context *ctx) {
+        // Same for now
+        stop(ctx);
+    }
+
     void mmf_dev_server_session::play_init(service::ipc_context *ctx) {
         if (stream_state_ != epoc::mmf_state_idle) {
             if ((stream_state_ == epoc::mmf_state_playing) || (stream_state_ == epoc::mmf_state_playing_recording)) {
@@ -1153,6 +1158,10 @@ namespace eka2l1 {
 
             case epoc::mmf_dev_newarch_samples_played:
                 samples_played(ctx);
+                break;
+
+            case epoc::mmf_dev_newarch_close:
+                close(ctx);
                 break;
 
             default:

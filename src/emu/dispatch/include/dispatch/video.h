@@ -20,6 +20,7 @@
 #pragma once
 
 #include <common/vecx.h>
+#include <common/container.h>
 #include <dispatch/def.h>
 #include <drivers/video/video.h>
 #include <drivers/itc.h>
@@ -41,13 +42,17 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::dispatch {
+    struct epoc_video_posting_target {
+        epoc::canvas_base *target_window_;
+        eka2l1::rect display_rect_;
+    };
+
     class epoc_video_player {
     private:
         drivers::handle image_handle_;
         drivers::video_player_instance video_player_;
 
-        epoc::canvas_base *target_window_;
-        eka2l1::rect display_rect_;
+        common::identity_container<epoc_video_posting_target> postings_;
 
         drivers::graphics_driver *driver_;
         std::unique_ptr<common::ro_stream> custom_stream_;
@@ -66,8 +71,9 @@ namespace eka2l1::dispatch {
         explicit epoc_video_player(drivers::graphics_driver *grdrv, drivers::audio_driver *auddrv);
         ~epoc_video_player();
 
-        bool set_target_window(kernel_system *kern, window_server *serv, const std::uint32_t wss_handle, const std::uint32_t win_handle);
-        void set_target_rect(const eka2l1::rect &display_rect);
+        std::int32_t register_window(kernel_system *kern, window_server *serv, const std::uint32_t wss_handle, const std::uint32_t win_handle);
+        void set_target_rect(const std::int32_t managed_handle, const eka2l1::rect &display_rect);
+        void unregister_window(const std::int32_t managed_handle);
 
         std::uint32_t max_volume() const;
         std::uint32_t current_volume() const;
@@ -80,25 +86,30 @@ namespace eka2l1::dispatch {
 
         void play(const std::uint64_t *range);
         void close();
+        void stop();
 
         bool set_done_notify(epoc::notify_info &info);
         void cancel_done_notify();
         void on_play_done(const int sts);
 
         void post_new_image(const std::uint8_t *buffer_data, const std::size_t buffer_size);
+        std::uint64_t position() const;
     };
 
     BRIDGE_FUNC_DISPATCHER(eka2l1::ptr<void>, evideo_player_inst);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_destroy, const std::uint32_t handle);
-    BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_set_owned_window, const std::uint32_t handle, const std::uint32_t wss_handle, const std::uint32_t win_ws_handle);
-    BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_set_display_rect, const std::uint32_t handle, const eka2l1::rect *disp_rect);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_register_window, const std::uint32_t handle, const std::uint32_t wss_handle, const std::uint32_t win_ws_handle);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_set_display_rect, const std::uint32_t handle, const std::int32_t managed_handle, const eka2l1::rect *disp_rect);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_unregister_window, const std::uint32_t handle, const std::int32_t managed_handle);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_open_file, const std::uint32_t handle, epoc::desc16 *filename);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_max_volume, const std::uint32_t handle);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_current_volume, const std::uint32_t handle);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_set_volume, const std::uint32_t handle, const std::int32_t new_vol);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_set_rotation, const std::uint32_t handle, const int rot_type);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_play, const std::uint32_t handle, const std::uint64_t *range);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_stop, const std::uint32_t handle);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_close, const std::uint32_t handle);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_set_done_notify, const std::uint32_t handle, eka2l1::ptr<epoc::request_status> sts);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_cancel_done_notify, const std::uint32_t handle);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_position, const std::uint32_t handle, std::uint64_t *position_us);
 }

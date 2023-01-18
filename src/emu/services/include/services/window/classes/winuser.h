@@ -54,7 +54,6 @@ namespace eka2l1::epoc {
     struct canvas_interface : public epoc::window {
         virtual std::uint32_t redraw_priority(int *shift = nullptr) = 0;
         virtual eka2l1::vec2 absolute_position() const = 0;
-        virtual eka2l1::vec2 get_origin() = 0;
 
         explicit canvas_interface(window_server_client_ptr client, screen *scr, window *parent)
             : window(client, scr, parent) {
@@ -121,7 +120,6 @@ namespace eka2l1::epoc {
 
         epoc::display_mode display_mode() const;
         eka2l1::vec2 absolute_position() const override;
-        eka2l1::vec2 get_origin() override;
 
         std::uint32_t redraw_priority(int *shift = nullptr) override;
         eka2l1::rect bounding_rect() const;
@@ -189,6 +187,13 @@ namespace eka2l1::epoc {
         void set_shape(service::ipc_context &context, ws_cmd &cmd);
         void enable_visiblity_change_events(service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
         void fix_native_orientation(service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
+        /**
+         * \brief Handler for InquireOffset opcode.
+         * 
+         * The offset calculates origin distance between this window and a targeted window given by the handle.
+         */
+        void inquire_offset(service::ipc_context &ctx, ws_cmd &cmd);
+
 
         epoc::window_group *get_group();
 
@@ -200,7 +205,6 @@ namespace eka2l1::epoc {
         explicit top_canvas(window_server_client_ptr client, screen *scr, window *parent);
 
         std::uint32_t redraw_priority(int *shift = nullptr) override;
-        eka2l1::vec2 get_origin() override;
         eka2l1::vec2 absolute_position() const override;
     };
 

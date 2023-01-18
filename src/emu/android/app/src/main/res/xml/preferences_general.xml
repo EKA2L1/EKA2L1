@@ -9,4 +9,11 @@
         android:defaultValue="true"
         android:key="hide-system-apps"
         android:title="@string/hide_system_apps" />
+    <SwitchPreferenceCompat
+        android:id="@+id/switchPreferenceCompat2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:defaultValue="false"
+        android:key="extensive-logging"
+        android:title="@string/extensive_logging" />
 </PreferenceScreen>

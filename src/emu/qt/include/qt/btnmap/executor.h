@@ -177,5 +177,9 @@ namespace eka2l1::qt::btnmap {
         ntimer *get_timing() {
             return timing_;
         }
+
+        bool is_active() const {
+            return !behaviours_.empty();
+        }
     };
 }

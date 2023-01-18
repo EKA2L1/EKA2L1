@@ -498,10 +498,13 @@ namespace eka2l1::drivers {
         std::size_t data_size = static_cast<std::size_t>(cmd.data_[1]);
         drivers::shader_module_type mod_type = static_cast<drivers::shader_module_type>(cmd.data_[2]);
         std::string *compile_log = reinterpret_cast<std::string*>(cmd.data_[4]);
+        drivers::handle *store = reinterpret_cast<drivers::handle*>(cmd.data_[3]);
 
         auto obj = make_shader_module(this);
         if (!obj->create(this, data, data_size, mod_type, compile_log)) {
             LOG_ERROR(DRIVER_GRAPHICS, "Fail to create shader module!");
+            *store = 0;
+
             finish(cmd.status_, -1);
             return;
         }
@@ -509,7 +512,6 @@ namespace eka2l1::drivers {
         std::unique_ptr<graphics_object> obj_casted = std::move(obj);
         drivers::handle res = append_graphics_object(obj_casted);
 
-        drivers::handle *store = reinterpret_cast<drivers::handle*>(cmd.data_[3]);
         *store = res;
 
         finish(cmd.status_, 0);

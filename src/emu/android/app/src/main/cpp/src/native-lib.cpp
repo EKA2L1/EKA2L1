@@ -367,3 +367,13 @@ Java_com_github_eka2l1_emu_EmulatorCamera_doesCameraAllowNewFrame(JNIEnv *env, j
 
     return collection->reserved_wants_new_frame(index);
 }
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_github_eka2l1_emu_Emulator_installNGageGame(JNIEnv *env, jclass clazz, jstring path) {
+    const char *cstr = env->GetStringUTFChars(path, nullptr);
+    std::string cpath = std::string(cstr);
+    env->ReleaseStringUTFChars(path, cstr);
+
+    return state->launcher->install_ngage_game(cpath);
+}

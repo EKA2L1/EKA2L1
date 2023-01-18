@@ -875,6 +875,13 @@ namespace eka2l1 {
             return "audio/mpeg";
         }
 
+        std::uint8_t magic8[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+        stream.read(magic8, 8);
+
+        if (memcmp(magic8, "ftypmp42", 8) == 0) {
+            return "video/mp4";
+        }
+
         return "";
     }
 
@@ -1109,7 +1116,7 @@ namespace eka2l1 {
     static constexpr std::uint8_t ENVIRONMENT_SLOT_MAIN = 1;
 
     bool applist_server::launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id,
-                                    kernel::process *requester, std::function<void()> app_exit_callback) {
+                                    kernel::process *requester, const epoc::uid known_uid, std::function<void()> app_exit_callback) {
         static constexpr std::size_t MINIMAL_LAUNCH_STACK_SIZE = 0x10000;
         static constexpr std::size_t MINIMAL_LAUNCH_STACK_SIZE_S3 = 0x80000;
 
@@ -1139,6 +1146,13 @@ namespace eka2l1 {
             pr->logon([app_exit_callback](kernel::process *) { app_exit_callback(); });
         }
 
+        if ((kern->get_epoc_version() < epocver::eka2) && known_uid) {
+            kernel::process_uid_type current_uid_type = pr->get_uid_type();
+            std::get<2>(current_uid_type) = known_uid;
+
+            pr->set_uid_type(current_uid_type);
+        }
+
         // Add it into our app running list
         return pr->run();
     }
@@ -1149,7 +1163,7 @@ namespace eka2l1 {
         registry.get_launch_parameter(executable_to_run, parameter);
 
         std::u16string apacmddat = parameter.to_string(legacy_level() < APA_LEGACY_LEVEL_MORDEN);
-        return launch_app(executable_to_run, apacmddat, thread_id, nullptr, app_exit_callback);
+        return launch_app(executable_to_run, apacmddat, thread_id, nullptr, registry.mandatory_info.uid, app_exit_callback);
     }
 
     std::optional<apa_app_masked_icon_bitmap> applist_server::get_icon(apa_app_registry &registry, const std::int8_t index) {
