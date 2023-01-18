@@ -53,7 +53,7 @@ namespace eka2l1 {
     };
 
     static constexpr const char *LOG_FILTER_NORMAL_USE_PRESET = "*:trace Emulated.Stdout:off Service.EFsrv:warn Service.Cenrep:off Kernel:Warn Service.Track:error";
-    static constexpr const char *LOG_FILTER_DEBUG_PRESET = "*:debug";
+    static constexpr const char *LOG_FILTER_DEBUG_PRESET = "*:trace";
 
     class base_logger {
     public:
