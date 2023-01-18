@@ -31,6 +31,7 @@
 #include <QPointer>
 #include <QProgressDialog>
 #include <memory>
+#include <map>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -110,6 +111,8 @@ private:
     btnet_dialog *btnet_dialog_;
     editor_widget *editor_widget_;
     eka2l1::qt::btnmap::executor *map_executor_;
+
+    std::map<int, int> mouse_to_touch_index_emu_;
 
     void setup_screen_draw();
     void setup_app_list(const bool load_now = false);
@@ -223,6 +226,8 @@ public:
 
     bool input_dialog_open(const std::u16string &inital_text, const int max_length, eka2l1::drivers::ui::input_dialog_complete_callback complete_callback);
     void input_dialog_close();
+
+    int map_mouse_id_to_touch_index(int mouse_id, const bool on_release);
 
 private:
     Ui::main_window *ui_;

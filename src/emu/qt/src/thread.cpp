@@ -90,7 +90,7 @@ static void on_ui_window_mouse_evt(void *userdata, eka2l1::vec3 mouse_pos, int b
 
     const float scale = emu->symsys->get_config()->ui_scale;
     auto mouse_evt = make_mouse_event_driver(mouse_pos_x / scale, mouse_pos_y / scale, mouse_pos_z / scale,
-        button, action, mouse_id);
+        button, action, emu->ui_main->map_mouse_id_to_touch_index(mouse_id, (action == 2)));
 
     if ((emu->symsys) && emu->winserv) {
         emu->winserv->queue_input_from_driver(mouse_evt);
