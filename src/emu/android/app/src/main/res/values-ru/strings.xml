@@ -19,6 +19,7 @@
     <string name="opengl_required">Приложение требует OpenGL ES 3.0+.</string>
     <string name="warning">Внимание</string>
     <string name="scoped_storage_warning">Ваши пользовательские данные хранятся в папке, которая <b>будет удалена</b> при удалении приложения:\n</string>
+    <string name="install_ng_game">Install N-Gage game</string>
     <string name="install">Установить</string>
     <string name="rescan_devices">Пересканировать устройства</string>
     <string name="device_dump">Дамп устройства</string>
@@ -143,6 +144,7 @@
     <string name="enter_name">Введите название</string>
     <string name="set_default_profile_description">Выбрать этот шаблон как стандартную настройку для всех приложений, которые будут устанавливаться позже</string>
     <string name="error_name_exists">Уже есть, введите другое название</string>
+    <string name="extensive_logging">Extensive logging</string>
     <string name="mapping_dialog_title">Нажмите кнопку</string>
     <string name="mapping_dialog_message" formatted="false">Текущий маппинг: %1$s</string>
     <string name="reset_mapping">Сброс</string>
@@ -159,4 +161,8 @@
     <string name="about_icon_by">&lt;BR&gt;Иконка от: </string>
     <string name="version">Версия: </string>
     <string name="recommended_devices_note"><b>Примечание:</b> Рекомендуется использовать прошивку для установки устройств с S60v3 и выше.</string>
+    <string name="install_ng_game_cant_find_data_folder">Can\'t find the game data folder!</string>
+    <string name="install_ng_game_more_than_one_game">В данной папке находится более одной игры!</string>
+    <string name="install_ng_game_no_game_info_file">Файл информации об игре не существует в папке с игровой карточкой!</string>
+    <string name="install_ng_game_corrupted_game_info">The game information file has been corrupted. Please check your data\'s validity!</string>
 </resources>
