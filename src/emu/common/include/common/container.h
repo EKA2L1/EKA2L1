@@ -59,6 +59,12 @@ namespace eka2l1::common {
             typename std::vector<T>::iterator ite_;
             identity_container *container_;
 
+            typedef std::size_t difference_type;
+            typedef T value_type;
+            typedef T* pointer;
+            typedef T& reference;
+            typedef std::forward_iterator_tag iterator_category;
+
             iterator(identity_container *container, typename std::vector<T>::iterator ite)
                 : ite_(ite)
                 , container_(container) {
