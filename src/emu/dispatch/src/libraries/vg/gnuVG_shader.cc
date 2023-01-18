@@ -93,8 +93,8 @@ namespace gnuVG {
 			&(vec[0]), 2 * sizeof(float));
 		current_cmdbuilder_->set_dynamic_uniform(linear_normal, eka2l1::drivers::shader_var_type::vec2,
 			&(vec[2]), 2 * sizeof(float));
-		current_cmdbuilder_->set_dynamic_uniform(linear_length, eka2l1::drivers::shader_var_type::vec2,
-			&(vec[4]), 2 * sizeof(float));
+		current_cmdbuilder_->set_dynamic_uniform(linear_length, eka2l1::drivers::shader_var_type::real,
+			&(vec[4]), sizeof(float));
 	}
 
 	void Shader::set_radial_parameters(const float *vec) {
@@ -116,6 +116,8 @@ namespace gnuVG {
 			invfactor, max_stops * sizeof(float));
 		current_cmdbuilder_->set_dynamic_uniform(stop_colors, eka2l1::drivers::shader_var_type::vec4,
 			colors, max_stops * 4 * sizeof(float));
+		current_cmdbuilder_->set_dynamic_uniform(nr_stops, eka2l1::drivers::shader_var_type::integer,
+			&max_stops, sizeof(std::int32_t));
 	}
 
 	void Shader::set_texture_matrix(const float *mtrx) {

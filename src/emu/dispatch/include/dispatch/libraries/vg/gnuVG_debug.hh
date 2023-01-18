@@ -21,4 +21,4 @@
 
 #include <common/log.h>
 
-#define GNUVG_DEBUG(...) LOG_DEBUG(eka2l1::HLE_DISPATCHER, __VA_ARGS__)
+#define GNUVG_DEBUG(...) /*LOG_DEBUG(eka2l1::HLE_DISPATCHER, __VA_ARGS__)*/
