@@ -373,6 +373,7 @@ namespace eka2l1::manager {
             return;
         }
 
+        bool should_full_flush = (data[0] & 0xF800) > 0xE800;
         source_insts[pr->get_uid()] = data[0];
 
         if (target & 1) {
@@ -385,10 +386,15 @@ namespace eka2l1::manager {
         kernel_system *kern = sys->get_kernel_system();
 
         // Must clear cache of all cores, but since we only have one core now...
+#if EKA2L1_ARCH(ARM64)
+        if (should_full_flush) {
+            kern->get_cpu()->clear_instruction_cache();
+        } else
+#endif
         kern->get_cpu()->imb_range((target & ~1), (target & 1) ? 2 : 4);
     }
 
-    bool scripts::write_back_breakpoint(kernel::process *pr, const vaddress target) {
+    bool scripts::write_back_breakpoint(kernel::process *pr, const vaddress target, bool *should_full_flush) {
         if (pr->get_exit_type() != kernel::entity_exit_type::pending) {
             return true;
         }
@@ -406,6 +412,10 @@ namespace eka2l1::manager {
         }
 
         data[0] = source_value->second;
+
+        if (should_full_flush) {
+            *should_full_flush = (source_value->second & 0xF800) > 0xE800;
+        }
 
         sources.erase(source_value);
         return true;
@@ -700,12 +710,20 @@ namespace eka2l1::manager {
                 const std::uint32_t last_breakpoint_script_size_ = (running_core->get_cpsr() & 0x20) ? 2 : 4;
                 info.addr_ = cur_addr;
 
-                write_back_breakpoint(correspond->owning_process(), cur_addr);
+                bool should_full_flush = false;
+                write_back_breakpoint(correspond->owning_process(), cur_addr, &should_full_flush);
+
+#if EKA2L1_ARCH(ARM64)
+                if (should_full_flush) {
+                    running_core->clear_instruction_cache();
+                } else
+#endif
+                {
+                    running_core->imb_range(addr, last_breakpoint_script_size_);
+                }
 
                 correspond->get_thread_context().set_pc(addr);
-
                 running_core->set_pc(addr);
-                running_core->imb_range(addr, last_breakpoint_script_size_);
             }
         }
     }

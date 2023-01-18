@@ -657,23 +657,23 @@ namespace eka2l1::epoc {
         lang_maximum = lang_none // This must always be equal to the last (largest) language enum.
     };
 
-    enum date_format {
+    enum date_format : std::uint32_t {
         date_format_america,
         date_format_european,
         date_format_japan
     };
 
-    enum time_format {
+    enum time_format : std::uint32_t {
         time_format_twelve_hours,
         time_format_twenty_four_hours
     };
 
-    enum locale_pos {
+    enum locale_pos : std::uint32_t  {
         locale_before,
         locale_after,
     };
 
-    enum negative_currency_format {
+    enum negative_currency_format : std::uint32_t  {
         negative_currency_leading_minus_sign,
         negative_currency_in_brackets,
         negative_currency_invervening_minus_sign_with_spaces,
@@ -681,7 +681,7 @@ namespace eka2l1::epoc {
         negative_currency_trailing_minus_sign,
     };
 
-    enum daylight_saving_zone {
+    enum daylight_saving_zone : std::uint32_t  {
         daylight_saving_zone_dst_home = 0x40000000,
         daylight_saving_zone_none = 0,
         daylight_saving_zone_european = 1,
@@ -689,7 +689,7 @@ namespace eka2l1::epoc {
         daylight_saving_zone_southern = 4
     };
 
-    enum day {
+    enum day : std::uint32_t  {
         monday,
         tuesday,
         wednesday,
@@ -699,17 +699,17 @@ namespace eka2l1::epoc {
         sunday
     };
 
-    enum clock_format {
+    enum clock_format : std::uint32_t  {
         clock_analog,
         clock_digital
     };
 
-    enum units_format {
+    enum units_format : std::uint32_t  {
         units_imperal,
         units_metric
     };
 
-    enum digit_type {
+    enum digit_type : std::uint32_t  {
         digit_type_unknown = 0x0000,
         digit_type_western = 0x0030,
         digit_type_arabic_indic = 0x0660,
@@ -731,11 +731,12 @@ namespace eka2l1::epoc {
         digit_type_all_types = 0xFFFF
     };
 
-    enum device_time_state {
+    enum device_time_state : std::uint32_t  {
         device_user_time,
         nitz_network_time_sync
     };
 
+#pragma pack(push, 1)
     struct locale {
         std::int32_t country_code_;
         std::int32_t universal_time_offset_;
@@ -767,7 +768,9 @@ namespace eka2l1::epoc {
         device_time_state device_time_state_;
         std::int32_t spare_[0x12];
     };
+#pragma pack(pop)
 
+#pragma pack(push, 1)
     struct locale_language {
         epoc::language language;
         eka2l1::ptr<char> date_suffix_table;
@@ -778,6 +781,7 @@ namespace eka2l1::epoc {
         eka2l1::ptr<char> am_pm_table;
         eka2l1::ptr<uint16_t> msg_table;
     };
+#pragma pack(pop)
 
     struct locale_locale_settings {
         char16_t currency_symbols[9];

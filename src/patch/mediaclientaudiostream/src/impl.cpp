@@ -147,7 +147,7 @@ void CMMFMdaOutputBufferQueue::StartTransfer() {
 }
 
 CMMFMdaOutputOpen::CMMFMdaOutputOpen()
-    : CTimer(CActive::EPriorityStandard)
+    : CTimer(CActive::EPriorityHigh)
     , iIsFixup(EFalse)
     , iConstructed(EFalse)
     , iParent(NULL) {

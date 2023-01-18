@@ -3052,11 +3052,11 @@ namespace eka2l1::dispatch {
         // Empty
     }
     
-    BRIDGE_FUNC_LIBRARY(void, gl_point_parameter_f_emu, std::uint32_t pname, float value) {
+    BRIDGE_FUNC_LIBRARY(void, gl_point_parameter_f_emu, std::uint32_t pname, float param) {
         // Empty
     }
 
-    BRIDGE_FUNC_LIBRARY(void, gl_point_parameter_fv_emu, std::uint32_t pname, float *values) {
+    BRIDGE_FUNC_LIBRARY(void, gl_point_parameter_fv_emu, std::uint32_t pname, const float *param) {
         // Empty
     }
 
