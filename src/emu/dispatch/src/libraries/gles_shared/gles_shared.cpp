@@ -939,6 +939,10 @@ namespace eka2l1::dispatch {
             context_.return_handle_to_pool(GLES_OBJECT_TEXTURE, driver_handle_, static_cast<int>(texture_type_));
         }
 
+        for (gles_driver_texture_observer *observer: texture_observers_) {
+            observer->on_texture_destruction(this);
+        }
+
         update_link_.deque();
     }
     
@@ -1142,6 +1146,19 @@ namespace eka2l1::dispatch {
 
         context_.cmd_builder_.set_texture_filter(driver_handle_, true, fil_min);
         context_.cmd_builder_.set_texture_filter(driver_handle_, false, fil_mag);
+    }
+
+    void gles_driver_texture::add_texture_observer(gles_driver_texture_observer *observer) {
+        if (std::find(texture_observers_.begin(), texture_observers_.end(), observer) == texture_observers_.end()) {
+            texture_observers_.push_back(observer);
+        }
+    }
+
+    void gles_driver_texture::remove_texture_observer(gles_driver_texture_observer *observer) {
+        auto ite = std::find(texture_observers_.begin(), texture_observers_.end(), observer);
+        if (ite != texture_observers_.end()) {
+            texture_observers_.erase(ite);
+        }
     }
 
     gles_driver_buffer::gles_driver_buffer(egl_context_es_shared &ctx)

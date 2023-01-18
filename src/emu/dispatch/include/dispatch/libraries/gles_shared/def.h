@@ -110,6 +110,13 @@ namespace eka2l1::dispatch {
         GLES_DRIVER_TEXTURE_TYPE_CUBE = 2
     };
 
+    struct gles_driver_texture;
+
+    struct gles_driver_texture_observer {
+    public:
+        virtual void on_texture_destruction(gles_driver_texture *texture) = 0;
+    };
+
     struct gles_driver_texture : public gles_driver_object {
     private:
         friend struct egl_context_es_shared;
@@ -130,6 +137,8 @@ namespace eka2l1::dispatch {
 
         common::double_linked_queue_element update_link_;
         std::uint8_t change_flags_;
+
+        std::vector<gles_driver_texture_observer *> texture_observers_;
 
         enum {
             FLAG_MIN_FILTER_CHANGED = 1 << 0,
@@ -217,6 +226,8 @@ namespace eka2l1::dispatch {
         void set_mag_filter(const std::uint32_t mag_filter);
         void set_wrap_s(const std::uint32_t wrap_s);
         void set_wrap_t(const std::uint32_t wrap_t);
+        void add_texture_observer(gles_driver_texture_observer *observer);
+        void remove_texture_observer(gles_driver_texture_observer *observer);
     };
 
     struct gles_driver_buffer : public gles_driver_object {

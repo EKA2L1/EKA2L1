@@ -245,7 +245,7 @@ namespace eka2l1::dispatch {
         void try_upscale();
     };
 
-    struct gles_framebuffer_object : public gles_driver_object {
+    struct gles_framebuffer_object : public gles_driver_object, public gles_driver_texture_observer {
     private:
         gles_driver_object *attached_color_;
         gles_driver_object *attached_depth_;
@@ -272,6 +272,7 @@ namespace eka2l1::dispatch {
         std::uint32_t ready_for_draw(egl_controller &controller, drivers::graphics_driver *drv);
         std::uint32_t format_compatible_for_read(const std::uint32_t format, const std::uint32_t dttype) const;
         bool get_pair_read_specs(std::uint32_t &format, std::uint32_t &ttype) const;
+        void on_texture_destruction(gles_driver_texture *texture);
 
         gles_object_type object_type() const override {
             return GLES_OBJECT_FRAMEBUFFER;

@@ -109,7 +109,8 @@ namespace eka2l1::drivers {
     };
 
     enum graphics_driver_extension {
-        graphics_driver_extension_anisotrophy_filtering = 1 << 0
+        graphics_driver_extension_anisotrophy_filtering = 1 << 0,
+        graphics_driver_extension_float_precision_qualifier = 1 << 1
     };
 
     enum graphics_driver_extension_query {
