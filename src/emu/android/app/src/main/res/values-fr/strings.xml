@@ -19,6 +19,7 @@
     <string name="opengl_required">L\'application nécessite OpenGL ES 3.0+.</string>
     <string name="warning">ATTENTION</string>
     <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
+    <string name="install_ng_game">Install N-Gage game</string>
     <string name="install">Installer</string>
     <string name="rescan_devices">Rescanner les appareils</string>
     <string name="device_dump">Dump de l\'appareil</string>
@@ -143,6 +144,7 @@
     <string name="enter_name">Enter name</string>
     <string name="set_default_profile_description">Select this profile as a standard settings for all apps that will be installed later</string>
     <string name="error_name_exists">Already exists, enter other name</string>
+    <string name="extensive_logging">Extensive logging</string>
     <string name="mapping_dialog_title">Appuyez sur une touche</string>
     <string name="mapping_dialog_message" formatted="false">Mappage actuel : %1$s</string>
     <string name="reset_mapping">Réinitialiser</string>
@@ -159,4 +161,8 @@
     <string name="about_icon_by">&lt;BR&gt;Icône par: </string>
     <string name="version">Version : </string>
     <string name="recommended_devices_note"><b>Note:</b> Il est recommandé d\'utiliser le firmware pour l\'installation des appareils à partir de S60v3 et supérieurs.</string>
+    <string name="install_ng_game_cant_find_data_folder">Can\'t find the game data folder!</string>
+    <string name="install_ng_game_more_than_one_game">There is more than one game in the given card game folder!</string>
+    <string name="install_ng_game_no_game_info_file">The game information file does not exist in the card game folder!</string>
+    <string name="install_ng_game_corrupted_game_info">The game information file has been corrupted. Please check your data\'s validity!</string>
 </resources>
