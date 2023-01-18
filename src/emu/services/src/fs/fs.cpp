@@ -269,6 +269,8 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(file_set_att, epoc::fs_msg_file_set_att, "Fs::FileSetAtt");
             HANDLE_CLIENT_IPC(file_modified, epoc::fs_msg_file_modified, "Fs::FileModified");
             HANDLE_CLIENT_IPC(file_set_modified, epoc::fs_msg_file_set_modified, "Fs::FileSetModified");
+            HANDLE_CLIENT_IPC(file_lock, epoc::fs_msg_file_lock, "Fs::FileLock");
+            HANDLE_CLIENT_IPC(file_unlock, epoc::fs_msg_file_unlock, "Fs::FileUnlock");
             HANDLE_CLIENT_IPC(is_file_in_rom, epoc::fs_msg_is_file_in_rom, "Fs::IsFileInRom");
             HANDLE_CLIENT_IPC(is_valid_name, epoc::fs_msg_is_valid_name, "Fs::IsValidName");
             HANDLE_CLIENT_IPC(open_dir, epoc::fs_msg_dir_open, "Fs::OpenDir");
@@ -893,6 +895,16 @@ namespace eka2l1 {
         std::u16string fs_stub_name = (drv == drive_z) ? u"ROFS" : u"FAT";
 
         ctx->write_arg(0, fs_stub_name);
+        ctx->complete(epoc::error_none);
+    }
+
+    void fs_server_client::file_lock(service::ipc_context *ctx) {
+        LOG_TRACE(SERVICE_EFSRV, "Locking file unimplemented!");
+        ctx->complete(epoc::error_none);
+    }
+
+    void fs_server_client::file_unlock(service::ipc_context *ctx) {
+        LOG_TRACE(SERVICE_EFSRV, "Unlocking file unimplemented!");
         ctx->complete(epoc::error_none);
     }
 }

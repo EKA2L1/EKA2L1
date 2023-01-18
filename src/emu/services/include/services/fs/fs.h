@@ -127,6 +127,8 @@ namespace eka2l1 {
         void file_full_name(service::ipc_context *ctx);
         void file_att(service::ipc_context *ctx);
         void file_set_att(service::ipc_context *ctx);
+        void file_lock(service::ipc_context *ctx);
+        void file_unlock(service::ipc_context *ctx);
 
         enum exist_check_mode {
             exist_mode_dont_care = 0,

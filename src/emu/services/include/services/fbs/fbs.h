@@ -223,6 +223,7 @@ namespace eka2l1 {
         void get_default_glyph_bitmap_type(service::ipc_context *ctx);
         void has_character(service::ipc_context *ctx);
         void add_font_file_store(service::ipc_context *ctx);
+        void remove_font_file_store(service::ipc_context *ctx);
         void get_font_shaping(service::ipc_context *ctx);
         void delete_font_shaping(service::ipc_context *ctx);
         void get_font_table(service::ipc_context *ctx);
