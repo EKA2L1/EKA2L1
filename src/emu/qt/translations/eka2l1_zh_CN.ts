@@ -71,9 +71,17 @@
     </message>
   </context>
   <context>
+    <name>applist_device_combo</name>
+    <message>
+      <location filename="../src/applistwidget.cpp" line="95"/>
+      <source>Device</source>
+      <translation>设备</translation>
+    </message>
+  </context>
+  <context>
     <name>applist_search_bar</name>
     <message>
-      <location filename="../src/applistwidget.cpp" line="51"/>
+      <location filename="../src/applistwidget.cpp" line="63"/>
       <source>Search</source>
       <translation>搜索</translation>
     </message>
@@ -81,81 +89,209 @@
   <context>
     <name>applist_widget</name>
     <message>
-      <location filename="../src/applistwidget.cpp" line="386"/>
+      <location filename="../src/applistwidget.cpp" line="712"/>
       <source>&lt;br&gt;App UID: 0x%1</source>
       <translation>&lt;br&gt;应用UID：0x%1</translation>
+    </message>
+    <message>
+      <location filename="../src/applistwidget.cpp" line="784"/>
+      <source>Enter a new name</source>
+      <translation type="unfinished">Enter a new name</translation>
+    </message>
+    <message>
+      <location filename="../src/applistwidget.cpp" line="793"/>
+      <source>Update name failed</source>
+      <translation type="unfinished">Update name failed</translation>
+    </message>
+    <message>
+      <location filename="../src/applistwidget.cpp" line="793"/>
+      <source>An error occured while trying to rename the app!</source>
+      <translation type="unfinished">An error occured while trying to rename the app!</translation>
+    </message>
+    <message>
+      <location filename="../src/applistwidget.cpp" line="802"/>
+      <source>Delete app failed</source>
+      <translation type="unfinished">Delete app failed</translation>
+    </message>
+    <message>
+      <location filename="../src/applistwidget.cpp" line="802"/>
+      <source>An error occured while trying to delete the app!</source>
+      <translation type="unfinished">An error occured while trying to delete the app!</translation>
+    </message>
+    <message>
+      <location filename="../src/applistwidget.cpp" line="822"/>
+      <source>Rename</source>
+      <translation>重命名</translation>
+    </message>
+    <message>
+      <location filename="../src/applistwidget.cpp" line="823"/>
+      <source>Delete</source>
+      <translation>删除</translation>
+    </message>
+  </context>
+  <context>
+    <name>btnet_dialog</name>
+    <message>
+      <location filename="../src/btnet_dialog.ui" line="20"/>
+      <source>Bluetooth netplay settings</source>
+      <translation type="unfinished">Bluetooth netplay settings</translation>
+    </message>
+    <message>
+      <location filename="../src/btnet_dialog.ui" line="47"/>
+      <source>Mode</source>
+      <translation type="unfinished">Mode</translation>
+    </message>
+    <message>
+      <location filename="../src/btnet_dialog.ui" line="55"/>
+      <source>Off</source>
+      <translation type="unfinished">Off</translation>
+    </message>
+    <message>
+      <location filename="../src/btnet_dialog.ui" line="60"/>
+      <source>Direct IP</source>
+      <translation type="unfinished">Direct IP</translation>
+    </message>
+    <message>
+      <location filename="../src/btnet_dialog.ui" line="65"/>
+      <source>Local LAN</source>
+      <translation type="unfinished">Local LAN</translation>
+    </message>
+    <message>
+      <location filename="../src/btnet_dialog.ui" line="70"/>
+      <source>Server</source>
+      <translation type="unfinished">Server</translation>
+    </message>
+    <message>
+      <location filename="../src/btnet_dialog.ui" line="114"/>
+      <source>Server address</source>
+      <translation type="unfinished">Server address</translation>
+    </message>
+    <message>
+      <location filename="../src/btnet_dialog.ui" line="133"/>
+      <source>Enable UPnP (for IPv4 public play)</source>
+      <translation type="unfinished">Enable UPnP (for IPv4 public play)</translation>
+    </message>
+    <message>
+      <location filename="../src/btnet_dialog.ui" line="165"/>
+      <source>Save</source>
+      <translation type="unfinished">Save</translation>
+    </message>
+    <message>
+      <location filename="../src/btnet_dialog.ui" line="187"/>
+      <source>Open friends&apos; IP editor</source>
+      <translation type="unfinished">Open friends&apos; IP editor</translation>
+    </message>
+    <message>
+      <location filename="../src/btnet_dialog.ui" line="224"/>
+      <source>Players with the same password will be able to see each others. This can be empty.</source>
+      <translation type="unfinished">Players with the same password will be able to see each others. This can be empty.</translation>
+    </message>
+    <message>
+      <location filename="../src/btnet_dialog.ui" line="227"/>
+      <source>Password</source>
+      <translation type="unfinished">Password</translation>
+    </message>
+    <message>
+      <location filename="../src/btnet_dialog.ui" line="237"/>
+      <source>Generate random</source>
+      <translation type="unfinished">Generate random</translation>
+    </message>
+    <message>
+      <location filename="../src/btnet_dialog.ui" line="244"/>
+      <source>Clear</source>
+      <translation type="unfinished">Clear</translation>
+    </message>
+    <message>
+      <location filename="../src/btnet_dialog.cpp" line="119"/>
+      <source>Configuration not saved</source>
+      <translation type="unfinished">Configuration not saved</translation>
+    </message>
+    <message>
+      <location filename="../src/btnet_dialog.cpp" line="119"/>
+      <source>The Bluetooth netplay configuration has not been saved. Do you want to save?</source>
+      <translation type="unfinished">The Bluetooth netplay configuration has not been saved. Do you want to save?</translation>
+    </message>
+    <message>
+      <location filename="../src/btnet_dialog.cpp" line="127"/>
+      <source>Relaunch needed</source>
+      <translation>需要重启</translation>
+    </message>
+    <message>
+      <location filename="../src/btnet_dialog.cpp" line="127"/>
+      <source>This change will be effective on the next launch of the emulator.</source>
+      <translation>此更改将在下次启动模拟器时生效。</translation>
     </message>
   </context>
   <context>
     <name>btnetplay_friends_dialog</name>
     <message>
-      <location filename="../src/btnetplay_friends_dialog.cpp" line="51"/>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="70"/>
       <source>Modify friends&apos; IP addresses</source>
       <translation>修改朋友的IP地址</translation>
     </message>
     <message>
-      <location filename="../src/btnetplay_friends_dialog.cpp" line="66"/>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="85"/>
       <source>IP address (IPv4 or IPv6)</source>
       <translation>IP地址 (IPv4或IPv6)</translation>
     </message>
     <message>
-      <location filename="../src/btnetplay_friends_dialog.cpp" line="71"/>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="90"/>
       <source>Port (can be empty)</source>
       <translation>端口（可以留空）</translation>
     </message>
     <message>
-      <location filename="../src/btnetplay_friends_dialog.cpp" line="114"/>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="133"/>
       <source>Add more</source>
       <translation>添加更多</translation>
     </message>
     <message>
-      <location filename="../src/btnetplay_friends_dialog.cpp" line="115"/>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="134"/>
       <source>Remove</source>
       <translation>移除</translation>
     </message>
     <message>
-      <location filename="../src/btnetplay_friends_dialog.cpp" line="116"/>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="135"/>
       <source>Update</source>
       <translation>更新</translation>
     </message>
     <message>
-      <location filename="../src/btnetplay_friends_dialog.cpp" line="182"/>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="201"/>
       <source>Update friends success!</source>
       <translation>更新好友成功！</translation>
     </message>
     <message>
-      <location filename="../src/btnetplay_friends_dialog.cpp" line="182"/>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="201"/>
       <source>Friends&apos; IP addresses have been successfully saved!</source>
       <translation>好友的IP地址已成功保存！</translation>
     </message>
     <message>
-      <location filename="../src/btnetplay_friends_dialog.cpp" line="195"/>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="214"/>
       <source>Friend %1 has empty IP address!
 </source>
       <translation>朋友%1的IP地址为空！
 </translation>
     </message>
     <message>
-      <location filename="../src/btnetplay_friends_dialog.cpp" line="197"/>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="216"/>
       <source>Friend %1 has invalid IP address!
 </source>
       <translation>好友%1的IP地址无效！
 </translation>
     </message>
     <message>
-      <location filename="../src/btnetplay_friends_dialog.cpp" line="202"/>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="221"/>
       <source>Friend %1 has invalid port number (must be between 0 and 65535)!
 </source>
       <translation>好友%1的端口号无效（必须在0至65535之间）！
 </translation>
     </message>
     <message>
-      <location filename="../src/btnetplay_friends_dialog.cpp" line="229"/>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="248"/>
       <source>Some errors in updating friends!</source>
       <translation>更新好友时出现一些错误！</translation>
     </message>
     <message>
-      <location filename="../src/btnetplay_friends_dialog.cpp" line="230"/>
+      <location filename="../src/btnetplay_friends_dialog.cpp" line="249"/>
       <source>Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</source>
       <translation type="unfinished">Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</translation>
     </message>
@@ -400,6 +536,50 @@
     </message>
   </context>
   <context>
+    <name>launch_process_dialog</name>
+    <message>
+      <location filename="../src/launch_process_dialog.ui" line="14"/>
+      <source>Launch process</source>
+      <translation type="unfinished">Launch process</translation>
+    </message>
+    <message>
+      <location filename="../src/launch_process_dialog.ui" line="31"/>
+      <source>Arguments</source>
+      <translation type="unfinished">Arguments</translation>
+    </message>
+    <message>
+      <location filename="../src/launch_process_dialog.ui" line="51"/>
+      <source>Executable path</source>
+      <translation type="unfinished">Executable path</translation>
+    </message>
+    <message>
+      <location filename="../src/launch_process_dialog.ui" line="78"/>
+      <source>Launch</source>
+      <translation type="unfinished">Launch</translation>
+    </message>
+    <message>
+      <location filename="../src/launch_process_dialog.ui" line="85"/>
+      <source>Cancel</source>
+      <translation>取消</translation>
+    </message>
+    <message>
+      <location filename="../src/launch_process_dialog.cpp" line="22"/>
+      <location filename="../src/launch_process_dialog.cpp" line="33"/>
+      <source>Launch failed</source>
+      <translation type="unfinished">Launch failed</translation>
+    </message>
+    <message>
+      <location filename="../src/launch_process_dialog.cpp" line="22"/>
+      <source>The executable path field is empty!</source>
+      <translation type="unfinished">The executable path field is empty!</translation>
+    </message>
+    <message>
+      <location filename="../src/launch_process_dialog.cpp" line="33"/>
+      <source>The executable path is invalid or the executable is corrupted. Check the log for more info!</source>
+      <translation type="unfinished">The executable path is invalid or the executable is corrupted. Check the log for more info!</translation>
+    </message>
+  </context>
+  <context>
     <name>main_window</name>
     <message>
       <location filename="../src/mainwindow.ui" line="50"/>
@@ -417,396 +597,467 @@
       <translation>安装</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="81"/>
+      <location filename="../src/mainwindow.ui" line="83"/>
       <source>Mount game card dump</source>
       <translation>挂载游戏卡转储</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="98"/>
+      <location filename="../src/mainwindow.ui" line="100"/>
       <source>View</source>
       <translation>查看</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="102"/>
+      <location filename="../src/mainwindow.ui" line="104"/>
       <source>Rotate screen</source>
       <translation>旋转屏幕</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="114"/>
+      <location filename="../src/mainwindow.ui" line="116"/>
       <source>Help</source>
       <translation>帮助</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="121"/>
+      <location filename="../src/mainwindow.ui" line="123"/>
       <source>Emulation</source>
       <translation>模拟</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="129"/>
+      <location filename="../src/mainwindow.ui" line="133"/>
       <source>Bluetooth</source>
       <translation type="unfinished">Bluetooth</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="133"/>
+      <location filename="../src/mainwindow.ui" line="137"/>
       <source>Netplay</source>
       <translation type="unfinished">Netplay</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="141"/>
+      <location filename="../src/mainwindow.ui" line="146"/>
       <source>Control</source>
       <translation>控制</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="156"/>
+      <location filename="../src/mainwindow.ui" line="161"/>
       <source>About</source>
       <translation>关于</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="161"/>
+      <location filename="../src/mainwindow.ui" line="166"/>
       <source>Package</source>
       <translation>包</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="166"/>
+      <location filename="../src/mainwindow.ui" line="171"/>
       <source>Device</source>
       <translation>设备</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="171"/>
+      <location filename="../src/mainwindow.ui" line="176"/>
       <source>Package manager</source>
       <translation>包管理器</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="176"/>
+      <location filename="../src/mainwindow.ui" line="181"/>
       <source>Settings</source>
       <translation>设置</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="184"/>
+      <location filename="../src/mainwindow.ui" line="189"/>
       <source>Pause</source>
       <translation>暂停</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="189"/>
+      <location filename="../src/mainwindow.ui" line="194"/>
       <source>Stop</source>
       <translation>停止</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="194"/>
+      <location filename="../src/mainwindow.ui" line="199"/>
       <source>Restart</source>
       <translation>重启</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="199"/>
+      <location filename="../src/mainwindow.ui" line="204"/>
       <source>Threads</source>
       <translation>线程</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="204"/>
+      <location filename="../src/mainwindow.ui" line="209"/>
       <source>Mutexes</source>
       <translation>互斥锁</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="209"/>
+      <location filename="../src/mainwindow.ui" line="214"/>
       <source>Chunks</source>
       <translation>数据块</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="214"/>
+      <location filename="../src/mainwindow.ui" line="219"/>
       <source>Window tree</source>
       <translation>窗口树</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="222"/>
+      <location filename="../src/mainwindow.ui" line="227"/>
       <source>Fullscreen</source>
       <translation>全屏</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="233"/>
+      <location filename="../src/mainwindow.ui" line="238"/>
       <source>Recent dumps</source>
       <translation>最近转储的</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="273"/>
+      <location filename="../src/mainwindow.ui" line="278"/>
       <source>Folder</source>
       <translation>文件夹</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="283"/>
+      <location filename="../src/mainwindow.ui" line="288"/>
       <source>Refresh app list</source>
       <translation>刷新应用列表</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="288"/>
+      <location filename="../src/mainwindow.ui" line="293"/>
       <source>Friends&apos;s IP addresses</source>
       <translation type="unfinished">Friends&apos;s IP addresses</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="293"/>
+      <location filename="../src/mainwindow.ui" line="298"/>
       <source>Button mapping editor</source>
       <translation type="unfinished">Button mapping editor</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="298"/>
+      <location filename="../src/mainwindow.ui" line="303"/>
       <source>Touch mapping editor</source>
       <translation type="unfinished">Touch mapping editor</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="303"/>
+      <location filename="../src/mainwindow.ui" line="308"/>
       <source>N-Gage card game</source>
       <translation type="unfinished">N-Gage card game</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="308"/>
+      <location filename="../src/mainwindow.ui" line="313"/>
       <source>Check for update</source>
       <translation type="unfinished">Check for update</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="241"/>
+      <location filename="../src/mainwindow.ui" line="318"/>
+      <source>Launch process</source>
+      <translation type="unfinished">Launch process</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.ui" line="328"/>
+      <source>Configure</source>
+      <translation type="unfinished">Configure</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="248"/>
       <source>Clear menu</source>
       <translation>清除菜单</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="316"/>
+      <location filename="../src/mainwindow.cpp" line="323"/>
       <source>Touchscreen disabled</source>
       <translation>触摸屏已禁用</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="316"/>
+      <location filename="../src/mainwindow.cpp" line="323"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
       <translation>您当前的一些按键绑定与鼠标按钮相关联。因此模拟触摸屏已禁用。&lt;br&gt;&lt;br&gt;&lt;b&gt;注意：&lt;/b&gt;&lt;br&gt;可通过键盘按键重新绑定鼠标按钮重新启用触摸屏。</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="317"/>
-      <location filename="../src/mainwindow.cpp" line="391"/>
+      <location filename="../src/mainwindow.cpp" line="324"/>
+      <location filename="../src/mainwindow.cpp" line="404"/>
       <source>Don&apos;t show this again</source>
       <translation>不再显示</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="390"/>
+      <location filename="../src/mainwindow.cpp" line="403"/>
       <source>No device installed</source>
       <translation>未安装设备</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="390"/>
+      <location filename="../src/mainwindow.cpp" line="403"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
       <translation>您尚未安装任何设备，请安装设备或在GitHub上查询EKA2L1项目中的Wiki说明页</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="642"/>
+      <location filename="../src/mainwindow.cpp" line="663"/>
       <source>Installing &lt;b&gt;%1&lt;/b&gt;</source>
       <translation type="unfinished">Installing &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="655"/>
+      <location filename="../src/mainwindow.cpp" line="676"/>
       <source>Choose the N-Gage game card folder</source>
       <translation type="unfinished">Choose the N-Gage game card folder</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="663"/>
+      <location filename="../src/mainwindow.cpp" line="684"/>
       <source>Installing N-Gage game...</source>
       <translation type="unfinished">Installing N-Gage game...</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="686"/>
+      <location filename="../src/mainwindow.cpp" line="707"/>
       <source>Install success!</source>
       <translation type="unfinished">Install success!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="686"/>
+      <location filename="../src/mainwindow.cpp" line="707"/>
       <source>Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</source>
       <translation type="unfinished">Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="692"/>
+      <location filename="../src/mainwindow.cpp" line="713"/>
       <source>Can&apos;t find the game data folder!</source>
       <translation type="unfinished">Can&apos;t find the game data folder!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="696"/>
+      <location filename="../src/mainwindow.cpp" line="717"/>
       <source>There is more than one game in the given card game folder!</source>
       <translation type="unfinished">There is more than one game in the given card game folder!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="700"/>
+      <location filename="../src/mainwindow.cpp" line="721"/>
       <source>The game information file does not exist in the card game folder!</source>
       <translation type="unfinished">The game information file does not exist in the card game folder!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="704"/>
+      <location filename="../src/mainwindow.cpp" line="725"/>
       <source>The game information file has been corrupted. Please check your data&apos;s validity!</source>
       <translation type="unfinished">The game information file has been corrupted. Please check your data&apos;s validity!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="708"/>
+      <location filename="../src/mainwindow.cpp" line="729"/>
       <source>General error occured...</source>
       <translation type="unfinished">General error occured...</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="713"/>
-      <location filename="../src/mainwindow.cpp" line="715"/>
+      <location filename="../src/mainwindow.cpp" line="734"/>
+      <location filename="../src/mainwindow.cpp" line="736"/>
+      <location filename="../src/mainwindow.cpp" line="1636"/>
       <source>Install failed</source>
       <translation type="unfinished">Install failed</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="713"/>
+      <location filename="../src/mainwindow.cpp" line="734"/>
       <source>Installation failed with error:
   -%1</source>
       <translation type="unfinished">Installation failed with error:
   -%1</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="715"/>
+      <location filename="../src/mainwindow.cpp" line="736"/>
       <source>Installation of %1% failed with error:
   -%2</source>
       <translation type="unfinished">Installation of %1% failed with error:
   -%2</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="784"/>
-      <location filename="../src/mainwindow.cpp" line="1036"/>
+      <location filename="../src/mainwindow.cpp" line="805"/>
+      <location filename="../src/mainwindow.cpp" line="1064"/>
       <source>Cancel</source>
       <translation>取消</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="787"/>
+      <location filename="../src/mainwindow.cpp" line="808"/>
       <source>Extracting game dump files</source>
       <translation>提取游戏转储文件</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="809"/>
+      <location filename="../src/mainwindow.cpp" line="830"/>
       <source>Mounting aborted</source>
       <translation>挂载中止</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="814"/>
+      <location filename="../src/mainwindow.cpp" line="835"/>
       <source>The ZIP file is corrupted!</source>
       <translation>ZIP文件已损坏！</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="819"/>
+      <location filename="../src/mainwindow.cpp" line="840"/>
       <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
       <translation>ZIP在根文件夹中没有系统文件夹。系统文件夹必须存在于游戏转储中。</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="825"/>
+      <location filename="../src/mainwindow.cpp" line="846"/>
       <source>The choosen file is not a ZIP file!</source>
       <translation>选择的文件不是ZIP文件！</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="839"/>
+      <location filename="../src/mainwindow.cpp" line="860"/>
       <source>Game card problem</source>
       <translation>游戏卡问题</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="839"/>
+      <location filename="../src/mainwindow.cpp" line="860"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
       <translation>游戏卡转储有区分大小写的文件。这可能会导致模拟器出现问题。</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="843"/>
+      <location filename="../src/mainwindow.cpp" line="864"/>
       <source>Game card dump folder correction</source>
       <translation>游戏卡转储文件夹校正</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="843"/>
+      <location filename="../src/mainwindow.cpp" line="864"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
       <translation>选定的路径似乎不正确。&lt;br&gt;您想要模拟器纠正吗？</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="899"/>
+      <location filename="../src/mainwindow.cpp" line="920"/>
       <source>Choose the game card dump folder</source>
       <translation>选择游戏卡转储文件夹</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="919"/>
+      <location filename="../src/mainwindow.cpp" line="940"/>
       <source>Choose the game card zip</source>
       <translation>选择游戏卡压缩包</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1000"/>
+      <location filename="../src/mainwindow.cpp" line="1011"/>
+      <source>Launch failed</source>
+      <translation type="unfinished">Launch failed</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="1011"/>
+      <source>Fail to launch the selected application!</source>
+      <translation type="unfinished">Fail to launch the selected application!</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="1028"/>
       <source>Document</source>
       <translation>文档</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1018"/>
+      <location filename="../src/mainwindow.cpp" line="1046"/>
       <source>Choose a language for the package</source>
       <translation>选择软件包的语言</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1039"/>
+      <location filename="../src/mainwindow.cpp" line="1067"/>
       <source>Installing package progress</source>
       <translation>正在安装软件包</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1064"/>
+      <location filename="../src/mainwindow.cpp" line="1092"/>
       <source>Installation aborted</source>
       <translation>安装中止</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1064"/>
+      <location filename="../src/mainwindow.cpp" line="1092"/>
       <source>The installation has been canceled</source>
       <translation>安装已被取消</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1069"/>
+      <location filename="../src/mainwindow.cpp" line="1097"/>
       <source>Installation failed</source>
       <translation>安装失败</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1069"/>
+      <location filename="../src/mainwindow.cpp" line="1097"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
       <translation>无法在路径上安装包：%1。请确保路径定位到一个有效的SIS/SISX文件。</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1076"/>
+      <location filename="../src/mainwindow.cpp" line="1104"/>
       <source>Installation success</source>
       <translation>安装成功</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1076"/>
+      <location filename="../src/mainwindow.cpp" line="1104"/>
       <source>Package has been successfully installed</source>
       <translation>软件包已成功安装</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1101"/>
+      <location filename="../src/mainwindow.cpp" line="1129"/>
       <source>Choose the file to install</source>
       <translation>选择要安装的文件</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1101"/>
+      <location filename="../src/mainwindow.cpp" line="1129"/>
       <source>SIS file (*.sis *.sisx)</source>
       <translation>SIS文件(*.sis *.sisx)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1293"/>
+      <location filename="../src/mainwindow.cpp" line="1324"/>
       <source>Load theme failed!</source>
       <translation>加载主题失败！</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1293"/>
+      <location filename="../src/mainwindow.cpp" line="1324"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
       <translation>无法找到暗色主题的样式文件！</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1423"/>
+      <location filename="../src/mainwindow.cpp" line="1454"/>
       <source>Continue to modify friends&apos; IP addresses</source>
       <translation type="unfinished">Continue to modify friends&apos; IP addresses</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1424"/>
+      <location filename="../src/mainwindow.cpp" line="1455"/>
       <source>This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</source>
       <translation type="unfinished">This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1439"/>
+      <location filename="../src/mainwindow.cpp" line="1472"/>
       <source>Bluetooth manager service not available!</source>
       <translation type="unfinished">Bluetooth manager service not available!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1439"/>
+      <location filename="../src/mainwindow.cpp" line="1472"/>
       <source>The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</source>
       <translation type="unfinished">The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="1589"/>
+      <source>Choose the JAR file to install</source>
+      <translation type="unfinished">Choose the JAR file to install</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="1589"/>
+      <source>JAR file (*.jar)</source>
+      <translation type="unfinished">JAR file (*.jar)</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="1597"/>
+      <source>%1 version %2 (by %3) has been installed!</source>
+      <translation type="unfinished">%1 version %2 (by %3) has been installed!</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="1600"/>
+      <source>Install success</source>
+      <translation type="unfinished">Install success</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="1612"/>
+      <source>Can not add the JAR to the apps database!</source>
+      <translation type="unfinished">Can not add the JAR to the apps database!</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="1616"/>
+      <source>The given file is not a valid JAR file!</source>
+      <translation type="unfinished">The given file is not a valid JAR file!</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="1620"/>
+      <source>Can not find the JAR file!</source>
+      <translation type="unfinished">Can not find the JAR file!</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="1624"/>
+      <source>The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</source>
+      <translation type="unfinished">The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="1628"/>
+      <source>The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</source>
+      <translation type="unfinished">The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="1632"/>
+      <source>An unexpected error has happened. Error code: %1</source>
+      <translation type="unfinished">An unexpected error has happened. Error code: %1</translation>
     </message>
   </context>
   <context>
@@ -1449,8 +1700,8 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="440"/>
-      <location filename="../src/settings_dialog.cpp" line="1144"/>
-      <location filename="../src/settings_dialog.cpp" line="1169"/>
+      <location filename="../src/settings_dialog.cpp" line="1105"/>
+      <location filename="../src/settings_dialog.cpp" line="1130"/>
       <source>Relaunch needed</source>
       <translation>需要重启</translation>
     </message>
@@ -1460,191 +1711,191 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
       <translation>此更改需要重新启动模拟器。&lt;br&gt;您要继续吗？</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="561"/>
+      <location filename="../src/settings_dialog.cpp" line="522"/>
       <source>Please wait</source>
       <translation>请稍候</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="562"/>
+      <location filename="../src/settings_dialog.cpp" line="523"/>
       <source>Validation is in process. Please do not exit or launch applications until this operation is done.</source>
       <translation>验证正在进行中。请在此操作完成之前不要退出或启动应用程序。</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="582"/>
+      <location filename="../src/settings_dialog.cpp" line="543"/>
       <source>Validation done!</source>
       <translation>验证完成！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="582"/>
+      <location filename="../src/settings_dialog.cpp" line="543"/>
       <source>The validation has successfully completed!</source>
       <translation>验证已成功完成！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="593"/>
+      <location filename="../src/settings_dialog.cpp" line="554"/>
       <source>Enter new device name</source>
       <translation>输入新设备名称</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="690"/>
+      <location filename="../src/settings_dialog.cpp" line="651"/>
       <source>Unbind</source>
       <translation>解除绑定</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="739"/>
+      <location filename="../src/settings_dialog.cpp" line="700"/>
       <source>Waiting for input</source>
       <translation>等待输入</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="754"/>
-      <location filename="../src/settings_dialog.cpp" line="800"/>
+      <location filename="../src/settings_dialog.cpp" line="715"/>
+      <location filename="../src/settings_dialog.cpp" line="761"/>
       <source>Mouse button %1</source>
       <translation>鼠标按键 %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="756"/>
+      <location filename="../src/settings_dialog.cpp" line="717"/>
       <source>Controller %1 : Button %2</source>
       <translation>控制器 %1 ：按钮 %2</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="867"/>
-      <location filename="../src/settings_dialog.cpp" line="891"/>
+      <location filename="../src/settings_dialog.cpp" line="828"/>
+      <location filename="../src/settings_dialog.cpp" line="852"/>
       <source>Enter profile name</source>
       <translation>输入配置名称</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="875"/>
+      <location filename="../src/settings_dialog.cpp" line="836"/>
       <source>Profile creation failed</source>
       <translation>配置创建失败</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="875"/>
-      <location filename="../src/settings_dialog.cpp" line="899"/>
+      <location filename="../src/settings_dialog.cpp" line="836"/>
+      <location filename="../src/settings_dialog.cpp" line="860"/>
       <source>A profile with that name already exists!</source>
       <translation>同名配置已存在！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="899"/>
+      <location filename="../src/settings_dialog.cpp" line="860"/>
       <source>Profile rename failed</source>
       <translation>配置重命名失败</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="914"/>
+      <location filename="../src/settings_dialog.cpp" line="875"/>
       <source>Profile deletion failed</source>
       <translation>配置删除失败</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="914"/>
+      <location filename="../src/settings_dialog.cpp" line="875"/>
       <source>This is the only profile left!</source>
       <translation>这是仅剩的配置！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="952"/>
+      <location filename="../src/settings_dialog.cpp" line="913"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
       <translation>&lt;b&gt;配置为：&lt;/b&gt; %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="955"/>
-      <location filename="../src/settings_dialog.cpp" line="960"/>
+      <location filename="../src/settings_dialog.cpp" line="916"/>
+      <location filename="../src/settings_dialog.cpp" line="921"/>
       <source>None</source>
       <translation>无</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1067"/>
+      <location filename="../src/settings_dialog.cpp" line="1028"/>
       <source>IMEI sequence contains non-numeric character!</source>
       <translation>IMEI序列包含非数字字符！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1070"/>
+      <location filename="../src/settings_dialog.cpp" line="1031"/>
       <source>IMEI sequence has invalid sum!</source>
       <translation>IMEI序列值无效！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1073"/>
+      <location filename="../src/settings_dialog.cpp" line="1034"/>
       <source>IMEI sequence length must be 15!</source>
       <translation>IMEI序列长度必须为15！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1079"/>
+      <location filename="../src/settings_dialog.cpp" line="1040"/>
       <source>Unidentified error!</source>
       <translation>未定义的错误！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1086"/>
+      <location filename="../src/settings_dialog.cpp" line="1047"/>
       <source>IMEI valid!</source>
       <translation>IMEI有效！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1086"/>
+      <location filename="../src/settings_dialog.cpp" line="1047"/>
       <source>The IMEI sequence is valid!</source>
       <translation>IMEI序列有效！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1089"/>
+      <location filename="../src/settings_dialog.cpp" line="1050"/>
       <source>IMEI invalid!</source>
       <translation>IMEI无效！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1099"/>
+      <location filename="../src/settings_dialog.cpp" line="1060"/>
       <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
       <translation>您的IMEI无效，因为：%1。&lt;br&gt;您想要编辑当前IMEI而不是关闭吗？选择&quot;没有&quot;将保存当前IMEI值。</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1101"/>
+      <location filename="../src/settings_dialog.cpp" line="1062"/>
       <source>Cancel closing</source>
       <translation>取消关闭</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1144"/>
+      <location filename="../src/settings_dialog.cpp" line="1105"/>
       <source>This change will be effective on the next launch of the emulator.</source>
       <translation>此更改将在下次启动模拟器时生效。</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1152"/>
+      <location filename="../src/settings_dialog.cpp" line="1113"/>
       <source>Confirmation</source>
       <translation>确认</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1152"/>
+      <location filename="../src/settings_dialog.cpp" line="1113"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
       <translation>您确定要这样做吗？ 您当前的主题将被重置，所有已被禁用的消息框将被重新启用，所有最近的挂载将被清除。</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1169"/>
+      <location filename="../src/settings_dialog.cpp" line="1130"/>
       <source>The language will be updated on the next launch of the emulator.</source>
       <translation>此语言将在下次启动模拟器时更新。</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1196"/>
+      <location filename="../src/settings_dialog.cpp" line="1157"/>
       <source>Pick the screen background color</source>
       <translation>选取屏幕背景颜色</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1261"/>
+      <location filename="../src/settings_dialog.cpp" line="1222"/>
       <source>Successfully changed</source>
       <translation>修改成功</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1261"/>
+      <location filename="../src/settings_dialog.cpp" line="1222"/>
       <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
       <translation>下次应用程序请求播放新的MIDI时，将使用选择的后端！</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1274"/>
+      <location filename="../src/settings_dialog.cpp" line="1235"/>
       <source>Choose the HSB bank file</source>
       <translation>选择HSB bank文件</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1297"/>
+      <location filename="../src/settings_dialog.cpp" line="1258"/>
       <source>Choose the SF2 bank file</source>
       <translation>选择SF2 bank文件</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1333"/>
+      <location filename="../src/settings_dialog.cpp" line="1294"/>
       <source>Emulator reset needed</source>
       <translation>需要重置模拟器</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1333"/>
+      <location filename="../src/settings_dialog.cpp" line="1294"/>
       <source>This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</source>
       <translation>此更改将在通过模拟菜单重置模拟器后或在下次启动模拟器时生效。</translation>
     </message>
@@ -1658,8 +1909,8 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="43"/>
-      <source>A new update has been released on Github!</source>
-      <translation type="unfinished">A new update has been released on Github!</translation>
+      <source>A new update has been released on GitHub!</source>
+      <translation type="unfinished">A new update has been released on GitHub!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="61"/>
@@ -1707,79 +1958,79 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
       <translation type="unfinished">The emulator is already updated to lastest version!</translation>
     </message>
     <message>
-      <location filename="../src/update_dialog.cpp" line="151"/>
+      <location filename="../src/update_dialog.cpp" line="152"/>
       <source>The release channel is not available. Please check your internet connection!</source>
       <translation type="unfinished">The release channel is not available. Please check your internet connection!</translation>
     </message>
     <message>
-      <location filename="../src/update_dialog.cpp" line="157"/>
-      <source>Failed to get information about the newest update from Github!</source>
-      <translation type="unfinished">Failed to get information about the newest update from Github!</translation>
+      <location filename="../src/update_dialog.cpp" line="158"/>
+      <source>Failed to get information about the newest update from GitHub!</source>
+      <translation type="unfinished">Failed to get information about the newest update from GitHub!</translation>
     </message>
     <message>
-      <location filename="../src/update_dialog.cpp" line="189"/>
+      <location filename="../src/update_dialog.cpp" line="190"/>
       <source>Can&apos;t find the download link of newest update for your platform!</source>
       <translation type="unfinished">Can&apos;t find the download link of newest update for your platform!</translation>
     </message>
     <message>
-      <location filename="../src/update_dialog.cpp" line="195"/>
-      <source>Failed to get update download link from Github!</source>
-      <translation type="unfinished">Failed to get update download link from Github!</translation>
+      <location filename="../src/update_dialog.cpp" line="196"/>
+      <source>Failed to get update download link from GitHub!</source>
+      <translation type="unfinished">Failed to get update download link from GitHub!</translation>
     </message>
     <message>
-      <location filename="../src/update_dialog.cpp" line="213"/>
-      <source>Error retrieving changelog from Github...</source>
-      <translation type="unfinished">Error retrieving changelog from Github...</translation>
+      <location filename="../src/update_dialog.cpp" line="214"/>
+      <source>Error retrieving changelog from GitHub...</source>
+      <translation type="unfinished">Error retrieving changelog from GitHub...</translation>
     </message>
     <message>
-      <location filename="../src/update_dialog.cpp" line="235"/>
+      <location filename="../src/update_dialog.cpp" line="238"/>
       <source>Changelog (update commit: %1)</source>
       <translation type="unfinished">Changelog (update commit: %1)</translation>
     </message>
     <message>
-      <location filename="../src/update_dialog.cpp" line="256"/>
+      <location filename="../src/update_dialog.cpp" line="259"/>
       <source>Updater unsupported</source>
       <translation type="unfinished">Updater unsupported</translation>
     </message>
     <message>
-      <location filename="../src/update_dialog.cpp" line="256"/>
+      <location filename="../src/update_dialog.cpp" line="259"/>
       <source>The updater is not yet supported on your platform!</source>
       <translation type="unfinished">The updater is not yet supported on your platform!</translation>
     </message>
     <message>
-      <location filename="../src/update_dialog.cpp" line="300"/>
-      <location filename="../src/update_dialog.cpp" line="360"/>
+      <location filename="../src/update_dialog.cpp" line="303"/>
+      <location filename="../src/update_dialog.cpp" line="363"/>
       <source>Update error</source>
       <translation type="unfinished">Update error</translation>
     </message>
     <message>
-      <location filename="../src/update_dialog.cpp" line="300"/>
+      <location filename="../src/update_dialog.cpp" line="303"/>
       <source>Can&apos;t not open temporary file for storing the update files!</source>
       <translation type="unfinished">Can&apos;t not open temporary file for storing the update files!</translation>
     </message>
     <message>
-      <location filename="../src/update_dialog.cpp" line="384"/>
+      <location filename="../src/update_dialog.cpp" line="387"/>
       <source>Failed to download update with error: %1</source>
       <translation type="unfinished">Failed to download update with error: %1</translation>
     </message>
     <message>
-      <location filename="../src/update_dialog.cpp" line="392"/>
+      <location filename="../src/update_dialog.cpp" line="395"/>
       <source>Downloaded update is not in zip format!</source>
       <translation type="unfinished">Downloaded update is not in zip format!</translation>
     </message>
     <message>
-      <location filename="../src/update_dialog.cpp" line="421"/>
+      <location filename="../src/update_dialog.cpp" line="424"/>
       <source>Failed to update the updater program!</source>
       <translation type="unfinished">Failed to update the updater program!</translation>
     </message>
     <message>
-      <location filename="../src/update_dialog.cpp" line="429"/>
+      <location filename="../src/update_dialog.cpp" line="432"/>
       <source>Update zip file is corrupted!</source>
       <translation type="unfinished">Update zip file is corrupted!</translation>
     </message>
     <message>
-      <location filename="../src/update_dialog.cpp" line="436"/>
-      <location filename="../src/update_dialog.cpp" line="451"/>
+      <location filename="../src/update_dialog.cpp" line="439"/>
+      <location filename="../src/update_dialog.cpp" line="454"/>
       <source>Can&apos;t find the updater program in the update archive file!</source>
       <translation type="unfinished">Can&apos;t find the updater program in the update archive file!</translation>
     </message>
@@ -1810,38 +2061,38 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
       <translation type="unfinished">Extracting ... %p%</translation>
     </message>
     <message>
-      <location filename="../src/updater.cpp" line="91"/>
+      <location filename="../src/updater.cpp" line="93"/>
       <source>Update failed</source>
       <translation type="unfinished">Update failed</translation>
     </message>
     <message>
-      <location filename="../src/updater.cpp" line="99"/>
+      <location filename="../src/updater.cpp" line="101"/>
       <source>Downloaded update is not a zip file!</source>
       <translation type="unfinished">Downloaded update is not a zip file!</translation>
     </message>
     <message>
-      <location filename="../src/updater.cpp" line="122"/>
-      <location filename="../src/updater.cpp" line="175"/>
+      <location filename="../src/updater.cpp" line="124"/>
+      <location filename="../src/updater.cpp" line="177"/>
       <source>The downloaded archive zip is corrupted</source>
       <translation type="unfinished">The downloaded archive zip is corrupted</translation>
     </message>
     <message>
-      <location filename="../src/updater.cpp" line="178"/>
+      <location filename="../src/updater.cpp" line="180"/>
       <source>Extracted: %1</source>
       <translation type="unfinished">Extracted: %1</translation>
     </message>
     <message>
-      <location filename="../src/updater.cpp" line="197"/>
+      <location filename="../src/updater.cpp" line="199"/>
       <source>Update&apos;s archive file does not exist!</source>
       <translation type="unfinished">Update&apos;s archive file does not exist!</translation>
     </message>
     <message>
-      <location filename="../src/updater.cpp" line="212"/>
+      <location filename="../src/updater.cpp" line="214"/>
       <source>Update success</source>
       <translation type="unfinished">Update success</translation>
     </message>
     <message>
-      <location filename="../src/updater.cpp" line="212"/>
+      <location filename="../src/updater.cpp" line="214"/>
       <source>Update success. Relaunch the emulator?</source>
       <translation type="unfinished">Update success. Relaunch the emulator?</translation>
     </message>
