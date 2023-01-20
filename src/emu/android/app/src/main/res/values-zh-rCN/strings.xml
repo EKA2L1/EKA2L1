@@ -19,6 +19,7 @@
     <string name="opengl_required">此应用需要OpenGL ES 3.0及更高版本。</string>
     <string name="warning">警告</string>
     <string name="scoped_storage_warning">您的用户数据存储路径在卸载应用时<b>将被删除</b>\n</string>
+    <string name="install_ng_game">Install N-Gage game</string>
     <string name="install">安装</string>
     <string name="rescan_devices">重新扫描设备</string>
     <string name="device_dump">从设备上导出的ROM</string>
@@ -28,6 +29,7 @@
     <string name="path_to_firmware">VPL文件路径</string>
     <string name="install_method">选择安装源</string>
     <string name="enter_new_name">输入新设备名称</string>
+    <string name="mode">Mode</string>
     <string name="no_device_dialog_title">未安装设备！</string>
     <string name="no_device_installed">请安装设备。安装塞班设备需要从设备上导出的ROM或者设备的固件文件。\n\n<b>注意：</b> 每个应用都需要合适的塞班设备才能运行。</string>
     <string name="install_device_note_may_need_rpkg">对于S60v2或更高版本的设备，您可能需要提供额外的RPKG文件。如果安装程序检测到需要RPKG文件，路径选择器将会自动弹出。</string>
@@ -67,7 +69,19 @@
     <string name="emulated_screen_rotation_item_name">旋转</string>
     <string name="emulated_screen_refresh_rate_item_name">刷新率</string>
     <string name="pref_device_display_name">友好的手机名称</string>
-    <string name="hide_system_apps">Hide system applications</string>
+    <string name="hide_system_apps">隐藏系统应用</string>
+    <string name="pref_bt_netplay_direct_ips_manager">Direct IPs manager</string>
+    <string name="enter_address">输入地址</string>
+    <string name="address">地址</string>
+    <string name="port">端口</string>
+    <string name="pref_bt_netplay_mode_off">Off</string>
+    <string name="pref_bt_netplay_mode_direct_ip">Direct IP</string>
+    <string name="pref_bt_netplay_mode_lan">LAN</string>
+    <string name="pref_bt_netplay_mode_server">Server</string>
+    <string name="pref_bt_netplay_enable_upnp">Enable UPnP (for IPv4 public play)</string>
+    <string name="pref_bt_netplay_server_address">Server address</string>
+    <string name="pref_bt_netplay_password">Password</string>
+    <string name="pref_bt_netplay_port_offset">Port offset</string>
     <string name="action_context_delete">删除</string>
     <string name="action_context_rename">重命名</string>
     <string name="action_context_shortcut">创建快捷方式</string>
@@ -130,6 +144,7 @@
     <string name="enter_name">输入名称</string>
     <string name="set_default_profile_description">为以后安装的所有应用程序使用此配置</string>
     <string name="error_name_exists">已存在，请输入其他名称</string>
+    <string name="extensive_logging">Extensive logging</string>
     <string name="mapping_dialog_title">按下一个按键</string>
     <string name="mapping_dialog_message" formatted="false">当前映射：%1$s</string>
     <string name="reset_mapping">重置</string>
@@ -146,4 +161,8 @@
     <string name="about_icon_by">&lt;BR&gt;图标设计： </string>
     <string name="version">版本： </string>
     <string name="recommended_devices_note"><b>注：</b> 建议安装S60v3及以上版本的设备固件。</string>
+    <string name="install_ng_game_cant_find_data_folder">Can\'t find the game data folder!</string>
+    <string name="install_ng_game_more_than_one_game">There is more than one game in the given card game folder!</string>
+    <string name="install_ng_game_no_game_info_file">The game information file does not exist in the card game folder!</string>
+    <string name="install_ng_game_corrupted_game_info">The game information file has been corrupted. Please check your data\'s validity!</string>
 </resources>

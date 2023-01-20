@@ -19,6 +19,7 @@
     <string name="opengl_required">Застосунок потребує OpenGL ES 3.0+.</string>
     <string name="warning">Попередження</string>
     <string name="scoped_storage_warning">Ваші дані користувача зберігаються в місці, яке <b>буде видалено</b>, коли ви видалите застосунок:\n</string>
+    <string name="install_ng_game">Install N-Gage game</string>
     <string name="install">Установити</string>
     <string name="rescan_devices">Пересканувати пристрої</string>
     <string name="device_dump">Дамп пристрою</string>
@@ -28,6 +29,7 @@
     <string name="path_to_firmware">Шлях до VPL</string>
     <string name="install_method">Спосіб установлення</string>
     <string name="enter_new_name">Уведіть нове ім\'я</string>
+    <string name="mode">Режим</string>
     <string name="no_device_dialog_title">Жодного пристрою не встановлено!</string>
     <string name="no_device_installed">Будь ласка, встановіть пристрій. Для встановлення потрібні файли та ПЗП (ROM) пристрою Symbian.\n\n<b>Примітка:</b> Кожному застосунку для запуску знадобиться відповідний пристрій Symbian.</string>
     <string name="install_device_note_may_need_rpkg">Для пристроїв S60v2 чи вище вам може знадобитися надати додатковий файл під назвою RPKG. Засіб вибору шляху з\'явиться, якщо встановник виявить необхідність у ньому.</string>
@@ -68,6 +70,18 @@
     <string name="emulated_screen_refresh_rate_item_name">Частота оновлення</string>
     <string name="pref_device_display_name">Ім\'я телефона</string>
     <string name="hide_system_apps">Приховати системні застосунки</string>
+    <string name="pref_bt_netplay_direct_ips_manager">Менеджер прямих IP-адрес</string>
+    <string name="enter_address">Уведіть адресу</string>
+    <string name="address">Адреса</string>
+    <string name="port">Порт</string>
+    <string name="pref_bt_netplay_mode_off">Вимк.</string>
+    <string name="pref_bt_netplay_mode_direct_ip">Пряма IP-адреса</string>
+    <string name="pref_bt_netplay_mode_lan">Локальна мережа</string>
+    <string name="pref_bt_netplay_mode_server">Сервер</string>
+    <string name="pref_bt_netplay_enable_upnp">Увімкнути UPnP (для публічної гри через IPv4)</string>
+    <string name="pref_bt_netplay_server_address">Адреса сервера</string>
+    <string name="pref_bt_netplay_password">Пароль</string>
+    <string name="pref_bt_netplay_port_offset">Зміщення порту</string>
     <string name="action_context_delete">Видалити</string>
     <string name="action_context_rename">Перейменувати</string>
     <string name="action_context_shortcut">Створити ярлик</string>
@@ -130,6 +144,7 @@
     <string name="enter_name">Уведіть назву</string>
     <string name="set_default_profile_description">Виберіть цей профіль як стандартні налаштування для всіх застосунків, які буде встановлено пізніше</string>
     <string name="error_name_exists">Уже існує, введіть іншу назву</string>
+    <string name="extensive_logging">Extensive logging</string>
     <string name="mapping_dialog_title">Натисніть кнопку</string>
     <string name="mapping_dialog_message" formatted="false">Поточне зіставлення: %1$s</string>
     <string name="reset_mapping">Скинути</string>
@@ -146,4 +161,8 @@
     <string name="about_icon_by">&lt;BR&gt;Іконка від: </string>
     <string name="version">Версія: </string>
     <string name="recommended_devices_note"><b>Примітка:</b> Рекомендовано використовувати прошивку для встановлення пристроїв від S60v3 і вище.</string>
+    <string name="install_ng_game_cant_find_data_folder">Can\'t find the game data folder!</string>
+    <string name="install_ng_game_more_than_one_game">There is more than one game in the given card game folder!</string>
+    <string name="install_ng_game_no_game_info_file">Файлу інформації про гру не існує в теці з ігровою карткою!</string>
+    <string name="install_ng_game_corrupted_game_info">The game information file has been corrupted. Please check your data\'s validity!</string>
 </resources>

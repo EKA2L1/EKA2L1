@@ -19,6 +19,7 @@
     <string name="opengl_required">Aplikacja wymaga OpenGL ES 3.0+.</string>
     <string name="warning">Uwaga</string>
     <string name="scoped_storage_warning">Twoje dane użytkownika są przechowywane w lokalizacji która <b>zostanie usunięta</b> kiedy odinstalujesz aplikację:\n</string>
+    <string name="install_ng_game">Install N-Gage game</string>
     <string name="install">Zainstaluj</string>
     <string name="rescan_devices">Przeskanuj ponownie urządzenia</string>
     <string name="device_dump">Zrzut urządzenia</string>
@@ -28,6 +29,7 @@
     <string name="path_to_firmware">Ścieżka do VPL</string>
     <string name="install_method">Metoda instalacji</string>
     <string name="enter_new_name">Wprowadź nową nazwę</string>
+    <string name="mode">Tryb</string>
     <string name="no_device_dialog_title">Nie zainstalowano urządzenia!</string>
     <string name="no_device_installed">Zainstaluj urządzenie. Pliki i ROM urządzenia Symbiana są potrzebne by zacząć instalację.\n\n<b>Uwaga:</b> każda aplikacja będzie potrzebować odpowiedniego urządzenia Symbiana, by się uruchomić.</string>
     <string name="install_device_note_may_need_rpkg">Dla urządzeń S60v2 lub wyższych, możesz musieć dostarczyć dodatkowy plik zwany RPKG. Wyskoczy okienko wybierania ścieżki pliku jeśli instalator wykryje że jest na to potrzeba.</string>
@@ -67,7 +69,19 @@
     <string name="emulated_screen_rotation_item_name">Rotacja</string>
     <string name="emulated_screen_refresh_rate_item_name">Częstotliwość odświeżania</string>
     <string name="pref_device_display_name">Przyjazna nazwa telefonu</string>
-    <string name="hide_system_apps">Hide system applications</string>
+    <string name="hide_system_apps">Ukryj aplikacje systemowe</string>
+    <string name="pref_bt_netplay_direct_ips_manager">Menedżer Direct IP</string>
+    <string name="enter_address">Wprowadź adres</string>
+    <string name="address">Adres</string>
+    <string name="port">Port</string>
+    <string name="pref_bt_netplay_mode_off">Wyłączone</string>
+    <string name="pref_bt_netplay_mode_direct_ip">Direct IP</string>
+    <string name="pref_bt_netplay_mode_lan">LAN</string>
+    <string name="pref_bt_netplay_mode_server">Serwer</string>
+    <string name="pref_bt_netplay_enable_upnp">Włącz UPnP (do publicznej gry IPv4)</string>
+    <string name="pref_bt_netplay_server_address">Adres serwera</string>
+    <string name="pref_bt_netplay_password">Hasło</string>
+    <string name="pref_bt_netplay_port_offset">Przesunięcie portu</string>
     <string name="action_context_delete">Usuń</string>
     <string name="action_context_rename">Zmień nazwę</string>
     <string name="action_context_shortcut">Utwórz skrót</string>
@@ -130,6 +144,7 @@
     <string name="enter_name">Wprowadź nazwę</string>
     <string name="set_default_profile_description">Wybierz ten profil jako standardowe ustawienia dla wszystkich aplikacji, które zostaną zainstalowane później</string>
     <string name="error_name_exists">Już istnieje, wprowadź inną nazwę</string>
+    <string name="extensive_logging">Extensive logging</string>
     <string name="mapping_dialog_title">Naciśnij przycisk</string>
     <string name="mapping_dialog_message" formatted="false">Bieżące mapowanie: %1$s</string>
     <string name="reset_mapping">Reset</string>
@@ -146,4 +161,8 @@
     <string name="about_icon_by">&lt;BR&gt;Ikona autorstwa: </string>
     <string name="version">Wersja: </string>
     <string name="recommended_devices_note"><b>Uwaga:</b> zalecane jest używać firmware\'u do instalacji urządzeń od S60v3 i wyżej.</string>
+    <string name="install_ng_game_cant_find_data_folder">Can\'t find the game data folder!</string>
+    <string name="install_ng_game_more_than_one_game">Jest więcej niż jedna gra w podanym folderze gry karty!</string>
+    <string name="install_ng_game_no_game_info_file">Plik informacji o grze nie istnieje w folderze gry karty!</string>
+    <string name="install_ng_game_corrupted_game_info">The game information file has been corrupted. Please check your data\'s validity!</string>
 </resources>

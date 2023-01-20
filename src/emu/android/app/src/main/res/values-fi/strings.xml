@@ -19,6 +19,7 @@
     <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
     <string name="warning">Warning</string>
     <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
+    <string name="install_ng_game">Install N-Gage game</string>
     <string name="install">Asenna</string>
     <string name="rescan_devices">Skannaa laitteet uudelleen</string>
     <string name="device_dump">Device dump</string>
@@ -28,6 +29,7 @@
     <string name="path_to_firmware">Polku VPL:ään</string>
     <string name="install_method">Asennus menetelmä</string>
     <string name="enter_new_name">Syötä uusi nimi</string>
+    <string name="mode">Mode</string>
     <string name="no_device_dialog_title">Laitetta ei ole asennettu!</string>
     <string name="no_device_installed">Please install a device. Files and ROM of a Symbian device are needed for the installation.\n\n<b>Note:</b> Each app will need suitable Symbian device to run.</string>
     <string name="install_device_note_may_need_rpkg">For S60v2 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
@@ -68,6 +70,18 @@
     <string name="emulated_screen_refresh_rate_item_name">Virkistystaajuus</string>
     <string name="pref_device_display_name">Friendly phone name</string>
     <string name="hide_system_apps">Hide system applications</string>
+    <string name="pref_bt_netplay_direct_ips_manager">Direct IPs manager</string>
+    <string name="enter_address">Enter address</string>
+    <string name="address">Address</string>
+    <string name="port">Port</string>
+    <string name="pref_bt_netplay_mode_off">Off</string>
+    <string name="pref_bt_netplay_mode_direct_ip">Direct IP</string>
+    <string name="pref_bt_netplay_mode_lan">LAN</string>
+    <string name="pref_bt_netplay_mode_server">Server</string>
+    <string name="pref_bt_netplay_enable_upnp">Enable UPnP (for IPv4 public play)</string>
+    <string name="pref_bt_netplay_server_address">Server address</string>
+    <string name="pref_bt_netplay_password">Password</string>
+    <string name="pref_bt_netplay_port_offset">Port offset</string>
     <string name="action_context_delete">Delete</string>
     <string name="action_context_rename">Nimeä uudelleen</string>
     <string name="action_context_shortcut">Create shortcut</string>
@@ -130,6 +144,7 @@
     <string name="enter_name">Enter name</string>
     <string name="set_default_profile_description">Select this profile as a standard settings for all apps that will be installed later</string>
     <string name="error_name_exists">Already exists, enter other name</string>
+    <string name="extensive_logging">Extensive logging</string>
     <string name="mapping_dialog_title">Paina näppäintä</string>
     <string name="mapping_dialog_message" formatted="false">Nykyinen kartoitus: %1$s</string>
     <string name="reset_mapping">Tyhjennä</string>
@@ -146,4 +161,8 @@
     <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
     <string name="version">Versio: </string>
     <string name="recommended_devices_note"><b>Note:</b> It\'s recommended to use firmware for installation of devices from S60v3 and above.</string>
+    <string name="install_ng_game_cant_find_data_folder">Can\'t find the game data folder!</string>
+    <string name="install_ng_game_more_than_one_game">There is more than one game in the given card game folder!</string>
+    <string name="install_ng_game_no_game_info_file">The game information file does not exist in the card game folder!</string>
+    <string name="install_ng_game_corrupted_game_info">The game information file has been corrupted. Please check your data\'s validity!</string>
 </resources>

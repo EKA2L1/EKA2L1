@@ -19,6 +19,7 @@
     <string name="opengl_required">Proqram OpenGL ES 3.0+ tələb edir.</string>
     <string name="warning">Xəbərdarlıq</string>
     <string name="scoped_storage_warning">İstifadəçi məlumatlarınız proqramı sildiyiniz zaman <b>silinəcək</b> məkanda saxlanılır:\n</string>
+    <string name="install_ng_game">Install N-Gage game</string>
     <string name="install">Quraşdır</string>
     <string name="rescan_devices">Cihazları təkrar axtar</string>
     <string name="device_dump">Cihaz tullantıları</string>
@@ -28,6 +29,7 @@
     <string name="path_to_firmware">VPL yolu</string>
     <string name="install_method">Quraşdırma metodu</string>
     <string name="enter_new_name">Yeni ad daxil et</string>
+    <string name="mode">Mode</string>
     <string name="no_device_dialog_title">Qurulu cihaz yoxdur!</string>
     <string name="no_device_installed">Bir cihaz quraşdırın. Symbian cihazın ROM və fayllarını quraşdırma üçün lazımdır.\n\n<b>Qeyd:</b>Hər bir tətbiqin işləməsi üçün uyğun bir Symbian cihazına ehtiyacı var.</string>
     <string name="install_device_note_may_need_rpkg">S60v2 və üst cihazlar üçün, əlavə bir RPKG adlı fayl təmin etməlisiniz. Yükləyici, buna ehtiyac olduğunu aşkarlasa fayl seçici açılacaq.</string>
@@ -68,6 +70,18 @@
     <string name="emulated_screen_refresh_rate_item_name">Təzələmə sürəti</string>
     <string name="pref_device_display_name">Dost telefon adı</string>
     <string name="hide_system_apps">Hide system applications</string>
+    <string name="pref_bt_netplay_direct_ips_manager">Direct IPs manager</string>
+    <string name="enter_address">Enter address</string>
+    <string name="address">Address</string>
+    <string name="port">Port</string>
+    <string name="pref_bt_netplay_mode_off">Off</string>
+    <string name="pref_bt_netplay_mode_direct_ip">Direct IP</string>
+    <string name="pref_bt_netplay_mode_lan">LAN</string>
+    <string name="pref_bt_netplay_mode_server">Server</string>
+    <string name="pref_bt_netplay_enable_upnp">Enable UPnP (for IPv4 public play)</string>
+    <string name="pref_bt_netplay_server_address">Server address</string>
+    <string name="pref_bt_netplay_password">Password</string>
+    <string name="pref_bt_netplay_port_offset">Port offset</string>
     <string name="action_context_delete">Sil</string>
     <string name="action_context_rename">Yenidən adlandır</string>
     <string name="action_context_shortcut">Yarlıq Yarat</string>
@@ -130,6 +144,7 @@
     <string name="enter_name">Ad daxil edin</string>
     <string name="set_default_profile_description">Sonradan quraşdırılacaq bütün proqramlar üçün standart parametrlər kimi bu profili seçin</string>
     <string name="error_name_exists">Artıq mövcuddur, başqa ad daxil edin</string>
+    <string name="extensive_logging">Extensive logging</string>
     <string name="mapping_dialog_title">Bir düyməyə bas</string>
     <string name="mapping_dialog_message" formatted="false">Hazırkı təyin etmə: %1$s</string>
     <string name="reset_mapping">Sıfırla</string>
@@ -146,4 +161,8 @@
     <string name="about_icon_by">&lt;BR&gt;Nişan müəllifi: </string>
     <string name="version">Versiya: </string>
     <string name="recommended_devices_note"><b>Qeyd:</b> S60v3 və yuxarı cihazların quraşdırılması üçün firmware istifadə etməyiniz məsləhətdir.</string>
+    <string name="install_ng_game_cant_find_data_folder">Can\'t find the game data folder!</string>
+    <string name="install_ng_game_more_than_one_game">There is more than one game in the given card game folder!</string>
+    <string name="install_ng_game_no_game_info_file">The game information file does not exist in the card game folder!</string>
+    <string name="install_ng_game_corrupted_game_info">The game information file has been corrupted. Please check your data\'s validity!</string>
 </resources>

@@ -19,6 +19,7 @@
     <string name="opengl_required">Este aplicativo requer OpenGL ES 3.0+.</string>
     <string name="warning">Atenção</string>
     <string name="scoped_storage_warning">Seus dados de usuário são armazenados em um local que <b>será excluído</b> quando você desinstalar o aplicativo:\n</string>
+    <string name="install_ng_game">Install N-Gage game</string>
     <string name="install">Instalar</string>
     <string name="rescan_devices">Reescanear dispositivos</string>
     <string name="device_dump">Despejo de dispositivo</string>
@@ -28,6 +29,7 @@
     <string name="path_to_firmware">Caminho para VPL</string>
     <string name="install_method">Método de instalação</string>
     <string name="enter_new_name">Insira o novo nome</string>
+    <string name="mode">Modo</string>
     <string name="no_device_dialog_title">Nenhum dispositivo instalado!</string>
     <string name="no_device_installed">Por favor instale um dispositivo. Arquivos e ROM de um dispositivo Symbian são necessários para a instalação.\n\n<b>Nota:</b> Cada aplicativo precisará de um dispositivo Symbian adequado para ser executado.</string>
     <string name="install_device_note_may_need_rpkg">Para dispositivos S60v2 ou superior, você pode precisar fornecer um arquivo adicional chamado RPKG. O selecionador de caminhos irá aparecer se o instalador detectar a necessidade disso.</string>
@@ -67,7 +69,19 @@
     <string name="emulated_screen_rotation_item_name">Rotação</string>
     <string name="emulated_screen_refresh_rate_item_name">Taxa de atualização</string>
     <string name="pref_device_display_name">Nome de telefone amigável</string>
-    <string name="hide_system_apps">Hide system applications</string>
+    <string name="hide_system_apps">Ocultar aplicativos do sistema</string>
+    <string name="pref_bt_netplay_direct_ips_manager">Gerenciador direto de IPs</string>
+    <string name="enter_address">Digite o endereço</string>
+    <string name="address">Endereço</string>
+    <string name="port">Porta</string>
+    <string name="pref_bt_netplay_mode_off">Desligar</string>
+    <string name="pref_bt_netplay_mode_direct_ip">IP Direto</string>
+    <string name="pref_bt_netplay_mode_lan">LAN</string>
+    <string name="pref_bt_netplay_mode_server">Servidor</string>
+    <string name="pref_bt_netplay_enable_upnp">Ativar UPnP (para reprodução pública IPv4)</string>
+    <string name="pref_bt_netplay_server_address">Endereço do servidor</string>
+    <string name="pref_bt_netplay_password">Senha</string>
+    <string name="pref_bt_netplay_port_offset">Deslocamento de porta</string>
     <string name="action_context_delete">Apagar</string>
     <string name="action_context_rename">Renomear</string>
     <string name="action_context_shortcut">Criar atalho</string>
@@ -117,8 +131,8 @@
     <string name="pref_screen_scale_type_fill">Preencher janela (ignorar proporção de aspecto)</string>
     <string name="pref_screen_scale_type_fit">Ajustar a janela</string>
     <string name="pref_screen_scale_type_none">Como é</string>
-    <string name="pref_screen_scale_use_shader">Usar Sombra para aumentar</string>
-    <string name="pref_screen_upscale_shader">Sombra de Upscale</string>
+    <string name="pref_screen_scale_use_shader">Usar shader para ampliação</string>
+    <string name="pref_screen_upscale_shader">Shader de Upscale</string>
     <string name="pref_screen_default_shader">Padrão</string>
     <string name="default_label">"[%s] (padrão)"</string>
     <string name="not_saved_exists">Já existe</string>
@@ -130,6 +144,7 @@
     <string name="enter_name">Digitar nome</string>
     <string name="set_default_profile_description">Selecione este perfil como uma configuração padrão para todos os aplicativos que serão instalados posteriormente</string>
     <string name="error_name_exists">Já existe, insira outro nome</string>
+    <string name="extensive_logging">Extensive logging</string>
     <string name="mapping_dialog_title">Aperte qualquer botão</string>
     <string name="mapping_dialog_message" formatted="false">Mapeamento atual: %1$s</string>
     <string name="reset_mapping">Restaurar</string>
@@ -146,4 +161,8 @@
     <string name="about_icon_by">&lt;BR&gt;Ícone por: </string>
     <string name="version">Versão: </string>
     <string name="recommended_devices_note"><b>Nota:</b> É recomendável usar firmware para instalação de dispositivos do S60v3 ou superior.</string>
+    <string name="install_ng_game_cant_find_data_folder">Can\'t find the game data folder!</string>
+    <string name="install_ng_game_more_than_one_game">Há mais de um jogo na pasta de jogos fornecida!</string>
+    <string name="install_ng_game_no_game_info_file">O arquivo de informações do jogo não existe na pasta do cartucho do jogo!</string>
+    <string name="install_ng_game_corrupted_game_info">The game information file has been corrupted. Please check your data\'s validity!</string>
 </resources>

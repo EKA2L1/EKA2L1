@@ -19,6 +19,7 @@
     <string name="opengl_required">Questa applicazione richiede OpenGL ES 3.0+.</string>
     <string name="warning">Attenzione</string>
     <string name="scoped_storage_warning">I tuoi dati utente vengono memorizzati in una posizione che <b>verrà cancellata</b> quando disinstalli l\'app:\n</string>
+    <string name="install_ng_game">Install N-Gage game</string>
     <string name="install">Installa</string>
     <string name="rescan_devices">Ricarica dispositivi</string>
     <string name="device_dump">Dump dispositivo</string>
@@ -28,6 +29,7 @@
     <string name="path_to_firmware">Percorso VPL</string>
     <string name="install_method">Metodo d\'installazione</string>
     <string name="enter_new_name">Inserisci un nuovo nome</string>
+    <string name="mode">Modalità</string>
     <string name="no_device_dialog_title">Nessun dispositivo installato!</string>
     <string name="no_device_installed">Installa un dispositivo. Hai bisogno dei File e della ROM di un dispositivo Symbian per l\'installazione.\n\n<b>Nota:</b> Ogni app avrà bisogno di un dispositivo Symbian compatibile per l\'esecuzione.</string>
     <string name="install_device_note_may_need_rpkg">Per i dispositivi con S60v2 o superiore, potrebbe essere richiesto il file aggiuntivo chiamato RPKG. Se il file RPKG dovesse essere necessario, ne verrà richiesto il percorso in fase di installazione.</string>
@@ -67,7 +69,19 @@
     <string name="emulated_screen_rotation_item_name">Rotazione</string>
     <string name="emulated_screen_refresh_rate_item_name">Frequenza di aggiornamento</string>
     <string name="pref_device_display_name">Nome telefono familiare</string>
-    <string name="hide_system_apps">Hide system applications</string>
+    <string name="hide_system_apps">Nascondi le applicazioni di sistema</string>
+    <string name="pref_bt_netplay_direct_ips_manager">Gestione IP diretti</string>
+    <string name="enter_address">Imposta indirizzo</string>
+    <string name="address">Indirizzo</string>
+    <string name="port">Porta</string>
+    <string name="pref_bt_netplay_mode_off">Off</string>
+    <string name="pref_bt_netplay_mode_direct_ip">IP Diretto</string>
+    <string name="pref_bt_netplay_mode_lan">LAN</string>
+    <string name="pref_bt_netplay_mode_server">Server</string>
+    <string name="pref_bt_netplay_enable_upnp">Abilita UPnP (partire pubbliche su IPv4)</string>
+    <string name="pref_bt_netplay_server_address">Indirizzo server</string>
+    <string name="pref_bt_netplay_password">Password</string>
+    <string name="pref_bt_netplay_port_offset">Offset porta</string>
     <string name="action_context_delete">Elimina</string>
     <string name="action_context_rename">Rinomina</string>
     <string name="action_context_shortcut">Crea collegamento</string>
@@ -130,6 +144,7 @@
     <string name="enter_name">Inserisci nome</string>
     <string name="set_default_profile_description">Seleziona questo profilo come predefinito per tutte le applicazioni che saranno installate successivamente</string>
     <string name="error_name_exists">Già esiste, inserisci altro nome</string>
+    <string name="extensive_logging">Extensive logging</string>
     <string name="mapping_dialog_title">Premi un tasto</string>
     <string name="mapping_dialog_message" formatted="false">Tasto corrente: %1$s</string>
     <string name="reset_mapping">Ripristina</string>
@@ -146,4 +161,8 @@
     <string name="about_icon_by">&lt;BR&gt;Icona da: </string>
     <string name="version">Versione: </string>
     <string name="recommended_devices_note"><b>Nota:</b> Si consiglia di utilizzare firmware S60v3 e superiori per l\'installazione di nuovi dispositivi.</string>
+    <string name="install_ng_game_cant_find_data_folder">Can\'t find the game data folder!</string>
+    <string name="install_ng_game_more_than_one_game">È presente più di un gioco nella cartella della scheda di gioco selezionata!</string>
+    <string name="install_ng_game_no_game_info_file">Il file delle informazioni di gioco non esiste nella cartella selezionata!</string>
+    <string name="install_ng_game_corrupted_game_info">The game information file has been corrupted. Please check your data\'s validity!</string>
 </resources>

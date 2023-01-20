@@ -19,6 +19,7 @@
     <string name="opengl_required">Aplikasi ini memerlukan OpenGL ES 3.0+.</string>
     <string name="warning">Peringatan</string>
     <string name="scoped_storage_warning">Data pengguna Anda ditampung pada lokasi yang <b>akan dihapus</b> ketika mencopot aplikasi:\n</string>
+    <string name="install_ng_game">Install N-Gage game</string>
     <string name="install">Pasang</string>
     <string name="rescan_devices">Pindai ulang perangkat</string>
     <string name="device_dump">Dump perangkat</string>
@@ -28,6 +29,7 @@
     <string name="path_to_firmware">Jalur ke VPL</string>
     <string name="install_method">Metode pemasangan</string>
     <string name="enter_new_name">Masukkan nama baru</string>
+    <string name="mode">Mode</string>
     <string name="no_device_dialog_title">Tak ada terpasang perangkat!</string>
     <string name="no_device_installed">Harap pasang firmware perangkat. Berkas dan ROM dari perangkat Symbian diperlukan untuk pemasangan.\n\n<b>Catatan:</b> Setiap aplikasi memerlukan perangkat Symbian yang cocok untuk dijalankan.</string>
     <string name="install_device_note_may_need_rpkg">Untuk perangkat S60v2 atau lebih tinggi, perlu ada berkas tambahan bernama RPKG. Jika perangkatnya terdeteksi maka akan muncul permintaan memasukkan berkas tersebut.</string>
@@ -55,7 +57,7 @@
     <string name="pref_enable_statusbar">Hidupkan bilah status</string>
     <string name="pref_wakelock">Layar tetap menyala</string>
     <string name="pref_enable_vibration">Aktifkan getaran</string>
-    <string name="pref_emulator_dir">Direktori yang berjalan</string>
+    <string name="pref_emulator_dir">Direktory yang berjalan</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Aktifkan tapisan Nearest Neighbor</string>
     <string name="pref_system_language_option_name">Bahasa</string>
     <string name="pref_system_real_time_accuracy_str">Akurasi waktu-nyata</string>
@@ -68,6 +70,18 @@
     <string name="emulated_screen_refresh_rate_item_name">Laju refresh</string>
     <string name="pref_device_display_name">Nama ponsel yang ramah</string>
     <string name="hide_system_apps">Hide system applications</string>
+    <string name="pref_bt_netplay_direct_ips_manager">Manajer IP Direct</string>
+    <string name="enter_address">Masukkan alamat</string>
+    <string name="address">Alamat</string>
+    <string name="port">Port</string>
+    <string name="pref_bt_netplay_mode_off">Nonaktif</string>
+    <string name="pref_bt_netplay_mode_direct_ip">IP Direct</string>
+    <string name="pref_bt_netplay_mode_lan">LAN</string>
+    <string name="pref_bt_netplay_mode_server">Server</string>
+    <string name="pref_bt_netplay_enable_upnp">Aktifkan UPnP (untuk bermain publik IPv4)</string>
+    <string name="pref_bt_netplay_server_address">Alamat server</string>
+    <string name="pref_bt_netplay_password">Kata Sandi</string>
+    <string name="pref_bt_netplay_port_offset">Offset port</string>
     <string name="action_context_delete">Hapus</string>
     <string name="action_context_rename">Ganti nama</string>
     <string name="action_context_shortcut">Buat pintasan</string>
@@ -130,6 +144,7 @@
     <string name="enter_name">Ketik nama</string>
     <string name="set_default_profile_description">Pilih profil ini sebagai pengaturan standar untuk semua aplikasi yang akan dipasang nanti</string>
     <string name="error_name_exists">Nama sudah ada, ketik nama lain</string>
+    <string name="extensive_logging">Extensive logging</string>
     <string name="mapping_dialog_title">Tekan tombol</string>
     <string name="mapping_dialog_message" formatted="false">Pemetaan saat ini: %1$s</string>
     <string name="reset_mapping">Atur ulang</string>
@@ -146,4 +161,8 @@
     <string name="about_icon_by">&lt;BR&gt;Ikon oleh: </string>
     <string name="version">Versi: </string>
     <string name="recommended_devices_note"><b>Catatan:</b> Dianjurkan menggunakan firmware untuk pemasangan perangkat S60v3 ke atas.</string>
+    <string name="install_ng_game_cant_find_data_folder">Can\'t find the game data folder!</string>
+    <string name="install_ng_game_more_than_one_game">Ada lebih dari satu permainan di folder card game yang diberikan!</string>
+    <string name="install_ng_game_no_game_info_file">File informasi permainan tidak ada di folder card game!</string>
+    <string name="install_ng_game_corrupted_game_info">The game information file has been corrupted. Please check your data\'s validity!</string>
 </resources>

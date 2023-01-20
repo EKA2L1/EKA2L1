@@ -19,6 +19,7 @@
     <string name="opengl_required">Esta aplicación requiere OpenGL ES 3.0+.</string>
     <string name="warning">Advertencia</string>
     <string name="scoped_storage_warning">Sus datos de usuario están almacenados en una ubicación que <b>se eliminará</b> si desinstala la aplicación:\n</string>
+    <string name="install_ng_game">Install N-Gage game</string>
     <string name="install">Instalar</string>
     <string name="rescan_devices">Reescanear dispositivos</string>
     <string name="device_dump">Volcado del dispositivo</string>
@@ -28,6 +29,7 @@
     <string name="path_to_firmware">Ruta al VPL</string>
     <string name="install_method">Método de instalación</string>
     <string name="enter_new_name">Introduzca el nuevo nombre</string>
+    <string name="mode">Mode</string>
     <string name="no_device_dialog_title">¡Ningún dispositivo instalado!</string>
     <string name="no_device_installed">Por favor, instale un dispositivo. Se requieren ficheros y la ROM de un dispositivo Symbian.\n\n<b>Nota:</b> Cada aplicación requiere de un dispositivo Symbian concreto para funcionar.</string>
     <string name="install_device_note_may_need_rpkg">Para dispositivos S60v2 o superior puede que sea necesario proveer un fichero adicional llamado RPKG. Si el instalador lo determina necesario, aparecerá el selector de ruta para seleccionarlo.</string>
@@ -68,6 +70,18 @@
     <string name="emulated_screen_refresh_rate_item_name">Frecuencia de refresco</string>
     <string name="pref_device_display_name">Nombre amistoso del teléfono</string>
     <string name="hide_system_apps">Ocultar aplicaciones del sistema</string>
+    <string name="pref_bt_netplay_direct_ips_manager">Direct IPs manager</string>
+    <string name="enter_address">Enter address</string>
+    <string name="address">Address</string>
+    <string name="port">Port</string>
+    <string name="pref_bt_netplay_mode_off">Off</string>
+    <string name="pref_bt_netplay_mode_direct_ip">Direct IP</string>
+    <string name="pref_bt_netplay_mode_lan">LAN</string>
+    <string name="pref_bt_netplay_mode_server">Server</string>
+    <string name="pref_bt_netplay_enable_upnp">Enable UPnP (for IPv4 public play)</string>
+    <string name="pref_bt_netplay_server_address">Server address</string>
+    <string name="pref_bt_netplay_password">Password</string>
+    <string name="pref_bt_netplay_port_offset">Port offset</string>
     <string name="action_context_delete">Eliminar</string>
     <string name="action_context_rename">Renombrar</string>
     <string name="action_context_shortcut">Crear acceso directo</string>
@@ -130,6 +144,7 @@
     <string name="enter_name">Introduzca un nombre</string>
     <string name="set_default_profile_description">Seleccionar este perfil como el predeterminado para las próximas aplicaciones instaladas</string>
     <string name="error_name_exists">Ya existe, introduzca otro nombre</string>
+    <string name="extensive_logging">Extensive logging</string>
     <string name="mapping_dialog_title">Presione una tecla</string>
     <string name="mapping_dialog_message" formatted="false">Mapping actual: %1$s</string>
     <string name="reset_mapping">Reset</string>
@@ -146,4 +161,8 @@
     <string name="about_icon_by">&lt;BR&gt;Icono por: </string>
     <string name="version">Versión: </string>
     <string name="recommended_devices_note"><b>Nota:</b>Se recomienda usar firmware para la instalación de dispositivos S60v3 y superior.</string>
+    <string name="install_ng_game_cant_find_data_folder">Can\'t find the game data folder!</string>
+    <string name="install_ng_game_more_than_one_game">There is more than one game in the given card game folder!</string>
+    <string name="install_ng_game_no_game_info_file">The game information file does not exist in the card game folder!</string>
+    <string name="install_ng_game_corrupted_game_info">The game information file has been corrupted. Please check your data\'s validity!</string>
 </resources>

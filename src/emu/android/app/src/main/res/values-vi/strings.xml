@@ -19,6 +19,7 @@
     <string name="opengl_required">Ứng dụng yêu cầu OpenGL ES 3.0+.</string>
     <string name="warning">Cảnh báo</string>
     <string name="scoped_storage_warning">Dữ liệu người dùng của bạn đang được lưu trữ ở nơi mà <b>sẽ bị xóa</b> sau khi bạn gỡ ứng dụng:\n</string>
+    <string name="install_ng_game">Install N-Gage game</string>
     <string name="install">Cài đặt</string>
     <string name="rescan_devices">Quét lại các thiết bị</string>
     <string name="device_dump">Dump của thiết bị</string>
@@ -28,6 +29,7 @@
     <string name="path_to_firmware">Đường dẫn tới VPL</string>
     <string name="install_method">Phương thức cài đặt</string>
     <string name="enter_new_name">Nhập tên mới</string>
+    <string name="mode">Chế độ</string>
     <string name="no_device_dialog_title">Chưa thiết bị nào được cài đặt!</string>
     <string name="no_device_installed">Hãy cài đặt một thiết bị. Các tệp tin và ROM của một thiết bị Symbian cần thiết cho quá trình cài đặt.\n\n<b>Lưu ý:</b> Mỗi ứng dụng sẽ cần một thiết bị Symbian thích hợp để khởi chạy.</string>
     <string name="install_device_note_may_need_rpkg">Với các thiết bị S60v2 hoặc cao hơn, bạn có thể cần đến một file nữa tên là RPKG. Nút chọn đường dẫn sẽ xuất hiện nếu trình cài đặt phát hiện ra nó cần thiết.</string>
@@ -67,10 +69,22 @@
     <string name="emulated_screen_rotation_item_name">Xoay màn hình</string>
     <string name="emulated_screen_refresh_rate_item_name">Tần số làm mới</string>
     <string name="pref_device_display_name">Tên điện thoại thân thiện</string>
-    <string name="hide_system_apps">Hide system applications</string>
+    <string name="hide_system_apps">Ẩn ứng dụng hệ thống</string>
+    <string name="pref_bt_netplay_direct_ips_manager">Quản lý Direct IP</string>
+    <string name="enter_address">Nhập địa chỉ</string>
+    <string name="address">Địa chỉ</string>
+    <string name="port">Cổng</string>
+    <string name="pref_bt_netplay_mode_off">Tắt</string>
+    <string name="pref_bt_netplay_mode_direct_ip">Direct IP</string>
+    <string name="pref_bt_netplay_mode_lan">LAN</string>
+    <string name="pref_bt_netplay_mode_server">Máy chủ</string>
+    <string name="pref_bt_netplay_enable_upnp">Bật UPnP (dùng cho IPv4 public play)</string>
+    <string name="pref_bt_netplay_server_address">Địa chỉ máy chủ</string>
+    <string name="pref_bt_netplay_password">Mật khẩu</string>
+    <string name="pref_bt_netplay_port_offset">Port offset</string>
     <string name="action_context_delete">Xóa</string>
     <string name="action_context_rename">Đổi tên</string>
-    <string name="action_context_shortcut">Create shortcut</string>
+    <string name="action_context_shortcut">Tạo đường dẫn</string>
     <string name="start">Bắt đầu</string>
     <string name="reset_settings">Đặt lại thiết đặt</string>
     <string name="reset_layout">Đặt lại bố cục phím</string>
@@ -85,7 +99,7 @@
     <string name="pref_touch_input">Cảm ứng</string>
     <string name="pref_vk_back">Nút</string>
     <string name="pref_vk_fore">Nhãn</string>
-    <string name="pref_vk_outline">Outline</string>
+    <string name="pref_vk_outline">Đường viền</string>
     <string name="pref_vk_alpha">Độ mờ: </string>
     <string name="pref_vk_hide_delay">Ẩn trễ: </string>
     <string name="pref_unit_ms">ms</string>
@@ -117,8 +131,8 @@
     <string name="pref_screen_scale_type_fill">Làm đầy cửa sổ (bỏ qua tỉ lệ khung hình)</string>
     <string name="pref_screen_scale_type_fit">Vừa với cửa sổ</string>
     <string name="pref_screen_scale_type_none">Như gốc</string>
-    <string name="pref_screen_scale_use_shader">Use shader for upscaling</string>
-    <string name="pref_screen_upscale_shader">Upscale shader</string>
+    <string name="pref_screen_scale_use_shader">Sử dụng hiệu ứng đổ bóng để tăng chất lượng hình ảnh</string>
+    <string name="pref_screen_upscale_shader">Nâng cấp hiệu ứng đổ bóng</string>
     <string name="pref_screen_default_shader">Mặc định</string>
     <string name="default_label">"%s (mặc định)"</string>
     <string name="not_saved_exists">Đã tồn tại</string>
@@ -130,6 +144,7 @@
     <string name="enter_name">Nhập tên</string>
     <string name="set_default_profile_description">Chọn cấu hình này là cấu hình chuẩn cho các ứng dụng mà sẽ được cài đặt sau này</string>
     <string name="error_name_exists">Đã tồn tại, nhập tên khác</string>
+    <string name="extensive_logging">Extensive logging</string>
     <string name="mapping_dialog_title">Bấm phím bất kì</string>
     <string name="mapping_dialog_message" formatted="false">Lưu với phím: %1$s</string>
     <string name="reset_mapping">Cài đặt lại</string>
@@ -142,8 +157,12 @@
     <string name="confirmation_required">Yêu cầu xác nhận</string>
     <string name="force_close_confirmation">Bắt buộc đóng ứng dụng có thể dẫn đến mất dữ liệu hoặc thậm chí hư hỏng!\nBạn vẫn muốn thoát?</string>
     <string name="log_saved">Log đã được lưu</string>
-    <string name="enter_text">Enter the text</string>
+    <string name="enter_text">Nhập văn bản ở trên</string>
     <string name="about_icon_by">&lt;BR&gt;Icon bởi: </string>
     <string name="version">Phiên bản: </string>
     <string name="recommended_devices_note"><b>Chú ý:</b> Khuyên dùng firmware để cài đặt những thiết bị từ S60v3 trở lên.</string>
+    <string name="install_ng_game_cant_find_data_folder">Can\'t find the game data folder!</string>
+    <string name="install_ng_game_more_than_one_game">There is more than one game in the given card game folder!</string>
+    <string name="install_ng_game_no_game_info_file">The game information file does not exist in the card game folder!</string>
+    <string name="install_ng_game_corrupted_game_info">The game information file has been corrupted. Please check your data\'s validity!</string>
 </resources>
