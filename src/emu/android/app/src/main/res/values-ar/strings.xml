@@ -19,7 +19,7 @@
     <string name="opengl_required">يتطلب التطبيق OpenGL ES 3.0+.</string>
     <string name="warning">تحذير</string>
     <string name="scoped_storage_warning">يتم تخزين بيانات المستخدم في مسار <b>سيتم حذفه</b> عند إلغاء تثبيت التطبيق:\n</string>
-    <string name="install_ng_game">Install N-Gage game</string>
+    <string name="install_ng_game">تثبيت لعبة N-Gage</string>
     <string name="install">تثبيت</string>
     <string name="rescan_devices">إعادة فحص الأجهزة</string>
     <string name="device_dump">Dump الجهاز</string>
@@ -29,7 +29,7 @@
     <string name="path_to_firmware">المسار إلى VPL</string>
     <string name="install_method">طريقة التثبيت</string>
     <string name="enter_new_name">أدخل اسم جديد</string>
-    <string name="mode">Mode</string>
+    <string name="mode">الوضع</string>
     <string name="no_device_dialog_title">لا يوجد جهاز مثبت!</string>
     <string name="no_device_installed">الرجاء تثبيت الجهاز. الملفات و ROM للجهاز الرمزي مطلوبة للتثبيت.\n\n<b>ملاحظة</b> يحتاج كل تطبيق إلى جهاز سيمبي مناسب لتشغيله.</string>
     <string name="install_device_note_may_need_rpkg">بالنسبة لأجهزة S60v2 أو أكثر، قد تحتاج إلى توفير ملف إضافي يسمى RPKG. اختيار المسار سيظهر عند اكتشاف المثبت الحاجة إليه.</string>
@@ -70,18 +70,18 @@
     <string name="emulated_screen_refresh_rate_item_name">معدل التحديث</string>
     <string name="pref_device_display_name">اسم الهاتف الودي</string>
     <string name="hide_system_apps">إخفاء تطبيقات النظام</string>
-    <string name="pref_bt_netplay_direct_ips_manager">Direct IPs manager</string>
-    <string name="enter_address">Enter address</string>
-    <string name="address">Address</string>
-    <string name="port">Port</string>
-    <string name="pref_bt_netplay_mode_off">Off</string>
-    <string name="pref_bt_netplay_mode_direct_ip">Direct IP</string>
-    <string name="pref_bt_netplay_mode_lan">LAN</string>
-    <string name="pref_bt_netplay_mode_server">Server</string>
-    <string name="pref_bt_netplay_enable_upnp">Enable UPnP (for IPv4 public play)</string>
-    <string name="pref_bt_netplay_server_address">Server address</string>
-    <string name="pref_bt_netplay_password">Password</string>
-    <string name="pref_bt_netplay_port_offset">Port offset</string>
+    <string name="pref_bt_netplay_direct_ips_manager">مدير IP المباشر</string>
+    <string name="enter_address">أدخل عنوان</string>
+    <string name="address">العنوان</string>
+    <string name="port">المنفذ</string>
+    <string name="pref_bt_netplay_mode_off">إيقاف</string>
+    <string name="pref_bt_netplay_mode_direct_ip">عنوان IP مباشر</string>
+    <string name="pref_bt_netplay_mode_lan">الشبكة المحلية</string>
+    <string name="pref_bt_netplay_mode_server">الخادم</string>
+    <string name="pref_bt_netplay_enable_upnp">تمكين UPnP (لتشغيل IPv4 العام)</string>
+    <string name="pref_bt_netplay_server_address">عنوان الخادم</string>
+    <string name="pref_bt_netplay_password">كلمة المرور</string>
+    <string name="pref_bt_netplay_port_offset">إزاحة المنفذ</string>
     <string name="action_context_delete">حذف</string>
     <string name="action_context_rename">إعادة التسمية</string>
     <string name="action_context_shortcut">إنشاء إختصار</string>
@@ -144,7 +144,7 @@
     <string name="enter_name">أدخل الاسم</string>
     <string name="set_default_profile_description">تحديد هذا الملف الشخصي كإعدادات إفتراضية لجميع التطبيقات التي سيتم تثبيتها لاحقاً</string>
     <string name="error_name_exists">هذا الاسم مستخدم، أدخل اسم آخر</string>
-    <string name="extensive_logging">Extensive logging</string>
+    <string name="extensive_logging">تسجيل واسع النطاق</string>
     <string name="mapping_dialog_title">اضغط على المفتاح</string>
     <string name="mapping_dialog_message" formatted="false">التخطيط الحالي: %1$s</string>
     <string name="reset_mapping">إعادة تعيين</string>
@@ -161,8 +161,8 @@
     <string name="about_icon_by">&lt;BR&gt;الايقونة بواسطة: </string>
     <string name="version">الإصدار: </string>
     <string name="recommended_devices_note"><b>ملاحظة:</b> ينصح باستخدام البرامج الثابتة لتثبيت الأجهزة من S60v3 وما فوق.</string>
-    <string name="install_ng_game_cant_find_data_folder">Can\'t find the game data folder!</string>
+    <string name="install_ng_game_cant_find_data_folder">لا يمكن العثور على مجلد بيانات اللعبة!</string>
     <string name="install_ng_game_more_than_one_game">There is more than one game in the given card game folder!</string>
     <string name="install_ng_game_no_game_info_file">The game information file does not exist in the card game folder!</string>
-    <string name="install_ng_game_corrupted_game_info">The game information file has been corrupted. Please check your data\'s validity!</string>
+    <string name="install_ng_game_corrupted_game_info">ملف معلومات اللعبة تالف. الرجاء التحقق من صحة بياناتك!</string>
 </resources>
