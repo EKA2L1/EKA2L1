@@ -96,22 +96,22 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="784"/>
       <source>Enter a new name</source>
-      <translation type="unfinished">Enter a new name</translation>
+      <translation>Masukkan nama baru</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="793"/>
       <source>Update name failed</source>
-      <translation type="unfinished">Update name failed</translation>
+      <translation>Gagal memperbarui nama</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="793"/>
       <source>An error occured while trying to rename the app!</source>
-      <translation type="unfinished">An error occured while trying to rename the app!</translation>
+      <translation>Terjadi kesalahan saat mengubah nama aplikasi!</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="802"/>
       <source>Delete app failed</source>
-      <translation type="unfinished">Delete app failed</translation>
+      <translation>Gagal menghapus</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="802"/>
