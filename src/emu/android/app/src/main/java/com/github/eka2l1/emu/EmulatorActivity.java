@@ -132,7 +132,7 @@ public class EmulatorActivity extends AppCompatActivity {
         if (wakelockEnabled) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
-        actionBarEnabled = dataStore.getBoolean(PREF_ACTIONBAR, true);
+        actionBarEnabled = dataStore.getBoolean(PREF_ACTIONBAR, false);
         statusBarEnabled = dataStore.getBoolean(PREF_STATUSBAR, false);
         if (!actionBarEnabled) {
             getSupportActionBar().hide();
