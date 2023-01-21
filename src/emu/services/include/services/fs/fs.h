@@ -231,9 +231,9 @@ namespace eka2l1 {
         std::uint8_t filler;
     };
 
+    // Match EKA1 layout. Need to implement this on EKA1 only
     struct file_parse {
-        std::int16_t mod;
-        std::int16_t wild;
+        std::int32_t wild;
         file_sfield fields[LEX_COMPONENTS];
         eka2l1::ptr<void> vtable;
         epoc::filename name_buf;

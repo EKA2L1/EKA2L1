@@ -100,6 +100,10 @@ namespace eka2l1 {
         if (!done) {
             result += name.substr(pos_start, pos_end - pos_start);
             done = true;
+
+            if ((pos_start + 1) == pos_end) {
+                parse_.wild |= file_wild_is_root;
+            }
         }
     }
 
