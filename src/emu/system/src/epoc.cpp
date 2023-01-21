@@ -355,7 +355,12 @@ namespace eka2l1 {
                 dvcmngr_->clear();
 
                 std::string rom_drive_name = std::string(1, static_cast<char>(drive_to_char16(romdrv)));
-                std::string root_z_path = add_path(conf_->storage, "drives/" + rom_drive_name + "/");
+
+                std::string storage_path;
+                common::get_current_directory(storage_path);
+                storage_path = eka2l1::absolute_path(conf_->storage, storage_path);
+
+                std::string root_z_path = add_path(storage_path, "drives/" + rom_drive_name + "/");
                 auto ite = common::make_directory_iterator(root_z_path);
                 if (!ite) {
                     return false;
@@ -376,7 +381,7 @@ namespace eka2l1 {
                         std::string manu, firm_name, model;
                         loader::determine_rpkg_product_info(full_entry_path, manu, firm_name, model);
 
-                        const std::string rom_directory = eka2l1::add_path(conf_->storage, eka2l1::add_path("roms", firm_name + "\\"));
+                        const std::string rom_directory = eka2l1::add_path(storage_path, eka2l1::add_path("roms", firm_name + "\\"));
                         const std::string rom_file = eka2l1::add_path(rom_directory, "SYM.ROM");
                         if (!common::exists(rom_file)) {
                             LOG_ERROR(SYSTEM, "Removing broken device: {} ({})", model, firm_name);
