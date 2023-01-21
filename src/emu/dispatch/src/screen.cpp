@@ -198,6 +198,8 @@ namespace eka2l1::dispatch {
         kernel_system *kern = sys->get_kernel_system();
 
         epoc::screen *scr = dispatcher->winserv_->get_screens();
+        eka2l1::rect update_rect = *rect_list;
+        update_rect.transform_from_symbian_rectangle();
 
         while (scr != nullptr) {
             if (scr->number == screen_number) {
@@ -205,7 +207,9 @@ namespace eka2l1::dispatch {
                 const epoc::config::screen_mode &mode_info = scr->current_mode();
 
                 const eka2l1::vec2 screen_size = mode_info.size;
-                const std::size_t buffer_size = mode_info.size.x * mode_info.size.y * 4;
+
+                const char *data_ptr = reinterpret_cast<const char *>(scr->screen_buffer_ptr()) + ((update_rect.top.y * mode_info.size.x + update_rect.top.x) * 4);
+                const std::size_t buffer_size = mode_info.size.x * update_rect.size.y * 4;
 
                 std::uint64_t next_vsync_us = 0;
                 scr->vsync(sys->get_ntimer(), next_vsync_us);
@@ -237,8 +241,8 @@ namespace eka2l1::dispatch {
                 eka2l1::drivers::filter_option filter = (kern->get_config()->nearest_neighbor_filtering ? eka2l1::drivers::filter_option::nearest : eka2l1::drivers::filter_option::linear);
                 drivers::graphics_command_builder builder;
 
-                builder.update_bitmap(scr->dsa_texture, reinterpret_cast<const char *>(scr->screen_buffer_ptr()),
-                    buffer_size, { 0, 0 }, screen_size);
+                // Only one rectangle for now!
+                builder.update_bitmap(scr->dsa_texture, data_ptr, buffer_size, update_rect.top, update_rect.size, mode_info.size.x);
 
                 // NOTE: This is a hack for some apps that dont fill alpha
                 // TODO: Figure out why or better solution (maybe the display mode is not really correct?)
@@ -379,10 +383,10 @@ namespace eka2l1::dispatch {
         std::uint8_t *dest_blt = info->dest_base.get(crr_process);
         const std::uint8_t *src_blt = info->src_base.get(crr_process);
 
-        if ((info->src_size.x == info->src_blit_rect.size.x) && info->dest_stride == info->src_stride
-            && info->src_blit_rect.top.x == 0 && info->dest_point.x == 0) {
-            std::memcpy(dest_blt + info->dest_point.y * info->dest_stride, src_blt + info->src_blit_rect.top.x * info->src_stride,
-                info->src_stride * info->src_size.y);
+        if ((info->src_size.x == info->src_blit_rect.size.x) && (info->dest_stride == info->src_stride)
+            && (info->src_blit_rect.top.x == 0) && (info->dest_point.x == 0)) {
+            std::memcpy(dest_blt + info->dest_point.y * info->dest_stride, src_blt + info->src_blit_rect.top.y * info->src_stride,
+                info->src_stride * info->src_blit_rect.size.y);
             return;
         }
 

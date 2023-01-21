@@ -3404,6 +3404,22 @@ namespace eka2l1::epoc {
 
         kern->get_info(the_object, *info);
     }
+    
+    BRIDGE_FUNC(void, handle_info, const kernel::handle h, kernel::handle_info *info) {
+        kernel_obj_ptr the_object = kern->get_kernel_obj_raw(h, kern->crr_thread());
+
+        if (!the_object) {
+            LOG_WARN(KERNEL, "Trying to get handle info of an invalid handle: 0x{:X}, ignored", h);
+            return;
+        }
+
+        if (!info) {
+            LOG_WARN(KERNEL, "Trying to get handle info but the information struct is null!");
+            return;
+        }
+
+        kern->get_info(the_object, *info);
+    }
 
     BRIDGE_FUNC(void, handle_name_eka1, des16 *name_des, kernel::handle h) {
         kernel_obj_ptr obj = kern->get_kernel_obj_raw(h, kern->crr_thread());
@@ -5638,6 +5654,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x3A, request_signal),
         BRIDGE_REGISTER(0x3B, handle_name),
         BRIDGE_REGISTER(0x3C, handle_full_name),
+        BRIDGE_REGISTER(0x3E, handle_info),
         BRIDGE_REGISTER(0x3E, handle_count),
         BRIDGE_REGISTER(0x3F, after),
         BRIDGE_REGISTER(0x41, message_complete),
@@ -5771,6 +5788,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x0B, math_rand),
         BRIDGE_REGISTER(0x0C, imb_range),
         BRIDGE_REGISTER(0x0E, library_lookup),
+        BRIDGE_REGISTER(0x0F, library_filename),
         BRIDGE_REGISTER(0x11, mutex_wait),
         BRIDGE_REGISTER(0x12, mutex_signal),
         BRIDGE_REGISTER(0x13, process_get_id),
@@ -5809,6 +5827,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x3B, request_signal),
         BRIDGE_REGISTER(0x3C, handle_name),
         BRIDGE_REGISTER(0x3D, handle_full_name),
+        BRIDGE_REGISTER(0x3E, handle_info),
         BRIDGE_REGISTER(0x3F, handle_count),
         BRIDGE_REGISTER(0x40, after),
         BRIDGE_REGISTER(0x42, message_complete),
@@ -5937,6 +5956,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x0B, math_rand),
         BRIDGE_REGISTER(0x0C, imb_range),
         BRIDGE_REGISTER(0x0E, library_lookup),
+        BRIDGE_REGISTER(0x0F, library_filename),
         BRIDGE_REGISTER(0x11, mutex_wait),
         BRIDGE_REGISTER(0x12, mutex_signal),
         BRIDGE_REGISTER(0x13, process_get_id),
@@ -5952,6 +5972,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x1E, process_set_flags),
         BRIDGE_REGISTER(0x1F, semaphore_wait),
         BRIDGE_REGISTER(0x20, semaphore_signal),
+        BRIDGE_REGISTER(0x21, semaphore_signal_n),
         BRIDGE_REGISTER(0x22, server_receive),
         BRIDGE_REGISTER(0x23, server_cancel),
         BRIDGE_REGISTER(0x24, set_session_ptr),
@@ -5973,6 +5994,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x3B, request_signal),
         BRIDGE_REGISTER(0x3C, handle_name),
         BRIDGE_REGISTER(0x3D, handle_full_name),
+        BRIDGE_REGISTER(0x3E, handle_info),
+        BRIDGE_REGISTER(0x3F, handle_count),
         BRIDGE_REGISTER(0x40, after),
         BRIDGE_REGISTER(0x42, message_complete),
         BRIDGE_REGISTER(0x43, message_complete_handle),

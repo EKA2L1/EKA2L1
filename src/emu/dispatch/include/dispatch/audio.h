@@ -77,4 +77,6 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_position, eka2l1::ptr<void> handle, std::uint64_t *time);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_reset_stat, eka2l1::ptr<void> handle);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_set_format, eka2l1::ptr<void> handle, const std::int32_t four_cc);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_get_format, eka2l1::ptr<void> handle, std::int32_t *four_cc);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_out_stream_set_balance, eka2l1::ptr<void> handle, std::uint32_t balance);
 }

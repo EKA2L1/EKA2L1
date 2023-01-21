@@ -827,4 +827,35 @@ namespace eka2l1::dispatch {
 
         return epoc::error_none;
     }
+    
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_get_format, eka2l1::ptr<void> handle, std::int32_t *four_cc_val) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
+        dsp_epoc_stream *stream = manager.get_object<dsp_epoc_stream>(handle.ptr_address());
+
+        if (!stream) {
+            return epoc::error_bad_handle;
+        }
+
+        if (!four_cc_val) {
+            return epoc::error_argument;
+        }
+
+        *four_cc_val = static_cast<std::int32_t>(stream->ll_stream_->format());
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_out_stream_set_balance, eka2l1::ptr<void> handle, std::uint32_t balance) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
+        dsp_epoc_stream *stream = manager.get_object<dsp_epoc_stream>(handle.ptr_address());
+
+        if (!stream) {
+            return epoc::error_bad_handle;
+        }
+
+        // Stub for now
+        // TODO: Implement
+        return epoc::error_none;
+    }
 }
