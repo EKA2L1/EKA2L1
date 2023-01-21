@@ -37,6 +37,8 @@ bool fullscreen_option_handler(eka2l1::common::arg_parser *parser, void *userdat
 bool mount_card_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
 bool device_set_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
 bool keybind_profile_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
+bool set_mmcid_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
+bool run_ngage_game_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
 
 #if ENABLE_SCRIPTING
 bool python_docgen_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);

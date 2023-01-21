@@ -287,16 +287,28 @@ bool mount_card_option_handler(eka2l1::common::arg_parser *parser, void *userdat
         return true;
     }
 
+    bool writable_sd = false;
+
+    if (eka2l1::common::compare_ignore_case("writeable", path) == 0) {
+        writable_sd = true;
+        path = parser->next_token();
+
+        if (!path) {
+            *err = "No folder specified";
+            return true;
+        }
+    }
+
     eka2l1::io_system *io = emu->symsys->get_io_system();
 
     io->unmount(drive_e);
 
     if (eka2l1::common::is_dir(path)) {
-        io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable | io_attrib_write_protected, common::utf8_to_ucs2(path));
+        io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable | (writable_sd ? 0 : io_attrib_write_protected), common::utf8_to_ucs2(path));
     } else {
         std::cout << "Mounting in progress. Please wait..." << std::endl;
 
-        eka2l1::zip_mount_error error = emu->symsys->mount_game_zip(drive_e, drive_media::physical, path, 0);
+        eka2l1::zip_mount_error error = emu->symsys->mount_game_zip(drive_e, drive_media::physical, path, (writable_sd ? 0 : io_attrib_write_protected));
         if (error != eka2l1::zip_mount_error_none) {
             switch (error) {
             case eka2l1::zip_mount_error_corrupt:
@@ -369,6 +381,55 @@ bool keybind_profile_option_handler(eka2l1::common::arg_parser *parser, void *us
     emu->conf.current_keybind_profile = profile;
     emu->conf.keybinds.deserialize(profile_path);
 
+    return true;
+}
+
+bool set_mmcid_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
+    desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
+    const char *mmc_id = parser->next_token();
+
+    if (!mmc_id) {
+        *err = "No MMC-ID entered!";
+        return true;
+    }
+
+    emu->conf.mmc_id = mmc_id;
+    return true;
+}
+
+bool run_ngage_game_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
+    desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
+    eka2l1::apa_app_registry registry;
+
+    if (!emu->symsys->get_ngage_game_info_mounted(registry)) {
+        *err = "Can't find the game mounted in E drive! If you believe this is a mistake, contact the emulator developers!";
+        return false;
+    }
+
+    kernel_system *kern = emu->symsys->get_kernel_system();
+    eka2l1::applist_server *svr = nullptr;
+
+    if (kern) {
+        svr = reinterpret_cast<eka2l1::applist_server *>(kern->get_by_name<service::server>(
+            get_app_list_server_name_by_epocver(kern->get_epoc_version())));
+    }
+
+    if (!svr) {
+        *err = "Can't get app list server!\n";
+        return false;
+    }
+
+    epoc::apa::command_line cmdline;
+    cmdline.launch_cmd_ = epoc::apa::command_create;
+
+    if (!svr->launch_app(registry, cmdline, nullptr, []() {
+        exit(0);
+    })) {
+        *err = "Launch app failed!";
+        return false;
+    }
+
+    emu->init_app_launched = true;
     return true;
 }
 

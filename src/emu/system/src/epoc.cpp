@@ -541,6 +541,8 @@ namespace eka2l1 {
         void mount(drive_number drv, const drive_media media, std::string path, const std::uint32_t attrib = io_attrib_none);
         zip_mount_error mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t attrib = io_attrib_none, progress_changed_callback progress_cb = nullptr, cancel_requested_callback cancel_cb = nullptr);
         ngage_game_card_install_error install_ngage_game_card(const std::string &folder_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb = nullptr);
+        ngage_game_card_install_error find_singular_ngage_game(const std::string &system_apps_folder_path, apa_app_registry &result, std::string *app_folder_name_1 = nullptr, std::string *app_folder_name_2 = nullptr);
+        bool get_ngage_game_info_mounted(apa_app_registry &result);
 
         bool reset(const bool lock_sys, const std::int32_t new_index = -1);
         void do_state(common::chunkyseri &seri);
@@ -874,37 +876,12 @@ namespace eka2l1 {
         }
 
         mz_zip_reader_end(archive.get());
-        mount(drv, media, temp_folder, base_attrib | io_attrib_write_protected | io_attrib_removeable);
+        mount(drv, media, temp_folder, base_attrib | io_attrib_removeable);
 
         return zip_mount_error_none;
     }
 
-    ngage_game_card_install_error system_impl::install_ngage_game_card(const std::string &folder_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb) {
-        std::string system_folder_path = eka2l1::add_path(folder_path, "\\system\\");
-        if (!common::exists(system_folder_path)) {
-            if (common::is_platform_case_sensitive()) {
-                std::string system_real_name = common::find_case_sensitive_file_name(folder_path + "\\", "system", common::FILE_DIRECTORY);
-                if (system_real_name.empty()) {
-                    return ngage_game_card_no_game_data_folder;
-                }
-                system_folder_path = eka2l1::add_path(folder_path, system_real_name + "\\");
-            } else {
-                return ngage_game_card_no_game_data_folder;
-            }
-        }
-        std::string system_apps_folder_path = eka2l1::add_path(system_folder_path, "\\apps\\");
-        if (!common::exists(system_apps_folder_path)) {
-            if (common::is_platform_case_sensitive()) {
-                std::string apps_real_name = common::find_case_sensitive_file_name(system_folder_path + "\\", "apps", common::FILE_DIRECTORY);
-                if (apps_real_name.empty()) {
-                    return ngage_game_card_no_game_data_folder;
-                }
-                system_apps_folder_path = eka2l1::add_path(system_folder_path, apps_real_name + "\\");
-            } else {
-                return ngage_game_card_no_game_data_folder;
-            }
-            return ngage_game_card_no_game_data_folder;
-        }
+    ngage_game_card_install_error system_impl::find_singular_ngage_game(const std::string &system_apps_folder_path, apa_app_registry &result, std::string *folder_1, std::string *folder_2) {
         std::unique_ptr<common::dir_iterator> apps_folder_ite = common::make_directory_iterator(system_apps_folder_path);
         apps_folder_ite->detail = true;
 
@@ -961,11 +938,75 @@ namespace eka2l1 {
         }
 
         common::ro_std_file_stream aif_file_stream(aif_file, true);
-        apa_app_registry app_reg_temp;
 
-        if (!eka2l1::read_registeration_info_aif(reinterpret_cast<common::ro_stream*>(&aif_file_stream), app_reg_temp,
+        if (!eka2l1::read_registeration_info_aif(reinterpret_cast<common::ro_stream*>(&aif_file_stream), result,
                                             drive_e, get_system_language())) {
             return ngage_game_card_registeration_corrupted;
+        }
+
+        if (folder_1) {
+            *folder_1 = specific_app;
+        }
+
+        if (folder_2) {
+            *folder_2 = specific_app_2;
+        }
+
+        return ngage_game_card_install_success;
+    }
+
+    bool system_impl::get_ngage_game_info_mounted(apa_app_registry &result) {
+        std::optional<std::u16string> path_apps = io_->get_raw_path(u"E:\\system\\apps\\");
+        if (!path_apps.has_value()) {
+            return false;
+        }
+
+        std::string folder_1, folder_2;
+        if (!find_singular_ngage_game(common::ucs2_to_utf8(path_apps.value()), result, &folder_1, &folder_2) == ngage_game_card_install_success) {
+            return false;
+        }
+
+        if (!folder_2.empty()) {
+            folder_1 = folder_2;
+        }
+
+        result.mandatory_info.app_path = eka2l1::add_path(u"E:\\system\\apps\\", common::utf8_to_ucs2(eka2l1::add_path(folder_1, folder_1 + ".app")));
+        return true;
+    }
+
+    ngage_game_card_install_error system_impl::install_ngage_game_card(const std::string &folder_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb) {
+        std::string system_folder_path = eka2l1::add_path(folder_path, "\\system\\");
+        if (!common::exists(system_folder_path)) {
+            if (common::is_platform_case_sensitive()) {
+                std::string system_real_name = common::find_case_sensitive_file_name(folder_path + "\\", "system", common::FILE_DIRECTORY);
+                if (system_real_name.empty()) {
+                    return ngage_game_card_no_game_data_folder;
+                }
+                system_folder_path = eka2l1::add_path(folder_path, system_real_name + "\\");
+            } else {
+                return ngage_game_card_no_game_data_folder;
+            }
+        }
+        std::string system_apps_folder_path = eka2l1::add_path(system_folder_path, "\\apps\\");
+        if (!common::exists(system_apps_folder_path)) {
+            if (common::is_platform_case_sensitive()) {
+                std::string apps_real_name = common::find_case_sensitive_file_name(system_folder_path + "\\", "apps", common::FILE_DIRECTORY);
+                if (apps_real_name.empty()) {
+                    return ngage_game_card_no_game_data_folder;
+                }
+                system_apps_folder_path = eka2l1::add_path(system_folder_path, apps_real_name + "\\");
+            } else {
+                return ngage_game_card_no_game_data_folder;
+            }
+            return ngage_game_card_no_game_data_folder;
+        }
+
+        std::string specific_app, specific_app_2;
+
+        apa_app_registry app_reg_temp;
+        ngage_game_card_install_error err_find = find_singular_ngage_game(system_apps_folder_path, app_reg_temp, &specific_app, &specific_app_2);
+        if (err_find != ngage_game_card_install_success) {
+            return err_find;
         }
 
         if (game_name_found_cb) {
@@ -990,7 +1031,7 @@ namespace eka2l1 {
         }
 
         // Copy system folder (override lib folder copy). We don't copy other file or folder
-        apps_folder_ite = common::make_directory_iterator(system_folder_path);
+        auto apps_folder_ite = common::make_directory_iterator(system_folder_path);
         apps_folder_ite->detail = true;
 
         common::dir_entry system_subitem_entry;
@@ -1039,7 +1080,7 @@ namespace eka2l1 {
 
         if (!explicit_lib_copy.empty() || !explicit_program_copy.empty()) {
             std::uint32_t percentage_per_explicit_copy = (!explicit_lib_copy.empty() && !explicit_program_copy.empty()) ? 50 : 100;
-            std::uint32_t flags_copy = common::FOLDER_COPY_FLAG_FILE_NO_OVERWRITE_IF_EXIST;
+            std::uint32_t flags_copy = 0;
 
             common::is_platform_case_sensitive() ? (flags_copy |= common::FOLDER_COPY_FLAG_LOWERCASE_NAME) : 0;
             std::uint32_t current_perct = 100;
@@ -1404,5 +1445,9 @@ namespace eka2l1 {
 
     void system::initialize_user_parties() {
         impl->initialize_user_parties();
+    }
+
+    bool system::get_ngage_game_info_mounted(apa_app_registry &result) {
+        return impl->get_ngage_game_info_mounted(result);
     }
 }

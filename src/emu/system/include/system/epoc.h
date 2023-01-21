@@ -36,6 +36,7 @@ namespace eka2l1 {
     class ntimer;
     class disasm;
     class gdbstub;
+    struct apa_app_registry;
 
     namespace common {
         class chunkyseri;
@@ -175,6 +176,7 @@ namespace eka2l1 {
             progress_changed_callback progress_cb = nullptr, cancel_requested_callback cancel_cb = nullptr);
 
         ngage_game_card_install_error install_ngage_game_card(const std::string &folder_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb = nullptr);
+        bool get_ngage_game_info_mounted(apa_app_registry &result);
 
         bool reset();
 
