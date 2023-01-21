@@ -31,7 +31,6 @@
 #if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
 #elif EKA2L1_PLATFORM(UNIX) || EKA2L1_PLATFORM(DARWIN)
-#include <fnmatch.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #endif
@@ -47,8 +46,10 @@
 
 #include <stack>
 #include <cstring>
+#include <regex>
 
 #include <common/pystr.h>
+#include <common/wildcard.h>
 
 namespace eka2l1::common {
     std::int64_t file_size(const std::string &path) {
@@ -173,7 +174,7 @@ namespace eka2l1::common {
 
     struct standard_dir_iterator: public dir_iterator {
     protected:
-        std::string match_pattern;
+        std::regex match_regex;
 
     public:
         void *handle;
@@ -205,14 +206,15 @@ namespace eka2l1::common {
         detail = false;
 
 #if EKA2L1_PLATFORM(POSIX)
-        match_pattern = eka2l1::filename(dir_name);
+        std::string match_pattern = eka2l1::filename(dir_name);
         dir_name = eka2l1::file_directory(dir_name);
 
         if (match_pattern.empty()) {
             match_pattern = "*";
         }
 
-        match_pattern += '\0';
+        LOG_TRACE(KERNEL, "{}", common::wildcard_to_regex_string(match_pattern));
+        match_regex = std::regex(common::wildcard_to_regex_string(match_pattern), std::regex_constants::icase);
 
         handle = reinterpret_cast<void *>(opendir(dir_name.c_str()));
 
@@ -224,7 +226,7 @@ namespace eka2l1::common {
 
         struct dirent *d = reinterpret_cast<decltype(d)>(find_data);
 
-        while (d && (fnmatch(match_pattern.c_str(), d->d_name, 0) != 0) && is_valid()) {
+        while (d && !std::regex_match(d->d_name, match_regex) && is_valid()) {
             cycles_to_next_entry();
             d = reinterpret_cast<decltype(d)>(find_data);
         };
@@ -331,7 +333,7 @@ namespace eka2l1::common {
         do {
             cycles_to_next_entry();
             d = reinterpret_cast<struct dirent *>(find_data);
-        } while (d && (fnmatch(match_pattern.c_str(), d->d_name, 0) != 0));
+        } while (d && !std::regex_match(d->d_name, match_regex));
 #endif
 
         return 0;
