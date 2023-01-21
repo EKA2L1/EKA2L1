@@ -96,27 +96,27 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="784"/>
       <source>Enter a new name</source>
-      <translation type="unfinished">Enter a new name</translation>
+      <translation>أدخل اسم جديد</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="793"/>
       <source>Update name failed</source>
-      <translation type="unfinished">Update name failed</translation>
+      <translation>فشل تحديث الاسم</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="793"/>
       <source>An error occured while trying to rename the app!</source>
-      <translation type="unfinished">An error occured while trying to rename the app!</translation>
+      <translation>حدث خطأ أثناء محاولة إعادة تسمية التطبيق!</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="802"/>
       <source>Delete app failed</source>
-      <translation type="unfinished">Delete app failed</translation>
+      <translation>فشل حذف التطبيق</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="802"/>
       <source>An error occured while trying to delete the app!</source>
-      <translation type="unfinished">An error occured while trying to delete the app!</translation>
+      <translation>حدث خطأ أثناء محاولة حذف التطبيق!</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="822"/>
@@ -134,82 +134,82 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="20"/>
       <source>Bluetooth netplay settings</source>
-      <translation type="unfinished">Bluetooth netplay settings</translation>
+      <translation>إعدادات اللعب عبر البلوتوث</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="47"/>
       <source>Mode</source>
-      <translation type="unfinished">Mode</translation>
+      <translation>الوضع</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="55"/>
       <source>Off</source>
-      <translation type="unfinished">Off</translation>
+      <translation>إيقاف</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="60"/>
       <source>Direct IP</source>
-      <translation type="unfinished">Direct IP</translation>
+      <translation>عنوان IP مباشر</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="65"/>
       <source>Local LAN</source>
-      <translation type="unfinished">Local LAN</translation>
+      <translation>الشبكة المحلية</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="70"/>
       <source>Server</source>
-      <translation type="unfinished">Server</translation>
+      <translation>الخادم</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="114"/>
       <source>Server address</source>
-      <translation type="unfinished">Server address</translation>
+      <translation>عنوان الخادم</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="133"/>
       <source>Enable UPnP (for IPv4 public play)</source>
-      <translation type="unfinished">Enable UPnP (for IPv4 public play)</translation>
+      <translation>تمكين UPnP (لتشغيل IPv4 العام)</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="165"/>
       <source>Save</source>
-      <translation type="unfinished">Save</translation>
+      <translation>حفظ</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="187"/>
       <source>Open friends&apos; IP editor</source>
-      <translation type="unfinished">Open friends&apos; IP editor</translation>
+      <translation>فتح&apos; محرر IP للأصدقاء</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="224"/>
       <source>Players with the same password will be able to see each others. This can be empty.</source>
-      <translation type="unfinished">Players with the same password will be able to see each others. This can be empty.</translation>
+      <translation>سيتمكن اللاعبين الذين لديهم نفس كلمة المرور من رؤية بعضهم البعض. هذا يمكن أن يكون فارغاً.</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="227"/>
       <source>Password</source>
-      <translation type="unfinished">Password</translation>
+      <translation>كلمة المرور</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="237"/>
       <source>Generate random</source>
-      <translation type="unfinished">Generate random</translation>
+      <translation>توليد عشوائي</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="244"/>
       <source>Clear</source>
-      <translation type="unfinished">Clear</translation>
+      <translation>مسح</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
       <source>Configuration not saved</source>
-      <translation type="unfinished">Configuration not saved</translation>
+      <translation>لم يتم حفظ الإعدادات</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
       <source>The Bluetooth netplay configuration has not been saved. Do you want to save?</source>
-      <translation type="unfinished">The Bluetooth netplay configuration has not been saved. Do you want to save?</translation>
+      <translation>لم يتم حفظ تكوين شبكة البلوتوث. هل تريد الحفظ؟</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="127"/>
@@ -227,22 +227,22 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="70"/>
       <source>Modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Modify friends&apos; IP addresses</translation>
+      <translation>تعديل أسماء الأصدقاء&apos; عناوين IP</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="85"/>
       <source>IP address (IPv4 or IPv6)</source>
-      <translation type="unfinished">IP address (IPv4 or IPv6)</translation>
+      <translation>عنوان IP (IPv4 أو IPv6)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="90"/>
       <source>Port (can be empty)</source>
-      <translation type="unfinished">Port (can be empty)</translation>
+      <translation>المنفذ (يمكن أن يكون فارغا)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="133"/>
       <source>Add more</source>
-      <translation type="unfinished">Add more</translation>
+      <translation>إضافة المزيد</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="134"/>
@@ -252,48 +252,48 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="135"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>تحديث</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="201"/>
       <source>Update friends success!</source>
-      <translation type="unfinished">Update friends success!</translation>
+      <translation>تم تحديث الاصدقاء بنجاح!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="201"/>
       <source>Friends&apos; IP addresses have been successfully saved!</source>
-      <translation type="unfinished">Friends&apos; IP addresses have been successfully saved!</translation>
+      <translation>تم حفظ الأصدقاء&apos; عناوين IP بنجاح!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="214"/>
       <source>Friend %1 has empty IP address!
 </source>
-      <translation type="unfinished">Friend %1 has empty IP address!
+      <translation>الصديق %1 لديه عنوان IP فارغ!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="216"/>
       <source>Friend %1 has invalid IP address!
 </source>
-      <translation type="unfinished">Friend %1 has invalid IP address!
+      <translation>صديق %1 لديه عنوان IP غير صالح!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="221"/>
       <source>Friend %1 has invalid port number (must be between 0 and 65535)!
 </source>
-      <translation type="unfinished">Friend %1 has invalid port number (must be between 0 and 65535)!
+      <translation>الصديق %1 لديه رقم منفذ غير صالح (يجب أن يكون بين 0 و 65535)!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="248"/>
       <source>Some errors in updating friends!</source>
-      <translation type="unfinished">Some errors in updating friends!</translation>
+      <translation>بعض الأخطاء في تحديث الأصدقاء!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="249"/>
       <source>Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</source>
-      <translation type="unfinished">Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</translation>
+      <translation>بعض الأصدقاء&apos; عناوين IP يمكن تحديث&apos;t (انظر النص التفصيلي).&lt;br&gt;العناوين التي تستطيع التحديث تم حفظها.</translation>
     </message>
   </context>
   <context>
@@ -446,33 +446,33 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="17"/>
       <source>Touch mapping editor</source>
-      <translation type="unfinished">Touch mapping editor</translation>
+      <translation>محرر تعيين اللمس</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="26"/>
       <source>&lt;b&gt;Mapping elements&lt;/b&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Mapping elements&lt;/b&gt;</translation>
+      <translation>&lt;b&gt;عناصر التخطيط&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="40"/>
       <source>Joystick</source>
-      <translation type="unfinished">Joystick</translation>
+      <translation>عصاء التحكم</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="45"/>
       <source>Single touch</source>
-      <translation type="unfinished">Single touch</translation>
+      <translation>لمسة واحدة</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="64"/>
       <source>For app: </source>
-      <translation type="unfinished">For app: </translation>
+      <translation>للتطبيق: </translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="105"/>
       <location filename="../src/btnmap/editor_widget.cpp" line="274"/>
       <source>Save and hide editor</source>
-      <translation type="unfinished">Save and hide editor</translation>
+      <translation>حفظ وإخفاء المحرر</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="136"/>
@@ -492,7 +492,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="181"/>
       <source>Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</source>
-      <translation type="unfinished">Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</translation>
+      <translation>يتم حفظ الملفات الشخصية لكل تطبيق/لعبة. اضغط على &lt;b&gt;تحرير&lt;/b&gt; لإدخال وضع التحرير. لحذف عنصر التخطيط، اضغط على &lt;b&gt;حذف&lt;/b&gt; وانقر على العنصر الذي تريد إزالته.</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="212"/>
@@ -507,12 +507,12 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="50"/>
       <source>Please wait for a game to be active!</source>
-      <translation type="unfinished">Please wait for a game to be active!</translation>
+      <translation>الرجاء الانتظار حتى تكون اللعبة نشطة!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="89"/>
       <source>For app: %1 (0x%2)</source>
-      <translation type="unfinished">For app: %1 (0x%2)</translation>
+      <translation>للتطبيق: %1 (0x%2)</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="151"/>
@@ -522,17 +522,17 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
       <source>Error creating profile!</source>
-      <translation type="unfinished">Error creating profile!</translation>
+      <translation>حدث خطأ أثناء إنشاء الملف الشخصي!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
       <source>Profile name contains special characters or system error encountered!</source>
-      <translation type="unfinished">Profile name contains special characters or system error encountered!</translation>
+      <translation>اسم الملف الشخصي يحتوي على أحرف خاصة أو خطأ في النظام!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="285"/>
       <source>Show editor</source>
-      <translation type="unfinished">Show editor</translation>
+      <translation>إظهار المحرر</translation>
     </message>
   </context>
   <context>
@@ -540,22 +540,22 @@
     <message>
       <location filename="../src/launch_process_dialog.ui" line="14"/>
       <source>Launch process</source>
-      <translation type="unfinished">Launch process</translation>
+      <translation>عملية التشغيل</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="31"/>
       <source>Arguments</source>
-      <translation type="unfinished">Arguments</translation>
+      <translation>الحجج</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="51"/>
       <source>Executable path</source>
-      <translation type="unfinished">Executable path</translation>
+      <translation>المسار القابل للتنفيذ</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="78"/>
       <source>Launch</source>
-      <translation type="unfinished">Launch</translation>
+      <translation>تشغيل</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="85"/>
@@ -566,17 +566,17 @@
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
       <location filename="../src/launch_process_dialog.cpp" line="33"/>
       <source>Launch failed</source>
-      <translation type="unfinished">Launch failed</translation>
+      <translation>فشل التشغيل</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
       <source>The executable path field is empty!</source>
-      <translation type="unfinished">The executable path field is empty!</translation>
+      <translation>حقل المسار التنفيذي فارغ!</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="33"/>
       <source>The executable path is invalid or the executable is corrupted. Check the log for more info!</source>
-      <translation type="unfinished">The executable path is invalid or the executable is corrupted. Check the log for more info!</translation>
+      <translation>المسار القابل للتنفيذ غير صالح أو الجهاز التنفيذي تالف. تحقق من السجل للحصول على مزيد من المعلومات!</translation>
     </message>
   </context>
   <context>
@@ -624,12 +624,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="133"/>
       <source>Bluetooth</source>
-      <translation type="unfinished">Bluetooth</translation>
+      <translation>البلوتوث</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="137"/>
       <source>Netplay</source>
-      <translation type="unfinished">Netplay</translation>
+      <translation>اللعب عبر الشبكة</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="146"/>
@@ -719,17 +719,17 @@
     <message>
       <location filename="../src/mainwindow.ui" line="293"/>
       <source>Friends&apos;s IP addresses</source>
-      <translation type="unfinished">Friends&apos;s IP addresses</translation>
+      <translation>الأصدقاء&apos;عناوين IP</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="298"/>
       <source>Button mapping editor</source>
-      <translation type="unfinished">Button mapping editor</translation>
+      <translation>محرر تعيين الزر</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="303"/>
       <source>Touch mapping editor</source>
-      <translation type="unfinished">Touch mapping editor</translation>
+      <translation>محرر تعيين اللمس</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="308"/>
@@ -744,7 +744,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="318"/>
       <source>Launch process</source>
-      <translation type="unfinished">Launch process</translation>
+      <translation>عملية التشغيل</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="328"/>
@@ -917,7 +917,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1011"/>
       <source>Launch failed</source>
-      <translation type="unfinished">Launch failed</translation>
+      <translation>فشل التشغيل</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1011"/>
@@ -1930,7 +1930,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.ui" line="126"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>تحديث</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="139"/>
