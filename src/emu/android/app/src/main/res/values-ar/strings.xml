@@ -162,7 +162,7 @@
     <string name="version">الإصدار: </string>
     <string name="recommended_devices_note"><b>ملاحظة:</b> ينصح باستخدام البرامج الثابتة لتثبيت الأجهزة من S60v3 وما فوق.</string>
     <string name="install_ng_game_cant_find_data_folder">لا يمكن العثور على مجلد بيانات اللعبة!</string>
-    <string name="install_ng_game_more_than_one_game">There is more than one game in the given card game folder!</string>
-    <string name="install_ng_game_no_game_info_file">The game information file does not exist in the card game folder!</string>
+    <string name="install_ng_game_more_than_one_game">هناك أكثر من لعبة واحدة في مجلد اللعبة المعين!</string>
+    <string name="install_ng_game_no_game_info_file">ملف معلومات اللعبة غير موجود في مجلد اللعبة!</string>
     <string name="install_ng_game_corrupted_game_info">ملف معلومات اللعبة تالف. الرجاء التحقق من صحة بياناتك!</string>
 </resources>
