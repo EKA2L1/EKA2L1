@@ -734,12 +734,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="308"/>
       <source>N-Gage card game</source>
-      <translation type="unfinished">N-Gage card game</translation>
+      <translation>بطاقة لُعْبَة N-Gage</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="313"/>
       <source>Check for update</source>
-      <translation type="unfinished">Check for update</translation>
+      <translation>التحقق من وجود تحديث</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="318"/>
@@ -749,7 +749,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="328"/>
       <source>Configure</source>
-      <translation type="unfinished">Configure</translation>
+      <translation>اعداد</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="248"/>
@@ -785,72 +785,72 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="663"/>
       <source>Installing &lt;b&gt;%1&lt;/b&gt;</source>
-      <translation type="unfinished">Installing &lt;b&gt;%1&lt;/b&gt;</translation>
+      <translation>تثبيت &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="676"/>
       <source>Choose the N-Gage game card folder</source>
-      <translation type="unfinished">Choose the N-Gage game card folder</translation>
+      <translation>اختر مجلد بطاقة لعبة N-Gage</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="684"/>
       <source>Installing N-Gage game...</source>
-      <translation type="unfinished">Installing N-Gage game...</translation>
+      <translation>تثبيت لعبة N-Gagage...</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="707"/>
       <source>Install success!</source>
-      <translation type="unfinished">Install success!</translation>
+      <translation>تم التثبيت بنجاح!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="707"/>
       <source>Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</source>
-      <translation type="unfinished">Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</translation>
+      <translation>تم تثبيت لعبة بطاقة N-Gage بنجاح: &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="713"/>
       <source>Can&apos;t find the game data folder!</source>
-      <translation type="unfinished">Can&apos;t find the game data folder!</translation>
+      <translation>يستطيع&apos;العثور على مجلد بيانات اللعبة!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="717"/>
       <source>There is more than one game in the given card game folder!</source>
-      <translation type="unfinished">There is more than one game in the given card game folder!</translation>
+      <translation>هناك أكثر من لعبة واحدة في مجلد اللعبة المعين!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="721"/>
       <source>The game information file does not exist in the card game folder!</source>
-      <translation type="unfinished">The game information file does not exist in the card game folder!</translation>
+      <translation>ملف معلومات اللعبة غير موجود في مجلد اللعبة!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="725"/>
       <source>The game information file has been corrupted. Please check your data&apos;s validity!</source>
-      <translation type="unfinished">The game information file has been corrupted. Please check your data&apos;s validity!</translation>
+      <translation>ملف معلومات اللعبة تالف. الرجاء التحقق من صحة بياناتك&apos;ثانية!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="729"/>
       <source>General error occured...</source>
-      <translation type="unfinished">General error occured...</translation>
+      <translation>حدث خطأ عام...</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="734"/>
       <location filename="../src/mainwindow.cpp" line="736"/>
       <location filename="../src/mainwindow.cpp" line="1636"/>
       <source>Install failed</source>
-      <translation type="unfinished">Install failed</translation>
+      <translation>فشل التثبيت</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="734"/>
       <source>Installation failed with error:
   -%1</source>
-      <translation type="unfinished">Installation failed with error:
+      <translation>فشل التثبيت بخطأ:
   -%1</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="736"/>
       <source>Installation of %1% failed with error:
   -%2</source>
-      <translation type="unfinished">Installation of %1% failed with error:
+      <translation>فشل تثبيت %1% بالخطأ:
   -%2</translation>
     </message>
     <message>
@@ -922,7 +922,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1011"/>
       <source>Fail to launch the selected application!</source>
-      <translation type="unfinished">Fail to launch the selected application!</translation>
+      <translation>فشل في بدء تشغيل التطبيق المحدد!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1028"/>
@@ -992,72 +992,72 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1454"/>
       <source>Continue to modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Continue to modify friends&apos; IP addresses</translation>
+      <translation>الاستمرار في تعديل الأصدقاء&apos; عناوين IP</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1455"/>
       <source>This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</source>
-      <translation type="unfinished">This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</translation>
+      <translation>سيظهر مربع الحوار هذا جميع عناوين IP المخزنة، التي يمكن أن تكشف عن الآخرين&apos; معلومات شخصية.&lt;br&gt;هل ترغب في المتابعة؟</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1472"/>
       <source>Bluetooth manager service not available!</source>
-      <translation type="unfinished">Bluetooth manager service not available!</translation>
+      <translation>خدمة مدير البلوتوث غير متوفرة!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1472"/>
       <source>The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</source>
-      <translation type="unfinished">The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</translation>
+      <translation>الجهاز المحاكي لا يحتوي على خدمة مدير البلوتوث! البلوتوث غير مدعوم.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1589"/>
       <source>Choose the JAR file to install</source>
-      <translation type="unfinished">Choose the JAR file to install</translation>
+      <translation>اختر ملف JAR لتثبيته</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1589"/>
       <source>JAR file (*.jar)</source>
-      <translation type="unfinished">JAR file (*.jar)</translation>
+      <translation>ملف JAR (*.jar)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1597"/>
       <source>%1 version %2 (by %3) has been installed!</source>
-      <translation type="unfinished">%1 version %2 (by %3) has been installed!</translation>
+      <translation>تم تثبيت %1 الإصدار %2 (بواسطة %3)!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1600"/>
       <source>Install success</source>
-      <translation type="unfinished">Install success</translation>
+      <translation>تم التثبيت بنجاح</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1612"/>
       <source>Can not add the JAR to the apps database!</source>
-      <translation type="unfinished">Can not add the JAR to the apps database!</translation>
+      <translation>لا يمكن إضافة JAR إلى قاعدة بيانات التطبيقات!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1616"/>
       <source>The given file is not a valid JAR file!</source>
-      <translation type="unfinished">The given file is not a valid JAR file!</translation>
+      <translation>الملف المحدد ليس ملف JAR صالح!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1620"/>
       <source>Can not find the JAR file!</source>
-      <translation type="unfinished">Can not find the JAR file!</translation>
+      <translation>لا يمكن العثور على ملف JAR!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1624"/>
       <source>The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</source>
-      <translation type="unfinished">The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</translation>
+      <translation>يحتاج JAR إلى MIDP-2.0، ولكن المحاكي يدعم فقط MIDP-1.0 JAR قيد التشغيل على أجهزة S60v1!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1628"/>
       <source>The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</source>
-      <translation type="unfinished">The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</translation>
+      <translation>لا يمكن تثبيت JAR لهذا الجهاز الحالي! فقط أجهزة S60v1 يمكن تثبيت هذا JAR في الوقت الحالي</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1632"/>
       <source>An unexpected error has happened. Error code: %1</source>
-      <translation type="unfinished">An unexpected error has happened. Error code: %1</translation>
+      <translation>حدث خطأ غير متوقع. رمز الخطأ: %1</translation>
     </message>
   </context>
   <context>
@@ -1188,7 +1188,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="279"/>
       <source>Hide system applications across all devices</source>
-      <translation type="unfinished">Hide system applications across all devices</translation>
+      <translation>إخفاء تطبيقات النظام عبر جميع الأجهزة</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="282"/>
@@ -1243,17 +1243,17 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="382"/>
       <source>Log filter</source>
-      <translation type="unfinished">Log filter</translation>
+      <translation>تصفية السجل</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="399"/>
       <source>Apply</source>
-      <translation type="unfinished">Apply</translation>
+      <translation>تطبيق</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="408"/>
       <source>Show log console (Windows only)</source>
-      <translation type="unfinished">Show log console (Windows only)</translation>
+      <translation>إظهار وحدة سجل الأخطاء (ويندوز فقط)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="418"/>
@@ -1350,7 +1350,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="597"/>
       <source>Disable title with Git version</source>
-      <translation type="unfinished">Disable title with Git version</translation>
+      <translation>تعطيل العنوان مع إصدار Git</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="604"/>
@@ -1905,27 +1905,27 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.ui" line="14"/>
       <source>New update available</source>
-      <translation type="unfinished">New update available</translation>
+      <translation>تحديث جديد متوفر</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="43"/>
       <source>A new update has been released on GitHub!</source>
-      <translation type="unfinished">A new update has been released on GitHub!</translation>
+      <translation>تم إصدار تحديث جديد على GitHub!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="61"/>
       <source>Changelog</source>
-      <translation type="unfinished">Changelog</translation>
+      <translation>سِجل التغييرات</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="84"/>
       <source>Downloading update ... %p%</source>
-      <translation type="unfinished">Downloading update ... %p%</translation>
+      <translation>تحميل التحديث... %p%</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="91"/>
       <source>Do not automatically check for update when startup</source>
-      <translation type="unfinished">Do not automatically check for update when startup</translation>
+      <translation>لا تتحقق تلقائيًا من التحديث عند بدء التشغيل</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="126"/>
@@ -1935,7 +1935,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.ui" line="139"/>
       <source>Ignore</source>
-      <translation type="unfinished">Ignore</translation>
+      <translation>تجاهل</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="149"/>
@@ -1945,94 +1945,94 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.cpp" line="107"/>
       <source>Update success</source>
-      <translation type="unfinished">Update success</translation>
+      <translation>تم التحديث بنجاح</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="113"/>
       <source>Update failed</source>
-      <translation type="unfinished">Update failed</translation>
+      <translation>فشل التحديث</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="142"/>
       <source>The emulator is already updated to lastest version!</source>
-      <translation type="unfinished">The emulator is already updated to lastest version!</translation>
+      <translation>تم تحديث المحاكي بالفعل إلى أحدث إصدار!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="152"/>
       <source>The release channel is not available. Please check your internet connection!</source>
-      <translation type="unfinished">The release channel is not available. Please check your internet connection!</translation>
+      <translation>قناة الإصدار غير متوفرة. الرجاء التحقق من اتصال الإنترنت الخاص بك!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="158"/>
       <source>Failed to get information about the newest update from GitHub!</source>
-      <translation type="unfinished">Failed to get information about the newest update from GitHub!</translation>
+      <translation>فشل الحصول على معلومات حول أحدث تحديث من GitHub!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="190"/>
       <source>Can&apos;t find the download link of newest update for your platform!</source>
-      <translation type="unfinished">Can&apos;t find the download link of newest update for your platform!</translation>
+      <translation>يمكن&apos;العثور على رابط التحميل لأحدث تحديث للمنصة الخاصة بك!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="196"/>
       <source>Failed to get update download link from GitHub!</source>
-      <translation type="unfinished">Failed to get update download link from GitHub!</translation>
+      <translation>فشل الحصول على رابط التحديث من GitHub!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="214"/>
       <source>Error retrieving changelog from GitHub...</source>
-      <translation type="unfinished">Error retrieving changelog from GitHub...</translation>
+      <translation>حدث خطأ أثناء استرداد سجل التغييرات من GitHub...</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="238"/>
       <source>Changelog (update commit: %1)</source>
-      <translation type="unfinished">Changelog (update commit: %1)</translation>
+      <translation>سجل التغييرات (التزام التحديث: %1)</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="259"/>
       <source>Updater unsupported</source>
-      <translation type="unfinished">Updater unsupported</translation>
+      <translation>التحديث غير مدعوم</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="259"/>
       <source>The updater is not yet supported on your platform!</source>
-      <translation type="unfinished">The updater is not yet supported on your platform!</translation>
+      <translation>التحديث غير مدعوم حتى الآن على منصتك!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="303"/>
       <location filename="../src/update_dialog.cpp" line="363"/>
       <source>Update error</source>
-      <translation type="unfinished">Update error</translation>
+      <translation>خطأ في التحديث</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="303"/>
       <source>Can&apos;t not open temporary file for storing the update files!</source>
-      <translation type="unfinished">Can&apos;t not open temporary file for storing the update files!</translation>
+      <translation>لا يمكن&apos;فتح الملف المؤقت لتخزين ملفات التحديث!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="387"/>
       <source>Failed to download update with error: %1</source>
-      <translation type="unfinished">Failed to download update with error: %1</translation>
+      <translation>فشل تنزيل التحديث بخطأ: %1</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="395"/>
       <source>Downloaded update is not in zip format!</source>
-      <translation type="unfinished">Downloaded update is not in zip format!</translation>
+      <translation>التحديث الذي تم تنزيله ليس في تنسيق مضغوط!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="424"/>
       <source>Failed to update the updater program!</source>
-      <translation type="unfinished">Failed to update the updater program!</translation>
+      <translation>فشل تحديث برنامج التحديث!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="432"/>
       <source>Update zip file is corrupted!</source>
-      <translation type="unfinished">Update zip file is corrupted!</translation>
+      <translation>الملف المضغوط لتحديث تالف!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="439"/>
       <location filename="../src/update_dialog.cpp" line="454"/>
       <source>Can&apos;t find the updater program in the update archive file!</source>
-      <translation type="unfinished">Can&apos;t find the updater program in the update archive file!</translation>
+      <translation>يمكن&apos;العثور على برنامج التحديث في ملف الأرشيف!</translation>
     </message>
   </context>
   <context>
@@ -2040,7 +2040,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_notice_dialog.ui" line="14"/>
       <source>Update news</source>
-      <translation type="unfinished">Update news</translation>
+      <translation>أخبار التحديث</translation>
     </message>
   </context>
   <context>
@@ -2048,53 +2048,53 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/updater.ui" line="14"/>
       <source>EKA2L1 Updater</source>
-      <translation type="unfinished">EKA2L1 Updater</translation>
+      <translation>EKA2L1 محدث</translation>
     </message>
     <message>
       <location filename="../src/updater.ui" line="59"/>
       <source>Updating...</source>
-      <translation type="unfinished">Updating...</translation>
+      <translation>جارٍ التحديث...</translation>
     </message>
     <message>
       <location filename="../src/updater.ui" line="85"/>
       <source>Extracting ... %p%</source>
-      <translation type="unfinished">Extracting ... %p%</translation>
+      <translation>استخراج... %p%</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="93"/>
       <source>Update failed</source>
-      <translation type="unfinished">Update failed</translation>
+      <translation>فشل التحديث</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="101"/>
       <source>Downloaded update is not a zip file!</source>
-      <translation type="unfinished">Downloaded update is not a zip file!</translation>
+      <translation>التحديث الذي تم تنزيله ليس ملف مضغوط!</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="124"/>
       <location filename="../src/updater.cpp" line="177"/>
       <source>The downloaded archive zip is corrupted</source>
-      <translation type="unfinished">The downloaded archive zip is corrupted</translation>
+      <translation>الأرشيف الذي تم تحميله تالف</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="180"/>
       <source>Extracted: %1</source>
-      <translation type="unfinished">Extracted: %1</translation>
+      <translation>مستخرج: %1</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="199"/>
       <source>Update&apos;s archive file does not exist!</source>
-      <translation type="unfinished">Update&apos;s archive file does not exist!</translation>
+      <translation>تحديث&apos;ملف الأرشيف غير موجود!</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="214"/>
       <source>Update success</source>
-      <translation type="unfinished">Update success</translation>
+      <translation>تم التحديث بنجاح</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="214"/>
       <source>Update success. Relaunch the emulator?</source>
-      <translation type="unfinished">Update success. Relaunch the emulator?</translation>
+      <translation>نجح التحديث. هل تريد إعادة تشغيل المحاكي؟</translation>
     </message>
   </context>
 </TS>
