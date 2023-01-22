@@ -125,17 +125,20 @@ namespace eka2l1 {
             return session_path;
         }
 
+        // For some reasons some apps throw path with ton of spaces at the end
+        // Windows is fine with it (probably through tons of fixes they have to do to ensure compatibilities!),
+        // but not the case for other OSes
         if (is_separator(target_path[0])) {
             // Only append the root directory to the beginning
-            return eka2l1::add_path(eka2l1::root_name(session_path, true), target_path, true);
+            return common::trim_spaces(eka2l1::add_path(eka2l1::root_name(session_path, true), target_path, true));
         }
 
         // Check if the path has a root directory
         if (!eka2l1::has_root_name(target_path)) {
-            return eka2l1::add_path(session_path, target_path, true);
+            return common::trim_spaces(eka2l1::add_path(session_path, target_path, true));
         }
 
-        return target_path;
+        return common::trim_spaces(target_path);
     }
 
     size_t fs_path_case_insensitive_hasher::operator()(const utf16_str &key) const {
