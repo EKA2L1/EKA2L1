@@ -545,7 +545,7 @@
     <message>
       <location filename="../src/launch_process_dialog.ui" line="31"/>
       <source>Arguments</source>
-      <translation type="unfinished">Arguments</translation>
+      <translation>Argumentos</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="51"/>
