@@ -380,6 +380,8 @@ namespace eka2l1 {
         std::uint64_t next_repeat_delay_; ///< Time that the next repeat event after the previous being generated.
 
         int repeatable_event_;
+        int deliver_report_visibility_evt_;
+
         std::set<std::uint64_t> cancel_repeatable_list;
 
         enum {
@@ -517,6 +519,10 @@ namespace eka2l1 {
 
         const bool no_redraw_storing_enabled() const {
             return config_flags & CONFIG_FLAG_NO_REDRAW_STORING;
+        }
+
+        int get_deliver_delay_report_visiblity_event() const {
+            return deliver_report_visibility_evt_;
         }
     };
 }

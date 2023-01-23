@@ -94,6 +94,8 @@ namespace eka2l1::epoc {
         std::uint64_t last_fps_sync_;
         std::uint64_t fps_count_;
 
+        bool in_visibility_delay_report_;
+
         // NOTE: If you ever want to access this and call a function that can directly affect this list elements, copy it first
         std::vector<dsa*> directs_;
 
@@ -135,7 +137,7 @@ namespace eka2l1::epoc {
          */
         void set_extent(const eka2l1::vec2 &top, const eka2l1::vec2 &size);
         void recalculate_absolute_position(const eka2l1::vec2 &diff);
-        void report_visiblity_change();
+        void report_visiblity_change(const bool forced = false);
 
         bool is_visible() const;
         bool can_be_physically_seen() const;

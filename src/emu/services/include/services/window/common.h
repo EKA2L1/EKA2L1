@@ -673,6 +673,7 @@ namespace eka2l1::epoc {
     static constexpr std::uint16_t WS_NEWARCH_VER = 151;
     static constexpr std::uint64_t WS_DEFAULT_KEYBOARD_REPEAT_INIT_DELAY = 300000;
     static constexpr std::uint64_t WS_DEFAULT_KEYBOARD_REPEAT_NEXT_DELAY = 100000;
+    static constexpr std::uint64_t WS_DELIVER_REPORT_VISIBILITY_INIT_DELAY = 400000;
 
     key_code map_scancode_to_keycode(std_scan_code scan_code);
     std_scan_code post_processing_scancode(std_scan_code input_code, int ui_rotation);

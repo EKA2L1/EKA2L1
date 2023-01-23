@@ -78,7 +78,8 @@ namespace eka2l1::epoc {
         , max_pointer_buffer_(0)
         , last_draw_(0)
         , last_fps_sync_(0)
-        , fps_count_(0) {
+        , fps_count_(0)
+        , in_visibility_delay_report_(false) {
         set_initial_state();
 
         abs_rect.top = reinterpret_cast<canvas_interface *>(parent)->absolute_position();
@@ -109,6 +110,12 @@ namespace eka2l1::epoc {
     }
 
     canvas_base::~canvas_base() {
+        if (in_visibility_delay_report_) {
+            ntimer *timer = client->get_ws().get_ntimer();
+            timer->unschedule_event(client->get_ws().get_deliver_delay_report_visiblity_event(),
+                reinterpret_cast<std::uint64_t>(this));
+        }
+
         set_visible(false);
 
         remove_from_sibling_list();
@@ -232,7 +239,15 @@ namespace eka2l1::epoc {
         return abs_rect.size;
     }
 
-    void canvas_base::report_visiblity_change() {
+    void canvas_base::report_visiblity_change(const bool forced) {
+        if (!forced && in_visibility_delay_report_) {
+            return;
+        }
+
+        if (forced) {
+            in_visibility_delay_report_ = false;
+        }
+
         if ((flags & flag_visiblity_event_report) == 0) {
             return;
         }
@@ -618,8 +633,20 @@ namespace eka2l1::epoc {
     void canvas_base::enable_visiblity_change_events(service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         flags |= flag_visiblity_event_report;
 
-        scr->recalculate_visible_regions();
-        report_visiblity_change();
+        // Delay the report a bit... With IPC + system expected delay
+        // Games needed: Digitial Chocolate N-Gage 2.0 games, display ready is called when display object instance is not yet created
+        if (!in_visibility_delay_report_) {
+            in_visibility_delay_report_ = true;
+            scr->recalculate_visible_regions();
+
+            window_server &ws = client->get_ws();
+            ntimer *timer = ws.get_ntimer();
+
+            timer->schedule_event(epoc::WS_DELIVER_REPORT_VISIBILITY_INIT_DELAY, ws.get_deliver_delay_report_visiblity_event(),
+                reinterpret_cast<std::uint64_t>(this));
+        } else {  
+            scr->recalculate_visible_regions();
+        }
         
         ctx.complete(epoc::error_none);
     }

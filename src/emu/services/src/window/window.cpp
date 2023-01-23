@@ -1539,7 +1539,10 @@ namespace eka2l1 {
             screens = next;
         }
 
-        get_ntimer()->remove_event(repeatable_event_);
+        ntimer *timer = get_ntimer();
+        timer->remove_event(repeatable_event_);
+        timer->remove_event(deliver_report_visibility_evt_);
+
         bmp_cache.clean(drv);
     }
 
@@ -2025,8 +2028,6 @@ namespace eka2l1 {
         init_ws_mem();
         init_repeatable();
 
-        
-
         loaded = true;
     }
 
@@ -2073,6 +2074,14 @@ namespace eka2l1 {
                 }
 
                 kern->unlock();
+            });
+
+        deliver_report_visibility_evt_ = kern->get_ntimer()->register_event("WsDeliverReportVisiblityEvent",
+            [](std::uint64_t userdata, std::uint64_t microsecs_late) {
+                epoc::canvas_base *cv = reinterpret_cast<epoc::canvas_base *>(userdata);
+                if (cv) {
+                    cv->report_visiblity_change(true);
+                }
             });
     }
 
