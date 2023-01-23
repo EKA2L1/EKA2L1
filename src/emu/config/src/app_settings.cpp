@@ -77,7 +77,7 @@ namespace eka2l1::config {
         return &(ite->second);
     }
 
-    static const char *COMPAT_DIR_PATH = "compat//";
+    static const char *COMPAT_DIR_PATH = "compat\\";
 
     bool app_settings::load_all_settings() {
         if (!common::exists(COMPAT_DIR_PATH)) {

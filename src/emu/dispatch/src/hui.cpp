@@ -81,4 +81,8 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_DISPATCHER(void, ehui_close_input_view) {
         drivers::ui::close_input_view();
     }
+    
+    BRIDGE_FUNC_DISPATCHER(bool, ehui_is_keypad_based) {
+        return sys->get_symbian_version_use() < epocver::epoc94;
+    }
 }

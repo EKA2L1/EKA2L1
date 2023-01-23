@@ -359,7 +359,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     connect(this, &main_window::package_install_text_ask, this, &main_window::on_package_install_text_ask, Qt::BlockingQueuedConnection);
     connect(this, &main_window::package_install_language_choose, this, &main_window::on_package_install_language_choose, Qt::BlockingQueuedConnection);
     connect(this, &main_window::screen_focus_group_changed, this, &main_window::on_screen_current_group_change_callback, Qt::QueuedConnection);
-    connect(this, &main_window::input_dialog_open_request, this, &main_window::on_input_dialog_open_request);
+    connect(this, &main_window::input_dialog_delay_launch_asked, this, &main_window::on_input_dialog_delay_launch_asked);
     connect(this, &main_window::input_dialog_close_request, this, &main_window::on_input_dialog_close_request);
 
     connect(editor_widget_, &editor_widget::editor_hidden, this, &main_window::on_mapping_editor_hidden);    
@@ -1397,12 +1397,17 @@ bool main_window::input_dialog_open(const std::u16string &inital_text, const int
     input_initial_text_ = inital_text;
     input_text_max_len_ = max_length;
 
-    emit input_dialog_open_request();
+    emit input_dialog_delay_launch_asked();
     return true;
 }
 
 void main_window::input_dialog_close() {
     emit input_dialog_close_request();
+}
+
+void main_window::on_input_dialog_delay_launch_asked() {
+    // Give it a bit of time so that the Select (Middle/5) button release can be submitted
+    QTimer::singleShot(200, this, &main_window::on_input_dialog_open_request);
 }
 
 void main_window::on_finished_text_input(const QString &text, const bool force_close) {

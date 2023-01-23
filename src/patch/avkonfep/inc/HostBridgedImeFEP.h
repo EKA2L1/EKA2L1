@@ -64,14 +64,14 @@ private:
 
     void HandleInputCapabilitiesEventL( TInt aEvent, TAny* aParams );
     void HandleAknEdwinStateEventL(CAknEdwinState* aAknEdwinState, EAknEdwinStateEvent aEventType);
-    void CancelAndCommitDialogL();
+    void CancelDialogL();
 
     CAknEdwinState* EditorState() const;
 
     TCoeInputCapabilities iInputCapabilities;
     TBool iDialogPending;
-    TBool iInRestart;
     TBool iHasFep;
+    TBool iInFEPWork;
 
     CHostDialogIme iImeDialog;
 

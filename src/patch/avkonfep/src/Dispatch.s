@@ -3,6 +3,7 @@
 .global EHUIOpenGlobalTextView
 .global EHUIGetStoredText
 .global EHUICancelGlobalTextView
+.global EHUIIsKeypadBased
 
 EHUIOpenGlobalTextView:
     CallHleDispatch 0xA0
@@ -12,3 +13,6 @@ EHUIGetStoredText:
 
 EHUICancelGlobalTextView:
     CallHleDispatch 0xA2
+
+EHUIIsKeypadBased:
+    CallHleDispatch 0xA3

@@ -24,7 +24,7 @@
 #include <Log.h>
 
 CHostDialogIme::CHostDialogIme(CHostBridgedImeFEP *aHost)
-    : CActive(EPriorityHigh)
+    : CActive(CActive::EPriorityHigh)
     , iHost(aHost) {
     CActiveScheduler::Add(this);
 }
@@ -35,7 +35,7 @@ CHostDialogIme::~CHostDialogIme() {
 
 TInt CHostDialogIme::Open(const TDesC *aInitialText, const TInt aMaxLength) {
     iStatus = KRequestPending;
-    TInt result = EHUIOpenGlobalTextView(0, aInitialText, aMaxLength, &iStatus);
+    TInt result = ::EHUIOpenGlobalTextView(0, aInitialText, aMaxLength, &iStatus);
     if (result != KErrNone) {
         return result;
     }
@@ -58,16 +58,21 @@ CHostBridgedImeFEP::CHostBridgedImeFEP(CCoeEnv &aConeEnvironment)
     : CCoeFep(aConeEnvironment)
     , iDialogPending(EFalse)
     , iHasFep(EFalse)
+    , iInFEPWork(EFalse)
     , iImeDialog(this) {
     
 }
 
 CHostBridgedImeFEP::~CHostBridgedImeFEP() {
-    TRAP_IGNORE(CommitChangedTextL());
+    if (iDialogPending) {
+        TRAP_IGNORE(CancelDialogL());
+    }
 
-    UnregisterObserver();
-    if (EditorState()) {
-        EditorState()->SetObserver(NULL);
+    if (EHUIIsKeypadBased(0)) {
+        UnregisterObserver();
+        if (EditorState()) {
+            EditorState()->SetObserver(NULL);
+        }
     }
 }
 
@@ -88,6 +93,8 @@ void CHostBridgedImeFEP::OpenDialogInputL(const TBool aTranstractRestart) {
     HBufC *initialText = NULL;
     TPtr initialTextPtr(0, 0);
 
+    iInFEPWork = ETrue;
+
     if (editor->DocumentLengthForFep()) {
         // Spawn text dialog from host and listen for completion
         initialText = HBufC::NewLC(editor->DocumentLengthForFep());
@@ -97,22 +104,17 @@ void CHostBridgedImeFEP::OpenDialogInputL(const TBool aTranstractRestart) {
         editor->GetEditorContentForFep(initialTextPtr, 0, editor->DocumentLengthForFep());
     }
 
-    if (!iInRestart) {
-        TCursorSelection selection(0, editor->DocumentLengthForFep());
-        editor->SetCursorSelectionForFepL(selection);
+    TCursorSelection selection(0, editor->DocumentLengthForFep());
+    editor->SetCursorSelectionForFepL(selection);
+    editor->StartFepInlineEditL(initialTextPtr, initialTextPtr.Length(), ETrue, NULL, *this, *this);
+
+    // Start the request
+    if (iImeDialog.Open(&initialTextPtr, editor->DocumentMaximumLengthForFep()) != KErrNone) {
+        LogOut(KAvkonFepCat, _L("Text view is already owned (this should already been canceled in losing foreground)!"));
+        User::Leave(KErrInUse);
     }
 
-    editor->StartFepInlineEditL(initialTextPtr, initialTextPtr.Length(), ETrue, NULL, *this, *this);
-    
-    // Start the request
-    if (!aTranstractRestart) {
-        if (iImeDialog.Open(&initialTextPtr, editor->DocumentMaximumLengthForFep()) != KErrNone) {
-            LogOut(KAvkonFepCat, _L("Text view is already owned (this should already been canceled in losing foreground)!"));
-            User::Leave(KErrInUse);
-        }
-    } else {
-        iInRestart = EFalse;
-    }
+    iInFEPWork = EFalse;
     
     if (initialText) {
         CleanupStack::PopAndDestroy();
@@ -158,7 +160,7 @@ void CHostBridgedImeFEP::HandleAknEdwinStateEventL(CAknEdwinState* aAknEdwinStat
 
         // Close one, for S^3
         case EAknActivatePenInputRequest + 3:
-            CancelAndCommitDialogL();
+            CancelDialogL();
             break;
 
         default:
@@ -198,19 +200,28 @@ void CHostBridgedImeFEP::HandleChangeInFocusL() {
     MCoeFepAwareTextEditor *editor = iInputCapabilities.FepAwareTextEditor();
 
     if (editor && !iHasFep) {
-        RegisterObserver();
-
-        if (EditorState()) {
-            EditorState()->SetObserver(this);
+        if (EHUIIsKeypadBased(0)) {
+            if (!iDialogPending) {
+                OpenDialogInputL();
+                iDialogPending = ETrue;
+            }
         } else {
-            EditorState()->SetObserver(NULL);
+            RegisterObserver();
+
+            if (EditorState()) {
+                EditorState()->SetObserver(this);
+            } else {
+                EditorState()->SetObserver(NULL);
+            }
         }
 
         iHasFep = ETrue;
-    } else if (!editor && iHasFep) {
-        UnregisterObserver();
-        CancelAndCommitDialogL();
+    } else {
+        if (!EHUIIsKeypadBased(0)) {
+            UnregisterObserver();
+        }
 
+        CancelDialogL();
         iHasFep = EFalse;
     }
 }
@@ -266,7 +277,7 @@ void CHostBridgedImeFEP::HandleGainingForeground() {
 
 void CHostBridgedImeFEP::HandleLosingForeground() {
     if (iDialogPending) {
-        CancelAndCommitDialogL();
+        CancelDialogL();
         iDialogPending = ETrue;
     }
 }
@@ -274,28 +285,26 @@ void CHostBridgedImeFEP::HandleLosingForeground() {
 void CHostBridgedImeFEP::HandleDestructionOfFocusedItem() {
     MCoeFepAwareTextEditor *editor = iInputCapabilities.FepAwareTextEditor();
     if (!editor) {
-        TRAP_IGNORE(CancelAndCommitDialogL());
+        TRAP_IGNORE(CancelDialogL());
     }
 }
 
-void CHostBridgedImeFEP::CancelAndCommitDialogL() {
+void CHostBridgedImeFEP::CancelDialogL() {
     if (iDialogPending) {
+        MCoeFepAwareTextEditor *editor = iInputCapabilities.FepAwareTextEditor();
+
+        if (editor) {
+            editor->CancelFepInlineEdit();
+        }
+
         iImeDialog.Cancel();
-        CommitChangedTextL();
+        iDialogPending = EFalse;
     }
 }
 
 void CHostBridgedImeFEP::CancelTransaction() {
-    // TODO: I think this will close the UI dialog, but for now it's buggy on emulator
-    // So we just gonna restart and keep the spawned UI
-    MCoeFepAwareTextEditor *editor = iInputCapabilities.FepAwareTextEditor();
-    if (editor && iDialogPending) {
-        editor->CancelFepInlineEdit();
-
-        if (!iInRestart) {
-            iInRestart = ETrue;
-            OpenDialogInputL(ETrue);
-        }
+    if (!iInFEPWork) {
+        CancelDialogL();
     }
 }
 

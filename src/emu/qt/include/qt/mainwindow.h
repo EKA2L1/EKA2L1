@@ -172,6 +172,7 @@ private slots:
     void on_finished_text_input(const QString &text, const bool force_close);
     void on_input_dialog_open_request();
     void on_input_dialog_close_request();
+    void on_input_dialog_delay_launch_asked();
     void on_hide_system_apps_changed();
     void on_bt_netplay_mod_friends_clicked();
     void on_btnetplay_friends_dialog_finished(int status);
@@ -196,7 +197,7 @@ signals:
     void restart_requested();
     void controller_button_press(eka2l1::drivers::input_event event);
     void screen_focus_group_changed();
-    void input_dialog_open_request();
+    void input_dialog_delay_launch_asked();
     void input_dialog_close_request();
     void install_ngage_game_name_available(QString name);
 

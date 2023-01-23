@@ -31,6 +31,7 @@ extern "C" {
 HLE_DISPATCH_FUNC(TInt, EHUIOpenGlobalTextView, const TDesC *aInitialText, const TInt aMaxLength, TRequestStatus *aStatus);
 HLE_DISPATCH_FUNC(void, EHUIGetStoredText, TInt *aLength, const void *aPtr);
 HLE_DISPATCH_FUNC(void, EHUICancelGlobalTextView);
+HLE_DISPATCH_FUNC(TBool, EHUIIsKeypadBased);
 }
 
 #endif
