@@ -871,20 +871,29 @@ namespace eka2l1::hle {
         };
 
         if (!eka2l1::has_root_dir(lib_path)) {
+            auto org_root_name = eka2l1::root_name(lib_path, true);
+            auto fname = eka2l1::filename(lib_path, true);
+
             // Nope ? We need to cycle through all possibilities
             for (std::size_t i = 0; i < search_paths.size(); i++) {
                 bool only_once = eka2l1::has_root_name(search_paths[i], true);
 
+                if (only_once && !org_root_name.empty()) {
+                    continue;
+                }
+
                 for (drive_number drv = drive_a; drv <= drive_z; drv = static_cast<drive_number>(static_cast<int>(drv) + 1)) {
                     const char16_t drvc = drive_to_char16(drv);
 
-                    if (!only_once) {
+                    if (!org_root_name.empty()) {
+                        lib_path = org_root_name;
+                    } else if (!only_once) {
                         lib_path = drvc;
                         lib_path += u':';
                     }
 
                     lib_path += search_paths[i];
-                    lib_path += path;
+                    lib_path += fname;
 
                     auto result = open_and_get(lib_path);
                     if (result.first != std::nullopt || result.second != std::nullopt) {
@@ -949,7 +958,6 @@ namespace eka2l1::hle {
 
             // Nope ? We need to cycle through all possibilities
             for (std::size_t i = 0; i < search_paths.size(); i++) {
-                lib_path.clear();
                 bool only_once = eka2l1::has_root_name(search_paths[i]);
 
                 if (only_once && !org_root_name.empty()) {
@@ -960,7 +968,7 @@ namespace eka2l1::hle {
                     const char16_t drvc = drive_to_char16(drv);
 
                     if (!org_root_name.empty()) {
-                        lib_path += org_root_name;
+                        lib_path = org_root_name;
                     } else {
                         if (!only_once) {
                             lib_path = drvc;

@@ -243,7 +243,7 @@ namespace eka2l1 {
 
         common::ro_buf_stream app_info_resource_stream(&dat[0], dat.size());
         bool result = read_registeration_info(reinterpret_cast<common::ro_stream *>(&app_info_resource_stream),
-            reg, land_drive);
+            reg, land_drive, kern->get_epoc_version() < epocver::eka2);
 
         if (!result) {
             return false;
@@ -1012,7 +1012,54 @@ namespace eka2l1 {
     }
 
     applist_session::applist_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver)
-        : typical_session(svr, client_ss_uid, client_ver) {
+        : typical_session(svr, client_ss_uid, client_ver)
+        , filter_method_(APP_FILTER_NONE) {
+    }
+
+    void applist_session::get_filtered_apps_by_flags(service::ipc_context &ctx) {
+        std::optional<std::uint32_t> screen_mode = ctx.get_argument_value<std::uint32_t>(0);
+        std::optional<std::uint32_t> flags_mask = ctx.get_argument_value<std::uint32_t>(1);
+        std::optional<std::uint32_t> flags_value = ctx.get_argument_value<std::uint32_t>(2);
+    
+        if (!screen_mode.has_value() || !flags_mask.has_value() || !flags_value.has_value()) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        filter_method_ = APP_FILTER_BY_FLAGS;
+        flags_mask_ = flags_mask.value();
+        flags_value = flags_value.value();
+        requested_screen_mode_ = screen_mode.value();
+        current_index_ = 0;
+
+        ctx.complete(epoc::error_none);
+    }
+
+    void applist_session::get_next_app(service::ipc_context &ctx) {
+        if (filter_method_ == APP_FILTER_NONE) {
+            ctx.complete(epoc::error_not_ready);
+            return;
+        }
+
+        auto &registries = server<applist_server>()->regs;
+        for (; current_index_ < registries.size(); current_index_++) {
+            if (!registries[current_index_].supports_screen_mode(requested_screen_mode_)) {
+                continue;
+            }
+            
+            if (filter_method_ == APP_FILTER_BY_FLAGS) {
+                if ((registries[current_index_].caps.flags & flags_mask_) == flags_match_value_) {
+                    ctx.write_data_to_descriptor_argument<apa_app_info>(1, registries[current_index_].mandatory_info);
+                    ctx.complete(epoc::error_none);
+
+                    current_index_++;
+
+                    return;
+                }
+            }
+        }
+
+        ctx.complete(epoc::error_not_found);
     }
 
     void applist_session::fetch(service::ipc_context *ctx) {
@@ -1153,11 +1200,37 @@ namespace eka2l1 {
                 server<applist_server>()->get_supported_data_types_phase2(*ctx);
                 break;
 
+            case applsit_request_init_attr_filtered_list:
+                get_filtered_apps_by_flags(*ctx);
+                break;
+
+            case applist_request_get_next_app:
+                get_next_app(*ctx);
+                break;
+
             default:
                 LOG_ERROR(SERVICE_APPLIST, "Unimplemented applist opcode 0x{:X}", ctx->msg->function);
                 break;
             }
         }
+    }
+
+    bool apa_app_registry::supports_screen_mode(const int mode_num) {
+        if (mode_num < 0) {
+            return true;
+        }
+
+        if (view_datas.size() == 0) {
+            return (mode_num == 0);
+        }
+
+        for (std::size_t i = 0; i < view_datas.size(); i++) {
+            if (view_datas[i].screen_mode_ == mode_num) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     void apa_app_registry::get_launch_parameter(std::u16string &native_executable_path, epoc::apa::command_line &args) {

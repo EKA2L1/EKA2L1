@@ -112,7 +112,7 @@ namespace eka2l1 {
         return true;
     }
 
-    static bool read_mandatory_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive) {
+    static bool read_mandatory_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive, const bool app_path_oldarch) {
         // Skip over reserved variables
         stream->seek(8, common::seek_where::beg);
         std::u16string app_file;
@@ -132,22 +132,24 @@ namespace eka2l1 {
             binary_name.pop_back();
         }
 
+        // EKA2 supports shortening executable path. If it's in /sys/bin/ then we can just shorten
+        // to drive and filename. Gameloft games relies on this (they use DriveAndPath to get the drive of the EXE, lol)
         if (reg.caps.flags & apa_capability::non_native) {
             reg.mandatory_info.app_path = std::u16string(1, drive_to_char16(land_drive)) + eka2l1::relative_path(app_file);
         } else if (reg.caps.flags & apa_capability::built_as_dll) {
-            reg.mandatory_info.app_path = std::u16string(1, drive_to_char16(land_drive)) + u"\\:system\\programs\\"
+            reg.mandatory_info.app_path = std::u16string(1, drive_to_char16(land_drive)) + (app_path_oldarch ? u":\\system\\programs\\" : u":")
                 + binary_name + u".dll";
         } else {
             // Compatibility with old EKA1
-            reg.mandatory_info.app_path = std::u16string(1, drive_to_char16(land_drive)) + u":\\system\\programs\\"
+            reg.mandatory_info.app_path = std::u16string(1, drive_to_char16(land_drive)) + (app_path_oldarch ? u":\\system\\programs\\" : u":")
                 + binary_name + u".exe";
         }
 
         return true;
     }
 
-    bool read_registeration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive) {
-        if (!read_mandatory_info(stream, reg, land_drive)) {
+    bool read_registeration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive, const bool app_path_oldarch) {
+        if (!read_mandatory_info(stream, reg, land_drive, app_path_oldarch)) {
             return false;
         }
 
@@ -188,7 +190,33 @@ namespace eka2l1 {
 
         reg.icon_file_path = cap;
 
-        // TODO: Read view list and localised group name
+        std::uint16_t view_count = 0;
+        if (stream->read(&view_count, 2) != 2) {
+            return false;
+        }
+
+        reg.view_datas.resize(view_count);
+        for (std::uint16_t i = 0; i < view_count; i++) {
+            stream->seek(8, common::seek_where::cur);
+            if (stream->read(&reg.view_datas[i].uid_, 4) != 4) {
+                return false;
+            }
+            if (stream->read(&reg.view_datas[i].screen_mode_, 4) != 4) {
+                return false;
+            }
+            stream->seek(8, common::seek_where::cur);
+            if (!read_str16_aligned(stream, reg.view_datas[i].caption_)) {
+                return false;
+            }
+            std::uint16_t icon_count_temp = 0;
+            if (stream->read(&icon_count_temp, 2) != 2) {
+                return false;
+            }
+            reg.view_datas[i].icon_count_ = icon_count_temp;
+            if (!read_str16_aligned(stream, reg.view_datas[i].icon_path_)) {
+                return false;
+            }
+        }
 
         return true;
     }
@@ -346,7 +374,6 @@ namespace eka2l1 {
                 return false;
             }
 
-            reg.view_datas[i].icon_count_ = static_cast<std::uint32_t>(view_icon_count);
             if (!read_caption_list_and_find_best()) {
                 return false;
             }

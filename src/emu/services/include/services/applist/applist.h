@@ -106,6 +106,8 @@ namespace eka2l1 {
          *                                      this function will fill parameters that you don't yet know.
          */
         void get_launch_parameter(std::u16string &native_executable_path, epoc::apa::command_line &args);
+
+        bool supports_screen_mode(const int mode_num);
     };
 
     /**
@@ -114,13 +116,14 @@ namespace eka2l1 {
      * The function does not know the app UID. To know the UID yourself, check out UID3 field of
      * the app binary. App binary path is guranteed to be filled in the struct on success.
      * 
-     * \param stream      A read-only stream contains registeration info.
-     * \param reg         APA registry struct. This will be filled with info on success.
-     * \param land_drive  The drive contains this registeration.
+     * \param stream            A read-only stream contains registeration info.
+     * \param reg               APA registry struct. This will be filled with info on success.
+     * \param land_drive        The drive contains this registeration.
+     * \param app_path_oldarch  If true, native applications will have its app path pointed to system/programs instead of shorten path with drive only.
      * 
      * \returns True on success.
      */
-    bool read_registeration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive);
+    bool read_registeration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive, const bool app_path_oldarch);
 
     /**
      * \brief Read registeration info from AIF file.
@@ -171,9 +174,26 @@ namespace eka2l1 {
     const std::string get_app_list_server_name_by_epocver(const epocver ver);
 
     class applist_session : public service::typical_session {
+    private:
+        enum app_filter_method {
+            APP_FILTER_BY_EMBED,
+            APP_FILTER_BY_FLAGS,
+            APP_FILTER_NONE
+        };
+
+        std::size_t current_index_;
+        std::uint32_t flags_mask_;
+        std::uint32_t flags_match_value_;
+        std::uint32_t requested_screen_mode_;
+
+        app_filter_method filter_method_;
+
     public:
         explicit applist_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver);
         void fetch(service::ipc_context *ctx);
+
+        void get_filtered_apps_by_flags(service::ipc_context &ctx);
+        void get_next_app(service::ipc_context &ctx);
     };
 
     /*! \brief Applist services

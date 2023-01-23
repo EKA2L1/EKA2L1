@@ -80,6 +80,7 @@ namespace eka2l1 {
             check_other_flag = true;
         } else if (attrib_raw & epoc::fs::entry_att_match_exclusive) {
             check_other_flag = true;
+            attrib = 0;
         }
 
         if (check_other_flag) {
