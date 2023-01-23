@@ -269,18 +269,8 @@ namespace eka2l1::epoc {
 
             len = len * 2 + (sizeof(T) % 2);
 
-            if (len <= (0xFF >> 1)) {
-                std::uint8_t b = static_cast<std::uint8_t>(len << 1);
-                seri.absorb(b);
-            } else {
-                if (len <= (0xFFFF >> 2)) {
-                    std::uint16_t b = static_cast<std::uint16_t>(len << 2) + 0x1;
-                    seri.absorb(b);
-                } else {
-                    std::uint32_t b = (len << 3) + 0x3;
-                    seri.absorb(b);
-                }
-            }
+            utils::cardinality cardinality(len);
+            cardinality.serialize(seri);
 
             if (unicode) {
                 raw.resize(raw.size() * 2);
@@ -299,24 +289,10 @@ namespace eka2l1::epoc {
 
             seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&raw[0]), len);
         } else {
-            std::uint8_t b1 = 0;
-            seri.absorb(b1);
+            utils::cardinality cardinality;
+            cardinality.serialize(seri);
 
-            if ((b1 & 1) == 0) {
-                len = (b1 >> 1);
-            } else {
-                if ((b1 & 2) == 0) {
-                    len = b1;
-                    seri.absorb(b1);
-                    len += b1 << 8;
-                    len >>= 2;
-                } else if ((b1 & 4) == 0) {
-                    std::uint16_t b2 = 0;
-                    seri.absorb(b2);
-                    len = b1 + (b2 << 8);
-                    len >>= 4;
-                }
-            }
+            len = cardinality.value();
 
             if (len & 1) {
                 unicode = false;

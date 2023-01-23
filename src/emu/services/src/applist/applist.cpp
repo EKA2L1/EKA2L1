@@ -46,6 +46,28 @@
 #include <config/config.h>
 
 namespace eka2l1 {
+    static const std::array<std::u16string, 6> RECOG_MIME_TYPES = {
+        u"image/png",
+        u"image/jpeg",
+        u"image/bmp",
+        u"audio/mpeg",
+        u"video/mp4",
+        u"application/octet-stream"
+    };
+
+    static void serialize_mime_arrays(common::chunkyseri &seri) {
+        utils::cardinality card(static_cast<std::uint32_t>(RECOG_MIME_TYPES.size()));
+        card.serialize(seri);
+
+        std::uint32_t uid = 0;
+
+        // Make copy
+        for (auto mime: RECOG_MIME_TYPES) {
+            epoc::absorb_des_string(mime, seri, true);
+            seri.absorb(uid);
+        }
+    } 
+
     static void populate_icon_sizes(common::chunkyseri &seri, apa_app_registry *reg) {
         std::uint32_t size = reg->app_icons.size();
         seri.absorb(size);
@@ -882,7 +904,7 @@ namespace eka2l1 {
             return "video/mp4";
         }
 
-        return "";
+        return "application/octet-stream";
     }
 
     void applist_server::recognize_data_by_file_handle(service::ipc_context &ctx) {
@@ -911,6 +933,37 @@ namespace eka2l1 {
         result.type_.type_name_.assign(nullptr, mime_res);
 
         ctx.write_data_to_descriptor_argument<data_recog_result>(0, result);
+        ctx.complete(epoc::error_none);
+    }
+
+    void applist_server::get_supported_data_types_phase1(service::ipc_context &ctx) {
+        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
+        serialize_mime_arrays(seri);
+
+        ctx.complete(static_cast<int>(seri.size()));
+    }
+
+    void applist_server::get_supported_data_types_phase2(service::ipc_context &ctx) {
+        std::uint8_t *data_ptr = ctx.get_descriptor_argument_ptr(0);
+        std::size_t data_max_size = ctx.get_argument_max_data_size(0);
+
+        if (!data_ptr || !data_max_size) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        common::chunkyseri seri(nullptr, data_max_size, common::SERI_MODE_MEASURE);
+        serialize_mime_arrays(seri);
+
+        if (seri.size() > data_max_size) {
+            ctx.complete(epoc::error_overflow);
+            return;
+        }
+
+        seri = common::chunkyseri(data_ptr, data_max_size, common::SERI_MODE_WRITE);
+        serialize_mime_arrays(seri);
+
+        ctx.set_descriptor_argument_length(0, static_cast<std::uint32_t>(seri.size()));
         ctx.complete(epoc::error_none);
     }
 
@@ -1090,6 +1143,14 @@ namespace eka2l1 {
 
             case applist_request_get_executable_name_given_app_uid:
                 server<applist_server>()->get_app_executable_name_given_app_uid(*ctx);
+                break;
+
+            case applist_request_get_data_types_phase1:
+                server<applist_server>()->get_supported_data_types_phase1(*ctx);
+                break;
+                
+            case applist_request_get_data_types_phase2:
+                server<applist_server>()->get_supported_data_types_phase2(*ctx);
                 break;
 
             default:

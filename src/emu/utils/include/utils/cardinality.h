@@ -24,6 +24,7 @@
 namespace eka2l1::common {
     class ro_stream;
     class wo_stream;
+    class chunkyseri;
 }
 
 namespace eka2l1::utils {
@@ -40,5 +41,6 @@ namespace eka2l1::utils {
 
         bool internalize(common::ro_stream &stream);
         bool externalize(common::wo_stream &stream);
+        void serialize(common::chunkyseri &seri);
     };
 }

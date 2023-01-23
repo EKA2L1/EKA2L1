@@ -286,6 +286,8 @@ namespace eka2l1 {
         void get_app_for_document_impl(service::ipc_context &ctx, const std::u16string &path);
         void get_app_executable_name_given_app_uid(service::ipc_context &ctx);
         void recognize_data_by_file_handle(service::ipc_context &ctx);
+        void get_supported_data_types_phase1(service::ipc_context &ctx);
+        void get_supported_data_types_phase2(service::ipc_context &ctx);
 
         void connect(service::ipc_context &ctx) override;
 

@@ -18,6 +18,7 @@
  */
 
 #include <common/buffer.h>
+#include <common/chunkyseri.h>
 #include <utils/cardinality.h>
 
 namespace eka2l1::utils {
@@ -70,5 +71,41 @@ namespace eka2l1::utils {
 
         std::uint32_t b = (val_ << 3) + 0x3;
         return (stream.write(&b, 4) == 4);
+    }
+    
+    void cardinality::serialize(common::chunkyseri &seri) {
+        if (seri.get_seri_mode() != common::SERI_MODE_READ) {
+            if (val_ <= (0xFF >> 1)) {
+                std::uint8_t b = static_cast<std::uint8_t>(val_ << 1);
+                seri.absorb(b);
+            } else {
+                if (val_ <= (0xFFFF >> 2)) {
+                    std::uint16_t b = static_cast<std::uint16_t>(val_ << 2) + 0x1;
+                    seri.absorb(b);
+                } else {
+                    std::uint32_t b = (val_ << 3) + 0x3;
+                    seri.absorb(b);
+                }
+            }
+        } else {
+            std::uint8_t b1 = 0;
+            seri.absorb(b1);
+
+            if ((b1 & 1) == 0) {
+                val_ = (b1 >> 1);
+            } else {
+                if ((b1 & 2) == 0) {
+                    val_ = b1;
+                    seri.absorb(b1);
+                    val_ += b1 << 8;
+                    val_ >>= 2;
+                } else if ((b1 & 4) == 0) {
+                    std::uint16_t b2 = 0;
+                    seri.absorb(b2);
+                    val_ = b1 + (b2 << 8);
+                    val_ >>= 4;
+                }
+            }
+        }
     }
 }
