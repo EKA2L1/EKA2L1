@@ -108,8 +108,8 @@ namespace eka2l1::qt::btnmap {
     }
 
     void joystick::draw(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder,
-        const float scale_factor) {
-        base::draw(driver, builder, scale_factor);
+        const eka2l1::vec2f &scale_vector) {
+        base::draw(driver, builder, scale_vector);
         static const char *JOYSTICK_BASE_PNG_PATH = "resources\\joystick_base.png";
 
         if (!joystick_image_resource_.loaded()) {
@@ -155,7 +155,7 @@ namespace eka2l1::qt::btnmap {
         dest_rect.top = position_;
         dest_rect.size = eka2l1::vec2(width_);
 
-        dest_rect.scale(scale_factor);
+        dest_rect.scale(scale_vector);
 
         builder.set_brush_color_detail(eka2l1::vec4(255, 255, 255, 255));
         builder.set_feature(eka2l1::drivers::graphics_feature::blend, true);
@@ -189,7 +189,7 @@ namespace eka2l1::qt::btnmap {
 
         for (std::size_t i = 0; i < 5; i++) {
             if (keys_[i]) {
-                keys_[i]->draw(driver, builder, scale_factor);
+                keys_[i]->draw(driver, builder, scale_vector);
             }
         }
     }
@@ -235,18 +235,18 @@ namespace eka2l1::qt::btnmap {
         case 0:
             if (value <= ((previous_rect_.top + previous_rect_.size) * scale_factor_)) {
                 if (common::abs(previous_rect_.top.x - value.x) >= common::abs(previous_rect_.top.y - value.y)) {
-                    width_ = previous_rect_.top.y + previous_rect_.size.y - static_cast<int>(value.y / scale_factor_);
+                    width_ = previous_rect_.top.y + previous_rect_.size.y - static_cast<int>(value.y / scale_factor_[1]);
                 } else {
-                    width_ = previous_rect_.top.x + previous_rect_.size.x - static_cast<int>(value.x / scale_factor_);
+                    width_ = previous_rect_.top.x + previous_rect_.size.x - static_cast<int>(value.x / scale_factor_[0]);
                 }
 
                 width_ = common::max(width_, MIN_JOYSTICK_SIZE);
                 position_ = previous_rect_.top + previous_rect_.size - eka2l1::vec2(width_);
             } else {
                 if (common::abs(previous_rect_.top.x - value.x) >= common::abs(previous_rect_.top.y - value.y)) {
-                    width_ = static_cast<int>(value.y / scale_factor_) - previous_rect_.top.y;
+                    width_ = static_cast<int>(value.y / scale_factor_[1]) - previous_rect_.top.y;
                 } else {
-                    width_ = static_cast<int>(value.x / scale_factor_) - previous_rect_.top.x;
+                    width_ = static_cast<int>(value.x / scale_factor_[0]) - previous_rect_.top.x;
                 }
 
                 width_ = common::max(width_, MIN_JOYSTICK_SIZE);
@@ -256,22 +256,22 @@ namespace eka2l1::qt::btnmap {
             break;
 
         case 1:
-            if (value.x >= static_cast<int>(previous_rect_.top.x * scale_factor_)) {
-                width_ = static_cast<int>(value.x / scale_factor_) - previous_rect_.top.x;
+            if (value.x >= static_cast<int>(previous_rect_.top.x * scale_factor_[0])) {
+                width_ = static_cast<int>(value.x / scale_factor_[0]) - previous_rect_.top.x;
                 width_ = common::max(width_, MIN_JOYSTICK_SIZE);
             } else {
-                width_ =  previous_rect_.top.x - static_cast<int>(value.x / scale_factor_);
+                width_ =  previous_rect_.top.x - static_cast<int>(value.x / scale_factor_[0]);
                 width_ = common::max(width_, MIN_JOYSTICK_SIZE);
                 position_ = previous_rect_.top - eka2l1::vec2(width_, 0);
             }
             break;
 
         case 2:
-            if (value.y >= static_cast<int>(previous_rect_.top.y * scale_factor_)) {
-                width_ = static_cast<int>(value.y / scale_factor_) - previous_rect_.top.y;
+            if (value.y >= static_cast<int>(previous_rect_.top.y * scale_factor_[1])) {
+                width_ = static_cast<int>(value.y / scale_factor_[1]) - previous_rect_.top.y;
                 width_ = common::max(width_, MIN_JOYSTICK_SIZE);
             } else {
-                width_ = previous_rect_.top.y - static_cast<int>(value.y / scale_factor_);
+                width_ = previous_rect_.top.y - static_cast<int>(value.y / scale_factor_[1]);
                 width_ = common::max(width_, MIN_JOYSTICK_SIZE);
                 position_ = previous_rect_.top - eka2l1::vec2(0, width_);
             }
@@ -280,17 +280,17 @@ namespace eka2l1::qt::btnmap {
         case 3:
             if (value >= (previous_rect_.top * scale_factor_)) {
                 if (common::abs(previous_rect_.top.x + previous_rect_.size.x - value.x) >= common::abs(previous_rect_.top.y + previous_rect_.size.y - value.y)) {
-                    width_ = static_cast<int>(value.y / scale_factor_) - position_.y;
+                    width_ = static_cast<int>(value.y / scale_factor_[1]) - position_.y;
                 } else {
-                    width_ = static_cast<int>(value.x / scale_factor_) - position_.x;
+                    width_ = static_cast<int>(value.x / scale_factor_[0]) - position_.x;
                 }
 
                 width_ = common::max(width_, MIN_JOYSTICK_SIZE);
             } else {
                 if (common::abs(previous_rect_.top.x - value.x) >= common::abs(previous_rect_.top.y - value.y)) {
-                    width_ = previous_rect_.top.y - static_cast<int>(value.y / scale_factor_);
+                    width_ = previous_rect_.top.y - static_cast<int>(value.y / scale_factor_[1]);
                 } else {
-                    width_ = previous_rect_.top.x - static_cast<int>(value.x / scale_factor_);
+                    width_ = previous_rect_.top.x - static_cast<int>(value.x / scale_factor_[0]);
                 }
 
                 position_ = previous_rect_.top - eka2l1::vec2(width_);

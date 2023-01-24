@@ -75,7 +75,7 @@ namespace eka2l1::epoc {
         return common::align(ESTIMATE_MAX_CHAR_IN_ATLAS_WIDTH * size_, 1024);
     }
 
-    bool font_atlas::draw_text(const std::u16string &text, const eka2l1::rect &text_box, const epoc::text_alignment alignment, drivers::graphics_driver *driver, drivers::graphics_command_builder &builder, const float scale_factor) {
+    bool font_atlas::draw_text(const std::u16string &text, const eka2l1::rect &text_box, const epoc::text_alignment alignment, drivers::graphics_driver *driver, drivers::graphics_command_builder &builder, const eka2l1::vec2f scale_vector) {
         const int width = get_atlas_width();
         drivers::graphics_command_builder upload_builder;
 
@@ -170,7 +170,7 @@ namespace eka2l1::epoc {
             float size_length = 0;
 
             for (auto &chr : text) {
-                size_length += characters_[chr].xadv * scale_factor;
+                size_length += static_cast<int>(characters_[chr].xadv * scale_vector[0]);
             }
 
             if (alignment == epoc::text_alignment::right) {
@@ -200,11 +200,11 @@ namespace eka2l1::epoc {
             source_rect.size = eka2l1::object_size(info.x1 - info.x0, info.y1 - info.y0);
 
             eka2l1::rect dest_rect;
-            dest_rect.top.x = cur_pos.x + static_cast<int>(info.xoff * scale_factor);
-            dest_rect.top.y = cur_pos.y + static_cast<int>(info.yoff * scale_factor);
+            dest_rect.top.x = cur_pos.x + static_cast<int>(info.xoff * scale_vector[0]);
+            dest_rect.top.y = cur_pos.y + static_cast<int>(info.yoff * scale_vector[1]);
 
-            dest_rect.size.x = static_cast<int>((info.xoff2 - info.xoff) * scale_factor);
-            dest_rect.size.y = static_cast<int>((info.yoff2 - info.yoff) * scale_factor);
+            dest_rect.size.x = static_cast<int>((info.xoff2 - info.xoff) * scale_vector[0]);
+            dest_rect.size.y = static_cast<int>((info.yoff2 - info.yoff) * scale_vector[1]);
 
             if ((dest_rect.size.x != 0) && (dest_rect.size.y != 0) && (source_rect.size.x != 0) && (source_rect.size.y != 0)) {
                 builder.draw_bitmap(atlas_handle_, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), 0.0f,
@@ -212,7 +212,7 @@ namespace eka2l1::epoc {
             }
 
             // TODO: Newline
-            cur_pos.x += static_cast<int>(std::round(info.xadv * scale_factor));
+            cur_pos.x += static_cast<int>(std::round(info.xadv * scale_vector[0]));
         }
 
         builder.set_feature(drivers::graphics_feature::blend, false);

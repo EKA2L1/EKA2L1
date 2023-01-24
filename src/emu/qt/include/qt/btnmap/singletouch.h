@@ -36,7 +36,7 @@ namespace eka2l1::qt::btnmap {
         explicit single_touch(editor *editor_instance, const eka2l1::vec2 &position);
 
         void draw(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder,
-                  const float scale_factor) override;
+                  const eka2l1::vec2f &scale_factor) override;
 
         std::uint32_t keycode() const {
             return keycode_;

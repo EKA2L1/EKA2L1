@@ -56,7 +56,7 @@ namespace eka2l1::qt::btnmap {
         return resources_[name];
     }
 
-    void editor::draw_text(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder, const eka2l1::rect &draw_rect, epoc::text_alignment alignment, const std::string &str, const float scale_factor) {
+    void editor::draw_text(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder, const eka2l1::rect &draw_rect, epoc::text_alignment alignment, const std::string &str, const eka2l1::vec2f &scale_factor) {
         static const char *FONT_OVERLAY_PATH = "resources\\overlay_font.ttf";
         if (!adapter_) {
             FILE *f = common::open_c_file(FONT_OVERLAY_PATH, "rb");
@@ -85,7 +85,7 @@ namespace eka2l1::qt::btnmap {
         atlas_->draw_text(common::utf8_to_ucs2(str), draw_rect, alignment, driver, builder, scale_factor);
     }
 
-    void editor::draw(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder, const float scale_factor) {
+    void editor::draw(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder, const eka2l1::vec2f &scale) {
         // Draw a gray overlay
         builder.set_feature(eka2l1::drivers::graphics_feature::blend, true);
         builder.blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
@@ -100,7 +100,7 @@ namespace eka2l1::qt::btnmap {
             const std::lock_guard<std::mutex> guard(lock_);
 
             for (std::size_t i = 0; i < entities_.size(); i++) {
-                entities_[i]->draw(driver, builder, scale_factor);
+                entities_[i]->draw(driver, builder, scale);
             }
         }
         

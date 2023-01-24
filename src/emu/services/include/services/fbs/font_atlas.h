@@ -70,7 +70,12 @@ namespace eka2l1::epoc {
         int get_atlas_width() const;
 
         bool draw_text(const std::u16string &text, const eka2l1::rect &box, const epoc::text_alignment alignment, drivers::graphics_driver *driver,
-            drivers::graphics_command_builder &builder, const float scale_factor = 1.0f);
+            drivers::graphics_command_builder &builder, const float scale_factor = 1.0f) {
+            return draw_text(text, box, alignment, driver, builder, { scale_factor, scale_factor });
+        }
+
+        bool draw_text(const std::u16string &text, const eka2l1::rect &box, const epoc::text_alignment alignment, drivers::graphics_driver *driver,
+            drivers::graphics_command_builder &builder, const eka2l1::vec2f scale_vector);
 
         int get_char_size() const {
             return size_;

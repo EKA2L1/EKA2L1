@@ -72,6 +72,7 @@ namespace eka2l1::desktop {
         bool init_fullscreen;
         bool init_app_launched;
         bool inited_graphics;
+        bool stretch_to_fill_display;
 
         common::event graphics_event;
         common::event init_event;

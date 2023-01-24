@@ -57,10 +57,10 @@ namespace eka2l1::qt::btnmap {
 
         void draw_text(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder,
                        const eka2l1::rect &draw_rect, epoc::text_alignment alignment,
-                       const std::string &str, const float scale_factor);
+                       const std::string &str, const eka2l1::vec2f &scale_factor);
 
         void draw(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder,
-                  const float scale_factor);
+                  const eka2l1::vec2f &scale_factor);
 
         void on_mouse_event(const eka2l1::vec3 &pos, const int button_id, const int action_id,
             const int mouse_id);

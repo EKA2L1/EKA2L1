@@ -60,7 +60,7 @@ namespace eka2l1::qt::btnmap {
     }
 
     void single_touch::draw(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder,
-        const float scale_factor) {
+        const eka2l1::vec2f &scale_factor) {
         base::draw(driver, builder, scale_factor);
         std::string draw_str = get_readable_keyname();
         eka2l1::rect draw_box = get_content_box(draw_str);
@@ -68,7 +68,7 @@ namespace eka2l1::qt::btnmap {
         builder.set_brush_color(GRAY_COLOUR);
         builder.draw_rectangle(draw_box);
 
-        draw_box.top.y += (draw_box.size.y - FIELD_TEXT_PADDING * scale_factor);
+        draw_box.top.y += (draw_box.size.y - FIELD_TEXT_PADDING * scale_factor[1]);
 
         builder.set_brush_color(BLACK_COLOUR);
         editor_->draw_text(driver, builder, draw_box, epoc::text_alignment::center, draw_str, scale_factor);

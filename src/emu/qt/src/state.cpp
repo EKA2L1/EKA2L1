@@ -51,6 +51,7 @@ namespace eka2l1::desktop {
         , should_emu_quit(false)
         , should_emu_pause(false)
         , stage_two_inited(false)
+        , stretch_to_fill_display(false)
         , first_time(true)
         , init_fullscreen(false)
         , init_app_launched(false)

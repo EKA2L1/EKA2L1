@@ -110,6 +110,7 @@
     </widget>
     <addaction name="action_fullscreen"/>
     <addaction name="action_rotate_drop_menu"/>
+    <addaction name="action_stretch_to_fill"/>
    </widget>
    <widget class="QMenu" name="menu_help">
     <property name="title">
@@ -326,6 +327,17 @@
   <action name="action_netplay_configure">
    <property name="text">
     <string>Configure</string>
+   </property>
+  </action>
+  <action name="action_stretch_to_fill">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Stretch to fill window (ignore aspect ratio)</string>
    </property>
   </action>
  </widget>

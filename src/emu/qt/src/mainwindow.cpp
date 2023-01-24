@@ -83,6 +83,7 @@ static constexpr const char *LAST_MOUNT_FOLDER_SETTING = "lastMountFolder";
 static constexpr const char *LAST_INSTALL_NGAGE_GAME_CARD_FOLDER_SETTING = "lastNGageGameCardFolder";
 static constexpr const char *NO_DEVICE_INSTALL_DISABLE_NOF_SETTING = "disableNoDeviceInstallNotify";
 static constexpr const char *NO_TOUCHSCREEN_DISABLE_WARN_SETTING = "disableNoTouchscreenWarn";
+static constexpr const char *STRETCH_DISPLAY_SETTING = "stretchDisplay";
 
 static void mode_change_screen(void *userdata, eka2l1::epoc::screen *scr, const int old_mode) {
     eka2l1::desktop::emulator *state_ptr = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
@@ -152,21 +153,24 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
         std::swap(size.x, size.y);
     }
 
-    float mult = scr->requested_ui_scale_factor > 0.0f ? scr->requested_ui_scale_factor : (static_cast<float>(window_width) / size.x);
-    float width = size.x * mult;
-    float height = size.y * mult;
+    float mult_x = scr->requested_ui_scale_factor > 0.0f ? scr->requested_ui_scale_factor : (static_cast<float>(window_width) / size.x);
+    float mult_y = scr->requested_ui_scale_factor > 0.0f ? scr->requested_ui_scale_factor : (state.stretch_to_fill_display ? (static_cast<float>(window_height) / size.y) : mult_x);
+    float width = size.x * mult_x;
+    float height = size.y * mult_y;
     std::uint32_t x = 0;
     std::uint32_t y = 0;
-    if (height > swapchain_size.y) {
-        height = swapchain_size.y;
-        mult = height / size.y;
-        width = size.x * mult;
+    if (!state.stretch_to_fill_display) {
+        if (height > swapchain_size.y) {
+            height = swapchain_size.y;
+            mult_x = mult_y = height / size.y;
+            width = size.x * mult_y;
+        }
     }
 
     x = (swapchain_size.x - width) / 2;
     y = (swapchain_size.y - height) / 2;
 
-    scr->set_native_scale_factor(state_ptr->graphics_driver.get(), mult, mult);
+    scr->set_native_scale_factor(state_ptr->graphics_driver.get(), mult_x, mult_y);
     scr->absolute_pos.x = static_cast<int>(x);
     scr->absolute_pos.y = static_cast<int>(y);
 
@@ -190,7 +194,7 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
 
     if (state_ptr->ui_main) {
         builder.set_viewport(dest);
-        state_ptr->ui_main->draw_enabled_overlay(state_ptr->graphics_driver.get(), builder, mult);
+        state_ptr->ui_main->draw_enabled_overlay(state_ptr->graphics_driver.get(), builder, mult_x, mult_y);
     }
 
     builder.load_backup_state();
@@ -298,6 +302,8 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
 
     ui_->status_bar->setVisible(!settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
     active_screen_number_ = settings.value(SHOW_SCREEN_NUMBER_SETTINGS_NAME, 0).toInt();
+    emulator_state_.stretch_to_fill_display = settings.value(STRETCH_DISPLAY_SETTING, false).toBool();
+    ui_->action_stretch_to_fill->setChecked(emulator_state_.stretch_to_fill_display);
 
     map_executor_ = new eka2l1::qt::btnmap::executor(nullptr, emulator_state_.symsys->get_ntimer());
     editor_widget_ = new editor_widget(this, map_executor_);
@@ -350,6 +356,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     connect(ui_->action_package_manager, &QAction::triggered, this, &main_window::on_package_manager_triggered);
     connect(ui_->action_refresh_app_list, &QAction::triggered, this, &main_window::on_refresh_app_list_requested);
     connect(ui_->action_mod_netplay_friends, &QAction::triggered, this, &main_window::on_bt_netplay_mod_friends_clicked);
+    connect(ui_->action_stretch_to_fill, &QAction::toggled, this, &main_window::on_action_stretch_to_fill_toggled);
 
     connect(rotate_group_, &QActionGroup::triggered, this, &main_window::on_another_rotation_triggered);
 
@@ -1490,11 +1497,11 @@ void main_window::on_btnetplay_friends_dialog_finished(int status) {
     bt_netplay_dialog_ = nullptr;
 }
 
-void main_window::draw_enabled_overlay(eka2l1::drivers::graphics_driver *driver, eka2l1::drivers::graphics_command_builder &builder, const float scale_factor) {
+void main_window::draw_enabled_overlay(eka2l1::drivers::graphics_driver *driver, eka2l1::drivers::graphics_command_builder &builder, const float scale_factor_x, const float scale_factor_y) {
     if (!editor_widget_->isVisible()) {
         return;
     }
-    editor_widget_->draw(driver, builder, scale_factor);
+    editor_widget_->draw(driver, builder, { scale_factor_x, scale_factor_y });
 }
 
 bool main_window::deliver_overlay_mouse_event(const eka2l1::vec3 &pos, const int button_id, const int action_id,
@@ -1679,4 +1686,11 @@ int main_window::map_mouse_id_to_touch_index(int mouse_id, const bool on_release
     mouse_to_touch_index_emu_.emplace(mouse_id, new_ptr_index);
 
     return new_ptr_index;
+}
+
+void main_window::on_action_stretch_to_fill_toggled(bool checked) {
+    emulator_state_.stretch_to_fill_display = checked;
+
+    QSettings settings;
+    settings.setValue(STRETCH_DISPLAY_SETTING, checked);
 }

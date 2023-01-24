@@ -34,7 +34,7 @@ editor_widget::editor_widget(QWidget *parent, eka2l1::qt::btnmap::executor *exec
     : QDockWidget(parent)
     , ui_(new Ui::editor_widget)
     , map_editor_hidden_(false)
-    , last_scale_factor_(1.0)
+    , last_scale_factor_({ 1.0f, 1.0f })
     , system_(nullptr)
     , map_exec_(exec)
     , previous_profile_combo_index_(-1){
@@ -195,7 +195,7 @@ void editor_widget::on_delete_btn_clicked(bool checked) {
 }
 
 void editor_widget::draw(eka2l1::drivers::graphics_driver *driver, eka2l1::drivers::graphics_command_builder &builder,
-    const float scale_factor) {
+    const eka2l1::vec2f &scale_factor) {
     last_scale_factor_ = scale_factor;
 
     if (!map_editor_hidden_) {

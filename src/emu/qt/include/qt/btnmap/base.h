@@ -49,7 +49,7 @@ namespace eka2l1::qt::btnmap {
         eka2l1::vec2 position_;
         eka2l1::vec2 diff_origin_;
         map_type type_;
-        float scale_factor_;
+        eka2l1::vec2f scale_factor_;
 
         eka2l1::vec2 start_dragging_pos_;
         bool dragging_;
@@ -61,7 +61,7 @@ namespace eka2l1::qt::btnmap {
         explicit base(editor *editor_instace, const eka2l1::vec2 &position = eka2l1::vec2(0, 0));
 
         virtual void draw(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder,
-            const float scale_factor) {
+            const eka2l1::vec2f &scale_factor) {
             scale_factor_ = scale_factor;
         }
 

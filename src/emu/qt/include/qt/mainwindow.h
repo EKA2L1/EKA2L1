@@ -187,6 +187,7 @@ private slots:
     void on_launch_process_requested();
     void on_action_netplay_configure_triggered();
     void on_btnet_friends_dialog_requested_from_conf();
+    void on_action_stretch_to_fill_toggled(bool checked);
 
 signals:
     void progress_dialog_change(const std::size_t now, const std::size_t total);
@@ -212,7 +213,8 @@ public:
 
     void setup_and_switch_to_game_mode();
     void draw_enabled_overlay(eka2l1::drivers::graphics_driver *driver,
-        eka2l1::drivers::graphics_command_builder &builder, const float scale_factor);
+        eka2l1::drivers::graphics_command_builder &builder, const float scale_factor_x,
+        const float scale_factor_y);
     void load_and_show();
 
     bool deliver_overlay_mouse_event(const eka2l1::vec3 &pos, const int button_id, const int action_id,

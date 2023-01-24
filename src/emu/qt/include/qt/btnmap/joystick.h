@@ -44,7 +44,7 @@ namespace eka2l1::qt::btnmap {
         explicit joystick(editor *editor_instance, const eka2l1::vec2 &position);
 
         void draw(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder,
-                  const float scale_factor) override;
+                  const eka2l1::vec2f &scale_factor) override;
 
         void on_key_press(const std::uint32_t code) override;
         void on_controller_button_press(const std::uint32_t code) override;

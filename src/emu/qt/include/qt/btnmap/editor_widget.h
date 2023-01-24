@@ -43,7 +43,7 @@ private:
     Ui::editor_widget *ui_;
     eka2l1::qt::btnmap::editor map_editor_;
     bool map_editor_hidden_;
-    float last_scale_factor_;
+    eka2l1::vec2f last_scale_factor_;
     eka2l1::system *system_;
 
     std::string current_app_uid_;
@@ -75,7 +75,7 @@ public:
 
     void hear_active_app(eka2l1::system *sys);
     void draw(eka2l1::drivers::graphics_driver *driver, eka2l1::drivers::graphics_command_builder &builder,
-              const float scale_factor);
+              const eka2l1::vec2f &scale_vector);
 
     bool handle_key_press(const std::uint32_t code);
     bool handle_mouse_action(const eka2l1::vec3 &pos, const int button_id, const int action_id,
