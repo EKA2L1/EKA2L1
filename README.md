@@ -22,6 +22,7 @@ The emulator *emulates* Symbian OS/N-Gage's kernel, and *reimplement* most of it
 ### Download Builds/Artifacts:
 
 - Builds/Artifacts for Windows, OSX, Linux and Android are provided through Github Actions. Click on the [***Releases***](https://github.com/EKA2L1/EKA2L1/releases/tag/continous) section to get the newest stable build.
+
     - **Note:** There's no official maintainer for OSX and Linux versions of the emulator. Please report to the developers through issues if versions for these OSes are not working.
 
 ### Compatibility:
