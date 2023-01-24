@@ -397,8 +397,10 @@ void applist_widget::reload_whole_list() {
 
     // This vector icon list is synced with
     QFuture<void> future;
-    
-    if (j2me_mode_btn_->isChecked()) {
+
+    const bool in_j2me = j2me_mode_btn_->isChecked();
+
+    if (in_j2me) {
         future = QtConcurrent::run([this]() {
             exit_mutex_.lock();
             scanning_ = true;
@@ -474,6 +476,16 @@ void applist_widget::reload_whole_list() {
     while (!future.isFinished()) {
         QCoreApplication::processEvents();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    if (in_j2me) {
+        if (list_j2me_widget_->count() == 0) {
+            show_no_apps_avail();
+        }
+    } else {
+        if (list_widget_->count() == 0) {
+            show_no_apps_avail();
+        }
     }
 }
 
