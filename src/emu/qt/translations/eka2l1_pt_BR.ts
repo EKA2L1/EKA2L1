@@ -89,42 +89,42 @@
   <context>
     <name>applist_widget</name>
     <message>
-      <location filename="../src/applistwidget.cpp" line="712"/>
+      <location filename="../src/applistwidget.cpp" line="724"/>
       <source>&lt;br&gt;App UID: 0x%1</source>
       <translation>&lt;br&gt;UID do Aplicativo: 0x%1</translation>
     </message>
     <message>
-      <location filename="../src/applistwidget.cpp" line="784"/>
+      <location filename="../src/applistwidget.cpp" line="796"/>
       <source>Enter a new name</source>
       <translation>Digite um novo nome</translation>
     </message>
     <message>
-      <location filename="../src/applistwidget.cpp" line="793"/>
+      <location filename="../src/applistwidget.cpp" line="805"/>
       <source>Update name failed</source>
       <translation>Falha ao atualizar nome</translation>
     </message>
     <message>
-      <location filename="../src/applistwidget.cpp" line="793"/>
+      <location filename="../src/applistwidget.cpp" line="805"/>
       <source>An error occured while trying to rename the app!</source>
       <translation>Ocorreu um erro ao tentar renomear o aplicativo!</translation>
     </message>
     <message>
-      <location filename="../src/applistwidget.cpp" line="802"/>
+      <location filename="../src/applistwidget.cpp" line="814"/>
       <source>Delete app failed</source>
       <translation>Falha ao excluir aplicação</translation>
     </message>
     <message>
-      <location filename="../src/applistwidget.cpp" line="802"/>
+      <location filename="../src/applistwidget.cpp" line="814"/>
       <source>An error occured while trying to delete the app!</source>
       <translation>Ocorreu um erro ao tentar deletar o aplicativo!</translation>
     </message>
     <message>
-      <location filename="../src/applistwidget.cpp" line="822"/>
+      <location filename="../src/applistwidget.cpp" line="834"/>
       <source>Rename</source>
       <translation>Renomear</translation>
     </message>
     <message>
-      <location filename="../src/applistwidget.cpp" line="823"/>
+      <location filename="../src/applistwidget.cpp" line="835"/>
       <source>Delete</source>
       <translation>Apagar</translation>
     </message>
@@ -612,450 +612,455 @@
       <translation>Girar a tela</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="116"/>
+      <location filename="../src/mainwindow.ui" line="117"/>
       <source>Help</source>
       <translation>Ajuda</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="123"/>
+      <location filename="../src/mainwindow.ui" line="124"/>
       <source>Emulation</source>
       <translation>Emulação</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="133"/>
+      <location filename="../src/mainwindow.ui" line="134"/>
       <source>Bluetooth</source>
       <translation>Bluetooth</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="137"/>
+      <location filename="../src/mainwindow.ui" line="138"/>
       <source>Netplay</source>
       <translation>Netplay</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="146"/>
+      <location filename="../src/mainwindow.ui" line="147"/>
       <source>Control</source>
       <translation>Controle</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="161"/>
+      <location filename="../src/mainwindow.ui" line="162"/>
       <source>About</source>
       <translation>Sobre</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="166"/>
+      <location filename="../src/mainwindow.ui" line="167"/>
       <source>Package</source>
       <translation>Pacote</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="171"/>
+      <location filename="../src/mainwindow.ui" line="172"/>
       <source>Device</source>
       <translation>Dispositivo</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="176"/>
+      <location filename="../src/mainwindow.ui" line="177"/>
       <source>Package manager</source>
       <translation>Gerenciador de Pacotes</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="181"/>
+      <location filename="../src/mainwindow.ui" line="182"/>
       <source>Settings</source>
       <translation>Configurações</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="189"/>
+      <location filename="../src/mainwindow.ui" line="190"/>
       <source>Pause</source>
       <translation>Pausar</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="194"/>
+      <location filename="../src/mainwindow.ui" line="195"/>
       <source>Stop</source>
       <translation>Parar</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="199"/>
+      <location filename="../src/mainwindow.ui" line="200"/>
       <source>Restart</source>
       <translation>Reiniciar</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="204"/>
+      <location filename="../src/mainwindow.ui" line="205"/>
       <source>Threads</source>
       <translation>Tópicos</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="209"/>
+      <location filename="../src/mainwindow.ui" line="210"/>
       <source>Mutexes</source>
       <translation>Mutexes</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="214"/>
+      <location filename="../src/mainwindow.ui" line="215"/>
       <source>Chunks</source>
       <translation>Chunks</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="219"/>
+      <location filename="../src/mainwindow.ui" line="220"/>
       <source>Window tree</source>
       <translation>Árvore de janela</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="227"/>
+      <location filename="../src/mainwindow.ui" line="228"/>
       <source>Fullscreen</source>
       <translation>Tela cheia</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="238"/>
+      <location filename="../src/mainwindow.ui" line="239"/>
       <source>Recent dumps</source>
       <translation>Dumps recentes</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="278"/>
+      <location filename="../src/mainwindow.ui" line="279"/>
       <source>Folder</source>
       <translation>Pasta</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="288"/>
+      <location filename="../src/mainwindow.ui" line="289"/>
       <source>Refresh app list</source>
       <translation>Atualizar lista de aplicativos</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="293"/>
+      <location filename="../src/mainwindow.ui" line="294"/>
       <source>Friends&apos;s IP addresses</source>
       <translation>Endereços IP de amigos</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="298"/>
+      <location filename="../src/mainwindow.ui" line="299"/>
       <source>Button mapping editor</source>
       <translation>Editor para mapeamento de botões</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="303"/>
+      <location filename="../src/mainwindow.ui" line="304"/>
       <source>Touch mapping editor</source>
       <translation>Editor para mapeamento de toque</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="308"/>
+      <location filename="../src/mainwindow.ui" line="309"/>
       <source>N-Gage card game</source>
       <translation>Cartucho de jogo N-Gage</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="313"/>
+      <location filename="../src/mainwindow.ui" line="314"/>
       <source>Check for update</source>
       <translation>Procurar atualizações</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="318"/>
+      <location filename="../src/mainwindow.ui" line="319"/>
       <source>Launch process</source>
       <translation>Iniciar processo</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="328"/>
+      <location filename="../src/mainwindow.ui" line="329"/>
       <source>Configure</source>
       <translation>Configurar</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="248"/>
+      <location filename="../src/mainwindow.ui" line="340"/>
+      <source>Stretch to fill window (ignore aspect ratio)</source>
+      <translation type="unfinished">Stretch to fill window (ignore aspect ratio)</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="252"/>
       <source>Clear menu</source>
       <translation>Limpar Menu</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="323"/>
+      <location filename="../src/mainwindow.cpp" line="329"/>
       <source>Touchscreen disabled</source>
       <translation>Touchscreen desativado</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="323"/>
+      <location filename="../src/mainwindow.cpp" line="329"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
       <translation>Algumas das suas teclas de atalho estão associadas com os botões do mouse. Portanto, tela de toque emulada está desativada.&lt;br&gt;&lt;br&gt;&lt;b&gt;Nota:&lt;/b&gt;&lt;br&gt;O Touchscreen pode ser reativado religando os botões do mouse com as teclas de teclado.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="324"/>
-      <location filename="../src/mainwindow.cpp" line="404"/>
+      <location filename="../src/mainwindow.cpp" line="330"/>
+      <location filename="../src/mainwindow.cpp" line="411"/>
       <source>Don&apos;t show this again</source>
       <translation>Não mostre isso novamente</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="403"/>
+      <location filename="../src/mainwindow.cpp" line="410"/>
       <source>No device installed</source>
       <translation>Nenhum dispositivo instalado</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="403"/>
+      <location filename="../src/mainwindow.cpp" line="410"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
       <translation>Você não instalou nenhum dispositivo. Por favor instale um dispositivo ou siga as instruções da página do Github wiki do EKA2L1.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="663"/>
+      <location filename="../src/mainwindow.cpp" line="670"/>
       <source>Installing &lt;b&gt;%1&lt;/b&gt;</source>
       <translation>Instalando &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="676"/>
+      <location filename="../src/mainwindow.cpp" line="683"/>
       <source>Choose the N-Gage game card folder</source>
       <translation>Escolha a pasta do cartucho de jogo N-Gage</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="684"/>
+      <location filename="../src/mainwindow.cpp" line="691"/>
       <source>Installing N-Gage game...</source>
       <translation>Instalando jogo N-Gage...</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="707"/>
+      <location filename="../src/mainwindow.cpp" line="714"/>
       <source>Install success!</source>
       <translation>Instalação bem sucedida!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="707"/>
+      <location filename="../src/mainwindow.cpp" line="714"/>
       <source>Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</source>
       <translation>Sucesso ao instalar o cartucho de jogo N-Gage: &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="713"/>
+      <location filename="../src/mainwindow.cpp" line="720"/>
       <source>Can&apos;t find the game data folder!</source>
       <translation>Não é possível encontrar a pasta de dados do jogo!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="717"/>
+      <location filename="../src/mainwindow.cpp" line="724"/>
       <source>There is more than one game in the given card game folder!</source>
       <translation>Há mais de um jogo na pasta de jogos fornecida!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="721"/>
+      <location filename="../src/mainwindow.cpp" line="728"/>
       <source>The game information file does not exist in the card game folder!</source>
       <translation>O arquivo de informações do jogo não existe na pasta do cartucho do jogo!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="725"/>
+      <location filename="../src/mainwindow.cpp" line="732"/>
       <source>The game information file has been corrupted. Please check your data&apos;s validity!</source>
       <translation>O arquivo de informações do jogo foi corrompido. Por favor, verifique a validade de seus dados!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="729"/>
+      <location filename="../src/mainwindow.cpp" line="736"/>
       <source>General error occured...</source>
       <translation>Ocorreu um erro geral...</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="734"/>
-      <location filename="../src/mainwindow.cpp" line="736"/>
-      <location filename="../src/mainwindow.cpp" line="1636"/>
+      <location filename="../src/mainwindow.cpp" line="741"/>
+      <location filename="../src/mainwindow.cpp" line="743"/>
+      <location filename="../src/mainwindow.cpp" line="1648"/>
       <source>Install failed</source>
       <translation>Falha na instalação</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="734"/>
+      <location filename="../src/mainwindow.cpp" line="741"/>
       <source>Installation failed with error:
   -%1</source>
       <translation>A instalação falhou com o erro:
   -%1</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="736"/>
+      <location filename="../src/mainwindow.cpp" line="743"/>
       <source>Installation of %1% failed with error:
   -%2</source>
       <translation>Instalação de %1% falhou com erro:
   -%2</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="805"/>
-      <location filename="../src/mainwindow.cpp" line="1064"/>
+      <location filename="../src/mainwindow.cpp" line="812"/>
+      <location filename="../src/mainwindow.cpp" line="1071"/>
       <source>Cancel</source>
       <translation>Cancelar</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="808"/>
+      <location filename="../src/mainwindow.cpp" line="815"/>
       <source>Extracting game dump files</source>
       <translation>Extraindo arquivos de dump do jogo</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="830"/>
+      <location filename="../src/mainwindow.cpp" line="837"/>
       <source>Mounting aborted</source>
       <translation>Montagem abortada</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="835"/>
+      <location filename="../src/mainwindow.cpp" line="842"/>
       <source>The ZIP file is corrupted!</source>
       <translation>O arquivo está corrompido!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="840"/>
+      <location filename="../src/mainwindow.cpp" line="847"/>
       <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
       <translation>O ZIP não possui uma pasta do sistema na pasta raiz. A pasta do sistema deve existir em um backup de jogo.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="846"/>
+      <location filename="../src/mainwindow.cpp" line="853"/>
       <source>The choosen file is not a ZIP file!</source>
       <translation>O arquivo escolhido não é um arquivo ZIP!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="860"/>
+      <location filename="../src/mainwindow.cpp" line="867"/>
       <source>Game card problem</source>
       <translation>Problema no cartucho do jogo</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="860"/>
+      <location filename="../src/mainwindow.cpp" line="867"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
       <translation>O dump do cartucho tem arquivos que diferenciam maiúsculas de minúsculas. Isso pode causar problemas com o emulador.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="864"/>
+      <location filename="../src/mainwindow.cpp" line="871"/>
       <source>Game card dump folder correction</source>
       <translation>Correção da pasta de dump do cartucho de jogo</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="864"/>
+      <location filename="../src/mainwindow.cpp" line="871"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
       <translation>O caminho selecionado parece estar incorreto.&lt;br&gt;Você quer que o emulador o corrija?</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="920"/>
+      <location filename="../src/mainwindow.cpp" line="927"/>
       <source>Choose the game card dump folder</source>
       <translation>Escolha a pasta de dump do cartucho</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="940"/>
+      <location filename="../src/mainwindow.cpp" line="947"/>
       <source>Choose the game card zip</source>
       <translation>Escolha o cartucho do jogo em zip</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1011"/>
+      <location filename="../src/mainwindow.cpp" line="1018"/>
       <source>Launch failed</source>
       <translation>Falha ao iniciar</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1011"/>
+      <location filename="../src/mainwindow.cpp" line="1018"/>
       <source>Fail to launch the selected application!</source>
       <translation>Falha ao abrir a aplicação selecionada!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1028"/>
+      <location filename="../src/mainwindow.cpp" line="1035"/>
       <source>Document</source>
       <translation>Documento</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1046"/>
+      <location filename="../src/mainwindow.cpp" line="1053"/>
       <source>Choose a language for the package</source>
       <translation>Escolha o idioma para este pacote</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1067"/>
+      <location filename="../src/mainwindow.cpp" line="1074"/>
       <source>Installing package progress</source>
       <translation>Instalando progresso do pacote</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1092"/>
+      <location filename="../src/mainwindow.cpp" line="1099"/>
       <source>Installation aborted</source>
       <translation>Instalação abortada</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1092"/>
+      <location filename="../src/mainwindow.cpp" line="1099"/>
       <source>The installation has been canceled</source>
       <translation>Instalação foi cancelada</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1097"/>
+      <location filename="../src/mainwindow.cpp" line="1104"/>
       <source>Installation failed</source>
       <translation>Falha na instalação</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1097"/>
+      <location filename="../src/mainwindow.cpp" line="1104"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
       <translation>Falha ao instalar o pacote no caminho: %1. Certifique-se de que o caminho aponta para um arquivo SIS/SISX válido.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1104"/>
+      <location filename="../src/mainwindow.cpp" line="1111"/>
       <source>Installation success</source>
       <translation>Instalação concluída</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1104"/>
+      <location filename="../src/mainwindow.cpp" line="1111"/>
       <source>Package has been successfully installed</source>
       <translation>A língua foi instalada com sucesso</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1129"/>
+      <location filename="../src/mainwindow.cpp" line="1136"/>
       <source>Choose the file to install</source>
       <translation>Escolher arquivos para instalar</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1129"/>
+      <location filename="../src/mainwindow.cpp" line="1136"/>
       <source>SIS file (*.sis *.sisx)</source>
       <translation>Arquivo SIS (*.sis *.sisx)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1324"/>
+      <location filename="../src/mainwindow.cpp" line="1331"/>
       <source>Load theme failed!</source>
       <translation>Falha ao carregar o tema!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1324"/>
+      <location filename="../src/mainwindow.cpp" line="1331"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
       <translation>O arquivo de estilo do tema escuro não pode ser encontrado!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1454"/>
+      <location filename="../src/mainwindow.cpp" line="1466"/>
       <source>Continue to modify friends&apos; IP addresses</source>
       <translation>Continuar a modificar os endereços IP dos amigos</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1455"/>
+      <location filename="../src/mainwindow.cpp" line="1467"/>
       <source>This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</source>
       <translation>Esta caixa de diálogo mostrará todos os endereços IP armazenados, que têm o potencial de revelar informações pessoais de outras pessoas.&lt;br&gt;Você deseja continuar?</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1472"/>
+      <location filename="../src/mainwindow.cpp" line="1484"/>
       <source>Bluetooth manager service not available!</source>
       <translation>Serviço de gerenciamento Bluetooth indisponível!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1472"/>
+      <location filename="../src/mainwindow.cpp" line="1484"/>
       <source>The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</source>
       <translation>O dispositivo emulado não possui um serviço de gerenciamento bluetooth! O Bluetooth não é suportado.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1589"/>
+      <location filename="../src/mainwindow.cpp" line="1601"/>
       <source>Choose the JAR file to install</source>
       <translation>Escolha o arquivo JAR para instalar</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1589"/>
+      <location filename="../src/mainwindow.cpp" line="1601"/>
       <source>JAR file (*.jar)</source>
       <translation>Arquivo JAR (*.jar)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1597"/>
+      <location filename="../src/mainwindow.cpp" line="1609"/>
       <source>%1 version %2 (by %3) has been installed!</source>
       <translation>%1 versão %2 (por %3) foi instalada!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1600"/>
+      <location filename="../src/mainwindow.cpp" line="1612"/>
       <source>Install success</source>
       <translation>Instalação concluída com sucesso</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1612"/>
+      <location filename="../src/mainwindow.cpp" line="1624"/>
       <source>Can not add the JAR to the apps database!</source>
       <translation>Não é possível adicionar o JAR na base de dados dos aplicativos!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1616"/>
+      <location filename="../src/mainwindow.cpp" line="1628"/>
       <source>The given file is not a valid JAR file!</source>
       <translation>O arquivo selecionado não é um arquivo JAR!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1620"/>
+      <location filename="../src/mainwindow.cpp" line="1632"/>
       <source>Can not find the JAR file!</source>
       <translation>Não foi possível encontrar o arquivo JAR!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1624"/>
+      <location filename="../src/mainwindow.cpp" line="1636"/>
       <source>The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</source>
       <translation>O JAR precisa do MIDP-2.0, mas o emulador apenas suporta o JAR MIDP-1.0 em dispositivos S60v1!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1628"/>
+      <location filename="../src/mainwindow.cpp" line="1640"/>
       <source>The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</source>
       <translation>O JAR não pode ser instalado no dispositivo atual! Somente dispositivos S60v1 podem instalar este JAR no momento</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1632"/>
+      <location filename="../src/mainwindow.cpp" line="1644"/>
       <source>An unexpected error has happened. Error code: %1</source>
       <translation>Ocorreu um erro inesperado. Código de erro: %1</translation>
     </message>
