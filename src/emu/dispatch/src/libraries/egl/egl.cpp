@@ -38,10 +38,10 @@
 namespace eka2l1::dispatch {
     // First bit is surface type, and second bit is buffer size bits
     static constexpr std::uint32_t EGL_EMU_CONFIG_LIST_VALS[] = {
-        // GLES2
-        0b1010, 0b1100, 0b1110,
         // GLES1
         0b010, 0b100, 0b110,
+        // GLES2
+        0b1010, 0b1100, 0b1110,
         // VG
         0b10010, 0b10100, 0b10110,
     };
