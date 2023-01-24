@@ -144,7 +144,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="55"/>
       <source>Off</source>
-      <translation type="unfinished">Off</translation>
+      <translation>Apagar</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="60"/>
@@ -159,7 +159,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="70"/>
       <source>Server</source>
-      <translation type="unfinished">Server</translation>
+      <translation>Servidor</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="114"/>
@@ -189,7 +189,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="227"/>
       <source>Password</source>
-      <translation type="unfinished">Password</translation>
+      <translation>Contraseña</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="237"/>
