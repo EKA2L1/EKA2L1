@@ -89,42 +89,42 @@
   <context>
     <name>applist_widget</name>
     <message>
-      <location filename="../src/applistwidget.cpp" line="712"/>
+      <location filename="../src/applistwidget.cpp" line="724"/>
       <source>&lt;br&gt;App UID: 0x%1</source>
       <translation>&lt;br&gt;تطبيق UID: 0x%1</translation>
     </message>
     <message>
-      <location filename="../src/applistwidget.cpp" line="784"/>
+      <location filename="../src/applistwidget.cpp" line="796"/>
       <source>Enter a new name</source>
       <translation>أدخل اسم جديد</translation>
     </message>
     <message>
-      <location filename="../src/applistwidget.cpp" line="793"/>
+      <location filename="../src/applistwidget.cpp" line="805"/>
       <source>Update name failed</source>
       <translation>فشل تحديث الاسم</translation>
     </message>
     <message>
-      <location filename="../src/applistwidget.cpp" line="793"/>
+      <location filename="../src/applistwidget.cpp" line="805"/>
       <source>An error occured while trying to rename the app!</source>
       <translation>حدث خطأ أثناء محاولة إعادة تسمية التطبيق!</translation>
     </message>
     <message>
-      <location filename="../src/applistwidget.cpp" line="802"/>
+      <location filename="../src/applistwidget.cpp" line="814"/>
       <source>Delete app failed</source>
       <translation>فشل حذف التطبيق</translation>
     </message>
     <message>
-      <location filename="../src/applistwidget.cpp" line="802"/>
+      <location filename="../src/applistwidget.cpp" line="814"/>
       <source>An error occured while trying to delete the app!</source>
       <translation>حدث خطأ أثناء محاولة حذف التطبيق!</translation>
     </message>
     <message>
-      <location filename="../src/applistwidget.cpp" line="822"/>
+      <location filename="../src/applistwidget.cpp" line="834"/>
       <source>Rename</source>
       <translation>إعادة التسمية</translation>
     </message>
     <message>
-      <location filename="../src/applistwidget.cpp" line="823"/>
+      <location filename="../src/applistwidget.cpp" line="835"/>
       <source>Delete</source>
       <translation>حذف</translation>
     </message>
@@ -612,450 +612,455 @@
       <translation>تدوير الشاشة</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="116"/>
+      <location filename="../src/mainwindow.ui" line="117"/>
       <source>Help</source>
       <translation>المساعدة</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="123"/>
+      <location filename="../src/mainwindow.ui" line="124"/>
       <source>Emulation</source>
       <translation>المحاكاة</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="133"/>
+      <location filename="../src/mainwindow.ui" line="134"/>
       <source>Bluetooth</source>
       <translation>البلوتوث</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="137"/>
+      <location filename="../src/mainwindow.ui" line="138"/>
       <source>Netplay</source>
       <translation>اللعب عبر الشبكة</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="146"/>
+      <location filename="../src/mainwindow.ui" line="147"/>
       <source>Control</source>
       <translation>التحكم</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="161"/>
+      <location filename="../src/mainwindow.ui" line="162"/>
       <source>About</source>
       <translation>حول</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="166"/>
+      <location filename="../src/mainwindow.ui" line="167"/>
       <source>Package</source>
       <translation>الحزمة</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="171"/>
+      <location filename="../src/mainwindow.ui" line="172"/>
       <source>Device</source>
       <translation>الجهاز</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="176"/>
+      <location filename="../src/mainwindow.ui" line="177"/>
       <source>Package manager</source>
       <translation>مدير الحزم</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="181"/>
+      <location filename="../src/mainwindow.ui" line="182"/>
       <source>Settings</source>
       <translation>الإعدادات</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="189"/>
+      <location filename="../src/mainwindow.ui" line="190"/>
       <source>Pause</source>
       <translation>ايقاف</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="194"/>
+      <location filename="../src/mainwindow.ui" line="195"/>
       <source>Stop</source>
       <translation>توقف</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="199"/>
+      <location filename="../src/mainwindow.ui" line="200"/>
       <source>Restart</source>
       <translation>إعادة التشغيل</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="204"/>
+      <location filename="../src/mainwindow.ui" line="205"/>
       <source>Threads</source>
       <translation>الروابط</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="209"/>
+      <location filename="../src/mainwindow.ui" line="210"/>
       <source>Mutexes</source>
       <translation>Mutexes</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="214"/>
+      <location filename="../src/mainwindow.ui" line="215"/>
       <source>Chunks</source>
       <translation>القطع</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="219"/>
+      <location filename="../src/mainwindow.ui" line="220"/>
       <source>Window tree</source>
       <translation>شجرة النافذة</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="227"/>
+      <location filename="../src/mainwindow.ui" line="228"/>
       <source>Fullscreen</source>
       <translation>ملء الشاشة</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="238"/>
+      <location filename="../src/mainwindow.ui" line="239"/>
       <source>Recent dumps</source>
       <translation>Dumps الحديثة</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="278"/>
+      <location filename="../src/mainwindow.ui" line="279"/>
       <source>Folder</source>
       <translation>المجلد</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="288"/>
+      <location filename="../src/mainwindow.ui" line="289"/>
       <source>Refresh app list</source>
       <translation>تحديث قائمة التطبيقات</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="293"/>
+      <location filename="../src/mainwindow.ui" line="294"/>
       <source>Friends&apos;s IP addresses</source>
       <translation>الأصدقاء&apos;عناوين IP</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="298"/>
+      <location filename="../src/mainwindow.ui" line="299"/>
       <source>Button mapping editor</source>
       <translation>محرر تعيين الزر</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="303"/>
+      <location filename="../src/mainwindow.ui" line="304"/>
       <source>Touch mapping editor</source>
       <translation>محرر تعيين اللمس</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="308"/>
+      <location filename="../src/mainwindow.ui" line="309"/>
       <source>N-Gage card game</source>
       <translation>بطاقة لُعْبَة N-Gage</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="313"/>
+      <location filename="../src/mainwindow.ui" line="314"/>
       <source>Check for update</source>
       <translation>التحقق من وجود تحديث</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="318"/>
+      <location filename="../src/mainwindow.ui" line="319"/>
       <source>Launch process</source>
       <translation>عملية التشغيل</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.ui" line="328"/>
+      <location filename="../src/mainwindow.ui" line="329"/>
       <source>Configure</source>
       <translation>اعداد</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="248"/>
+      <location filename="../src/mainwindow.ui" line="340"/>
+      <source>Stretch to fill window (ignore aspect ratio)</source>
+      <translation type="unfinished">Stretch to fill window (ignore aspect ratio)</translation>
+    </message>
+    <message>
+      <location filename="../src/mainwindow.cpp" line="252"/>
       <source>Clear menu</source>
       <translation>مسح القائمة</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="323"/>
+      <location filename="../src/mainwindow.cpp" line="329"/>
       <source>Touchscreen disabled</source>
       <translation>تم تعطيل الشاشة اللمسية</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="323"/>
+      <location filename="../src/mainwindow.cpp" line="329"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
       <translation>بعض الروابط المفاتيح الحالية مرتبطة بأزرار الماوس. لذلك يتم تعطيل محاكاة شاشة اللمس.&lt;br&gt;&lt;br&gt;&lt;b&gt;ملاحظة&lt;/b&gt;&lt;br&gt;يمكن إعادة تمكين شاشة التش عن طريق إعادة ربط أزرار الماوس بمفاتيح لوحة المفاتيح.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="324"/>
-      <location filename="../src/mainwindow.cpp" line="404"/>
+      <location filename="../src/mainwindow.cpp" line="330"/>
+      <location filename="../src/mainwindow.cpp" line="411"/>
       <source>Don&apos;t show this again</source>
       <translation>لا تظهرها &apos; مرة أخرى</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="403"/>
+      <location filename="../src/mainwindow.cpp" line="410"/>
       <source>No device installed</source>
       <translation>لا يوجد جهاز مثبت</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="403"/>
+      <location filename="../src/mainwindow.cpp" line="410"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
       <translation>لم تقم بتثبيت أي جهاز. الرجاء تثبيت جهاز أو اتباع تعليمات التثبيت على صفحة ويكي EKA2L1&apos;s GitHub.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="663"/>
+      <location filename="../src/mainwindow.cpp" line="670"/>
       <source>Installing &lt;b&gt;%1&lt;/b&gt;</source>
       <translation>تثبيت &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="676"/>
+      <location filename="../src/mainwindow.cpp" line="683"/>
       <source>Choose the N-Gage game card folder</source>
       <translation>اختر مجلد بطاقة لعبة N-Gage</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="684"/>
+      <location filename="../src/mainwindow.cpp" line="691"/>
       <source>Installing N-Gage game...</source>
       <translation>تثبيت لعبة N-Gagage...</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="707"/>
+      <location filename="../src/mainwindow.cpp" line="714"/>
       <source>Install success!</source>
       <translation>تم التثبيت بنجاح!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="707"/>
+      <location filename="../src/mainwindow.cpp" line="714"/>
       <source>Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</source>
       <translation>تم تثبيت لعبة بطاقة N-Gage بنجاح: &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="713"/>
+      <location filename="../src/mainwindow.cpp" line="720"/>
       <source>Can&apos;t find the game data folder!</source>
       <translation>يستطيع&apos;العثور على مجلد بيانات اللعبة!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="717"/>
+      <location filename="../src/mainwindow.cpp" line="724"/>
       <source>There is more than one game in the given card game folder!</source>
       <translation>هناك أكثر من لعبة واحدة في مجلد اللعبة المعين!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="721"/>
+      <location filename="../src/mainwindow.cpp" line="728"/>
       <source>The game information file does not exist in the card game folder!</source>
       <translation>ملف معلومات اللعبة غير موجود في مجلد اللعبة!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="725"/>
+      <location filename="../src/mainwindow.cpp" line="732"/>
       <source>The game information file has been corrupted. Please check your data&apos;s validity!</source>
       <translation>ملف معلومات اللعبة تالف. الرجاء التحقق من صحة بياناتك&apos;ثانية!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="729"/>
+      <location filename="../src/mainwindow.cpp" line="736"/>
       <source>General error occured...</source>
       <translation>حدث خطأ عام...</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="734"/>
-      <location filename="../src/mainwindow.cpp" line="736"/>
-      <location filename="../src/mainwindow.cpp" line="1636"/>
+      <location filename="../src/mainwindow.cpp" line="741"/>
+      <location filename="../src/mainwindow.cpp" line="743"/>
+      <location filename="../src/mainwindow.cpp" line="1648"/>
       <source>Install failed</source>
       <translation>فشل التثبيت</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="734"/>
+      <location filename="../src/mainwindow.cpp" line="741"/>
       <source>Installation failed with error:
   -%1</source>
       <translation>فشل التثبيت بخطأ:
   -%1</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="736"/>
+      <location filename="../src/mainwindow.cpp" line="743"/>
       <source>Installation of %1% failed with error:
   -%2</source>
       <translation>فشل تثبيت %1% بالخطأ:
   -%2</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="805"/>
-      <location filename="../src/mainwindow.cpp" line="1064"/>
+      <location filename="../src/mainwindow.cpp" line="812"/>
+      <location filename="../src/mainwindow.cpp" line="1071"/>
       <source>Cancel</source>
       <translation>إلغاء</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="808"/>
+      <location filename="../src/mainwindow.cpp" line="815"/>
       <source>Extracting game dump files</source>
       <translation>استخراج ملفات dump اللعبة</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="830"/>
+      <location filename="../src/mainwindow.cpp" line="837"/>
       <source>Mounting aborted</source>
       <translation>تم إحباط التجهيز</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="835"/>
+      <location filename="../src/mainwindow.cpp" line="842"/>
       <source>The ZIP file is corrupted!</source>
       <translation>ملف ZIP تالف!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="840"/>
+      <location filename="../src/mainwindow.cpp" line="847"/>
       <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
       <translation>ZIP لا يحتوي على مجلد النظام في المجلد الجذر. يجب أن يكون مجلد النظام موجودا في dump اللعبة.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="846"/>
+      <location filename="../src/mainwindow.cpp" line="853"/>
       <source>The choosen file is not a ZIP file!</source>
       <translation>الملف المختار ليس ملف ZIP!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="860"/>
+      <location filename="../src/mainwindow.cpp" line="867"/>
       <source>Game card problem</source>
       <translation>مشكلة في بطاقة اللعبة</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="860"/>
+      <location filename="../src/mainwindow.cpp" line="867"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
       <translation>ملف dump لبطاقة اللعبة يحتوي على ملفات حساسة لحالة الأحرف. قد يسبب ذلك مشاكل مع المحاكي.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="864"/>
+      <location filename="../src/mainwindow.cpp" line="871"/>
       <source>Game card dump folder correction</source>
       <translation>تصحيح مجلد dump بطاقة اللعبة</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="864"/>
+      <location filename="../src/mainwindow.cpp" line="871"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
       <translation>يبدو أن المسار المحدد غير صحيح.&lt;br&gt;هل تريد من المحاكي تصحيحه؟</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="920"/>
+      <location filename="../src/mainwindow.cpp" line="927"/>
       <source>Choose the game card dump folder</source>
       <translation>اختر مجلد dump بطاقة اللعبة</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="940"/>
+      <location filename="../src/mainwindow.cpp" line="947"/>
       <source>Choose the game card zip</source>
       <translation>اختر بطاقة اللعبة المضغوط</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1011"/>
+      <location filename="../src/mainwindow.cpp" line="1018"/>
       <source>Launch failed</source>
       <translation>فشل التشغيل</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1011"/>
+      <location filename="../src/mainwindow.cpp" line="1018"/>
       <source>Fail to launch the selected application!</source>
       <translation>فشل في بدء تشغيل التطبيق المحدد!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1028"/>
+      <location filename="../src/mainwindow.cpp" line="1035"/>
       <source>Document</source>
       <translation>المستند</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1046"/>
+      <location filename="../src/mainwindow.cpp" line="1053"/>
       <source>Choose a language for the package</source>
       <translation>اختيار لغة للحزمة</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1067"/>
+      <location filename="../src/mainwindow.cpp" line="1074"/>
       <source>Installing package progress</source>
       <translation>تقدم تثبيت الحزمة</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1092"/>
+      <location filename="../src/mainwindow.cpp" line="1099"/>
       <source>Installation aborted</source>
       <translation>تم الغاء التثبيت</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1092"/>
+      <location filename="../src/mainwindow.cpp" line="1099"/>
       <source>The installation has been canceled</source>
       <translation>تم إلغاء التثبيت</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1097"/>
+      <location filename="../src/mainwindow.cpp" line="1104"/>
       <source>Installation failed</source>
       <translation>فشل التثبيت</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1097"/>
+      <location filename="../src/mainwindow.cpp" line="1104"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
       <translation>فشل في تثبيت الحزمة على المسار: %1. تأكد من أن المسار يشير إلى ملف SIS/SISX صالح.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1104"/>
+      <location filename="../src/mainwindow.cpp" line="1111"/>
       <source>Installation success</source>
       <translation>تم التثبيت بنجاح</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1104"/>
+      <location filename="../src/mainwindow.cpp" line="1111"/>
       <source>Package has been successfully installed</source>
       <translation>تم تثبيت الحزمة بنجاح</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1129"/>
+      <location filename="../src/mainwindow.cpp" line="1136"/>
       <source>Choose the file to install</source>
       <translation>اختر الملف الذي سيتم تثبيته</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1129"/>
+      <location filename="../src/mainwindow.cpp" line="1136"/>
       <source>SIS file (*.sis *.sisx)</source>
       <translation>ملف SIS (*.sis *.sisx)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1324"/>
+      <location filename="../src/mainwindow.cpp" line="1331"/>
       <source>Load theme failed!</source>
       <translation>فشل تحميل السمة!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1324"/>
+      <location filename="../src/mainwindow.cpp" line="1331"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
       <translation>يمكن العثور على السمة المظلمة&apos;ملف النمط s&apos;t!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1454"/>
+      <location filename="../src/mainwindow.cpp" line="1466"/>
       <source>Continue to modify friends&apos; IP addresses</source>
       <translation>الاستمرار في تعديل الأصدقاء&apos; عناوين IP</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1455"/>
+      <location filename="../src/mainwindow.cpp" line="1467"/>
       <source>This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</source>
       <translation>سيظهر مربع الحوار هذا جميع عناوين IP المخزنة، التي يمكن أن تكشف عن الآخرين&apos; معلومات شخصية.&lt;br&gt;هل ترغب في المتابعة؟</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1472"/>
+      <location filename="../src/mainwindow.cpp" line="1484"/>
       <source>Bluetooth manager service not available!</source>
       <translation>خدمة مدير البلوتوث غير متوفرة!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1472"/>
+      <location filename="../src/mainwindow.cpp" line="1484"/>
       <source>The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</source>
       <translation>الجهاز المحاكي لا يحتوي على خدمة مدير البلوتوث! البلوتوث غير مدعوم.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1589"/>
+      <location filename="../src/mainwindow.cpp" line="1601"/>
       <source>Choose the JAR file to install</source>
       <translation>اختر ملف JAR لتثبيته</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1589"/>
+      <location filename="../src/mainwindow.cpp" line="1601"/>
       <source>JAR file (*.jar)</source>
       <translation>ملف JAR (*.jar)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1597"/>
+      <location filename="../src/mainwindow.cpp" line="1609"/>
       <source>%1 version %2 (by %3) has been installed!</source>
       <translation>تم تثبيت %1 الإصدار %2 (بواسطة %3)!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1600"/>
+      <location filename="../src/mainwindow.cpp" line="1612"/>
       <source>Install success</source>
       <translation>تم التثبيت بنجاح</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1612"/>
+      <location filename="../src/mainwindow.cpp" line="1624"/>
       <source>Can not add the JAR to the apps database!</source>
       <translation>لا يمكن إضافة JAR إلى قاعدة بيانات التطبيقات!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1616"/>
+      <location filename="../src/mainwindow.cpp" line="1628"/>
       <source>The given file is not a valid JAR file!</source>
       <translation>الملف المحدد ليس ملف JAR صالح!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1620"/>
+      <location filename="../src/mainwindow.cpp" line="1632"/>
       <source>Can not find the JAR file!</source>
       <translation>لا يمكن العثور على ملف JAR!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1624"/>
+      <location filename="../src/mainwindow.cpp" line="1636"/>
       <source>The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</source>
       <translation>يحتاج JAR إلى MIDP-2.0، ولكن المحاكي يدعم فقط MIDP-1.0 JAR قيد التشغيل على أجهزة S60v1!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1628"/>
+      <location filename="../src/mainwindow.cpp" line="1640"/>
       <source>The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</source>
       <translation>لا يمكن تثبيت JAR لهذا الجهاز الحالي! فقط أجهزة S60v1 يمكن تثبيت هذا JAR في الوقت الحالي</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1632"/>
+      <location filename="../src/mainwindow.cpp" line="1644"/>
       <source>An unexpected error has happened. Error code: %1</source>
       <translation>حدث خطأ غير متوقع. رمز الخطأ: %1</translation>
     </message>
