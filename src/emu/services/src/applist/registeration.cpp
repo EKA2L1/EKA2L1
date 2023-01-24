@@ -132,16 +132,16 @@ namespace eka2l1 {
             binary_name.pop_back();
         }
 
-        // EKA2 supports shortening executable path. If it's in /sys/bin/ then we can just shorten
+        // Versions of Symbian (From S^3 I guess?) supports shortening executable path. If it's in /sys/bin/ then we can just shorten
         // to drive and filename. Gameloft games relies on this (they use DriveAndPath to get the drive of the EXE, lol)
         if (reg.caps.flags & apa_capability::non_native) {
             reg.mandatory_info.app_path = std::u16string(1, drive_to_char16(land_drive)) + eka2l1::relative_path(app_file);
         } else if (reg.caps.flags & apa_capability::built_as_dll) {
-            reg.mandatory_info.app_path = std::u16string(1, drive_to_char16(land_drive)) + (app_path_oldarch ? u":\\system\\programs\\" : u":")
+            reg.mandatory_info.app_path = std::u16string(1, drive_to_char16(land_drive)) + (app_path_oldarch ? u":\\system\\programs\\" : u":\\")
                 + binary_name + u".dll";
         } else {
             // Compatibility with old EKA1
-            reg.mandatory_info.app_path = std::u16string(1, drive_to_char16(land_drive)) + (app_path_oldarch ? u":\\system\\programs\\" : u":")
+            reg.mandatory_info.app_path = std::u16string(1, drive_to_char16(land_drive)) + (app_path_oldarch ? u":\\system\\programs\\" : u":\\")
                 + binary_name + u".exe";
         }
 

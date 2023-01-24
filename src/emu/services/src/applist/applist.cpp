@@ -243,7 +243,7 @@ namespace eka2l1 {
 
         common::ro_buf_stream app_info_resource_stream(&dat[0], dat.size());
         bool result = read_registeration_info(reinterpret_cast<common::ro_stream *>(&app_info_resource_stream),
-            reg, land_drive, kern->get_epoc_version() < epocver::eka2);
+            reg, land_drive, kern->get_epoc_version() < epocver::epoc95);
 
         if (!result) {
             return false;
@@ -1260,7 +1260,7 @@ namespace eka2l1 {
         // https://github.com/SymbianSource/oss.FCL.sf.mw.appsupport/blob/master/appfw/apparchitecture/apgrfx/apgstart.cpp#L164
         // Value of S^3 is based on the proud Doodle Farm (for some reason using 0.3mb of stack in a single function when in EXE it ask for 0.1mb)
         process_ptr pr = kern->spawn_new_process(exe_path, (legacy_level() < APA_LEGACY_LEVEL_MORDEN) ? cmd : u"",
-            0, (kern->get_epoc_version() >= epocver::epoc10) ? MINIMAL_LAUNCH_STACK_SIZE_S3 : MINIMAL_LAUNCH_STACK_SIZE);
+            0, (kern->get_epoc_version() >= epocver::epoc95) ? MINIMAL_LAUNCH_STACK_SIZE_S3 : MINIMAL_LAUNCH_STACK_SIZE);
 
         if (!pr) {
             return false;

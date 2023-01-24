@@ -801,8 +801,20 @@ namespace eka2l1 {
             return create<kernel::guomen_process>(mem_, cmd_arg);
         }
 
+        // NOTE: Workaround for launching game on S^3 or more with keeping the path same for both applist and system calls
+        // For ID3works games
+        std::u16string corrected_path = path;
+
+        if (get_epoc_version() >= epocver::epoc95) {
+            auto root_path = eka2l1::root_path(corrected_path, true);
+            auto rel_path = eka2l1::file_directory(corrected_path, true);
+            if (!root_path.empty() && (root_path == rel_path)) {
+                corrected_path.erase(corrected_path.begin() + 2);
+            }
+        }
+
         std::u16string full_path;
-        auto imgs = lib_mngr_->try_search_and_parse(path, &full_path);
+        auto imgs = lib_mngr_->try_search_and_parse(corrected_path, &full_path);
 
         if (!imgs.first && !imgs.second) {
             return nullptr;
