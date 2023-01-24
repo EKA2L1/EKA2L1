@@ -77,10 +77,10 @@
     <string name="pref_bt_netplay_mode_off">Off</string>
     <string name="pref_bt_netplay_mode_direct_ip">Direct IP</string>
     <string name="pref_bt_netplay_mode_lan">LAN</string>
-    <string name="pref_bt_netplay_mode_server">Server</string>
+    <string name="pref_bt_netplay_mode_server">Servidor</string>
     <string name="pref_bt_netplay_enable_upnp">Enable UPnP (for IPv4 public play)</string>
     <string name="pref_bt_netplay_server_address">Server address</string>
-    <string name="pref_bt_netplay_password">Password</string>
+    <string name="pref_bt_netplay_password">Contraseña</string>
     <string name="pref_bt_netplay_port_offset">Port offset</string>
     <string name="action_context_delete">Eliminar</string>
     <string name="action_context_rename">Renombrar</string>
