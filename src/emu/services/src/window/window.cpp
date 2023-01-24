@@ -563,12 +563,22 @@ namespace eka2l1::epoc {
 
         const char16_t *win_group_name_ptr = reinterpret_cast<char16_t *>(find_info + 1);
         const std::u16string win_group_name(win_group_name_ptr, find_info->length);
-
+        std::wstring win_group_name_w = common::ucs2_to_wstr(win_group_name);
         for (; group; group = reinterpret_cast<epoc::window_group *>(group->sibling)) {
+            // Prevent null \0 character from being trimmed by substr
+            std::wstring name_copy_raw_w;
+  
+            if (find_info->offset == 0) {
+                name_copy_raw_w = common::ucs2_to_wstr(group->name);
+            } else {
+                std::u16string name_copy_raw;
+                name_copy_raw.resize(group->name.length() - find_info->offset);
+                std::copy(group->name.begin() + find_info->offset, group->name.end(), name_copy_raw.begin());
+
+                name_copy_raw_w = common::ucs2_to_wstr(name_copy_raw);
+            }
             // Whole string should be matched => from position 0
-            if (common::match_wildcard_in_string(
-                common::ucs2_to_wstr(group->name.substr(find_info->offset)),
-                common::ucs2_to_wstr(win_group_name), true) == 0) {
+            if (common::match_wildcard_in_string(name_copy_raw_w, win_group_name_w, true) == 0) {
                 ctx.complete(group->id);
                 return;
             }
