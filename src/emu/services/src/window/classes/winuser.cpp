@@ -637,15 +637,16 @@ namespace eka2l1::epoc {
         // Games needed: Digitial Chocolate N-Gage 2.0 games, display ready is called when display object instance is not yet created
         if (!in_visibility_delay_report_) {
             in_visibility_delay_report_ = true;
-            scr->recalculate_visible_regions();
 
             window_server &ws = client->get_ws();
             ntimer *timer = ws.get_ntimer();
 
             timer->schedule_event(epoc::WS_DELIVER_REPORT_VISIBILITY_INIT_DELAY, ws.get_deliver_delay_report_visiblity_event(),
                 reinterpret_cast<std::uint64_t>(this));
-        } else {  
-            scr->recalculate_visible_regions();
+        } else {
+            if (scr->need_update_visible_regions()) {
+                scr->recalculate_visible_regions();
+            }
         }
         
         ctx.complete(epoc::error_none);

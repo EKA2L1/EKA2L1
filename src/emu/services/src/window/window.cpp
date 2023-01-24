@@ -2087,10 +2087,18 @@ namespace eka2l1 {
             });
 
         deliver_report_visibility_evt_ = kern->get_ntimer()->register_event("WsDeliverReportVisiblityEvent",
-            [](std::uint64_t userdata, std::uint64_t microsecs_late) {
+            [this](std::uint64_t userdata, std::uint64_t microsecs_late) {
                 epoc::canvas_base *cv = reinterpret_cast<epoc::canvas_base *>(userdata);
                 if (cv) {
+                    const std::lock_guard<std::mutex> guard(cv->scr->screen_mutex);
+                    kern->lock();
+
+                    if (cv->scr->need_update_visible_regions()) {
+                        cv->scr->recalculate_visible_regions();
+                    }
+
                     cv->report_visiblity_change(true);
+                    kern->unlock();
                 }
             });
     }
