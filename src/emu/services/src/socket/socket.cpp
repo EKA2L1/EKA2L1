@@ -780,6 +780,14 @@ namespace eka2l1::epoc::socket {
                     bind(ctx);
                     return;
 
+                case socket_so_accept:
+                    accept(ctx);
+                    return;
+
+                case socket_so_listen:
+                    listen(ctx);
+                    return;
+
                 case socket_so_write:
                     write(ctx);
                     return;
@@ -820,6 +828,10 @@ namespace eka2l1::epoc::socket {
                     sock_->cancel_connect();
                     ctx->complete(epoc::error_none);
 
+                    return;
+
+                case socket_so_cancel_accept:
+                    cancel_accept(ctx);
                     return;
 
                 case socket_so_local_name:
