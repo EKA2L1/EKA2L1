@@ -197,19 +197,17 @@ namespace eka2l1::dispatch {
         drivers::graphics_driver *driver = sys->get_graphics_driver();
         kernel_system *kern = sys->get_kernel_system();
 
+        // TODO: Update only some regions specified. Rotation makes it complicated
         epoc::screen *scr = dispatcher->winserv_->get_screens();
-        eka2l1::rect update_rect = *rect_list;
-        update_rect.transform_from_symbian_rectangle();
 
         while (scr != nullptr) {
             if (scr->number == screen_number) {
                 // Update the DSA screen texture
                 const epoc::config::screen_mode &mode_info = scr->current_mode();
-
                 const eka2l1::vec2 screen_size = mode_info.size;
 
-                const char *data_ptr = reinterpret_cast<const char *>(scr->screen_buffer_ptr()) + ((update_rect.top.y * mode_info.size.x + update_rect.top.x) * 4);
-                const std::size_t buffer_size = mode_info.size.x * update_rect.size.y * 4;
+                const char *data_ptr = reinterpret_cast<const char *>(scr->screen_buffer_ptr());
+                const std::size_t buffer_size = mode_info.size.x * mode_info.size.y * 4;
 
                 std::uint64_t next_vsync_us = 0;
                 scr->vsync(sys->get_ntimer(), next_vsync_us);
@@ -242,7 +240,7 @@ namespace eka2l1::dispatch {
                 drivers::graphics_command_builder builder;
 
                 // Only one rectangle for now!
-                builder.update_bitmap(scr->dsa_texture, data_ptr, buffer_size, update_rect.top, update_rect.size, mode_info.size.x);
+                builder.update_bitmap(scr->dsa_texture, data_ptr, buffer_size, { 0, 0 }, screen_size);
 
                 // NOTE: This is a hack for some apps that dont fill alpha
                 // TODO: Figure out why or better solution (maybe the display mode is not really correct?)
