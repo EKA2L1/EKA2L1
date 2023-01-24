@@ -2,7 +2,7 @@
   <p align="center">
      <img src="https://i.imgur.com/FasrbKV.png" width="256">
      <!-- Margin not working for some reasons! Tried to fix it by searching but not working! Feel free to submit a patch! -->
-     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+     &nbsp;
      <!-- Old link: https://femto.pw/rasu.gif -->
      <img src="https://raw.githubusercontent.com/EKA2L1/eka2l1.github.io/main/assets/main/logo.gif">
   </p>
