@@ -179,7 +179,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="187"/>
       <source>Open friends&apos; IP editor</source>
-      <translation>Abrir amigos&apos; Editor de IP</translation>
+      <translation>Abrir editor de IP de amigos</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="224"/>
@@ -754,7 +754,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="340"/>
       <source>Stretch to fill window (ignore aspect ratio)</source>
-      <translation type="unfinished">Stretch to fill window (ignore aspect ratio)</translation>
+      <translation>Esticar para preencher janela (ignorar proporção de aspecto)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="252"/>
