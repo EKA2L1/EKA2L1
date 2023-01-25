@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/utils.cpp" line="126"/>
       <source>EKA2L1 - Symbian OS emulator</source>
-      <translation>EKA2L1 - Emulator Symbian OS</translation>
+      <translation>EKA2L1 - Symbian OS emulator</translation>
     </message>
   </context>
   <context>
