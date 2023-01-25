@@ -71,15 +71,15 @@
     <string name="pref_device_display_name">Nombre amistoso del teléfono</string>
     <string name="hide_system_apps">Ocultar aplicaciones del sistema</string>
     <string name="pref_bt_netplay_direct_ips_manager">Gestor de IPs Directos</string>
-    <string name="enter_address">Enter address</string>
-    <string name="address">Address</string>
+    <string name="enter_address">Introducir dirección</string>
+    <string name="address">Dirección</string>
     <string name="port">Puerto</string>
     <string name="pref_bt_netplay_mode_off">Apagar</string>
     <string name="pref_bt_netplay_mode_direct_ip">IP directa</string>
     <string name="pref_bt_netplay_mode_lan">LAN</string>
     <string name="pref_bt_netplay_mode_server">Servidor</string>
-    <string name="pref_bt_netplay_enable_upnp">Enable UPnP (for IPv4 public play)</string>
-    <string name="pref_bt_netplay_server_address">Server address</string>
+    <string name="pref_bt_netplay_enable_upnp">Activar UPnP (para IPv4 jugar públicamente)</string>
+    <string name="pref_bt_netplay_server_address">Dirección del servidor</string>
     <string name="pref_bt_netplay_password">Contraseña</string>
     <string name="pref_bt_netplay_port_offset">Offset de puerto</string>
     <string name="action_context_delete">Eliminar</string>
@@ -144,7 +144,7 @@
     <string name="enter_name">Introduzca un nombre</string>
     <string name="set_default_profile_description">Seleccionar este perfil como el predeterminado para las próximas aplicaciones instaladas</string>
     <string name="error_name_exists">Ya existe, introduzca otro nombre</string>
-    <string name="extensive_logging">Extensive logging</string>
+    <string name="extensive_logging">Log extensivo</string>
     <string name="mapping_dialog_title">Presione una tecla</string>
     <string name="mapping_dialog_message" formatted="false">Mapping actual: %1$s</string>
     <string name="reset_mapping">Reset</string>
@@ -162,7 +162,7 @@
     <string name="version">Versión: </string>
     <string name="recommended_devices_note"><b>Nota:</b>Se recomienda usar firmware para la instalación de dispositivos S60v3 y superior.</string>
     <string name="install_ng_game_cant_find_data_folder">¡No se puede encontrar la carpeta de datos del juego!</string>
-    <string name="install_ng_game_more_than_one_game">There is more than one game in the given card game folder!</string>
-    <string name="install_ng_game_no_game_info_file">The game information file does not exist in the card game folder!</string>
+    <string name="install_ng_game_more_than_one_game">¡Hay más de un juego en la carpeta de la tarjeta del juego!</string>
+    <string name="install_ng_game_no_game_info_file">¡El archivo de información del juego no existe en la carpeta de la tarjeta del juego!</string>
     <string name="install_ng_game_corrupted_game_info">El archivo de información del juego está dañado. ¡Por favor, comprueba la validez de los datos!</string>
 </resources>
