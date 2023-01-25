@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/utils.cpp" line="126"/>
       <source>EKA2L1 - Symbian OS emulator</source>
-      <translation>EKA2L1 - Emulador Symbian OS</translation>
+      <translation>EKA2L1 - Emulador de Symbian OS</translation>
     </message>
   </context>
   <context>
@@ -134,7 +134,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="20"/>
       <source>Bluetooth netplay settings</source>
-      <translation type="unfinished">Bluetooth netplay settings</translation>
+      <translation>Ajustes de Bluetooth netplay</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="47"/>
@@ -164,12 +164,12 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="114"/>
       <source>Server address</source>
-      <translation type="unfinished">Server address</translation>
+      <translation>Dirección del servidor</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="133"/>
       <source>Enable UPnP (for IPv4 public play)</source>
-      <translation type="unfinished">Enable UPnP (for IPv4 public play)</translation>
+      <translation>Activar UPnP (para IPv4 jugar públicamente)</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="165"/>
@@ -179,7 +179,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="187"/>
       <source>Open friends&apos; IP editor</source>
-      <translation type="unfinished">Open friends&apos; IP editor</translation>
+      <translation>Abrir el editor IP de tus amigos</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="224"/>
@@ -209,7 +209,7 @@
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
       <source>The Bluetooth netplay configuration has not been saved. Do you want to save?</source>
-      <translation type="unfinished">The Bluetooth netplay configuration has not been saved. Do you want to save?</translation>
+      <translation>La configuración de Bluetooth netplay no ha sido guardada. ¿Desea guardarla?</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="127"/>
@@ -282,18 +282,18 @@
       <location filename="../src/btnetplay_friends_dialog.cpp" line="221"/>
       <source>Friend %1 has invalid port number (must be between 0 and 65535)!
 </source>
-      <translation type="unfinished">Friend %1 has invalid port number (must be between 0 and 65535)!
+      <translation>¡El amigo %1 tiene un número de puerto no válido (debe estar entre 0 y 65535)!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="248"/>
       <source>Some errors in updating friends!</source>
-      <translation type="unfinished">Some errors in updating friends!</translation>
+      <translation>¡Algunos errores al actualizar amigos!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="249"/>
       <source>Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</source>
-      <translation type="unfinished">Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</translation>
+      <translation>Las direcciones IP de algunos amigos no se pueden actualizar (consulte el texto detallado). Las direcciones que se pueden actualizar se han guardado.</translation>
     </message>
   </context>
   <context>
@@ -446,12 +446,12 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="17"/>
       <source>Touch mapping editor</source>
-      <translation type="unfinished">Touch mapping editor</translation>
+      <translation>Editor de mapeo touch</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="26"/>
       <source>&lt;b&gt;Mapping elements&lt;/b&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Mapping elements&lt;/b&gt;</translation>
+      <translation>&lt;b&gt;Elementos de mapeo&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="40"/>
@@ -492,7 +492,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="181"/>
       <source>Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</source>
-      <translation type="unfinished">Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</translation>
+      <translation>Los perfiles se guardan por aplicación/juego. Pulsa &lt;b&gt;Editar&lt;/b&gt; para entrar en modo Edición. Para eliminar el elemento de mapeo, presione &lt;b&gt;Eliminar&lt;/b&gt; y haga clic en el elemento que desea eliminar.</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="212"/>
@@ -507,12 +507,12 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="50"/>
       <source>Please wait for a game to be active!</source>
-      <translation type="unfinished">Please wait for a game to be active!</translation>
+      <translation>¡Por favor espere a que un juego esté activo!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="89"/>
       <source>For app: %1 (0x%2)</source>
-      <translation type="unfinished">For app: %1 (0x%2)</translation>
+      <translation>Para la aplicación: %1 (0x%2)</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="151"/>
@@ -550,7 +550,7 @@
     <message>
       <location filename="../src/launch_process_dialog.ui" line="51"/>
       <source>Executable path</source>
-      <translation type="unfinished">Executable path</translation>
+      <translation>Directorio del ejecutable</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="78"/>
@@ -576,7 +576,7 @@
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="33"/>
       <source>The executable path is invalid or the executable is corrupted. Check the log for more info!</source>
-      <translation type="unfinished">The executable path is invalid or the executable is corrupted. Check the log for more info!</translation>
+      <translation>El directorio del ejecutable no es válido o el ejecutable está corrompido. ¡Revisa el log para más información!</translation>
     </message>
   </context>
   <context>
@@ -624,12 +624,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="134"/>
       <source>Bluetooth</source>
-      <translation type="unfinished">Bluetooth</translation>
+      <translation>Bluetooth</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="138"/>
       <source>Netplay</source>
-      <translation type="unfinished">Netplay</translation>
+      <translation>Netplay</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="147"/>
@@ -719,27 +719,27 @@
     <message>
       <location filename="../src/mainwindow.ui" line="294"/>
       <source>Friends&apos;s IP addresses</source>
-      <translation type="unfinished">Friends&apos;s IP addresses</translation>
+      <translation>Direcciones IP de tus amigos</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="299"/>
       <source>Button mapping editor</source>
-      <translation type="unfinished">Button mapping editor</translation>
+      <translation>Editor de mapeo de botones</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="304"/>
       <source>Touch mapping editor</source>
-      <translation type="unfinished">Touch mapping editor</translation>
+      <translation>Editor de mapeo touch</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="309"/>
       <source>N-Gage card game</source>
-      <translation type="unfinished">N-Gage card game</translation>
+      <translation>Tarjeta de juego N-Gage</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="314"/>
       <source>Check for update</source>
-      <translation type="unfinished">Check for update</translation>
+      <translation>Buscar actualizaciones</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="319"/>
@@ -754,7 +754,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="340"/>
       <source>Stretch to fill window (ignore aspect ratio)</source>
-      <translation type="unfinished">Stretch to fill window (ignore aspect ratio)</translation>
+      <translation>Estirar para llenar la ventana (ignorar relación de aspecto)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="252"/>
@@ -795,7 +795,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="683"/>
       <source>Choose the N-Gage game card folder</source>
-      <translation type="unfinished">Choose the N-Gage game card folder</translation>
+      <translation>Elige la carpeta de tarjetas de juego N-Gage</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="691"/>
@@ -805,37 +805,37 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="714"/>
       <source>Install success!</source>
-      <translation type="unfinished">Install success!</translation>
+      <translation>¡Instalación exitosa!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="714"/>
       <source>Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</source>
-      <translation type="unfinished">Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</translation>
+      <translation>Instalado exitosamente la tarjeta de juego N-Gage: &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="720"/>
       <source>Can&apos;t find the game data folder!</source>
-      <translation type="unfinished">Can&apos;t find the game data folder!</translation>
+      <translation>¡No se puede encontrar la carpeta de datos del juego!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="724"/>
       <source>There is more than one game in the given card game folder!</source>
-      <translation type="unfinished">There is more than one game in the given card game folder!</translation>
+      <translation>¡Hay más de un juego en la carpeta de la tarjeta del juego!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="728"/>
       <source>The game information file does not exist in the card game folder!</source>
-      <translation type="unfinished">The game information file does not exist in the card game folder!</translation>
+      <translation>¡El archivo de información del juego no existe en la carpeta de la tarjeta del juego!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="732"/>
       <source>The game information file has been corrupted. Please check your data&apos;s validity!</source>
-      <translation type="unfinished">The game information file has been corrupted. Please check your data&apos;s validity!</translation>
+      <translation>El archivo de información del juego está dañado. ¡Por favor, compruebe la validez de los datos!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="736"/>
       <source>General error occured...</source>
-      <translation type="unfinished">General error occured...</translation>
+      <translation>Ocurrió un error general...</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="741"/>
@@ -848,14 +848,14 @@
       <location filename="../src/mainwindow.cpp" line="741"/>
       <source>Installation failed with error:
   -%1</source>
-      <translation type="unfinished">Installation failed with error:
+      <translation>Error al instalar con error:
   -%1</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="743"/>
       <source>Installation of %1% failed with error:
   -%2</source>
-      <translation type="unfinished">Installation of %1% failed with error:
+      <translation>La instalación de %1% falló con error:
   -%2</translation>
     </message>
     <message>
@@ -927,7 +927,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1018"/>
       <source>Fail to launch the selected application!</source>
-      <translation type="unfinished">Fail to launch the selected application!</translation>
+      <translation>¡Fallo al iniciar la aplicación seleccionada!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1035"/>
@@ -997,27 +997,27 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1466"/>
       <source>Continue to modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Continue to modify friends&apos; IP addresses</translation>
+      <translation>Continuar a modificar amigos&apos; direcciones IP</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1467"/>
       <source>This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</source>
-      <translation type="unfinished">This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</translation>
+      <translation>Este diálogo mostrará todas las direcciones IP almacenadas, que tienen el potencial de revelar información personal de otros.&lt;br&gt;¿Desea continuar?</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1484"/>
       <source>Bluetooth manager service not available!</source>
-      <translation type="unfinished">Bluetooth manager service not available!</translation>
+      <translation>¡Servicio de gestor de Bluetooth no disponible!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1484"/>
       <source>The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</source>
-      <translation type="unfinished">The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</translation>
+      <translation>¡El dispositivo emulado no tiene un gestor de servicio de bluetooth! Bluetooth no es compatible.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1601"/>
       <source>Choose the JAR file to install</source>
-      <translation type="unfinished">Choose the JAR file to install</translation>
+      <translation>Elige el archivo JAR para instalar</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1601"/>
@@ -1027,12 +1027,12 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1609"/>
       <source>%1 version %2 (by %3) has been installed!</source>
-      <translation type="unfinished">%1 version %2 (by %3) has been installed!</translation>
+      <translation>%1 versión %2 (por %3) ha sido instalada!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1612"/>
       <source>Install success</source>
-      <translation type="unfinished">Install success</translation>
+      <translation>Instalado exitosamente</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1624"/>
@@ -1047,22 +1047,22 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1632"/>
       <source>Can not find the JAR file!</source>
-      <translation type="unfinished">Can not find the JAR file!</translation>
+      <translation>¡No se puede encontrar el archivo JAR!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1636"/>
       <source>The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</source>
-      <translation type="unfinished">The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</translation>
+      <translation>¡El JAR necesita MIDP-2.0, pero el emulador sólo soporta JAR MIDP-1.0 ejecutándose en dispositivos S60v1!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1640"/>
       <source>The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</source>
-      <translation type="unfinished">The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</translation>
+      <translation>¡El JAR no puede ser instalado para este dispositivo actual! Sólo los dispositivos S60v1 pueden instalar este JAR en este momento</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1644"/>
       <source>An unexpected error has happened. Error code: %1</source>
-      <translation type="unfinished">An unexpected error has happened. Error code: %1</translation>
+      <translation>Ha ocurrido un error inesperado. Código de error: %1</translation>
     </message>
   </context>
   <context>
@@ -1193,7 +1193,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="279"/>
       <source>Hide system applications across all devices</source>
-      <translation type="unfinished">Hide system applications across all devices</translation>
+      <translation>Ocultar aplicaciones del sistema en todos los dispositivos</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="282"/>
@@ -1248,7 +1248,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="382"/>
       <source>Log filter</source>
-      <translation type="unfinished">Log filter</translation>
+      <translation>Filtro de Log</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="399"/>
@@ -1258,7 +1258,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="408"/>
       <source>Show log console (Windows only)</source>
-      <translation type="unfinished">Show log console (Windows only)</translation>
+      <translation>Mostrar consola de log (sólo Windows)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="418"/>
@@ -1355,7 +1355,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="597"/>
       <source>Disable title with Git version</source>
-      <translation type="unfinished">Disable title with Git version</translation>
+      <translation>Desactivar título con la versión de Git</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="604"/>
@@ -1909,7 +1909,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.ui" line="14"/>
       <source>New update available</source>
-      <translation type="unfinished">New update available</translation>
+      <translation>Nueva actualización disponible</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="43"/>
@@ -1974,7 +1974,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.cpp" line="190"/>
       <source>Can&apos;t find the download link of newest update for your platform!</source>
-      <translation type="unfinished">Can&apos;t find the download link of newest update for your platform!</translation>
+      <translation>¡No se ha podido encontrar el link de descarga de la actualización más reciente para su plataforma!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="196"/>
@@ -2010,7 +2010,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.cpp" line="303"/>
       <source>Can&apos;t not open temporary file for storing the update files!</source>
-      <translation type="unfinished">Can&apos;t not open temporary file for storing the update files!</translation>
+      <translation>¡No fue posible abrir el archivo temporario para almacenar los archivos de actualización!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="387"/>
@@ -2036,7 +2036,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
       <location filename="../src/update_dialog.cpp" line="439"/>
       <location filename="../src/update_dialog.cpp" line="454"/>
       <source>Can&apos;t find the updater program in the update archive file!</source>
-      <translation type="unfinished">Can&apos;t find the updater program in the update archive file!</translation>
+      <translation>¡No fue posible encontrar el programa de actualización en el archivo de actualización!</translation>
     </message>
   </context>
   <context>
