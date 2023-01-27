@@ -330,16 +330,16 @@ namespace eka2l1::drivers {
         color_loc = sprite_program->get_uniform_location("u_color").value_or(-1);
         proj_loc = sprite_program->get_uniform_location("u_proj").value_or(-1);
         model_loc = sprite_program->get_uniform_location("u_model").value_or(-1);
-        in_position_loc = sprite_program->get_attrib_location("in_position").value_or(-1);
-        in_texcoord_loc = sprite_program->get_attrib_location("in_texcoord").value_or(-1);
+        in_position_loc = is_stricted() ? 0 : sprite_program->get_attrib_location("in_position").value_or(-1);
+        in_texcoord_loc = is_stricted() ? 1 : sprite_program->get_attrib_location("in_texcoord").value_or(-1);
 
         color_upscaled_loc = upscale_program->get_uniform_location("u_color").value_or(-1);
         proj_upscaled_loc = upscale_program->get_uniform_location("u_proj").value_or(-1);
         model_upscaled_loc = upscale_program->get_uniform_location("u_model").value_or(-1);
         texel_delta_upscaled_loc_ = upscale_program->get_uniform_location("u_texelDelta").value_or(-1);
         pixel_delta_upscaled_loc_ = upscale_program->get_uniform_location("u_pixelDelta").value_or(-1);
-        in_position_loc_upscale = upscale_program->get_attrib_location("in_position").value_or(-1);
-        in_texcoord_loc_upscale = upscale_program->get_attrib_location("in_texcoord").value_or(-1);
+        in_position_loc_upscale = is_stricted() ? 0 : upscale_program->get_attrib_location("in_position").value_or(-1);
+        in_texcoord_loc_upscale = is_stricted() ? 1 : upscale_program->get_attrib_location("in_texcoord").value_or(-1);
 
         color_loc_brush = brush_program->get_uniform_location("u_color").value_or(-1);
         proj_loc_brush = brush_program->get_uniform_location("u_proj").value_or(-1);
@@ -352,8 +352,8 @@ namespace eka2l1::drivers {
         source_loc_mask = mask_program->get_uniform_location("u_tex").value_or(-1);
         mask_loc_mask = mask_program->get_uniform_location("u_mask").value_or(-1);
         flat_blend_loc_mask = mask_program->get_uniform_location("u_flat").value_or(-1);
-        in_position_loc_mask = mask_program->get_attrib_location("in_position").value_or(-1);
-        in_texcoord_loc_mask = mask_program->get_attrib_location("in_texcoord").value_or(-1);
+        in_position_loc_mask = is_stricted() ? 0 : mask_program->get_attrib_location("in_position").value_or(-1);
+        in_texcoord_loc_mask = is_stricted() ? 1 : mask_program->get_attrib_location("in_texcoord").value_or(-1);
         
         color_loc_pen = pen_program->get_uniform_location("u_color").value_or(-1);
         proj_loc_pen = pen_program->get_uniform_location("u_proj").value_or(-1);
