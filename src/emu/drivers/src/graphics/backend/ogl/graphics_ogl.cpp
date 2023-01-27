@@ -632,21 +632,27 @@ namespace eka2l1::drivers {
         glBufferData(GL_ARRAY_BUFFER, sizeof(verts), nullptr, GL_STATIC_DRAW);
         glBufferData(GL_ARRAY_BUFFER, sizeof(verts), vert_pointer, GL_STATIC_DRAW);
 
+        int position_loc = -1;
+
         if (flags & bitmap_draw_flag_use_upscale_shader) {
-            glEnableVertexAttribArray(in_position_loc_upscale);
+            position_loc = in_position_loc_upscale;
         } else {
-            glEnableVertexAttribArray(mask_draw_texture ? in_position_loc_mask : in_position_loc);
+            position_loc = mask_draw_texture ? in_position_loc_mask : in_position_loc;
         }
 
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0);
+        glEnableVertexAttribArray(position_loc);
+        glVertexAttribPointer(position_loc, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0);
         
+        int texcoord_loc = -1;
+
         if (flags & bitmap_draw_flag_use_upscale_shader) {
-            glEnableVertexAttribArray(in_position_loc_upscale);
+            texcoord_loc = in_position_loc_upscale;
         } else {
-            glEnableVertexAttribArray(mask_draw_texture ? in_texcoord_loc_mask : in_texcoord_loc);
+            texcoord_loc = mask_draw_texture ? in_texcoord_loc_mask : in_texcoord_loc;
         }
 
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat)));
+        glEnableVertexAttribArray(texcoord_loc);
+        glVertexAttribPointer(texcoord_loc, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat)));
 
         if (mask_draw_texture) {
             glUniform1i(source_loc_mask, 0);
