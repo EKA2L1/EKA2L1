@@ -646,7 +646,7 @@ namespace eka2l1::drivers {
         int texcoord_loc = -1;
 
         if (flags & bitmap_draw_flag_use_upscale_shader) {
-            texcoord_loc = in_position_loc_upscale;
+            texcoord_loc = in_texcoord_loc_upscale;
         } else {
             texcoord_loc = mask_draw_texture ? in_texcoord_loc_mask : in_texcoord_loc;
         }
