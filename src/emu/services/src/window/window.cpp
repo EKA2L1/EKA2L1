@@ -99,7 +99,32 @@ namespace eka2l1::epoc {
     }
 
     window_server_client::~window_server_client() {
+        window_server &serv = get_ws();
+        bool canceling = false;
+
+        if (serv.get_kernel_system()->wipeout_in_progress()) {
+            if (serv.anim_sched.cancel_all()) {
+                canceling = true;
+            }
+        }
+
+        if (canceling) {
+            epoc::screen *scr = serv.screens;
+            while (scr) {
+                scr->screen_mutex.lock();
+                scr = scr->next;
+            }
+        }
+
         objects.clear();
+
+        if (canceling) {
+            epoc::screen *scr = serv.screens;
+            while (scr) {
+                scr->screen_mutex.unlock();
+                scr = scr->next;
+            }
+        }
     }
 
     void window_server_client::parse_command_buffer(service::ipc_context &ctx) {

@@ -96,6 +96,8 @@ namespace eka2l1::epoc {
         explicit animation_scheduler(kernel_system *kern, ntimer *timing, const int total_screen);
         ~animation_scheduler();
 
+        bool cancel_all();
+
         /**
          * \brief Callback for queueing screen redraw, when the scheduler is idled.
          */

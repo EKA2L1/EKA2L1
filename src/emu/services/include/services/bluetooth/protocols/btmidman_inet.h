@@ -103,7 +103,7 @@ namespace eka2l1::epoc::bt {
 
     public:
         explicit midman_inet(const config::state &conf);
-        ~midman_inet();
+        ~midman_inet() override;
 
         std::uint32_t lookup_host_port(const std::uint16_t virtual_port);
         void add_host_port(const std::uint16_t virtual_port);

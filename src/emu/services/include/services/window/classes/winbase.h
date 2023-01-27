@@ -202,6 +202,6 @@ namespace eka2l1::epoc {
             }
         }
 
-        ~window() override;
+        virtual ~window() override;
     };
 }

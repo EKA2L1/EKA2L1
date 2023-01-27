@@ -17,6 +17,7 @@
 
 #include "sdl2_scoping.h"
 #include <common/log.h>
+#include <common/platform.h>
 #include <SDL.h>
 
 namespace eka2l1::drivers {
@@ -34,7 +35,11 @@ namespace eka2l1::drivers {
         }
 
         ~sdl2_system_scoping() {
+            // TODO: Find out why scoping is crashing on Mac
+            // Maybe because it's in destructor instead of main() ?
+#if !EKA2L1_PLATFORM(DARWIN)
             SDL_Quit();
+#endif
         }
     };
 

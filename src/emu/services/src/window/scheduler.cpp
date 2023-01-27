@@ -57,7 +57,15 @@ namespace eka2l1::epoc {
     }
 
     animation_scheduler::~animation_scheduler() {
+        cancel_all();
+    }
+
+    bool animation_scheduler::cancel_all() {
         const std::lock_guard<std::mutex> guard(lock_);
+
+        if (callback_evt_ == 0) {
+            return false;
+        }
 
         if (callback_scheduled_) {
             timing_->unschedule_event(callback_evt_, reinterpret_cast<std::uint64_t>(&scan_callback_data_));
@@ -71,6 +79,11 @@ namespace eka2l1::epoc {
 
         timing_->remove_event(callback_evt_);
         timing_->remove_event(anim_due_evt_);
+
+        callback_evt_ = 0;
+        anim_due_evt_ = 0;
+
+        return true;
     }
 
     void animation_scheduler::schedule(drivers::graphics_driver *driver, screen *scr, const std::uint64_t time) {

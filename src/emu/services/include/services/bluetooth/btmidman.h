@@ -46,6 +46,7 @@ namespace eka2l1::epoc::bt {
 
     public:
         explicit midman();
+        virtual ~midman() = default;
 
         std::u16string device_name() const {
             return local_name_;
