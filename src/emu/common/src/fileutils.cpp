@@ -213,9 +213,7 @@ namespace eka2l1::common {
             match_pattern = "*";
         }
 
-        LOG_TRACE(KERNEL, "{}", common::wildcard_to_regex_string(match_pattern));
         match_regex = std::regex(common::wildcard_to_regex_string(match_pattern), std::regex_constants::icase);
-
         handle = reinterpret_cast<void *>(opendir(dir_name.c_str()));
 
         if (handle) {
