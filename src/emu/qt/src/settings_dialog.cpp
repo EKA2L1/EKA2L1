@@ -831,7 +831,7 @@ void settings_dialog::on_control_profile_add_clicked() {
         return;
     }
 
-    std::string path_to_file = fmt::format("bindings\\{}.yml", result.toStdString());
+    std::string path_to_file = eka2l1::add_path("bindings\\", fmt::format("{}.yml", result.toStdString()));
     if (eka2l1::common::exists(path_to_file)) {
         QMessageBox::critical(this, tr("Profile creation failed"), tr("A profile with that name already exists!"));
     } else {
@@ -855,11 +855,11 @@ void settings_dialog::on_control_profile_rename_clicked() {
         return;
     }
 
-    std::string path_to_file = fmt::format("bindings\\{}.yml", result.toStdString());
+    std::string path_to_file = eka2l1::add_path("bindings\\", fmt::format("{}.yml", result.toStdString()));
     if (eka2l1::common::exists(path_to_file)) {
         QMessageBox::critical(this, tr("Profile rename failed"), tr("A profile with that name already exists!"));
     } else {
-        eka2l1::common::move_file(fmt::format("bindings\\{}.yml", configuration_.current_keybind_profile), path_to_file);
+        eka2l1::common::move_file(eka2l1::add_path("bindings\\", fmt::format("{}.yml", configuration_.current_keybind_profile)), path_to_file);
 
         configuration_.current_keybind_profile = result.toStdString();
         configuration_.serialize();
@@ -874,7 +874,7 @@ void settings_dialog::on_control_profile_delete_clicked() {
     if (ui_->control_profile_combobox->count() <= 1) {
         QMessageBox::critical(this, tr("Profile deletion failed"), tr("This is the only profile left!"));
     } else {
-        std::string path_to_file = fmt::format("bindings\\{}.yml", configuration_.current_keybind_profile);
+        std::string path_to_file = eka2l1::add_path("bindings\\", fmt::format("{}.yml", configuration_.current_keybind_profile));
         eka2l1::common::remove(path_to_file);
 
         ui_->control_profile_combobox->removeItem(ui_->control_profile_combobox->currentIndex());
