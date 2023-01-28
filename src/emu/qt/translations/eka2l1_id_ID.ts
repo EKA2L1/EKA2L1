@@ -116,7 +116,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
       <source>An error occured while trying to delete the app!</source>
-      <translation type="unfinished">An error occured while trying to delete the app!</translation>
+      <translation>Terjadi kesalahan saat menghapus aplikasi!</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="834"/>
@@ -134,7 +134,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="20"/>
       <source>Bluetooth netplay settings</source>
-      <translation type="unfinished">Bluetooth netplay settings</translation>
+      <translation>Pengaturan netplay Bluetooth</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="47"/>
@@ -154,7 +154,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="65"/>
       <source>Local LAN</source>
-      <translation type="unfinished">Local LAN</translation>
+      <translation>LAN Lokal</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="70"/>
@@ -174,17 +174,17 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="165"/>
       <source>Save</source>
-      <translation type="unfinished">Save</translation>
+      <translation>Simpan</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="187"/>
       <source>Open friends&apos; IP editor</source>
-      <translation type="unfinished">Open friends&apos; IP editor</translation>
+      <translation>Buka teman&apos; editor IP</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="224"/>
       <source>Players with the same password will be able to see each others. This can be empty.</source>
-      <translation type="unfinished">Players with the same password will be able to see each others. This can be empty.</translation>
+      <translation>Pemain dengan kata sandi yang sama akan dapat melihat satu sama lain. Ini bisa dikosongkan.</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="227"/>
@@ -194,22 +194,22 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="237"/>
       <source>Generate random</source>
-      <translation type="unfinished">Generate random</translation>
+      <translation>Buat Acak</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="244"/>
       <source>Clear</source>
-      <translation type="unfinished">Clear</translation>
+      <translation>Bersihkan</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
       <source>Configuration not saved</source>
-      <translation type="unfinished">Configuration not saved</translation>
+      <translation>Konfigurasi tidak tersimpan</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
       <source>The Bluetooth netplay configuration has not been saved. Do you want to save?</source>
-      <translation type="unfinished">The Bluetooth netplay configuration has not been saved. Do you want to save?</translation>
+      <translation>Konfigurasi Bluetooth netplay belum disimpan. Apakah Anda ingin menyimpan?</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="127"/>
@@ -540,22 +540,22 @@
     <message>
       <location filename="../src/launch_process_dialog.ui" line="14"/>
       <source>Launch process</source>
-      <translation type="unfinished">Launch process</translation>
+      <translation>Proses peluncur</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="31"/>
       <source>Arguments</source>
-      <translation type="unfinished">Arguments</translation>
+      <translation>Argumen</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="51"/>
       <source>Executable path</source>
-      <translation type="unfinished">Executable path</translation>
+      <translation>Jalur yang dapat dieksekusi</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="78"/>
       <source>Launch</source>
-      <translation type="unfinished">Launch</translation>
+      <translation>Luncurkan</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="85"/>
@@ -566,17 +566,17 @@
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
       <location filename="../src/launch_process_dialog.cpp" line="33"/>
       <source>Launch failed</source>
-      <translation type="unfinished">Launch failed</translation>
+      <translation>Peluncuran gagal</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
       <source>The executable path field is empty!</source>
-      <translation type="unfinished">The executable path field is empty!</translation>
+      <translation>Bidang jalur yang dapat dieksekusi kosong!</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="33"/>
       <source>The executable path is invalid or the executable is corrupted. Check the log for more info!</source>
-      <translation type="unfinished">The executable path is invalid or the executable is corrupted. Check the log for more info!</translation>
+      <translation>Jalur yang dapat dieksekusi tidak valid atau yang dapat dieksekusi rusak. Periksa log untuk info lebih lanjut!</translation>
     </message>
   </context>
   <context>
@@ -744,17 +744,17 @@
     <message>
       <location filename="../src/mainwindow.ui" line="319"/>
       <source>Launch process</source>
-      <translation type="unfinished">Launch process</translation>
+      <translation>Proses peluncur</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="329"/>
       <source>Configure</source>
-      <translation type="unfinished">Configure</translation>
+      <translation>Mengkonfigurasi</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="340"/>
       <source>Stretch to fill window (ignore aspect ratio)</source>
-      <translation type="unfinished">Stretch to fill window (ignore aspect ratio)</translation>
+      <translation>Penuhi layar (abaikan rasio aspek)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="252"/>
@@ -922,12 +922,12 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1018"/>
       <source>Launch failed</source>
-      <translation type="unfinished">Launch failed</translation>
+      <translation>Peluncuran gagal</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1018"/>
       <source>Fail to launch the selected application!</source>
-      <translation type="unfinished">Fail to launch the selected application!</translation>
+      <translation>Gagal meluncurkan aplikasi yang dipilih!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1035"/>
@@ -1017,52 +1017,52 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1601"/>
       <source>Choose the JAR file to install</source>
-      <translation type="unfinished">Choose the JAR file to install</translation>
+      <translation>Pilih file JAR untuk diinstal</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1601"/>
       <source>JAR file (*.jar)</source>
-      <translation type="unfinished">JAR file (*.jar)</translation>
+      <translation>Berkas JAR (*.jar)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1609"/>
       <source>%1 version %2 (by %3) has been installed!</source>
-      <translation type="unfinished">%1 version %2 (by %3) has been installed!</translation>
+      <translation>%1 versi %2 (oleh %3) telah dipasang!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1612"/>
       <source>Install success</source>
-      <translation type="unfinished">Install success</translation>
+      <translation>Pemasangan berhasil</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1624"/>
       <source>Can not add the JAR to the apps database!</source>
-      <translation type="unfinished">Can not add the JAR to the apps database!</translation>
+      <translation>Tidak dapat menambahkan JAR ke basis data aplikasi!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1628"/>
       <source>The given file is not a valid JAR file!</source>
-      <translation type="unfinished">The given file is not a valid JAR file!</translation>
+      <translation>File yang diberikan bukan file JAR yang valid!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1632"/>
       <source>Can not find the JAR file!</source>
-      <translation type="unfinished">Can not find the JAR file!</translation>
+      <translation>Tidak dapat menemukan file JAR!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1636"/>
       <source>The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</source>
-      <translation type="unfinished">The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</translation>
+      <translation>JAR membutuhkan MIDP-2.0, tetapi emulator hanya mendukung JAR MIDP-1.0 yang berjalan di perangkat S60v1!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1640"/>
       <source>The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</source>
-      <translation type="unfinished">The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</translation>
+      <translation>JAR tidak dapat dipasang untuk perangkat saat ini! Hanya perangkat S60v1 yang dapat memasang JAR ini saat ini</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1644"/>
       <source>An unexpected error has happened. Error code: %1</source>
-      <translation type="unfinished">An unexpected error has happened. Error code: %1</translation>
+      <translation>Terjadi kesalahan tak terduga. Kode kesalahan: %1</translation>
     </message>
   </context>
   <context>
@@ -1915,7 +1915,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.ui" line="43"/>
       <source>A new update has been released on GitHub!</source>
-      <translation type="unfinished">A new update has been released on GitHub!</translation>
+      <translation>Pembaruan baru telah dirilis di Github!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="61"/>
@@ -1970,7 +1970,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.cpp" line="158"/>
       <source>Failed to get information about the newest update from GitHub!</source>
-      <translation type="unfinished">Failed to get information about the newest update from GitHub!</translation>
+      <translation>Gagal mendapatkan informasi tentang update terbaru dari Github!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="190"/>
@@ -1980,12 +1980,12 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.cpp" line="196"/>
       <source>Failed to get update download link from GitHub!</source>
-      <translation type="unfinished">Failed to get update download link from GitHub!</translation>
+      <translation>Gagal mendapatkan tautan unduhan pembaruan dari Github!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="214"/>
       <source>Error retrieving changelog from GitHub...</source>
-      <translation type="unfinished">Error retrieving changelog from GitHub...</translation>
+      <translation>Kesalahan saat mengambil log perubahan dari Github...</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="238"/>
