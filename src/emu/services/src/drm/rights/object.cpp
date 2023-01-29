@@ -24,8 +24,11 @@ namespace eka2l1::epoc::drm {
     static constexpr std::uint32_t SYNC_MARK = 0xAFCE;
 
     void rights_constraint::absorb(common::chunkyseri &seri, std::uint32_t version) {
-        std::uint32_t sync_mark_temp = SYNC_MARK;
-        seri.absorb(sync_mark_temp);
+        std::uint32_t sync_mark_temp = 0;
+        if ((version >= 1) || (seri.get_seri_mode() == common::SERI_MODE_READ)) {
+            sync_mark_temp = SYNC_MARK;
+            seri.absorb(sync_mark_temp);
+        }
 
         if (seri.get_seri_mode() == common::SERI_MODE_READ) {
             if (sync_mark_temp == SYNC_MARK) {
@@ -73,12 +76,17 @@ namespace eka2l1::epoc::drm {
     }
 
     void rights_permission::absorb(common::chunkyseri &seri, std::uint32_t version) { 
-        std::uint32_t possible_sync_mark = SYNC_MARK;
-        seri.absorb(possible_sync_mark);
+        std::uint32_t possible_sync_mark = 0;
+        if ((version >= 1) || (seri.get_seri_mode() == common::SERI_MODE_READ)) {
+            possible_sync_mark = SYNC_MARK;
+            seri.absorb(possible_sync_mark);
+        }
 
         if ((seri.get_seri_mode() == common::SERI_MODE_READ) && (possible_sync_mark != SYNC_MARK)) {
             unique_id_ = possible_sync_mark;
             version = 0;
+        } else if ((seri.get_seri_mode() != common::SERI_MODE_READ) && (version == 0)) {
+            seri.absorb(unique_id_);
         } else {
             seri.absorb(version);
             seri.absorb(unique_id_);
