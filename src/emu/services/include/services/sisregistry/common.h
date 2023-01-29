@@ -54,6 +54,15 @@ namespace eka2l1 {
         sisregistry_add_entry = 0x41,
         sisregistry_update_entry = 0x42,
         sisregistry_delete_entry = 0x43,
+        // FP1
+        sisregistry_dependent_packages_fp1 = 0x44,
+        sisregistry_dependencies_fp1 = 0x45,
+        sisregistry_embedded_packages_fp1 = 0x46,
+        sisregistry_embedding_packages_fp1 = 0x47,
+        sisregistry_install_type_op_fp1 = 0x48,
+        sisregistry_regenerate_cache_fp1 = 0x49,
+        sisregistry_deletable_preinstalled_fp1 = 0x4A,
+        // FP2 and above
         sisregistry_install_type_op = 0x44,
         sisregistry_regenerate_cache = 0x45,
         sisregistry_deletable_preinstalled = 0x102,

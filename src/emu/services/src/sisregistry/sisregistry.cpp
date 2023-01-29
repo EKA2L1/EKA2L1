@@ -95,7 +95,7 @@ namespace eka2l1 {
             fcount = 0;
         }
 
-        std::size_t last_size = 0;
+        std::size_t last_size = seri.size();
 
         for (std::size_t i = start_index; i < (count_filename ? obj->file_descriptions.size() : (start_index + fcount)); i++) {
             epoc::absorb_des_string(obj->file_descriptions[i].target, seri, true);
@@ -166,7 +166,11 @@ namespace eka2l1 {
     void sisregistry_client_session::fetch(service::ipc_context *ctx) {
         if (ctx->sys->get_symbian_version_use() < epocver::epoc95) {
             if ((ctx->msg->function >= sisregistry_get_matching_supported_languages) && (ctx->msg->function <= sisregistry_separator_minimum_read_user_data)) {
-                ctx->msg->function++;
+                ctx->msg->function++;                
+
+                if (ctx->sys->get_symbian_version_use() == epocver::epoc93fp1) {
+                    ctx->msg->function++;
+                }
             }
         }
 
@@ -248,6 +252,7 @@ namespace eka2l1 {
 
     bool sisregistry_client_subsession::fetch(service::ipc_context *ctx) {
         bool del = false;
+        bool shared_handled = true;
 
         switch (ctx->msg->function) {
         case sisregistry_close_registry_entry: {
@@ -297,11 +302,6 @@ namespace eka2l1 {
             break;
         }
 
-        case sisregistry_dependent_packages: {
-            request_dependent_packages(ctx);
-            break;
-        }
-
         case sisregistry_files: {
             request_files(ctx);
             break;
@@ -314,11 +314,6 @@ namespace eka2l1 {
 
         case sisregistry_preinstalled: {
             is_preinstalled(ctx);
-            break;
-        }
-
-        case sisregistry_signed_by_sucert: {
-            is_signed_by_sucert(ctx);
             break;
         }
 
@@ -347,33 +342,87 @@ namespace eka2l1 {
             break;
         }
 
-        case sisregistry_embedded_packages: {
-            request_embedded_packages(ctx);
-            break;
-        }
-
-        case sisregistry_install_type_op: {
-            install_type(ctx);
-            break;
-        }
-
-        case sisregistry_dependencies: {
-            request_dependencies(ctx);
-            break;
-        }
-
-        case sisregistry_deletable_preinstalled: {
-            is_deletable_preinstalled(ctx);
-            break;
-        }
-
         default:
-            LOG_ERROR(SERVICE_SISREGISTRY, "Unimplemented opcode for sisregistry subsession 0x{:X}", ctx->msg->function);
-            ctx->complete(epoc::error_none);
+            shared_handled = false;
             break;
         }
 
-        return del;
+        if (shared_handled) {
+            return del;
+        }
+
+        if (ctx->sys->get_symbian_version_use() <= epocver::epoc93fp1) {
+            switch (ctx->msg->function) {
+            case sisregistry_embedded_packages_fp1: {
+                request_embedded_packages(ctx);
+                break;
+            }
+
+            case sisregistry_dependent_packages_fp1: {
+                request_dependent_packages(ctx);
+                break;
+            }
+
+            case sisregistry_install_type_op_fp1: {
+                install_type(ctx);
+                break;
+            }
+
+            case sisregistry_dependencies_fp1: {
+                request_dependencies(ctx);
+                break;
+            }
+
+            case sisregistry_deletable_preinstalled_fp1: {
+                is_deletable_preinstalled(ctx);
+                break;
+            }
+
+            default:
+                LOG_ERROR(SERVICE_SISREGISTRY, "Unimplemented FP1 opcode for sisregistry subsession 0x{:X}", ctx->msg->function);
+                ctx->complete(epoc::error_none);
+                break;
+            }
+        } else {
+            switch (ctx->msg->function) {
+            case sisregistry_embedded_packages: {
+                request_embedded_packages(ctx);
+                break;
+            }
+
+            case sisregistry_signed_by_sucert: {
+                is_signed_by_sucert(ctx);
+                break;
+            }
+
+            case sisregistry_dependent_packages: {
+                request_dependent_packages(ctx);
+                break;
+            }
+
+            case sisregistry_install_type_op: {
+                install_type(ctx);
+                break;
+            }
+
+            case sisregistry_dependencies: {
+                request_dependencies(ctx);
+                break;
+            }
+
+            case sisregistry_deletable_preinstalled: {
+                is_deletable_preinstalled(ctx);
+                break;
+            }
+
+            default:
+                LOG_ERROR(SERVICE_SISREGISTRY, "Unimplemented opcode for sisregistry subsession 0x{:X}", ctx->msg->function);
+                ctx->complete(epoc::error_none);
+                break;
+            }
+        }
+
+        return false;
     }
 
     void sisregistry_client_session::open_registry_uid(eka2l1::service::ipc_context *ctx) {
@@ -829,41 +878,78 @@ namespace eka2l1 {
             return;
         }
 
-        std::optional<sisregistry_stub_extraction_mode> package_mode = ctx->get_argument_data_from_descriptor<sisregistry_stub_extraction_mode>(0);
+        bool old_ver_sisreg = ctx->sys->get_symbian_version_use() == epocver::epoc93fp1;
+
+        std::optional<sisregistry_stub_extraction_mode> package_mode;
+        if (old_ver_sisreg) {
+            package_mode = sisregistry_stub_extraction_mode::sisregistry_stub_extraction_mode_get_files;
+        } else {
+            package_mode = ctx->get_argument_data_from_descriptor<sisregistry_stub_extraction_mode>(0);
+        }
+
+        if (!package_mode.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
 
         if (package_mode == sisregistry_stub_extraction_mode::sisregistry_stub_extraction_mode_get_count) {
             std::uint32_t file_count = static_cast<std::uint32_t>(obj->file_descriptions.size());
             ctx->write_data_to_descriptor_argument<std::uint32_t>(1, file_count);
         } else if (package_mode == sisregistry_stub_extraction_mode::sisregistry_stub_extraction_mode_get_files) {
-            std::optional<std::uint32_t> start_index = ctx->get_argument_data_from_descriptor<std::uint32_t>(1);
-            if (!start_index.has_value()) {
-                ctx->complete(epoc::error_argument);
-                return;
+            if (old_ver_sisreg) {
+                std::size_t max_buffer_size = ctx->get_argument_max_data_size(0);
+                std::int32_t total_filename_can_store = -1;
+
+                if (!max_buffer_size) {
+                    ctx->complete(epoc::error_argument);
+                    return;
+                }
+
+                common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
+                const std::size_t final_size = populate_filenames_with_limitation(seri, obj, 0, std::numeric_limits<std::size_t>::max(), total_filename_can_store);
+
+                if (final_size > max_buffer_size) {
+                    ctx->write_data_to_descriptor_argument<std::uint32_t>(0, static_cast<std::uint32_t>(final_size));
+                    ctx->complete(epoc::error_overflow);
+                    return;
+                }
+                
+                std::vector<char> buf(final_size);
+                seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
+                populate_filenames_with_limitation(seri, obj, 0, final_size, total_filename_can_store);
+
+                ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), static_cast<std::uint32_t>(buf.size()));
+            } else {
+                std::optional<std::uint32_t> start_index = ctx->get_argument_data_from_descriptor<std::uint32_t>(1);
+                if (!start_index.has_value()) {
+                    ctx->complete(epoc::error_argument);
+                    return;
+                }
+
+                std::size_t max_buffer_size = ctx->get_argument_max_data_size(2);
+                std::int32_t total_filename_can_store = -1;
+
+                if (!max_buffer_size) {
+                    ctx->complete(epoc::error_argument);
+                    return;
+                }
+
+                common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
+                const std::size_t final_size = populate_filenames_with_limitation(seri, obj, start_index.value(), max_buffer_size, total_filename_can_store);
+
+                if (final_size == static_cast<std::size_t>(-1)) {
+                    LOG_ERROR(SERVICE_SISREGISTRY, "Buffer too small to hold at least one filename!");
+
+                    ctx->complete(epoc::error_no_memory);
+                    return;
+                }
+
+                std::vector<char> buf(final_size);
+                seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
+                populate_filenames_with_limitation(seri, obj, start_index.value(), final_size, total_filename_can_store);
+
+                ctx->write_data_to_descriptor_argument(2, reinterpret_cast<std::uint8_t *>(&buf[0]), static_cast<std::uint32_t>(buf.size()));
             }
-
-            std::size_t max_buffer_size = ctx->get_argument_max_data_size(2);
-            std::int32_t total_filename_can_store = -1;
-
-            if (!max_buffer_size) {
-                ctx->complete(epoc::error_argument);
-                return;
-            }
-
-            common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
-            const std::size_t final_size = populate_filenames_with_limitation(seri, obj, start_index.value(), max_buffer_size, total_filename_can_store);
-
-            if (final_size == static_cast<std::size_t>(-1)) {
-                LOG_ERROR(SERVICE_SISREGISTRY, "Buffer too small to hold at least one filename!");
-
-                ctx->complete(epoc::error_no_memory);
-                return;
-            }
-
-            std::vector<char> buf(final_size);
-            seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
-            populate_filenames_with_limitation(seri, obj, start_index.value(), final_size, total_filename_can_store);
-
-            ctx->write_data_to_descriptor_argument(2, reinterpret_cast<std::uint8_t *>(&buf[0]), static_cast<std::uint32_t>(buf.size()));
         } else {
             LOG_ERROR(SERVICE_SISREGISTRY, "Unidentified stub extraction mode {}", static_cast<std::int32_t>(package_mode.value()));
         }
