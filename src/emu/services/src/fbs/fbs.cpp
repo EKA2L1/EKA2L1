@@ -66,6 +66,9 @@ namespace eka2l1 {
                     support_current_display_mode = false;
 
                 support_dirty_bitmap = false;
+            } else if (fbss->legacy_level() == FBS_LEGACY_LEVEL_SYMBIAN_92) {
+                support_dirty_bitmap = false;
+                support_current_display_mode = true;
             }
         }
     }
@@ -327,6 +330,10 @@ namespace eka2l1 {
 
         if (kern->get_epoc_version() <= epocver::epoc81b) {
             return FBS_LEGACY_LEVEL_KERNEL_TRANSITION;
+        }
+
+        if (kern->get_epoc_version() == epocver::epoc93fp1) {
+            return FBS_LEGACY_LEVEL_SYMBIAN_92;
         }
 
         if (large_bitmap_access_mutex->get_access_count() > 0) {

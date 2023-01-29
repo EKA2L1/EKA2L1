@@ -105,7 +105,7 @@ namespace eka2l1::epoc {
         loader::sbm_header header_;
         int spare1_;
         int data_offset_;
-        bool compressed_in_ram_;
+        int compressed_in_ram_;
         bool offset_from_me_;
 
         void construct(loader::sbm_header &info, epoc::display_mode disp_mode, void *data, const void *base,

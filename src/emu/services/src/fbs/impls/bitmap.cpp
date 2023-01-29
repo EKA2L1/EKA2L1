@@ -185,6 +185,15 @@ namespace eka2l1 {
             // Set large bitmap flag so that the data pointer base is in large chunk
             if (serv->legacy_level() == FBS_LEGACY_LEVEL_EARLY_EKA2) {
                 settings_.set_large(offset_from_me_ ? false : true);
+            } else if (serv->legacy_level() == FBS_LEGACY_LEVEL_SYMBIAN_92) {
+                if (header_.compression == 0) {
+                    settings_.set_large(true);
+                } else {
+                    settings_.set_large(((((header_.bitmap_size - header_.header_len) + 3) >> 2) << 2) >= 4096);
+                }
+
+                // Intentionally set in here!
+                compressed_in_ram_ = (header_.compression != epoc::bitmap_file_no_compression);
             }
 
             if (serv->legacy_level() == FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
@@ -1015,7 +1024,7 @@ namespace eka2l1 {
         bool offset_from_me_now = false;
 
         if ((new_size.x != 0) && (new_size.y != 0)) {
-            if (fbss->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
+            if (fbss->legacy_level() >= FBS_LEGACY_LEVEL_SYMBIAN_92) {
                 new_bmp = bmp;
 
                 const int dest_byte_width = epoc::get_byte_width(new_size.x, bmp->bitmap_->header_.bit_per_pixels);

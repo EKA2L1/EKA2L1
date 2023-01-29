@@ -150,9 +150,10 @@ namespace eka2l1 {
     enum fbs_legacy_level {
         FBS_LEGACY_LEVEL_MORDEN = 0,
         FBS_LEGACY_LEVEL_EARLY_EKA2 = 1,
-        FBS_LEGACY_LEVEL_KERNEL_TRANSITION = 2,
-        FBS_LEGACY_LEVEL_EARLY_KERNEL_TRANSITION = 3,
-        FBS_LEGACY_LEVEL_S60V1 = 4
+        FBS_LEGACY_LEVEL_SYMBIAN_92 = 2,
+        FBS_LEGACY_LEVEL_KERNEL_TRANSITION = 3,
+        FBS_LEGACY_LEVEL_EARLY_KERNEL_TRANSITION = 4,
+        FBS_LEGACY_LEVEL_S60V1 = 5
     };
 
     enum class fbsobj_kind {
@@ -237,7 +238,7 @@ namespace eka2l1 {
         fbsfont *get_font_object(service::ipc_context *ctx);
     };
 
-    struct fbsfont : fbsobj {
+    struct fbsfont : public fbsobj {
         std::int32_t guest_font_offset;
         epoc::open_font_info of_info;
         fbs_server *serv;
