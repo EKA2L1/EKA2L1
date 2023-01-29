@@ -216,6 +216,12 @@ namespace eka2l1 {
                     device *dvc = get_device_manager()->get_current();
                     return dvc ? dvc->machine_uid : 0;
                 }
+
+                case hal_entry_manufacturer:
+                    return preset::MANUFACTURER_NOKIA_UID;
+
+                default:
+                    break;
                 }
 
                 return 0;

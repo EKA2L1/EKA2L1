@@ -32,4 +32,6 @@ namespace eka2l1::preset {
         SYSTEM_CPU_HZ_S3 = 680000000,
         SYSTEM_CPU_HZ_BELLE = 1200000000
     };
+
+    static constexpr std::uint32_t MANUFACTURER_NOKIA_UID = 0x101F7E7B;
 }
