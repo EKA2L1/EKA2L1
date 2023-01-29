@@ -315,6 +315,16 @@ namespace eka2l1 {
 
             break;
 
+        // Legacy opcode from S60v3 fp1? Probably debug track, I'm unsure!
+        case epoc::fs_msg_notification_open:
+        case epoc::fs_msg_notification_buffer:
+        case epoc::fs_msg_notification_remove:
+        case epoc::fs_msg_notification_cancel:
+        case epoc::fs_msg_notification_request:
+        case epoc::fs_msg_notification_subclose:
+            ctx->complete(epoc::error_none);
+            break;
+
         default: {
             LOG_ERROR(SERVICE_EFSRV, "Unknown FSServer client opcode {}!", ctx->msg->function);
             break;
