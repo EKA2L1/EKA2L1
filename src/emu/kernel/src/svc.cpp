@@ -2394,6 +2394,16 @@ namespace eka2l1::epoc {
         return static_cast<std::int32_t>(thr->get_exit_type());
     }
 
+    BRIDGE_FUNC(std::int32_t, thread_exit_reason, const kernel::handle h) {
+        kernel::thread *thr = kern->get<kernel::thread>(h);
+
+        if (!thr) {
+            return epoc::error_not_found;
+        }
+
+        return static_cast<std::int32_t>(thr->get_exit_reason());
+    }
+
     BRIDGE_FUNC(std::int32_t, thread_request_count, const kernel::handle h) {
         kernel::thread *thr = kern->get<kernel::thread>(h);
 
@@ -5986,6 +5996,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x2F, thread_set_flags),
         BRIDGE_REGISTER(0x30, thread_request_count),
         BRIDGE_REGISTER(0x31, thread_exit_type),
+        BRIDGE_REGISTER(0x32, thread_exit_reason),
         BRIDGE_REGISTER(0x35, timer_cancel),
         BRIDGE_REGISTER(0x36, timer_after),
         BRIDGE_REGISTER(0x37, timer_at_utc),
