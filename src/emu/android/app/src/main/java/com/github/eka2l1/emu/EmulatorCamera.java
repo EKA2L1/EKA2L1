@@ -146,6 +146,16 @@ public class EmulatorCamera {
     }
 
     public static void releaseCamera(int handle) throws InterruptedException {
+        EmulatorCamera cam = getCameraWith(handle);
+        if (cam == null) {
+            return;
+        }
+
+        cam.stopViewfinderFeed();
+        cam.unbindImageCapture();
+    }
+
+    public static void destroyCamera(int handle) throws InterruptedException {
         if (!cameraWrappers.containsKey(handle)) {
             Log.e(TAG, "No camera found with handle " + handle);
             return;
@@ -155,14 +165,6 @@ public class EmulatorCamera {
         cam.useCount--;
 
         if (cam.useCount == 0) {
-            cam.stopViewfinderFeed();
-
-            if (cam.previousImageCapture != null) {
-                applicationActivity.runOnUiThread(() -> {
-                    cameraProvider.unbind(cam.previousImageCapture);
-                });
-            }
-
             cameraWrappers.remove(handle);
         }
     }
@@ -341,6 +343,39 @@ public class EmulatorCamera {
         return outputImageSizes;
     }
 
+    public void unbindImageCapture() throws InterruptedException {
+        if (previousImageCapture == null) {
+            return;
+        }
+
+        if (Looper.getMainLooper().getThread() == Thread.currentThread()) {
+            cameraProvider.unbind(previousImageCapture);
+
+            previousImageCapture = null;
+            pendingImageCapture = false;
+            configChanged = true;
+        } else {
+            Runnable unbindSync = new Runnable() {
+                @Override
+                public void run() {
+                    cameraProvider.unbind(previousImageCapture);
+                    previousImageCapture = null;
+                    pendingImageCapture = false;
+                    configChanged = true;
+
+                    synchronized (this) {
+                        this.notify();
+                    }
+                }
+            };
+
+            synchronized (unbindSync) {
+                applicationActivity.runOnUiThread(unbindSync);
+                unbindSync.wait();
+            }
+        }
+    }
+
     public void stopViewfinderFeed() throws InterruptedException {
         if (!pendingViewfinder) {
             Log.w(TAG, "No operation is active on this camera!");
@@ -485,12 +520,12 @@ public class EmulatorCamera {
 
                             for (int i = 0; i < sizeFinned.getWidth(); i++) {
                                 for (int j = 0; j < sizeFinned.getHeight(); j++) {
-                                    short pixel565 = (short) ((((imageBuffer.get(j * stride + 3)) & 0xF8) >> 3) |
-                                            ((imageBuffer.get(j * stride + 2) & 0xFC) << 5) |
-                                            ((imageBuffer.get(j * stride + 1) & 0xF8) << 11));
+                                    short pixel565 = (short) ((((imageBuffer.get(j * stride + i * 4 + 2)) & 0xF8) >> 3) |
+                                            ((imageBuffer.get(j * stride + i * 4 + 1) & 0xFC) << 3) |
+                                            ((imageBuffer.get(j * stride + i * 4) & 0xF8) << 8));
 
-                                    buffer[j * byteWidth + i * 2] = (byte) ((pixel565 >> 8) & 0xFF);
-                                    buffer[j * byteWidth + i * 2 + 1] = (byte) (pixel565 & 0xFF);
+                                    buffer[j * byteWidth + i * 2] = (byte) (pixel565 & 0xFF);
+                                    buffer[j * byteWidth + i * 2 + 1] = (byte) ((pixel565 >> 8) & 0xFF);
                                 }
                             }
 

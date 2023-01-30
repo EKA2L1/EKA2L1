@@ -23,6 +23,7 @@
 
 #include <map>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 namespace eka2l1::drivers::camera {
@@ -33,6 +34,7 @@ namespace eka2l1::drivers::camera {
         friend class instance_android;
 
         std::map<int, instance_android*> current_reserved_;
+        std::mutex reserve_lock_;
 
     public:
         std::uint32_t count() const override;

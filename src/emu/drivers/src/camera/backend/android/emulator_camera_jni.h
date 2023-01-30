@@ -26,6 +26,7 @@ namespace eka2l1::drivers::android {
     int emulator_camera_count();
     int emulator_camera_initialize(int index);
     void emulator_camera_release(int handle);
+    void emulator_camera_destroy(int handle);
 
     std::vector<int> emulator_camera_get_supported_image_output_formats();
 

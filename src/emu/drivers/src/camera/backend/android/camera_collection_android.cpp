@@ -33,8 +33,9 @@ namespace eka2l1::drivers::camera {
     }
 
     void collection_android::handle_image_capture_delivered(int index, const void *bytes, const std::size_t size, const int error) {
+        const std::lock_guard<std::mutex> guard(reserve_lock_);
         auto ite = current_reserved_.find(index);
-        if (ite != current_reserved_.end()) {
+        if ((ite != current_reserved_.end()) && (ite->second != nullptr)) {
             const std::lock_guard<std::mutex> guard(ite->second->callback_lock_);
             if (ite->second->active_capture_img_callback_) {
                 ite->second->active_capture_img_callback_(bytes, size, error);
@@ -46,8 +47,9 @@ namespace eka2l1::drivers::camera {
     }
 
     void collection_android::handle_frame_viewfinder_delivered(int index, const void *bytes, const std::size_t size, const int error) {
+        const std::lock_guard<std::mutex> guard(reserve_lock_);
         auto ite = current_reserved_.find(index);
-        if (ite != current_reserved_.end()) {
+        if ((ite != current_reserved_.end()) && (ite->second != nullptr)) {
             const std::lock_guard<std::mutex> guard(ite->second->callback_lock_);
             if (ite->second->active_frame_viewfinder_callback_) {
                 ite->second->active_frame_viewfinder_callback_(bytes, size, error);
@@ -59,7 +61,7 @@ namespace eka2l1::drivers::camera {
 
     bool collection_android::reserved_wants_new_frame(int index) {
         auto ite = current_reserved_.find(index);
-        if (ite != current_reserved_.end()) {
+        if ((ite != current_reserved_.end())  && (ite->second != nullptr)) {
             const std::lock_guard<std::mutex> guard(ite->second->callback_lock_);
             if (ite->second->wants_new_frame_callback_) {
                 return ite->second->wants_new_frame_callback_();

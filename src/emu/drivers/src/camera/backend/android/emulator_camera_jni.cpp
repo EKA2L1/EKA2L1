@@ -34,6 +34,7 @@ namespace eka2l1::drivers::android {
     static jmethodID camera_receive_viewfinder_feed_method = nullptr;
     static jmethodID camera_stop_viewfinder_feed_method = nullptr;
     static jmethodID camera_release_method = nullptr;
+    static jmethodID camera_destroy_method = nullptr;
 
     void register_camera_callbacks(JNIEnv *env) {
         jclass temp_camera_class = env->FindClass("com/github/eka2l1/emu/EmulatorCamera");
@@ -43,6 +44,7 @@ namespace eka2l1::drivers::android {
         camera_count_method = env->GetStaticMethodID(camera_class, "getCameraCount", "()I");
         camera_initialize_method = env->GetStaticMethodID(camera_class, "initializeCamera", "(I)I");
         camera_release_method = env->GetStaticMethodID(camera_class, "releaseCamera", "(I)V");
+        camera_destroy_method = env->GetStaticMethodID(camera_class, "destroyCamera", "(I)V");
         camera_supported_output_image_format_method = env->GetStaticMethodID(camera_class,
              "getSupportedImageOutputFormats", "()[I");
         camera_get_flash_mode_method = env->GetStaticMethodID(camera_class, "getFlashMode", "(I)I");
@@ -67,6 +69,11 @@ namespace eka2l1::drivers::android {
     void emulator_camera_release(int handle) {
         JNIEnv *env = common::jni::environment();
         env->CallStaticVoidMethod(camera_class, camera_release_method, handle);
+    }
+
+    void emulator_camera_destroy(int handle) {
+        JNIEnv *env = common::jni::environment();
+        env->CallStaticVoidMethod(camera_class, camera_destroy_method, handle);
     }
 
     bool emulator_camera_is_facing_front(int handle) {

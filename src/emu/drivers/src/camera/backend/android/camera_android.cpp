@@ -43,6 +43,8 @@ namespace eka2l1::drivers::camera {
 
     instance_android::~instance_android() {
         release();
+
+        android::emulator_camera_destroy(managed_handle_);
     }
 
     bool instance_android::set_parameter(const parameter_key key, const std::uint32_t value) {
@@ -108,6 +110,8 @@ namespace eka2l1::drivers::camera {
     }
 
     bool instance_android::reserve() {
+        const std::lock_guard<std::mutex> guard(collection_->reserve_lock_);
+
         if (collection_->current_reserved_[index_] != nullptr) {
             LOG_ERROR(DRIVER_CAM, "Another camera instance is currently reserved the camera for operations!");
             return false;
@@ -119,6 +123,8 @@ namespace eka2l1::drivers::camera {
 
     void instance_android::release() {
         android::emulator_camera_release(managed_handle_);
+
+        const std::lock_guard<std::mutex> guard(collection_->reserve_lock_);
 
         if (collection_->current_reserved_[index_] == this) {
             collection_->current_reserved_[index_] = nullptr;
@@ -146,9 +152,12 @@ namespace eka2l1::drivers::camera {
     void instance_android::receive_viewfinder_feed(const eka2l1::vec2 &size, const frame_format format,
          camera_wants_new_frame_callback new_frame_needed_callback,
          camera_capture_image_done_callback new_frame_come_callback) {
-        if (collection_->current_reserved_[index_] != this) {
-            LOG_ERROR(DRIVER_CAM, "Camera is not yet reserved to receive viewfinder feed!");
-            return;
+        {
+            const std::lock_guard<std::mutex> guard(collection_->reserve_lock_);
+            if (collection_->current_reserved_[index_] != this) {
+                LOG_ERROR(DRIVER_CAM, "Camera is not yet reserved to receive viewfinder feed!");
+                return;
+            }
         }
 
         if (active_frame_viewfinder_callback_) {
@@ -176,9 +185,12 @@ namespace eka2l1::drivers::camera {
     }
 
     void instance_android::stop_viewfinder_feed() {
-        if (collection_->current_reserved_[index_] != this) {
-            LOG_ERROR(DRIVER_CAM, "Camera is not yet reserved to stop viewfinder feed!");
-            return;
+        {
+            const std::lock_guard<std::mutex> guard(collection_->reserve_lock_);
+            if (collection_->current_reserved_[index_] != this) {
+                LOG_ERROR(DRIVER_CAM, "Camera is not yet reserved to stop viewfinder feed!");
+                return;
+            }
         }
 
         const std::lock_guard<std::mutex> guard(callback_lock_);
@@ -194,9 +206,12 @@ namespace eka2l1::drivers::camera {
             return;
         }
 
-        if (collection_->current_reserved_[index_] != this) {
-            LOG_ERROR(DRIVER_CAM, "Camera is not yet reserved to capture image!");
-            return;
+        {
+            const std::lock_guard<std::mutex> guard(collection_->reserve_lock_);
+            if (collection_->current_reserved_[index_] != this) {
+                LOG_ERROR(DRIVER_CAM, "Camera is not yet reserved to capture image!");
+                return;
+            }
         }
 
         if (active_capture_img_callback_) {
