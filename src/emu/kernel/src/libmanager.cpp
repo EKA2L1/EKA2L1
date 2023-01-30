@@ -890,6 +890,8 @@ namespace eka2l1::hle {
                     } else if (!only_once) {
                         lib_path = drvc;
                         lib_path += u':';
+                    } else {
+                        lib_path = u"";
                     }
 
                     lib_path += search_paths[i];
@@ -973,6 +975,8 @@ namespace eka2l1::hle {
                         if (!only_once) {
                             lib_path = drvc;
                             lib_path += u':';
+                        } else {
+                            lib_path = u"";
                         }
                     }
 
