@@ -35,9 +35,9 @@ namespace eka2l1::drivers::camera {
         int managed_handle_;
 
         camera_capture_image_done_callback active_capture_img_callback_;
+        camera_capture_image_done_callback active_frame_viewfinder_callback_;
         camera_wants_new_frame_callback wants_new_frame_callback_;
 
-        bool should_dispose_callback_after_done_;
         std::mutex callback_lock_;
 
         std::uint32_t stub_exposure_;

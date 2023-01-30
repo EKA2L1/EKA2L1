@@ -31,8 +31,8 @@ namespace eka2l1::drivers::camera {
         , index_(index)
         , managed_handle_(-1)
         , active_capture_img_callback_(nullptr)
+        , active_frame_viewfinder_callback_(nullptr)
         , wants_new_frame_callback_(nullptr)
-        , should_dispose_callback_after_done_(false)
         , stub_exposure_(EXPOSURE_MODE_AUTO)
         , stub_digital_zoom_(1) {
         managed_handle_ = android::emulator_camera_initialize(index_);
@@ -118,6 +118,8 @@ namespace eka2l1::drivers::camera {
     }
 
     void instance_android::release() {
+        android::emulator_camera_release(managed_handle_);
+
         if (collection_->current_reserved_[index_] == this) {
             collection_->current_reserved_[index_] = nullptr;
         }
@@ -149,7 +151,7 @@ namespace eka2l1::drivers::camera {
             return;
         }
 
-        if (active_capture_img_callback_) {
+        if (active_frame_viewfinder_callback_) {
             LOG_ERROR(DRIVER_CAM, "Another operation is active on this camera!");
             return;
         }
@@ -160,15 +162,14 @@ namespace eka2l1::drivers::camera {
         }
 
         const std::lock_guard<std::mutex> guard(callback_lock_);
-        active_capture_img_callback_ = new_frame_come_callback;
+        active_frame_viewfinder_callback_ = new_frame_come_callback;
         wants_new_frame_callback_ = new_frame_needed_callback;
-        should_dispose_callback_after_done_ = false;
 
         if (!android::emulator_camera_receive_viewfinder_feed(managed_handle_, size.x, size.y,
             static_cast<int>(format))) {
             LOG_ERROR(DRIVER_CAM, "Unable to request image capture!");
-            active_capture_img_callback_(nullptr, 0, -1);
-            active_capture_img_callback_ = nullptr;
+            active_frame_viewfinder_callback_(nullptr, 0, -1);
+            active_frame_viewfinder_callback_ = nullptr;
 
             return;
         }
@@ -183,7 +184,7 @@ namespace eka2l1::drivers::camera {
         const std::lock_guard<std::mutex> guard(callback_lock_);
 
         android::emulator_camera_stop_viewfinder_feed(managed_handle_);
-        active_capture_img_callback_ = nullptr;
+        active_frame_viewfinder_callback_ = nullptr;
     }
 
     void instance_android::capture_image(const std::uint32_t resolution_index, const frame_format format,
@@ -206,7 +207,6 @@ namespace eka2l1::drivers::camera {
         const std::lock_guard<std::mutex> guard(callback_lock_);
 
         active_capture_img_callback_ = callback;
-        should_dispose_callback_after_done_ = true;
 
         if (!android::emulator_camera_capture_image(managed_handle_, static_cast<int>(resolution_index),
                                                     static_cast<int>(format))) {

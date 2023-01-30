@@ -64,7 +64,7 @@ void CCameraPlugin::ConstructL(TInt aCameraIndex) {
     iVideoCapture.ConstructL(iDispatchInstance, iObserver, iVersion);
     iViewfinderBitmapCapture.ConstructL(iDispatchInstance, iObserver, iVersion);
 
-    iEventCompleteIdle = CIdle::NewL(CActive::EPriorityStandard);
+    iEventCompleteIdle = CIdle::NewL(CActive::EPriorityHigh);
 }
 
 void CCameraPlugin::ConstructSharedL(TAny *aSharedHandle) {
@@ -74,7 +74,7 @@ void CCameraPlugin::ConstructSharedL(TAny *aSharedHandle) {
     iImageCapture.ConstructL(iDispatchInstance, iObserver, iVersion);
     iVideoCapture.ConstructL(iDispatchInstance, iObserver, iVersion);
 
-    iEventCompleteIdle = CIdle::NewL(CActive::EPriorityStandard);
+    iEventCompleteIdle = CIdle::NewL(CActive::EPriorityHigh);
 }
 
 void CCameraPlugin::CameraInfo(TCameraInfo &aInfo) const {
@@ -121,6 +121,7 @@ void CCameraPlugin::HandleReserveComplete(TInt aError) {
 }
 
 void CCameraPlugin::HandlePowerOnComplete(TInt aError) {
+    LogOut(KCameraCat, _L("Power on active object!"));
     if (iVersion == 1) {
         HandlePowerOnCompleteV1(aError);
     } else {

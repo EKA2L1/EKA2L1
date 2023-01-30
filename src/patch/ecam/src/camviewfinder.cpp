@@ -110,13 +110,13 @@ void CCameraViewfinderBitmapObject::HandleCompleteV1() {
 
     if (iStatus == KErrNone) {
         TInt imageBufferSize = 0;
-        TInt error = ECamReceiveImage(0, iDispatch, &imageBufferSize, NULL);
+        TInt error = ECamReceiveImage(0, iDispatch, &imageBufferSize, NULL, EImageStackViewfinderFrame);
 
         if (error != KErrNone) {
             LogOut(KCameraCat, _L("Failed to receive viewfinder frame data (image size can't be get)!"));
         } else {
             iDataBitmap->BeginDataAccess();
-            error = ECamReceiveImage(0, iDispatch, &imageBufferSize, (TUint8*)iDataBitmap->DataAddress());
+            error = ECamReceiveImage(0, iDispatch, &imageBufferSize, (TUint8*)iDataBitmap->DataAddress(), EImageStackViewfinderFrame);
             iDataBitmap->EndDataAccess();
 
             if (error != KErrNone) {
@@ -149,7 +149,7 @@ void CCameraViewfinderBitmapObject::HandleCompleteV2() {
     }
 
     TInt imageBufferSize = 0;
-    TInt error = ECamReceiveImage(0, iDispatch, &imageBufferSize, NULL);
+    TInt error = ECamReceiveImage(0, iDispatch, &imageBufferSize, NULL, EImageStackViewfinderFrame);
 
     if (error != KErrNone) {
         LogOut(KCameraCat, _L("Failed to receive image data (image size can't be get)!"));
@@ -161,7 +161,7 @@ void CCameraViewfinderBitmapObject::HandleCompleteV2() {
             return;
         }
 
-        error = ECamReceiveImage(0, iDispatch, &imageBufferSize, buffer->DataPtr());
+        error = ECamReceiveImage(0, iDispatch, &imageBufferSize, buffer->DataPtr(), EImageStackViewfinderFrame);
         buffer->EndDataAccess();
 
         if (error != KErrNone) {

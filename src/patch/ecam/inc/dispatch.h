@@ -31,6 +31,11 @@ typedef unsigned long long TUint64;
 
 class TCameraInfo;
 
+enum TImageStack {
+	EImageStackCaptureImage,
+	EImageStackViewfinderFrame
+};
+
 extern "C" {
 HLE_DISPATCH_FUNC(TInt, ECamGetNumberOfCameras);
 HLE_DISPATCH_FUNC(TAny*, ECamCreate, TInt aIndex, TCameraInfo &aBasisInfo);
@@ -42,7 +47,7 @@ HLE_DISPATCH_FUNC(void, ECamPowerOff, TAny *aInstance);
 HLE_DISPATCH_FUNC(TInt, ECamSetParameter, TAny *aInstance, TInt aKey, TInt aValue);
 HLE_DISPATCH_FUNC(TInt, ECamQueryStillImageSize, TAny *aInstance, TInt aFormat, TInt aSizeIndex, TSize &aSize);
 HLE_DISPATCH_FUNC(TInt, ECamTakeImage, TAny *aInstance, TInt aSizeIndex, TInt aFormat, TRect *aClip, TRequestStatus &aFinishStatus);
-HLE_DISPATCH_FUNC(TInt, ECamReceiveImage, TAny *aInstance, TInt *aSize, const TUint8 *aData);
+HLE_DISPATCH_FUNC(TInt, ECamReceiveImage, TAny *aInstance, TInt *aSize, const TUint8 *aData, TInt aImageStack);
 HLE_DISPATCH_FUNC(TInt, ECamCancelTakeImage, TAny *aInstance);
 HLE_DISPATCH_FUNC(TInt, ECamQueryVideoFrameDimension, TAny *aInstance, TInt aSizeIndex, TInt aFormat, TSize &aSize);
 HLE_DISPATCH_FUNC(TInt, ECamQueryVideoFrameRate, TAny *aInstance, TInt aFrameRateIndex, TInt aSizeIndex, TInt aFormat, TInt aExposure, TReal32 *aRate);

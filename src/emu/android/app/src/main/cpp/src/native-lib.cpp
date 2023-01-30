@@ -359,6 +359,23 @@ Java_com_github_eka2l1_emu_EmulatorCamera_onCaptureImageDelivered(JNIEnv *env, j
     }
 }
 extern "C"
+JNIEXPORT void JNICALL
+Java_com_github_eka2l1_emu_EmulatorCamera_onFrameViewfinderDelivered(JNIEnv *env, jclass clazz,
+                                                                     jint index,
+                                                                     jbyteArray raw_data,
+                                                                     jint error_code) {
+    eka2l1::drivers::camera::collection_android *collection = reinterpret_cast
+            <eka2l1::drivers::camera::collection_android *>(eka2l1::drivers::camera::get_collection());
+
+    if (collection) {
+        jboolean is_data_copy = false;
+        jsize data_size = env->GetArrayLength(raw_data);
+        jbyte *data = env->GetByteArrayElements(raw_data, &is_data_copy);
+        collection->handle_frame_viewfinder_delivered(index, data, static_cast<int>(data_size), error_code);
+        env->ReleaseByteArrayElements(raw_data, data, 0);
+    }
+}
+extern "C"
 JNIEXPORT jboolean JNICALL
 Java_com_github_eka2l1_emu_EmulatorCamera_doesCameraAllowNewFrame(JNIEnv *env, jclass clazz,
                                                                   jint index) {

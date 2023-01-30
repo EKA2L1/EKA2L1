@@ -72,6 +72,11 @@ namespace eka2l1::dispatch {
         DSP_MEDIUM_TYPE_EPOC_PLAYER = 1
     };
 
+    enum camera_image_stack_type {
+        CAMERA_IMAGE_STACK_CAPTURE_IMAGE,
+        CAMERA_IMAGE_STACK_VIEWFINDER_FRAME
+    };
+
     struct dsp_medium {
     protected:
         dsp_manager *manager_;
@@ -224,11 +229,14 @@ namespace eka2l1::dispatch {
     struct epoc_camera {
         static constexpr std::size_t QUEUE_MAX_PENDING = 5;
 
-        epoc::notify_info done_notify_;
+        epoc::notify_info done_frame_viewfinder_notify_;
+        epoc::notify_info done_image_capture_notify_;
         drivers::camera::info cached_info_;
 
-        std::array<std::vector<char>, QUEUE_MAX_PENDING> received_image_frame_;
+        std::array<std::vector<char>, QUEUE_MAX_PENDING> received_viewfinder_frame_;
+        std::vector<char> received_image_capture_;
         std::int32_t current_frame_index_;
+        bool image_capture_taken_;
 
         std::map<drivers::camera::frame_format, std::vector<eka2l1::vec2>> cached_frame_sizes_;
         std::unique_ptr<drivers::camera::instance> impl_;
@@ -237,7 +245,8 @@ namespace eka2l1::dispatch {
 
         explicit epoc_camera(std::unique_ptr<drivers::camera::instance> &camera)
             : impl_(std::move(camera))
-            , current_frame_index_(-1) {
+            , current_frame_index_(-1)
+            , image_capture_taken_(true) {
         }
     };
 

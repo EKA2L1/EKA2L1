@@ -39,6 +39,7 @@ namespace eka2l1::drivers::camera {
         std::unique_ptr<instance> make_camera(const std::uint32_t camera_index) override;
 
         void handle_image_capture_delivered(int index, const void *bytes, const std::size_t size, const int error);
+        void handle_frame_viewfinder_delivered(int index, const void *bytes, const std::size_t size, const int error);
         bool reserved_wants_new_frame(int index);
     };
 }

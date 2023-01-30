@@ -115,7 +115,7 @@ void CCameraImageBufferImpl::Release() {
 }
 
 CCameraImageCaptureObject::CCameraImageCaptureObject()
-    : CActive(EPriorityNormal)
+    : CActive(CActive::EPriorityHigh)
     , iDispatch(NULL)
     , iObserver(NULL)
     , iDataBuffer(NULL)
@@ -224,7 +224,7 @@ void CCameraImageCaptureObject::HandleCompleteV1() {
         observer->ImageReady(NULL, NULL, iStatus.Int());
     } else {
         TInt imageBufferSize = 0;
-        TInt error = ECamReceiveImage(0, iDispatch, &imageBufferSize, NULL);
+        TInt error = ECamReceiveImage(0, iDispatch, &imageBufferSize, NULL, EImageStackCaptureImage);
 
         if (error != KErrNone) {
             LogOut(KCameraCat, _L("Failed to receive image data (image size can't be get)!"));
@@ -237,10 +237,10 @@ void CCameraImageCaptureObject::HandleCompleteV1() {
                     iDataBuffer = iDataBuffer->ReAllocL(imageBufferSize);
                 }
 
-                error = ECamReceiveImage(0, iDispatch, &imageBufferSize, iDataBuffer->Ptr());
+                error = ECamReceiveImage(0, iDispatch, &imageBufferSize, iDataBuffer->Ptr(), EImageStackCaptureImage);
             } else {
                 iDataBitmap->BeginDataAccess();
-                error = ECamReceiveImage(0, iDispatch, &imageBufferSize, (TUint8*)iDataBitmap->DataAddress());
+                error = ECamReceiveImage(0, iDispatch, &imageBufferSize, (TUint8*)iDataBitmap->DataAddress(), EImageStackCaptureImage);
                 iDataBitmap->EndDataAccess();
             }
 
@@ -275,7 +275,7 @@ void CCameraImageCaptureObject::HandleCompleteV2() {
     }
 
     TInt imageBufferSize = 0;
-    TInt error = ECamReceiveImage(0, iDispatch, &imageBufferSize, NULL);
+    TInt error = ECamReceiveImage(0, iDispatch, &imageBufferSize, NULL, EImageStackCaptureImage);
 
     if (error != KErrNone) {
         LogOut(KCameraCat, _L("Failed to receive image data (image size can't be get)!"));
@@ -291,7 +291,7 @@ void CCameraImageCaptureObject::HandleCompleteV2() {
             return;
         }
 
-        error = ECamReceiveImage(0, iDispatch, &imageBufferSize, buffer->DataPtr());
+        error = ECamReceiveImage(0, iDispatch, &imageBufferSize, buffer->DataPtr(), EImageStackCaptureImage);
         buffer->EndDataAccess();
 
         if (error != KErrNone) {

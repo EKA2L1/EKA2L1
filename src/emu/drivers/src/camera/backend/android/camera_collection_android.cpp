@@ -38,9 +38,19 @@ namespace eka2l1::drivers::camera {
             const std::lock_guard<std::mutex> guard(ite->second->callback_lock_);
             if (ite->second->active_capture_img_callback_) {
                 ite->second->active_capture_img_callback_(bytes, size, error);
-            }
-            if (ite->second->should_dispose_callback_after_done_) {
                 ite->second->active_capture_img_callback_ = nullptr;
+            }
+        } else {
+            LOG_TRACE(DRIVER_CAM, "Unable to find active reserved camera with index {} for returning capture bytes", index);
+        }
+    }
+
+    void collection_android::handle_frame_viewfinder_delivered(int index, const void *bytes, const std::size_t size, const int error) {
+        auto ite = current_reserved_.find(index);
+        if (ite != current_reserved_.end()) {
+            const std::lock_guard<std::mutex> guard(ite->second->callback_lock_);
+            if (ite->second->active_frame_viewfinder_callback_) {
+                ite->second->active_frame_viewfinder_callback_(bytes, size, error);
             }
         } else {
             LOG_TRACE(DRIVER_CAM, "Unable to find active reserved camera with index {} for returning capture bytes", index);

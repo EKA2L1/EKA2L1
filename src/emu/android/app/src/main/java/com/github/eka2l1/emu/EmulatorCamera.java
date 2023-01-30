@@ -28,9 +28,15 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class EmulatorCamera {
     private static ProcessCameraProvider cameraProvider;
@@ -54,11 +60,13 @@ public class EmulatorCamera {
     private static final int FLASH_MODE_DRIVER_FORCED = 0x02;
     private static final int FLASH_MODE_DRIVER_VIDEO_LIGHT = 0x80;
 
-    private static List<EmulatorCamera> cameraWrappers;
+    private static HashMap<Integer, EmulatorCamera> cameraWrappers;
+    private static int cameraIdCounter = 1;
 
     private int flashMode;
     private int index;
-    private boolean pending;
+    private boolean pendingViewfinder;
+    private boolean pendingImageCapture;
     private boolean configChanged;
     private int previousResolutionIndex;
     private ImageAnalysis currentAnalysis;
@@ -68,12 +76,16 @@ public class EmulatorCamera {
     private CameraCharacteristics characteristics;
 
     // Cached parameters for orientation change
-    private int previousFormat = 0;
+    private int previousViewfinderFormat = 0;
+    private int previousImageFormat = 0;
     private Size previousSize;
+
+    private Executor cameraExecutor;
+    private int useCount = 1;
 
     public static void setActivity(AppCompatActivity activity) {
         applicationActivity = activity;
-        cameraWrappers = new ArrayList<>();
+        cameraWrappers = new HashMap<>();
 
         if (cameraProvider == null) {
             try {
@@ -106,9 +118,10 @@ public class EmulatorCamera {
                 return -1;
             }
 
-            for (int i = 0; i < cameraWrappers.size(); i++) {
-                if (cameraWrappers.get(i).index == index) {
-                    return i;
+            for (HashMap.Entry<Integer, EmulatorCamera> entry : cameraWrappers.entrySet()) {
+                if (entry.getValue().index == index) {
+                    entry.getValue().useCount++;
+                    return entry.getKey();
                 }
             }
 
@@ -124,11 +137,33 @@ public class EmulatorCamera {
             }
 
             EmulatorCamera newCam = new EmulatorCamera(index);
-            cameraWrappers.add(newCam);
+            cameraWrappers.put(cameraIdCounter, newCam);
 
-            return cameraWrappers.size() - 1;
+            return cameraIdCounter++;
         } catch (Exception ex) {
             return -1;
+        }
+    }
+
+    public static void releaseCamera(int handle) throws InterruptedException {
+        if (!cameraWrappers.containsKey(handle)) {
+            Log.e(TAG, "No camera found with handle " + handle);
+            return;
+        }
+
+        EmulatorCamera cam = cameraWrappers.get(handle);
+        cam.useCount--;
+
+        if (cam.useCount == 0) {
+            cam.stopViewfinderFeed();
+
+            if (cam.previousImageCapture != null) {
+                applicationActivity.runOnUiThread(() -> {
+                    cameraProvider.unbind(cam.previousImageCapture);
+                });
+            }
+
+            cameraWrappers.remove(handle);
         }
     }
 
@@ -140,7 +175,7 @@ public class EmulatorCamera {
 
     /* WRAPPER */
     public static EmulatorCamera getCameraWith(int handle) {
-        if ((handle < 0) || (handle >= cameraWrappers.size())) {
+        if (!cameraWrappers.containsKey(handle)) {
             Log.e(TAG, "No camera found with handle " + handle);
             return null;
         }
@@ -216,7 +251,8 @@ public class EmulatorCamera {
     public EmulatorCamera(int index) throws InterruptedException {
         this.flashMode = ImageCapture.FLASH_MODE_OFF;
         this.index = index;
-        this.pending = false;
+        this.pendingImageCapture = false;
+        this.pendingViewfinder = false;
         this.configChanged = false;
         this.previousResolutionIndex = -1;
 
@@ -224,19 +260,22 @@ public class EmulatorCamera {
         characteristics = Camera2CameraInfo.extractCameraCharacteristics(getCameraSelector().filter(cameraProvider.getAvailableCameraInfos()).get(0));
         StreamConfigurationMap streamConfigurationMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
         outputImageSizes = streamConfigurationMap.getOutputSizes(ImageFormat.JPEG);
+        cameraExecutor = Executors.newSingleThreadExecutor();
     }
 
     public void handleOrientationChange() {
         configChanged = true;
 
-        if ((camera != null) && pending) {
-            if (currentAnalysis != null) {
-                try {
-                    stopViewfinderFeed();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+        if ((camera != null)) {
+            if (pendingViewfinder)  {
+                if (currentAnalysis != null) {
+                    try {
+                        stopViewfinderFeed();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    receiveViewfinderFeed(previousSize.getWidth(), previousSize.getHeight(), previousViewfinderFormat);
                 }
-                receiveViewfinderFeed(previousSize.getWidth(), previousSize.getHeight(), previousFormat);
             }
         }
     }
@@ -303,7 +342,7 @@ public class EmulatorCamera {
     }
 
     public void stopViewfinderFeed() throws InterruptedException {
-        if (!pending) {
+        if (!pendingViewfinder) {
             Log.w(TAG, "No operation is active on this camera!");
             return;
         }
@@ -314,13 +353,13 @@ public class EmulatorCamera {
         }
         if (Looper.getMainLooper().getThread() == Thread.currentThread()) {
             cameraProvider.unbind(currentAnalysis);
-            pending = false;
+            pendingViewfinder = false;
         } else {
             Runnable unbindSync = new Runnable() {
                 @Override
                 public void run() {
                     cameraProvider.unbind(currentAnalysis);
-                    pending = false;
+                    pendingViewfinder = false;
 
                     synchronized (this) {
                         this.notify();
@@ -347,7 +386,7 @@ public class EmulatorCamera {
     }
 
     public boolean receiveViewfinderFeed(int width, int height, int requestedFormat) {
-        if (pending) {
+        if (pendingViewfinder) {
             Log.w(TAG, "Another operation is active on this camera!");
             return false;
         }
@@ -362,23 +401,22 @@ public class EmulatorCamera {
             return false;
         }
 
-        previousFormat = requestedFormat;
+        previousViewfinderFormat = requestedFormat;
         previousSize = new Size(width, height);
-        pending = true;
+        pendingViewfinder = true;
 
         applicationActivity.runOnUiThread(() -> {
-            int rotation = getTargetCaptureRotation();
-            Size sizeRotated = ((rotation % 180) != 0) ? new Size(height, width) : new Size(width, height);
+            Size sizeFinned = new Size(width, height);
 
             currentAnalysis = new ImageAnalysis.Builder()
-                    .setTargetResolution(sizeRotated)
+                    .setTargetResolution(sizeFinned)
                     .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                     .build();
 
             camera = cameraProvider.bindToLifecycle(applicationActivity, getCameraSelector(), currentAnalysis);
             currentAnalysis.getTargetRotation();
 
-            currentAnalysis.setAnalyzer(ContextCompat.getMainExecutor(applicationActivity),
+            currentAnalysis.setAnalyzer(cameraExecutor,
                     image -> {
                         if (!doesCameraAllowNewFrame(index)) {
                             image.close();
@@ -386,57 +424,104 @@ public class EmulatorCamera {
                         }
 
                         ByteBuffer imageBuffer = image.getPlanes()[0].getBuffer();
+
+                        Size sizeRotatedReceived = new Size(image.getWidth(), image.getHeight());
                         int rotationGivenByImage = image.getImageInfo().getRotationDegrees();
 
+                        Bitmap finalBitmap = null;
+                        int stride = image.getPlanes()[0].getRowStride();
+
                         if (rotationGivenByImage != 0) {
-                            Bitmap bmp = Bitmap.createBitmap(sizeRotated.getWidth(), sizeRotated.getHeight(), Bitmap.Config.ARGB_8888);
-                            bmp.copyPixelsFromBuffer(imageBuffer);
+                            Bitmap bmp;
+
+                            if (sizeRotatedReceived.getWidth() != stride) {
+                                bmp = Bitmap.createBitmap(stride / image.getPlanes()[0].getPixelStride(), sizeRotatedReceived.getHeight(), Bitmap.Config.ARGB_8888);
+                                bmp.copyPixelsFromBuffer(imageBuffer);
+                            } else {
+                                bmp = Bitmap.createBitmap(sizeRotatedReceived.getWidth(), sizeRotatedReceived.getHeight(), Bitmap.Config.ARGB_8888);
+                                bmp.copyPixelsFromBuffer(imageBuffer);
+                            }
 
                             Matrix bmpMat = new Matrix();
                             bmpMat.postRotate(rotationGivenByImage);
 
-                            Bitmap bmpRotated = Bitmap.createBitmap(bmp, 0, 0, sizeRotated.getWidth(), sizeRotated.getHeight(), bmpMat, true);
-                            imageBuffer = ByteBuffer.allocate(bmpRotated.getRowBytes() * height);
+                            finalBitmap = Bitmap.createBitmap(bmp, 0, 0, sizeRotatedReceived.getWidth(), sizeRotatedReceived.getHeight(), bmpMat, true);
+                        }
 
-                            bmpRotated.copyPixelsToBuffer(imageBuffer);
+                        Size authenticateSize = sizeRotatedReceived;
+                        if ((rotationGivenByImage % 180) != 0) {
+                            authenticateSize = new Size(sizeRotatedReceived.getHeight(), sizeRotatedReceived.getWidth());
+                        }
+
+                        if (!authenticateSize.equals(sizeFinned)) {
+                            if (finalBitmap == null) {
+                                if (sizeRotatedReceived.getWidth() != stride) {
+
+                                    finalBitmap = Bitmap.createBitmap(stride / image.getPlanes()[0].getPixelStride(), sizeRotatedReceived.getHeight(), Bitmap.Config.ARGB_8888);
+                                    finalBitmap.copyPixelsFromBuffer(imageBuffer);
+
+                                    // Not efficient but do the job )
+                                    finalBitmap = Bitmap.createBitmap(finalBitmap, 0, 0, sizeRotatedReceived.getWidth(), sizeRotatedReceived.getHeight());
+                                } else {
+                                    finalBitmap = Bitmap.createBitmap(sizeRotatedReceived.getWidth(), sizeRotatedReceived.getHeight(), Bitmap.Config.ARGB_8888);
+                                    finalBitmap.copyPixelsFromBuffer(imageBuffer);
+                                }
+                            }
+
+                            finalBitmap = Bitmap.createScaledBitmap(finalBitmap, sizeFinned.getWidth(), sizeFinned.getHeight(), false);
+                            stride = finalBitmap.getWidth() * 4;
+                        }
+
+                        if (finalBitmap != null) {
+                            imageBuffer = ByteBuffer.allocate(finalBitmap.getRowBytes() * sizeFinned.getHeight());
+
+                            finalBitmap.copyPixelsToBuffer(imageBuffer);
                             imageBuffer.position(0);
                         }
 
                         if (requestedFormat == FORMAT_DRIVER_FBS_BMP_64K) {
-                            int byteWidth = (width * 2 + 3) / 4 * 4;
-                            byte []buffer = new byte[byteWidth * height];
+                            int byteWidth = (sizeFinned.getWidth() * 2 + 3) / 4 * 4;
+                            byte []buffer = new byte[byteWidth * sizeFinned.getHeight()];
 
-                            for (int i = 0; i < width; i++) {
-                                for (int j = 0; j < height; j++) {
-                                    short pixel565 = (short) ((((imageBuffer.get(j * width * 4 + 3)) & 0xF8) >> 3) |
-                                            ((imageBuffer.get(j * width * 4 + 2) & 0xFC) << 5) |
-                                            ((imageBuffer.get(j * width * 4 + 1) & 0xF8) << 11));
+                            for (int i = 0; i < sizeFinned.getWidth(); i++) {
+                                for (int j = 0; j < sizeFinned.getHeight(); j++) {
+                                    short pixel565 = (short) ((((imageBuffer.get(j * stride + 3)) & 0xF8) >> 3) |
+                                            ((imageBuffer.get(j * stride + 2) & 0xFC) << 5) |
+                                            ((imageBuffer.get(j * stride + 1) & 0xF8) << 11));
 
                                     buffer[j * byteWidth + i * 2] = (byte) ((pixel565 >> 8) & 0xFF);
                                     buffer[j * byteWidth + i * 2 + 1] = (byte) (pixel565 & 0xFF);
                                 }
                             }
 
-                            onCaptureImageDelivered(index, buffer, buffer.length);
+                            onFrameViewfinderDelivered(index, buffer, buffer.length);
                         } else if (requestedFormat == FORMAT_DRIVER_FBS_BMP_16M) {
-                            int byteWidth = (width * 3 + 3) / 4 * 4;
-                            byte []buffer = new byte[byteWidth * height];
+                            int byteWidth = (sizeFinned.getWidth() * 3 + 3) / 4 * 4;
+                            byte []buffer = new byte[byteWidth * sizeFinned.getHeight()];
 
-                            for (int i = 0; i < width; i++) {
-                                for (int j = 0; j < height; j++) {
-                                    buffer[j * byteWidth + i * 3] = imageBuffer.get(j * width * 4 + i * 4 + 1);
-                                    buffer[j * byteWidth + i * 3 + 1] = imageBuffer.get(j * width * 4 + i * 4 + 2);
-                                    buffer[j * byteWidth + i * 3 + 2] = imageBuffer.get(j * width * 4 + i * 4 + 3);
+                            for (int i = 0; i < sizeFinned.getWidth(); i++) {
+                                for (int j = 0; j < sizeFinned.getHeight(); j++) {
+                                    buffer[j * byteWidth + i * 3] = imageBuffer.get(j * stride + i * 4 + 2);
+                                    buffer[j * byteWidth + i * 3 + 1] = imageBuffer.get(j * stride + i * 4 + 1);
+                                    buffer[j * byteWidth + i * 3 + 2] = imageBuffer.get(j * stride + i * 4);
                                 }
                             }
 
-                            onCaptureImageDelivered(index, buffer, buffer.length);
+                            onFrameViewfinderDelivered(index, buffer, buffer.length);
                         } else if (requestedFormat == FORMAT_DRIVER_FBS_BMP_16MU) {
-                            // Copy the buffer directly
-                            byte []imageBufferArr = new byte[imageBuffer.remaining()];
-                            imageBuffer.get(imageBufferArr);
+                            int byteWidth = sizeFinned.getWidth() * 4;
+                            byte []buffer = new byte[byteWidth * sizeFinned.getHeight()];
 
-                            onCaptureImageDelivered(index, imageBufferArr, imageBufferArr.length);
+                            for (int i = 0; i < sizeFinned.getWidth(); i++) {
+                                for (int j = 0; j < sizeFinned.getHeight(); j++) {
+                                    buffer[j * byteWidth + i * 4] = imageBuffer.get(j * stride + i * 4 + 2);
+                                    buffer[j * byteWidth + i * 4 + 1] = imageBuffer.get(j * stride + i * 4 + 1);
+                                    buffer[j * byteWidth + i * 4 + 2] = imageBuffer.get(j * stride + i * 4);
+                                    buffer[j * byteWidth + i * 4 + 3] = imageBuffer.get(j * stride + i * 4 + 3);
+                                }
+                            }
+
+                            onFrameViewfinderDelivered(index, buffer, buffer.length);
                         }
 
                         image.close();
@@ -447,7 +532,7 @@ public class EmulatorCamera {
     }
 
     public boolean captureImage(int resolutionIndex, int requestedFormat) {
-        if (pending) {
+        if (pendingImageCapture) {
             Log.w(TAG, "Another operation is active on this camera!");
             return false;
         }
@@ -467,22 +552,17 @@ public class EmulatorCamera {
             configChanged = true;
         }
 
-        previousFormat = requestedFormat;
-        pending = true;
+        previousImageFormat = requestedFormat;
+        pendingImageCapture = true;
 
         applicationActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                Size outputSize = outputImageSizes[resolutionIndex];
+
                 if (configChanged || (camera == null)) {
                     if (configChanged && (previousImageCapture != null)) {
                         cameraProvider.unbind(previousImageCapture);
-                    }
-
-                    int rotation = getTargetCaptureRotation();
-                    Size outputSize = outputImageSizes[resolutionIndex];
-
-                    if ((rotation % 180) != 0) {
-                        outputSize = new Size(outputImageSizes[resolutionIndex].getHeight(), outputImageSizes[resolutionIndex].getWidth());
                     }
 
                     ImageCapture imageCaptureRequest = new ImageCapture.Builder()
@@ -504,16 +584,39 @@ public class EmulatorCamera {
                     control.enableTorch(false);
                 }
 
-                previousImageCapture.takePicture(ContextCompat.getMainExecutor(applicationActivity),
+                Size finalOutputSize = outputSize;
+                previousImageCapture.takePicture(cameraExecutor,
                         new ImageCapture.OnImageCapturedCallback() {
                             @Override
                             public void onCaptureSuccess(@NonNull ImageProxy image) {
                                 ByteBuffer jpegBuffer = image.getPlanes()[0].getBuffer();
                                 int imageRot = image.getImageInfo().getRotationDegrees();
 
+                                Size finalSizeFin = ((imageRot % 180) != 0) ?
+                                    new Size(image.getHeight(), image.getWidth()) :
+                                    new Size(image.getWidth(), image.getHeight());
+
                                 if ((requestedFormat == FORMAT_DRIVER_JPEG) || (requestedFormat == FORMAT_DRIVER_EXIF)) {
-                                    // Throw immediately
-                                    onCaptureImageDelivered(index, jpegBuffer.array(), 0);
+                                    if (!finalSizeFin.equals(finalOutputSize)) {
+                                        byte []dataBufferDecoded = new byte[jpegBuffer.remaining()];
+                                        jpegBuffer.get(dataBufferDecoded);
+
+                                        Bitmap finalBitmap = BitmapFactory.decodeByteArray(dataBufferDecoded, 0,
+                                                dataBufferDecoded.length, new BitmapFactory.Options());
+
+                                        finalBitmap = Bitmap.createScaledBitmap(finalBitmap,
+                                                finalOutputSize.getWidth(),
+                                                finalOutputSize.getHeight(),
+                                                false);
+
+                                        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+                                        finalBitmap.compress(Bitmap.CompressFormat.JPEG, 50, bytes);
+
+                                        onCaptureImageDelivered(index, bytes.toByteArray(), 0);
+                                    } else {
+                                        // Throw immediately
+                                        onCaptureImageDelivered(index, jpegBuffer.array(), 0);
+                                    }
                                 } else {
                                     BitmapFactory.Options opt = new BitmapFactory.Options();
                                     switch (requestedFormat) {
@@ -543,14 +646,9 @@ public class EmulatorCamera {
                                         Log.i(TAG, "Decoding bitmap encountered exception: " + ex);
                                     }
 
-                                    if (imageRot != 0) {
-                                        Matrix rotMatrix = new Matrix();
-                                        rotMatrix.postRotate(imageRot);
-
-                                        decodedBitmap = Bitmap.createBitmap(decodedBitmap, 0, 0,
-                                                outputImageSizes[resolutionIndex].getWidth(),
-                                                outputImageSizes[resolutionIndex].getHeight(),
-                                                rotMatrix, true);
+                                    if (!finalSizeFin.equals(finalOutputSize)) {
+                                        decodedBitmap = Bitmap.createScaledBitmap(decodedBitmap, finalOutputSize.getWidth(),
+                                                finalOutputSize.getHeight(), false);
                                     }
 
                                     if (decodedBitmap == null) {
@@ -565,7 +663,7 @@ public class EmulatorCamera {
                                     }
                                 }
 
-                                pending = false;
+                                pendingImageCapture = false;
                                 image.close();
 
                                 super.onCaptureSuccess(image);
@@ -576,7 +674,7 @@ public class EmulatorCamera {
                                 Log.i(TAG, "Image capture encountered exception: " + ex);
                                 onCaptureImageDelivered(index, null, -1);
 
-                                pending = false;
+                                pendingImageCapture = false;
 
                                 super.onError(ex);
                             }
@@ -589,4 +687,5 @@ public class EmulatorCamera {
 
     private static native boolean doesCameraAllowNewFrame(int index);
     private static native void onCaptureImageDelivered(int index, byte[] rawData, int errorCode);
+    public static native void onFrameViewfinderDelivered(int index, byte[] rawData, int errorCode);
 }

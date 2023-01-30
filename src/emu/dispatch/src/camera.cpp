@@ -152,12 +152,12 @@ namespace eka2l1::dispatch {
 
         const std::lock_guard<std::mutex> guard(cam->lock_);
 
-        if (!cam->done_notify_.empty()) {
+        if (!cam->done_image_capture_notify_.empty()) {
             LOG_TRACE(HLE_DISPATCHER, "Another camera operation is pending on the same instance!");
             return epoc::error_in_use;
         }
 
-        cam->done_notify_ = epoc::notify_info(status, kern->crr_thread());
+        cam->done_image_capture_notify_ = epoc::notify_info(status, kern->crr_thread());
 
         cam->impl_->capture_image(size_index, static_cast<drivers::camera::frame_format>(format),
                                   [cam, kern](const void *buffer, std::size_t buffer_size, int err) {
@@ -165,14 +165,14 @@ namespace eka2l1::dispatch {
             kern->lock();
 
             if (err < 0) {
-                cam->done_notify_.complete(epoc::error_general);
+                cam->done_image_capture_notify_.complete(epoc::error_general);
             } else {
                 // Copy data to temporary buffer
-                cam->received_image_frame_[0].resize(buffer_size);
-                std::memcpy(cam->received_image_frame_[0].data(), buffer, buffer_size);
+                cam->received_image_capture_.resize(buffer_size);
+                std::memcpy(cam->received_image_capture_.data(), buffer, buffer_size);
 
-                cam->current_frame_index_ = 0;
-                cam->done_notify_.complete(epoc::error_none);
+                cam->image_capture_taken_ = false;
+                cam->done_image_capture_notify_.complete(epoc::error_none);
             }
 
             kern->unlock();
@@ -181,7 +181,7 @@ namespace eka2l1::dispatch {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_receive_image, std::uint32_t handle, std::int32_t *size, void *data_ptr) {
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_receive_image, std::uint32_t handle, std::int32_t *size, void *data_ptr, int stack_type) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         epoc_camera *cam = dispatcher->cameras_.get_object(handle);
 
@@ -194,24 +194,49 @@ namespace eka2l1::dispatch {
         }
 
         const std::lock_guard<std::mutex> guard(cam->lock_);
-        if (cam->current_frame_index_ < 0) {
-            if (size) {
-                *size = 0;
+        std::vector<char> *frame_vec_ptr = nullptr;
+
+        if (stack_type == CAMERA_IMAGE_STACK_CAPTURE_IMAGE) {
+            if (cam->image_capture_taken_) {
+                if (size) {
+                    *size = 0;
+                }
+
+                return epoc::error_none;
+            } else {
+                frame_vec_ptr = &cam->received_image_capture_;
+            }
+        } else {
+            if (cam->current_frame_index_ < 0) {
+                if (size) {
+                    *size = 0;
+                }
+
+                return epoc::error_none;
             }
 
-            return epoc::error_none;
+            frame_vec_ptr = &cam->received_viewfinder_frame_[cam->current_frame_index_];
+        }
+
+        if (!frame_vec_ptr) {
+            return epoc::error_underflow;
         }
 
         if (!data_ptr) {
-            *size = static_cast<std::int32_t>(cam->received_image_frame_[cam->current_frame_index_].size());
+            *size = static_cast<std::int32_t>(frame_vec_ptr->size());
         } else {
             const std::int32_t copy_size = common::min<std::int32_t>(*size,
-                 static_cast<std::int32_t>(cam->received_image_frame_[cam->current_frame_index_].size()));
+                 static_cast<std::int32_t>(frame_vec_ptr->size()));
 
-            std::memcpy(data_ptr, cam->received_image_frame_[cam->current_frame_index_].data(), copy_size);
+            std::memcpy(data_ptr, frame_vec_ptr->data(), copy_size);
 
             *size = copy_size;
-            cam->current_frame_index_--;
+
+            if (stack_type == CAMERA_IMAGE_STACK_CAPTURE_IMAGE) {
+                cam->image_capture_taken_ = true;
+            } else {
+                cam->current_frame_index_--;
+            }
         }
 
         return epoc::error_none;
@@ -233,12 +258,12 @@ namespace eka2l1::dispatch {
 
         const std::lock_guard<std::mutex> guard(cam->lock_);
 
-        if (!cam->done_notify_.empty()) {
+        if (!cam->done_frame_viewfinder_notify_.empty()) {
             LOG_TRACE(HLE_DISPATCHER, "Another camera operation is pending on the same instance!");
             return epoc::error_in_use;
         }
 
-        cam->done_notify_ = epoc::notify_info(status, kern->crr_thread());
+        cam->done_frame_viewfinder_notify_ = epoc::notify_info(status, kern->crr_thread());
 
         drivers::camera::frame_format capture_format;
 
@@ -273,12 +298,12 @@ namespace eka2l1::dispatch {
             guard.lock();
 
             if (err < 0) {
-                cam->done_notify_.complete(epoc::error_general);
+                cam->done_frame_viewfinder_notify_.complete(epoc::error_general);
             } else {
-                cam->received_image_frame_[++cam->current_frame_index_].resize(buffer_size);
-                std::memcpy(cam->received_image_frame_[cam->current_frame_index_].data(), buffer, buffer_size);
+                cam->received_viewfinder_frame_[++cam->current_frame_index_].resize(buffer_size);
+                std::memcpy(cam->received_viewfinder_frame_[cam->current_frame_index_].data(), buffer, buffer_size);
 
-                cam->done_notify_.complete(epoc::error_none);
+                cam->done_frame_viewfinder_notify_.complete(epoc::error_none);
             }
 
             kern->unlock();
@@ -302,7 +327,7 @@ namespace eka2l1::dispatch {
         if (cam->current_frame_index_ >= 0) {
             done_info.complete(epoc::error_none);
         } else {
-            cam->done_notify_ = done_info;
+            cam->done_frame_viewfinder_notify_ = done_info;
         }
 
         return epoc::error_none;
@@ -319,8 +344,8 @@ namespace eka2l1::dispatch {
         const std::lock_guard<std::mutex> guard(cam->lock_);
         cam->impl_->stop_viewfinder_feed();
 
-        if (!cam->done_notify_.empty()) {
-            cam->done_notify_.complete(epoc::error_cancel);
+        if (!cam->done_frame_viewfinder_notify_.empty()) {
+            cam->done_frame_viewfinder_notify_.complete(epoc::error_cancel);
         }
 
         cam->current_frame_index_ = -1;
