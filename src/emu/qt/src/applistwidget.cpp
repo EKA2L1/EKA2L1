@@ -578,7 +578,7 @@ void applist_widget::add_registeration_item_native(eka2l1::apa_app_registry &reg
             if (!renderer && file_mif_parser.do_parse()) {
                 std::vector<std::uint8_t> data;
                 int dest_size = 0;
-                if (file_mif_parser.read_mif_entry(0, nullptr, dest_size)) {
+                if (file_mif_parser.read_mif_entry(0, nullptr, dest_size) && (dest_size > 0)) {
                     data.resize(dest_size);
                     file_mif_parser.read_mif_entry(0, data.data(), dest_size);
 

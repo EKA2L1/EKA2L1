@@ -141,40 +141,42 @@ namespace eka2l1::android {
                     std::vector<std::uint8_t> data;
                     int dest_size = 0;
                     if (file_mif_parser.read_mif_entry(0, nullptr, dest_size)) {
-                        data.resize(dest_size);
-                        file_mif_parser.read_mif_entry(0, data.data(), dest_size);
+                        if (dest_size != 0) {
+                            data.resize(dest_size);
+                            file_mif_parser.read_mif_entry(0, data.data(), dest_size);
 
-                        eka2l1::common::ro_buf_stream inside_stream(data.data(), data.size());
-                        std::unique_ptr<eka2l1::common::wo_std_file_stream> outfile_stream =
-                                std::make_unique<eka2l1::common::wo_std_file_stream>(cached_path, true);
+                            eka2l1::common::ro_buf_stream inside_stream(data.data(), data.size());
+                            std::unique_ptr<eka2l1::common::wo_std_file_stream> outfile_stream =
+                                    std::make_unique<eka2l1::common::wo_std_file_stream>(cached_path, true);
 
-                        eka2l1::loader::mif_icon_header header;
-                        inside_stream.read(&header, sizeof(eka2l1::loader::mif_icon_header));
+                            eka2l1::loader::mif_icon_header header;
+                            inside_stream.read(&header, sizeof(eka2l1::loader::mif_icon_header));
 
-                        std::vector<eka2l1::loader::svgb_convert_error_description> errors;
-                        std::vector<eka2l1::loader::nvg_convert_error_description> errors_nvg;
+                            std::vector<eka2l1::loader::svgb_convert_error_description> errors;
+                            std::vector<eka2l1::loader::nvg_convert_error_description> errors_nvg;
 
-                        if (header.type == eka2l1::loader::mif_icon_type_svg) {
-                            if (!eka2l1::loader::convert_svgb_to_svg(inside_stream, *outfile_stream, errors)) {
-                                if (errors[0].reason_ == eka2l1::loader::svgb_convert_error_invalid_file) {
-                                    outfile_stream->write(reinterpret_cast<const char *>(data.data()) + sizeof(eka2l1::loader::mif_icon_header), data.size() - sizeof(eka2l1::loader::mif_icon_header));
+                            if (header.type == eka2l1::loader::mif_icon_type_svg) {
+                                if (!eka2l1::loader::convert_svgb_to_svg(inside_stream, *outfile_stream, errors)) {
+                                    if (errors[0].reason_ == eka2l1::loader::svgb_convert_error_invalid_file) {
+                                        outfile_stream->write(reinterpret_cast<const char *>(data.data()) + sizeof(eka2l1::loader::mif_icon_header), data.size() - sizeof(eka2l1::loader::mif_icon_header));
+                                    }
                                 }
-                            }
 
-                            outfile_stream.reset();
-                            document = lunasvg::Document::loadFromFile(cached_path.c_str());
-                        } else {
-                            inside_stream = eka2l1::common::ro_buf_stream(data.data() + sizeof(eka2l1::loader::mif_icon_header),
-                                                                          data.size() - sizeof(eka2l1::loader::mif_icon_header));
-
-                            if (eka2l1::loader::convert_nvg_to_svg(inside_stream, *outfile_stream, errors_nvg)) {
                                 outfile_stream.reset();
                                 document = lunasvg::Document::loadFromFile(cached_path.c_str());
-                            } else  {
-                                LOG_ERROR(eka2l1::FRONTEND_UI, "Icon for app {} can't be decoded!", header.type, app_name);
-                                outfile_stream.reset();
+                            } else {
+                                inside_stream = eka2l1::common::ro_buf_stream(data.data() + sizeof(eka2l1::loader::mif_icon_header),
+                                                                              data.size() - sizeof(eka2l1::loader::mif_icon_header));
 
-                                eka2l1::common::remove(cached_path);
+                                if (eka2l1::loader::convert_nvg_to_svg(inside_stream, *outfile_stream, errors_nvg)) {
+                                    outfile_stream.reset();
+                                    document = lunasvg::Document::loadFromFile(cached_path.c_str());
+                                } else  {
+                                    LOG_ERROR(eka2l1::FRONTEND_UI, "Icon for app {} can't be decoded!", header.type, app_name);
+                                    outfile_stream.reset();
+
+                                    eka2l1::common::remove(cached_path);
+                                }
                             }
                         }
                     }

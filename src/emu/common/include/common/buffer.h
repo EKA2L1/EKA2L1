@@ -172,6 +172,10 @@ namespace eka2l1 {
                 std::uint64_t actual_read_size = common::min(read_size,
                     static_cast<std::uint64_t>(end - beg - crr_pos));
 
+                if (actual_read_size == 0) {
+                    return 0;
+                }
+
                 memcpy(buf, beg + crr_pos, actual_read_size);
                 crr_pos += actual_read_size;
 
