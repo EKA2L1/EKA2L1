@@ -175,7 +175,10 @@ namespace eka2l1::loader {
         if (!found) {
             if (common::exists(add_path(extracted_path, "system\\install\\series80v20.sis"))) {
                 // It's funny))
-                ver = epocver::epoc80;
+                ver = epocver::epoc7;
+                return true;
+            } else if (common::exists(add_path(extracted_path, "system\\install\\series80v10.sis"))) {
+                ver = epocver::epoc6;
                 return true;
             }
         }
@@ -281,13 +284,54 @@ namespace eka2l1::loader {
         return true;
     }
 
+    static bool determine_rpkg_product_info_from_sis(const std::string &extracted_path, std::string &manufacturer, std::string &firmcode, std::string &model) {
+        std::string sis_path = add_path(extracted_path, "system\\install\\dev*.sis");
+
+        auto directory = common::make_directory_iterator(sis_path);
+        if (!directory) {
+            return false;
+        }
+
+        common::dir_entry entry;
+        bool found = false;
+
+        while (directory->next_entry(entry) >= 0) {
+            if (entry.type == common::FILE_DIRECTORY) {
+                continue;
+            }
+
+            const common::pystr sis_filename = eka2l1::filename(entry.name);
+            auto device_filename_parts = sis_filename.split('.');
+
+            if (device_filename_parts.size() < 2) {
+                LOG_ERROR(SYSTEM, "Unable to extract symbian device from SIS skimming method!");
+            } else {
+                device_filename_parts[0] = device_filename_parts[0].substr(3, std::string::npos);
+
+                if (device_filename_parts[0] == "9300") {
+                    manufacturer = "Nokia";
+                    firmcode = "RAE-6";
+                    model = "Nokia 9300";
+
+                    return true;
+                }
+            }
+        }
+
+        LOG_ERROR(SYSTEM, "Unable to extract symbian device from SIS skimming method! No file found in system/install with the dev*.sis file name format!");
+        return false;
+    }
+
     bool determine_rpkg_product_info(const std::string &extracted_path, std::string &manufacturer, std::string &firmcode, std::string &model) {
         if (!determine_rpkg_product_info_from_platform_txt(extracted_path, manufacturer, firmcode, model)) {
             LOG_WARN(SYSTEM, "First method of determining product info failed, start the second one.");
 
             if (!determine_rpkg_product_info_from_various_txts(extracted_path, manufacturer, firmcode, model)) {
-                LOG_ERROR(SYSTEM, "Second method of determining product info failed!");
-                return false;
+                LOG_ERROR(SYSTEM, "Second method of determining product info failed! Start the third one");
+                if (!determine_rpkg_product_info_from_sis(extracted_path, manufacturer, firmcode, model)) {  
+                    LOG_ERROR(SYSTEM, "Third method of determining product info failed! End product info scanning");
+                    return false;
+                }
             }
         }
 

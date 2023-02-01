@@ -324,7 +324,7 @@ namespace eka2l1 {
             return FBS_LEGACY_LEVEL_S60V1;
         }
 
-        if (kern->get_epoc_version() <= epocver::epoc80) {
+        if (kern->get_epoc_version() <= epocver::epoc7) {
             return FBS_LEGACY_LEVEL_EARLY_KERNEL_TRANSITION;
         }
 

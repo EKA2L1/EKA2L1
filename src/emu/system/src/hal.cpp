@@ -491,6 +491,26 @@ namespace eka2l1::epoc {
             return the_hal->current_screen_info(reinterpret_cast<int *>(data), nullptr, 0);
         }
 
+        case kernel::hal_data_eka1_video_info: {
+            display_hal *the_hal = reinterpret_cast<display_hal *>(sys->get_hal(hal_category_display));
+
+            if (!the_hal) {
+                return -1;
+            }
+
+            return the_hal->current_mode_info(reinterpret_cast<int *>(data), nullptr, 0);
+        }
+
+        case kernel::hal_data_eka1_screen_num_of_colors: {
+            display_hal *the_hal = reinterpret_cast<display_hal *>(sys->get_hal(hal_category_display));
+
+            if (!the_hal) {
+                return -1;
+            }
+
+            return the_hal->color_count(reinterpret_cast<int *>(data), nullptr, 0);
+        }
+
         default:
             LOG_ERROR(SYSTEM, "Unimplemented HAL function handler for key {}", data_num);
             return -1;

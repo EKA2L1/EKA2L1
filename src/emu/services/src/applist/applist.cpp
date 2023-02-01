@@ -487,7 +487,7 @@ namespace eka2l1 {
     }
 
     int applist_server::legacy_level() {
-        if (kern->get_epoc_version() < epocver::epoc80) {
+        if (kern->get_epoc_version() < epocver::epoc7) {
             return APA_LEGACY_LEVEL_OLD;
         } else if (kern->get_epoc_version() < epocver::epoc81a) {
             return APA_LEGACY_LEVEL_S60V2;

@@ -46,6 +46,11 @@
 #include <cctype>
 
 namespace eka2l1::hle {
+    static std::array<std::u16string, 2> LDD_SKIP_LOAD_LIST = {
+        u"VideoDriver.LDD",
+        u"EKeyb.LDD"
+    };
+
     // Given relocation entries, relocate the code and data
     static bool build_relocation_list(const std::vector<loader::e32_reloc_entry> &entries, std::vector<std::uint64_t> &relocation_list, const loader::relocate_section sect) {
         for (std::uint32_t i = 0; i < entries.size(); i++) {
@@ -684,7 +689,7 @@ namespace eka2l1::hle {
         return import_e32img(&img, mem_, kern_, *this, path);
     }
 
-    codeseg_ptr lib_manager::load_as_romimg(loader::romimg &romimg, const std::u16string &path) {
+    codeseg_ptr lib_manager::load_as_romimg(loader::romimg &romimg, const std::u16string &path, const bool only_shell) {
         if (auto seg = kern_->pull_codeseg_by_ep(romimg.header.entry_point)) {
             return seg;
         }
@@ -716,6 +721,10 @@ namespace eka2l1::hle {
             common::lowercase_string(common::ucs2_to_utf8(eka2l1::filename(path)));
 
         auto cs = kern_->create<kernel::codeseg>(seg_name, info);
+
+        if (only_shell) {
+            return cs;
+        }
 
         struct dll_ref_table {
             std::uint16_t flags;
@@ -922,7 +931,19 @@ namespace eka2l1::hle {
     }
 
     codeseg_ptr lib_manager::load(const std::u16string &name) {
-        auto load_depend_on_drive = [&](const std::u16string &lib_path) -> codeseg_ptr {
+        bool is_driver_lib = false;
+
+        if (kern_->is_eka1()) {
+            const std::u16string filename = eka2l1::filename(name);
+            for (std::size_t i = 0; i < LDD_SKIP_LOAD_LIST.size(); i++) {
+                if (common::compare_ignore_case(filename, LDD_SKIP_LOAD_LIST[i]) == 0) {
+                    is_driver_lib = true;
+                    break;
+                }
+            }
+        }
+    
+        auto load_depend_on_drive = [&](const std::u16string &lib_path, const bool is_driver_lib = false) -> codeseg_ptr {
             symfile f = io_->open_file(lib_path, READ_MODE | BIN_MODE | additional_mode_);
             if (!f) {
                 LOG_ERROR(KERNEL, "Can't open {}", common::ucs2_to_utf8(lib_path));
@@ -932,12 +953,12 @@ namespace eka2l1::hle {
             eka2l1::ro_file_stream image_data_stream(f.get());
 
             if (f->is_in_rom()) {
-                auto romimg = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&image_data_stream), mem_, kern_->get_epoc_version());
+                auto romimg = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&image_data_stream), mem_, kern_->get_epoc_version(), is_driver_lib);
                 if (!romimg) {
                     return nullptr;
                 }
 
-                return load_as_romimg(*romimg, lib_path);
+                return load_as_romimg(*romimg, lib_path, is_driver_lib);
             } else {
                 auto e32img = loader::parse_e32img(reinterpret_cast<common::ro_stream *>(&image_data_stream));
                 if (!e32img) {
@@ -984,7 +1005,7 @@ namespace eka2l1::hle {
                     lib_path += fname;
 
                     if (io_->exist(lib_path)) {
-                        auto result = load_depend_on_drive(lib_path);
+                        auto result = load_depend_on_drive(lib_path, is_driver_lib);
                         if (result != nullptr) {
                             result->set_full_path(lib_path);
                             return result;
@@ -1006,7 +1027,7 @@ namespace eka2l1::hle {
         // Add the codeseg that trying to be loaded path to search path, for dependencies search.
         search_paths.insert(search_paths.begin(), eka2l1::file_directory(lib_path, true));
 
-        if (auto cs = load_depend_on_drive(lib_path)) {
+        if (auto cs = load_depend_on_drive(lib_path, is_driver_lib)) {
             cs->set_full_path(lib_path);
             search_paths.erase(search_paths.begin());
             return cs;
@@ -1226,6 +1247,11 @@ namespace eka2l1::hle {
         switch (kern_->get_epoc_version()) {
         case epocver::epoc6:
             epoc::register_epocv6(*this);
+            break;
+
+        case epocver::epoc7:
+            // For now seems to match exactly
+            epoc::register_epocv80(*this);
             break;
 
         case epocver::epoc80:

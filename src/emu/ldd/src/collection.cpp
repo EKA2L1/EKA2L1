@@ -19,8 +19,10 @@
 
 #include <ldd/collection.h>
 #include <ldd/ecomm/ecomm.h>
+#include <ldd/ekeyb/ekeyb.h>
 #include <ldd/hal/hal.h>
 #include <ldd/mmcif/mmcif.h>
+#include <ldd/videodriver/videodriver.h>
 
 #include <system/epoc.h>
 
@@ -40,11 +42,15 @@ namespace eka2l1::ldd {
     FACTORY_DECLARE(mmcif_factory)
     FACTORY_DECLARE(ecomm_factory)
     FACTORY_DECLARE(hal_factory)
+    FACTORY_DECLARE(video_driver_factory)
+    FACTORY_DECLARE(ekeyb_factory)
 
     static std::unordered_map<std::string, factory_instantiate_func> insts_map = {
         FACTORY_REGISTER("gd1drv", mmcif_factory),
         FACTORY_REGISTER("ecomm", ecomm_factory),
-        FACTORY_REGISTER("dhal", hal_factory)
+        FACTORY_REGISTER("dhal", hal_factory),
+        FACTORY_REGISTER("videodriver", video_driver_factory),
+        FACTORY_REGISTER("ekeyb", ekeyb_factory)
     };
 
     factory_instantiate_func get_factory_func(const char *name) {

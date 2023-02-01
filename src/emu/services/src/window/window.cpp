@@ -1396,6 +1396,23 @@ namespace eka2l1 {
 
         // Screen size is assumed to be 176x208 by default
         static const eka2l1::vec2 ASSUMED_SCREEN_SIZE = { 176, 208 };
+        static const eka2l1::vec2 ASSUMED_SCREEN_SIZE_S80 = { 640, 200 };
+
+        static std::array<std::string, 1> S80_DEVICES_FIRMCODE = {
+            "RAE-6"
+        };
+
+        device *current_dvc = sys->get_device_manager()->get_current();
+        bool is_s80_device = false;
+
+        if (kern->is_eka1()) {
+            for (const std::string &device: S80_DEVICES_FIRMCODE) {
+                if (common::compare_ignore_case(device.c_str(), current_dvc->firmware_code.c_str()) == 0) {
+                    is_s80_device = true;
+                    break;
+                }
+            }
+        }
 
         do {
             std::string screen_key = "SCREEN";
@@ -1450,7 +1467,7 @@ namespace eka2l1 {
                     if (total_mode > 1)
                         break;
 
-                    scr_mode.size.x = ASSUMED_SCREEN_SIZE.x;
+                    scr_mode.size.x = is_s80_device ? ASSUMED_SCREEN_SIZE_S80.x : ASSUMED_SCREEN_SIZE.x;
                     one_mode_only = true;
                 }
 
@@ -1461,7 +1478,7 @@ namespace eka2l1 {
                     if (total_mode > 1)
                         break;
 
-                    scr_mode.size.y = ASSUMED_SCREEN_SIZE.y;
+                    scr_mode.size.y = is_s80_device ? ASSUMED_SCREEN_SIZE_S80.y : ASSUMED_SCREEN_SIZE.y;
                     one_mode_only = true;
                 }
 

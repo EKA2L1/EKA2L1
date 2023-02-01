@@ -4837,7 +4837,7 @@ namespace eka2l1::epoc {
                 LOG_ERROR(KERNEL, "Unimplemented object executor for function 0x{:X}", attribute & 0xFF);
                 break;
             }
-        } else if (kver == epocver::epoc80) {
+        } else if ((kver == epocver::epoc80) || (kver == epocver::epoc7)) {
             switch (attribute & 0xFF) {
             case epoc::eka1_executor::execute_v80_create_chunk_normal:
             case epoc::eka1_executor::execute_v80_create_chunk_double_ended:
@@ -6156,6 +6156,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x800043, thread_read_ipc_to_des16),
         BRIDGE_REGISTER(0x800044, thread_write_ipc_to_des8),
         BRIDGE_REGISTER(0x800045, thread_write_ipc_to_des16),
+        BRIDGE_REGISTER(0x80004B, change_notifier_logon_eka1),
+        BRIDGE_REGISTER(0x80004C, change_notifier_logoff),
         BRIDGE_REGISTER(0x800054, des8_match),
         BRIDGE_REGISTER(0x800055, des16_match),
         BRIDGE_REGISTER(0x800056, desc8_find),
@@ -6172,6 +6174,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x80007E, dll_global_data_read),
         BRIDGE_REGISTER(0x80007F, dll_global_data_write),
         BRIDGE_REGISTER(0x800083, user_svr_hal_get),
+        BRIDGE_REGISTER(0x8000A2, is_exception_handled_eka1),
         BRIDGE_REGISTER(0x8000A8, heap_created),
         BRIDGE_REGISTER(0x8000A9, library_type_eka1),
         BRIDGE_REGISTER(0x8000AA, process_type_eka1),
