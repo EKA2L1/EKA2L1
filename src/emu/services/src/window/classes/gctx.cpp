@@ -275,6 +275,12 @@ namespace eka2l1::epoc {
             *clip_region_temp = clip_region_temp->intersect(personal_clipping);
 
             if (clip_region_temp->rects_.size() <= 1) {
+                if (clip_region_temp->empty()) {
+                    cmd.opcode_ = gdi_store_command_disable_clip;
+                    attached_window->add_draw_command(cmd);
+
+                    return;
+                }
                 // We can use clipping directly
                 use_clipping = true;
                 the_clip = clip_region_temp->empty() ? eka2l1::rect({ 0, 0 }, { 0, 0 }) : clip_region_temp->rects_[0];

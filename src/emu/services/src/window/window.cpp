@@ -424,10 +424,20 @@ namespace eka2l1::epoc {
         const char16_t *dll_name_ptr = reinterpret_cast<char16_t *>(reinterpret_cast<std::uint8_t *>(cmd.data_ptr) + sizeof(int));
 
         const std::u16string dll_name(dll_name_ptr, dll_name_length);
+        epoc::anim_executor_factory *factory_to_pass = nullptr;
 
-        LOG_TRACE(SERVICE_WINDOW, "Create ANIMDLL for {}, stubbed object", common::ucs2_to_utf8(dll_name));
+        for (auto &[dll_of_factory, factory]: get_ws().anim_factory_list_) {
+            if (common::compare_ignore_case(dll_of_factory, dll_name) == 0) {
+                factory_to_pass = factory.get();
+                break;
+            }
+        }
 
-        window_client_obj_ptr animdll = std::make_unique<epoc::anim_dll>(this, nullptr);
+        if (!factory_to_pass) {
+            LOG_TRACE(SERVICE_WINDOW, "Create ANIMDLL for {}, stubbed object", common::ucs2_to_utf8(dll_name));
+        }
+
+        window_client_obj_ptr animdll = std::make_unique<epoc::anim_dll>(this, nullptr, factory_to_pass);
         ctx.complete(add_object(animdll));
     }
 
@@ -1573,6 +1583,7 @@ namespace eka2l1 {
 
         // For addition mappings before actual game launches
         init_key_mappings();
+        epoc::add_anim_executor_factory_to_list(anim_factory_list_);
     }
 
     window_server::~window_server() {

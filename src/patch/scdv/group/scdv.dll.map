@@ -37,5 +37,10 @@
 2 10      ; DisplayMode16M__14CFbsDrawDevice
 7 9       ; NewL__19CDirectScreenBitmap
 
+[epoc7]
+4 2       ; NewScreenDeviceL__14CFbsDrawDeviceG11TScreenInfo12TDisplayMode
+2 10      ; DisplayMode16M__14CFbsDrawDevice
+7 9       ; NewL__19CDirectScreenBitmap
+
 [epoc6]
 4 2       ; NewScreenDeviceL__14CFbsDrawDeviceG11TScreenInfo12TDisplayMode
