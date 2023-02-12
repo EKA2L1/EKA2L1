@@ -19,7 +19,7 @@
     <message>
       <location filename="../src/symbian_input_dialog.ui" line="31"/>
       <source>Submit</source>
-      <translation>Ajukan</translation>
+      <translation>Kirim</translation>
     </message>
   </context>
   <context>
@@ -106,7 +106,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
       <source>An error occured while trying to rename the app!</source>
-      <translation>Terjadi galat saat mengubah nama aplikasi!</translation>
+      <translation>Terjadi kegalatan saat mengubah nama aplikasi!</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
@@ -116,7 +116,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
       <source>An error occured while trying to delete the app!</source>
-      <translation>Terjadi kesalahan saat menghapus aplikasi!</translation>
+      <translation>Terjadi kegalatan saat menghapus aplikasi!</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="834"/>
@@ -179,12 +179,12 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="187"/>
       <source>Open friends&apos; IP editor</source>
-      <translation>Buka teman&apos; editor IP</translation>
+      <translation>Buka penyunting IP teman</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="224"/>
       <source>Players with the same password will be able to see each others. This can be empty.</source>
-      <translation>Pemain dengan kata sandi yang sama akan dapat melihat satu sama lain. Ini bisa dikosongkan.</translation>
+      <translation>Pemain dengan kata sandi yang sama dapat melihat satu sama lain. Ini boleh kosong.</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="227"/>
@@ -194,12 +194,12 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="237"/>
       <source>Generate random</source>
-      <translation>Buat Acak</translation>
+      <translation>Buat acak</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="244"/>
       <source>Clear</source>
-      <translation>Bersihkan</translation>
+      <translation>Kosongkan</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
@@ -209,7 +209,7 @@
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
       <source>The Bluetooth netplay configuration has not been saved. Do you want to save?</source>
-      <translation>Konfigurasi Bluetooth netplay belum disimpan. Apakah Anda ingin menyimpan?</translation>
+      <translation>Konfigurasi Bluetooth netplay belum disimpan. Apakah ingin Anda simpan?</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="127"/>
@@ -227,22 +227,22 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="70"/>
       <source>Modify friends&apos; IP addresses</source>
-      <translation>Ubah teman&apos; alamat IP</translation>
+      <translation>Ubah alamat IP teman</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="85"/>
       <source>IP address (IPv4 or IPv6)</source>
-      <translation>Alamat IP (IPV4 ATAU IPV6)</translation>
+      <translation>Alamat IP (IPV4 atau IPV6)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="90"/>
       <source>Port (can be empty)</source>
-      <translation>Port (dapat dikosongkan)</translation>
+      <translation>Porta (ini boleh kosong)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="133"/>
       <source>Add more</source>
-      <translation>Tambahkan yang lain</translation>
+      <translation>Tambah lagi</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="134"/>
@@ -262,38 +262,38 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="201"/>
       <source>Friends&apos; IP addresses have been successfully saved!</source>
-      <translation>Teman&apos; alamat IP sudah simpan!</translation>
+      <translation>Alamat IP teman sudah berhasil disimpan!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="214"/>
       <source>Friend %1 has empty IP address!
 </source>
-      <translation>Teman memiliki %1 alamat IP kosong! 
+      <translation>Teman %1 punya alamat IP kosong!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="216"/>
       <source>Friend %1 has invalid IP address!
 </source>
-      <translation>Teman memiliki %1 alamat IP tidak valid!
+      <translation>Teman %1 punya alamat IP tidak absah!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="221"/>
       <source>Friend %1 has invalid port number (must be between 0 and 65535)!
 </source>
-      <translation>Teman %1 memiliki nomor port yang tidak valid (harus antara 0 dan 65535)!
+      <translation>Teman %1 punya nomor porta tidak absah (harus antara 0 dan 65535)!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="248"/>
       <source>Some errors in updating friends!</source>
-      <translation>Ada kesalahan dalam mengupdate teman!</translation>
+      <translation>Ada galat saat memperbarui teman!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="249"/>
       <source>Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</source>
-      <translation>Beberapa teman&apos; Alamat IP tidak dapa&apos;t diperbarui (lihat teks terperinci).&lt;br&gt;Alamat yang dapat diperbarui telah disimpan.</translation>
+      <translation>Beberapa alamat IP teman tidak dapat diperbarui (lihat perincian teks).&lt;br&gt;Alamat yang dapat diperbarui telah disimpan.</translation>
     </message>
   </context>
   <context>
@@ -301,7 +301,7 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="20"/>
       <source>Device install wizard</source>
-      <translation>Wisaya pemasangan perangkat</translation>
+      <translation>Wisaya pemasang perangkat</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="55"/>
@@ -368,17 +368,17 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="220"/>
       <source>An unknown error has occured. Please contact the developers with your log!</source>
-      <translation>Terjadi kegalatan (error) tak diketahui. Tolong hubungi pengembang dengan catatan (log) Anda!</translation>
+      <translation>Terjadi kegalatan tak diketahui. Mohon hubungi pengembang dengan isi log Anda!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="224"/>
       <source>The disk space is insufficient to perform the device install! Please free your disk space!</source>
-      <translation>Ruang perangkat tak mencukupi untuk melakukan pemasangan perangkat. Mohon luangkan ruang perangkat!</translation>
+      <translation>Ruang perangkat tidak cukup untuk melakukan pemasangan perangkat. Mohon luangkan ruang perangkat!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="228"/>
       <source>Some files provided for installation do not exist anymore. Please keep them intact until the installation is done!</source>
-      <translation>Beberapa berkas untuk pemasangan (installation) tak lagi ditemukan. Mohon jangan diubah hingga pemasangan selesai!</translation>
+      <translation>Beberapa berkas untuk pemasangan tidak lagi ditemukan. Mohon jangan diubah hingga pemasangan selesai!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="232"/>
@@ -393,17 +393,17 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="240"/>
       <source>The provided ROM is corrupted! Please make sure your ROM is valid!</source>
-      <translation>ROM yang dipilih rusak! Pastikan ROM absah!</translation>
+      <translation>ROM yang dipilih rusak! Pastikan ROM Anda absah!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="244"/>
       <source>The provided RPKG is corrupted! Please make sure your RPKG is valid!</source>
-      <translation>RPKG yang dipilih rusak! Pastikan RPKG absah!</translation>
+      <translation>RPKG yang dipilih rusak! Pastikan RPKG Anda absah!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="248"/>
       <source>The provided VPL file is invalid. Please check your firmware files again!</source>
-      <translation>Berkas VPL yang dipilih tidak sah! Periksa kembali berkas firmware Anda!</translation>
+      <translation>Berkas VPL yang dipilih tidak absah! Periksa kembali firmware Anda!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="256"/>
@@ -576,7 +576,7 @@
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="33"/>
       <source>The executable path is invalid or the executable is corrupted. Check the log for more info!</source>
-      <translation>Jalur yang dapat dieksekusi tidak valid atau yang dapat dieksekusi rusak. Periksa log untuk info lebih lanjut!</translation>
+      <translation>Jalur eksekusi tidak absah atau yang dieksekusi ini rusak. Lihat log untuk info lebih lanjut!</translation>
     </message>
   </context>
   <context>
@@ -830,7 +830,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="732"/>
       <source>The game information file has been corrupted. Please check your data&apos;s validity!</source>
-      <translation>File informasi game telah rusak. Harap periksa validitas data&apos;s Anda!</translation>
+      <translation>Berkas info permainan telah rusak. Mohon periksa lagi keabsahan data Anda!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="736"/>
@@ -1042,7 +1042,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1628"/>
       <source>The given file is not a valid JAR file!</source>
-      <translation>File yang diberikan bukan file JAR yang valid!</translation>
+      <translation>Berkas yang diberikan bukan JAR yang absah!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1632"/>
@@ -1812,7 +1812,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="1031"/>
       <source>IMEI sequence has invalid sum!</source>
-      <translation>Urutan IMEI memiliki jumlah yang tidak sah!</translation>
+      <translation>Urutan IMEI punya jumlah tidak absah!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1034"/>
@@ -1832,17 +1832,17 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="1047"/>
       <source>The IMEI sequence is valid!</source>
-      <translation>Urutan IMEI-nya absah!</translation>
+      <translation>Urutan IMEI ini absah!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1050"/>
       <source>IMEI invalid!</source>
-      <translation>IMEI tidak sah!</translation>
+      <translation>IMEI tidak absah!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1060"/>
       <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
-      <translation>IMEI Anda tidak sah karena: %1.&lt;br&gt;Apakah Anda ingin mengubah IMEI saat ini sebelum menutup? Memilih &quot;Tidak&quot; akan menyimpan nilai (value) IMEI saat ini.</translation>
+      <translation>IMEI Anda tidak absah karena: %1.&lt;br&gt;Apakah IMEI saat ini ingin Anda ubah sebelum menutup? Memilih &quot;Tidak&quot; akan menyimpan nilai (value) IMEI saat ini.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1062"/>
