@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/utils.cpp" line="126"/>
       <source>EKA2L1 - Symbian OS emulator</source>
-      <translation>EKA2L1 - Symbian OS emulator</translation>
+      <translation>EKA2L1 - Emulator Symbian OS</translation>
     </message>
   </context>
   <context>
@@ -106,7 +106,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
       <source>An error occured while trying to rename the app!</source>
-      <translation>Terjadi kesalahan saat mengubah nama aplikasi!</translation>
+      <translation>Terjadi galat saat mengubah nama aplikasi!</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
@@ -1090,7 +1090,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="76"/>
       <source>Vendor</source>
-      <translation>Vendor</translation>
+      <translation>Pihak jual</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="81"/>
