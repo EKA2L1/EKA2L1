@@ -446,12 +446,12 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="17"/>
       <source>Touch mapping editor</source>
-      <translation>Editor pemetaan sentuh</translation>
+      <translation>Pengubah pemetaan sentuh</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="26"/>
       <source>&lt;b&gt;Mapping elements&lt;/b&gt;</source>
-      <translation>&lt;b&gt;Memetakan elemen&lt;/b&gt;</translation>
+      <translation>&lt;b&gt;Memetakan unsur&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="40"/>
@@ -472,7 +472,7 @@
       <location filename="../src/btnmap/editor_widget.ui" line="105"/>
       <location filename="../src/btnmap/editor_widget.cpp" line="274"/>
       <source>Save and hide editor</source>
-      <translation>Simpan dan sembunyikan editor</translation>
+      <translation>Simpan dan sembunyikan penyunting</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="136"/>
@@ -492,7 +492,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="181"/>
       <source>Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</source>
-      <translation>Profil disimpan per app/game. Tekan &lt;b&gt;Edit&lt;/b&gt; untuk masuk ke mode Edit. Untuk menghapus elemen pemetaan, tekan &lt;b&gt;Hapus&lt;/b&gt; dan klik pada elemen yang ingin Anda hapus.</translation>
+      <translation>Profil disimpan di tiap apli/p'mainan. Tekan &lt;b&gt;Edit&lt;/b&gt; untuk masuk Mode sunting. Untuk menghapus unsur pemetaan, tekan &lt;b&gt;Hapus&lt;/b&gt; dan klik unsur yang ingin dihapus.</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="212"/>
@@ -532,7 +532,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="285"/>
       <source>Show editor</source>
-      <translation>Tampilkan editor</translation>
+      <translation>Tampilkan penyunting</translation>
     </message>
   </context>
   <context>
@@ -724,12 +724,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="299"/>
       <source>Button mapping editor</source>
-      <translation>Editor pemetaan sentuh</translation>
+      <translation>Pengubah pemetaan tombol</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="304"/>
       <source>Touch mapping editor</source>
-      <translation>Editor pemetaan sentuh</translation>
+      <translation>Pengubah pemetaan sentuh</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="309"/>
