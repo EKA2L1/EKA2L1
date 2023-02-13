@@ -456,12 +456,12 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="40"/>
       <source>Joystick</source>
-      <translation>Joystick</translation>
+      <translation>Tuas kendali</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="45"/>
       <source>Single touch</source>
-      <translation>Single touch</translation>
+      <translation>Sentuh sekali</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="64"/>
@@ -507,7 +507,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="50"/>
       <source>Please wait for a game to be active!</source>
-      <translation>Harap tunggu hingga game aktif!</translation>
+      <translation>Mohon tunggu permainannya aktif!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="89"/>
@@ -522,12 +522,12 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
       <source>Error creating profile!</source>
-      <translation>Kesalahan memperbarui profil!</translation>
+      <translation>Galat membuat profil!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
       <source>Profile name contains special characters or system error encountered!</source>
-      <translation>Nama profil berisi karakter khusus atau kesalahan sistem ditemukan!</translation>
+      <translation>Nama profil terdapat karakter khusus atau ditemukan galat sistem!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="285"/>
@@ -835,7 +835,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="736"/>
       <source>General error occured...</source>
-      <translation>Terjadi kesalahan...</translation>
+      <translation>Terjadi kegalatan umum...</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="741"/>
@@ -848,14 +848,14 @@
       <location filename="../src/mainwindow.cpp" line="741"/>
       <source>Installation failed with error:
   -%1</source>
-      <translation>Pemasangan gagal dengan eror:
+      <translation>Pemasangan gagal dengan galat:
   -%1</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="743"/>
       <source>Installation of %1% failed with error:
   -%2</source>
-      <translation>Pemasangan gagal %1% dengan eror:
+      <translation>Pemasangan %1% gagal dengan galat:
     -%2</translation>
     </message>
     <message>
@@ -1062,7 +1062,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1644"/>
       <source>An unexpected error has happened. Error code: %1</source>
-      <translation>Terjadi kesalahan tak terduga. Kode kesalahan: %1</translation>
+      <translation>Terjadi kegalatan tak terduga. Kode galat: %1</translation>
     </message>
   </context>
   <context>
@@ -1930,7 +1930,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.ui" line="91"/>
       <source>Do not automatically check for update when startup</source>
-      <translation>Jangan secara otomatis memeriksa pembaruan saat startup</translation>
+      <translation>Jangan otomatis memeriksa pembaruan saat startup</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="126"/>
@@ -1970,7 +1970,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.cpp" line="158"/>
       <source>Failed to get information about the newest update from GitHub!</source>
-      <translation>Gagal mendapatkan informasi tentang update terbaru dari Github!</translation>
+      <translation>Gagal mendapatkan info tentang pembaruan terbaru dari Github!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="190"/>
@@ -1985,12 +1985,12 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.cpp" line="214"/>
       <source>Error retrieving changelog from GitHub...</source>
-      <translation>Kesalahan saat mengambil log perubahan dari Github...</translation>
+      <translation>Galat mengambil log perubahan dari Github...</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="238"/>
       <source>Changelog (update commit: %1)</source>
-      <translation>Changelog (update commit: %1)</translation>
+      <translation>Log perubahan (pembaruan commit: %1)</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="259"/>
@@ -2016,7 +2016,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.cpp" line="387"/>
       <source>Failed to download update with error: %1</source>
-      <translation>Gagal mengunduh file perbaruan: %1</translation>
+      <translation>Gagal mengunduh berkas pembaruan: %1</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="395"/>
