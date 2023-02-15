@@ -1955,7 +1955,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.cpp" line="113"/>
       <source>Update failed</source>
-      <translation>Pembaruan gagal</translation>
+      <translation>Gagal diperbarui</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="142"/>
@@ -2068,7 +2068,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/updater.cpp" line="93"/>
       <source>Update failed</source>
-      <translation>Pembaruan gagal</translation>
+      <translation>Gagal diperbarui</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="101"/>
