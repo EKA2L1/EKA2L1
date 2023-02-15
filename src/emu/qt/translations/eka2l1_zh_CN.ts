@@ -96,27 +96,27 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="796"/>
       <source>Enter a new name</source>
-      <translation type="unfinished">Enter a new name</translation>
+      <translation>输入新文件名</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
       <source>Update name failed</source>
-      <translation type="unfinished">Update name failed</translation>
+      <translation>更新名称失败</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
       <source>An error occured while trying to rename the app!</source>
-      <translation type="unfinished">An error occured while trying to rename the app!</translation>
+      <translation>试图移除小部件时出错。</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
       <source>Delete app failed</source>
-      <translation type="unfinished">Delete app failed</translation>
+      <translation>删除失败</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
       <source>An error occured while trying to delete the app!</source>
-      <translation type="unfinished">An error occured while trying to delete the app!</translation>
+      <translation>试图移除小部件时出错。</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="834"/>
@@ -134,82 +134,82 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="20"/>
       <source>Bluetooth netplay settings</source>
-      <translation type="unfinished">Bluetooth netplay settings</translation>
+      <translation>蓝牙网络播放设置</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="47"/>
       <source>Mode</source>
-      <translation type="unfinished">Mode</translation>
+      <translation>显示方式</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="55"/>
       <source>Off</source>
-      <translation type="unfinished">Off</translation>
+      <translation>关闭</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="60"/>
       <source>Direct IP</source>
-      <translation type="unfinished">Direct IP</translation>
+      <translation>直接IP</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="65"/>
       <source>Local LAN</source>
-      <translation type="unfinished">Local LAN</translation>
+      <translation>本地局域网</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="70"/>
       <source>Server</source>
-      <translation type="unfinished">Server</translation>
+      <translation>服务器</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="114"/>
       <source>Server address</source>
-      <translation type="unfinished">Server address</translation>
+      <translation>服务器地址</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="133"/>
       <source>Enable UPnP (for IPv4 public play)</source>
-      <translation type="unfinished">Enable UPnP (for IPv4 public play)</translation>
+      <translation>启用 UPnP (适用于 IPv4 公共播放)</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="165"/>
       <source>Save</source>
-      <translation type="unfinished">Save</translation>
+      <translation>保存修改</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="187"/>
       <source>Open friends&apos; IP editor</source>
-      <translation type="unfinished">Open friends&apos; IP editor</translation>
+      <translation>打开好友&apos; IP 编辑器</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="224"/>
       <source>Players with the same password will be able to see each others. This can be empty.</source>
-      <translation type="unfinished">Players with the same password will be able to see each others. This can be empty.</translation>
+      <translation>具有相同密码的玩家可以看到其他人。这可以是空的。</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="227"/>
       <source>Password</source>
-      <translation type="unfinished">Password</translation>
+      <translation>登录密码:</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="237"/>
       <source>Generate random</source>
-      <translation type="unfinished">Generate random</translation>
+      <translation>随机生成</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="244"/>
       <source>Clear</source>
-      <translation type="unfinished">Clear</translation>
+      <translation>清除</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
       <source>Configuration not saved</source>
-      <translation type="unfinished">Configuration not saved</translation>
+      <translation>配置未保存</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
       <source>The Bluetooth netplay configuration has not been saved. Do you want to save?</source>
-      <translation type="unfinished">The Bluetooth netplay configuration has not been saved. Do you want to save?</translation>
+      <translation>蓝牙网络播放配置未保存。您想要保存吗？</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="127"/>
@@ -293,7 +293,7 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="249"/>
       <source>Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</source>
-      <translation type="unfinished">Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</translation>
+      <translation>某些好友&apos; IP 地址可以更新&apos;t (见详细文本)。&lt;br&gt;能够更新的地址已保存。</translation>
     </message>
   </context>
   <context>
@@ -446,33 +446,33 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="17"/>
       <source>Touch mapping editor</source>
-      <translation type="unfinished">Touch mapping editor</translation>
+      <translation>触摸映射编辑器</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="26"/>
       <source>&lt;b&gt;Mapping elements&lt;/b&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Mapping elements&lt;/b&gt;</translation>
+      <translation>&lt;b&gt;映射元素&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="40"/>
       <source>Joystick</source>
-      <translation type="unfinished">Joystick</translation>
+      <translation>操纵杆</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="45"/>
       <source>Single touch</source>
-      <translation type="unfinished">Single touch</translation>
+      <translation>单次触摸：</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="64"/>
       <source>For app: </source>
-      <translation type="unfinished">For app: </translation>
+      <translation>应用程序： </translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="105"/>
       <location filename="../src/btnmap/editor_widget.cpp" line="274"/>
       <source>Save and hide editor</source>
-      <translation type="unfinished">Save and hide editor</translation>
+      <translation>保存并关闭编辑器</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="136"/>
@@ -492,7 +492,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="181"/>
       <source>Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</source>
-      <translation type="unfinished">Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</translation>
+      <translation>每个应用/游戏保存配置文件。按 &lt;b&gt;编辑&lt;/b&gt; 进入编辑模式。 要删除映射元素，请按 &lt;b&gt;删除&lt;/b&gt; 并点击您想要删除的元素。</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="212"/>
@@ -507,12 +507,12 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="50"/>
       <source>Please wait for a game to be active!</source>
-      <translation type="unfinished">Please wait for a game to be active!</translation>
+      <translation>请等待游戏开始！</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="89"/>
       <source>For app: %1 (0x%2)</source>
-      <translation type="unfinished">For app: %1 (0x%2)</translation>
+      <translation>应用程序: %1 (0x%2)</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="151"/>
@@ -522,17 +522,17 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
       <source>Error creating profile!</source>
-      <translation type="unfinished">Error creating profile!</translation>
+      <translation>更新个人资料时出错。</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
       <source>Profile name contains special characters or system error encountered!</source>
-      <translation type="unfinished">Profile name contains special characters or system error encountered!</translation>
+      <translation>配置文件名称包含特殊字符或系统错误 ！</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="285"/>
       <source>Show editor</source>
-      <translation type="unfinished">Show editor</translation>
+      <translation>显示编辑器</translation>
     </message>
   </context>
   <context>
@@ -540,22 +540,22 @@
     <message>
       <location filename="../src/launch_process_dialog.ui" line="14"/>
       <source>Launch process</source>
-      <translation type="unfinished">Launch process</translation>
+      <translation>启动程序</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="31"/>
       <source>Arguments</source>
-      <translation type="unfinished">Arguments</translation>
+      <translation>参数</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="51"/>
       <source>Executable path</source>
-      <translation type="unfinished">Executable path</translation>
+      <translation>可执行文件路径</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="78"/>
       <source>Launch</source>
-      <translation type="unfinished">Launch</translation>
+      <translation>启动系统</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="85"/>
@@ -566,17 +566,17 @@
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
       <location filename="../src/launch_process_dialog.cpp" line="33"/>
       <source>Launch failed</source>
-      <translation type="unfinished">Launch failed</translation>
+      <translation>启动失败</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
       <source>The executable path field is empty!</source>
-      <translation type="unfinished">The executable path field is empty!</translation>
+      <translation>可执行路径字段为空！</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="33"/>
       <source>The executable path is invalid or the executable is corrupted. Check the log for more info!</source>
-      <translation type="unfinished">The executable path is invalid or the executable is corrupted. Check the log for more info!</translation>
+      <translation>可执行文件路径无效或可执行文件已损坏。请检查日志以获取更多信息！</translation>
     </message>
   </context>
   <context>
@@ -624,12 +624,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="134"/>
       <source>Bluetooth</source>
-      <translation type="unfinished">Bluetooth</translation>
+      <translation>蓝牙</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="138"/>
       <source>Netplay</source>
-      <translation type="unfinished">Netplay</translation>
+      <translation>网络播放</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="147"/>
@@ -729,7 +729,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="304"/>
       <source>Touch mapping editor</source>
-      <translation type="unfinished">Touch mapping editor</translation>
+      <translation>触摸映射编辑器</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="309"/>
@@ -744,7 +744,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="319"/>
       <source>Launch process</source>
-      <translation type="unfinished">Launch process</translation>
+      <translation>启动程序</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="329"/>
@@ -922,7 +922,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1018"/>
       <source>Launch failed</source>
-      <translation type="unfinished">Launch failed</translation>
+      <translation>启动失败</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1018"/>
@@ -1965,48 +1965,48 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.cpp" line="152"/>
       <source>The release channel is not available. Please check your internet connection!</source>
-      <translation type="unfinished">The release channel is not available. Please check your internet connection!</translation>
+      <translation>发行频道不可用。请检查您的网络连接！</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="158"/>
       <source>Failed to get information about the newest update from GitHub!</source>
-      <translation type="unfinished">Failed to get information about the newest update from GitHub!</translation>
+      <translation>无法从 GitHub 获取最新更新信息！</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="190"/>
       <source>Can&apos;t find the download link of newest update for your platform!</source>
-      <translation type="unfinished">Can&apos;t find the download link of newest update for your platform!</translation>
+      <translation>可以&apos;找到您平台最新更新的下载链接！</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="196"/>
       <source>Failed to get update download link from GitHub!</source>
-      <translation type="unfinished">Failed to get update download link from GitHub!</translation>
+      <translation>从 GitHub 获取更新下载链接失败！</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="214"/>
       <source>Error retrieving changelog from GitHub...</source>
-      <translation type="unfinished">Error retrieving changelog from GitHub...</translation>
+      <translation>从 GitHub 获取更新日志时发生错误...</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="238"/>
       <source>Changelog (update commit: %1)</source>
-      <translation type="unfinished">Changelog (update commit: %1)</translation>
+      <translation>更新日志 (更新提交: %1)</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="259"/>
       <source>Updater unsupported</source>
-      <translation type="unfinished">Updater unsupported</translation>
+      <translation>不支持更新</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="259"/>
       <source>The updater is not yet supported on your platform!</source>
-      <translation type="unfinished">The updater is not yet supported on your platform!</translation>
+      <translation>您的平台上还不支持更新程序！</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="303"/>
       <location filename="../src/update_dialog.cpp" line="363"/>
       <source>Update error</source>
-      <translation type="unfinished">Update error</translation>
+      <translation>更新错误</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="303"/>
