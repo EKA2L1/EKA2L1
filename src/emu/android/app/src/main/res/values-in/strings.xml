@@ -57,7 +57,7 @@
     <string name="pref_enable_statusbar">Hidupkan bilah status</string>
     <string name="pref_wakelock">Layar tetap menyala</string>
     <string name="pref_enable_vibration">Aktifkan getaran</string>
-    <string name="pref_emulator_dir">Direktory yang berjalan</string>
+    <string name="pref_emulator_dir">Direktori kerja</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Aktifkan tapisan Nearest Neighbor</string>
     <string name="pref_system_language_option_name">Bahasa</string>
     <string name="pref_system_real_time_accuracy_str">Akurasi waktu-nyata</string>
@@ -69,7 +69,7 @@
     <string name="emulated_screen_rotation_item_name">Perputaran</string>
     <string name="emulated_screen_refresh_rate_item_name">Laju refresh</string>
     <string name="pref_device_display_name">Nama ponsel yang ramah</string>
-    <string name="hide_system_apps">Hide system applications</string>
+    <string name="hide_system_apps">Sembunyikan aplikasi sistem</string>
     <string name="pref_bt_netplay_direct_ips_manager">Manajer IP Direct</string>
     <string name="enter_address">Masukkan alamat</string>
     <string name="address">Alamat</string>
