@@ -58,7 +58,7 @@
     <string name="pref_wakelock">Layar tetap menyala</string>
     <string name="pref_enable_vibration">Aktifkan getaran</string>
     <string name="pref_emulator_dir">Direktori kerja</string>
-    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Aktifkan tapisan Nearest Neighbor</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Hidupkan pemfilteran terdekat</string>
     <string name="pref_system_language_option_name">Bahasa</string>
     <string name="pref_system_real_time_accuracy_str">Akurasi waktu-nyata</string>
     <string name="pref_system_real_time_accuracy_level_name_low">Rendah</string>
@@ -93,7 +93,7 @@
     <string name="pref_screen_options">Opsi layar</string>
     <string name="pref_scale_ratio">Skala(%)</string>
     <string name="pref_background">Latar belakang</string>
-    <string name="pref_virtual_keyboard_options">Papan tombol maya</string>
+    <string name="pref_virtual_keyboard_options">Keyboard virtual</string>
     <string name="pref_vk_show">Tampilkan papan tombol</string>
     <string name="pref_vk_feedback">Respon sentuhan</string>
     <string name="pref_touch_input">Masukan sentuh</string>
@@ -111,11 +111,11 @@
     <string name="pref_orientation_auto">Otomatis</string>
     <string name="pref_orientation_port">Portrait (Menegak)</string>
     <string name="pref_orientation_land">Landscape (Mendatar)</string>
-    <string name="pref_vk_type">Jenis papan tombol</string>
+    <string name="pref_vk_type">Jenis keyboard</string>
     <string name="pref_vk_type_custom">Ubah Suai</string>
     <string name="pref_vk_type_phone">Ponsel</string>
     <string name="pref_vk_type_phone_arrows">Ponsel (tombol arah)</string>
-    <string name="pref_vk_hide_hint">dilumpuhkan</string>
+    <string name="pref_vk_hide_hint">dinonaktifkan</string>
     <string name="pref_button_shape_title">Bentuk tombol</string>
     <string name="pref_button_shape_oval">Lonjong</string>
     <string name="pref_button_shape_rect">Persegi Panjang</string>
