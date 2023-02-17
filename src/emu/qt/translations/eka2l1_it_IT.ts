@@ -96,27 +96,27 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="796"/>
       <source>Enter a new name</source>
-      <translation type="unfinished">Enter a new name</translation>
+      <translation>Inserisci un nuovo nome</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
       <source>Update name failed</source>
-      <translation type="unfinished">Update name failed</translation>
+      <translation>Impossibile aggiornare il nome</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
       <source>An error occured while trying to rename the app!</source>
-      <translation type="unfinished">An error occured while trying to rename the app!</translation>
+      <translation>Si è verificato un errore cercando di rinominare l'app!</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
       <source>Delete app failed</source>
-      <translation type="unfinished">Delete app failed</translation>
+      <translation>Eliminazione app non riuscita</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
       <source>An error occured while trying to delete the app!</source>
-      <translation type="unfinished">An error occured while trying to delete the app!</translation>
+      <translation>Si è verificato un errore provando a cancellare l'App!</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="834"/>
@@ -134,7 +134,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="20"/>
       <source>Bluetooth netplay settings</source>
-      <translation type="unfinished">Bluetooth netplay settings</translation>
+      <translation>Impostazioni multiplayer Bluetooth</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="47"/>
@@ -154,7 +154,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="65"/>
       <source>Local LAN</source>
-      <translation type="unfinished">Local LAN</translation>
+      <translation>LAN Locale</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="70"/>
@@ -174,17 +174,17 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="165"/>
       <source>Save</source>
-      <translation type="unfinished">Save</translation>
+      <translation>Salva</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="187"/>
       <source>Open friends&apos; IP editor</source>
-      <translation type="unfinished">Open friends&apos; IP editor</translation>
+      <translation>Apri l'editor IP degli amici</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="224"/>
       <source>Players with the same password will be able to see each others. This can be empty.</source>
-      <translation type="unfinished">Players with the same password will be able to see each others. This can be empty.</translation>
+      <translation>I giocatori con la stessa password saranno in grado di vedersi tra loro. Può essere vuota.</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="227"/>
@@ -194,12 +194,12 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="237"/>
       <source>Generate random</source>
-      <translation type="unfinished">Generate random</translation>
+      <translation>Genera casuale</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="244"/>
       <source>Clear</source>
-      <translation type="unfinished">Clear</translation>
+      <translation>Cancella</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
