@@ -237,7 +237,7 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="90"/>
       <source>Port (can be empty)</source>
-      <translation>Porta (ini boleh kosong)</translation>
+      <translation>Port (ini boleh kosong)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="133"/>
@@ -1198,7 +1198,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="282"/>
       <source>Hide system applications</source>
-      <translation>Hide system applications</translation>
+      <translation>Sembunyikan aplikasi sistem</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="301"/>
@@ -1310,7 +1310,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="524"/>
       <source>Enable nearest neighbor filtering</source>
-      <translation>Aktifkan tapisan Nearest Neighbor</translation>
+      <translation>Hidupkan pemfilteran terdekat</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="531"/>
