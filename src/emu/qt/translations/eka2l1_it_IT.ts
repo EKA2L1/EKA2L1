@@ -134,7 +134,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="20"/>
       <source>Bluetooth netplay settings</source>
-      <translation>Impostazioni multiplayer Bluetooth</translation>
+      <translation>Impostazioni netplay Bluetooth</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="47"/>
@@ -204,12 +204,12 @@
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
       <source>Configuration not saved</source>
-      <translation type="unfinished">Configuration not saved</translation>
+      <translation>Configurazione non salvata</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
       <source>The Bluetooth netplay configuration has not been saved. Do you want to save?</source>
-      <translation type="unfinished">The Bluetooth netplay configuration has not been saved. Do you want to save?</translation>
+      <translation>La configurazione di netplay Bluetooth non è stata salvata. Vuoi salvarla?</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="127"/>
@@ -540,22 +540,22 @@
     <message>
       <location filename="../src/launch_process_dialog.ui" line="14"/>
       <source>Launch process</source>
-      <translation type="unfinished">Launch process</translation>
+      <translation>Avvia processo</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="31"/>
       <source>Arguments</source>
-      <translation type="unfinished">Arguments</translation>
+      <translation>Parametri</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="51"/>
       <source>Executable path</source>
-      <translation type="unfinished">Executable path</translation>
+      <translation>Percorso eseguibile</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="78"/>
       <source>Launch</source>
-      <translation type="unfinished">Launch</translation>
+      <translation>Avvia</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="85"/>
@@ -566,17 +566,17 @@
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
       <location filename="../src/launch_process_dialog.cpp" line="33"/>
       <source>Launch failed</source>
-      <translation type="unfinished">Launch failed</translation>
+      <translation>Avvio non riuscito</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
       <source>The executable path field is empty!</source>
-      <translation type="unfinished">The executable path field is empty!</translation>
+      <translation>Il campo percorso eseguibile è vuoto!</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="33"/>
       <source>The executable path is invalid or the executable is corrupted. Check the log for more info!</source>
-      <translation type="unfinished">The executable path is invalid or the executable is corrupted. Check the log for more info!</translation>
+      <translation>Il percorso eseguibile non è valido o l'eseguibile è danneggiato. Controlla il log per ulteriori informazioni!</translation>
     </message>
   </context>
   <context>
@@ -744,17 +744,17 @@
     <message>
       <location filename="../src/mainwindow.ui" line="319"/>
       <source>Launch process</source>
-      <translation type="unfinished">Launch process</translation>
+      <translation>Avvia processo</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="329"/>
       <source>Configure</source>
-      <translation type="unfinished">Configure</translation>
+      <translation>Configura</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="340"/>
       <source>Stretch to fill window (ignore aspect ratio)</source>
-      <translation type="unfinished">Stretch to fill window (ignore aspect ratio)</translation>
+      <translation>Estendi per riempire la finestra (ignora le proporzioni)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="252"/>
@@ -921,12 +921,12 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1018"/>
       <source>Launch failed</source>
-      <translation type="unfinished">Launch failed</translation>
+      <translation>Avvio non riuscito</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1018"/>
       <source>Fail to launch the selected application!</source>
-      <translation type="unfinished">Fail to launch the selected application!</translation>
+      <translation>Impossibile avviare l'applicazione selezionata!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1035"/>
@@ -1016,52 +1016,52 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1601"/>
       <source>Choose the JAR file to install</source>
-      <translation type="unfinished">Choose the JAR file to install</translation>
+      <translation>Scegli il file JAR da installare</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1601"/>
       <source>JAR file (*.jar)</source>
-      <translation type="unfinished">JAR file (*.jar)</translation>
+      <translation>File JAR (*.jar)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1609"/>
       <source>%1 version %2 (by %3) has been installed!</source>
-      <translation type="unfinished">%1 version %2 (by %3) has been installed!</translation>
+      <translation>%1 versione %2 (di %3) è stata installata!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1612"/>
       <source>Install success</source>
-      <translation type="unfinished">Install success</translation>
+      <translation>Installazione riuscita</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1624"/>
       <source>Can not add the JAR to the apps database!</source>
-      <translation type="unfinished">Can not add the JAR to the apps database!</translation>
+      <translation>Impossibile aggiungere il JAR al database delle app!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1628"/>
       <source>The given file is not a valid JAR file!</source>
-      <translation type="unfinished">The given file is not a valid JAR file!</translation>
+      <translation>Il file specificato non è un file JAR valido!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1632"/>
       <source>Can not find the JAR file!</source>
-      <translation type="unfinished">Can not find the JAR file!</translation>
+      <translation>Impossibile trovare il file JAR!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1636"/>
       <source>The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</source>
-      <translation type="unfinished">The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</translation>
+      <translation>Il file JAR richiede il MIDP-2.0, ma l'emulatore supporta solo JAR MIDP-1.0 in esecuzione su dispositivi S60v1!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1640"/>
       <source>The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</source>
-      <translation type="unfinished">The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</translation>
+      <translation>Il file JAR non può essere installato nel dispositivo corrente! Solo i dispositivi S60v1 possono installare questo JAR al momento</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1644"/>
       <source>An unexpected error has happened. Error code: %1</source>
-      <translation type="unfinished">An unexpected error has happened. Error code: %1</translation>
+      <translation>Si è verificato un errore imprevisto. Codice errore: %1</translation>
     </message>
   </context>
   <context>
@@ -1914,7 +1914,7 @@ Per opzione preferita sarà attivo su dispositivi S60v1/S60v2.</translation>
     <message>
       <location filename="../src/update_dialog.ui" line="43"/>
       <source>A new update has been released on GitHub!</source>
-      <translation type="unfinished">A new update has been released on GitHub!</translation>
+      <translation>Un nuovo aggiornamento è stato rilasciato su Github!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="61"/>
@@ -1969,7 +1969,7 @@ Per opzione preferita sarà attivo su dispositivi S60v1/S60v2.</translation>
     <message>
       <location filename="../src/update_dialog.cpp" line="158"/>
       <source>Failed to get information about the newest update from GitHub!</source>
-      <translation type="unfinished">Failed to get information about the newest update from GitHub!</translation>
+      <translation>Impossibile ottenere informazioni sull'aggiornamento più recente da Github!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="190"/>
@@ -1979,12 +1979,12 @@ Per opzione preferita sarà attivo su dispositivi S60v1/S60v2.</translation>
     <message>
       <location filename="../src/update_dialog.cpp" line="196"/>
       <source>Failed to get update download link from GitHub!</source>
-      <translation type="unfinished">Failed to get update download link from GitHub!</translation>
+      <translation>Impossibile ottenere il link per il download dell'aggiornamento da Github!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="214"/>
       <source>Error retrieving changelog from GitHub...</source>
-      <translation type="unfinished">Error retrieving changelog from GitHub...</translation>
+      <translation>Errore nel recupero dei changelog da Github...</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="238"/>
