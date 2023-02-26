@@ -1910,7 +1910,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.ui" line="14"/>
       <source>New update available</source>
-      <translation>Pembaruan terbaru tersedia</translation>
+      <translation>Pembaruan baru tersedia</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="43"/>
@@ -1975,12 +1975,12 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.cpp" line="190"/>
       <source>Can&apos;t find the download link of newest update for your platform!</source>
-      <translation>Tidak dapa&apos;t menemukan tautan unduhan pembaruan terbaru untuk platform Anda!</translation>
+      <translation>Tautan pembaruan terbaru tidak ditemukan untuk pelantar Anda!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="196"/>
       <source>Failed to get update download link from GitHub!</source>
-      <translation>Gagal mendapatkan tautan unduhan pembaruan dari Github!</translation>
+      <translation>Gagal mendapatkan tautan pembaruan dari Github!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="214"/>
@@ -2079,7 +2079,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
       <location filename="../src/updater.cpp" line="124"/>
       <location filename="../src/updater.cpp" line="177"/>
       <source>The downloaded archive zip is corrupted</source>
-      <translation>Zip arsip yang terunduh rusak</translation>
+      <translation>Arsip zip yang terunduh ini rusak</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="180"/>
