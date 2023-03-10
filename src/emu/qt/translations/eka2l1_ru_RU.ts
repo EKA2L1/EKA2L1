@@ -111,7 +111,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
       <source>Delete app failed</source>
-      <translation type="unfinished">Delete app failed</translation>
+      <translation>Не удалось удалить приложение</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
