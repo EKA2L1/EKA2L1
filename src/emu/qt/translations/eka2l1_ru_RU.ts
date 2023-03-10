@@ -184,7 +184,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="224"/>
       <source>Players with the same password will be able to see each others. This can be empty.</source>
-      <translation type="unfinished">Players with the same password will be able to see each others. This can be empty.</translation>
+      <translation>Игроки с одинаковым паролем смогут видеть друг друга. Он может быть пустым.</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="227"/>
@@ -571,12 +571,12 @@
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
       <source>The executable path field is empty!</source>
-      <translation type="unfinished">The executable path field is empty!</translation>
+      <translation>Поле пути к исполняемому файлу пусто!</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="33"/>
       <source>The executable path is invalid or the executable is corrupted. Check the log for more info!</source>
-      <translation type="unfinished">The executable path is invalid or the executable is corrupted. Check the log for more info!</translation>
+      <translation>Недопустимый путь к исполняемому файлу или исполняемый файл поврежден. Проверьте журнал для получения дополнительной информации!</translation>
     </message>
   </context>
   <context>
@@ -749,7 +749,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="329"/>
       <source>Configure</source>
-      <translation type="unfinished">Configure</translation>
+      <translation>Настройки</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="340"/>
@@ -927,7 +927,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1018"/>
       <source>Fail to launch the selected application!</source>
-      <translation type="unfinished">Fail to launch the selected application!</translation>
+      <translation>Не удалось запустить выбранное приложение!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1035"/>
@@ -1017,17 +1017,17 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1601"/>
       <source>Choose the JAR file to install</source>
-      <translation type="unfinished">Choose the JAR file to install</translation>
+      <translation>Выберите JAR-файл для установки</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1601"/>
       <source>JAR file (*.jar)</source>
-      <translation type="unfinished">JAR file (*.jar)</translation>
+      <translation>JAR-файл (*.jar)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1609"/>
       <source>%1 version %2 (by %3) has been installed!</source>
-      <translation type="unfinished">%1 version %2 (by %3) has been installed!</translation>
+      <translation>%1 версии %2 ( %3) установлена!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1612"/>
@@ -1037,12 +1037,12 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1624"/>
       <source>Can not add the JAR to the apps database!</source>
-      <translation type="unfinished">Can not add the JAR to the apps database!</translation>
+      <translation>Не удалось добавить JAR в базу данных приложений!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1628"/>
       <source>The given file is not a valid JAR file!</source>
-      <translation type="unfinished">The given file is not a valid JAR file!</translation>
+      <translation>Данный файл не является допустимым JAR-файлом!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1632"/>
@@ -1052,17 +1052,17 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1636"/>
       <source>The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</source>
-      <translation type="unfinished">The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</translation>
+      <translation>JAR необходим MIDP-2.0, но эмулятор поддерживает только MIDP-1.0 JAR на устройствах S60v1!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1640"/>
       <source>The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</source>
-      <translation type="unfinished">The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</translation>
+      <translation>JAR не может быть установлен для этого устройства! Только устройства S60v1 могут установить этот JAR на данный момент</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1644"/>
       <source>An unexpected error has happened. Error code: %1</source>
-      <translation type="unfinished">An unexpected error has happened. Error code: %1</translation>
+      <translation>Произошла непредвиденная ошибка. Код ошибки: %1</translation>
     </message>
   </context>
   <context>
@@ -1915,7 +1915,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.ui" line="43"/>
       <source>A new update has been released on GitHub!</source>
-      <translation type="unfinished">A new update has been released on GitHub!</translation>
+      <translation>На GitHub выпущено новое обновление!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="61"/>
@@ -1970,7 +1970,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.cpp" line="158"/>
       <source>Failed to get information about the newest update from GitHub!</source>
-      <translation type="unfinished">Failed to get information about the newest update from GitHub!</translation>
+      <translation>Не удалось получить информацию о последних обновлениях с GitHub!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="190"/>
@@ -1980,12 +1980,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/update_dialog.cpp" line="196"/>
       <source>Failed to get update download link from GitHub!</source>
-      <translation type="unfinished">Failed to get update download link from GitHub!</translation>
+      <translation>Не удалось получить ссылку для обновления с GitHub!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="214"/>
       <source>Error retrieving changelog from GitHub...</source>
-      <translation type="unfinished">Error retrieving changelog from GitHub...</translation>
+      <translation>Ошибка при получении списка изменений с GitHub...</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="238"/>
