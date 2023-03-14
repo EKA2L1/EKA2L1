@@ -27,7 +27,10 @@
 #include <common/sync.h>
 
 #include <string>
+#include <memory>
 #include <mutex>
+
+#include <uvw.hpp>
 
 namespace eka2l1::epoc::bt {
     class midman;
@@ -38,8 +41,8 @@ namespace eka2l1::epoc::bt {
         sdp_inet_protocol *protocol_;
         asker_inet bt_port_asker_;
         epoc::notify_info current_query_notify_;
+        std::shared_ptr<uvw::tcp_handle> sdp_connect_;
 
-        void *sdp_connect_;
         bool connected_;
         pdu_builder pdu_packet_builder_;
         std::vector<char> pdu_response_buffer_;

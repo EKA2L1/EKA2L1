@@ -143,6 +143,7 @@ namespace eka2l1::config {
         std::string sf2_bank_path{ "resources/defaultbank.sf2" };
         std::string log_filter{ DEFAULT_LOG_FILTERING };
         std::string bt_central_server_url{ "btnetplay.12z1.com" };
+        std::string background_image{ "" };
 
         screen_buffer_sync_option screen_buffer_sync{ screen_buffer_sync_option_preferred };
         midi_backend_type midi_backend{ MIDI_BACKEND_TSF };
@@ -155,6 +156,7 @@ namespace eka2l1::config {
 		std::string btnet_password;
 		std::uint32_t btnet_discovery_mode{ 0 };
         bool extensive_logging{ false };
+        int background_image_opacity{ 255 };
 
         void serialize(const bool with_bindings = true);
         void deserialize(const bool with_bindings = true);

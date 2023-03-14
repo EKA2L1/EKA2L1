@@ -113,6 +113,9 @@ private:
     eka2l1::qt::btnmap::executor *map_executor_;
 
     std::map<int, int> mouse_to_touch_index_emu_;
+    eka2l1::drivers::handle background_image_texture_;
+    eka2l1::vec2 previous_background_image_size_;
+    std::string previous_background_image_path_;
 
     void setup_screen_draw();
     void setup_app_list(const bool load_now = false);
@@ -134,6 +137,7 @@ private:
 
     void save_ui_layouts();
     void restore_ui_layouts();
+    bool load_background_image(const std::string &path);
 
 private slots:
     void on_about_triggered();
@@ -231,6 +235,7 @@ public:
     void input_dialog_close();
 
     int map_mouse_id_to_touch_index(int mouse_id, const bool on_release);
+    eka2l1::drivers::handle get_background_image();
 
 private:
     Ui::main_window *ui_;

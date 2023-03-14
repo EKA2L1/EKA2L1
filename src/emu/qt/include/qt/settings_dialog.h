@@ -111,6 +111,8 @@ private slots:
     void on_control_profile_choosen_another(int index);
     void on_binding_button_clicked();
     void on_background_color_pick_button_clicked();
+    void on_background_image_browse_button_clicked();
+    void on_background_opacity_changed(int value);
     void on_log_filter_apply_clicked();
 
     void on_device_combo_choose(const int index);

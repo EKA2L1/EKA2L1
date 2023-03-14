@@ -18,186 +18,113 @@
  */
 
 #include <services/bluetooth/protocols/asker_inet.h>
+#include <services/bluetooth/protocols/common_inet.h>
+
+#include <common/log.h>
 
 extern "C" {
 #include <uv.h>
 }
 
 namespace eka2l1::epoc::bt {
-    asker_inet::asker_inet()
-        : bt_asker_(nullptr)
-        , bt_asker_retry_timer_(nullptr) {
+    static constexpr std::uint32_t MAX_RETRY_ATTEMPT = 5;
 
+    asker_inet::asker_inet()
+        : asker_(nullptr)
+        , asker_retry_timer_(nullptr)
+        , retry_times_(0)
+        , buf_(nullptr)
+        , buf_size_(0)
+        , dynamically_allocated_(false)
+        , callback_(nullptr)
+        , in_transfer_data_callback_(true) {
+        request_done_evt_.set();
     }
     
     asker_inet::~asker_inet() {
-        if (bt_asker_retry_timer_) {
-            uv_timer_stop(reinterpret_cast<uv_timer_t*>(bt_asker_retry_timer_));
-
-            uv_close(reinterpret_cast<uv_handle_t*>(bt_asker_retry_timer_), [](uv_handle_t *hh) {
-                delete hh;
-            });
-        }
-
-        if (bt_asker_) {
-            uv_udp_recv_stop(reinterpret_cast<uv_udp_t*>(bt_asker_));
-            uv_close(reinterpret_cast<uv_handle_t*>(bt_asker_), [](uv_handle_t *hh) {
-                delete hh;
-            });
-        }
     }
 
-    static constexpr std::uint32_t SEND_TIMEOUT_RETRY = 100;
-    struct send_data_vars {
-        uv_buf_t buf_;
-        sockaddr_in6 addr_;
-        asker_inet::response_callback response_cb_;
-        char *response_ptr_ = nullptr;
-        std::size_t response_size_;
-        uv_udp_send_t *send_req;
-        uv_udp_t *send_udp_handle_;
-        uv_timer_t *timeout_timer_;
-        uv_async_t *async_workload_;
-        char *dynamic_buf_data_ = nullptr;
-        int times_ = 0;
-    };
+    void asker_inet::handle_request_failure() {
+        if (retry_times_ >= MAX_RETRY_ATTEMPT) {
+            asker_retry_timer_->stop();
 
-    enum {
-        BT_COMM_INET_ERROR_SEND_FAILED = -1,
-        BT_COMM_INET_ERROR_RECV_FAILED = -2,
-        BT_COMM_INET_INVALID_ADDR = -3
-    };
+            request_done_evt_.set();
+            callback_(nullptr, BT_COMM_INET_ERROR_RECV_FAILED);
 
-    static void free_async_workload(send_data_vars *vars_ptr) {
-        if (vars_ptr->async_workload_) {
-            uv_close(reinterpret_cast<uv_handle_t*>(vars_ptr->async_workload_), [](uv_handle_t *hh) {
-                uv_async_t *async_hh = reinterpret_cast<uv_async_t*>(hh);
-                delete async_hh;
-            });
-
-            vars_ptr->async_workload_ = nullptr;
+            if (dynamically_allocated_) {
+                free(buf_);
+            }
+        } else {
+            keep_sending_data();
         }
+        return;
     }
 
-    static void free_send_data_vars_struct(send_data_vars *vars_ptr) {
-        if (vars_ptr->response_ptr_) {
-            free(vars_ptr->response_ptr_);
-        }
+    void asker_inet::listen_to_data() {
+        asker_->on<uvw::udp_data_event>([this](const uvw::udp_data_event &event, uvw::udp_handle &handle) {
+            if (event.length <= 0) {
+                handle_request_failure();
+                return;
+            }
 
-        if (vars_ptr->send_req) {
-            delete vars_ptr->send_req;
-        }
+            in_transfer_data_callback_ = true;
 
-        if (vars_ptr->dynamic_buf_data_) {
-            delete vars_ptr->dynamic_buf_data_;
-        }
-
-        free_async_workload(vars_ptr);
-
-        delete vars_ptr;
-    }
-
-    static void keep_sending_data(uv_udp_t *handle, send_data_vars *vars_ptr) {
-        uv_udp_send_t *send_req = new uv_udp_send_t;
-        send_req->data = vars_ptr;
-        handle->data = vars_ptr;
-        vars_ptr->timeout_timer_->data = vars_ptr;
-        vars_ptr->send_req = send_req;
-        vars_ptr->send_udp_handle_ = handle;
-
-        uv_async_t *async = new uv_async_t;
-        vars_ptr->async_workload_ = async;
-        async->data = vars_ptr;
-
-        uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
-            send_data_vars *vars_ptr = reinterpret_cast<send_data_vars*>(async->data);
-
-            uv_udp_recv_start(vars_ptr->send_udp_handle_, [](uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
-                send_data_vars *vars = reinterpret_cast<send_data_vars*>(handle->data);
-                if (!vars->response_ptr_) {
-                    vars->response_ptr_ = reinterpret_cast<char*>(malloc(suggested_size));
-                    vars->response_size_ = suggested_size;
-                } else {
-                    if (suggested_size > vars->response_size_) {
-                        vars->response_ptr_ = reinterpret_cast<char*>(realloc(vars->response_ptr_, suggested_size));
-                        vars->response_size_ = suggested_size;
+            if (callback_(event.data.get(), event.length)) {
+                // Callback may turn it off through another request call
+                if (in_transfer_data_callback_) {
+                    request_done_evt_.set();
+                    asker_retry_timer_->stop();
+                    if (dynamically_allocated_) {
+                        free(buf_);
                     }
                 }
-                buf->base = vars->response_ptr_;
-                buf->len = static_cast<std::uint32_t>(suggested_size);
-            }, [](uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags) {
-                send_data_vars *vars = reinterpret_cast<send_data_vars*>(handle->data);
 
-                uv_timer_stop(vars->timeout_timer_);
-                uv_udp_recv_stop(handle);
-
-                if (nread < 0) {
-                    if (vars->times_ >= 3) {
-                        vars->response_cb_(nullptr, BT_COMM_INET_ERROR_RECV_FAILED);
-                        free_send_data_vars_struct(vars);
-                    } else {
-                        free_async_workload(vars);
-                        keep_sending_data(handle, vars);
-                    }
-                    return;
-                }
-
-                vars->response_cb_(buf->base, nread);
-                free_send_data_vars_struct(vars);
+                in_transfer_data_callback_ = false;
 
                 return;
-            });
-            
-            const int result = uv_udp_send(vars_ptr->send_req, vars_ptr->send_udp_handle_, &vars_ptr->buf_, 1, reinterpret_cast<sockaddr*>(&vars_ptr->addr_), [](uv_udp_send_t *send_info, int status) {
-                send_data_vars *vars = reinterpret_cast<send_data_vars*>(send_info->data);
-                vars->times_++;
-
-                if (status >= 0) {
-                    uv_timer_start(vars->timeout_timer_, [](uv_timer_t *timer) {
-                        send_data_vars *vars = reinterpret_cast<send_data_vars*>(timer->data);
-
-                        uv_udp_recv_stop(vars->send_req->handle);
-                        if (vars->times_ >= 3) {
-                            vars->response_cb_(nullptr, BT_COMM_INET_ERROR_RECV_FAILED);
-                            free_send_data_vars_struct(vars);
-                        } else {
-                            keep_sending_data(vars->send_req->handle, vars);
-                        }
-                    }, SEND_TIMEOUT_RETRY, 0);
-                } else {
-                    uv_udp_recv_stop(send_info->handle);
-
-                    if (vars->times_ >= 3) {
-                        vars->response_cb_(nullptr, BT_COMM_INET_ERROR_SEND_FAILED);
-                        free_send_data_vars_struct(vars);
-
-                        return;
-                    } else {
-                        free_async_workload(vars);
-                        keep_sending_data(vars->send_req->handle, vars);
-                    }
-                }
-            });
-
-            if (result != 0) {
-                LOG_TRACE(SERVICE_BLUETOOTH, "Send asking host info failed with libuv code {}", result);
-                if (vars_ptr->times_ >= 3) {
-                    vars_ptr->response_cb_(nullptr, BT_COMM_INET_ERROR_SEND_FAILED);
-                    free_send_data_vars_struct(vars_ptr);
-
-                    return;
-                } else {
-                    free_async_workload(vars_ptr);
-                    keep_sending_data(vars_ptr->send_udp_handle_, vars_ptr);
-                }
+            } else {
+                in_transfer_data_callback_ = false;
+                handle_request_failure();
             }
         });
 
-        uv_async_send(async);
+        asker_->on<uvw::error_event>([this](const uvw::error_event &event, uvw::udp_handle &handle) {
+            handle_request_failure();
+        });
+
+        asker_->recv();
+    }
+
+    void asker_inet::keep_sending_data() {
+        asker_retry_timer_->stop();
+        retry_times_++;
+
+        if (asker_->send(*reinterpret_cast<const sockaddr *>(&dest_), buf_, buf_size_) < 0) {
+            handle_request_failure();
+        } else {
+            asker_->on<uvw::error_event>([this](const uvw::error_event &event, uvw::udp_handle &handle) {
+                if (event.code() >= 0) {
+                    asker_retry_timer_->on<uvw::timer_event>([this](const uvw::timer_event &event, uvw::timer_handle &handle) {
+                        handle_request_failure();
+                    });
+
+                    asker_retry_timer_->start(std::chrono::milliseconds(SEND_TIMEOUT_RETRY), std::chrono::milliseconds(SEND_TIMEOUT_RETRY));
+                } else {
+                    handle_request_failure();
+                }
+            });
+        }
     }
 
     void asker_inet::send_request_with_retries(const epoc::socket::saddress &addr, char *request, const std::size_t request_size,
-        response_callback response_cb, const bool request_dynamically_allocated) {
+        response_callback response_cb, const bool request_dynamically_allocated, const bool sync) {
+        if (!in_transfer_data_callback_) {
+            request_done_evt_.wait();
+        }
+
+        request_done_evt_.reset();
+        in_transfer_data_callback_ = false;
+
         sockaddr *addr_host = nullptr;
         GUEST_TO_BSD_ADDR(addr, addr_host);
 
@@ -210,40 +137,53 @@ namespace eka2l1::epoc::bt {
             return;
         }
 
-        if (!bt_asker_) {
-            uv_udp_t *bt_asker_impl = new uv_udp_t;
+        bool was_not_inited = false;
+
+        auto default_loop = uvw::loop::get_default();
+
+        if (!asker_) {
+            asker_ = default_loop->resource<uvw::udp_handle>();
 
             sockaddr_in6 bind;
             std::memset(&bind, 0, sizeof(sockaddr_in6));
             bind.sin6_family = AF_INET6;
 
-            uv_udp_init(uv_default_loop(), bt_asker_impl);
-            uv_udp_bind(bt_asker_impl, reinterpret_cast<const sockaddr*>(&bind), 0);
-
-            bt_asker_ = bt_asker_impl;
+            asker_->bind(*reinterpret_cast<sockaddr*>(&bind));
+            was_not_inited = true;
         }
 
-        if (!bt_asker_retry_timer_) {
-            bt_asker_retry_timer_ = new uv_timer_t;
-            uv_timer_init(uv_default_loop(), reinterpret_cast<uv_timer_t*>(bt_asker_retry_timer_));
+        if (!asker_retry_timer_) {
+            asker_retry_timer_ = default_loop->resource<uvw::timer_handle>();
         }
 
-        send_data_vars *vars_ptr = new send_data_vars;
-
-        vars_ptr->buf_ = uv_buf_init(request, static_cast<std::uint32_t>(request_size));
-        vars_ptr->timeout_timer_ = reinterpret_cast<uv_timer_t*>(bt_asker_retry_timer_);
-        std::memcpy(&vars_ptr->addr_, addr_host, sizeof(sockaddr_in6));
-
-        if (request_dynamically_allocated) {
-            vars_ptr->dynamic_buf_data_ = request;
+        if (was_not_inited) {
+            listen_to_data();
         }
 
-        vars_ptr->response_cb_ = response_cb;
-        keep_sending_data(reinterpret_cast<uv_udp_t*>(bt_asker_), vars_ptr);
+        if (addr_host->sa_family == AF_INET) {
+            std::memcpy(&dest_, addr_host, sizeof(sockaddr_in));
+        } else {
+            std::memcpy(&dest_, addr_host, sizeof(sockaddr_in6));
+        }
+
+        if ((buf_ != nullptr) && dynamically_allocated_) {
+            free(buf_);
+        }
+
+        retry_times_ = 0;
+        buf_ = request;
+        buf_size_ = static_cast<std::uint32_t>(request_size);
+        callback_ = response_cb;
+        dynamically_allocated_ = request_dynamically_allocated;
+
+        keep_sending_data();
+
+        if (sync) {
+            request_done_evt_.wait();
+        }
     }
 
     std::uint32_t asker_inet::ask_for_routed_port(const std::uint16_t virtual_port, const epoc::socket::saddress &dev_addr) {
-        ask_routed_port_wait_evt_.reset();
         std::uint32_t local_result = 0;
 
         ask_for_routed_port_async(virtual_port, dev_addr, [&local_result, this](const std::int64_t res) {
@@ -252,27 +192,125 @@ namespace eka2l1::epoc::bt {
             } else {
                 local_result = static_cast<std::uint32_t>(res);
             }
-
-            ask_routed_port_wait_evt_.set();
         });
 
-        ask_routed_port_wait_evt_.wait();
+        request_done_evt_.wait();
         return local_result;
     }
 
     void asker_inet::ask_for_routed_port_async(const std::uint16_t virtual_port, const epoc::socket::saddress &dev_addr, port_ask_done_callback cb) {
-        char *buf = new char[4];
-        buf[0] = 'p';
-        buf[1] = 'l';
-        buf[2] = static_cast<char>(virtual_port & 0xFF);
-        buf[3] = static_cast<char>((virtual_port >> 8) & 0xFF);
+        char *buf = new char[3];
+        buf[0] = QUERY_OPCODE_GET_REAL_PORT_FROM_VIRTUAL_PORT;
+        buf[1] = static_cast<char>(virtual_port & 0xFF);
+        buf[2] = static_cast<char>((virtual_port >> 8) & 0xFF);
 
-        send_request_with_retries(dev_addr, buf, 4, [cb](const char *response, const ssize_t size) {
+        send_request_with_retries(dev_addr, buf, 3, [cb](const char *response, const ssize_t size) {
             if (size <= 0) {
                 cb(static_cast<std::int64_t>(size));
+                return false;
             } else {
-                cb(*reinterpret_cast<const std::int64_t*>(response));
+                if (response[0] != (QUERY_OPCODE_GET_REAL_PORT_FROM_VIRTUAL_PORT + QUERY_OPCODE_RESULT_START)) {
+                    return false;
+                }
+
+                std::uint32_t result = 0;
+                std::memcpy(&result, response + 1, 4);
+
+                cb(static_cast<std::int64_t>(result));
+                return true;
             }
         }, true);
+    }
+
+    bool asker_inet::check_is_real_port_mapped(const epoc::socket::saddress &addr, const std::uint32_t real_port) {
+        std::vector<char> request_data;
+        request_data.push_back(QUERY_OPCODE_IS_REAL_PORT_MAPPED_TO_VIRTUAL_PORT);
+        request_data.push_back(static_cast<char>(real_port));
+        request_data.push_back(static_cast<char>(real_port >> 8));
+        request_data.push_back(static_cast<char>(real_port >> 16));
+        request_data.push_back(static_cast<char>(real_port >> 24));
+
+        bool result = false;
+        send_request_with_retries(addr, request_data.data(), request_data.size(), [&result](const char *buf, const std::int64_t nread) {
+            if ((nread <= 0) || (buf[0] != (QUERY_OPCODE_RESULT_START + QUERY_OPCODE_IS_REAL_PORT_MAPPED_TO_VIRTUAL_PORT))) {
+                return false;
+            }
+
+            result = (buf[1] == '1');
+            return true;
+        }, false, true);
+
+        return result;
+    }
+
+    std::optional<device_address> asker_inet::get_device_address(const epoc::socket::saddress &dest_friend) {
+        std::optional<device_address> addr_result;
+        char buffer = QUERY_OPCODE_GET_VIRTUAL_BLUETOOTH_ADDRESS;
+
+        send_request_with_retries(dest_friend, &buffer, 1, [&addr_result](const char *buf, const std::int64_t nread) {
+            if ((nread <= 0) || (buf[0] != (QUERY_OPCODE_RESULT_START + QUERY_OPCODE_GET_VIRTUAL_BLUETOOTH_ADDRESS))) {
+                return false;
+            }
+
+            if (nread < sizeof(device_address) + 1) {
+                LOG_WARN(SERVICE_BLUETOOTH, "Get bluetooth MAC (virtual) packet size is insufficient!");
+                return false;
+            }
+
+            device_address result;
+            std::memcpy(&result, buf + 1, sizeof(device_address));
+
+            addr_result = result;
+            return true;
+        }, false, true);
+
+        return addr_result;
+    }
+
+    void asker_inet::get_device_address_async(const epoc::socket::saddress &dest_friend, device_address_get_done_callback callback) {
+        char buffer = QUERY_OPCODE_GET_VIRTUAL_BLUETOOTH_ADDRESS;
+        send_request_with_retries(dest_friend, &buffer, 1, [callback](const char *buf, const std::int64_t nread) {
+            if (nread <= 0) {
+                callback(nullptr);
+                return false;
+            }
+            
+            if (buf[0] != (QUERY_OPCODE_RESULT_START + QUERY_OPCODE_GET_VIRTUAL_BLUETOOTH_ADDRESS)) {
+                return false;
+            }
+
+            if (nread < sizeof(device_address) + 1) {
+                LOG_WARN(SERVICE_BLUETOOTH, "Get bluetooth MAC (virtual) packet size is insufficient!");
+                return false;
+            }
+
+            device_address result;
+            std::memcpy(&result, buf + 1, sizeof(device_address));
+
+            callback(&result);
+            return true;
+        }, false);
+    }
+
+    void asker_inet::get_device_name_async(const epoc::socket::saddress &dest_friend, name_get_done_callback callback) {
+        char buffer = QUERY_OPCODE_GET_NAME;
+        send_request_with_retries(dest_friend, &buffer, 1, [callback](const char *buf, const std::int64_t nread) {
+            if (nread <= 0) {
+                callback(nullptr, -1);
+                return false;
+            }
+            
+            if (buf[0] != (QUERY_OPCODE_RESULT_START + QUERY_OPCODE_GET_NAME)) {
+                return false;
+            }
+
+            if (nread < buf[1] + 2) {
+                LOG_WARN(SERVICE_BLUETOOTH, "Get name packet size is insufficient!");
+                return false;
+            }
+
+            callback(buf + 2, buf[1]);
+            return true;
+        }, false);
     }
 }

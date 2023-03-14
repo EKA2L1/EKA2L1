@@ -32,6 +32,7 @@ add_library(epocservs
         include/services/bluetooth/protocols/btmidman_inet.h
         include/services/bluetooth/protocols/common.h
         include/services/bluetooth/protocols/overall.h
+        include/services/bluetooth/protocols/utils_inet.h
         include/services/bluetooth/bt.h
         include/services/bluetooth/btman.h
         include/services/bluetooth/btmidman.h
@@ -174,9 +175,12 @@ add_library(epocservs
         src/bluetooth/protocols/sdp/sdp_inet.cpp
         src/bluetooth/protocols/asker_inet.cpp
         src/bluetooth/protocols/base_inet.cpp
+        src/bluetooth/protocols/btmidman_lan_matching.cpp
+        src/bluetooth/protocols/btmidman_proxserv_matching.cpp
         src/bluetooth/protocols/btmidman_inet.cpp
         src/bluetooth/protocols/common.cpp
         src/bluetooth/protocols/overall.cpp
+        src/bluetooth/protocols/utils_inet.cpp
         src/bluetooth/bt.cpp
         src/bluetooth/btman.cpp
         src/bluetooth/btmidman.cpp
@@ -332,6 +336,7 @@ target_link_libraries(epocservs PRIVATE
         lunasvg
         stb
         uv_a
+        uvw
         xxHash
         pugixml
         sqlite3)

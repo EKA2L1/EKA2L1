@@ -22,7 +22,7 @@
 #include <qt/btnmap/executor.h>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb/stb_image.h>
+#include <stb_image.h>
 
 #include <common/fileutils.h>
 #include <common/log.h>

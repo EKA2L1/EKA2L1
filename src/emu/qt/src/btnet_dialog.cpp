@@ -73,7 +73,7 @@ void btnet_dialog::show_opts_accord_to_index(int index) {
         ui_->direct_ip_opts_widget->show();
         break;
 
-    case eka2l1::epoc::bt::DISCOVERY_MODE_LOCAL_LAN:
+    case eka2l1::epoc::bt::DISCOVERY_MODE_LAN:
         ui_->server_and_lan_shared_opts_widget->show();
         break;
 

@@ -73,6 +73,8 @@
 #include <QLineEdit>
 #include <QtConcurrent/QtConcurrent>
 
+#include <stb_image.h>
+
 static constexpr const char *LAST_UI_WINDOW_GEOMETRY_SETTING = "lastWindowGeometry";
 static constexpr const char *LAST_UI_WINDOW_STATE = "lastWindowState";
 static constexpr const char *LAST_EMULATED_DISPLAY_GEOMETRY_SETTING = "lastEmulatedDisplayGeometry";
@@ -144,7 +146,20 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     builder.set_feature(eka2l1::drivers::graphics_feature::clipping, false);
     builder.set_viewport(viewport);
 
+    eka2l1::drivers::handle background_image = state_ptr->ui_main->get_background_image();
     builder.clear({ color_clear.z / 255.0f, color_clear.y / 255.0f, color_clear.x / 255.0f, color_clear.w / 255.0f, 0.0f, 0.0f }, eka2l1::drivers::draw_buffer_bit_color_buffer);
+    if (background_image != 0) {
+        eka2l1::rect draw_image_rect;
+        draw_image_rect.size = swapchain_size;
+
+        builder.set_feature(eka2l1::drivers::graphics_feature::blend, true);
+        builder.blend_formula(eka2l1::drivers::blend_equation::add, eka2l1::drivers::blend_equation::add,
+            eka2l1::drivers::blend_factor::frag_out_alpha, eka2l1::drivers::blend_factor::one_minus_frag_out_alpha,
+            eka2l1::drivers::blend_factor::one, eka2l1::drivers::blend_factor::one_minus_frag_out_alpha);
+        builder.set_brush_color_detail(eka2l1::vec4(255, 255, 255, eka2l1::common::clamp<int>(0, 255, state_ptr->conf.background_image_opacity)));
+        builder.draw_bitmap(background_image, 0, draw_image_rect, eka2l1::rect(), eka2l1::vec2(0, 0), 0.0f, eka2l1::drivers::bitmap_draw_flag_use_brush);
+        builder.set_feature(eka2l1::drivers::graphics_feature::blend, false);
+    }
 
     auto &crr_mode = scr->current_mode();
 
@@ -226,7 +241,8 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     , map_executor_(nullptr)
     , ui_(new Ui::main_window)
     , applist_(nullptr)
-    , displayer_(nullptr) {
+    , displayer_(nullptr)
+    , background_image_texture_(0) {
     ui_->setupUi(this);
     ui_->label_al_not_available->setVisible(false);
 
@@ -369,7 +385,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     connect(this, &main_window::input_dialog_delay_launch_asked, this, &main_window::on_input_dialog_delay_launch_asked);
     connect(this, &main_window::input_dialog_close_request, this, &main_window::on_input_dialog_close_request);
 
-    connect(editor_widget_, &editor_widget::editor_hidden, this, &main_window::on_mapping_editor_hidden);    
+    connect(editor_widget_, &editor_widget::editor_hidden, this, &main_window::on_mapping_editor_hidden);
 
     setAcceptDrops(true);
 }
@@ -1693,4 +1709,77 @@ void main_window::on_action_stretch_to_fill_toggled(bool checked) {
 
     QSettings settings;
     settings.setValue(STRETCH_DISPLAY_SETTING, checked);
+}
+
+bool main_window::load_background_image(const std::string &path) {
+    if (!eka2l1::common::exists(path)) {
+        return false;
+    }
+
+    FILE *f = eka2l1::common::open_c_file(path, "rb");
+    if (!f) {
+        return false;
+    }
+
+    int x, y;
+    int comp = STBI_rgb_alpha;
+
+    stbi_uc *data = stbi_load_from_file(f, &x, &y, &comp, STBI_rgb_alpha);
+
+    if (!data) {
+        LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to load background image!");
+        return false;
+    }
+
+    if (!background_image_texture_) {
+        background_image_texture_ = eka2l1::drivers::create_texture(emulator_state_.graphics_driver.get(), 2, 0,
+            eka2l1::drivers::texture_format::rgba, eka2l1::drivers::texture_format::rgba,
+            eka2l1::drivers::texture_data_type::ubyte, data, x * y * 4, eka2l1::vec3(x, y, 0));
+
+        if (!background_image_texture_) {
+            LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to create background texture!");
+            stbi_image_free(data);
+
+            return false;
+        }
+
+        eka2l1::drivers::graphics_command_builder builder;
+        builder.set_texture_filter(background_image_texture_, true, eka2l1::drivers::filter_option::nearest);
+        
+        auto cmd_list = builder.retrieve_command_list();
+        emulator_state_.graphics_driver->submit_command_list(cmd_list);
+    } else {
+        eka2l1::drivers::graphics_command_builder builder;
+        if (previous_background_image_size_ != eka2l1::vec2(x, y)) {
+            builder.recreate_texture(background_image_texture_, 2, 0, eka2l1::drivers::texture_format::rgba,
+                eka2l1::drivers::texture_format::rgba, eka2l1::drivers::texture_data_type::ubyte, data,
+                x * y * 4, eka2l1::vec3(x, y, 0));
+            builder.set_texture_filter(background_image_texture_, true, eka2l1::drivers::filter_option::nearest);
+        } else {
+            builder.update_texture(background_image_texture_, reinterpret_cast<const char*>(data), x * y * 4, 0, eka2l1::drivers::texture_format::rgba,
+                eka2l1::drivers::texture_data_type::ubyte, eka2l1::vec3(0, 0, 0), eka2l1::vec3(x, y, 0));
+        }
+        auto cmd_list = builder.retrieve_command_list();
+        emulator_state_.graphics_driver->submit_command_list(cmd_list);
+    }
+
+    previous_background_image_size_ = eka2l1::vec2(x, y);
+    stbi_image_free(data);
+
+    return true;
+}
+
+eka2l1::drivers::handle main_window::get_background_image() {
+    if (emulator_state_.conf.background_image.empty()) {
+        return 0;
+    }
+
+    if (!background_image_texture_ || (previous_background_image_path_ != emulator_state_.conf.background_image)) {
+        load_background_image(emulator_state_.conf.background_image);
+
+        // Force to prevent multiple reload attempt
+        previous_background_image_path_ = emulator_state_.conf.background_image;
+    }
+
+    return background_image_texture_;
 }

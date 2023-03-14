@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>837</width>
-    <height>866</height>
+    <height>870</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -29,7 +29,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="general_widget">
       <attribute name="title">
@@ -463,49 +463,130 @@
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
           <item row="0" column="0">
-           <layout class="QVBoxLayout" name="emulator_display_layout" stretch="1,1,1,1">
+           <layout class="QVBoxLayout" name="emulator_display_layout" stretch="0,1,1,1">
             <item>
-             <widget class="QWidget" name="emulator_display_bgc_choose_widget" native="true">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
+             <widget class="QGroupBox" name="emulator_display_background">
+              <property name="title">
+               <string>Background</string>
               </property>
-              <layout class="QHBoxLayout" name="horizontalLayout_5">
-               <property name="spacing">
-                <number>7</number>
-               </property>
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
-               <property name="topMargin">
-                <number>1</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>1</number>
-               </property>
-               <item>
-                <widget class="QLabel" name="emulator_display_bgc_desc_label">
-                 <property name="text">
-                  <string>Background color</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="emulator_display_bgc_pick_btn">
+              <layout class="QGridLayout" name="gridLayout_14">
+               <item row="0" column="0">
+                <widget class="QWidget" name="emulator_display_bg_image_choose_widget" native="true">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
-                 <property name="text">
-                  <string>Pick</string>
+                 <layout class="QHBoxLayout" name="emulator_display_bg_path_widget" stretch="1,5,0">
+                  <item>
+                   <widget class="QLabel" name="emulator_display_bg_image_desc_label">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Image</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="emulator_display_bg_image_path_line_edit">
+                    <property name="readOnly">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="emulator_display_bg_image_browse_button">
+                    <property name="text">
+                     <string>Browse</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QWidget" name="emulator_display_bgc_choose_widget" native="true">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
                  </property>
+                 <layout class="QHBoxLayout" name="horizontalLayout_5">
+                  <property name="spacing">
+                   <number>7</number>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="emulator_display_bgc_desc_label">
+                    <property name="text">
+                     <string>Color</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="emulator_display_bgc_pick_btn">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Pick</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QWidget" name="emualator_display_bg_opacity_widget" native="true">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,8,1">
+                  <property name="spacing">
+                   <number>7</number>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="emulator_display_bg_opacity_desc_label">
+                    <property name="text">
+                     <string>Opacity</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QSlider" name="emulator_display_bg_opacity_val_slider">
+                    <property name="maximum">
+                     <number>255</number>
+                    </property>
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="emulator_display_bg_opacity_val_label">
+                    <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                      </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>TextLabel</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </widget>
                </item>
               </layout>
@@ -546,45 +627,6 @@
           <string>User interface</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_4" rowstretch="1,0,0,0">
-          <item row="0" column="0">
-           <layout class="QHBoxLayout" name="interface_language_layout">
-            <item>
-             <widget class="QLabel" name="interface_language_label">
-              <property name="text">
-               <string>Language</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="interface_language_combo"/>
-            </item>
-           </layout>
-          </item>
-          <item row="1" column="0">
-           <layout class="QHBoxLayout" name="interface_theme_layout">
-            <item>
-             <widget class="QLabel" name="interface_theme_label">
-              <property name="text">
-               <string>Theme</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="interface_theme_combo">
-              <item>
-               <property name="text">
-                <string>Light</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Dark</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-           </layout>
-          </item>
           <item row="3" column="0">
            <widget class="QCheckBox" name="interface_disable_easter_egg_title_checkbox">
             <property name="toolTip">
@@ -594,7 +636,7 @@
              <string/>
             </property>
             <property name="text">
-             <string>Disable title with Git version</string>
+             <string>Disable window name with emulator version</string>
             </property>
            </widget>
           </item>
@@ -603,6 +645,61 @@
             <property name="text">
              <string>Disable status bar</string>
             </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QWidget" name="interface_language_layout" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <layout class="QHBoxLayout" name="interface_language_layout">
+             <item>
+              <widget class="QLabel" name="interface_language_label">
+               <property name="text">
+                <string>Language</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="interface_language_combo"/>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QWidget" name="interface_theme_layout" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <layout class="QHBoxLayout" name="interface_theme_layout">
+             <item>
+              <widget class="QLabel" name="interface_theme_label">
+               <property name="text">
+                <string>Theme</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="interface_theme_combo">
+               <item>
+                <property name="text">
+                 <string>Light</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Dark</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
          </layout>

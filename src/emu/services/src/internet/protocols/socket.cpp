@@ -1146,13 +1146,14 @@ namespace eka2l1::epoc::internet {
         if (protocol_ == INET_TCP_PROTOCOL_ID) {
             uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
                 uv_shutdown_t *shut = new uv_shutdown_t;
-                int res = uv_shutdown(shut, reinterpret_cast<uv_stream_t*>(async->data), [](uv_shutdown_t *shut, int status) {
+                uv_stream_t *stream = reinterpret_cast<uv_stream_t *>(async->data);
+                int res = uv_shutdown(shut, stream, [](uv_shutdown_t *shut, int status) {
                     reinterpret_cast<inet_socket*>(shut->handle->data)->complete_shutdown_info(status);
                     delete shut;
                 });
 
                 if (res < 0) {
-                    reinterpret_cast<inet_socket*>(shut->handle->data)->complete_shutdown_info(res);
+                    reinterpret_cast<inet_socket*>(stream->data)->complete_shutdown_info(res);
                     delete shut;
                 }
 

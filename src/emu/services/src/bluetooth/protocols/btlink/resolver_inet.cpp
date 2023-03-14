@@ -188,27 +188,27 @@ namespace eka2l1::epoc::bt {
         info_addr_in->minor_device_class_ = MINOR_DEVICE_PHONE_CECULLAR;
         cast_addr.family_ = BTADDR_PROTOCOL_FAMILY_ID;
 
-        friend_querier_.send_request_with_retries(addr, "a", 1, [this, addr, midman, index](const char *result, const std::int64_t bytes) {
+        friend_querier_.get_device_address_async(addr, [this, addr, midman, index](device_address *dvc_addr_res) {
             const bool manual_direct_search = (midman->get_discovery_mode() > DISCOVERY_MODE_DIRECT_IP);
 
-            if (bytes <= 0) {
+            if (dvc_addr_res == nullptr) {
                 manual_direct_search ? current_friend_++ : 0;
                 next_impl();
             } else {
                 inquiry_socket_address &cast_addr = static_cast<inquiry_socket_address&>(friend_name_entry_->addr_);
                 inquiry_info *info_addr_in = cast_addr.get_inquiry_info();
+                info_addr_in->addr_ = *dvc_addr_res;
 
-                std::memcpy(&info_addr_in->addr_, result, sizeof(device_address));
                 midman->add_device_address_mapping(index, info_addr_in->addr_);
 
-                friend_querier_.send_request_with_retries(addr, "n", 1, [this, manual_direct_search](const char *result, const std::int64_t bytes) {
+                friend_querier_.get_device_name_async(addr, [this, manual_direct_search](const char *result, const char result_length) {
                     kernel_system *kern = friend_retrieve_info_.requester->get_kernel_object_owner();
                     kern->lock();
 
-                    if (bytes < 0) {
+                    if (result == nullptr) {
                         friend_name_entry_->name_.assign(nullptr, u"Unknown o_o");
                     } else {
-                        std::u16string result_u16 = common::utf8_to_ucs2(std::string(result, bytes));
+                        std::u16string result_u16 = common::utf8_to_ucs2(std::string(result, result_length));
                         friend_name_entry_->name_.assign(nullptr, result_u16);
                     }
                     
