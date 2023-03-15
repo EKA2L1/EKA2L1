@@ -52,8 +52,6 @@ namespace eka2l1::epoc::bt {
         bool store_to_temp_buffer_;
 
         std::mutex access_lock_;
-        common::event close_done_evt_;
-        bool should_notify_done_;
 
         void handle_connect_query(const char *record_buf, const std::uint32_t record_size);
         void handle_service_query(const char *record_buf, const std::uint32_t record_size);

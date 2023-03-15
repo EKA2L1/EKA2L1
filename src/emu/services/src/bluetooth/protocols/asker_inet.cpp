@@ -18,7 +18,9 @@
  */
 
 #include <services/bluetooth/protocols/asker_inet.h>
+#include <services/bluetooth/protocols/btmidman_inet.h>
 #include <services/bluetooth/protocols/common_inet.h>
+#include <services/utils_uvw.h>
 
 #include <common/log.h>
 
@@ -27,17 +29,15 @@ extern "C" {
 }
 
 namespace eka2l1::epoc::bt {
-    static constexpr std::uint32_t MAX_RETRY_ATTEMPT = 5;
+    static constexpr std::uint32_t MAX_RETRY_ATTEMPT = 15;
 
-    asker_inet::asker_inet()
+    asker_inet::asker_inet(midman_inet *midman)
         : asker_(nullptr)
         , asker_retry_timer_(nullptr)
         , retry_times_(0)
-        , buf_(nullptr)
-        , buf_size_(0)
-        , dynamically_allocated_(false)
         , callback_(nullptr)
-        , in_transfer_data_callback_(true) {
+        , in_transfer_data_callback_(true)
+        , asker_id_(midman->new_asker_id()) {
         request_done_evt_.set();
     }
     
@@ -50,10 +50,6 @@ namespace eka2l1::epoc::bt {
 
             request_done_evt_.set();
             callback_(nullptr, BT_COMM_INET_ERROR_RECV_FAILED);
-
-            if (dynamically_allocated_) {
-                free(buf_);
-            }
         } else {
             keep_sending_data();
         }
@@ -62,29 +58,26 @@ namespace eka2l1::epoc::bt {
 
     void asker_inet::listen_to_data() {
         asker_->on<uvw::udp_data_event>([this](const uvw::udp_data_event &event, uvw::udp_handle &handle) {
-            if (event.length <= 0) {
-                handle_request_failure();
+            if (event.length < 4) {
+                return;
+            }
+
+            if (memcmp(event.data.get(), &asker_id_, sizeof(std::uint32_t)) != 0) {
                 return;
             }
 
             in_transfer_data_callback_ = true;
 
-            if (callback_(event.data.get(), event.length)) {
+            if (callback_(event.data.get() + 4, event.length - 4)) {
                 // Callback may turn it off through another request call
                 if (in_transfer_data_callback_) {
                     request_done_evt_.set();
                     asker_retry_timer_->stop();
-                    if (dynamically_allocated_) {
-                        free(buf_);
-                    }
                 }
 
                 in_transfer_data_callback_ = false;
 
                 return;
-            } else {
-                in_transfer_data_callback_ = false;
-                handle_request_failure();
             }
         });
 
@@ -99,84 +92,71 @@ namespace eka2l1::epoc::bt {
         asker_retry_timer_->stop();
         retry_times_++;
 
-        if (asker_->send(*reinterpret_cast<const sockaddr *>(&dest_), buf_, buf_size_) < 0) {
+        if (asker_->send(*reinterpret_cast<const sockaddr *>(&dest_), buffer_.data(), static_cast<std::uint32_t>(buffer_.size())) < 0) {
             handle_request_failure();
         } else {
-            asker_->on<uvw::error_event>([this](const uvw::error_event &event, uvw::udp_handle &handle) {
-                if (event.code() >= 0) {
-                    asker_retry_timer_->on<uvw::timer_event>([this](const uvw::timer_event &event, uvw::timer_handle &handle) {
-                        handle_request_failure();
-                    });
-
-                    asker_retry_timer_->start(std::chrono::milliseconds(SEND_TIMEOUT_RETRY), std::chrono::milliseconds(SEND_TIMEOUT_RETRY));
-                } else {
-                    handle_request_failure();
-                }
+            asker_retry_timer_->on<uvw::timer_event>([this](const uvw::timer_event &event, uvw::timer_handle &handle) {
+                handle_request_failure();
             });
+
+            asker_retry_timer_->start(std::chrono::milliseconds(SEND_TIMEOUT_RETRY), std::chrono::milliseconds(SEND_TIMEOUT_RETRY));
         }
     }
 
     void asker_inet::send_request_with_retries(const epoc::socket::saddress &addr, char *request, const std::size_t request_size,
-        response_callback response_cb, const bool request_dynamically_allocated, const bool sync) {
+        response_callback response_cb, const bool sync) {
         if (!in_transfer_data_callback_) {
             request_done_evt_.wait();
+        }
+
+        // Check address validity
+        sockaddr *addr_host = nullptr;
+        GUEST_TO_BSD_ADDR(addr, addr_host);
+
+        if (addr_host == nullptr) {
+            callback_(nullptr, BT_COMM_INET_INVALID_ADDR);
+            return;
         }
 
         request_done_evt_.reset();
         in_transfer_data_callback_ = false;
 
-        sockaddr *addr_host = nullptr;
-        GUEST_TO_BSD_ADDR(addr, addr_host);
+        retry_times_ = 0;
+        callback_ = response_cb;
 
-        if (addr_host == nullptr) {
-            response_cb(nullptr, BT_COMM_INET_INVALID_ADDR);
-            if (request_dynamically_allocated) {
-                free(request);
+        buffer_.clear();
+        buffer_.insert(buffer_.begin(), reinterpret_cast<char*>(&asker_id_), reinterpret_cast<char*>(&asker_id_ + 1));
+        buffer_.insert(buffer_.end(), request, request + request_size);
+
+        run_task_on(uvw::loop::get_default(), [this, addr]() {
+            sockaddr *addr_host = nullptr;
+            GUEST_TO_BSD_ADDR(addr, addr_host);
+
+            auto default_loop = uvw::loop::get_default();
+
+            if (!asker_) {
+                asker_ = default_loop->resource<uvw::udp_handle>();
+
+                sockaddr_in6 bind;
+                std::memset(&bind, 0, sizeof(sockaddr_in6));
+                bind.sin6_family = AF_INET6;
+
+                asker_->bind(*reinterpret_cast<sockaddr*>(&bind));
             }
 
-            return;
-        }
+            if (!asker_retry_timer_) {
+                asker_retry_timer_ = default_loop->resource<uvw::timer_handle>();
+            }
 
-        bool was_not_inited = false;
+            if (addr_host->sa_family == AF_INET) {
+                std::memcpy(&dest_, addr_host, sizeof(sockaddr_in));
+            } else {
+                std::memcpy(&dest_, addr_host, sizeof(sockaddr_in6));
+            }
 
-        auto default_loop = uvw::loop::get_default();
-
-        if (!asker_) {
-            asker_ = default_loop->resource<uvw::udp_handle>();
-
-            sockaddr_in6 bind;
-            std::memset(&bind, 0, sizeof(sockaddr_in6));
-            bind.sin6_family = AF_INET6;
-
-            asker_->bind(*reinterpret_cast<sockaddr*>(&bind));
-            was_not_inited = true;
-        }
-
-        if (!asker_retry_timer_) {
-            asker_retry_timer_ = default_loop->resource<uvw::timer_handle>();
-        }
-
-        if (was_not_inited) {
             listen_to_data();
-        }
-
-        if (addr_host->sa_family == AF_INET) {
-            std::memcpy(&dest_, addr_host, sizeof(sockaddr_in));
-        } else {
-            std::memcpy(&dest_, addr_host, sizeof(sockaddr_in6));
-        }
-
-        if ((buf_ != nullptr) && dynamically_allocated_) {
-            free(buf_);
-        }
-
-        retry_times_ = 0;
-        buf_ = request;
-        buf_size_ = static_cast<std::uint32_t>(request_size);
-        callback_ = response_cb;
-        dynamically_allocated_ = request_dynamically_allocated;
-
-        keep_sending_data();
+            keep_sending_data();
+        });
 
         if (sync) {
             request_done_evt_.wait();
@@ -199,7 +179,7 @@ namespace eka2l1::epoc::bt {
     }
 
     void asker_inet::ask_for_routed_port_async(const std::uint16_t virtual_port, const epoc::socket::saddress &dev_addr, port_ask_done_callback cb) {
-        char *buf = new char[3];
+        char buf[3];
         buf[0] = QUERY_OPCODE_GET_REAL_PORT_FROM_VIRTUAL_PORT;
         buf[1] = static_cast<char>(virtual_port & 0xFF);
         buf[2] = static_cast<char>((virtual_port >> 8) & 0xFF);
@@ -219,7 +199,7 @@ namespace eka2l1::epoc::bt {
                 cb(static_cast<std::int64_t>(result));
                 return true;
             }
-        }, true);
+        });
     }
 
     bool asker_inet::check_is_real_port_mapped(const epoc::socket::saddress &addr, const std::uint32_t real_port) {
@@ -238,7 +218,7 @@ namespace eka2l1::epoc::bt {
 
             result = (buf[1] == '1');
             return true;
-        }, false, true);
+        }, true);
 
         return result;
     }
@@ -262,7 +242,7 @@ namespace eka2l1::epoc::bt {
 
             addr_result = result;
             return true;
-        }, false, true);
+        }, true);
 
         return addr_result;
     }

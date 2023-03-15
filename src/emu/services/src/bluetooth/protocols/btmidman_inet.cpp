@@ -28,7 +28,7 @@
 #include <config/config.h>
 #include <common/upnp.h>
 
-#include <services/bluetooth/protocols/utils_inet.h>
+#include <services/utils_uvw.h>
 
 namespace eka2l1::epoc::bt {
     bool midman_inet::should_upnp_apply_to_port() {
@@ -47,9 +47,11 @@ namespace eka2l1::epoc::bt {
         , hearing_timeout_timer_(nullptr)
         , port_(conf.internet_bluetooth_port)
         , retried_lan_discovery_times_(0)
+        , device_addr_asker_(this)
         , current_active_observer_(nullptr)
         , password_(conf.btnet_password)
-        , discovery_mode_(static_cast<discovery_mode>(conf.btnet_discovery_mode)) {
+        , discovery_mode_(static_cast<discovery_mode>(conf.btnet_discovery_mode))
+        , asker_counter_(0) {
         if (discovery_mode_ == DISCOVERY_MODE_OFF) {
             return;
         }
@@ -182,7 +184,8 @@ namespace eka2l1::epoc::bt {
     }
 
     void midman_inet::handle_queries_request(const sockaddr *sender, const char *buf, std::int64_t nread) {
-        query_opcode opcode = static_cast<query_opcode>(buf[0]);
+        const std::uint32_t asker_id = *reinterpret_cast<const std::uint32_t*>(buf);
+        query_opcode opcode = static_cast<query_opcode>(buf[4]);
         char opcode_result_signature = QUERY_OPCODE_RESULT_START + opcode;
 
         switch (opcode) {
@@ -190,36 +193,42 @@ namespace eka2l1::epoc::bt {
             std::string name_utf8 = common::ucs2_to_utf8(device_name());
             name_utf8.insert(name_utf8.begin(), static_cast<char>(name_utf8.length()));
             name_utf8.insert(name_utf8.begin(), opcode_result_signature);
+            name_utf8.insert(name_utf8.begin(), reinterpret_cast<const char*>(&asker_id), reinterpret_cast<const char*>(&asker_id + 1));
 
             bluetooth_queries_server_socket_->send(*sender, name_utf8.data(), static_cast<std::uint32_t>(name_utf8.size()));
             break;
         }
 
         case QUERY_OPCODE_IS_REAL_PORT_MAPPED_TO_VIRTUAL_PORT: {
-            std::uint32_t requested_port = static_cast<std::uint8_t>(buf[1]) |
-                (static_cast<std::uint32_t>(static_cast<std::uint8_t>(buf[2])) << 8) | 
-                (static_cast<std::uint32_t>(static_cast<std::uint8_t>(buf[3])) << 16) |
-                (static_cast<std::uint32_t>(static_cast<std::uint8_t>(buf[4])) << 24);
+            std::uint32_t requested_port = static_cast<std::uint8_t>(buf[5]) |
+                (static_cast<std::uint32_t>(static_cast<std::uint8_t>(buf[6])) << 8) |
+                (static_cast<std::uint32_t>(static_cast<std::uint8_t>(buf[7])) << 16) |
+                (static_cast<std::uint32_t>(static_cast<std::uint8_t>(buf[8])) << 24);
 
-            char check_result[2];
-            check_result[0] = opcode_result_signature;
-            check_result[1] = '0';
+            std::vector<char> check_result;
+            check_result.insert(check_result.end(), reinterpret_cast<const char*>(&asker_id), reinterpret_cast<const char*>(&asker_id + 1));
+            check_result.push_back(opcode_result_signature);
+
+            char final_result  = '0';
 
             if ((requested_port >= port_offset_) && (requested_port < port_offset_ + MAX_PORT)) {
                 if (allocated_ports_.is_allocated(requested_port - port_offset_)) {
-                    check_result[1] = '1';
+                    final_result = '1';
                 }
             }
 
-            bluetooth_queries_server_socket_->send(*sender, check_result, 2);
+            check_result.push_back(final_result);
+
+            bluetooth_queries_server_socket_->send(*sender, check_result.data(), static_cast<std::uint32_t>(check_result.size()));
             break;
         }
 
         case QUERY_OPCODE_GET_REAL_PORT_FROM_VIRTUAL_PORT: {
-            std::uint16_t virtual_port = buf[1] | (static_cast<std::uint16_t>(buf[2]) << 8);
+            std::uint16_t virtual_port = buf[5] | (static_cast<std::uint16_t>(buf[6]) << 8);
             std::uint32_t temp_uint = lookup_host_port(virtual_port);
 
             std::vector<char> buf_result;
+            buf_result.insert(buf_result.begin(), reinterpret_cast<const char*>(&asker_id), reinterpret_cast<const char*>(&asker_id + 1));
             buf_result.push_back(opcode_result_signature);
             buf_result.insert(buf_result.end(), reinterpret_cast<char *>(&temp_uint), reinterpret_cast<char *>(&temp_uint + 1));
 
@@ -229,6 +238,7 @@ namespace eka2l1::epoc::bt {
 
         case QUERY_OPCODE_GET_VIRTUAL_BLUETOOTH_ADDRESS: {
             std::vector<char> buf_result;
+            buf_result.insert(buf_result.begin(), reinterpret_cast<const char*>(&asker_id), reinterpret_cast<const char*>(&asker_id + 1));
             buf_result.push_back(opcode_result_signature);
             buf_result.insert(buf_result.end(), reinterpret_cast<char *>(&random_device_addr_), reinterpret_cast<char *>(&random_device_addr_ + 1));
 
@@ -452,7 +462,7 @@ lookup:
             return port_offset_ + virtual_port - 1;
         }
 
-        return 0;
+        return port_offset_ + virtual_port - 1;
     }
 
     void midman_inet::add_host_port(const std::uint16_t virtual_port) {
@@ -512,7 +522,7 @@ lookup:
 
         if (allocated_ports_.is_allocated(virtual_port - 1)) {
             std::uint32_t ref_count = --port_refs_[virtual_port - 1];
-            if (ref_count <= 0) {
+            if (ref_count == 0) {
                 if (should_upnp_apply_to_port()) {
                     UPnP::StopPortmapping(virtual_port, false);
                 }
@@ -630,8 +640,6 @@ lookup:
             if (discovery_mode_ == DISCOVERY_MODE_LAN) {
                 sockaddr_in6 server_addr_modded;
 
-                LOG_TRACE(KERNEL, "0x{:X}", ((sockaddr_in*)(server_addr_sock_ptr))->sin_addr.s_addr);
-
                 // A bit of overflow would be ok, I guess))
                 std::memcpy(&server_addr_modded, server_addr_sock_ptr, sizeof(sockaddr_in6));
                 server_addr_modded.sin6_port = htons(LAN_DISCOVERY_PORT);
@@ -641,14 +649,17 @@ lookup:
                 broadcast_buf.push_back(static_cast<char>(password_.length()));
                 broadcast_buf.insert(broadcast_buf.end(), password_.begin(), password_.end());
 
-                lan_discovery_call_listener_socket_->broadcast(true);
-
-                lan_discovery_call_listener_socket_->on<uvw::error_event>([this](const uvw::error_event &event, uvw::udp_handle &handle) {
+                lan_discovery_call_listener_socket_->on<uvw::error_event>([](const uvw::error_event &event, uvw::udp_handle &handle) {
                     if (event.code() < 0) {
                         LOG_ERROR(SERVICE_BLUETOOTH, "Fail to send broadcast message to find nearby playable devices! Libuv error code={}", event.code());
                     }
                 });
 
+                lan_discovery_call_listener_socket_->on<uvw::send_event>([](const uvw::send_event &event, uvw::udp_handle &handle) {
+                    LOG_TRACE(SERVICE_BLUETOOTH, "Sent lan discovery call!");
+                });
+
+                lan_discovery_call_listener_socket_->broadcast(true);
                 lan_discovery_call_listener_socket_->send(*reinterpret_cast<sockaddr*>(&server_addr_modded), broadcast_buf.data(), static_cast<std::uint32_t>(broadcast_buf.size()));
             } else {
                 matching_server_socket_->write(&request_friends, 1);

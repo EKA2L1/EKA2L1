@@ -19,7 +19,7 @@
 
 #include <services/bluetooth/protocols/btmidman_inet.h>
 #include <services/bluetooth/protocols/common_inet.h>
-#include <services/bluetooth/protocols/utils_inet.h>
+#include <services/utils_uvw.h>
 
 namespace eka2l1::epoc::bt {
     void midman_inet::setup_lan_discovery() {
@@ -54,7 +54,9 @@ namespace eka2l1::epoc::bt {
     }
 
     void midman_inet::handle_lan_discovery_receive(const char *buf, std::int64_t nread, const sockaddr *addr) {
-        if (memcmp(&(reinterpret_cast<const sockaddr_in*>(addr)->sin_addr), local_addr_.user_data_, 4) == 0) {
+        const std::uint32_t LOCALHOST_ADDR = 0x100007F;
+        if ((memcmp(&(reinterpret_cast<const sockaddr_in*>(addr)->sin_addr), local_addr_.user_data_, 4) == 0) ||
+            (memcmp(&(reinterpret_cast<const sockaddr_in*>(addr)->sin_addr), &LOCALHOST_ADDR, 4) == 0)) {
             return;
         }
 

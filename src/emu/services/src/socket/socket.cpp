@@ -52,6 +52,10 @@ namespace eka2l1::epoc::socket {
         info.complete(epoc::error_not_supported);
     }
 
+    void socket::bind_callback(const saddress &addr, std::function<void(int)> callback) {
+        LOG_ERROR(SERVICE_ESOCK, "Binding socket with callback unimplemented!");
+    }
+
     void socket::connect(const saddress &addr, epoc::notify_info &info) {
         LOG_ERROR(SERVICE_ESOCK, "Connecting socket unimplemented");
         info.complete(epoc::error_not_supported);

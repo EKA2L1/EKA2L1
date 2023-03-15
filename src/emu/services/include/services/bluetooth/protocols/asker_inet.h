@@ -25,10 +25,13 @@
 
 #include <memory>
 #include <optional>
+#include <vector>
 
 #include <uvw.hpp>
 
 namespace eka2l1::epoc::bt {
+    class midman_inet;
+
     enum {
         BT_COMM_INET_ERROR_SEND_FAILED = -1,
         BT_COMM_INET_ERROR_RECV_FAILED = -2,
@@ -46,9 +49,7 @@ namespace eka2l1::epoc::bt {
 
     private:
         int retry_times_;
-        char *buf_;
-        std::uint32_t buf_size_;
-        bool dynamically_allocated_;
+        std::vector<char> buffer_;
 
         response_callback callback_;
         sockaddr_in6 dest_;
@@ -59,18 +60,20 @@ namespace eka2l1::epoc::bt {
         common::event request_done_evt_;
 
         bool in_transfer_data_callback_;
+        std::uint32_t asker_id_;
 
         void keep_sending_data();
         void handle_request_failure();
         void listen_to_data();
 
+        void send_request_with_retries(const epoc::socket::saddress &addr, char *request, const std::size_t request_size,
+                                       response_callback response_cb, const bool sync = false);
+
+
     public:
-        explicit asker_inet();
+        explicit asker_inet(midman_inet *midman);
         ~asker_inet();
 
-        void send_request_with_retries(const epoc::socket::saddress &addr, char *request, const std::size_t request_size,
-            response_callback response_cb, const bool request_dynamically_allocated = false, const bool sync = false);
-        
         bool check_is_real_port_mapped(const epoc::socket::saddress &addr, const std::uint32_t real_port);
         std::optional<device_address> get_device_address(const epoc::socket::saddress &dest_friend);
         void get_device_address_async(const epoc::socket::saddress &dest_friend, device_address_get_done_callback callback);

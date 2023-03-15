@@ -24,6 +24,7 @@
 #include <services/bluetooth/protocols/btmidman_inet.h>
 #include <utils/err.h>
 #include <utils/reqsts.h>
+#include <services/utils_uvw.h>
 
 #include <kernel/kernel.h>
 
@@ -34,6 +35,7 @@ extern "C" {
 namespace eka2l1::epoc::bt {
     btinet_socket::btinet_socket(btlink_inet_protocol *protocol, std::unique_ptr<epoc::socket::socket> &inet_socket)
         : inet_socket_(std::move(inet_socket))
+        , info_asker_(reinterpret_cast<midman_inet*>(protocol->get_midman()))
         , scan_value_(HCI_INQUIRY_AND_PAGE_SCAN)
         , protocol_(protocol)
         , virtual_port_(0)
@@ -42,7 +44,12 @@ namespace eka2l1::epoc::bt {
         if (inet_socket_) {
             int opt_value = 1;
             inet_socket_->set_option(internet::INET_TCP_NO_DELAY_OPT, internet::INET_TCP_SOCK_OPT_LEVEL, reinterpret_cast<std::uint8_t*>(&opt_value), 4);
+            
+            // These game sockets just connect and shutdown same port like it's nothing. I can't care enough if this is security risk or not... If it make things work
+            // Else we have to wait until half the time TIME_WAIT passed.
+            inet_socket_->set_option(internet::INET_REUSE_ADDR, internet::INET_IP_SOCK_OPT_LEVEL, reinterpret_cast<std::uint8_t *>(&opt_value), 4);
         }
+
         if (inet_socket_ && (mid->get_discovery_mode() != DISCOVERY_MODE_DIRECT_IP)) {
             reinterpret_cast<epoc::internet::inet_socket*>(inet_socket_.get())->set_socket_accepted_hook([this](void *opaque_handle) {
                 midman_inet *mid = reinterpret_cast<midman_inet*>(protocol_->get_midman());
@@ -86,9 +93,6 @@ namespace eka2l1::epoc::bt {
             return;
         }
 
-        epoc::socket::saddress addr_to_bind = addr;
-        midman_inet *midman = reinterpret_cast<midman_inet*>(protocol_->get_midman());
-  
         if (addr.family_ != BTADDR_PROTOCOL_FAMILY_ID) {
             // If 0, they just want to change the port. Well, acceptable
             if (addr.family_ != 0) {
@@ -98,36 +102,59 @@ namespace eka2l1::epoc::bt {
             }
         }
 
-        std::memset(addr_to_bind.user_data_, 0, sizeof(addr_to_bind.user_data_));
-        addr_to_bind.family_ = internet::INET6_ADDRESS_FAMILY;
+        // Must make it synchronous with free or ref port, else there will be port overlapped tangled problem
+        run_task_on(uvw::loop::get_default(), [this, addr, info]() {
+            epoc::socket::saddress addr_to_bind = addr;
+            epoc::notify_info info_copy = info;
 
-        std::uint32_t result_len;
-        std::uint16_t guest_port = addr_to_bind.port_;
+            kernel_system *kern = info.requester->get_kernel_object_owner();
+            midman_inet *midman = reinterpret_cast<midman_inet*>(protocol_->get_midman());
 
-        if (guest_port == 0) {
-            guest_port = midman->get_free_port();
+            std::memset(addr_to_bind.user_data_, 0, sizeof(addr_to_bind.user_data_));
+            addr_to_bind.family_ = internet::INET6_ADDRESS_FAMILY;
+
+            std::uint16_t guest_port = addr_to_bind.port_;
+
             if (guest_port == 0) {
-                LOG_ERROR(SERVICE_BLUETOOTH, "Bluetooth ports have ran out. Can't bind!");
-                info.complete(epoc::error_eof);
+                guest_port = midman->get_free_port();
+                if (guest_port == 0) {
+                    LOG_ERROR(SERVICE_BLUETOOTH, "Bluetooth ports have ran out. Can't bind!");
 
-                return;
+                    kern->lock();
+                    info_copy.complete(epoc::error_eof);
+                    kern->unlock();
+
+                    return;
+                }
             }
-        }
 
-        std::uint32_t host_port = midman->lookup_host_port(guest_port);
-        if (host_port == 0) {
-            addr_to_bind.port_ = 0;
+            std::uint32_t host_port = midman->lookup_host_port(guest_port);
+            if (host_port == 0) {
+                addr_to_bind.port_ = 0;
 
-            inet_socket_->bind(addr_to_bind, info);
-            inet_socket_->local_name(addr_to_bind, result_len);
+                inet_socket_->bind_callback(addr_to_bind, [this, info, addr_to_bind, guest_port, midman](int error) {
+                    epoc::notify_info info_copy = info;
+                    epoc::socket::saddress addr_to_bind_copy = addr_to_bind;
 
-            midman->add_host_port(guest_port);
-        } else {
-            addr_to_bind.port_ = host_port;
-            inet_socket_->bind(addr_to_bind, info);
-        }
+                    if (error != epoc::error_none) {
+                        info_copy.complete(error);
+                        return;
+                    } else {
+                        midman->add_host_port(guest_port);
+                        
+                        kernel_system *kern = info_copy.requester->get_kernel_object_owner();
+                        kern->lock();
+                        info_copy.complete(epoc::error_none);
+                        kern->unlock();
+                    }
+                });
+            } else {
+                addr_to_bind.port_ = host_port;
+                inet_socket_->bind(addr_to_bind, info_copy);
+            }
 
-        virtual_port_ = guest_port;
+            virtual_port_ = guest_port;
+        });
     }
 
     void btinet_socket::connect(const epoc::socket::saddress &addr, epoc::notify_info &info) {

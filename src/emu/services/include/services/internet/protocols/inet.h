@@ -133,7 +133,7 @@ namespace eka2l1::epoc::internet {
 
     public:
         explicit inet_host_resolver(inet_bridged_protocol *papa, const std::uint32_t addr_family, const std::uint32_t protocol_id);
-        ~inet_host_resolver();
+        ~inet_host_resolver() override;
 
         std::u16string host_name() const override;
         bool host_name(const std::u16string &name) override;
@@ -189,6 +189,8 @@ namespace eka2l1::epoc::internet {
 
         std::size_t recv_size_;
         bool take_available_only_;
+        bool reuse_addr_ = false;
+        bool reuse_addr_changed_ = false;
 
         std::vector<char> temp_buffer_;
         epoc::socket::saddress *recv_addr_;
@@ -237,6 +239,7 @@ namespace eka2l1::epoc::internet {
         bool open(const std::uint32_t family_id, const std::uint32_t protocol_id, const epoc::socket::socket_type sock_type);
         void connect(const epoc::socket::saddress &addr, epoc::notify_info &info) override;
         void bind(const epoc::socket::saddress &addr, epoc::notify_info &info) override;
+        void bind_callback(const epoc::socket::saddress &addr, std::function<void(int)> callback) override;
         void send(const std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr, std::uint32_t flags, epoc::notify_info &complete_info) override;
         void receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, epoc::socket::saddress *addr,
             std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) override;

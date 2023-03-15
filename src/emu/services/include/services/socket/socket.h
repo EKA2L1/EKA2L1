@@ -105,6 +105,14 @@ namespace eka2l1::epoc::socket {
         virtual void bind(const saddress &addr, epoc::notify_info &info);
 
         /**
+         * @brief Perform binding this address to local desired address with callback.
+         * 
+         * @param sockaddr_buffer        Buffer containing the information about the address, different per socket implementation.
+         * @param callback               The callback to be called when binding is done. Integer argument contains error code for bind.
+         */
+        virtual void bind_callback(const saddress &addr, std::function<void(int)> callback);
+
+        /**
          * @brief Perform connect to remote address.
          * 
          * @param addr                  Address to be connected to

@@ -19,7 +19,7 @@
 
 #include <services/bluetooth/protocols/btmidman_inet.h>
 #include <services/bluetooth/protocols/common_inet.h>
-#include <services/bluetooth/protocols/utils_inet.h>
+#include <services/utils_uvw.h>
 #include <config/config.h>
 
 namespace eka2l1::epoc::bt {

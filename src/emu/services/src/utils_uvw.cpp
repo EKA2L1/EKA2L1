@@ -1,6 +1,6 @@
-#include <services/bluetooth/protocols/utils_inet.h>
+#include <services/utils_uvw.h>
 
-namespace eka2l1::epoc::bt {
+namespace eka2l1::epoc {
     void run_task_on(std::shared_ptr<uvw::loop> loop, std::function<void()> task) {
         auto async_op = loop->resource<uvw::async_handle>();
 

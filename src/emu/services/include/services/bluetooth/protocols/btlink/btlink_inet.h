@@ -65,7 +65,7 @@ namespace eka2l1::epoc::bt {
 
     public:
         explicit btlink_inet_host_resolver(btlink_inet_protocol *papa);
-        ~btlink_inet_host_resolver();
+        ~btlink_inet_host_resolver() override;
 
         std::u16string host_name() const override;
         bool host_name(const std::u16string &name) override;

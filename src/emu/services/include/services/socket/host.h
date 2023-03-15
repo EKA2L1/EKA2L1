@@ -53,6 +53,8 @@ namespace eka2l1::epoc::socket {
 
     class host_resolver {
     public:
+        virtual ~host_resolver() = default;
+
         virtual std::u16string host_name() const = 0;
         virtual bool host_name(const std::u16string &new_name) = 0;
 

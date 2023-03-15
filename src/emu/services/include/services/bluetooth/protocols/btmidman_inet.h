@@ -92,7 +92,6 @@ namespace eka2l1::epoc::bt {
         std::shared_ptr<uvw::udp_handle> bluetooth_queries_server_socket_;
         std::shared_ptr<uvw::timer_handle> hearing_timeout_timer_;
 
-        std::vector<char> server_recv_buf_;
         int port_;
         int retried_lan_discovery_times_;
 
@@ -107,6 +106,8 @@ namespace eka2l1::epoc::bt {
 
         epoc::socket::saddress server_addr_;
         epoc::socket::saddress local_addr_;
+
+        std::uint32_t asker_counter_;
 
         void send_call_for_strangers();
 
@@ -185,6 +186,10 @@ namespace eka2l1::epoc::bt {
 
         std::uint32_t get_port_offset() const {
             return port_offset_;
+        }
+
+        std::uint32_t new_asker_id() {
+            return ++asker_counter_;
         }
     };
 }

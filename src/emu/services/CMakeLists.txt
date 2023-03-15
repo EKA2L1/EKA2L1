@@ -7,6 +7,7 @@ add_library(epocservs
         include/services/host_launch.h
         include/services/init.h
         include/services/utils.h
+        include/services/utils_uvw.h
         include/services/accessory/accessory.h
         include/services/accessory/common.h
         include/services/alarm/alarm.h
@@ -32,7 +33,6 @@ add_library(epocservs
         include/services/bluetooth/protocols/btmidman_inet.h
         include/services/bluetooth/protocols/common.h
         include/services/bluetooth/protocols/overall.h
-        include/services/bluetooth/protocols/utils_inet.h
         include/services/bluetooth/bt.h
         include/services/bluetooth/btman.h
         include/services/bluetooth/btmidman.h
@@ -156,6 +156,7 @@ add_library(epocservs
         src/host_launch.cpp
         src/init.cpp
         src/utils.cpp
+        src/utils_uvw.cpp
         src/accessory/accessory.cpp
         src/accessory/common.cpp
         src/alarm/alarm.cpp
@@ -180,7 +181,6 @@ add_library(epocservs
         src/bluetooth/protocols/btmidman_inet.cpp
         src/bluetooth/protocols/common.cpp
         src/bluetooth/protocols/overall.cpp
-        src/bluetooth/protocols/utils_inet.cpp
         src/bluetooth/bt.cpp
         src/bluetooth/btman.cpp
         src/bluetooth/btmidman.cpp

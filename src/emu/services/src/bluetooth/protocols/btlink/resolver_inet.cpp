@@ -39,6 +39,7 @@ namespace eka2l1::epoc::bt {
         , in_completion_(false)
         , no_more_friends_(false)
         , in_async_searching_(false)
+        , friend_querier_(reinterpret_cast<midman_inet*>(papa->get_midman()))
         , delay_emu_evt_(-1) {
     }
 

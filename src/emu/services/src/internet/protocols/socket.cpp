@@ -18,11 +18,14 @@
  */
 
 #include <services/internet/protocols/inet.h>
+#include <services/utils_uvw.h>
+
 #include <common/platform.h>
 #include <utils/des.h>
 #include <utils/err.h>
 #include <kernel/kernel.h>
 #include <common/thread.h>
+#include <common/log.h>
 
 extern "C" {
 #include <uv.h>
@@ -101,19 +104,13 @@ namespace eka2l1::epoc::internet {
 
             if (protocol_ == INET_TCP_PROTOCOL_ID) {
                 uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
-                    uv_shutdown_t *shut = new uv_shutdown_t;
-                    if (uv_shutdown(shut, reinterpret_cast<uv_stream_t*>(async->data), [](uv_shutdown_t *shut, int status) {
-                        uv_close(reinterpret_cast<uv_handle_t*>(shut->handle), [](uv_handle_t *handle) {
+                    if (uv_tcp_close_reset(reinterpret_cast<uv_tcp_t *>(async->data), [](uv_handle_t *handle) {
                             delete handle;
-                        });
-
-                        delete shut;
-                    }) < 0) {
+                        })
+                        < 0) {
                         uv_close(reinterpret_cast<uv_handle_t*>(async->data), [](uv_handle_t *handle) {
                             delete handle;
                         });
-
-                        delete shut;
                     }
 
                     close_and_delete_async(async);
@@ -199,11 +196,13 @@ namespace eka2l1::epoc::internet {
         struct uv_sock_init_params {
             void *opaque_handle_;
             int result_ = 0;
+            int family_ = 0;
             common::event *done_evt_ = nullptr;
         };
 
         uv_sock_init_params params;
         params.done_evt_ = &open_event_;
+        params.family_ = family_translated;
 
         async->data = &params;
 
@@ -213,7 +212,7 @@ namespace eka2l1::epoc::internet {
 
             uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
                 uv_sock_init_params *params = reinterpret_cast<uv_sock_init_params*>(async->data);
-                params->result_ = uv_tcp_init(uv_default_loop(), reinterpret_cast<uv_tcp_t*>(params->opaque_handle_));
+                params->result_ = uv_tcp_init_ex(uv_default_loop(), reinterpret_cast<uv_tcp_t*>(params->opaque_handle_), params->family_);
                 params->done_evt_->set();
 
                 close_and_delete_async(async);
@@ -224,7 +223,7 @@ namespace eka2l1::epoc::internet {
 
             uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
                 uv_sock_init_params *params = reinterpret_cast<uv_sock_init_params*>(async->data);
-                params->result_ = uv_udp_init(uv_default_loop(), reinterpret_cast<uv_udp_t*>(params->opaque_handle_));
+                params->result_ = uv_udp_init_ex(uv_default_loop(), reinterpret_cast<uv_udp_t*>(params->opaque_handle_), params->family_);
 
                 params->done_evt_->set();
                 close_and_delete_async(async);
@@ -258,6 +257,9 @@ namespace eka2l1::epoc::internet {
         if (connect_done_info_.empty()) {
             return;
         }
+
+        kernel_system *kern = connect_done_info_.requester->get_kernel_object_owner();
+        kern->lock();
 
         if (error_code == 0) {
             connect_done_info_.complete(epoc::error_none);
@@ -301,6 +303,8 @@ namespace eka2l1::epoc::internet {
 
             connect_done_info_.complete(guest_error_code);
         }
+
+        kern->unlock();
     }
 
     void inet_socket::complete_connect_done_info(const int err) {
@@ -404,16 +408,61 @@ namespace eka2l1::epoc::internet {
             return;
         }
 
-        sockaddr *ip_addr_ptr = nullptr;
-        GUEST_TO_BSD_ADDR(addr, ip_addr_ptr);
-        
-        if (protocol_ == INET_UDP_PROTOCOL_ID) {
-            uv_udp_bind(reinterpret_cast<uv_udp_t*>(opaque_handle_), ip_addr_ptr, 0);
-        } else {
-            uv_tcp_bind(reinterpret_cast<uv_tcp_t*>(opaque_handle_), ip_addr_ptr, 0);
+        run_task_on(uvw::loop::get_default(), [this, addr, info]() {
+            epoc::notify_info info_copy = info;
+
+            sockaddr *ip_addr_ptr = nullptr;
+            GUEST_TO_BSD_ADDR(addr, ip_addr_ptr);
+
+            if (reuse_addr_changed_) {
+                // Set flags
+                reuse_addr_changed_ = false;
+
+                uv_os_fd_t fd = 0;
+                uv_fileno(reinterpret_cast<uv_handle_t *>(opaque_handle_), &fd);
+
+                int value = reuse_addr_;
+
+#if EKA2L1_PLATFORM(WIN32)
+                setsockopt(reinterpret_cast<SOCKET>(fd), SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char *>(&value), 4);
+                
+#else
+                setsockopt(reinterpret_cast<int>(fd), SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char *>(&value), 4);
+#endif
+            }
+
+            if (protocol_ == INET_UDP_PROTOCOL_ID) {
+                uv_udp_bind(reinterpret_cast<uv_udp_t*>(opaque_handle_), ip_addr_ptr, 0);
+            } else {
+                uv_tcp_bind(reinterpret_cast<uv_tcp_t*>(opaque_handle_), ip_addr_ptr, 0);
+            }
+
+            kernel_system *kern = info_copy.requester->get_kernel_object_owner();
+
+            kern->lock();
+            info_copy.complete(epoc::error_none);
+            kern->unlock();
+        });
+    }
+
+    void inet_socket::bind_callback(const epoc::socket::saddress &addr, std::function<void(int)> callback) {
+        if (!opaque_handle_) {
+            callback(epoc::error_not_ready);
+            return;
         }
 
-        info.complete(epoc::error_none);
+        run_task_on(uvw::loop::get_default(), [this, addr, callback]() {
+            sockaddr *ip_addr_ptr = nullptr;
+            GUEST_TO_BSD_ADDR(addr, ip_addr_ptr);
+
+            if (protocol_ == INET_UDP_PROTOCOL_ID) {
+                uv_udp_bind(reinterpret_cast<uv_udp_t*>(opaque_handle_), ip_addr_ptr, 0);
+            } else {
+                uv_tcp_bind(reinterpret_cast<uv_tcp_t*>(opaque_handle_), ip_addr_ptr, 0);
+            }
+
+            callback(epoc::error_none);
+        });
     }
 
     void inet_socket::handle_new_connection() {
@@ -1122,14 +1171,21 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::complete_shutdown_info(const int err) {
-        if (err < 0) {
-            LOG_ERROR(SERVICE_INTERNET, "Shutdown encountered libuv error code {}", err);
-            shutdown_info_.complete(epoc::error_general);
-
+        if (shutdown_info_.empty()) {
             return;
         }
 
-        shutdown_info_.complete(epoc::error_none);
+        kernel_system *kern = shutdown_info_.requester->get_kernel_object_owner();
+        kern->lock();
+
+        if (err < 0) {
+            LOG_ERROR(SERVICE_INTERNET, "Shutdown encountered libuv error code {}", err);
+            shutdown_info_.complete(epoc::error_general);
+        } else {
+            shutdown_info_.complete(epoc::error_none);
+        }
+
+        kern->unlock();
     }
 
     void inet_socket::shutdown(epoc::notify_info &complete_info, int reason) {
@@ -1205,9 +1261,29 @@ namespace eka2l1::epoc::internet {
                 return false;
             }
             switch (option_id) {
-            case INET_TCP_NO_DELAY_OPT:
-                uv_tcp_nodelay(reinterpret_cast<uv_tcp_t*>(opaque_handle_), *reinterpret_cast<int*>(buffer));
+            case INET_TCP_NO_DELAY_OPT: {
+                int value = *reinterpret_cast<int *>(buffer);
+                run_task_on(uvw::loop::get_default(), [this, value]() {
+                    uv_tcp_nodelay(reinterpret_cast<uv_tcp_t*>(opaque_handle_), value);
+                });
                 return true;
+            }
+
+            default:
+                break;
+            }
+        } else if (option_family == INET_IP_SOCK_OPT_LEVEL) {
+            switch (option_id) {
+            case INET_REUSE_ADDR: {
+                int value = *reinterpret_cast<int *>(buffer);
+
+                if (reuse_addr_ != static_cast<bool>(value)) {
+                    reuse_addr_changed_ = true;
+                    reuse_addr_ = static_cast<bool>(value);
+                }
+
+                return true;
+            }
 
             default:
                 break;

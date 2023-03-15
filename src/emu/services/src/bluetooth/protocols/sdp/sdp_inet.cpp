@@ -19,7 +19,7 @@
 
 #include <services/bluetooth/protocols/sdp/sdp_inet.h>
 #include <services/bluetooth/protocols/btmidman_inet.h>
-#include <services/bluetooth/protocols/utils_inet.h>
+#include <services/utils_uvw.h>
 #include <common/log.h>
 #include <common/bytes.h>
 #include <kernel/thread.h>
@@ -41,11 +41,11 @@ namespace eka2l1::epoc::bt {
 
     sdp_inet_net_database::sdp_inet_net_database(sdp_inet_protocol *protocol)
         : protocol_(protocol)
+        , bt_port_asker_(reinterpret_cast<midman_inet*>(protocol->get_midman()))
         , sdp_connect_(nullptr)
         , connected_(false)
         , provided_result_(nullptr)
-        , store_to_temp_buffer_(false)
-        , should_notify_done_(false) {
+        , store_to_temp_buffer_(false) {
     }
 
     sdp_inet_net_database::~sdp_inet_net_database() {

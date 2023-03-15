@@ -24,6 +24,6 @@
 #include <functional>
 #include <memory>
 
-namespace eka2l1::epoc::bt {
+namespace eka2l1::epoc {
     void run_task_on(std::shared_ptr<uvw::loop> loop, std::function<void()> task);
 }
