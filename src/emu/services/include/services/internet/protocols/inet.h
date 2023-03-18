@@ -35,6 +35,8 @@
 #include <vector>
 #include <queue>
 
+#include <uvlooper/uvlooper.h>
+
 struct addrinfo;
 struct sockaddr;
 
@@ -182,6 +184,7 @@ namespace eka2l1::epoc::internet {
         epoc::notify_info recv_done_info_;
         epoc::notify_info accept_done_info_;
         epoc::notify_info shutdown_info_;
+        epoc::notify_info bind_done_info_;
 
         std::uint32_t *bytes_written_;
         std::uint32_t *bytes_read_;
@@ -208,32 +211,60 @@ namespace eka2l1::epoc::internet {
 
         std::function<void(void*)> socket_accepted_hook_;
         std::mutex hook_lock_;
+        std::mutex data_lock_;
+
+        std::shared_ptr<libuv::looper> looper_;
+
+        std::shared_ptr<libuv::task> connect_task_;
+        std::shared_ptr<libuv::task> listen_task_;
+        std::shared_ptr<libuv::task> bind_task_;
+        std::shared_ptr<libuv::task> bind_callback_task_;
+        std::shared_ptr<libuv::task> accept_task_;
+        std::shared_ptr<libuv::task> send_task_;
+        std::shared_ptr<libuv::task> recv_task_;
+        std::shared_ptr<libuv::task> cancel_recv_task_;
+        std::shared_ptr<libuv::task> shutdown_task_;
+
+        /// Async connect parameters
+        sockaddr_in6 connect_addr_;
+
+        /// Async backlog count for listen
+        int backlog_count_;
+
+        /// Async bind parameters
+        epoc::socket::saddress bind_addr_;
+        std::function<void(int)> bind_callback_;
+
+        /// Async data send parameters
+        uv_buf_t send_buf_;
+        sockaddr_in6 send_dest_;
 
         void close_down();
         void handle_connect_done_error_code(const int error_code);
         std::size_t retrieve_next_interface_info(std::uint8_t *buffer, const std::size_t avail_size);
+        void create_frequent_tcp_tasks();
+        void create_frequent_udp_tasks();
+        void create_frequent_common_tasks();
+
+        // Asynchronous operations
+        void tcp_connect_impl_async();
+        void tcp_send_impl_async();
+        void tcp_recv_impl_async();
+        void tcp_cancel_recv_impl_async();
+        void tcp_shutdown_impl_async();
+        void listen_impl_async();
+
+        void udp_connect_impl_async();
+        void udp_send_impl_async();
+        void udp_recv_impl_async();
+        void udp_cancel_recv_impl_async();
+        void udp_shutdown_impl_async();
+
+        void bind_impl_async();
+        void bind_callback_impl_async();
 
     public:
-        explicit inet_socket(inet_bridged_protocol *papa)
-            : papa_(papa)
-            , accept_socket_ptr_(nullptr)
-            , accept_server_(nullptr)
-            , opaque_handle_(nullptr)
-            , opaque_connect_(nullptr)
-            , opaque_send_info_(nullptr)
-            , opaque_write_info_(nullptr)
-            , protocol_(0)
-            , bytes_written_(nullptr)
-            , bytes_read_(nullptr)
-            , read_dest_(nullptr)
-            , recv_size_(0)
-            , take_available_only_(false)
-            , stream_data_buffer_(nullptr)
-            , receive_done_cb_(nullptr)
-            , broadcast_translate_cached_(false)
-            , socket_accepted_hook_(nullptr) {
-        }
-
+        explicit inet_socket(inet_bridged_protocol *papa);
         ~inet_socket() override;
 
         bool open(const std::uint32_t family_id, const std::uint32_t protocol_id, const epoc::socket::socket_type sock_type);
@@ -269,7 +300,7 @@ namespace eka2l1::epoc::internet {
         void handle_udp_delivery(const std::int64_t bytes_read, const void *buf_ptr, const void *addr);
         void handle_tcp_delivery(const std::int64_t bytes_read, const void *buf_ptr);
         void handle_new_connection();
-        void handle_accept_impl(std::unique_ptr<epoc::socket::socket> *pending_sock, epoc::notify_info &complete_info);
+        void handle_accept_impl();
 
         void *get_opaque_handle() {
             return opaque_handle_;
@@ -283,14 +314,11 @@ namespace eka2l1::epoc::internet {
 
     class inet_bridged_protocol : public socket::protocol {
     private:
-        std::unique_ptr<std::thread> loop_thread_;
-        std::atomic<bool> stopped_;
+        std::shared_ptr<libuv::looper> looper_;
         kernel_system *kern_;
 
     public:
         explicit inet_bridged_protocol(kernel_system *kern, const bool oldarch);
-        ~inet_bridged_protocol() override;
-
         void initialize_looper();
 
         virtual std::u16string name() const override {
@@ -330,6 +358,10 @@ namespace eka2l1::epoc::internet {
 
         kernel_system *get_kernel_system() {
             return kern_;
+        }
+
+        std::shared_ptr<libuv::looper> get_looper() {
+            return looper_;
         }
     };
 

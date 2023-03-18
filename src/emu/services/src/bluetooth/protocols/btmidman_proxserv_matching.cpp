@@ -19,7 +19,6 @@
 
 #include <services/bluetooth/protocols/btmidman_inet.h>
 #include <services/bluetooth/protocols/common_inet.h>
-#include <services/utils_uvw.h>
 #include <config/config.h>
 
 namespace eka2l1::epoc::bt {
@@ -72,7 +71,7 @@ namespace eka2l1::epoc::bt {
 
         auto matching_server_socket_copy = matching_server_socket_;
 
-        run_task_on(loop, [matching_server_socket_copy, meta_server_addr, this]() {
+        libuv::default_looper->one_shot([matching_server_socket_copy, meta_server_addr, this]() {
             auto matching_server_socket_copy_copy = matching_server_socket_copy;
 
             sockaddr_in6 addr_temp;
@@ -140,9 +139,7 @@ namespace eka2l1::epoc::bt {
 
         if (close_and_reset) {
             auto matching_server_socket_copy = matching_server_socket_;
-            run_task_on(uvw::loop::get_default(), [matching_server_socket_copy]() {
-                auto matching_server_socket_copy_copy = matching_server_socket_copy;
-                matching_server_socket_copy_copy.reset();
+            libuv::default_looper->one_shot([matching_server_socket_copy]() {
             });
         }
     }

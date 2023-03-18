@@ -19,10 +19,10 @@
 
 #include <services/bluetooth/protocols/sdp/sdp_inet.h>
 #include <services/bluetooth/protocols/btmidman_inet.h>
-#include <services/utils_uvw.h>
 #include <common/log.h>
 #include <common/bytes.h>
 #include <kernel/thread.h>
+#include <kernel/kernel.h>
 #include <utils/err.h>
 
 extern "C" {
@@ -39,13 +39,16 @@ namespace eka2l1::epoc::bt {
         return static_cast<std::uint8_t>((type << 3) | (size_index & 0x7));
     }
 
-    sdp_inet_net_database::sdp_inet_net_database(sdp_inet_protocol *protocol)
-        : protocol_(protocol)
+    sdp_inet_net_database::sdp_inet_net_database(sdp_inet_protocol *protocol, internet::inet_bridged_protocol *inet_pro)
+        : inet_pro_(inet_pro)
+        , protocol_(protocol)
         , bt_port_asker_(reinterpret_cast<midman_inet*>(protocol->get_midman()))
         , sdp_connect_(nullptr)
         , connected_(false)
         , provided_result_(nullptr)
-        , store_to_temp_buffer_(false) {
+        , store_to_temp_buffer_(false)
+        , target_pdu_buffer_(nullptr)
+        , target_pdu_buffer_size_(0) {
     }
 
     sdp_inet_net_database::~sdp_inet_net_database() {
@@ -56,11 +59,9 @@ namespace eka2l1::epoc::bt {
         const std::lock_guard<std::mutex> guard(access_lock_);
 
         if (sdp_connect_) {
-            auto sdp_connect_copy = sdp_connect_;
-
-            run_task_on(uvw::loop::get_default(), [sdp_connect_copy]() {
-                auto sdp_connect_copy_copy = sdp_connect_copy;
-                sdp_connect_copy_copy.reset();
+            inet_pro_->get_looper()->one_shot([sdp_connect_copy = sdp_connect_]() {
+                sdp_connect_copy->reset<uvw::data_event>();
+                sdp_connect_copy->reset<uvw::error_event>();
             });
         }
     }
@@ -70,9 +71,15 @@ namespace eka2l1::epoc::bt {
             return;
         }
 
+        kernel_system *kern = current_query_notify_.requester->get_kernel_object_owner();
+
         if (!provided_result_) {
             LOG_ERROR(SERVICE_BLUETOOTH, "No result buffer for SDP query!");
+
+            kern->lock();
             current_query_notify_.complete(epoc::error_general);
+            kern->unlock();
+
             return;
         }
 
@@ -103,7 +110,9 @@ namespace eka2l1::epoc::bt {
             provided_result_ = nullptr;
         }
 
+        kern->lock();
         current_query_notify_.complete(epoc::error_none);
+        kern->unlock();
     }
 
     void sdp_inet_net_database::handle_new_pdu_packet(const char *buffer, const std::int64_t nread) {
@@ -133,9 +142,14 @@ namespace eka2l1::epoc::bt {
         trans_id = common::to_host_order(trans_id);
         param_len = common::to_host_order(param_len);
 
+        kernel_system *kern = current_query_notify_.requester->get_kernel_object_owner();
+
         if (trans_id != pdu_packet_builder_.current_transmission_id()) {
             LOG_TRACE(SERVICE_BLUETOOTH, "PDU packet mismatch transmission ID (got {}, expected {})", trans_id, pdu_packet_builder_.current_transmission_id());
+
+            kern->lock();
             current_query_notify_.complete(error_sdp_bad_result_data);
+            kern->unlock();
 
             return;
         }
@@ -144,7 +158,11 @@ namespace eka2l1::epoc::bt {
         case SDP_PDU_ERROR_RESPONE: {
             if (param_len < 2) {
                 LOG_TRACE(SERVICE_BLUETOOTH, "Error response has insufficent error data!");
+
+                kern->lock();
                 current_query_notify_.complete(error_sdp_peer_error);
+                kern->unlock();
+
                 return;
             }
 
@@ -152,7 +170,10 @@ namespace eka2l1::epoc::bt {
             std::memcpy(&error, buffer + pdu_builder::PDU_HEADER_SIZE, 2);
             error = common::to_host_order(error);
 
+            kern->lock();
             current_query_notify_.complete(error);
+            kern->unlock();
+
             return;
         }
 
@@ -162,15 +183,27 @@ namespace eka2l1::epoc::bt {
             return;
 
         default:
+            kern->lock();
             current_query_notify_.complete(error_sdp_bad_result_data);
+            kern->unlock();
+
             return;
         }
     }
 
     void sdp_inet_net_database::handle_connect_done(const int status) {
+        if (current_query_notify_.empty()) {
+            return;
+        }
+
+        kernel_system *kern = current_query_notify_.requester->get_kernel_object_owner();
+
         if (status < 0) {
             LOG_ERROR(SERVICE_BLUETOOTH, "Connect to SDP server failed with libuv error code {}", status);
+
+            kern->lock();
             current_query_notify_.complete(epoc::error_could_not_connect);
+            kern->unlock();
 
             return;
         }
@@ -184,7 +217,10 @@ namespace eka2l1::epoc::bt {
         });
 
         sdp_connect_->read();
+
+        kern->lock();
         current_query_notify_.complete(epoc::error_none);
+        kern->unlock();
     }
 
     void sdp_inet_net_database::handle_connect_query(const char *record_buf, const std::uint32_t record_size) {
@@ -240,23 +276,37 @@ namespace eka2l1::epoc::bt {
 
         if (status < 0) {
             LOG_ERROR(SERVICE_BLUETOOTH, "Sending PDU packet to SDP server failed with libuv error code {}", status);
+
+            kernel_system *kern = current_query_notify_.requester->get_kernel_object_owner();
+
+            kern->lock();
             current_query_notify_.complete(epoc::error_server_busy);
+            kern->unlock();
 
             return;
         }
     }
 
     void sdp_inet_net_database::send_pdu_packet(const char *buf, const std::uint32_t buf_size) {
-        // Re-register new pdu packet error event
-        sdp_connect_->on<uvw::error_event>([this](const uvw::error_event &event, uvw::tcp_handle &handle) {
-            handle_send_done(event.code());
-        });
+        target_pdu_buffer_ = buf;
+        target_pdu_buffer_size_ = buf_size;
 
-        sdp_connect_->on<uvw::write_event>([this](const uvw::write_event &event, uvw::tcp_handle &handle) {
-            handle_send_done(0);
-        });
+        if (!send_pdu_packet_task_) {
+            send_pdu_packet_task_ = libuv::create_task([this]() {
+                // Re-register new pdu packet error event
+                sdp_connect_->on<uvw::error_event>([this](const uvw::error_event &event, uvw::tcp_handle &handle) {
+                    handle_send_done(event.code());
+                });
 
-        sdp_connect_->write(const_cast<char*>(buf), buf_size);
+                sdp_connect_->on<uvw::write_event>([this](const uvw::write_event &event, uvw::tcp_handle &handle) {
+                    handle_send_done(0);
+                });
+
+                sdp_connect_->write(const_cast<char*>(target_pdu_buffer_), target_pdu_buffer_size_);
+            });
+        }
+
+        inet_pro_->get_looper()->post_task(send_pdu_packet_task_);
     }
 
     void sdp_inet_net_database::handle_service_query(const char *record_buf, const std::uint32_t record_size) {

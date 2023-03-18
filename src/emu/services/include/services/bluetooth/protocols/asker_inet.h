@@ -22,6 +22,7 @@
 #include <services/bluetooth/protocols/common.h>
 #include <services/internet/protocols/inet.h>
 #include <common/sync.h>
+#include <uvlooper/uvlooper.h>
 
 #include <memory>
 #include <optional>
@@ -56,11 +57,14 @@ namespace eka2l1::epoc::bt {
 
         std::shared_ptr<uvw::udp_handle> asker_;
         std::shared_ptr<uvw::timer_handle> asker_retry_timer_;
+        std::shared_ptr<libuv::task> send_data_task_;
 
         common::event request_done_evt_;
 
         bool in_transfer_data_callback_;
         std::uint32_t asker_id_;
+
+        epoc::socket::saddress dest_addr_;
 
         void keep_sending_data();
         void handle_request_failure();

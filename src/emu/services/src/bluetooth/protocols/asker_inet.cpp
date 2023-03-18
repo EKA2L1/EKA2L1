@@ -20,7 +20,6 @@
 #include <services/bluetooth/protocols/asker_inet.h>
 #include <services/bluetooth/protocols/btmidman_inet.h>
 #include <services/bluetooth/protocols/common_inet.h>
-#include <services/utils_uvw.h>
 
 #include <common/log.h>
 
@@ -123,40 +122,45 @@ namespace eka2l1::epoc::bt {
 
         retry_times_ = 0;
         callback_ = response_cb;
+        dest_addr_ = addr;
 
         buffer_.clear();
         buffer_.insert(buffer_.begin(), reinterpret_cast<char*>(&asker_id_), reinterpret_cast<char*>(&asker_id_ + 1));
         buffer_.insert(buffer_.end(), request, request + request_size);
 
-        run_task_on(uvw::loop::get_default(), [this, addr]() {
-            sockaddr *addr_host = nullptr;
-            GUEST_TO_BSD_ADDR(addr, addr_host);
+        if (!send_data_task_) {
+            send_data_task_ = libuv::create_task([this]() {
+                sockaddr *addr_host = nullptr;
+                GUEST_TO_BSD_ADDR(dest_addr_, addr_host);
 
-            auto default_loop = uvw::loop::get_default();
+                auto default_loop = uvw::loop::get_default();
 
-            if (!asker_) {
-                asker_ = default_loop->resource<uvw::udp_handle>();
+                if (!asker_) {
+                    asker_ = default_loop->resource<uvw::udp_handle>();
 
-                sockaddr_in6 bind;
-                std::memset(&bind, 0, sizeof(sockaddr_in6));
-                bind.sin6_family = AF_INET6;
+                    sockaddr_in6 bind;
+                    std::memset(&bind, 0, sizeof(sockaddr_in6));
+                    bind.sin6_family = AF_INET6;
 
-                asker_->bind(*reinterpret_cast<sockaddr*>(&bind));
-            }
+                    asker_->bind(*reinterpret_cast<sockaddr*>(&bind));
+                }
 
-            if (!asker_retry_timer_) {
-                asker_retry_timer_ = default_loop->resource<uvw::timer_handle>();
-            }
+                if (!asker_retry_timer_) {
+                    asker_retry_timer_ = default_loop->resource<uvw::timer_handle>();
+                }
 
-            if (addr_host->sa_family == AF_INET) {
-                std::memcpy(&dest_, addr_host, sizeof(sockaddr_in));
-            } else {
-                std::memcpy(&dest_, addr_host, sizeof(sockaddr_in6));
-            }
+                if (addr_host->sa_family == AF_INET) {
+                    std::memcpy(&dest_, addr_host, sizeof(sockaddr_in));
+                } else {
+                    std::memcpy(&dest_, addr_host, sizeof(sockaddr_in6));
+                }
 
-            listen_to_data();
-            keep_sending_data();
-        });
+                listen_to_data();
+                keep_sending_data();
+            });
+        }
+
+        libuv::default_looper->post_task(send_data_task_);
 
         if (sync) {
             request_done_evt_.wait();

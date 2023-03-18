@@ -25,10 +25,9 @@
 #include <common/random.h>
 #include <common/log.h>
 #include <common/algorithm.h>
+#include <common/thread.h>
 #include <config/config.h>
 #include <common/upnp.h>
-
-#include <services/utils_uvw.h>
 
 namespace eka2l1::epoc::bt {
     bool midman_inet::should_upnp_apply_to_port() {
@@ -78,38 +77,48 @@ namespace eka2l1::epoc::bt {
             random_device_addr_.addr_[i] = static_cast<std::uint8_t>(random_range(0, 0xFF));
         }
 
-        auto loop = uvw::loop::get_default();
+        auto looper = libuv::default_looper;
+        std::string bt_server_url = conf.bt_central_server_url;
 
-        bluetooth_queries_server_socket_ = loop->resource<uvw::udp_handle>();
-        hearing_timeout_timer_ = loop->resource<uvw::timer_handle>();
-
-        if (discovery_mode_ == DISCOVERY_MODE_LAN) {
-            setup_lan_discovery();
-        } else if (discovery_mode_ == DISCOVERY_MODE_PROXY_SERVER) {
-            setup_proxy_server_discovery(conf.bt_central_server_url);
+        if (!looper->started()) {
+            looper->set_loop_thread_prepare_callback([]() { common::set_thread_priority(common::thread_priority_very_high); });
+            looper->start();
         }
 
-        sockaddr_in6 addr_bind;
-        std::memset(&addr_bind, 0, sizeof(sockaddr_in6));
-        addr_bind.sin6_family = (discovery_mode_ == DISCOVERY_MODE_LAN) ? AF_INET : AF_INET6;
-        addr_bind.sin6_port = htons(static_cast<std::uint16_t>(port_));
+        looper->one_shot([this, bt_server_url]() {
+            auto loop = uvw::loop::get_default();
 
-        bluetooth_queries_server_socket_->bind(*reinterpret_cast<sockaddr*>(&addr_bind));
+            bluetooth_queries_server_socket_ = loop->resource<uvw::udp_handle>();
+            hearing_timeout_timer_ = loop->resource<uvw::timer_handle>();
 
-        if (should_upnp_apply_to_port()) {
-            UPnP::TryPortmapping(static_cast<std::uint16_t>(port_), true);
-        }
+            if (discovery_mode_ == DISCOVERY_MODE_LAN) {
+                setup_lan_discovery();
+            } else if (discovery_mode_ == DISCOVERY_MODE_PROXY_SERVER) {
+                setup_proxy_server_discovery(bt_server_url);
+            }
 
-        bluetooth_queries_server_socket_->on<uvw::udp_data_event>([this](const uvw::udp_data_event &event, uvw::udp_handle &handle) {
-            sockaddr sender_ced = uvw::details::ip_addr(event.sender.ip.data(), event.sender.port);
-            handle_queries_request(&sender_ced, event.data.get(), event.length);
+            sockaddr_in6 addr_bind;
+            std::memset(&addr_bind, 0, sizeof(sockaddr_in6));
+            addr_bind.sin6_family = (discovery_mode_ == DISCOVERY_MODE_LAN) ? AF_INET : AF_INET6;
+            addr_bind.sin6_port = htons(static_cast<std::uint16_t>(port_));
+
+            bluetooth_queries_server_socket_->bind(*reinterpret_cast<sockaddr*>(&addr_bind));
+
+            if (should_upnp_apply_to_port()) {
+                UPnP::TryPortmapping(static_cast<std::uint16_t>(port_), true);
+            }
+
+            bluetooth_queries_server_socket_->on<uvw::udp_data_event>([this](const uvw::udp_data_event &event, uvw::udp_handle &handle) {
+                sockaddr sender_ced = uvw::details::ip_addr(event.sender.ip.data(), event.sender.port);
+                handle_queries_request(&sender_ced, event.data.get(), event.length);
+            });
+
+            bluetooth_queries_server_socket_->on<uvw::error_event>([this](const uvw::error_event &event, uvw::udp_handle &handle) {
+                handle_queries_request(nullptr, nullptr, event.code());
+            });
+
+            bluetooth_queries_server_socket_->recv();
         });
-
-        bluetooth_queries_server_socket_->on<uvw::error_event>([this](const uvw::error_event &event, uvw::udp_handle &handle) {
-            handle_queries_request(nullptr, nullptr, event.code());
-        });
-
-        bluetooth_queries_server_socket_->recv();
     }
 
     midman_inet::~midman_inet() {
@@ -133,14 +142,7 @@ namespace eka2l1::epoc::bt {
         auto bluetooth_queries_server_socket_copy = bluetooth_queries_server_socket_;
         auto hearing_timeout_timer_copy = hearing_timeout_timer_;
 
-        run_task_on(uvw::loop::get_default(), [lan_discovery_call_listener_socket_copy, bluetooth_queries_server_socket_copy, hearing_timeout_timer_copy]() {
-            auto copy_sock1 = lan_discovery_call_listener_socket_copy;
-            auto copy_sock2 = bluetooth_queries_server_socket_copy;
-            auto copy_sock3 = hearing_timeout_timer_copy;
-
-            copy_sock1.reset();
-            copy_sock2.reset();
-            copy_sock3.reset();
+        libuv::default_looper->one_shot([lan_discovery_call_listener_socket_copy, bluetooth_queries_server_socket_copy, hearing_timeout_timer_copy]() {
         });
     }
 
@@ -169,18 +171,22 @@ namespace eka2l1::epoc::bt {
     }
 
     void midman_inet::reset_friend_timeout_timer() {
-        run_task_on(uvw::loop::get_default(), [this]() {
-            const std::uint32_t duration = (discovery_mode_ == DISCOVERY_MODE_LAN) ? TIMEOUT_HEARING_STRANGER_LAN_MS : TIMEOUT_HEARING_STRANGER_MS;
-            const auto duration_chrono = std::chrono::milliseconds(duration);
+        if (!reset_timeout_timer_task_) {
+            reset_timeout_timer_task_ = libuv::create_task([this]() {
+                const std::uint32_t duration = (discovery_mode_ == DISCOVERY_MODE_LAN) ? TIMEOUT_HEARING_STRANGER_LAN_MS : TIMEOUT_HEARING_STRANGER_MS;
+                const auto duration_chrono = std::chrono::milliseconds(duration);
 
-            hearing_timeout_timer_->stop();
+                hearing_timeout_timer_->stop();
 
-            hearing_timeout_timer_->on<uvw::timer_event>([this](const uvw::timer_event &event, uvw::timer_handle &handle) {
-                on_timeout_friend_search();
+                hearing_timeout_timer_->on<uvw::timer_event>([this](const uvw::timer_event &event, uvw::timer_handle &handle) {
+                    on_timeout_friend_search();
+                });
+
+                hearing_timeout_timer_->start(duration_chrono, duration_chrono);
             });
+        }
 
-            hearing_timeout_timer_->start(duration_chrono, duration_chrono);
-        });
+        libuv::default_looper->post_task(reset_timeout_timer_task_);
     }
 
     void midman_inet::handle_queries_request(const sockaddr *sender, const char *buf, std::int64_t nread) {
@@ -631,44 +637,48 @@ lookup:
     }
 
     void midman_inet::send_call_for_strangers() {
-        run_task_on(uvw::loop::get_default(), [this]() {
-            sockaddr *server_addr_sock_ptr = nullptr;
-            GUEST_TO_BSD_ADDR(server_addr_, server_addr_sock_ptr);
+        if (!send_strangers_call_task_) {
+            send_strangers_call_task_ = libuv::create_task([this]() {
+                sockaddr *server_addr_sock_ptr = nullptr;
+                GUEST_TO_BSD_ADDR(server_addr_, server_addr_sock_ptr);
 
-            char request_friends = QUERY_OPCODE_GET_PLAYERS;
+                char request_friends = QUERY_OPCODE_GET_PLAYERS;
 
-            if (discovery_mode_ == DISCOVERY_MODE_LAN) {
-                sockaddr_in6 server_addr_modded;
+                if (discovery_mode_ == DISCOVERY_MODE_LAN) {
+                    sockaddr_in6 server_addr_modded;
 
-                // A bit of overflow would be ok, I guess))
-                std::memcpy(&server_addr_modded, server_addr_sock_ptr, sizeof(sockaddr_in6));
-                server_addr_modded.sin6_port = htons(LAN_DISCOVERY_PORT);
+                    // A bit of overflow would be ok, I guess))
+                    std::memcpy(&server_addr_modded, server_addr_sock_ptr, sizeof(sockaddr_in6));
+                    server_addr_modded.sin6_port = htons(LAN_DISCOVERY_PORT);
 
-                std::vector<char> broadcast_buf;
-                broadcast_buf.push_back(request_friends);
-                broadcast_buf.push_back(static_cast<char>(password_.length()));
-                broadcast_buf.insert(broadcast_buf.end(), password_.begin(), password_.end());
+                    std::vector<char> broadcast_buf;
+                    broadcast_buf.push_back(request_friends);
+                    broadcast_buf.push_back(static_cast<char>(password_.length()));
+                    broadcast_buf.insert(broadcast_buf.end(), password_.begin(), password_.end());
 
-                lan_discovery_call_listener_socket_->on<uvw::error_event>([](const uvw::error_event &event, uvw::udp_handle &handle) {
-                    if (event.code() < 0) {
-                        LOG_ERROR(SERVICE_BLUETOOTH, "Fail to send broadcast message to find nearby playable devices! Libuv error code={}", event.code());
-                    }
-                });
+                    lan_discovery_call_listener_socket_->on<uvw::error_event>([](const uvw::error_event &event, uvw::udp_handle &handle) {
+                        if (event.code() < 0) {
+                            LOG_ERROR(SERVICE_BLUETOOTH, "Fail to send broadcast message to find nearby playable devices! Libuv error code={}", event.code());
+                        }
+                    });
 
-                lan_discovery_call_listener_socket_->on<uvw::send_event>([](const uvw::send_event &event, uvw::udp_handle &handle) {
-                    LOG_TRACE(SERVICE_BLUETOOTH, "Sent lan discovery call!");
-                });
+                    lan_discovery_call_listener_socket_->on<uvw::send_event>([](const uvw::send_event &event, uvw::udp_handle &handle) {
+                        LOG_TRACE(SERVICE_BLUETOOTH, "Sent lan discovery call!");
+                    });
 
-                lan_discovery_call_listener_socket_->broadcast(true);
-                lan_discovery_call_listener_socket_->send(*reinterpret_cast<sockaddr*>(&server_addr_modded), broadcast_buf.data(), static_cast<std::uint32_t>(broadcast_buf.size()));
-            } else {
-                matching_server_socket_->write(&request_friends, 1);
-            }
+                    lan_discovery_call_listener_socket_->broadcast(true);
+                    lan_discovery_call_listener_socket_->send(*reinterpret_cast<sockaddr*>(&server_addr_modded), broadcast_buf.data(), static_cast<std::uint32_t>(broadcast_buf.size()));
+                } else {
+                    matching_server_socket_->write(&request_friends, 1);
+                }
 
-            if ((discovery_mode_ != DISCOVERY_MODE_LAN) || (retried_lan_discovery_times_ == 0)) {
-                reset_friend_timeout_timer();
-            }
-        });
+                if ((discovery_mode_ != DISCOVERY_MODE_LAN) || (retried_lan_discovery_times_ == 0)) {
+                    reset_friend_timeout_timer();
+                }
+            });
+        }
+
+        libuv::default_looper->post_task(send_strangers_call_task_);
     }
 
     void midman_inet::begin_hearing_stranger_call(inet_stranger_call_observer *observer) {

@@ -19,7 +19,6 @@
 
 #include <services/bluetooth/protocols/btmidman_inet.h>
 #include <services/bluetooth/protocols/common_inet.h>
-#include <services/utils_uvw.h>
 
 namespace eka2l1::epoc::bt {
     void midman_inet::setup_lan_discovery() {
@@ -33,7 +32,7 @@ namespace eka2l1::epoc::bt {
         local_addr_.port_ = static_cast<std::uint16_t>(LAN_DISCOVERY_PORT);
         lan_discovery_call_listener_socket_ = loop->resource<uvw::udp_handle>();
 
-        run_task_on(loop, [this]() {
+        libuv::default_looper->one_shot([this]() {
             sockaddr_in6 addr_bind;
             std::memset(&addr_bind, 0, sizeof(sockaddr_in6));
             addr_bind.sin6_family = AF_INET;

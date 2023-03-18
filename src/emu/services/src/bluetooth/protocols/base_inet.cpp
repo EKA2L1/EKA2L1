@@ -24,7 +24,6 @@
 #include <services/bluetooth/protocols/btmidman_inet.h>
 #include <utils/err.h>
 #include <utils/reqsts.h>
-#include <services/utils_uvw.h>
 
 #include <kernel/kernel.h>
 
@@ -103,58 +102,57 @@ namespace eka2l1::epoc::bt {
         }
 
         // Must make it synchronous with free or ref port, else there will be port overlapped tangled problem
-        run_task_on(uvw::loop::get_default(), [this, addr, info]() {
-            epoc::socket::saddress addr_to_bind = addr;
-            epoc::notify_info info_copy = info;
+    
+        epoc::socket::saddress addr_to_bind = addr;
+        epoc::notify_info info_copy = info;
 
-            kernel_system *kern = info.requester->get_kernel_object_owner();
-            midman_inet *midman = reinterpret_cast<midman_inet*>(protocol_->get_midman());
+        kernel_system *kern = info.requester->get_kernel_object_owner();
+        midman_inet *midman = reinterpret_cast<midman_inet*>(protocol_->get_midman());
 
-            std::memset(addr_to_bind.user_data_, 0, sizeof(addr_to_bind.user_data_));
-            addr_to_bind.family_ = internet::INET6_ADDRESS_FAMILY;
+        std::memset(addr_to_bind.user_data_, 0, sizeof(addr_to_bind.user_data_));
+        addr_to_bind.family_ = internet::INET6_ADDRESS_FAMILY;
 
-            std::uint16_t guest_port = addr_to_bind.port_;
+        std::uint16_t guest_port = addr_to_bind.port_;
 
+        if (guest_port == 0) {
+            guest_port = midman->get_free_port();
             if (guest_port == 0) {
-                guest_port = midman->get_free_port();
-                if (guest_port == 0) {
-                    LOG_ERROR(SERVICE_BLUETOOTH, "Bluetooth ports have ran out. Can't bind!");
+                LOG_ERROR(SERVICE_BLUETOOTH, "Bluetooth ports have ran out. Can't bind!");
 
-                    kern->lock();
-                    info_copy.complete(epoc::error_eof);
-                    kern->unlock();
+                kern->lock();
+                info_copy.complete(epoc::error_eof);
+                kern->unlock();
 
+                return;
+            }
+        }
+
+        std::uint32_t host_port = midman->lookup_host_port(guest_port);
+        if (host_port == 0) {
+            addr_to_bind.port_ = 0;
+
+            inet_socket_->bind_callback(addr_to_bind, [this, info, addr_to_bind, guest_port, midman](int error) {
+                epoc::notify_info info_copy = info;
+                epoc::socket::saddress addr_to_bind_copy = addr_to_bind;
+
+                if (error != epoc::error_none) {
+                    info_copy.complete(error);
                     return;
+                } else {
+                    midman->add_host_port(guest_port);
+                    
+                    kernel_system *kern = info_copy.requester->get_kernel_object_owner();
+                    kern->lock();
+                    info_copy.complete(epoc::error_none);
+                    kern->unlock();
                 }
-            }
+            });
+        } else {
+            addr_to_bind.port_ = host_port;
+            inet_socket_->bind(addr_to_bind, info_copy);
+        }
 
-            std::uint32_t host_port = midman->lookup_host_port(guest_port);
-            if (host_port == 0) {
-                addr_to_bind.port_ = 0;
-
-                inet_socket_->bind_callback(addr_to_bind, [this, info, addr_to_bind, guest_port, midman](int error) {
-                    epoc::notify_info info_copy = info;
-                    epoc::socket::saddress addr_to_bind_copy = addr_to_bind;
-
-                    if (error != epoc::error_none) {
-                        info_copy.complete(error);
-                        return;
-                    } else {
-                        midman->add_host_port(guest_port);
-                        
-                        kernel_system *kern = info_copy.requester->get_kernel_object_owner();
-                        kern->lock();
-                        info_copy.complete(epoc::error_none);
-                        kern->unlock();
-                    }
-                });
-            } else {
-                addr_to_bind.port_ = host_port;
-                inet_socket_->bind(addr_to_bind, info_copy);
-            }
-
-            virtual_port_ = guest_port;
-        });
+        virtual_port_ = guest_port;
     }
 
     void btinet_socket::connect(const epoc::socket::saddress &addr, epoc::notify_info &info) {

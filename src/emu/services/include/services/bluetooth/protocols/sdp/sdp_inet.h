@@ -30,6 +30,7 @@
 #include <memory>
 #include <mutex>
 
+#include <uvlooper/uvlooper.h>
 #include <uvw.hpp>
 
 namespace eka2l1::epoc::bt {
@@ -38,10 +39,12 @@ namespace eka2l1::epoc::bt {
 
     class sdp_inet_net_database: public socket::net_database {
     private:
+        internet::inet_bridged_protocol *inet_pro_;
         sdp_inet_protocol *protocol_;
         asker_inet bt_port_asker_;
         epoc::notify_info current_query_notify_;
         std::shared_ptr<uvw::tcp_handle> sdp_connect_;
+        std::shared_ptr<libuv::task> send_pdu_packet_task_;
 
         bool connected_;
         pdu_builder pdu_packet_builder_;
@@ -53,6 +56,9 @@ namespace eka2l1::epoc::bt {
 
         std::mutex access_lock_;
 
+        const char *target_pdu_buffer_;
+        std::uint32_t target_pdu_buffer_size_;
+
         void handle_connect_query(const char *record_buf, const std::uint32_t record_size);
         void handle_service_query(const char *record_buf, const std::uint32_t record_size);
         void handle_encoded_query(const char *record_buf, const std::uint32_t record_size);
@@ -62,7 +68,7 @@ namespace eka2l1::epoc::bt {
         void close_connect_handle(const bool should_wait = false);
 
     public:
-        explicit sdp_inet_net_database(sdp_inet_protocol *protocol);
+        explicit sdp_inet_net_database(sdp_inet_protocol *protocol, epoc::internet::inet_bridged_protocol *inet_pro);
         ~sdp_inet_net_database() override;
 
         void query(const char *query_data, const std::uint32_t query_size, epoc::des8 *result_buffer, epoc::notify_info &complete_info) override;
@@ -79,11 +85,13 @@ namespace eka2l1::epoc::bt {
     class sdp_inet_protocol : public socket::protocol {
     private:
         // lmao no
+        internet::inet_bridged_protocol *inet_pro_;
         midman *mid_;
 
     public:
-        explicit sdp_inet_protocol(midman *mid, const bool oldarch)
+        explicit sdp_inet_protocol(midman *mid, internet::inet_bridged_protocol *inet_pro, const bool oldarch)
             : socket::protocol(oldarch)
+            , inet_pro_(inet_pro)
             , mid_(mid) {
         }
 
@@ -126,7 +134,7 @@ namespace eka2l1::epoc::bt {
         }
 
         virtual std::unique_ptr<epoc::socket::net_database> make_net_database(const std::uint32_t id, const std::uint32_t family_id) override {
-            return std::make_unique<sdp_inet_net_database>(this);
+            return std::make_unique<sdp_inet_net_database>(this, inet_pro_);
         }
     };
 }

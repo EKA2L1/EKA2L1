@@ -107,6 +107,9 @@ namespace eka2l1::epoc::bt {
         epoc::socket::saddress server_addr_;
         epoc::socket::saddress local_addr_;
 
+        std::shared_ptr<libuv::task> send_strangers_call_task_;
+        std::shared_ptr<libuv::task> reset_timeout_timer_task_;
+
         std::uint32_t asker_counter_;
 
         void send_call_for_strangers();

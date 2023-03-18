@@ -7,7 +7,6 @@ add_library(epocservs
         include/services/host_launch.h
         include/services/init.h
         include/services/utils.h
-        include/services/utils_uvw.h
         include/services/accessory/accessory.h
         include/services/accessory/common.h
         include/services/alarm/alarm.h
@@ -156,7 +155,6 @@ add_library(epocservs
         src/host_launch.cpp
         src/init.cpp
         src/utils.cpp
-        src/utils_uvw.cpp
         src/accessory/accessory.cpp
         src/accessory/common.cpp
         src/alarm/alarm.cpp
@@ -325,7 +323,10 @@ target_link_libraries(epocservs PUBLIC
         epocio
         epocloader
         epocmem
-        epocutils)
+        epocutils
+        uv_a
+        uvw
+        uvlooper)
 
 target_link_libraries(epocservs PRIVATE
         config
@@ -335,8 +336,6 @@ target_link_libraries(epocservs PRIVATE
         drivers
         lunasvg
         stb
-        uv_a
-        uvw
         xxHash
         pugixml
         sqlite3)

@@ -272,6 +272,7 @@ option(FIND_LIBUV "Find LibUV" ON)
 set (BUILD_TESTING OFF CACHE INTERNAL "Enable testing with ctest." FORCE)
 
 add_subdirectory(uvw)
+add_subdirectory(uvlooper)
 
 # UPNP
 
