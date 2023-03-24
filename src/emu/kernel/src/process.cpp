@@ -621,6 +621,19 @@ namespace eka2l1::kernel {
         time_delay_ = delay;
     }
 
+    // NOTE: These two use global directory ASID (0) if no memory implementation exist or if it's kernel process.
+    std::optional<std::uint32_t> process::read_dword_data_from(process *from_process, address addr) {
+        mem::control_base *control = mem->get_control();
+        return control->read_dword_data_from((from_process->mm_impl_ && !from_process->is_kernel_process()) ? from_process->mm_impl_->address_space_id() : 0,
+            (mm_impl_ && !is_kernel_process()) ? mm_impl_->address_space_id() : 0, addr);
+    }
+
+    bool process::write_dword_data_to(process *to_process, address addr, const std::uint32_t target_data) {
+        mem::control_base *control = mem->get_control();
+        return control->write_dword_data_to((to_process->mm_impl_ && !to_process->is_kernel_process()) ? to_process->mm_impl_->address_space_id() : 0,
+            (mm_impl_ && !is_kernel_process()) ? mm_impl_->address_space_id() : 0, addr, target_data);
+    }
+
     void pass_arg::do_state(common::chunkyseri &seri) {
         auto s = seri.section("PassArg", 1);
 

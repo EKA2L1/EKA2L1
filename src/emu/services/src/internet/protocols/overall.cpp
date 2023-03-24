@@ -22,6 +22,7 @@
 #include <services/socket/server.h>
 
 #include <common/log.h>
+#include <common/thread.h>
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <ws2tcpip.h>
@@ -30,7 +31,7 @@
 namespace eka2l1::epoc::internet {
     inet_bridged_protocol::inet_bridged_protocol(kernel_system *kern, const bool oldarch)
         : socket::protocol(oldarch)
-        , stopped_(false)
+        , looper_(libuv::default_looper)
         , kern_(kern) {
 #if EKA2L1_PLATFORM(WIN32)
         WSADATA init_data;

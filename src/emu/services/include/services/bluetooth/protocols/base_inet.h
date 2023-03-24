@@ -44,8 +44,6 @@ namespace eka2l1::epoc::bt {
         socket_device_address remote_addr_;
         bool remote_calculated_;
 
-        common::event port_exist_ask_done_event_;
-
     public:
         explicit btinet_socket(btlink_inet_protocol *protocol, std::unique_ptr<epoc::socket::socket> &inet_socket);
         virtual ~btinet_socket() override;

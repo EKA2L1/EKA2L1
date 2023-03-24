@@ -265,10 +265,14 @@ if (NOT ANDROID)
 endif()
 
 # libuv
-set(LIBUV_BUILD_TESTS "Build test for libuv" CACHE INTERNAL OFF)
-set(LIBUV_BUILD_BENCH "Build bench for libuv" CACHE INTERNAL OFF)
+option(LIBUV_BUILD_TESTS "Build test for libuv" OFF)
+option(LIBUV_BUILD_BENCH "Build bench for libuv" OFF)
+option(BUILD_UVW_LIBS "Build UVW libraries" ON)
+option(FETCH_LIBUV "Fetch the libuv repo using CMake FetchContent facility" ON)
+set (BUILD_TESTING OFF CACHE INTERNAL "Enable testing with ctest." FORCE)
 
-add_subdirectory(libuv)
+add_subdirectory(uvw)
+add_subdirectory(uvlooper)
 
 # UPNP
 

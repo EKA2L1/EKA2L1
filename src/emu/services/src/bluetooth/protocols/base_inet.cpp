@@ -18,10 +18,14 @@
  */
 
 #include <services/bluetooth/protocols/base_inet.h>
+#include <services/bluetooth/protocols/common_inet.h>
 #include <services/bluetooth/protocols/btlink/btlink_inet.h>
 #include <services/internet/protocols/inet.h>
 #include <services/bluetooth/protocols/btmidman_inet.h>
 #include <utils/err.h>
+#include <utils/reqsts.h>
+
+#include <kernel/kernel.h>
 
 extern "C" {
 #include <uv.h>
@@ -30,6 +34,7 @@ extern "C" {
 namespace eka2l1::epoc::bt {
     btinet_socket::btinet_socket(btlink_inet_protocol *protocol, std::unique_ptr<epoc::socket::socket> &inet_socket)
         : inet_socket_(std::move(inet_socket))
+        , info_asker_(reinterpret_cast<midman_inet*>(protocol->get_midman()))
         , scan_value_(HCI_INQUIRY_AND_PAGE_SCAN)
         , protocol_(protocol)
         , virtual_port_(0)
@@ -38,7 +43,12 @@ namespace eka2l1::epoc::bt {
         if (inet_socket_) {
             int opt_value = 1;
             inet_socket_->set_option(internet::INET_TCP_NO_DELAY_OPT, internet::INET_TCP_SOCK_OPT_LEVEL, reinterpret_cast<std::uint8_t*>(&opt_value), 4);
+            
+            // These game sockets just connect and shutdown same port like it's nothing. I can't care enough if this is security risk or not... If it make things work
+            // Else we have to wait until half the time TIME_WAIT passed.
+            inet_socket_->set_option(internet::INET_REUSE_ADDR, internet::INET_IP_SOCK_OPT_LEVEL, reinterpret_cast<std::uint8_t *>(&opt_value), 4);
         }
+
         if (inet_socket_ && (mid->get_discovery_mode() != DISCOVERY_MODE_DIRECT_IP)) {
             reinterpret_cast<epoc::internet::inet_socket*>(inet_socket_.get())->set_socket_accepted_hook([this](void *opaque_handle) {
                 midman_inet *mid = reinterpret_cast<midman_inet*>(protocol_->get_midman());
@@ -82,9 +92,6 @@ namespace eka2l1::epoc::bt {
             return;
         }
 
-        epoc::socket::saddress addr_to_bind = addr;
-        midman_inet *midman = reinterpret_cast<midman_inet*>(protocol_->get_midman());
-  
         if (addr.family_ != BTADDR_PROTOCOL_FAMILY_ID) {
             // If 0, they just want to change the port. Well, acceptable
             if (addr.family_ != 0) {
@@ -94,17 +101,27 @@ namespace eka2l1::epoc::bt {
             }
         }
 
+        // Must make it synchronous with free or ref port, else there will be port overlapped tangled problem
+    
+        epoc::socket::saddress addr_to_bind = addr;
+        epoc::notify_info info_copy = info;
+
+        kernel_system *kern = info.requester->get_kernel_object_owner();
+        midman_inet *midman = reinterpret_cast<midman_inet*>(protocol_->get_midman());
+
         std::memset(addr_to_bind.user_data_, 0, sizeof(addr_to_bind.user_data_));
         addr_to_bind.family_ = internet::INET6_ADDRESS_FAMILY;
 
-        std::uint32_t result_len;
         std::uint16_t guest_port = addr_to_bind.port_;
 
         if (guest_port == 0) {
             guest_port = midman->get_free_port();
             if (guest_port == 0) {
                 LOG_ERROR(SERVICE_BLUETOOTH, "Bluetooth ports have ran out. Can't bind!");
-                info.complete(epoc::error_eof);
+
+                kern->lock();
+                info_copy.complete(epoc::error_eof);
+                kern->unlock();
 
                 return;
             }
@@ -114,13 +131,25 @@ namespace eka2l1::epoc::bt {
         if (host_port == 0) {
             addr_to_bind.port_ = 0;
 
-            inet_socket_->bind(addr_to_bind, info);
-            inet_socket_->local_name(addr_to_bind, result_len);
+            inet_socket_->bind_callback(addr_to_bind, [this, info, addr_to_bind, guest_port, midman](int error) {
+                epoc::notify_info info_copy = info;
+                epoc::socket::saddress addr_to_bind_copy = addr_to_bind;
 
-            midman->add_host_port(guest_port);
+                if (error != epoc::error_none) {
+                    info_copy.complete(error);
+                    return;
+                } else {
+                    midman->add_host_port(guest_port);
+                    
+                    kernel_system *kern = info_copy.requester->get_kernel_object_owner();
+                    kern->lock();
+                    info_copy.complete(epoc::error_none);
+                    kern->unlock();
+                }
+            });
         } else {
             addr_to_bind.port_ = host_port;
-            inet_socket_->bind(addr_to_bind, info);
+            inet_socket_->bind(addr_to_bind, info_copy);
         }
 
         virtual_port_ = guest_port;
@@ -137,33 +166,42 @@ namespace eka2l1::epoc::bt {
         }
 
         const socket_device_address &dvc_addr = static_cast<const socket_device_address&>(addr);
-        epoc::socket::saddress real_addr;
 
         // NOTE: Need real address actually T_T
-        if (!midman->get_friend_address(*dvc_addr.get_device_address_const(), real_addr)) {
-            LOG_ERROR(SERVICE_BLUETOOTH, "Can't retrieve real INET address!");
-            info.complete(epoc::error_could_not_connect);
-            return;
-        }
-
-        // There's no mechanism exposed to client to know whether it's correct, just an absolute fact that it's
-        // gonna be a valid value when the socket is connected. Set it here won't hurt
-        remote_addr_ = dvc_addr;
-        remote_addr_.family_ = BTADDR_PROTOCOL_FAMILY_ID;
-
-        remote_calculated_ = true;
-
-        info_asker_.ask_for_routed_port_async(addr.port_, real_addr, [info, real_addr, this](const std::int64_t res) {
+        midman->get_friend_address_async(*dvc_addr.get_device_address_const(), [this, info, dvc_addr](epoc::socket::saddress *real_addr_ptr) {
             epoc::notify_info info_copy = info;
+            kernel_system *kern_lock = info_copy.requester->get_kernel_object_owner();
 
-            if (res <= 0) {
-                LOG_ERROR(SERVICE_BLUETOOTH, "Retrieve real port of Virtual bluetooth address failed with error code {}", res);
+            if (!real_addr_ptr) {         
+                LOG_ERROR(SERVICE_BLUETOOTH, "Can't retrieve real INET address!");
+
+                kern_lock->lock();
                 info_copy.complete(epoc::error_could_not_connect);
-            } else {
-                epoc::socket::saddress addr_copy = real_addr;
-                addr_copy.port_ = static_cast<std::uint32_t>(res);
+                kern_lock->unlock();
 
-                inet_socket_->connect(addr_copy, info_copy);
+                return;
+            } else {
+                // There's no mechanism exposed to client to know whether it's correct, just an absolute fact that it's
+                // gonna be a valid value when the socket is connected. Set it here won't hurt
+                remote_addr_ = dvc_addr;
+                remote_addr_.family_ = BTADDR_PROTOCOL_FAMILY_ID;
+
+                remote_calculated_ = true;
+
+                epoc::socket::saddress real_addr_copy = *real_addr_ptr;
+                info_asker_.ask_for_routed_port_async(dvc_addr.port_, real_addr_copy, [info, real_addr_copy, this](const std::int64_t res) {
+                    epoc::notify_info info_copy = info;
+
+                    if (res <= 0) {
+                        LOG_ERROR(SERVICE_BLUETOOTH, "Retrieve real port of Virtual bluetooth address failed with error code {}", res);
+                        info_copy.complete(epoc::error_could_not_connect);
+                    } else {
+                        epoc::socket::saddress addr_copy = real_addr_copy;
+                        addr_copy.port_ = static_cast<std::uint32_t>(res);
+
+                        inet_socket_->connect(addr_copy, info_copy);
+                    }
+                });
             }
         });
     }
@@ -203,31 +241,10 @@ namespace eka2l1::epoc::bt {
             if (list_indicies.size() > 1) {
                 correct_index = static_cast<std::uint32_t>(-1);
                 std::uint32_t correct_port = addr_real.port_;
-                
-                std::vector<char> request_data;
-                request_data.push_back('p');
-                request_data.push_back('e');
-                request_data.push_back(static_cast<char>(correct_port));
-                request_data.push_back(static_cast<char>(correct_port >> 8));
-                request_data.push_back(static_cast<char>(correct_port >> 16));
-                request_data.push_back(static_cast<char>(correct_port >> 24));
 
                 for (std::size_t i = 0; i < list_indicies.size(); i++) {
                     midman->get_friend_address(list_indicies[i], addr_real);
-
-                    port_exist_ask_done_event_.reset();
-                    bool have_it = false;
-
-                    info_asker_.send_request_with_retries(addr_real, request_data.data(), request_data.size(), [this, &have_it](const char *result, const ssize_t bytes) {
-                        if (bytes >= 1) {
-                            have_it = (result[0] == '1');
-                        }
-                        port_exist_ask_done_event_.set();
-                    });
-
-                    port_exist_ask_done_event_.wait();
-
-                    if (have_it) {
+                    if (info_asker_.check_is_real_port_mapped(addr_real, correct_port)) {
                         correct_index = static_cast<std::uint32_t>(i);
                         break;
                     }

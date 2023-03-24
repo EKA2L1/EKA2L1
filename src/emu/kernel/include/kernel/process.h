@@ -38,6 +38,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <optional>
 
 namespace eka2l1 {
     class kernel_system;
@@ -278,6 +279,9 @@ namespace eka2l1::kernel {
         kernel_obj_ptr get_object(const std::uint32_t handle);
 
         void *get_ptr_on_addr_space(address addr);
+
+        std::optional<std::uint32_t> read_dword_data_from(process *from_process, address addr);
+        bool write_dword_data_to(process *to_process, address addr, const std::uint32_t target_data);
 
         std::u16string get_cmd_args() const {
             return cmd_args;

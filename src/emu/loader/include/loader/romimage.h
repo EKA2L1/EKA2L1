@@ -76,5 +76,5 @@ namespace eka2l1::loader {
         std::vector<uint32_t> exports;
     };
 
-    std::optional<romimg> parse_romimg(common::ro_stream *stream, memory_system *mem, const epocver os_ver);
+    std::optional<romimg> parse_romimg(common::ro_stream *stream, memory_system *mem, const epocver os_ver, const bool is_driver = false);
 }

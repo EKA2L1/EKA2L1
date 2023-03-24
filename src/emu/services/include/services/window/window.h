@@ -37,6 +37,7 @@
 #include <common/vecx.h>
 
 #include <services/allocator.h>
+#include <services/window/classes/plugins/anim/overall.h>
 #include <services/window/bitmap_cache.h>
 #include <services/window/classes/config.h>
 #include <services/window/common.h>
@@ -389,6 +390,7 @@ namespace eka2l1 {
         };
 
         std::uint32_t config_flags;
+        epoc::anim_dll_filename_and_factory_list anim_factory_list_;
 
         void init(service::ipc_context &ctx);
         void send_to_command_buffer(service::ipc_context &ctx);

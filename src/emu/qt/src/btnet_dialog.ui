@@ -62,14 +62,15 @@
         </item>
         <item>
          <property name="text">
-          <string>Local LAN</string>
+          <string>LAN</string>
          </property>
         </item>
+        <!--
         <item>
          <property name="text">
           <string>Server</string>
          </property>
-        </item>
+        </item>-->
        </widget>
       </item>
      </layout>

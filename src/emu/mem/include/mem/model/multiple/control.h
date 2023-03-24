@@ -70,5 +70,8 @@ namespace eka2l1::mem {
          * \brief Assign page tables at linear base address to page directories.
          */
         void assign_page_table(page_table *tab, const vm_address linear_addr, const std::uint32_t flags, asid *id_list = nullptr, const std::uint32_t id_list_size = 0) override;
+
+        std::optional<std::uint32_t> read_dword_data_from(const asid from_id, const asid reader_id, const vm_address addr) override;
+        bool write_dword_data_to(const asid to_id, const asid writer_id, const vm_address addr, const std::uint32_t data) override;
     };
 }

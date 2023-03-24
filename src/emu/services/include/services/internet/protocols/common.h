@@ -24,6 +24,8 @@
 #define GUEST_TO_BSD_ADDR(addr, dest_ptr)                                                               \
     sockaddr_in ipv4_addr;                                                                              \
     sockaddr_in6 ipv6_addr;                                                                             \
+    std::memset(&ipv4_addr, 0, sizeof(sockaddr_in));                                                    \
+    std::memset(&ipv6_addr, 0, sizeof(sockaddr_in6));                                                   \
     if (addr.family_ == epoc::internet::INET_ADDRESS_FAMILY) {                                          \
         ipv4_addr.sin_family = AF_INET;                                                                 \
         ipv4_addr.sin_port = htons(static_cast<std::uint16_t>(addr.port_));                             \
@@ -52,7 +54,11 @@ namespace eka2l1::epoc::internet {
         INET_INTERFACE_CONTROL_OPT_FAMILY = 0x201,
         INET_ROUTE_CONTROL_OPT_FAMILY = 0x202,
         INET_DNS_CONTROL_OPT_FAMILY = 0x204,
+        INET_IP_SOCK_OPT_LEVEL = 0x100,
         INET_TCP_SOCK_OPT_LEVEL = 0x106,
+
+        // Option in generic IP family
+        INET_REUSE_ADDR = 0x406,
         
         // Option in IC family
         INET_ENUM_INTERFACES_OPT = 0x211,

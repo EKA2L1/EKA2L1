@@ -22,6 +22,7 @@
 #include <common/log.h>
 #include <common/bytes.h>
 #include <kernel/thread.h>
+#include <kernel/kernel.h>
 #include <utils/err.h>
 
 extern "C" {
@@ -38,13 +39,16 @@ namespace eka2l1::epoc::bt {
         return static_cast<std::uint8_t>((type << 3) | (size_index & 0x7));
     }
 
-    sdp_inet_net_database::sdp_inet_net_database(sdp_inet_protocol *protocol)
-        : protocol_(protocol)
+    sdp_inet_net_database::sdp_inet_net_database(sdp_inet_protocol *protocol, internet::inet_bridged_protocol *inet_pro)
+        : inet_pro_(inet_pro)
+        , protocol_(protocol)
+        , bt_port_asker_(reinterpret_cast<midman_inet*>(protocol->get_midman()))
         , sdp_connect_(nullptr)
         , connected_(false)
         , provided_result_(nullptr)
         , store_to_temp_buffer_(false)
-        , should_notify_done_(false) {
+        , target_pdu_buffer_(nullptr)
+        , target_pdu_buffer_size_(0) {
     }
 
     sdp_inet_net_database::~sdp_inet_net_database() {
@@ -55,52 +59,11 @@ namespace eka2l1::epoc::bt {
         const std::lock_guard<std::mutex> guard(access_lock_);
 
         if (sdp_connect_) {
-            if (should_wait) {
-                close_done_evt_.reset();
-                should_notify_done_ = true;
-            } else {
-                should_notify_done_ = false;
-            }
-
-            uv_async_t *async = new uv_async_t;
-            async->data = sdp_connect_;
-
-            // While shutdown it calls EOF again
-            sdp_connect_ = nullptr;
-
-            uv_async_init(uv_default_loop(), async, [](uv_async_t *close_async) {
-                uv_stream_t *h = reinterpret_cast<uv_stream_t*>(close_async->data);
-                uv_shutdown_t *shut = new uv_shutdown_t;
-
-                uv_shutdown(shut, h, [](uv_shutdown_t *shut, int status) {
-                    uv_close(reinterpret_cast<uv_handle_t*>(shut->handle), [](uv_handle_t *handle) {
-                        sdp_inet_net_database *sdp = reinterpret_cast<sdp_inet_net_database*>(handle->data);
-                        if (sdp->should_notify_done_) {
-                            sdp->close_done_evt_.set();
-                        }
-                        delete handle;
-                    });
-
-                    delete shut;
-                });
-
-                uv_close(reinterpret_cast<uv_handle_t*>(close_async), [](uv_handle_t *hh) { delete hh; });
+            inet_pro_->get_looper()->one_shot([sdp_connect_copy = sdp_connect_]() {
+                sdp_connect_copy->reset<uvw::data_event>();
+                sdp_connect_copy->reset<uvw::error_event>();
             });
-
-            uv_async_send(async);
-
-            if (should_wait) {
-                close_done_evt_.wait();
-            }
         }
-    }
-
-    char *sdp_inet_net_database::prepare_read_buffer(const std::size_t suggested_size) {
-        if (pdu_response_buffer_.size() < suggested_size) {
-            pdu_response_buffer_.resize(suggested_size);
-        }
-
-        return pdu_response_buffer_.data();
     }
 
     void sdp_inet_net_database::handle_normal_query_complete(const std::uint8_t *param, const std::uint32_t param_len) {
@@ -108,9 +71,15 @@ namespace eka2l1::epoc::bt {
             return;
         }
 
+        kernel_system *kern = current_query_notify_.requester->get_kernel_object_owner();
+
         if (!provided_result_) {
             LOG_ERROR(SERVICE_BLUETOOTH, "No result buffer for SDP query!");
+
+            kern->lock();
             current_query_notify_.complete(epoc::error_general);
+            kern->unlock();
+
             return;
         }
 
@@ -141,7 +110,9 @@ namespace eka2l1::epoc::bt {
             provided_result_ = nullptr;
         }
 
+        kern->lock();
         current_query_notify_.complete(epoc::error_none);
+        kern->unlock();
     }
 
     void sdp_inet_net_database::handle_new_pdu_packet(const char *buffer, const std::int64_t nread) {
@@ -171,9 +142,14 @@ namespace eka2l1::epoc::bt {
         trans_id = common::to_host_order(trans_id);
         param_len = common::to_host_order(param_len);
 
+        kernel_system *kern = current_query_notify_.requester->get_kernel_object_owner();
+
         if (trans_id != pdu_packet_builder_.current_transmission_id()) {
             LOG_TRACE(SERVICE_BLUETOOTH, "PDU packet mismatch transmission ID (got {}, expected {})", trans_id, pdu_packet_builder_.current_transmission_id());
+
+            kern->lock();
             current_query_notify_.complete(error_sdp_bad_result_data);
+            kern->unlock();
 
             return;
         }
@@ -182,7 +158,11 @@ namespace eka2l1::epoc::bt {
         case SDP_PDU_ERROR_RESPONE: {
             if (param_len < 2) {
                 LOG_TRACE(SERVICE_BLUETOOTH, "Error response has insufficent error data!");
+
+                kern->lock();
                 current_query_notify_.complete(error_sdp_peer_error);
+                kern->unlock();
+
                 return;
             }
 
@@ -190,7 +170,10 @@ namespace eka2l1::epoc::bt {
             std::memcpy(&error, buffer + pdu_builder::PDU_HEADER_SIZE, 2);
             error = common::to_host_order(error);
 
+            kern->lock();
             current_query_notify_.complete(error);
+            kern->unlock();
+
             return;
         }
 
@@ -200,29 +183,44 @@ namespace eka2l1::epoc::bt {
             return;
 
         default:
+            kern->lock();
             current_query_notify_.complete(error_sdp_bad_result_data);
+            kern->unlock();
+
             return;
         }
     }
 
     void sdp_inet_net_database::handle_connect_done(const int status) {
+        if (current_query_notify_.empty()) {
+            return;
+        }
+
+        kernel_system *kern = current_query_notify_.requester->get_kernel_object_owner();
+
         if (status < 0) {
             LOG_ERROR(SERVICE_BLUETOOTH, "Connect to SDP server failed with libuv error code {}", status);
+
+            kern->lock();
             current_query_notify_.complete(epoc::error_could_not_connect);
+            kern->unlock();
 
             return;
         }
 
-        uv_read_start(reinterpret_cast<uv_stream_t*>(sdp_connect_), [](uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
-            sdp_inet_net_database *ndb = reinterpret_cast<sdp_inet_net_database*>(handle->data);
-            buf->base = ndb->prepare_read_buffer(suggested_size);
-            buf->len = static_cast<std::uint32_t>(suggested_size);
-        }, [](uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
-            sdp_inet_net_database *ndb = reinterpret_cast<sdp_inet_net_database*>(stream->data);
-            ndb->handle_new_pdu_packet(buf->base, nread);
+        sdp_connect_->on<uvw::error_event>([this](const uvw::error_event &event, uvw::tcp_handle &handle) {
+            handle_new_pdu_packet(nullptr, event.code());
         });
 
+        sdp_connect_->on<uvw::data_event>([this](const uvw::data_event &event, uvw::tcp_handle &handle) {
+            handle_new_pdu_packet(event.data.get(), static_cast<std::int64_t>(event.length));
+        });
+
+        sdp_connect_->read();
+
+        kern->lock();
         current_query_notify_.complete(epoc::error_none);
+        kern->unlock();
     }
 
     void sdp_inet_net_database::handle_connect_query(const char *record_buf, const std::uint32_t record_size) {
@@ -242,105 +240,73 @@ namespace eka2l1::epoc::bt {
             } else {
                 // Establish TCP connect
                 if (!sdp_connect_) {
-                    uv_tcp_t *sdp_connect_impl = new uv_tcp_t;
-                    uv_tcp_init(uv_default_loop(), sdp_connect_impl);
-                    
-                    sdp_connect_impl->data = this;
-                    sdp_connect_ = sdp_connect_impl;
+                    sdp_connect_ = uvw::loop::get_default()->resource<uvw::tcp_handle>();
                 }
 
-                uv_async_t *async_connect = new uv_async_t;
-                struct async_sdp_connect_data {
-                    epoc::socket::saddress addr_;
-                    uv_tcp_t *tcp_;
-                    sdp_inet_net_database *self_;
-                };
+                epoc::socket::saddress dest_friend = friend_addr_real;
+                dest_friend.port_ = static_cast<std::uint32_t>(port_result);
 
-                async_sdp_connect_data *data = new async_sdp_connect_data;
-                data->addr_ = friend_addr_real;
-                data->addr_.port_ = static_cast<std::uint32_t>(port_result);
-                data->tcp_ = reinterpret_cast<uv_tcp_t*>(sdp_connect_);
-                data->self_ = this;
+                sockaddr *addr_translated = nullptr;
+                GUEST_TO_BSD_ADDR(dest_friend, addr_translated);
 
-                async_connect->data = data;
+                sockaddr_in6 bind_any;
+                std::memset(&bind_any, 0, sizeof(sockaddr_in6));
+                bind_any.sin6_family = AF_INET6;
 
-                uv_async_init(uv_default_loop(), async_connect, [](uv_async_t *async) {
-                    async_sdp_connect_data *data = reinterpret_cast<async_sdp_connect_data*>(async->data);
-                    uv_connect_t *conn = new uv_connect_t;
-                    conn->data = data;
+                sdp_connect_->bind(*reinterpret_cast<const sockaddr *>(&bind_any));
 
-                    sockaddr *addr_translated = nullptr;
-                    GUEST_TO_BSD_ADDR(data->addr_, addr_translated);
-
-                    sockaddr_in6 bind_any;
-                    std::memset(&bind_any, 0, sizeof(sockaddr_in6));
-                    bind_any.sin6_family = AF_INET6;
-
-                    uv_tcp_bind(data->tcp_, reinterpret_cast<const sockaddr*>(&bind_any), 0);
-                    uv_tcp_connect(conn, data->tcp_, addr_translated, [](uv_connect_t *req, int status) {
-                        async_sdp_connect_data *data = reinterpret_cast<async_sdp_connect_data*>(req->data);
-                        data->self_->handle_connect_done(status);
-
-                        delete data;
-                        delete req;
-                    });
-
-                    uv_close(reinterpret_cast<uv_handle_t*>(async), [](uv_handle_t *hh) { delete hh; });
+                sdp_connect_->on<uvw::connect_event>([this](const uvw::connect_event &event, uvw::tcp_handle &handle) {
+                    handle_connect_done(0);
+                });
+                
+                sdp_connect_->on<uvw::error_event>([this](const uvw::error_event &event, uvw::tcp_handle &handle) {
+                    handle_connect_done(event.code());
                 });
 
-                uv_async_send(async_connect);
+                sdp_connect_->connect(*addr_translated);
             }
         });
     }
 
     void sdp_inet_net_database::handle_send_done(const int status) {
+        // Re-register new pdu packet error event
+        sdp_connect_->on<uvw::error_event>([this](const uvw::error_event &event, uvw::tcp_handle &handle) {
+            handle_new_pdu_packet(nullptr, event.code());
+        });
+
         if (status < 0) {
             LOG_ERROR(SERVICE_BLUETOOTH, "Sending PDU packet to SDP server failed with libuv error code {}", status);
+
+            kernel_system *kern = current_query_notify_.requester->get_kernel_object_owner();
+
+            kern->lock();
             current_query_notify_.complete(epoc::error_server_busy);
+            kern->unlock();
 
             return;
         }
     }
 
     void sdp_inet_net_database::send_pdu_packet(const char *buf, const std::uint32_t buf_size) {
-        struct send_pdu_packet_data {
-            char *buf_copy_;
-            std::uint32_t buf_size_;
-            uv_tcp_t *tcp_handle_;
-            sdp_inet_net_database *self_;
-        };
+        target_pdu_buffer_ = buf;
+        target_pdu_buffer_size_ = buf_size;
 
-        send_pdu_packet_data *info_data = new send_pdu_packet_data;
-        info_data->buf_copy_ = reinterpret_cast<char*>(malloc(buf_size));
-        info_data->buf_size_ = buf_size;
-        info_data->tcp_handle_ = reinterpret_cast<uv_tcp_t*>(sdp_connect_);
-        info_data->self_ = this;
+        if (!send_pdu_packet_task_) {
+            send_pdu_packet_task_ = libuv::create_task([this]() {
+                // Re-register new pdu packet error event
+                sdp_connect_->on<uvw::error_event>([this](const uvw::error_event &event, uvw::tcp_handle &handle) {
+                    handle_send_done(event.code());
+                });
 
-        std::memcpy(info_data->buf_copy_, buf, buf_size);
+                sdp_connect_->on<uvw::write_event>([this](const uvw::write_event &event, uvw::tcp_handle &handle) {
+                    handle_send_done(0);
+                });
 
-        uv_async_t *async = new uv_async_t;
-        async->data = info_data;
-
-        uv_async_init(uv_default_loop(), async, [](uv_async_t *async) {
-            send_pdu_packet_data *info_data = reinterpret_cast<send_pdu_packet_data*>(async->data);
-            uv_buf_t buf = uv_buf_init(info_data->buf_copy_, info_data->buf_size_);
-
-            uv_write_t *write_req = new uv_write_t;
-            write_req->data = info_data;
-
-            uv_write(write_req, reinterpret_cast<uv_stream_t*>(info_data->tcp_handle_), &buf, 1, [](uv_write_t *write_req, const int status) {
-                send_pdu_packet_data *info_data = reinterpret_cast<send_pdu_packet_data*>(write_req->data);
-                info_data->self_->handle_send_done(status);
-
-                free(info_data->buf_copy_);
-                delete info_data;
-                delete write_req;
+                sdp_connect_->write(const_cast<char*>(target_pdu_buffer_), target_pdu_buffer_size_);
             });
+        }
 
-            uv_close(reinterpret_cast<uv_handle_t*>(async), [](uv_handle_t *hh) { delete hh; });
-        });
-
-        uv_async_send(async);
+        inet_pro_->get_looper()->post_task(send_pdu_packet_task_);
     }
 
     void sdp_inet_net_database::handle_service_query(const char *record_buf, const std::uint32_t record_size) {

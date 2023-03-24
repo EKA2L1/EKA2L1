@@ -26,8 +26,9 @@
 #include <mem/ptr.h>
 
 namespace eka2l1::loader {
-    std::optional<romimg> parse_romimg(common::ro_stream *stream, memory_system *mem, const epocver os_ver) {
+    std::optional<romimg> parse_romimg(common::ro_stream *stream, memory_system *mem, const epocver os_ver, const bool is_driver) {
         romimg img;
+        std::memset(&img, 0, sizeof(img));
 
         img.header.checksum_code = 0;
         img.header.checksum_data = 0;
@@ -36,8 +37,20 @@ namespace eka2l1::loader {
         img.header.sec_info.secure_id = 0;
         img.header.sec_info.vendor_id = 0;
 
-        std::uint32_t size_to_initially_read = offsetof(rom_image_header, sec_info);
+        std::uint32_t size_to_initially_read = offsetof(rom_image_header, export_dir_count);
         if (stream->read(&(img.header), size_to_initially_read) != size_to_initially_read) {
+            return std::nullopt;
+        }
+
+        if ((stream->left() == 0) && is_driver) {
+            return img;
+        }
+
+        if (stream->read(&img.header.export_dir_count, 4) != 4) {
+            return std::nullopt;
+        }
+
+        if (stream->read(&img.header.export_dir_address, 4) != 4) {
             return std::nullopt;
         }
 

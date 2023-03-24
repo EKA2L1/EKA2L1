@@ -92,13 +92,21 @@ namespace eka2l1::mem {
         return page_tabs_[addr >> page_table_index_shift_];
     }
 
-    void page_directory::set_page_table(const std::uint32_t off, page_table *tab) {
-        if (off == 0xFFFFFFFF) {
-            return;
+    page_table *page_directory::get_page_table_from_index(const std::uint32_t index) {
+        if (index >= page_tabs_.size()) {
+            return nullptr;
         }
 
-        if (off >= offset_mask_) {
-            return;
+        return page_tabs_[index];
+    }
+
+    bool page_directory::set_page_table(const std::uint32_t off, page_table *tab) {
+        if (off == 0xFFFFFFFF) {
+            return false;
+        }
+
+        if (off > offset_mask_) {
+            return false;
         }
 
         if (page_tabs_.size() <= off) {
@@ -106,5 +114,6 @@ namespace eka2l1::mem {
         }
 
         page_tabs_[off] = tab;
+        return true;
     }
 }

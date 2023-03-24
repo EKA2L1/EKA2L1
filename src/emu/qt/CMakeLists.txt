@@ -188,7 +188,9 @@ target_link_libraries(eka2l1_qt PRIVATE
     epockern
     epocpkg
     gdbstub
+    uvw
     j2me
+    stb
     yaml-cpp)
 	
 set_target_properties(eka2l1_qt PROPERTIES OUTPUT_NAME eka2l1_qt

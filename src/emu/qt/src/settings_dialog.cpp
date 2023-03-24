@@ -266,6 +266,11 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     ui_->app_config_hide_system_apps_checkbox->setChecked(configuration.hide_system_apps);
     ui_->log_filter_edit->setText(QString::fromStdString(configuration.log_filter));
 
+    int clamped_opacity = eka2l1::common::clamp<int>(0, 255, configuration_.background_image_opacity);
+    ui_->emulator_display_bg_opacity_val_slider->setValue(clamped_opacity);
+    ui_->emulator_display_bg_opacity_val_label->setText(QString("%1").arg(clamped_opacity));
+    ui_->emulator_display_bg_image_path_line_edit->setText(QString::fromStdString(configuration_.background_image));
+
     QSettings settings;
     ui_->interface_status_bar_checkbox->setChecked(settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
     ui_->interface_theme_combo->setCurrentIndex(settings.value(THEME_SETTING_NAME, 0).toInt());
@@ -363,6 +368,8 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->emulator_display_hide_cursor_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_cursor_visibility_change);
     connect(ui_->emulator_display_true_size_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_true_size_enable_toogled);
     connect(ui_->emulator_display_bgc_pick_btn, &QPushButton::clicked, this, &settings_dialog::on_background_color_pick_button_clicked);
+    connect(ui_->emulator_display_bg_opacity_val_slider, &QSlider::valueChanged, this, &settings_dialog::on_background_opacity_changed);
+    connect(ui_->emulator_display_bg_image_browse_button, &QPushButton::clicked, this, &settings_dialog::on_background_image_browse_button_clicked);
 
     connect(ui_->general_clear_ui_config_btn, &QPushButton::clicked, this, &settings_dialog::on_ui_clear_all_configs_clicked);
     connect(ui_->app_config_fps_slider, &QSlider::valueChanged, this, &settings_dialog::on_fps_slider_value_changed);
@@ -1362,4 +1369,31 @@ void settings_dialog::on_log_filter_apply_clicked() {
 
 void settings_dialog::set_active_tab(const int tab_index) {
     ui_->settings_tab->setCurrentIndex(tab_index);
+}
+
+void settings_dialog::on_background_image_browse_button_clicked() {
+    QSettings settings;
+    QVariant last_bg_image_folder_variant = settings.value(RECENT_BACKGROUND_IMAGE_FOLDER_SETTING_NAME);
+    QString last_bg_image_folder;
+
+    if (last_bg_image_folder_variant.isValid()) {
+        last_bg_image_folder = last_bg_image_folder_variant.toString();
+    }
+
+    QString img_path = QFileDialog::getOpenFileName(this, tr("Choose the background image"), last_bg_image_folder, "Images (*.png *.jpg *.jpeg *.bmp);;All files (*.*)");
+    if (img_path.isEmpty()) {
+        return;
+    }
+
+    configuration_.background_image = img_path.toStdString();
+    configuration_.serialize();
+
+    ui_->emulator_display_bg_image_path_line_edit->setText(QString::fromStdString(configuration_.background_image));
+}
+
+void settings_dialog::on_background_opacity_changed(int value) {
+    configuration_.background_image_opacity = value;
+    configuration_.serialize();
+
+    ui_->emulator_display_bg_opacity_val_label->setText(QString("%1").arg(value));
 }

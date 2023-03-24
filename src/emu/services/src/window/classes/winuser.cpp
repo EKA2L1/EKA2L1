@@ -921,7 +921,6 @@ namespace eka2l1::epoc {
     blank_canvas::blank_canvas(window_server_client_ptr client, screen *scr, window *parent,
             const epoc::display_mode dmode, const std::uint32_t client_handle)
         : canvas_base(client, scr, parent, window_type::blank, dmode, client_handle) {
-
     }
         
     bool blank_canvas::draw(drivers::graphics_command_builder &builder) {

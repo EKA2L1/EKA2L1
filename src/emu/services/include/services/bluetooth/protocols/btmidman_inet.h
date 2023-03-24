@@ -29,16 +29,27 @@
 
 #include <functional>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <vector>
+
+#include <uvw.hpp>
 
 typedef struct uv_timer_s uv_timer_t;
 typedef struct uv_buf_t uv_buf_t;
 
 namespace eka2l1::epoc::bt {
+    static constexpr std::uint32_t TIMEOUT_HEARING_STRANGER_MS = 2000;
+    static constexpr std::uint16_t CENTRAL_SERVER_STANDARD_PORT = 27138;
+    static constexpr std::uint16_t HARBOUR_PORT = 35689;
+    static constexpr std::uint16_t LAN_DISCOVERY_PORT = 35690;
+    static constexpr std::uint32_t TIMEOUT_HEARING_STRANGER_LAN_MS = 400;
+    static constexpr std::uint16_t RETRY_LAN_DISCOVERY_TIME_MAX = 5;
+
     struct friend_info {
         epoc::socket::saddress real_addr_;
         device_address dvc_addr_;
+        bool refreshed_ = false;
     };
 
     enum friend_update_error : std::uint64_t {
@@ -51,7 +62,7 @@ namespace eka2l1::epoc::bt {
     enum discovery_mode {
         DISCOVERY_MODE_OFF = 0,
         DISCOVERY_MODE_DIRECT_IP = 1,
-        DISCOVERY_MODE_LOCAL_LAN = 2,
+        DISCOVERY_MODE_LAN = 2,
         DISCOVERY_MODE_PROXY_SERVER = 3
     };
 
@@ -75,12 +86,14 @@ namespace eka2l1::epoc::bt {
 
         bool friend_info_cached_;
 
-        void *virt_bt_info_server_;
-        void *virt_server_socket_;
-        void *hearing_timeout_timer_;
+        std::shared_ptr<uvw::udp_handle> lan_discovery_call_listener_socket_;
+        std::shared_ptr<uvw::tcp_handle> matching_server_socket_;
 
-        std::vector<char> server_recv_buf_;
+        std::shared_ptr<uvw::udp_handle> bluetooth_queries_server_socket_;
+        std::shared_ptr<uvw::timer_handle> hearing_timeout_timer_;
+
         int port_;
+        int retried_lan_discovery_times_;
 
         std::mutex friends_lock_;
         asker_inet device_addr_asker_;
@@ -94,12 +107,33 @@ namespace eka2l1::epoc::bt {
         epoc::socket::saddress server_addr_;
         epoc::socket::saddress local_addr_;
 
+        std::shared_ptr<libuv::task> send_strangers_call_task_;
+        std::shared_ptr<libuv::task> reset_timeout_timer_task_;
+
+        std::uint32_t asker_counter_;
+
         void send_call_for_strangers();
-        void handle_meta_server_msg(std::int64_t nread, const uv_buf_t *buf_ptr);
+
+        // LAN
+        void setup_lan_discovery();
+        void add_lan_friend(const sockaddr *replier);
+        void handle_lan_discovery_receive(const char *buf, std::int64_t nread, const sockaddr *addr);
+
+        // Proxy server
+        void setup_proxy_server_discovery(const std::string &base_server);
+
+        // Server handler
+        void handle_matching_server_msg(std::int64_t nread, const char *buf_ptr);
         void send_login();
-        
-        static void reset_friend_timeout_timer(uv_timer_t *timer);
+        void send_logout(const bool close_and_reset = true);
+        void read_and_add_friend(const char *buf, char &buf_pointer);
+        void add_friend(epoc::bt::friend_info &info);
+        void on_timeout_friend_search();
+
+        void reset_friend_timeout_timer();
         bool should_upnp_apply_to_port();
+
+        void refresh_friend_info_async_impl(std::uint32_t pos, std::function<void()> callback);
 
     public:
         explicit midman_inet(const config::state &conf);
@@ -113,15 +147,15 @@ namespace eka2l1::epoc::bt {
 
         std::vector<std::uint32_t> get_friend_index_with_address(epoc::socket::saddress &addr);
         bool get_friend_device_address(const std::uint32_t index, device_address &result);
-
-        void prepare_server_recv_buffer(void *buf_trans, const std::size_t suggested_size);
-        void handle_server_request(const sockaddr *requester, const void *buf, std::int64_t nread);
+        void handle_queries_request(const sockaddr *addr, const char *buf, std::int64_t nread);
 
         bool get_friend_address(const std::uint32_t index, epoc::socket::saddress &addr);
         bool get_friend_address(const device_address &friend_virt_addr, epoc::socket::saddress &addr);
+        void get_friend_address_async(const device_address &friend_virt_addr, std::function<void(epoc::socket::saddress*)> callback);
 
         void add_device_address_mapping(const std::uint32_t index, const device_address &addr);
         void refresh_friend_infos();
+        void refresh_friend_infos_async(std::function<void()> callback);
 
         void update_friend_list(const std::vector<config::friend_address> &addrs, std::vector<std::uint64_t> &invalid_address_indicies);
         void add_or_update_friend(const epoc::socket::saddress &addr);
@@ -157,6 +191,8 @@ namespace eka2l1::epoc::bt {
             return port_offset_;
         }
 
-        static void send_logout(void *hh, bool close_and_reset = false);
+        std::uint32_t new_asker_id() {
+            return ++asker_counter_;
+        }
     };
 }

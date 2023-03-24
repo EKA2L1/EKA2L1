@@ -35,7 +35,7 @@ namespace eka2l1::epoc::bt {
         std::unique_ptr<epoc::socket::protocol> btlink_pr = std::make_unique<btlink_inet_protocol>(mm, oldarch);
         std::unique_ptr<epoc::socket::protocol> l2cap_pr = std::make_unique<l2cap_inet_protocol>(mm, protocol, oldarch);
         std::unique_ptr<epoc::socket::protocol> rfcomm_pr = std::make_unique<rfcomm_inet_protocol>(mm, protocol, oldarch);
-        std::unique_ptr<epoc::socket::protocol> sdp_pr = std::make_unique<sdp_inet_protocol>(mm, oldarch);
+        std::unique_ptr<epoc::socket::protocol> sdp_pr = std::make_unique<sdp_inet_protocol>(mm, protocol, oldarch);
 
         if (!sock->add_protocol(btlink_pr)) {
             LOG_ERROR(SERVICE_BLUETOOTH, "Failed to add BTLink protocol");

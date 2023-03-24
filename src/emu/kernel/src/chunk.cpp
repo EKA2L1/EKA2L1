@@ -112,7 +112,7 @@ namespace eka2l1 {
             mmc_impl_ = nullptr;
             mem::mem_model_process *mmp = nullptr;
 
-            if (own_process) {
+            if (own_process && own_process->get_mem_model()) {
                 mmp = own_process->get_mem_model();
                 mmp->create_chunk(mmc_impl_, create_info);
             } else {

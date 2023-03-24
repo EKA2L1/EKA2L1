@@ -633,7 +633,7 @@ namespace eka2l1 {
                 std::uint32_t data_size = 0;
                 stream.seek(12, common::seek_where::cur);
                 if (stream.read(&data_size, 4) == 4) {
-                    std::uint32_t ptr_start = data_size + (4 - (data_size % 4)) + 16;
+                    std::uint32_t ptr_start = data_size + (((data_size % 4) == 0) ? 0 : (4 - (data_size % 4))) + 20;
                     if (stream.size() > ptr_start) {
                         ref_stream = std::make_unique<common::ro_window_ref_stream>(stream, ptr_start,
                             stream.size() - ptr_start);

@@ -107,7 +107,7 @@ namespace eka2l1::common {
         int allocated_count(const std::uint32_t offset, const std::uint32_t offset_end);
 
         bool is_allocated(const std::uint32_t offset) {
-            return (words_.size() > (offset >> 5)) && (words_[offset >> 5] & (1 << (offset & 31)));
+            return (words_.size() > (offset >> 5)) && ((words_[offset >> 5] & (1 << (offset & 31))) == 0);
         }
     };
 }

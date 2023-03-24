@@ -138,6 +138,10 @@ add_library(epocservs
         include/services/ui/eikappui.h
         include/services/uiss/uiss.h
         include/services/unipertar/unipertar.h
+        include/services/window/classes/plugins/anim/clock/clock.h
+        include/services/window/classes/plugins/anim/clock/factory.h
+        include/services/window/classes/plugins/anim/clock/messagewin.h
+        include/services/window/classes/plugins/anim/overall.h
         include/services/window/bitmap_cache.h
         include/services/window/keys.h
         include/services/window/scheduler.h
@@ -170,6 +174,8 @@ add_library(epocservs
         src/bluetooth/protocols/sdp/sdp_inet.cpp
         src/bluetooth/protocols/asker_inet.cpp
         src/bluetooth/protocols/base_inet.cpp
+        src/bluetooth/protocols/btmidman_lan_matching.cpp
+        src/bluetooth/protocols/btmidman_proxserv_matching.cpp
         src/bluetooth/protocols/btmidman_inet.cpp
         src/bluetooth/protocols/common.cpp
         src/bluetooth/protocols/overall.cpp
@@ -280,6 +286,10 @@ add_library(epocservs
         src/ui/eikappui.cpp
         src/uiss/uiss.cpp
         src/unipertar/unipertar.cpp
+        src/window/classes/plugins/anim/clock/clock.cpp
+        src/window/classes/plugins/anim/clock/factory.cpp
+        src/window/classes/plugins/anim/clock/messagewin.cpp
+        src/window/classes/plugins/anim/overall.cpp
         src/window/classes/plugins/animdll.cpp
         src/window/classes/plugins/clickdll.cpp
         src/window/classes/plugins/graphics.cpp
@@ -313,7 +323,10 @@ target_link_libraries(epocservs PUBLIC
         epocio
         epocloader
         epocmem
-        epocutils)
+        epocutils
+        uv_a
+        uvw
+        uvlooper)
 
 target_link_libraries(epocservs PRIVATE
         config
@@ -323,7 +336,6 @@ target_link_libraries(epocservs PRIVATE
         drivers
         lunasvg
         stb
-        uv_a
         xxHash
         pugixml
         sqlite3)

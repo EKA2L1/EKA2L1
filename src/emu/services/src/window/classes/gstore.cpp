@@ -471,6 +471,10 @@ namespace eka2l1::epoc {
         clipped.add_rect(rect_advanced);
         clipped = clipped.intersect(clip_);
 
+        if ((clipped.rects_.size() == 1) && (clipped.rects_[0].size == eka2l1::vec2(1, 1))) {
+            LOG_TRACE(KERNEL, "HI!");
+        }
+        
         builder_.clip_bitmap_region(clipped, scale_factor_);
     }
 
