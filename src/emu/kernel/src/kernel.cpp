@@ -382,12 +382,19 @@ namespace eka2l1 {
     }
 
     void kernel_system::setup_nanokern_controller() {
+        if (!is_eka1()) {
+            return;
+        }
+
         static const char *SUPERVISOR_THREAD_NAME = "Supervisor";
+        static const char *KERN_PROCESS_NAME = "ekern";
         static const char16_t *KERN_EXE_NAME = u"ekern.exe";
         static const std::uint32_t BOOTLOADER_UID = 0x100000B9;
+        static constexpr std::size_t SPACE_RESERVED = 0x2000000;
+        static constexpr std::size_t SPACE_RESERVED_START_OFFSET = 0x2000000;
 
         // Create kernel process. This process will be forever queued
-        nanokern_pr_ = spawn_new_process(KERN_EXE_NAME);
+        nanokern_pr_ = create<kernel::process>(mem_, KERN_PROCESS_NAME, KERN_EXE_NAME, u"");
         if (nanokern_pr_) {
             nanokern_pr_->set_is_kernel_process(true);
 
@@ -399,7 +406,13 @@ namespace eka2l1 {
 
             // Create supervisor thread
             create<kernel::thread>(mem_, timing_, nanokern_pr_, kernel::access_type::local_access,
-                SUPERVISOR_THREAD_NAME, nanokern_pr_->get_entry_point_address(), 1000, 0, 1000, false);
+                SUPERVISOR_THREAD_NAME, 0, 1000, 0, 1000, false);
+
+            // Reserve some spaces for loader like BinPDA to relocate their patch code
+            create<kernel::chunk>(mem_, nullptr, "SpaceReservePatchROM",
+                0, 0, SPACE_RESERVED, prot_read_write, kernel::chunk_type::normal,
+                kernel::chunk_access::rom, kernel::chunk_attrib::none, 0, false,
+                mem::rom_eka1 + SPACE_RESERVED_START_OFFSET);
         }
     }
 
@@ -415,7 +428,7 @@ namespace eka2l1 {
 
     void kernel_system::start_bootload() {
         // Disable these
-        // setup_nanokern_controller();
+        setup_nanokern_controller();
         // setup_stub_io_mapping();
     }
 

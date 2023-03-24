@@ -133,7 +133,7 @@ namespace eka2l1::mem {
     }
 
     void *control_multiple::get_host_pointer(const asid id, const vm_address addr) {
-        if (id > 0 && dirs_.size() < id) {
+        if ((id > 0) && (dirs_.size() < id)) {
             return nullptr;
         }
 
@@ -145,7 +145,7 @@ namespace eka2l1::mem {
     }
 
     page_info *control_multiple::get_page_info(const asid id, const vm_address addr) {
-        if (id > 0 && dirs_.size() < id) {
+        if ((id > 0) && (dirs_.size() < id)) {
             return nullptr;
         }
 
@@ -154,5 +154,92 @@ namespace eka2l1::mem {
         }
 
         return ((id <= 0) ? global_dir_.get_page_info(addr) : dirs_[id - 1]->get_page_info(addr));
+    }
+
+    std::optional<std::uint32_t> control_multiple::read_dword_data_from(const asid from_id, const asid reader_id, const vm_address addr) {
+        if ((addr >= page_dir_start_eka1) && (addr < page_dir_end_eka1)) {
+            // Physical address of the page table at the index indicated in the address. But we don't have that kind of resource, so just return what is needed
+            // Mirror the linear to physical, add attribute. 1 = page table, 2 = section
+            return static_cast<std::uint32_t>(addr << 10) | 0b1;
+        } else if ((addr >= page_table_info_start_eka1) && (addr < page_table_info_end_eka1)) {
+            // Page table info, with the last 6 bits containg attribute, and the remaining 26 bits containing the offset of the page table in the page table
+            // memory region
+            if (page_size_bits_ == 20) {
+                // Get the page table size in 4 bytes (the system is 32-bit, so physical address still should be in 4 bytes, multiply with the index of the page table, retrieved by subtracting from the base,
+                // and divide by single info size - 4 bytes)
+                return (static_cast<std::uint32_t>((((addr - page_table_info_start_eka1) >> 2) * (PAGE_PER_TABLE_20B * 4))) << 6) | 0b1;
+            } else {
+                // 0b10 = 2 indicates 12-bit page
+                return (static_cast<std::uint32_t>(((addr - page_table_info_start_eka1) >> 2) * (PAGE_PER_TABLE_12B * 4)) << 6) | 0b10;
+            }
+        } else if ((addr >= page_table_start_eka1) && (addr < page_table_end_eka1)) {
+            // Calculate the page table index
+            const std::uint32_t page_table_size_shift = (((page_size_bits_ == 20) ? PAGE_PER_TABLE_SHIFT_20B : PAGE_PER_TABLE_SHIFT_12B) + 2);
+            const std::uint32_t page_table_index = (addr - page_table_start_eka1) >> page_table_size_shift;
+            const std::uint32_t page_index = (((addr - page_table_start_eka1) - (1 << page_table_size_shift) * page_table_index)) >> 2;
+
+            // Construct a linear address that when it's assigned using write_data_to, we can assign necessary page/page table from host.
+            return (page_index << ((page_size_bits_ == 20) ? PAGE_INDEX_SHIFT_20B : PAGE_INDEX_SHIFT_12B)) | (page_table_index << ((page_size_bits_ == 20) ? PAGE_TABLE_INDEX_SHIFT_20B : PAGE_TABLE_INDEX_SHIFT_12B));
+        }
+
+        std::uint32_t *host_ptr = reinterpret_cast<std::uint32_t*>(get_host_pointer(from_id, addr));
+        if (!host_ptr) {
+            return std::nullopt;
+        }
+
+        return *host_ptr;
+    }
+
+    bool control_multiple::write_dword_data_to(const asid to_id, const asid writer_id, const vm_address addr, const std::uint32_t data) {
+        if ((dirs_.size() < writer_id) || (dirs_.size() < to_id)) {
+            return nullptr;
+        }
+
+        if ((addr >= page_dir_start_eka1) && (addr < page_dir_end_eka1)) {
+            if (to_id != global_dir_.id_) {
+                LOG_ERROR(MEMORY, "Permission denied on the emulator (at the moment): page table injection to non-global/kernel process! {}", to_id);
+                return false;
+            }
+
+            // Assign physical page table address. The agenda we want to do here is assign page table from "writer directory" to the "to directory".
+            page_directory *source_dir = dirs_[writer_id - 1].get();
+            if (!source_dir) {
+                LOG_WARN(MEMORY, "Trying to assign page table with a physical address, but the page directory does not exist!");
+                return false;
+            }
+
+            const std::uint32_t dest_page_table_index = (addr - page_dir_start_eka1) >> 2;
+            page_table *source_pt = source_dir->get_page_table(data);
+
+            if (to_id == global_dir_.id_) {
+                if (!global_dir_.set_page_table(dest_page_table_index, source_pt)) {
+                    LOG_ERROR(MEMORY, "Can't set page table responsible for address 0x{:X} to page directory entry 0x{:X}", data, addr);
+                    return false;
+                } else {
+                    return true;
+                }
+            } else {
+                if (!dirs_[to_id - 1]->set_page_table(dest_page_table_index, source_pt)) {
+                    LOG_ERROR(MEMORY, "Can't set page table responsible for address 0x{:X} to page directory entry 0x{:X}", data, addr);
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        } else if ((addr >= page_table_info_start_eka1) && (addr < page_table_info_end_eka1)) {
+            LOG_ERROR(MEMORY, "Page table info writing is not supported on the emulator!");
+            return false;
+        } else if ((addr >= page_table_start_eka1) && (addr < page_table_end_eka1)) {
+            LOG_ERROR(MEMORY, "Page table writing is not supported on the emulator!");
+            return false;
+        }
+
+        std::uint32_t *host_ptr = reinterpret_cast<std::uint32_t*>(get_host_pointer(to_id, addr));
+        if (!host_ptr) {
+            return false;
+        }
+
+        *host_ptr = data;
+        return true;
     }
 }

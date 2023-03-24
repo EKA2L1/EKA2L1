@@ -1127,9 +1127,6 @@ namespace eka2l1 {
     }
 
     void system_impl::initialize_user_parties() {
-        // Start the bootload
-        kern_->start_bootload();
-
         get_lib_manager()->load_patch_libraries(PATCH_FOLDER_PATH);
         dispatch::libraries::register_functions(kern_.get(), dispatcher_.get());
 
@@ -1138,6 +1135,9 @@ namespace eka2l1 {
 #ifdef ENABLE_SCRIPTING
         scripting_->import_all_modules();
 #endif
+
+        // Start the bootload
+        kern_->start_bootload();
     }
 
     void system_impl::request_exit() {

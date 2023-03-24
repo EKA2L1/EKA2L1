@@ -248,7 +248,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
 
     eka2l1::kernel_system *kernel = emulator_state_.symsys->get_kernel_system();
 
-    if (kernel && kernel->get_thread_list().empty())
+    if (!emulator_state_.init_app_launched)
         setup_app_list();
 
     setup_package_installer_ui_hooks();

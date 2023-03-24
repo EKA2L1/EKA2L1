@@ -54,6 +54,12 @@ namespace eka2l1::mem {
         shared_data_section_size_eka1 = 0x20000000,
         shared_data_section_size_max = shared_data_section_size_eka2,
         code_seg_section_size = 0x10000000,
+        page_dir_start_eka1 = 0x41000000,
+        page_table_info_start_eka1 = 0x41080000,
+        page_table_start_eka1 = 0x42000000,
+        page_table_end_eka1 = 0x42400000,
+        page_dir_end_eka1 = page_table_info_start_eka1,
+        page_table_info_end_eka1 = page_table_start_eka1,
         page_size = 0x1000,
         page_bits = 12,
         page_table_number_entries = 1 << (32 - page_bits),
@@ -166,8 +172,9 @@ namespace eka2l1::mem {
         void *get_pointer(const vm_address addr);
         page_info *get_page_info(const vm_address addr);
         page_table *get_page_table(const vm_address addr);
+        page_table *get_page_table_from_index(const std::uint32_t index);
 
-        void set_page_table(const std::uint32_t off, page_table *tab);
+        bool set_page_table(const std::uint32_t off, page_table *tab);
         void reset();
 
         const asid id() const {

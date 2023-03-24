@@ -25,6 +25,7 @@
 #include <mem/page.h>
 
 #include <memory>
+#include <optional>
 
 namespace eka2l1 {
     namespace config {
@@ -102,6 +103,14 @@ namespace eka2l1::mem {
         virtual void *get_host_pointer(const asid id, const vm_address addr) = 0;
 
         virtual page_info *get_page_info(const asid id, const vm_address addr) = 0;
+
+        virtual std::optional<std::uint32_t> read_dword_data_from(const asid from_id, const asid reader_id, const vm_address addr) {
+            return std::nullopt;
+        }
+
+        virtual bool write_dword_data_to(const asid to_id, const asid writer_id, const vm_address addr, const std::uint32_t data) {
+            return false;
+        }
 
         /**
          * @brief   Execute an exclusive write.
