@@ -192,7 +192,7 @@ namespace eka2l1::mem {
 
     bool control_multiple::write_dword_data_to(const asid to_id, const asid writer_id, const vm_address addr, const std::uint32_t data) {
         if ((dirs_.size() < writer_id) || (dirs_.size() < to_id)) {
-            return nullptr;
+            return false;
         }
 
         if ((addr >= page_dir_start_eka1) && (addr < page_dir_end_eka1)) {
