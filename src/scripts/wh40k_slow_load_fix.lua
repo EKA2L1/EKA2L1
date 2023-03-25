@@ -26,7 +26,15 @@ events.registerBreakpointHook('6r92.app', 0x100CC880, 0, 0x101FD427, WH40K_Adjus
 events.registerBreakpointHook('6r92.app', 0x1006D3E8, 0, 0x101FD427, WH40K_SkipRecursiveWait, 0x5F894B9D)
 events.registerBreakpointHook('6r92.app', 0x1006D3D0, 0, 0x101FD427, WH40K_AdjustAudioFeedbackWaitTime, 0x5F894B9D)
 
+events.registerBreakpointHook('main.dll', 0x100CC880, 0, 0x101FD427, WH40K_AdjustLoadingActiveObjPriority, 0x5F894B9D)
+events.registerBreakpointHook('main.dll', 0x1006D3E8, 0, 0x101FD427, WH40K_SkipRecursiveWait, 0x5F894B9D)
+events.registerBreakpointHook('main.dll', 0x1006D3D0, 0, 0x101FD427, WH40K_AdjustAudioFeedbackWaitTime, 0x5F894B9D)
+
 -- v03156-0.6.9
 events.registerBreakpointHook('6r92.app', 0x100DB3F8, 0, 0x101FD427, WH40K_AdjustLoadingActiveObjPriority, 0x8EFD9C7)
 events.registerBreakpointHook('6r92.app', 0x1007290C, 0, 0x101FD427, WH40K_SkipRecursiveWait, 0x8EFD9C7)
 events.registerBreakpointHook('6r92.app', 0x100728DC, 0, 0x101FD427, WH40K_AdjustAudioFeedbackWaitTime, 0x8EFD9C7)
+
+events.registerBreakpointHook('main.dll', 0x100DB3F8, 0, 0x101FD427, WH40K_AdjustLoadingActiveObjPriority, 0x8EFD9C7)
+events.registerBreakpointHook('main.dll', 0x1007290C, 0, 0x101FD427, WH40K_SkipRecursiveWait, 0x8EFD9C7)
+events.registerBreakpointHook('main.dll', 0x100728DC, 0, 0x101FD427, WH40K_AdjustAudioFeedbackWaitTime, 0x8EFD9C7)
