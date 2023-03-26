@@ -58,6 +58,7 @@
     <string name="pref_wakelock">Mantieni lo schermo acceso</string>
     <string name="pref_enable_vibration">Attiva vibrazione</string>
     <string name="pref_emulator_dir">Cartella di lavoro</string>
+    <string name="pref_emulator_dir_cant_change">The working directory can\'t be changed!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Abilita filtro Nearest Neighbor</string>
     <string name="pref_system_language_option_name">Lingua</string>
     <string name="pref_system_real_time_accuracy_str">Accuratezza in tempo reale</string>
@@ -68,7 +69,7 @@
     <string name="pref_system_setting_inheritance_option_name">Mantieni impostazioni</string>
     <string name="emulated_screen_rotation_item_name">Rotazione</string>
     <string name="emulated_screen_refresh_rate_item_name">Frequenza di aggiornamento</string>
-    <string name="pref_device_display_name">Nome telefono familiare</string>
+    <string name="pref_device_display_name">Phone name</string>
     <string name="hide_system_apps">Nascondi le applicazioni di sistema</string>
     <string name="pref_bt_netplay_direct_ips_manager">Gestione IP diretti</string>
     <string name="enter_address">Imposta indirizzo</string>
@@ -131,6 +132,7 @@
     <string name="pref_screen_scale_type_fill">Riempi la finestra (ignora le proporzioni)</string>
     <string name="pref_screen_scale_type_fit">Adatta alla finestra</string>
     <string name="pref_screen_scale_type_none">Com\'è</string>
+    <string name="pref_screen_use_notch">Use notch</string>
     <string name="pref_screen_scale_use_shader">Usa shader per l\'upscaling</string>
     <string name="pref_screen_upscale_shader">Shader Upscale</string>
     <string name="pref_screen_default_shader">Predefinito</string>
