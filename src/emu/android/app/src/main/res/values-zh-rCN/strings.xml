@@ -58,6 +58,7 @@
     <string name="pref_wakelock">保持屏幕常亮</string>
     <string name="pref_enable_vibration">开启振动</string>
     <string name="pref_emulator_dir">工作目录</string>
+    <string name="pref_emulator_dir_cant_change">The working directory can\'t be changed!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">启用最近邻域过滤</string>
     <string name="pref_system_language_option_name">语言</string>
     <string name="pref_system_real_time_accuracy_str">实时精度</string>
@@ -68,7 +69,7 @@
     <string name="pref_system_setting_inheritance_option_name">设置继承</string>
     <string name="emulated_screen_rotation_item_name">旋转</string>
     <string name="emulated_screen_refresh_rate_item_name">刷新率</string>
-    <string name="pref_device_display_name">友好的手机名称</string>
+    <string name="pref_device_display_name">Phone name</string>
     <string name="hide_system_apps">隐藏系统应用</string>
     <string name="pref_bt_netplay_direct_ips_manager">直属经理</string>
     <string name="enter_address">输入地址</string>
@@ -131,6 +132,7 @@
     <string name="pref_screen_scale_type_fill">填充 (忽略宽高比)</string>
     <string name="pref_screen_scale_type_fit">适应</string>
     <string name="pref_screen_scale_type_none">无</string>
+    <string name="pref_screen_use_notch">Use notch</string>
     <string name="pref_screen_scale_use_shader">使用着色器进行缩放</string>
     <string name="pref_screen_upscale_shader">缩放着色器</string>
     <string name="pref_screen_default_shader">默认</string>
