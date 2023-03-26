@@ -58,6 +58,7 @@
     <string name="pref_wakelock">Не вимикати екран</string>
     <string name="pref_enable_vibration">Увімкнути вібрацію</string>
     <string name="pref_emulator_dir">Робочий каталог</string>
+    <string name="pref_emulator_dir_cant_change">The working directory can\'t be changed!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Увімкнути фільтрацію шляхом найближчого сусіда</string>
     <string name="pref_system_language_option_name">Мова</string>
     <string name="pref_system_real_time_accuracy_str">Точність у реальному часі</string>
@@ -68,7 +69,7 @@
     <string name="pref_system_setting_inheritance_option_name">Успадкування налаштувань</string>
     <string name="emulated_screen_rotation_item_name">Поворот екрана</string>
     <string name="emulated_screen_refresh_rate_item_name">Частота оновлення</string>
-    <string name="pref_device_display_name">Ім\'я телефона</string>
+    <string name="pref_device_display_name">Phone name</string>
     <string name="hide_system_apps">Приховати системні застосунки</string>
     <string name="pref_bt_netplay_direct_ips_manager">Менеджер прямих IP-адрес</string>
     <string name="enter_address">Уведіть адресу</string>
@@ -131,6 +132,7 @@
     <string name="pref_screen_scale_type_fill">Заповнити вікно (ігнорувати пропорції)</string>
     <string name="pref_screen_scale_type_fit">Уписати у вікно</string>
     <string name="pref_screen_scale_type_none">Як є</string>
+    <string name="pref_screen_use_notch">Use notch</string>
     <string name="pref_screen_scale_use_shader">Використовувати шейдер для масштабування</string>
     <string name="pref_screen_upscale_shader">Масштабувальний шейдер</string>
     <string name="pref_screen_default_shader">За промовчанням</string>
