@@ -58,6 +58,7 @@
     <string name="pref_wakelock">إبقاء الشاشة فعالة</string>
     <string name="pref_enable_vibration">تمكين الإهتزاز</string>
     <string name="pref_emulator_dir">مسار العمل</string>
+    <string name="pref_emulator_dir_cant_change">The working directory can\'t be changed!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">تفعيل تصفية أقرب جار</string>
     <string name="pref_system_language_option_name">اللغة</string>
     <string name="pref_system_real_time_accuracy_str">الدقة في الوقت الحقيقي</string>
@@ -68,7 +69,7 @@
     <string name="pref_system_setting_inheritance_option_name">توريث الاعدادات</string>
     <string name="emulated_screen_rotation_item_name">التدوير</string>
     <string name="emulated_screen_refresh_rate_item_name">معدل التحديث</string>
-    <string name="pref_device_display_name">اسم الهاتف الودي</string>
+    <string name="pref_device_display_name">Phone name</string>
     <string name="hide_system_apps">إخفاء تطبيقات النظام</string>
     <string name="pref_bt_netplay_direct_ips_manager">مدير IP المباشر</string>
     <string name="enter_address">أدخل عنوان</string>
@@ -131,6 +132,7 @@
     <string name="pref_screen_scale_type_fill">ملء النافذة (تجاهل نسبة الجوانب)</string>
     <string name="pref_screen_scale_type_fit">مناسب للنافذة</string>
     <string name="pref_screen_scale_type_none">كما هو</string>
+    <string name="pref_screen_use_notch">Use notch</string>
     <string name="pref_screen_scale_use_shader">استخدام المظلل لتعزيز الجودة</string>
     <string name="pref_screen_upscale_shader">ضل معزز الجودة</string>
     <string name="pref_screen_default_shader">الافتراضي</string>
