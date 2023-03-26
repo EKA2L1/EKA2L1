@@ -58,6 +58,7 @@
     <string name="pref_wakelock">Layar tetap menyala</string>
     <string name="pref_enable_vibration">Aktifkan getaran</string>
     <string name="pref_emulator_dir">Direktori kerja</string>
+    <string name="pref_emulator_dir_cant_change">The working directory can\'t be changed!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Hidupkan pemfilteran terdekat</string>
     <string name="pref_system_language_option_name">Bahasa</string>
     <string name="pref_system_real_time_accuracy_str">Akurasi waktu-nyata</string>
@@ -68,7 +69,7 @@
     <string name="pref_system_setting_inheritance_option_name">Warisan pengaturan</string>
     <string name="emulated_screen_rotation_item_name">Perputaran</string>
     <string name="emulated_screen_refresh_rate_item_name">Laju refresh</string>
-    <string name="pref_device_display_name">Nama ponsel yang ramah</string>
+    <string name="pref_device_display_name">Phone name</string>
     <string name="hide_system_apps">Sembunyikan aplikasi sistem</string>
     <string name="pref_bt_netplay_direct_ips_manager">Manajer IP Direct</string>
     <string name="enter_address">Masukkan alamat</string>
@@ -131,6 +132,7 @@
     <string name="pref_screen_scale_type_fill">Penuhi layar (abaikan rasio aspek)</string>
     <string name="pref_screen_scale_type_fit">Paskan ke layar</string>
     <string name="pref_screen_scale_type_none">Seaslinya</string>
+    <string name="pref_screen_use_notch">Use notch</string>
     <string name="pref_screen_scale_use_shader">Gunakan shader untuk naik skala</string>
     <string name="pref_screen_upscale_shader">Naikkan skala shader</string>
     <string name="pref_screen_default_shader">Bawaan</string>
