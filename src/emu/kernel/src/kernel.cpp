@@ -170,7 +170,7 @@ namespace eka2l1 {
         utc_offset_ = common::get_current_utc_offset();
         cpu_hz_ = DEFAULT_EMULATED_CPU_HZ;
 
-        locale_ = std::make_unique<std::locale>("");
+        locale_ = std::make_unique<std::locale>();
 
         dll_global_data_chunk_ = nullptr;
         custom_code_chunk = nullptr;
