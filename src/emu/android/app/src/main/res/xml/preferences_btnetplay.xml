@@ -19,7 +19,8 @@
         android:key="bt-central-server-url"
         android:selectAllOnFocus="true"
         android:singleLine="true"
-        android:title="@string/pref_bt_netplay_server_address" />
+        android:title="@string/pref_bt_netplay_server_address"
+        app:isPreferenceVisible="false" />
     <EditTextPreference
         android:selectAllOnFocus="true"
         android:singleLine="true"
@@ -34,5 +35,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:key="pref_bt_netplay_direct_ips_manager"
-        android:title="@string/pref_bt_netplay_direct_ips_manager" />
+        android:title="@string/pref_bt_netplay_direct_ips_manager"
+        app:enabled="false"
+        app:isPreferenceVisible="false" />
 </PreferenceScreen>

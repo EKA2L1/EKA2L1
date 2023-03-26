@@ -23,6 +23,7 @@ package com.github.eka2l1.emu;
 public class Constants {
     public static final String ACTION_EDIT = "config.edit";
     public static final String ACTION_EDIT_PROFILE = "config.edit.profile";
+    public static final String ACTION_LAUNCH_GAME = "emu.launch";
     public static final String KEY_ACTION = "action";
 
     public static final String KEY_RESTART = "restart";

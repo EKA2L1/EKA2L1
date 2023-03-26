@@ -72,7 +72,7 @@ public class AppDataStore extends PreferenceDataStore {
     }
 
     public static AppDataStore getAndroidStore() {
-        File file = new File(Emulator.getEmulatorDir(), "android.yml");
+        File file = new File(Emulator.getPersistentDataDir(), "android.yml");
         return new AppDataStore(file);
     }
 

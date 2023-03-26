@@ -27,7 +27,9 @@ import static com.github.eka2l1.emu.Constants.PREF_VIBRATION;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
@@ -40,9 +42,15 @@ import androidx.preference.SwitchPreferenceCompat;
 
 import com.github.eka2l1.R;
 import com.github.eka2l1.emu.Emulator;
+import com.github.eka2l1.util.FileUtils;
 
 public class AndroidSettingsFragment extends PreferenceFragmentCompat {
     private AppDataStore dataStore;
+    private Preference emulatorDirPreference;
+
+    private final ActivityResultLauncher pickEmulatorDirectory = registerForActivityResult(
+            FileUtils.getDirPicker(),
+            this::onEmulatorDirPickResult);
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
@@ -60,8 +68,18 @@ public class AndroidSettingsFragment extends PreferenceFragmentCompat {
             Emulator.setVibration((Boolean) newValue);
             return true;
         });
-        Preference emulatorDirPreference = findPreference(PREF_EMULATOR_DIR);
+        emulatorDirPreference = findPreference(PREF_EMULATOR_DIR);
         emulatorDirPreference.setSummary(Emulator.getEmulatorDir());
+
+        emulatorDirPreference.setOnPreferenceClickListener(preference -> {
+            if (FileUtils.isExternalStorageLegacy()) {
+                pickEmulatorDirectory.launch(null);
+            } else {
+                Toast.makeText(getActivity(), R.string.pref_emulator_dir_cant_change, Toast.LENGTH_SHORT).show();
+            }
+
+            return true;
+        });
     }
 
     @Override
@@ -86,5 +104,12 @@ public class AndroidSettingsFragment extends PreferenceFragmentCompat {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void onEmulatorDirPickResult(String newPath) {
+        dataStore.putString(PREF_EMULATOR_DIR, newPath);
+        emulatorDirPreference.setSummary(newPath);
+
+        getParentFragmentManager().setFragmentResult(KEY_RESTART, new Bundle());
     }
 }

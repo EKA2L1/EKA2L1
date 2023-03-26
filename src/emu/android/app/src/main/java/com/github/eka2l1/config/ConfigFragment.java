@@ -24,6 +24,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -84,10 +85,10 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
     protected Spinner spScaleType;
     protected TextView tvUpscaleShader;
     protected Spinner spUpscaleShader;
+
+    protected CompoundButton cbShowNotch;
     protected CompoundButton cbUseShaderForUpscale;
-
     protected CompoundButton cbShowKeyboard;
-
     private View rootInputConfig;
     private View groupVkConfig;
     protected CompoundButton cbVKFeedback;
@@ -177,6 +178,7 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
         tvUpscaleShader = view.findViewById(R.id.tvUpscaleShader);
         spUpscaleShader = view.findViewById(R.id.spUpscaleShader);
         cbUseShaderForUpscale = view.findViewById(R.id.cbShouldUseShaderForUpscale);
+        cbShowNotch = view.findViewById(R.id.cbShowNotch);
 
         rootInputConfig = view.findViewById(R.id.rootInputConfig);
         cbTouchInput = view.findViewById(R.id.cbTouchInput);
@@ -300,6 +302,11 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
                 }
             }
         });
+
+        cbShowNotch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+
+        });
+
         cbUseShaderForUpscale.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
                 tvUpscaleShader.setVisibility(View.VISIBLE);
@@ -431,6 +438,7 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
         spOrientation.setSelection(params.orientation);
         spScaleType.setSelection(params.screenScaleType);
         spScreenGravity.setSelection(params.screenGravity);
+        cbShowNotch.setChecked(params.screenShowNotch);
 
         boolean showVk = params.showKeyboard;
         cbShowKeyboard.setChecked(showVk);
@@ -451,6 +459,11 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
         etVKSelBack.setText(String.format("%06X", params.vkBgColorSelected));
         etVKSelFore.setText(String.format("%06X", params.vkFgColorSelected));
         etVKOutline.setText(String.format("%06X", params.vkOutlineColor));
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            // Disable notch option on older version
+            cbShowNotch.setVisibility(View.GONE);
+        }
     }
 
     private void saveParams() {
@@ -463,6 +476,7 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
             params.orientation = spOrientation.getSelectedItemPosition();
             params.screenGravity = spScreenGravity.getSelectedItemPosition();
             params.screenScaleType = spScaleType.getSelectedItemPosition();
+            params.screenShowNotch = cbShowNotch.isChecked();
 
             params.showKeyboard = cbShowKeyboard.isChecked();
             params.vkFeedback = cbVKFeedback.isChecked();

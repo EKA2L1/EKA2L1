@@ -20,6 +20,7 @@
 
 package com.github.eka2l1.emu;
 
+import static com.github.eka2l1.emu.Constants.PREF_EMULATOR_DIR;
 import static com.github.eka2l1.emu.Constants.PREF_VIBRATION;
 
 import android.Manifest;
@@ -111,6 +112,7 @@ public class Emulator {
     private static AlertDialog inputDialog;
 
     private static String emulatorDir;
+    private static String persistentDataDir;
     private static String compatDir;
     private static String configsDir;
     private static String profilesDir;
@@ -124,17 +126,24 @@ public class Emulator {
 
     public static void initializePath(Context context) {
         Emulator.context = context;
-        vibrationEnabled = AppDataStore.getAndroidStore().getBoolean(PREF_VIBRATION, true);
 
         if (FileUtils.isExternalStorageLegacy()) {
-            emulatorDir = Environment.getExternalStorageDirectory() + "/EKA2L1/";
+            String defaultEmulatorDir = Environment.getExternalStorageDirectory() + "/EKA2L1/";
+
+            // Order is important :)
+            persistentDataDir = defaultEmulatorDir;
+            emulatorDir = AppDataStore.getAndroidStore().getString(PREF_EMULATOR_DIR, defaultEmulatorDir);
         } else {
             emulatorDir = context.getExternalFilesDir(null).getPath() + "/";
+            persistentDataDir = emulatorDir;
         }
+
         compatDir = emulatorDir + "compat/";
         configsDir = emulatorDir + "android/configs/";
         profilesDir = emulatorDir + "android/profiles/";
         scriptsDir = emulatorDir + "scripts/";
+
+        vibrationEnabled = AppDataStore.getAndroidStore().getBoolean(PREF_VIBRATION, true);
     }
 
     public static void initializeFolders() {
@@ -204,6 +213,7 @@ public class Emulator {
     public static String getEmulatorDir() {
         return emulatorDir;
     }
+    public static String getPersistentDataDir() { return persistentDataDir; }
 
     public static String getCompatDir() {
         return compatDir;

@@ -31,6 +31,7 @@ import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.SparseIntArray;
@@ -106,7 +107,7 @@ public class EmulatorActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         Intent intent = getIntent();
-        if (intent.getBooleanExtra(KEY_APP_IS_SHORTCUT, false)) {
+        if (intent.getBooleanExtra(KEY_APP_IS_SHORTCUT, false) || ACTION_LAUNCH_GAME.equals(intent.getAction())) {
             Emulator.initializeForShortcutLaunch(this);
         }
 
@@ -177,6 +178,14 @@ public class EmulatorActivity extends AppCompatActivity {
         } else {
             setOrientation(params.orientation);
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            getWindow().getAttributes().layoutInDisplayCutoutMode =
+                    params.screenShowNotch ?
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES :
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER;
+        }
+
         Emulator.setScreenParams(params.screenBackgroundColor, params.screenScaleRatio,
                 params.screenScaleType, params.screenGravity);
     }

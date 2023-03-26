@@ -57,6 +57,9 @@ public class ProfileModel {
     @SerializedName("ScreenGravity")
     public int screenGravity;
 
+    @SerializedName("ScreenShowNotch")
+    public boolean screenShowNotch;
+
     @SerializedName("TouchInput")
     public boolean touchInput;
 
@@ -110,6 +113,7 @@ public class ProfileModel {
         screenScaleType = 1;
         screenGravity = 1;
         screenScaleRatio = 100;
+        screenShowNotch = false;
 
         showKeyboard = true;
         touchInput = true;
