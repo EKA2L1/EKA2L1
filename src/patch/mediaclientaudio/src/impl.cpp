@@ -35,7 +35,9 @@ static const TUint32 KBlackListAudioClipFormatCount = sizeof(KBlackListAudioClip
 
 CMMFMdaAudioOpenComplete::CMMFMdaAudioOpenComplete()
     : CIdle(100)
-    , iIsFixup(EFalse) {
+    , iIsFixup(EFalse)
+    , iTarget(NULL)
+    , iIsTone(EFalse) {
 }
 
 CMMFMdaAudioOpenComplete::~CMMFMdaAudioOpenComplete() {
@@ -44,16 +46,37 @@ CMMFMdaAudioOpenComplete::~CMMFMdaAudioOpenComplete() {
 }
 
 static TInt OpenCompleteCallback(void *aUserdata) {
-    LogOut(KMcaCat, _L("Open utility/recorder complete"));
-
-    CMMFMdaAudioUtility *stream = reinterpret_cast<CMMFMdaAudioUtility *>(aUserdata);
-    stream->TransitionState(EMdaStateReady, KErrNone);
-
+    CMMFMdaAudioOpenComplete *iOpenComplete = reinterpret_cast<CMMFMdaAudioOpenComplete *>(aUserdata);
+    if (iOpenComplete != NULL) {
+        iOpenComplete->CompleteOpen();
+    }
     return 0;
 }
 
+void CMMFMdaAudioOpenComplete::CompleteOpen() {
+    LogOut(KMcaCat, _L("Open utility/recorder/tone complete"));
+
+    if (iIsTone) {
+        CMMFMdaAudioToneUtility *stream = reinterpret_cast<CMMFMdaAudioToneUtility *>(iTarget);
+        stream->CompletePrepare(KErrNone);
+    } else {
+        CMMFMdaAudioUtility *stream = reinterpret_cast<CMMFMdaAudioUtility *>(iTarget);
+        stream->TransitionState(EMdaStateReady, KErrNone);
+    }
+}
+
 void CMMFMdaAudioOpenComplete::Open(CMMFMdaAudioUtility *aUtil) {
-    Start(TCallBack(OpenCompleteCallback, aUtil));
+    iTarget = aUtil;
+    iIsTone = EFalse;
+
+    Start(TCallBack(OpenCompleteCallback, this));
+}
+
+void CMMFMdaAudioOpenComplete::Open(CMMFMdaAudioToneUtility *aUtil) {
+    iTarget = aUtil;
+    iIsTone = ETrue;
+
+    Start(TCallBack(OpenCompleteCallback, this));
 }
 
 void CMMFMdaAudioOpenComplete::FixupActiveStatus() {
@@ -452,4 +475,145 @@ TInt CMMFMdaAudioRecorderUtility::SetDestContainerFormat(const TUint32 aUid) {
 TInt CMMFMdaAudioRecorderUtility::GetDestContainerFormat(TUint32 &aUid) {
     aUid = iContainerFormat;
     return KErrNone;
+}
+
+CMMFMdaAudioToneUtility::CMMFMdaAudioToneUtility(MMdaAudioToneObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref)
+    : CActive(CActive::EPriorityStandard)
+    , iObserver(aObserver)
+    , iState(EMdaAudioToneUtilityNotReady)
+    , iDispatchInstance(NULL) {
+}
+
+void CMMFMdaAudioToneUtility::ConstructL() {
+    iDispatchInstance = ETonePlayerNewInstance(0);
+
+    if (!iDispatchInstance) {
+        User::Leave(KErrGeneral);
+    }
+
+    iOpener.FixupActiveStatus();
+
+    CActiveScheduler::Add(&iOpener);
+    CActiveScheduler::Add(this);
+}
+
+CMMFMdaAudioToneUtility *CMMFMdaAudioToneUtility::NewL(MMdaAudioToneObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref) {
+    CMMFMdaAudioToneUtility *self = new (ELeave) CMMFMdaAudioToneUtility(aObserver, aPriority, aPref);
+    CleanupStack::PushL(self);
+    self->ConstructL();
+    CleanupStack::Pop(self);
+
+    return self;
+}
+
+TInt CMMFMdaAudioToneUtility::SetVolume(const TInt aNewVolume) {
+    return ETonePlayerSetVolume(0, iDispatchInstance, aNewVolume);
+}
+
+TInt CMMFMdaAudioToneUtility::GetVolume() {
+    return ETonePlayerGetVolume(0, iDispatchInstance);
+}
+
+TInt CMMFMdaAudioToneUtility::MaxVolume() {
+    return ETonePlayerMaxVolume(0, iDispatchInstance);
+}
+
+TInt CMMFMdaAudioToneUtility::GetBalance() {
+    return ETonePlayerGetBalance(0, iDispatchInstance);
+}
+
+TInt CMMFMdaAudioToneUtility::SetBalance(const TInt aBalance) {
+    return ETonePlayerSetBalance(0, iDispatchInstance, aBalance);
+}
+
+#define CALL_PREARE(function, ARGS...)                                                  \
+    iOpener.FixupActiveStatus();                                                        \
+    TInt err = function(0, iDispatchInstance, ##ARGS);                                  \
+    if (err != KErrNone) {                                                          \
+        CompletePrepare(err);                                                       \
+    } else {                                                                        \
+        iOpener.Open(this);                                                         \
+}
+
+void CMMFMdaAudioToneUtility::PrepareToPlayFileSequence(const TDesC &aFileName) {
+    CALL_PREARE(ETonePlayerSetFileToneSequence, aFileName)
+}
+
+void CMMFMdaAudioToneUtility::PrepareToPlayBufferSequence(const TDesC8 &aBuf) {
+    CALL_PREARE(ETonePlayerSetBufferToneSequence, aBuf)
+}
+
+void CMMFMdaAudioToneUtility::PrepareToPlayFixedSequence(const TInt aSequenceIndex) {
+    CALL_PREARE(ETonePlayerSetFixedToneSequence, aSequenceIndex)
+}
+
+void CMMFMdaAudioToneUtility::PrepareToPlayTone(const TInt aFreq, const TTimeIntervalMicroSeconds &aDuration) {
+#ifdef EKA2
+    CALL_PREARE(ETonePlayerSetSingleTone, aFreq, aDuration.Int64() & 0xFFFFFFFF, (aDuration.Int64() >> 32) & 0xFFFFFFFF)
+#else
+    CALL_PREARE(ETonePlayerSetSingleTone, aFreq, aDuration.Int64().GetTInt(), 0)
+#endif
+}
+
+void CMMFMdaAudioToneUtility::CancelPrepare() {
+    // Not gonna do anything :)
+}
+
+void CMMFMdaAudioToneUtility::Play() {
+    if (iState == EMdaAudioToneUtilityPlaying) {
+        LogOut(KMcaCat, _L("Trying to call play while tone player is playing!"));
+        return;
+    }
+
+    // Will override existing
+    iStatus = KRequestPending;
+
+    ETonePlayerNotifyAnyDone(0, iDispatchInstance, iStatus);
+    SetActive();
+
+    TInt err = ETonePlayerPlay(0, iDispatchInstance);
+    if (err != KErrNone) {
+        LogOut(KMcaCat, _L("Playing tone player encountered error: %d"), err);
+        iObserver.MatoPlayComplete(err);
+    } else {
+        iState = EMdaAudioToneUtilityPlaying;
+    }
+}
+
+void CMMFMdaAudioToneUtility::CancelPlay() {
+    Cancel();
+}
+
+TInt CMMFMdaAudioToneUtility::FixedSequenceCount() const {
+    return ETonePlayerGetFixedSequenceCount(0, iDispatchInstance);
+}
+
+void CMMFMdaAudioToneUtility::SetRepeats(const TInt aHowManyTimes, const TTimeIntervalMicroSeconds &aSilenceInterval) {
+#ifdef EKA2
+    ETonePlayerSetRepeats(0, iDispatchInstance, aHowManyTimes, aSilenceInterval.Int64() & 0xFFFFFFFF, (aSilenceInterval.Int64() >> 32) & 0xFFFFFFFF);
+#else
+    ETonePlayerSetRepeats(0, iDispatchInstance, aHowManyTimes, aSilenceInterval.Int64().GetTInt(), 0);
+#endif
+}
+
+const TMdaAudioToneUtilityState CMMFMdaAudioToneUtility::State() {
+    return iState;
+}
+
+void CMMFMdaAudioToneUtility::RunL() {
+    iState = EMdaAudioToneUtilityPrepared;
+    iObserver.MatoPlayComplete(iStatus.Int());
+}
+
+void CMMFMdaAudioToneUtility::DoCancel() {
+    ETonePlayerStop(0, iDispatchInstance);
+    iObserver.MatoPlayComplete(KErrCancel);
+}
+
+void CMMFMdaAudioToneUtility::CompletePrepare(TInt aError) {
+    if (aError == KErrNone) {
+        iState = EMdaAudioToneUtilityPrepared;
+    }
+
+    iObserver.MatoPrepareComplete(aError);
 }

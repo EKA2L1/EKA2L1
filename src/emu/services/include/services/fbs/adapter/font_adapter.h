@@ -111,11 +111,12 @@ namespace eka2l1::epoc::adapter {
         virtual std::size_t count() = 0;
 
         /**
-         * @brief       Get the unique ID of a typeface.
-         * @param       face_index        The index of the face to get the UID from.
-         * @returns     0xFFFFFFFF on failure or unavailable
+         * @brief       Check if the typeface supports this feature UID.
+         * @param       face_index        The index of the face to check the UID against.
+         * @param       uid               The UID to be checked.
+         * @returns     false if not contained.
          */
-        virtual std::uint32_t unique_id(const std::size_t face_index) = 0;
+        virtual bool contains_uid(const std::size_t face_index, const std::uint32_t uid) = 0;
 
         /**
          * @brief       Check if a character exists.

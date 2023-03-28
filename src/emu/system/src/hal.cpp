@@ -84,10 +84,23 @@ namespace eka2l1::epoc {
             des8 *buf = reinterpret_cast<des8 *>(a1);
             epoc::memory_info_v1 mem_info;
 
-            mem_info.total_ram_in_bytes_ = static_cast<int>(common::MB(256));
+            epocver system_version = sys->get_symbian_version_use();
+            int system_ram_size = 0;
+
+            if (system_version >= epocver::epoc94) {
+                system_ram_size = static_cast<int>(common::MB(512));
+            } else if (system_version >= epocver::epoc93fp1) {
+                system_ram_size = static_cast<int>(common::MB(256));
+            } else if (system_version >= epocver::epoc80) {
+                system_ram_size = static_cast<int>(common::MB(128));
+            } else {
+                system_ram_size = static_cast<int>(common::MB(64));
+            }
+
+            mem_info.total_ram_in_bytes_ = system_ram_size;
             mem_info.rom_is_reprogrammable_ = false;
-            mem_info.max_free_ram_in_bytes_ = static_cast<int>(common::MB(256));
-            mem_info.free_ram_in_bytes_ = static_cast<int>(common::MB(256));
+            mem_info.max_free_ram_in_bytes_ = system_ram_size;
+            mem_info.free_ram_in_bytes_ = system_ram_size;
             mem_info.total_rom_in_bytes_ = sys->get_rom_info()->header.rom_size;
 
             // This value is appr. the same as rom.

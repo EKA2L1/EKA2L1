@@ -81,6 +81,29 @@ HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetDestinationEncoding, TAny *aInstance, con
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetDestinationEncoding, TAny *aInstance, TUint32 &aEncoding);
 
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetContainerFormat, TAny *aInstance, const TUint32 aFourCC);
+
+/// TONE PLAYER
+HLE_DISPATCH_FUNC(TAny *, ETonePlayerNewInstance);
+HLE_DISPATCH_FUNC(TInt, ETonePlayerNotifyAnyDone, TAny *aInstance, TRequestStatus &aStatus);
+
+HLE_DISPATCH_FUNC(TInt, ETonePlayerSetVolume, TAny *aInstance, const TInt aVolume);
+HLE_DISPATCH_FUNC(TInt, ETonePlayerGetVolume, TAny *aInstance);
+HLE_DISPATCH_FUNC(TInt, ETonePlayerMaxVolume, TAny *aInstance);
+HLE_DISPATCH_FUNC(TInt, ETonePlayerSetRepeats, TAny *aInstance, const TInt aTimes, TInt aSilenceIntervalMicrosLow, TInt aSilenceIntervalMicrosHigh);
+
+HLE_DISPATCH_FUNC(TInt, ETonePlayerSetBufferToneSequence, TAny *aInstance, const TDesC8 &aSequence);
+HLE_DISPATCH_FUNC(TInt, ETonePlayerSetFileToneSequence, TAny *aInstance, const TDesC16 &aSequence);
+HLE_DISPATCH_FUNC(TInt, ETonePlayerSetFixedToneSequence, TAny *aInstance, const TInt aSequenceIndex);
+HLE_DISPATCH_FUNC(TInt, ETonePlayerSetSingleTone, TAny *aInstance, TInt aFrequency, TInt aDurationMicrosLow, TInt aDurationMicrosHigh);
+HLE_DISPATCH_FUNC(TInt, ETonePlayerGetFixedSequenceCount, TAny *aInstance);
+
+HLE_DISPATCH_FUNC(TInt, ETonePlayerSetBalance, TAny *aInstance, TInt aBalance);
+HLE_DISPATCH_FUNC(TInt, ETonePlayerGetBalance, TAny *aInstance);
+
+HLE_DISPATCH_FUNC(TInt, ETonePlayerPlay, TAny *aInstance);
+HLE_DISPATCH_FUNC(TInt, ETonePlayerStop, TAny *aInstance);
+
+HLE_DISPATCH_FUNC(TInt, ETonePlayerGetFixedSequenceName, TInt *aLength, TText16 *aText);
 }
 
 #endif

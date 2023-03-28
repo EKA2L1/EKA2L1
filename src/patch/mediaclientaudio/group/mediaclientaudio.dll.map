@@ -96,6 +96,15 @@
 103 143         ; _ZTV20CMdaAudioClipUtility
 104 150         ; _ZTV24CMdaAudioRecorderUtility
 105 121         ; _ZN24CMdaAudioRecorderUtility9OpenFileLERK7TDesC164TUidS3_S3_7TFourCC
+110 4           ; _ZN20CMdaAudioToneUtility11GetBalanceLEv
+111 5           ; _ZN20CMdaAudioToneUtility11SetBalanceLEi
+112 7           ; _ZN20CMdaAudioToneUtility21PrepareToPlayDualToneEiiRK25TTimeIntervalMicroSeconds
+113 9           ; _ZN20CMdaAudioToneUtility4NewLER21MMdaAudioToneObserverP10CMdaServer
+114 10          ; _ZN20CMdaAudioToneUtility4NewLER21MMdaAudioToneObserverP10CMdaServeri22TMdaPriorityPreference
+115 129         ; _ZTI20CMdaAudioToneUtility
+116 144         ; _ZTV20CMdaAudioToneUtility
+117 6           ; _ZN20CMdaAudioToneUtility15CustomInterfaceE4TUid
+118 8           ; _ZN20CMdaAudioToneUtility25PrepareToPlayFileSequenceER5RFile
 
 [epoc94]
 1 11            ; CMdaAudioPlayerUtility::GetBalance
@@ -195,6 +204,15 @@
 103 143         ; _ZTV20CMdaAudioClipUtility
 104 150         ; _ZTV24CMdaAudioRecorderUtility
 105 121         ; _ZN24CMdaAudioRecorderUtility9OpenFileLERK7TDesC164TUidS3_S3_7TFourCC
+110 4           ; _ZN20CMdaAudioToneUtility11GetBalanceLEv
+111 5           ; _ZN20CMdaAudioToneUtility11SetBalanceLEi
+112 7           ; _ZN20CMdaAudioToneUtility21PrepareToPlayDualToneEiiRK25TTimeIntervalMicroSeconds
+113 9           ; _ZN20CMdaAudioToneUtility4NewLER21MMdaAudioToneObserverP10CMdaServer
+114 10          ; _ZN20CMdaAudioToneUtility4NewLER21MMdaAudioToneObserverP10CMdaServeri22TMdaPriorityPreference
+115 129         ; _ZTI20CMdaAudioToneUtility
+116 144         ; _ZTV20CMdaAudioToneUtility
+117 6           ; _ZN20CMdaAudioToneUtility15CustomInterfaceE4TUid
+118 8           ; _ZN20CMdaAudioToneUtility25PrepareToPlayFileSequenceER5RFile
 
 [epoc93fp2]
 1 11            ; CMdaAudioPlayerUtility::GetBalance
@@ -294,6 +312,15 @@
 103 143         ; _ZTV20CMdaAudioClipUtility
 104 150         ; _ZTV24CMdaAudioRecorderUtility
 105 121         ; _ZN24CMdaAudioRecorderUtility9OpenFileLERK7TDesC164TUidS3_S3_7TFourCC
+110 4           ; _ZN20CMdaAudioToneUtility11GetBalanceLEv
+111 5           ; _ZN20CMdaAudioToneUtility11SetBalanceLEi
+112 7           ; _ZN20CMdaAudioToneUtility21PrepareToPlayDualToneEiiRK25TTimeIntervalMicroSeconds
+113 9           ; _ZN20CMdaAudioToneUtility4NewLER21MMdaAudioToneObserverP10CMdaServer
+114 10          ; _ZN20CMdaAudioToneUtility4NewLER21MMdaAudioToneObserverP10CMdaServeri22TMdaPriorityPreference
+115 129         ; _ZTI20CMdaAudioToneUtility
+116 144         ; _ZTV20CMdaAudioToneUtility
+117 6           ; _ZN20CMdaAudioToneUtility15CustomInterfaceE4TUid
+118 8           ; _ZN20CMdaAudioToneUtility25PrepareToPlayFileSequenceER5RFile
 
 [epoc93fp1]
 1 11            ; CMdaAudioPlayerUtility::GetBalance
@@ -465,6 +492,11 @@
 69 73           ; SetPriority__24CMdaAudioRecorderUtilityi22TMdaPriorityPreference
 70 80           ; AddMetaDataEntryL__24CMdaAudioRecorderUtilityR17CMMFMetaDataEntry
 71 49           ; OpenFileL__24CMdaAudioRecorderUtilityRC7TDesC16G4TUidN22G7TFourCC
+72 21           ; GetBalanceL__20CMdaAudioToneUtility
+73 1            ; NewL__20CMdaAudioToneUtilityR21MMdaAudioToneObserverP10CMdaServer
+74 41           ; NewL__20CMdaAudioToneUtilityR21MMdaAudioToneObserverP10CMdaServeri22TMdaPriorityPreference
+75 109          ; PrepareToPlayDualTone__20CMdaAudioToneUtilityiiRC25TTimeIntervalMicroSeconds
+76 57           ; SetBalanceL__20CMdaAudioToneUtilityi
 
 [epoc80]
 2 70            ; SetPriority__22CMdaAudioPlayerUtilityi22TMdaPriorityPreference
@@ -537,6 +569,11 @@
 69 73           ; SetPriority__24CMdaAudioRecorderUtilityi22TMdaPriorityPreference
 70 80           ; AddMetaDataEntryL__24CMdaAudioRecorderUtilityR17CMMFMetaDataEntry
 71 49           ; OpenFileL__24CMdaAudioRecorderUtilityRC7TDesC16G4TUidN22G7TFourCC
+72 21           ; GetBalanceL__20CMdaAudioToneUtility
+73 1            ; NewL__20CMdaAudioToneUtilityR21MMdaAudioToneObserverP10CMdaServer
+74 41           ; NewL__20CMdaAudioToneUtilityR21MMdaAudioToneObserverP10CMdaServeri22TMdaPriorityPreference
+75 109          ; PrepareToPlayDualTone__20CMdaAudioToneUtilityiiRC25TTimeIntervalMicroSeconds
+76 57           ; SetBalanceL__20CMdaAudioToneUtilityi
 
 [epoc7]
 2 70            ; SetPriority__22CMdaAudioPlayerUtilityi22TMdaPriorityPreference
@@ -609,6 +646,11 @@
 69 73           ; SetPriority__24CMdaAudioRecorderUtilityi22TMdaPriorityPreference
 70 80           ; AddMetaDataEntryL__24CMdaAudioRecorderUtilityR17CMMFMetaDataEntry
 71 49           ; OpenFileL__24CMdaAudioRecorderUtilityRC7TDesC16G4TUidN22G7TFourCC
+72 21           ; GetBalanceL__20CMdaAudioToneUtility
+73 1            ; NewL__20CMdaAudioToneUtilityR21MMdaAudioToneObserverP10CMdaServer
+74 41           ; NewL__20CMdaAudioToneUtilityR21MMdaAudioToneObserverP10CMdaServeri22TMdaPriorityPreference
+75 109          ; PrepareToPlayDualTone__20CMdaAudioToneUtilityiiRC25TTimeIntervalMicroSeconds
+76 57           ; SetBalanceL__20CMdaAudioToneUtilityi
 
 [epoc6]
 16 2            ; NewDesPlayerReadOnlyL__22CMdaAudioPlayerUtilityRC6TDesC8R23MMdaAudioPlayerCallbacki22TMdaPriorityPreferenceP10CMdaServer

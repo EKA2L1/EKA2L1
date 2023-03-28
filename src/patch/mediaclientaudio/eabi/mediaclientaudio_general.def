@@ -104,4 +104,17 @@ EXPORTS
 	_ZTV20CMdaAudioClipUtility @ 103 NONAME
 	_ZTV24CMdaAudioRecorderUtility @ 104 NONAME
 	_ZN24CMdaAudioRecorderUtility9OpenFileLERK7TDesC164TUidS3_S3_7TFourCC @ 105 NONAME
+	_ZTI23CMMFMdaAudioToneUtility @ 106 NONAME
+	_ZTI24CMMFMdaAudioOpenComplete @ 107 NONAME
+	_ZTV23CMMFMdaAudioToneUtility @ 108 NONAME
+	_ZTV24CMMFMdaAudioOpenComplete @ 109 NONAME
+	_ZN20CMdaAudioToneUtility11GetBalanceLEv @ 110 NONAME
+	_ZN20CMdaAudioToneUtility11SetBalanceLEi @ 111 NONAME
+	_ZN20CMdaAudioToneUtility21PrepareToPlayDualToneEiiRK25TTimeIntervalMicroSeconds @ 112 NONAME
+	_ZN20CMdaAudioToneUtility4NewLER21MMdaAudioToneObserverP10CMdaServer @ 113 NONAME
+	_ZN20CMdaAudioToneUtility4NewLER21MMdaAudioToneObserverP10CMdaServeri22TMdaPriorityPreference @ 114 NONAME
+	_ZTI20CMdaAudioToneUtility @ 115 NONAME
+	_ZTV20CMdaAudioToneUtility @ 116 NONAME
+	_ZN20CMdaAudioToneUtility15CustomInterfaceE4TUid @ 117 NONAME
+	_ZN20CMdaAudioToneUtility25PrepareToPlayFileSequenceER5RFile @ 118 NONAME
 

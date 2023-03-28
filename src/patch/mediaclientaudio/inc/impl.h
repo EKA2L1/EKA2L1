@@ -22,6 +22,7 @@
 
 #include <mdaaudiosampleeditor.h>
 #include <mdaaudiosampleplayer.h>
+#include <mdaaudiotoneplayer.h>
 
 #include <e32base.h>
 #include <e32std.h>
@@ -42,19 +43,24 @@ enum TMdaPlayType {
 bool TranslateInternalStateToReleasedState(const TMdaState aState, CMdaAudioClipUtility::TState &aReleasedState);
 
 struct CMMFMdaAudioUtility;
+struct CMMFMdaAudioToneUtility;
 
 struct CMMFMdaAudioOpenComplete : public CIdle {
 protected:
     TBool iIsFixup;
+    TAny *iTarget;
+    TBool iIsTone;
 
 public:
     CMMFMdaAudioOpenComplete();
     ~CMMFMdaAudioOpenComplete();
 
     void Open(CMMFMdaAudioUtility *aUtil);
+    void Open(CMMFMdaAudioToneUtility *aToneUtility);
     void FixupActiveStatus();
 
     virtual void DoCancel();
+    void CompleteOpen();
 };
 
 /**
@@ -157,6 +163,47 @@ public:
 
     TInt SetDestContainerFormat(const TUint32 aUid);
     TInt GetDestContainerFormat(TUint32 &aUid);
+};
+
+struct CMMFMdaAudioToneUtility : public CActive {
+private:
+    MMdaAudioToneObserver &iObserver;
+    TMdaAudioToneUtilityState iState;
+    CMMFMdaAudioOpenComplete iOpener;
+
+    TAny *iDispatchInstance;
+
+public:
+    CMMFMdaAudioToneUtility(MMdaAudioToneObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref);
+    void ConstructL();
+
+    static CMMFMdaAudioToneUtility *NewL(MMdaAudioToneObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref);
+
+    TInt SetVolume(const TInt aNewVolume);
+    TInt GetVolume();
+    TInt MaxVolume();
+    
+    TInt GetBalance();
+    TInt SetBalance(const TInt aBalance);
+
+    void PrepareToPlayFileSequence(const TDesC &aFileName);
+    void PrepareToPlayBufferSequence(const TDesC8 &aBuf);
+    void PrepareToPlayFixedSequence(const TInt aSequenceIndex);
+    void PrepareToPlayTone(const TInt aFreq, const TTimeIntervalMicroSeconds &aDuration);
+    void CancelPrepare();
+
+    void Play();
+    void CancelPlay();
+
+    TInt FixedSequenceCount() const;
+    void SetRepeats(const TInt aHowManyTimes, const TTimeIntervalMicroSeconds &aSilenceInterval);
+
+    void CompletePrepare(TInt err);
+
+    virtual void RunL();
+    virtual void DoCancel();
+
+    const TMdaAudioToneUtilityState State();
 };
 
 #endif

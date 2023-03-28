@@ -88,8 +88,8 @@ namespace eka2l1::epoc::adapter {
 
         std::size_t count() override;
 
-        std::uint32_t unique_id(const std::size_t face_index) override {
-            return INVALID_FONT_TF_UID;
+        bool contains_uid(const std::size_t face_index, const std::uint32_t) override {
+            return false;
         }
 
         bool has_character(const std::size_t face_index, const std::int32_t codepoint) override;

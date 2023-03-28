@@ -45,6 +45,23 @@
 .global EAudioPlayerGetDestinationEncoding
 .global EAudioPlayerSetContainerFormat
 
+.global ETonePlayerNewInstance
+.global ETonePlayerNotifyAnyDone
+.global ETonePlayerSetVolume
+.global ETonePlayerGetVolume
+.global ETonePlayerMaxVolume
+.global ETonePlayerSetRepeats
+.global ETonePlayerSetBufferToneSequence
+.global ETonePlayerSetFileToneSequence
+.global ETonePlayerSetFixedToneSequence
+.global ETonePlayerSetSingleTone
+.global ETonePlayerPlay
+.global ETonePlayerStop
+.global ETonePlayerSetBalance
+.global ETonePlayerGetBalance
+.global ETonePlayerGetFixedSequenceCount
+.global ETonePlayerGetFixedSequenceName
+
 EAudioPlayerNewInstance:
     CallHleDispatch 0x20
 
@@ -119,3 +136,51 @@ EAudioPlayerGetDestinationEncoding:
 
 EAudioPlayerSetContainerFormat:
     CallHleDispatch 0x38
+
+ETonePlayerNewInstance:
+    CallHleDispatch 0xC0
+
+ETonePlayerNotifyAnyDone:
+    CallHleDispatch 0xC1
+    
+ETonePlayerGetFixedSequenceCount:
+    CallHleDispatch 0xC2
+
+ETonePlayerSetVolume:
+    CallHleDispatch 0xC3
+
+ETonePlayerGetVolume:
+    CallHleDispatch 0xC4
+
+ETonePlayerMaxVolume:
+    CallHleDispatch 0xC5
+
+ETonePlayerSetRepeats:
+    CallHleDispatch 0xC6
+
+ETonePlayerSetBufferToneSequence:
+    CallHleDispatch 0xC7
+
+ETonePlayerSetFileToneSequence:
+    CallHleDispatch 0xC8
+
+ETonePlayerSetFixedToneSequence:
+    CallHleDispatch 0xC9
+
+ETonePlayerSetSingleTone:
+    CallHleDispatch 0xCA
+
+ETonePlayerPlay:
+    CallHleDispatch 0xCB
+
+ETonePlayerStop:
+    CallHleDispatch 0xCC
+
+ETonePlayerGetBalance:
+    CallHleDispatch 0xCD
+
+ETonePlayerSetBalance:
+    CallHleDispatch 0xCE
+
+ETonePlayerGetFixedSequenceName:
+    CallHleDispatch 0xCF

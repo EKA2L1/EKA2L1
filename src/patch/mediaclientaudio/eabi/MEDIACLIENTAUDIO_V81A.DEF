@@ -70,4 +70,9 @@ EXPORTS
 	SetPriority__24CMdaAudioRecorderUtilityi22TMdaPriorityPreference @ 69 NONAME R3UNUSED ; CMdaAudioRecorderUtility::SetPriority(int, TMdaPriorityPreference)
 	AddMetaDataEntryL__24CMdaAudioRecorderUtilityR17CMMFMetaDataEntry @ 70 NONAME R3UNUSED ; CMdaAudioRecorderUtility::AddMetaDataEntryL(CMMFMetaDataEntry &)	OpenFileL__24CMdaAudioRecorderUtilityRC7TDesC16G4TUidN22G7TFourCC @ 71 NONAME ; CMdaAudioRecorderUtility::OpenFileL(TDesC16 const &, TUid, TUid, TUid, TFourCC)
 	OpenFileL__24CMdaAudioRecorderUtilityRC7TDesC16G4TUidN22G7TFourCC @ 71 NONAME ; CMdaAudioRecorderUtility::OpenFileL(TDesC16 const &, TUid, TUid, TUid, TFourCC)
+	GetBalanceL__20CMdaAudioToneUtility @ 72 NONAME R3UNUSED ; CMdaAudioToneUtility::GetBalanceL(void)
+	NewL__20CMdaAudioToneUtilityR21MMdaAudioToneObserverP10CMdaServer @ 73 NONAME R3UNUSED ; CMdaAudioToneUtility::NewL(MMdaAudioToneObserver &, CMdaServer *)
+	NewL__20CMdaAudioToneUtilityR21MMdaAudioToneObserverP10CMdaServeri22TMdaPriorityPreference @ 74 NONAME ; CMdaAudioToneUtility::NewL(MMdaAudioToneObserver &, CMdaServer *, int, TMdaPriorityPreference)
+	PrepareToPlayDualTone__20CMdaAudioToneUtilityiiRC25TTimeIntervalMicroSeconds @ 75 NONAME ; CMdaAudioToneUtility::PrepareToPlayDualTone(int, int, TTimeIntervalMicroSeconds const &)
+	SetBalanceL__20CMdaAudioToneUtilityi @ 76 NONAME R3UNUSED ; CMdaAudioToneUtility::SetBalanceL(int)
 

@@ -1293,6 +1293,41 @@ namespace eka2l1 {
 
     bool applist_server::launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter, kernel::uid *thread_id,
                                     std::function<void()> app_exit_callback) {
+        // OPL game check
+        io_system *io = sys->get_io_system();
+        symfile app_file = io->open_file(registry.mandatory_info.app_path.to_std_string(nullptr), READ_MODE | BIN_MODE);
+
+        if (app_file != nullptr) {
+            static constexpr std::uint32_t OPL_APP_UID2 = 0x100055C1;
+            static constexpr std::uint32_t OPL_LAUNCHER_UID = 0x10005D2E;
+
+            std::uint32_t uid = 0;
+            if (app_file->read_file(4, &uid, 1, 4) == 4) {
+                if (uid == OPL_APP_UID2) {
+                    std::u16string processed_app_path = registry.mandatory_info.app_path.to_std_string(nullptr);
+                    if (processed_app_path.find_first_of(' ') != std::string::npos) {
+                        processed_app_path.insert(processed_app_path.begin(), u'\"');
+                        processed_app_path += u'\"';
+                    }
+
+                    // Put our app path in tail end
+                    epoc::apa::command_line new_parameter = parameter;
+                    new_parameter.tail_end_.resize(processed_app_path.length() * 2);
+
+                    std::memcpy(new_parameter.tail_end_.data(), processed_app_path.data(), new_parameter.tail_end_.length());
+
+                    apa_app_registry *launcher_reg = get_registration(OPL_LAUNCHER_UID);
+                    if (!launcher_reg) {
+                        LOG_ERROR(SERVICE_APPLIST, "OPL is not installed! Please install it!");
+                        return false;
+                    }
+
+                    // Launch the OPL launcher
+                    return launch_app(*launcher_reg, new_parameter, thread_id, app_exit_callback);
+                }
+            }
+        }
+
         std::u16string executable_to_run;
         registry.get_launch_parameter(executable_to_run, parameter);
 

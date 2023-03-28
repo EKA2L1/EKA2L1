@@ -123,7 +123,7 @@ namespace eka2l1::epoc {
 
     open_font_info *font_store::seek_the_font_by_uid(const epoc::uid the_uid) {
         for (auto &info : open_font_store) {
-            if (info.adapter->unique_id(info.idx) == the_uid) {
+            if (info.adapter->contains_uid(info.idx, the_uid)) {
                 return &info;
             }
         }
