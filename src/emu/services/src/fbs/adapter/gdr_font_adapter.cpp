@@ -18,6 +18,7 @@
  */
 
 #include <common/bytes.h>
+#include <common/log.h>
 #include <services/fbs/adapter/gdr_font_adapter.h>
 
 #define STB_RECT_PACK_IMPLEMENTATION
@@ -34,7 +35,26 @@ namespace eka2l1::epoc::adapter {
         ctx.pack_dest_ = nullptr;
     }
 
-    // Do you like fonts? I dont (pent0)
+    static open_font_metrics build_of_metrics_from_font_bitmap(const loader::gdr::font_bitmap *target_bitmap) {
+        open_font_metrics metrics;
+
+        metrics.max_height = 0;
+        metrics.max_width = 0;
+        metrics.ascent = 0;
+
+        metrics.max_width = target_bitmap->header_.max_char_width_in_pixels_;
+        metrics.max_height = target_bitmap->header_.cell_height_in_pixels_;
+        metrics.ascent = target_bitmap->header_.ascent_in_pixels_;
+
+        // No baseline correction
+        metrics.baseline_correction = 0; // For the whole font
+        metrics.descent = -(metrics.ascent - metrics.max_height); // Correct?
+        metrics.design_height = metrics.max_height; // Dunno, maybe wrong ;(
+        metrics.max_depth = 0; // Help I dunno what this is
+
+        return metrics;
+    }
+
     gdr_font_file_adapter::gdr_font_file_adapter(std::vector<std::uint8_t> &data)
         : pack_contexts_(is_gdr_pack_context_free, free_gdr_pack_context) {
         // Instantiate a read-only buffer stream
@@ -58,19 +78,24 @@ namespace eka2l1::epoc::adapter {
         return store_.typefaces_.size();
     }
 
-    bool gdr_font_file_adapter::contains_uid(const std::size_t face_index, const std::uint32_t uid) {
+    std::optional<open_font_metrics> gdr_font_file_adapter::get_metric_with_uid(const std::size_t face_index, const std::uint32_t uid,
+        std::uint32_t *metric_identifier) {
         if (face_index >= store_.typefaces_.size()) {
-            return false;
+            return std::nullopt;
         }
 
         // Use the first
         for (std::size_t i = 0; i < store_.typefaces_[face_index].font_bitmaps_.size(); i++) {
             if (store_.typefaces_[face_index].font_bitmaps_[i]->header_.uid_ == uid) {
-                return true;
+                if (metric_identifier) {
+                    *metric_identifier = static_cast<std::uint32_t>(i);
+                }
+
+                return build_of_metrics_from_font_bitmap(store_.typefaces_[face_index].font_bitmaps_[i]);
             }
         }
 
-        return false;
+        return std::nullopt;
     }
 
     bool gdr_font_file_adapter::get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) {
@@ -104,45 +129,21 @@ namespace eka2l1::epoc::adapter {
         return true;
     }
 
-    bool gdr_font_file_adapter::get_metrics(const std::size_t idx, open_font_metrics &metrics) {
-        if (!is_valid() || (idx >= store_.typefaces_.size())) {
-            return false;
-        }
-
-        loader::gdr::typeface &the_typeface = store_.typefaces_[idx];
-
-        metrics.max_height = 0;
-        metrics.max_width = 0;
-        metrics.ascent = 0;
-
-        for (std::size_t i = 0; i < the_typeface.font_bitmaps_.size(); i++) {
-            metrics.max_width = std::max<std::int16_t>(static_cast<std::int16_t>(the_typeface.font_bitmaps_[i]->header_.max_char_width_in_pixels_), metrics.max_width);
-            metrics.max_height = std::max<std::int16_t>(static_cast<std::int16_t>(the_typeface.font_bitmaps_[i]->header_.cell_height_in_pixels_), metrics.max_height);
-            metrics.ascent = std::max<std::int16_t>(static_cast<std::int16_t>(the_typeface.font_bitmaps_[i]->header_.ascent_in_pixels_), metrics.ascent);
-        }
-
-        // No baseline correction
-        metrics.baseline_correction = 0; // For the whole font
-        metrics.descent = -(metrics.ascent - metrics.max_height); // Correct?
-        metrics.design_height = metrics.max_height; // Dunno, maybe wrong ;(
-        metrics.max_depth = 0; // Help I dunno what this is
-
-        return true;
-    }
-
-    loader::gdr::character *gdr_font_file_adapter::get_character(const std::size_t idx, std::uint32_t code) {
+    const loader::gdr::character *gdr_font_file_adapter::get_character(const std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier) {
         if (!is_valid() || (idx >= store_.typefaces_.size())) {
             return nullptr;
         }
 
-        loader::gdr::typeface &the_typeface = store_.typefaces_[idx];
+        if (metric_identifier >= store_.typefaces_[idx].font_bitmaps_.size()) {
+            return nullptr;
+        }
 
-        for (auto &font_bitmap : the_typeface.font_bitmaps_) {
-            for (auto &code_section : font_bitmap->code_sections_) {
-                if ((code_section.header_.start_ <= code) && (code <= code_section.header_.end_)) {
-                    // Found you!
-                    return &code_section.chars_[code - code_section.header_.start_];
-                }
+        loader::gdr::font_bitmap *bitmap = store_.typefaces_[idx].font_bitmaps_[metric_identifier];
+
+        for (auto &code_section : bitmap->code_sections_) {
+            if ((code_section.header_.start_ <= code) && (code <= code_section.header_.end_)) {
+                // Found you!
+                return &code_section.chars_[code - code_section.header_.start_];
             }
         }
 
@@ -150,8 +151,8 @@ namespace eka2l1::epoc::adapter {
     }
 
     bool gdr_font_file_adapter::get_glyph_metric(const std::size_t idx, std::uint32_t code, open_font_character_metric &character_metric, const std::int32_t baseline_horz_off,
-        const std::uint16_t font_size) {
-        loader::gdr::character *the_char = get_character(idx, code);
+        const std::uint32_t metric_identifier) {
+        const loader::gdr::character *the_char = get_character(idx, code, metric_identifier);
 
         if (!the_char) {
             return false;
@@ -174,52 +175,28 @@ namespace eka2l1::epoc::adapter {
         return true;
     }
 
-    bool gdr_font_file_adapter::does_glyph_exist(std::size_t idx, std::uint32_t code) {
-        return get_character(idx, code);
+    bool gdr_font_file_adapter::does_glyph_exist(std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier) {
+        return get_character(idx, code, 0);
     }
 
-    std::uint8_t *gdr_font_file_adapter::get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const std::uint16_t font_size,
+    std::uint8_t *gdr_font_file_adapter::get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier,
         int *rasterized_width, int *rasterized_height, std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type) {
-        loader::gdr::character *the_char = get_character(idx, code);
+        const loader::gdr::character *the_char = get_character(idx, code, metric_identifier);
 
         if (!the_char) {
             return nullptr;
         }
 
-        epoc::open_font_metrics whole_metrics;
-        get_metrics(idx, whole_metrics);
 
         // Do simple scaling! :D If it is blocky, probably have to get a library involved
         std::vector<std::uint32_t> scaled_result;
-        std::uint32_t *src = the_char->data_.data();
-
+        const std::uint32_t *src = the_char->data_.data();
         const std::int16_t target_width = the_char->metric_->move_in_pixels_ - the_char->metric_->left_adj_in_pixels_ - the_char->metric_->right_adjust_in_pixels_;
-
-        const float scale_factor = static_cast<float>(font_size) / static_cast<float>(whole_metrics.max_height);
-        const std::int16_t scaled_width = static_cast<std::int16_t>(std::roundf(target_width * scale_factor));
-        const std::int16_t scaled_char_height = static_cast<std::int16_t>(scale_factor * the_char->metric_->height_in_pixels_);
-
-        if (scale_factor != 1.0f) {
-            scaled_result.resize((static_cast<std::uint32_t>(scaled_width * font_size) + 31) >> 5);
-            std::fill(scaled_result.begin(), scaled_result.end(), 0);
-
-            for (std::int16_t y = 0; y < scaled_char_height; y++) {
-                for (std::int16_t x = 0; x < scaled_width; x++) {
-                    const std::int16_t dx = static_cast<std::int16_t>(x / scale_factor);
-                    const std::int16_t dy = static_cast<std::int16_t>(y / scale_factor);
-                    const std::int32_t src_pixel_loc = (dy * target_width + dx);
-                    const std::int32_t dest_pixel_loc = (y * scaled_width + x);
-
-                    scaled_result[dest_pixel_loc >> 5] |= ((the_char->data_[src_pixel_loc >> 5] >> (src_pixel_loc & 31)) & 1) << (dest_pixel_loc & 31);
-                }
-            }
-
-            src = scaled_result.data();
-        }
+        const std::int16_t target_height = the_char->metric_->height_in_pixels_;
 
         // RLE this baby! Alloc this big to gurantee compressed data will always fit. If the compression is bad
         // we also add 5 more words. in case compression is not effective at all.
-        const std::size_t total_compressed_word = ((static_cast<std::uint32_t>(scaled_width * font_size) + 31) >> 5) + 5;
+        const std::size_t total_compressed_word = ((static_cast<std::uint32_t>(target_width * target_height) + 31) >> 5) + 5;
         std::uint32_t *compressed_bitmap = new std::uint32_t[total_compressed_word];
         std::fill(compressed_bitmap, compressed_bitmap + total_compressed_word, 0);
 
@@ -236,8 +213,8 @@ namespace eka2l1::epoc::adapter {
             while (left > 0) {
                 std::uint32_t to_read = std::min<std::uint32_t>(left, 32);
 
-                std::uint32_t pos1 = (p_l1 * scaled_width + n - left);
-                std::uint32_t pos2 = (p_l2 * scaled_width + n - left);
+                std::uint32_t pos1 = (p_l1 * target_width + n - left);
+                std::uint32_t pos2 = (p_l2 * target_width + n - left);
 
                 std::uint32_t maximum_1 = 32U - (pos1 & 31);
                 std::uint32_t maximum_2 = 32U - (pos2 & 31);
@@ -259,19 +236,19 @@ namespace eka2l1::epoc::adapter {
             return true;
         };
 
-        while (total_line_processed_so_far < scaled_char_height) {
+        while (total_line_processed_so_far < target_height) {
             bool mode = false;
             std::int8_t count = 2;
 
-            if (total_line_processed_so_far == (scaled_char_height - 1)) {
+            if (total_line_processed_so_far == (target_height - 1)) {
                 count = 1;
                 mode = false;
             } else {
-                mode = compare_line_equal(total_line_processed_so_far, total_line_processed_so_far + 1, scaled_width);
+                mode = compare_line_equal(total_line_processed_so_far, total_line_processed_so_far + 1, target_width);
 
                 bool got_in = false;
 
-                while ((count < 15) && (total_line_processed_so_far + count < scaled_char_height) && (compare_line_equal(total_line_processed_so_far + (mode ? 0 : (count - 1)), total_line_processed_so_far + count, scaled_width) == mode)) {
+                while ((count < 15) && (total_line_processed_so_far + count < target_height) && (compare_line_equal(total_line_processed_so_far + (mode ? 0 : (count - 1)), total_line_processed_so_far + count, target_width) == mode)) {
                     count++;
                     got_in = true;
                 }
@@ -290,15 +267,15 @@ namespace eka2l1::epoc::adapter {
             WRITE_BIT_32((count >> 3) & 1);
 
             // Write the line content
-            std::uint32_t loc = total_line_processed_so_far * scaled_width;
+            std::uint32_t loc = total_line_processed_so_far * target_width;
 
             for (std::size_t j = 0; j < (mode ? 1 : count); j++) {
-                for (std::size_t i = 0; i < scaled_width; i++) {
+                for (std::size_t i = 0; i < target_width; i++) {
                     // Give up being fast lol
                     WRITE_BIT_32((src[(loc + i) >> 5] >> ((loc + i) & 31)) & 1);
                 }
 
-                loc += scaled_width;
+                loc += target_width;
             }
 
             total_line_processed_so_far += count;
@@ -311,11 +288,11 @@ namespace eka2l1::epoc::adapter {
         total_size = ((total_bit_write + 31) >> 5) * 4;
 
         if (rasterized_width) {
-            *rasterized_width = scaled_width;
+            *rasterized_width = target_width;
         }
 
         if (rasterized_height) {
-            *rasterized_height = scaled_char_height;
+            *rasterized_height = target_height;
         }
 
         // In case this adapter get destroyed. It will free this data.
@@ -349,7 +326,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     bool gdr_font_file_adapter::get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point, const char16_t num_code,
-        const int font_size, character_info *info) {
+        const std::uint32_t metric_identifier, character_info *info) {
         gdr_font_atlas_pack_context *context = pack_contexts_.get(handle);
 
         if (!context) {
@@ -357,17 +334,12 @@ namespace eka2l1::epoc::adapter {
         }
 
         std::vector<stbrp_rect> rect_build;
-        std::vector<loader::gdr::character *> the_chars;
+        std::vector<const loader::gdr::character *> the_chars;
         rect_build.resize(num_code);
-
-        epoc::open_font_metrics metrics;
-        get_metrics(idx, metrics);
-
-        const float scale_factor = static_cast<float>(font_size) / static_cast<float>(metrics.max_height);
 
         for (char16_t i = 0; i < num_code; i++) {
             const char16_t ucode = (unicode_point) ? static_cast<char16_t>(unicode_point[i]) : start_code + i;
-            loader::gdr::character *c = get_character(idx, ucode);
+            const loader::gdr::character *c = get_character(idx, ucode, metric_identifier);
 
             rect_build[i].x = 0;
             rect_build[i].y = 0;
@@ -376,8 +348,8 @@ namespace eka2l1::epoc::adapter {
                 rect_build[i].w = 0;
                 rect_build[i].h = 0;
             } else {
-                rect_build[i].w = static_cast<stbrp_coord>((c->metric_->move_in_pixels_ - c->metric_->left_adj_in_pixels_ - c->metric_->right_adjust_in_pixels_) * scale_factor);
-                rect_build[i].h = font_size;
+                rect_build[i].w = static_cast<stbrp_coord>(c->metric_->move_in_pixels_ - c->metric_->left_adj_in_pixels_ - c->metric_->right_adjust_in_pixels_);
+                rect_build[i].h = c->metric_->height_in_pixels_;
             }
 
             the_chars.push_back(c);
@@ -397,13 +369,13 @@ namespace eka2l1::epoc::adapter {
 
                 const std::int16_t target_width = the_chars[i]->metric_->move_in_pixels_ - the_chars[i]->metric_->left_adj_in_pixels_ - the_chars[i]->metric_->right_adjust_in_pixels_;
 
-                info[i].xoff = the_chars[i]->metric_->left_adj_in_pixels_ * scale_factor;
-                info[i].yoff = -(the_chars[i]->metric_->ascent_in_pixels_) * scale_factor;
-                info[i].xoff2 = info[i].xoff + scale_factor * target_width;
-                info[i].yoff2 = info[i].yoff + (the_chars[i]->metric_->height_in_pixels_ * scale_factor);
-                info[i].xadv = the_chars[i]->metric_->move_in_pixels_ * scale_factor;
+                info[i].xoff = the_chars[i]->metric_->left_adj_in_pixels_;
+                info[i].yoff = -(the_chars[i]->metric_->ascent_in_pixels_);
+                info[i].xoff2 = info[i].xoff + target_width;
+                info[i].yoff2 = info[i].yoff + (the_chars[i]->metric_->height_in_pixels_);
+                info[i].xadv = the_chars[i]->metric_->move_in_pixels_;
 
-                loader::gdr::bitmap &bmp = the_chars[i]->data_;
+                const loader::gdr::bitmap &bmp = the_chars[i]->data_;
 
                 // UWU gonna copy data to you. Simple scaling algorithm WARNING!
                 for (int y = rect_build[i].y; y < rect_build[i].y + rect_build[i].h; y++) {
@@ -411,7 +383,7 @@ namespace eka2l1::epoc::adapter {
                         const float y_in_rect = static_cast<float>(y - rect_build[i].y);
                         const float x_in_rect = static_cast<float>(x - rect_build[i].x);
 
-                        const std::uint32_t src_scale_loc = (static_cast<std::int16_t>(y_in_rect / scale_factor) * target_width + static_cast<std::int16_t>(x_in_rect / scale_factor));
+                        const std::uint32_t src_scale_loc = (static_cast<std::int16_t>(y_in_rect) * target_width + static_cast<std::int16_t>(x_in_rect));
                         if (src_scale_loc >= static_cast<std::uint32_t>(target_width * the_chars[i]->metric_->height_in_pixels_)) {
                             // Nothing, just black
                             context->pack_dest_[context->pack_size_.x * y + x] = 0;
@@ -440,12 +412,12 @@ namespace eka2l1::epoc::adapter {
         pack_contexts_.remove(handle);
     }
     
-    bool gdr_font_file_adapter::has_character(const std::size_t face_index, const std::int32_t codepoint) {
-        return (get_character(face_index, codepoint) != nullptr);
+    bool gdr_font_file_adapter::has_character(const std::size_t face_index, const std::int32_t codepoint, const std::uint32_t metric_identifier) {
+        return (get_character(face_index, codepoint, metric_identifier) != nullptr);
     }
 
-    std::uint32_t gdr_font_file_adapter::get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint, const std::uint16_t font_size, const bool vertical) {
-        loader::gdr::character *the_char = get_character(face_index, codepoint);
+    std::uint32_t gdr_font_file_adapter::get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint, const std::uint32_t metric_identifier, const bool vertical) {
+        const loader::gdr::character *the_char = get_character(face_index, codepoint, metric_identifier);
         if (!the_char) {
             return 0xFFFFFFFF;
         }
@@ -456,5 +428,37 @@ namespace eka2l1::epoc::adapter {
         }
 
         return the_char->metric_->move_in_pixels_;
+    }
+
+    std::optional<open_font_metrics> gdr_font_file_adapter::get_nearest_supported_metric(const std::size_t face_index, const std::uint16_t targeted_font_size,
+        std::uint32_t *metric_identifier) {
+        if ((face_index >= store_.typefaces_.size()) || !is_valid()) {
+            LOG_ERROR(SERVICE_FBS, "The font is not ready or the face index is out of bounds!");
+            return std::nullopt;
+        }
+
+        std::int16_t min_delta = std::numeric_limits<std::int16_t>::max();
+        const loader::gdr::font_bitmap *target_bitmap = nullptr;
+        std::size_t final_index = 0;
+
+        loader::gdr::typeface face = store_.typefaces_[face_index];
+        for (std::size_t i = 0; i < face.font_bitmaps_.size(); i++) {
+            const std::int16_t delta = (static_cast<std::int16_t>(face.font_bitmaps_[i]->header_.cell_height_in_pixels_) - static_cast<std::int16_t>(targeted_font_size));
+            if (delta < min_delta) {
+                target_bitmap = face.font_bitmaps_[i];
+                min_delta = delta;
+                final_index = i;
+            }
+        }
+
+        if (target_bitmap == nullptr) {
+            return std::nullopt;
+        }
+        
+        if (metric_identifier != nullptr) {
+            *metric_identifier = static_cast<std::uint32_t>(final_index);
+        }
+
+        return build_of_metrics_from_font_bitmap(target_bitmap);
     }
 }

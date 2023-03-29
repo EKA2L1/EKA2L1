@@ -29,9 +29,10 @@ namespace eka2l1::epoc {
     }
 
     font_atlas::font_atlas(adapter::font_file_adapter_base *adapter, const std::size_t typeface_idx, const char16_t initial_start,
-        const char16_t initial_char_count, int font_size)
+        const char16_t initial_char_count, const int font_size, const std::uint32_t metric_identifier)
         : atlas_handle_(0)
         , adapter_(adapter)
+        , metric_identifier_(metric_identifier)
         , size_(font_size)
         , initial_range_(initial_start, initial_char_count)
         , typeface_idx_(typeface_idx)
@@ -40,9 +41,10 @@ namespace eka2l1::epoc {
     }
 
     void font_atlas::init(adapter::font_file_adapter_base *adapter, const std::size_t typeface_idx, const char16_t initial_start,
-        const char16_t initial_char_count, int font_size) {
+        const char16_t initial_char_count, const int font_size, const std::uint32_t metric_identifier) {
         adapter_ = adapter;
         atlas_handle_ = 0;
+        metric_identifier_ = metric_identifier;
         size_ = font_size;
         initial_range_ = { initial_start, initial_char_count };
         typeface_idx_ = typeface_idx;
@@ -90,7 +92,7 @@ namespace eka2l1::epoc {
             }
 
             if (!adapter_->get_glyph_atlas(pack_handle_, typeface_idx_, initial_range_.first, nullptr, initial_range_.second,
-                    size_, cinfos.get())) {
+                    metric_identifier_, cinfos.get())) {
                 return false;
             }
 
@@ -133,7 +135,7 @@ namespace eka2l1::epoc {
             // Try to rasterize these
             auto cinfos = std::make_unique<adapter::character_info[]>(to_rast.size());
 
-            if (!adapter_->get_glyph_atlas(pack_handle_, typeface_idx_, 0, to_rast.data(), static_cast<char16_t>(to_rast.size()), size_,
+            if (!adapter_->get_glyph_atlas(pack_handle_, typeface_idx_, 0, to_rast.data(), static_cast<char16_t>(to_rast.size()), metric_identifier_,
                     cinfos.get())) {
                 // Try to redo the atlas, getting latest use characters.
                 adapter_->end_get_atlas(pack_handle_);
@@ -144,7 +146,7 @@ namespace eka2l1::epoc {
                 }
 
                 if (!adapter_->get_glyph_atlas(pack_handle_, typeface_idx_, 0, &last_use_[0], static_cast<char16_t>(characters_.size() - 5),
-                        size_, cinfos.get())) {
+                        metric_identifier_, cinfos.get())) {
                     return false;
                 }
 

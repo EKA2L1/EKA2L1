@@ -79,7 +79,8 @@ namespace eka2l1::qt::btnmap {
         }
 
         if (!atlas_) {
-            atlas_ = std::make_unique<epoc::font_atlas>(adapter_.get(), 0, 0x20, 0xFF - 0x20, DEFAULT_OVERLAY_FONT_SIZE);
+            atlas_ = std::make_unique<epoc::font_atlas>(adapter_.get(), 0, 0x20, 0xFF - 0x20, DEFAULT_OVERLAY_FONT_SIZE,
+                DEFAULT_OVERLAY_FONT_SIZE);
         }
 
         atlas_->draw_text(common::utf8_to_ucs2(str), draw_rect, alignment, driver, builder, scale_factor);

@@ -145,12 +145,12 @@ namespace eka2l1::epoc::adapter {
         return true;
     }
 
-    bool stb_font_file_adapter::get_metrics(const std::size_t idx, open_font_metrics &metrics) {
+    std::optional<open_font_metrics> stb_font_file_adapter::get_nearest_supported_metric(const std::size_t idx, const std::uint16_t target_font_size, std::uint32_t *metric_identifier) {
         int off = 0;
         stbtt_fontinfo *info = get_or_create_info(static_cast<int>(idx), &off);
 
         if (!info) {
-            return false;
+            return std::nullopt;
         }
 
         int gaps = 0;
@@ -158,21 +158,29 @@ namespace eka2l1::epoc::adapter {
 
         stbtt_GetFontBoundingBox(info, &x0, &y0, &x1, &y1);
 
+        const float scale_factor = stbtt_ScaleForPixelHeight(info, target_font_size);
+
+        open_font_metrics metrics;
+
         // TODO: Compensate for aspect ratio. We currently don't have screen ratio, since
         //  no physical screen size is provided
         // By the way. Descent is negative (because it follows coordinate)
-        metrics.ascent = y1;
-        metrics.descent = -y0;
-        metrics.max_height = y1 - y0;
-        metrics.design_height = y1 - y0;
-        metrics.max_width = x1 - x0;
-        metrics.max_depth = -y0;
+        metrics.ascent = static_cast<std::int16_t>(y1 * scale_factor);
+        metrics.descent = static_cast<std::int16_t>(-y0 * scale_factor);
+        metrics.max_height = static_cast<std::int16_t>((y1 - y0) * scale_factor);
+        metrics.design_height = static_cast<std::int16_t>((y1 - y0) * scale_factor);
+        metrics.max_width = static_cast<std::int16_t>((x1 - x0) * scale_factor);
+        metrics.max_depth = static_cast<std::int16_t>(-y0 * scale_factor);
         metrics.baseline_correction = 0;
 
-        return true;
+        if (metric_identifier != nullptr) {
+            *metric_identifier = target_font_size;
+        }
+
+        return metrics;
     }
 
-    bool stb_font_file_adapter::does_glyph_exist(const size_t idx, const uint32_t code) {
+    bool stb_font_file_adapter::does_glyph_exist(const size_t idx, const uint32_t code, const std::uint32_t metric_identifier) {
         int off = 0;
         stbtt_fontinfo *info = get_or_create_info(static_cast<int>(idx), &off);
         if (!info) {
@@ -185,9 +193,10 @@ namespace eka2l1::epoc::adapter {
     }
 
     std::uint8_t *stb_font_file_adapter::get_glyph_bitmap(const std::size_t idx, std::uint32_t code,
-        const std::uint16_t font_size, int *rasterized_width, int *rasterized_height,
+        const std::uint32_t metric_identifier, int *rasterized_width, int *rasterized_height,
         std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type) {
         bool get_codepoint = true;
+        const std::uint32_t font_size = metric_identifier;
 
         if (code & 0x80000000) {
             // It's truly the glyph index.
@@ -233,7 +242,8 @@ namespace eka2l1::epoc::adapter {
     }
 
     bool stb_font_file_adapter::get_glyph_metric(const std::size_t idx, std::uint32_t code, open_font_character_metric &character_metric, const std::int32_t baseline_horz_off,
-        const std::uint16_t font_size) {
+        const std::uint32_t metric_identifier) {
+        const std::uint32_t font_size = metric_identifier;
         bool get_codepoint = true;
 
         if (code & 0x80000000) {
@@ -324,7 +334,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     bool stb_font_file_adapter::get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point,
-        const char16_t num_code, const int font_size, character_info *info) {
+        const char16_t num_code, const std::uint32_t font_size, character_info *info) {
         auto character_infos = std::make_unique<stbtt_packedchar[]>(num_code);
         std::unique_ptr<stbtt_pack_context> *context_ptr = contexts_.get(handle);
 
@@ -353,7 +363,7 @@ namespace eka2l1::epoc::adapter {
         return true;
     }
 
-    bool stb_font_file_adapter::has_character(const std::size_t face_index, const std::int32_t codepoint) {
+    bool stb_font_file_adapter::has_character(const std::size_t face_index, const std::int32_t codepoint, const std::uint32_t font_size) {
         int off = 0;
         stbtt_fontinfo *info = get_or_create_info(static_cast<int>(face_index), &off);
 
@@ -364,7 +374,7 @@ namespace eka2l1::epoc::adapter {
         return (stbtt_FindGlyphIndex(info, codepoint) != 0);
     }
     
-    std::uint32_t stb_font_file_adapter::get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint, const std::uint16_t font_size, const bool vertical) {
+    std::uint32_t stb_font_file_adapter::get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint, const std::uint32_t font_size, const bool vertical) {
         int off = 0;
         stbtt_fontinfo *info = get_or_create_info(static_cast<int>(face_index), &off);
 

@@ -306,11 +306,13 @@ namespace eka2l1::epoc {
         fbsfont *text_font = reinterpret_cast<fbsfont*>(cmd.fbs_font_ptr_);
         
         std::int16_t scaled_font_size = text_font->of_info.metrics.max_height;
+        std::uint32_t metric_identifier = text_font->of_info.metric_identifier;
         float scale_to_pass = 1.0f;
 
         if (text_font->of_info.adapter->vectorizable()) {
             scaled_font_size = static_cast<std::int16_t>(scaled_font_size * scale_factor_);
-            
+            metric_identifier = scaled_font_size;       // Vectorizable font metric identifier is font size
+
             if ((text_font->atlas.atlas_handle_ != 0) && (scaled_font_size != text_font->atlas.get_char_size())) {
                 text_font->atlas.destroy(driver_);
             }
@@ -320,7 +322,7 @@ namespace eka2l1::epoc {
 
         if (text_font->atlas.atlas_handle_ == 0) {
             text_font->atlas.init(text_font->of_info.adapter, text_font->of_info.idx, 0x20, 0xFF - 0x20,
-                scaled_font_size);
+                scaled_font_size, metric_identifier);
         }
 
         eka2l1::rect scaled_text_box = cmd.text_box_;

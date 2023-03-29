@@ -44,8 +44,8 @@ namespace eka2l1::epoc::adapter {
         common::identity_container<gdr_font_atlas_pack_context> pack_contexts_;
 
     protected:
-        loader::gdr::character *get_character(const std::size_t idx, std::uint32_t code);    
-        std::uint32_t get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint, const std::uint16_t font_size, const bool vertical = false) override;
+        const loader::gdr::character *get_character(const std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier);
+        std::uint32_t get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint, const std::uint32_t metric_identifier, const bool vertical = false) override;
 
     public:
         explicit gdr_font_file_adapter(std::vector<std::uint8_t> &data_);
@@ -61,12 +61,11 @@ namespace eka2l1::epoc::adapter {
         }
 
         bool get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) override;
-        bool get_metrics(const std::size_t idx, open_font_metrics &metrics) override;
         bool get_glyph_metric(const std::size_t idx, std::uint32_t code,
             open_font_character_metric &character_metric, const std::int32_t baseline_horz_off,
-            const std::uint16_t font_size) override;
+            const std::uint32_t metric_identifier) override;
 
-        std::uint8_t *get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const std::uint16_t font_size,
+        std::uint8_t *get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier,
             int *rasterized_width, int *rasterized_height, std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type) override;
 
         void free_glyph_bitmap(std::uint8_t *data) override;
@@ -74,7 +73,7 @@ namespace eka2l1::epoc::adapter {
         std::int32_t begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) override;
 
         bool get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point,
-            const char16_t num_code, const int font_size, character_info *info) override;
+            const char16_t num_code, const std::uint32_t metric_identifier, character_info *info) override;
 
         void end_get_atlas(const std::int32_t handle) override;
 
@@ -82,11 +81,15 @@ namespace eka2l1::epoc::adapter {
             return monochrome_glyph_bitmap;
         }
 
-        bool does_glyph_exist(std::size_t idx, std::uint32_t code) override;
+        bool does_glyph_exist(std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier) override;
 
         std::size_t count() override;
-        bool contains_uid(const std::size_t face_index, const std::uint32_t) override;
 
-        bool has_character(const std::size_t face_index, const std::int32_t codepoint) override;
+        std::optional<open_font_metrics> get_metric_with_uid(const std::size_t face_index, const std::uint32_t uid,
+            std::uint32_t *metric_identifier) override;
+
+        bool has_character(const std::size_t face_index, const std::int32_t codepoint, const std::uint32_t metric_identifier) override;
+        std::optional<open_font_metrics> get_nearest_supported_metric(const std::size_t face_index, const std::uint16_t targeted_font_size,
+            std::uint32_t *metric_identifier = nullptr) override;
     };
 }

@@ -22,7 +22,7 @@
 #include <services/fbs/adapter/stb_font_adapter.h>
 
 namespace eka2l1::epoc::adapter {
-    bool font_file_adapter_base::make_text_shape(const std::size_t face_index, const open_font_shaping_parameter &params, const std::u16string &text, const std::uint16_t font_size, open_font_shaping_header &shaping_header, std::uint8_t *shaping_data) {
+    bool font_file_adapter_base::make_text_shape(const std::size_t face_index, const open_font_shaping_parameter &params, const std::u16string &text, const std::uint32_t metric_identifier, open_font_shaping_header &shaping_header, std::uint8_t *shaping_data) {
         if (params.text_range_[0] > params.text_range_[1]) {
             LOG_ERROR(SERVICE_FBS, "Text start position is larger than text end position in shaping parameter!");
             return false;
@@ -70,7 +70,7 @@ namespace eka2l1::epoc::adapter {
             positions_and_advance[current_glyph_index * 2 + 1] = static_cast<std::uint16_t>(current_position.y);
             glyph_index_in_text[current_glyph_index] = static_cast<std::uint16_t>(i);
 
-            const std::uint32_t adv = get_glyph_advance(face_index, text[i], font_size, false);
+            const std::uint32_t adv = get_glyph_advance(face_index, text[i], metric_identifier, false);
             if (adv == 0xFFFFFFFF) {
                 current_position.x += 1;
             } else {

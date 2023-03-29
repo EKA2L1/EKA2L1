@@ -46,6 +46,7 @@ namespace eka2l1::epoc {
         std::map<char16_t, adapter::character_info> characters_;
         drivers::handle atlas_handle_;
         adapter::font_file_adapter_base *adapter_;
+        std::uint32_t metric_identifier_;
         int size_;
 
         std::vector<int> last_use_;
@@ -60,10 +61,10 @@ namespace eka2l1::epoc {
         explicit font_atlas();
 
         explicit font_atlas(adapter::font_file_adapter_base *adapter, const std::size_t typeface_idx, const char16_t initial_start,
-            const char16_t initial_char_count, int font_size);
+            const char16_t initial_char_count, const int font_size, const std::uint32_t metric_identifier_);
 
         void init(adapter::font_file_adapter_base *adapter, const std::size_t typeface_idx, const char16_t initial_start,
-            const char16_t initial_char_count, int font_size);
+            const char16_t initial_char_count, const int font_size, const std::uint32_t metric_identifier_);
 
         void destroy(drivers::graphics_driver *driver);
 

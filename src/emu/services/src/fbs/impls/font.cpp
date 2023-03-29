@@ -448,7 +448,7 @@ namespace eka2l1 {
 
     template <typename T, typename Q>
     void fbscli::fill_bitmap_information(T *bmpfont, Q *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
-        kernel::process *font_user, const std::uint32_t desired_height, std::optional<std::pair<float, float>> scale_vector) {
+        kernel::process *font_user) {
         fbs_server *serv = server<fbs_server>();
 
         if (epoc::does_client_use_pointer_instead_of_offset(this)) {
@@ -465,27 +465,7 @@ namespace eka2l1 {
         bmpfont->vtable = serv->fntstr_seg->relocate(font_user, serv->bmp_font_vtab.ptr_address());
         calculate_algorithic_style(bmpfont->algorithic_style, spec);
 
-        float scale_factor_x = 0;
-        float scale_factor_y = 0;
-
-        if (!scale_vector) {
-            if (desired_height != 0) {
-                // Scale for max height
-                scale_factor_x = scale_factor_y = static_cast<float>(desired_height) / info.metrics.max_height;
-            } else {
-                scale_factor_x = scale_factor_y = static_cast<float>(spec.height) / info.metrics.design_height;
-            }
-        } else {
-            scale_factor_x = scale_vector->first;
-            scale_factor_y = scale_vector->second;
-        }
-
-        do_scale_metrics(info.metrics, scale_factor_x, scale_factor_y);
         do_fill_bitmap_font_spec(bmpfont->spec_in_twips, spec, info.metrics.design_height, info.adapter);
-
-        // Set font name and flags. Flags is stubbed
-        info.scale_factor_x = scale_factor_x;
-        info.scale_factor_y = scale_factor_y;
 
         static constexpr std::uint16_t MAX_TF_NAME = 24;
         bmpfont->spec_in_twips.tf.name.assign(nullptr, info.face_attrib.fam_name.to_std_string(nullptr));
@@ -504,7 +484,7 @@ namespace eka2l1 {
             of->font_captial_offset = 0;
 
             // Get the line gap!! This is no stub
-            of->font_line_gap = static_cast<std::uint16_t>(info.adapter->line_gap(info.idx) * scale_factor_y);
+            of->font_line_gap = static_cast<std::uint16_t>(info.adapter->line_gap(info.idx));
         }
 
         // NOTE: Newer version (from S^3 onwards) uses offset. Older version just cast this directly to integer
@@ -559,16 +539,15 @@ namespace eka2l1 {
     }
 
     template void fbscli::fill_bitmap_information<epoc::bitmapfont_v1, epoc::open_font_v1>(epoc::bitmapfont_v1 *bitmapfont, epoc::open_font_v1 *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
-        kernel::process *font_user, const std::uint32_t desired_height, std::optional<std::pair<float, float>> scale_vector);
+        kernel::process *font_user);
 
     template void fbscli::fill_bitmap_information<epoc::bitmapfont_v2, epoc::open_font_v2>(epoc::bitmapfont_v2 *bitmapfont, epoc::open_font_v2 *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
-        kernel::process *font_user, const std::uint32_t desired_height, std::optional<std::pair<float, float>> scale_vector);
+        kernel::process *font_user);
 
     template void fbs_server::destroy_bitmap_font<epoc::bitmapfont_v1>(epoc::bitmapfont_v1 *bmpfont);
     template void fbs_server::destroy_bitmap_font<epoc::bitmapfont_v2>(epoc::bitmapfont_v2 *bmpfont);
 
-    epoc::bitmapfont_base *fbscli::create_bitmap_open_font(epoc::open_font_info &info, epoc::font_spec_base &spec, kernel::process *font_user, const std::uint32_t desired_height,
-        std::optional<std::pair<float, float>> scale_vector) {
+    epoc::bitmapfont_base *fbscli::create_bitmap_open_font(epoc::open_font_info &info, epoc::font_spec_base &spec, kernel::process *font_user) {
         fbs_server *serv = server<fbs_server>();
 #define DO_BITMAP_OPEN_FONT_CREATION(ver)                                                      \
     epoc::open_font_v##ver *of = serv->allocate_general_data<epoc::open_font_v##ver>();        \
@@ -580,11 +559,10 @@ namespace eka2l1 {
         serv->free_general_data(of);                                                           \
         return nullptr;                                                                        \
     }                                                                                          \
-    fill_bitmap_information<epoc::bitmapfont_v##ver>(bmpfont, of, info, spec, font_user,       \
-        desired_height, scale_vector);                                                         \
+    fill_bitmap_information<epoc::bitmapfont_v##ver>(bmpfont, of, info, spec, font_user);      \
     return bmpfont
 
-        if (serv->kern->is_eka1()) {
+            if (serv->kern->is_eka1()) {
             DO_BITMAP_OPEN_FONT_CREATION(1);
         }
 
@@ -655,17 +633,14 @@ namespace eka2l1 {
         }
 
         if (!font) {
-            // Scale it
             font = serv->font_obj_container.make_new<fbsfont>();
-            font->of_info = *ofi_suit;
             font->serv = serv;
 
-            // If font is not vectorizable, keep the font as it's
-            const bool vectorizable = font->of_info.adapter->vectorizable();
-            std::uint32_t desired_height = (is_design_height || !vectorizable) ? 0 : size_info->x;
+            font->of_info = *ofi_suit;
+            font->of_info.metrics = ofi_suit->adapter->get_nearest_supported_metric(ofi_suit->idx, static_cast<std::uint16_t>(spec.height),
+                &font->of_info.metric_identifier).value();
 
-            epoc::bitmapfont_base *bmpfont = create_bitmap_open_font(font->of_info, spec, ctx->msg->own_thr->owning_process(),
-                desired_height, vectorizable ? std::nullopt : std::make_optional(std::make_pair(1.0f, 1.0f)));
+            epoc::bitmapfont_base *bmpfont = create_bitmap_open_font(font->of_info, spec, ctx->msg->own_thr->owning_process());
 
             if (!bmpfont) {
                 ctx->complete(epoc::error_no_memory);
@@ -689,7 +664,11 @@ namespace eka2l1 {
         }
 
         fbs_server *serv = server<fbs_server>();
-        epoc::open_font_info *info = serv->persistent_font_store.seek_the_font_by_uid(font_uid.value());
+
+        epoc::open_font_metrics metrics;
+        std::uint32_t metric_identifier = 0;
+
+        epoc::open_font_info *info = serv->persistent_font_store.seek_the_font_by_uid(font_uid.value(), metrics, &metric_identifier);
 
         if (!info) {
             ctx->complete(epoc::error_not_found);
@@ -703,14 +682,14 @@ namespace eka2l1 {
         the_spec.style.flags = the_style->flags;
         the_spec.height = info->metrics.design_height * the_style->height_factor;
 
-        std::pair<float, float> scale_pair = { static_cast<float>(the_style->width_factor), static_cast<float>(the_style->height_factor) };
-
         fbsfont *font = nullptr;
         font = serv->font_obj_container.make_new<fbsfont>();
         font->of_info = *info;
+        font->of_info.metrics = metrics;
+        font->of_info.metric_identifier = metric_identifier;
         font->serv = serv;
 
-        epoc::bitmapfont_base *bmpfont = create_bitmap_open_font(font->of_info, the_spec, ctx->msg->own_thr->owning_process(), 0, scale_pair);
+        epoc::bitmapfont_base *bmpfont = create_bitmap_open_font(font->of_info, the_spec, ctx->msg->own_thr->owning_process());
 
         if (!bmpfont) {
             ctx->complete(epoc::error_no_memory);
@@ -802,10 +781,10 @@ namespace eka2l1 {
 
         // Get server font handle
         // The returned bitmap is 8bpp single channel. Luckily Symbian likes this (at least in v3 and upper).
-        std::uint8_t *bitmap_data = info->adapter->get_glyph_bitmap(info->idx, codepoint, font->of_info.metrics.max_height,
+        std::uint8_t *bitmap_data = info->adapter->get_glyph_bitmap(info->idx, codepoint, font->of_info.metric_identifier,
             &rasterized_width, &rasterized_height, bitmap_data_size, &bitmap_type);
 
-        if (!bitmap_data && !info->adapter->does_glyph_exist(info->idx, codepoint)) {
+        if (!bitmap_data && !info->adapter->does_glyph_exist(info->idx, codepoint, info->metric_identifier)) {
             // The glyph is not available. Let the client know. With code 0, we already use '?'
             // On S^3, it expect us to return false here.
             // On lower version, it expect us to return nullptr, so use 0 here is for the best.
@@ -825,7 +804,7 @@ namespace eka2l1 {
     cache_entry->offset = sizeof(epoc::open_font_session_cache_entry_v##entry_ver) + 1;                                                     \
     info->adapter->get_glyph_metric(info->idx, codepoint, cache_entry->metric,                                                              \
         reinterpret_cast<type *>(bmp_font)->algorithic_style.baseline_offsets_in_pixel,                                                     \
-        font->of_info.metrics.max_height);                                                                                                  \
+        font->of_info.metric_identifier);                                                                                                  \
     cache_entry->metric.width = rasterized_width;                                                                                           \
     cache_entry->metric.height = rasterized_height;                                                                                         \
     cache_entry->metric.bitmap_type = bitmap_type;                                                                                          \
@@ -931,7 +910,7 @@ namespace eka2l1 {
             return;
         }
 
-        const std::int32_t result = static_cast<std::int32_t>(font->of_info.adapter->has_character(font->of_info.idx, code.value()));
+        const std::int32_t result = static_cast<std::int32_t>(font->of_info.adapter->has_character(font->of_info.idx, code.value(), font->of_info.metric_identifier));
         ctx->complete(result);
     }
 
@@ -957,7 +936,7 @@ namespace eka2l1 {
 
         // Open a temporary header to calculate neccessary allocations
         epoc::open_font_shaping_header temp_header;
-        if (!font->of_info.adapter->make_text_shape(font->of_info.idx, params.value(), text_to_shape.value(), font->of_info.metrics.max_height, temp_header, nullptr)) {
+        if (!font->of_info.adapter->make_text_shape(font->of_info.idx, params.value(), text_to_shape.value(), font->of_info.metric_identifier, temp_header, nullptr)) {
             ctx->complete(epoc::error_general);
             return;
         }
@@ -970,7 +949,7 @@ namespace eka2l1 {
             return;
         }
 
-        if (!font->of_info.adapter->make_text_shape(font->of_info.idx, params.value(), text_to_shape.value(), font->of_info.metrics.max_height, *reinterpret_cast<epoc::open_font_shaping_header*>(allocated_data),
+        if (!font->of_info.adapter->make_text_shape(font->of_info.idx, params.value(), text_to_shape.value(), font->of_info.metric_identifier, *reinterpret_cast<epoc::open_font_shaping_header*>(allocated_data),
             allocated_data + sizeof(epoc::open_font_shaping_header))) {
             serv->free_general_data_impl(allocated_data);
             ctx->complete(epoc::error_general);

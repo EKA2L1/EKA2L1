@@ -34,14 +34,13 @@ namespace eka2l1 {
 namespace eka2l1::epoc {
     struct open_font_info {
         std::u16string family;
-
         std::size_t idx;
-        float scale_factor_x;
-        float scale_factor_y;
 
-        epoc::open_font_metrics metrics;
         epoc::adapter::font_file_adapter_base *adapter;
         epoc::open_font_face_attrib face_attrib;
+        epoc::open_font_metrics metrics;
+
+        std::uint32_t metric_identifier;
     };
 
     // A set of fonts
@@ -63,8 +62,7 @@ namespace eka2l1::epoc {
         void add_fonts(std::vector<std::uint8_t> &buf, const epoc::adapter::font_file_adapter_kind adapter_kind);
 
         open_font_info *seek_the_open_font(epoc::font_spec_base &spec);
-        open_font_info *seek_the_font_by_uid(const epoc::uid the_uid);
-        open_font_info *seek_the_font_by_id(std::uint32_t index);
+        open_font_info *seek_the_font_by_uid(const epoc::uid the_uid, epoc::open_font_metrics &target_metric, std::uint32_t *metric_identifier = nullptr);
         epoc::typeface_support *get_typeface_support(const std::uint32_t index);
 
         const std::size_t number_of_fonts() const {

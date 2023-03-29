@@ -35,10 +35,6 @@ namespace eka2l1::epoc {
                 continue;
             }
 
-            if (!adapter->get_metrics(i, metrics)) {
-                continue;
-            }
-
             const std::u16string fam_name = attrib.fam_name.to_std_string(nullptr);
             const std::u16string name = attrib.name.to_std_string(nullptr);
 
@@ -56,7 +52,6 @@ namespace eka2l1::epoc {
             if (!found) {
                 // Get the metrics and make new open font
                 open_font_info info;
-                adapter->get_metrics(i, info.metrics);
 
                 info.family = fam_name;
                 info.idx = static_cast<std::int32_t>(i);
@@ -121,21 +116,15 @@ namespace eka2l1::epoc {
         font_adapters.push_back(std::move(adapter));
     }
 
-    open_font_info *font_store::seek_the_font_by_uid(const epoc::uid the_uid) {
+    open_font_info *font_store::seek_the_font_by_uid(const epoc::uid the_uid, open_font_metrics &target_metric, std::uint32_t *metric_identifier) {
         for (auto &info : open_font_store) {
-            if (info.adapter->contains_uid(info.idx, the_uid)) {
+            if (std::optional<open_font_metrics> result = info.adapter->get_metric_with_uid(info.idx, the_uid, metric_identifier)) {
+                target_metric = std::move(result.value());
                 return &info;
             }
         }
 
         return nullptr;
-    }
-
-    open_font_info *font_store::seek_the_font_by_id(std::uint32_t index) {
-        if (index >= open_font_store.size()) {
-            return nullptr;
-        }
-        return &open_font_store[index];
     }
 
     open_font_info *font_store::seek_the_open_font(epoc::font_spec_base &spec) {
@@ -158,9 +147,11 @@ namespace eka2l1::epoc {
                 score += 10000;
             }
 
-            if (!info.adapter->vectorizable()) {
+            std::optional<open_font_metrics> target_metric = info.adapter->get_nearest_supported_metric(info.idx, static_cast<std::uint16_t>(spec_height));
+
+            if (target_metric.has_value()) {
                 // Font that is not vectorizable, according to test, can't resize
-                std::uint32_t subtract_score = (common::abs(spec.height - info.metrics.max_height)) * 100;
+                std::uint32_t subtract_score = (common::abs(spec.height - target_metric->design_height)) * 100;
                 if (info.face_attrib.coverage[1] & 0x8000000) {
                     // NOTE: Some older games that use special character like Chinese seems to prefer smaller font
                     // more despite the twips size (since their character is larger in display). Here CJK flag of
