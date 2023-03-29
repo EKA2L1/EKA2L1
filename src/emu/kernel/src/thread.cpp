@@ -1083,6 +1083,18 @@ namespace eka2l1 {
             sts = 0;
             requester->signal_request();
         }
+        
+        void notify_info::pending() {
+            if (sts.ptr_address() == 0) {
+                return;
+            }
+
+            kernel_system *kern = requester->get_kernel_object_owner();
+
+            epoc::request_status *sts_real = sts.get(requester->owning_process());
+            if (sts_real)
+                sts_real->set(epoc::request_status::pending_status, kern->is_eka1());
+        }
 
         void notify_info::do_state(common::chunkyseri &seri) {
             sts.do_state(seri);

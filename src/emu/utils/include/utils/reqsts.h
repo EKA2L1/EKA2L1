@@ -19,6 +19,8 @@ namespace eka2l1 {
 namespace eka2l1::epoc {
     // Don't change the structure! Specifically no more fields and no vtable!
     struct request_status {
+        static constexpr int pending_status = static_cast<int>(0x80000001);
+
         int status;
         int flags;
 
@@ -31,7 +33,7 @@ namespace eka2l1::epoc {
 
         void set(const int sts, const bool is_eka1) {
             if (!is_eka1) {
-                if (sts == 0x80000001) {
+                if (sts == pending_status) {
                     flags |= pending;
                 } else {
                     flags &= ~pending;
@@ -60,6 +62,7 @@ namespace eka2l1::epoc {
         }
 
         void complete(int err_code);
+        void pending();
         void do_state(common::chunkyseri &seri);
 
         bool empty() const {

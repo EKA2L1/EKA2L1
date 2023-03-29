@@ -46,6 +46,11 @@ namespace eka2l1 {
             req_info_.requester = kern->crr_thread();
             req_info_.sts = request_sts;
 
+            // NOTE: EKA1's change notifier does not change status to pending in euser.dll
+            // So we need to do extra check here. So far this seems like the only instance in the library
+            // This should fix stray signal
+            req_info_.pending();
+
             return true;
         }
 
