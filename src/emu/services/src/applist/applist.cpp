@@ -1312,9 +1312,15 @@ namespace eka2l1 {
 
                     // Put our app path in tail end
                     epoc::apa::command_line new_parameter = parameter;
-                    new_parameter.tail_end_.resize(processed_app_path.length() * 2);
+                    new_parameter.tail_end_.resize((processed_app_path.length() + 1) * 2);
 
-                    std::memcpy(new_parameter.tail_end_.data(), processed_app_path.data(), new_parameter.tail_end_.length());
+                    // OPL command: run no IPC
+                    static constexpr std::uint8_t OPL_COMMAND_RUN_NO_IPC = 82;
+
+                    new_parameter.tail_end_[0] = 0x00;
+                    new_parameter.tail_end_[1] = OPL_COMMAND_RUN_NO_IPC;
+
+                    std::memcpy(new_parameter.tail_end_.data() + 2, processed_app_path.data(), new_parameter.tail_end_.length());
 
                     apa_app_registry *launcher_reg = get_registration(OPL_LAUNCHER_UID);
                     if (!launcher_reg) {
