@@ -14,12 +14,12 @@
     <message>
       <location filename="../src/symbian_input_dialog.ui" line="14"/>
       <source>Enter the text</source>
-      <translation type="unfinished">Enter the text</translation>
+      <translation>টেক্সট লিখুন</translation>
     </message>
     <message>
       <location filename="../src/symbian_input_dialog.ui" line="31"/>
       <source>Submit</source>
-      <translation type="unfinished">Submit</translation>
+      <translation>সাবমিট করুন</translation>
     </message>
   </context>
   <context>
@@ -27,7 +27,7 @@
     <message>
       <location filename="../src/aboutdialog.ui" line="14"/>
       <source>About EKA2L1</source>
-      <translation type="unfinished">About EKA2L1</translation>
+      <translation>EKA2L1 সম্পর্কে</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.ui" line="69"/>
@@ -37,37 +37,37 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="50"/>
       <source>&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</translation>
+      <translation>&lt;i&gt;কমিট &lt;b&gt;%1&lt;/b&gt; ব্রাঞ্চ &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="53"/>
       <source>&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;(C) 2018- EKA2L1 টিম&lt;/b&gt;&lt;br&gt;&lt;b&gt;ইমুলেটর ব্যবহার করার জন্য আপনাকে ধন্যবাদ!&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="64"/>
       <source>&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;মূল ডেভেলপার:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="78"/>
       <source>&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;অবদানকারী:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="92"/>
       <source>&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;আইকন:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="106"/>
       <source>&lt;b&gt;Honors:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Honors:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;সম্মানিত ব্যক্তিগণ:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="120"/>
       <source>&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;অনুবাদক:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
   </context>
   <context>
@@ -91,17 +91,17 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="724"/>
       <source>&lt;br&gt;App UID: 0x%1</source>
-      <translation type="unfinished">&lt;br&gt;App UID: 0x%1</translation>
+      <translation>&lt;br&gt;অ্যাপ UID: 0x%1</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="796"/>
       <source>Enter a new name</source>
-      <translation type="unfinished">Enter a new name</translation>
+      <translation>একটি নতুন নাম লিখুন</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
       <source>Update name failed</source>
-      <translation type="unfinished">Update name failed</translation>
+      <translation>নাম আপডেট করতে ব্যর্থ</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
@@ -139,27 +139,27 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="47"/>
       <source>Mode</source>
-      <translation type="unfinished">Mode</translation>
+      <translation>মোড</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="55"/>
       <source>Off</source>
-      <translation type="unfinished">Off</translation>
+      <translation>বন্ধ</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="60"/>
       <source>Direct IP</source>
-      <translation type="unfinished">Direct IP</translation>
+      <translation>ডাইরেক্ট আইপি</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="65"/>
       <source>LAN</source>
-      <translation type="unfinished">LAN</translation>
+      <translation>ল্যান</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="115"/>
       <source>Server address</source>
-      <translation type="unfinished">Server address</translation>
+      <translation>সার্ভারের এড্রেস</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="134"/>
@@ -184,7 +184,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="228"/>
       <source>Password</source>
-      <translation type="unfinished">Password</translation>
+      <translation>পাসওয়ার্ড</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="238"/>
@@ -1193,7 +1193,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="282"/>
       <source>Hide system applications</source>
-      <translation type="unfinished">Hide system applications</translation>
+      <translation>সিস্টেমের অ্যাপ্লিকেশনসমূহ লুকান</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="301"/>
@@ -1346,7 +1346,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="470"/>
       <source>Background</source>
-      <translation type="unfinished">Background</translation>
+      <translation>ব্যাকগ্রাউন্ড</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="491"/>
