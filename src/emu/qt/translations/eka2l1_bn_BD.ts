@@ -106,12 +106,12 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
       <source>An error occured while trying to rename the app!</source>
-      <translation type="unfinished">An error occured while trying to rename the app!</translation>
+      <translation>অ্যাপ পুনঃনামকরণ করতে গিয়ে একটি ত্রুটি ঘটেছে!</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
       <source>Delete app failed</source>
-      <translation type="unfinished">Delete app failed</translation>
+      <translation>অ্যাপ মুছে ফেলতে ব্যর্থ</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
@@ -126,7 +126,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="835"/>
       <source>Delete</source>
-      <translation type="unfinished">Delete</translation>
+      <translation>মুছে ফেলুন</translation>
     </message>
   </context>
   <context>
@@ -134,7 +134,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="20"/>
       <source>Bluetooth netplay settings</source>
-      <translation type="unfinished">Bluetooth netplay settings</translation>
+      <translation>ব্লুটুথ নেটপ্লে সেটিংস</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="47"/>
@@ -169,7 +169,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="166"/>
       <source>Save</source>
-      <translation type="unfinished">Save</translation>
+      <translation>সংরক্ষণ করুন</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="188"/>
@@ -472,12 +472,12 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="136"/>
       <source>Profile</source>
-      <translation type="unfinished">Profile</translation>
+      <translation>প্রোফাইল</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="146"/>
       <source>Add</source>
-      <translation type="unfinished">Add</translation>
+      <translation>যোগ করুন</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="153"/>
@@ -492,12 +492,12 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="212"/>
       <source>Edit</source>
-      <translation type="unfinished">Edit</translation>
+      <translation>সম্পাদন করুন</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="222"/>
       <source>Delete</source>
-      <translation type="unfinished">Delete</translation>
+      <translation>মুছে ফেলুন</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="50"/>
@@ -1582,7 +1582,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1198"/>
       <source>Volume</source>
-      <translation type="unfinished">Volume</translation>
+      <translation>ভলিউম</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1240"/>
@@ -1592,17 +1592,17 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1255"/>
       <source>Profile</source>
-      <translation type="unfinished">Profile</translation>
+      <translation>প্রোফাইল</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1278"/>
       <source>Add</source>
-      <translation type="unfinished">Add</translation>
+      <translation>যোগ করুন</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1304"/>
       <source>Delete</source>
-      <translation type="unfinished">Delete</translation>
+      <translation>মুছে ফেলুন</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1322"/>
@@ -1712,12 +1712,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="307"/>
       <source>Default</source>
-      <translation type="unfinished">Default</translation>
+      <translation>ডিফল্ট</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="445"/>
       <source>Choose the data folder</source>
-      <translation type="unfinished">Choose the data folder</translation>
+      <translation>ডেটা ফোল্ডার নির্বাচন করুন</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="447"/>
@@ -1734,7 +1734,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="529"/>
       <source>Please wait</source>
-      <translation type="unfinished">Please wait</translation>
+      <translation>অনুগ্রহ করে অপেক্ষা করুন</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="530"/>
