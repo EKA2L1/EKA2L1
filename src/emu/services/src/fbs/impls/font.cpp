@@ -1069,6 +1069,30 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void fbscli::add_font_file_store(service::ipc_context *ctx) {
+        std::optional<std::u16string> filename = ctx->get_argument_value<std::u16string>(0);
+        if (!filename.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        if (!server<fbs_server>()->add_single_font(ctx->sys->get_io_system(), filename.value())) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        // TODO: Fill font id. For now write a random identifiable ID instead
+        std::uint32_t random_id = 0x12345678;
+
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(2, random_id);
+        ctx->complete(epoc::error_none);
+    }
+
+    void fbscli::remove_font_file_store(service::ipc_context *ctx) {
+        LOG_TRACE(SERVICE_FBS, "RemoveFontFileStore stubbed");
+        ctx->complete(epoc::error_none);
+    }
+
     fbsfont::~fbsfont() {
         // Free atlas + bitmap
         atlas.destroy(serv->get_graphics_driver());
@@ -1097,30 +1121,36 @@ namespace eka2l1 {
 
     void fbs_server::load_fonts_from_directory(eka2l1::io_system *io, eka2l1::directory *folder) {
         while (auto entry = folder->get_next_entry()) {
-            symfile f = io->open_file(common::utf8_to_ucs2(entry->full_path), READ_MODE | BIN_MODE);
-            const std::uint64_t fsize = f->size();
-
-            std::vector<std::uint8_t> buf;
-
-            buf.resize(fsize);
-            f->read_file(&buf[0], 1, static_cast<std::uint32_t>(buf.size()));
-
-            f->close();
-
-            // Add fonts
-            const auto extension = common::lowercase_string(eka2l1::path_extension(entry->full_path));
-            epoc::adapter::font_file_adapter_kind adapter_kind = epoc::adapter::font_file_adapter_kind::none;
-
-            if (extension == ".ttf") {
-                adapter_kind = epoc::adapter::font_file_adapter_kind::stb;
-            } else if (extension == ".gdr") {
-                adapter_kind = epoc::adapter::font_file_adapter_kind::gdr;
-            }
-
-            if (adapter_kind != epoc::adapter::font_file_adapter_kind::none) {
-                persistent_font_store.add_fonts(buf, adapter_kind);
-            }
+            add_single_font(io, common::utf8_to_ucs2(entry->full_path));
         }
+    }
+
+    bool fbs_server::add_single_font(eka2l1::io_system *io, const std::u16string &path) {
+        symfile f = io->open_file(path, READ_MODE | BIN_MODE);
+        const std::uint64_t fsize = f->size();
+
+        std::vector<std::uint8_t> buf;
+
+        buf.resize(fsize);
+        f->read_file(&buf[0], 1, static_cast<std::uint32_t>(buf.size()));
+
+        f->close();
+
+        // Add fonts
+        const auto extension = common::lowercase_string(eka2l1::path_extension(common::ucs2_to_utf8(path)));
+        epoc::adapter::font_file_adapter_kind adapter_kind = epoc::adapter::font_file_adapter_kind::none;
+
+        if (extension == ".ttf") {
+            adapter_kind = epoc::adapter::font_file_adapter_kind::stb;
+        } else if (extension == ".gdr") {
+            adapter_kind = epoc::adapter::font_file_adapter_kind::gdr;
+        }
+
+        if (adapter_kind != epoc::adapter::font_file_adapter_kind::none) {
+            persistent_font_store.add_fonts(buf, adapter_kind);
+        }
+
+        return true;
     }
 
     void fbs_server::load_fonts(eka2l1::io_system *io) {
