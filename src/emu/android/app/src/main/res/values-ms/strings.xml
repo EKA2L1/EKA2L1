@@ -20,6 +20,7 @@
     <string name="warning">Warning</string>
     <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
     <string name="install_ng_game">Install N-Gage game</string>
+    <string name="notify_dialog_title">Notification</string>
     <string name="install">Pasang</string>
     <string name="rescan_devices">Imbas kembali peranti</string>
     <string name="device_dump">Longgakan peranti</string>
