@@ -20,6 +20,7 @@
     <string name="warning">අවවාදයයි</string>
     <string name="scoped_storage_warning">ඔබගේ පරිශීලක දත්ත ගබඩා කර ඇති ස්ථානයක <b>මකා දමනු ලැබේ</b> ඔබ යෙදුම අස්ථාපනය කරන විට:\n</string>
     <string name="install_ng_game">Install N-Gage game</string>
+    <string name="notify_dialog_title">Notification</string>
     <string name="install">ස්ථාපනය කරන්න</string>
     <string name="rescan_devices">උපාංග නැවත පරිලෝකනය කරන්න</string>
     <string name="device_dump">උපාංග ඩම්ප්</string>
