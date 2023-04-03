@@ -146,8 +146,10 @@ namespace eka2l1 {
         { "rm-750", 0x20035566 }, // Nokia 500
     };
 
-    static std::array<std::string, 1> S80_DEVICES_FIRMCODE = {
-        "RAE-6"
+    static std::array<std::string, 3> S80_DEVICES_FIRMCODE = {
+        "RAE-6", 
+        "RA-2",
+        "RA-8"
     };
 
     void device::init_flags() {
