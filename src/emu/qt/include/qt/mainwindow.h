@@ -116,6 +116,11 @@ private:
     eka2l1::drivers::handle background_image_texture_;
     eka2l1::vec2 previous_background_image_size_;
     std::string previous_background_image_path_;
+    
+    std::u16string question_dialog_text_;
+    std::u16string question_dialog_button1_text_;
+    std::u16string question_dialog_button2_text_;
+    eka2l1::drivers::ui::yes_no_dialog_complete_callback question_dialog_complete_callback_;
 
     void setup_screen_draw();
     void setup_app_list(const bool load_now = false);
@@ -192,6 +197,7 @@ private slots:
     void on_action_netplay_configure_triggered();
     void on_btnet_friends_dialog_requested_from_conf();
     void on_action_stretch_to_fill_toggled(bool checked);
+    void on_question_dialog_open_request();
 
 signals:
     void progress_dialog_change(const std::size_t now, const std::size_t total);
@@ -205,6 +211,7 @@ signals:
     void input_dialog_delay_launch_asked();
     void input_dialog_close_request();
     void install_ngage_game_name_available(QString name);
+    void question_dialog_open_request();
 
 public:
     main_window(QApplication &app, QWidget *parent, eka2l1::desktop::emulator &emulator_state);
@@ -232,6 +239,9 @@ public:
     bool controller_event_handler(eka2l1::drivers::input_event &event);
 
     bool input_dialog_open(const std::u16string &inital_text, const int max_length, eka2l1::drivers::ui::input_dialog_complete_callback complete_callback);
+    void question_dialog_open(const std::u16string &text, const std::u16string &button1_text, const std::u16string &button2_text,
+        eka2l1::drivers::ui::yes_no_dialog_complete_callback complete_callback);
+
     void input_dialog_close();
 
     int map_mouse_id_to_touch_index(int mouse_id, const bool on_release);

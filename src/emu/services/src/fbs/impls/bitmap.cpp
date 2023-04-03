@@ -1253,7 +1253,7 @@ namespace eka2l1 {
                     for (std::size_t y = 0; y < bitmap->header_.size_pixels.y; y++) {
                         for (std::size_t x = 0; x < bitmap->header_.size_pixels.x; x++) {
                             const std::uint8_t pixel = *reinterpret_cast<const std::uint8_t *>(packed_data + y * byte_width + x);
-                            std::uint32_t palette_color = epoc::get_suitable_palette_256(sysver)[pixel];
+                            std::uint32_t palette_color = epoc::get_suitable_palette_256(sysver, false)[pixel];
 
                             file.write(reinterpret_cast<const char *>(&palette_color) + 2, 1);
                             file.write(reinterpret_cast<const char *>(&palette_color) + 1, 1);
@@ -1400,6 +1400,9 @@ namespace eka2l1 {
             case epoc::display_mode::color256:
                 for (std::size_t y = 0; y < header.size_pixels.y; y++) {
                     current_to_look->seek(y * byte_width, common::seek_where::beg);
+                    
+                    epoc::palette_256 &palette = epoc::get_suitable_palette_256(serv->get_kernel_object_owner()->get_epoc_version(),
+                        serv->get_system()->is_s80_device_active());
 
                     for (std::size_t x = 0; x < header.size_pixels.x; x++) {
                         std::uint8_t pixel = 0;
@@ -1407,7 +1410,7 @@ namespace eka2l1 {
                             return false;
                         }
 
-                        std::uint32_t palette_color = epoc::get_suitable_palette_256(serv->get_kernel_object_owner()->get_epoc_version())[pixel];
+                        std::uint32_t palette_color = palette[pixel];
 
                         std::uint8_t a = ((make_standard_mask) ? ((palette_color & 0xFFFFFF) == 0xFFFFFF) : 1) * 255;
 

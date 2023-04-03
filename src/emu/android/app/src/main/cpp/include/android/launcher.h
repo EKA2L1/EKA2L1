@@ -46,12 +46,14 @@ namespace eka2l1::android {
         applist_server *alserv;
         window_server *winserv;
         fbs_server *fbsserv;
+        bool is_s80;
 
         eka2l1::vecx<std::uint8_t, 3> background_color_;
         float scale_ratio_;
         std::uint32_t scale_type_;
         std::uint32_t gravity_;
         eka2l1::drivers::ui::input_dialog_complete_callback input_complete_callback_;
+        eka2l1::drivers::ui::yes_no_dialog_complete_callback yes_no_complete_callback_;
 
         void set_language_to_property(const language new_one);
         void set_language_current(const language lang);
@@ -90,6 +92,10 @@ namespace eka2l1::android {
                              drivers::ui::input_dialog_complete_callback complete_callback);
         void close_input_view();
         void on_finished_text_input(const std::string &text, const bool force_close);
+        bool open_question_dialog(const std::u16string &text, const std::u16string &button1_text,
+                                  const std::u16string &button2_text,
+                                  drivers::ui::yes_no_dialog_complete_callback complete_callback);
+        void on_question_dialog_finished(const int result);
         int install_ngage_game(const std::string &path);
 
         fbs_server *get_fbs_serv() {

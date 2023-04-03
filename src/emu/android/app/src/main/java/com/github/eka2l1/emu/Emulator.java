@@ -45,6 +45,7 @@ import android.view.Surface;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
@@ -110,6 +111,8 @@ public class Emulator {
     private static boolean vibrationEnabled;
     private static Vibrator vibrator;
     private static AlertDialog inputDialog;
+
+    private static AlertDialog questionDialog;
 
     private static String emulatorDir;
     private static String persistentDataDir;
@@ -602,6 +605,56 @@ public class Emulator {
         });
     }
 
+    public static void showQuestionDialog(String text, String yesText, String noText) {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            if (questionDialog == null) {
+                LinearLayout linearLayout = new LinearLayout(context);
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT);
+
+                float density = context.getResources().getDisplayMetrics().density;
+                int margin = (int) (density * 20);
+                params.setMargins(margin, 0, margin, 0);
+
+                TextView textView = new TextView(context);
+                textView.setText(text);
+
+                linearLayout.addView(textView, params);
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(context)
+                        .setTitle(R.string.notify_dialog_title)
+                        .setView(linearLayout);
+
+                if ((yesText == null) || (yesText.length() == 0)) {
+                    builder = builder.setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
+                        Emulator.submitQuestionDialogResponse(1);
+                        questionDialog = null;
+                    });
+                } else {
+                    builder = builder.setPositiveButton(yesText, (dialogInterface, i) -> {
+                        Emulator.submitQuestionDialogResponse(1);
+                        questionDialog = null;
+                    });
+                }
+
+                if ((noText == null) || (noText.length() == 0)) {
+                    builder = builder.setNegativeButton(android.R.string.cancel, (dialogInterface, i) -> {
+                        Emulator.submitQuestionDialogResponse(0);
+                        questionDialog = null;
+                    });
+                } else {
+                    builder = builder.setNegativeButton(noText, (dialogInterface, i) -> {
+                        Emulator.submitQuestionDialogResponse(0);
+                        questionDialog = null;
+                    });
+                }
+
+                questionDialog = builder.create();
+                questionDialog.show();
+            }
+        });
+    }
+
     public static void closeInputDialog() {
         new Handler(Looper.getMainLooper()).post(() -> {
             if (inputDialog != null) {
@@ -706,4 +759,7 @@ public class Emulator {
     public static native boolean runTest(String testName);
 
     public static native void submitInput(String text);
+
+
+    public static native void submitQuestionDialogResponse(int value);
 }

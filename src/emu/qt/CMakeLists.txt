@@ -60,9 +60,10 @@ set(PROJECT_SOURCES
         include/qt/btnetplay_friends_dialog.h
         include/qt/btnet_dialog.h
         include/qt/cmdhandler.h
+        include/qt/custom_question_dialog.h
         include/qt/device_install_dialog.h
         include/qt/displaywidget.h
-        include/qt/input_dialog_driver.h
+        include/qt/dialog_driver.h
         include/qt/launch_process_dialog.h
         include/qt/mainwindow.h
         include/qt/package_manager_dialog.h
@@ -90,10 +91,11 @@ set(PROJECT_SOURCES
         src/btnet_dialog.ui
         src/cmdhandler.cpp
         src/common_library_plugin.cpp
+        src/custom_question_dialog.cpp
         src/device_install_dialog.cpp
         src/device_install_dialog.ui
         src/displaywidget.cpp
-        src/input_dialog_driver.cpp
+        src/dialog_driver.cpp
         src/launch_process_dialog.cpp
         src/launch_process_dialog.ui
         src/main.cpp

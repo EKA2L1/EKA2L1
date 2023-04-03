@@ -33,6 +33,15 @@ namespace eka2l1::drivers::ui {
         return launcher_instance->open_input_view(initial_text, max_len, complete_callback);
     }
 
+    void show_yes_no_dialog(const std::u16string &text, const std::u16string &button1_text, const std::u16string &button2_text,
+                            yes_no_dialog_complete_callback complete_callback) {
+        if (!launcher_instance) {
+            LOG_TRACE(FRONTEND_UI, "Main window has not been initialized!");
+        }
+
+        launcher_instance->open_question_dialog(text, button1_text, button2_text, complete_callback);
+    }
+
     void close_input_view()  {
         if (!launcher_instance) {
             LOG_TRACE(FRONTEND_UI, "Main window has not been initialized!");

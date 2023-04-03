@@ -146,6 +146,30 @@ namespace eka2l1 {
         { "rm-750", 0x20035566 }, // Nokia 500
     };
 
+    static std::array<std::string, 1> S80_DEVICES_FIRMCODE = {
+        "RAE-6"
+    };
+
+    void device::init_flags() {
+        cached_flags_ = 0;
+        flag_inited_ = true;
+
+        for (const std::string &device: S80_DEVICES_FIRMCODE) {
+            if (common::compare_ignore_case(device.c_str(), firmware_code.c_str()) == 0) {
+                cached_flags_ |= DEVICE_FLAG_S80;
+                break;
+            }
+        }
+    }
+    
+    bool device::is_s80() {
+        if (!flag_inited_) {
+            init_flags();
+        }
+
+        return cached_flags_ & DEVICE_FLAG_S80;
+    }
+
     void device_manager::load_devices() {
         YAML::Node devices_node{};
 
@@ -320,7 +344,7 @@ namespace eka2l1 {
         if (default_language == -1)
             default_language = languages[0];
 
-        device dvc = { ver, firmcode, manufacturer, model };
+        device dvc(ver, firmcode, manufacturer, model);
         dvc.languages = languages;
         dvc.default_language_code = default_language;
         dvc.machine_uid = machine_uid;

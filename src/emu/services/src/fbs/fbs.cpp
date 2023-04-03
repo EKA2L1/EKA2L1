@@ -99,16 +99,6 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    void fbscli::add_font_file_store(service::ipc_context *ctx) {
-        LOG_TRACE(SERVICE_FBS, "AddFontFileStore stubbed");
-        ctx->complete(epoc::error_none);
-    }
-
-    void fbscli::remove_font_file_store(service::ipc_context *ctx) {
-        LOG_TRACE(SERVICE_FBS, "RemoveFontFileStore stubbed");
-        ctx->complete(epoc::error_none);
-    }
-
     void fbscli::fetch(service::ipc_context *ctx) {
         if (ctx->sys->get_symbian_version_use() < epocver::eka2) {
             // Move get nearest font to be after set pixel size in twips

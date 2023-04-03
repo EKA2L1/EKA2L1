@@ -35,6 +35,7 @@
 #include <qt/utils.h>
 #include <qt/btnmap/editor_widget.h>
 #include <qt/btnmap/executor.h>
+#include <qt/custom_question_dialog.h>
 
 #include <kernel/kernel.h>
 #include <system/devices.h>
@@ -384,6 +385,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     connect(this, &main_window::screen_focus_group_changed, this, &main_window::on_screen_current_group_change_callback, Qt::QueuedConnection);
     connect(this, &main_window::input_dialog_delay_launch_asked, this, &main_window::on_input_dialog_delay_launch_asked);
     connect(this, &main_window::input_dialog_close_request, this, &main_window::on_input_dialog_close_request);
+    connect(this, &main_window::question_dialog_open_request, this, &main_window::on_question_dialog_open_request, Qt::QueuedConnection);
 
     connect(editor_widget_, &editor_widget::editor_hidden, this, &main_window::on_mapping_editor_hidden);
 
@@ -1091,9 +1093,16 @@ void main_window::spawn_package_install_camper(QString package_file_path) {
             current_progress_dialog_->setAttribute(Qt::WA_DeleteOnClose, true);
             current_progress_dialog_->show();
 
-            QFuture<eka2l1::package::installation_result> install_future = QtConcurrent::run([this, pkgmngr, package_file_path]() {
+            drive_number install_drive = drive_e;
+            if (emulator_state_.symsys->is_s80_device_active()) {
+                install_drive = drive_d;
+            }
+
+            QFuture<eka2l1::package::installation_result> install_future = QtConcurrent::run([this, pkgmngr, package_file_path, install_drive]() {
                 return pkgmngr->install_package(
-                    package_file_path.toStdU16String(), drive_e, [this](const std::size_t done, const std::size_t total) { emit progress_dialog_change(done, total); }, [this] { return current_progress_dialog_->wasCanceled(); });
+                    package_file_path.toStdU16String(),
+                    install_drive,
+                    [this](const std::size_t done, const std::size_t total) { emit progress_dialog_change(done, total); }, [this] { return current_progress_dialog_->wasCanceled(); });
             });
 
             while (!install_future.isFinished()) {
@@ -1782,4 +1791,21 @@ eka2l1::drivers::handle main_window::get_background_image() {
     }
 
     return background_image_texture_;
+}
+
+void main_window::on_question_dialog_open_request() {
+    message_box_asyncable_close *msg_box = new message_box_asyncable_close(this, question_dialog_text_, question_dialog_button1_text_,
+        question_dialog_button2_text_, question_dialog_complete_callback_);
+
+    msg_box->show();
+}
+
+void main_window::question_dialog_open(const std::u16string &text, const std::u16string &button1_text, const std::u16string &button2_text,
+    eka2l1::drivers::ui::yes_no_dialog_complete_callback complete_callback) {
+    question_dialog_text_ = text;
+    question_dialog_button1_text_ = button1_text;
+    question_dialog_button2_text_ = button2_text;
+    question_dialog_complete_callback_ = complete_callback;
+
+    emit question_dialog_open_request();
 }

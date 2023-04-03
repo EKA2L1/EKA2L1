@@ -381,6 +381,8 @@ namespace eka2l1 {
         void load_fonts_from_directory(eka2l1::io_system *io, eka2l1::directory *dir);
         void initialize_server();
 
+        bool add_single_font(eka2l1::io_system *io, const std::u16string &path);
+
     public:
         explicit fbs_server(eka2l1::system *sys);
         ~fbs_server() override;
