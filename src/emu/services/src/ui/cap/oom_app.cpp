@@ -315,7 +315,7 @@ namespace eka2l1 {
             info.screen_number_ = group->scr->number;
             info.associated_ = group->client->get_client()->owning_process();
 
-            if ((info.app_uid_ != 0) && (info.flags_ != 0)) {
+            if (info.app_uid_ != 0) {
                 if (group->scr->focus == group) {
                     info.flags_ |= akn_running_app_info::FLAG_CURRENTLY_PLAY;
                 }
