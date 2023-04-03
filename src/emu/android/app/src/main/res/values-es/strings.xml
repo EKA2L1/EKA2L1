@@ -20,6 +20,7 @@
     <string name="warning">Advertencia</string>
     <string name="scoped_storage_warning">Sus datos de usuario están almacenados en una ubicación que <b>se eliminará</b> si desinstala la aplicación:\n</string>
     <string name="install_ng_game">Instalar juego N-Gage</string>
+    <string name="notify_dialog_title">Notification</string>
     <string name="install">Instalar</string>
     <string name="rescan_devices">Reescanear dispositivos</string>
     <string name="device_dump">Volcado del dispositivo</string>
