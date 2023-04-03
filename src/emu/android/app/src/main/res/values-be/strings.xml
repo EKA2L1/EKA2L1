@@ -20,6 +20,7 @@
     <string name="warning">Увага</string>
     <string name="scoped_storage_warning">Вашы карыстацкія дадзеныя захоўваюцца ў месцы, якое<b>будзе выдаленае</b>пры выдаленні дастасавання:\n</string>
     <string name="install_ng_game">Install N-Gage game</string>
+    <string name="notify_dialog_title">Notification</string>
     <string name="install">Усталяваць</string>
     <string name="rescan_devices">Перасканаваць прылады</string>
     <string name="device_dump">Дамп прылады</string>
