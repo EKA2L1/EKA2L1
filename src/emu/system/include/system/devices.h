@@ -31,6 +31,17 @@ namespace eka2l1::config {
 
 namespace eka2l1 {
     struct device {
+    private:
+        std::uint32_t cached_flags_;
+        bool flag_inited_ = false;
+
+        enum {
+            DEVICE_FLAG_S80 = 1 << 0
+        };
+
+        void init_flags();
+
+    public:
         epocver ver;
         std::string firmware_code;
         std::string manufacturer;
@@ -38,6 +49,17 @@ namespace eka2l1 {
         std::vector<int> languages;
         std::uint32_t machine_uid;
         int default_language_code;
+
+        explicit device(epocver ver, std::string firmware_code, std::string manufacturer, std::string model)
+            : ver(ver)
+            , firmware_code(firmware_code)
+            , manufacturer(manufacturer)
+            , model(model)
+            , machine_uid(0)
+            , default_language_code(-1) {
+        }
+
+        bool is_s80();
     };
 
     enum add_device_error {

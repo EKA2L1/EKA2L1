@@ -311,6 +311,15 @@ namespace eka2l1 {
 
             return preset::SYSTEM_CPU_HZ_S60V5;
         }
+        
+        bool is_s80_device_active() {
+            device *crr = dvcmngr_->get_current();
+            if (crr && crr->is_s80()) {
+                return true;
+            }
+
+            return false;
+        }
 
         void set_symbian_version_use(const epocver ever) {
             io_->set_epoc_ver(ever);
@@ -1461,5 +1470,9 @@ namespace eka2l1 {
 
     bool system::get_ngage_game_info_mounted(apa_app_registry &result) {
         return impl->get_ngage_game_info_mounted(result);
+    }
+
+    bool system::is_s80_device_active() {
+        return impl->is_s80_device_active();
     }
 }

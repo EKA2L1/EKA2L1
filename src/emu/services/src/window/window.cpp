@@ -1408,21 +1408,7 @@ namespace eka2l1 {
         static const eka2l1::vec2 ASSUMED_SCREEN_SIZE = { 176, 208 };
         static const eka2l1::vec2 ASSUMED_SCREEN_SIZE_S80 = { 640, 200 };
 
-        static std::array<std::string, 1> S80_DEVICES_FIRMCODE = {
-            "RAE-6"
-        };
-
-        device *current_dvc = sys->get_device_manager()->get_current();
-        bool is_s80_device = false;
-
-        if (kern->is_eka1()) {
-            for (const std::string &device: S80_DEVICES_FIRMCODE) {
-                if (common::compare_ignore_case(device.c_str(), current_dvc->firmware_code.c_str()) == 0) {
-                    is_s80_device = true;
-                    break;
-                }
-            }
-        }
+        bool is_s80_device = sys->is_s80_device_active();
 
         do {
             std::string screen_key = "SCREEN";
@@ -1770,6 +1756,17 @@ namespace eka2l1 {
         case drivers::input_event_type::key:
         case drivers::input_event_type::key_raw:
             if (make_key_event(input_mapping.key_input_map, input_event, guest_event)) {
+                // NOTE: Current workaround for S80 layout ! Remapping a bit until we figured out
+                // what's best keyboard layout for both PCs and Android...
+                if (sys->is_s80_device_active()) {
+                    std::int32_t scancode = guest_event.key_evt_.scancode;
+                    if (scancode == epoc::std_key_device_3) {
+                        guest_event.key_evt_.scancode = epoc::std_key_enter;
+                    } else if (scancode == '5') {
+                        guest_event.key_evt_.scancode = epoc::std_key_space;
+                    }
+                }
+
                 key_shipper.add_new_event(guest_event);
                 key_shipper.start_shipping();
 

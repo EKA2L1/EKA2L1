@@ -136,8 +136,8 @@ namespace eka2l1::epoc {
         0x00ffff00, 0x00ffff33, 0x00ffff66, 0x00ffff99, 0x00ffffcc, 0x00ffffff
     };
 
-    inline palette_256 &get_suitable_palette_256(const epocver ver) {
-        if (ver >= epocver::epoc95) {
+    inline palette_256 &get_suitable_palette_256(const epocver ver, bool is_s80) {
+        if ((ver >= epocver::epoc95) || is_s80) {
             return color_256_palette_new;
         }
 
