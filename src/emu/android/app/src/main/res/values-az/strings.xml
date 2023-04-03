@@ -20,6 +20,7 @@
     <string name="warning">Xəbərdarlıq</string>
     <string name="scoped_storage_warning">İstifadəçi məlumatlarınız proqramı sildiyiniz zaman <b>silinəcək</b> məkanda saxlanılır:\n</string>
     <string name="install_ng_game">Install N-Gage game</string>
+    <string name="notify_dialog_title">Notification</string>
     <string name="install">Quraşdır</string>
     <string name="rescan_devices">Cihazları təkrar axtar</string>
     <string name="device_dump">Cihaz tullantıları</string>
