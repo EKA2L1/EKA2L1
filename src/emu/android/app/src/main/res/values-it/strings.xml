@@ -20,6 +20,7 @@
     <string name="warning">Attenzione</string>
     <string name="scoped_storage_warning">I tuoi dati utente vengono memorizzati in una posizione che <b>verrà cancellata</b> quando disinstalli l\'app:\n</string>
     <string name="install_ng_game">Installa gioco N-Gage</string>
+    <string name="notify_dialog_title">Notification</string>
     <string name="install">Installa</string>
     <string name="rescan_devices">Ricarica dispositivi</string>
     <string name="device_dump">Dump dispositivo</string>
