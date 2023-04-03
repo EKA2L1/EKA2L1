@@ -17,19 +17,26 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <common/applauncher.h>
-#include <utils/reqsts.h>
-#include <utils/err.h>
+#pragma once
 
-#include <kernel/kernel.h>
-
-#include <QDesktopServices>
+#include <drivers/ui/input_dialog.h>
 #include <QMessageBox>
-#include <QUrl>
 
-namespace eka2l1::common {
-    bool launch_browser(const std::string &url) {
-        QUrl qt_url(QString::fromStdString(url));
-        return QDesktopServices::openUrl(qt_url);
-    }
-}
+class message_box_asyncable_close: public QMessageBox {
+private:
+    QPushButton *yes_button_;
+    QPushButton *no_button_;
+
+    eka2l1::drivers::ui::yes_no_dialog_complete_callback complete_callback_;
+
+protected slots:
+    void on_yes_button_clicked();
+    void on_no_button_clicked();
+
+public:
+    explicit message_box_asyncable_close(QWidget *parent,
+        const std::u16string &text,
+        const std::u16string &button1_text,
+        const std::u16string &button2_text,
+        eka2l1::drivers::ui::yes_no_dialog_complete_callback complete_callback);
+};

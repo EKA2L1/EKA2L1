@@ -48,7 +48,10 @@ namespace eka2l1::android {
         : sys(sys)
         , conf(sys->get_config())
         , kern(sys->get_kernel_system())
-        , alserv(nullptr) {
+        , alserv(nullptr)
+        , input_complete_callback_(nullptr)
+        , yes_no_complete_callback_(nullptr)
+        , is_s80(false) {
         retrieve_servers();
     }
 
@@ -312,8 +315,13 @@ namespace eka2l1::android {
 
     package::installation_result launcher::install_app(std::string &path) {
         std::u16string upath = common::utf8_to_ucs2(path);
+        drive_number install_drive = drive_number::drive_e;
 
-        return static_cast<package::installation_result>(sys->install_package(upath, drive_number::drive_e));
+        if (sys->is_s80_device_active()) {
+            install_drive = drive_number::drive_d;
+        }
+
+        return static_cast<package::installation_result>(sys->install_package(upath, install_drive));
     }
 
     std::vector<std::string> launcher::get_devices() {
@@ -684,10 +692,41 @@ namespace eka2l1::android {
         env->CallStaticVoidMethod(clazz, input_method);
     }
 
+    bool launcher::open_question_dialog(const std::u16string &text, const std::u16string &button1_text,
+                              const std::u16string &button2_text,
+                              drivers::ui::yes_no_dialog_complete_callback complete_callback) {
+        if (yes_no_complete_callback_) {
+            return false;
+        }
+
+        yes_no_complete_callback_ = complete_callback;
+
+        JNIEnv *env = common::jni::environment();
+        jclass clazz = common::jni::find_class("com/github/eka2l1/emu/Emulator");
+        jmethodID open_method = env->GetStaticMethodID(clazz, "showQuestionDialog", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+        std::string question_text_utf8 = common::ucs2_to_utf8(text);
+        std::string yes_text_utf8 = common::ucs2_to_utf8(button1_text);
+        std::string no_text_utf8 = common::ucs2_to_utf8(button2_text);
+
+        jstring jtext_question = env->NewStringUTF(question_text_utf8.c_str());
+        jstring jtext_yes = env->NewStringUTF(yes_text_utf8.c_str());
+        jstring jtext_no = env->NewStringUTF(no_text_utf8.c_str());
+
+        env->CallStaticVoidMethod(clazz, open_method, jtext_question, jtext_yes, jtext_no);
+        return true;
+    }
+
     void launcher::on_finished_text_input(const std::string &text, const bool force_close) {
         if (input_complete_callback_) {
             input_complete_callback_(common::utf8_to_ucs2(text));
             input_complete_callback_ = nullptr;
+        }
+    }
+
+    void launcher::on_question_dialog_finished(const int result) {
+        if (yes_no_complete_callback_) {
+            yes_no_complete_callback_(result);
+            yes_no_complete_callback_ = nullptr;
         }
     }
 

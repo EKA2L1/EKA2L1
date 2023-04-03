@@ -20,6 +20,7 @@
 
 #include <services/notifier/notifier.h>
 #include <services/notifier/queries.h>
+#include <drivers/ui/input_dialog.h>
 #include <system/epoc.h>
 
 #include <utils/consts.h>
@@ -109,11 +110,59 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void notifier_client_session::notify(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> length_text_line = ctx->get_argument_value<std::uint32_t>(2);
+        std::optional<std::uint32_t> length_two_buttons = ctx->get_argument_value<std::uint32_t>(3);
+
+        if (!length_text_line.has_value() || !length_two_buttons.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        std::uint16_t length_line1 = length_text_line.value() >> 16;
+        std::uint16_t length_line2 = length_text_line.value() & 0xFFFF;
+
+        std::uint16_t length_button_text1 = length_two_buttons.value() >> 16;
+        std::uint16_t length_button_text2 = length_two_buttons.value() & 0xFFFF;
+
+        std::optional<std::u16string> combined_text = ctx->get_argument_value<std::u16string>(1);
+        if (!combined_text.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        std::u16string line1 = combined_text->substr(0, length_line1);
+        std::u16string line2 = combined_text->substr(length_line1, length_line2);
+        std::u16string button_text1 = combined_text->substr(length_line1 + length_line2, length_button_text1);
+        std::u16string button_text2 = combined_text->substr(length_line1 + length_line2 + length_button_text1,
+            length_button_text2);
+
+        //LOG_TRACE(SERVICE_NOTIFIER, "Trying to display: {} {} {} {}", common::ucs2_to_utf8(line1),
+        //    common::ucs2_to_utf8(line2), common::ucs2_to_utf8(button_text1), common::ucs2_to_utf8(button_text2));
+
+        int *status = reinterpret_cast<int*>(ctx->get_descriptor_argument_ptr(0));
+        if (!status) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        epoc::notify_info complete_info{ ctx->msg->request_sts, ctx->msg->own_thr };
+        drivers::ui::show_yes_no_dialog(line1 + u'\n' + line2, button_text1, button_text2, [status, complete_info](int value) {
+            *status = value;
+
+            kernel_system *kern = complete_info.requester->get_kernel_object_owner();
+            epoc::notify_info complete_info_copy = complete_info;
+
+            kern->lock();
+            complete_info_copy.complete(epoc::error_none);
+            kern->unlock();
+        });
+    }
+
     void notifier_client_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case notifier_notify:
-            LOG_TRACE(SERVICE_NOTIFIER, "Notifier opcode: notify stubbed");
-            ctx->complete(epoc::error_none);
+            notify(ctx);
             break;
 
         case notifier_info_print:
@@ -135,6 +184,11 @@ namespace eka2l1 {
             // From doc: This function has never been implemented on any Symbian OS version.
             // Safe to return not supported
             ctx->complete(epoc::error_not_supported);
+            return;
+
+        case notifier_update_and_get_response:
+            LOG_TRACE(SERVICE_NOTIFIER, "Update and get response is not implemented yet.");
+            ctx->complete(epoc::error_none);
             return;
 
         default:

@@ -394,3 +394,9 @@ Java_com_github_eka2l1_emu_Emulator_installNGageGame(JNIEnv *env, jclass clazz, 
 
     return state->launcher->install_ngage_game(cpath);
 }
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_github_eka2l1_emu_Emulator_submitQuestionDialogResponse(JNIEnv *env, jclass clazz,
+                                                                 jint value) {
+    state->launcher->on_question_dialog_finished(value);
+}

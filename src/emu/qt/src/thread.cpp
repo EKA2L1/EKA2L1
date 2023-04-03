@@ -42,7 +42,8 @@
 #include <drivers/input/emu_controller.h>
 
 #include <services/window/window.h>
-#include <qt/input_dialog_driver.h>
+#include <qt/custom_question_dialog.h>
+#include <qt/dialog_driver.h>
 
 #include <kernel/kernel.h>
 

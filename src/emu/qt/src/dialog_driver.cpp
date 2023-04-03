@@ -18,7 +18,7 @@
  */
 
 #include <drivers/ui/input_dialog.h>
-#include <qt/input_dialog_driver.h>
+#include <qt/dialog_driver.h>
 #include <qt/mainwindow.h>
 #include <common/log.h>
 
@@ -40,5 +40,10 @@ namespace eka2l1::drivers::ui {
         }
 
         main_window_instance->input_dialog_close();
+    }
+
+    void show_yes_no_dialog(const std::u16string &text, const std::u16string &button1_text, const std::u16string &button2_text,
+        yes_no_dialog_complete_callback complete_callback) {
+        main_window_instance->question_dialog_open(text, button1_text, button2_text, complete_callback);
     }
 }

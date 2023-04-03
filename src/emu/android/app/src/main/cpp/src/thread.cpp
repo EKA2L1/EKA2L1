@@ -21,6 +21,7 @@
 #include <common/thread.h>
 #include <drivers/audio/audio.h>
 #include <drivers/graphics/graphics.h>
+#include <system/devices.h>
 
 std::unique_ptr<std::thread> os_thread_obj;
 std::unique_ptr<std::thread> ui_thread_obj;
