@@ -20,6 +20,7 @@
     <string name="warning">警告</string>
     <string name="scoped_storage_warning">您的用户数据存储路径在卸载应用时<b>将被删除</b>\n</string>
     <string name="install_ng_game">安装 N-Gage 游戏</string>
+    <string name="notify_dialog_title">Notification</string>
     <string name="install">安装</string>
     <string name="rescan_devices">重新扫描设备</string>
     <string name="device_dump">从设备上导出的ROM</string>
