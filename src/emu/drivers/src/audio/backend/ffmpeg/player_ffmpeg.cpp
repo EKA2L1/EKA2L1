@@ -273,6 +273,11 @@ namespace eka2l1::drivers {
     }
 
     bool player_ffmpeg::set_position_for_custom_format(const std::uint64_t pos_in_us) {
+        if (!format_context_) {
+            LOG_WARN(DRIVER_AUD, "No current format context is active! Set position will do nothing");
+            return true;
+        }
+
         avformat_flush(format_context_);
 
         // The unit is microseconds

@@ -98,31 +98,27 @@ namespace eka2l1::drivers {
         }
 
         // Reset the request
-        {
-            const std::lock_guard<std::mutex> guard(lock_);
-            reset_request();
+        reset_request();
 
-            if (!is_ready_to_play()) {
-                return false;
-            }
-
-            data_pointer_ = 0;
-            flags_ = 0;
-            data_.clear();
-
-            // New stream to restart everything
-            output_stream_ = aud_->new_output_stream(freq_, channels_, [this](std::int16_t *u1, std::size_t u2) {
-                return data_supply_callback(u1, u2);
-            });
-
-            if (!output_stream_) {
-                // Null stream
-                return true;
-            }
-
-            output_stream_->set_volume(static_cast<float>(volume_) / 10.0f);
+        if (!is_ready_to_play()) {
+            return false;
         }
 
+        data_pointer_ = 0;
+        flags_ = 0;
+        data_.clear();
+
+        // New stream to restart everything
+        output_stream_ = aud_->new_output_stream(freq_, channels_, [this](std::int16_t *u1, std::size_t u2) {
+            return data_supply_callback(u1, u2);
+        });
+
+        if (!output_stream_) {
+            // Null stream
+            return true;
+        }
+
+        output_stream_->set_volume(static_cast<float>(volume_) / 10.0f);
         return output_stream_->start();
     }
 
@@ -181,7 +177,6 @@ namespace eka2l1::drivers {
     }
 
     bool player_shared::set_volume(const std::uint32_t vol) {
-        const std::lock_guard<std::mutex> guard(lock_);
         const bool res = player::set_volume(vol);
 
         if (output_stream_ && res) {
