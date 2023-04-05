@@ -5,6 +5,7 @@ extern "C" {
 }
 
 #include <atomic>
+#include <cstring>
 #include <functional>
 #include <thread>
 #include <memory>
