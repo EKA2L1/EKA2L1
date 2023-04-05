@@ -87,14 +87,14 @@ namespace eka2l1::epoc {
             epocver system_version = sys->get_symbian_version_use();
             int system_ram_size = 0;
 
-            if (system_version >= epocver::epoc94) {
-                system_ram_size = static_cast<int>(common::MB(512));
-            } else if (system_version >= epocver::epoc93fp1) {
+            if (system_version >= epocver::epoc10) {
                 system_ram_size = static_cast<int>(common::MB(256));
-            } else if (system_version >= epocver::epoc80) {
+            } else if (system_version >= epocver::epoc93fp1) {
                 system_ram_size = static_cast<int>(common::MB(128));
-            } else {
+            } else if (system_version >= epocver::epoc80) {
                 system_ram_size = static_cast<int>(common::MB(64));
+            } else {
+                system_ram_size = static_cast<int>(common::MB(32));
             }
 
             mem_info.total_ram_in_bytes_ = system_ram_size;
