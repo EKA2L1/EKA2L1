@@ -44,8 +44,12 @@ namespace eka2l1::epoc::bt {
             });
 
             lan_discovery_call_listener_socket_->on<uvw::udp_data_event>([this](const uvw::udp_data_event &event, uvw::udp_handle &handle) {
-                sockaddr sender_ced = uvw::details::ip_addr(event.sender.ip.data(), event.sender.port);
-                handle_lan_discovery_receive(event.data.get(), event.length, &sender_ced);
+                std::optional<sockaddr_in6> sender_ced = libuv::from_ip_string(event.sender.ip.data(), event.sender.port);
+                if (!sender_ced.has_value()) {
+                    LOG_ERROR(SERVICE_BLUETOOTH, "Invalid sender address passed to callback!");
+                    return;
+                }
+                handle_lan_discovery_receive(event.data.get(), event.length, reinterpret_cast<sockaddr*>(&sender_ced.value()));
             });
 
             lan_discovery_call_listener_socket_->recv();

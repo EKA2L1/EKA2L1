@@ -118,16 +118,13 @@ namespace eka2l1::epoc::bt {
             guest_port = midman->get_free_port();
             if (guest_port == 0) {
                 LOG_ERROR(SERVICE_BLUETOOTH, "Bluetooth ports have ran out. Can't bind!");
-
-                kern->lock();
                 info_copy.complete(epoc::error_eof);
-                kern->unlock();
 
                 return;
             }
         }
 
-        std::uint32_t host_port = midman->lookup_host_port(guest_port);
+        std::uint32_t host_port = midman->get_host_port(guest_port);
         if (host_port == 0) {
             addr_to_bind.port_ = 0;
 
@@ -139,7 +136,7 @@ namespace eka2l1::epoc::bt {
                     info_copy.complete(error);
                     return;
                 } else {
-                    midman->add_host_port(guest_port);
+                    midman->ref_and_public_port(guest_port);
                     
                     kernel_system *kern = info_copy.requester->get_kernel_object_owner();
                     kern->lock();

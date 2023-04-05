@@ -13,6 +13,7 @@ extern "C" {
 
 #include <unordered_map>
 #include <unordered_set>
+#include <optional>
 
 namespace libuv {
     struct looper;
@@ -111,6 +112,26 @@ namespace libuv {
             loop_thread_prepare_callback_ = callback;
         }
     };
+
+    /**
+     * @brief Returns a socket address contained inside IPv6 struct from a given ip address and port.
+     * 
+     * @param addr The address to be converted.
+     * @param port The port to be converted.
+     * @return sockaddr_in6 New socket address.
+     */
+    inline std::optional<sockaddr_in6> from_ip_string(const char *addr, unsigned int port) {
+        sockaddr_in6 addr_total;
+        std::memset(&addr_total, sizeof(sockaddr_in6), 0);
+
+        if (uv_ip4_addr(addr, port, reinterpret_cast<sockaddr_in*>(&addr_total)) == 0) {
+            return addr_total;
+        } else if (uv_ip6_addr(addr, port, &addr_total) == 0) {
+            return addr_total;
+        }
+
+        return std::nullopt;
+    }
 
     extern std::shared_ptr<looper> default_looper;
 }

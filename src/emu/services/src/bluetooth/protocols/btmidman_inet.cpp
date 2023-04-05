@@ -109,8 +109,12 @@ namespace eka2l1::epoc::bt {
             }
 
             bluetooth_queries_server_socket_->on<uvw::udp_data_event>([this](const uvw::udp_data_event &event, uvw::udp_handle &handle) {
-                sockaddr sender_ced = uvw::details::ip_addr(event.sender.ip.data(), event.sender.port);
-                handle_queries_request(&sender_ced, event.data.get(), event.length);
+                std::optional<sockaddr_in6> sender_ced = libuv::from_ip_string(event.sender.ip.data(), event.sender.port);
+                if (!sender_ced.has_value()) {
+                    LOG_ERROR(SERVICE_BLUETOOTH, "Invalid sender address passed to callback!");
+                    return;
+                }
+                handle_queries_request(reinterpret_cast<sockaddr*>(&sender_ced.value()), event.data.get(), event.length);
             });
 
             bluetooth_queries_server_socket_->on<uvw::error_event>([this](const uvw::error_event &event, uvw::udp_handle &handle) {
@@ -218,9 +222,7 @@ namespace eka2l1::epoc::bt {
             char final_result  = '0';
 
             if ((requested_port >= port_offset_) && (requested_port < port_offset_ + MAX_PORT)) {
-                if (allocated_ports_.is_allocated(requested_port - port_offset_)) {
-                    final_result = '1';
-                }
+                final_result = '1';
             }
 
             check_result.push_back(final_result);
@@ -231,7 +233,7 @@ namespace eka2l1::epoc::bt {
 
         case QUERY_OPCODE_GET_REAL_PORT_FROM_VIRTUAL_PORT: {
             std::uint16_t virtual_port = buf[5] | (static_cast<std::uint16_t>(buf[6]) << 8);
-            std::uint32_t temp_uint = lookup_host_port(virtual_port);
+            std::uint32_t temp_uint = get_host_port(virtual_port);
 
             std::vector<char> buf_result;
             buf_result.insert(buf_result.begin(), reinterpret_cast<const char*>(&asker_id), reinterpret_cast<const char*>(&asker_id + 1));
@@ -455,7 +457,7 @@ lookup:
         refresh_friend_info_async_impl(0, callback);
     }
 
-    std::uint32_t midman_inet::lookup_host_port(const std::uint16_t virtual_port) {
+    std::uint32_t midman_inet::get_host_port(const std::uint16_t virtual_port) {
         if (discovery_mode_ == DISCOVERY_MODE_OFF) {
             return 0;
         }
@@ -471,7 +473,7 @@ lookup:
         return port_offset_ + virtual_port - 1;
     }
 
-    void midman_inet::add_host_port(const std::uint16_t virtual_port) {
+    void midman_inet::ref_and_public_port(const std::uint16_t virtual_port) {
         if (discovery_mode_ == DISCOVERY_MODE_OFF) {
             return;
         }
@@ -494,9 +496,9 @@ lookup:
             return 0;
         }
 
-        // Reserve first 10 ports for system
+        // Reserve first 20 ports for system
         int size = 1;
-        const int offset = allocated_ports_.allocate_from(10, size, false);
+        const int offset = allocated_ports_.allocate_from(20, size, false);
         if (offset < 0) {
             return 0;
         }

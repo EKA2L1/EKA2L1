@@ -190,7 +190,7 @@ namespace eka2l1::epoc::bt {
         cast_addr.family_ = BTADDR_PROTOCOL_FAMILY_ID;
 
         friend_querier_.get_device_address_async(addr, [this, addr, midman, index](device_address *dvc_addr_res) {
-            const bool manual_direct_search = (midman->get_discovery_mode() > DISCOVERY_MODE_DIRECT_IP);
+            const bool manual_direct_search = (midman->get_discovery_mode() == DISCOVERY_MODE_DIRECT_IP);
 
             if (dvc_addr_res == nullptr) {
                 manual_direct_search ? current_friend_++ : 0;
