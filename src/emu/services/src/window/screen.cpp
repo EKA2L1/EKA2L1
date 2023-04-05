@@ -575,9 +575,11 @@ namespace eka2l1::epoc {
 
     struct window_visible_region_calc_walker: public window_tree_walker {
         common::region visible_left_region_;
+        bool trigger_redraw_;
 
-        explicit window_visible_region_calc_walker(const common::region &master_region)
-            : visible_left_region_(master_region) {
+        explicit window_visible_region_calc_walker(const common::region &master_region, bool trigger_redraw = true)
+            : visible_left_region_(master_region)
+            , trigger_redraw_(trigger_redraw) {
         }
 
         bool do_it(epoc::window *win) override {
@@ -612,6 +614,10 @@ namespace eka2l1::epoc {
                     }
 
                     winuser->report_visiblity_change();
+
+                    if (trigger_redraw_) {
+                        winuser->flags |= screen::FLAG_SERVER_REDRAW_PENDING;
+                    }
                 }
             }
 
@@ -619,25 +625,22 @@ namespace eka2l1::epoc {
         }
     };
 
-    void screen::recalculate_visible_regions() {
+    void screen::recalculate_visible_regions(bool dont_trigger_redraw) {
         common::region master_region;
         eka2l1::rect master_rect{ eka2l1::vec2(0, 0), current_mode().size };
 
         master_region.add_rect(master_rect);
-        window_visible_region_calc_walker walker(master_region);
+        window_visible_region_calc_walker walker(master_region, !dont_trigger_redraw);
 
         root->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children);
         need_update_visible_regions(false);
-
-        // The server side causes a change (maybe position or visiblity, so a redraw requested from server is needed)
-        flags_ |= FLAG_SERVER_REDRAW_PENDING;
     }
 
     void screen::ref_dsa_usage() {
         active_dsa_count_++;
 
         if (need_update_visible_regions()) {
-            recalculate_visible_regions();
+            recalculate_visible_regions(true);
         }
     }
 
@@ -650,7 +653,7 @@ namespace eka2l1::epoc {
             flags_ |= FLAG_NEED_RECALC_VISIBLE;
 
             if (active_dsa_count_) {
-                recalculate_visible_regions();
+                recalculate_visible_regions(true);
             }
         } else {
             flags_ &= ~FLAG_NEED_RECALC_VISIBLE;
