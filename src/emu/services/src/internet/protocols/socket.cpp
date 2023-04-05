@@ -1185,9 +1185,12 @@ namespace eka2l1::epoc::internet {
             switch (option_id) {
             case INET_TCP_NO_DELAY_OPT: {
                 int value = *reinterpret_cast<int *>(buffer);
-                looper_->one_shot([this, value]() {
-                    uv_tcp_nodelay(reinterpret_cast<uv_tcp_t*>(opaque_handle_), value);
+                void *opaque_handle_copy = opaque_handle_;
+
+                looper_->one_shot([opaque_handle_copy, value]() {
+                    uv_tcp_nodelay(reinterpret_cast<uv_tcp_t*>(opaque_handle_copy), value);
                 });
+
                 return true;
             }
 
