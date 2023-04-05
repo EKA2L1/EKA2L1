@@ -130,12 +130,12 @@ namespace eka2l1 {
         // but not the case for other OSes
         if (is_separator(target_path[0])) {
             // Only append the root directory to the beginning
-            return common::trim_spaces(eka2l1::add_path(eka2l1::root_name(session_path, true), target_path, true));
+            return common::trim_spaces(eka2l1::absolute_path(target_path, eka2l1::root_name(session_path, true), true));
         }
 
         // Check if the path has a root directory
-        if (!eka2l1::has_root_name(target_path)) {
-            return common::trim_spaces(eka2l1::add_path(session_path, target_path, true));
+        if (!eka2l1::has_root_dir(target_path)) {
+            return common::trim_spaces(eka2l1::absolute_path(target_path, session_path, true));
         }
 
         return common::trim_spaces(target_path);
