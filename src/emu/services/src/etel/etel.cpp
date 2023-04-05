@@ -359,6 +359,26 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void etel_session::is_supported_by_module(service::ipc_context *ctx) {
+        std::optional<std::u16string> tsy_name = ctx->get_argument_value<std::u16string>(0);
+        if (!tsy_name.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        LOG_TRACE(SERVICE_ETEL, "Check supportabilities name: {}", common::ucs2_to_utf8(tsy_name.value()));
+
+        std::optional<std::uint32_t> mask = ctx->get_argument_data_from_descriptor<std::uint32_t>(1);
+        if (!mask.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        std::uint32_t mask_local = mask.value();
+        ctx->write_data_to_descriptor_argument(2, mask_local);
+        ctx->complete(epoc::error_none);
+    }
+
     void etel_session::fetch(service::ipc_context *ctx) {
         if (server<etel_server>()->legacy_level() <= ETEL_LEGACY_LEVEL_TRANSITION) {
             switch (ctx->msg->function) {
@@ -396,6 +416,10 @@ namespace eka2l1 {
 
             case epoc::etel_old_line_enumerate_call:
                 line_enumerate_call(ctx);
+                break;
+
+            case epoc::etel_old_is_supported_by_module:
+                is_supported_by_module(ctx);
                 break;
 
             default:
