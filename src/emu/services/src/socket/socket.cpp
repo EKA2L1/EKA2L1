@@ -416,7 +416,8 @@ namespace eka2l1::epoc::socket {
         saddress *optional_addr = (has_addr ? eka2l1::ptr<saddress>(req_info->sock_addr_).get(requester) : nullptr);
 
         epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
-        sock_->send(packet_buffer, static_cast<std::uint32_t>(packet_size), reinterpret_cast<std::uint32_t*>(size_return_des->get_pointer_raw(requester)),
+        sock_->send(packet_buffer, static_cast<std::uint32_t>(packet_size),
+            size_return_des ? reinterpret_cast<std::uint32_t*>(size_return_des->get_pointer_raw(requester)) : nullptr,
             optional_addr, req_info->flags_, info);
     }
 
@@ -446,7 +447,9 @@ namespace eka2l1::epoc::socket {
         saddress *optional_addr = (has_addr ? eka2l1::ptr<saddress>(req_info->sock_addr_).get(requester) : nullptr);
 
         epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
-        sock_->receive(packet_buffer, static_cast<std::uint32_t>(packet_size), reinterpret_cast<std::uint32_t*>(size_return_des->get_pointer_raw(requester)), optional_addr, req_info->flags_, info,
+        sock_->receive(packet_buffer, static_cast<std::uint32_t>(packet_size),
+            size_return_des ? reinterpret_cast<std::uint32_t*>(size_return_des->get_pointer_raw(requester)) : nullptr,
+            optional_addr, req_info->flags_, info,
             [packet_des, requester](const std::int64_t length) {
                 if (length < 0) {
                     packet_des->set_length(requester, 0);
