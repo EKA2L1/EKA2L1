@@ -1356,22 +1356,22 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="527"/>
       <source>Color</source>
-      <translation type="unfinished">Color</translation>
+      <translation>Cor</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="562"/>
       <source>Opacity</source>
-      <translation type="unfinished">Opacity</translation>
+      <translation>Opacidade</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="585"/>
       <source>TextLabel</source>
-      <translation type="unfinished">TextLabel</translation>
+      <translation>Rótulo de Texto</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="639"/>
       <source>Disable window name with emulator version</source>
-      <translation type="unfinished">Disable window name with emulator version</translation>
+      <translation>Desabilita o nome da janela com a versão do emulador</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="646"/>
@@ -1923,7 +1923,7 @@ A opção de preferência ativará isso automaticamente em dispositivos S60v1/S6
     <message>
       <location filename="../src/settings_dialog.cpp" line="1383"/>
       <source>Choose the background image</source>
-      <translation type="unfinished">Choose the background image</translation>
+      <translation>Selecionar uma imagem de fundo</translation>
     </message>
   </context>
   <context>
