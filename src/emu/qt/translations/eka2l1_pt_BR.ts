@@ -1351,7 +1351,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="491"/>
       <source>Image</source>
-      <translation type="unfinished">Image</translation>
+      <translation>Imagem</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="527"/>
