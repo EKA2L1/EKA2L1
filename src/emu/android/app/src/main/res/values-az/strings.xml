@@ -20,6 +20,7 @@
     <string name="warning">Xəbərdarlıq</string>
     <string name="scoped_storage_warning">İstifadəçi məlumatlarınız proqramı sildiyiniz zaman <b>silinəcək</b> məkanda saxlanılır:\n</string>
     <string name="install_ng_game">Install N-Gage game</string>
+    <string name="notify_dialog_title">Notification</string>
     <string name="install">Quraşdır</string>
     <string name="rescan_devices">Cihazları təkrar axtar</string>
     <string name="device_dump">Cihaz tullantıları</string>
@@ -58,6 +59,7 @@
     <string name="pref_wakelock">Ekranı yanılı saxla</string>
     <string name="pref_enable_vibration">Titrəməni fəallaşdır</string>
     <string name="pref_emulator_dir">İş kataloqu</string>
+    <string name="pref_emulator_dir_cant_change">The working directory can\'t be changed!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Ən yaxın qonşu filtrləməsini fəallaşdır</string>
     <string name="pref_system_language_option_name">Dil</string>
     <string name="pref_system_real_time_accuracy_str">Gerçək zamanlı dəqiqlik</string>
@@ -68,7 +70,7 @@
     <string name="pref_system_setting_inheritance_option_name">Varislik tənzimləməsi</string>
     <string name="emulated_screen_rotation_item_name">Döndərmə</string>
     <string name="emulated_screen_refresh_rate_item_name">Təzələmə sürəti</string>
-    <string name="pref_device_display_name">Dost telefon adı</string>
+    <string name="pref_device_display_name">Phone name</string>
     <string name="hide_system_apps">Hide system applications</string>
     <string name="pref_bt_netplay_direct_ips_manager">Direct IPs manager</string>
     <string name="enter_address">Enter address</string>
@@ -131,6 +133,7 @@
     <string name="pref_screen_scale_type_fill">Doldurma pəncərəsi (aspekt nisbətini nəzərə alma)</string>
     <string name="pref_screen_scale_type_fit">Genişliyə uyğunlaşdır</string>
     <string name="pref_screen_scale_type_none">olduğu kimi</string>
+    <string name="pref_screen_use_notch">Use notch</string>
     <string name="pref_screen_scale_use_shader">Ölçəyi yüksəltmək üçün şeyderdən istifadə edin</string>
     <string name="pref_screen_upscale_shader">Yüksək səviyyəli şeyder</string>
     <string name="pref_screen_default_shader">Standart</string>

@@ -19,7 +19,8 @@
     <string name="opengl_required">Questa applicazione richiede OpenGL ES 3.0+.</string>
     <string name="warning">Attenzione</string>
     <string name="scoped_storage_warning">I tuoi dati utente vengono memorizzati in una posizione che <b>verrà cancellata</b> quando disinstalli l\'app:\n</string>
-    <string name="install_ng_game">Install N-Gage game</string>
+    <string name="install_ng_game">Installa gioco N-Gage</string>
+    <string name="notify_dialog_title">Notification</string>
     <string name="install">Installa</string>
     <string name="rescan_devices">Ricarica dispositivi</string>
     <string name="device_dump">Dump dispositivo</string>
@@ -58,6 +59,7 @@
     <string name="pref_wakelock">Mantieni lo schermo acceso</string>
     <string name="pref_enable_vibration">Attiva vibrazione</string>
     <string name="pref_emulator_dir">Cartella di lavoro</string>
+    <string name="pref_emulator_dir_cant_change">The working directory can\'t be changed!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Abilita filtro Nearest Neighbor</string>
     <string name="pref_system_language_option_name">Lingua</string>
     <string name="pref_system_real_time_accuracy_str">Accuratezza in tempo reale</string>
@@ -68,7 +70,7 @@
     <string name="pref_system_setting_inheritance_option_name">Mantieni impostazioni</string>
     <string name="emulated_screen_rotation_item_name">Rotazione</string>
     <string name="emulated_screen_refresh_rate_item_name">Frequenza di aggiornamento</string>
-    <string name="pref_device_display_name">Nome telefono familiare</string>
+    <string name="pref_device_display_name">Phone name</string>
     <string name="hide_system_apps">Nascondi le applicazioni di sistema</string>
     <string name="pref_bt_netplay_direct_ips_manager">Gestione IP diretti</string>
     <string name="enter_address">Imposta indirizzo</string>
@@ -131,6 +133,7 @@
     <string name="pref_screen_scale_type_fill">Riempi la finestra (ignora le proporzioni)</string>
     <string name="pref_screen_scale_type_fit">Adatta alla finestra</string>
     <string name="pref_screen_scale_type_none">Com\'è</string>
+    <string name="pref_screen_use_notch">Use notch</string>
     <string name="pref_screen_scale_use_shader">Usa shader per l\'upscaling</string>
     <string name="pref_screen_upscale_shader">Shader Upscale</string>
     <string name="pref_screen_default_shader">Predefinito</string>
@@ -144,7 +147,7 @@
     <string name="enter_name">Inserisci nome</string>
     <string name="set_default_profile_description">Seleziona questo profilo come predefinito per tutte le applicazioni che saranno installate successivamente</string>
     <string name="error_name_exists">Già esiste, inserisci altro nome</string>
-    <string name="extensive_logging">Extensive logging</string>
+    <string name="extensive_logging">Log esteso</string>
     <string name="mapping_dialog_title">Premi un tasto</string>
     <string name="mapping_dialog_message" formatted="false">Tasto corrente: %1$s</string>
     <string name="reset_mapping">Ripristina</string>
@@ -161,8 +164,8 @@
     <string name="about_icon_by">&lt;BR&gt;Icona da: </string>
     <string name="version">Versione: </string>
     <string name="recommended_devices_note"><b>Nota:</b> Si consiglia di utilizzare firmware S60v3 e superiori per l\'installazione di nuovi dispositivi.</string>
-    <string name="install_ng_game_cant_find_data_folder">Can\'t find the game data folder!</string>
+    <string name="install_ng_game_cant_find_data_folder">Impossibile trovare la cartella con i dati di gioco!</string>
     <string name="install_ng_game_more_than_one_game">È presente più di un gioco nella cartella della scheda di gioco selezionata!</string>
     <string name="install_ng_game_no_game_info_file">Il file delle informazioni di gioco non esiste nella cartella selezionata!</string>
-    <string name="install_ng_game_corrupted_game_info">The game information file has been corrupted. Please check your data\'s validity!</string>
+    <string name="install_ng_game_corrupted_game_info">Il file delle informazioni di gioco è danneggiato. Verifica l\'integrità dei file!</string>
 </resources>

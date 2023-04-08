@@ -20,6 +20,7 @@
     <string name="warning">Warning</string>
     <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
     <string name="install_ng_game">Install N-Gage game</string>
+    <string name="notify_dialog_title">Notification</string>
     <string name="install">Asenna</string>
     <string name="rescan_devices">Skannaa laitteet uudelleen</string>
     <string name="device_dump">Device dump</string>
@@ -58,6 +59,7 @@
     <string name="pref_wakelock">Pidä näyttö päällä</string>
     <string name="pref_enable_vibration">Ota värinä käyttöön</string>
     <string name="pref_emulator_dir">Working directory</string>
+    <string name="pref_emulator_dir_cant_change">The working directory can\'t be changed!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Ota käyttöön lähimmän naapurin suodatus</string>
     <string name="pref_system_language_option_name">Kieli</string>
     <string name="pref_system_real_time_accuracy_str">Reaaliaikainen tarkkuus</string>
@@ -68,7 +70,7 @@
     <string name="pref_system_setting_inheritance_option_name">Perintöasetus</string>
     <string name="emulated_screen_rotation_item_name">Kierto</string>
     <string name="emulated_screen_refresh_rate_item_name">Virkistystaajuus</string>
-    <string name="pref_device_display_name">Friendly phone name</string>
+    <string name="pref_device_display_name">Phone name</string>
     <string name="hide_system_apps">Hide system applications</string>
     <string name="pref_bt_netplay_direct_ips_manager">Direct IPs manager</string>
     <string name="enter_address">Enter address</string>
@@ -131,6 +133,7 @@
     <string name="pref_screen_scale_type_fill">Fill window (ignore aspect ratio)</string>
     <string name="pref_screen_scale_type_fit">Fit to window</string>
     <string name="pref_screen_scale_type_none">As is</string>
+    <string name="pref_screen_use_notch">Use notch</string>
     <string name="pref_screen_scale_use_shader">Use shader for upscaling</string>
     <string name="pref_screen_upscale_shader">Upscale shader</string>
     <string name="pref_screen_default_shader">Default</string>

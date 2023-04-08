@@ -20,6 +20,7 @@
     <string name="warning">අවවාදයයි</string>
     <string name="scoped_storage_warning">ඔබගේ පරිශීලක දත්ත ගබඩා කර ඇති ස්ථානයක <b>මකා දමනු ලැබේ</b> ඔබ යෙදුම අස්ථාපනය කරන විට:\n</string>
     <string name="install_ng_game">Install N-Gage game</string>
+    <string name="notify_dialog_title">Notification</string>
     <string name="install">ස්ථාපනය කරන්න</string>
     <string name="rescan_devices">උපාංග නැවත පරිලෝකනය කරන්න</string>
     <string name="device_dump">උපාංග ඩම්ප්</string>
@@ -58,6 +59,7 @@
     <string name="pref_wakelock">තිරය මත තබා ගන්න</string>
     <string name="pref_enable_vibration">කම්පනය සබල කරන්න</string>
     <string name="pref_emulator_dir">වැඩ කරන නාමාවලිය</string>
+    <string name="pref_emulator_dir_cant_change">The working directory can\'t be changed!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">ආසන්නතම අසල්වැසි පෙරහන සබල කරන්න</string>
     <string name="pref_system_language_option_name">භාෂාව</string>
     <string name="pref_system_real_time_accuracy_str">තත්‍ය කාලීන නිරවද්‍යතාවය</string>
@@ -68,7 +70,7 @@
     <string name="pref_system_setting_inheritance_option_name">උරුමය සැකසීම</string>
     <string name="emulated_screen_rotation_item_name">භ්රමණය</string>
     <string name="emulated_screen_refresh_rate_item_name">නැවුම් කිරීමේ අනුපාතය</string>
-    <string name="pref_device_display_name">මිත්රශීලී දුරකථන නම</string>
+    <string name="pref_device_display_name">Phone name</string>
     <string name="hide_system_apps">පද්ධති යෙදුම් සඟවන්න</string>
     <string name="pref_bt_netplay_direct_ips_manager">Direct IPs manager</string>
     <string name="enter_address">Enter address</string>
@@ -131,6 +133,7 @@
     <string name="pref_screen_scale_type_fill">කවුළුව පුරවන්න (දර්ශන අනුපාතය නොසලකා හරින්න)</string>
     <string name="pref_screen_scale_type_fit">කවුළුවට ගැලපේ</string>
     <string name="pref_screen_scale_type_none">පවතින පරිදි</string>
+    <string name="pref_screen_use_notch">Use notch</string>
     <string name="pref_screen_scale_use_shader">ඉහළ නැංවීම සඳහා සෙවන භාවිතා කරන්න</string>
     <string name="pref_screen_upscale_shader">ඉහළ මට්ටමේ සෙවන</string>
     <string name="pref_screen_default_shader">පෙරනිමිය</string>

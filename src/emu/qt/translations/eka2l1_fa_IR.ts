@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="ro" sourcelanguage="en">
+<TS version="2.1" language="fa" sourcelanguage="en">
   <context>
     <name>QObject</name>
     <message>
@@ -83,7 +83,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="63"/>
       <source>Search</source>
-      <translation>Căutare</translation>
+      <translation type="unfinished">Search</translation>
     </message>
   </context>
   <context>
@@ -121,7 +121,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="834"/>
       <source>Rename</source>
-      <translation>Redenumire</translation>
+      <translation type="unfinished">Rename</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="835"/>
@@ -323,12 +323,12 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="125"/>
       <source>Install</source>
-      <translation>Instalează</translation>
+      <translation type="unfinished">Install</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="138"/>
       <source>Cancel</source>
-      <translation>Anulează</translation>
+      <translation type="unfinished">Cancel</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="117"/>
@@ -555,7 +555,7 @@
     <message>
       <location filename="../src/launch_process_dialog.ui" line="85"/>
       <source>Cancel</source>
-      <translation>Anulează</translation>
+      <translation type="unfinished">Cancel</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
@@ -584,12 +584,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="69"/>
       <source>File</source>
-      <translation>Fișier</translation>
+      <translation type="unfinished">File</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="73"/>
       <source>Install</source>
-      <translation>Instalează</translation>
+      <translation type="unfinished">Install</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="83"/>
@@ -599,7 +599,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="100"/>
       <source>View</source>
-      <translation>Vizualizare</translation>
+      <translation type="unfinished">View</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="104"/>
@@ -609,7 +609,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="117"/>
       <source>Help</source>
-      <translation>Ajutor</translation>
+      <translation type="unfinished">Help</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="124"/>
@@ -654,22 +654,22 @@
     <message>
       <location filename="../src/mainwindow.ui" line="182"/>
       <source>Settings</source>
-      <translation>Configurari</translation>
+      <translation type="unfinished">Settings</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="190"/>
       <source>Pause</source>
-      <translation>Întrerupeți</translation>
+      <translation type="unfinished">Pause</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="195"/>
       <source>Stop</source>
-      <translation>Oprește</translation>
+      <translation type="unfinished">Stop</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="200"/>
       <source>Restart</source>
-      <translation>Restart</translation>
+      <translation type="unfinished">Restart</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="205"/>
@@ -679,12 +679,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="210"/>
       <source>Mutexes</source>
-      <translation>Mutexes</translation>
+      <translation type="unfinished">Mutexes</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="215"/>
       <source>Chunks</source>
-      <translation>Bucăți</translation>
+      <translation type="unfinished">Chunks</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="220"/>
@@ -857,7 +857,7 @@
       <location filename="../src/mainwindow.cpp" line="828"/>
       <location filename="../src/mainwindow.cpp" line="1087"/>
       <source>Cancel</source>
-      <translation>Anulează</translation>
+      <translation type="unfinished">Cancel</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="831"/>
@@ -1070,7 +1070,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
       <source>Search</source>
-      <translation>Căutare</translation>
+      <translation type="unfinished">Search</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="66"/>
@@ -1080,7 +1080,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="71"/>
       <source>Name</source>
-      <translation>Nume</translation>
+      <translation type="unfinished">Name</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="76"/>
@@ -1133,12 +1133,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="20"/>
       <source>Settings</source>
-      <translation>Configurari</translation>
+      <translation type="unfinished">Settings</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="36"/>
       <source>General</source>
-      <translation>Generale</translation>
+      <translation type="unfinished">General</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="48"/>
@@ -1326,17 +1326,17 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="684"/>
       <source>Theme</source>
-      <translation>Temă</translation>
+      <translation type="unfinished">Theme</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="692"/>
       <source>Light</source>
-      <translation>Luminoasă</translation>
+      <translation type="unfinished">Light</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="697"/>
       <source>Dark</source>
-      <translation>Întunecat</translation>
+      <translation type="unfinished">Dark</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="633"/>
@@ -1428,7 +1428,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="777"/>
       <source>Devices</source>
-      <translation>Dispozitive</translation>
+      <translation type="unfinished">Devices</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="794"/>
@@ -1439,7 +1439,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
       <location filename="../src/settings_dialog.ui" line="817"/>
       <location filename="../src/settings_dialog.ui" line="1291"/>
       <source>Rename</source>
-      <translation>Redenumire</translation>
+      <translation type="unfinished">Rename</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="828"/>
@@ -1557,7 +1557,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
       <location filename="../src/settings_dialog.ui" line="1103"/>
       <location filename="../src/settings_dialog.ui" line="1144"/>
       <source>Reset</source>
-      <translation>Reset</translation>
+      <translation type="unfinished">Reset</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1117"/>
@@ -1966,7 +1966,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/update_dialog.ui" line="149"/>
       <source>Cancel</source>
-      <translation>Anulează</translation>
+      <translation type="unfinished">Cancel</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="107"/>

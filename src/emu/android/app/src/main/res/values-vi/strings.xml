@@ -20,6 +20,7 @@
     <string name="warning">Cảnh báo</string>
     <string name="scoped_storage_warning">Dữ liệu người dùng của bạn đang được lưu trữ ở nơi mà <b>sẽ bị xóa</b> sau khi bạn gỡ ứng dụng:\n</string>
     <string name="install_ng_game">Install N-Gage game</string>
+    <string name="notify_dialog_title">Notification</string>
     <string name="install">Cài đặt</string>
     <string name="rescan_devices">Quét lại các thiết bị</string>
     <string name="device_dump">Dump của thiết bị</string>
@@ -58,6 +59,7 @@
     <string name="pref_wakelock">Giữ màn hình bật</string>
     <string name="pref_enable_vibration">Bật rung</string>
     <string name="pref_emulator_dir">Thư mục làm việc</string>
+    <string name="pref_emulator_dir_cant_change">The working directory can\'t be changed!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Bật màng lọc hàng xóm gần nhất</string>
     <string name="pref_system_language_option_name">Ngôn ngữ</string>
     <string name="pref_system_real_time_accuracy_str">Độ chính xác về thời gian thực</string>
@@ -68,7 +70,7 @@
     <string name="pref_system_setting_inheritance_option_name">Kế thừa hiệu chỉnh</string>
     <string name="emulated_screen_rotation_item_name">Xoay màn hình</string>
     <string name="emulated_screen_refresh_rate_item_name">Tần số làm mới</string>
-    <string name="pref_device_display_name">Tên điện thoại thân thiện</string>
+    <string name="pref_device_display_name">Phone name</string>
     <string name="hide_system_apps">Ẩn ứng dụng hệ thống</string>
     <string name="pref_bt_netplay_direct_ips_manager">Quản lý Direct IP</string>
     <string name="enter_address">Nhập địa chỉ</string>
@@ -131,6 +133,7 @@
     <string name="pref_screen_scale_type_fill">Làm đầy cửa sổ (bỏ qua tỉ lệ khung hình)</string>
     <string name="pref_screen_scale_type_fit">Vừa với cửa sổ</string>
     <string name="pref_screen_scale_type_none">Như gốc</string>
+    <string name="pref_screen_use_notch">Use notch</string>
     <string name="pref_screen_scale_use_shader">Sử dụng hiệu ứng đổ bóng để tăng chất lượng hình ảnh</string>
     <string name="pref_screen_upscale_shader">Nâng cấp hiệu ứng đổ bóng</string>
     <string name="pref_screen_default_shader">Mặc định</string>
