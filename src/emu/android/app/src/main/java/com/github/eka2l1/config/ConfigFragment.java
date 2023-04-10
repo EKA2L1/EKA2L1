@@ -119,7 +119,9 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
         super.onViewCreated(view, savedInstanceState);
         setHasOptionsMenu(true);
         ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
+        if (!(getActivity() instanceof ConfigActivity)) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
 
         Bundle args = getArguments();
         String action = args.getString(KEY_ACTION, "");

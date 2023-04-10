@@ -34,6 +34,9 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".config.ConfigActivity"
+            android:noHistory="true" />
+        <activity
             android:name=".filepicker.FilteredFilePickerActivity"
             android:theme="@style/FilePickerTheme" />
         <activity

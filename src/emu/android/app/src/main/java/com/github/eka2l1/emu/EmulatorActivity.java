@@ -33,7 +33,6 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.Display;
 import android.view.KeyEvent;
@@ -59,6 +58,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.github.eka2l1.R;
+import com.github.eka2l1.config.ConfigActivity;
 import com.github.eka2l1.config.ProfileModel;
 import com.github.eka2l1.config.ProfilesManager;
 import com.github.eka2l1.emu.overlay.FixedKeyboard;
@@ -107,7 +107,8 @@ public class EmulatorActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         Intent intent = getIntent();
-        if (intent.getBooleanExtra(KEY_APP_IS_SHORTCUT, false) || ACTION_LAUNCH_GAME.equals(intent.getAction())) {
+        boolean externalIntent = intent.getBooleanExtra(KEY_APP_IS_SHORTCUT, false) || ACTION_LAUNCH_GAME.equals(intent.getAction());
+        if (externalIntent) {
             Emulator.initializeForShortcutLaunch(this);
         }
 
@@ -116,6 +117,23 @@ public class EmulatorActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emulator);
         overlayView = findViewById(R.id.overlay);
+
+        uid = intent.getLongExtra(KEY_APP_UID, -1);
+        String uidStr = Long.toHexString(uid).toUpperCase();
+        File configDir = new File(Emulator.getConfigsDir(), uidStr);
+        String defProfile = dataStore.getString(PREF_DEFAULT_PROFILE, null);
+
+        if (externalIntent && (params = ProfilesManager.loadConfig(configDir)) == null) {
+            Intent configIntent = new Intent(this, ConfigActivity.class);
+            Bundle extras = Objects.requireNonNull(intent.getExtras());
+            extras.putString(KEY_ACTION, ACTION_EDIT);
+            configIntent.putExtras(extras);
+            startActivity(configIntent);
+            finish();
+            return;
+        } else {
+            params = ProfilesManager.loadConfigOrDefault(configDir, defProfile);
+        }
 
         SurfaceView surfaceView = findViewById(R.id.surface_view);
         ViewCallbacks callbacks = new ViewCallbacks(surfaceView);
@@ -142,8 +160,6 @@ public class EmulatorActivity extends AppCompatActivity {
         Emulator.setContext(this);
         EmulatorCamera.setActivity(this);
 
-        uid = intent.getLongExtra(KEY_APP_UID, -1);
-
         String name = intent.getStringExtra(KEY_APP_NAME);
         String deviceCode = intent.getStringExtra(KEY_DEVICE_CODE);
 
@@ -164,10 +180,6 @@ public class EmulatorActivity extends AppCompatActivity {
         displayWidth = display.getWidth();
         displayHeight = display.getHeight();
 
-        String uidStr = Long.toHexString(uid).toUpperCase();
-        File configDir = new File(Emulator.getConfigsDir(), uidStr);
-        String defProfile = dataStore.getString(PREF_DEFAULT_PROFILE, null);
-        params = ProfilesManager.loadConfigOrDefault(configDir, defProfile);
         androidToSymbian = (params.keyMappings != null) ? params.keyMappings : KeyMapper.getDefaultKeyMap();
 
         if (params.showKeyboard) {
