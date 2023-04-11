@@ -122,7 +122,7 @@ namespace eka2l1::drivers::graphics {
       return true;
     }
 
-    void gl_context_agl::update() {
+    void gl_context_agl::update(const std::uint32_t new_width, const std::uint32_t new_height) {
       if (!m_view)
         return;
 

@@ -91,6 +91,8 @@ namespace eka2l1::drivers {
             return;
         }
 
+        context_->make_current();
+
         init_gl_graphics_library(context_->gl_mode());
         list_queue.max_pending_count_ = 128;
 
@@ -415,13 +417,21 @@ namespace eka2l1::drivers {
             surface_update_needed = false;
         }
 
-        context_->update();
+        if ((new_surface_size_.x > 0) && (new_surface_size_.y > 0)) {
+            context_->update(static_cast<std::uint32_t>(new_surface_size_.x), static_cast<std::uint32_t>(new_surface_size_.y));
+            new_surface_size_ = { -1, -1 };
+        }
+
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     void ogl_graphics_driver::update_surface(void *new_surface_set) {
         new_surface = new_surface_set;
         surface_update_needed = true;
+    }
+
+    void ogl_graphics_driver::update_surface_size(const eka2l1::vec2 &new_size) {
+        new_surface_size_ = new_size;
     }
 
     void ogl_graphics_driver::draw_rectangle(const eka2l1::rect &brush_rect) {

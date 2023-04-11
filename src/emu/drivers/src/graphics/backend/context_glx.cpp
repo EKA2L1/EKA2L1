@@ -308,7 +308,7 @@ namespace eka2l1::drivers::graphics {
         return glXMakeCurrent(m_display, None, nullptr);
     }
 
-    void gl_context_glx::update() {
+    void gl_context_glx::update(const std::uint32_t new_width, const std::uint32_t new_height) {
         m_render_window->update_dimensions();
         m_backbuffer_width = m_render_window->get_width();
         m_backbuffer_height = m_render_window->get_height();

@@ -172,6 +172,14 @@ namespace eka2l1::desktop {
         // We got window and context ready (OpenGL, let makes stuff now)
         // TODO: Configurable
         state.graphics_driver = drivers::create_graphics_driver(drivers::graphic_api::opengl, state.window->get_window_system_info());
+        state.graphics_driver->update_surface_size(state.window->window_fb_size());
+
+        // Now we start set the hook
+        state.window->resize_hook = [](void *userdata, const eka2l1::vec2 &size) {
+            emulator *state = reinterpret_cast<emulator *>(userdata);
+            state->graphics_driver->update_surface_size(size);
+        };
+
         state.symsys->set_graphics_driver(state.graphics_driver.get());
 
         drivers::emu_window *window = state.window;

@@ -53,7 +53,7 @@ namespace eka2l1::drivers::graphics {
         virtual bool clear_current() = 0;
 
         virtual void swap_buffers() = 0;
-        virtual void update() = 0;
+        virtual void update(const std::uint32_t new_width, const std::uint32_t new_height) = 0;
         virtual void set_swap_interval(const std::int32_t interval) = 0;
 
         virtual bool is_headless() const = 0;

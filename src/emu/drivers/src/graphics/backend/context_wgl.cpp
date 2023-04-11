@@ -430,7 +430,7 @@ namespace eka2l1::drivers::graphics {
     }
 
     // Update window width, size and etc. Called from Render.cpp
-    void gl_context_wgl::update() {
+    void gl_context_wgl::update(const std::uint32_t new_width, const std::uint32_t new_height) {
         RECT rcWindow;
         GetClientRect(m_window_handle, &rcWindow);
 

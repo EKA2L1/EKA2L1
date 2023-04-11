@@ -29,6 +29,5 @@ namespace eka2l1::drivers::graphics {
 
     protected:
         virtual void create_surface() override;
-        virtual void destroy_surface() override;
     };
 }
