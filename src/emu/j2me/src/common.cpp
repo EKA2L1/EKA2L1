@@ -24,6 +24,7 @@
 #include <common/fileutils.h>
 #include <common/path.h>
 #include <common/pystr.h>
+#include <common/log.h>
 #include <config/config.h>
 
 #include <fmt/format.h>

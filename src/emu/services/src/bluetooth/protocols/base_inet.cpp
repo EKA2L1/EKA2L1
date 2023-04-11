@@ -25,6 +25,7 @@
 #include <utils/err.h>
 #include <utils/reqsts.h>
 
+#include <common/log.h>
 #include <kernel/kernel.h>
 
 extern "C" {

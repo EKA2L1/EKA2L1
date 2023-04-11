@@ -22,7 +22,6 @@
 
 #include <common/buffer.h>
 #include <common/chunkyseri.h>
-#include <common/log.h>
 #include <common/unicode.h>
 #include <mem/ptr.h>
 

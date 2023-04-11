@@ -231,7 +231,7 @@ namespace eka2l1::common::armgen {
         {
             type_ = TYPE_RSR;
 
-            LOG_ERROR_IF(COMMON, !(type_ != ST_RRX), "Invalid operand2: RRX does not take a register shift amount");
+            LOG_ERROR_IF(COMMON, !(stype != ST_RRX), "Invalid operand2: RRX does not take a register shift amount");
 
             index_or_shift_ = shift_reg;
             shift_ = stype;

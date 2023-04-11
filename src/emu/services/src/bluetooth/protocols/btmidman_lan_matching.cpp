@@ -19,6 +19,7 @@
 
 #include <services/bluetooth/protocols/btmidman_inet.h>
 #include <services/bluetooth/protocols/common_inet.h>
+#include <common/log.h>
 
 namespace eka2l1::epoc::bt {
     void midman_inet::setup_lan_discovery() {

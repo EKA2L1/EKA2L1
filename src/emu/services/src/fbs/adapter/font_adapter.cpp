@@ -20,6 +20,7 @@
 #include <services/fbs/adapter/font_adapter.h>
 #include <services/fbs/adapter/gdr_font_adapter.h>
 #include <services/fbs/adapter/stb_font_adapter.h>
+#include <common/log.h>
 
 namespace eka2l1::epoc::adapter {
     bool font_file_adapter_base::make_text_shape(const std::size_t face_index, const open_font_shaping_parameter &params, const std::u16string &text, const std::uint32_t metric_identifier, open_font_shaping_header &shaping_header, std::uint8_t *shaping_data) {
