@@ -28,7 +28,6 @@
 #include <clocale>
 #include <cwctype>
 #include <memory>
-#include <regex>
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
@@ -45,6 +44,7 @@
 #include <utils/err.h>
 
 #include <services/fs/sec.h>
+#include <re2/re2.h>
 
 namespace eka2l1 {
     bool check_path_capabilities_pass(const std::u16string &path, kernel::process *pr, epoc::security_policy &private_policy, epoc::security_policy &sys_policy, epoc::security_policy &resource_policy) {
@@ -618,9 +618,9 @@ namespace eka2l1 {
             return;
         }
 
-        std::regex pattern("[<>:\"/|*?]+");
+        RE2 pattern("[<>:\"/|*?]+");
         std::string path_utf8 = common::ucs2_to_utf8(path.value());
-        std::uint32_t valid = !(std::regex_match(path_utf8, pattern) || path->empty());
+        std::uint32_t valid = !(RE2::PartialMatch(path_utf8, pattern) || path->empty());
 
         ctx->write_data_to_descriptor_argument<std::uint32_t>(1, valid);
         ctx->complete(epoc::error_none);

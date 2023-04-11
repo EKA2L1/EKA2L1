@@ -92,3 +92,6 @@
 [submodule "src/external/uvw"]
 	path = src/external/uvw
 	url = https://github.com/skypjack/uvw/
+[submodule "src/external/re2"]
+	path = src/external/re2
+	url = https://github.com/google/re2

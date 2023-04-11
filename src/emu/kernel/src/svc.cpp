@@ -5424,8 +5424,7 @@ namespace eka2l1::epoc {
         std::string source = str_des->to_std_string(crr_process);
         std::string sequence_search = seq_des->to_std_string(crr_process);
 
-        const std::size_t pos = common::match_wildcard_in_string(common::utf8_to_wstr(source),
-            common::utf8_to_wstr(sequence_search), is_fold);
+        const std::size_t pos = common::wildcard_match(source, sequence_search, is_fold);
 
         if (pos == std::wstring::npos) {
             return epoc::error_not_found;
@@ -5440,7 +5439,7 @@ namespace eka2l1::epoc {
         std::u16string source = str_des->to_std_string(crr_process);
         std::u16string sequence_search = seq_des->to_std_string(crr_process);
 
-        const std::size_t pos = common::match_wildcard_in_string(common::ucs2_to_wstr(source), common::ucs2_to_wstr(sequence_search),
+        const std::size_t pos = common::wildcard_match(common::ucs2_to_wstr(source), common::ucs2_to_wstr(sequence_search),
             is_fold);
 
         if (pos == std::wstring::npos) {
@@ -5469,7 +5468,7 @@ namespace eka2l1::epoc {
         to_find_str = std::basic_string<T>(1, static_cast<T>('(')) + to_find_str;
         to_find_str += std::basic_string<T>(1, static_cast<T>(')'));
 
-        const std::size_t pos = common::match_wildcard_in_string(cvt_func(source_str), cvt_func(to_find_str), is_fold);
+        const std::size_t pos = common::wildcard_match(cvt_func(source_str), cvt_func(to_find_str), is_fold);
 
         if (pos == std::basic_string<T>::npos) {
             return epoc::error_not_found;
@@ -5478,8 +5477,12 @@ namespace eka2l1::epoc {
         return static_cast<std::int32_t>(pos);
     }
 
+    inline std::string rereturn_string_function(std::string value) {
+        return value;
+    }
+
     BRIDGE_FUNC(std::int32_t, desc8_find, epoc::desc8 *dd, const char *str, const std::int32_t length, const bool is_fold) {
-        return desc_find(kern, common::utf8_to_wstr, dd, str, length, is_fold);
+        return desc_find(kern, rereturn_string_function, dd, str, length, is_fold);
     }
 
     BRIDGE_FUNC(std::int32_t, desc16_find, epoc::desc16 *dd, const char16_t *str, const std::int32_t length, const bool is_fold) {

@@ -118,7 +118,7 @@ endif()
 
 target_include_directories(common PUBLIC include)
 target_link_libraries(common PUBLIC fmt miniz spdlog)
-target_link_libraries(common PRIVATE pugixml miniupnpc::miniupnpc)
+target_link_libraries(common PRIVATE pugixml miniupnpc::miniupnpc re2::re2)
 
 if (UNIX OR APPLE)
     set_property(TARGET common PROPERTY POSITION_INDEPENDENT_CODE ON)

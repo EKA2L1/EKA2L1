@@ -306,6 +306,10 @@ target_include_directories(libtess2 PUBLIC libtess2/Include)
 # RectangleBinPack
 add_subdirectory(RectangleBinPack)
 
+# Re2
+option(RE2_BUILD_TESTING "enable testing for RE2" OFF)
+add_subdirectory(re2)
+
 set (capstone_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/capstone/include" PARENT_SCOPE)
 set (YAML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp/include" PARENT_SCOPE)
 set (LIBCXXABI_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libcxxabi/include" PARENT_SCOPE)

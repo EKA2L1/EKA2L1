@@ -28,9 +28,13 @@ namespace eka2l1::common {
      * \brief Convert a wildcard string to regex 
      */
     template <typename T>
-    std::basic_string<T> wildcard_to_regex_string(std::basic_string<T> regexstr);
+    std::basic_string<T> wildcard_to_regex_string(std::basic_string<T> regexstr, bool case_sensitive = true);
 
     template <typename T>
-    std::size_t match_wildcard_in_string(const std::basic_string<T> &reference, const std::basic_string<T> &match_pattern,
+    bool full_wildcard_match(const std::basic_string<T> &reference, const std::basic_string<T> &match_pattern,
+        const bool is_fold);
+
+    template <typename T>
+    std::size_t wildcard_match(const std::basic_string<T> &reference, const std::basic_string<T> &match_pattern,
         const bool is_fold);
 }

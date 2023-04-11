@@ -25,6 +25,7 @@
 #include <common/path.h>
 #include <common/platform.h>
 #include <common/time.h>
+#include <re2/re2.h>
 
 #include <fstream>
 
@@ -46,7 +47,6 @@
 
 #include <stack>
 #include <cstring>
-#include <regex>
 
 #include <common/pystr.h>
 #include <common/wildcard.h>
@@ -174,7 +174,7 @@ namespace eka2l1::common {
 
     struct standard_dir_iterator: public dir_iterator {
     protected:
-        std::regex match_regex;
+        std::shared_ptr<RE2> match_regex;
 
     public:
         void *handle;
@@ -200,6 +200,7 @@ namespace eka2l1::common {
 
     standard_dir_iterator::standard_dir_iterator(const std::string &name)
         : dir_iterator(name)
+        , match_regex(nullptr)
         , handle(nullptr)
         , eof(false) {
         dir_name = transform_separators<char>(dir_name, false, get_separator);
@@ -209,11 +210,10 @@ namespace eka2l1::common {
         std::string match_pattern = eka2l1::filename(dir_name);
         dir_name = eka2l1::file_directory(dir_name);
 
-        if (match_pattern.empty()) {
-            match_pattern = "*";
+        if (!match_pattern.empty()) {
+            match_regex = std::make_shared<RE2>(common::wildcard_to_regex_string(match_pattern, true));
         }
 
-        match_regex = std::regex(common::wildcard_to_regex_string(match_pattern), std::regex_constants::icase);
         handle = reinterpret_cast<void *>(opendir(dir_name.c_str()));
 
         if (handle) {
@@ -224,7 +224,7 @@ namespace eka2l1::common {
 
         struct dirent *d = reinterpret_cast<decltype(d)>(find_data);
 
-        while (d && !std::regex_match(d->d_name, match_regex) && is_valid()) {
+        while (d && is_valid() && match_regex && !RE2::FullMatch(d->d_name, *match_regex)) {
             cycles_to_next_entry();
             d = reinterpret_cast<decltype(d)>(find_data);
         };
@@ -331,7 +331,7 @@ namespace eka2l1::common {
         do {
             cycles_to_next_entry();
             d = reinterpret_cast<struct dirent *>(find_data);
-        } while (d && !std::regex_match(d->d_name, match_regex));
+        } while (d && match_regex && !RE2::FullMatch(d->d_name, *match_regex));
 #endif
 
         return 0;

@@ -338,7 +338,8 @@ target_link_libraries(epocservs PRIVATE
         stb
         xxHash
         pugixml
-        sqlite3)
+        sqlite3
+        re2::re2)
 
 if (WIN32)
         target_link_libraries(epocservs PRIVATE Ws2_32.lib)
