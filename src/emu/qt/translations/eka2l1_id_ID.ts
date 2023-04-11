@@ -121,7 +121,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="834"/>
       <source>Rename</source>
-      <translation>Ganti nama</translation>
+      <translation>Ubah nama</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="835"/>
@@ -764,7 +764,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="345"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
-      <translation>Beberapa pemetaan tombol dipautkan dengan tombol tetikus. Sehingga layar sentuh dinonaktifkan.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Layar sentuh dapat diaktifkan kembali dengan memetakan tombol tetikus dengan tombol papan ketik.</translation>
+      <translation>Beberapa pemetaan tombol dipautkan dengan tombol tetikus. Sehingga layar sentuh dinonaktifkan.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Layar sentuh bisa diaktifkan ulang dengan memetakan tombol tetikus dengan tombol papan ketik.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="346"/>
@@ -1007,7 +1007,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1500"/>
       <source>The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</source>
-      <translation>Perangkat tidak memiliki layanan pengelola bluetooth! Bluetooth tidak didukung.</translation>
+      <translation>Perangkat yang diemulasi tidak ada layanan pengelola bluetooth! Bluetooth tidak didukung.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1617"/>
@@ -1351,27 +1351,27 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="491"/>
       <source>Image</source>
-      <translation type="unfinished">Image</translation>
+      <translation>Gambar</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="527"/>
       <source>Color</source>
-      <translation type="unfinished">Color</translation>
+      <translation>Warna</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="562"/>
       <source>Opacity</source>
-      <translation type="unfinished">Opacity</translation>
+      <translation>Kelegapan</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="585"/>
       <source>TextLabel</source>
-      <translation type="unfinished">TextLabel</translation>
+      <translation>TextLabel</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="639"/>
       <source>Disable window name with emulator version</source>
-      <translation type="unfinished">Disable window name with emulator version</translation>
+      <translation>Nonaktifkan nama jendela dengan versi emulator</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="646"/>
@@ -1439,7 +1439,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
       <location filename="../src/settings_dialog.ui" line="817"/>
       <location filename="../src/settings_dialog.ui" line="1291"/>
       <source>Rename</source>
-      <translation>Ganti nama</translation>
+      <translation>Ubah nama</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="828"/>
@@ -1878,7 +1878,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="1120"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
-      <translation>Apakah Anda yakin? Tema Anda saat ini akan diatur ulang, semua kotak pesan yang telah dinonaktifkan akan diaktifkan ulang, dan semua mount tadi akan dikosongkan.</translation>
+      <translation>Apakah Anda yakin? Tema Anda akan diatur ulang, semua kotak pesan yang telah dinonaktifkan akan diaktifkan ulang, dan semua yang di-mount akan dikosongkan.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1137"/>
@@ -1923,7 +1923,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="1383"/>
       <source>Choose the background image</source>
-      <translation type="unfinished">Choose the background image</translation>
+      <translation>Pilih gambar latar belakang</translation>
     </message>
   </context>
   <context>
