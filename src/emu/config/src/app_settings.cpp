@@ -80,12 +80,17 @@ namespace eka2l1::config {
     static const char *COMPAT_DIR_PATH = "compat\\";
 
     bool app_settings::load_all_settings() {
-        if (!common::exists(COMPAT_DIR_PATH)) {
-            common::create_directories(COMPAT_DIR_PATH);
+        std::string current_dir;
+        common::get_current_directory(current_dir);
+
+        std::string compat_full = eka2l1::absolute_path(COMPAT_DIR_PATH, current_dir);
+
+        if (!common::exists(compat_full)) {
+            common::create_directories(compat_full);
             return true;
         }
 
-        auto setting_folder = common::make_directory_iterator(COMPAT_DIR_PATH);
+        auto setting_folder = common::make_directory_iterator(compat_full);
         if (!setting_folder) {
             return false;
         }

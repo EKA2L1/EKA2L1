@@ -234,10 +234,11 @@ namespace eka2l1::common {
         std::string name_wildcard = name;
 
         if (eka2l1::filename(name).empty()) {
-            name_wildcard += "\\*";
+            name_wildcard = eka2l1::add_path(name_wildcard, "*");
         }
 
         const std::wstring name_wildcard_w = common::utf8_to_wstr(name_wildcard);
+        dir_name = eka2l1::file_directory(dir_name);
 
         handle = reinterpret_cast<void *>(FindFirstFileExW(name_wildcard_w.c_str(), FindExInfoBasic,
             reinterpret_cast<LPWIN32_FIND_DATAW>(find_data), FindExSearchNameMatch, NULL,
