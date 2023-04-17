@@ -412,7 +412,7 @@ namespace eka2l1::dispatch {
         }
 
         eplayer->stored_repeat_times = times;
-        eplayer->stored_trailing_silence_us = silence_interval_micros_low | static_cast<std::int64_t>(silence_micros_high << 32);
+        eplayer->stored_trailing_silence_us = silence_interval_micros_low | (static_cast<std::int64_t>(silence_micros_high) << 32);
 
         if (eplayer->impl_)
             eplayer->impl_->set_repeat(times, eplayer->stored_trailing_silence_us);

@@ -92,4 +92,5 @@ target_link_libraries(epockern PRIVATE
         epocloader
         epocmem
         epoctiming
+        re2::re2
         )

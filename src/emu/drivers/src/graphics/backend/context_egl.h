@@ -28,7 +28,7 @@ namespace eka2l1::drivers::graphics {
     class gl_context_egl : public gl_context {
     public:
         explicit gl_context_egl() = default;
-        explicit gl_context_egl(const window_system_info& wsi, bool stereo, bool core);
+        explicit gl_context_egl(const window_system_info& wsi, bool stereo, bool core, bool gles);
 
         ~gl_context_egl() override;
         bool is_headless() const override;
@@ -38,7 +38,7 @@ namespace eka2l1::drivers::graphics {
         bool make_current() override;
         bool clear_current() override;
 
-        void update() override;
+        virtual void update(const std::uint32_t new_width, const std::uint32_t new_height) override;
         void update_surface(void *new_surface) override;
 
         void swap_buffers() override;
@@ -51,11 +51,18 @@ namespace eka2l1::drivers::graphics {
         EGLDisplay egl_display;
 
         void *render_window;
+        window_system_info wsi;
+
+        std::pair<int, int> context_version;
 
         void init_gl();
-        void init_surface();
+        bool init_surface();
+        bool init_gl_for_shared(gl_context_egl *parent);
+        bool create_context(EGLContext shared = nullptr, std::pair<int, int> *target_version = nullptr);
 
-        virtual void create_surface() {}
-        virtual void destroy_surface() {}
+        virtual void create_surface();
+        virtual void destroy_surface();
+
+        virtual void prepare_render_window() {}
     };
 }

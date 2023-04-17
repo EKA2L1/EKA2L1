@@ -24,7 +24,7 @@
 
 namespace eka2l1::drivers::graphics {
     gl_context_egl_android::gl_context_egl_android(const window_system_info& wsi, bool stereo, bool core)
-        : gl_context_egl(wsi, stereo, core) {
+        : gl_context_egl(wsi, stereo, core, true) {
     }
 
     void gl_context_egl_android::create_surface() {
@@ -36,34 +36,6 @@ namespace eka2l1::drivers::graphics {
         eglGetConfigAttrib(egl_display, egl_config, EGL_NATIVE_VISUAL_ID, &format);
         ANativeWindow_setBuffersGeometry(reinterpret_cast<ANativeWindow*>(render_window), 0, 0, format);
 
-        if (egl_surface = eglCreateWindowSurface(egl_display, egl_config, reinterpret_cast<EGLNativeWindowType>(render_window), 0);
-            egl_surface == EGL_NO_SURFACE) {
-            return;
-        }
-
-        EGLint surface_width = 1;
-        EGLint surface_height = 1;
-
-        if (!eglQuerySurface(egl_display, egl_surface, EGL_WIDTH, &surface_width) ||
-            !eglQuerySurface(egl_display, egl_surface, EGL_HEIGHT, &surface_height))  {
-            LOG_ERROR(DRIVER_GRAPHICS, "Failed to retrieve surface width or height.");
-            return;
-        }
-
-        m_backbuffer_width = static_cast<int>(surface_width);
-        m_backbuffer_height = static_cast<int>(surface_height);
-    }
-
-    void gl_context_egl_android::destroy_surface() {
-        if (!egl_surface) {
-            return;
-        }
-        if (eglGetCurrentSurface(EGL_DRAW) == egl_surface) {
-            eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-        }
-        if (!eglDestroySurface(egl_display, egl_surface)) {
-            LOG_CRITICAL(DRIVER_GRAPHICS, "eglDestroySurface() failed");
-        }
-        egl_surface = EGL_NO_SURFACE;
+        gl_context_egl::create_surface();
     }
 }

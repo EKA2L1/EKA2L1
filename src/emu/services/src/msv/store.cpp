@@ -22,6 +22,8 @@
 #include <utils/des.h>
 #include <utils/cardinality.h>
 
+#include <common/log.h>
+
 namespace eka2l1::epoc::msv {
     static constexpr std::uint32_t STORE_FILE_UID = 0x10003C68;
     static const std::uint32_t STANDARD_HEADER_UID[4] = { STORE_FILE_UID, STORE_FILE_UID, 0, 0x008D8E4B };

@@ -272,6 +272,9 @@ namespace eka2l1::drivers {
 
         // Scale of the render surface. For hidpi systems, this will be >1.
         float render_surface_scale = 1.0f;
+
+        std::uint32_t surface_width = 0;
+        std::uint32_t surface_height = 0;
     };
 
     using channel_swizzles = std::array<channel_swizzle, 4>;

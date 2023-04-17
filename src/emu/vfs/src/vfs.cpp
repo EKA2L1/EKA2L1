@@ -36,7 +36,6 @@
 #include <iostream>
 #include <map>
 #include <mutex>
-#include <regex>
 #include <stack>
 #include <thread>
 
@@ -474,7 +473,6 @@ namespace eka2l1 {
 
     /* DIRECTORY VFS */
     class physical_directory : public directory {
-        std::regex filter;
         std::string vir_path;
 
         std::unique_ptr<common::dir_iterator> iterator;
@@ -492,13 +490,12 @@ namespace eka2l1 {
             const std::string &vir_path, const std::string &filter, epoc::uid_type type,
             const std::uint32_t attrib)
             : directory(attrib)
-            , filter(common::wildcard_to_regex_string(common::lowercase_string(filter)))
             , vir_path(vir_path)
             , utype(type)
             , inst(inst)
             , peeking(false)
             , is_root(false) {
-            iterator = common::make_directory_iterator(phys_path);
+            iterator = common::make_directory_iterator(eka2l1::add_path(phys_path, filter));
             if (!iterator) {
                 LOG_ERROR(VFS, "Unable to open directory {}", phys_path);
                 return;
@@ -539,16 +536,6 @@ namespace eka2l1 {
                     if (!(attribute & io_attrib_include_file) && entry.type == common::FILE_REGULAR) {
                         continue;
                     }
-                }
-
-                // Quick hack: Regex dumb with null-terminated string
-                if (name.back() == '\0') {
-                    name.erase(name.length() - 1);
-                }
-
-                // If it doesn't meet the filter, continue until find one or there is no one
-                if (!std::regex_match(common::lowercase_string(name), filter)) {
-                    continue;
                 }
 
                 const std::u16string path_to_retinfo = common::utf8_to_ucs2(eka2l1::add_path(vir_path, name));

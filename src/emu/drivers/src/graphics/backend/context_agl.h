@@ -27,7 +27,7 @@ namespace eka2l1::drivers::graphics {
         bool make_current() override;
         bool clear_current() override;
 
-        void update() override;
+        void update(const std::uint32_t new_width, const std::uint32_t new_height) override;
 
         void swap_buffers() override;
         void set_swap_interval(const std::int32_t interval) override;

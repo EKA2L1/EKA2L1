@@ -612,8 +612,7 @@ namespace eka2l1::epoc {
 
                 name_copy_raw_w = common::ucs2_to_wstr(name_copy_raw);
             }
-            // Whole string should be matched => from position 0
-            if (common::match_wildcard_in_string(name_copy_raw_w, win_group_name_w, true) == 0) {
+            if (common::full_wildcard_match(name_copy_raw_w, win_group_name_w, true)) {
                 ctx.complete(group->id);
                 return;
             }

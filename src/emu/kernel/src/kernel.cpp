@@ -52,6 +52,8 @@
 #include <loader/e32img.h>
 #include <loader/romimage.h>
 
+#include <re2/re2.h>
+
 #include <common/time.h>
 #include <config/config.h>
 
@@ -1174,7 +1176,7 @@ namespace eka2l1 {
 
     std::optional<find_handle> kernel_system::find_object(const std::string &name, int start, kernel::object_type type, const bool use_full_name) {
         find_handle handle_find_info;
-        std::regex filter(common::wildcard_to_regex_string(name), std::regex_constants::icase);
+        RE2 filter(common::wildcard_to_regex_string(name, false));
         start = (start & FIND_HANDLE_IDX_MASK) + 1;
 
         // NOTE: See about the starting index of find handle info in the struct's document!
@@ -1188,7 +1190,7 @@ namespace eka2l1 {
             } else {                                                                               \
                 to_compare = rhs->name();                                                          \
             }                                                                                      \
-            return std::regex_match(to_compare, filter);                                           \
+            return RE2::FullMatch(to_compare, filter);                                           \
         });                                                                                        \
         if (res == obj_map.end())                                                                  \
             return std::nullopt;                                                                   \

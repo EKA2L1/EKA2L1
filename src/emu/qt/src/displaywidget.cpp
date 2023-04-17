@@ -89,6 +89,8 @@ eka2l1::drivers::window_system_info display_widget::get_window_system_info() {
     wsi.render_surface = wsi.render_window;
     #endif
     wsi.render_surface_scale = window ? static_cast<float>(window->devicePixelRatio()) : 1.0f;
+    wsi.surface_width = window ? static_cast<std::uint32_t>(static_cast<qreal>(window->width()) * wsi.render_surface_scale) : 0;
+    wsi.surface_height = window ? static_cast<std::uint32_t>(static_cast<qreal>(window->height()) * wsi.render_surface_scale) : 0;
 
     return wsi;
 }
@@ -96,6 +98,20 @@ eka2l1::drivers::window_system_info display_widget::get_window_system_info() {
 void display_widget::init(std::string title, eka2l1::vec2 size, const std::uint32_t flags) {
     resize(size.x, size.y);
     change_title(title);
+}
+
+void display_widget::resizeEvent(QResizeEvent *event) {
+    if (resize_hook) {
+        QWindow *window = windowHandle();
+
+        if (window) {
+            const qreal pixel_ratio = window->devicePixelRatio();
+            resize_hook(userdata_, { static_cast<int>(event->size().width() * pixel_ratio),
+                static_cast<int>(event->size().height() * pixel_ratio) });
+        } else {
+            resize_hook(userdata_, { event->size().width(), event->size().height() });
+        }
+    }
 }
 
 void display_widget::poll_events() {

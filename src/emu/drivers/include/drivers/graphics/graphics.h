@@ -160,6 +160,7 @@ namespace eka2l1::drivers {
 
         virtual void set_viewport(const eka2l1::rect &viewport) = 0;
         virtual void update_surface(void *surface) = 0;
+        virtual void update_surface_size(const eka2l1::vec2 &size) = 0;
 
         /**
          * \brief Submit a command list.

@@ -1,7 +1,6 @@
 #ifndef BTNETPLAY_FRIENDS_DIALOG_H
 #define BTNETPLAY_FRIENDS_DIALOG_H
 
-#include <services/bluetooth/protocols/btmidman_inet.h>
 #include <config/config.h>
 
 #include <QDialog>
@@ -10,6 +9,10 @@
 #include <QGridLayout>
 #include <QVBoxLayout>
 #include <QWidget>
+
+namespace eka2l1::epoc::bt {
+    class midman_inet;
+};
 
 struct btnetplay_address_field : public QWidget {
     Q_OBJECT;

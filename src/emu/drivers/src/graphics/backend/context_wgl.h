@@ -26,7 +26,7 @@ namespace eka2l1::drivers::graphics {
         void swap_buffers() override;
         void set_swap_interval(const std::int32_t interval) override;
 
-        void update() override;
+        void update(const std::uint32_t new_width, const std::uint32_t new_height) override;
 
     protected:
         static HGLRC create_core_context(HDC dc, HGLRC share_context);

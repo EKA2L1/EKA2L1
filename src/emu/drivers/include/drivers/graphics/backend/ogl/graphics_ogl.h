@@ -133,6 +133,8 @@ namespace eka2l1::drivers {
         GLuint index_buffer_current_;
 
         void *new_surface;
+        eka2l1::vec2 new_surface_size_;
+
         bool is_gles;
         bool support_line_width_;
 
@@ -204,6 +206,7 @@ namespace eka2l1::drivers {
         void dispatch(command &cmd) override;
         void bind_swapchain_framebuf() override;
         void update_surface(void *new_surface) override;
+        void update_surface_size(const eka2l1::vec2 &size) override;
         void wait_for(int *status) override;
         void set_upscale_shader(const std::string &name) override;
         std::string get_active_upscale_shader() const override;

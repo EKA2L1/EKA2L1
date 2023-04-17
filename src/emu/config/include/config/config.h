@@ -20,7 +20,6 @@
 #pragma once
 
 #include <common/configure.h>
-#include <common/log.h>
 #include <config/options.inl>
 
 #include <array>
@@ -29,6 +28,11 @@
 #include <optional>
 #include <string>
 #include <vector>
+
+namespace eka2l1 {
+    static constexpr const char *LOG_FILTER_NORMAL_USE_PRESET = "*:trace Emulated.Stdout:off Service.EFsrv:warn Service.Cenrep:off Kernel:Warn Service.Track:error";
+    static constexpr const char *LOG_FILTER_DEBUG_PRESET = "*:trace";
+}
 
 namespace eka2l1::config {
     static constexpr const char *KEYBIND_TYPE_KEY = "key";
