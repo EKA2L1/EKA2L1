@@ -148,24 +148,24 @@ namespace eka2l1::drivers::graphics {
             return;
         }
 
+        if (EGLint egl_num_configs{}; eglChooseConfig(egl_display,
+                                                      (m_opengl_mode == mode::opengl_es) ? egl_attribs_es.data() : egl_attribs.data(), &egl_config, 1,
+                                                      &egl_num_configs) != EGL_TRUE) {
+            LOG_CRITICAL(DRIVER_GRAPHICS, "eglChooseConfig() failed");
+            return;
+        }
+
         if (!create_context(nullptr, nullptr)) {
             return;
         }
     }
 
-    void gl_context_egl::init_surface() {
+    bool gl_context_egl::init_surface() {
         prepare_render_window();
 
         if (!render_window) {
             LOG_CRITICAL(DRIVER_GRAPHICS, "surface is nullptr");
-            return;
-        }
-
-        if (EGLint egl_num_configs{}; eglChooseConfig(egl_display,
-            (m_opengl_mode == mode::opengl_es) ? egl_attribs_es.data() : egl_attribs.data(), &egl_config, 1,
-            &egl_num_configs) != EGL_TRUE) {
-            LOG_CRITICAL(DRIVER_GRAPHICS, "eglChooseConfig() failed");
-            return;
+            return false;
         }
 
         destroy_surface();
@@ -173,13 +173,15 @@ namespace eka2l1::drivers::graphics {
 
         if (eglSurfaceAttrib(egl_display, egl_surface, EGL_SWAP_BEHAVIOR, EGL_BUFFER_DESTROYED) != EGL_TRUE) {
             LOG_CRITICAL(DRIVER_GRAPHICS, "eglSurfaceAttrib() failed");
-            return;
+            return false;
         }
 
         if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) != EGL_TRUE) {
             LOG_CRITICAL(DRIVER_GRAPHICS, "eglMakeCurrent() failed");
-            return;
+            return false;
         }
+
+        return true;
     }
 
     void gl_context_egl::update_surface(void *new_surface) {
@@ -193,8 +195,12 @@ namespace eka2l1::drivers::graphics {
 
     bool gl_context_egl::make_current() {
         if (!egl_surface) {
-            init_surface();
-            return true;
+            if (!init_surface()) {
+                // Bind with no surface
+                return eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
+            } else {
+                return true;
+            }
         }
         return eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
     }

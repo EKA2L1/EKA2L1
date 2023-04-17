@@ -56,7 +56,7 @@ namespace eka2l1::drivers::graphics {
         std::pair<int, int> context_version;
 
         void init_gl();
-        void init_surface();
+        bool init_surface();
         bool init_gl_for_shared(gl_context_egl *parent);
         bool create_context(EGLContext shared = nullptr, std::pair<int, int> *target_version = nullptr);
 
