@@ -179,7 +179,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="225"/>
       <source>Players with the same password will be able to see each others. This can be empty.</source>
-      <translation>Pemain dengan kata sandi yang sama dapat melihat satu sama lain. Ini boleh kosong.</translation>
+      <translation>Pemain dengan kata sandi yang sama bisa melihat satu sama lain. Ini boleh kosong.</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="228"/>
@@ -535,7 +535,7 @@
     <message>
       <location filename="../src/launch_process_dialog.ui" line="14"/>
       <source>Launch process</source>
-      <translation>Proses peluncur</translation>
+      <translation>Luncurkan proses</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="31"/>
@@ -545,7 +545,7 @@
     <message>
       <location filename="../src/launch_process_dialog.ui" line="51"/>
       <source>Executable path</source>
-      <translation>Jalur tereksekusikan</translation>
+      <translation>Jalur bisa dieksekusi</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="78"/>
@@ -566,7 +566,7 @@
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
       <source>The executable path field is empty!</source>
-      <translation>Bidang jalur yang dapat dieksekusi kosong!</translation>
+      <translation>Bidang jalur yang bisa dieksekusi kosong!</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="33"/>
@@ -739,7 +739,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="319"/>
       <source>Launch process</source>
-      <translation>Proses peluncur</translation>
+      <translation>Luncurkan proses</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="329"/>
@@ -810,7 +810,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="736"/>
       <source>Can&apos;t find the game data folder!</source>
-      <translation>Folder data permainan tidak bisa ditemukan!</translation>
+      <translation>Folder data permainan tidak ditemukan!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="740"/>
@@ -1291,7 +1291,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="540"/>
       <source>Pick</source>
-      <translation>Memilih</translation>
+      <translation>Pilih</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="598"/>
@@ -1306,7 +1306,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="612"/>
       <source>By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</source>
-      <translation>Secara bawaan, emulator hanya mengizinkan tampilan emulator diubah ke ukuran minimum layar ponsel, dikalikan dengan skala tampilan sistem untuk menyesuaikan sebagian besar mata pengguna</translation>
+      <translation>Secara bawaan, tampilan emulator hanya boleh diubah ke ukuran minimum layar ponsel dan dikalikan dengan skala tampilan sistem untuk menyesuaikan sebagian besar mata pengguna</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="615"/>
@@ -1371,7 +1371,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="639"/>
       <source>Disable window name with emulator version</source>
-      <translation>Nonaktifkan nama jendela dengan versi emulator</translation>
+      <translation>Nonaktifkan versi emulator di nama jendela</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="646"/>
@@ -1739,7 +1739,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="530"/>
       <source>Validation is in process. Please do not exit or launch applications until this operation is done.</source>
-      <translation>Pengabsahan sedang berlangsung. Mohon jangan keluar atau membuka aplikasi sampai ini selesai.</translation>
+      <translation>Pengabsahan sedang berlangsung. Mohon jangan keluar atau buka aplikasi sampai ini selesai.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="550"/>
