@@ -204,7 +204,7 @@
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
       <source>The Bluetooth netplay configuration has not been saved. Do you want to save?</source>
-      <translation>Setelan netplay Bluetooth belum disimpan. Apakah ingin Anda simpan?</translation>
+      <translation>Setelan netplay Bluetooth belum disimpan. Apakah ingin disimpan?</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="127"/>
@@ -441,7 +441,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="17"/>
       <source>Touch mapping editor</source>
-      <translation>Pengubah pemetaan sentuh</translation>
+      <translation>Sunting pemetaan sentuh</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="26"/>
@@ -535,7 +535,7 @@
     <message>
       <location filename="../src/launch_process_dialog.ui" line="14"/>
       <source>Launch process</source>
-      <translation>Luncurkan proses</translation>
+      <translation>Proses peluncur</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="31"/>
@@ -719,12 +719,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="299"/>
       <source>Button mapping editor</source>
-      <translation>Pengubah pemetaan tombol</translation>
+      <translation>Sunting pemetaan tombol</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="304"/>
       <source>Touch mapping editor</source>
-      <translation>Pengubah pemetaan sentuh</translation>
+      <translation>Sunting pemetaan sentuh</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="309"/>
@@ -739,7 +739,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="319"/>
       <source>Launch process</source>
-      <translation>Luncurkan proses</translation>
+      <translation>Proses peluncur</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="329"/>
@@ -1052,7 +1052,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1656"/>
       <source>The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</source>
-      <translation>JAR tidak bisa dipasang untuk perangkat saat ini! Hanya perangkat S60v1 yang bisa memasang JAR ini untuk sekarang</translation>
+      <translation>JAR ini tidak bisa dipasang untuk perangkat saat ini! Hanya di perangkat S60v1 yang bisa untuk sekarang</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1660"/>
@@ -1306,7 +1306,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="612"/>
       <source>By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</source>
-      <translation>Secara bawaan, tampilan emulator hanya boleh diubah ke ukuran minimum layar ponsel dan dikalikan dengan skala tampilan sistem untuk menyesuaikan sebagian besar mata pengguna</translation>
+      <translation>Secara bawaan, tampilan emulator hanya boleh diubah ke ukuran minimum layar ponsel lalu dikalikan dengan skala tampilan sistem untuk menyesuaikan sebagian besar mata pengguna</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="615"/>
@@ -1392,8 +1392,8 @@
       <location filename="../src/settings_dialog.ui" line="726"/>
       <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
-      <translation>Ini mengizinkan perangkat lunak yang diemulasi memiliki kemampuan merekam, dan mencegah kelap-kelip di beberapa permainan S60v1/S60v2 lama.
-Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</translation>
+      <translation>Ini mengizinkan perangkat lunak yang diemulasi mampu merekam, dan mencegah kelap-kelip di beberapa permainan S60v1/S60v2 lama.
+Opsi pilihan akan otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="730"/>
@@ -1607,7 +1607,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.ui" line="1322"/>
       <source>Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</source>
-      <translation>Catatan: Salah satu tombol ada yang dipautkan ke tombol tetikus, kebergunaan layar sentuh akan dinonaktifkan.</translation>
+      <translation>Catatan: Salah satu tombol ada yang dipaut ke tombol tetikus, kebergunaan layar sentuh akan dinonaktifkan.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1340"/>
@@ -1729,7 +1729,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="447"/>
       <source>This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</source>
-      <translation>Perubahan ini perlu meluncurkan ulang emulator.&lt;br&gt;Apakah Anda ingin lanjut?</translation>
+      <translation>Perubahan ini memerlukan emulator diluncur ulang.&lt;br&gt;Apakah Anda ingin lanjut?</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="529"/>
@@ -1797,7 +1797,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="867"/>
       <source>Profile rename failed</source>
-      <translation>Gagal mengganti nama profil</translation>
+      <translation>Gagal mengubah nama profil</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="882"/>
@@ -1898,7 +1898,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="1229"/>
       <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
-      <translation>Ketika aplikasi meminta memainkan MIDI baru, back-end yang dipilih akan digunakan!</translation>
+      <translation>Ketika aplikasi minta memainkan MIDI baru, back-end yang dipilih akan digunakan!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1242"/>
@@ -1951,7 +1951,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.ui" line="91"/>
       <source>Do not automatically check for update when startup</source>
-      <translation>Jangan otomatis memeriksa pembaruan saat startup</translation>
+      <translation>Jangan otomatis periksa pembaruan saat awal buka</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="126"/>
@@ -1986,7 +1986,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.cpp" line="152"/>
       <source>The release channel is not available. Please check your internet connection!</source>
-      <translation>Saluran rilis tidak tersedia. Harap periksa sambungan internet Anda!</translation>
+      <translation>Saluran rilis tidak tersedia. Mohon periksa sambungan internet Anda!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="158"/>
