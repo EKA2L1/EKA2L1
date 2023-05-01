@@ -368,11 +368,6 @@ namespace eka2l1::kernel {
     }
 
     std::size_t process::register_uid_type_change_callback(void *userdata, process_uid_type_change_callback callback) {
-        /** 
-         * 我要蟹汤米线。我俄。
-         * 先生，我要蟹汤米线。
-         * 中国人在看，我要蟹汤米线。 谢谢。
-         */
         auto the_pair = std::make_pair(userdata, callback);
         return uid_change_callbacks.add(the_pair);
     }
@@ -559,6 +554,8 @@ namespace eka2l1::kernel {
 
         if (ite == child_processes_.end()) {
             pr->parent_process_ = this;
+            pr->parent_process_->increase_access_count();
+
             child_processes_.push_back(pr);
         }
     }
@@ -576,6 +573,7 @@ namespace eka2l1::kernel {
                 child_array.erase(ite);
             }
 
+            parent_process_->decrease_access_count();
             parent_process_ = nullptr;
         }
     }
