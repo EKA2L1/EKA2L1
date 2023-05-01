@@ -380,6 +380,7 @@ namespace eka2l1 {
             LOG_WARN(SERVICE_FBS, "Large bitmap access mutex fail to create!");
         }
 
+        large_bitmap_access_mutex->increase_access_count();
         memory_system *mem = sys->get_memory_system();
 
         base_shared_chunk = reinterpret_cast<std::uint8_t *>(shared_chunk->host_base());
@@ -527,7 +528,7 @@ namespace eka2l1 {
             return reinterpret_cast<kernel::legacy::mutex*>(large_bitmap_access_mutex)->count() <= 0;
         }
 
-        return large_bitmap_access_mutex->count() < 0;
+        return large_bitmap_access_mutex->count() <= 0;
     }
 
     void fbs_server::spin_wait_heap(const std::uint32_t max_times) {
