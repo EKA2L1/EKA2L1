@@ -26,10 +26,6 @@
 namespace eka2l1::common {
     template <>
     std::basic_string<char> wildcard_to_regex_string(std::basic_string<char> regexstr, bool case_sensitive) {
-        if (!case_sensitive) {
-            regexstr.insert(0, "(?i)");
-        }
-
         regexstr = replace_all<char>(regexstr, "\\", "\\\\");
         regexstr = replace_all<char>(regexstr, ".", std::string("\\") + ".");
         regexstr = replace_all<char>(regexstr, "?", ".");
@@ -39,15 +35,15 @@ namespace eka2l1::common {
         regexstr = replace_all<char>(regexstr, "{", "\\{");
         regexstr = replace_all<char>(regexstr, "}", "\\}");
 
+        if (!case_sensitive) {
+            regexstr.insert(0, "(?i)");
+        }
+
         return regexstr;
     }
 
     template <>
     std::basic_string<wchar_t> wildcard_to_regex_string(std::basic_string<wchar_t> regexstr, bool case_sensitive) {
-        if (!case_sensitive) {
-            regexstr.insert(0, L"(?i)");
-        }
-
         regexstr = replace_all<wchar_t>(regexstr, L"\\", L"\\\\");
         regexstr = replace_all<wchar_t>(regexstr, L".", std::wstring(L"\\") + L".");
         regexstr = replace_all<wchar_t>(regexstr, L"?", L".");
@@ -56,6 +52,10 @@ namespace eka2l1::common {
         regexstr = replace_all<wchar_t>(regexstr, L"]", L"\\]");
         regexstr = replace_all<wchar_t>(regexstr, L"{", L"\\{");
         regexstr = replace_all<wchar_t>(regexstr, L"}", L"\\}");
+
+        if (!case_sensitive) {
+            regexstr.insert(0, L"(?i)");
+        }
 
         return regexstr;
     }
