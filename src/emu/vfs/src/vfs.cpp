@@ -857,6 +857,10 @@ namespace eka2l1 {
                 return std::unique_ptr<directory>(nullptr);
             }
 
+            if (!common::is_system_case_insensitive()) {
+                filter = common::lowercase_string(filter);
+            }
+
             return std::make_unique<physical_directory>(this, new_path_utf8,
                 common::ucs2_to_utf8(vir_path), filter, type, attrib);
         }
