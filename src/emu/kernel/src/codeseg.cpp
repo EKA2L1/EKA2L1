@@ -75,6 +75,10 @@ namespace eka2l1::kernel {
             kern->destroy(code_chunk_shared);
         }
 
+        for (auto &dep: dependencies) {
+            dep.dep_->decrease_access_count();
+        }
+
         return 0;
     }
 
@@ -110,8 +114,15 @@ namespace eka2l1::kernel {
 
             if (att) {
                 if (!mark) {
-                    if (att->get()->use_count == 0)
-                        att->get()->closing_lib_link.deque();
+                    if (att->get()->use_count == 0) {
+                        if (!att->get()->garbage_link.alone()) {
+                            kern->get_codedump_collector().remove(*(att->get()));
+                        }
+                        
+                        if (!att->get()->closing_lib_link.alone()) {
+                            att->get()->closing_lib_link.deque();
+                        }
+                    }
 
                     att->get()->use_count++;
                     mark = true;
@@ -143,6 +154,7 @@ namespace eka2l1::kernel {
         bool need_patch_and_reloc = true;
 
         unmark();
+        increase_access_count();
 
         if (code_addr == 0) {
             // EKA1 try to reuse code segment...
@@ -220,6 +232,12 @@ namespace eka2l1::kernel {
 
         LOG_INFO(KERNEL, "{} (UID3=0x{:X}) runtime code: 0x{:x}", name(), uids[2], the_addr_of_code_run);
         LOG_INFO(KERNEL, "{} (UID3=0x{:X}) runtime data: 0x{:x}", name(), uids[2], the_addr_of_data_run);
+
+        if (attaches.empty()) {
+            if (!garbage_link.alone()) {
+                kern->get_codedump_collector().remove(this);
+            }
+        }
 
         attaches.emplace_back(std::make_unique<attached_info>(this, new_foe, dt_chunk, code_chunk));
 
@@ -321,7 +339,51 @@ namespace eka2l1::kernel {
         return true;
     }
 
-    bool codeseg::detach(kernel::process *de_foe) {
+    void codeseg::free_attached_data(attached_info &info) {
+        auto ite = std::find_if(attaches.begin(), attaches.end(), [&](const std::unique_ptr<attached_info> &ptr) {
+            return ptr.get() == &info;
+        });
+
+        if (ite == attaches.end()) {
+            LOG_ERROR(KERNEL, "Unable to locate the attached info in the attach list!");
+            return;
+        }
+
+        if (info.data_chunk) {
+            if (info.data_chunk->position_access() != kernel::chunk_access::dll_static_data) {
+                kern->destroy(info.data_chunk);
+            } else {
+                memory_system *mem = kern->get_memory_system();
+
+                const std::uint32_t offset = data_base - info.data_chunk->base(info.attached_process).ptr_address();
+                const auto data_size_align = common::align(data_size + bss_size, mem->get_page_size());
+
+                info.data_chunk->decommit(offset, data_size_align);
+            }
+        }
+
+        if (!code_chunk_shared && info.code_chunk) {
+            kern->destroy(info.code_chunk);
+        }
+
+        info.closing_lib_link.deque();
+        info.process_link.deque();
+
+        attaches.erase(ite);
+
+        if (attaches.empty()) {
+            // No muda, add to collector for potential reuse
+            kern->get_codedump_collector().add(this);
+        }
+
+        decrease_access_count();
+    }
+
+    bool codeseg::detach(kernel::process *de_foe, const bool process_dead) {
+        if (mark) {
+            return true;
+        }
+
         auto attach_info_ptr = common::find_and_ret_if(attaches, [=](const std::unique_ptr<attached_info> &info) {
             return info->attached_process == de_foe;
         });
@@ -334,35 +396,24 @@ namespace eka2l1::kernel {
 
         // Free the chunk data
         if (!kern->wipeout_in_progress()) {
-            if (attach_info->data_chunk) {
-                if (attach_info->data_chunk->position_access() != kernel::chunk_access::dll_static_data) {
-                    kern->destroy(attach_info->data_chunk);
-                } else {
-                    memory_system *mem = kern->get_memory_system();
+            mark = true;
 
-                    const std::uint32_t offset = data_base - attach_info->data_chunk->base(de_foe).ptr_address();
-                    const auto data_size_align = common::align(data_size + bss_size, mem->get_page_size());
-
-                    attach_info->data_chunk->decommit(offset, data_size_align);
-                }
+            for (auto &dep : dependencies) {
+                dep.dep_->detach(de_foe, process_dead);
             }
 
-            if (!code_chunk_shared && attach_info->code_chunk) {
-                kern->destroy(attach_info->code_chunk);
+            if (process_dead) {
+                free_attached_data(*attach_info);
+            } else {    
+                kern->get_codedump_collector().add(*attach_info);
             }
-
-            attach_info->closing_lib_link.deque();
-            attach_info->process_link.deque();
-        }
-
-        attaches.erase(attaches.begin() + std::distance(attaches.data(), attach_info_ptr));
-
-        if (attaches.empty()) {
-            // MUDA MUDA MUDA MUDA MUDA MUDA MUDA
-            kern->destroy(this);
         }
 
         return true;
+    }
+
+    void codeseg::dump_collected(attached_info *info) {
+        free_attached_data(*info);
     }
 
     bool codeseg::attached_report(kernel::process *foe) {
@@ -450,7 +501,8 @@ namespace eka2l1::kernel {
             return info->attached_process == foe;
         });
 
-        if (!attach_info) {
+        // if nothing in attach info, or it's in garbage link list, return as detached
+        if (!attach_info || !attach_info->get()->garbage_link.alone()) {
             return codeseg_state_detached;
         }
 
@@ -644,6 +696,7 @@ namespace eka2l1::kernel {
             [&](const codeseg_dependency_info &codeseg_ite) { return codeseg_ite.dep_->unique_id() == codeseg.dep_->unique_id(); });
 
         if (result == dependencies.end()) {
+            codeseg.dep_->increase_access_count();
             dependencies.push_back(std::move(codeseg));
         } else {
             result->import_info_.insert(result->import_info_.end(), codeseg.import_info_.begin(),

@@ -1005,6 +1005,7 @@ namespace eka2l1 {
             while (!closing_libs.empty()) {
                 kernel::codeseg::attached_info *info = E_LOFF(closing_libs.first()->deque(), kernel::codeseg::attached_info, closing_lib_link);
                 info->parent_seg->detach(info->attached_process);
+                info->parent_seg->unmark();
             }
         }
 

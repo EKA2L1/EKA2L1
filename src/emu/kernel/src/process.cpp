@@ -435,7 +435,8 @@ namespace eka2l1::kernel {
 
         while (!codeseg_list.empty()) {
             kernel::codeseg::attached_info *info = E_LOFF(codeseg_list.first()->deque(), kernel::codeseg::attached_info, process_link);
-            info->parent_seg->detach(this);
+            info->parent_seg->detach(this, true);
+            info->parent_seg->unmark();
         }
 
         mm_impl_.reset();

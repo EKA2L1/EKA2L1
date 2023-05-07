@@ -107,6 +107,7 @@ namespace eka2l1::kernel {
 
             common::double_linked_queue_element closing_lib_link;
             common::double_linked_queue_element process_link;
+            common::double_linked_queue_element garbage_link;
 
             std::uint32_t flags = 0;
 
@@ -125,6 +126,8 @@ namespace eka2l1::kernel {
         };
 
     private:
+        friend class codedump_collector;
+
         std::uint32_t uids[3];
 
         std::uint32_t code_addr;
@@ -166,7 +169,10 @@ namespace eka2l1::kernel {
         bool ep_disabled_{ false };
         bool hash_inited_{ false };
 
+        common::double_linked_queue_element garbage_link;
+
         void calculate_hash();
+        void free_attached_data(attached_info &info);
 
     public:
         /*! \brief Create a new codeseg
@@ -199,7 +205,8 @@ namespace eka2l1::kernel {
         bool add_premade_entry_point(const address addr);
 
         bool attach(kernel::process *new_foe, const bool forcefully = false);
-        bool detach(kernel::process *de_foe);
+        bool detach(kernel::process *de_foe, const bool process_dead = false);
+        void dump_collected(attached_info *info);
 
         bool attached_report(kernel::process *foe);
         bool detaching_report(kernel::process *foe);
@@ -240,6 +247,10 @@ namespace eka2l1::kernel {
 
         std::uint32_t get_data_size() const {
             return data_size;
+        }
+
+        std::uint64_t get_used_memory_size() const {
+            return bss_size + (is_rom() ? 0 : (code_size + data_size));
         }
 
         std::uint32_t get_text_size() const {

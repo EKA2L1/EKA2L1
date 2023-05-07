@@ -38,6 +38,7 @@ namespace eka2l1 {
             , codeseg(std::move(codeseg))
             , reffed(false) {
             obj_type = object_type::library;
+            codeseg->increase_access_count();
         }
 
         std::optional<uint32_t> library::get_ordinal_address(kernel::process *pr, const std::uint32_t idx) {
@@ -85,6 +86,7 @@ namespace eka2l1 {
                 codeseg->unmark();
             }
 
+            codeseg->decrease_access_count();
             return 1;
         }
 

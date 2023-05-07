@@ -23,6 +23,7 @@
 #include <kernel/change_notifier.h>
 #include <kernel/chunk.h>
 #include <kernel/codeseg.h>
+#include <kernel/codedump_collector.h>
 #include <kernel/common.h>
 #include <kernel/condvar.h>
 #include <kernel/kernel_obj.h>
@@ -358,6 +359,8 @@ namespace eka2l1 {
         kernel::process *nanokern_pr_;
 
         kernel::chunk *custom_code_chunk;
+        kernel::codedump_collector codedump_collector_;
+
         address exception_handler_guard_;
 
         bool wiping_;
@@ -568,6 +571,10 @@ namespace eka2l1 {
 
         language get_current_language() const {
             return lang_;
+        }
+
+        kernel::codedump_collector &get_codedump_collector() {
+            return codedump_collector_;
         }
 
         void set_current_language(const language new_lang);

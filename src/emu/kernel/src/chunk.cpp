@@ -112,30 +112,50 @@ namespace eka2l1 {
             mmc_impl_ = nullptr;
             mem::mem_model_process *mmp = nullptr;
 
+            int err = 0;
+
             if (own_process && own_process->get_mem_model()) {
                 mmp = own_process->get_mem_model();
-                mmp->create_chunk(mmc_impl_, create_info);
+                err = mmp->create_chunk(mmc_impl_, create_info);
+
+                if (err != mem::MEM_MODEL_CHUNK_ERR_OK) {
+                    if (chnk_access == chunk_access::code) {
+                        kern->get_codedump_collector().force_clean();
+                        err = mmp->create_chunk(mmc_impl_, create_info);
+                    }
+                }
             } else {
                 mmc_impl_unq_ = mem::make_new_mem_model_chunk(mem->get_control(), 0, mem->get_model_type());
-                mmc_impl_unq_->do_create(create_info);
+                err = mmc_impl_unq_->do_create(create_info);
+
+                if (err != mem::MEM_MODEL_CHUNK_ERR_OK) {
+                    if (chnk_access == chunk_access::code) {
+                        kern->get_codedump_collector().force_clean();
+                        err = mmc_impl_unq_->do_create(create_info);
+                    }
+                }
 
                 mmc_impl_ = mmc_impl_unq_.get();
             }
 
-            mmc_impl_->adjust(bottom, top);
+            if (err != mem::MEM_MODEL_CHUNK_ERR_OK) {
+                LOG_ERROR(KERNEL, "Failed to allocate mem model chunk: {}, error: {}", obj_name, err);
+            } else {
+                mmc_impl_->adjust(bottom, top);
 
-            // Clear the adjusted memory with clear byte.
-            // Note that the doc does not specify if this is used in future. I don't think it will.
-            // Please look at t_chunk.cpp test in mmu category of OSS. It has only been tested on chunk creation.
-            if (!force_host_map) {
-                std::uint8_t *base_ptr = reinterpret_cast<std::uint8_t *>(mmc_impl_->host_base());
-                std::fill(base_ptr + bottom, base_ptr + top, clear_byte);
+                // Clear the adjusted memory with clear byte.
+                // Note that the doc does not specify if this is used in future. I don't think it will.
+                // Please look at t_chunk.cpp test in mmu category of OSS. It has only been tested on chunk creation.
+                if (!force_host_map) {
+                    std::uint8_t *base_ptr = reinterpret_cast<std::uint8_t *>(mmc_impl_->host_base());
+                    std::fill(base_ptr + bottom, base_ptr + top, clear_byte);
+                }
+
+                LOG_INFO(KERNEL, "Chunk created: {}, base (in parent): 0x{:x}, max size: 0x{:x} type: {}, access: {}{}", obj_name,
+                    mmc_impl_->base(mmp), max_size, (type == chunk_type::normal ? "normal" : (type == chunk_type::disconnected ? "disconnected" : "double ended")),
+                    (chnk_access == chunk_access::local ? "local" : (chnk_access == chunk_access::code ? "code " : "global")),
+                    (attrib == chunk_attrib::anonymous ? ", anonymous" : ""));
             }
-
-            LOG_INFO(KERNEL, "Chunk created: {}, base (in parent): 0x{:x}, max size: 0x{:x} type: {}, access: {}{}", obj_name,
-                mmc_impl_->base(mmp), max_size, (type == chunk_type::normal ? "normal" : (type == chunk_type::disconnected ? "disconnected" : "double ended")),
-                (chnk_access == chunk_access::local ? "local" : (chnk_access == chunk_access::code ? "code " : "global")),
-                (attrib == chunk_attrib::anonymous ? ", anonymous" : ""));
         }
 
         int chunk::destroy() {

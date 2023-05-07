@@ -22,6 +22,7 @@
 #include <mem/model/flexible/process.h>
 
 #include <common/log.h>
+#include <cpu/arm_interface.h>
 
 namespace eka2l1::mem::flexible {
     static constexpr vm_address INVALID_ADDR = 0xDEADBEEF;
@@ -36,6 +37,13 @@ namespace eka2l1::mem::flexible {
     }
 
     flexible_mem_model_chunk::~flexible_mem_model_chunk() {
+        if (fixed_mapping_ && (flags_ & MEM_MODEL_CHUNK_REGION_USER_CODE)) {
+            control_flexible *control_mm = reinterpret_cast<control_flexible *>(control_);
+            for (auto &mmu : control_mm->mmus_) {
+                // Clear the instruction cache at that range, code may reuse it later
+                mmu->cpu_->imb_range(fixed_mapping_->base_, max_size_);
+            }
+        }
     }
 
     int flexible_mem_model_chunk::do_create(const mem_model_chunk_creation_info &create_info) {

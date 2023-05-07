@@ -155,8 +155,8 @@ namespace eka2l1 {
 
             void full_name(std::string &name_will_full);
 
-            void increase_access_count();
-            int decrease_access_count();
+            virtual void increase_access_count();
+            virtual int decrease_access_count();
 
             int get_access_count() { return access_count; }
 

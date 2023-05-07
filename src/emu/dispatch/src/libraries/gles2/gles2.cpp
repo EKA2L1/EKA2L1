@@ -658,7 +658,7 @@ APPLY_PENDING_ROUTES:
         }
 
         if (attached_depth_) {
-            if (attached_stencil_->object_type() == GLES_OBJECT_RENDERBUFFER) {
+            if (attached_depth_->object_type() == GLES_OBJECT_RENDERBUFFER) {
                 reinterpret_cast<gles_renderbuffer_object*>(attached_depth_)->detach_from(this);
             } else {
                 reinterpret_cast<gles_driver_texture*>(attached_depth_)->remove_texture_observer(this);

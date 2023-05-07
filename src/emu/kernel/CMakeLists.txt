@@ -13,6 +13,7 @@ add_library(epockern
         include/kernel/smp/core.h
         include/kernel/smp/scheduler.h
         include/kernel/btrace.h
+        include/kernel/codedump_collector.h
         include/kernel/guomen_process.h
         include/kernel/change_notifier.h
         include/kernel/chunk.h
@@ -48,6 +49,7 @@ add_library(epockern
         src/change_notifier.cpp
         src/chunk.cpp
         src/codeseg.cpp
+        src/codedump_collector.cpp
         src/condvar.cpp
         src/ldd.cpp
         src/libmanager.cpp
