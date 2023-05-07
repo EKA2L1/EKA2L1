@@ -29,23 +29,13 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
-import com.github.eka2l1.BuildConfig;
 import com.github.eka2l1.R;
 
-public class AboutDialogFragment extends DialogFragment {
+public class SpecialThanksDialogFragment extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        StringBuilder message = new StringBuilder().append(getText(R.string.version))
-                .append(BuildConfig.VERSION_NAME)
-                .append('-')
-                .append(BuildConfig.GIT_HASH)
-                .append(getText(R.string.about_website))
-                .append(getText(R.string.about_github))
-                .append(getText(R.string.about_crowdin))
-                .append(getText(R.string.about_copyright))
-                .append(getText(R.string.about_icon_by))
-                .append(getText(R.string.about_icon_author));
+        StringBuilder message = new StringBuilder().append(getText(R.string.about_special_thanks_content));
         TextView tv = new TextView(getActivity());
         tv.setMovementMethod(LinkMovementMethod.getInstance());
         tv.setText(Html.fromHtml(message.toString()));
@@ -55,12 +45,12 @@ public class AboutDialogFragment extends DialogFragment {
         int paddingVertical = (int) (density * 14);
         tv.setPadding(paddingHorizontal, paddingVertical, paddingHorizontal, paddingVertical);
         AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
-        builder.setTitle(R.string.app_name)
+        builder.setTitle(R.string.about_special_thanks_title)
                 .setIcon(R.mipmap.ic_ducky)
                 .setView(tv)
-                .setPositiveButton(R.string.about_special_thanks_title, (d, w) -> {
-                    SpecialThanksDialogFragment specialThanksFragment = new SpecialThanksDialogFragment();
-                    specialThanksFragment.show(getParentFragmentManager(), "specialThanks");
+                .setPositiveButton(R.string.about, (d, w) -> {
+                    AboutDialogFragment aboutDialogFragment = new AboutDialogFragment();
+                    aboutDialogFragment.show(getParentFragmentManager(), "about");
                 })
                 .setNegativeButton(R.string.about_translator, (d, w) -> {
                     TranslatorsDialogFragment translatorsDialogFragment = new TranslatorsDialogFragment();

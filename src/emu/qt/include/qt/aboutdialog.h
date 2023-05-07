@@ -38,6 +38,7 @@ private:
     QLabel *translator_label_;
     QLabel *version_label_;
     QLabel *copyright_label_;
+    QLabel *special_thanks_label_;
 
 public:
     explicit about_dialog(QWidget *parent = nullptr);

@@ -129,6 +129,17 @@ about_dialog::about_dialog(QWidget *parent)
         LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to load translators section of credit file!");
         return;
     }
+
+    QString special_thanks_str = tr("<b>Special thanks:</b><br>");
+    special_thanks_str += tr("- nikita36708 for publishing the Android version on Play Store and for his help!<br>"
+        "- Symbian/N-Gage OG sceners: BinPDA, pSyGAGE, Engage, zg, eskMaemo, BodyZ, Ilya Dianov, iCodeRUS, huellif, ... for wonderful contributions!<br>"
+        "- Phone manufacturers for creating wonderful Symbian devices: Nokia, Sony Ericsson, Samsung, Siemens, ...<br>"
+        "- The N-Gage Discord community<br>"
+        "- vk.com/Symbian_zone community<br>"
+        "- EKA2L1 Discord community");
+
+    special_thanks_label_ = new QLabel(special_thanks_str);
+    ui_->credit_layout->addWidget(special_thanks_label_);
 }
 
 about_dialog::~about_dialog() {
@@ -149,5 +160,6 @@ about_dialog::~about_dialog() {
 
     delete copyright_label_;
     delete version_label_;
+    delete special_thanks_label_;
     delete ui_;
 }
