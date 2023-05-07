@@ -162,6 +162,9 @@
     <string name="log_saved">Лог захаваны</string>
     <string name="enter_text">Увядзіце тэкст</string>
     <string name="about_icon_by">&lt;BR&gt;Абразок ад: </string>
+    <string name="about_special_thanks_title">Special thanks</string>
+    <string name="about_special_thanks_content">  - nikita36708 for publishing the Android version on Play Store and for his help!&lt;BR&gt;  - Symbian/N-Gage OG sceners: BinPDA, pSyGAGE, Engage, zg, eskMaemo, BodyZ, Ilya Dianov, iCodeRUS, huellif, … for wonderful contributions!&lt;BR&gt;  - Phone manufacturers for creating wonderful Symbian devices: Nokia, Sony Ericsson, Samsung, Siemens, ...&lt;BR&gt;  - The N-Gage Discord community&lt;BR&gt;  - vk.com/Symbian_zone community&lt;BR&gt;  - EKA2L1 Discord community</string>
+    <string name="about_translator">Translators</string>
     <string name="version">Версія: </string>
     <string name="recommended_devices_note"><b>Заўвага:</b> Рэкамендавана выкарыстоўваць прашыўку для ўсталёўкі прылад ад S60v3 і вышэй.</string>
     <string name="install_ng_game_cant_find_data_folder">Can\'t find the game data folder!</string>
