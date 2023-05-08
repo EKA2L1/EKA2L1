@@ -115,12 +115,31 @@ namespace eka2l1::kernel {
             if (att) {
                 if (!mark) {
                     if (att->get()->use_count == 0) {
+                        // Clear setting flag from previous use
+                        att->get()->flags = 0;
+
                         if (!att->get()->garbage_link.alone()) {
                             kern->get_codedump_collector().remove(*(att->get()));
                         }
                         
                         if (!att->get()->closing_lib_link.alone()) {
                             att->get()->closing_lib_link.deque();
+                        }
+
+                        // Redo data and bss if it exists
+                        std::uint32_t add_offset = 0;
+                        if ((data_addr != 0) && !((data_base >= mem::local_data) && (data_base <= (kern->is_eka1() ? mem::shared_data_eka1 : mem::dll_static_data)))) {
+                            add_offset = data_base - att->get()->data_chunk->base(new_foe).ptr_address();
+                        }
+
+                        if (bss_size != 0) {
+                            std::uint8_t *bss_base = reinterpret_cast<std::uint8_t *>(att->get()->data_chunk->host_base()) + add_offset + data_size;
+                            std::fill(bss_base, bss_base + bss_size, 0); // .bss
+                        }
+
+                        if (data_size != 0) {
+                            std::uint8_t *data_base_ptr = reinterpret_cast<std::uint8_t *>(att->get()->data_chunk->host_base()) + add_offset;
+                            std::copy(constant_data.get(), constant_data.get() + data_size, data_base_ptr); // .data
                         }
                     }
 
@@ -396,12 +415,6 @@ namespace eka2l1::kernel {
 
         // Free the chunk data
         if (!kern->wipeout_in_progress()) {
-            mark = true;
-
-            for (auto &dep : dependencies) {
-                dep.dep_->detach(de_foe, process_dead);
-            }
-
             if (process_dead) {
                 free_attached_data(*attach_info);
             } else {    
