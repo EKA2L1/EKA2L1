@@ -147,7 +147,7 @@
     <string name="enter_name">Wprowadź nazwę</string>
     <string name="set_default_profile_description">Wybierz ten profil jako standardowe ustawienia dla wszystkich aplikacji, które zostaną zainstalowane później</string>
     <string name="error_name_exists">Już istnieje, wprowadź inną nazwę</string>
-    <string name="extensive_logging">Extensive logging</string>
+    <string name="extensive_logging">Szczegółowe rejestrowanie</string>
     <string name="mapping_dialog_title">Naciśnij przycisk</string>
     <string name="mapping_dialog_message" formatted="false">Bieżące mapowanie: %1$s</string>
     <string name="reset_mapping">Reset</string>
@@ -162,13 +162,13 @@
     <string name="log_saved">Log został zapisany</string>
     <string name="enter_text">Wprowadź tekst</string>
     <string name="about_icon_by">&lt;BR&gt;Ikona autorstwa: </string>
-    <string name="about_special_thanks_title">Special thanks</string>
-    <string name="about_special_thanks_content">  - nikita36708 for publishing the Android version on Play Store and for his help!&lt;BR&gt;  - Symbian/N-Gage OG sceners: BinPDA, pSyGAGE, Engage, zg, eskMaemo, BodyZ, Ilya Dianov, iCodeRUS, huellif, … for wonderful contributions!&lt;BR&gt;  - Phone manufacturers for creating wonderful Symbian devices: Nokia, Sony Ericsson, Samsung, Siemens, ...&lt;BR&gt;  - The N-Gage Discord community&lt;BR&gt;  - vk.com/Symbian_zone community&lt;BR&gt;  - EKA2L1 Discord community</string>
-    <string name="about_translator">Translators</string>
+    <string name="about_special_thanks_title">Specjalne podziękowania</string>
+    <string name="about_special_thanks_content">  - nikita36708 za opublikowanie wersji na Androida w Play Store i za jego pomoc!&lt;BR&gt;  - Symbian/N-Gage OG sceners: BinPDA, pSyGAGE, Engage, zg, eskMaemo, BodyZ, Ilya Dianov, iCodeRUS, huellif, … za wspaniały wkład!&lt;BR&gt;  - Producentom telefonów do tworzenia wspaniałych Symbianowych urządzeń: Nokia, Sony Ericsson, Samsung, Siemens, ...&lt;BR&gt;  - Discordowej społeczności N-Gage &lt;BR&gt;  - vk.com/Symbian_zone community&lt;BR&gt;  - Discordowej społeczności EKA2L1</string>
+    <string name="about_translator">Tłumacze</string>
     <string name="version">Wersja: </string>
     <string name="recommended_devices_note"><b>Uwaga:</b> zalecane jest używać firmware\'u do instalacji urządzeń od S60v3 i wyżej.</string>
-    <string name="install_ng_game_cant_find_data_folder">Can\'t find the game data folder!</string>
+    <string name="install_ng_game_cant_find_data_folder">Nie można znaleźć folderu danych gry!</string>
     <string name="install_ng_game_more_than_one_game">Jest więcej niż jedna gra w podanym folderze gry karty!</string>
     <string name="install_ng_game_no_game_info_file">Plik informacji o grze nie istnieje w folderze gry karty!</string>
-    <string name="install_ng_game_corrupted_game_info">The game information file has been corrupted. Please check your data\'s validity!</string>
+    <string name="install_ng_game_corrupted_game_info">Plik informacji o grze został uszkodzony. Sprawdź poprawność danych!</string>
 </resources>
