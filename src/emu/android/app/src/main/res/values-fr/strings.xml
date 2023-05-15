@@ -19,7 +19,7 @@
     <string name="opengl_required">L\'application nécessite OpenGL ES 3.0+.</string>
     <string name="warning">ATTENTION</string>
     <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
-    <string name="install_ng_game">Install N-Gage game</string>
+    <string name="install_ng_game">Installer un jeu N-GAGE</string>
     <string name="notify_dialog_title">Notification</string>
     <string name="install">Installer</string>
     <string name="rescan_devices">Rescanner les appareils</string>
@@ -70,11 +70,11 @@
     <string name="pref_system_setting_inheritance_option_name">Réglage de l\'héritage</string>
     <string name="emulated_screen_rotation_item_name">Rotation</string>
     <string name="emulated_screen_refresh_rate_item_name">Taux de rafraîchissement</string>
-    <string name="pref_device_display_name">Phone name</string>
+    <string name="pref_device_display_name">Nom du téléphone</string>
     <string name="hide_system_apps">Hide system applications</string>
     <string name="pref_bt_netplay_direct_ips_manager">Direct IPs manager</string>
     <string name="enter_address">Enter address</string>
-    <string name="address">Address</string>
+    <string name="address">Adresses</string>
     <string name="port">Port</string>
     <string name="pref_bt_netplay_mode_off">Off</string>
     <string name="pref_bt_netplay_mode_direct_ip">Direct IP</string>
