@@ -21,6 +21,8 @@
     <string name="scoped_storage_warning">Data pengguna Anda ditampung pada lokasi yang <b>akan dihapus</b> ketika mencopot aplikasi:\n</string>
     <string name="install_ng_game">Pasang permainan N-Gage</string>
     <string name="notify_dialog_title">Pemberitahuan</string>
+    <string name="grid_app_list_mode">Grid mode</string>
+    <string name="list_app_list_mode">List mode</string>
     <string name="install">Pasang</string>
     <string name="rescan_devices">Pindai ulang perangkat</string>
     <string name="device_dump">Dump perangkat</string>
