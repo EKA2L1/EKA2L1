@@ -29,42 +29,34 @@ import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
-
 import com.github.eka2l1.R;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 
-public class AppsListAdapter extends RecyclerView.Adapter<AppItemViewHolder> implements Filterable {
+public class PackageListAdapter extends BaseAdapter implements Filterable {
 
     private List<AppItem> list;
     private List<AppItem> filteredList;
     private final LayoutInflater layoutInflater;
     private final AppFilter appFilter;
-    private boolean gridDisplay;
 
-    public AppsListAdapter(Context context) {
+    public PackageListAdapter(Context context) {
         this.list = new ArrayList<>();
         this.filteredList = new ArrayList<>();
         this.layoutInflater = LayoutInflater.from(context);
         this.appFilter = new AppFilter();
     }
 
-    @NonNull
     @Override
-    public AppItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = layoutInflater.inflate(viewType, parent, false);
-        return new AppItemViewHolder(view);
+    public int getCount() {
+        return filteredList.size();
     }
 
     @Override
-    public void onBindViewHolder(@NonNull AppItemViewHolder holder, int position) {
-        AppItem item = filteredList.get(position);
-        holder.setItem(item, position);
+    public AppItem getItem(int position) {
+        return filteredList.get(position);
     }
 
     @Override
@@ -73,38 +65,47 @@ public class AppsListAdapter extends RecyclerView.Adapter<AppItemViewHolder> imp
     }
 
     @Override
-    public int getItemCount() {
-        return filteredList.size();
-    }
+    public View getView(int position, View view, ViewGroup viewGroup) {
+        ViewHolder holder;
+        if (view == null) {
+            view = layoutInflater.inflate(R.layout.listitem_detail_icon, viewGroup, false);
+            holder = new ViewHolder();
+            holder.name = view.findViewById(R.id.appName);
+            holder.uid = view.findViewById(R.id.appUid);
+            holder.icon = view.findViewById(R.id.iconView);
+            view.setTag(holder);
+        } else {
+            holder = (ViewHolder) view.getTag();
+        }
+        AppItem item = filteredList.get(position);
 
-    @Override
-    public int getItemViewType(final int position) {
-        return gridDisplay ? R.layout.listitem_detail_icon_grid : R.layout.listitem_detail_icon;
+        holder.name.setText(item.getTitle());
+        holder.uid.setText(String.format("UID: 0x%08X", item.getUid()));
+
+        if (item.getIcon() != null) {
+            holder.icon.setImageBitmap(item.getIcon());
+        } else {
+            holder.icon.setImageResource(R.mipmap.ic_ducky_foreground);
+        }
+
+        return view;
     }
 
     public void setItems(List<AppItem> items) {
-        items.sort(Comparator.comparing(AppItem::getTitle));
-
         list = items;
         filteredList = items;
         notifyDataSetChanged();
     }
 
-    public void setDisplay(boolean isGridDisplay) {
-        gridDisplay = isGridDisplay;
-
-        if (list != null) {
-            notifyDataSetChanged();
-        }
-    }
-
-    public AppItem getItem(int position) {
-        return filteredList.get(position);
-    }
-
     @Override
     public Filter getFilter() {
         return appFilter;
+    }
+
+    private static class ViewHolder {
+        ImageView icon;
+        TextView name;
+        TextView uid;
     }
 
     private class AppFilter extends Filter {
@@ -133,8 +134,10 @@ public class AppsListAdapter extends RecyclerView.Adapter<AppItemViewHolder> imp
         protected void publishResults(CharSequence constraint, FilterResults results) {
             if (results.values != null) {
                 filteredList = (List<AppItem>) results.values;
+                notifyDataSetChanged();
+            } else {
+                notifyDataSetInvalidated();
             }
-            notifyDataSetChanged();
         }
     }
 }

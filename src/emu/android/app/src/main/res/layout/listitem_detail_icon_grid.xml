@@ -4,11 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="5sp"
-    android:layout_marginBottom="5sp"
+    android:layout_marginLeft="10sp"
+    android:layout_marginTop="10sp"
+    android:layout_marginRight="10sp"
+    android:layout_marginBottom="10sp"
     android:foreground="?attr/selectableItemBackground"
-    android:gravity="center_vertical"
-    android:orientation="horizontal">
+    android:gravity="center_horizontal|center_vertical"
+    android:orientation="vertical">
 
     <ImageView
         android:id="@+id/iconView"
@@ -19,25 +21,14 @@
         android:layout_marginEnd="10dp"
         app:srcCompat="@android:drawable/sym_def_app_icon" />
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/appName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/appName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="App Name"
-            android:textSize="18sp" />
-
-        <TextView
-            android:id="@+id/appUid"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="UID: 0xDDDDDDDD"
-            android:textSize="12sp" />
-    </LinearLayout>
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="App Name"
+        android:textAlignment="center"
+        android:textSize="16sp" />
 
 </LinearLayout>

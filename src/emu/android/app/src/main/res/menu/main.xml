@@ -9,6 +9,12 @@
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="ifRoom" />
     <item
+        android:id="@+id/action_toggle_grid"
+        android:checkable="true"
+        android:icon="@drawable/grid_white"
+        android:title="@string/grid_app_list_mode"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/action_about"
         android:title="@string/about"
         app:showAsAction="never" />

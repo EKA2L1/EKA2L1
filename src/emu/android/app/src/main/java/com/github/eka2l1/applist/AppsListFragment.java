@@ -32,18 +32,15 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Bundle;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -53,7 +50,11 @@ import androidx.appcompat.widget.SearchView;
 import androidx.core.content.pm.ShortcutInfoCompat;
 import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.core.graphics.drawable.IconCompat;
-import androidx.fragment.app.ListFragment;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.eka2l1.R;
 import com.github.eka2l1.config.ConfigFragment;
@@ -61,6 +62,7 @@ import com.github.eka2l1.config.ProfilesFragment;
 import com.github.eka2l1.emu.Emulator;
 import com.github.eka2l1.emu.EmulatorActivity;
 import com.github.eka2l1.info.AboutDialogFragment;
+import com.github.eka2l1.settings.AppDataStore;
 import com.github.eka2l1.settings.SettingsFragment;
 import com.github.eka2l1.util.FileUtils;
 import com.github.eka2l1.util.LogUtils;
@@ -83,9 +85,12 @@ import io.reactivex.schedulers.Schedulers;
 
 import static com.github.eka2l1.emu.Constants.*;
 
-public class AppsListFragment extends ListFragment {
+public class AppsListFragment extends Fragment {
     private CompositeDisposable compositeDisposable;
     private AppsListAdapter adapter;
+    private RecyclerView rvApplist;
+    private TextView tvEmptyList;
+    private DividerItemDecoration dividerItemDecoration;
     private boolean restartNeeded;
     private final ActivityResultLauncher<String[]> openSisLauncher = registerForActivityResult(
             FileUtils.getFilePicker(),
@@ -116,15 +121,62 @@ public class AppsListFragment extends ListFragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        registerForContextMenu(getListView());
+
+        rvApplist = view.findViewById(R.id.rv_applist);
+        tvEmptyList = view.findViewById(R.id.tv_empty_list);
+
+        registerForContextMenu(rvApplist);
+
+        AppDataStore store = AppDataStore.getAndroidStore();
+        boolean isGrid = store.getBoolean(PREF_GRID_APP_LIST, true);
+
+        rvApplist.setAdapter(adapter);
+        setDisplay(view, isGrid);
+
+        adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onChanged() {
+                boolean empty = adapter.getItemCount() == 0;
+
+                rvApplist.setVisibility(empty ? View.INVISIBLE : View.VISIBLE);
+                tvEmptyList.setVisibility(empty ? View.VISIBLE : View.INVISIBLE);
+            }
+        });
+
         setHasOptionsMenu(true);
-        setListAdapter(adapter);
         prepareApps();
         ActionBar actionBar = ((AppCompatActivity) requireActivity()).getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(false);
         actionBar.setTitle(R.string.app_name);
         FloatingActionButton fab = view.findViewById(R.id.fab);
         fab.setOnClickListener(v -> openSisLauncher.launch(new String[]{".sis", ".sisx"}));
+    }
+
+    private void setDisplay(View view, boolean isGrid) {
+        if (view == null) {
+            view = getView();
+        }
+
+        Context context = view.getContext();
+
+        rvApplist.setPadding(0, 0, 0, isGrid ? 200 : 0);
+        rvApplist.requestLayout();
+
+        if (isGrid) {
+            rvApplist.setLayoutManager(new GridLayoutManager(context, 4));
+            if (dividerItemDecoration != null) {
+                rvApplist.removeItemDecoration(dividerItemDecoration);
+            }
+        } else {
+            if (dividerItemDecoration == null) {
+                dividerItemDecoration = new DividerItemDecoration(context, DividerItemDecoration.VERTICAL);
+            }
+
+            rvApplist.setLayoutManager(new LinearLayoutManager(context));
+            rvApplist.addItemDecoration(dividerItemDecoration);
+        }
+
+        adapter.setDisplay(isGrid);
     }
 
     private void switchToDeviceList() {
@@ -284,13 +336,15 @@ public class AppsListFragment extends ListFragment {
         }
     }
 
-    @Override
-    public void onListItemClick(@NonNull ListView l, @NonNull View v, int position, long id) {
-        AppItem item = adapter.getItem(position);
-        Intent intent = new Intent(getContext(), EmulatorActivity.class);
-        intent.putExtra(KEY_APP_UID, item.getUid());
-        intent.putExtra(KEY_APP_NAME, item.getTitle());
-        startActivity(intent);
+    private void setToggleGridIconStatus(MenuItem item, boolean isGrid) {
+        item.setChecked(isGrid);
+        if (isGrid) {
+            item.setIcon(R.drawable.list_white);
+            item.setTitle(R.string.list_app_list_mode);
+        } else {
+            item.setIcon(R.drawable.grid_white);
+            item.setTitle(R.string.grid_app_list_mode);
+        }
     }
 
     @Override
@@ -319,6 +373,24 @@ public class AppsListFragment extends ListFragment {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(charSequence -> adapter.getFilter().filter(charSequence));
         compositeDisposable.add(searchViewDisposable);
+
+        AppDataStore store = AppDataStore.getAndroidStore();
+        boolean isGrid = store.getBoolean(PREF_GRID_APP_LIST, true);
+
+        final MenuItem gridModeItem = menu.findItem(R.id.action_toggle_grid);
+
+        setToggleGridIconStatus(gridModeItem, isGrid);
+        gridModeItem.setOnMenuItemClickListener(item -> {
+            boolean gridEnabled = !item.isChecked();
+
+            store.putBoolean(PREF_GRID_APP_LIST, gridEnabled);
+            store.save();
+
+            setDisplay(null, gridEnabled);
+            setToggleGridIconStatus(item, gridEnabled);
+
+            return true;
+        });
     }
 
     @Override
@@ -361,13 +433,6 @@ public class AppsListFragment extends ListFragment {
             openNGageGameLauncher.launch(null);
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v, @Nullable ContextMenu.ContextMenuInfo menuInfo) {
-        super.onCreateContextMenu(menu, v, menuInfo);
-        MenuInflater inflater = requireActivity().getMenuInflater();
-        inflater.inflate(R.menu.context_appslist, menu);
     }
 
     private void addAppShortcut(AppItem item) {
@@ -426,8 +491,7 @@ public class AppsListFragment extends ListFragment {
 
     @Override
     public boolean onContextItemSelected(@NonNull MenuItem item) {
-        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-        int index = info.position;
+        int index = AppItemViewHolder.contextIndex;
         AppItem appItem = adapter.getItem(index);
         if (item.getItemId() == R.id.action_context_settings) {
             ConfigFragment configFragment = new ConfigFragment();

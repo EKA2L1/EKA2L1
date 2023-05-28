@@ -44,12 +44,12 @@ import static com.github.eka2l1.emu.Constants.KEY_RESTART;
 import java.io.File;
 
 public class PackageListFragment extends ListFragment {
-    private AppsListAdapter adapter;
+    private PackageListAdapter adapter;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        adapter = new AppsListAdapter(getContext());
+        adapter = new PackageListAdapter(getContext());
     }
 
     @Override

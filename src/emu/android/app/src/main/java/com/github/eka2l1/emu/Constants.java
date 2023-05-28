@@ -62,4 +62,5 @@ public class Constants {
     public static final String PREF_BT_NETPLAY_DIRECT_IP_MAN = "pref_bt_netplay_direct_ips_manager";
     public static final String PREF_BT_NETPLAY_PORT_OFFSET = "btnet-port-offset";
     public static final String PREF_BT_NETPLAY_PASSWORD = "btnet-password";
+    public static final String PREF_GRID_APP_LIST = "grid-applist";
 }
