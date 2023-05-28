@@ -826,7 +826,7 @@ namespace eka2l1::common {
                         if (flags & FOLDER_COPY_FLAG_LOWERCASE_NAME) {
                             if (no_copy) {
                                 if (entry.name != lowercased) {
-                                    if (!common::move_file(iterator->dir_name + entry.name, iterator->dir_name + lowercased)) {
+                                    if (!common::move_file(eka2l1::add_path(iterator->dir_name, entry.name), eka2l1::add_path(iterator->dir_name, lowercased))) {
                                         return false;
                                     }
 
@@ -842,7 +842,7 @@ namespace eka2l1::common {
                     }
 
                     if (entry.type == common::file_type::FILE_DIRECTORY) {
-                        folder_stacks.push(eka2l1::add_path(top_path, name_to_use + eka2l1::get_separator()));
+                        folder_stacks.push(eka2l1::add_path(top_path, name_to_use));
                     } else {
                         if (is_measuring) {
                             total_size += entry.size;
@@ -852,7 +852,7 @@ namespace eka2l1::common {
                                     continue;
                                 }
 
-                                if (!common::copy_file(iterator->dir_name + entry.name, eka2l1::add_path(dest_folder_to_reside, top_path) + eka2l1::get_separator() + name_to_use, overwrite_on_file_exist)) {
+                                if (!common::copy_file(eka2l1::add_path(iterator->dir_name, entry.name), eka2l1::add_path(eka2l1::add_path(dest_folder_to_reside, top_path), name_to_use), overwrite_on_file_exist)) {
                                     return false;
                                 }
 
