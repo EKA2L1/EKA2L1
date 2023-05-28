@@ -21,6 +21,8 @@
     <string name="scoped_storage_warning">あなたのユーザーデータは <b>アプリのアンインストール時に</b> 削除される場所に保存されます\n</string>
     <string name="install_ng_game">Install N-Gage game</string>
     <string name="notify_dialog_title">Notification</string>
+    <string name="grid_app_list_mode">Grid mode</string>
+    <string name="list_app_list_mode">List mode</string>
     <string name="install">インストール</string>
     <string name="rescan_devices">Rescan devices</string>
     <string name="device_dump">デバイスダンプ</string>
