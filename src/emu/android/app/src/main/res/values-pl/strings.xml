@@ -21,6 +21,8 @@
     <string name="scoped_storage_warning">Twoje dane użytkownika są przechowywane w lokalizacji która <b>zostanie usunięta</b> kiedy odinstalujesz aplikację:\n</string>
     <string name="install_ng_game">Zainstaluj grę N-Gage</string>
     <string name="notify_dialog_title">Powiadomienie</string>
+    <string name="grid_app_list_mode">Grid mode</string>
+    <string name="list_app_list_mode">List mode</string>
     <string name="install">Zainstaluj</string>
     <string name="rescan_devices">Przeskanuj ponownie urządzenia</string>
     <string name="device_dump">Zrzut urządzenia</string>
