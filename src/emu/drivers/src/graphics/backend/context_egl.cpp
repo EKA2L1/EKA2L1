@@ -148,14 +148,32 @@ namespace eka2l1::drivers::graphics {
             return;
         }
 
-        if (EGLint egl_num_configs{}; eglChooseConfig(egl_display,
-                                                      (m_opengl_mode == mode::opengl_es) ? egl_attribs_es.data() : egl_attribs.data(), &egl_config, 1,
-                                                      &egl_num_configs) != EGL_TRUE) {
-            LOG_CRITICAL(DRIVER_GRAPHICS, "eglChooseConfig() failed");
-            return;
+        if (m_opengl_mode == mode::opengl_es) {
+            if (EGLint egl_num_configs{}; eglChooseConfig(egl_display, egl_fake_attribs_es.data(), &egl_config, 1,
+                                &egl_num_configs) != EGL_TRUE) {
+                LOG_CRITICAL(DRIVER_GRAPHICS, "eglChooseConfig() failed");
+                return;
+            }
+            if (egl_surface = eglCreatePbufferSurface(egl_display, egl_config, egl_pbuffer_attribs);
+                egl_surface == EGL_NO_SURFACE) {
+                LOG_CRITICAL(DRIVER_GRAPHICS, "eglCreatePbufferSurface() failed");
+                return;
+            }
+        } else {
+            if (EGLint egl_num_configs{}; eglChooseConfig(egl_display,
+                                                          (m_opengl_mode == mode::opengl_es) ? egl_attribs_es.data() : egl_attribs.data(), &egl_config, 1,
+                                                          &egl_num_configs) != EGL_TRUE) {
+                LOG_CRITICAL(DRIVER_GRAPHICS, "eglChooseConfig() failed");
+                return;
+            }
         }
 
         if (!create_context(nullptr, nullptr)) {
+            return;
+        }
+
+        if (m_opengl_mode == mode::opengl_es && eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) != EGL_TRUE) {
+            LOG_CRITICAL(DRIVER_GRAPHICS, "eglMakeCurrent() failed");
             return;
         }
     }
