@@ -20,9 +20,9 @@
     <string name="warning">Внимание</string>
     <string name="scoped_storage_warning">Ваши пользовательские данные хранятся в папке, которая <b>будет удалена</b> при удалении приложения:\n</string>
     <string name="install_ng_game">Установка игры N-Gage</string>
-    <string name="notify_dialog_title">Notification</string>
-    <string name="grid_app_list_mode">Grid mode</string>
-    <string name="list_app_list_mode">List mode</string>
+    <string name="notify_dialog_title">Уведомление</string>
+    <string name="grid_app_list_mode">Режим сетки</string>
+    <string name="list_app_list_mode">Режим списка</string>
     <string name="install">Установить</string>
     <string name="rescan_devices">Пересканировать устройства</string>
     <string name="device_dump">Дамп устройства</string>
@@ -61,7 +61,7 @@
     <string name="pref_wakelock">Не отключать экран</string>
     <string name="pref_enable_vibration">Включить вибрацию</string>
     <string name="pref_emulator_dir">Рабочая папка</string>
-    <string name="pref_emulator_dir_cant_change">The working directory can\'t be changed!</string>
+    <string name="pref_emulator_dir_cant_change">Невозможно изменить рабочую папку!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Включить фильтрацию методом ближайшего соседа</string>
     <string name="pref_system_language_option_name">Язык</string>
     <string name="pref_system_real_time_accuracy_str">Точность в реальном времени</string>
@@ -72,7 +72,7 @@
     <string name="pref_system_setting_inheritance_option_name">Наследование настроек</string>
     <string name="emulated_screen_rotation_item_name">Поворот экрана</string>
     <string name="emulated_screen_refresh_rate_item_name">Частота обновления</string>
-    <string name="pref_device_display_name">Phone name</string>
+    <string name="pref_device_display_name">Имя телефона</string>
     <string name="hide_system_apps">Скрыть системные приложения</string>
     <string name="pref_bt_netplay_direct_ips_manager">Менеджер прямых IP-адресов</string>
     <string name="enter_address">Введите адрес</string>
@@ -135,7 +135,7 @@
     <string name="pref_screen_scale_type_fill">Заполнить (без учёта пропорций)</string>
     <string name="pref_screen_scale_type_fit">Вписать</string>
     <string name="pref_screen_scale_type_none">Как есть</string>
-    <string name="pref_screen_use_notch">Use notch</string>
+    <string name="pref_screen_use_notch">Использовать вырез</string>
     <string name="pref_screen_scale_use_shader">Использовать шейдер для масштабирования</string>
     <string name="pref_screen_upscale_shader">Масштабирующий шейдер</string>
     <string name="pref_screen_default_shader">По умолчанию</string>
@@ -164,9 +164,9 @@
     <string name="log_saved">Лог успешно сохранён</string>
     <string name="enter_text">Введите текст</string>
     <string name="about_icon_by">&lt;BR&gt;Иконка от: </string>
-    <string name="about_special_thanks_title">Special thanks</string>
-    <string name="about_special_thanks_content">  - nikita36708 for publishing the Android version on Play Store and for his help!&lt;BR&gt;  - Symbian/N-Gage OG sceners: BinPDA, pSyGAGE, Engage, zg, eskMaemo, BodyZ, Ilya Dianov, iCodeRUS, huellif, … for wonderful contributions!&lt;BR&gt;  - Phone manufacturers for creating wonderful Symbian devices: Nokia, Sony Ericsson, Samsung, Siemens, ...&lt;BR&gt;  - The N-Gage Discord community&lt;BR&gt;  - vk.com/Symbian_zone community&lt;BR&gt;  - EKA2L1 Discord community</string>
-    <string name="about_translator">Translators</string>
+    <string name="about_special_thanks_title">Благодарности</string>
+    <string name="about_special_thanks_content">  - nikita36078 for publishing the Android version on Play Store and for his help!&lt;BR&gt;  - Symbian/N-Gage OG sceners: BinPDA, pSyGAGE, Engage, zg, eskMaemo, BodyZ, Ilya Dianov, iCodeRUS, huellif, … for wonderful contributions!&lt;BR&gt;  - Phone manufacturers for creating wonderful Symbian devices: Nokia, Sony Ericsson, Samsung, Siemens, ...&lt;BR&gt;  - The N-Gage Discord community&lt;BR&gt;  - vk.com/Symbian_zone community&lt;BR&gt;  - EKA2L1 Discord community</string>
+    <string name="about_translator">Переводчики</string>
     <string name="version">Версия: </string>
     <string name="recommended_devices_note"><b>Примечание:</b> Рекомендуется использовать прошивку для установки устройств с S60v3 и выше.</string>
     <string name="install_ng_game_cant_find_data_folder">Невозможно найти папку с игровыми данными!</string>
