@@ -495,7 +495,7 @@ namespace eka2l1 {
             , inst(inst)
             , peeking(false)
             , is_root(false) {
-            iterator = common::make_directory_iterator(eka2l1::add_path(phys_path, filter));
+            iterator = common::make_directory_iterator(phys_path, filter);
             if (!iterator) {
                 LOG_ERROR(VFS, "Unable to open directory {}", phys_path);
                 return;

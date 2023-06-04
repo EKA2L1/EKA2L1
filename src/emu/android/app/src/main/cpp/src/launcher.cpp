@@ -63,6 +63,7 @@ namespace eka2l1::android {
                     kern->get_epoc_version())));
             fbsserv = reinterpret_cast<eka2l1::fbs_server *>(kern->get_by_name<service::server>(epoc::get_fbs_server_name_by_epocver(
                     kern->get_epoc_version())));
+            rightsserv = reinterpret_cast<eka2l1::rights_server *>(kern->get_by_name<service::server>(eka2l1::RIGHTS_SERVER_NAME));
         }
     }
 
@@ -733,5 +734,17 @@ namespace eka2l1::android {
     int launcher::install_ngage_game(const std::string &path) {
         return static_cast<int>(sys->install_ngage_game_card(path,
                                                              nullptr, nullptr));
+    }
+
+    bool launcher::install_ng2_game_licenses(const std::string &content) {
+        return rightsserv->import_ng2l(content, success_license_games, failed_license_games);
+    }
+
+    std::vector<std::string> launcher::get_success_installed_license_games() {
+        return success_license_games;
+    }
+
+    std::vector<std::string> launcher::get_failed_installed_license_games() {
+        return failed_license_games;
     }
 }

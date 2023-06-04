@@ -164,10 +164,12 @@ namespace eka2l1::common {
      * Note that you still have to check if the iterator is valid even if the instance is not null,
      * by using the is_valid method.
      *
+     * Filter in the iterator will operate in a case-insenstive manner.
+     *
      * @param path The path to the folder we want to open the directory iterator.
      * @return Instance of the suitable directory iterator on success.
      */
-    std::unique_ptr<dir_iterator> make_directory_iterator(const std::string &path);
+    std::unique_ptr<dir_iterator> make_directory_iterator(const std::string &path, const std::string &filter);
 
     /**
      * @brief Given a filename, find the file/folder that matches this name by case-insensitive comparasion.

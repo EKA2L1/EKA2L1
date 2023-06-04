@@ -47,6 +47,7 @@ namespace eka2l1 {
 
     static constexpr std::uint32_t ERROR_CA_NO_RIGHTS = -17452;
     static constexpr std::uint32_t ERROR_CA_PENDING_RIGHTS = -17455;
+    static constexpr const char* RIGHTS_SERVER_NAME = "!RightsServer";
 
     class rights_server : public service::typical_server {
     private:
@@ -58,6 +59,8 @@ namespace eka2l1 {
     public:
         explicit rights_server(eka2l1::system *sys);
         void connect(service::ipc_context &context) override;
+        bool import_ng2l(const std::string &content, std::vector<std::string> &success_game_name,
+                         std::vector<std::string> &failed_game_name);
 
         epoc::drm::rights_database &database() {
             return *database_;

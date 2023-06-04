@@ -32,6 +32,7 @@ target_link_libraries(native-lib PRIVATE
         epockern
         epocpkg
         epocservs
+        sqlite3
         yaml-cpp)
 
 target_include_directories(native-lib PRIVATE include)

@@ -24,6 +24,9 @@
 #include <system/epoc.h>
 #include <vfs/vfs.h>
 #include <utils/err.h>
+#include <yaml-cpp/yaml.h>
+#include <common/crypt.h>
+#include <common/pystr.h>
 
 namespace eka2l1 {
     static constexpr const char16_t *RIGHTS_FOLDER_PATH = u"C:\\Private\\101f51f2\\";
@@ -33,7 +36,7 @@ namespace eka2l1 {
     static constexpr const std::uint32_t APP_INSTALLER_UID = 0x101F875A;
 
     rights_server::rights_server(eka2l1::system *sys)
-        : service::typical_server(sys, "!RightsServer") {
+        : service::typical_server(sys, RIGHTS_SERVER_NAME) {
     }
 
     std::uint32_t rights_server::get_suitable_seri_version() const {
@@ -61,6 +64,120 @@ namespace eka2l1 {
 
         database_ = std::make_unique<epoc::drm::rights_database>(path.value());
         startup_imports();
+    }
+
+    bool rights_server::import_ng2l(const std::string &content, std::vector<std::string> &success_game_name,
+                                    std::vector<std::string> &failed_game_name) {
+        if (!database_) {
+            initialize();
+        }
+
+        success_game_name.clear();
+        failed_game_name.clear();
+
+        YAML::Node root = YAML::Load(content);
+        if (root) {
+            auto magic = root["ng2l"];
+            if (!magic || magic.as<std::string>() != "ng2l") {
+                return false;
+            }
+
+            auto games = root["games"];
+            for (auto game_pair: games) {
+                std::string game_name = game_pair.first.as<std::string>();
+                YAML::Node game = game_pair.second;
+
+                auto game_vid_node = game["vid"];
+                auto game_sid_node = game["sid"];
+
+                if (!game_vid_node || !game_sid_node) {
+                    failed_game_name.push_back(game_name);
+                    continue;
+                }
+
+                auto game_keys = game["keys"];
+                if (!game_keys) {
+                    failed_game_name.push_back(game_name);
+                    continue;
+                }
+
+                std::uint32_t vid = 0;
+                std::uint32_t sid = 0;
+
+                try {
+                    std::string vid_str = game_vid_node.as<std::string>();
+                    std::string sid_str = game_sid_node.as<std::string>();
+
+                    vid = common::pystr(vid_str).as_int(0, 16);
+                    sid = common::pystr(sid_str).as_int(0, 16);
+
+                    if ((vid == 0) || (sid == 0)) {
+                        throw std::invalid_argument("VID or SID is not hex string!");
+                    }
+                } catch (std::exception &ex) {
+                    failed_game_name.push_back(game_name);
+                    continue;
+                }
+
+                epoc::drm::rights_permission permission_template;
+                permission_template.version_rights_main_ = 1;
+                permission_template.version_rights_sub_ = 0;
+                permission_template.insert_time_ = common::get_current_utc_time_in_microseconds_since_0ad();
+                permission_template.play_constraint_.active_constraints_ = epoc::drm::rights_constraint_vendor | epoc::drm::rights_constraint_software;
+                permission_template.play_constraint_.vendor_id_ = vid;
+                permission_template.play_constraint_.secure_id_ = sid;
+                permission_template.available_rights_ = epoc::drm::rights_type_play;
+
+                bool key_failed = false;
+
+                std::vector<epoc::drm::rights_object> key_parsed;
+
+                for (auto game_key: game_keys) {
+                    epoc::drm::rights_object final_result;
+                    final_result.common_data_.content_hash_.resize(20, 0);
+                    final_result.permissions_.push_back(permission_template);
+
+                    auto cid_node = game_key["cid"];
+                    auto key_base64_node = game_key["value"];
+
+                    if (!cid_node || !key_base64_node) {
+                        key_failed = true;
+                        break;
+                    } else {
+                        try {
+                            final_result.common_data_.content_id_ = fmt::format("cid:{}@content.nokia.com", cid_node.as<std::uint32_t>());
+                            std::string key_base64_str = key_base64_node.as<std::string>();
+
+                            final_result.encrypt_key_.resize(16);
+                            crypt::base64_decode(reinterpret_cast<const std::uint8_t*>(key_base64_str.c_str()), 24, final_result.encrypt_key_.data(), 16);
+                        } catch (std::exception &ex)
+                        {
+                            key_failed = true;
+                            break;
+                        }
+                    }
+
+                    key_parsed.push_back(final_result);
+                }
+
+                if (key_failed) {
+                    failed_game_name.push_back(game_name);
+                    continue;
+                }
+
+                for (std::size_t i = 0; i < key_parsed.size(); i++) {
+                    database_->add_or_update_record(key_parsed[i]);
+                }
+
+                success_game_name.push_back(game_name);
+            }
+
+            database_->flush();
+
+            return true;
+        }
+
+        return false;
     }
 
     void rights_server::startup_imports() {

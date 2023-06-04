@@ -377,7 +377,7 @@ namespace eka2l1 {
                 storage_path = eka2l1::absolute_path(conf_->storage, storage_path);
 
                 std::string root_z_path = add_path(storage_path, "drives/" + rom_drive_name + "/");
-                auto ite = common::make_directory_iterator(root_z_path);
+                auto ite = common::make_directory_iterator(root_z_path, "");
                 if (!ite) {
                     return false;
                 }
@@ -903,7 +903,7 @@ namespace eka2l1 {
     }
 
     ngage_game_card_install_error system_impl::find_singular_ngage_game(const std::string &system_apps_folder_path, apa_app_registry &result, std::string *folder_1, std::string *folder_2) {
-        std::unique_ptr<common::dir_iterator> apps_folder_ite = common::make_directory_iterator(system_apps_folder_path);
+        std::unique_ptr<common::dir_iterator> apps_folder_ite = common::make_directory_iterator(system_apps_folder_path, "");
         apps_folder_ite->detail = true;
 
         std::string specific_app;
@@ -1052,7 +1052,7 @@ namespace eka2l1 {
         }
 
         // Copy system folder (override lib folder copy). We don't copy other file or folder
-        auto apps_folder_ite = common::make_directory_iterator(system_folder_path);
+        auto apps_folder_ite = common::make_directory_iterator(system_folder_path, "");
         apps_folder_ite->detail = true;
 
         common::dir_entry system_subitem_entry;

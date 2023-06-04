@@ -762,4 +762,8 @@ public class Emulator {
 
 
     public static native void submitQuestionDialogResponse(int value);
+
+    public static native String[] getSuccessInstalledLicenseGames();
+    public static native String[] getFailedInstalledLicenseGames();
+    public static native boolean installNG2Licenses(String content);
 }

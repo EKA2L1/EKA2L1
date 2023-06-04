@@ -1229,7 +1229,7 @@ bool main_window::controller_event_handler(eka2l1::drivers::input_event &event) 
 
 void main_window::make_default_binding_profile() {
     // Create default profile if there is none
-    auto ite = eka2l1::common::make_directory_iterator("bindings\\");
+    auto ite = eka2l1::common::make_directory_iterator("bindings\\", "");
     if (!ite) {
         return;
     }

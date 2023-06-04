@@ -23,6 +23,20 @@
     <string name="notify_dialog_title">Notification</string>
     <string name="grid_app_list_mode">Grid mode</string>
     <string name="list_app_list_mode">List mode</string>
+    <string name="qr_scan_title">Scan your QR code</string>
+    <string name="camera_not_available">No camera available</string>
+    <string name="ng2_license_install_success_single_game">Successfully installed licenses of <b>%s</b>!</string>
+    <string name="ng2_license_install_failed_single_game">Fail to install licenses of <b>%s</b>!</string>
+    <string name="ng2_license_install_success_multiple_game">These games\' licenses have successfully be installed:</string>
+    <string name="ng2_license_install_failed_multiple_game">These games\' licenses have failed to be installed:</string>
+    <string name="ng2_license_install_result">License install result</string>
+    <string name="ng2_scan_qr_title">Scan N-Gage 2.0 QR code license</string>
+    <string name="install_ng2_licenses">Install N-Gage 2.0 licenses</string>
+    <string name="ng2_qr_code_invalid">The provided QR code contains invalid N-Gage 2.0 game license!</string>
+    <string name="scan_mmc_id">Scan MMC ID</string>
+    <string name="scan_qr_mmc_id_title">Scan QR code containing MMC ID</string>
+    <string name="scan_qr_mmc_id_failed">QR code does not contain MMC ID</string>
+    <string name="scan_qr_mmc_id_success">Successfully scan MMC ID</string>
 
     <string name="install">Install</string>
     <string name="rescan_devices">Rescan devices</string>
@@ -226,4 +240,7 @@
     <string name="install_ng_game_more_than_one_game">There is more than one game in the given card game folder!</string>
     <string name="install_ng_game_no_game_info_file">The game information file does not exist in the card game folder!</string>
     <string name="install_ng_game_corrupted_game_info">The game information file has been corrupted. Please check your data\'s validity!</string>
+    <string name="title_activity_qr_scan_preview">QrScanPreviewActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
 </resources>

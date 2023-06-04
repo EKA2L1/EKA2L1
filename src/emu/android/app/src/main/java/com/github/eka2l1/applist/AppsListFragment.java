@@ -62,6 +62,7 @@ import com.github.eka2l1.config.ProfilesFragment;
 import com.github.eka2l1.emu.Emulator;
 import com.github.eka2l1.emu.EmulatorActivity;
 import com.github.eka2l1.info.AboutDialogFragment;
+import com.github.eka2l1.qrscan.QrScanResultContract;
 import com.github.eka2l1.settings.AppDataStore;
 import com.github.eka2l1.settings.SettingsFragment;
 import com.github.eka2l1.util.FileUtils;
@@ -101,6 +102,16 @@ public class AppsListFragment extends Fragment {
     private final ActivityResultLauncher<Void> openNGageGameLauncher = registerForActivityResult(
             FileUtils.getDirPicker(),
             this::onNGageGameResult
+    );
+
+    private final ActivityResultLauncher<Integer> scanNG2LicenseLauncher = registerForActivityResult(
+            new QrScanResultContract(),
+            this::onNG2LicenseScanResult
+    );
+
+    private final ActivityResultLauncher<Integer> scanMMCIDLauncher = registerForActivityResult(
+            new QrScanResultContract(),
+            this::onMMCIDScanResult
     );
 
     @Override
@@ -336,6 +347,51 @@ public class AppsListFragment extends Fragment {
         }
     }
 
+    private void onNG2LicenseScanResult(String content) {
+        if (content == null) {
+            return;
+        }
+
+        if (!Emulator.installNG2Licenses(content)) {
+            Toast.makeText(getContext(), R.string.ng2_qr_code_invalid, Toast.LENGTH_LONG).show();
+        } else {
+            NG2LicenseInstallResultDialogFragment resultFragment = new NG2LicenseInstallResultDialogFragment();
+            resultFragment.show(getParentFragmentManager(), "ng2_license_result");
+        }
+    }
+
+    private void onMMCIDScanResult(String content) {
+        if (content == null) {
+            return;
+        }
+
+        String[] values = content.split("-");
+        boolean failed = false;
+
+        if (values.length != 4) {
+            failed = true;
+        } else {
+            for (int i = 0; i < values.length; i++) {
+                try {
+                    Long.parseLong(values[i], 16);
+                } catch (Exception ex) {
+                    failed = true;
+                    break;
+                }
+            }
+        }
+
+        Toast.makeText(getContext(), failed ? R.string.scan_qr_mmc_id_failed : R.string.scan_qr_mmc_id_success, failed ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT).show();
+
+        if (!failed) {
+            AppDataStore store = AppDataStore.getEmulatorStore();
+            store.putString("mmc-id", content);
+            store.save();
+
+            restart();
+        }
+    }
+
     private void setToggleGridIconStatus(MenuItem item, boolean isGrid) {
         item.setChecked(isGrid);
         if (isGrid) {
@@ -431,6 +487,10 @@ public class AppsListFragment extends Fragment {
                     .commit();
         } else if (itemId == R.id.action_install_ng_game) {
             openNGageGameLauncher.launch(null);
+        } else if (itemId == R.id.action_install_ng2_licenses) {
+            scanNG2LicenseLauncher.launch(R.string.ng2_scan_qr_title);
+        } else if (itemId == R.id.action_scan_mmc_id) {
+            scanMMCIDLauncher.launch(R.string.scan_qr_mmc_id_title);
         }
         return super.onOptionsItemSelected(item);
     }

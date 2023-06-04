@@ -90,7 +90,7 @@ namespace eka2l1::config {
             return true;
         }
 
-        auto setting_folder = common::make_directory_iterator(compat_full);
+        auto setting_folder = common::make_directory_iterator(compat_full, "*.yml");
         if (!setting_folder) {
             return false;
         }
@@ -100,7 +100,7 @@ namespace eka2l1::config {
         common::dir_entry setting_entry;
 
         while (setting_folder->next_entry(setting_entry) == 0) {
-            if ((setting_entry.type == common::FILE_REGULAR) && common::lowercase_string(eka2l1::path_extension(setting_entry.name)) == ".yml") {
+            if (setting_entry.type == common::FILE_REGULAR) {
                 const common::pystr fname = eka2l1::replace_extension(eka2l1::filename(setting_entry.name), "");
                 const epoc::uid uid = fname.as_int<std::uint32_t>(0, 16);
 

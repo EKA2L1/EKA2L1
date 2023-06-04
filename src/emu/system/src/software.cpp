@@ -136,9 +136,9 @@ namespace eka2l1::loader {
     }
 
     static bool determine_rpkg_symbian_version_through_series60_sis(const std::string &extracted_path, epocver &ver) {
-        std::string sis_path = add_path(extracted_path, "system\\install\\series60v*.sis");
+        std::string sis_path = add_path(extracted_path, "system\\install\\");
 
-        auto directory = common::make_directory_iterator(sis_path);
+        auto directory = common::make_directory_iterator(sis_path, "series60v*.sis");
         if (!directory) {
             return false;
         }
@@ -285,9 +285,9 @@ namespace eka2l1::loader {
     }
 
     static bool determine_rpkg_product_info_from_sis(const std::string &extracted_path, std::string &manufacturer, std::string &firmcode, std::string &model) {
-        std::string sis_path = add_path(extracted_path, "system\\install\\dev*.sis");
+        std::string sis_path = add_path(extracted_path, "system\\install\\");
 
-        auto directory = common::make_directory_iterator(sis_path);
+        auto directory = common::make_directory_iterator(sis_path, "dev*.sis");
         if (!directory) {
             return false;
         }

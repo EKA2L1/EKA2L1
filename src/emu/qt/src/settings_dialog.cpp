@@ -679,7 +679,7 @@ void settings_dialog::refresh_keybind_buttons() {
 void settings_dialog::refresh_keybind_profiles() {
     ui_->control_profile_combobox->clear();
 
-    auto ite = eka2l1::common::make_directory_iterator("bindings\\");
+    auto ite = eka2l1::common::make_directory_iterator("bindings\\", "");
     if (!ite) {
         return;
     }

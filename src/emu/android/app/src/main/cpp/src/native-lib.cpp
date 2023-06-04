@@ -400,3 +400,25 @@ Java_com_github_eka2l1_emu_Emulator_submitQuestionDialogResponse(JNIEnv *env, jc
                                                                  jint value) {
     state->launcher->on_question_dialog_finished(value);
 }
+
+extern "C"
+JNIEXPORT jobjectArray JNICALL
+Java_com_github_eka2l1_emu_Emulator_getSuccessInstalledLicenseGames(JNIEnv *env, jclass clazz) {
+    return retrieve_jni_string_array_from_vector(env, state->launcher->get_success_installed_license_games());
+}
+
+extern "C"
+JNIEXPORT jobjectArray JNICALL
+Java_com_github_eka2l1_emu_Emulator_getFailedInstalledLicenseGames(JNIEnv *env, jclass clazz) {
+    return retrieve_jni_string_array_from_vector(env, state->launcher->get_failed_installed_license_games());
+}
+
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_github_eka2l1_emu_Emulator_installNG2Licenses(JNIEnv *env, jclass clazz, jstring content) {
+    const char *cstr = env->GetStringUTFChars(content, nullptr);
+    std::string content_cpp = std::string(cstr);
+    env->ReleaseStringUTFChars(content, cstr);
+
+    return state->launcher->install_ng2_game_licenses(content_cpp);
+}

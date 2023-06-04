@@ -27,6 +27,7 @@
 #include <drivers/ui/input_dialog.h>
 #include <services/applist/applist.h>
 #include <services/window/window.h>
+#include <services/drm/rights/rights.h>
 #include <system/installation/common.h>
 #include <utils/apacmd.h>
 
@@ -46,7 +47,11 @@ namespace eka2l1::android {
         applist_server *alserv;
         window_server *winserv;
         fbs_server *fbsserv;
+        rights_server *rightsserv;
         bool is_s80;
+
+        std::vector<std::string> success_license_games;
+        std::vector<std::string> failed_license_games;
 
         eka2l1::vecx<std::uint8_t, 3> background_color_;
         float scale_ratio_;
@@ -97,6 +102,9 @@ namespace eka2l1::android {
                                   drivers::ui::yes_no_dialog_complete_callback complete_callback);
         void on_question_dialog_finished(const int result);
         int install_ngage_game(const std::string &path);
+        bool install_ng2_game_licenses(const std::string &content);
+        std::vector<std::string> get_success_installed_license_games();
+        std::vector<std::string> get_failed_installed_license_games();
 
         fbs_server *get_fbs_serv() {
             return fbsserv;

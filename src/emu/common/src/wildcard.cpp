@@ -77,8 +77,14 @@ namespace eka2l1::common {
 
     std::size_t wildcard_match_impl(const std::string &reference, const std::string &match_pattern,
         const bool is_fold) {
+        std::string rgs = wildcard_to_regex_string(match_pattern, !is_fold);
+
         re2::StringPiece result;
-        if (!RE2::PartialMatch(reference, wildcard_to_regex_string(match_pattern, !is_fold), &result)) {
+        if (!RE2::PartialMatch(reference, rgs, &result)) {
+            if (RE2::FullMatch(reference, rgs)) {
+                return 0;
+            }
+
             return std::string::npos;
         }
 

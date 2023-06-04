@@ -402,7 +402,7 @@ namespace eka2l1::hle {
     }
 
     void lib_manager::load_patch_libraries(const std::string &patch_folder) {
-        auto iterator = common::make_directory_iterator(patch_folder);
+        auto iterator = common::make_directory_iterator(patch_folder, "*.map");
         if (!iterator) {
             return;
         }
@@ -414,120 +414,118 @@ namespace eka2l1::hle {
         std::vector<std::string> patch_image_paths;
 
         while (iterator->next_entry(entry) == 0) {
-            if (common::lowercase_string(eka2l1::path_extension(entry.name)) == ".map") {
-                const std::string original_map_name = eka2l1::replace_extension(eka2l1::filename(entry.name), "");
-                const std::string patch_map_path = eka2l1::add_path(patch_folder, entry.name);
+            const std::string original_map_name = eka2l1::replace_extension(eka2l1::filename(entry.name), "");
+            const std::string patch_map_path = eka2l1::add_path(patch_folder, entry.name);
 
-                epocver start_ver = kern_->get_epoc_version();
+            epocver start_ver = kern_->get_epoc_version();
 
-                std::string patch_dll_map;
+            std::string patch_dll_map;
 
-                // Look for map file. These describes the export maps.
-                // This function will replace original ROM subroutines with route to these functions.
-                common::ini_file map_file_parser;
-                map_file_parser.load(patch_map_path.c_str());
+            // Look for map file. These describes the export maps.
+            // This function will replace original ROM subroutines with route to these functions.
+            common::ini_file map_file_parser;
+            map_file_parser.load(patch_map_path.c_str());
 
-                std::string source_dll_name_from_patch = eka2l1::replace_extension(original_map_name, "_");
-                common::ini_node_ptr pair_source_node = map_file_parser.find("source");
-                if (pair_source_node != nullptr) {
-                    common::ini_pair *pair = pair_source_node->get_as<common::ini_pair>();
-                    if (pair != nullptr) {
-                        if (pair->get_value_count() >= 1) {
-                            std::vector<std::string> sources_dll_list(1);
-                            pair->get(sources_dll_list);
+            std::string source_dll_name_from_patch = eka2l1::replace_extension(original_map_name, "_");
+            common::ini_node_ptr pair_source_node = map_file_parser.find("source");
+            if (pair_source_node != nullptr) {
+                common::ini_pair *pair = pair_source_node->get_as<common::ini_pair>();
+                if (pair != nullptr) {
+                    if (pair->get_value_count() >= 1) {
+                        std::vector<std::string> sources_dll_list(1);
+                        pair->get(sources_dll_list);
 
-                            if (sources_dll_list.size() >= 1) {
-                                source_dll_name_from_patch = sources_dll_list[0] + "_";
-                            }
+                        if (sources_dll_list.size() >= 1) {
+                            source_dll_name_from_patch = sources_dll_list[0] + "_";
                         }
                     }
                 }
+            }
 
-                while (true) {
-                    if (start_ver >= epocver::epocverend) {
-                        break;
-                    }
-
-                    const std::string source_dll_name = source_dll_name_from_patch + epocver_to_plat_suffix(start_ver) + ".dll";
-                    patch_dll_map = eka2l1::add_path(patch_folder, source_dll_name);
-
-                    if (!common::exists(patch_dll_map)) {
-                        patch_dll_map.clear();
-                        start_ver++;
-
-                        continue;
-                    }
-
-                    LOG_TRACE(KERNEL, "Using dll {} as patch dll for map file {}", source_dll_name, original_map_name);
+            while (true) {
+                if (start_ver >= epocver::epocverend) {
                     break;
                 }
 
-                if (patch_dll_map.empty()) {
-                    const std::string source_dll_name = source_dll_name_from_patch + "general.dll";
-                    patch_dll_map = eka2l1::add_path(patch_folder, source_dll_name);
+                const std::string source_dll_name = source_dll_name_from_patch + epocver_to_plat_suffix(start_ver) + ".dll";
+                patch_dll_map = eka2l1::add_path(patch_folder, source_dll_name);
 
-                    if (!common::exists(patch_dll_map)) {
-                        LOG_ERROR(KERNEL, "Can't find suitable patch DLL for map {}", original_map_name);
-                        continue;
-                    }
+                if (!common::exists(patch_dll_map)) {
+                    patch_dll_map.clear();
+                    start_ver++;
 
-                    LOG_TRACE(KERNEL, "Using general DLL {} as patch DLL for map file {}", source_dll_name, original_map_name);
+                    continue;
                 }
 
-                patch_image_paths.push_back(patch_dll_map);
-                patch_info the_patch;
-
-                the_patch.name_ = original_map_name;
-                the_patch.patch_ = nullptr;
-                the_patch.req_uid2_ = 0;
-                the_patch.req_uid3_ = 0;
-
-                // Get the requirements
-                common::ini_section *req_section = map_file_parser.find("requirements")->get_as<common::ini_section>();
-                if (req_section) {
-                    common::ini_pair *u2 = req_section->find("uid2")->get_as<common::ini_pair>();
-                    if (u2) {
-                        u2->get(&the_patch.req_uid2_, 1, 0);
-                    }
-
-                    common::ini_pair *u3 = req_section->find("uid3")->get_as<common::ini_pair>();
-                    if (u3) {
-                        u3->get(&the_patch.req_uid3_, 1, 0);
-                    }
-
-                    if (req_section->find("inrom") != nullptr) {
-                        the_patch.need_dest_rom_ = true;
-                    } else {
-                        the_patch.need_dest_rom_ = false;
-                    }
-                } else {
-                    LOG_TRACE(KERNEL, "Patch {} has no hard requirements", entry.name);
-                }
-
-                // Patch out the shared segment first
-                common::ini_section *shared_section = map_file_parser.find("shared")->get_as<common::ini_section>();
-
-                if (shared_section) {
-                    get_route_from_ini_section(*shared_section, the_patch.routes_);
-                } else {
-                    LOG_TRACE(KERNEL, "Shared section not found for patch DLL {}", entry.name);
-                }
-
-                const char *alone_section_name = epocver_to_string(kern_->get_epoc_version());
-
-                if (alone_section_name) {
-                    common::ini_section *indi_section = map_file_parser.find(alone_section_name)->get_as<common::ini_section>();
-
-                    if (indi_section) {
-                        get_route_from_ini_section(*indi_section, the_patch.routes_);
-                    } else {
-                        LOG_TRACE(KERNEL, "Seperate section not found for epoc version {} of patch DLL {}", static_cast<int>(kern_->get_epoc_version()),
-                            entry.name);
-                    }
-                }
-
-                patches_.push_back(the_patch);
+                LOG_TRACE(KERNEL, "Using dll {} as patch dll for map file {}", source_dll_name, original_map_name);
+                break;
             }
+
+            if (patch_dll_map.empty()) {
+                const std::string source_dll_name = source_dll_name_from_patch + "general.dll";
+                patch_dll_map = eka2l1::add_path(patch_folder, source_dll_name);
+
+                if (!common::exists(patch_dll_map)) {
+                    LOG_ERROR(KERNEL, "Can't find suitable patch DLL for map {}", original_map_name);
+                    continue;
+                }
+
+                LOG_TRACE(KERNEL, "Using general DLL {} as patch DLL for map file {}", source_dll_name, original_map_name);
+            }
+
+            patch_image_paths.push_back(patch_dll_map);
+            patch_info the_patch;
+
+            the_patch.name_ = original_map_name;
+            the_patch.patch_ = nullptr;
+            the_patch.req_uid2_ = 0;
+            the_patch.req_uid3_ = 0;
+
+            // Get the requirements
+            common::ini_section *req_section = map_file_parser.find("requirements")->get_as<common::ini_section>();
+            if (req_section) {
+                common::ini_pair *u2 = req_section->find("uid2")->get_as<common::ini_pair>();
+                if (u2) {
+                    u2->get(&the_patch.req_uid2_, 1, 0);
+                }
+
+                common::ini_pair *u3 = req_section->find("uid3")->get_as<common::ini_pair>();
+                if (u3) {
+                    u3->get(&the_patch.req_uid3_, 1, 0);
+                }
+
+                if (req_section->find("inrom") != nullptr) {
+                    the_patch.need_dest_rom_ = true;
+                } else {
+                    the_patch.need_dest_rom_ = false;
+                }
+            } else {
+                LOG_TRACE(KERNEL, "Patch {} has no hard requirements", entry.name);
+            }
+
+            // Patch out the shared segment first
+            common::ini_section *shared_section = map_file_parser.find("shared")->get_as<common::ini_section>();
+
+            if (shared_section) {
+                get_route_from_ini_section(*shared_section, the_patch.routes_);
+            } else {
+                LOG_TRACE(KERNEL, "Shared section not found for patch DLL {}", entry.name);
+            }
+
+            const char *alone_section_name = epocver_to_string(kern_->get_epoc_version());
+
+            if (alone_section_name) {
+                common::ini_section *indi_section = map_file_parser.find(alone_section_name)->get_as<common::ini_section>();
+
+                if (indi_section) {
+                    get_route_from_ini_section(*indi_section, the_patch.routes_);
+                } else {
+                    LOG_TRACE(KERNEL, "Seperate section not found for epoc version {} of patch DLL {}", static_cast<int>(kern_->get_epoc_version()),
+                        entry.name);
+                }
+            }
+
+            patches_.push_back(the_patch);
         }
 
         const std::uint32_t last_add_mode = additional_mode_;

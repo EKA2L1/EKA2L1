@@ -211,7 +211,7 @@ namespace eka2l1::common {
         dir_name = eka2l1::file_directory(dir_name);
 
         if (!match_pattern.empty()) {
-            match_regex = std::make_shared<RE2>(common::wildcard_to_regex_string(match_pattern, true));
+            match_regex = std::make_shared<RE2>(common::wildcard_to_regex_string(match_pattern, false));
         }
 
         handle = reinterpret_cast<void *>(opendir(dir_name.c_str()));
@@ -364,12 +364,18 @@ namespace eka2l1::common {
     private:
         std::vector<std::string> file_infos_;
         std::size_t current_index_;
+        std::shared_ptr<RE2> match_regex;
 
     public:
-        explicit content_uri_dir_iterator(const std::string &name)
+        explicit content_uri_dir_iterator(const std::string &name, const std::string &filter)
             : dir_iterator(name)
-            , current_index_(0) {
+            , current_index_(0)
+            , match_regex(nullptr) {
             file_infos_ = android::list_content_uri(name);
+
+            if (!filter.empty()) {
+                match_regex = std::make_shared<RE2>(common::wildcard_to_regex_string(filter, false));
+            }
         }
 
         ~content_uri_dir_iterator() override = default;
@@ -379,31 +385,33 @@ namespace eka2l1::common {
         }
 
         int next_entry(dir_entry &entry) {
-            if (current_index_ >= file_infos_.size()) {
-                return -1;
+            while (current_index_ < file_infos_.size()) {
+                if (!parse_uri_entry_info(file_infos_[current_index_++], entry)) {
+                    return -2;
+                }
+
+                if (!match_regex || RE2::FullMatch(entry.name, *match_regex)) {
+                    return 0;
+                }
             }
 
-            if (!parse_uri_entry_info(file_infos_[current_index_++], entry)) {
-                return -2;
-            }
-
-            return 0;
+            return -1;
         }
     };
 #endif
 
-    std::unique_ptr<dir_iterator> make_directory_iterator(const std::string &path) {
+    std::unique_ptr<dir_iterator> make_directory_iterator(const std::string &path, const std::string &filter) {
 #if EKA2L1_PLATFORM(ANDROID)
         if (is_content_uri(path)) {
-            return std::make_unique<content_uri_dir_iterator>(path);
+            return std::make_unique<content_uri_dir_iterator>(path, filter);
         }
 #endif
 
-        return std::make_unique<standard_dir_iterator>(path);
+        return std::make_unique<standard_dir_iterator>(eka2l1::add_path(path, filter));
     }
     
     std::string find_case_sensitive_file_name(const std::string &folder_path, const std::string &insensitive_name, const file_type type) {
-        auto ite = make_directory_iterator(folder_path);
+        auto ite = make_directory_iterator(folder_path, "");
         const std::u16string insensitive_name_u16 = common::utf8_to_ucs2(insensitive_name);
 
         common::dir_entry entry;
@@ -802,7 +810,7 @@ namespace eka2l1::common {
 
                 const std::string top_path = folder_stacks.top();
 
-                auto iterator = make_directory_iterator(add_path(target_folder, top_path));
+                auto iterator = make_directory_iterator(add_path(target_folder, top_path), "");
                 if (!iterator) {
                     return false;
                 }
@@ -881,7 +889,7 @@ namespace eka2l1::common {
             return true;
         }
 
-        auto iterator = make_directory_iterator(target_folder);
+        auto iterator = make_directory_iterator(target_folder, "");
         if (!iterator) {
             return false;
         }

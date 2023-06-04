@@ -194,7 +194,7 @@ namespace eka2l1::manager {
         std::string cur_dir;
         common::get_current_directory(cur_dir);
 
-        auto scripts_dir = common::make_directory_iterator("scripts/");
+        auto scripts_dir = common::make_directory_iterator("scripts/", "*.lua");
         if (!scripts_dir) {
             return;
         }
@@ -205,10 +205,8 @@ namespace eka2l1::manager {
         while (scripts_dir->next_entry(scripts_entry) == 0) {
             const std::string ext = path_extension(scripts_entry.name);
 
-            if ((scripts_entry.type == common::FILE_REGULAR) && (ext == ".lua")) {
-                auto module_name = filename(scripts_entry.name);
-                import_module("scripts/" + module_name);
-            }
+            auto module_name = filename(scripts_entry.name);
+            import_module("scripts/" + module_name);
         }
 
         common::set_current_directory(cur_dir);
