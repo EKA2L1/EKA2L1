@@ -23,6 +23,20 @@
     <string name="notify_dialog_title">Уведомление</string>
     <string name="grid_app_list_mode">Режим сетки</string>
     <string name="list_app_list_mode">Режим списка</string>
+    <string name="qr_scan_title">Scan your QR code</string>
+    <string name="camera_not_available">No camera available</string>
+    <string name="ng2_license_install_success_single_game">Successfully installed licenses of <b>%s</b>!</string>
+    <string name="ng2_license_install_failed_single_game">Fail to install licenses of <b>%s</b>!</string>
+    <string name="ng2_license_install_success_multiple_game">These games\' licenses have successfully be installed:</string>
+    <string name="ng2_license_install_failed_multiple_game">These games\' licenses have failed to be installed:</string>
+    <string name="ng2_license_install_result">License install result</string>
+    <string name="ng2_scan_qr_title">Scan N-Gage 2.0 QR code license</string>
+    <string name="install_ng2_licenses">Install N-Gage 2.0 licenses</string>
+    <string name="ng2_qr_code_invalid">The provided QR code contains invalid N-Gage 2.0 game license!</string>
+    <string name="scan_mmc_id">Scan MMC ID</string>
+    <string name="scan_qr_mmc_id_title">Scan QR code containing MMC ID</string>
+    <string name="scan_qr_mmc_id_failed">QR code does not contain MMC ID</string>
+    <string name="scan_qr_mmc_id_success">Successfully scan MMC ID</string>
     <string name="install">Установить</string>
     <string name="rescan_devices">Пересканировать устройства</string>
     <string name="device_dump">Дамп устройства</string>
@@ -173,4 +187,7 @@
     <string name="install_ng_game_more_than_one_game">В данной папке находится более одной игры!</string>
     <string name="install_ng_game_no_game_info_file">Файл информации об игре не существует в папке с игровой карточкой!</string>
     <string name="install_ng_game_corrupted_game_info">Файл информации об игре поврежден. Пожалуйста, проверьте корректность ваших данных!</string>
+    <string name="title_activity_qr_scan_preview">QrScanPreviewActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
 </resources>
