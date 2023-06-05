@@ -7,6 +7,7 @@
     <string name="settings">Configurações</string>
     <string name="packages">Pacotes</string>
     <string name="devices">Dispositivos</string>
+    <string name="switch_devices">Switch devices</string>
     <string name="profiles">Perfis</string>
     <string name="processing">Processando...</string>
     <string name="completed">Pronto!</string>
@@ -34,9 +35,14 @@
     <string name="install_ng2_licenses">Instalar licenças N-Gage 2.0</string>
     <string name="ng2_qr_code_invalid">O código QR fornecido contém uma licença de jogo N-Gage 2.0 inválida!</string>
     <string name="scan_mmc_id">Escanear ID do MMC</string>
+    <string name="mounted_mmc_ok_and_use_id_in_folder_name">Completed! Using MMC ID found in folder name.</string>
     <string name="scan_qr_mmc_id_title">Escanear código QR que contem o ID MMC</string>
     <string name="scan_qr_mmc_id_failed">Código QR não contém ID MMC</string>
     <string name="scan_qr_mmc_id_success">ID do MMC verificado com sucesso</string>
+    <string name="ng1_menu_title">N-Gage</string>
+    <string name="ng2_menu_title">N-Gage 2.0</string>
+    <string name="qr_no_camera">Press the picture button on bottom-right to scan QR code from an existing image.\n\nPlease re-enable camera permission for this application in order for camera scanning to work.</string>
+    <string name="qr_not_found_in_image">Can\'t find QR code in the choosen image.</string>
     <string name="install">Instalar</string>
     <string name="rescan_devices">Reescanear dispositivos</string>
     <string name="device_dump">Despejo de dispositivo</string>
@@ -111,6 +117,14 @@
     <string name="pref_screen_options">Opções de tela</string>
     <string name="pref_scale_ratio">Escala(%)</string>
     <string name="pref_background">Plano de fundo</string>
+    <string name="pref_background_image">Background image</string>
+    <string name="pref_background_image_view">Exibir</string>
+    <string name="pref_background_image_empty">Not set</string>
+    <string name="pref_background_image_clear">Limpar</string>
+    <string name="pref_background_image_fail_to_set">Fail to set background image!</string>
+    <string name="background_image">Background image</string>
+    <string name="background_image_opacity">BG image opacity</string>
+    <string name="background_image_keep_aspect_ratio">Keep BG image aspect ratio</string>
     <string name="pref_virtual_keyboard_options">Teclado Virtual</string>
     <string name="pref_vk_show">Mostrar teclado</string>
     <string name="pref_vk_feedback">Resposta tátil</string>
