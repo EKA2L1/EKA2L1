@@ -7,6 +7,7 @@
     <string name="settings">সেটিংস</string>
     <string name="packages">প্যাকেজসমূহ</string>
     <string name="devices">ডিভাইসসমূহ</string>
+    <string name="switch_devices">Switch devices</string>
     <string name="profiles">প্রোফাইলসমূহ</string>
     <string name="processing">প্রক্রিয়া চলছে...</string>
     <string name="completed">সম্পন্ন হয়েছে!</string>
@@ -34,9 +35,14 @@
     <string name="install_ng2_licenses">Install N-Gage 2.0 licenses</string>
     <string name="ng2_qr_code_invalid">The provided QR code contains invalid N-Gage 2.0 game license!</string>
     <string name="scan_mmc_id">Scan MMC ID</string>
+    <string name="mounted_mmc_ok_and_use_id_in_folder_name">Completed! Using MMC ID found in folder name.</string>
     <string name="scan_qr_mmc_id_title">Scan QR code containing MMC ID</string>
     <string name="scan_qr_mmc_id_failed">QR code does not contain MMC ID</string>
     <string name="scan_qr_mmc_id_success">Successfully scan MMC ID</string>
+    <string name="ng1_menu_title">N-Gage</string>
+    <string name="ng2_menu_title">N-Gage 2.0</string>
+    <string name="qr_no_camera">Press the picture button on bottom-right to scan QR code from an existing image.\n\nPlease re-enable camera permission for this application in order for camera scanning to work.</string>
+    <string name="qr_not_found_in_image">Can\'t find QR code in the choosen image.</string>
     <string name="install">ইনস্টল</string>
     <string name="rescan_devices">পুনরায় ডিভাইসসমূহ স্ক্যান করুন</string>
     <string name="device_dump">ডিভাইস ডাম্প</string>
@@ -111,6 +117,14 @@
     <string name="pref_screen_options">স্ক্রিন অপশন</string>
     <string name="pref_scale_ratio">স্কেল(%)</string>
     <string name="pref_background">ব্যাকগ্রাউন্ড</string>
+    <string name="pref_background_image">Background image</string>
+    <string name="pref_background_image_view">দৃশ্য</string>
+    <string name="pref_background_image_empty">Not set</string>
+    <string name="pref_background_image_clear">Clear</string>
+    <string name="pref_background_image_fail_to_set">Fail to set background image!</string>
+    <string name="background_image">Background image</string>
+    <string name="background_image_opacity">BG image opacity</string>
+    <string name="background_image_keep_aspect_ratio">Keep BG image aspect ratio</string>
     <string name="pref_virtual_keyboard_options">ভার্চুয়াল কিবোর্ড</string>
     <string name="pref_vk_show">কিবোর্ড দেখান</string>
     <string name="pref_vk_feedback">কম্পন প্রতিক্রিয়া</string>
