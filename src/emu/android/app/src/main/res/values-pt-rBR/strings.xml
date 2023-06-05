@@ -23,7 +23,7 @@
     <string name="notify_dialog_title">Notificação</string>
     <string name="grid_app_list_mode">Grid mode</string>
     <string name="list_app_list_mode">List mode</string>
-    <string name="qr_scan_title">Scan your QR code</string>
+    <string name="qr_scan_title">Escanear o seu código QR</string>
     <string name="camera_not_available">No camera available</string>
     <string name="ng2_license_install_success_single_game">Successfully installed licenses of <b>%s</b>!</string>
     <string name="ng2_license_install_failed_single_game">Fail to install licenses of <b>%s</b>!</string>
