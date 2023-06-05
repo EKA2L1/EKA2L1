@@ -1236,6 +1236,10 @@ namespace eka2l1 {
         scripting_ = std::make_unique<manager::scripts>(parent_);
 #endif
 
+        if (gdriver) {
+            gdriver->set_upscale_shader("");
+        }
+
         // Setup outsiders
         setup_outsider();
         invoke_system_reset_callbacks();

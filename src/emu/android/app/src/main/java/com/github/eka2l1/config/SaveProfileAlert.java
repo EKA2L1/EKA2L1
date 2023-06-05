@@ -65,6 +65,7 @@ public class SaveProfileAlert extends DialogFragment {
         EditText editText = v.findViewById(R.id.et_name);
         CheckBox cbConfig = v.findViewById(R.id.cb_config);
         CheckBox cbKeyboard = v.findViewById(R.id.cb_keyboard);
+        CheckBox cbBgImg = v.findViewById(R.id.cb_bg_img);
         CheckBox cbDefault = v.findViewById(R.id.cb_default);
         Button btNegative = v.findViewById(R.id.bt_negative);
         Button btPositive = v.findViewById(R.id.bt_positive);
@@ -93,7 +94,7 @@ public class SaveProfileAlert extends DialogFragment {
             try {
                 Profile profile = new Profile(name);
                 ProfilesManager.save(profile, configPath,
-                        cbConfig.isChecked(), cbKeyboard.isChecked());
+                        cbConfig.isChecked(), cbKeyboard.isChecked(), cbBgImg.isChecked());
                 if (cbDefault.isChecked()) {
                     AppDataStore dataStore = AppDataStore.getAndroidStore();
                     dataStore.putString(PREF_DEFAULT_PROFILE, name);

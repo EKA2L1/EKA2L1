@@ -12,6 +12,7 @@ option(EKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER "Enable EKA2L1 to dump unexpec
 option(EKA2L1_BUILD_VULKAN_BACKEND "Build Vulkan backend" OFF)
 option(EKA2L1_DEPLOY_DMG "Deploy EKA2L1 as .dmg" OFF)
 option(EKA2L1_BUILD_PATCH "Enable building Symbian's DLL patches using Symbian SDK" OFF)
+option(EKA2L1_ENABLE_DISCORD_RICH_PRESENCE "Enable support for Discord Rich Presence" OFF)
 
 set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set (ROOT ${CMAKE_CURRENT_SOURCE_DIR})
@@ -53,6 +54,12 @@ set (ENABLE_SEH_HANDLER 0)
 if (EKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER)
     set(ENABLE_SEH_HANDLER 1)
 endif (EKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER)
+
+if (EKA2L1_ENABLE_DISCORD_RICH_PRESENCE AND NOT ANDROID)
+    set(ENABLE_DISCORD_RICH_PRESENCE 1)
+else()
+    set(ENABLE_DISCORD_RICH_PRESENCE 0)
+endif()
 
 add_subdirectory(src/patch)
 add_subdirectory(src/external)

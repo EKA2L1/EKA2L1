@@ -27,6 +27,7 @@
 #include <common/path.h>
 #include <config/config.h>
 #include <vfs/vfs.h>
+#include <kernel/kernel.h>
 
 #include <fmt/format.h>
 
@@ -72,7 +73,7 @@ namespace eka2l1::j2me {
         return build_path_to_jar_dir(entry) + fmt::format("{}.jar", reduce_special_character_in_name(entry.name_));
     }
 
-    void launch_through_kmidrun(system *sys, const app_entry &entry) {
+    void launch_through_kmidrun(system *sys, const app_entry &entry, std::function<void(kernel::process*)> exit_cb) {
         std::u16string jar_path = common::utf8_to_ucs2(build_path_to_jar(entry));
         io_system *io = sys->get_io_system();
 
@@ -109,9 +110,16 @@ namespace eka2l1::j2me {
         const std::u16string args = std::u16string(u"7049*268437956*") + common::utf8_to_ucs2(entry.original_title_)
             + u"*" + jar_path + u"*" + jad_path + u"*";
 
-        if (!sys->load(u"Z:\\system\\programs\\kmidrun.exe", args)) {
+        kernel_system *kern = sys->get_kernel_system();
+        kernel::process *pr = kern->spawn_new_process(u"Z:\\system\\programs\\kmidrun.exe", args);
+
+        if (!pr) {
             LOG_ERROR(J2ME, "Can't launch KMidRun for running Midlet!");
+        } else {
+            pr->logon(exit_cb);
         }
+
+        pr->run();
     }
 
     install_error install_for_kmidrun(system *sys, app_list *applist, const std::string &path, app_entry &entry_info) {

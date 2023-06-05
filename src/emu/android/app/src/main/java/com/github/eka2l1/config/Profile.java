@@ -67,6 +67,10 @@ public class Profile implements Comparable<Profile> {
         return new File(Emulator.getProfilesDir(), name + Emulator.APP_KEY_LAYOUT_FILE);
     }
 
+    public File getBackground() {
+        return new File(Emulator.getProfilesDir(), name + Emulator.APP_BACKGROUND_IMAGE_FILE);
+    }
+
     @Override
     public String toString() {
         return name;
@@ -83,6 +87,9 @@ public class Profile implements Comparable<Profile> {
 
     boolean hasKeyLayout() {
         return getKeyLayout().exists();
+    }
+    boolean hasBackground() {
+        return getBackground().exists();
     }
 
     @Override

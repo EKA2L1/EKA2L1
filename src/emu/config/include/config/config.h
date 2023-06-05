@@ -162,6 +162,8 @@ namespace eka2l1::config {
         bool extensive_logging{ false };
         int background_image_opacity{ 255 };
 
+        std::string current_mmc_id;
+
         void serialize(const bool with_bindings = true);
         void deserialize(const bool with_bindings = true);
     };

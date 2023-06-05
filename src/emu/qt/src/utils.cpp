@@ -22,6 +22,7 @@
 #include <config/app_settings.h>
 #include <common/random.h>
 #include <common/version.h>
+#include <common/path.h>
 
 #include <kernel/kernel.h>
 #include <services/ui/cap/oom_app.h>
@@ -31,6 +32,8 @@
 
 #include <QCheckBox>
 #include <QSettings>
+
+#include <regex>
 
 eka2l1::window_server *get_window_server_through_system(eka2l1::system *sys) {
     eka2l1::kernel_system *kernel = sys->get_kernel_system();
@@ -172,4 +175,20 @@ QString epocver_to_symbian_readable_name(const epocver ver) {
     }
 
     return QString("Unknown");
+}
+
+std::optional<std::string> get_mmc_id_from_path(const std::string &path) {
+    std::string folder_name = eka2l1::filename(path);
+    if (folder_name.empty()) {
+        return std::nullopt;
+    }
+
+    std::regex mmc_id_regex("[0-9a-fA-F]+-[0-9a-fA-F]+-[0-9a-fA-F]+-[0-9a-fA-F]+", std::regex_constants::icase);
+    std::smatch matches;
+
+    if (std::regex_search(folder_name, matches, mmc_id_regex)) {
+        return matches[0];
+    }
+
+    return std::nullopt;
 }

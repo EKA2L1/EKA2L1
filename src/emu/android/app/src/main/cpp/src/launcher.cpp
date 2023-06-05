@@ -42,6 +42,9 @@
 #include <lunasvg.h>
 #include <jni.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
+
 namespace eka2l1::android {
 
     launcher::launcher(eka2l1::system *sys)
@@ -51,7 +54,10 @@ namespace eka2l1::android {
         , alserv(nullptr)
         , input_complete_callback_(nullptr)
         , yes_no_complete_callback_(nullptr)
-        , is_s80(false) {
+        , is_s80(false)
+        , background_img_(0)
+        , background_img_opacity_(0.0f)
+        , keep_bg_aspect_(true) {
         retrieve_servers();
     }
 
@@ -303,7 +309,7 @@ namespace eka2l1::android {
         cmdline.launch_cmd_ = epoc::apa::command_create;
 
         kern->lock();
-        alserv->launch_app(*reg, cmdline, nullptr, [&]() {
+        alserv->launch_app(*reg, cmdline, nullptr, [&](kernel::process *pr) {
             JNIEnv *env = common::jni::environment();
             jclass clazz = common::jni::find_class("com/github/eka2l1/emu/Emulator");
             jmethodID exit_method = env->GetStaticMethodID(clazz, "exitInstance", "()V");
@@ -533,6 +539,65 @@ namespace eka2l1::android {
         builder.clear({ background_color_[0] / 255.0f, background_color_[1] / 255.0f, background_color_[2] / 255.0f, 1.0f, 0.0f, 0.0f },
             drivers::draw_buffer_bit_color_buffer);
 
+        if (!background_img_ && !background_img_path_.empty()) {
+            int x, y, comp = 0;
+
+            FILE *f = eka2l1::common::open_c_file(background_img_path_, "rb");
+            if (!f) {
+                LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to load background texture!");
+            } else {
+                // Not load again even if fail
+                background_img_path_.clear();
+                stbi_uc *data = stbi_load_from_file(f, &background_width, &background_height, &comp, STBI_rgb_alpha);
+
+                background_img_ = eka2l1::drivers::create_texture(sys->get_graphics_driver(), 2, 0,
+                                                                  eka2l1::drivers::texture_format::rgba, eka2l1::drivers::texture_format::rgba,
+                                                                  eka2l1::drivers::texture_data_type::ubyte, data, x * y * 4, eka2l1::vec3(x, y, 0));
+
+                if (!background_img_) {
+                    LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to create background texture!");
+                } else {
+                    builder.set_texture_filter(background_img_, true, eka2l1::drivers::filter_option::nearest);
+                }
+
+                stbi_image_free(data);
+            }
+        }
+
+        if (background_img_ != 0) {
+            eka2l1::rect draw_image_rect;
+            draw_image_rect.size = swapchain_size;
+
+            if (keep_bg_aspect_) {
+                float bg_aspect_ratio = static_cast<float>(background_width) / background_height;
+                bool do_potrait_ap_keeping = false;
+
+                if (swapchain_size.x > swapchain_size.y) {
+                    do_potrait_ap_keeping = (swapchain_size.y * bg_aspect_ratio <= draw_image_rect.size.x);
+                } else {
+                    do_potrait_ap_keeping = (swapchain_size.x / bg_aspect_ratio > draw_image_rect.size.y);
+                }
+
+                if (do_potrait_ap_keeping) {
+                    draw_image_rect.size.x = swapchain_size.x;
+                    draw_image_rect.size.y = static_cast<int>(swapchain_size.x / bg_aspect_ratio);
+                    draw_image_rect.top.y = (swapchain_size.y - draw_image_rect.size.y) / 2;
+                } else {
+                    draw_image_rect.size.y = swapchain_size.y;
+                    draw_image_rect.size.x = static_cast<int>(swapchain_size.y * bg_aspect_ratio);
+                    draw_image_rect.top.x = (swapchain_size.x - draw_image_rect.size.x) / 2;
+                }
+            }
+
+            builder.set_feature(eka2l1::drivers::graphics_feature::blend, true);
+            builder.blend_formula(eka2l1::drivers::blend_equation::add, eka2l1::drivers::blend_equation::add,
+                                  eka2l1::drivers::blend_factor::frag_out_alpha, eka2l1::drivers::blend_factor::one_minus_frag_out_alpha,
+                                  eka2l1::drivers::blend_factor::one, eka2l1::drivers::blend_factor::one_minus_frag_out_alpha);
+            builder.set_brush_color_detail(eka2l1::vec4(255, 255, 255, eka2l1::common::clamp<int>(0, 255, background_img_opacity_ * 255)));
+            builder.draw_bitmap(background_img_, 0, draw_image_rect, eka2l1::rect(), eka2l1::vec2(0, 0), 0.0f, eka2l1::drivers::bitmap_draw_flag_use_brush);
+            builder.set_feature(eka2l1::drivers::graphics_feature::blend, false);
+        }
+
         if (scr) {
             auto &crr_mode = scr->current_mode();
 
@@ -660,13 +725,18 @@ namespace eka2l1::android {
     }
 
     void launcher::set_screen_params(std::uint32_t background_color, std::uint32_t scale_ratio,
-                                     std::uint32_t scale_type, std::uint32_t gravity) {
+                                     std::uint32_t scale_type, std::uint32_t gravity,
+                                     const std::string &bg_img_path,
+                                     float bg_img_opacity, bool bg_keep_aspect_ratio) {
         background_color_[0] = (background_color >> 16) & 0xFF;
         background_color_[1] = (background_color >> 8) & 0xFF;
         background_color_[2] = background_color & 0xFF;
         scale_ratio_ = scale_ratio;
         scale_type_ = scale_type;
         gravity_ = gravity;
+        background_img_path_ = bg_img_path;
+        background_img_opacity_ = bg_img_opacity;
+        keep_bg_aspect_ = bg_keep_aspect_ratio;
     }
 
     bool launcher::open_input_view(const std::u16string &initial_text, const int max_len,
@@ -746,5 +816,9 @@ namespace eka2l1::android {
 
     std::vector<std::string> launcher::get_failed_installed_license_games() {
         return failed_license_games;
+    }
+
+    void launcher::set_current_mmc_id(const std::string &new_mmc_id) {
+        conf->current_mmc_id = new_mmc_id;
     }
 }

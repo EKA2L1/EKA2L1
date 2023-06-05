@@ -39,9 +39,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class ProfilesManager {
-
     private static final String TAG = ProfilesManager.class.getName();
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+    public static String getBackgroundPath(String configDir) {
+        return configDir + Emulator.APP_BACKGROUND_IMAGE_FILE;
+    }
+
+    public static File getBackgroundFile(File configFile) {
+        return new File(configFile, Emulator.APP_BACKGROUND_IMAGE_FILE);
+    }
 
     static ArrayList<Profile> getProfiles() {
         File root = new File(Emulator.getProfilesDir());
@@ -62,11 +69,12 @@ public class ProfilesManager {
         return new ArrayList<>(Arrays.asList(profiles));
     }
 
-    static void load(Profile from, String toPath, boolean config, boolean keyboard)
+    static void load(Profile from, String toPath, boolean config, boolean keyboard, boolean backgroundImage)
             throws IOException {
-        if (!config && !keyboard) {
+        if (!config && !keyboard && !backgroundImage) {
             return;
         }
+        File dstBackground = new File(toPath, Emulator.APP_BACKGROUND_IMAGE_FILE);
         File dstConfig = new File(toPath, Emulator.APP_CONFIG_FILE);
         File dstKeyLayout = new File(toPath, Emulator.APP_KEY_LAYOUT_FILE);
         try {
@@ -83,22 +91,25 @@ public class ProfilesManager {
                 }
             }
             if (keyboard) FileUtils.copyFileUsingChannel(from.getKeyLayout(), dstKeyLayout);
+            if (backgroundImage) FileUtils.copyFileUsingChannel(from.getBackground(), dstBackground);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
     }
 
-    static void save(Profile profile, String fromPath, boolean config, boolean keyboard)
+    static void save(Profile profile, String fromPath, boolean config, boolean keyboard, boolean backgroundImage)
             throws IOException {
-        if (!config && !keyboard) {
+        if (!config && !keyboard && !backgroundImage) {
             return;
         }
         profile.create();
         File srcConfig = new File(fromPath, Emulator.APP_CONFIG_FILE);
         File srcKeyLayout = new File(fromPath, Emulator.APP_KEY_LAYOUT_FILE);
+        File srcBackground = new File(fromPath, Emulator.APP_BACKGROUND_IMAGE_FILE);
         try {
             if (config) FileUtils.copyFileUsingChannel(srcConfig, profile.getConfig());
             if (keyboard) FileUtils.copyFileUsingChannel(srcKeyLayout, profile.getKeyLayout());
+            if (backgroundImage) FileUtils.copyFileUsingChannel(srcBackground, profile.getBackground());
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }

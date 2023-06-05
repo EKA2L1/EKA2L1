@@ -22,6 +22,7 @@
 #include <common/path.h>
 #include <common/pystr.h>
 #include <qt/cmdhandler.h>
+#include <qt/mainwindow.h>
 #include <qt/state.h>
 #include <system/devices.h>
 
@@ -40,6 +41,7 @@
 
 #include <utils/apacmd.h>
 #include <vfs/vfs.h>
+#include <qt/utils.h>
 
 #include <iostream>
 
@@ -147,8 +149,12 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
             epoc::apa::command_line cmdline;
             cmdline.launch_cmd_ = epoc::apa::command_create;
 
-            svr->launch_app(*registry, cmdline, nullptr);
+            svr->launch_app(*registry, cmdline, nullptr, [emu](kernel::process *pr) {
+                return emu->ui_main->get_process_exit_callback()(pr);
+            });
+
             emu->init_app_launched = true;
+            emu->launched_app_name_ = common::ucs2_to_utf8(registry->mandatory_info.long_caption.to_std_string(nullptr));
 
             return true;
         }
@@ -164,8 +170,14 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
             if (!pr) {
                 LOG_ERROR(FRONTEND_CMDLINE, "Unable to launch process: {}", tokstr);
             } else {
+                pr->logon([emu](kernel::process *pr) {
+                    return emu->ui_main->get_process_exit_callback()(pr);
+                });
+
                 pr->run();
+
                 emu->init_app_launched = true;
+                emu->launched_app_name_ = eka2l1::filename(tokstr);
             }
 
             return true;
@@ -181,7 +193,12 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
                 epoc::apa::command_line cmdline;
                 cmdline.launch_cmd_ = epoc::apa::command_create;
 
-                svr->launch_app(reg, cmdline, nullptr);
+                emu->launched_app_name_ = tokstr;
+
+                svr->launch_app(reg, cmdline, nullptr, [emu](kernel::process *pr) {
+                    return emu->ui_main->get_process_exit_callback()(pr);
+                });
+
                 emu->init_app_launched = true;
 
                 return true;
@@ -332,6 +349,11 @@ bool mount_card_option_handler(eka2l1::common::arg_parser *parser, void *userdat
         }
     }
 
+    std::optional<std::string> mmc_id_found = get_mmc_id_from_path(path);
+    if (mmc_id_found.has_value()) {
+        emu->conf.current_mmc_id = mmc_id_found.value();
+    }
+
     return true;
 }
 
@@ -422,7 +444,7 @@ bool run_ngage_game_option_handler(eka2l1::common::arg_parser *parser, void *use
     epoc::apa::command_line cmdline;
     cmdline.launch_cmd_ = epoc::apa::command_create;
 
-    if (!svr->launch_app(registry, cmdline, nullptr, []() {
+    if (!svr->launch_app(registry, cmdline, nullptr, [](kernel::process*) {
         exit(0);
     })) {
         *err = "Launch app failed!";

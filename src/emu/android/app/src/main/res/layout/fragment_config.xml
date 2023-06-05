@@ -100,6 +100,9 @@
         </androidx.constraintlayout.widget.ConstraintLayout><!-- System Properties -->
 
         <!-- Screen -->
+        <!-- Screen -->
+
+        <!-- Input -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/rootConfigScreen"
             android:layout_width="match_parent"
@@ -123,8 +126,8 @@
                 android:layout_height="38dp"
                 android:layout_margin="4dp"
                 android:text="@string/pref_background"
-                app:layout_constraintEnd_toStartOf="@+id/barrierScreenConfig"
                 app:layout_constraintBottom_toBottomOf="@+id/etScreenBack"
+                app:layout_constraintEnd_toStartOf="@+id/barrierScreenConfig"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/etScreenBack"
                 app:layout_constraintWidth_min="wrap" />
@@ -145,6 +148,73 @@
                 tools:ignore="UnusedAttribute" />
 
 
+            <Button
+                android:id="@+id/cmdScreenBgImg"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="4dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="4dp"
+                android:text="@string/pref_background_image"
+                app:layout_constraintEnd_toStartOf="@id/barrierScreenConfig"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/cmdScreenBack" />
+
+            <Button
+                android:id="@+id/cmdScreenViewBgImg"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="4dp"
+                android:text="@string/pref_background_image_empty"
+                app:layout_constraintEnd_toStartOf="@id/cmdScreenClearBgImg"
+                app:layout_constraintStart_toEndOf="@id/barrierScreenConfig"
+                app:layout_constraintTop_toTopOf="@id/cmdScreenBgImg"
+                tools:layout_constraintStart_toEndOf="@id/barrierScreenConfig" />
+
+            <Button
+                android:id="@+id/cmdScreenClearBgImg"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/pref_background_image_clear"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/cmdScreenViewBgImg" />
+
+            <TextView
+                android:id="@+id/tvScreenBgImgOpacity"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/height_config_row"
+                android:gravity="center_vertical"
+                android:text="@string/background_image_opacity"
+                android:textColor="?attr/textColorSecondary"
+                android:textSize="15dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/cmdScreenBgImg" />
+
+            <SeekBar
+                android:id="@+id/sbScreenBgImgOpacity"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:max="100"
+                app:layout_constraintBottom_toBottomOf="@id/tvScreenBgImgOpacity"
+                app:layout_constraintEnd_toStartOf="@id/etScreenBgImgOpacityValue"
+                app:layout_constraintStart_toEndOf="@+id/tvScreenBgImgOpacity"
+                app:layout_constraintTop_toTopOf="@id/tvScreenBgImgOpacity" />
+
+            <EditText
+                android:id="@+id/etScreenBgImgOpacityValue"
+                style="@style/EditTextStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/height_config_row"
+                android:ems="2"
+                android:gravity="center"
+                android:hint="100"
+                android:importantForAutofill="no"
+                android:inputType="number"
+                android:textDirection="ltr"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/tvScreenBgImgOpacity"
+                tools:ignore="HardcodedText,UnusedAttribute" />
+
             <TextView
                 android:id="@+id/textView3"
                 android:layout_width="wrap_content"
@@ -154,7 +224,7 @@
                 android:textColor="?attr/textColorSecondary"
                 android:textSize="15sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/etScreenBack" />
+                app:layout_constraintTop_toBottomOf="@id/tvScreenBgImgOpacity" />
 
             <SeekBar
                 android:id="@+id/sbScaleRatio"
@@ -164,7 +234,7 @@
                 app:layout_constraintBottom_toBottomOf="@+id/etScaleRatioValue"
                 app:layout_constraintEnd_toStartOf="@+id/etScaleRatioValue"
                 app:layout_constraintStart_toEndOf="@+id/textView3"
-                app:layout_constraintTop_toTopOf="@+id/etScaleRatioValue" />
+                app:layout_constraintTop_toTopOf="@id/textView3" />
 
             <EditText
                 android:id="@+id/etScaleRatioValue"
@@ -177,8 +247,9 @@
                 android:importantForAutofill="no"
                 android:inputType="number"
                 android:textDirection="ltr"
+                app:layout_constraintBottom_toBottomOf="@id/textView3"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/etScreenBack"
+                app:layout_constraintTop_toTopOf="@id/textView3"
                 tools:ignore="HardcodedText,UnusedAttribute" />
 
 
@@ -203,9 +274,12 @@
                 android:entries="@array/pref_orientation_entries"
                 android:textColor="?attr/textColorSecondary"
                 android:textSize="15sp"
+                app:layout_constraintBottom_toBottomOf="@id/textView4"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toEndOf="@+id/barrierScreenConfig"
-                app:layout_constraintTop_toTopOf="@+id/textView4" />
+                app:layout_constraintTop_toTopOf="@+id/textView4"
+                app:layout_constraintVertical_bias="0.475" />
 
             <TextView
                 android:id="@+id/tvScreenGravity"
@@ -306,6 +380,18 @@
                 app:layout_constraintStart_toEndOf="@+id/barrierScreenConfig"
                 app:layout_constraintTop_toBottomOf="@+id/cbShouldUseShaderForUpscale" />
 
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/cbKeepBgImgAspect"
+                style="@style/SwitchStyle"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/height_config_row"
+                android:layout_marginHorizontal="5dp"
+                android:checked="false"
+                android:text="@string/background_image_keep_aspect_ratio"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/spUpscaleShader" />
+
             <androidx.constraintlayout.widget.Barrier
                 android:id="@+id/barrierScreenConfig"
                 android:layout_width="10dp"
@@ -316,9 +402,8 @@
                 tools:layout_editor_absoluteY="5dp" />
 
 
-        </androidx.constraintlayout.widget.ConstraintLayout><!-- Screen -->
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <!-- Input -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/rootInputConfig"
             android:layout_width="match_parent"

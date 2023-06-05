@@ -31,7 +31,9 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -50,6 +52,7 @@ import androidx.appcompat.widget.SearchView;
 import androidx.core.content.pm.ShortcutInfoCompat;
 import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.core.graphics.drawable.IconCompat;
+import androidx.documentfile.provider.DocumentFile;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -69,9 +72,12 @@ import com.github.eka2l1.util.FileUtils;
 import com.github.eka2l1.util.LogUtils;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
@@ -122,6 +128,10 @@ public class AppsListFragment extends Fragment {
         getParentFragmentManager().setFragmentResultListener(KEY_RESTART, this, (key, bundle) -> {
             restartNeeded = true;
         });
+        getParentFragmentManager().setFragmentResultListener(KEY_RESTART_IMMEDIATELY, this, (key, bundle) -> {
+            restart();
+        });
+
     }
 
     @Override
@@ -311,8 +321,26 @@ public class AppsListFragment extends Fragment {
     }
 
     private void mountSdCard(String path) {
+        if (path == null) {
+            return;
+        }
+
+        String folderName = FileUtils.getFilenameFromPath(getContext(), path);
+
+        Pattern cidPattern = Pattern.compile("[0-9a-fA-F]+-[0-9a-fA-F]+-[0-9a-fA-F]+-[0-9a-fA-F]+");
+        Matcher matcher = cidPattern.matcher(folderName);
+
+        boolean mmcIdFoundInFolderName = matcher.find();
+
         Emulator.mountSdCard(path);
-        Toast.makeText(getContext(), R.string.completed, Toast.LENGTH_SHORT).show();
+
+        if (mmcIdFoundInFolderName) {
+            Emulator.setCurrentMMCID(matcher.group());
+            Toast.makeText(getContext(), R.string.mounted_mmc_ok_and_use_id_in_folder_name, Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(getContext(), R.string.completed, Toast.LENGTH_SHORT).show();
+        }
+
         prepareApps();
     }
 
@@ -395,10 +423,10 @@ public class AppsListFragment extends Fragment {
     private void setToggleGridIconStatus(MenuItem item, boolean isGrid) {
         item.setChecked(isGrid);
         if (isGrid) {
-            item.setIcon(R.drawable.list_white);
+            item.setIcon(R.drawable.ic_list_white);
             item.setTitle(R.string.list_app_list_mode);
         } else {
-            item.setIcon(R.drawable.grid_white);
+            item.setIcon(R.drawable.ic_grid_white);
             item.setTitle(R.string.grid_app_list_mode);
         }
     }
@@ -491,6 +519,9 @@ public class AppsListFragment extends Fragment {
             scanNG2LicenseLauncher.launch(R.string.ng2_scan_qr_title);
         } else if (itemId == R.id.action_scan_mmc_id) {
             scanMMCIDLauncher.launch(R.string.scan_qr_mmc_id_title);
+        } else if (itemId == R.id.action_switch_devices) {
+            SwitchDevicesAlert.newInstance()
+                    .show(getParentFragmentManager(), "alert_switch_devices");
         }
         return super.onOptionsItemSelected(item);
     }

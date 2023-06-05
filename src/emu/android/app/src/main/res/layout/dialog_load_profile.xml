@@ -29,4 +29,11 @@
         android:layout_height="wrap_content"
         android:checked="true"
         android:text="@string/pref_virtual_keyboard_options" />
+
+    <CheckBox
+        android:id="@+id/cb_bg_img"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="@string/background_image" />
 </LinearLayout>

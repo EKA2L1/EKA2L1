@@ -78,8 +78,10 @@
 
 static constexpr const char *LAST_UI_WINDOW_GEOMETRY_SETTING = "lastWindowGeometry";
 static constexpr const char *LAST_UI_WINDOW_STATE = "lastWindowState";
+static constexpr const char *LAST_UI_WINDOW_MAXMIZED = "lastWindowMaximized";
 static constexpr const char *LAST_EMULATED_DISPLAY_GEOMETRY_SETTING = "lastEmulatedDisplayGeometry";
 static constexpr const char *LAST_EMULATED_DISPLAY_STATE = "lastEmulatedDisplayState";
+static constexpr const char *LAST_EMULATED_DISPLAY_MAXIMIZED = "lastEmulatedDisplayMaximized";
 static constexpr const char *LAST_PACKAGE_FOLDER_SETTING = "lastPackageFolder";
 static constexpr const char *LAST_JAR_FOLDER_SETTING = "lastJarFolder";
 static constexpr const char *LAST_MOUNT_FOLDER_SETTING = "lastMountFolder";
@@ -241,9 +243,12 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     , editor_widget_(nullptr)
     , map_executor_(nullptr)
     , ui_(new Ui::main_window)
+    , tray_icon_(new QSystemTrayIcon(this))
+    , emu_icon_(":/assets/duck_tank.png")
     , applist_(nullptr)
     , displayer_(nullptr)
-    , background_image_texture_(0) {
+    , background_image_texture_(0)
+    , rpc_(this) {
     ui_->setupUi(this);
     ui_->label_al_not_available->setVisible(false);
 
@@ -360,6 +365,9 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     QColor default_color = settings.value(BACKGROUND_COLOR_DISPLAY_SETTING_NAME, QColor(0xD0, 0xD0, 0xD0)).value<QColor>();
     emulator_state_.conf.display_background_color = default_color.rgba();
 
+    tray_icon_->setIcon(emu_icon_);
+    tray_icon_->show();
+
     connect(ui_->action_about, &QAction::triggered, this, &main_window::on_about_triggered);
     connect(ui_->action_settings, &QAction::triggered, this, &main_window::on_settings_triggered);
     connect(ui_->action_package, &QAction::triggered, this, &main_window::on_package_install_clicked);
@@ -383,9 +391,11 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     connect(this, &main_window::package_install_text_ask, this, &main_window::on_package_install_text_ask, Qt::BlockingQueuedConnection);
     connect(this, &main_window::package_install_language_choose, this, &main_window::on_package_install_language_choose, Qt::BlockingQueuedConnection);
     connect(this, &main_window::screen_focus_group_changed, this, &main_window::on_screen_current_group_change_callback, Qt::QueuedConnection);
+
     connect(this, &main_window::input_dialog_delay_launch_asked, this, &main_window::on_input_dialog_delay_launch_asked);
     connect(this, &main_window::input_dialog_close_request, this, &main_window::on_input_dialog_close_request);
     connect(this, &main_window::question_dialog_open_request, this, &main_window::on_question_dialog_open_request, Qt::QueuedConnection);
+    connect(this, &main_window::app_exited, this, &main_window::on_app_exited, Qt::QueuedConnection);
 
     connect(editor_widget_, &editor_widget::editor_hidden, this, &main_window::on_mapping_editor_hidden);
 
@@ -437,6 +447,10 @@ void main_window::setup_app_list(const bool load_now) {
             }
         }
     }
+
+#if ENABLE_DISCORD_RICH_PRESENCE
+    rpc_.update(tr("Browsing").toStdString(), tr("App list").toStdString(), true);
+#endif
 }
 
 void main_window::setup_package_installer_ui_hooks() {
@@ -491,6 +505,7 @@ main_window::~main_window() {
 
     delete rotate_group_;
     delete map_executor_;
+    delete tray_icon_;
 
     delete ui_;
 }
@@ -585,7 +600,10 @@ void main_window::on_device_set_requested(const int index) {
         }
     }
 
-    emulator_state_.conf.device = index;
+    if (index >= 0) {
+        emulator_state_.conf.device = index;
+    }
+
     emulator_state_.conf.serialize();
 
     if (applist_) {
@@ -822,6 +840,14 @@ void main_window::mount_game_card_dump(QString mount_path) {
         mount_path.remove(mount_path.length() - 2, 2);
     }
 
+    auto do_check_and_assign_mmc_id = [mount_path, this]() {
+        std::optional<std::string> mmc_id_found = get_mmc_id_from_path(mount_path.toStdString());
+        if (mmc_id_found.has_value()) {
+            emulator_state_.conf.current_mmc_id = mmc_id_found.value();
+            tray_icon_->showMessage(tr("MMC ID found"), tr("MMC ID found in folder name. Using it as current MMC ID."), emu_icon_, 2000);
+        }
+    };
+
     eka2l1::io_system *io = emulator_state_.symsys->get_io_system();
 
     const std::string path_ext = eka2l1::path_extension(mount_path.toStdString());
@@ -869,10 +895,13 @@ void main_window::mount_game_card_dump(QString mount_path) {
 
             case eka2l1::zip_mount_error_not_zip: {
                 QMessageBox::critical(this, title_dialog, tr("The choosen file is not a ZIP file!"));
+                break;
             }
 
-            default:
+            default: {
+                do_check_and_assign_mmc_id();
                 break;
+            }
             }
         }
     } else {
@@ -893,6 +922,8 @@ void main_window::mount_game_card_dump(QString mount_path) {
                 mount_path.remove(mount_path.length() - 8, 7);
             }
         }
+
+        do_check_and_assign_mmc_id();
     }
 
     QSettings settings;
@@ -1017,6 +1048,54 @@ void main_window::switch_to_game_display_mode() {
     on_fullscreen_toogled(ui_->action_fullscreen->isChecked());
 }
 
+void main_window::on_app_exited(eka2l1::kernel::process *target_proc) {
+    bool shown_msg = false;
+
+    if (target_proc->get_exit_type() == eka2l1::kernel::entity_exit_type::kill) {
+        if ((target_proc->get_exit_reason() == 0) || (target_proc->get_exit_category() == u"None")) {
+            tray_icon_->showMessage(tr("Application exited"), tr("The application exited normally"), emu_icon_, 1500);
+            shown_msg = true;
+        }
+    }
+
+    if (!shown_msg) {
+        QString category_exit = QString::fromStdU16String(target_proc->get_exit_category());
+        int reason_exit = target_proc->get_exit_reason();
+
+        switch (target_proc->get_exit_type()) {
+        case eka2l1::kernel::entity_exit_type::kill:
+            tray_icon_->showMessage(tr("Application exited"), tr("The application was killed with code: %1/%2").arg(category_exit).arg(reason_exit), emu_icon_, 1500);
+            break;
+
+        case eka2l1::kernel::entity_exit_type::panic:
+            tray_icon_->showMessage(tr("Application exited"), tr("The application panicked with code: %1/%2").arg(category_exit).arg(reason_exit), emu_icon_, 1500);
+            break;
+
+        case eka2l1::kernel::entity_exit_type::terminate:
+            tray_icon_->showMessage(tr("Application exited"), tr("The application terminated with code: %1/%2").arg(category_exit).arg(reason_exit), emu_icon_, 1500);
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    on_restart_requested();
+}
+
+std::function<void(eka2l1::kernel::process *)> main_window::get_process_exit_callback() {
+    return [this](eka2l1::kernel::process *proc) { emit app_exited(proc); };
+}
+
+void main_window::set_discord_presence_current_playing(const std::string &name) {
+#if ENABLE_DISCORD_RICH_PRESENCE
+        std::string state = tr("Playing %1").arg(QString::fromStdString(name)).toStdString();
+        std::string detail = tr("In game").toStdString();
+
+        rpc_.update(state, detail, true);
+#endif
+}
+
 void main_window::on_app_clicked(applist_widget_item *item) {
     if (!active_screen_draw_callback_) {
         setup_screen_draw();
@@ -1024,12 +1103,13 @@ void main_window::on_app_clicked(applist_widget_item *item) {
 
     bool launch_ok = false;
     if (item->is_j2me_) {
-        launch_ok = eka2l1::j2me::launch(emulator_state_.symsys.get(), static_cast<std::uint32_t>(item->registry_index_));
+        launch_ok = eka2l1::j2me::launch(emulator_state_.symsys.get(), static_cast<std::uint32_t>(item->registry_index_), get_process_exit_callback());
     } else  {
-        launch_ok = applist_->launch_from_widget_item(item);
+        launch_ok = applist_->launch_from_widget_item(item, get_process_exit_callback());
     }
 
     if (launch_ok) {
+        set_discord_presence_current_playing(applist_->get_app_name_from_widget_item(item));
         switch_to_game_display_mode();
         emit app_launching();
     } else {
@@ -1387,9 +1467,11 @@ void main_window::save_ui_layouts() {
     if (displayer_->isVisible()) {
         settings.setValue(LAST_EMULATED_DISPLAY_GEOMETRY_SETTING, saveGeometry());
         settings.setValue(LAST_EMULATED_DISPLAY_STATE, saveState());
+        settings.setValue(LAST_EMULATED_DISPLAY_MAXIMIZED, isMaximized());
     } else {
         settings.setValue(LAST_UI_WINDOW_GEOMETRY_SETTING, saveGeometry());
         settings.setValue(LAST_UI_WINDOW_STATE, saveState());
+        settings.setValue(LAST_UI_WINDOW_MAXMIZED, isMaximized());
     }
 }
 
@@ -1397,13 +1479,16 @@ void main_window::restore_ui_layouts() {
     QSettings settings;
     QVariant geo_variant;
     QVariant state_variant;
+    bool maximized;
 
     if (displayer_->isVisible()) {
         geo_variant = settings.value(LAST_EMULATED_DISPLAY_GEOMETRY_SETTING);
         state_variant = settings.value(LAST_EMULATED_DISPLAY_STATE);
+        maximized = settings.value(LAST_EMULATED_DISPLAY_MAXIMIZED, false).toBool();
     } else {
         geo_variant = settings.value(LAST_UI_WINDOW_GEOMETRY_SETTING);
         state_variant = settings.value(LAST_UI_WINDOW_STATE);
+        maximized = settings.value(LAST_UI_WINDOW_MAXMIZED, false).toBool();
     }
 
     const bool was_visible = editor_widget_->isVisible();
@@ -1414,6 +1499,12 @@ void main_window::restore_ui_layouts() {
 
     if (state_variant.isValid()) {
         restoreState(state_variant.toByteArray());
+    }
+
+    if (maximized) {
+        showMaximized();
+    } else {
+        showNormal();
     }
 
     if (!was_visible)

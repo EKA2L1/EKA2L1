@@ -62,6 +62,7 @@ set(PROJECT_SOURCES
         include/qt/cmdhandler.h
         include/qt/custom_question_dialog.h
         include/qt/device_install_dialog.h
+        include/qt/discord_rpc.h
         include/qt/displaywidget.h
         include/qt/dialog_driver.h
         include/qt/launch_process_dialog.h
@@ -94,6 +95,7 @@ set(PROJECT_SOURCES
         src/custom_question_dialog.cpp
         src/device_install_dialog.cpp
         src/device_install_dialog.ui
+        src/discord_rpc.cpp
         src/displaywidget.cpp
         src/dialog_driver.cpp
         src/launch_process_dialog.cpp
@@ -194,6 +196,10 @@ target_link_libraries(eka2l1_qt PRIVATE
     j2me
     stb
     yaml-cpp)
+
+if (ENABLE_DISCORD_RICH_PRESENCE)
+    target_link_libraries(eka2l1_qt PRIVATE discord-rpc)
+endif()
 	
 set_target_properties(eka2l1_qt PROPERTIES OUTPUT_NAME eka2l1_qt
         ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
@@ -264,6 +270,14 @@ if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
         else()
             target_link_libraries(eka2l1_qt PRIVATE scripting)
         endif()
+endif()
+
+if (ENABLE_DISCORD_RICH_PRESENCE AND WIN32)
+    add_custom_command(
+            TARGET eka2l1_qt
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/external/discord_game_sdk/lib/x86_64/discord_game_sdk.dll" "$<TARGET_FILE_DIR:eka2l1_qt>"
+    )
 endif()
 
 get_target_property(QMAKE_EXE Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)

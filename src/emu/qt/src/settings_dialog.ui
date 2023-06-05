@@ -62,6 +62,19 @@
            </widget>
           </item>
           <item row="1" column="0">
+            <widget class="QLabel" name="app_config_instruction">
+              <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+                </sizepolicy>
+              </property>
+              <property name="text">
+                <string notr="true">Launch a game for configuration to be visible</string>
+              </property>
+            </widget>
+          </item>
+          <item row="2" column="0">
            <widget class="QWidget" name="app_config_all_widget" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -273,13 +286,26 @@
             </layout>
            </widget>
           </item>
-          <item row="2" column="0">
+          <item row="3" column="0">
            <widget class="QCheckBox" name="app_config_hide_system_apps_checkbox">
             <property name="toolTip">
              <string>Hide system applications across all devices</string>
             </property>
             <property name="text">
              <string>Hide system applications</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QCheckBox" name="app_config_enable_discord_rich_presence">
+            <property name="toolTip">
+             <string>Show what apps/games you are playing on emulator on your Discord profile.</string>
+            </property>
+            <property name="text">
+             <string>Enable Discord Rich Presence</string>
             </property>
             <property name="checked">
              <bool>true</bool>

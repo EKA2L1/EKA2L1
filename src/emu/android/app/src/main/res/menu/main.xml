@@ -5,14 +5,20 @@
 
     <item
         android:id="@+id/action_search"
+        android:icon="@drawable/ic_search_white"
         android:title="@string/search"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
     <item
         android:id="@+id/action_toggle_grid"
         android:checkable="true"
-        android:icon="@drawable/grid_white"
+        android:icon="@drawable/ic_grid_white"
         android:title="@string/grid_app_list_mode"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_switch_devices"
+        android:icon="@drawable/ic_mobile_white"
+        android:title="@string/switch_devices"
         app:showAsAction="always" />
     <item
         android:id="@+id/action_about"
@@ -31,22 +37,6 @@
         android:title="@string/devices"
         app:showAsAction="never" />
     <item
-        android:id="@+id/action_install_ng2_licenses"
-        android:title="@string/install_ng2_licenses"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_install_ng_game"
-        android:title="@string/install_ng_game"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_mount_sd"
-        android:title="@string/mount_sd"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_scan_mmc_id"
-        android:title="@string/scan_mmc_id"
-        app:showAsAction="never" />
-    <item
         android:id="@+id/action_save_log"
         android:title="@string/save_log"
         app:showAsAction="never" />
@@ -54,5 +44,33 @@
         android:id="@+id/action_profiles"
         android:title="@string/profiles"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_ng1"
+        android:title="@string/ng1_menu_title">
+        <menu>
+            <item
+                android:id="@+id/action_install_ng_game"
+                android:title="@string/install_ng_game"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/action_mount_sd"
+                android:title="@string/mount_sd"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/action_scan_mmc_id"
+                android:title="@string/scan_mmc_id"
+                app:showAsAction="never" />
+        </menu>
+    </item>
+    <item
+        android:id="@+id/action_ng2"
+        android:title="@string/ng2_menu_title">
+        <menu>
+            <item
+                android:id="@+id/action_install_ng2_licenses"
+                android:title="@string/install_ng2_licenses"
+                app:showAsAction="never" />
+        </menu>
+    </item>
 
 </menu>

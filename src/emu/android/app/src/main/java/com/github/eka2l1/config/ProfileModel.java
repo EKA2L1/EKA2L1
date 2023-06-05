@@ -45,6 +45,11 @@ public class ProfileModel {
     @SerializedName("ScreenBackgroundColor")
     public int screenBackgroundColor;
 
+    @SerializedName("ScreenBackgroundImageOpacity")
+    public int screenBackgroundImageOpacity;
+
+    @SerializedName("ScreenBackgroundImageKeepAspectRatio")
+    public boolean screenBackgroundImageKeepAspectRatio;
     @SerializedName("ScreenScaleRatio")
     public int screenScaleRatio;
 
@@ -110,6 +115,8 @@ public class ProfileModel {
         this.isNew = true;
         version = 1;
         screenBackgroundColor = 0xD0D0D0;
+        screenBackgroundImageOpacity = 50;
+        screenBackgroundImageKeepAspectRatio = true;
         screenScaleType = 1;
         screenGravity = 1;
         screenScaleRatio = 100;

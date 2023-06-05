@@ -312,8 +312,14 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_eka2l1_emu_Emulator_setScreenParams(JNIEnv *env, jclass clazz,
                                                     jint background_color, jint scale_ratio,
-                                                    jint scale_type, jint gravity) {
-    state->launcher->set_screen_params(background_color, scale_ratio, scale_type, gravity);
+                                                    jint scale_type, jint gravity,
+                                                    jstring bg_img_path, jfloat bg_img_opacity,
+                                                    jboolean bg_img_keep_aspect) {
+    const char *cstr = env->GetStringUTFChars(bg_img_path, nullptr);
+    std::string cpath = std::string(cstr);
+    env->ReleaseStringUTFChars(bg_img_path, cstr);
+
+    state->launcher->set_screen_params(background_color, scale_ratio, scale_type, gravity, cpath, bg_img_opacity, bg_img_keep_aspect);
 }
 
 extern "C"
@@ -421,4 +427,14 @@ Java_com_github_eka2l1_emu_Emulator_installNG2Licenses(JNIEnv *env, jclass clazz
     env->ReleaseStringUTFChars(content, cstr);
 
     return state->launcher->install_ng2_game_licenses(content_cpp);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_github_eka2l1_emu_Emulator_setCurrentMMCID(JNIEnv *env, jclass clazz, jstring new_mmcid) {
+    const char *cstr = env->GetStringUTFChars(new_mmcid, nullptr);
+    std::string mmc_id_str = std::string(cstr);
+    env->ReleaseStringUTFChars(new_mmcid, cstr);
+
+    state->launcher->set_current_mmc_id(mmc_id_str);
 }

@@ -21,6 +21,7 @@
 
 #include <atomic>
 #include <condition_variable>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <queue>
@@ -43,6 +44,10 @@ namespace eka2l1 {
     namespace drivers {
         class graphics_driver;
         class audio_driver;
+    }
+
+    namespace kernel {
+        class process;
     }
 
     class window_server;
@@ -87,6 +92,8 @@ namespace eka2l1::desktop {
 
         main_window *ui_main;
         int present_status;
+
+        std::string launched_app_name_;
 
         explicit emulator();
 

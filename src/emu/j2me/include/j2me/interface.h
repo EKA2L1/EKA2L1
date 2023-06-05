@@ -20,17 +20,22 @@
 #pragma once
 
 #include <j2me/common.h>
+#include <functional>
 #include <string>
 
 namespace eka2l1 {
     class system;
+
+    namespace kernel {
+        class process;
+    }
 }
 
 namespace eka2l1::j2me {
     struct app_entry;
     class app_list;
 
-    bool launch(system *sys, const std::uint32_t app_id);
+    bool launch(system *sys, const std::uint32_t app_id, std::function<void(kernel::process*)> exit_cb);
     install_error install(system *sys, const std::string &path, app_entry &entry_info);
     bool uninstall(system *sys, const std::uint32_t app_id);
 }

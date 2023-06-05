@@ -1250,7 +1250,7 @@ namespace eka2l1 {
     static constexpr std::uint8_t ENVIRONMENT_SLOT_MAIN = 1;
 
     bool applist_server::launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id,
-                                    kernel::process *requester, const epoc::uid known_uid, std::function<void()> app_exit_callback) {
+                                    kernel::process *requester, const epoc::uid known_uid, std::function<void(kernel::process*)> app_exit_callback) {
         static constexpr std::size_t MINIMAL_LAUNCH_STACK_SIZE = 0x10000;
         static constexpr std::size_t MINIMAL_LAUNCH_STACK_SIZE_S3 = 0x80000;
 
@@ -1277,7 +1277,7 @@ namespace eka2l1 {
         }
 
         if (app_exit_callback) {
-            pr->logon([app_exit_callback](kernel::process *) { app_exit_callback(); });
+            pr->logon([app_exit_callback](kernel::process *pr) { app_exit_callback(pr); });
         }
 
         if ((kern->get_epoc_version() < epocver::eka2) && known_uid) {
@@ -1292,7 +1292,7 @@ namespace eka2l1 {
     }
 
     bool applist_server::launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter, kernel::uid *thread_id,
-                                    std::function<void()> app_exit_callback) {
+                                    std::function<void(kernel::process*)> app_exit_callback) {
         // OPL game check
         io_system *io = sys->get_io_system();
         symfile app_file = io->open_file(registry.mandatory_info.app_path.to_std_string(nullptr), READ_MODE | BIN_MODE);

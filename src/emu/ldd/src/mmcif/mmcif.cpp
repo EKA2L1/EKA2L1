@@ -31,7 +31,7 @@
 
 namespace eka2l1::ldd {
     static void get_cid_from_config(config::state *conf, std::uint32_t *dat) {
-        common::pystr strconf(conf->mmc_id);
+        common::pystr strconf(conf->current_mmc_id);
         std::vector<common::pystr> nums = strconf.split('-');
 
         if (nums.size() != 4) {

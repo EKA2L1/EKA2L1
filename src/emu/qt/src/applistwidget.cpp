@@ -514,13 +514,33 @@ eka2l1::apa_app_registry *applist_widget::get_registry_from_widget_item(applist_
     return &registries[item->registry_index_];
 }
 
-bool applist_widget::launch_from_widget_item(applist_widget_item *item) {
+std::string applist_widget::get_app_name_from_widget_item(applist_widget_item *item) {
+    if (!item) {
+        return "";
+    }
+
+    if (item->is_j2me_) {
+        std::optional<eka2l1::j2me::app_entry> entry = lister_j2me_->get_entry(item->registry_index_);
+        if (entry.has_value()) {
+            return entry->name_;
+        }
+    } else {
+        eka2l1::apa_app_registry *registry = get_registry_from_widget_item(item);
+        if (registry) {
+            return eka2l1::common::ucs2_to_utf8(registry->mandatory_info.long_caption.to_std_string(nullptr));
+        }
+    }
+
+    return "";
+}
+
+bool applist_widget::launch_from_widget_item(applist_widget_item *item, std::function<void(eka2l1::kernel::process*)> done_cb) {
     eka2l1::apa_app_registry *registry = get_registry_from_widget_item(item);
     if (registry) {
         eka2l1::epoc::apa::command_line cmd_line;
         cmd_line.launch_cmd_ = eka2l1::epoc::apa::command_open;
 
-        return lister_->launch_app(*registry, cmd_line, nullptr);
+        return lister_->launch_app(*registry, cmd_line, nullptr, done_cb);
     }
 
     return false;

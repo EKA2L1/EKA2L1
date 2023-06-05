@@ -25,11 +25,14 @@
 #include <common/types.h>
 
 #include <drivers/ui/input_dialog.h>
+#include <drivers/graphics/common.h>
 #include <services/applist/applist.h>
 #include <services/window/window.h>
 #include <services/drm/rights/rights.h>
 #include <system/installation/common.h>
 #include <utils/apacmd.h>
+
+#include <string>
 
 namespace eka2l1 {
     class fbs_server;
@@ -59,6 +62,12 @@ namespace eka2l1::android {
         std::uint32_t gravity_;
         eka2l1::drivers::ui::input_dialog_complete_callback input_complete_callback_;
         eka2l1::drivers::ui::yes_no_dialog_complete_callback yes_no_complete_callback_;
+
+        eka2l1::drivers::handle background_img_;
+        std::string background_img_path_;
+        float background_img_opacity_;
+        int background_width, background_height;
+        bool keep_bg_aspect_;
 
         void set_language_to_property(const language new_one);
         void set_language_current(const language lang);
@@ -91,7 +100,8 @@ namespace eka2l1::android {
         std::vector<std::string> get_language_ids();
         std::vector<std::string> get_language_names();
         void set_screen_params(std::uint32_t background_color, std::uint32_t scale_ratio,
-                               std::uint32_t scale_type, std::uint32_t gravity);
+                               std::uint32_t scale_type, std::uint32_t gravity, const std::string &bg_img_path,
+                               float bg_img_opacity, bool keep_bg_aspect);
         bool open_input_view(const std::u16string &initial_text,
                              const int max_len,
                              drivers::ui::input_dialog_complete_callback complete_callback);
@@ -103,6 +113,7 @@ namespace eka2l1::android {
         void on_question_dialog_finished(const int result);
         int install_ngage_game(const std::string &path);
         bool install_ng2_game_licenses(const std::string &content);
+        void set_current_mmc_id(const std::string &new_mmc_id);
         std::vector<std::string> get_success_installed_license_games();
         std::vector<std::string> get_failed_installed_license_games();
 

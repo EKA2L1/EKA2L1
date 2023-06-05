@@ -27,6 +27,7 @@
 #include <QListWidget>
 #include <QPushButton>
 
+#include <functional>
 #include <mutex>
 
 #include <common/sync.h>
@@ -38,6 +39,10 @@ namespace eka2l1 {
 
     struct apa_app_registry;
     class device_manager;
+
+    namespace kernel {
+        class process;
+    }
 
     namespace config {
         struct state;
@@ -166,7 +171,8 @@ public:
         eka2l1::j2me::app_list *lister_j2me, eka2l1::config::state &conf, const bool hide_system_apps = true, const bool ngage_mode = false);
     ~applist_widget();
 
-    bool launch_from_widget_item(applist_widget_item *item);
+    bool launch_from_widget_item(applist_widget_item *item, std::function<void(eka2l1::kernel::process*)> done_cb);
+    std::string get_app_name_from_widget_item(applist_widget_item *item);
     void set_hide_system_apps(const bool should_hide);
     void update_devices(eka2l1::device_manager *mngr);
     void request_reload(const bool j2me);

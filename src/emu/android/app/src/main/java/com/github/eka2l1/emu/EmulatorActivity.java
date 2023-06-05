@@ -198,8 +198,13 @@ public class EmulatorActivity extends AppCompatActivity {
                     WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER;
         }
 
+        final boolean hasBackground = ProfilesManager.getBackgroundFile(configDir).exists();
+
         Emulator.setScreenParams(params.screenBackgroundColor, params.screenScaleRatio,
-                params.screenScaleType, params.screenGravity);
+                params.screenScaleType, params.screenGravity,
+                hasBackground ? ProfilesManager.getBackgroundPath(configDir.getAbsolutePath()) : "",
+                Math.max(0.0f, Math.min(params.screenBackgroundImageOpacity / 100.0f, 1.0f)),
+                params.screenBackgroundImageKeepAspectRatio);
     }
 
     @Override

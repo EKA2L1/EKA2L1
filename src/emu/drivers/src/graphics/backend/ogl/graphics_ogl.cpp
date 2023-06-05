@@ -407,8 +407,13 @@ namespace eka2l1::drivers {
     }
 
     void ogl_graphics_driver::set_upscale_shader(const std::string &name) {
-        pending_upscale_shader_ = name;
-        active_upscale_shader_ = name;
+        if (name.empty()) {
+            pending_upscale_shader_ = "Default";
+            active_upscale_shader_ = "Default";
+        } else {
+            pending_upscale_shader_ = name;
+            active_upscale_shader_ = name;
+        }
     }
 
     void ogl_graphics_driver::bind_swapchain_framebuf() {

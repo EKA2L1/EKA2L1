@@ -9,4 +9,4 @@ add_library(j2me
     src/kmidrun.cpp)
 
 target_include_directories(j2me PUBLIC include)
-target_link_libraries(j2me PRIVATE common config epocio miniz sqlite3 epoc)
+target_link_libraries(j2me PRIVATE common config epocio epockern miniz sqlite3 epoc)

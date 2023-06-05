@@ -245,7 +245,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
 
     ui_->emulator_display_hide_cursor_checkbox->setChecked(configuration_.hide_mouse_in_screen_space);
     ui_->emulator_display_nearest_neightbor_checkbox->setChecked(configuration_.nearest_neighbor_filtering);
-
+    
     if (configuration_.rtos_level == "low") {
         ui_->system_he_rta_combo->setCurrentIndex(RTA_LOW_INDEX);
     } else if (configuration_.rtos_level == "mid") {
@@ -277,6 +277,12 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     ui_->emulator_display_true_size_checkbox->setChecked(settings.value(TRUE_SIZE_RESIZE_SETTING_NAME, false).toBool());
     ui_->interface_disable_easter_egg_title_checkbox->setChecked(settings.value(STATIC_TITLE_SETTING_NAME, false).toBool());
     ui_->show_cmd_checkbox->setChecked(settings.value(SHOW_LOG_CONSOLE_SETTING_NAME, true).toBool());
+    
+#if ENABLE_DISCORD_RICH_PRESENCE
+    ui_->app_config_enable_discord_rich_presence->setChecked(settings.value(ENABLE_DISCORD_RICH_PRESENCE_SETTING_NAME, true).toBool());
+#else
+    ui_->app_config_enable_discord_rich_presence->setVisible(false);
+#endif
 
     QVariant current_language_variant = settings.value(LANGUAGE_SETTING_NAME);
 
@@ -921,13 +927,16 @@ void settings_dialog::refresh_configuration_for_who(const bool clear) {
 
     if (clear) {
         ui_->app_config_for_who_label->setText(format_string.arg(tr("None")));
+        ui_->app_config_instruction->setVisible(true);
     } else if (kernel) {
         std::optional<eka2l1::akn_running_app_info> info = ::get_active_app_info(system_);
 
         if (!info.has_value()) {
             ui_->app_config_for_who_label->setText(format_string.arg(tr("None")));
+            ui_->app_config_instruction->setVisible(true);
         } else {
             ui_->app_config_for_who_label->setText(format_string.arg(info->app_name_));
+            ui_->app_config_instruction->setVisible(false);
             ui_->app_config_all_widget->setVisible(true);
 
             eka2l1::epoc::screen *scr = ::get_current_active_screen(system_);
@@ -1079,6 +1088,10 @@ void settings_dialog::closeEvent(QCloseEvent *event) {
     }
 
     configuration_.hide_system_apps = ui_->app_config_hide_system_apps_checkbox->isChecked();
+    
+    QSettings settings;
+    settings.setValue(ENABLE_DISCORD_RICH_PRESENCE_SETTING_NAME, ui_->app_config_enable_discord_rich_presence->isChecked());
+    
     emit hide_system_apps_changed();
 }
 

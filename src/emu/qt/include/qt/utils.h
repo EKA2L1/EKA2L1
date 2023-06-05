@@ -46,6 +46,7 @@ static constexpr const char *STATIC_TITLE_SETTING_NAME = "useStaticTitle";
 static constexpr const char *RECENT_BANK_FOLDER_SETTING_NAME = "recentBankFolder";
 static constexpr const char *RECENT_BACKGROUND_IMAGE_FOLDER_SETTING_NAME = "recentBackgroundImageFolder";
 static constexpr const char *SHOW_LOG_CONSOLE_SETTING_NAME = "showLogConsole";
+static constexpr const char *ENABLE_DISCORD_RICH_PRESENCE_SETTING_NAME = "enableDiscordRichPresence";
 
 typedef void (*dialog_checkbox_toggled_callback)(bool toggled);
 
@@ -57,3 +58,4 @@ std::optional<eka2l1::akn_running_app_info> get_active_app_info(eka2l1::system *
 QMessageBox::StandardButton make_dialog_with_checkbox_and_choices(const QString &title, const QString &text, const QString &checkbox_text, const bool checkbox_state, dialog_checkbox_toggled_callback checkbox_callback, const bool two_choices);
 QString get_emulator_window_title();
 QString epocver_to_symbian_readable_name(const epocver ver);
+std::optional<std::string> get_mmc_id_from_path(const std::string &path);

@@ -24,7 +24,7 @@
 #include <system/epoc.h>
 
 namespace eka2l1::j2me {
-    bool launch(system *sys, const std::uint32_t app_id) {
+    bool launch(system *sys, const std::uint32_t app_id, std::function<void(kernel::process*)> exit_cb) {
         app_list *applist = sys->get_j2me_applist();
         std::optional<app_entry> entry = applist->get_entry(app_id);
         if (!entry.has_value()) {
@@ -32,7 +32,7 @@ namespace eka2l1::j2me {
         }
         const epocver sysver = sys->get_symbian_version_use();
         if (sysver <= epocver::epoc6) {
-            launch_through_kmidrun(sys, entry.value());
+            launch_through_kmidrun(sys, entry.value(), exit_cb);
             return true;
         }
 

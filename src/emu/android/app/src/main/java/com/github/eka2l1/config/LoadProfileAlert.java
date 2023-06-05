@@ -48,6 +48,7 @@ public class LoadProfileAlert extends DialogFragment {
     private ArrayList<Profile> profiles;
     private CheckBox cbConfig;
     private CheckBox cbKeyboard;
+    private CheckBox cbBgImg;
 
     static LoadProfileAlert newInstance(String parent) {
         LoadProfileAlert fragment = new LoadProfileAlert();
@@ -78,6 +79,7 @@ public class LoadProfileAlert extends DialogFragment {
         listView.setAdapter(adapter);
         cbConfig = v.findViewById(R.id.cb_config);
         cbKeyboard = v.findViewById(R.id.cb_keyboard);
+        cbBgImg = v.findViewById(R.id.cb_bg_img);
         AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
         builder.setTitle(R.string.load_profile)
                 .setView(v)
@@ -86,12 +88,13 @@ public class LoadProfileAlert extends DialogFragment {
                         final int pos = listView.getCheckedItemPosition();
                         final boolean configChecked = cbConfig.isChecked();
                         final boolean vkChecked = cbKeyboard.isChecked();
+                        final boolean bgChecked = cbBgImg.isChecked();
                         if (pos == -1) {
                             Toast.makeText(getActivity(), R.string.error, Toast.LENGTH_SHORT).show();
                             return;
                         }
                         ProfilesManager.load((Profile) listView.getItemAtPosition(pos), configPath,
-                                configChecked, vkChecked);
+                                configChecked, vkChecked, bgChecked);
                         getParentFragmentManager().setFragmentResult(KEY_PROFILE_LOADED, new Bundle());
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -118,10 +121,13 @@ public class LoadProfileAlert extends DialogFragment {
         final Profile profile = profiles.get(pos);
         final boolean hasConfig = profile.hasConfig();
         final boolean hasVk = profile.hasKeyLayout();
+        final boolean hasBgImg = profile.hasBackground();
         cbConfig.setEnabled(hasConfig && hasVk);
         cbConfig.setChecked(hasConfig);
         cbKeyboard.setEnabled(hasVk && hasConfig);
         cbKeyboard.setChecked(hasVk);
+        cbBgImg.setEnabled(hasConfig && hasBgImg);
+        cbBgImg.setChecked(hasBgImg);
     }
 
 }

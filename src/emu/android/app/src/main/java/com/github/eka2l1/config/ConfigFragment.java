@@ -24,6 +24,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
@@ -39,20 +40,25 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 
+import com.github.eka2l1.BuildConfig;
 import com.github.eka2l1.R;
 import com.github.eka2l1.emu.Emulator;
 import com.github.eka2l1.emu.EmulatorActivity;
@@ -61,7 +67,6 @@ import com.github.eka2l1.settings.KeyMapperFragment;
 import com.github.eka2l1.util.FileUtils;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,6 +76,9 @@ import yuku.ambilwarna.AmbilWarnaDialog;
 import static com.github.eka2l1.emu.Constants.*;
 
 public class ConfigFragment extends Fragment implements View.OnClickListener {
+    private final ActivityResultLauncher<String[]> openBackgroundImageLauncher = registerForActivityResult(
+            FileUtils.getFilePicker(),
+            this::onOpenBackgroundImageResult);
 
     protected ScrollView rootContainer;
     protected EditText etScreenRefreshRate;
@@ -78,6 +86,9 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
     protected CompoundButton cbShouldChildInherit;
 
     protected EditText etScreenBack;
+    protected Button cmdViewScreenBgImg;
+    protected SeekBar sbBgImgOpacity;
+    protected EditText etBgImgOpacityValue;
     protected SeekBar sbScaleRatio;
     protected EditText etScaleRatioValue;
     protected Spinner spOrientation;
@@ -93,6 +104,7 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
     private View groupVkConfig;
     protected CompoundButton cbVKFeedback;
     protected CompoundButton cbTouchInput;
+    protected CompoundButton cbBgImgKeepAspectRatio;
 
     private Spinner spVKType;
     private Spinner spButtonsShape;
@@ -162,6 +174,60 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
         });
     }
 
+    private SeekBar.OnSeekBarChangeListener getConnectedWithEditTextSeekbarChangeListener(EditText edit) {
+        return new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) edit.setText(String.valueOf(progress));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        };
+    }
+
+    private TextWatcher getConnectedTextWatcher(EditText edit, SeekBar seek) {
+        return new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                int length = s.length();
+                if (length > 3) {
+                    if (start >= 3) {
+                        edit.getText().delete(3, length);
+                    } else {
+                        int st = start + count;
+                        int end = st + (before == 0 ? count : before);
+                        edit.getText().delete(st, Math.min(end, length));
+                    }
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (s.length() == 0) return;
+                try {
+                    int progress = Integer.parseInt(s.toString());
+                    if (progress <= 100) {
+                        seek.setProgress(progress);
+                    } else {
+                        s.replace(0, s.length(), "100");
+                    }
+                } catch (NumberFormatException e) {
+                    s.clear();
+                }
+            }
+        };
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -172,8 +238,11 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
         cbShouldChildInherit = view.findViewById(R.id.cbShouldChildInherit);
 
         etScreenBack = view.findViewById(R.id.etScreenBack);
+        cmdViewScreenBgImg = view.findViewById(R.id.cmdScreenViewBgImg);
         spScreenGravity = view.findViewById(R.id.spScreenGravity);
         spScaleType = view.findViewById(R.id.spScaleType);
+        sbBgImgOpacity = view.findViewById(R.id.sbScreenBgImgOpacity);
+        etBgImgOpacityValue = view.findViewById(R.id.etScreenBgImgOpacityValue);
         sbScaleRatio = view.findViewById(R.id.sbScaleRatio);
         etScaleRatioValue = view.findViewById(R.id.etScaleRatioValue);
         spOrientation = view.findViewById(R.id.spOrientation);
@@ -181,6 +250,7 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
         spUpscaleShader = view.findViewById(R.id.spUpscaleShader);
         cbUseShaderForUpscale = view.findViewById(R.id.cbShouldUseShaderForUpscale);
         cbShowNotch = view.findViewById(R.id.cbShowNotch);
+        cbBgImgKeepAspectRatio = view.findViewById(R.id.cbKeepBgImgAspect);
 
         rootInputConfig = view.findViewById(R.id.rootInputConfig);
         cbTouchInput = view.findViewById(R.id.cbTouchInput);
@@ -199,12 +269,15 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
         etVKOutline = view.findViewById(R.id.etVKOutline);
 
         view.findViewById(R.id.cmdScreenBack).setOnClickListener(this);
+        view.findViewById(R.id.cmdScreenBgImg).setOnClickListener(this);
+        view.findViewById(R.id.cmdScreenClearBgImg).setOnClickListener(this);
         view.findViewById(R.id.cmdKeyMappings).setOnClickListener(this);
         view.findViewById(R.id.cmdVKBack).setOnClickListener(this);
         view.findViewById(R.id.cmdVKFore).setOnClickListener(this);
         view.findViewById(R.id.cmdVKSelBack).setOnClickListener(this);
         view.findViewById(R.id.cmdVKSelFore).setOnClickListener(this);
         view.findViewById(R.id.cmdVKOutline).setOnClickListener(this);
+        cmdViewScreenBgImg.setOnClickListener(this);
 
         // Load shaders
         File upscaleShaderDir = new File(Emulator.getEmulatorDir() + "resources/upscale");
@@ -256,54 +329,12 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
             }
         });
         cbShouldChildInherit.setOnCheckedChangeListener((buttonView, isChecked) -> compatChanged = true);
-        sbScaleRatio.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser) etScaleRatioValue.setText(String.valueOf(progress));
-            }
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
+        sbBgImgOpacity.setOnSeekBarChangeListener(getConnectedWithEditTextSeekbarChangeListener(etBgImgOpacityValue));
+        etBgImgOpacityValue.addTextChangedListener(getConnectedTextWatcher(etBgImgOpacityValue, sbBgImgOpacity));
 
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
-        });
-        etScaleRatioValue.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                int length = s.length();
-                if (length > 3) {
-                    if (start >= 3) {
-                        etScaleRatioValue.getText().delete(3, length);
-                    } else {
-                        int st = start + count;
-                        int end = st + (before == 0 ? count : before);
-                        etScaleRatioValue.getText().delete(st, Math.min(end, length));
-                    }
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (s.length() == 0) return;
-                try {
-                    int progress = Integer.parseInt(s.toString());
-                    if (progress <= 100) {
-                        sbScaleRatio.setProgress(progress);
-                    } else {
-                        s.replace(0, s.length(), "100");
-                    }
-                } catch (NumberFormatException e) {
-                    s.clear();
-                }
-            }
-        });
+        sbScaleRatio.setOnSeekBarChangeListener(getConnectedWithEditTextSeekbarChangeListener(etScaleRatioValue));
+        etScaleRatioValue.addTextChangedListener(getConnectedTextWatcher(etScaleRatioValue, sbScaleRatio));
 
         cbShowNotch.setOnCheckedChangeListener((buttonView, isChecked) -> {
 
@@ -436,11 +467,19 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
 
         etScreenBack.setText(String.format("%06X", params.screenBackgroundColor));
         sbScaleRatio.setProgress(params.screenScaleRatio);
+        etBgImgOpacityValue.setText(Integer.toString(params.screenBackgroundImageOpacity));
         etScaleRatioValue.setText(Integer.toString(params.screenScaleRatio));
         spOrientation.setSelection(params.orientation);
         spScaleType.setSelection(params.screenScaleType);
         spScreenGravity.setSelection(params.screenGravity);
         cbShowNotch.setChecked(params.screenShowNotch);
+        cbBgImgKeepAspectRatio.setChecked(params.screenBackgroundImageKeepAspectRatio);
+
+        File backgroundCheckFile = ProfilesManager.getBackgroundFile(configDir);
+
+        if (backgroundCheckFile.exists()) {
+            cmdViewScreenBgImg.setText(R.string.pref_background_image_view);
+        }
 
         boolean showVk = params.showKeyboard;
         cbShowKeyboard.setChecked(showVk);
@@ -474,11 +513,13 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
                 params.screenBackgroundColor = Integer.parseInt(etScreenBack.getText().toString(), 16);
             } catch (NumberFormatException ignored) {
             }
+            params.screenBackgroundImageOpacity = sbBgImgOpacity.getProgress();
             params.screenScaleRatio = sbScaleRatio.getProgress();
             params.orientation = spOrientation.getSelectedItemPosition();
             params.screenGravity = spScreenGravity.getSelectedItemPosition();
             params.screenScaleType = spScaleType.getSelectedItemPosition();
             params.screenShowNotch = cbShowNotch.isChecked();
+            params.screenBackgroundImageKeepAspectRatio = cbBgImgKeepAspectRatio.isChecked();
 
             params.showKeyboard = cbShowKeyboard.isChecked();
             params.vkFeedback = cbVKFeedback.isChecked();
@@ -567,12 +608,53 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
         startActivity(intent);
     }
 
+    private void onOpenBackgroundImageResult(String result) {
+        if (result != null) {
+            // TODO: Check if the file is actually valid or not
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    FileUtils.copyFileFromURI(getContext(), result, ProfilesManager.getBackgroundFile(configDir));
+                } else {
+                    FileUtils.copyFileUsingChannel(new File(result), ProfilesManager.getBackgroundFile(configDir));
+                }
+            } catch (IOException ex) {
+                Toast.makeText(getContext(), R.string.pref_background_image_fail_to_set, Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            cmdViewScreenBgImg.setText(R.string.pref_background_image_view);
+        }
+    }
+
+    private void previewBackgroundImage() {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.setDataAndType(FileProvider.getUriForFile(getContext(), BuildConfig.APPLICATION_ID + ".provider", ProfilesManager.getBackgroundFile(configDir)), "image/*");
+        intent.setFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        startActivity(intent);
+    }
+
+    private void clearBackgroundImage() {
+        File backgroundFile = ProfilesManager.getBackgroundFile(configDir);
+        if (backgroundFile.exists()) {
+            backgroundFile.delete();
+            cmdViewScreenBgImg.setText(R.string.pref_background_image_empty);
+        }
+    }
+
     @SuppressLint("SetTextI18n")
     @Override
     public void onClick(View v) {
         int id = v.getId();
         if (id == R.id.cmdScreenBack) {
             showColorPicker(etScreenBack);
+        } else if (id == R.id.cmdScreenBgImg) {
+            openBackgroundImageLauncher.launch(new String[]{ ".bmp", ".png", ".jpg", ".jpeg" });
+        } else if (id == R.id.cmdScreenViewBgImg) {
+            previewBackgroundImage();
+        } else if (id == R.id.cmdScreenClearBgImg) {
+            clearBackgroundImage();
         } else if (id == R.id.cmdVKBack) {
             showColorPicker(etVKBack);
         } else if (id == R.id.cmdVKFore) {

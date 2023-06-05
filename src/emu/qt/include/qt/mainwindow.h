@@ -30,8 +30,11 @@
 #include <QMainWindow>
 #include <QPointer>
 #include <QProgressDialog>
+#include <QSystemTrayIcon>
 #include <memory>
 #include <map>
+
+#include <qt/discord_rpc.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -48,6 +51,10 @@ class editor_widget;
 namespace eka2l1 {
     class system;
     class window_server;
+
+    namespace kernel {
+        class process;
+    }
 
     namespace config {
         struct app_setting;
@@ -121,6 +128,11 @@ private:
     std::u16string question_dialog_button1_text_;
     std::u16string question_dialog_button2_text_;
     eka2l1::drivers::ui::yes_no_dialog_complete_callback question_dialog_complete_callback_;
+
+    QSystemTrayIcon *tray_icon_;
+    QIcon emu_icon_;
+
+    eka2l1::qt::discord_rpc rpc_;
 
     void setup_screen_draw();
     void setup_app_list(const bool load_now = false);
@@ -198,6 +210,7 @@ private slots:
     void on_btnet_friends_dialog_requested_from_conf();
     void on_action_stretch_to_fill_toggled(bool checked);
     void on_question_dialog_open_request();
+    void on_app_exited(eka2l1::kernel::process *proc);
 
 signals:
     void progress_dialog_change(const std::size_t now, const std::size_t total);
@@ -212,6 +225,7 @@ signals:
     void input_dialog_close_request();
     void install_ngage_game_name_available(QString name);
     void question_dialog_open_request();
+    void app_exited(eka2l1::kernel::process *proc);
 
 public:
     main_window(QApplication &app, QWidget *parent, eka2l1::desktop::emulator &emulator_state);
@@ -243,9 +257,12 @@ public:
         eka2l1::drivers::ui::yes_no_dialog_complete_callback complete_callback);
 
     void input_dialog_close();
+    void set_discord_presence_current_playing(const std::string &name);
 
     int map_mouse_id_to_touch_index(int mouse_id, const bool on_release);
     eka2l1::drivers::handle get_background_image();
+
+    std::function<void(eka2l1::kernel::process *)> get_process_exit_callback();
 
 private:
     Ui::main_window *ui_;

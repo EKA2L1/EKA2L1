@@ -92,8 +92,6 @@
     <addaction name="action_refresh_app_list"/>
     <addaction name="menu_mount_game_card_dump"/>
     <addaction name="action_mount_recent_dumps"/>
-    <addaction name="separator"/>
-    <addaction name="action_settings"/>
    </widget>
    <widget class="QMenu" name="menu_view">
     <property name="title">
@@ -154,6 +152,7 @@
    <addaction name="menu_view"/>
    <addaction name="menu_control"/>
    <addaction name="menu_bluetooth"/>
+   <addaction name="action_settings"/>
    <addaction name="menu_help"/>
   </widget>
   <widget class="QStatusBar" name="status_bar"/>

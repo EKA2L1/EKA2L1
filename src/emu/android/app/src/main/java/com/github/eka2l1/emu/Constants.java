@@ -27,6 +27,7 @@ public class Constants {
     public static final String KEY_ACTION = "action";
 
     public static final String KEY_RESTART = "restart";
+    public static final String KEY_RESTART_IMMEDIATELY = "restartImmediately";
 
     public static final String KEY_CONFIG_PATH = "configPath";
     public static final String KEY_PROFILE_NAME = "profileName";

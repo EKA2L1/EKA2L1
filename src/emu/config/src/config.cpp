@@ -226,6 +226,10 @@ namespace eka2l1::config {
             common::create_directories("bindings");
             keybinds.serialize(fmt::format("bindings/{}.yml", current_keybind_profile));
         }
+
+        if (current_mmc_id.empty()) {
+            current_mmc_id = mmc_id;
+        }
     }
 
     void state::deserialize(const bool with_bindings) {

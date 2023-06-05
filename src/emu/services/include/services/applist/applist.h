@@ -314,7 +314,7 @@ namespace eka2l1 {
     protected:
         bool launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id,
             kernel::process *requester = nullptr, const epoc::uid known_uid = 0,
-            std::function<void()> app_exit_callback = nullptr);
+            std::function<void(kernel::process*)> app_exit_callback = nullptr);
 
     public:
         explicit applist_server(system *sys);
@@ -326,7 +326,7 @@ namespace eka2l1 {
         int legacy_level();
 
         bool launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter, kernel::uid *thread_id,
-                        std::function<void()> app_exit_callback = nullptr);
+                        std::function<void(kernel::process*)> app_exit_callback = nullptr);
 
         std::optional<apa_app_masked_icon_bitmap> get_icon(apa_app_registry &registry, const std::int8_t index);
 

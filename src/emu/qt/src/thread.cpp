@@ -411,6 +411,9 @@ namespace eka2l1::desktop {
         std::thread graphics_thread_obj(graphics_driver_thread, std::ref(state));
 
         if (state.init_app_launched) {
+            if (!state.launched_app_name_.empty()) {
+                state.ui_main->set_discord_presence_current_playing(state.launched_app_name_);
+            }
             state.ui_main->setup_and_switch_to_game_mode();
         }
 

@@ -70,6 +70,7 @@ import io.reactivex.Single;
 public class Emulator {
     public static final String APP_CONFIG_FILE = "/config.json";
     public static final String APP_KEY_LAYOUT_FILE = "/VirtualKeyboardLayout";
+    public static final String APP_BACKGROUND_IMAGE_FILE = "/background";
 
     public static final int INSTALL_DEVICE_ERROR_NONE = 0;
     public static final int INSTALL_DEVICE_ERROR_NOT_EXIST = 1;
@@ -754,7 +755,7 @@ public class Emulator {
 
     public static native String[] getLanguageNames();
 
-    public static native void setScreenParams(int backgroundColor, int scaleRatio, int scaleType, int gravity);
+    public static native void setScreenParams(int backgroundColor, int scaleRatio, int scaleType, int gravity, String bgImgPath, float bgImgOpacity, boolean bgImgKeepAspect);
 
     public static native boolean runTest(String testName);
 
@@ -766,4 +767,5 @@ public class Emulator {
     public static native String[] getSuccessInstalledLicenseGames();
     public static native String[] getFailedInstalledLicenseGames();
     public static native boolean installNG2Licenses(String content);
+    public static native void setCurrentMMCID(String newMMCID);
 }

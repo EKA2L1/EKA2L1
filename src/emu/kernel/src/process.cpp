@@ -445,6 +445,10 @@ namespace eka2l1::kernel {
     }
 
     void *process::get_ptr_on_addr_space(address addr) {
+        if (!mm_impl_) {
+            return nullptr;
+        }
+
         return mem->get_control()->get_host_pointer(mm_impl_->address_space_id(), addr);
     }
 
