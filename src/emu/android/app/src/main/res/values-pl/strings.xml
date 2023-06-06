@@ -11,12 +11,17 @@
     <string name="profiles">Profile</string>
     <string name="processing">Przetwarzanie...</string>
     <string name="completed">Ukończono!</string>
+    <string name="cancelled">Cancelled</string>
     <string name="remove">Usuń</string>
     <string name="mount_sd">Zamontuj kartę MMC/SD</string>
     <string name="no_devices_found">Nie znaleziono urządzeń</string>
     <string name="exit">Wyjście</string>
     <string name="rename">Zmień nazwę</string>
     <string name="save_log">Zapisz log</string>
+    <string name="take_screenshot">Take screenshot</string>
+    <string name="screenshot">Screenshot</string>
+    <string name="take_screenshot_success">Screenshot saved to %s!</string>
+    <string name="take_screenshot_fail">Failed to take screenshot!</string>
     <string name="opengl_required">Aplikacja wymaga OpenGL ES 3.0+.</string>
     <string name="warning">Uwaga</string>
     <string name="scoped_storage_warning">Twoje dane użytkownika są przechowywane w lokalizacji która <b>zostanie usunięta</b> kiedy odinstalujesz aplikację:\n</string>
@@ -43,6 +48,15 @@
     <string name="ng2_menu_title">N-Gage 2.0</string>
     <string name="qr_no_camera">Press the picture button on bottom-right to scan QR code from an existing image.\n\nPlease re-enable camera permission for this application in order for camera scanning to work.</string>
     <string name="qr_not_found_in_image">Can\'t find QR code in the choosen image.</string>
+    <string name="install_preconfigured_pack">Install preconfigured pack</string>
+    <string name="delete_existing_data_title">Delete existing data</string>
+    <string name="delete_existing_data">Do you want to delete existing emulator data (devices, apps, games,...)?</string>
+    <string name="fail_to_install_preconfigured_pack">Failed to install preconfigured pack!</string>
+    <string name="fail_to_install_preconfigured_pack_and_rollback">Failed to install preconfigured pack! Rollback-ed to old data!</string>
+    <string name="choose_installation_type">Choose installation type</string>
+    <string name="choose_installation_type_instruction">Use an existing data pack to quickly settle in, or start afresh by installing a new device using its ROM/firmware.</string>
+    <string name="preconfigured_pack">Preconfigured pack</string>
+    <string name="rom_or_firmware">ROM/Firmware</string>
     <string name="install">Zainstaluj</string>
     <string name="rescan_devices">Przeskanuj ponownie urządzenia</string>
     <string name="device_dump">Zrzut urządzenia</string>
@@ -201,7 +215,4 @@
     <string name="install_ng_game_more_than_one_game">Jest więcej niż jedna gra w podanym folderze gry karty!</string>
     <string name="install_ng_game_no_game_info_file">Plik informacji o grze nie istnieje w folderze gry karty!</string>
     <string name="install_ng_game_corrupted_game_info">Plik informacji o grze został uszkodzony. Sprawdź poprawność danych!</string>
-    <string name="title_activity_qr_scan_preview">QrScanPreviewActivity</string>
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
 </resources>
