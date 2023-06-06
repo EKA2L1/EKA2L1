@@ -74,10 +74,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class EmulatorActivity extends AppCompatActivity {
     private static final int ORIENTATION_DEFAULT = 0;
@@ -102,6 +103,7 @@ public class EmulatorActivity extends AppCompatActivity {
     private float displayHeight;
     private SparseIntArray androidToSymbian;
     private ProfileModel params;
+    private MenuItem actionScreenshot;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -113,7 +115,7 @@ public class EmulatorActivity extends AppCompatActivity {
         }
 
         AppDataStore dataStore = AppDataStore.getAndroidStore();
-        setTheme(dataStore.getString(PREF_THEME, "light"));
+        setTheme(dataStore.getString(PREF_THEME, "dark"));
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emulator);
         overlayView = findViewById(R.id.overlay);
@@ -279,6 +281,10 @@ public class EmulatorActivity extends AppCompatActivity {
         if (keyboard != null && !(keyboard instanceof FixedKeyboard)) {
             inflater.inflate(R.menu.emulator_keys, menu);
         }
+        actionScreenshot = menu.findItem(R.id.action_screenshot);
+        if (!getSupportActionBar().isShowing()) {
+            actionScreenshot.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+        }
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -289,6 +295,8 @@ public class EmulatorActivity extends AppCompatActivity {
             showExitConfirmation();
         } else if (id == R.id.action_save_log) {
             saveLog();
+        } else if (id == R.id.action_screenshot) {
+            saveScreenshot();
         } else if (keyboard != null) {
             handleVkOptions(id);
         }
@@ -308,6 +316,24 @@ public class EmulatorActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
             Toast.makeText(this, R.string.error, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void saveScreenshot() {
+        String destDir = Emulator.getScreenshotDir();
+        File destDirFile = new File(destDir);
+
+        if (!destDirFile.exists()) {
+            destDirFile.mkdirs();
+        }
+
+        SimpleDateFormat fileNameDateFormat = new SimpleDateFormat("yyyyMMdd-hhmmss");
+        String fileName = destDir + getString(R.string.screenshot) + "_" +  getSupportActionBar().getTitle() + "_" + fileNameDateFormat.format(new Date()) + ".png";
+
+        if (Emulator.saveScreenshotTo(fileName)) {
+            Toast.makeText(this, getString(R.string.take_screenshot_success, fileName), Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(this, R.string.take_screenshot_fail, Toast.LENGTH_LONG).show();
         }
     }
 

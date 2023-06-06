@@ -45,6 +45,9 @@
         android:title="@string/profiles"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_install_preconfigured_pack"
+        android:title="@string/install_preconfigured_pack" />
+    <item
         android:id="@+id/action_ng1"
         android:title="@string/ng1_menu_title">
         <menu>

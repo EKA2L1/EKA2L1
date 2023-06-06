@@ -438,3 +438,12 @@ Java_com_github_eka2l1_emu_Emulator_setCurrentMMCID(JNIEnv *env, jclass clazz, j
 
     state->launcher->set_current_mmc_id(mmc_id_str);
 }
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_github_eka2l1_emu_Emulator_saveScreenshotTo(JNIEnv *env, jclass clazz, jstring file_path) {
+    const char *cstr = env->GetStringUTFChars(file_path, nullptr);
+    std::string file_path_std = std::string(cstr);
+    env->ReleaseStringUTFChars(file_path, cstr);
+
+    return state->launcher->save_screenshot_to(file_path_std);
+}

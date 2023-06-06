@@ -45,6 +45,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb/stb_image_write.h>
+
 namespace eka2l1::android {
 
     launcher::launcher(eka2l1::system *sys)
@@ -820,5 +823,66 @@ namespace eka2l1::android {
 
     void launcher::set_current_mmc_id(const std::string &new_mmc_id) {
         conf->current_mmc_id = new_mmc_id;
+    }
+
+    bool launcher::save_screenshot_to(const std::string &path) {
+        if (!winserv) {
+            return false;
+        }
+
+        epoc::screen *scr = winserv->get_current_focus_screen();
+
+        if (!scr) {
+            return false;
+        }
+
+        eka2l1::vec2 scr_size_scaled = scr->current_mode().size * scr->display_scale_factor;
+        std::size_t total_data_size = scr_size_scaled.x * scr_size_scaled.y * 4;
+
+        if (screenshot_buffer_.size() < total_data_size) {
+            screenshot_buffer_.resize(total_data_size);
+        }
+
+        if (!drivers::read_bitmap(sys->get_graphics_driver(), winserv->get_current_focus_screen()->screen_texture,
+                             eka2l1::point(0, 0), scr_size_scaled, 32, screenshot_buffer_.data())) {
+            return false;
+        }
+
+        struct write_png_context {
+            FILE *dest_file_;
+            std::string path_;
+
+            explicit write_png_context(const std::string &path)
+                : path_(path) {
+                 dest_file_ = common::open_c_file(path, "wb");
+            }
+
+            ~write_png_context() {
+                if (dest_file_) {
+                    fclose(dest_file_);
+                }
+            }
+
+            void write(void *data, int size) {
+                if (!dest_file_) {
+                    return;
+                }
+
+                if (fwrite(data, 1, size, dest_file_) != size) {
+                    fclose(dest_file_);
+                    common::remove(path_);
+
+                    dest_file_ = nullptr;
+                }
+            }
+        };
+
+        write_png_context png_write_context(path);
+        if (stbi_write_png_to_func([](void * context, void *data, int size) { (reinterpret_cast<write_png_context*>(context))->write(data, size); },
+                                   &png_write_context, scr_size_scaled.x, scr_size_scaled.y, 4, screenshot_buffer_.data(), scr_size_scaled.x * 4) == 0) {
+            return false;
+        }
+
+        return true;
     }
 }

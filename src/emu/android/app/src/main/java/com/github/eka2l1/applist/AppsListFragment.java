@@ -40,6 +40,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -70,10 +71,13 @@ import com.github.eka2l1.settings.AppDataStore;
 import com.github.eka2l1.settings.SettingsFragment;
 import com.github.eka2l1.util.FileUtils;
 import com.github.eka2l1.util.LogUtils;
+import com.github.eka2l1.util.ZipUtils;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -91,6 +95,8 @@ import io.reactivex.observers.DisposableSingleObserver;
 import io.reactivex.schedulers.Schedulers;
 
 import static com.github.eka2l1.emu.Constants.*;
+
+import org.w3c.dom.Text;
 
 public class AppsListFragment extends Fragment {
     private CompositeDisposable compositeDisposable;
@@ -119,6 +125,10 @@ public class AppsListFragment extends Fragment {
             new QrScanResultContract(),
             this::onMMCIDScanResult
     );
+
+    private final ActivityResultLauncher<String[]> openPreconfiguredPackZIPLauncher = registerForActivityResult(
+            FileUtils.getFilePicker(),
+            this::onPreconfiguredPackZIPResult);
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -237,7 +247,19 @@ public class AppsListFragment extends Fragment {
                                 .setMessage(R.string.no_device_installed)
                                 .setPositiveButton(R.string.install, (d, id) -> {
                                     d.cancel();
-                                    switchToDeviceList();
+
+                                    new AlertDialog.Builder(getActivity())
+                                            .setTitle(R.string.choose_installation_type)
+                                            .setMessage(R.string.choose_installation_type_instruction)
+                                            .setPositiveButton(R.string.rom_or_firmware, (d2, id2) -> {
+                                                d2.cancel();
+                                                switchToDeviceList();
+                                            })
+                                            .setNegativeButton(R.string.preconfigured_pack, (d2, i2) -> {
+                                                d2.cancel();
+                                                openPreconfiguredZIPFilePicker();
+                                            })
+                                            .show();
                                 }).setNegativeButton(android.R.string.cancel, (d, id) -> d.cancel()).create();
                         installDeviceAskDialog.show();
                     }
@@ -431,6 +453,96 @@ public class AppsListFragment extends Fragment {
         }
     }
 
+    @SuppressLint("CheckResult")
+    private void extractPreconfiguredPack(String inputPath, String destPath, String destPathTemp) {
+        InputStream sourceZipStream;
+
+        try {
+            sourceZipStream = getContext().getContentResolver().openInputStream(Uri.parse(inputPath));
+        } catch (FileNotFoundException ex) {
+            Toast.makeText(getContext(), R.string.fail_to_install_preconfigured_pack, Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        ProgressDialog dialog = new ProgressDialog(getActivity());
+        dialog.setIndeterminate(true);
+        dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        dialog.setCancelable(false);
+        dialog.setMessage(getText(R.string.processing));
+        dialog.show();
+
+        Single<Boolean> extractPackSingle = Single.create(emitter -> {
+           try {
+               ZipUtils.unzip(sourceZipStream, new File(destPathTemp));
+
+               if (destPath != null) {
+                    File destRealFile = new File(destPath);
+                    FileUtils.deleteDirectory(destRealFile);
+
+                    new File(destPathTemp + "/data").renameTo(destRealFile);
+                    FileUtils.deleteDirectory(new File(destPathTemp));
+               }
+           } catch (IOException io)
+           {
+               // Delete temporary folder
+               FileUtils.deleteDirectory(new File(destPathTemp));
+               emitter.onError(io);
+               return;
+           }
+
+           emitter.onSuccess(true);
+        });
+
+        extractPackSingle.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(new DisposableSingleObserver<Boolean>() {
+                    @SuppressLint("CheckResult")
+                    @Override
+                    public void onSuccess(@NonNull Boolean result) {
+                        Toast.makeText(getContext(), R.string.completed, Toast.LENGTH_SHORT).show();
+                        dialog.cancel();
+
+                        restart();
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+                        Toast.makeText(getContext(), (destPath != null) ? R.string.fail_to_install_preconfigured_pack_and_rollback : R.string.fail_to_install_preconfigured_pack, Toast.LENGTH_LONG).show();
+                        dialog.cancel();
+                    }
+                });
+    }
+
+    private void onPreconfiguredPackZIPResult(String sourcePath) {
+        if (sourcePath == null) {
+            return;
+        }
+
+        String dataFolderPath = Emulator.getEmulatorDir() + "/data";
+        String dataFolderPathTemp = Emulator.getEmulatorDir() + "/data_temp";
+
+        File dataFolder = new File(dataFolderPath);
+
+        if (dataFolder.exists()) {
+            new AlertDialog.Builder(getContext())
+                    .setTitle(R.string.delete_existing_data_title)
+                    .setMessage(R.string.delete_existing_data)
+                    .setPositiveButton(android.R.string.yes, (d, i) -> {
+                        extractPreconfiguredPack(sourcePath, dataFolderPath, dataFolderPathTemp);
+                    })
+                    .setNegativeButton(android.R.string.cancel, (d, i) -> {
+                        Toast.makeText(getContext(), R.string.cancelled, Toast.LENGTH_SHORT).show();
+                    })
+                    .show();
+        } else {
+            extractPreconfiguredPack(sourcePath, null, Emulator.getEmulatorDir());
+        }
+    }
+
+    private void openPreconfiguredZIPFilePicker() {
+        openPreconfiguredPackZIPLauncher.launch(new String[] { "*.zip" });
+    }
+
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
@@ -519,6 +631,8 @@ public class AppsListFragment extends Fragment {
             scanNG2LicenseLauncher.launch(R.string.ng2_scan_qr_title);
         } else if (itemId == R.id.action_scan_mmc_id) {
             scanMMCIDLauncher.launch(R.string.scan_qr_mmc_id_title);
+        } else if (itemId == R.id.action_install_preconfigured_pack) {
+            openPreconfiguredZIPFilePicker();
         } else if (itemId == R.id.action_switch_devices) {
             SwitchDevicesAlert.newInstance()
                     .show(getParentFragmentManager(), "alert_switch_devices");

@@ -62,6 +62,7 @@ import com.github.eka2l1.util.BitmapUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 import io.reactivex.Completable;
@@ -121,6 +122,7 @@ public class Emulator {
     private static String configsDir;
     private static String profilesDir;
     private static String scriptsDir;
+    private static String screenshotDir;
     private static boolean init;
     private static boolean load;
 
@@ -146,6 +148,7 @@ public class Emulator {
         configsDir = emulatorDir + "android/configs/";
         profilesDir = emulatorDir + "android/profiles/";
         scriptsDir = emulatorDir + "scripts/";
+        screenshotDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/EKA2L1/";
 
         vibrationEnabled = AppDataStore.getAndroidStore().getBoolean(PREF_VIBRATION, true);
     }
@@ -175,6 +178,10 @@ public class Emulator {
         File scriptsFolder = new File(scriptsDir);
         if (!scriptsFolder.exists()) {
             scriptsFolder.mkdirs();
+        }
+        File screenshotFolder = new File(screenshotDir);
+        if (!screenshotFolder.exists()) {
+            screenshotFolder.mkdirs();
         }
 
         boolean shouldUpdate = checkUpdate();
@@ -229,6 +236,9 @@ public class Emulator {
 
     public static String getConfigsDir() {
         return configsDir;
+    }
+    public static String getScreenshotDir() {
+        return screenshotDir;
     }
 
     public static Single<ArrayList<AppItem>> getAppsList() {
@@ -768,4 +778,5 @@ public class Emulator {
     public static native String[] getFailedInstalledLicenseGames();
     public static native boolean installNG2Licenses(String content);
     public static native void setCurrentMMCID(String newMMCID);
+    public static native boolean saveScreenshotTo(String filePath);
 }

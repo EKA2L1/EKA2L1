@@ -69,6 +69,8 @@ namespace eka2l1::android {
         int background_width, background_height;
         bool keep_bg_aspect_;
 
+        std::vector<std::uint8_t> screenshot_buffer_;
+
         void set_language_to_property(const language new_one);
         void set_language_current(const language lang);
         void retrieve_servers();
@@ -114,6 +116,7 @@ namespace eka2l1::android {
         int install_ngage_game(const std::string &path);
         bool install_ng2_game_licenses(const std::string &content);
         void set_current_mmc_id(const std::string &new_mmc_id);
+        bool save_screenshot_to(const std::string &path);
         std::vector<std::string> get_success_installed_license_games();
         std::vector<std::string> get_failed_installed_license_games();
 
