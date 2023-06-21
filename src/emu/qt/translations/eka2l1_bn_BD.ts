@@ -247,12 +247,12 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="135"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>হালনাগাদ করুন</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="201"/>
       <source>Update friends success!</source>
-      <translation type="unfinished">Update friends success!</translation>
+      <translation>বন্ধুতালিকার হালনাগাদ সম্পন্ন!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="201"/>
@@ -313,12 +313,12 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="94"/>
       <source>Device dump (RPKG + ROM)</source>
-      <translation type="unfinished">Device dump (RPKG + ROM)</translation>
+      <translation>ডিভাইস ডাম্প (RPKG + ROM)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="99"/>
       <source>Firmware (VPL)</source>
-      <translation type="unfinished">Firmware (VPL)</translation>
+      <translation>ফার্মওয়্যার (VPL)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="125"/>
@@ -333,12 +333,12 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="117"/>
       <source>Choose the firmware variant to install</source>
-      <translation type="unfinished">Choose the firmware variant to install</translation>
+      <translation>ইনস্টল করতে ফার্মওয়্যার ভ‍্যারিয়েন্ট বাছাই করুন</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="199"/>
       <source>Installation completed</source>
-      <translation type="unfinished">Installation completed</translation>
+      <translation>ইনস্টলেশন সম্পন্ন হয়েছে</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="200"/>
@@ -1956,7 +1956,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/update_dialog.ui" line="126"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>হালনাগাদ করুন</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="139"/>
