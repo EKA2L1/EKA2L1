@@ -134,7 +134,7 @@
     <string name="pref_background_image">Background image</string>
     <string name="pref_background_image_view">দৃশ্য</string>
     <string name="pref_background_image_empty">Not set</string>
-    <string name="pref_background_image_clear">Clear</string>
+    <string name="pref_background_image_clear">পরিষ্কার করুন</string>
     <string name="pref_background_image_fail_to_set">Fail to set background image!</string>
     <string name="background_image">Background image</string>
     <string name="background_image_opacity">BG image opacity</string>
