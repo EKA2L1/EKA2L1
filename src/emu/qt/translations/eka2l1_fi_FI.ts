@@ -96,7 +96,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="796"/>
       <source>Enter a new name</source>
-      <translation type="unfinished">Enter a new name</translation>
+      <translation>Anna uusi nimi</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
@@ -308,7 +308,7 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="80"/>
       <source>Choose the installation method</source>
-      <translation type="unfinished">Choose the installation method</translation>
+      <translation>Valitse asennustapa</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="94"/>
@@ -383,7 +383,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="236"/>
       <source>Fail to copy ROM file!</source>
-      <translation type="unfinished">Fail to copy ROM file!</translation>
+      <translation>ROM-tiedoston kopiointi epäonnistui!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="240"/>
