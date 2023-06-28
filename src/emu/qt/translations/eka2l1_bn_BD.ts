@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/utils.cpp" line="126"/>
       <source>EKA2L1 - Symbian OS emulator</source>
-      <translation type="unfinished">EKA2L1 - Symbian OS emulator</translation>
+      <translation>EKA2L1 - সিম্বিয়ান ওএস ইমুলেটর</translation>
     </message>
   </context>
   <context>
@@ -116,7 +116,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
       <source>An error occured while trying to delete the app!</source>
-      <translation type="unfinished">An error occured while trying to delete the app!</translation>
+      <translation>একটি ত্রুটি ঘটেছে যখন অ্যাপটি মুছে ফেলার চেষ্টা করছি!</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="834"/>
@@ -174,12 +174,12 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="188"/>
       <source>Open friends&apos; IP editor</source>
-      <translation type="unfinished">Open friends&apos; IP editor</translation>
+      <translation>বন্ধুতালিকা খুলুন&apos; আইপি এডিটর</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="225"/>
       <source>Players with the same password will be able to see each others. This can be empty.</source>
-      <translation type="unfinished">Players with the same password will be able to see each others. This can be empty.</translation>
+      <translation>খেলোয়াড়রা একই পাসওয়ার্ড দিয়ে একে অপরকে দেখতে পারবেন। এটি খালি হতে পারে।</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="228"/>
@@ -189,22 +189,22 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="238"/>
       <source>Generate random</source>
-      <translation type="unfinished">Generate random</translation>
+      <translation>এলোমেলো তৈরি করুন</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="245"/>
       <source>Clear</source>
-      <translation type="unfinished">Clear</translation>
+      <translation>পরিষ্কার করুন</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
       <source>Configuration not saved</source>
-      <translation type="unfinished">Configuration not saved</translation>
+      <translation>কনফিগারেশন সংরক্ষণ করা নেই</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
       <source>The Bluetooth netplay configuration has not been saved. Do you want to save?</source>
-      <translation type="unfinished">The Bluetooth netplay configuration has not been saved. Do you want to save?</translation>
+      <translation>ব্লুটুথ নেটপ্লে কনফিগারেশনটি সংরক্ষণ করা হয়নি। আপনি কি সংরক্ষণ করতে চান?</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="127"/>
@@ -222,22 +222,22 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="70"/>
       <source>Modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Modify friends&apos; IP addresses</translation>
+      <translation>বন্ধুতালিকা পরিবর্তন করুন&apos; আইপি ঠিকানাসমূহ</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="85"/>
       <source>IP address (IPv4 or IPv6)</source>
-      <translation type="unfinished">IP address (IPv4 or IPv6)</translation>
+      <translation>আইপি ঠিকানা (IPv4 অথবা IPv6)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="90"/>
       <source>Port (can be empty)</source>
-      <translation type="unfinished">Port (can be empty)</translation>
+      <translation>পোর্ট (খালি হতে পারে)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="133"/>
       <source>Add more</source>
-      <translation type="unfinished">Add more</translation>
+      <translation>আরও যোগ করুন</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="134"/>
@@ -257,28 +257,25 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="201"/>
       <source>Friends&apos; IP addresses have been successfully saved!</source>
-      <translation type="unfinished">Friends&apos; IP addresses have been successfully saved!</translation>
+      <translation>বন্ধুতালিকা&apos; আইপি ঠিকানাসমূহ সফলভাবে সংরক্ষণ করা হয়েছে!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="214"/>
       <source>Friend %1 has empty IP address!
 </source>
-      <translation type="unfinished">Friend %1 has empty IP address!
-</translation>
+      <translation>বন্ধু %1 -এর কাছে খালি আইপি ঠিকানা আছে!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="216"/>
       <source>Friend %1 has invalid IP address!
 </source>
-      <translation type="unfinished">Friend %1 has invalid IP address!
-</translation>
+      <translation>বন্ধু %1 -এর কাছে অবৈধ আইপি ঠিকানা আছে!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="221"/>
       <source>Friend %1 has invalid port number (must be between 0 and 65535)!
 </source>
-      <translation type="unfinished">Friend %1 has invalid port number (must be between 0 and 65535)!
-</translation>
+      <translation>বন্ধু %1 -এর কাছে অবৈধ পোর্ট নম্বর আছে (0 থেকে 65535 এর মধ্যে যেকোনো একটি পোর্ট সংখ্যা হওয়া উচিত)!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="248"/>
