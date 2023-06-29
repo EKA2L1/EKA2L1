@@ -19,7 +19,7 @@
     <message>
       <location filename="../src/symbian_input_dialog.ui" line="31"/>
       <source>Submit</source>
-      <translation type="unfinished">Submit</translation>
+      <translation>Lähetä</translation>
     </message>
   </context>
   <context>
@@ -27,7 +27,7 @@
     <message>
       <location filename="../src/aboutdialog.ui" line="14"/>
       <source>About EKA2L1</source>
-      <translation type="unfinished">About EKA2L1</translation>
+      <translation>Tietoja EKA2L1:stä</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.ui" line="69"/>
@@ -37,7 +37,7 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="50"/>
       <source>&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</translation>
+      <translation>&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; haara &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="53"/>
@@ -47,7 +47,7 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="64"/>
       <source>&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Pääkehittäjät:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="78"/>
@@ -57,7 +57,7 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="92"/>
       <source>&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Kuvake:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="106"/>
@@ -67,7 +67,7 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="120"/>
       <source>&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Kääntäjät:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
   </context>
   <context>
@@ -101,7 +101,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
       <source>Update name failed</source>
-      <translation type="unfinished">Update name failed</translation>
+      <translation>Nimen päivitys epäonnistui</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
@@ -111,7 +111,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
       <source>Delete app failed</source>
-      <translation type="unfinished">Delete app failed</translation>
+      <translation>Sovelluksen poisto epäonnistui</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
@@ -144,17 +144,17 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="55"/>
       <source>Off</source>
-      <translation type="unfinished">Off</translation>
+      <translation>Pois</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="60"/>
       <source>Direct IP</source>
-      <translation type="unfinished">Direct IP</translation>
+      <translation>Suora IP</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="65"/>
       <source>LAN</source>
-      <translation type="unfinished">LAN</translation>
+      <translation>Lähiverkko</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="115"/>
@@ -189,7 +189,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="238"/>
       <source>Generate random</source>
-      <translation type="unfinished">Generate random</translation>
+      <translation>Luo satunnainen</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="245"/>
@@ -222,17 +222,17 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="70"/>
       <source>Modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Modify friends&apos; IP addresses</translation>
+      <translation>Muokkaa ystävien IP-osoitteita</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="85"/>
       <source>IP address (IPv4 or IPv6)</source>
-      <translation type="unfinished">IP address (IPv4 or IPv6)</translation>
+      <translation>IP-osoite (IPv4 tai IPv6)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="90"/>
       <source>Port (can be empty)</source>
-      <translation type="unfinished">Port (can be empty)</translation>
+      <translation>Portti (voi olla tyhjä)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="133"/>
@@ -263,21 +263,21 @@
       <location filename="../src/btnetplay_friends_dialog.cpp" line="214"/>
       <source>Friend %1 has empty IP address!
 </source>
-      <translation type="unfinished">Friend %1 has empty IP address!
+      <translation>Ystävällä %1 on tyhjä IP-osoite!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="216"/>
       <source>Friend %1 has invalid IP address!
 </source>
-      <translation type="unfinished">Friend %1 has invalid IP address!
+      <translation>Ystävällä %1 on viallinen IP-osoite!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="221"/>
       <source>Friend %1 has invalid port number (must be between 0 and 65535)!
 </source>
-      <translation type="unfinished">Friend %1 has invalid port number (must be between 0 and 65535)!
+      <translation>Ystävällä %1 on viallinen porttinumero (täytyy olla välillä 0 - 65535)!
 </translation>
     </message>
     <message>
@@ -318,7 +318,7 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="99"/>
       <source>Firmware (VPL)</source>
-      <translation type="unfinished">Firmware (VPL)</translation>
+      <translation>Laiteohjelmisto (VPL)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="125"/>
@@ -333,7 +333,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="117"/>
       <source>Choose the firmware variant to install</source>
-      <translation type="unfinished">Choose the firmware variant to install</translation>
+      <translation>Valitse asennettava laiteohjelmiston variantti</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="199"/>
@@ -343,7 +343,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="200"/>
       <source>Device %1 (%2) has been successfully installed!</source>
-      <translation type="unfinished">Device %1 (%2) has been successfully installed!</translation>
+      <translation>Laitteen %1 (%2) asennus onnistui!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="208"/>
@@ -358,7 +358,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="216"/>
       <source>One of the FPSX files provided in the firmware is corrupted!</source>
-      <translation type="unfinished">One of the FPSX files provided in the firmware is corrupted!</translation>
+      <translation>Yksi laiteohjelmiston FPSX-tiedostoista on viallinen!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="220"/>
@@ -378,7 +378,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="232"/>
       <source>The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</source>
-      <translation type="unfinished">The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</translation>
+      <translation>Laiteohjelmiston ROFS-tiedosto on viallinen! Varmista, että laiteohjelmistotiedostosi eivät ole viallisia.</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="236"/>
@@ -398,7 +398,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="248"/>
       <source>The provided VPL file is invalid. Please check your firmware files again!</source>
-      <translation type="unfinished">The provided VPL file is invalid. Please check your firmware files again!</translation>
+      <translation>Annettu VPL-tiedosto on viallinen. Tarkista laiteohjelmistotiedostosi uudelleen!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="256"/>
@@ -492,7 +492,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="212"/>
       <source>Edit</source>
-      <translation type="unfinished">Edit</translation>
+      <translation>Muokkaa</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="222"/>
@@ -579,7 +579,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="50"/>
       <source>App launcher is unavailable.&lt;br&gt;Install a device to continue.</source>
-      <translation type="unfinished">App launcher is unavailable.&lt;br&gt;Install a device to continue.</translation>
+      <translation>Sovellusten käynnistysohjelma ei ole saatavilla.&lt;br&gt;Asenna laite jatkaaksesi.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="69"/>
@@ -649,7 +649,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="177"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>Pakettien hallinta</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="182"/>
@@ -734,7 +734,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="314"/>
       <source>Check for update</source>
-      <translation type="unfinished">Check for update</translation>
+      <translation>Tarkista päivitykset</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="319"/>
@@ -744,7 +744,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="329"/>
       <source>Configure</source>
-      <translation type="unfinished">Configure</translation>
+      <translation>Asetukset</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="340"/>
@@ -770,7 +770,7 @@
       <location filename="../src/mainwindow.cpp" line="346"/>
       <location filename="../src/mainwindow.cpp" line="427"/>
       <source>Don&apos;t show this again</source>
-      <translation type="unfinished">Don&apos;t show this again</translation>
+      <translation>Älä näytä uudelleen</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="426"/>
@@ -780,7 +780,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="426"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
-      <translation type="unfinished">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</translation>
+      <translation>Et ole asentanut mitään laitetta. Asenna laite tai noudata asennusohjeita EKA2L1:n GitHub wiki -sivulla.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="686"/>
@@ -837,7 +837,7 @@
       <location filename="../src/mainwindow.cpp" line="759"/>
       <location filename="../src/mainwindow.cpp" line="1664"/>
       <source>Install failed</source>
-      <translation type="unfinished">Install failed</translation>
+      <translation>Asennus epäonnistui</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="757"/>
@@ -977,7 +977,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1152"/>
       <source>SIS file (*.sis *.sisx)</source>
-      <translation type="unfinished">SIS file (*.sis *.sisx)</translation>
+      <translation>SIS-tiedosto (*.sis *.sisx)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1347"/>
@@ -1037,7 +1037,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1644"/>
       <source>The given file is not a valid JAR file!</source>
-      <translation type="unfinished">The given file is not a valid JAR file!</translation>
+      <translation>Annettu tiedosto ei ole kelvollinen JAR-tiedosto!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1648"/>
@@ -1065,7 +1065,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="17"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>Pakettien hallinta</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
@@ -1090,17 +1090,17 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="81"/>
       <source>Drives</source>
-      <translation type="unfinished">Drives</translation>
+      <translation>Asemat</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="89"/>
       <source>Uninstall</source>
-      <translation type="unfinished">Uninstall</translation>
+      <translation>Poista asennus</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="94"/>
       <source>List files</source>
-      <translation type="unfinished">List files</translation>
+      <translation>Listaa tiedostot</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="126"/>
@@ -1110,12 +1110,12 @@
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="126"/>
       <source>Failed to uninstall the package</source>
-      <translation type="unfinished">Failed to uninstall the package</translation>
+      <translation>Paketin poisto epäonnistui</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="143"/>
       <source>%1&apos;s files</source>
-      <translation type="unfinished">%1&apos;s files</translation>
+      <translation>%1:n tiedostot</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="152"/>
@@ -1243,7 +1243,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="382"/>
       <source>Log filter</source>
-      <translation type="unfinished">Log filter</translation>
+      <translation>Lokin suodatin</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="399"/>
@@ -1281,7 +1281,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="456"/>
       <source>Interface</source>
-      <translation type="unfinished">Interface</translation>
+      <translation>Käyttöliittymä</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="462"/>
@@ -1296,7 +1296,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="598"/>
       <source>Hide mouse cursor</source>
-      <translation type="unfinished">Hide mouse cursor</translation>
+      <translation>Piilota kursori</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="605"/>
@@ -1316,7 +1316,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="627"/>
       <source>User interface</source>
-      <translation type="unfinished">User interface</translation>
+      <translation>Käyttöliittymä</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="662"/>
@@ -1346,22 +1346,22 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="470"/>
       <source>Background</source>
-      <translation type="unfinished">Background</translation>
+      <translation>Tausta</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="491"/>
       <source>Image</source>
-      <translation type="unfinished">Image</translation>
+      <translation>Kuva</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="527"/>
       <source>Color</source>
-      <translation type="unfinished">Color</translation>
+      <translation>Väri</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="562"/>
       <source>Opacity</source>
-      <translation type="unfinished">Opacity</translation>
+      <translation>Peittävyys</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="585"/>
@@ -1464,12 +1464,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="859"/>
       <source>Properties</source>
-      <translation type="unfinished">Properties</translation>
+      <translation>Ominaisuudet</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="867"/>
       <source>Battery level (0 - 100)</source>
-      <translation type="unfinished">Battery level (0 - 100)</translation>
+      <translation>Akun varaus (0 - 100)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="896"/>
@@ -1486,7 +1486,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="950"/>
       <source>Check</source>
-      <translation type="unfinished">Check</translation>
+      <translation>Tarkista</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="967"/>
@@ -1582,7 +1582,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1198"/>
       <source>Volume</source>
-      <translation type="unfinished">Volume</translation>
+      <translation>Äänenvoimakkuus</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1240"/>
@@ -1617,7 +1617,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1378"/>
       <source>Up arrow</source>
-      <translation type="unfinished">Up arrow</translation>
+      <translation>Ylänuoli</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1410"/>
@@ -1627,7 +1627,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1446"/>
       <source>Left arrow</source>
-      <translation type="unfinished">Left arrow</translation>
+      <translation>Vasen nuoli</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1478"/>
@@ -1637,7 +1637,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1510"/>
       <source>Right arrow</source>
-      <translation type="unfinished">Right arrow</translation>
+      <translation>Oikea nuoli</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1546"/>
@@ -1647,7 +1647,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1578"/>
       <source>Down arrow</source>
-      <translation type="unfinished">Down arrow</translation>
+      <translation>Alanuoli</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1610"/>
@@ -1712,7 +1712,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="307"/>
       <source>Default</source>
-      <translation type="unfinished">Default</translation>
+      <translation>Oletus</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="445"/>
@@ -1853,7 +1853,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="1057"/>
       <source>IMEI invalid!</source>
-      <translation type="unfinished">IMEI invalid!</translation>
+      <translation>Viallinen IMEI!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1067"/>
@@ -1923,7 +1923,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="1383"/>
       <source>Choose the background image</source>
-      <translation type="unfinished">Choose the background image</translation>
+      <translation>Valitse taustakuva</translation>
     </message>
   </context>
   <context>
@@ -1946,7 +1946,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/update_dialog.ui" line="84"/>
       <source>Downloading update ... %p%</source>
-      <translation type="unfinished">Downloading update ... %p%</translation>
+      <translation>Ladataan päivitystä ... %p%</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="91"/>
