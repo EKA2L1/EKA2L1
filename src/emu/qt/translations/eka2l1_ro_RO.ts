@@ -418,7 +418,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="275"/>
       <source>Choose the ROM</source>
-      <translation type="unfinished">Choose the ROM</translation>
+      <translation>Alegeți ROM-ul</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="276"/>
@@ -451,7 +451,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="40"/>
       <source>Joystick</source>
-      <translation type="unfinished">Joystick</translation>
+      <translation>Joystick</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="45"/>
@@ -502,7 +502,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="50"/>
       <source>Please wait for a game to be active!</source>
-      <translation type="unfinished">Please wait for a game to be active!</translation>
+      <translation>Vă rugăm așteptați ca un joc să fie activ!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="89"/>
@@ -527,7 +527,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="285"/>
       <source>Show editor</source>
-      <translation type="unfinished">Show editor</translation>
+      <translation>Afișare editor</translation>
     </message>
   </context>
   <context>
@@ -649,7 +649,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="177"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>Manager de pachete</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="182"/>
@@ -694,7 +694,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="228"/>
       <source>Fullscreen</source>
-      <translation type="unfinished">Fullscreen</translation>
+      <translation>Ecran complet</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="239"/>
@@ -704,7 +704,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="279"/>
       <source>Folder</source>
-      <translation type="unfinished">Folder</translation>
+      <translation>Dosar</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="289"/>
@@ -759,7 +759,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="345"/>
       <source>Touchscreen disabled</source>
-      <translation type="unfinished">Touchscreen disabled</translation>
+      <translation>Touchscreen dezactivat</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="345"/>
@@ -872,7 +872,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="858"/>
       <source>The ZIP file is corrupted!</source>
-      <translation type="unfinished">The ZIP file is corrupted!</translation>
+      <translation>Fișierul ZIP este corupt!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="863"/>
@@ -1065,7 +1065,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="17"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>Manager de pachete</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
