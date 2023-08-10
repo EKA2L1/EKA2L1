@@ -8,7 +8,7 @@
     <string name="packages">Paketler</string>
     <string name="devices">Cihazlar</string>
     <string name="switch_devices">Switch devices</string>
-    <string name="profiles">Profiller</string>
+    <string name="profiles">Profil</string>
     <string name="processing">İşlem devam ediyor...</string>
     <string name="completed">Tamamlandı!</string>
     <string name="cancelled">Cancelled</string>
