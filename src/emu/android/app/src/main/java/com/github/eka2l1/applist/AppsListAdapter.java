@@ -35,7 +35,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.github.eka2l1.R;
 
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -83,7 +83,9 @@ public class AppsListAdapter extends RecyclerView.Adapter<AppItemViewHolder> imp
     }
 
     public void setItems(List<AppItem> items) {
-        items.sort(Comparator.comparing(AppItem::getTitle));
+        Collections.sort(items, (o1, o2) -> {
+            return o1.getTitle().compareTo(o2.getTitle());
+        });
 
         list = items;
         filteredList = items;
