@@ -58,7 +58,7 @@
 	url = https://github.com/Vita3K/libfat16/
 [submodule "src/external/lunasvg"]
 	path = src/external/lunasvg
-	url = https://github.com/EKA2L1/lunasvg
+	url = https://github.com/sammycage/lunasvg
 [submodule "src/external/mbedtls"]
 	path = src/external/mbedtls
 	url = https://github.com/ARMmbed/mbedtls
