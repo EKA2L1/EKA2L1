@@ -121,16 +121,19 @@ public class FileUtils {
         }
     }
 
-    public static void deleteDirectory(File dir) {
+    public static boolean deleteDirectory(File dir) {
         if (dir.isDirectory()) {
             File[] listFiles = dir.listFiles();
-            if (listFiles.length != 0) {
+            if (listFiles != null && listFiles.length != 0) {
                 for (File file : listFiles) {
                     deleteDirectory(file);
                 }
             }
         }
-        dir.delete();
+        if (!dir.delete() && dir.exists()) {
+            return false;
+        }
+        return true;
     }
 
     public static boolean copyAssetFolder(Context context, String srcName, String dstName) {
