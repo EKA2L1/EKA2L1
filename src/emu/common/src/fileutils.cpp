@@ -850,7 +850,7 @@ namespace eka2l1::common {
                     }
 
                     if (entry.type == common::file_type::FILE_DIRECTORY) {
-                        folder_stacks.push(eka2l1::add_path(top_path, name_to_use));
+                        folder_stacks.push(eka2l1::add_path(top_path, name_to_use + eka2l1::get_separator()));
                     } else {
                         if (is_measuring) {
                             total_size += entry.size;
