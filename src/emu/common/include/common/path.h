@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <functional>
 #include <stdexcept>
 #include <string>
