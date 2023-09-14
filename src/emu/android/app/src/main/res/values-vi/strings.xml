@@ -207,7 +207,7 @@
     <string name="enter_text">Nhập văn bản ở trên</string>
     <string name="about_icon_by">&lt;BR&gt;Icon bởi: </string>
     <string name="about_special_thanks_title">Đặc biệt cảm ơn</string>
-    <string name="about_special_thanks_content">  - nikita36078 for publishing the Android version on Play Store and for his help!&lt;BR&gt;  - Symbian/N-Gage OG sceners: BinPDA, pSyGAGE, Engage, zg, eskMaemo, BodyZ, Ilya Dianov, iCodeRUS, huellif, … for wonderful contributions!&lt;BR&gt;  - Phone manufacturers for creating wonderful Symbian devices: Nokia, Sony Ericsson, Samsung, Siemens, ...&lt;BR&gt;  - The N-Gage Discord community&lt;BR&gt;  - vk.com/Symbian_zone community&lt;BR&gt;  - EKA2L1 Discord community</string>
+    <string name="about_special_thanks_content"></string>
     <string name="about_translator">Phiên dịch viên</string>
     <string name="version">Phiên bản: </string>
     <string name="recommended_devices_note"><b>Chú ý:</b> Khuyên dùng firmware để cài đặt những thiết bị từ S60v3 trở lên.</string>
