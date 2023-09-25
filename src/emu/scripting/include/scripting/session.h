@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <string>
+#include <cstdint>
 
 #include <scripting/server.h>
 
