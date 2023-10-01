@@ -169,7 +169,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="166"/>
       <source>Save</source>
-      <translation type="unfinished">Save</translation>
+      <translation>Lưu</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="188"/>
@@ -194,7 +194,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="245"/>
       <source>Clear</source>
-      <translation type="unfinished">Clear</translation>
+      <translation>Xóa</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
@@ -237,7 +237,7 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="133"/>
       <source>Add more</source>
-      <translation type="unfinished">Add more</translation>
+      <translation>Thêm</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="134"/>
@@ -247,7 +247,7 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="135"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>Cập nhật</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="201"/>
@@ -550,7 +550,7 @@
     <message>
       <location filename="../src/launch_process_dialog.ui" line="78"/>
       <source>Launch</source>
-      <translation type="unfinished">Launch</translation>
+      <translation>Khởi chạy</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="85"/>
@@ -561,7 +561,7 @@
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
       <location filename="../src/launch_process_dialog.cpp" line="33"/>
       <source>Launch failed</source>
-      <translation type="unfinished">Launch failed</translation>
+      <translation>Khởi chạy không thành công</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
@@ -734,7 +734,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="314"/>
       <source>Check for update</source>
-      <translation type="unfinished">Check for update</translation>
+      <translation>Kiểm tra bản cập nhật</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="319"/>
@@ -917,7 +917,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1034"/>
       <source>Launch failed</source>
-      <translation type="unfinished">Launch failed</translation>
+      <translation>Khởi chạy không thành công</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1034"/>
@@ -1017,7 +1017,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1617"/>
       <source>JAR file (*.jar)</source>
-      <translation type="unfinished">JAR file (*.jar)</translation>
+      <translation>Tệp JAR (*.jar)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1625"/>
@@ -1027,7 +1027,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1628"/>
       <source>Install success</source>
-      <translation type="unfinished">Install success</translation>
+      <translation>Cài đặt thành công</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1640"/>
@@ -1351,17 +1351,17 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="491"/>
       <source>Image</source>
-      <translation type="unfinished">Image</translation>
+      <translation>Hình ảnh</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="527"/>
       <source>Color</source>
-      <translation type="unfinished">Color</translation>
+      <translation>Màu</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="562"/>
       <source>Opacity</source>
-      <translation type="unfinished">Opacity</translation>
+      <translation>Độ trong suốt</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="585"/>
@@ -1923,7 +1923,7 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/settings_dialog.cpp" line="1383"/>
       <source>Choose the background image</source>
-      <translation type="unfinished">Choose the background image</translation>
+      <translation>Chọn ảnh nền</translation>
     </message>
   </context>
   <context>
@@ -1956,7 +1956,7 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/update_dialog.ui" line="126"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>Cập nhật</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="139"/>
@@ -1971,17 +1971,17 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/update_dialog.cpp" line="107"/>
       <source>Update success</source>
-      <translation type="unfinished">Update success</translation>
+      <translation>Cập nhật thành công</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="113"/>
       <source>Update failed</source>
-      <translation type="unfinished">Update failed</translation>
+      <translation>Cập nhật không thành công</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="142"/>
       <source>The emulator is already updated to lastest version!</source>
-      <translation type="unfinished">The emulator is already updated to lastest version!</translation>
+      <translation>Trình giả lập đang ở phiên bản mới nhất!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="152"/>
@@ -2089,7 +2089,7 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/updater.cpp" line="93"/>
       <source>Update failed</source>
-      <translation type="unfinished">Update failed</translation>
+      <translation>Cập nhật không thành công</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="101"/>
@@ -2115,7 +2115,7 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/updater.cpp" line="214"/>
       <source>Update success</source>
-      <translation type="unfinished">Update success</translation>
+      <translation>Cập nhật thành công</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="214"/>
