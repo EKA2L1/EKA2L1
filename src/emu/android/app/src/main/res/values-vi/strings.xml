@@ -134,7 +134,7 @@
     <string name="pref_background_image">Ảnh nền</string>
     <string name="pref_background_image_view">Hiển thị</string>
     <string name="pref_background_image_empty">Chưa đặt</string>
-    <string name="pref_background_image_clear">Clear</string>
+    <string name="pref_background_image_clear">Xóa</string>
     <string name="pref_background_image_fail_to_set">Đặt ảnh nền thất bại!</string>
     <string name="background_image">Ảnh nền</string>
     <string name="background_image_opacity">Độ trong suốt ảnh nền</string>
