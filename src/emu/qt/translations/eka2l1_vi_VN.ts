@@ -2001,7 +2001,7 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/update_dialog.cpp" line="196"/>
       <source>Failed to get update download link from GitHub!</source>
-      <translation type="unfinished">Failed to get update download link from GitHub!</translation>
+      <translation>Lấy link update từ Github không thành công!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="214"/>
@@ -2027,7 +2027,7 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
       <location filename="../src/update_dialog.cpp" line="303"/>
       <location filename="../src/update_dialog.cpp" line="363"/>
       <source>Update error</source>
-      <translation type="unfinished">Update error</translation>
+      <translation>Cập nhật bị lỗi</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="303"/>
