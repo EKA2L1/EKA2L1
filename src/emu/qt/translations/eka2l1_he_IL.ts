@@ -83,7 +83,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="63"/>
       <source>Search</source>
-      <translation type="unfinished">Search</translation>
+      <translation>חיפוש</translation>
     </message>
   </context>
   <context>
@@ -121,7 +121,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="834"/>
       <source>Rename</source>
-      <translation type="unfinished">Rename</translation>
+      <translation>שנה שם</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="835"/>
@@ -144,7 +144,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="55"/>
       <source>Off</source>
-      <translation type="unfinished">Off</translation>
+      <translation>כיבוי</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="60"/>
@@ -242,7 +242,7 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="134"/>
       <source>Remove</source>
-      <translation type="unfinished">Remove</translation>
+      <translation>הסר</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="135"/>
@@ -482,7 +482,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="153"/>
       <source>Remove</source>
-      <translation type="unfinished">Remove</translation>
+      <translation>הסר</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="181"/>
@@ -634,7 +634,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="162"/>
       <source>About</source>
-      <translation type="unfinished">About</translation>
+      <translation>אודות</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="167"/>
@@ -654,7 +654,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="182"/>
       <source>Settings</source>
-      <translation type="unfinished">Settings</translation>
+      <translation>הגדרות</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="190"/>
@@ -1070,7 +1070,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
       <source>Search</source>
-      <translation type="unfinished">Search</translation>
+      <translation>חיפוש</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="66"/>
@@ -1133,7 +1133,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="20"/>
       <source>Settings</source>
-      <translation type="unfinished">Settings</translation>
+      <translation>הגדרות</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="36"/>
@@ -1321,22 +1321,22 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="662"/>
       <source>Language</source>
-      <translation type="unfinished">Language</translation>
+      <translation>שפה</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="684"/>
       <source>Theme</source>
-      <translation type="unfinished">Theme</translation>
+      <translation>ערכת נושא</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="692"/>
       <source>Light</source>
-      <translation type="unfinished">Light</translation>
+      <translation>אור</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="697"/>
       <source>Dark</source>
-      <translation type="unfinished">Dark</translation>
+      <translation>שחור</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="633"/>
@@ -1428,7 +1428,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="777"/>
       <source>Devices</source>
-      <translation type="unfinished">Devices</translation>
+      <translation>התקנים</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="794"/>
@@ -1439,7 +1439,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
       <location filename="../src/settings_dialog.ui" line="817"/>
       <location filename="../src/settings_dialog.ui" line="1291"/>
       <source>Rename</source>
-      <translation type="unfinished">Rename</translation>
+      <translation>שנה שם</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="828"/>
@@ -1531,17 +1531,17 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1045"/>
       <source>Low</source>
-      <translation type="unfinished">Low</translation>
+      <translation>נמוך</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1050"/>
       <source>Mid</source>
-      <translation type="unfinished">Mid</translation>
+      <translation>בינוני</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1055"/>
       <source>High</source>
-      <translation type="unfinished">High</translation>
+      <translation>גבוה</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1068"/>
@@ -1712,7 +1712,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="307"/>
       <source>Default</source>
-      <translation type="unfinished">Default</translation>
+      <translation>ברירת מחדל</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="445"/>
