@@ -800,7 +800,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="730"/>
       <source>Install success!</source>
-      <translation type="unfinished">Install success!</translation>
+      <translation>Cài đặt hoàn thành!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="730"/>
@@ -837,7 +837,7 @@
       <location filename="../src/mainwindow.cpp" line="759"/>
       <location filename="../src/mainwindow.cpp" line="1664"/>
       <source>Install failed</source>
-      <translation type="unfinished">Install failed</translation>
+      <translation>Cài đặt thất bại</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="757"/>
@@ -1012,7 +1012,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1617"/>
       <source>Choose the JAR file to install</source>
-      <translation type="unfinished">Choose the JAR file to install</translation>
+      <translation>Chọn tệp JAR để cài đặt</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1617"/>
@@ -1941,12 +1941,12 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/update_dialog.ui" line="61"/>
       <source>Changelog</source>
-      <translation type="unfinished">Changelog</translation>
+      <translation>Nhật ký thay đổi</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="84"/>
       <source>Downloading update ... %p%</source>
-      <translation type="unfinished">Downloading update ... %p%</translation>
+      <translation>Đang tải xuống bản Cập Nhật ... %p%</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="91"/>
