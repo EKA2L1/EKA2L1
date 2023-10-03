@@ -111,7 +111,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
       <source>Delete app failed</source>
-      <translation type="unfinished">Delete app failed</translation>
+      <translation>Gỡ cài đặt app không thành công</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
@@ -189,7 +189,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="238"/>
       <source>Generate random</source>
-      <translation type="unfinished">Generate random</translation>
+      <translation>Tạo ngẫu nhiên</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="245"/>
@@ -199,12 +199,12 @@
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
       <source>Configuration not saved</source>
-      <translation type="unfinished">Configuration not saved</translation>
+      <translation>Cấu hình chưa được lưu</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
       <source>The Bluetooth netplay configuration has not been saved. Do you want to save?</source>
-      <translation type="unfinished">The Bluetooth netplay configuration has not been saved. Do you want to save?</translation>
+      <translation>Cấu hình Bluetooth Netplay chưa được lưu. Bạn có muốn lưu ngay?</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="127"/>
@@ -232,7 +232,7 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="90"/>
       <source>Port (can be empty)</source>
-      <translation type="unfinished">Port (can be empty)</translation>
+      <translation>Cổng (Có thể để trống)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="133"/>
@@ -252,7 +252,7 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="201"/>
       <source>Update friends success!</source>
-      <translation type="unfinished">Update friends success!</translation>
+      <translation>Cập nhật bạn bè thành công!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="201"/>
@@ -729,7 +729,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="309"/>
       <source>N-Gage card game</source>
-      <translation type="unfinished">N-Gage card game</translation>
+      <translation>Thẻ game N-Gage</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="314"/>
@@ -749,7 +749,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="340"/>
       <source>Stretch to fill window (ignore aspect ratio)</source>
-      <translation type="unfinished">Stretch to fill window (ignore aspect ratio)</translation>
+      <translation>Kéo dãn cho đầy cửa sổ (bỏ qua tỉ lệ khung hình)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="268"/>
@@ -810,7 +810,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="736"/>
       <source>Can&apos;t find the game data folder!</source>
-      <translation type="unfinished">Can&apos;t find the game data folder!</translation>
+      <translation>Không tìm thấy thư mục dữ liệu trò chơi!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="740"/>
@@ -825,7 +825,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="748"/>
       <source>The game information file has been corrupted. Please check your data&apos;s validity!</source>
-      <translation type="unfinished">The game information file has been corrupted. Please check your data&apos;s validity!</translation>
+      <translation>Thông tin trò chơi đã bị lỗi! Vui lòng kiểm tra lại tính chính xác của dữ liệu của bạn!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="752"/>
@@ -1248,7 +1248,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="399"/>
       <source>Apply</source>
-      <translation type="unfinished">Apply</translation>
+      <translation>Áp dụng</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="408"/>
