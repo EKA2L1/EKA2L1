@@ -212,7 +212,7 @@
     <string name="version">Phiên bản: </string>
     <string name="recommended_devices_note"><b>Chú ý:</b> Khuyên dùng firmware để cài đặt những thiết bị từ S60v3 trở lên.</string>
     <string name="install_ng_game_cant_find_data_folder">Không thể tìm thấy thư mục dữ liệu trò chơi!</string>
-    <string name="install_ng_game_more_than_one_game">There is more than one game in the given card game folder!</string>
-    <string name="install_ng_game_no_game_info_file">The game information file does not exist in the card game folder!</string>
+    <string name="install_ng_game_more_than_one_game">Có nhiều hơn một trò chơi trong thư mục thẻ trò chơi!</string>
+    <string name="install_ng_game_no_game_info_file">Thông tin trò chơi không tồn tại trong thư mục thẻ trò chơi!</string>
     <string name="install_ng_game_corrupted_game_info">Thông tin trò chơi đã bị lỗi! Vui lòng kiểm tra lại tính chính xác của dữ liệu của bạn!</string>
 </resources>
