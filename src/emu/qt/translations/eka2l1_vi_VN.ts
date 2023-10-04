@@ -1931,12 +1931,12 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/update_dialog.ui" line="14"/>
       <source>New update available</source>
-      <translation type="unfinished">New update available</translation>
+      <translation>Có bản cập nhật mới</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="43"/>
       <source>A new update has been released on GitHub!</source>
-      <translation type="unfinished">A new update has been released on GitHub!</translation>
+      <translation>Có bản cập nhật mới trên GitHub!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="61"/>
@@ -1951,7 +1951,7 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/update_dialog.ui" line="91"/>
       <source>Do not automatically check for update when startup</source>
-      <translation type="unfinished">Do not automatically check for update when startup</translation>
+      <translation>Tắt tự động kiểm tra cập nhật khi khởi chạy ứng dụng</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="126"/>
@@ -2021,7 +2021,7 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/update_dialog.cpp" line="259"/>
       <source>The updater is not yet supported on your platform!</source>
-      <translation type="unfinished">The updater is not yet supported on your platform!</translation>
+      <translation>Trình cập nhật chưa được hỗ trợ trên nền tảng của bạn!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="303"/>
@@ -2042,7 +2042,7 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/update_dialog.cpp" line="395"/>
       <source>Downloaded update is not in zip format!</source>
-      <translation type="unfinished">Downloaded update is not in zip format!</translation>
+      <translation>Bản cập nhật đã tải không phải định dạng file zip!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="424"/>
@@ -2066,7 +2066,7 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/update_notice_dialog.ui" line="14"/>
       <source>Update news</source>
-      <translation type="unfinished">Update news</translation>
+      <translation>Cập nhật tin tức</translation>
     </message>
   </context>
   <context>
@@ -2074,17 +2074,17 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/updater.ui" line="14"/>
       <source>EKA2L1 Updater</source>
-      <translation type="unfinished">EKA2L1 Updater</translation>
+      <translation>Trình cập nhật EKA2L1</translation>
     </message>
     <message>
       <location filename="../src/updater.ui" line="59"/>
       <source>Updating...</source>
-      <translation type="unfinished">Updating...</translation>
+      <translation>Đang cập nhật...</translation>
     </message>
     <message>
       <location filename="../src/updater.ui" line="85"/>
       <source>Extracting ... %p%</source>
-      <translation type="unfinished">Extracting ... %p%</translation>
+      <translation>Đang giải nén ... %p%</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="93"/>
@@ -2094,18 +2094,18 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/updater.cpp" line="101"/>
       <source>Downloaded update is not a zip file!</source>
-      <translation type="unfinished">Downloaded update is not a zip file!</translation>
+      <translation>Bản cập nhật đã tải không phải là file zip!</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="124"/>
       <location filename="../src/updater.cpp" line="177"/>
       <source>The downloaded archive zip is corrupted</source>
-      <translation type="unfinished">The downloaded archive zip is corrupted</translation>
+      <translation>Tệp zip đã tải bị hư</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="180"/>
       <source>Extracted: %1</source>
-      <translation type="unfinished">Extracted: %1</translation>
+      <translation>Đã giải nén: %1</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="199"/>
