@@ -96,17 +96,17 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="796"/>
       <source>Enter a new name</source>
-      <translation type="unfinished">Enter a new name</translation>
+      <translation>Nhập tên mới</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
       <source>Update name failed</source>
-      <translation type="unfinished">Update name failed</translation>
+      <translation>Cập nhật tên không thành công</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
       <source>An error occured while trying to rename the app!</source>
-      <translation type="unfinished">An error occured while trying to rename the app!</translation>
+      <translation>Đã xảy ra lỗi khi cố gắng sửa tên ứng dụng!</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
@@ -116,7 +116,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
       <source>An error occured while trying to delete the app!</source>
-      <translation type="unfinished">An error occured while trying to delete the app!</translation>
+      <translation>Đã xảy ra lỗi khi cố gắng xóa ứng dụng!</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="834"/>
@@ -134,7 +134,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="20"/>
       <source>Bluetooth netplay settings</source>
-      <translation type="unfinished">Bluetooth netplay settings</translation>
+      <translation>Cài đặt Bluetooth netplay</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="47"/>
@@ -174,12 +174,12 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="188"/>
       <source>Open friends&apos; IP editor</source>
-      <translation type="unfinished">Open friends&apos; IP editor</translation>
+      <translation>Mở trình soạn thảo IP của bạn bè</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="225"/>
       <source>Players with the same password will be able to see each others. This can be empty.</source>
-      <translation type="unfinished">Players with the same password will be able to see each others. This can be empty.</translation>
+      <translation>Những người chơi có cùng mật khẩu sẽ có thể nhìn thấy nhau. Cái này có thể để trống.</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="228"/>
@@ -222,7 +222,7 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="70"/>
       <source>Modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Modify friends&apos; IP addresses</translation>
+      <translation>Chỉnh sửa địa chỉ IP của bạn bè</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="85"/>
@@ -257,38 +257,36 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="201"/>
       <source>Friends&apos; IP addresses have been successfully saved!</source>
-      <translation type="unfinished">Friends&apos; IP addresses have been successfully saved!</translation>
+      <translation>Địa chỉ IP của bạn bè đã được lưu thành công!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="214"/>
       <source>Friend %1 has empty IP address!
 </source>
-      <translation type="unfinished">Friend %1 has empty IP address!
+      <translation>Địa chỉ IP bạn bè %1 trống!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="216"/>
       <source>Friend %1 has invalid IP address!
 </source>
-      <translation type="unfinished">Friend %1 has invalid IP address!
-</translation>
+      <translation>Địa chỉ IP bạn bè %1 không hợp lệ!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="221"/>
       <source>Friend %1 has invalid port number (must be between 0 and 65535)!
 </source>
-      <translation type="unfinished">Friend %1 has invalid port number (must be between 0 and 65535)!
-</translation>
+      <translation>Bạn bè %1 có số cổng không hợp lệ (phải nằm trong khoảng từ 0 đến 65535)!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="248"/>
       <source>Some errors in updating friends!</source>
-      <translation type="unfinished">Some errors in updating friends!</translation>
+      <translation>Đã gặp một số lỗi trong việc cập nhật bạn bè!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="249"/>
       <source>Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</source>
-      <translation type="unfinished">Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</translation>
+      <translation>Một số người bạn không thể cập nhật địa chỉ IP (xem văn bản chi tiết).&lt;br&gt;Những địa chỉ có thể cập nhật đã được lưu.</translation>
     </message>
   </context>
   <context>
@@ -441,33 +439,33 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="17"/>
       <source>Touch mapping editor</source>
-      <translation type="unfinished">Touch mapping editor</translation>
+      <translation>Điều khiển cảm ứng</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="26"/>
       <source>&lt;b&gt;Mapping elements&lt;/b&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Mapping elements&lt;/b&gt;</translation>
+      <translation>&lt;b&gt;Công cụ&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="40"/>
       <source>Joystick</source>
-      <translation type="unfinished">Joystick</translation>
+      <translation>Cần điều khiển</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="45"/>
       <source>Single touch</source>
-      <translation type="unfinished">Single touch</translation>
+      <translation>Nhấp một lần</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="64"/>
       <source>For app: </source>
-      <translation type="unfinished">For app: </translation>
+      <translation>Đối với ứng dụng: </translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="105"/>
       <location filename="../src/btnmap/editor_widget.cpp" line="274"/>
       <source>Save and hide editor</source>
-      <translation type="unfinished">Save and hide editor</translation>
+      <translation>Lưu và ẩn trình chỉnh sửa</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="136"/>
@@ -487,7 +485,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="181"/>
       <source>Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</source>
-      <translation type="unfinished">Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</translation>
+      <translation>Hồ sơ được lưu cho mỗi ứng dụng/trò chơi. Nhấn &lt;b&gt;Sửa&lt;/b&gt; để vào chế độ chỉnh sửa. Để xoá nút, nhấn &lt;b&gt;Xoá&lt;/b&gt; và bấm vào những nút mà bạn muốn loại bỏ.</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="212"/>
@@ -502,12 +500,12 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="50"/>
       <source>Please wait for a game to be active!</source>
-      <translation type="unfinished">Please wait for a game to be active!</translation>
+      <translation>Vui lòng chờ trò chơi hoạt động!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="89"/>
       <source>For app: %1 (0x%2)</source>
-      <translation type="unfinished">For app: %1 (0x%2)</translation>
+      <translation>Đối với ứng dụng: %1 (0x%2)</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="151"/>
@@ -517,17 +515,17 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
       <source>Error creating profile!</source>
-      <translation type="unfinished">Error creating profile!</translation>
+      <translation>Lỗi khi tạo hồ sơ!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
       <source>Profile name contains special characters or system error encountered!</source>
-      <translation type="unfinished">Profile name contains special characters or system error encountered!</translation>
+      <translation>Tên hồ sơ chứa kí tự đặc biệt hoặc gặp phải lỗi hệ thống!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="285"/>
       <source>Show editor</source>
-      <translation type="unfinished">Show editor</translation>
+      <translation>Hiện trình chỉnh sửa</translation>
     </message>
   </context>
   <context>
@@ -535,17 +533,17 @@
     <message>
       <location filename="../src/launch_process_dialog.ui" line="14"/>
       <source>Launch process</source>
-      <translation type="unfinished">Launch process</translation>
+      <translation>Khởi chạy tiến trình</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="31"/>
       <source>Arguments</source>
-      <translation type="unfinished">Arguments</translation>
+      <translation>Đối Số</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="51"/>
       <source>Executable path</source>
-      <translation type="unfinished">Executable path</translation>
+      <translation>Đường dẫn thực thi</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="78"/>
@@ -566,12 +564,12 @@
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
       <source>The executable path field is empty!</source>
-      <translation type="unfinished">The executable path field is empty!</translation>
+      <translation>Đường dẫn thực thi bị trống!</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="33"/>
       <source>The executable path is invalid or the executable is corrupted. Check the log for more info!</source>
-      <translation type="unfinished">The executable path is invalid or the executable is corrupted. Check the log for more info!</translation>
+      <translation>Đường dẫn thực thi không hợp lệ hoặc tệp thực thi bị hỏng. Kiểm tra nhật ký để biết thêm thông tin!</translation>
     </message>
   </context>
   <context>
@@ -619,12 +617,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="134"/>
       <source>Bluetooth</source>
-      <translation type="unfinished">Bluetooth</translation>
+      <translation>Bluetooth</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="138"/>
       <source>Netplay</source>
-      <translation type="unfinished">Netplay</translation>
+      <translation>Netplay</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="147"/>
@@ -714,17 +712,17 @@
     <message>
       <location filename="../src/mainwindow.ui" line="294"/>
       <source>Friends&apos;s IP addresses</source>
-      <translation type="unfinished">Friends&apos;s IP addresses</translation>
+      <translation>Địa chỉ IP của bạn bè</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="299"/>
       <source>Button mapping editor</source>
-      <translation type="unfinished">Button mapping editor</translation>
+      <translation>Điều khiển bàn phím</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="304"/>
       <source>Touch mapping editor</source>
-      <translation type="unfinished">Touch mapping editor</translation>
+      <translation>Điều khiển cảm ứng</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="309"/>
@@ -739,12 +737,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="319"/>
       <source>Launch process</source>
-      <translation type="unfinished">Launch process</translation>
+      <translation>Khởi chạy tiến trình</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="329"/>
       <source>Configure</source>
-      <translation type="unfinished">Configure</translation>
+      <translation>Cấu hình</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="340"/>
@@ -785,17 +783,17 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="686"/>
       <source>Installing &lt;b&gt;%1&lt;/b&gt;</source>
-      <translation type="unfinished">Installing &lt;b&gt;%1&lt;/b&gt;</translation>
+      <translation>Đang cài đặt &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="699"/>
       <source>Choose the N-Gage game card folder</source>
-      <translation type="unfinished">Choose the N-Gage game card folder</translation>
+      <translation>Chọn thư mục thẻ game N-Gage</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="707"/>
       <source>Installing N-Gage game...</source>
-      <translation type="unfinished">Installing N-Gage game...</translation>
+      <translation>Đang cài game N-Gage...</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="730"/>
@@ -805,7 +803,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="730"/>
       <source>Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</source>
-      <translation type="unfinished">Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</translation>
+      <translation>Cài game thẻ game N-Gage thành công: &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="736"/>
@@ -815,12 +813,12 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="740"/>
       <source>There is more than one game in the given card game folder!</source>
-      <translation type="unfinished">There is more than one game in the given card game folder!</translation>
+      <translation>Có nhiều hơn một trò chơi trong thư mục thẻ trò chơi!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="744"/>
       <source>The game information file does not exist in the card game folder!</source>
-      <translation type="unfinished">The game information file does not exist in the card game folder!</translation>
+      <translation>Thông tin trò chơi không tồn tại trong thư mục thẻ trò chơi!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="748"/>
@@ -830,7 +828,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="752"/>
       <source>General error occured...</source>
-      <translation type="unfinished">General error occured...</translation>
+      <translation>Đã xảy ra lỗi chung...</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="757"/>
@@ -843,14 +841,14 @@
       <location filename="../src/mainwindow.cpp" line="757"/>
       <source>Installation failed with error:
   -%1</source>
-      <translation type="unfinished">Installation failed with error:
+      <translation>Cài đặt không thành công với lỗi:
   -%1</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="759"/>
       <source>Installation of %1% failed with error:
   -%2</source>
-      <translation type="unfinished">Installation of %1% failed with error:
+      <translation>Cài đặt %1% không thành công với lỗi:
   -%2</translation>
     </message>
     <message>
@@ -922,7 +920,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1034"/>
       <source>Fail to launch the selected application!</source>
-      <translation type="unfinished">Fail to launch the selected application!</translation>
+      <translation>Không khởi chạy được ứng dụng đã chọn!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1051"/>
@@ -992,22 +990,22 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1482"/>
       <source>Continue to modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Continue to modify friends&apos; IP addresses</translation>
+      <translation>Tiếp tục thay đổi địa chỉ IP của bạn bè</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1483"/>
       <source>This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</source>
-      <translation type="unfinished">This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</translation>
+      <translation>Hộp thoại này sẽ hiển thị tất cả các địa chỉ IP được lưu trữ, có khả năng tiết lộ thông tin cá nhân của người khác.&lt;br&gt;Bạn có muốn tiếp tục không?</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1500"/>
       <source>Bluetooth manager service not available!</source>
-      <translation type="unfinished">Bluetooth manager service not available!</translation>
+      <translation>Dịch vụ quản lý Bluetooth không khả dụng!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1500"/>
       <source>The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</source>
-      <translation type="unfinished">The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</translation>
+      <translation>Thiết bị được giả lập không có dịch vụ quản lý bluetooth! Bluetooth không được hỗ trợ.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1617"/>
@@ -1022,7 +1020,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1625"/>
       <source>%1 version %2 (by %3) has been installed!</source>
-      <translation type="unfinished">%1 version %2 (by %3) has been installed!</translation>
+      <translation>%1 phiên bản %2 (bởi %3) đã được cài đặt thành công!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1628"/>
@@ -1032,32 +1030,32 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1640"/>
       <source>Can not add the JAR to the apps database!</source>
-      <translation type="unfinished">Can not add the JAR to the apps database!</translation>
+      <translation>Không thể thêm JAR vào cơ sở dữ liệu ứng dụng!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1644"/>
       <source>The given file is not a valid JAR file!</source>
-      <translation type="unfinished">The given file is not a valid JAR file!</translation>
+      <translation>Tệp đã cho không phải là tệp JAR hợp lệ!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1648"/>
       <source>Can not find the JAR file!</source>
-      <translation type="unfinished">Can not find the JAR file!</translation>
+      <translation>Không thể tìm thấy tệp JAR!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1652"/>
       <source>The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</source>
-      <translation type="unfinished">The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</translation>
+      <translation>JAR cần MIDP-2.0, nhưng trình giả lập chỉ hỗ trợ JAR MIDP-1.0 chạy trên thiết bị S60v1!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1656"/>
       <source>The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</source>
-      <translation type="unfinished">The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</translation>
+      <translation>Không thể cài đặt JAR cho thiết bị hiện tại này! Hiện tại chỉ có thiết bị S60v1 mới có thể cài đặt JAR này</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1660"/>
       <source>An unexpected error has happened. Error code: %1</source>
-      <translation type="unfinished">An unexpected error has happened. Error code: %1</translation>
+      <translation>Đã xảy ra lỗi không mong muốn. Mã lỗi: %1</translation>
     </message>
   </context>
   <context>
@@ -1243,7 +1241,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="382"/>
       <source>Log filter</source>
-      <translation type="unfinished">Log filter</translation>
+      <translation>Lọc nhật ký</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="399"/>
@@ -1253,7 +1251,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="408"/>
       <source>Show log console (Windows only)</source>
-      <translation type="unfinished">Show log console (Windows only)</translation>
+      <translation>Hiển thị log console (chỉ dành cho Windows)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="418"/>
@@ -1366,12 +1364,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="585"/>
       <source>TextLabel</source>
-      <translation type="unfinished">TextLabel</translation>
+      <translation>TextLabel</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="639"/>
       <source>Disable window name with emulator version</source>
-      <translation type="unfinished">Disable window name with emulator version</translation>
+      <translation>Không hiển thị số phiên bản trên thanh tiêu đề của cửa sổ</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="646"/>
@@ -1986,17 +1984,17 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/update_dialog.cpp" line="152"/>
       <source>The release channel is not available. Please check your internet connection!</source>
-      <translation type="unfinished">The release channel is not available. Please check your internet connection!</translation>
+      <translation>Kênh phát hành không khả dụng. Xin vui lòng kiểm tra kết nối mạng của bạn!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="158"/>
       <source>Failed to get information about the newest update from GitHub!</source>
-      <translation type="unfinished">Failed to get information about the newest update from GitHub!</translation>
+      <translation>Không nhận được thông tin về bản cập nhật mới nhất từ ​​GitHub!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="190"/>
       <source>Can&apos;t find the download link of newest update for your platform!</source>
-      <translation type="unfinished">Can&apos;t find the download link of newest update for your platform!</translation>
+      <translation>Không thể tìm thấy liên kết tải xuống bản cập nhật mới nhất cho nền tảng của bạn!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="196"/>
@@ -2006,17 +2004,17 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/update_dialog.cpp" line="214"/>
       <source>Error retrieving changelog from GitHub...</source>
-      <translation type="unfinished">Error retrieving changelog from GitHub...</translation>
+      <translation>Lỗi truy xuất nhật ký thay đổi từ GitHub...</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="238"/>
       <source>Changelog (update commit: %1)</source>
-      <translation type="unfinished">Changelog (update commit: %1)</translation>
+      <translation>Nhật ký thay đổi (cập nhật commit: %1)</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="259"/>
       <source>Updater unsupported</source>
-      <translation type="unfinished">Updater unsupported</translation>
+      <translation>Trình cập nhật không được hỗ trợ</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="259"/>
@@ -2032,12 +2030,12 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/update_dialog.cpp" line="303"/>
       <source>Can&apos;t not open temporary file for storing the update files!</source>
-      <translation type="unfinished">Can&apos;t not open temporary file for storing the update files!</translation>
+      <translation>Không thể mở tệp tạm thời để lưu trữ tệp cập nhật!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="387"/>
       <source>Failed to download update with error: %1</source>
-      <translation type="unfinished">Failed to download update with error: %1</translation>
+      <translation>Không tải được bản cập nhật do lỗi: %1</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="395"/>
@@ -2047,18 +2045,18 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/update_dialog.cpp" line="424"/>
       <source>Failed to update the updater program!</source>
-      <translation type="unfinished">Failed to update the updater program!</translation>
+      <translation>Không thể cập nhật chương trình cập nhật!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="432"/>
       <source>Update zip file is corrupted!</source>
-      <translation type="unfinished">Update zip file is corrupted!</translation>
+      <translation>Tệp zip cập nhật bị hư!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="439"/>
       <location filename="../src/update_dialog.cpp" line="454"/>
       <source>Can&apos;t find the updater program in the update archive file!</source>
-      <translation type="unfinished">Can&apos;t find the updater program in the update archive file!</translation>
+      <translation>Không thể tìm thấy trình cập nhật trong tệp lưu trữ cập nhật!</translation>
     </message>
   </context>
   <context>
@@ -2110,7 +2108,7 @@ Lựa chọn Tự quyết định sẽ khiến tính năng này được hiệu 
     <message>
       <location filename="../src/updater.cpp" line="199"/>
       <source>Update&apos;s archive file does not exist!</source>
-      <translation type="unfinished">Update&apos;s archive file does not exist!</translation>
+      <translation>Tệp lưu trữ của bản cập nhật không tồn tại!</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="214"/>
