@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <string>
+#include <cstdint>
 
 namespace eka2l1 {
     namespace kernel {
