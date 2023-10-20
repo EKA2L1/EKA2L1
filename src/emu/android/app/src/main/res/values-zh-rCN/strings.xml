@@ -7,11 +7,11 @@
     <string name="settings">设置</string>
     <string name="packages">软件包</string>
     <string name="devices">设备</string>
-    <string name="switch_devices">Switch devices</string>
+    <string name="switch_devices"></string>
     <string name="profiles">配置</string>
     <string name="processing">处理中……</string>
     <string name="completed">处理完成！</string>
-    <string name="cancelled">Cancelled</string>
+    <string name="cancelled"></string>
     <string name="remove">移除</string>
     <string name="mount_sd">挂载MMC/SD卡</string>
     <string name="no_devices_found">未找到设备</string>
