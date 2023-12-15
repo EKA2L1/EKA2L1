@@ -144,27 +144,27 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="55"/>
       <source>Off</source>
-      <translation type="unfinished">Off</translation>
+      <translation>Oprit</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="60"/>
       <source>Direct IP</source>
-      <translation type="unfinished">Direct IP</translation>
+      <translation>IP direct</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="65"/>
       <source>LAN</source>
-      <translation type="unfinished">LAN</translation>
+      <translation>LAN</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="115"/>
       <source>Server address</source>
-      <translation type="unfinished">Server address</translation>
+      <translation>Adresă server</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="134"/>
       <source>Enable UPnP (for IPv4 public play)</source>
-      <translation type="unfinished">Enable UPnP (for IPv4 public play)</translation>
+      <translation>Activează UPnP (pentru play-ul public IPv4)</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="166"/>
@@ -184,7 +184,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="228"/>
       <source>Password</source>
-      <translation type="unfinished">Password</translation>
+      <translation>Parolă</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="238"/>
@@ -1193,7 +1193,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="282"/>
       <source>Hide system applications</source>
-      <translation type="unfinished">Hide system applications</translation>
+      <translation>Ascunde aplicațiile de sistem</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="301"/>
@@ -1346,7 +1346,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="470"/>
       <source>Background</source>
-      <translation type="unfinished">Background</translation>
+      <translation>Fundal</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="491"/>
@@ -1712,7 +1712,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="307"/>
       <source>Default</source>
-      <translation type="unfinished">Default</translation>
+      <translation>Prestabilit</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="445"/>
