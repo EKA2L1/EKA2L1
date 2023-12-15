@@ -83,14 +83,14 @@
     <string name="install_device_rofs_corrupt_msg">ROFS file is corrupted!</string>
     <string name="install_device_rom_corrupt_msg">ROM file is corrupted!</string>
     <string name="install_device_fpsx_corrupt_msg">FPSX file is corrupted!</string>
-    <string name="pref_general_title">Generale</string>
+    <string name="pref_general_title">General</string>
     <string name="pref_system_title">System</string>
     <string name="pref_control_key_binding_sect_title">Key binding</string>
     <string name="pref_theme">Temă</string>
     <string name="pref_theme_light">Luminoasă</string>
     <string name="pref_theme_dark">Întunecat</string>
     <string name="pref_enable_virtual_keyboard">Activează tastatura virtuală</string>
-    <string name="pref_enable_actionbar">Activaţi ActionBar</string>
+    <string name="pref_enable_actionbar">Activează ActionBar</string>
     <string name="pref_enable_statusbar">Activaţi bara de stare</string>
     <string name="pref_wakelock">Păstraţi ecranul pornit</string>
     <string name="pref_enable_vibration">Activare vibrații</string>
@@ -119,7 +119,7 @@
     <string name="pref_bt_netplay_enable_upnp">Activează UPnP (pentru play-ul public IPv4)</string>
     <string name="pref_bt_netplay_server_address">Adresă server</string>
     <string name="pref_bt_netplay_password">Parolă</string>
-    <string name="pref_bt_netplay_port_offset">Compensare port</string>
+    <string name="pref_bt_netplay_port_offset">Decalaj port</string>
     <string name="action_context_delete">Delete</string>
     <string name="action_context_rename">Redenumire</string>
     <string name="action_context_shortcut">Creează o scurtătura</string>
