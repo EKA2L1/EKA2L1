@@ -7,7 +7,7 @@
     <string name="settings">Ayarlar</string>
     <string name="packages">Paketler</string>
     <string name="devices">Cihazlar</string>
-    <string name="switch_devices">Switch devices</string>
+    <string name="switch_devices">Cihazı değiştir</string>
     <string name="profiles">Profil</string>
     <string name="processing">İşlem devam ediyor...</string>
     <string name="completed">Tamamlandı!</string>
