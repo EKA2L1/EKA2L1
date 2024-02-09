@@ -591,7 +591,7 @@ namespace eka2l1 {
             break;
 
         default: {
-            LOG_ERROR(SERVICE_CENREP, "Unhandled message opcode for cenrep 0x{:X]", ctx->msg->function);
+            LOG_ERROR(SERVICE_CENREP, "Unhandled message opcode for cenrep 0x{:X}", ctx->msg->function);
             break;
         }
         }
