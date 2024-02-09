@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.8)
 project (EKA2L1)
 
 # Clang 14 is required to compile nicely with C++ 20
-set (CMAKE_CXX_STANDARD 17)
+set (CMAKE_CXX_STANDARD 20)
 
 option(EKA2L1_BUILD_TOOLS "Build EKA2L1's tool" ON)
 option(EKA2L1_BUILD_TESTS "Build EKA2L1's tests" ON)

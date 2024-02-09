@@ -117,7 +117,7 @@ if(WIN32)
         src/graphics/backend/context_wgl.h
     )
 
-    target_link_libraries(drivers PRIVATE opengl32.lib)
+    target_link_libraries(drivers PRIVATE opengl32.lib Mfuuid.lib Propsys.lib)
 elseif(APPLE)
     target_sources(drivers PRIVATE
         src/graphics/backend/context_agl.h

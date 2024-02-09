@@ -1,4 +1,4 @@
-﻿include(ExternalProject)
+include(ExternalProject)
 include(CheckSymbolExists)
 
 add_library(miniz miniz/miniz.h miniz/miniz.c)
@@ -66,47 +66,24 @@ if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
 
             set(LUA_DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/luajit-android/x86_64/libluajit.so")
 		endif()
-    elseif (MSVC)
-        ExternalProject_Add(luaorg
-                SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/luajit"
-                SOURCE_SUBDIR src
-                CONFIGURE_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/luajit ${LUA_BINARY_DIR}
-                BINARY_DIR "${LUA_BINARY_DIR}/src"
-                BUILD_COMMAND "${LUA_BINARY_DIR}/src/msvcbuild.bat"
-                INSTALL_COMMAND ""
-                BUILD_BYPRODUCTS "${LUA_BINARY_DIR}/src/lua51.dll"
-                BUILD_BYPRODUCTS "${LUA_BINARY_DIR}/src/lua51.lib")
-
-        set(LUA_DLL_PATH "${LUA_BINARY_DIR}/src/lua51.dll" PARENT_SCOPE)
-
-        target_link_libraries(liblua INTERFACE
-                "${LUA_BINARY_DIR}/src/lua51.lib")
-
-        add_dependencies(liblua luaorg)
     else()
-        ExternalProject_Add(luaorg
-            SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/luajit"
-            SOURCE_SUBDIR src
-            CONFIGURE_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/luajit ${LUA_BINARY_DIR}
-            BINARY_DIR "${LUA_BINARY_DIR}/src"
-            BUILD_COMMAND cd ${LUA_BINARY_DIR} && export MACOSX_DEPLOYMENT_TARGET=10.12 && make
-            INSTALL_COMMAND ""
-            BUILD_BYPRODUCTS "${LUA_BINARY_DIR}/src/libluajit.so"
-            BUILD_BYPRODUCTS "${LUA_BINARY_DIR}/src/libluajit.a"
-        )
+        option(LUAJIT_DIR "" ON)
+        set(LUAJIT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/luajit")
 
-        set(LUA_DLL_PATH "${LUA_BINARY_DIR}/src/libluajit.so" PARENT_SCOPE)
+        add_subdirectory(luajit-cmake)
 
-        target_link_libraries(liblua INTERFACE "${LUA_BINARY_DIR}/src/libluajit.a")
+        # Fix up a bit
+        target_include_directories(buildvm PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/luajit-cmake")
 
-        add_dependencies(liblua luaorg)
+        target_link_libraries(liblua INTERFACE luajit::lib luajit::header)
+        target_include_directories(liblua INTERFACE "${CMAKE_CURRENT_BINARY_DIR}/luajit-cmake")
     endif()
 endif()
 
 # SPDLOG - Build examples off
 option (SPDLOG_BUILD_EXAMPLES "Build spdlog Examples" OFF) 
 option (SPDLOG_BUILD_BENCH "Build spdlog benchmarks" OFF)
-# set (SPDLOG_FMT_EXTERNAL OFF CACHE BOOL "" FORCE)
+option (SPDLOG_FMT_EXTERNAL "Use external fmt library instead of bundled" ON)
 
 add_subdirectory(spdlog)
 

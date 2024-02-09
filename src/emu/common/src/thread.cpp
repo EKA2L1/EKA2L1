@@ -55,18 +55,6 @@ namespace eka2l1::common {
         SetThreadPriority(handle, windows_priority);
     }
 
-#if defined(_MSC_VER)
-    static constexpr const DWORD MS_VC_EXCEPTION = 0x406D1388;
-
-#pragma pack(push, 8)
-    typedef struct tagTHREADNAME_INFO {
-        DWORD dwType; // Must be 0x1000.
-        LPCSTR szName; // Pointer to name (in user addr space).
-        DWORD dwThreadID; // Thread ID (-1=caller thread).
-        DWORD dwFlags; // Reserved for future use, must be zero.
-    } THREADNAME_INFO;
-#pragma pack(pop)
-
     typedef HRESULT (*set_thread_description_func)(HANDLE, PCWSTR);
     set_thread_description_func set_thread_description;
 
@@ -100,6 +88,18 @@ namespace eka2l1::common {
             convert_and_set_thread_name_win10(thread_name);
         }
 
+#if defined(_MSC_VER)
+        static constexpr const DWORD MS_VC_EXCEPTION = 0x406D1388;
+
+#pragma pack(push, 8)
+        typedef struct tagTHREADNAME_INFO {
+            DWORD dwType; // Must be 0x1000.
+            LPCSTR szName; // Pointer to name (in user addr space).
+            DWORD dwThreadID; // Thread ID (-1=caller thread).
+            DWORD dwFlags; // Reserved for future use, must be zero.
+        } THREADNAME_INFO;
+#pragma pack(pop)
+
         THREADNAME_INFO info;
         info.dwType = 0x1000;
         info.szName = thread_name;
@@ -110,8 +110,8 @@ namespace eka2l1::common {
             RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR *)&info);
         } __except (EXCEPTION_EXECUTE_HANDLER) {
         }
-    }
 #endif
+    }
 #else
     void set_thread_name(const char *thread_name) {
 #if EKA2L1_PLATFORM(DARWIN)

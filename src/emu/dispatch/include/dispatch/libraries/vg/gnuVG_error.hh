@@ -21,4 +21,4 @@
 
 #include <common/log.h>
 
-#define GNUVG_ERROR(...) LOG_ERROR(eka2l1::HLE_DISPATCHER, __VA_ARGS__)
+#define GNUVG_ERROR(format, ...) LOG_ERROR(eka2l1::HLE_DISPATCHER, format, __VA_ARGS__)

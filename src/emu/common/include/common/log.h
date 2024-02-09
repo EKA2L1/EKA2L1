@@ -19,13 +19,21 @@
  */
 #pragma once
 
-#define SPDLOG_FMT_EXTERNAL
 #include <spdlog/spdlog.h>
 
 #include <common/configure.h>
 
 #include <memory>
 #include <string>
+
+template<typename T>
+struct fmt::formatter<T, std::enable_if_t<std::is_enum_v<std::decay_t<T>>, char> >
+    : ::fmt::formatter<std::underlying_type_t<T>> {
+    template<class VT, class FormatContext>
+    auto format(VT& data, FormatContext& ctx) const {
+        return ::fmt::formatter<std::underlying_type_t<T>>::format(fmt::underlying(data), ctx);
+    }
+};
 
 namespace eka2l1 {
     extern bool already_setup;

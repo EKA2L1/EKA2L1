@@ -44,13 +44,13 @@ namespace eka2l1::kernel {
         const std::uint32_t subcategory = (a0 >> (btrace_header_subcategory_index * 8)) & 0xFF;
 
         if (trace_) {
-            std::string message = "Trace out (data size = {}, flags = {}, category = {}, subcategory = {}):\n"
+            constexpr const char *message_format = "Trace out (data size = {}, flags = {}, category = {}, subcategory = {}):\n"
                                   "\ta1 = 0x{:X}\n"
                                   "\ta2 = 0x{:X}\n"
                                   "\ta3 = 0x{:X}\n"
                                   "\n";
 
-            message = fmt::format(message, args_size, flags, category, subcategory, a1, a2, a3);
+            auto message = fmt::format(message_format, args_size, flags, category, subcategory, a1, a2, a3);
             trace_->write_file(&message[0], static_cast<std::uint32_t>(message.size()), 1);
 
             trace_->flush();

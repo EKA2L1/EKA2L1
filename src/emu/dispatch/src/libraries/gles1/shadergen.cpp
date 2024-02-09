@@ -42,7 +42,7 @@ namespace eka2l1::dispatch {
         input_decl += "layout (location = 0) in vec4 inPosition;\n";
 
         if (skinning) {
-            uni_decl += fmt::format("uniform mat4 uPaletteMat[{}];\n", GLES1_EMU_MAX_PALETTE_MATRICES);
+            uni_decl += fmt::format("uniform mat4 uPaletteMat[{}];\n", static_cast<int>(GLES1_EMU_MAX_PALETTE_MATRICES));
         } else {
             uni_decl += "uniform mat4 uViewModelMat;\n";
         }
@@ -52,8 +52,8 @@ namespace eka2l1::dispatch {
 
         main_body += "void main() {\n";
         if (skinning) {
-            input_decl += fmt::format("layout (location = {}) in uint uMatrixIndices[{}];\n", 3 + GLES1_EMU_MAX_TEXTURE_COUNT, GLES1_EMU_MAX_WEIGHTS_PER_VERTEX);
-            input_decl += fmt::format("layout (location = {}) in float uWeights[{}];\n", 4 + GLES1_EMU_MAX_TEXTURE_COUNT, GLES1_EMU_MAX_WEIGHTS_PER_VERTEX);
+            input_decl += fmt::format("layout (location = {}) in uint uMatrixIndices[{}];\n", static_cast<int>(3 + GLES1_EMU_MAX_TEXTURE_COUNT), static_cast<int>(GLES1_EMU_MAX_WEIGHTS_PER_VERTEX));
+            input_decl += fmt::format("layout (location = {}) in float uWeights[{}];\n", static_cast<int>(4 + GLES1_EMU_MAX_TEXTURE_COUNT), static_cast<int>(GLES1_EMU_MAX_WEIGHTS_PER_VERTEX));
 
             std::uint32_t weights_per_vertex_count = (vertex_statuses & egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_MASK) 
                 >> egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_BITS_POS;

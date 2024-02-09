@@ -618,7 +618,7 @@ namespace eka2l1 {
         static constexpr std::uint32_t ERRNO_INVALID_ARG = 22;
 
         const std::string cmd = common::lowercase_string(comps[0].strip().std_str());
-        const std::string error_format = "F-1,{:X}";
+        constexpr const char *error_format = "F-1,{:X}";
 
         if (cmd == "open") {
             if (arguments.size() < 3) {

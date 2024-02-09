@@ -99,7 +99,7 @@ void vfp_put_float(ARMul_State *state, std::int32_t val, unsigned int reg) {
 
 std::uint64_t vfp_get_double(ARMul_State *state, unsigned int reg) {
     std::uint64_t result = ((std::uint64_t)state->ExtReg[reg * 2 + 1]) << 32 | state->ExtReg[reg * 2];
-    LOG_TRACE(eka2l1::CPU_DYNCOM, "VFP get double: s[{}-{}]=[{:016llx}]", reg * 2 + 1, reg * 2, result);
+    LOG_TRACE(eka2l1::CPU_DYNCOM, "VFP get double: s[{}-{}]=[{:016x}]", reg * 2 + 1, reg * 2, result);
     return result;
 }
 

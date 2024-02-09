@@ -472,7 +472,7 @@ namespace eka2l1::loader {
             }
         }
 
-        static const char *FILL_STYLE_FMT = "fill=\"{}\"";
+        constexpr const char *FILL_STYLE_FMT = "fill=\"{}\"";
 
         std::string fill_style;
         if (!do_fill) {
@@ -501,7 +501,7 @@ namespace eka2l1::loader {
             }
         }
 
-        static const char *STROKE_STYLE_FMT = "stroke=\"{}\"";
+        constexpr const char *STROKE_STYLE_FMT = "stroke=\"{}\"";
         std::string stroke_style;
         if (!do_stroke) {
             stroke_style = fmt::format(STROKE_STYLE_FMT, "none");

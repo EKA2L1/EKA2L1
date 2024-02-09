@@ -117,6 +117,7 @@ set(PROJECT_SOURCES
         src/update_notice_dialog.cpp
         src/update_notice_dialog.ui
         src/utils.cpp
+        EKA2L1.def
         ${RESOURCE_FILES}
 )
 
@@ -200,7 +201,7 @@ target_link_libraries(eka2l1_qt PRIVATE
 if (ENABLE_DISCORD_RICH_PRESENCE)
     target_link_libraries(eka2l1_qt PRIVATE discord-rpc)
 endif()
-	
+
 set_target_properties(eka2l1_qt PROPERTIES OUTPUT_NAME eka2l1_qt
         ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
@@ -252,24 +253,26 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/miscs/compat/" "$<TARGET_FILE_DIR:eka2l1_qt>/compat/"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/external/SDL_GameControllerDB/gamecontrollerdb.txt" "$<TARGET_FILE_DIR:eka2l1_qt>/resources/"
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/qt/resources/" "$<TARGET_FILE_DIR:eka2l1_qt>/resources/"
-        )
+    )
 
 if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
+    if (LUA_DLL_PATH)
         add_custom_command(
                 TARGET eka2l1_qt
                 POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different "${LUA_DLL_PATH}" "$<TARGET_FILE_DIR:eka2l1_qt>"
         )
+    endif()
 
-        set_target_properties(eka2l1_qt PROPERTIES ENABLE_EXPORTS 1)
+    set_target_properties(eka2l1_qt PROPERTIES ENABLE_EXPORTS 1)
 
-        if (UNIX AND (NOT APPLE) AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU"))
-            target_link_libraries(eka2l1_qt PRIVATE -Wl,--whole-archive $<TARGET_FILE:scripting> -Wl,--no-whole-archive)
-        elseif(MSVC)
-            set_target_properties(eka2l1_qt PROPERTIES LINK_FLAGS /WHOLEARCHIVE:scripting.lib)
-        else()
-            target_link_libraries(eka2l1_qt PRIVATE scripting)
-        endif()
+    if (UNIX AND (NOT APPLE) AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU"))
+        target_link_libraries(eka2l1_qt PRIVATE -Wl,--whole-archive $<TARGET_FILE:scripting> -Wl,--no-whole-archive)
+    elseif(MSVC)
+        set_target_properties(eka2l1_qt PROPERTIES LINK_FLAGS /WHOLEARCHIVE:scripting.lib)
+    else()
+        target_link_libraries(eka2l1_qt PRIVATE scripting)
+    endif()
 endif()
 
 if (ENABLE_DISCORD_RICH_PRESENCE AND WIN32)
@@ -356,11 +359,11 @@ if (WIN32)
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/qt.conf.win" "$<TARGET_FILE_DIR:eka2l1_qt>/qt.conf"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/external/sdl2/Windows/lib/x64/SDL2.dll" "$<TARGET_FILE_DIR:eka2l1_qt>")
-    
-    if(CMAKE_BUILD_TYPE MATCHES DEBUG)
-        set(DEPLOY_BUILD_CONFIG_ARG "--debug")
-    else()
+
+    if(CMAKE_BUILD_TYPE MATCHES Release OR (CMAKE_BUILD_TYPE MATCHES RelWithDebInfo AND MSVC))
         set(DEPLOY_BUILD_CONFIG_ARG "--release")
+    else()
+        set(DEPLOY_BUILD_CONFIG_ARG "--debug")
     endif()
 
     add_custom_command(
@@ -379,6 +382,17 @@ if (WIN32)
         TARGET updater
         POST_BUILD
         COMMAND "${WINDEPLOYQT_EXECUTABLE}" --no-compiler-runtime --no-opengl-sw --no-quick --plugindir "$<TARGET_FILE_DIR:updater>/qt/plugins" ${DEPLOY_BUILD_CONFIG_ARG} "$<TARGET_FILE:updater>")
+
+    if (MINGW)
+        find_file(LIBGCC_DLL_PATH "libgcc_s_seh-1.dll" HINTS ENV PATH NO_CACHE)
+        find_file(LIBSTDCPP_DLL_PATH "libstdc++-6.dll" HINTS ENV PATH NO_CACHE)
+
+        add_custom_command(
+            TARGET eka2l1_qt
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${LIBGCC_DLL_PATH}" "$<TARGET_FILE_DIR:eka2l1_qt>"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${LIBSTDCPP_DLL_PATH}" "$<TARGET_FILE_DIR:eka2l1_qt>")
+    endif()
 endif()
 
 # This code is taken and modified from RPCS3

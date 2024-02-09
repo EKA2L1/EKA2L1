@@ -29,7 +29,7 @@
 #if defined(_MSC_VER)
 #define EKA2L1_EXPORT __declspec(dllexport)
 #else
-#define EKA2L1_EXPORT __attribute__((dllexport))
+#define EKA2L1_EXPORT __attribute__((dllexport)) __attribute__((used))
 #endif
 #else
 #define EKA2L1_EXPORT __attribute__((visibility("default")))

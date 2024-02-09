@@ -162,7 +162,7 @@ namespace gnuVG {
 		case blend_darken:
 		case blend_lighten:
 		case blend_additive:
-			GNUVG_ERROR("Unsupported blend mode {}", blend_mode);
+			GNUVG_ERROR("Unsupported blend mode {}", static_cast<int>(blend_mode));
 			[[fallthrough]];
 
 		case blend_src_over:
@@ -1788,7 +1788,7 @@ namespace gnuVG {
 			break;
 		}
 
-		GNUVG_ERROR("Unknown image format 0x{:X} to calculate data stride!", src_format);
+		GNUVG_ERROR("Unknown image format 0x{:X} to calculate data stride!", static_cast<int>(src_format));
 		return 0;
 	}
 
@@ -2194,7 +2194,7 @@ namespace gnuVG {
 
 		if (!translate_vg_image_format_to_driver_format(fmt, in_format, internal_format, dtype,
 			swizzle, state.driver->is_stricted())) {
-			GNUVG_ERROR("Format 0x{:X} is currently unsupported.\n", fmt);
+			GNUVG_ERROR("Format 0x{:X} is currently unsupported.\n", static_cast<int>(fmt));
 			return;
 		}
 

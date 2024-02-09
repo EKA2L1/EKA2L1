@@ -36,7 +36,9 @@ namespace eka2l1::common {
      * \param err  Target error string to set.
      */
     static void svg_set_diag(std::string *diag, const char *err) {
-        (diag) ? *diag = err : 0;
+        if (diag) {
+            *diag = err;
+        }
     }
 
     /**

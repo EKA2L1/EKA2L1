@@ -201,7 +201,11 @@ long BAE_FileOpenForRead(void *fileName) {
 
 #if EKA2L1_PLATFORM(WIN32)
     std::wstring name_unicode = eka2l1::common::utf8_to_wstr(fname_casted);
+#ifdef _MSC_VER
     return _wopen(name_unicode.c_str(), _O_RDONLY | _O_BINARY, _S_IREAD);
+#else
+    return _wopen(name_unicode.c_str(), _O_RDONLY | _O_BINARY);
+#endif
 #elif EKA2L1_PLATFORM(POSIX)
 #if EKA2L1_PLATFORM(ANDROID)
     if (eka2l1::is_content_uri(fname_casted)) {
@@ -218,7 +222,11 @@ long BAE_FileOpenForWrite(void *fileName) {
 
 #if EKA2L1_PLATFORM(WIN32)
     std::wstring name_unicode = eka2l1::common::utf8_to_wstr(fname_casted);
+#ifdef _MSC_VER
     return _wopen(name_unicode.c_str(), _O_WRONLY | _O_BINARY, _S_IWRITE);
+#else
+    return _wopen(name_unicode.c_str(), _O_WRONLY | _O_BINARY);
+#endif
 #elif EKA2L1_PLATFORM(POSIX)
 #if EKA2L1_PLATFORM(ANDROID)
     if (eka2l1::is_content_uri(fname_casted)) {
@@ -235,7 +243,11 @@ long BAE_FileOpenForReadWrite(void *fileName) {
 
 #if EKA2L1_PLATFORM(WIN32)
     std::wstring name_unicode = eka2l1::common::utf8_to_wstr(fname_casted);
+#ifdef _MSC_VER
     return _wopen(name_unicode.c_str(), _O_RDWR | _O_BINARY, _S_IREAD | _S_IWRITE);
+#else
+    return _wopen(name_unicode.c_str(), _O_RDWR | _O_BINARY);
+#endif
 #elif EKA2L1_PLATFORM(POSIX)
 #if EKA2L1_PLATFORM(ANDROID)
     if (eka2l1::is_content_uri(fname_casted)) {

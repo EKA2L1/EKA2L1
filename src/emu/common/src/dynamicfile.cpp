@@ -22,10 +22,18 @@
 #include <common/platform.h>
 #include <common/dynamicfile.h>
 
+#if EKA2L1_PLATFORM(WIN32) && !defined(_MSC_VER)
+#include <filesystem>
+#endif
+
 namespace eka2l1::common {
     dynamic_ifile::dynamic_ifile(const std::string &name)
 #if EKA2L1_PLATFORM(WIN32)
+#if defined(_MSC_VER)
         : stream_(common::utf8_to_wstr(name), std::ios::binary) {
+#else
+        : stream_(std::filesystem::path(common::utf8_to_wstr(name)), std::ios::binary) {
+#endif
 #else
         : stream_(name, std::ios::binary) {
 #endif

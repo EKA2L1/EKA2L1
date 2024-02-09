@@ -22,7 +22,6 @@
 #include <common/platform.h>
 #include <common/pystr.h>
 
-#define SPDLOG_FMT_EXTERNAL
 #include <spdlog/spdlog.h>
 
 #include <iostream>
@@ -137,7 +136,7 @@ namespace eka2l1 {
         for (const common::pystr &rule: rules) {
             std::vector<common::pystr> comp = rule.split(':');
             if (comp.size() != 2) {
-                LOG_ERROR(COMMON, "Rule {} is invalid (valid format: <class>:<level>)!");
+                LOG_ERROR(COMMON, "Rule {} is invalid (valid format: <class>:<level>)!", filtering_str);
             } else {
                 spdlog::level::level_enum level_in_rule;
                 if (!string_to_log_level(comp[1].cstr(), level_in_rule)) {

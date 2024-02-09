@@ -124,7 +124,7 @@ namespace eka2l1::common {
             absorb(found_ver);
 
             if (found_ver < ver_min || found_ver > ver) {
-                LOG_ERROR(COMMON, "Chunk section {} has version that is not in range ({}-{})", ver_min, ver);
+                LOG_ERROR(COMMON, "Chunk section {} has version that is not in range ({}-{})", name, ver_min, ver);
                 return chunkyseri_section(name, nullptr, -1);
             }
 

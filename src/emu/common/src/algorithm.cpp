@@ -258,7 +258,7 @@ namespace eka2l1 {
 #endif
         }
 
-#if EKA2L1_PLATFORM(WIN32)
+#if defined(_MSC_VER)
         bool cpu_support_checked = false;
         bool cpu_support_popcnt = false;
 

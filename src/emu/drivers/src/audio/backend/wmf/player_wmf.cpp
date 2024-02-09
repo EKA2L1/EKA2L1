@@ -20,9 +20,6 @@
 #include <common/platform.h>
 
 #if EKA2L1_PLATFORM(WIN32)
-#pragma comment(lib, "Mfuuid.lib")
-#pragma comment(lib, "Propsys.lib")
-
 #include <drivers/audio/backend/wmf/wmf_loader.h>
 #include <drivers/audio/backend/wmf/player_wmf.h>
 
@@ -33,6 +30,13 @@
 #include <common/path.h>
 
 #include <propvarutil.h>
+
+#ifdef __MINGW32__
+PSSTDAPI PropVariantToStringVectorAlloc(REFPROPVARIANT propvar,
+    PWSTR **pprgsz,
+    ULONG *pcElem
+);
+#endif
 
 namespace eka2l1::drivers {
     template <class T>
@@ -63,7 +67,7 @@ namespace eka2l1::drivers {
         return out_mt;
     }
 
-    static wchar_t *DUMMY_ISTREAM_FILE_NAME = L"dummy";
+    static const wchar_t *DUMMY_ISTREAM_FILE_NAME = L"dummy";
     static constexpr int DUMMY_ISTREAM_FILE_NAME_LENGTH = 6;
 
     /**
