@@ -202,6 +202,10 @@ namespace eka2l1 {
             --lock_count;
 
             auto put_top_wait_to_pending = [&]() {
+                if (waits.empty()) {
+                    return;
+                }
+
                 // Take it from top of the wait queue
                 kernel::thread *top_wait = std::move(waits.top());
                 waits.pop();
