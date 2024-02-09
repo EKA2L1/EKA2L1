@@ -307,6 +307,8 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(server<fs_server>()->get_default_system_path, epoc::fs_msg_default_path, "Fs::DefaultPath");
             HANDLE_CLIENT_IPC(is_file_opened, epoc::fs_msg_is_file_open, "Fs::IsFileOpen");
             HANDLE_CLIENT_IPC(filesystem_name, epoc::fs_msg_filesystem_name, "Fs::IsFileOpen");
+            HANDLE_CLIENT_IPC(notify_dismount, epoc::fs_msg_notify_dismount, "Fs::NotifyDismount");
+            HANDLE_CLIENT_IPC(notify_dismount_cancel, epoc::fs_msg_notify_dismount_cancel, "Fs::NotifyDismountCancel");
 
         case epoc::fs_msg_base_close:
             if (ctx->sys->get_symbian_version_use() < epocver::eka2) {
@@ -697,6 +699,16 @@ namespace eka2l1 {
                 break;
             }
         }
+        ctx->complete(epoc::error_none);
+    }
+
+    void fs_server_client::notify_dismount(service::ipc_context *ctx) {
+        LOG_TRACE(SERVICE_EFSRV, "Notify dismount stubbed");
+        dismount_notify_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+    }
+
+    void fs_server_client::notify_dismount_cancel(service::ipc_context *ctx) {
+        dismount_notify_.complete(epoc::error_cancel);
         ctx->complete(epoc::error_none);
     }
 

@@ -171,6 +171,8 @@ namespace eka2l1 {
         void notify_change(service::ipc_context *ctx);
         void notify_change_cancel_ex(service::ipc_context *ctx);
         void notify_change_cancel(service::ipc_context *ctx);
+        void notify_dismount(service::ipc_context *ctx);
+        void notify_dismount_cancel(service::ipc_context *ctx);
 
         void mkdir(service::ipc_context *ctx);
         void rmdir(service::ipc_context *ctx);
@@ -210,6 +212,7 @@ namespace eka2l1 {
         };
 
         std::vector<notify_entry> notify_entries;
+        epoc::notify_info dismount_notify_;
 
         void notify(const utf16_str &entry, const notify_type type);
         bool should_notify_failures;
