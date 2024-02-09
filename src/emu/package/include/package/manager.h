@@ -110,6 +110,9 @@ namespace eka2l1 {
             std::vector<package::object *> dependents(const uid app_uid);
             std::vector<uid> installed_uids() const;
 
+            bool controller(const uid app_uid, const std::uint32_t package_index, const std::uint32_t controller_offset,
+                loader::sis_controller &controller_output);
+
             bool add_package(package::object &pkg, const controller_info *controller_info);
             bool save_package(package::object &pkg);
             bool uninstall_package(package::object &pkg);

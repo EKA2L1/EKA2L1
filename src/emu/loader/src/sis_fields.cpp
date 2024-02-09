@@ -53,6 +53,10 @@ namespace eka2l1 {
             stream = std::make_shared<common::ro_std_file_stream>(name, true);
         }
 
+        sis_parser::sis_parser(std::shared_ptr<common::ro_stream> stream)
+            : stream(stream) {
+        }
+
         sis_array sis_parser::parse_array() {
             sis_array arr;
 

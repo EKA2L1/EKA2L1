@@ -24,12 +24,12 @@
 #include <package/manager.h>
 #include <package/registry.h>
 
-#include <utils/consts.h>
 #include <utils/err.h>
 
 #include <common/chunkyseri.h>
 #include <common/time.h>
 
+#include <loader/sis_fields.h>
 #include <common/cvt.h>
 
 namespace eka2l1 {
@@ -339,6 +339,11 @@ namespace eka2l1 {
 
         case sisregistry_localized_vendor_name: {
             request_vendor_localized_name(ctx);
+            break;
+        }
+
+        case sisregistry_shutdown_all_apps: {
+            shutdown_all_apps(ctx);
             break;
         }
 
@@ -1251,6 +1256,33 @@ namespace eka2l1 {
         }
 
         ctx->write_data_to_descriptor_argument(0, obj->deletable_preinstalled);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::shutdown_all_apps(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        manager::packages *packages = ctx->sys->get_packages();
+        loader::sis_controller controller;
+
+        bool should_shutdown_all_apps = false;
+
+        for (const auto &controller_info : obj->controller_infos) {
+            if (packages->controller(obj->uid, obj->index, controller_info.offset, controller)) {
+                if (controller.info.install_flags & loader::sis_install_flag::shutdown_apps) {
+                    should_shutdown_all_apps = true;
+                    break;
+                }
+            }
+        }
+
+        const std::uint32_t result = should_shutdown_all_apps;
+
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(0, result);
         ctx->complete(epoc::error_none);
     }
 }

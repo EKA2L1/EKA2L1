@@ -583,5 +583,26 @@ namespace eka2l1 {
             LOG_TRACE(PACKAGE, "Installation done!");
             return package::installation_result_success;
         }
+
+        bool packages::controller(const uid app_uid, const std::uint32_t package_index, const std::uint32_t controller_offset,
+            loader::sis_controller &controller_output) {
+            const std::u16string residing_folder = get_virtual_registry_folder(residing_, app_uid);
+            const std::u16string controller_path = add_path(residing_folder, fmt::format(package::CONTROLLER_FILE_FORMAT, package_index, controller_offset));
+
+            if (!sys->exist(controller_path)) {
+                return false;
+            }
+
+            symfile controller_file = sys->open_file(controller_path, READ_MODE | BIN_MODE);
+            if (controller_file) {
+                auto controller_stream = std::make_shared<eka2l1::ro_file_stream>(controller_file.get());
+                loader::sis_parser parser(controller_stream);
+
+                controller_output = parser.parse_controller();
+                return true;
+            }
+
+            return false;
+        }
     }
 }

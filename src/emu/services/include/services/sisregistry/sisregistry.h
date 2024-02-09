@@ -87,6 +87,7 @@ namespace eka2l1 {
         void request_sids(eka2l1::service::ipc_context *ctx);
         void request_size(eka2l1::service::ipc_context *ctx);
         void close_registry(eka2l1::service::ipc_context *ctx);
+        void shutdown_all_apps(eka2l1::service::ipc_context *ctx);
     };
 
     using sisregistry_client_subsession_inst = std::unique_ptr<sisregistry_client_subsession>;
