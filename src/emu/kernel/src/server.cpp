@@ -159,7 +159,6 @@ namespace eka2l1::service {
             return;
         }
 
-        LOG_TRACE(KERNEL, "At least one message is on queue, popping and finish receive request");
         accept(pending_msg, true);
     }
 
