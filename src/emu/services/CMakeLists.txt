@@ -326,7 +326,8 @@ target_link_libraries(epocservs PUBLIC
         epocutils
         uv_a
         uvw
-        uvlooper)
+        uvlooper
+        thread-pool)
 
 target_link_libraries(epocservs PRIVATE
         config

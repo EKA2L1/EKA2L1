@@ -30,6 +30,8 @@
 #include <mutex>
 #include <vector>
 
+#include <BS_thread_pool.hpp>
+
 namespace eka2l1 {
     class io_system;
     class fbs_server;
@@ -218,6 +220,8 @@ namespace eka2l1 {
         fbs_server *fbsserv;
         fs_server *fsserv;
 
+        BS::thread_pool loading_thread_pool_;
+
         enum {
             AL_INITED = 0x1
         };
@@ -237,9 +241,10 @@ namespace eka2l1 {
 
         void remove_registries_on_drive(const drive_number drv);
 
-        bool rescan_registries_on_drive_oldarch(eka2l1::io_system *io, const drive_number num);
-        bool rescan_registries_on_drive_newarch(eka2l1::io_system *io, const drive_number num);
-        bool rescan_registries_on_drive_newarch_with_path(eka2l1::io_system *io, const drive_number num, const std::u16string &path);
+        void rescan_registries_on_drive_oldarch(eka2l1::io_system *io, const drive_number num, std::vector<std::u16string> &results);
+        void rescan_registries_on_drive_newarch(eka2l1::io_system *io, const drive_number num, std::vector<std::u16string> &results);
+        void rescan_registries_on_drive_newarch_with_path(eka2l1::io_system *io, const drive_number num, const std::u16string &path,
+            std::vector<std::u16string> &results);
 
         /*! \brief Get the number of screen shared for an app. 
          * 

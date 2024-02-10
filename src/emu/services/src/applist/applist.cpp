@@ -107,17 +107,23 @@ namespace eka2l1 {
             return false;
         }
 
-        auto existed = std::find_if(regs.begin(), regs.end(), [=](const apa_app_registry &reg) {
-            return (common::compare_ignore_case(reg.rsc_path, path) == 0);
-        });
+        std::uint64_t last_mof = 0;
 
-        std::uint64_t last_mof = f->last_modify_since_0ad();
+        {
+            const std::lock_guard<std::mutex> guard(list_access_mut_);
 
-        if (existed != regs.end()) {
-            if (existed->last_rsc_modified != last_mof) {
-                regs.erase(existed);
-            } else {
-                return false;
+            auto existed = std::find_if(regs.begin(), regs.end(), [=](const apa_app_registry &reg) {
+                return (common::compare_ignore_case(reg.rsc_path, path) == 0);
+            });
+
+            last_mof = f->last_modify_since_0ad();
+
+            if (existed != regs.end()) {
+                if (existed->last_rsc_modified != last_mof) {
+                    regs.erase(existed);
+                } else {
+                    return false;
+                }
             }
         }
 
@@ -181,7 +187,9 @@ namespace eka2l1 {
             reg.caps.is_hidden = true;
         }
 
+        const std::lock_guard<std::mutex> guard(list_access_mut_);
         regs.push_back(std::move(reg));
+
         return true;
     }
 
@@ -195,17 +203,23 @@ namespace eka2l1 {
             return false;
         }
 
-        auto find_result = std::find_if(regs.begin(), regs.end(), [=](const apa_app_registry &reg) {
-            return (common::compare_ignore_case(reg.rsc_path, nearest_path) == 0);
-        });
+        std::uint64_t last_modified = 0;
 
-        std::uint64_t last_modified = f->last_modify_since_0ad();
+        {
+            const std::lock_guard<std::mutex> guard(list_access_mut_);
 
-        if (find_result != regs.end()) {
-            if (find_result->last_rsc_modified != last_modified) {
-                regs.erase(find_result);
-            } else {
-                return false;
+            auto find_result = std::find_if(regs.begin(), regs.end(), [=](const apa_app_registry &reg) {
+                return (common::compare_ignore_case(reg.rsc_path, nearest_path) == 0);
+            });
+
+            last_modified = f->last_modify_since_0ad();
+
+            if (find_result != regs.end()) {
+                if (find_result->last_rsc_modified != last_modified) {
+                    regs.erase(find_result);
+                } else {
+                    return false;
+                }
             }
         }
 
@@ -311,11 +325,14 @@ namespace eka2l1 {
             }
         }
 
+        const std::lock_guard<std::mutex> guard(list_access_mut_);
         regs.push_back(std::move(reg));
         return true;
     }
 
     bool applist_server::delete_registry(const std::u16string &rsc_path) {
+        const std::lock_guard<std::mutex> guard(list_access_mut_);
+
         auto result = std::find_if(regs.begin(), regs.end(), [rsc_path](const apa_app_registry &reg) {
             return common::compare_ignore_case(reg.rsc_path, rsc_path) == 0;
         });
@@ -346,18 +363,37 @@ namespace eka2l1 {
 
     void applist_server::on_drive_change(void *userdata, drive_number drv, drive_action act) {
         io_system *io = reinterpret_cast<io_system *>(userdata);
-        bool modified = false;
+        std::atomic_bool modified = false;
 
         switch (act) {
-        case drive_action_mount:
+        case drive_action_mount: {
             avail_drives_ |= 1 << (drv - drive_a);
+            std::vector<std::u16string> register_file_paths;
+
             if (kern->is_eka1()) {
-                modified = rescan_registries_on_drive_oldarch(io, drv);
+                rescan_registries_on_drive_oldarch(io, drv, register_file_paths);
             } else {
-                modified = rescan_registries_on_drive_newarch(io, drv);
+                rescan_registries_on_drive_newarch(io, drv, register_file_paths);
             }
 
+            auto load_registry_task = loading_thread_pool_.submit_loop<std::size_t>(0, register_file_paths.size(),
+                [this, &register_file_paths, &modified, io](std::size_t idx) {
+                    bool entry_modified = false;
+
+                    if (kern->is_eka1()) {
+                        entry_modified = load_registry_oldarch(io, register_file_paths[idx], drive_number(idx % drive_count), language::en);
+                    } else {
+                        entry_modified = load_registry(io, register_file_paths[idx], drive_number(idx % drive_count), language::en);
+                    }
+
+                    if (entry_modified) {
+                        modified = true;
+                    }
+                });
+
+            load_registry_task.wait();
             break;
+        }
 
         case drive_action_unmount:
             avail_drives_ &= ~(1 << (drv - drive_a));
@@ -375,10 +411,10 @@ namespace eka2l1 {
         }
     }
 
-    bool applist_server::rescan_registries_on_drive_oldarch(eka2l1::io_system *io, const drive_number drv) {
+    void applist_server::rescan_registries_on_drive_oldarch(eka2l1::io_system *io, const drive_number drv,
+        std::vector<std::u16string> &register_file_paths) {
         const std::u16string base_dir = std::u16string(1, drive_to_char16(drv)) + u":\\System\\Apps\\";
         auto reg_dir = io->open_dir(base_dir, {}, io_attrib_include_dir);
-        bool modded = false;
 
         if (reg_dir) {
             while (auto ent = reg_dir->get_next_entry()) {
@@ -386,54 +422,40 @@ namespace eka2l1 {
                     const std::u16string aif_reg_file = common::utf8_to_ucs2(eka2l1::add_path(
                         ent->full_path, ent->name + OLDARCH_REG_FILE_EXT, true));
 
-                    if (load_registry_oldarch(io, aif_reg_file, drv, kern->get_current_language())) {
-                        modded = true;
-                    }
+                    register_file_paths.push_back(aif_reg_file);
                 }
             }
         }
-
-        return modded;
     }
 
-    bool applist_server::rescan_registries_on_drive_newarch(eka2l1::io_system *io, const drive_number drv) {
+    void applist_server::rescan_registries_on_drive_newarch(eka2l1::io_system *io, const drive_number drv,
+        std::vector<std::u16string> &register_file_paths) {
         const std::u16string import_rsc_path = std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\import\\apps\\" + NEWARCH_REG_FILE_SEARCH_WILDCARD16;
         const std::u16string rom_rscs_path = std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\apps\\" + NEWARCH_REG_FILE_SEARCH_WILDCARD16;
 
-        bool modded = false;
-
         // Supposedly to only scan in ROM, but it's not really that strict on the emulator ;)
-        if (rescan_registries_on_drive_newarch_with_path(io, drv, rom_rscs_path)) {
-            modded = true;
-        }
-
-        if (rescan_registries_on_drive_newarch_with_path(io, drv, import_rsc_path)) {
-            modded = true;
-        }
-
-        return modded;
+        rescan_registries_on_drive_newarch_with_path(io, drv, rom_rscs_path, register_file_paths);
+        rescan_registries_on_drive_newarch_with_path(io, drv, import_rsc_path, register_file_paths);
     }
 
-    bool applist_server::rescan_registries_on_drive_newarch_with_path(eka2l1::io_system *io, const drive_number drv, const std::u16string &path) {
+    void applist_server::rescan_registries_on_drive_newarch_with_path(eka2l1::io_system *io, const drive_number drv, const std::u16string &path,
+        std::vector<std::u16string> &results) {
         auto reg_dir = io->open_dir(path, {}, io_attrib_include_file);
         bool modded = false;
 
         if (reg_dir) {
             while (auto ent = reg_dir->get_next_entry()) {
                 if (ent->type == io_component_type::file) {
-                    if (load_registry(io, common::utf8_to_ucs2(ent->full_path), drv, kern->get_current_language()))
-                        modded = true;
+                    results.push_back(common::utf8_to_ucs2(ent->full_path));
                 }
             }
         }
-
-        return modded;
     }
 
     bool applist_server::rescan_registries(eka2l1::io_system *io) {
         LOG_INFO(SERVICE_APPLIST, "Loading app registries");
 
-        bool global_modified = false;
+        std::atomic_bool global_modified = false;
 
         if (avail_drives_ == 0) {
             for (drive_number drv = drive_z; drv >= drive_a; drv--) {
@@ -454,22 +476,41 @@ namespace eka2l1 {
             global_modified = true;
         }
 
+        std::vector<std::u16string> register_file_paths;
+
         for (std::uint8_t i = 0; i < drive_count; i++) {
             if (avail_drives_ & (1 << i)) {
                 drive_number drv = static_cast<drive_number>(static_cast<int>(drive_a) + i);
-                bool drv_modified = false;
 
                 if (kern->is_eka1()) {
-                    drv_modified = rescan_registries_on_drive_oldarch(io, drv);
+                    rescan_registries_on_drive_oldarch(io, drv, register_file_paths);
                 } else {
-                    drv_modified = rescan_registries_on_drive_newarch(io, drv);
-                }
-
-                if (drv_modified) {
-                    global_modified = true;
+                    rescan_registries_on_drive_newarch(io, drv, register_file_paths);
                 }
             }
         }
+
+        auto current_lang = kern->get_current_language();
+
+        auto load_registry_task = loading_thread_pool_.submit_loop<std::size_t>(0, register_file_paths.size(),
+            [this, &register_file_paths, &global_modified, io, current_lang](std::size_t idx) {
+                bool modified = false;
+
+                auto path = register_file_paths[idx];
+                drive_number drv = char16_to_drive(path[0]);
+
+                if (kern->is_eka1()) {
+                    modified = load_registry_oldarch(io, register_file_paths[idx], drv, current_lang);
+                } else {
+                    modified = load_registry(io, register_file_paths[idx], drv, current_lang);
+                }
+
+                if (modified) {
+                    global_modified = true;
+                }
+            });
+
+        load_registry_task.wait();
 
         if (global_modified) {
             sort_registry_list();
@@ -483,7 +524,7 @@ namespace eka2l1 {
         }
 
         LOG_INFO(SERVICE_APPLIST, "Done loading!");
-        return global_modified;
+        return global_modified.load();
     }
 
     int applist_server::legacy_level() {
@@ -516,13 +557,12 @@ namespace eka2l1 {
     }
 
     std::vector<apa_app_registry> &applist_server::get_registerations() {
-        const std::lock_guard<std::mutex> guard(list_access_mut_);
-
         if (!(flags & AL_INITED)) {
             // Initialize
             init();
         }
 
+        const std::lock_guard<std::mutex> guard(list_access_mut_);
         return regs;
     }
 
