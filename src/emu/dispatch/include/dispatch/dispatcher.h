@@ -196,6 +196,10 @@ namespace eka2l1::dispatch {
         dsp_epoc_audren_sema *audio_renderer_semaphore() {
             return audren_sema_.get();
         }
+
+        void shutdown() {
+            mediums_.clear();
+        }
     };
 
     class screen_post_transferer {
@@ -264,7 +268,7 @@ namespace eka2l1::dispatch {
 
         dsp_manager dsp_manager_;
         screen_post_transferer post_transferer_;
-        egl_controller egl_controller_;
+        std::unique_ptr<egl_controller> egl_controller_;
         ehui_controller hui_controller_;
 
         std::map<std::uint32_t, address> static_string_addrs_;
@@ -301,7 +305,7 @@ namespace eka2l1::dispatch {
         }
 
         egl_controller &get_egl_controller() {
-            return egl_controller_;
+            return *egl_controller_;
         }
 
         ehui_controller &get_hui_controller() {

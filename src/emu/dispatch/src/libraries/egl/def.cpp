@@ -104,7 +104,7 @@ namespace eka2l1::dispatch {
         , es1_shaderman_(driver) {
     }
 
-    egl_controller::~egl_controller() {
+    void egl_controller::shutdown() {
         drivers::graphics_command_builder cmd_builder;
         bool freed_once = false;
 
@@ -125,6 +125,13 @@ namespace eka2l1::dispatch {
             drivers::command_list list = cmd_builder.retrieve_command_list();
             driver_->submit_command_list(list);
         }
+
+        contexts_.clear();
+        dsurfaces_.clear();
+    }
+
+    egl_controller::~egl_controller() {
+        shutdown();
     }
 
     bool egl_controller::make_current(kernel::uid thread_id, const egl_context_handle handle) {

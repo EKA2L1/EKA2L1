@@ -98,5 +98,10 @@ namespace eka2l1::dispatch {
         typename std::vector<std::unique_ptr<T>>::iterator end() {
             return objs_.end();
         }
+
+        void clear() {
+            const std::lock_guard<std::mutex> guard(lock_);
+            objs_.clear();
+        }
     };
 }

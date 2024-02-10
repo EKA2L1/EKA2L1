@@ -76,6 +76,9 @@ namespace eka2l1::dispatch {
     }
 
     dsp_epoc_stream::~dsp_epoc_stream() {
+        if (ll_stream_) {
+            ll_stream_->stop();
+        }
     }
 
     void dsp_epoc_stream::volume(const std::uint32_t volume) {

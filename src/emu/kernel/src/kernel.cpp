@@ -115,7 +115,15 @@ namespace eka2l1 {
             obj->destroy();                 \
     }                                       \
     container.clear();
-    
+
+#define OBJECT_CONTAINER_CLEANUP_KEEP_OBJECTS(container) \
+    for (auto &obj : container) {           \
+        if (obj)                            \
+            obj->destroy();                 \
+    }
+
+#define OBJECT_CONTAINER_CLEAR(container) \
+    container.clear();
 
         // Delete one by one in order. Do not change the order
         OBJECT_CONTAINER_CLEANUP(sessions_);
@@ -134,13 +142,16 @@ namespace eka2l1 {
             msgs_[i].reset();   
         }
 
-        OBJECT_CONTAINER_CLEANUP(threads_);
-        OBJECT_CONTAINER_CLEANUP(processes_);
+        OBJECT_CONTAINER_CLEANUP_KEEP_OBJECTS(threads_);
+        OBJECT_CONTAINER_CLEANUP_KEEP_OBJECTS(processes_);
         OBJECT_CONTAINER_CLEANUP(libraries_);
         OBJECT_CONTAINER_CLEANUP(codesegs_);
-        OBJECT_CONTAINER_CLEANUP(message_queues_);
+        OBJECT_CONTAINER_CLEANUP(message_queues_)
         OBJECT_CONTAINER_CLEANUP(logical_channels_);
         OBJECT_CONTAINER_CLEANUP(logical_devices_);
+
+        OBJECT_CONTAINER_CLEAR(threads_);
+        OBJECT_CONTAINER_CLEAR(processes_);
 
         if (btrace_inst_)
             btrace_inst_->close_trace_session();

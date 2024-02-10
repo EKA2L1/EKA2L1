@@ -500,7 +500,9 @@ namespace eka2l1::kernel {
             attach_info->use_count--;
 
             if (attach_info->use_count == 0) {
-                foe_thr->closing_libs.push(&attach_info->closing_lib_link);
+                if (!kern->wipeout_in_progress()) {
+                    foe_thr->closing_libs.push(&attach_info->closing_lib_link);
+                }
 
                 for (std::size_t i = 0; i < dependencies.size(); i++) {
                     dependencies[i].dep_->deref(foe_thr);

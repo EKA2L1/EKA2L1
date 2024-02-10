@@ -581,6 +581,7 @@ namespace eka2l1::dispatch {
         ~egl_controller();
 
         void set_graphics_driver(drivers::graphics_driver *driver);
+        void shutdown();
 
         gles1_shaderman &get_es1_shaderman() {
             return es1_shaderman_;

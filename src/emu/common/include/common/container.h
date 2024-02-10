@@ -130,6 +130,13 @@ namespace eka2l1::common {
 
             return &data_[elem_id - 1];
         }
+
+        void clear() {
+            for (auto &elem : data_) {
+                freer_(elem);
+            }
+            data_.clear();
+        }
     };
         
     /// SPSC ring buffer

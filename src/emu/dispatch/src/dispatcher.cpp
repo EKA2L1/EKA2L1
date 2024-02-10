@@ -48,7 +48,7 @@ namespace eka2l1::dispatch {
         , trampoline_allocated_(0)
         , static_data_allocated_(0)
         , winserv_(nullptr)
-        , egl_controller_(nullptr)
+        , egl_controller_(std::make_unique<egl_controller>(nullptr))
         , graphics_string_added_(false) {
         trampoline_chunk_ = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr, "DispatcherTrampolines", 0,
             MAX_TRAMPOLINE_CHUNK_SIZE, MAX_TRAMPOLINE_CHUNK_SIZE, prot_read_write_exec, kernel::chunk_type::normal,
@@ -96,7 +96,7 @@ namespace eka2l1::dispatch {
             graphics_string_added_ = true;
         }
 
-        egl_controller_.set_graphics_driver(driver);
+        egl_controller_->set_graphics_driver(driver);
     }
 
     void dispatcher::resolve(eka2l1::system *sys, const std::uint32_t function_ord) {
@@ -119,6 +119,11 @@ namespace eka2l1::dispatch {
 
     void dispatcher::shutdown(drivers::graphics_driver *driver) {
         post_transferer_.destroy(driver);
+
+        video_player_container_.clear();
+        cameras_.clear();
+        dsp_manager_.shutdown();
+        egl_controller_ = std::make_unique<egl_controller>(driver);
     }
 
     void dispatcher::update_all_screens(eka2l1::system *sys) {
