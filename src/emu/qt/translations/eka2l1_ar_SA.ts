@@ -83,7 +83,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="63"/>
       <source>Search</source>
-      <translation>بحث</translation>
+      <translation>ابحث</translation>
     </message>
   </context>
   <context>
@@ -634,7 +634,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="162"/>
       <source>About</source>
-      <translation>حول</translation>
+      <translation>عن</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="167"/>
@@ -654,7 +654,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="182"/>
       <source>Settings</source>
-      <translation>الإعدادات</translation>
+      <translation>إعدادات</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="190"/>
@@ -1070,7 +1070,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
       <source>Search</source>
-      <translation>بحث</translation>
+      <translation>ابحث</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="66"/>
@@ -1133,7 +1133,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="20"/>
       <source>Settings</source>
-      <translation>الإعدادات</translation>
+      <translation>إعدادات</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="36"/>
@@ -1428,7 +1428,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/settings_dialog.ui" line="777"/>
       <source>Devices</source>
-      <translation>الأجهزة</translation>
+      <translation>Device</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="794"/>
