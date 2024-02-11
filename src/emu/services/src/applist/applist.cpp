@@ -91,7 +91,8 @@ namespace eka2l1 {
         : service::typical_server(sys, get_app_list_server_name_by_epocver(sys->get_symbian_version_use()))
         , drive_change_handle_(0)
         , fbsserv(nullptr)
-        , fsserv(nullptr) {
+        , fsserv(nullptr)
+        , loading_thread_pool_(std::thread::hardware_concurrency() <= 0 ? 4 : std::thread::hardware_concurrency()) {
     }
 
     applist_server::~applist_server() {
@@ -162,9 +163,15 @@ namespace eka2l1 {
 
         f->seek(0, file_seek_mode::beg);
 
-        if (!read_icon_data_aif(reinterpret_cast<common::ro_stream *>(&std_rsc_raw), fbsserv, reg.app_icons,
-                romaddr)) {
-            return false;
+        {
+            // Icon creation modifies kernel and services (creating bitmap)
+            // So we use a mutex to safeguard it
+            const std::lock_guard<std::mutex> guard(list_access_mut_);
+
+            if (!read_icon_data_aif(reinterpret_cast<common::ro_stream *>(&std_rsc_raw), fbsserv, reg.app_icons,
+                                    romaddr)) {
+                return false;
+            }
         }
 
         std::u16string caption_file_path = eka2l1::replace_extension(path, u"") + u"_caption.rsc";
