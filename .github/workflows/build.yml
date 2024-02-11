@@ -42,7 +42,7 @@ jobs:
     - name: Set up build environment
       run: |
         sudo apt-get update
-        sudo apt-get -y install build-essential libc6-dev
+        sudo apt-get -y install build-essential libc6-dev g++-multilib
       
     - name: Build with Gradle
       run: ./gradlew assembleRelease -PciArg='-DCI=ON'
