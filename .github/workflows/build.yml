@@ -46,7 +46,14 @@ jobs:
       
     - name: Build with Gradle
       run: ./gradlew assembleRelease -PciArg='-DCI=ON'
-
+    
+    - name: Setup build tool version variable
+      shell: bash
+      run: |
+        BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
+        echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
+        echo Last build tool version is: $BUILD_TOOL_VERSION
+    
     - name: Sign APK
       id: sign-android-app
       uses: r0adkll/sign-android-release@v1.0.4
@@ -56,7 +63,9 @@ jobs:
         alias: ${{ secrets.ALIAS }}
         keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
         keyPassword: ${{ secrets.KEY_PASSWORD }}
-
+      env:
+        BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
+    
     - name: Compute git short sha
       id: git_short_sha
       run: echo "::set-output name=value::$(git rev-parse --short HEAD)"
