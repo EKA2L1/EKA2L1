@@ -46,8 +46,11 @@
           <pointsize>10</pointsize>
          </font>
         </property>
+        <property name="openExternalLinks">
+         <bool>true</bool>
+        </property>
         <property name="text">
-         <string>App launcher is unavailable.&lt;br&gt;Install a device to continue.</string>
+         <string>App launcher is unavailable.&lt;br&gt;Visit &lt;a href=&quot;https://eka2l1.miraheze.org/wiki/Main_Page&quot;&gt;EKA2L1 wiki&lt;/a&gt; to get started, or install a device to continue.</string>
         </property>
        </widget>
       </item>
@@ -61,7 +64,7 @@
      <x>0</x>
      <y>0</y>
      <width>900</width>
-     <height>25</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_file">

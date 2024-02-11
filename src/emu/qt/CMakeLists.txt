@@ -119,6 +119,7 @@ set(PROJECT_SOURCES
         src/utils.cpp
         EKA2L1.def
         ${RESOURCE_FILES}
+        src/links.h
 )
 
 set(UPDATE_SOURCES

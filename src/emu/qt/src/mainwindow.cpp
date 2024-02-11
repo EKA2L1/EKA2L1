@@ -18,6 +18,8 @@
  */
 
 #include "./ui_mainwindow.h"
+#include "./links.h"
+
 #include <qt/aboutdialog.h>
 #include <qt/applistwidget.h>
 #include <qt/btnetplay_friends_dialog.h>
@@ -337,7 +339,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
 
     diag->check_for_update(false);
 
-    update_notice_dialog::spawn(this);
+    //update_notice_dialog::spawn(this);
 
     restore_ui_layouts();
     on_theme_change_requested(QString("%1").arg(settings.value(THEME_SETTING_NAME, 0).toInt()));
@@ -435,7 +437,7 @@ void main_window::setup_app_list(const bool load_now) {
 
         if (!no_notify_install.isValid() || !no_notify_install.toBool()) {
             const QMessageBox::StandardButton result = make_dialog_with_checkbox_and_choices(
-                tr("No device installed"), tr("You have not installed any device. Please install a device or follow the installation instructions on EKA2L1's GitHub wiki page."),
+                tr("No device installed"), tr("You have not installed any device. Please visit <a href=\"" WIKI_LINK "\">EKA2L1 wiki</a> to get started or install a device."),
                 tr("Don't show this again"), false, [](bool on) {
                     QSettings settings;
                     settings.setValue(NO_DEVICE_INSTALL_DISABLE_NOF_SETTING, on);
