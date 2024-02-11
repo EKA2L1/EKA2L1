@@ -42,7 +42,7 @@ jobs:
     - name: Set up build environment
       run: |
         sudo apt-get update
-        sudo apt-get -y install libc6-dev
+        sudo apt-get -y install build-essential libc6-dev
       
     - name: Build with Gradle
       run: ./gradlew assembleRelease -PciArg='-DCI=ON'
@@ -160,7 +160,8 @@ jobs:
 
     - name: Patch Qt to fix compile error with GCC-11 (ubuntu-latest)
       run: |
-        sed -i 's/ThreadEngineStarter<void>(ThreadEngine<void> \*_threadEngine)/ThreadEngineStarter(ThreadEngine<void> \*_threadEngine)/' ${QT_ROOT_DIR}/include/QtConcurrent/qtconcurrentthreadengine.h
+        sed -i 's/ThreadEngineStarter<void>(ThreadEngine<void> \*_threadEngine)/ThreadEngineStarter(ThreadEngine<void> \*_threadEngine)/' "${{ env.Qt5_DIR }}/include/QtConcurrent/qtconcurrentthreadengine.h"
+      shell: bash
       if: matrix.os == 'ubuntu-20.04'
       
     - name: CMake configure
@@ -191,8 +192,8 @@ jobs:
       
     - name: Copy OpenSSL binaries
       run: |
-        Copy-Item ${{ runner.workspace }}\Qt\Tools\OpenSSL\Win_x64\bin\libcrypto-1_1-x64.dll -Destination build\bin\libcrypto-1_1.dll
-        Copy-Item ${{ runner.workspace }}\Qt\Tools\OpenSSL\Win_x64\bin\libssl-1_1-x64.dll -Destination build\bin\libssl-1_1.dll
+        Invoke-WebRequest https://radrat.vn/eka2l1/roms/build/libcrypto-1_1-x64.dll -OutFile build\bin\libcrypto-1_1.dll
+        Invoke-WebRequest https://radrat.vn/eka2l1/roms/build/libssl-1_1-x64.dll -OutFile build\bin\libssl-1_1.dll
       shell: pwsh
       if: matrix.os == 'windows-latest'
 
