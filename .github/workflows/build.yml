@@ -138,7 +138,6 @@ jobs:
         host: 'windows'
         target: 'desktop'
         arch: 'win64_msvc2019_64'
-        tools: 'tools_opensslv3_x64'
       if: matrix.os == 'windows-latest'
 
     - name: Set up SDL 2.0.20 (ubuntu-latest)
@@ -161,7 +160,7 @@ jobs:
 
     - name: Patch Qt to fix compile error with GCC-11 (ubuntu-latest)
       run: |
-        sed -i 's/ThreadEngineStarter<void>(ThreadEngine<void> \*_threadEngine)/ThreadEngineStarter(ThreadEngine<void> \*_threadEngine)/' $QT_ROOT_DIR/include/QtConcurrent/qtconcurrentthreadengine.h
+        sed -i 's/ThreadEngineStarter<void>(ThreadEngine<void> \*_threadEngine)/ThreadEngineStarter(ThreadEngine<void> \*_threadEngine)/' ${QT_ROOT_DIR}/include/QtConcurrent/qtconcurrentthreadengine.h
       if: matrix.os == 'ubuntu-20.04'
       
     - name: CMake configure
