@@ -39,9 +39,21 @@ jobs:
         distribution: 'adopt'
         java-version: '11'
 
+    - name: Set up build environment
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install build-essential libc6-dev g++-multilib
+      
     - name: Build with Gradle
       run: ./gradlew assembleRelease -PciArg='-DCI=ON'
-
+    
+    - name: Setup build tool version variable
+      shell: bash
+      run: |
+        BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
+        echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
+        echo Last build tool version is: $BUILD_TOOL_VERSION
+    
     - name: Sign APK
       id: sign-android-app
       uses: r0adkll/sign-android-release@v1.0.4
@@ -51,7 +63,9 @@ jobs:
         alias: ${{ secrets.ALIAS }}
         keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
         keyPassword: ${{ secrets.KEY_PASSWORD }}
-
+      env:
+        BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
+    
     - name: Compute git short sha
       id: git_short_sha
       run: echo "::set-output name=value::$(git rev-parse --short HEAD)"
@@ -133,7 +147,6 @@ jobs:
         host: 'windows'
         target: 'desktop'
         arch: 'win64_msvc2019_64'
-        tools: 'tools_opensslv3_x64'
       if: matrix.os == 'windows-latest'
 
     - name: Set up SDL 2.0.20 (ubuntu-latest)
@@ -154,6 +167,12 @@ jobs:
         sudo make -C SDL2-${SDL2VER} install
       if: matrix.os == 'ubuntu-20.04'
 
+    - name: Patch Qt to fix compile error with GCC-11 (ubuntu-latest)
+      run: |
+        sed -i 's/ThreadEngineStarter<void>(ThreadEngine<void> \*_threadEngine)/ThreadEngineStarter(ThreadEngine<void> \*_threadEngine)/' "${{ env.Qt5_DIR }}/include/QtConcurrent/qtconcurrentthreadengine.h"
+      shell: bash
+      if: matrix.os == 'ubuntu-20.04'
+      
     - name: CMake configure
       run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_SCRIPTING_ABILITY=OFF -DEKA2L1_DEPLOY_DMG=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_ENABLE_DISCORD_RICH_PRESENCE=ON -DCMAKE_PREFIX_PATH=${{ env.Qt5_DIR }} -DCMAKE_BUILD_TYPE=${{ matrix.config }}
       if: matrix.os == 'macos-latest'
@@ -182,8 +201,8 @@ jobs:
       
     - name: Copy OpenSSL binaries
       run: |
-        Copy-Item ${{ runner.workspace }}\Qt\Tools\OpenSSL\Win_x64\bin\libcrypto-1_1-x64.dll -Destination build\bin\libcrypto-1_1.dll
-        Copy-Item ${{ runner.workspace }}\Qt\Tools\OpenSSL\Win_x64\bin\libssl-1_1-x64.dll -Destination build\bin\libssl-1_1.dll
+        Invoke-WebRequest https://radrat.vn/eka2l1/roms/build/libcrypto-1_1-x64.dll -OutFile build\bin\libcrypto-1_1.dll
+        Invoke-WebRequest https://radrat.vn/eka2l1/roms/build/libssl-1_1-x64.dll -OutFile build\bin\libssl-1_1.dll
       shell: pwsh
       if: matrix.os == 'windows-latest'
 

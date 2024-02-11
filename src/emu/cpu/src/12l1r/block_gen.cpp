@@ -761,7 +761,7 @@ namespace eka2l1::arm::r12l1 {
                 auto read_res = read_thumb_instruction(addr + block->size_, parent_->read_code);
 
                 if (!read_res) {
-                    LOG_ERROR(CPU_12L1R, "Error while reading instruction at address 0x{:X}!, addr");
+                    LOG_ERROR(CPU_12L1R, "Error while reading instruction at address 0x{:X}!", addr);
                     return nullptr;
                 }
 
@@ -769,7 +769,7 @@ namespace eka2l1::arm::r12l1 {
                 inst_size = read_res->second;
             } else {
                 if (!parent_->read_code(addr + block->size_, &inst)) {
-                    LOG_ERROR(CPU_12L1R, "Error while reading instruction at address 0x{:X}!, addr");
+                    LOG_ERROR(CPU_12L1R, "Error while reading instruction at address 0x{:X}!", addr);
                     return nullptr;
                 }
 
