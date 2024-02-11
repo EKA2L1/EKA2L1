@@ -24,7 +24,6 @@
 #include <cpu/arm_dynarmic.h>
 #include <cpu/arm_utils.h>
 
-#include <dynarmic/interface/A32/context.h>
 #include <dynarmic/interface/A32/coprocessor.h>
 
 namespace eka2l1::arm {
