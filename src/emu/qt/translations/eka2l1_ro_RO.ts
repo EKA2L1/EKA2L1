@@ -1138,7 +1138,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="36"/>
       <source>General</source>
-      <translation>Generale</translation>
+      <translation>General</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="48"/>
