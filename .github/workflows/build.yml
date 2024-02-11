@@ -39,6 +39,11 @@ jobs:
         distribution: 'adopt'
         java-version: '11'
 
+    - name: Set up build environment
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install libc6-dev
+      
     - name: Build with Gradle
       run: ./gradlew assembleRelease -PciArg='-DCI=ON'
 
