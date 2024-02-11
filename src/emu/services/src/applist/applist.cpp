@@ -574,11 +574,15 @@ namespace eka2l1 {
     }
 
     apa_app_registry *applist_server::get_registration(const std::uint32_t uid) {
-        const std::lock_guard<std::mutex> guard(list_access_mut_);
+        std::unique_lock<std::mutex> guard(list_access_mut_);
 
         if (!(flags & AL_INITED)) {
+            guard.unlock();
+
             // Initialize
             init();
+
+            guard.lock();
         }
 
         auto result = std::lower_bound(regs.begin(), regs.end(), uid, [](const apa_app_registry &lhs, const std::uint32_t rhs) {
