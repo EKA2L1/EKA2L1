@@ -159,6 +159,11 @@ jobs:
         sudo make -C SDL2-${SDL2VER} install
       if: matrix.os == 'ubuntu-20.04'
 
+    - name: Patch Qt to fix compile error with GCC-11 (ubuntu-latest)
+      run: |
+        sed -i 's/ThreadEngineStarter<void>(ThreadEngine<void> \*_threadEngine)/ThreadEngineStarter(ThreadEngine<void> \*_threadEngine)/' $QT_ROOT_DIR/include/QtConcurrent/qtconcurrentthreadengine.h
+      if: matrix.os == 'ubuntu-20.04'
+      
     - name: CMake configure
       run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_SCRIPTING_ABILITY=OFF -DEKA2L1_DEPLOY_DMG=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_ENABLE_DISCORD_RICH_PRESENCE=ON -DCMAKE_PREFIX_PATH=${{ env.Qt5_DIR }} -DCMAKE_BUILD_TYPE=${{ matrix.config }}
       if: matrix.os == 'macos-latest'
