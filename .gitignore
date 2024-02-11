@@ -16,3 +16,4 @@ CMakeSettings.json
 out
 .metadata
 cmake-build-*
+.idea

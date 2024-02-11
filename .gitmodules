@@ -95,3 +95,9 @@
 [submodule "src/external/re2"]
 	path = src/external/re2
 	url = https://github.com/google/re2
+[submodule "src/external/thread-pool"]
+	path = src/external/thread-pool
+	url = https://github.com/bshoshany/thread-pool
+[submodule "src/external/luajit-cmake"]
+	path = src/external/luajit-cmake
+	url = https://github.com/zhaozg/luajit-cmake
