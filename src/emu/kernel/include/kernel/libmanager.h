@@ -149,7 +149,7 @@ namespace eka2l1 {
             void jump_trampoline_through_svc();
 
         public:
-            std::map<sid, epoc_import_func> svc_funcs_;
+            std::unordered_map<sid, epoc_import_func> svc_funcs_;
             std::vector<std::u16string> search_paths;
 
             explicit lib_manager(kernel_system *kern, io_system *ios, memory_system *mems);
