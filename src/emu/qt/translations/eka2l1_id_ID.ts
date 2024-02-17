@@ -121,7 +121,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="834"/>
       <source>Rename</source>
-      <translation>Ganti nama</translation>
+      <translation>Ubah nama</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="835"/>
@@ -179,12 +179,12 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="225"/>
       <source>Players with the same password will be able to see each others. This can be empty.</source>
-      <translation>Pemain dengan kata sandi yang sama dapat melihat satu sama lain. Ini boleh kosong.</translation>
+      <translation>Pemain dengan kata sandi yang sama bisa melihat satu sama lain. Ini boleh kosong.</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="228"/>
       <source>Password</source>
-      <translation>Kata Sandi</translation>
+      <translation>Kata sandi</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="238"/>
@@ -199,12 +199,12 @@
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
       <source>Configuration not saved</source>
-      <translation>Konfigurasi tidak tersimpan</translation>
+      <translation>Setelan tidak tersimpan</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
       <source>The Bluetooth netplay configuration has not been saved. Do you want to save?</source>
-      <translation>Konfigurasi Bluetooth netplay belum disimpan. Apakah ingin Anda simpan?</translation>
+      <translation>Setelan netplay Bluetooth belum disimpan. Apakah ingin disimpan?</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="127"/>
@@ -277,7 +277,7 @@
       <location filename="../src/btnetplay_friends_dialog.cpp" line="221"/>
       <source>Friend %1 has invalid port number (must be between 0 and 65535)!
 </source>
-      <translation>Teman %1 punya nomor porta tidak absah (harus antara 0 dan 65535)!
+      <translation>Teman %1 punya nomor port tidak absah (harus antara 0 dan 65535)!
 </translation>
     </message>
     <message>
@@ -288,7 +288,7 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="249"/>
       <source>Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</source>
-      <translation>Beberapa alamat IP teman tidak dapat diperbarui (lihat perincian teks).&lt;br&gt;Alamat yang dapat diperbarui telah disimpan.</translation>
+      <translation>Beberapa alamat IP teman tidak bisa diperbarui (lihat perincian teks).&lt;br&gt;Alamat yang dapat diperbarui telah disimpan.</translation>
     </message>
   </context>
   <context>
@@ -441,7 +441,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="17"/>
       <source>Touch mapping editor</source>
-      <translation>Pengubah pemetaan sentuh</translation>
+      <translation>Sunting pemetaan sentuh</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="26"/>
@@ -467,7 +467,7 @@
       <location filename="../src/btnmap/editor_widget.ui" line="105"/>
       <location filename="../src/btnmap/editor_widget.cpp" line="274"/>
       <source>Save and hide editor</source>
-      <translation>Simpan dan sembunyikan penyunting</translation>
+      <translation>Simpan dan s'bunyikan penyunting</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="136"/>
@@ -487,7 +487,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="181"/>
       <source>Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</source>
-      <translation>Profil disimpan di tiap apli/p'mainan. Tekan &lt;b&gt;Edit&lt;/b&gt; untuk masuk Mode sunting. Untuk menghapus unsur pemetaan, tekan &lt;b&gt;Hapus&lt;/b&gt; dan klik unsur yang ingin dihapus.</translation>
+      <translation>Profil disimpan di tiap apli/p'mainan. Tekan &lt;b&gt;Edit&lt;/b&gt; untuk masuk Mode ubah. Untuk menghapus unsur pemetaan, tekan &lt;b&gt;Hapus&lt;/b&gt; dan klik unsur yang ingin dihapus.</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="212"/>
@@ -545,7 +545,7 @@
     <message>
       <location filename="../src/launch_process_dialog.ui" line="51"/>
       <source>Executable path</source>
-      <translation>Jalur yang dapat dieksekusi</translation>
+      <translation>Jalur bisa dieksekusi</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="78"/>
@@ -566,7 +566,7 @@
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
       <source>The executable path field is empty!</source>
-      <translation>Bidang jalur yang dapat dieksekusi kosong!</translation>
+      <translation>Bidang jalur yang bisa dieksekusi kosong!</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="33"/>
@@ -579,7 +579,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="50"/>
       <source>App launcher is unavailable.&lt;br&gt;Install a device to continue.</source>
-      <translation>Peluncur aplikasi tak tersedia.&lt;br&gt;Pasang firmware perangkat untuk melanjutkan.</translation>
+      <translation>Peluncur aplikasi tak tersedia.&lt;br&gt;Pasang firmware perangkat untuk lanjut.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="69"/>
@@ -629,7 +629,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="147"/>
       <source>Control</source>
-      <translation>Kontrol</translation>
+      <translation>Kendali</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="162"/>
@@ -669,7 +669,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="200"/>
       <source>Restart</source>
-      <translation>Mulai Ulang</translation>
+      <translation>Mulai ulang</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="205"/>
@@ -684,7 +684,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="215"/>
       <source>Chunks</source>
-      <translation>Potongan</translation>
+      <translation>Penggalan</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="220"/>
@@ -714,27 +714,27 @@
     <message>
       <location filename="../src/mainwindow.ui" line="294"/>
       <source>Friends&apos;s IP addresses</source>
-      <translation>Ubah teman&apos; alamat IP</translation>
+      <translation>Alamat IP teman</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="299"/>
       <source>Button mapping editor</source>
-      <translation>Pengubah pemetaan tombol</translation>
+      <translation>Sunting pemetaan tombol</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="304"/>
       <source>Touch mapping editor</source>
-      <translation>Pengubah pemetaan sentuh</translation>
+      <translation>Sunting pemetaan sentuh</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="309"/>
       <source>N-Gage card game</source>
-      <translation>Kartu permainan N-Gage</translation>
+      <translation>Kartu p'mainan N-Gage</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="314"/>
       <source>Check for update</source>
-      <translation>Memeriksa pembaruan</translation>
+      <translation>Periksa pembaruan</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="319"/>
@@ -744,12 +744,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="329"/>
       <source>Configure</source>
-      <translation>Mengkonfigurasi</translation>
+      <translation>Setel</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="340"/>
       <source>Stretch to fill window (ignore aspect ratio)</source>
-      <translation>Penuhi layar (abaikan rasio aspek)</translation>
+      <translation>Lebarkan selayar (abaikan rasio aspek)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="268"/>
@@ -764,7 +764,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="345"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
-      <translation>Beberapa pemetaan tombol dipautkan dengan tombol tetikus. Sehingga layar sentuh dinonaktifkan.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Layar sentuh dapat diaktifkan kembali dengan memetakan tombol tetikus dengan tombol papan ketik.</translation>
+      <translation>Beberapa pemetaan tombol dipautkan dengan tombol tetikus. Sehingga layar sentuh dinonaktifkan.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Layar sentuh bisa diaktifkan ulang dengan memetakan tombol tetikus dengan tombol papan ketik.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="346"/>
@@ -795,7 +795,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="707"/>
       <source>Installing N-Gage game...</source>
-      <translation>Menginstal game N-Gage...</translation>
+      <translation>Memasang permainan N-Gage...</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="730"/>
@@ -810,17 +810,17 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="736"/>
       <source>Can&apos;t find the game data folder!</source>
-      <translation>Tidak dapa&apos;t menemukan folder data permainan!</translation>
+      <translation>Folder data permainan tidak ditemukan!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="740"/>
       <source>There is more than one game in the given card game folder!</source>
-      <translation>Ada lebih dari satu permainan di folder card game yang diberikan!</translation>
+      <translation>Folder kartu permainan yang diberikan ada lebih dari satu permainan!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="744"/>
       <source>The game information file does not exist in the card game folder!</source>
-      <translation>File informasi permainan tidak ada di folder card game!</translation>
+      <translation>Berkas informasi permainan tidak ada di folder kartu permainan!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="748"/>
@@ -837,7 +837,7 @@
       <location filename="../src/mainwindow.cpp" line="759"/>
       <location filename="../src/mainwindow.cpp" line="1664"/>
       <source>Install failed</source>
-      <translation>Instalasi gagal</translation>
+      <translation>Pemasangan gagal</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="757"/>
@@ -892,7 +892,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="883"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
-      <translation>Dump kartu permainan terdapat berkas yang peka huruf besar kecil. Ini bisa bermasalah pada emulator.</translation>
+      <translation>Dump kartu permainan ada berkas yang peka huruf besar kecil. Ini akan bermasalah pada emulator.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="887"/>
@@ -902,7 +902,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="887"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
-      <translation>Jalur yang dipilih terlihat tidak tepat.&lt;br&gt;Ingin dibetulkan langsung oleh emulator?</translation>
+      <translation>Jalur yang dipilih terlihat tidak tepat.&lt;br&gt;Apakah ingin dibetulkan oleh emulator?</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="943"/>
@@ -972,7 +972,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1152"/>
       <source>Choose the file to install</source>
-      <translation>Pilih berkas untuk dipasang (install)</translation>
+      <translation>Pilih berkas untuk dipasang</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1152"/>
@@ -992,12 +992,12 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1482"/>
       <source>Continue to modify friends&apos; IP addresses</source>
-      <translation>Ubah teman&apos; alamat IP</translation>
+      <translation>Lanjut mengubah alamat IP teman</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1483"/>
       <source>This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</source>
-      <translation>Dialog ini akan menampilkan semua alamat IP yang tersimpan, yang berpotensi menampilkan alamat IP orang&apos; lain. informasi pribadi.&lt;br&gt;Apakah Anda ingin melanjutkan?</translation>
+      <translation>Dialog ini akan menampilkan semua alamat IP yang tersimpan, namun berpotensi menampilkan informasi pribadi orang lain. Apakah Anda ingin lanjut?</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1500"/>
@@ -1007,12 +1007,12 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1500"/>
       <source>The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</source>
-      <translation>Perangkat tidak memiliki layanan pengelola bluetooth! Bluetooth tidak didukung.</translation>
+      <translation>Perangkat yang diemulasi tidak ada layanan pengelola bluetooth! Bluetooth tidak didukung.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1617"/>
       <source>Choose the JAR file to install</source>
-      <translation>Pilih file JAR untuk diinstal</translation>
+      <translation>Pilih berkas JAR untuk dipasang</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1617"/>
@@ -1032,7 +1032,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1640"/>
       <source>Can not add the JAR to the apps database!</source>
-      <translation>Tidak dapat menambahkan JAR ke basis data aplikasi!</translation>
+      <translation>Tidak bisa menambah JAR ke pangkalan data aplikasi!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1644"/>
@@ -1042,17 +1042,17 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1648"/>
       <source>Can not find the JAR file!</source>
-      <translation>Tidak dapat menemukan file JAR!</translation>
+      <translation>Tidak bisa menemukan JAR!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1652"/>
       <source>The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</source>
-      <translation>JAR membutuhkan MIDP-2.0, tetapi emulator hanya mendukung JAR MIDP-1.0 yang berjalan di perangkat S60v1!</translation>
+      <translation>JAR perlu MIDP-2.0, tapi emulator hanya mendukung JAR MIDP-1.0 yang berjalan di perangkat S60v1!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1656"/>
       <source>The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</source>
-      <translation>JAR tidak dapat dipasang untuk perangkat saat ini! Hanya perangkat S60v1 yang dapat memasang JAR ini saat ini</translation>
+      <translation>JAR ini tidak bisa dipasang untuk perangkat saat ini! Hanya di perangkat S60v1 yang bisa untuk sekarang</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1660"/>
@@ -1163,7 +1163,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="200"/>
       <source>Fit the window</source>
-      <translation>Sesuaikan jendela</translation>
+      <translation>Sesuaikan layar</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="230"/>
@@ -1178,7 +1178,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="247"/>
       <source>Use shader for upscaling</source>
-      <translation>Gunakan shader untuk naik skala</translation>
+      <translation>Pakai shader untuk penaikan skala</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="263"/>
@@ -1188,7 +1188,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="279"/>
       <source>Hide system applications across all devices</source>
-      <translation>Sembunyikan aplikasi sistem di semua perangkat</translation>
+      <translation>S'bunyikan aplikasi sistem di semua perangkat</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="282"/>
@@ -1213,7 +1213,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="329"/>
       <source>This option will not be saved after emulator shutdown. Non-effective when GDBStub is enabled.</source>
-      <translation>Opsi ini tidak akan disimpan setelah emulator dimatikan. Tidak mangkus jika GDBStub diaktifkan.</translation>
+      <translation>Opsi ini tidak akan disimpan setelah emulator dimatikan. Tidak efektif jika GDBStub diaktifkan.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="332"/>
@@ -1233,7 +1233,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="359"/>
       <source>Enable kernel tracing that is used in driver. Slowdown expected on enable.</source>
-      <translation>Aktifkan pelacakan kernel yang digunakan di pengandar (driver). Akan lambat ketika diaktifkan.</translation>
+      <translation>Aktifkan perunutan kernel yang dipakai di pengandar (driver). Akan lambat ketika diaktifkan.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="362"/>
@@ -1253,7 +1253,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="408"/>
       <source>Show log console (Windows only)</source>
-      <translation>Tampilkan konsol log (Khusus Windows)</translation>
+      <translation>Tampilkan konsol log (khusus Windows)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="418"/>
@@ -1291,27 +1291,27 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="540"/>
       <source>Pick</source>
-      <translation>Memilih</translation>
+      <translation>Pilih</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="598"/>
       <source>Hide mouse cursor</source>
-      <translation>Samarkan kursor tetikus</translation>
+      <translation>S'bunyikan kursor tetikus</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="605"/>
       <source>Enable nearest neighbor filtering</source>
-      <translation>Hidupkan pemfilteran terdekat</translation>
+      <translation>Aktifkan saring Nearest Neighbor</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="612"/>
       <source>By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</source>
-      <translation>Secara bawaan, emulator hanya mengizinkan mengubah tampilan emulator ke ukuran minimum layar ponsel, dikalikan dengan skala tampilan sistem untuk menyesuaikan sebagian besar mata pengguna</translation>
+      <translation>Secara bawaan, tampilan emulator hanya boleh diubah ke ukuran minimum layar ponsel lalu dikalikan dengan skala tampilan sistem untuk menyesuaikan sebagian besar mata pengguna</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="615"/>
       <source>Allow resizing display to phone screen&apos;s true size in pixels</source>
-      <translation>Izinkan mengubah ukuran tampilan sesuai piksel layar ponsel asli</translation>
+      <translation>Izinkan ukuran tampilan diubah sesuai piksel layar ponsel asli</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="627"/>
@@ -1341,7 +1341,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="633"/>
       <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
-      <translation>Aktifkan ini akan membuat jendela menampilkan nama konstan &quot;EKA2L1&quot;, tanpa informasi tambahan.</translation>
+      <translation>Mengaktifkan ini akan membuat jendela terdapat nama konstan &quot;EKA2L1&quot;, tanpa info tambahan.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="470"/>
@@ -1351,27 +1351,27 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="491"/>
       <source>Image</source>
-      <translation type="unfinished">Image</translation>
+      <translation>Gambar</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="527"/>
       <source>Color</source>
-      <translation type="unfinished">Color</translation>
+      <translation>Warna</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="562"/>
       <source>Opacity</source>
-      <translation type="unfinished">Opacity</translation>
+      <translation>Kelegapan</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="585"/>
       <source>TextLabel</source>
-      <translation type="unfinished">TextLabel</translation>
+      <translation>TextLabel</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="639"/>
       <source>Disable window name with emulator version</source>
-      <translation type="unfinished">Disable window name with emulator version</translation>
+      <translation>Nonaktifkan versi emulator di nama jendela</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="646"/>
@@ -1392,8 +1392,8 @@
       <location filename="../src/settings_dialog.ui" line="726"/>
       <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
-      <translation>Ini membolehkan perangkat lunak yang diemulasi memiliki kemampuan merekam, dan mencegah kelap-kelip di beberapa permainan S60v1/S60v2 lama.
-Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</translation>
+      <translation>Ini mengizinkan perangkat lunak yang diemulasi mampu merekam, dan mencegah kelap-kelip di beberapa permainan S60v1/S60v2 lama.
+Opsi pilihan akan otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="730"/>
@@ -1439,7 +1439,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
       <location filename="../src/settings_dialog.ui" line="817"/>
       <location filename="../src/settings_dialog.ui" line="1291"/>
       <source>Rename</source>
-      <translation>Ganti nama</translation>
+      <translation>Ubah nama</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="828"/>
@@ -1454,7 +1454,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.ui" line="838"/>
       <source>Check for faults in current device and fix them so that EKA2L1 can emulate the device.</source>
-      <translation>Periksa kesalahan pada perangkat saat ini dan perbaiki sehingga EKA2L1 dapat menjalankan emulasi perangkat.</translation>
+      <translation>Periksa kesalahan pada perangkat dan perbaiki supaya EKA2L1 bisa mengemulasi perangkat.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="841"/>
@@ -1464,7 +1464,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.ui" line="859"/>
       <source>Properties</source>
-      <translation>Rincian sifat</translation>
+      <translation>Properti</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="867"/>
@@ -1587,7 +1587,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.ui" line="1240"/>
       <source>Control</source>
-      <translation>Kontrol</translation>
+      <translation>Kendali</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1255"/>
@@ -1607,7 +1607,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.ui" line="1322"/>
       <source>Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</source>
-      <translation>Catatan: Salah satu tombol ada yang dipautkan ke tombol tetikus, kebergunaan layar sentuh akan dinonaktifkan.</translation>
+      <translation>Catatan: Salah satu tombol ada yang dipaut ke tombol tetikus, kebergunaan layar sentuh akan dinonaktifkan.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1340"/>
@@ -1729,7 +1729,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="447"/>
       <source>This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</source>
-      <translation>Perubahan ini perlu peluncuran ulang pada emulator.&lt;br&gt;Anda ingin lanjut?</translation>
+      <translation>Perubahan ini memerlukan emulator diluncur ulang.&lt;br&gt;Apakah Anda ingin lanjut?</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="529"/>
@@ -1739,7 +1739,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="530"/>
       <source>Validation is in process. Please do not exit or launch applications until this operation is done.</source>
-      <translation>Pengabsahan sedang berlangsung. Mohon jangan keluar atau luncurkan aplikasi sampai ini selesai.</translation>
+      <translation>Pengabsahan sedang berlangsung. Mohon jangan keluar atau buka aplikasi sampai ini selesai.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="550"/>
@@ -1775,7 +1775,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="724"/>
       <source>Controller %1 : Button %2</source>
-      <translation>Alat kendali %1 : Tombol %2</translation>
+      <translation>Stik kendali %1 : Tombol %2</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="835"/>
@@ -1797,7 +1797,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="867"/>
       <source>Profile rename failed</source>
-      <translation>Gagal mengganti nama profil</translation>
+      <translation>Gagal mengubah nama profil</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="882"/>
@@ -1878,7 +1878,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="1120"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
-      <translation>Apakah Anda yakin? Tema Anda saat ini akan diatur ulang, semua kotak pesan yang telah dinonaktifkan akan diaktifkan ulang, dan semua mount tadi akan dikosongkan.</translation>
+      <translation>Apakah Anda yakin? Tema Anda akan diatur ulang, semua kotak pesan yang telah dinonaktifkan akan diaktifkan ulang, dan semua yang di-mount akan dikosongkan.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1137"/>
@@ -1898,7 +1898,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="1229"/>
       <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
-      <translation>Ketika aplikasi meminta memainkan MIDI baru, back-end yang dipilih akan digunakan!</translation>
+      <translation>Ketika aplikasi minta memainkan MIDI baru, back-end yang dipilih akan digunakan!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1242"/>
@@ -1918,12 +1918,12 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/settings_dialog.cpp" line="1301"/>
       <source>This change will be effective after resetting the emulator through Emulation menu, or on the next launch of the emulator.</source>
-      <translation>Perubahan ini akan efektif setelah mengatur ulang emulator melalui menu Emulasi, atau pada peluncuran emulator berikutnya.</translation>
+      <translation>Perubahan ini akan efektif setelah mengatur ulang emulator melalui Menu emulasi, atau pada peluncuran emulator berikutnya.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1383"/>
       <source>Choose the background image</source>
-      <translation type="unfinished">Choose the background image</translation>
+      <translation>Pilih gambar latar belakang</translation>
     </message>
   </context>
   <context>
@@ -1931,7 +1931,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.ui" line="14"/>
       <source>New update available</source>
-      <translation>Pembaruan baru tersedia</translation>
+      <translation>Tersedia pembaruan baru</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="43"/>
@@ -1941,7 +1941,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.ui" line="61"/>
       <source>Changelog</source>
-      <translation>Catatan perubahan</translation>
+      <translation>Log perubahan</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="84"/>
@@ -1951,7 +1951,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.ui" line="91"/>
       <source>Do not automatically check for update when startup</source>
-      <translation>Jangan otomatis memeriksa pembaruan saat startup</translation>
+      <translation>Jangan otomatis periksa pembaruan saat awal buka</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="126"/>
@@ -1986,7 +1986,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.cpp" line="152"/>
       <source>The release channel is not available. Please check your internet connection!</source>
-      <translation>Saluran rilis tidak tersedia. Silakan periksa koneksi internet Anda!</translation>
+      <translation>Saluran rilis tidak tersedia. Mohon periksa sambungan internet Anda!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="158"/>
@@ -2016,12 +2016,12 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.cpp" line="259"/>
       <source>Updater unsupported</source>
-      <translation>Pembaruan tidak didukung</translation>
+      <translation>Pemerbaru tidak didukung</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="259"/>
       <source>The updater is not yet supported on your platform!</source>
-      <translation>Pembaruan belum didukung di platform Anda!</translation>
+      <translation>Pemerbaru belum didukung di pelantar Anda!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="303"/>
@@ -2032,7 +2032,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.cpp" line="303"/>
       <source>Can&apos;t not open temporary file for storing the update files!</source>
-      <translation>Tidak dapa&apos;t membuka file sementara untuk menyimpan file pembaruan!</translation>
+      <translation>Berkas sementara untuk menyimpan berkas pembaruan tidak ditemukan!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="387"/>
@@ -2047,18 +2047,18 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_dialog.cpp" line="424"/>
       <source>Failed to update the updater program!</source>
-      <translation>Gagal memperbarui program pembaru!</translation>
+      <translation>Gagal memperbarui program pemerbaru!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="432"/>
       <source>Update zip file is corrupted!</source>
-      <translation>Berkas Perbarui file zip rusak!</translation>
+      <translation>Berkas zip pembaruan rusak!</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.cpp" line="439"/>
       <location filename="../src/update_dialog.cpp" line="454"/>
       <source>Can&apos;t find the updater program in the update archive file!</source>
-      <translation>Tidak dapa&apos;t menemukan program pembaru di berkas arsip pemutakhiran!</translation>
+      <translation>Program pemerbaru di berkas arsip pembaruan tidak ditemukan!</translation>
     </message>
   </context>
   <context>
@@ -2066,7 +2066,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/update_notice_dialog.ui" line="14"/>
       <source>Update news</source>
-      <translation>Berita pembaruran</translation>
+      <translation>Berita pembaruan</translation>
     </message>
   </context>
   <context>
@@ -2074,7 +2074,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/updater.ui" line="14"/>
       <source>EKA2L1 Updater</source>
-      <translation>Pembaruan EKA2L1</translation>
+      <translation>Pemerbaru EKA2L1</translation>
     </message>
     <message>
       <location filename="../src/updater.ui" line="59"/>
@@ -2094,7 +2094,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/updater.cpp" line="101"/>
       <source>Downloaded update is not a zip file!</source>
-      <translation>Pembaruan yang diunduh tidak dalam format zip!</translation>
+      <translation>Pembaruan yang diunduh bukan format zip!</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="124"/>
@@ -2105,12 +2105,12 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/updater.cpp" line="180"/>
       <source>Extracted: %1</source>
-      <translation>Mengekstrak: %1</translation>
+      <translation>Terekstrak: %1</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="199"/>
       <source>Update&apos;s archive file does not exist!</source>
-      <translation>Fil&apos;e arsip pembaruan tidak ada!</translation>
+      <translation>Berkas arsip pembaruan tidak ada!</translation>
     </message>
     <message>
       <location filename="../src/updater.cpp" line="214"/>
@@ -2120,7 +2120,7 @@ Opsi pilihan akan secara otomatis mengaktifkan ini pada perangkat S60v1/S60v2.</
     <message>
       <location filename="../src/updater.cpp" line="214"/>
       <source>Update success. Relaunch the emulator?</source>
-      <translation>Pembaruan sukses. Luncurkan ulang emulator?</translation>
+      <translation>Pembaruan berhasil. Luncurkan ulang emulator?</translation>
     </message>
   </context>
 </TS>

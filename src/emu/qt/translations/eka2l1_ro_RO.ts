@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/utils.cpp" line="126"/>
       <source>EKA2L1 - Symbian OS emulator</source>
-      <translation type="unfinished">EKA2L1 - Symbian OS emulator</translation>
+      <translation>EKA2L1 - emulator Symbian OS</translation>
     </message>
   </context>
   <context>
@@ -14,12 +14,12 @@
     <message>
       <location filename="../src/symbian_input_dialog.ui" line="14"/>
       <source>Enter the text</source>
-      <translation type="unfinished">Enter the text</translation>
+      <translation>Introduceți textul</translation>
     </message>
     <message>
       <location filename="../src/symbian_input_dialog.ui" line="31"/>
       <source>Submit</source>
-      <translation type="unfinished">Submit</translation>
+      <translation>Trimiteți</translation>
     </message>
   </context>
   <context>
@@ -27,7 +27,7 @@
     <message>
       <location filename="../src/aboutdialog.ui" line="14"/>
       <source>About EKA2L1</source>
-      <translation type="unfinished">About EKA2L1</translation>
+      <translation>Despre EKA2L1</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.ui" line="69"/>
@@ -42,17 +42,17 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="53"/>
       <source>&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;(C) 2018- echipa EKA2L1 &lt;/b&gt;&lt;br&gt;&lt;b&gt;Vă mulțumim pentru utilizarea emulatorului!&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="64"/>
       <source>&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Dezvoltatori principali:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="78"/>
       <source>&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Colaboratori:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="92"/>
@@ -67,7 +67,7 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="120"/>
       <source>&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Traducători:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
   </context>
   <context>
@@ -75,7 +75,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="95"/>
       <source>Device</source>
-      <translation type="unfinished">Device</translation>
+      <translation>Dispozitiv</translation>
     </message>
   </context>
   <context>
@@ -96,7 +96,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="796"/>
       <source>Enter a new name</source>
-      <translation type="unfinished">Enter a new name</translation>
+      <translation>Introduceți un nume nou</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
@@ -144,32 +144,32 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="55"/>
       <source>Off</source>
-      <translation type="unfinished">Off</translation>
+      <translation>Oprit</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="60"/>
       <source>Direct IP</source>
-      <translation type="unfinished">Direct IP</translation>
+      <translation>IP direct</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="65"/>
       <source>LAN</source>
-      <translation type="unfinished">LAN</translation>
+      <translation>LAN</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="115"/>
       <source>Server address</source>
-      <translation type="unfinished">Server address</translation>
+      <translation>Adresă server</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="134"/>
       <source>Enable UPnP (for IPv4 public play)</source>
-      <translation type="unfinished">Enable UPnP (for IPv4 public play)</translation>
+      <translation>Activează UPnP (pentru play-ul public IPv4)</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="166"/>
       <source>Save</source>
-      <translation type="unfinished">Save</translation>
+      <translation>Salvare</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="188"/>
@@ -184,7 +184,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="228"/>
       <source>Password</source>
-      <translation type="unfinished">Password</translation>
+      <translation>Parolă</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="238"/>
@@ -194,7 +194,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="245"/>
       <source>Clear</source>
-      <translation type="unfinished">Clear</translation>
+      <translation>Elimină</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
@@ -227,27 +227,27 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="85"/>
       <source>IP address (IPv4 or IPv6)</source>
-      <translation type="unfinished">IP address (IPv4 or IPv6)</translation>
+      <translation>Adresa IP (IPv4 sau IPv6)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="90"/>
       <source>Port (can be empty)</source>
-      <translation type="unfinished">Port (can be empty)</translation>
+      <translation>Port (poate fi gol)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="133"/>
       <source>Add more</source>
-      <translation type="unfinished">Add more</translation>
+      <translation>Adăugați mai multe</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="134"/>
       <source>Remove</source>
-      <translation type="unfinished">Remove</translation>
+      <translation>Eliminare</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="135"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>Actualizare</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="201"/>
@@ -303,7 +303,7 @@
       <location filename="../src/device_install_dialog.ui" line="174"/>
       <location filename="../src/device_install_dialog.ui" line="207"/>
       <source>Browse</source>
-      <translation type="unfinished">Browse</translation>
+      <translation>Navigare</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="80"/>
@@ -318,7 +318,7 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="99"/>
       <source>Firmware (VPL)</source>
-      <translation type="unfinished">Firmware (VPL)</translation>
+      <translation>Firmware (VPL)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="125"/>
@@ -338,7 +338,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="199"/>
       <source>Installation completed</source>
-      <translation type="unfinished">Installation completed</translation>
+      <translation>Instalare completă</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="200"/>
@@ -348,7 +348,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="208"/>
       <source>The device has already been installed!</source>
-      <translation type="unfinished">The device has already been installed!</translation>
+      <translation>Acest dispozitiv a fost deja instalat!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="212"/>
@@ -403,12 +403,12 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="256"/>
       <source>Installation failed</source>
-      <translation type="unfinished">Installation failed</translation>
+      <translation>Instalare eșuată</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="265"/>
       <source>Choose VPL file</source>
-      <translation type="unfinished">Choose VPL file</translation>
+      <translation>Alegeți fișierul VPL</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="266"/>
@@ -418,7 +418,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="275"/>
       <source>Choose the ROM</source>
-      <translation type="unfinished">Choose the ROM</translation>
+      <translation>Alegeți ROM-ul</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="276"/>
@@ -451,7 +451,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="40"/>
       <source>Joystick</source>
-      <translation type="unfinished">Joystick</translation>
+      <translation>Joystick</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="45"/>
@@ -482,7 +482,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="153"/>
       <source>Remove</source>
-      <translation type="unfinished">Remove</translation>
+      <translation>Eliminare</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="181"/>
@@ -502,7 +502,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="50"/>
       <source>Please wait for a game to be active!</source>
-      <translation type="unfinished">Please wait for a game to be active!</translation>
+      <translation>Vă rugăm așteptați ca un joc să fie activ!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="89"/>
@@ -527,7 +527,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="285"/>
       <source>Show editor</source>
-      <translation type="unfinished">Show editor</translation>
+      <translation>Afișare editor</translation>
     </message>
   </context>
   <context>
@@ -545,12 +545,12 @@
     <message>
       <location filename="../src/launch_process_dialog.ui" line="51"/>
       <source>Executable path</source>
-      <translation type="unfinished">Executable path</translation>
+      <translation>Cale executabil</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="78"/>
       <source>Launch</source>
-      <translation type="unfinished">Launch</translation>
+      <translation>Lansați</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="85"/>
@@ -561,7 +561,7 @@
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
       <location filename="../src/launch_process_dialog.cpp" line="33"/>
       <source>Launch failed</source>
-      <translation type="unfinished">Launch failed</translation>
+      <translation>Lansare eșuată</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
@@ -604,7 +604,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="104"/>
       <source>Rotate screen</source>
-      <translation type="unfinished">Rotate screen</translation>
+      <translation>Rotiți ecranul</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="117"/>
@@ -614,12 +614,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="124"/>
       <source>Emulation</source>
-      <translation type="unfinished">Emulation</translation>
+      <translation>Emulare</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="134"/>
       <source>Bluetooth</source>
-      <translation type="unfinished">Bluetooth</translation>
+      <translation>Bluetooth</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="138"/>
@@ -634,7 +634,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="162"/>
       <source>About</source>
-      <translation type="unfinished">About</translation>
+      <translation>Despre</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="167"/>
@@ -644,12 +644,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="172"/>
       <source>Device</source>
-      <translation type="unfinished">Device</translation>
+      <translation>Dispozitiv</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="177"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>Manager de pachete</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="182"/>
@@ -694,7 +694,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="228"/>
       <source>Fullscreen</source>
-      <translation type="unfinished">Fullscreen</translation>
+      <translation>Ecran complet</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="239"/>
@@ -704,7 +704,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="279"/>
       <source>Folder</source>
-      <translation type="unfinished">Folder</translation>
+      <translation>Dosar</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="289"/>
@@ -759,7 +759,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="345"/>
       <source>Touchscreen disabled</source>
-      <translation type="unfinished">Touchscreen disabled</translation>
+      <translation>Touchscreen dezactivat</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="345"/>
@@ -837,7 +837,7 @@
       <location filename="../src/mainwindow.cpp" line="759"/>
       <location filename="../src/mainwindow.cpp" line="1664"/>
       <source>Install failed</source>
-      <translation type="unfinished">Install failed</translation>
+      <translation>Instalare eșuată</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="757"/>
@@ -872,7 +872,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="858"/>
       <source>The ZIP file is corrupted!</source>
-      <translation type="unfinished">The ZIP file is corrupted!</translation>
+      <translation>Fișierul ZIP este corupt!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="863"/>
@@ -917,7 +917,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1034"/>
       <source>Launch failed</source>
-      <translation type="unfinished">Launch failed</translation>
+      <translation>Lansare eșuată</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1034"/>
@@ -952,7 +952,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1120"/>
       <source>Installation failed</source>
-      <translation type="unfinished">Installation failed</translation>
+      <translation>Instalare eșuată</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1120"/>
@@ -1065,7 +1065,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="17"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>Manager de pachete</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
@@ -1138,7 +1138,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="36"/>
       <source>General</source>
-      <translation>Generale</translation>
+      <translation>General</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="48"/>
@@ -1193,7 +1193,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="282"/>
       <source>Hide system applications</source>
-      <translation type="unfinished">Hide system applications</translation>
+      <translation>Ascunde aplicațiile de sistem</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="301"/>
@@ -1271,7 +1271,7 @@
       <location filename="../src/settings_dialog.ui" line="1096"/>
       <location filename="../src/settings_dialog.ui" line="1137"/>
       <source>Browse</source>
-      <translation type="unfinished">Browse</translation>
+      <translation>Navigare</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="445"/>
@@ -1346,7 +1346,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="470"/>
       <source>Background</source>
-      <translation type="unfinished">Background</translation>
+      <translation>Fundal</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="491"/>
@@ -1712,7 +1712,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="307"/>
       <source>Default</source>
-      <translation type="unfinished">Default</translation>
+      <translation>Prestabilit</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="445"/>
@@ -1956,7 +1956,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/update_dialog.ui" line="126"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>Actualizare</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="139"/>
