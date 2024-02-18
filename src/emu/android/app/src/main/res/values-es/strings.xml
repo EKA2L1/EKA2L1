@@ -41,6 +41,7 @@
     <string name="choose_installation_type_instruction">Utilice un pack de datos existentes para instalarse rápidamente, o inicie de nuevo instalando un nuevo dispositivo usando su ROM/Firmware.</string>
     <string name="preconfigured_pack">Paquete preconfigurado</string>
     <string name="rom_or_firmware">ROM/Firmware</string>
+    <string name="save_launch_file_success">Launch file saved as %s!</string>
     <string name="install">Instalar</string>
     <string name="rescan_devices">Reescanear dispositivos</string>
     <string name="device_dump">Volcado del dispositivo</string>
@@ -79,6 +80,7 @@
     <string name="pref_wakelock">Mantener pantalla por encima</string>
     <string name="pref_enable_vibration">Habilitar vibración</string>
     <string name="pref_emulator_dir">Directorio de trabajo</string>
+    <string name="pref_launch_file_dir">Launch file directory</string>
     <string name="pref_emulator_dir_cant_change">¡El directorio de trabajo no puede ser cambiado!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Habilitar filtro nearest neighbor</string>
     <string name="pref_system_language_option_name">Idioma</string>
@@ -107,6 +109,7 @@
     <string name="action_context_delete">Eliminar</string>
     <string name="action_context_rename">Renombrar</string>
     <string name="action_context_shortcut">Crear acceso directo</string>
+    <string name="action_context_launch_file">Create launch file</string>
     <string name="start">Iniciar</string>
     <string name="reset_settings">Restablecer ajustes</string>
     <string name="reset_layout">Restablecer disposición del teclado</string>
