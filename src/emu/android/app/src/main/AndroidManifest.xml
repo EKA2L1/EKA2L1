@@ -42,13 +42,19 @@
             android:name=".filepicker.FilteredFilePickerActivity"
             android:theme="@style/FilePickerTheme" />
         <activity
-            android:name=".qrscan.QrScanActivity" />
-        <activity
             android:name=".emu.EmulatorActivity"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
             android:exported="true"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
 
+                <data android:scheme="file" />
+                <data android:scheme="content" />
+                <data android:mimeType="application/json" />
+                <data android:pathPattern=".*.json" />
+            </intent-filter>
+        </activity>
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

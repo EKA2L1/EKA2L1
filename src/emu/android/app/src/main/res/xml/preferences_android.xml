@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
     <ListPreference
         android:defaultValue="light"
@@ -26,5 +27,9 @@
     <Preference
         android:key="emulator-dir"
         android:title="@string/pref_emulator_dir"
+        tools:summary="/sdcard/EKA2L1" />
+    <Preference
+        android:key="launch-file-dir"
+        android:title="@string/pref_launch_file_dir"
         tools:summary="/sdcard/EKA2L1" />
 </PreferenceScreen>

@@ -58,6 +58,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.github.eka2l1.R;
+import com.github.eka2l1.applist.AppLaunchInfo;
 import com.github.eka2l1.config.ConfigActivity;
 import com.github.eka2l1.config.ProfileModel;
 import com.github.eka2l1.config.ProfilesManager;
@@ -67,13 +68,18 @@ import com.github.eka2l1.emu.overlay.VirtualKeyboard;
 import com.github.eka2l1.settings.AppDataStore;
 import com.github.eka2l1.settings.KeyMapper;
 import com.github.eka2l1.util.LogUtils;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
@@ -85,6 +91,7 @@ public class EmulatorActivity extends AppCompatActivity {
     private static final int ORIENTATION_AUTO = 1;
     private static final int ORIENTATION_PORTRAIT = 2;
     private static final int ORIENTATION_LANDSCAPE = 3;
+    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     private final ActivityResultLauncher<String[]> permissionsLauncher = registerForActivityResult(
             new ActivityResultContracts.RequestMultiplePermissions(),
@@ -109,7 +116,11 @@ public class EmulatorActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         Intent intent = getIntent();
-        boolean externalIntent = intent.getBooleanExtra(KEY_APP_IS_SHORTCUT, false) || ACTION_LAUNCH_GAME.equals(intent.getAction());
+        boolean externalIntent = intent.getBooleanExtra(KEY_APP_IS_SHORTCUT, false) || ACTION_LAUNCH_GAME.equals(intent.getAction())
+                || intent.getData() != null;
+
+        boolean launchFromFile = intent.getData() != null;
+
         if (externalIntent) {
             Emulator.initializeForShortcutLaunch(this);
         }
@@ -120,14 +131,49 @@ public class EmulatorActivity extends AppCompatActivity {
         setContentView(R.layout.activity_emulator);
         overlayView = findViewById(R.id.overlay);
 
-        uid = intent.getLongExtra(KEY_APP_UID, -1);
+        String name;
+        String deviceCode;
+
+        if (intent.getData() != null) {
+            InputStream inputStream = null;
+
+            try {
+                inputStream = getContentResolver().openInputStream(intent.getData());
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+
+            AppLaunchInfo launchInfo = gson.fromJson(new InputStreamReader(inputStream), AppLaunchInfo.class);
+
+            uid = launchInfo.appUid;
+            name = launchInfo.appName;
+            deviceCode = launchInfo.deviceCode;
+
+            if (name == null || uid == 0) {
+                throw new RuntimeException("Invalid launch info");
+            }
+        } else {
+            uid = intent.getLongExtra(KEY_APP_UID, -1);
+            name = intent.getStringExtra(KEY_APP_NAME);
+            deviceCode = intent.getStringExtra(KEY_DEVICE_CODE);
+        }
+
         String uidStr = Long.toHexString(uid).toUpperCase();
         File configDir = new File(Emulator.getConfigsDir(), uidStr);
         String defProfile = dataStore.getString(PREF_DEFAULT_PROFILE, null);
 
         if (externalIntent && (params = ProfilesManager.loadConfig(configDir)) == null) {
             Intent configIntent = new Intent(this, ConfigActivity.class);
-            Bundle extras = Objects.requireNonNull(intent.getExtras());
+            Bundle extras;
+            if (launchFromFile) {
+                extras = new Bundle();
+
+                extras.putLong(KEY_APP_UID, uid);
+                extras.putString(KEY_APP_NAME, name);
+                extras.putString(KEY_DEVICE_CODE, deviceCode);
+            } else {
+                extras = Objects.requireNonNull(intent.getExtras());
+            }
             extras.putString(KEY_ACTION, ACTION_EDIT);
             configIntent.putExtras(extras);
             startActivity(configIntent);
@@ -161,9 +207,6 @@ public class EmulatorActivity extends AppCompatActivity {
 
         Emulator.setContext(this);
         EmulatorCamera.setActivity(this);
-
-        String name = intent.getStringExtra(KEY_APP_NAME);
-        String deviceCode = intent.getStringExtra(KEY_DEVICE_CODE);
 
         if (deviceCode != null) {
             String []availableDevices = Emulator.getDeviceFirmwareCodes();

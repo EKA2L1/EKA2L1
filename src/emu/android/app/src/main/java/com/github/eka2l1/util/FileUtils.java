@@ -229,4 +229,12 @@ public class FileUtils {
             return new SAFDirResultContract();
         }
     }
+
+    public static ActivityResultContract<Void,String> getDirPicker(boolean returnsRawPath) {
+        if (isExternalStorageLegacy()) {
+            return new PickDirResultContract();
+        } else {
+            return new SAFDirResultContract(returnsRawPath);
+        }
+    }
 }

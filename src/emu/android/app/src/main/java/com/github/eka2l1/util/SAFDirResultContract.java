@@ -30,6 +30,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public class SAFDirResultContract extends ActivityResultContract<Void, String> {
+    private boolean returnsRawPath = false;
+
+    public SAFDirResultContract() {
+        super();
+    }
+
+    public SAFDirResultContract(boolean returnsRawPath) {
+        super();
+        this.returnsRawPath = returnsRawPath;
+    }
+
     @NonNull
     @Override
     public Intent createIntent(@NonNull Context context, Void input) {
@@ -44,7 +55,10 @@ public class SAFDirResultContract extends ActivityResultContract<Void, String> {
         if (resultCode == Activity.RESULT_OK && intent != null) {
             // Transform the URI into something that work with ContentResolver
             Uri uriOriginal = intent.getData();
-            uriOriginal = DocumentsContract.buildDocumentUriUsingTree(uriOriginal, DocumentsContract.getTreeDocumentId(uriOriginal));
+
+            if (!returnsRawPath) {
+                uriOriginal = DocumentsContract.buildDocumentUriUsingTree(uriOriginal, DocumentsContract.getTreeDocumentId(uriOriginal));
+            }
 
             return uriOriginal.toString();
         }

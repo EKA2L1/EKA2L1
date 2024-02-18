@@ -21,13 +21,17 @@ package com.github.eka2l1.settings;
 
 import static com.github.eka2l1.emu.Constants.KEY_RESTART;
 import static com.github.eka2l1.emu.Constants.PREF_EMULATOR_DIR;
+import static com.github.eka2l1.emu.Constants.PREF_LAUNCH_FILE_DIR;
 import static com.github.eka2l1.emu.Constants.PREF_THEME;
 import static com.github.eka2l1.emu.Constants.PREF_VIBRATION;
 
+import android.content.ContentResolver;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
+import android.content.Intent;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
@@ -47,10 +51,15 @@ import com.github.eka2l1.util.FileUtils;
 public class AndroidSettingsFragment extends PreferenceFragmentCompat {
     private AppDataStore dataStore;
     private Preference emulatorDirPreference;
+    private Preference launchFileDirPreference;
 
     private final ActivityResultLauncher pickEmulatorDirectory = registerForActivityResult(
             FileUtils.getDirPicker(),
             this::onEmulatorDirPickResult);
+
+    private final ActivityResultLauncher pickLaunchFileDirectory = registerForActivityResult(
+            FileUtils.getDirPicker(true),
+            this::onLaunchFileDirPickResult);
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
@@ -78,6 +87,16 @@ public class AndroidSettingsFragment extends PreferenceFragmentCompat {
                 Toast.makeText(getActivity(), R.string.pref_emulator_dir_cant_change, Toast.LENGTH_SHORT).show();
             }
 
+            return true;
+        });
+
+        String previousLaunchFileDir = dataStore.getString(PREF_EMULATOR_DIR, null);
+
+        launchFileDirPreference = findPreference(PREF_LAUNCH_FILE_DIR);
+        launchFileDirPreference.setSummary(previousLaunchFileDir);
+
+        launchFileDirPreference.setOnPreferenceClickListener(preference -> {
+            pickLaunchFileDirectory.launch(null);
             return true;
         });
     }
@@ -111,5 +130,29 @@ public class AndroidSettingsFragment extends PreferenceFragmentCompat {
         emulatorDirPreference.setSummary(newPath);
 
         getParentFragmentManager().setFragmentResult(KEY_RESTART, new Bundle());
+    }
+
+    private void onLaunchFileDirPickResult(String newPath) {
+        String previousPathDir = dataStore.getString(PREF_LAUNCH_FILE_DIR, null);
+        ContentResolver contentResolver = requireContext().getContentResolver();
+
+        if (previousPathDir != null) {
+            if (previousPathDir.equals(newPath)) {
+                return;
+            }
+
+            Uri oldPathUri = Uri.parse(previousPathDir);
+
+            contentResolver.releasePersistableUriPermission(oldPathUri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        }
+
+        Uri newPathUri = Uri.parse(newPath);
+
+        contentResolver.takePersistableUriPermission(newPathUri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+        dataStore.putString(PREF_LAUNCH_FILE_DIR, newPath);
+        launchFileDirPreference.setSummary(newPath);
     }
 }
