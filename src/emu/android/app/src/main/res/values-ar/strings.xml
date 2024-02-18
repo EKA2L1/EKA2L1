@@ -41,6 +41,7 @@
     <string name="choose_installation_type_instruction">استخدم حزمة بيانات موجودة للاستيطان بسرعة، أو البدء من جديد بتثبيت جهاز جديد باستخدام ذاكرة القراءة فقط/والبرمجيات الثابتة الخاصة به.</string>
     <string name="preconfigured_pack">حزمة معدة مسبقاً</string>
     <string name="rom_or_firmware">الروم/البرنامج الثابت</string>
+    <string name="save_launch_file_success">Launch file saved as %s!</string>
     <string name="install">تثبيت</string>
     <string name="rescan_devices">إعادة فحص الأجهزة</string>
     <string name="device_dump">Dump الجهاز</string>
@@ -79,6 +80,7 @@
     <string name="pref_wakelock">إبقاء الشاشة فعالة</string>
     <string name="pref_enable_vibration">تمكين الإهتزاز</string>
     <string name="pref_emulator_dir">مسار العمل</string>
+    <string name="pref_launch_file_dir">Launch file directory</string>
     <string name="pref_emulator_dir_cant_change">لا يمكن تغيير مجلد العمل!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">تفعيل تصفية أقرب جار</string>
     <string name="pref_system_language_option_name">اللغة</string>
@@ -107,6 +109,7 @@
     <string name="action_context_delete">حذف</string>
     <string name="action_context_rename">إعادة التسمية</string>
     <string name="action_context_shortcut">إنشاء إختصار</string>
+    <string name="action_context_launch_file">Create launch file</string>
     <string name="start">إبدأ</string>
     <string name="reset_settings">إعادة ضبط الإعدادات</string>
     <string name="reset_layout">إعادة تعيين ترتيب لوحة المفاتيح</string>
