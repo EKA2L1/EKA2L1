@@ -41,6 +41,7 @@
     <string name="choose_installation_type_instruction">Use an existing data pack to quickly settle in, or start afresh by installing a new device using its ROM/firmware.</string>
     <string name="preconfigured_pack">Paket prasetel</string>
     <string name="rom_or_firmware">ROM/Firmware</string>
+    <string name="save_launch_file_success">Launch file saved as %s!</string>
     <string name="install">Pasang</string>
     <string name="rescan_devices">Pindai ulang perangkat</string>
     <string name="device_dump">Dump perangkat</string>
@@ -79,6 +80,7 @@
     <string name="pref_wakelock">Layar tetap menyala</string>
     <string name="pref_enable_vibration">Aktifkan getaran</string>
     <string name="pref_emulator_dir">Direktori yang dipakai</string>
+    <string name="pref_launch_file_dir">Launch file directory</string>
     <string name="pref_emulator_dir_cant_change">Direktori yang dipakai tak bisa diubah!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Aktifkan saring Nearest Neighbor</string>
     <string name="pref_system_language_option_name">Bahasa</string>
@@ -107,6 +109,7 @@
     <string name="action_context_delete">Hapus</string>
     <string name="action_context_rename">Ubah nama</string>
     <string name="action_context_shortcut">Buat pintasan</string>
+    <string name="action_context_launch_file">Create launch file</string>
     <string name="start">Mulai</string>
     <string name="reset_settings">Atur ulang pengaturan</string>
     <string name="reset_layout">Atur ulang letak tombol</string>
