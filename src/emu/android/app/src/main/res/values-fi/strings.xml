@@ -41,6 +41,7 @@
     <string name="choose_installation_type_instruction">Use an existing data pack to quickly settle in, or start afresh by installing a new device using its ROM/firmware.</string>
     <string name="preconfigured_pack">Preconfigured pack</string>
     <string name="rom_or_firmware">ROM/laiteohjelmisto</string>
+    <string name="save_launch_file_success">Launch file saved as %s!</string>
     <string name="install">Asenna</string>
     <string name="rescan_devices">Skannaa laitteet uudelleen</string>
     <string name="device_dump">Device dump</string>
@@ -79,6 +80,7 @@
     <string name="pref_wakelock">Pidä näyttö päällä</string>
     <string name="pref_enable_vibration">Ota värinä käyttöön</string>
     <string name="pref_emulator_dir">Työhakemisto</string>
+    <string name="pref_launch_file_dir">Launch file directory</string>
     <string name="pref_emulator_dir_cant_change">Työhakemistoa ei voida muuttaa!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Ota käyttöön lähimmän naapurin suodatus</string>
     <string name="pref_system_language_option_name">Kieli</string>
@@ -107,6 +109,7 @@
     <string name="action_context_delete">Poista</string>
     <string name="action_context_rename">Nimeä uudelleen</string>
     <string name="action_context_shortcut">Luo pikakuvake</string>
+    <string name="action_context_launch_file">Create launch file</string>
     <string name="start">Käynnistä</string>
     <string name="reset_settings">Nollaa asetukset</string>
     <string name="reset_layout">Reset keylayout</string>
