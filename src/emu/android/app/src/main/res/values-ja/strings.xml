@@ -41,6 +41,7 @@
     <string name="choose_installation_type_instruction">Use an existing data pack to quickly settle in, or start afresh by installing a new device using its ROM/firmware.</string>
     <string name="preconfigured_pack">Preconfigured pack</string>
     <string name="rom_or_firmware">ROM/Firmware</string>
+    <string name="save_launch_file_success">Launch file saved as %s!</string>
     <string name="install">インストール</string>
     <string name="rescan_devices">Rescan devices</string>
     <string name="device_dump">デバイスダンプ</string>
@@ -79,6 +80,7 @@
     <string name="pref_wakelock">Keep screen on</string>
     <string name="pref_enable_vibration">Enable vibration</string>
     <string name="pref_emulator_dir">Working directory</string>
+    <string name="pref_launch_file_dir">Launch file directory</string>
     <string name="pref_emulator_dir_cant_change">The working directory can\'t be changed!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Enable nearest neighbor filtering</string>
     <string name="pref_system_language_option_name">Language</string>
@@ -107,6 +109,7 @@
     <string name="action_context_delete">Delete</string>
     <string name="action_context_rename">リネーム</string>
     <string name="action_context_shortcut">Create shortcut</string>
+    <string name="action_context_launch_file">Create launch file</string>
     <string name="start">Start</string>
     <string name="reset_settings">Reset settings</string>
     <string name="reset_layout">Reset keylayout</string>
