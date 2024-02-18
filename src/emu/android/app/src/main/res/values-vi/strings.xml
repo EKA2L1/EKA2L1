@@ -41,6 +41,7 @@
     <string name="choose_installation_type_instruction">Dùng gói dữ liệu có sẵn để nhanh chóng sử dụng giả lập, hoặc bắt đầu bằng việc cài đặt thiết bị sử dụng ROM/sụn (firmware).</string>
     <string name="preconfigured_pack">Gói dữ liệu tinh chỉnh sẵn</string>
     <string name="rom_or_firmware">ROM/sụn</string>
+    <string name="save_launch_file_success">Launch file saved as %s!</string>
     <string name="install">Cài đặt</string>
     <string name="rescan_devices">Quét lại các thiết bị</string>
     <string name="device_dump">Dump của thiết bị</string>
@@ -79,6 +80,7 @@
     <string name="pref_wakelock">Giữ màn hình bật</string>
     <string name="pref_enable_vibration">Bật rung</string>
     <string name="pref_emulator_dir">Thư mục làm việc</string>
+    <string name="pref_launch_file_dir">Launch file directory</string>
     <string name="pref_emulator_dir_cant_change">Thư mục đang làm việc không thể thay đổi!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Bật màng lọc hàng xóm gần nhất</string>
     <string name="pref_system_language_option_name">Ngôn ngữ</string>
@@ -107,6 +109,7 @@
     <string name="action_context_delete">Xóa</string>
     <string name="action_context_rename">Đổi tên</string>
     <string name="action_context_shortcut">Tạo đường dẫn</string>
+    <string name="action_context_launch_file">Create launch file</string>
     <string name="start">Bắt đầu</string>
     <string name="reset_settings">Đặt lại thiết đặt</string>
     <string name="reset_layout">Đặt lại bố cục phím</string>
