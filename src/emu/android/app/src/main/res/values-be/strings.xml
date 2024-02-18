@@ -41,6 +41,7 @@
     <string name="choose_installation_type_instruction">Use an existing data pack to quickly settle in, or start afresh by installing a new device using its ROM/firmware.</string>
     <string name="preconfigured_pack">Preconfigured pack</string>
     <string name="rom_or_firmware">ROM/Firmware</string>
+    <string name="save_launch_file_success">Launch file saved as %s!</string>
     <string name="install">Усталяваць</string>
     <string name="rescan_devices">Перасканаваць прылады</string>
     <string name="device_dump">Дамп прылады</string>
@@ -79,6 +80,7 @@
     <string name="pref_wakelock">Не выключаць экран</string>
     <string name="pref_enable_vibration">Уключыць вібрацыю</string>
     <string name="pref_emulator_dir">Працоўны каталог</string>
+    <string name="pref_launch_file_dir">Launch file directory</string>
     <string name="pref_emulator_dir_cant_change">The working directory can\'t be changed!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Уключыць фільтрацыю шляхам найбліжэйшага суседа</string>
     <string name="pref_system_language_option_name">Мова</string>
@@ -107,6 +109,7 @@
     <string name="action_context_delete">Выдаліць</string>
     <string name="action_context_rename">Перайменаваць</string>
     <string name="action_context_shortcut">Стварыць ярлык</string>
+    <string name="action_context_launch_file">Create launch file</string>
     <string name="start">Пачаць</string>
     <string name="reset_settings">Скінуць налады</string>
     <string name="reset_layout">Скінуць размяшчэнне кнопак</string>
