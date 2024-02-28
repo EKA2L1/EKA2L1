@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2023 EKA2L1 Team
+ * Copyright (c) 2023 Dolphin Emulator Project
  *
  * This file is part of EKA2L1 project.
  *
@@ -41,7 +42,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-@RequiresApi(api = Build.VERSION_CODES.KITKAT)
 public class DocumentProvider extends DocumentsProvider {
    private static final String ALL_MIME_TYPES = "*/*";
 
