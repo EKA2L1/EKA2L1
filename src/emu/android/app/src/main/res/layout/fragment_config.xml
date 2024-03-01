@@ -182,11 +182,15 @@
             <TextView
                 android:id="@+id/tvScreenBgImgOpacity"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/height_config_row"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_marginTop="10dp"
+                android:minHeight="@dimen/height_config_row"
                 android:gravity="center_vertical"
                 android:text="@string/background_image_opacity"
                 android:textColor="?attr/textColorSecondary"
                 android:textSize="15dp"
+                app:layout_constraintEnd_toStartOf="@+id/barrierScreenConfig"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/cmdScreenBgImg" />
 
@@ -217,12 +221,15 @@
 
             <TextView
                 android:id="@+id/textView3"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/height_config_row"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:minHeight="@dimen/height_config_row"
                 android:gravity="center_vertical"
                 android:text="@string/pref_scale_ratio"
                 android:textColor="?attr/textColorSecondary"
                 android:textSize="15sp"
+                app:layout_constraintEnd_toStartOf="@+id/barrierScreenConfig"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvScreenBgImgOpacity" />
 
@@ -257,6 +264,7 @@
                 android:id="@+id/textView4"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/height_config_row"
+                android:layout_marginStart="5dp"
                 android:gravity="center_vertical"
                 android:text="@string/pref_orientation"
                 android:textAppearance="?android:attr/textAppearanceSmall"
@@ -285,7 +293,7 @@
                 android:id="@+id/tvScreenGravity"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/height_config_row"
-                android:checked="false"
+                android:layout_marginStart="5dp"
                 android:gravity="center_vertical"
                 android:text="@string/pref_screen_gravity"
                 android:textAppearance="?android:attr/textAppearanceSmall"
@@ -311,7 +319,7 @@
                 android:id="@+id/tvScaleType"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/height_config_row"
-                android:checked="false"
+                android:layout_marginStart="5dp"
                 android:gravity="center_vertical"
                 android:text="@string/pref_screen_scale_type"
                 android:textAppearance="?android:attr/textAppearanceSmall"
@@ -361,7 +369,7 @@
                 android:id="@+id/tvUpscaleShader"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/height_config_row"
-                android:checked="false"
+                android:layout_marginStart="5dp"
                 android:gravity="center_vertical"
                 android:text="@string/pref_screen_upscale_shader"
                 android:textAppearance="?android:attr/textAppearanceSmall"
@@ -369,8 +377,7 @@
                 android:textSize="15sp"
                 app:layout_constraintEnd_toStartOf="@+id/barrierScreenConfig"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/cbShouldUseShaderForUpscale"
-                app:layout_constraintWidth_min="wrap" />
+                app:layout_constraintTop_toBottomOf="@id/cbShouldUseShaderForUpscale" />
 
             <Spinner
                 android:id="@+id/spUpscaleShader"
@@ -410,7 +417,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
             android:background="?attr/bg_config_card"
-            android:paddingTop="10dp"
+            android:padding="5dp"
             app:elevation="2dp">
 
             <TextView

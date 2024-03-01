@@ -463,6 +463,9 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
                     }
                 }
             }
+        } else {
+            tvUpscaleShader.setVisibility(View.GONE);
+            spUpscaleShader.setVisibility(View.GONE);
         }
 
         etScreenBack.setText(String.format("%06X", params.screenBackgroundColor));
