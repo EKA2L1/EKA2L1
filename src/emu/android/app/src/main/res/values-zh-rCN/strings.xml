@@ -41,6 +41,7 @@
     <string name="choose_installation_type_instruction">Use an existing data pack to quickly settle in, or start afresh by installing a new device using its ROM/firmware.</string>
     <string name="preconfigured_pack">Preconfigured pack</string>
     <string name="rom_or_firmware">ROM/Firmware</string>
+    <string name="save_launch_file_success">Launch file saved as %s!</string>
     <string name="install">安装</string>
     <string name="rescan_devices">重新扫描设备</string>
     <string name="device_dump">从设备上导出的ROM</string>
@@ -79,6 +80,7 @@
     <string name="pref_wakelock">保持屏幕常亮</string>
     <string name="pref_enable_vibration">开启振动</string>
     <string name="pref_emulator_dir">工作目录</string>
+    <string name="pref_launch_file_dir">Launch file directory</string>
     <string name="pref_emulator_dir_cant_change">The working directory can\'t be changed!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">启用最近邻域过滤</string>
     <string name="pref_system_language_option_name">语言</string>
@@ -107,6 +109,7 @@
     <string name="action_context_delete">删除</string>
     <string name="action_context_rename">重命名</string>
     <string name="action_context_shortcut">创建快捷方式</string>
+    <string name="action_context_launch_file">Create launch file</string>
     <string name="start">开始</string>
     <string name="reset_settings">重置设置</string>
     <string name="reset_layout">重置按键布局</string>

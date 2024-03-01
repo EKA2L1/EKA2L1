@@ -41,6 +41,7 @@
     <string name="choose_installation_type_instruction">Use an existing data pack to quickly settle in, or start afresh by installing a new device using its ROM/firmware.</string>
     <string name="preconfigured_pack">Preconfigured pack</string>
     <string name="rom_or_firmware">রম/ফার্মওয়্যার</string>
+    <string name="save_launch_file_success">Launch file saved as %s!</string>
     <string name="install">ইনস্টল</string>
     <string name="rescan_devices">পুনরায় ডিভাইসসমূহ স্ক্যান করুন</string>
     <string name="device_dump">ডিভাইস ডাম্প</string>
@@ -79,6 +80,7 @@
     <string name="pref_wakelock">স্ক্রিন চালু রাখুন</string>
     <string name="pref_enable_vibration">কম্পন চালু করুন</string>
     <string name="pref_emulator_dir">Working directory</string>
+    <string name="pref_launch_file_dir">Launch file directory</string>
     <string name="pref_emulator_dir_cant_change">The working directory can\'t be changed!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">নিয়ারেস্ট নেইবর ফিল্টারিং সচল করুন</string>
     <string name="pref_system_language_option_name">ভাষা</string>
@@ -107,6 +109,7 @@
     <string name="action_context_delete">মুছে ফেলুন</string>
     <string name="action_context_rename">পুনঃনামকরণ</string>
     <string name="action_context_shortcut">শর্টকার্ট তৈরি করুন</string>
+    <string name="action_context_launch_file">Create launch file</string>
     <string name="start">শুরু করুন</string>
     <string name="reset_settings">সেটিংস রিসেট করুন</string>
     <string name="reset_layout">কি লেআউট রিসেট করুন</string>

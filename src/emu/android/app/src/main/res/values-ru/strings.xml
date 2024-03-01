@@ -41,6 +41,7 @@
     <string name="choose_installation_type_instruction">Использовать существующий набор данных для быстрого пополнения или после установки нового устройства с помощью прошивки.</string>
     <string name="preconfigured_pack">Предварительно настроенный пакет</string>
     <string name="rom_or_firmware">ROM/прошивка</string>
+    <string name="save_launch_file_success">Launch file saved as %s!</string>
     <string name="install">Установить</string>
     <string name="rescan_devices">Пересканировать устройства</string>
     <string name="device_dump">Дамп устройства</string>
@@ -79,6 +80,7 @@
     <string name="pref_wakelock">Не отключать экран</string>
     <string name="pref_enable_vibration">Включить вибрацию</string>
     <string name="pref_emulator_dir">Рабочая папка</string>
+    <string name="pref_launch_file_dir">Launch file directory</string>
     <string name="pref_emulator_dir_cant_change">Невозможно изменить рабочую папку!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Включить фильтрацию методом ближайшего соседа</string>
     <string name="pref_system_language_option_name">Язык</string>
@@ -107,6 +109,7 @@
     <string name="action_context_delete">Удалить</string>
     <string name="action_context_rename">Переименовать</string>
     <string name="action_context_shortcut">Создать ярлык</string>
+    <string name="action_context_launch_file">Create launch file</string>
     <string name="start">Пуск</string>
     <string name="reset_settings">Сброс настроек</string>
     <string name="reset_layout">Сброс раскладки</string>
