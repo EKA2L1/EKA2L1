@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="error">الخطأ</string>
+    <string name="error">خطأ</string>
     <string name="no_data">لا بيانات</string>
-    <string name="search">ابحث</string>
-    <string name="about">عن</string>
-    <string name="settings">إعدادات</string>
-    <string name="packages">مجموعات</string>
-    <string name="devices">Device</string>
-    <string name="switch_devices">التبديل بين الاجهزة</string>
-    <string name="profiles">Profiles</string>
-    <string name="processing">معالجة...</string>
+    <string name="search">بحث</string>
+    <string name="about">حول</string>
+    <string name="settings">الإعدادات</string>
+    <string name="packages">الحزم</string>
+    <string name="devices">الأجهزة</string>
+    <string name="switch_devices">تبديل الأجهزة</string>
+    <string name="profiles">الأوضاع</string>
+    <string name="processing">قيد المعالجة...</string>
     <string name="completed">مكتملة!</string>
     <string name="cancelled">لا تتبع المخزون</string>
     <string name="remove">حذف</string>
@@ -41,7 +41,7 @@
     <string name="choose_installation_type_instruction">استخدم حزمة بيانات موجودة للاستيطان بسرعة، أو البدء من جديد بتثبيت جهاز جديد باستخدام ذاكرة القراءة فقط/والبرمجيات الثابتة الخاصة به.</string>
     <string name="preconfigured_pack">حزمة معدة مسبقاً</string>
     <string name="rom_or_firmware">الروم/البرنامج الثابت</string>
-    <string name="save_launch_file_success">Launch file saved as %s!</string>
+    <string name="save_launch_file_success">مِلَفّ التشغيل محفوظ ك %s!</string>
     <string name="install">تثبيت</string>
     <string name="rescan_devices">إعادة فحص الأجهزة</string>
     <string name="device_dump">Dump الجهاز</string>
@@ -80,7 +80,7 @@
     <string name="pref_wakelock">إبقاء الشاشة فعالة</string>
     <string name="pref_enable_vibration">تمكين الإهتزاز</string>
     <string name="pref_emulator_dir">مسار العمل</string>
-    <string name="pref_launch_file_dir">Launch file directory</string>
+    <string name="pref_launch_file_dir">تشغيل مجلد المِلَفّ</string>
     <string name="pref_emulator_dir_cant_change">لا يمكن تغيير مجلد العمل!</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">تفعيل تصفية أقرب جار</string>
     <string name="pref_system_language_option_name">اللغة</string>
@@ -109,7 +109,7 @@
     <string name="action_context_delete">حذف</string>
     <string name="action_context_rename">إعادة التسمية</string>
     <string name="action_context_shortcut">إنشاء إختصار</string>
-    <string name="action_context_launch_file">Create launch file</string>
+    <string name="action_context_launch_file">إنشاء مِلَفّ التشغيل</string>
     <string name="start">إبدأ</string>
     <string name="reset_settings">إعادة ضبط الإعدادات</string>
     <string name="reset_layout">إعادة تعيين ترتيب لوحة المفاتيح</string>
