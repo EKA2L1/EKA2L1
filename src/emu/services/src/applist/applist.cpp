@@ -1328,7 +1328,34 @@ namespace eka2l1 {
         }
 
         if (app_exit_callback) {
-            pr->logon([app_exit_callback](kernel::process *pr) { app_exit_callback(pr); });
+            pr->logon([app_exit_callback, this](kernel::process *pr) {
+                auto child_processes = pr->get_child_processes();
+
+                // Handle case where a subsequence UI process is spawned
+                if (!child_processes.empty()) {
+                    bool deferred_exit = false;
+
+                    for (auto &child : child_processes) {
+                        if (child->get_exit_type() == kernel::entity_exit_type::pending) {
+                            auto pid = child->get_uid();
+
+                            if (get_registration(pid)) {
+                                child->logon([app_exit_callback](kernel::process *pr) {
+                                    app_exit_callback(pr);
+                                });
+
+                                deferred_exit = true;
+                            }
+                        }
+                    }
+
+                    if (!deferred_exit) {
+                        app_exit_callback(pr);
+                    }
+                } else {
+                    app_exit_callback(pr);
+                }
+            });
         }
 
         if ((kern->get_epoc_version() < epocver::eka2) && known_uid) {

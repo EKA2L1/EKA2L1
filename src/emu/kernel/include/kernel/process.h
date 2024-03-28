@@ -375,6 +375,10 @@ namespace eka2l1::kernel {
 
         bool has_child_process(kernel::process *pr);
 
+        std::vector<kernel::process *> get_child_processes() {
+            return child_processes_;
+        }
+
         entity_exit_type get_exit_type() const {
             return exit_type;
         }
