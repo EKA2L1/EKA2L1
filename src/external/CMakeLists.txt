@@ -1,6 +1,5 @@
 include(ExternalProject)
 include(CheckSymbolExists)
-include(Utils)
 
 add_library(miniz miniz/miniz.h miniz/miniz.c)
 target_include_directories(miniz PUBLIC miniz)
@@ -50,27 +49,35 @@ if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
     add_library(liblua INTERFACE)
     target_include_directories(liblua INTERFACE  "${CMAKE_CURRENT_SOURCE_DIR}/luajit/src/")
 
-    option(LUAJIT_DIR "" ON)
-    set(LUAJIT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/luajit")
+    if (ANDROID)
+        if (ARCHITECTURE_ARM32)
+            target_link_libraries(liblua INTERFACE
+                "${CMAKE_CURRENT_SOURCE_DIR}/luajit-android/armv7a/libluajit.a")
 
-    if (CMAKE_CROSSCOMPILING)
-        # Hacky, may need to build them statically instead of doing things like this
-        # This will assume MSVC builds the tools
-        if (CMAKE_HOST_WIN32)
-            set_readonly(MINILUA_PATH ${CMAKE_CURRENT_BINARY_DIR}/luajit-cmake/minilua/Debug/minilua)
-            set_readonly(BUILDVM_PATH ${CMAKE_CURRENT_BINARY_DIR}/luajit-cmake/buildvm/Debug/buildvm)
-        endif()
-    endif()
+            set(LUA_DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/luajit-android/armv7a/libluajit.so")
+        elseif (ARCHITECTURE_AARCH64)
+            target_link_libraries(liblua INTERFACE
+                    "${CMAKE_CURRENT_SOURCE_DIR}/luajit-android/aarch64/libluajit.a")
 
-    add_subdirectory(luajit-cmake)
+            set(LUA_DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/luajit-android/aarch64/libluajit.so")
+        else()
+            target_link_libraries(liblua INTERFACE
+                    "${CMAKE_CURRENT_SOURCE_DIR}/luajit-android/x86_64/libluajit.a")
 
-    # Fix up a bit
-    if (NOT CMAKE_CROSSCOMPILING)
+            set(LUA_DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/luajit-android/x86_64/libluajit.so")
+		endif()
+    else()
+        option(LUAJIT_DIR "" ON)
+        set(LUAJIT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/luajit")
+
+        add_subdirectory(luajit-cmake)
+
+        # Fix up a bit
         target_include_directories(buildvm PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/luajit-cmake")
-    endif()
 
-    target_link_libraries(liblua INTERFACE luajit::lib luajit::header)
-    target_include_directories(liblua INTERFACE "${CMAKE_CURRENT_BINARY_DIR}/luajit-cmake")
+        target_link_libraries(liblua INTERFACE luajit::lib luajit::header)
+        target_include_directories(liblua INTERFACE "${CMAKE_CURRENT_BINARY_DIR}/luajit-cmake")
+    endif()
 endif()
 
 # SPDLOG - Build examples off
@@ -245,6 +252,7 @@ add_subdirectory(uvw)
 add_subdirectory(uvlooper)
 
 # UPNP
+
 option (UPNPC_BUILD_SHARED "Build shared library" FALSE)
 option (UPNPC_BUILD_TESTS "Build test executables" FALSE)
 option (UPNPC_BUILD_SAMPLE "Build sample executables" FALSE)
