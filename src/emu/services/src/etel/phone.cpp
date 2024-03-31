@@ -207,6 +207,16 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void etel_phone_subsession::get_current_network_info_old(eka2l1::service::ipc_context *ctx) {
+        LOG_TRACE(SERVICE_ETEL, "Get current network hardcoded");
+        std::optional<epoc::etel_old_phone_network_info> network_info = ctx->get_argument_data_from_descriptor<epoc::etel_old_phone_network_info>(0);
+
+        network_info->status_ = phone_->network_info_.status_;
+
+        ctx->write_data_to_descriptor_argument<epoc::etel_old_phone_network_info>(0, network_info.value(), nullptr, true);
+        ctx->complete(epoc::error_none);
+    }
+
     void etel_phone_subsession::get_signal_strength(eka2l1::service::ipc_context *ctx) {
         std::int32_t *signal_strength_ptr = reinterpret_cast<std::int32_t *>(ctx->get_descriptor_argument_ptr(0));
         std::int32_t *bar_ptr = reinterpret_cast<std::int32_t *>(ctx->get_descriptor_argument_ptr(2));
@@ -288,6 +298,10 @@ namespace eka2l1 {
 
             case epoc::etel_old_gsm_phone_get_phone_id:
                 get_phone_id(ctx);
+                break;
+
+            case epoc::etel_old_gsm_phone_get_current_network_info:
+                get_current_network_info_old(ctx);
                 break;
 
             case epoc::etel_old_gsm_adv_phone_get_subscriber_id:

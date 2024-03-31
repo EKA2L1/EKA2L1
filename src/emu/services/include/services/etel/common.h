@@ -87,6 +87,7 @@ namespace eka2l1::epoc {
         etel_old_call_set_fax_setting = 72,
         etel_old_get_tsy_version_number = 77,
         etel_old_gsm_phone_get_phone_id = 1000,
+        etel_old_gsm_phone_get_current_network_info = 1027,
         etel_old_gsm_adv_phone_get_subscriber_id = 0x877
     };
 
@@ -308,6 +309,24 @@ namespace eka2l1::epoc {
 
     struct etel_multimode_type {
         std::int32_t extension_id_;
+    };
+
+    struct etel_old_bsc_network_id {
+        std::uint32_t mcc_;
+        std::uint32_t mnc_;
+    };
+
+    struct etel_old_phone_network_info {
+        etel_old_bsc_network_id network_id_;
+        etel_mobile_phone_network_status status_;
+        epoc::buf_static<char16_t, 20> short_name_;
+        epoc::buf_static<char16_t, 30> long_name_;
+    };
+
+    struct etel_old_current_phone_network_info {
+        etel_old_phone_network_info network_info_;
+        std::uint32_t location_area_code_;
+        std::uint32_t cell_id_;
     };
 
     struct etel_phone_network_info : etel_multimode_type {

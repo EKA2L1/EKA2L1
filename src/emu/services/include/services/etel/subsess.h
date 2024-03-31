@@ -93,6 +93,8 @@ namespace eka2l1 {
         void notify_battery_info(eka2l1::service::ipc_context *ctx);
         void notify_battery_info_cancel(eka2l1::service::ipc_context *ctx);
 
+        void get_current_network_info_old(eka2l1::service::ipc_context *ctx);
+
     public:
         explicit etel_phone_subsession(etel_session *session, etel_phone *phone, const etel_legacy_level lvl);
 
