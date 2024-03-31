@@ -97,3 +97,6 @@
 [submodule "src/external/ext-boost"]
 	path = src/external/ext-boost
 	url = https://github.com/yuzu-mirror/ext-boost
+[submodule "src/external/luajit-android-src"]
+	path = src/external/luajit-android-src
+	url = https://github.com/luajit/luajit

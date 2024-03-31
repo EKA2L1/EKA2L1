@@ -47,9 +47,10 @@ if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
     set(LUA_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/luaorg)
 
     add_library(liblua INTERFACE)
-    target_include_directories(liblua INTERFACE  "${CMAKE_CURRENT_SOURCE_DIR}/luajit/src/")
 
     if (ANDROID)
+        target_include_directories(liblua INTERFACE  "${CMAKE_CURRENT_SOURCE_DIR}/luajit-android-src/src/")
+
         if (ARCHITECTURE_ARM32)
             target_link_libraries(liblua INTERFACE
                 "${CMAKE_CURRENT_SOURCE_DIR}/luajit-android/armv7a/libluajit.a")
@@ -67,6 +68,8 @@ if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
             set(LUA_DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/luajit-android/x86_64/libluajit.so")
 		endif()
     else()
+        target_include_directories(liblua INTERFACE  "${CMAKE_CURRENT_SOURCE_DIR}/luajit/src/")
+
         option(LUAJIT_DIR "" ON)
         set(LUAJIT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/luajit")
 
