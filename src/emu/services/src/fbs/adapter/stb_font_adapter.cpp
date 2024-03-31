@@ -220,7 +220,7 @@ namespace eka2l1::epoc::adapter {
         int x0, x1, y0, y1 = 0;
 
         stbtt_GetFontBoundingBox(info, &x0, &y0, &x1, &y1);
-        const float scale_factor = static_cast<float>(font_size) / static_cast<float>(y1 - y0);
+        const float scale_factor = stbtt_ScaleForPixelHeight(info, static_cast<float>(font_size));
 
         if (get_codepoint) {
             result = stbtt_GetCodepointBitmap(info, scale_factor, scale_factor, static_cast<int>(code), rasterized_width,
@@ -276,14 +276,15 @@ namespace eka2l1::epoc::adapter {
             stbtt_GetGlyphBox(info, static_cast<int>(code), &x0, &y0, &x1, &y1);
         }
 
-        int wx0, wx1, wy0, wy1 = 0;
-        stbtt_GetFontBoundingBox(info, &wx0, &wy0, &wx1, &wy1);
+        const float scale_factor = stbtt_ScaleForPixelHeight(info, static_cast<float>(font_size));
 
-        const int org_height = y1 - y0;
-        const float scale_factor = static_cast<float>(font_size) / static_cast<float>(wy1 - wy0);
+        float scaled_x0 = std::floor(static_cast<float>(x0) * scale_factor);
+        float scaled_y0 = std::floor(static_cast<float>(-y1) * scale_factor);
+        float scaled_x1 = std::ceil(static_cast<float>(x1) * scale_factor);
+        float scaled_y1 = std::ceil(static_cast<float>(-y0) * scale_factor);
 
-        character_metric.width = static_cast<std::int16_t>((x1 - x0) * scale_factor);
-        character_metric.height = static_cast<std::int16_t>((y1 - y0) * scale_factor);
+        character_metric.width = static_cast<std::int16_t>(scaled_x1 - scaled_x0);
+        character_metric.height = static_cast<std::int16_t>(scaled_y1 - scaled_y0);
         character_metric.horizontal_advance = static_cast<std::int16_t>(std::roundf(adv_width * scale_factor));
         character_metric.horizontal_bearing_x = static_cast<std::int16_t>(left_side_bearing * scale_factor);
 
@@ -296,8 +297,8 @@ namespace eka2l1::epoc::adapter {
         stbtt_GetFontVMetrics(info, &ascent, &descent, &linegap);
 
         // Calculate vertical advance by char_ascent - char_descent + linegap
-        character_metric.vertical_advance = static_cast<std::int16_t>((y1 - y0 + linegap) * scale_factor);
-        character_metric.horizontal_bearing_y = static_cast<std::int16_t>(y1 * scale_factor);
+        character_metric.vertical_advance = static_cast<std::int16_t>(scaled_y1 - scaled_y0 + linegap * scale_factor);
+        character_metric.horizontal_bearing_y = static_cast<std::int16_t>(scaled_y1);
 
         // Not caring about vertical placement right now (text placement)
         character_metric.vertical_bearing_y = 0;
@@ -388,7 +389,7 @@ namespace eka2l1::epoc::adapter {
         int wx0, wx1, wy0, wy1 = 0;
         stbtt_GetFontBoundingBox(info, &wx0, &wy0, &wx1, &wy1);
 
-        const float scale_factor = static_cast<float>(font_size) / static_cast<float>(wy1 - wy0);
+        const float scale_factor = stbtt_ScaleForPixelHeight(info, static_cast<float>(font_size));
         return static_cast<std::uint32_t>(adv_width * scale_factor);
     }
 
