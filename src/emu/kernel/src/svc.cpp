@@ -5617,9 +5617,26 @@ namespace eka2l1::epoc {
         return chn->do_control(kern->crr_thread(), func, arg1, arg2);
     }
 
+    BRIDGE_FUNC(std::int32_t, logical_channel_do_request, const kernel::handle h, const int func,
+        eka2l1::ptr<epoc::request_status> status, const std::uint32_t *args) {
+        ldd::channel *chn = kern->get<ldd::channel>(h);
+
+        if (!chn) {
+            return epoc::error_not_found;
+        }
+
+        epoc::notify_info request_nof_info(status, kern->crr_thread());
+        return chn->do_request(request_nof_info, func, args[0], args[1], false);
+    }
+
     BRIDGE_FUNC(std::int32_t, logical_channel_do_control_eka1, const int func, eka2l1::ptr<void> arg1,
         eka2l1::ptr<void> arg2, const kernel::handle h) {
         return logical_channel_do_control(kern, h, func, arg1, arg2);
+    }
+
+    BRIDGE_FUNC(std::int32_t, logical_channel_do_request_eka1, const int func, eka2l1::ptr<epoc::request_status> status,
+        const std::uint32_t *args, const kernel::handle h) {
+        return logical_channel_do_request(kern, h, func, status, args);
     }
 
     BRIDGE_FUNC(void, restore_thread_exception_state) {
@@ -6348,6 +6365,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8000E6, message_ipc_copy_eka1),
         BRIDGE_REGISTER(0x8000EA, message_queue_notify_space_available),
         BRIDGE_REGISTER(0x8000EB, message_queue_notify_data_available),
+        BRIDGE_REGISTER(0xC0000C, logical_channel_do_request_eka1),
         BRIDGE_REGISTER(0xC0000E, logical_channel_do_control_eka1),
         BRIDGE_REGISTER(0xC0001D, process_resume),
         BRIDGE_REGISTER(0xC00024, process_set_priority_eka1),
@@ -6462,6 +6480,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8000C2, get_inactivity_time),
         BRIDGE_REGISTER(0x8000CC, imb_range),
         BRIDGE_REGISTER(0x8000C9, clear_inactivity_time),
+        BRIDGE_REGISTER(0xC0000C, logical_channel_do_request_eka1),
         BRIDGE_REGISTER(0xC0000E, logical_channel_do_control_eka1),
         BRIDGE_REGISTER(0xC0001D, process_resume),
         BRIDGE_REGISTER(0xC00024, process_set_priority_eka1),
