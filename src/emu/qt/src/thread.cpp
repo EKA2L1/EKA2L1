@@ -393,6 +393,7 @@ namespace eka2l1::desktop {
                 // Notify the OS thread that is still sleeping, waiting for
                 // graphics sema to be freed.
                 state.graphics_event.set();
+                state.kill_event.set();
 
                 std::cout << err << std::endl;
                 os_thread_obj.join();
@@ -410,7 +411,7 @@ namespace eka2l1::desktop {
 
         std::thread graphics_thread_obj(graphics_driver_thread, std::ref(state));
 
-        if (state.init_app_launched) {
+        if (state.app_launch_from_command_line) {
             if (!state.launched_app_name_.empty()) {
                 state.ui_main->set_discord_presence_current_playing(state.launched_app_name_);
             }

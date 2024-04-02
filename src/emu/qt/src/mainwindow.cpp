@@ -256,7 +256,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
 
     eka2l1::kernel_system *kernel = emulator_state_.symsys->get_kernel_system();
 
-    if (!emulator_state_.init_app_launched)
+    if (!emulator_state_.app_launch_from_command_line)
         setup_app_list();
 
     setup_package_installer_ui_hooks();
@@ -1086,7 +1086,11 @@ void main_window::on_app_exited(eka2l1::kernel::process *target_proc) {
         }
     }
 
-    on_restart_requested();
+    if (emulator_state_.app_launch_from_command_line) {
+        close();
+    } else {
+        on_restart_requested();
+    }
 }
 
 std::function<void(eka2l1::kernel::process *)> main_window::get_process_exit_callback() {

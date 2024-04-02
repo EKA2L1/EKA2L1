@@ -75,7 +75,7 @@ namespace eka2l1::desktop {
 
         bool first_time;
         bool init_fullscreen;
-        bool init_app_launched;
+        bool app_launch_from_command_line;
         bool inited_graphics;
         bool stretch_to_fill_display;
 

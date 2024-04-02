@@ -153,7 +153,7 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
                 return emu->ui_main->get_process_exit_callback()(pr);
             });
 
-            emu->init_app_launched = true;
+            emu->app_launch_from_command_line = true;
             emu->launched_app_name_ = common::ucs2_to_utf8(registry->mandatory_info.long_caption.to_std_string(nullptr));
 
             return true;
@@ -176,7 +176,7 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
 
                 pr->run();
 
-                emu->init_app_launched = true;
+                emu->app_launch_from_command_line = true;
                 emu->launched_app_name_ = eka2l1::filename(tokstr);
             }
 
@@ -199,7 +199,7 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
                     return emu->ui_main->get_process_exit_callback()(pr);
                 });
 
-                emu->init_app_launched = true;
+                emu->app_launch_from_command_line = true;
 
                 return true;
             }
@@ -363,7 +363,7 @@ bool device_set_option_handler(eka2l1::common::arg_parser *parser, void *userdat
 
     if (!device) {
         *err = "No device specified";
-        return true;
+        return false;
     }
 
     auto &devices_list = emu->symsys->get_device_manager()->get_devices();
@@ -451,7 +451,7 @@ bool run_ngage_game_option_handler(eka2l1::common::arg_parser *parser, void *use
         return false;
     }
 
-    emu->init_app_launched = true;
+    emu->app_launch_from_command_line = true;
     return true;
 }
 

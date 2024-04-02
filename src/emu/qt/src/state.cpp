@@ -54,7 +54,7 @@ namespace eka2l1::desktop {
         , stretch_to_fill_display(false)
         , first_time(true)
         , init_fullscreen(false)
-        , init_app_launched(false)
+        , app_launch_from_command_line(false)
         , winserv(nullptr)
         , sys_reset_cbh(0)
         , present_status(0) {
