@@ -100,3 +100,6 @@
 [submodule "src/external/luajit-android-src"]
 	path = src/external/luajit-android-src
 	url = https://github.com/luajit/luajit
+[submodule "src/external/freetype"]
+	path = src/external/freetype
+	url = https://github.com/freetype/freetype
