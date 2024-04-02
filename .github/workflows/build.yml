@@ -256,10 +256,10 @@ jobs:
         
     - name: Rename artifacts for release
       run: |
-        (cd windows-files && zip -r ../windows-latest.zip . && cd ..)
-        (cd mac-files && zip -r ../macos-latest.zip . && cd ..)
-        mv eka2l1-qt-x64.AppImage ubuntu-latest.AppImage
-        mv eka2l1-${{ steps.git_short_sha.outputs.value }}.apk android-latest.apk
+        (cd windows-files && zip -r ../EKA2L1-Windows-x86_64.zip . && cd ..)
+        (cd mac-files && zip -r ../EKA2L1-MacOS-x86_64.zip . && cd ..)
+        mv eka2l1-qt-x64.AppImage EKA2L1-Linux-x86_64.AppImage
+        mv eka2l1-${{ steps.git_short_sha.outputs.value }}.apk EKA2L1-Android.apk
 
     - name: Create release
       uses: "marvinpinto/action-automatic-releases@latest"
@@ -269,8 +269,8 @@ jobs:
         prerelease: false
         title: "Automatic CI builds"
         files: |
-          windows-latest.zip
-          macos-latest.zip
-          ubuntu-latest.AppImage
-          android-latest.apk
+          EKA2L1-Windows-x86_64.zip
+          EKA2L1-MacOS-x86_64.zip
+          EKA2L1-Linux-x86_64.AppImage
+          EKA2L1-Android.apk
 
