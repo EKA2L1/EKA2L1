@@ -60,7 +60,7 @@ namespace eka2l1::epoc::adapter {
             return true;
         }
 
-        std::uint32_t line_gap(const std::size_t idx) override;
+        std::uint32_t line_gap(const std::size_t idx, const std::uint32_t metric_identifier) override;
 
         bool get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) override;
         bool get_glyph_metric(const std::size_t idx, std::uint32_t code,

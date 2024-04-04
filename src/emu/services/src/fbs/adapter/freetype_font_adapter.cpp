@@ -21,8 +21,9 @@
 #include <common/log.h>
 
 #include <services/fbs/adapter/freetype_font_adapter.h>
-
 #include <memory>
+
+#include <freetype/tttables.h>
 
 namespace eka2l1::epoc::adapter {
     struct freetype_lib_raii {
@@ -41,6 +42,14 @@ namespace eka2l1::epoc::adapter {
     };
 
     std::unique_ptr<freetype_lib_raii> ft_lib_raii_;
+
+    inline short ft_convention_to_int_pixel(FT_Pos val) {
+        if (0 > val) {
+            val = static_cast<FT_Pos>(-val);
+        }
+
+        return static_cast<short>((val + 32) >> 6);
+    }
 
     FT_Library get_ft_lib() {
         return ft_lib_raii_->lib_;
@@ -75,8 +84,16 @@ namespace eka2l1::epoc::adapter {
         }
     }
 
-    std::uint32_t freetype_font_adapter::line_gap(const std::size_t idx) {
+    std::uint32_t freetype_font_adapter::line_gap(const std::size_t idx, const std::uint32_t metric_identifier) {
         if (idx >= faces_.size()) {
+            return 0;
+        }
+
+        auto face = faces_[idx];
+        auto err = FT_Set_Pixel_Sizes(face, 0, metric_identifier);
+
+        if (err) {
+            LOG_ERROR(SERVICE_FBS, "Failed to set character size for face to calculate line gap, error: {}", FT_Error_String(err));
             return 0;
         }
 
@@ -84,15 +101,141 @@ namespace eka2l1::epoc::adapter {
     }
 
     bool freetype_font_adapter::get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) {
-        return false;
+        if (idx >= faces_.size()) {
+            return false;
+        }
+
+        auto face = faces_[idx];
+        face_attrib.fam_name.assign(nullptr, common::utf8_to_ucs2(face->family_name));
+        face_attrib.name.assign(nullptr, common::utf8_to_ucs2(face->style_name));
+        face_attrib.local_full_fam_name.assign(nullptr, common::utf8_to_ucs2(face->family_name));
+        face_attrib.local_full_name.assign(nullptr, common::utf8_to_ucs2(face->style_name));
+        face_attrib.style = 0;
+
+        if (face->style_flags & FT_STYLE_FLAG_BOLD) {
+            face_attrib.style |= open_font_face_attrib::bold;
+        }
+
+        if (face->style_flags & FT_STYLE_FLAG_ITALIC) {
+            face_attrib.style |= open_font_face_attrib::italic;
+        }
+
+        if (face->face_flags & FT_FACE_FLAG_FIXED_WIDTH) {
+            face_attrib.style |= open_font_face_attrib::mono_width;
+        }
+
+        auto header = reinterpret_cast<TT_Header*>(FT_Get_Sfnt_Table(face, FT_SFNT_HEAD));
+
+        if (header) {
+            face_attrib.min_size_in_pixels = header->Lowest_Rec_PPEM;
+        }
+
+        auto os2 = reinterpret_cast<TT_OS2*>(FT_Get_Sfnt_Table(face, FT_SFNT_OS2));
+
+        if (os2) {
+            face_attrib.coverage[0] = os2->ulUnicodeRange1;
+            face_attrib.coverage[1] = os2->ulUnicodeRange2;
+            face_attrib.coverage[2] = os2->ulUnicodeRange3;
+            face_attrib.coverage[3] = os2->ulUnicodeRange4;
+
+            if (((os2->panose[1] >= 2) && (os2->panose[1] <= 10)) || (os2->panose[1] >= 14)) {
+                face_attrib.style |= open_font_face_attrib::serif;
+            }
+        }
+
+        return true;
     }
 
     bool freetype_font_adapter::get_glyph_metric(const std::size_t idx, std::uint32_t code, open_font_character_metric &character_metric, const std::int32_t baseline_horz_off, const std::uint32_t metric_identifier) {
-        return false;
+        if (idx >= faces_.size()) {
+            return false;
+        }
+
+        auto face = faces_[idx];
+        auto glyph_index = code;
+
+        if (glyph_index & 0x80000000) {
+            glyph_index &= ~0x80000000;
+        } else {
+            glyph_index = FT_Get_Char_Index(face, code);
+        }
+
+        if (face->size->metrics.height != metric_identifier) {
+            auto err = FT_Set_Pixel_Sizes(face, 0, metric_identifier);
+
+            if (err) {
+                LOG_ERROR(SERVICE_FBS, "Failed to set character size for face to get glyph metric, error: {}", FT_Error_String(err));
+                return false;
+            }
+        }
+
+        auto err = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+
+        if (err) {
+            LOG_ERROR(SERVICE_FBS, "Failed to load glyph for face to get glyph metric, error: {}", FT_Error_String(err));
+            return false;
+        }
+
+        auto glyph = face->glyph;
+        character_metric.width = ft_convention_to_int_pixel(glyph->metrics.width);
+        character_metric.height = ft_convention_to_int_pixel(glyph->metrics.height);
+        character_metric.horizontal_bearing_x = ft_convention_to_int_pixel(glyph->metrics.horiBearingX);
+        character_metric.horizontal_bearing_y = ft_convention_to_int_pixel(glyph->metrics.horiBearingY);
+        character_metric.horizontal_advance = ft_convention_to_int_pixel(glyph->metrics.horiAdvance);
+        character_metric.vertical_bearing_x = ft_convention_to_int_pixel(glyph->metrics.vertBearingX);
+        character_metric.vertical_bearing_y = ft_convention_to_int_pixel(glyph->metrics.vertBearingY);
+        character_metric.vertical_advance = ft_convention_to_int_pixel(glyph->metrics.vertAdvance);
+
+        return true;
     }
 
     std::uint8_t *freetype_font_adapter::get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier, int *rasterized_width, int *rasterized_height, uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type) {
-        return nullptr;
+        if (idx >= faces_.size()) {
+            return nullptr;
+        }
+
+        auto face = faces_[idx];
+        auto glyph_index = code;
+
+        if (glyph_index & 0x80000000) {
+            glyph_index &= ~0x80000000;
+        } else {
+            glyph_index = FT_Get_Char_Index(face, code);
+        }
+
+        if (face->size->metrics.height != metric_identifier) {
+            auto err = FT_Set_Pixel_Sizes(face, 0, metric_identifier);
+
+            if (err) {
+                LOG_ERROR(SERVICE_FBS, "Failed to set character size for face to get glyph bitmap, error: {}", FT_Error_String(err));
+                return nullptr;
+            }
+        }
+
+        auto err = FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER);
+        if (err) {
+            LOG_ERROR(SERVICE_FBS, "Failed to load glyph for face to get glyph bitmap, error: {}", FT_Error_String(err));
+            return nullptr;
+        }
+
+        auto glyph = face->glyph;
+        auto bitmap = glyph->bitmap;
+
+        if (rasterized_width) {
+            *rasterized_width = static_cast<int>(bitmap.width);
+        }
+
+        if (rasterized_height) {
+            *rasterized_height = static_cast<int>(bitmap.rows);
+        }
+
+        total_size = bitmap.width * bitmap.rows;
+
+        if (bmp_type) {
+            *bmp_type = glyph_bitmap_type::antialised_glyph_bitmap;
+        }
+
+        return bitmap.buffer;
     }
 
     void freetype_font_adapter::free_glyph_bitmap(std::uint8_t *data) {
@@ -139,10 +282,43 @@ namespace eka2l1::epoc::adapter {
     }
 
     bool freetype_font_adapter::get_table_content(const std::size_t face_index, const std::uint32_t tag4, std::uint8_t *dest, uint32_t &dest_size) {
-        return font_file_adapter_base::get_table_content(face_index, tag4, dest, dest_size);
+        auto face = faces_[face_index];
+
+        FT_ULong dest_size_temp = dest_size;
+        auto table = FT_Load_Sfnt_Table(face, tag4, 0, dest, &dest_size_temp);
+
+        if (!table) {
+            return false;
+        }
+
+        dest_size = static_cast<std::uint32_t>(dest_size_temp);
+        return true;
     }
 
     std::optional<open_font_metrics> freetype_font_adapter::get_nearest_supported_metric(const std::size_t face_index, const std::uint16_t targeted_font_size, std::uint32_t *metric_identifier) {
-        return std::optional<open_font_metrics>();
+        if (face_index >= faces_.size()) {
+            return std::nullopt;
+        }
+
+        auto face = faces_[face_index];
+        auto err = FT_Set_Pixel_Sizes(face, 0, targeted_font_size);
+
+        if (err) {
+            LOG_ERROR(SERVICE_FBS, "Failed to set character size for face, error: {}", FT_Error_String(err));
+            return std::nullopt;
+        }
+
+        // TODO: Filling max depth?
+        open_font_metrics metrics{};
+        metrics.ascent = ft_convention_to_int_pixel(face->size->metrics.ascender);
+        metrics.descent = ft_convention_to_int_pixel(face->size->metrics.descender);
+        metrics.max_height = ft_convention_to_int_pixel(face->size->metrics.height);
+        metrics.max_width = ft_convention_to_int_pixel(face->size->metrics.max_advance);
+
+        if (metric_identifier) {
+            *metric_identifier = metrics.max_height;
+        }
+
+        return metrics;
     }
 }

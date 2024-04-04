@@ -53,7 +53,7 @@ namespace eka2l1::epoc::adapter {
 
         virtual bool is_valid() = 0;
         virtual bool vectorizable() const = 0;
-        virtual std::uint32_t line_gap(const std::size_t idx) {
+        virtual std::uint32_t line_gap(const std::size_t idx, const std::uint32_t metric_identifier) {
             return 0;
         }
 

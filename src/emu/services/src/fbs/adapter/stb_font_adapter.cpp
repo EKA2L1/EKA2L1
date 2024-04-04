@@ -307,14 +307,15 @@ namespace eka2l1::epoc::adapter {
         return true;
     }
 
-    std::uint32_t stb_font_file_adapter::line_gap(const std::size_t idx) {
+    std::uint32_t stb_font_file_adapter::line_gap(const std::size_t idx, const std::uint32_t metric_identifier) {
         int ascent, descent, linegap = 0;
         int off = 0;
 
         stbtt_fontinfo *info = get_or_create_info(static_cast<int>(idx), &off);
         stbtt_GetFontVMetrics(info, &ascent, &descent, &linegap);
 
-        return linegap;
+        const float scale_factor = stbtt_ScaleForPixelHeight(info, static_cast<float>(metric_identifier));
+        return static_cast<std::uint32_t>(linegap * scale_factor);
     }
 
     void stb_font_file_adapter::free_glyph_bitmap(std::uint8_t *data) {
