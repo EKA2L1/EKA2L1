@@ -184,7 +184,7 @@ namespace eka2l1::epoc::adapter {
             }
         }
 
-        auto err = FT_Load_Glyph(face, glyph_index, FT_LOAD_BITMAP_METRICS_ONLY);
+        auto err = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_BITMAP);
 
         if (err) {
             LOG_ERROR(SERVICE_FBS, "Failed to load glyph for face to get glyph metric, error: {}", FT_Error_String(err));
@@ -200,6 +200,7 @@ namespace eka2l1::epoc::adapter {
         character_metric.vertical_bearing_x = ft_convention_to_int_pixel(glyph->metrics.vertBearingX);
         character_metric.vertical_bearing_y = ft_convention_to_int_pixel(glyph->metrics.vertBearingY);
         character_metric.vertical_advance = ft_convention_to_int_pixel(glyph->metrics.vertAdvance);
+        character_metric.bitmap_type = glyph_bitmap_type::antialised_glyph_bitmap;
 
         return true;
     }
@@ -307,8 +308,8 @@ namespace eka2l1::epoc::adapter {
 
             pack_rects[i].x = 0;
             pack_rects[i].y = 0;
-            pack_rects[i].w = face->glyph->bitmap.width;
-            pack_rects[i].h = face->glyph->bitmap.rows;
+            pack_rects[i].w = face->glyph->bitmap.width + 10;
+            pack_rects[i].h = face->glyph->bitmap.rows + 10;
         }
 
         if (!stbrp_pack_rects(&pack_state_ptr->atlas_context_, pack_rects.data(), static_cast<int>(pack_rects.size()))) {
@@ -319,33 +320,55 @@ namespace eka2l1::epoc::adapter {
         // Render and put bitmap to atlas
         for (auto i = 0; i < num_code; i++) {
             const char16_t char_code = unicode_point ? unicode_point[i] : static_cast<char16_t>(start_code + i);
-            auto err = FT_Load_Char(face, char_code, FT_LOAD_RENDER);
+            auto err = FT_Load_Char(face, char_code, FT_LOAD_DEFAULT);
 
             if (err) {
                 LOG_WARN(SERVICE_FBS, "Failed to load character code 0x{:X} for face to get glyph atlas, error: {}",
                     static_cast<int>(char_code), FT_Error_String(err));
             }
 
+            err = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_LCD);
+            if (err) {
+                LOG_WARN(SERVICE_FBS, "Failed to render character code 0x{:X} for face to get glyph atlas, error: {}",
+                static_cast<int>(char_code), FT_Error_String(err));
+            }
+
             auto glyph = face->glyph;
             auto bitmap = glyph->bitmap;
 
             auto &rect = pack_rects[i];
-            auto dest = pack_state_ptr->atlas_base_ + rect.x + rect.y * pack_state_ptr->atlas_size_.x;
+            auto dest = pack_state_ptr->atlas_base_ + (rect.x + 5) * 4 + (rect.y + 5) * pack_state_ptr->atlas_size_.x * 4;
 
             for (auto y = 0; y < bitmap.rows; y++) {
-                for (auto x = 0; x < bitmap.width; x++) {
-                    dest[x + y * pack_state_ptr->atlas_size_.x] = bitmap.buffer[x + y * bitmap.width];
+                for (auto x = 0; x < bitmap.width / 3; x++) {
+                    auto average = static_cast<float>(bitmap.buffer[x * 3 + y * bitmap.pitch] +
+                        bitmap.buffer[x * 3 + y * bitmap.pitch + 1] +
+                        bitmap.buffer[x * 3 + y * bitmap.pitch + 2]) / 3.0f;
+
+                    eka2l1::vec4 color(bitmap.buffer[x * 3 + y * bitmap.pitch], bitmap.buffer[x * 3 + y * bitmap.pitch + 1],
+                       bitmap.buffer[x * 3 + y * bitmap.pitch +2], static_cast<std::uint8_t>(average));
+
+                    float max = (static_cast<float>(std::max({ color.x, color.y, color.z })) / 255.0f);
+                    int min = std::min({ color.x, color.y, color.z });
+
+                    color = color * max + eka2l1::vec4(color.x, color.y, color.z, min) * (1.0f - max);
+
+                    dest[x * 4 + y * pack_state_ptr->atlas_size_.x * 4 + 0] = color.x;
+                    dest[x * 4 + y * pack_state_ptr->atlas_size_.x * 4 + 1] = color.y;
+                    dest[x * 4 + y * pack_state_ptr->atlas_size_.x * 4 + 2] = color.z;
+                    dest[x * 4 + y * pack_state_ptr->atlas_size_.x * 4 + 3] = color.w;
+
                 }
             }
 
-            info[i].x0 = rect.x;
-            info[i].y0 = rect.y;
-            info[i].x1 = rect.x + bitmap.width;
-            info[i].y1 = rect.y + bitmap.rows;
+            info[i].x0 = rect.x + 5;
+            info[i].y0 = rect.y + 5;
+            info[i].x1 = rect.x + 5 + bitmap.width / 3;
+            info[i].y1 = rect.y + 5 + bitmap.rows;
             info[i].xadv = ft_convention_to_float(glyph->metrics.horiAdvance);
-            info[i].xoff = ft_convention_to_int_pixel(glyph->metrics.horiBearingX);
-            info[i].yoff = ft_convention_to_int_pixel(-glyph->metrics.horiBearingY);
-            info[i].xoff2 = info[i].xoff + static_cast<float>(info[i].xadv);
+            info[i].xoff = static_cast<float>(glyph->bitmap_left);
+            info[i].yoff = static_cast<float>(-glyph->bitmap_top);
+            info[i].xoff2 = info[i].xoff + info[i].xadv;
             info[i].yoff2 = info[i].yoff + static_cast<float>(bitmap.rows);
         }
 
@@ -418,6 +441,7 @@ namespace eka2l1::epoc::adapter {
         metrics.descent = ft_convention_to_int_pixel(face->size->metrics.descender);
         metrics.max_height = ft_convention_to_int_pixel(face->size->metrics.height);
         metrics.max_width = ft_convention_to_int_pixel(face->size->metrics.max_advance);
+        metrics.baseline_correction = 0;
 
         if (metric_identifier) {
             *metric_identifier = metrics.max_height;

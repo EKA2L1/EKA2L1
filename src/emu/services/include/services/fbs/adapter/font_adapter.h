@@ -160,6 +160,10 @@ namespace eka2l1::epoc::adapter {
          */
         virtual std::optional<open_font_metrics> get_nearest_supported_metric(const std::size_t face_index, const std::uint16_t targeted_font_size,
             std::uint32_t *metric_identifier = nullptr) = 0;
+
+        virtual std::uint8_t get_atlas_bitmap_bits_per_pixel() {
+            return 8;
+        }
     };
 
     enum class font_file_adapter_kind {

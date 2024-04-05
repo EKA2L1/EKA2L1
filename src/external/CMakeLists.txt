@@ -342,7 +342,7 @@ endif()
 add_library(thread-pool INTERFACE)
 target_include_directories(thread-pool INTERFACE thread-pool/include)
 
-add_definitions(-DFT_DEBUG_LEVEL_ERROR)
+add_definitions(-DFT_DEBUG_LEVEL_ERROR -DFT_CONFIG_OPTION_SUBPIXEL_RENDERING)
 add_subdirectory(freetype)
 
 set (capstone_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/capstone/include" PARENT_SCOPE)

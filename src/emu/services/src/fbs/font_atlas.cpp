@@ -82,7 +82,7 @@ namespace eka2l1::epoc {
         drivers::graphics_command_builder upload_builder;
 
         if (!atlas_data_) {
-            atlas_data_ = std::make_unique<std::uint8_t[]>(width * width);
+            atlas_data_ = std::make_unique<std::uint8_t[]>(width * width * adapter_->get_atlas_bitmap_bits_per_pixel() / 8);
             auto cinfos = std::make_unique<adapter::character_info[]>(initial_range_.second);
 
             pack_handle_ = adapter_->begin_get_atlas(atlas_data_.get(), { width, width });
@@ -103,10 +103,10 @@ namespace eka2l1::epoc {
             }
 
             // Submit the bitmap through another queue, in case the command list above never got submitted
-            atlas_handle_ = drivers::create_bitmap(driver, { width, width }, 8);
+            atlas_handle_ = drivers::create_bitmap(driver, { width, width },  adapter_->get_atlas_bitmap_bits_per_pixel());
 
             upload_builder.update_bitmap(atlas_handle_, reinterpret_cast<const char *>(atlas_data_.get()),
-                width * width, { 0, 0 }, { width, width });
+                width * width * adapter_->get_atlas_bitmap_bits_per_pixel() / 8, { 0, 0 }, { width, width });
             upload_builder.set_texture_filter(atlas_handle_, false, drivers::filter_option::nearest);
         }
 
@@ -160,7 +160,7 @@ namespace eka2l1::epoc {
                 }
 
                 upload_builder.update_bitmap(atlas_handle_, reinterpret_cast<const char *>(atlas_data_.get()),
-                    width * width, { 0, 0 }, { width, width });
+                    width * width * adapter_->get_atlas_bitmap_bits_per_pixel() / 8, { 0, 0 }, { width, width });
             }
         }
 
