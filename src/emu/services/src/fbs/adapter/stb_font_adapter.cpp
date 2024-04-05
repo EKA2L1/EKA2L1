@@ -299,6 +299,7 @@ namespace eka2l1::epoc::adapter {
         // Calculate vertical advance by char_ascent - char_descent + linegap
         character_metric.vertical_advance = static_cast<std::int16_t>(scaled_y1 - scaled_y0 + linegap * scale_factor);
         character_metric.horizontal_bearing_y = static_cast<std::int16_t>(scaled_y1);
+        character_metric.horizontal_bearing_y = static_cast<std::int16_t>(scaled_y1);
 
         // Not caring about vertical placement right now (text placement)
         character_metric.vertical_bearing_y = 0;

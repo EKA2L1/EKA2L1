@@ -43,11 +43,15 @@ namespace eka2l1::epoc::adapter {
 
     std::unique_ptr<freetype_lib_raii> ft_lib_raii_;
 
-    inline short ft_convention_to_int_pixel(FT_Pos val) {
+    inline float ft_convention_to_float(FT_Pos val) {
         if (0 > val) {
             val = static_cast<FT_Pos>(-val);
         }
 
+        return static_cast<float>(val) / 64.0f;
+    }
+
+    inline short ft_convention_to_int_pixel(FT_Pos val) {
         return static_cast<short>((val + 32) >> 6);
     }
 
@@ -55,8 +59,9 @@ namespace eka2l1::epoc::adapter {
         return ft_lib_raii_->lib_;
     }
 
-    freetype_font_adapter::freetype_font_adapter(std::vector<std::uint8_t> &data_)
-        : is_valid_(false) {
+    freetype_font_adapter::freetype_font_adapter(std::vector<std::uint8_t> &data)
+        : data_(data)
+        , is_valid_(false) {
         if (!ft_lib_raii_) {
             ft_lib_raii_ = std::make_unique<freetype_lib_raii>();
         }
@@ -84,6 +89,12 @@ namespace eka2l1::epoc::adapter {
         }
     }
 
+    freetype_font_adapter::~freetype_font_adapter() {
+        for (auto face : faces_) {
+            FT_Done_Face(face);
+        }
+    }
+
     std::uint32_t freetype_font_adapter::line_gap(const std::size_t idx, const std::uint32_t metric_identifier) {
         if (idx >= faces_.size()) {
             return 0;
@@ -106,10 +117,14 @@ namespace eka2l1::epoc::adapter {
         }
 
         auto face = faces_[idx];
-        face_attrib.fam_name.assign(nullptr, common::utf8_to_ucs2(face->family_name));
-        face_attrib.name.assign(nullptr, common::utf8_to_ucs2(face->style_name));
-        face_attrib.local_full_fam_name.assign(nullptr, common::utf8_to_ucs2(face->family_name));
-        face_attrib.local_full_name.assign(nullptr, common::utf8_to_ucs2(face->style_name));
+
+        auto fam_name = common::utf8_to_ucs2(face->family_name);
+        auto name = fam_name + u" " + common::utf8_to_ucs2(face->style_name);
+
+        face_attrib.fam_name.assign(nullptr, fam_name);
+        face_attrib.name.assign(nullptr, name);
+        face_attrib.local_full_fam_name.assign(nullptr, fam_name);
+        face_attrib.local_full_name.assign(nullptr, name);
         face_attrib.style = 0;
 
         if (face->style_flags & FT_STYLE_FLAG_BOLD) {
@@ -160,7 +175,7 @@ namespace eka2l1::epoc::adapter {
             glyph_index = FT_Get_Char_Index(face, code);
         }
 
-        if (face->size->metrics.height != metric_identifier) {
+        if (ft_convention_to_int_pixel(face->size->metrics.height) != metric_identifier) {
             auto err = FT_Set_Pixel_Sizes(face, 0, metric_identifier);
 
             if (err) {
@@ -169,7 +184,7 @@ namespace eka2l1::epoc::adapter {
             }
         }
 
-        auto err = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+        auto err = FT_Load_Glyph(face, glyph_index, FT_LOAD_BITMAP_METRICS_ONLY);
 
         if (err) {
             LOG_ERROR(SERVICE_FBS, "Failed to load glyph for face to get glyph metric, error: {}", FT_Error_String(err));
@@ -203,7 +218,7 @@ namespace eka2l1::epoc::adapter {
             glyph_index = FT_Get_Char_Index(face, code);
         }
 
-        if (face->size->metrics.height != metric_identifier) {
+        if (ft_convention_to_int_pixel(face->size->metrics.height) != metric_identifier) {
             auto err = FT_Set_Pixel_Sizes(face, 0, metric_identifier);
 
             if (err) {
@@ -242,14 +257,103 @@ namespace eka2l1::epoc::adapter {
     }
 
     std::int32_t freetype_font_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) {
-        return 0;
+        auto pack_state = std::make_unique<atlas_pack_state>();
+
+        pack_state->atlas_base_ = atlas_ptr;
+        pack_state->atlas_size_ = atlas_size;
+
+        pack_state->atlas_node_.resize(atlas_size.x);
+
+        stbrp_init_target(&pack_state->atlas_context_, atlas_size.x, atlas_size.y, pack_state->atlas_node_.data(),
+            static_cast<int>(pack_state->atlas_node_.size()));
+        std::memset(pack_state->atlas_base_, 0, atlas_size.x * atlas_size.y);
+
+        return static_cast<std::int32_t>(pack_states_.add(pack_state));
     }
 
     bool freetype_font_adapter::get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point, const char16_t num_code, const std::uint32_t metric_identifier, character_info *info) {
-        return false;
+        auto pack_state = pack_states_.get(handle);
+
+        if (!pack_state) {
+            return false;
+        }
+
+        auto pack_state_ptr = pack_state->get();
+        auto face = faces_[idx];
+
+        if (!face) {
+            return false;
+        }
+
+        if (metric_identifier != ft_convention_to_int_pixel(face->size->metrics.height)) {
+            auto err = FT_Set_Pixel_Sizes(face, 0, metric_identifier);
+
+            if (err) {
+                LOG_ERROR(SERVICE_FBS, "Failed to set character size for face to get glyph atlas, error: {}", FT_Error_String(err));
+                return false;
+            }
+        }
+
+        std::vector<stbrp_rect> pack_rects(num_code);
+
+        for (auto i = 0; i < num_code; i++) {
+            const char16_t char_code = unicode_point ? unicode_point[i] : static_cast<char16_t>(start_code + i);
+            auto err = FT_Load_Char(face, char_code, FT_LOAD_BITMAP_METRICS_ONLY);
+
+            if (err) {
+                LOG_WARN(SERVICE_FBS, "Failed to load character code 0x{:X} for face to get glyph atlas, error: {}",
+                    static_cast<int>(char_code), FT_Error_String(err));
+            }
+
+            pack_rects[i].x = 0;
+            pack_rects[i].y = 0;
+            pack_rects[i].w = face->glyph->bitmap.width;
+            pack_rects[i].h = face->glyph->bitmap.rows;
+        }
+
+        if (!stbrp_pack_rects(&pack_state_ptr->atlas_context_, pack_rects.data(), static_cast<int>(pack_rects.size()))) {
+            LOG_ERROR(SERVICE_FBS, "Failed to pack rects for glyph atlas");
+            return false;
+        }
+
+        // Render and put bitmap to atlas
+        for (auto i = 0; i < num_code; i++) {
+            const char16_t char_code = unicode_point ? unicode_point[i] : static_cast<char16_t>(start_code + i);
+            auto err = FT_Load_Char(face, char_code, FT_LOAD_RENDER);
+
+            if (err) {
+                LOG_WARN(SERVICE_FBS, "Failed to load character code 0x{:X} for face to get glyph atlas, error: {}",
+                    static_cast<int>(char_code), FT_Error_String(err));
+            }
+
+            auto glyph = face->glyph;
+            auto bitmap = glyph->bitmap;
+
+            auto &rect = pack_rects[i];
+            auto dest = pack_state_ptr->atlas_base_ + rect.x + rect.y * pack_state_ptr->atlas_size_.x;
+
+            for (auto y = 0; y < bitmap.rows; y++) {
+                for (auto x = 0; x < bitmap.width; x++) {
+                    dest[x + y * pack_state_ptr->atlas_size_.x] = bitmap.buffer[x + y * bitmap.width];
+                }
+            }
+
+            info[i].x0 = rect.x;
+            info[i].y0 = rect.y;
+            info[i].x1 = rect.x + bitmap.width;
+            info[i].y1 = rect.y + bitmap.rows;
+            info[i].xadv = ft_convention_to_float(glyph->metrics.horiAdvance);
+            info[i].xoff = ft_convention_to_int_pixel(glyph->metrics.horiBearingX);
+            info[i].yoff = ft_convention_to_int_pixel(-glyph->metrics.horiBearingY);
+            info[i].xoff2 = info[i].xoff + static_cast<float>(info[i].xadv);
+            info[i].yoff2 = info[i].yoff + static_cast<float>(bitmap.rows);
+        }
+
+        return true;
     }
 
     void freetype_font_adapter::end_get_atlas(const std::int32_t handle) {
+        pack_states_.remove(handle);
     }
 
     bool freetype_font_adapter::does_glyph_exist(std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier) {
@@ -320,5 +424,38 @@ namespace eka2l1::epoc::adapter {
         }
 
         return metrics;
+    }
+
+    std::uint32_t freetype_font_adapter::get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint, const std::uint32_t metric_identifier, const bool vertical) {
+        auto face = faces_[face_index];
+        if (!face) {
+            return 0;
+        }
+
+        auto glyph_index = codepoint;
+        if (glyph_index & 0x80000000) {
+            glyph_index &= ~0x80000000;
+        } else {
+            glyph_index = FT_Get_Char_Index(face, codepoint);
+        }
+
+        if (ft_convention_to_int_pixel(face->size->metrics.height) != metric_identifier) {
+            auto err = FT_Set_Pixel_Sizes(face, 0, metric_identifier);
+            if (err) {
+                LOG_ERROR(SERVICE_FBS, "Failed to set character size for face to get glyph advance, error: {}", FT_Error_String(err));
+                return 0;
+            }
+        }
+
+        auto err = FT_Load_Glyph(face, glyph_index, FT_LOAD_ADVANCE_ONLY);
+        if (err) {
+            LOG_ERROR(SERVICE_FBS, "Failed to load glyph for face to get glyph advance, error: {}", FT_Error_String(err));
+            return 0;
+        }
+
+        auto glyph = face->glyph;
+
+        return vertical ? ft_convention_to_int_pixel(glyph->metrics.vertAdvance) :
+                          ft_convention_to_int_pixel(glyph->metrics.horiAdvance);
     }
 }

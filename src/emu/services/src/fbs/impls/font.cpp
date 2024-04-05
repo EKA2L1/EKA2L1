@@ -484,7 +484,7 @@ namespace eka2l1 {
             of->font_captial_offset = 0;
 
             // Get the line gap!! This is no stub
-            of->font_line_gap = static_cast<std::uint16_t>(info.adapter->line_gap(info.idx, info.metrics.design_height));
+            of->font_line_gap = static_cast<std::uint16_t>(info.adapter->line_gap(info.idx, info.metric_identifier));
         }
 
         // NOTE: Newer version (from S^3 onwards) uses offset. Older version just cast this directly to integer
@@ -1141,7 +1141,7 @@ namespace eka2l1 {
         epoc::adapter::font_file_adapter_kind adapter_kind = epoc::adapter::font_file_adapter_kind::none;
 
         if (extension == ".ttf") {
-            adapter_kind = epoc::adapter::font_file_adapter_kind::stb;
+            adapter_kind = epoc::adapter::font_file_adapter_kind::freetype;
         } else if (extension == ".gdr") {
             adapter_kind = epoc::adapter::font_file_adapter_kind::gdr;
         }

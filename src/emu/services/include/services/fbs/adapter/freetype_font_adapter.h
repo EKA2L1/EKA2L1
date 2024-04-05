@@ -27,19 +27,33 @@
 
 #include <freetype/freetype.h>
 #include <services/fbs/adapter/font_adapter.h>
+#include <stb_rect_pack.h>
 
 namespace eka2l1::epoc::adapter {
    class freetype_font_adapter : public font_file_adapter_base {
    private:
+       struct atlas_pack_state {
+           std::uint8_t *atlas_base_;
+           eka2l1::vec2 atlas_size_;
+           std::vector<stbrp_node> atlas_node_;
+           stbrp_context atlas_context_;
+       };
+
+       std::vector<std::uint8_t> data_;
        std::vector<FT_Face> faces_;
        bool is_valid_;
 
+       common::identity_container<std::unique_ptr<atlas_pack_state>> pack_states_;
+
    protected:
+       std::uint32_t get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint, const std::uint32_t metric_identifier, const bool vertical = false) override;
 
    public:
        explicit freetype_font_adapter(std::vector<std::uint8_t> &data_);
+       ~freetype_font_adapter() override;
+
        bool is_valid() override {
-           return false;
+           return is_valid_;
        }
 
        bool vectorizable() const override {

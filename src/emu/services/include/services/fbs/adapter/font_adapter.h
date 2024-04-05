@@ -165,7 +165,8 @@ namespace eka2l1::epoc::adapter {
     enum class font_file_adapter_kind {
         none,
         stb,
-        gdr
+        gdr,
+        freetype
         // Add your new adapter here
     };
 
