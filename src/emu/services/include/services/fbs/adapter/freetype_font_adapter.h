@@ -65,12 +65,10 @@ namespace eka2l1::epoc::adapter {
        std::uint32_t line_gap(const std::size_t idx, const std::uint32_t metric_identifier) override;
 
        bool get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) override;
-       bool get_glyph_metric(const std::size_t idx, std::uint32_t code,
-           open_font_character_metric &character_metric, const std::int32_t baseline_horz_off,
-           const std::uint32_t metric_identifier) override;
 
        std::uint8_t *get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier,
-           int *rasterized_width, int *rasterized_height, std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type) override;
+            int *rasterized_width, int *rasterized_height, std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type,
+            open_font_character_metric &character_metric) override;
 
        void free_glyph_bitmap(std::uint8_t *data) override;
 

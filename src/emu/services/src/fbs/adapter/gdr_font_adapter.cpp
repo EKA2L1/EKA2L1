@@ -150,43 +150,18 @@ namespace eka2l1::epoc::adapter {
         return nullptr;
     }
 
-    bool gdr_font_file_adapter::get_glyph_metric(const std::size_t idx, std::uint32_t code, open_font_character_metric &character_metric, const std::int32_t baseline_horz_off,
-        const std::uint32_t metric_identifier) {
-        const loader::gdr::character *the_char = get_character(idx, code, metric_identifier);
-
-        if (!the_char) {
-            return false;
-        }
-
-        const std::int16_t target_width = the_char->metric_->move_in_pixels_ - the_char->metric_->left_adj_in_pixels_ - the_char->metric_->right_adjust_in_pixels_;
-
-        character_metric.width = target_width;
-        character_metric.height = the_char->metric_->height_in_pixels_;
-        character_metric.horizontal_advance = the_char->metric_->move_in_pixels_;
-        character_metric.horizontal_bearing_x = the_char->metric_->left_adj_in_pixels_;
-        character_metric.horizontal_bearing_y = the_char->metric_->ascent_in_pixels_;
-
-        // Todo supply vertical bearing: This is spaces when text placed vertically
-        character_metric.vertical_bearing_x = 0;
-        character_metric.vertical_bearing_y = 0;
-
-        character_metric.bitmap_type = glyph_bitmap_type::monochrome_glyph_bitmap;
-
-        return true;
-    }
-
     bool gdr_font_file_adapter::does_glyph_exist(std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier) {
         return get_character(idx, code, 0);
     }
 
     std::uint8_t *gdr_font_file_adapter::get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier,
-        int *rasterized_width, int *rasterized_height, std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type) {
+        int *rasterized_width, int *rasterized_height, std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type,
+        open_font_character_metric &character_metric) {
         const loader::gdr::character *the_char = get_character(idx, code, metric_identifier);
 
         if (!the_char) {
             return nullptr;
         }
-
 
         // Do simple scaling! :D If it is blocky, probably have to get a library involved
         std::vector<std::uint32_t> scaled_result;
@@ -294,6 +269,18 @@ namespace eka2l1::epoc::adapter {
         if (rasterized_height) {
             *rasterized_height = target_height;
         }
+
+        character_metric.width = target_width;
+        character_metric.height = the_char->metric_->height_in_pixels_;
+        character_metric.horizontal_advance = the_char->metric_->move_in_pixels_;
+        character_metric.horizontal_bearing_x = the_char->metric_->left_adj_in_pixels_;
+        character_metric.horizontal_bearing_y = the_char->metric_->ascent_in_pixels_;
+
+        // Todo supply vertical bearing: This is spaces when text placed vertically
+        character_metric.vertical_bearing_x = 0;
+        character_metric.vertical_bearing_y = 0;
+
+        character_metric.bitmap_type = glyph_bitmap_type::monochrome_glyph_bitmap;
 
         // In case this adapter get destroyed. It will free this data.
         dynamic_alloc_list_.push_back(compressed_bitmap);

@@ -58,12 +58,10 @@ namespace eka2l1::epoc::adapter {
         }
 
         virtual bool get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) = 0;
-        virtual bool get_glyph_metric(const std::size_t idx, std::uint32_t code, open_font_character_metric &metric,
-            const std::int32_t baseline_horz_off, const std::uint32_t metric_identifier)
-            = 0;
 
         virtual std::uint8_t *get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier,
-            int *rasterized_width, int *rasterized_height, std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type)
+            int *rasterized_width, int *rasterized_height, std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type,
+            open_font_character_metric &character_metric)
             = 0;
 
         virtual void free_glyph_bitmap(std::uint8_t *data) = 0;

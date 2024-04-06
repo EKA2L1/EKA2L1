@@ -212,46 +212,9 @@ namespace eka2l1::epoc::adapter {
         return true;
     }
 
-    bool freetype_font_adapter::get_glyph_metric(const std::size_t idx, std::uint32_t code, open_font_character_metric &character_metric, const std::int32_t baseline_horz_off, const std::uint32_t metric_identifier) {
-        if (idx >= faces_.size()) {
-            return false;
-        }
-
-        auto face = faces_[idx];
-        auto glyph_index = code;
-
-        if (glyph_index & 0x80000000) {
-            glyph_index &= ~0x80000000;
-        } else {
-            glyph_index = FT_Get_Char_Index(face, code);
-        }
-
-        if (!set_font_size(idx, metric_identifier)) {
-            return false;
-        }
-
-        auto err = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_BITMAP);
-
-        if (err) {
-            LOG_ERROR(SERVICE_FBS, "Failed to load glyph for face to get glyph metric, error: {}", FT_Error_String(err));
-            return false;
-        }
-
-        auto glyph = face->glyph;
-        character_metric.width = ft_convention_to_int_pixel(glyph->metrics.width);
-        character_metric.height = ft_convention_to_int_pixel(glyph->metrics.height);
-        character_metric.horizontal_bearing_x = ft_convention_to_int_pixel(glyph->metrics.horiBearingX);
-        character_metric.horizontal_bearing_y = ft_convention_to_int_pixel(glyph->metrics.horiBearingY);
-        character_metric.horizontal_advance = ft_convention_to_int_pixel(glyph->metrics.horiAdvance);
-        character_metric.vertical_bearing_x = ft_convention_to_int_pixel(glyph->metrics.vertBearingX);
-        character_metric.vertical_bearing_y = ft_convention_to_int_pixel(glyph->metrics.vertBearingY);
-        character_metric.vertical_advance = ft_convention_to_int_pixel(glyph->metrics.vertAdvance);
-        character_metric.bitmap_type = glyph_bitmap_type::antialised_glyph_bitmap;
-
-        return true;
-    }
-
-    std::uint8_t *freetype_font_adapter::get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier, int *rasterized_width, int *rasterized_height, uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type) {
+    std::uint8_t *freetype_font_adapter::get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier,
+        int *rasterized_width, int *rasterized_height, std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type,
+        open_font_character_metric &character_metric) {
         if (idx >= faces_.size()) {
             return nullptr;
         }
@@ -291,6 +254,16 @@ namespace eka2l1::epoc::adapter {
         if (bmp_type) {
             *bmp_type = glyph_bitmap_type::antialised_glyph_bitmap;
         }
+
+        character_metric.width = ft_convention_to_int_pixel(glyph->metrics.width);
+        character_metric.height = ft_convention_to_int_pixel(glyph->metrics.height);
+        character_metric.horizontal_bearing_x = ft_convention_to_int_pixel(glyph->metrics.horiBearingX);
+        character_metric.horizontal_bearing_y = ft_convention_to_int_pixel(glyph->metrics.horiBearingY);
+        character_metric.horizontal_advance = ft_convention_to_int_pixel(glyph->metrics.horiAdvance);
+        character_metric.vertical_bearing_x = ft_convention_to_int_pixel(glyph->metrics.vertBearingX);
+        character_metric.vertical_bearing_y = ft_convention_to_int_pixel(glyph->metrics.vertBearingY);
+        character_metric.vertical_advance = ft_convention_to_int_pixel(glyph->metrics.vertAdvance);
+        character_metric.bitmap_type = glyph_bitmap_type::antialised_glyph_bitmap;
 
         return bitmap.buffer;
     }
