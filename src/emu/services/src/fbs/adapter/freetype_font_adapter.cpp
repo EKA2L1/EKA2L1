@@ -447,7 +447,7 @@ namespace eka2l1::epoc::adapter {
     bool freetype_font_adapter::get_table_content(const std::size_t face_index, const std::uint32_t tag4, std::uint8_t *dest, uint32_t &dest_size) {
         auto face = faces_[face_index];
 
-        FT_ULong dest_size_temp = dest_size;
+        FT_ULong dest_size_temp = !dest ? 0 : dest_size;
         auto table = FT_Load_Sfnt_Table(face, tag4, 0, dest, &dest_size_temp);
 
         if (!table) {
