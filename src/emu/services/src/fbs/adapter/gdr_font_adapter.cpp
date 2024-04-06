@@ -431,7 +431,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     std::optional<open_font_metrics> gdr_font_file_adapter::get_nearest_supported_metric(const std::size_t face_index, const std::uint16_t targeted_font_size,
-        std::uint32_t *metric_identifier) {
+        std::uint32_t *metric_identifier, bool is_design_font_size) {
         if ((face_index >= store_.typefaces_.size()) || !is_valid()) {
             LOG_ERROR(SERVICE_FBS, "The font is not ready or the face index is out of bounds!");
             return std::nullopt;

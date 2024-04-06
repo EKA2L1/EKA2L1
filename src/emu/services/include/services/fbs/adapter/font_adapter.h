@@ -53,7 +53,7 @@ namespace eka2l1::epoc::adapter {
 
         virtual bool is_valid() = 0;
         virtual bool vectorizable() const = 0;
-        virtual std::uint32_t line_gap(const std::size_t idx) {
+        virtual std::uint32_t line_gap(const std::size_t idx, const std::uint32_t metric_identifier) {
             return 0;
         }
 
@@ -159,13 +159,18 @@ namespace eka2l1::epoc::adapter {
          * @return std::uint16_t            The nearest font metric that this font supported.
          */
         virtual std::optional<open_font_metrics> get_nearest_supported_metric(const std::size_t face_index, const std::uint16_t targeted_font_size,
-            std::uint32_t *metric_identifier = nullptr) = 0;
+            std::uint32_t *metric_identifier = nullptr, bool is_design_font_size = true) = 0;
+
+        virtual std::uint8_t get_atlas_bitmap_bits_per_pixel() {
+            return 8;
+        }
     };
 
     enum class font_file_adapter_kind {
         none,
         stb,
-        gdr
+        gdr,
+        freetype
         // Add your new adapter here
     };
 

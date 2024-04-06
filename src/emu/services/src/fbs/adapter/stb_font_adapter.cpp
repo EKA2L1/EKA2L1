@@ -145,7 +145,8 @@ namespace eka2l1::epoc::adapter {
         return true;
     }
 
-    std::optional<open_font_metrics> stb_font_file_adapter::get_nearest_supported_metric(const std::size_t idx, const std::uint16_t target_font_size, std::uint32_t *metric_identifier) {
+    std::optional<open_font_metrics> stb_font_file_adapter::get_nearest_supported_metric(const std::size_t idx, const std::uint16_t target_font_size, std::uint32_t *metric_identifier,
+        bool is_design_font_size) {
         int off = 0;
         stbtt_fontinfo *info = get_or_create_info(static_cast<int>(idx), &off);
 
@@ -299,6 +300,7 @@ namespace eka2l1::epoc::adapter {
         // Calculate vertical advance by char_ascent - char_descent + linegap
         character_metric.vertical_advance = static_cast<std::int16_t>(scaled_y1 - scaled_y0 + linegap * scale_factor);
         character_metric.horizontal_bearing_y = static_cast<std::int16_t>(scaled_y1);
+        character_metric.horizontal_bearing_y = static_cast<std::int16_t>(scaled_y1);
 
         // Not caring about vertical placement right now (text placement)
         character_metric.vertical_bearing_y = 0;
@@ -307,14 +309,15 @@ namespace eka2l1::epoc::adapter {
         return true;
     }
 
-    std::uint32_t stb_font_file_adapter::line_gap(const std::size_t idx) {
+    std::uint32_t stb_font_file_adapter::line_gap(const std::size_t idx, const std::uint32_t metric_identifier) {
         int ascent, descent, linegap = 0;
         int off = 0;
 
         stbtt_fontinfo *info = get_or_create_info(static_cast<int>(idx), &off);
         stbtt_GetFontVMetrics(info, &ascent, &descent, &linegap);
 
-        return linegap;
+        const float scale_factor = stbtt_ScaleForPixelHeight(info, static_cast<float>(metric_identifier));
+        return static_cast<std::uint32_t>(linegap * scale_factor);
     }
 
     void stb_font_file_adapter::free_glyph_bitmap(std::uint8_t *data) {

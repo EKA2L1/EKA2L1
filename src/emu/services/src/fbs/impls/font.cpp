@@ -484,7 +484,7 @@ namespace eka2l1 {
             of->font_captial_offset = 0;
 
             // Get the line gap!! This is no stub
-            of->font_line_gap = static_cast<std::uint16_t>(info.adapter->line_gap(info.idx));
+            of->font_line_gap = static_cast<std::uint16_t>(info.adapter->line_gap(info.idx, info.metric_identifier));
         }
 
         // NOTE: Newer version (from S^3 onwards) uses offset. Older version just cast this directly to integer
@@ -597,6 +597,7 @@ namespace eka2l1 {
         // TODO: Find out if spec height is always in twips for eka2.
         if (serv->kern->is_eka1() || is_twips) {
             spec.height = static_cast<std::int32_t>(static_cast<float>(spec.height) / epoc::get_approximate_pixel_to_twips_mul(serv->kern->get_epoc_version()));
+            size_info->x = static_cast<std::int32_t>(static_cast<float>(size_info->x) / epoc::get_approximate_pixel_to_twips_mul(serv->kern->get_epoc_version()));
         }
 
         // Observing font plugin on real phone, it seems to clamp the height between 2 to 256.
@@ -637,8 +638,9 @@ namespace eka2l1 {
             font->serv = serv;
 
             font->of_info = *ofi_suit;
-            font->of_info.metrics = ofi_suit->adapter->get_nearest_supported_metric(ofi_suit->idx, static_cast<std::uint16_t>(spec.height),
-                &font->of_info.metric_identifier).value();
+            font->of_info.metrics = ofi_suit->adapter->get_nearest_supported_metric(ofi_suit->idx,
+                 is_design_height ? static_cast<std::uint16_t>(spec.height) : static_cast<std::uint16_t>(size_info->x),
+                 &font->of_info.metric_identifier, is_design_height).value();
 
             epoc::bitmapfont_base *bmpfont = create_bitmap_open_font(font->of_info, spec, ctx->msg->own_thr->owning_process());
 
@@ -1141,7 +1143,7 @@ namespace eka2l1 {
         epoc::adapter::font_file_adapter_kind adapter_kind = epoc::adapter::font_file_adapter_kind::none;
 
         if (extension == ".ttf") {
-            adapter_kind = epoc::adapter::font_file_adapter_kind::stb;
+            adapter_kind = epoc::adapter::font_file_adapter_kind::freetype;
         } else if (extension == ".gdr") {
             adapter_kind = epoc::adapter::font_file_adapter_kind::gdr;
         }

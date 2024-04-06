@@ -18,6 +18,7 @@
  */
 
 #include <services/fbs/adapter/font_adapter.h>
+#include <services/fbs/adapter/freetype_font_adapter.h>
 #include <services/fbs/adapter/gdr_font_adapter.h>
 #include <services/fbs/adapter/stb_font_adapter.h>
 #include <common/log.h>
@@ -95,6 +96,10 @@ namespace eka2l1::epoc::adapter {
 
         case font_file_adapter_kind::gdr: {
             return std::make_unique<gdr_font_file_adapter>(dat);
+        }
+
+        case font_file_adapter_kind::freetype: {
+            return std::make_unique<freetype_font_adapter>(dat);
         }
 
         default: {

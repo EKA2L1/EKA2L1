@@ -260,6 +260,11 @@ namespace eka2l1 {
         vec4 operator*(const int rhs) const {
             return vec4(x * rhs, y * rhs, z * rhs, w * rhs);
         }
+
+        vec4 operator*(const float rhs) const {
+            return vec4(static_cast<float>(x * rhs), static_cast<float>(y * rhs), static_cast<float>(z * rhs),
+                static_cast<float>(w * rhs));
+        }
     };
 
     struct object_size : public vec2 {
@@ -351,6 +356,10 @@ namespace eka2l1 {
         bool contains(const eka2l1::rect rect) const {
             return (top.x + size.x >= rect.top.x + rect.size.x) && (top.y + size.y >= rect.top.y + rect.size.y)
                 && (top.x <= rect.top.x) && (top.y <= rect.top.y);
+        }
+
+        eka2l1::vec2 bottom_left() const {
+            return eka2l1::vec2(top.x, top.y + size.y);
         }
 
         eka2l1::vec2 bottom_right() const {
