@@ -97,6 +97,6 @@ namespace eka2l1::epoc::adapter {
             std::uint32_t &dest_size) override;
 
         std::optional<open_font_metrics> get_nearest_supported_metric(const std::size_t face_index, const std::uint16_t targeted_font_size,
-            std::uint32_t *metric_identifier = nullptr) override;
+            std::uint32_t *metric_identifier = nullptr, bool is_design_font_size = true) override;
     };
 }

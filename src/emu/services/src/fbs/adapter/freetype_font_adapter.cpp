@@ -43,6 +43,37 @@ namespace eka2l1::epoc::adapter {
 
     std::unique_ptr<freetype_lib_raii> ft_lib_raii_;
 
+    // Thank you very much Anson!
+    // Source: https://lists.gnu.org/archive/html/freetype/2005-06/msg00033.html
+    // Don't know if Symbian dev made this code, or they copy it
+    // Symbian Source: https://github.com/SymbianSource/oss.FCL.sf.os.textandloc/blob/59666d6704fee305b0fdd74974f7b4f42659c6a6/fontservices/freetypefontrasteriser/src/FTRAST2.CPP#L934
+    static int derive_design_height_from_max_height(const FT_Face& aFace, int aMaxHeightInPixel)
+    {
+        const int boundingBoxHeightInFontUnit = aFace->bbox.yMax - aFace->bbox.yMin;
+        int designHeightInPixels = ( ( aMaxHeightInPixel *
+                                        aFace->units_per_EM ) / boundingBoxHeightInFontUnit );
+
+        const int maxHeightInFontUnit = aMaxHeightInPixel << 6;
+        FT_Set_Pixel_Sizes( aFace, designHeightInPixels, designHeightInPixels );
+        int currentMaxHeightInFontUnit = FT_MulFix(
+            boundingBoxHeightInFontUnit, aFace->size->metrics.y_scale );
+        while ( currentMaxHeightInFontUnit < maxHeightInFontUnit )
+        {
+            designHeightInPixels++;
+            FT_Set_Pixel_Sizes( aFace, designHeightInPixels, designHeightInPixels );
+            currentMaxHeightInFontUnit = FT_MulFix(
+                boundingBoxHeightInFontUnit, aFace->size->metrics.y_scale );
+        }
+        while ( currentMaxHeightInFontUnit > maxHeightInFontUnit )
+        {
+            designHeightInPixels--;
+            FT_Set_Pixel_Sizes( aFace, designHeightInPixels, designHeightInPixels );
+            currentMaxHeightInFontUnit = FT_MulFix(
+                boundingBoxHeightInFontUnit, aFace->size->metrics.y_scale );
+        }
+        return designHeightInPixels;
+    }
+
     inline float ft_convention_to_float(FT_Pos val) {
         if (0 > val) {
             val = static_cast<FT_Pos>(-val);
@@ -86,7 +117,31 @@ namespace eka2l1::epoc::adapter {
 
         if (!faces_.empty()) {
             is_valid_ = true;
+
+            current_font_sizes_.resize(faces_.size());
+            std::fill(current_font_sizes_.begin(), current_font_sizes_.end(), 0);
         }
+    }
+
+    bool freetype_font_adapter::set_font_size(const std::size_t index, const std::uint32_t size) {
+        if (index >= faces_.size()) {
+            return false;
+        }
+
+        if (current_font_sizes_[index] != 0 && current_font_sizes_[index] == size) {
+            return true;
+        }
+
+        auto face = faces_[index];
+        auto err = FT_Set_Pixel_Sizes(face, 0, size);
+
+        if (err) {
+            LOG_ERROR(SERVICE_FBS, "Failed to set character size for face, error: {}", FT_Error_String(err));
+            return false;
+        }
+
+        current_font_sizes_[index] = size;
+        return true;
     }
 
     freetype_font_adapter::~freetype_font_adapter() {
@@ -100,11 +155,7 @@ namespace eka2l1::epoc::adapter {
             return 0;
         }
 
-        auto face = faces_[idx];
-        auto err = FT_Set_Pixel_Sizes(face, 0, metric_identifier);
-
-        if (err) {
-            LOG_ERROR(SERVICE_FBS, "Failed to set character size for face to calculate line gap, error: {}", FT_Error_String(err));
+        if (!set_font_size(idx, metric_identifier)) {
             return 0;
         }
 
@@ -175,13 +226,8 @@ namespace eka2l1::epoc::adapter {
             glyph_index = FT_Get_Char_Index(face, code);
         }
 
-        if (ft_convention_to_int_pixel(face->size->metrics.height) != metric_identifier) {
-            auto err = FT_Set_Pixel_Sizes(face, 0, metric_identifier);
-
-            if (err) {
-                LOG_ERROR(SERVICE_FBS, "Failed to set character size for face to get glyph metric, error: {}", FT_Error_String(err));
-                return false;
-            }
+        if (!set_font_size(idx, metric_identifier)) {
+            return false;
         }
 
         auto err = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_BITMAP);
@@ -219,13 +265,8 @@ namespace eka2l1::epoc::adapter {
             glyph_index = FT_Get_Char_Index(face, code);
         }
 
-        if (ft_convention_to_int_pixel(face->size->metrics.height) != metric_identifier) {
-            auto err = FT_Set_Pixel_Sizes(face, 0, metric_identifier);
-
-            if (err) {
-                LOG_ERROR(SERVICE_FBS, "Failed to set character size for face to get glyph bitmap, error: {}", FT_Error_String(err));
-                return nullptr;
-            }
+        if (!set_font_size(idx, metric_identifier)) {
+            return nullptr;
         }
 
         auto err = FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER);
@@ -286,13 +327,8 @@ namespace eka2l1::epoc::adapter {
             return false;
         }
 
-        if (metric_identifier != ft_convention_to_int_pixel(face->size->metrics.height)) {
-            auto err = FT_Set_Pixel_Sizes(face, 0, metric_identifier);
-
-            if (err) {
-                LOG_ERROR(SERVICE_FBS, "Failed to set character size for face to get glyph atlas, error: {}", FT_Error_String(err));
-                return false;
-            }
+        if (!set_font_size(idx, metric_identifier)) {
+            return false;
         }
 
         std::vector<stbrp_rect> pack_rects(num_code);
@@ -422,16 +458,21 @@ namespace eka2l1::epoc::adapter {
         return true;
     }
 
-    std::optional<open_font_metrics> freetype_font_adapter::get_nearest_supported_metric(const std::size_t face_index, const std::uint16_t targeted_font_size, std::uint32_t *metric_identifier) {
+    static constexpr float DESIGN_SIZE_SCALE = 9.0f / 10.0f;
+
+    std::optional<open_font_metrics> freetype_font_adapter::get_nearest_supported_metric(const std::size_t face_index, const std::uint16_t targeted_font_size, std::uint32_t *metric_identifier,
+        bool is_design_font_size) {
         if (face_index >= faces_.size()) {
             return std::nullopt;
         }
 
         auto face = faces_[face_index];
-        auto err = FT_Set_Pixel_Sizes(face, 0, targeted_font_size);
+        auto adjusted_font_size = is_design_font_size ? (static_cast<int>(static_cast<float>(targeted_font_size) * DESIGN_SIZE_SCALE)) :
+            derive_design_height_from_max_height(face, targeted_font_size);
 
-        if (err) {
-            LOG_ERROR(SERVICE_FBS, "Failed to set character size for face, error: {}", FT_Error_String(err));
+        auto fake_design_height = is_design_font_size ? targeted_font_size : adjusted_font_size;
+
+        if (!set_font_size(face_index, adjusted_font_size)) {
             return std::nullopt;
         }
 
@@ -441,10 +482,12 @@ namespace eka2l1::epoc::adapter {
         metrics.descent = ft_convention_to_int_pixel(face->size->metrics.descender);
         metrics.max_height = ft_convention_to_int_pixel(face->size->metrics.height);
         metrics.max_width = ft_convention_to_int_pixel(face->size->metrics.max_advance);
+        metrics.max_depth = 0;
         metrics.baseline_correction = 0;
+        metrics.design_height = static_cast<std::int16_t>(fake_design_height);
 
         if (metric_identifier) {
-            *metric_identifier = metrics.max_height;
+            *metric_identifier = adjusted_font_size;
         }
 
         return metrics;
@@ -463,12 +506,8 @@ namespace eka2l1::epoc::adapter {
             glyph_index = FT_Get_Char_Index(face, codepoint);
         }
 
-        if (ft_convention_to_int_pixel(face->size->metrics.height) != metric_identifier) {
-            auto err = FT_Set_Pixel_Sizes(face, 0, metric_identifier);
-            if (err) {
-                LOG_ERROR(SERVICE_FBS, "Failed to set character size for face to get glyph advance, error: {}", FT_Error_String(err));
-                return 0;
-            }
+        if (!set_font_size(face_index, metric_identifier)) {
+            return 0;
         }
 
         auto err = FT_Load_Glyph(face, glyph_index, FT_LOAD_ADVANCE_ONLY);

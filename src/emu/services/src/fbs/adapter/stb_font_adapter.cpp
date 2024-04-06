@@ -145,7 +145,8 @@ namespace eka2l1::epoc::adapter {
         return true;
     }
 
-    std::optional<open_font_metrics> stb_font_file_adapter::get_nearest_supported_metric(const std::size_t idx, const std::uint16_t target_font_size, std::uint32_t *metric_identifier) {
+    std::optional<open_font_metrics> stb_font_file_adapter::get_nearest_supported_metric(const std::size_t idx, const std::uint16_t target_font_size, std::uint32_t *metric_identifier,
+        bool is_design_font_size) {
         int off = 0;
         stbtt_fontinfo *info = get_or_create_info(static_cast<int>(idx), &off);
 

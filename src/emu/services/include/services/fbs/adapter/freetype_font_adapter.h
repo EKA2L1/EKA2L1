@@ -44,9 +44,11 @@ namespace eka2l1::epoc::adapter {
        bool is_valid_;
 
        common::identity_container<std::unique_ptr<atlas_pack_state>> pack_states_;
+       std::vector<std::uint32_t> current_font_sizes_;
 
    protected:
        std::uint32_t get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint, const std::uint32_t metric_identifier, const bool vertical = false) override;
+       bool set_font_size(const std::size_t face_index, const std::uint32_t size);
 
    public:
        explicit freetype_font_adapter(std::vector<std::uint8_t> &data_);
@@ -97,7 +99,7 @@ namespace eka2l1::epoc::adapter {
            std::uint32_t &dest_size) override;
 
        std::optional<open_font_metrics> get_nearest_supported_metric(const std::size_t face_index, const std::uint16_t targeted_font_size,
-           std::uint32_t *metric_identifier = nullptr) override;
+           std::uint32_t *metric_identifier = nullptr, bool is_design_font_size = true) override;
 
        std::uint8_t get_atlas_bitmap_bits_per_pixel() override {
            return 32;
