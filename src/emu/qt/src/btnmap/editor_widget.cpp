@@ -22,6 +22,7 @@
 #include <qt/btnmap/editor_widget.h>
 #include <qt/btnmap/singletouch.h>
 #include <qt/btnmap/joystick.h>
+#include <qt/btnmap/camerapan.h>
 #include <qt/utils.h>
 
 #include <common/cvt.h>
@@ -246,6 +247,10 @@ bool editor_widget::handle_mouse_action(const eka2l1::vec3 &pos, const int butto
 
             case 1:
                 inst = std::make_unique<eka2l1::qt::btnmap::single_touch>(&map_editor_, pos_place);
+                break;
+
+            case 2:
+                inst = std::make_unique<eka2l1::qt::btnmap::camera_pan>(&map_editor_, pos_place);
                 break;
 
             default:

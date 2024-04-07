@@ -17,13 +17,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <qt/btnmap/camerapan.h>
 #include <qt/btnmap/editor.h>
 #include <qt/btnmap/singletouch.h>
 #include <qt/btnmap/joystick.h>
 #include <qt/btnmap/executor.h>
 #include <common/fileutils.h>
 #include <common/cvt.h>
+#include <common/log.h>
 
+#include <stb/stb_image.h>
 #include <vector>
 
 namespace eka2l1::qt::btnmap {
@@ -44,13 +47,34 @@ namespace eka2l1::qt::btnmap {
         resources_.clear();
     }
 
-    void editor::add_managed_resource(const std::string &name, drivers::handle h) {
-        resources_[name] = h;
-    }
-
-    drivers::handle editor::get_managed_resource(const std::string &name) {
+    drivers::handle editor::get_managed_resource(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder,
+        const std::string &name, const std::string &path) {
         if (resources_.find(name) == resources_.end()) {
-            return 0;
+            // Load it
+            int width, height, comp;
+            FILE *joystick_base_file = common::open_c_file(path, "rb");
+            if (joystick_base_file == nullptr) {
+                LOG_ERROR(FRONTEND_UI, "Resource file does not exist for mapping editor! (check {} if it exists)", path);
+                return 0;
+            } else {
+                stbi_uc* image = stbi_load_from_file(joystick_base_file, &width, &height, &comp, STBI_rgb_alpha);
+                if (!image) {
+                    LOG_ERROR(FRONTEND_UI, "Can't load resource {} for mapping editor!", path);
+                    return 0;
+                } else {
+                    auto handle = drivers::create_texture(driver, 2, 0, drivers::texture_format::rgba,
+                        drivers::texture_format::rgba, drivers::texture_data_type::ubyte,
+                        image, width * height * 4, eka2l1::vec3(width, height, 0));
+
+                    if (handle) {
+                        builder.set_texture_filter(handle, false, drivers::filter_option::linear);
+                        builder.set_texture_filter(handle, true, drivers::filter_option::linear);
+                    }
+
+                    resources_[name] = handle;
+                    stbi_image_free(image);
+                }
+            }
         }
 
         return resources_[name];
@@ -205,6 +229,16 @@ namespace eka2l1::qt::btnmap {
                 break;
             }
 
+            case BEHAVIOUR_TYPE_CAMERA_PAN: {
+                camera_pan_behavior *beha_pan = reinterpret_cast<camera_pan_behavior*>(beha);
+                auto inst = std::make_unique<camera_pan>(this, beha_pan->position());
+
+                inst->pan_speed(beha_pan->pan_speed());
+
+                entities_.push_back(std::move(inst));
+                break;
+            }
+
             default:
                 break;
             }
@@ -241,6 +275,16 @@ namespace eka2l1::qt::btnmap {
                 exec->add_behaviour(beha);
                 break;
             }
+
+            case EDITOR_ENTITY_TYPE_CAMERA_PAN: {
+                camera_pan *pan_ent = reinterpret_cast<camera_pan*>(entities_[i].get());
+                std::unique_ptr<behaviour> beha = std::make_unique<camera_pan_behavior>(exec, pan_ent->position(),
+                    pan_ent->pan_speed());
+
+                exec->add_behaviour(beha);
+                break;
+            }
+
             default:
                 break;
             }

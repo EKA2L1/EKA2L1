@@ -23,6 +23,7 @@
 #include <drivers/input/common.h>
 
 #include <cstdint>
+#include <chrono>
 #include <map>
 #include <memory>
 #include <vector>
@@ -45,7 +46,8 @@ namespace eka2l1::qt::btnmap {
 
     enum behaviour_type {
         BEHAVIOUR_TYPE_SINGLE_TOUCH,
-        BEHAVIOUR_TYPE_JOYSTICK
+        BEHAVIOUR_TYPE_JOYSTICK,
+        BEHAVIOUR_TYPE_CAMERA_PAN
     };
 
     struct behaviour {
@@ -133,6 +135,49 @@ namespace eka2l1::qt::btnmap {
 
         behaviour_type get_behaviour_type() const override {
             return BEHAVIOUR_TYPE_JOYSTICK;
+        }
+    };
+
+    struct camera_pan_behavior : public behaviour {
+    private:
+        bool is_mouse_controlling_;
+
+        float accumulated_axis_x_;
+        float accumulated_axis_y_;
+
+        std::chrono::time_point<std::chrono::system_clock> previous_time_point_;
+
+        std::uint8_t pointer_;
+        bool is_active_;
+
+        float pan_speed_;
+        eka2l1::vec2 pos_;
+
+    public:
+        explicit camera_pan_behavior(executor *exec, const eka2l1::vec2 &pos, const float pan_speed);
+        explicit camera_pan_behavior(executor *exec, const YAML::Node &joy_seri_node);
+
+        ~camera_pan_behavior();
+
+        void produce(const std::uint64_t key, const bool is_press) override;
+        void produce(const std::uint64_t key, const float axisx, const float axisy) override;
+        std::vector<std::uint64_t> mapped_keys() override;
+        void serialize(YAML::Emitter &emitter) override;
+
+        std::uint32_t width() const {
+            return 0;
+        }
+
+        const eka2l1::vec2 position() const {
+            return pos_;
+        }
+
+        behaviour_type get_behaviour_type() const override {
+            return BEHAVIOUR_TYPE_CAMERA_PAN;
+        }
+
+        float pan_speed() const {
+            return pan_speed_;
         }
     };
 

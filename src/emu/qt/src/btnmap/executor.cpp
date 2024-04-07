@@ -25,12 +25,14 @@
 #include <common/algorithm.h>
 #include <common/fileutils.h>
 
-#include <services/window/window.h>
+#include "qt/btnmap/base.h"
 #include <kernel/timing.h>
+#include <services/window/window.h>
 
 namespace eka2l1::qt::btnmap {
     static const char *SINGLE_TOUCH_YAML_TYPE = "singletouch";
     static const char *JOYSTICK_YAML_TYPE = "joystick";
+    static const char *CAMERA_PAM_YAML_TYPE = "camerapan";
 
     executor::executor(window_server *server, ntimer *timing)
         : winserv_(server)
@@ -102,6 +104,8 @@ namespace eka2l1::qt::btnmap {
                 beha = std::make_unique<single_touch_behaviour>(this, child);
             } else if (eka2l1::common::compare_ignore_case(type_of_comp.c_str(), JOYSTICK_YAML_TYPE) == 0) {
                 beha = std::make_unique<joystick_behaviour>(this, child);
+            } else if (eka2l1::common::compare_ignore_case(type_of_comp.c_str(), CAMERA_PAM_YAML_TYPE) == 0) {
+                beha = std::make_unique<camera_pan_behavior>(this, child);
             }
             if (beha) {
                 add_behaviour(beha);
@@ -319,6 +323,125 @@ namespace eka2l1::qt::btnmap {
             emitter << YAML::BeginSeq << keys_[0] << keys_[1] << keys_[2] << keys_[3] << keys_[4] << YAML::EndSeq;
         }
         emitter << YAML::Key << "width" << YAML::Value << width_;
+        emitter << YAML::EndMap;
+    }
+
+    camera_pan_behavior::camera_pan_behavior(executor *exec, const eka2l1::vec2 &pos, const float pan_speed)
+        : behaviour(exec)
+        , accumulated_axis_x_(0)
+        , accumulated_axis_y_(0)
+        , is_active_(false)
+        , pan_speed_(pan_speed)
+        , pos_(pos)  {
+
+    }
+
+    camera_pan_behavior::camera_pan_behavior(executor *exec, const YAML::Node &info_node)
+        : behaviour(exec)
+        , accumulated_axis_x_(0)
+        , accumulated_axis_y_(0)
+        , is_active_(false)
+        , pan_speed_(0.005f) {
+        pan_speed_ = info_node["joystick-pan-speed"].as<float>(0.005f);
+        pos_ = eka2l1::vec2(info_node["x"].as<int>(-1), info_node["y"].as<int>(-1));
+    }
+
+    camera_pan_behavior::~camera_pan_behavior() {
+        if (is_active_) {
+            executor_->free_allocated_pointer(pointer_);
+        }
+    }
+
+    void camera_pan_behavior::produce(const std::uint64_t key, const bool is_press) {
+
+    }
+
+    void camera_pan_behavior::produce(const std::uint64_t key, const float axisx, const float axisy) {
+        auto winserv = executor_->get_window_server();
+        auto screen_size = winserv->get_current_focus_screen()->size();
+        auto center_screen = screen_size / 2;
+
+        if (!is_active_) {
+            if ((std::abs(axisx) < JOY_DEADZONE_VALUE) && (std::abs(axisy) < JOY_DEADZONE_VALUE)) {
+                return;
+            }
+
+            is_active_ = true;
+
+            accumulated_axis_x_ = 0;
+            accumulated_axis_y_ = 0;
+
+            pointer_ = executor_->allocate_free_pointer();
+            previous_time_point_ = std::chrono::system_clock::now();
+
+            deliver_touch(center_screen, pointer_, drivers::mouse_action_press);
+        } else {
+            if ((std::abs(axisx) < JOY_DEADZONE_VALUE) && (std::abs(axisy) < JOY_DEADZONE_VALUE)) {
+                is_active_ = false;
+                executor_->free_allocated_pointer(pointer_);
+
+                float final_x_in_range = accumulated_axis_x_ * pan_speed_;
+                float final_y_in_range = accumulated_axis_y_ * pan_speed_;
+
+                auto final_pos = center_screen + eka2l1::vec2(static_cast<int>(static_cast<float>(screen_size.x) * final_x_in_range),
+                     static_cast<int>(static_cast<float>(screen_size.y) * final_y_in_range));
+
+                deliver_touch(final_pos, pointer_, drivers::mouse_action_release);
+                return;
+            }
+        }
+
+        if (is_mouse_controlling_) {
+            is_mouse_controlling_ = false;
+
+            accumulated_axis_x_ = 0;
+            accumulated_axis_y_ = 0;
+        }
+
+        auto delta_time = std::chrono::system_clock::now() - previous_time_point_;
+        auto delta_time_in_secs = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(delta_time).count()) / 1000.0f;
+
+        previous_time_point_ = std::chrono::system_clock::now();
+
+        accumulated_axis_x_ += axisx * delta_time_in_secs;
+        accumulated_axis_y_ += axisy * delta_time_in_secs;
+
+        float final_x_in_range = accumulated_axis_x_ * pan_speed_;
+        float final_y_in_range = accumulated_axis_y_ * pan_speed_;
+
+
+        auto final_pos = center_screen + eka2l1::vec2(static_cast<int>(static_cast<float>(screen_size.x) * final_x_in_range),
+                                                      static_cast<int>(static_cast<float>(screen_size.y) * final_y_in_range));
+
+        bool should_discharge = false;
+
+        if (std::abs(final_x_in_range) >= 0.5f || std::abs(final_y_in_range) >= 0.5f) {
+            accumulated_axis_x_ = 0.0f;
+            accumulated_axis_y_ = 0.0f;
+
+            should_discharge = true;
+        }
+
+        deliver_touch(final_pos, pointer_, drivers::mouse_action::mouse_action_repeat);
+
+        if (should_discharge) {
+            deliver_touch(screen_size, pointer_, drivers::mouse_action::mouse_action_release);
+
+            deliver_touch(center_screen, pointer_, drivers::mouse_action::mouse_action_press);
+            deliver_touch(center_screen, pointer_, drivers::mouse_action::mouse_action_repeat);
+        }
+    }
+
+    std::vector<std::uint64_t> camera_pan_behavior::mapped_keys() {
+        return { (static_cast<std::uint64_t>(qt::btnmap::map_type::MAP_TYPE_GAMEPAD) << 32) | drivers::controller_button_code::CONTROLLER_BUTTON_CODE_RIGHT_STICK };
+    }
+
+    void camera_pan_behavior::serialize(YAML::Emitter &emitter) {
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "type" << YAML::Value << CAMERA_PAM_YAML_TYPE;
+        emitter << YAML::Key << "joystick-pan-speed" << YAML::Value << pan_speed_;
+        emitter << YAML::Key << "x" << YAML::Value << pos_.x;
+        emitter << YAML::Key << "y" << YAML::Value << pos_.y;
         emitter << YAML::EndMap;
     }
 }

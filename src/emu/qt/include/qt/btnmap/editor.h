@@ -52,8 +52,8 @@ namespace eka2l1::qt::btnmap {
         explicit editor();
 
         void clean(drivers::graphics_driver *driver);
-        void add_managed_resource(const std::string &name, drivers::handle h);
-        drivers::handle get_managed_resource(const std::string &name);
+        drivers::handle get_managed_resource(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder,
+            const std::string &name, const std::string &path);
 
         void draw_text(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder,
                        const eka2l1::rect &draw_rect, epoc::text_alignment alignment,

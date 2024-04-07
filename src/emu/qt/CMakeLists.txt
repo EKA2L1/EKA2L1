@@ -133,7 +133,9 @@ set(PROJECT_SOURCES
 if (WIN32)
     set(PROJECT_SOURCES ${PROJECT_SOURCES}
         include/qt/winutils.h
-        src/winutils.cpp)
+        src/winutils.cpp
+            include/qt/btnmap/camerapan.h
+            src/btnmap/camerapan.cpp)
 endif()
 
 set(UPDATE_SOURCES

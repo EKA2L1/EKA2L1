@@ -30,32 +30,8 @@
 #include <QApplication>
 
 namespace eka2l1::qt::btnmap {
-    struct joystick_image_resource {
-        stbi_uc *data_ = nullptr;
-        int width;
-        int height;
-
-        bool try_loaded_ = false;
-
-        ~joystick_image_resource() {
-            if (data_) {
-                stbi_image_free(data_);
-            }
-        }
-
-        bool loaded() const {
-            return try_loaded_;
-        }
-
-        void set_loaded() {
-            try_loaded_ = true;
-        }
-    };
-
     static constexpr std::uint32_t MIN_JOYSTICK_SIZE = 36;
     static const eka2l1::vec2 CORNER_RESIZE_SIZE = eka2l1::vec2(5, 5);
-
-    joystick_image_resource joystick_image_resource_;
 
     joystick::joystick(editor *editor_instance, const eka2l1::vec2 &position)
         : base(editor_instance, position)
@@ -112,43 +88,10 @@ namespace eka2l1::qt::btnmap {
         base::draw(driver, builder, scale_vector);
         static const char *JOYSTICK_BASE_PNG_PATH = "resources\\joystick_base.png";
 
-        if (!joystick_image_resource_.loaded()) {
-            int width, height, comp;
-            FILE *joystick_base_file = common::open_c_file(JOYSTICK_BASE_PNG_PATH, "rb");
-            if (joystick_base_file == nullptr) {
-                LOG_ERROR(FRONTEND_UI, "Joystick image file does not exist for mapping editor! (check {} if it exists)", JOYSTICK_BASE_PNG_PATH);
-            } else {
-                stbi_uc* image = stbi_load_from_file(joystick_base_file, &width, &height, &comp, STBI_rgb_alpha);
-                if (!image) {
-                    LOG_ERROR(FRONTEND_UI, "Can't load joystick image for mapping editor!");
-                } else {
-                    joystick_image_resource_.data_ = image;
-                    joystick_image_resource_.width = width;
-                    joystick_image_resource_.height = height;
-                }
-            }
-
-            // If it fails, anyway...
-            joystick_image_resource_.set_loaded();
-        }
-
         if (!base_tex_handle_) {
             static const char *JOYSTICK_BASE_TEX_RESOURCE_NAME = "joystick_base_texture";
-            base_tex_handle_ = editor_->get_managed_resource(JOYSTICK_BASE_TEX_RESOURCE_NAME);
-
-            if (!base_tex_handle_ && joystick_image_resource_.data_) {
-                base_tex_handle_ = drivers::create_texture(driver, 2, 0, drivers::texture_format::rgba,
-                    drivers::texture_format::rgba, drivers::texture_data_type::ubyte,
-                    joystick_image_resource_.data_, joystick_image_resource_.width * joystick_image_resource_.height * 4,
-                    eka2l1::vec3(joystick_image_resource_.width, joystick_image_resource_.height, 0));
-
-                if (base_tex_handle_) {
-                    editor_->add_managed_resource(JOYSTICK_BASE_TEX_RESOURCE_NAME, base_tex_handle_);
-
-                    builder.set_texture_filter(base_tex_handle_, false, drivers::filter_option::linear);
-                    builder.set_texture_filter(base_tex_handle_, true, drivers::filter_option::linear);
-                }
-            }
+            base_tex_handle_ = editor_->get_managed_resource(driver, builder, JOYSTICK_BASE_TEX_RESOURCE_NAME,
+                JOYSTICK_BASE_PNG_PATH);
         }
 
         eka2l1::rect dest_rect;

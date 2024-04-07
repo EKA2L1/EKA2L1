@@ -45,6 +45,11 @@
           <string>Single touch</string>
          </property>
         </item>
+        <item>
+         <property name="text">
+          <string>Camera pan</string>
+         </property>
+        </item>
        </widget>
       </item>
      </layout>

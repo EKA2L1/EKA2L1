@@ -40,7 +40,8 @@ namespace eka2l1::qt::btnmap {
     enum editor_entity_type {
         EDITOR_ENTITY_TYPE_JOYSTICK = 0,
         EDITOR_ENTITY_TYPE_SINGLE_TOUCH = 1,
-        EDITOR_ENTITY_TYPE_AIM = 2
+        EDITOR_ENTITY_TYPE_AIM = 2,
+        EDITOR_ENTITY_TYPE_CAMERA_PAN = 3
     };
 
     class base {
