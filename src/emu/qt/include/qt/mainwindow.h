@@ -26,6 +26,7 @@
 #include <drivers/itc.h>
 
 #include <QActionGroup>
+#include <QComboBox>
 #include <QListWidgetItem>
 #include <QMainWindow>
 #include <QPointer>
@@ -35,6 +36,7 @@
 #include <map>
 
 #include <qt/discord_rpc.h>
+#include <common/platform.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -67,6 +69,10 @@ namespace eka2l1 {
     namespace epoc {
         struct screen;
         struct window_group;
+    }
+
+    namespace qt {
+        class window_transparent_manager;
     }
 
     namespace qt::btnmap {
@@ -134,6 +140,12 @@ private:
 
     eka2l1::qt::discord_rpc rpc_;
 
+#if EKA2L1_PLATFORM(WIN32)
+    eka2l1::qt::window_transparent_manager *win_transparent_manager_;
+#endif
+
+    bool should_maximized_;
+
     void setup_screen_draw();
     void setup_app_list(const bool load_now = false);
     void setup_package_installer_ui_hooks();
@@ -187,7 +199,7 @@ private slots:
     void on_app_clicked(applist_widget_item *item);
     void on_relaunch_request();
 
-    void on_theme_change_requested(const QString &text);
+    void on_theme_change_requested(const QString &text, const int variant);
     void force_update_display_minimum_size();
     void on_window_title_setting_changed();
     void on_finished_text_input(const QString &text, const bool force_close);
@@ -211,6 +223,7 @@ private slots:
     void on_action_stretch_to_fill_toggled(bool checked);
     void on_question_dialog_open_request();
     void on_app_exited(eka2l1::kernel::process *proc);
+    void on_theme_variant_combo_init(QWidget *container, QComboBox *combo);
 
 signals:
     void progress_dialog_change(const std::size_t now, const std::size_t total);
@@ -228,7 +241,11 @@ signals:
     void app_exited(eka2l1::kernel::process *proc);
 
 public:
-    main_window(QApplication &app, QWidget *parent, eka2l1::desktop::emulator &emulator_state);
+    main_window(QApplication &app, QWidget *parent, eka2l1::desktop::emulator &emulator_state
+#if EKA2L1_PLATFORM(WIN32)
+        , eka2l1::qt::window_transparent_manager *win_transparent_manager
+#endif
+        );
     ~main_window();
 
     void resizeEvent(QResizeEvent *event) override;

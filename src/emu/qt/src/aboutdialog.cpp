@@ -88,6 +88,14 @@ about_dialog::about_dialog(QWidget *parent)
         return;
     }
 
+    QString interface_str = tr("<b>UI:</b><br>");
+    interface_str += tr("- <a href=\"%1\">QtWin11</a> by Witali Hirsch<br>").arg("https://github.com/witalihirsch/QTWin11/");
+
+    auto interface_label = new QLabel(interface_str);
+    interface_label->setOpenExternalLinks(true);
+
+    ui_->credit_layout->addWidget(interface_label);
+
     try {
         QString icon_str = tr("<b>Icon:</b><br>");
 

@@ -55,8 +55,15 @@ static constexpr const char *STATUS_BAR_HIDDEN_SETTING_NAME = "statusBarHidden";
 static constexpr const char *TRUE_SIZE_RESIZE_SETTING_NAME = "trueSizeResizeEnabled";
 static constexpr const char *BACKGROUND_COLOR_DISPLAY_SETTING_NAME = "backgroundDisplayColor";
 static constexpr const char *THEME_SETTING_NAME = "theme";
+static constexpr const char *THEME_VARIANT_SETTING_NAME = "themeVariant";
 
 void make_default_keybind_profile(eka2l1::config::keybind_profile &profile);
+
+enum theme_variant {
+    theme_variant_classic = 0,      // Uses Qt default pack
+    theme_variant_acrylic = 1,      // Uses acrylic backdrop (blur behind)
+    theme_variant_mica = 2          // Windows's Mica theme
+};
 
 class settings_dialog : public QDialog {
     Q_OBJECT
@@ -141,6 +148,7 @@ private slots:
     void on_audio_sf2_browse_clicked();
     void on_audio_hsb_reset_clicked();
     void on_audio_sf2_reset_clicked();
+    void on_theme_variant_choose(const int index);
 
 public slots:
     void on_app_launching();
@@ -154,10 +162,11 @@ signals:
     void relaunch();
     void restart(const int index);
     void active_app_setting_changed();
-    void theme_change_request(const QString &theme_name);
+    void theme_change_request(const QString &theme_name, const int variant);
     void minimum_display_size_change();
     void window_title_setting_changed();
     void hide_system_apps_changed();
+    void theme_variant_combo_init(QWidget *container, QComboBox *widget);
 
 public:
     explicit settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::drivers::emu_controller *controller,

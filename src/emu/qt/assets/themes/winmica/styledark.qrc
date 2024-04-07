@@ -1,0 +1,59 @@
+<RCC>
+  <qresource prefix="ToggleSwitch">
+    <file>img dark/ToggleSwitchDisabled.png</file>
+    <file>img dark/ToggleSwitchOff.png</file>
+    <file>img dark/ToggleSwitchOffHover.png</file>
+    <file>img dark/ToggleSwitchOffPressed.png</file>
+    <file>img dark/ToggleSwitchOn.png</file>
+    <file>img dark/ToggleSwitchOnHover.png</file>
+    <file>img dark/ToggleSwitchOnPressed.png</file>
+  </qresource>
+  <qresource prefix="TreeView">
+    <file>img dark/TreeViewClose.png</file>
+    <file>img dark/TreeViewOpen.png</file>
+  </qresource>
+  <qresource prefix="SpinBox">
+    <file>img dark/SpinBoxDown.png</file>
+    <file>img dark/SpinBoxDownDisabled.png</file>
+    <file>img dark/SpinBoxUp.png</file>
+    <file>img dark/SpinBoxUpDisabled.png</file>
+  </qresource>
+  <qresource prefix="ScrollVertical">
+    <file>img dark/ScrollBottom.png</file>
+    <file>img dark/ScrollBottomHover.png</file>
+    <file>img dark/ScrollBottomPressed.png</file>
+    <file>img dark/ScrollTop.png</file>
+    <file>img dark/ScrollTopHover.png</file>
+    <file>img dark/ScrollTopPressed.png</file>
+  </qresource>
+  <qresource prefix="ScrollHorizontal">
+    <file>img dark/ScrollLeft.png</file>
+    <file>img dark/ScrollLeftHover.png</file>
+    <file>img dark/ScrollLeftPressed.png</file>
+    <file>img dark/ScrollRight.png</file>
+    <file>img dark/ScrollRightHover.png</file>
+    <file>img dark/ScrollRightPressed.png</file>
+  </qresource>
+  <qresource prefix="RadioButton">
+    <file>img dark/RadioButton.png</file>
+    <file>img dark/RadioButtonHover.png</file>
+    <file>img dark/RadioButtonPressed.png</file>
+  </qresource>
+  <qresource prefix="PrevNext">
+    <file>img dark/NextMonth.png</file>
+    <file>img dark/NextMonthDisabled.png</file>
+    <file>img dark/PrevMonth.png</file>
+    <file>img dark/PrevMonthDisabled.png</file>
+  </qresource>
+  <qresource prefix="ComboBox">
+    <file>img dark/ComboBox.png</file>
+    <file>img dark/ComboBoxDisabled.png</file>
+  </qresource>
+  <qresource prefix="CheckBox">
+    <file>img dark/CheckBox.png</file>
+    <file>img dark/CheckBoxPressed.png</file>
+  </qresource>
+  <qresource prefix="assets/themes/QtWin11">
+    <file>dark.qss</file>
+  </qresource>
+</RCC>

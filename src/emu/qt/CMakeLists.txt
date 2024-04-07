@@ -19,6 +19,10 @@ else()
     set(EXCLUSIVE_QT_COMPONENTS OpenGL)
 endif()
 
+if (WIN32)
+    set(EXCLUSIVE_QT_COMPONENTS ${EXCLUSIVE_QT_COMPONENTS} WinExtras)
+endif()
+
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools Svg Network ${EXCLUSIVE_QT_COMPONENTS} REQUIRED)
 
 # Make list of TS files, and add them to resources. Credits from Yuzu CMakeLists
@@ -44,7 +48,11 @@ file(APPEND ${LANGUAGE_QRC_FILE} "</qresource></RCC>")
 set(RESOURCE_FILES eka2l1.qrc assets/themes/dark/style.qrc ${CMAKE_CURRENT_BINARY_DIR}/languages.qrc)
 
 if (WIN32)
-    set(RESOURCE_FILES ${RESOURCE_FILES} eka2l1.rc)
+    # Mica theme (transparent morden theme)
+    set(RESOURCE_FILES ${RESOURCE_FILES} eka2l1.rc
+        assets/themes/winmica/styledark.qrc
+        assets/themes/winmica/stylelight.qrc
+    )
 endif()
 
 set(PROJECT_SOURCES
@@ -122,6 +130,12 @@ set(PROJECT_SOURCES
         src/links.h
 )
 
+if (WIN32)
+    set(PROJECT_SOURCES ${PROJECT_SOURCES}
+        include/qt/winutils.h
+        src/winutils.cpp)
+endif()
+
 set(UPDATE_SOURCES
         src/updater.cpp
         src/updater.ui
@@ -181,11 +195,21 @@ else()
         Qt${QT_VERSION_MAJOR}::OpenGL)
 endif()
 
+if (WIN32)
+    set(EXTRA_EXEC_LIBRARIES ${EXTRA_EXEC_LIBRARIES} Dwmapi)
+
+    if (MSVC)
+        set(EXTRA_EXEC_LIBRARIES ${EXTRA_EXEC_LIBRARIES} Delayimp windowsapp)
+        set(EXTRA_EXEC_LINK_FLAGS "/DELAYLOAD:API-MS-WIN-CORE-WINRT-L1-1-0.DLL")
+    endif()
+endif()
+
 target_link_libraries(eka2l1_qt PRIVATE
     Qt${QT_VERSION_MAJOR}::Svg
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Network
     ${EXCLUSIVE_QT_LIBRARIES}
+    ${EXTRA_EXEC_LIBRARIES}
     common
     config
     drivers
@@ -270,10 +294,14 @@ if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
     if (UNIX AND (NOT APPLE) AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU"))
         target_link_libraries(eka2l1_qt PRIVATE -Wl,--whole-archive $<TARGET_FILE:scripting> -Wl,--no-whole-archive)
     elseif(MSVC)
-        set_target_properties(eka2l1_qt PROPERTIES LINK_FLAGS /WHOLEARCHIVE:scripting.lib)
+        set(EXTRA_EXEC_LINK_FLAGS ${EXTRA_EXEC_LINK_FLAGS} /WHOLEARCHIVE:scripting.lib)
     else()
         target_link_libraries(eka2l1_qt PRIVATE scripting)
     endif()
+endif()
+
+if (MSVC)
+    set_target_properties(eka2l1_qt PROPERTIES LINK_FLAGS "${EXTRA_EXEC_LINK_FLAGS}")
 endif()
 
 if (ENABLE_DISCORD_RICH_PRESENCE AND WIN32)

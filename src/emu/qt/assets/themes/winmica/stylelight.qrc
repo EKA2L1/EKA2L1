@@ -1,0 +1,63 @@
+<RCC>
+  <qresource prefix="ToggleSwitch">
+    <file>img light/ToggleSwitchDisabled.png</file>
+    <file>img light/ToggleSwitchOn.png</file>
+    <file>img light/ToggleSwitchOnHover.png</file>
+    <file>img light/ToggleSwitchOnPressed.png</file>
+    <file>img light/ToggleSwitchOff.png</file>
+    <file>img light/ToggleSwitchOffHover.png</file>
+    <file>img light/ToggleSwitchOffPressed.png</file>
+  </qresource>
+  <qresource prefix="ScrollHorizontal">
+    <file>img light/ScrollLeft.png</file>
+    <file>img light/ScrollLeftHover.png</file>
+    <file>img light/ScrollLeftPressed.png</file>
+    <file>img light/ScrollRight.png</file>
+    <file>img light/ScrollRightHover.png</file>
+    <file>img light/ScrollRightPressed.png</file>
+  </qresource>
+  <qresource prefix="ScrollVertical">
+    <file>img light/ScrollBottom.png</file>
+    <file>img light/ScrollBottomHover.png</file>
+    <file>img light/ScrollBottomPressed.png</file>
+    <file>img light/ScrollTop.png</file>
+    <file>img light/ScrollTopHover.png</file>
+    <file>img light/ScrollTopPressed.png</file>
+  </qresource>
+  <qresource prefix="PrevNext">
+    <file>img light/NextMonthDisabled.png</file>
+    <file>img light/PrevMonthDisabled.png</file>
+    <file>img light/NextMonth.png</file>
+    <file>img light/PrevMonth.png</file>
+  </qresource>
+  <qresource prefix="SpinBox">
+    <file>img light/SpinBoxDown.png</file>
+    <file>img light/SpinBoxDownDisabled.png</file>
+    <file>img light/SpinBoxUp.png</file>
+    <file>img light/SpinBoxUpDisabled.png</file>
+  </qresource>
+  <qresource prefix="RadioButton">
+    <file>img light/RadioButtonPressed.png</file>
+    <file>img light/RadioButtonHover.png</file>
+    <file>img light/RadioButton.png</file>
+  </qresource>
+  <qresource prefix="CheckBox">
+    <file>img light/CheckBox.png</file>
+    <file>img light/CheckBoxPressed.png</file>
+  </qresource>
+  <qresource prefix="newPrefix">
+    <file>img light/ComboBox.png</file>
+  </qresource>
+  <qresource prefix="newPrefix">
+    <file>img light/ComboBoxDisabled.png</file>
+  </qresource>
+  <qresource prefix="newPrefix">
+    <file>img light/TreeViewClose.png</file>
+  </qresource>
+  <qresource prefix="newPrefix">
+    <file>img light/TreeViewOpen.png</file>
+  </qresource>
+  <qresource prefix="assets/themes/QtWin11">
+    <file>light.qss</file>
+  </qresource>
+</RCC>

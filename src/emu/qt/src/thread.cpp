@@ -49,6 +49,7 @@
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
+#include <qt/winutils.h>
 #endif
 
 #include <QApplication>
@@ -402,7 +403,15 @@ namespace eka2l1::desktop {
             }
         }
 
-        state.ui_main = new main_window(application, nullptr, state);
+#if EKA2L1_PLATFORM(WIN32)
+        eka2l1::qt::window_transparent_manager transparent_manager(application);
+#endif
+
+        state.ui_main = new main_window(application, nullptr, state,
+#if EKA2L1_PLATFORM(WIN32)
+                &transparent_manager
+#endif
+            );
         state.ui_main->setWindowTitle(get_emulator_window_title());
         state.ui_main->load_and_show();
 

@@ -78,6 +78,10 @@
 
 #include <stb_image.h>
 
+#if EKA2L1_PLATFORM(WIN32)
+#include <qt/winutils.h>
+#endif
+
 static constexpr const char *LAST_UI_WINDOW_GEOMETRY_SETTING = "lastWindowGeometry";
 static constexpr const char *LAST_UI_WINDOW_STATE = "lastWindowState";
 static constexpr const char *LAST_UI_WINDOW_MAXMIZED = "lastWindowMaximized";
@@ -229,7 +233,11 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
 }
 
 
-main_window::main_window(QApplication &application, QWidget *parent, eka2l1::desktop::emulator &emulator_state)
+main_window::main_window(QApplication &application, QWidget *parent, eka2l1::desktop::emulator &emulator_state
+#if EKA2L1_PLATFORM(WIN32)
+        , eka2l1::qt::window_transparent_manager *win_transparent_manager
+#endif
+    )
     : QMainWindow(parent)
     , application_(application)
     , emulator_state_(emulator_state)
@@ -250,7 +258,12 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     , applist_(nullptr)
     , displayer_(nullptr)
     , background_image_texture_(0)
-    , rpc_(this) {
+    , rpc_(this)
+#if EKA2L1_PLATFORM(WIN32)
+    , win_transparent_manager_(win_transparent_manager)
+#endif
+    , should_maximized_(false)
+{
     ui_->setupUi(this);
     ui_->label_al_not_available->setVisible(false);
 
@@ -342,7 +355,8 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     //update_notice_dialog::spawn(this);
 
     restore_ui_layouts();
-    on_theme_change_requested(QString("%1").arg(settings.value(THEME_SETTING_NAME, 0).toInt()));
+    on_theme_change_requested(QString("%1").arg(settings.value(THEME_SETTING_NAME, 0).toInt()),
+        settings.value(THEME_VARIANT_SETTING_NAME, theme_variant_acrylic).toInt());
 
     QVariant no_notify_install = settings.value(NO_TOUCHSCREEN_DISABLE_WARN_SETTING);
 
@@ -541,6 +555,7 @@ void main_window::on_settings_triggered() {
         connect(settings_dialog_.data(), &settings_dialog::active_app_setting_changed, this, &main_window::on_app_setting_changed, Qt::DirectConnection);
         connect(settings_dialog_.data(), &settings_dialog::window_title_setting_changed, this, &main_window::on_window_title_setting_changed);
         connect(settings_dialog_.data(), &settings_dialog::hide_system_apps_changed, this, &main_window::on_hide_system_apps_changed, Qt::DirectConnection);
+        connect(settings_dialog_.data(), &settings_dialog::theme_variant_combo_init, this, &main_window::on_theme_variant_combo_init);
 
         connect(this, &main_window::app_launching, settings_dialog_.data(), &settings_dialog::on_app_launching);
         connect(this, &main_window::controller_button_press, settings_dialog_.data(), &settings_dialog::on_controller_button_press);
@@ -635,6 +650,11 @@ void main_window::on_device_set_requested(const int index) {
 }
 
 void main_window::on_restart_requested() {
+    save_ui_layouts();
+
+    ui_->status_bar->show();
+    ui_->menu_bar->setVisible(true);
+
     on_device_set_requested(-1);
     emit restart_requested();
 }
@@ -809,7 +829,11 @@ void main_window::on_fullscreen_toogled(bool checked) {
 
         ui_->layout_centralwidget->setContentsMargins(before_margins_);
 
-        showNormal();
+        if (should_maximized_) {
+            showMaximized();
+        } else {
+            showNormal();
+        }
     }
 
     displayer_->set_fullscreen(checked);
@@ -1428,7 +1452,7 @@ void main_window::on_another_rotation_triggered(QAction *action) {
     mode_change_screen(&emulator_state_, scr, 0);
 }
 
-void main_window::on_theme_change_requested(const QString &text) {
+void main_window::on_theme_change_requested(const QString &text, const int variant) {
     if (text.count() == 1) {
         bool is_ok = false;
         int num = text.toInt(&is_ok);
@@ -1436,23 +1460,88 @@ void main_window::on_theme_change_requested(const QString &text) {
         if (is_ok) {
             QCoreApplication *app = QApplication::instance();
             if (app) {
-                if (num == 0) {
-                    // Light mode, reset to default
-                    application_.setStyleSheet("");
-                } else {
-                    QFile f(":assets/themes/dark/style.qss");
+                std::unique_ptr<QFile> f;
 
-                    if (!f.exists()) {
-                        QMessageBox::critical(this, tr("Load theme failed!"), tr("The Dark theme's style file can't be found!"));
+#if EKA2L1_PLATFORM(WIN32)
+                if (win_transparent_manager_->is_supported()) {
+                    if (variant == theme_variant_classic) {
+                        if (!win_transparent_manager_->is_enabled()) {
+                            if (num == 0) {
+                                application_.setStyleSheet("");
+                                return;
+                            } else {
+                                f = std::make_unique<QFile>(":assets/themes/dark/style.qss");
+                            }
+                        } else {
+                            QMessageBox::information(this, tr("Relaunch needed"), tr("Classic theme variant will be applied on the next launch of the emulator."));
+                            return;
+                        }
                     } else {
-                        f.open(QFile::ReadOnly | QFile::Text);
-                        QTextStream ts(&f);
-                        application_.setStyleSheet(ts.readAll());
+                        if (num == 2 && win_transparent_manager_->is_supported()) {
+                            num = (win_transparent_manager_->is_system_dark_mode()) ? 1 : 0;
+                        }
+
+                        f = std::make_unique<QFile>(num == 0 ? ":assets/themes/QtWin11/light.qss" : ":assets/themes/QtWin11/dark.qss");
+
+                        win_transparent_manager_->set_use_acrylic(variant == theme_variant_acrylic);
+                        win_transparent_manager_->set_dark_theme(num == 1);
                     }
+                } else {
+#endif
+                    if (num == 0) {
+                        application_.setStyleSheet("");
+                        return;
+                    } else {
+                        f = std::make_unique<QFile>(":assets/themes/dark/style.qss");
+                    }
+
+#if EKA2L1_PLATFORM(WIN32)
+                }
+#endif
+
+                if (!f || !f->exists()) {
+                    QMessageBox::critical(this, tr("Load theme failed!"), tr("The Dark theme's style file can't be found!"));
+                } else {
+                    f->open(QFile::ReadOnly | QFile::Text);
+                    QTextStream ts(f.get());
+
+                    QString styleSheet = ts.readAll();
+
+#if EKA2L1_PLATFORM(WIN32)
+                    if (win_transparent_manager_->is_supported() && win_transparent_manager_->is_enabled()) {
+                        auto accent_color = win_transparent_manager_->get_accent_color();
+                        auto rgb_string = QString("rgb(%1, %2, %3)").arg(accent_color.red()).arg(accent_color.green()).arg(accent_color.blue());
+
+                        styleSheet = styleSheet.arg(rgb_string);
+                    }
+#endif
+
+                    application_.setStyleSheet(styleSheet);
                 }
             }
         }
     }
+}
+
+void main_window::on_theme_variant_combo_init(QWidget *container, QComboBox *combo) {
+    container->setVisible(false);
+
+#if EKA2L1_PLATFORM(WIN32)
+    if (win_transparent_manager_->is_supported()) {
+        container->setVisible(true);
+
+        QSettings settings;
+        QVariant theme_variant = settings.value(THEME_VARIANT_SETTING_NAME, "1");
+
+        if (theme_variant.isValid()) {
+            combo->setCurrentIndex(theme_variant.toInt());
+        }
+    } else {
+        combo->setCurrentIndex(0);
+    }
+#else
+    combo->setCurrentIndex(0);
+#endif
 }
 
 void main_window::force_update_display_minimum_size() {
@@ -1474,14 +1563,16 @@ void main_window::on_refresh_app_list_requested() {
 void main_window::save_ui_layouts() {
     QSettings settings;
 
+    bool is_fullscreen = ui_->action_fullscreen->isChecked();
+
     if (displayer_->isVisible()) {
         settings.setValue(LAST_EMULATED_DISPLAY_GEOMETRY_SETTING, saveGeometry());
         settings.setValue(LAST_EMULATED_DISPLAY_STATE, saveState());
-        settings.setValue(LAST_EMULATED_DISPLAY_MAXIMIZED, isMaximized());
+        settings.setValue(LAST_EMULATED_DISPLAY_MAXIMIZED, is_fullscreen ? should_maximized_ : isMaximized());
     } else {
         settings.setValue(LAST_UI_WINDOW_GEOMETRY_SETTING, saveGeometry());
         settings.setValue(LAST_UI_WINDOW_STATE, saveState());
-        settings.setValue(LAST_UI_WINDOW_MAXMIZED, isMaximized());
+        settings.setValue(LAST_UI_WINDOW_MAXMIZED, is_fullscreen ? should_maximized_ : isMaximized());
     }
 }
 
@@ -1516,6 +1607,8 @@ void main_window::restore_ui_layouts() {
     } else {
         showNormal();
     }
+
+    should_maximized_ = maximized;
 
     if (!was_visible)
         editor_widget_->setVisible(false);

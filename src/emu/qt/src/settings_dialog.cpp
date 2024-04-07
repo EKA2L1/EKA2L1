@@ -273,7 +273,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
 
     QSettings settings;
     ui_->interface_status_bar_checkbox->setChecked(settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
-    ui_->interface_theme_combo->setCurrentIndex(settings.value(THEME_SETTING_NAME, 0).toInt());
+    ui_->interface_theme_combo->setCurrentIndex(settings.value(THEME_SETTING_NAME, 2).toInt());
     ui_->emulator_display_true_size_checkbox->setChecked(settings.value(TRUE_SIZE_RESIZE_SETTING_NAME, false).toBool());
     ui_->interface_disable_easter_egg_title_checkbox->setChecked(settings.value(STATIC_TITLE_SETTING_NAME, false).toBool());
     ui_->show_cmd_checkbox->setChecked(settings.value(SHOW_LOG_CONSOLE_SETTING_NAME, true).toBool());
@@ -283,6 +283,8 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
 #else
     ui_->app_config_enable_discord_rich_presence->setVisible(false);
 #endif
+
+    ui_->interface_theme_variant->setVisible(false);
 
     QVariant current_language_variant = settings.value(LANGUAGE_SETTING_NAME);
 
@@ -370,6 +372,10 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     refresh_keybind_buttons();
     refresh_configuration_for_who(false);
 
+    QTimer::singleShot(10, [this]() {
+        emit theme_variant_combo_init(ui_->interface_theme_variant, ui_->interface_theme_variant_combo);
+    });
+
     connect(ui_->emulator_display_nearest_neightbor_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_nearest_neighbor_toggled);
     connect(ui_->emulator_display_hide_cursor_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_cursor_visibility_change);
     connect(ui_->emulator_display_true_size_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_true_size_enable_toogled);
@@ -389,6 +395,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->interface_theme_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_theme_changed);
     connect(ui_->interface_language_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_ui_language_changed);
     connect(ui_->interface_disable_easter_egg_title_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_easter_egg_title_toggled);
+    connect(ui_->interface_theme_variant_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_theme_variant_choose);
 
     connect(ui_->debugging_cpu_read_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_cpu_read_toggled);
     connect(ui_->debugging_cpu_write_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_cpu_write_toggled);
@@ -1096,14 +1103,32 @@ void settings_dialog::closeEvent(QCloseEvent *event) {
 }
 
 void settings_dialog::on_theme_changed(int value) {
-    if (value <= 1) {
+    if (value <= 2) {
         QSettings settings;
         settings.setValue(THEME_SETTING_NAME, value);
 
-        emit theme_change_request(QString("%1").arg(value));
+        emit theme_change_request(QString("%1").arg(value), ui_->interface_theme_variant_combo->currentIndex());
     } else {
-        emit theme_change_request(ui_->interface_theme_combo->itemText(value));
+        emit theme_change_request(ui_->interface_theme_combo->itemText(value), ui_->interface_theme_variant_combo->currentIndex());
     }
+}
+
+void settings_dialog::on_theme_variant_choose(const int index) {
+    if (index < 0 || index >= 3) {
+        return;
+    }
+
+    QSettings settings;
+    settings.setValue(THEME_VARIANT_SETTING_NAME, index);
+
+    QString theme_text;
+    if (ui_->interface_theme_combo->currentIndex() <= 2) {
+        theme_text = QString("%1").arg(ui_->interface_theme_combo->currentIndex());
+    } else {
+        theme_text = ui_->interface_theme_combo->currentText();
+    }
+
+    emit theme_change_request(theme_text, index);
 }
 
 void settings_dialog::on_cpu_backend_changed(int value) {

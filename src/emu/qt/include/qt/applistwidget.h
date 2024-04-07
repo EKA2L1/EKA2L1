@@ -128,6 +128,9 @@ public:
     eka2l1::io_system *io_;
     eka2l1::j2me::app_list *lister_j2me_;
 
+    QSize icon_pixel_size_;
+    QSize icon_padding_size_;
+
     bool hide_system_apps_;
     bool scanning_;
     bool loaded_[2];
@@ -151,6 +154,7 @@ public:
     void update_j2me_button_name();
     void reload_whole_list();
     void show_no_apps_avail();
+    void configure_list_widget_to_grid(QListWidget *list_widget);
 
 private slots:
     void on_list_widget_item_clicked(QListWidgetItem *item);
@@ -165,6 +169,9 @@ signals:
     void app_launch(applist_widget_item *item);
     void device_change_request(int index);
     void new_registeration_item_come(QListWidgetItem *item);
+
+protected:
+    void changeEvent(QEvent *event) override;
 
 public:
     explicit applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss, eka2l1::io_system *io,
