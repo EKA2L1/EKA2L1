@@ -32,6 +32,7 @@
 #include <QPointer>
 #include <QProgressDialog>
 #include <QSystemTrayIcon>
+#include <QTimer>
 #include <memory>
 #include <map>
 
@@ -145,6 +146,7 @@ private:
 #endif
 
     bool should_maximized_;
+    QTimer inactivity_timer_;
 
     void setup_screen_draw();
     void setup_app_list(const bool load_now = false);
@@ -224,6 +226,7 @@ private slots:
     void on_question_dialog_open_request();
     void on_app_exited(eka2l1::kernel::process *proc);
     void on_theme_variant_combo_init(QWidget *container, QComboBox *combo);
+    void on_mouse_inactive();
 
 signals:
     void progress_dialog_change(const std::size_t now, const std::size_t total);
@@ -251,6 +254,7 @@ public:
     void resizeEvent(QResizeEvent *event) override;
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dropEvent(QDropEvent *event) override;
+    bool eventFilter(QObject *target, QEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
 
     void setup_and_switch_to_game_mode();

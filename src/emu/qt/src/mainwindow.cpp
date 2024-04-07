@@ -95,6 +95,7 @@ static constexpr const char *LAST_INSTALL_NGAGE_GAME_CARD_FOLDER_SETTING = "last
 static constexpr const char *NO_DEVICE_INSTALL_DISABLE_NOF_SETTING = "disableNoDeviceInstallNotify";
 static constexpr const char *NO_TOUCHSCREEN_DISABLE_WARN_SETTING = "disableNoTouchscreenWarn";
 static constexpr const char *STRETCH_DISPLAY_SETTING = "stretchDisplay";
+static constexpr int MOUSE_INACTIVITY_TIMEOUT_MS = 1500;
 
 static void mode_change_screen(void *userdata, eka2l1::epoc::screen *scr, const int old_mode) {
     eka2l1::desktop::emulator *state_ptr = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
@@ -399,6 +400,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     connect(ui_->action_mod_netplay_friends, &QAction::triggered, this, &main_window::on_bt_netplay_mod_friends_clicked);
     connect(ui_->action_stretch_to_fill, &QAction::toggled, this, &main_window::on_action_stretch_to_fill_toggled);
 
+    connect(&inactivity_timer_, &QTimer::timeout, this, &main_window::on_mouse_inactive);
     connect(rotate_group_, &QActionGroup::triggered, this, &main_window::on_another_rotation_triggered);
 
     connect(this, &main_window::progress_dialog_change, this, &main_window::on_progress_dialog_change, Qt::QueuedConnection);
@@ -654,6 +656,12 @@ void main_window::on_restart_requested() {
 
     ui_->status_bar->show();
     ui_->menu_bar->setVisible(true);
+
+    inactivity_timer_.stop();
+    setCursor(Qt::ArrowCursor);
+
+    displayer_->setMouseTracking(false);
+    displayer_->removeEventFilter(this);
 
     on_device_set_requested(-1);
     emit restart_requested();
@@ -1076,6 +1084,9 @@ void main_window::switch_to_game_display_mode() {
 
     before_margins_ = ui_->layout_centralwidget->contentsMargins();
     on_fullscreen_toogled(ui_->action_fullscreen->isChecked());
+
+    displayer_->setMouseTracking(true);
+    displayer_->installEventFilter(this);
 }
 
 void main_window::on_app_exited(eka2l1::kernel::process *target_proc) {
@@ -2002,4 +2013,21 @@ void main_window::question_dialog_open(const std::u16string &text, const std::u1
     question_dialog_complete_callback_ = complete_callback;
 
     emit question_dialog_open_request();
+}
+
+void main_window::on_mouse_inactive() {
+    setCursor(Qt::BlankCursor);
+}
+
+bool main_window::eventFilter(QObject *target, QEvent *event) {
+    if (target == displayer_ && event->type() == QEvent::MouseMove) {
+        setCursor(Qt::ArrowCursor);
+
+        inactivity_timer_.stop();
+
+        inactivity_timer_.setSingleShot(true);
+        inactivity_timer_.start(MOUSE_INACTIVITY_TIMEOUT_MS);
+    }
+
+    return false;
 }
