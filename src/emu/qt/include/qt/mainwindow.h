@@ -148,6 +148,14 @@ private:
     bool should_maximized_;
     QTimer inactivity_timer_;
 
+    bool ignore_sis_text_msg_;
+    bool auto_choose_sis_language_;
+
+    std::size_t total_try_installed_;
+    std::size_t total_to_install_;
+
+    bool is_installing_batch_;
+
     void setup_screen_draw();
     void setup_app_list(const bool load_now = false);
     void setup_package_installer_ui_hooks();
@@ -157,6 +165,7 @@ private:
     void refresh_mount_availbility();
     void mount_game_card_dump(QString path);
     void spawn_package_install_camper(QString package_install_path);
+    void spawn_multiple_install_packages(QList<QString> files);
     void make_default_binding_profile();
     void on_screen_current_group_change_callback();
     void switch_to_game_display_mode();
@@ -175,6 +184,7 @@ private slots:
     void on_settings_triggered();
     void on_package_manager_triggered();
     void on_package_install_clicked();
+    void on_multiple_package_install_clicked();
     void on_device_install_clicked();
     void on_install_ngage_card_game_clicked();
     void on_progress_dialog_change(const std::size_t now, const std::size_t total);
@@ -227,6 +237,9 @@ private slots:
     void on_app_exited(eka2l1::kernel::process *proc);
     void on_theme_variant_combo_init(QWidget *container, QComboBox *combo);
     void on_mouse_inactive();
+    void on_batch_install_request_start(bool should_ignore_sis_msg, bool should_auto_choose_language,
+        QList<QString> files);
+    void on_package_try_install_count_changed(const std::size_t count, const std::size_t total);
 
 signals:
     void progress_dialog_change(const std::size_t now, const std::size_t total);
@@ -242,6 +255,7 @@ signals:
     void install_ngage_game_name_available(QString name);
     void question_dialog_open_request();
     void app_exited(eka2l1::kernel::process *proc);
+    void package_try_install_count_changed(const std::size_t count, const std::size_t total);
 
 public:
     main_window(QApplication &app, QWidget *parent, eka2l1::desktop::emulator &emulator_state

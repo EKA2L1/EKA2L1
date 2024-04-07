@@ -82,6 +82,8 @@
 #include <qt/winutils.h>
 #endif
 
+#include <qt/batch_install_dialog.h>
+
 static constexpr const char *LAST_UI_WINDOW_GEOMETRY_SETTING = "lastWindowGeometry";
 static constexpr const char *LAST_UI_WINDOW_STATE = "lastWindowState";
 static constexpr const char *LAST_UI_WINDOW_MAXMIZED = "lastWindowMaximized";
@@ -264,6 +266,9 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     , win_transparent_manager_(win_transparent_manager)
 #endif
     , should_maximized_(false)
+    , ignore_sis_text_msg_(false)
+    , auto_choose_sis_language_(false)
+    , is_installing_batch_(false)
 {
     ui_->setupUi(this);
     ui_->label_al_not_available->setVisible(false);
@@ -388,6 +393,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     connect(ui_->action_about, &QAction::triggered, this, &main_window::on_about_triggered);
     connect(ui_->action_settings, &QAction::triggered, this, &main_window::on_settings_triggered);
     connect(ui_->action_package, &QAction::triggered, this, &main_window::on_package_install_clicked);
+    connect(ui_->action_multiple_packages, &QAction::triggered, this, &main_window::on_multiple_package_install_clicked);
     connect(ui_->action_device, &QAction::triggered, this, &main_window::on_device_install_clicked);
     connect(ui_->action_ngage_card_game, &QAction::triggered, this, &main_window::on_install_ngage_card_game_clicked);
     connect(ui_->action_mount_game_card_folder, &QAction::triggered, this, &main_window::on_mount_card_clicked);
@@ -409,6 +415,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     connect(this, &main_window::package_install_text_ask, this, &main_window::on_package_install_text_ask, Qt::BlockingQueuedConnection);
     connect(this, &main_window::package_install_language_choose, this, &main_window::on_package_install_language_choose, Qt::BlockingQueuedConnection);
     connect(this, &main_window::screen_focus_group_changed, this, &main_window::on_screen_current_group_change_callback, Qt::QueuedConnection);
+    connect(this, &main_window::package_try_install_count_changed, this, &main_window::on_package_try_install_count_changed, Qt::QueuedConnection);
 
     connect(this, &main_window::input_dialog_delay_launch_asked, this, &main_window::on_input_dialog_delay_launch_asked);
     connect(this, &main_window::input_dialog_close_request, this, &main_window::on_input_dialog_close_request);
@@ -477,10 +484,27 @@ void main_window::setup_package_installer_ui_hooks() {
 
     pkgmngr->show_text = [this](const char *text, const bool one_button) -> bool {
         // We only have one receiver, so it's ok ;)
+        if (ignore_sis_text_msg_) {
+            return one_button ? 0 : 1;
+        }
+
         return emit package_install_text_ask(text, one_button);
     };
 
     pkgmngr->choose_lang = [this](const int *languages, const int language_count) -> int {
+        if (auto_choose_sis_language_) {
+            auto def_lang = language::en;
+            if (emulator_state_.symsys) {
+                def_lang = emulator_state_.symsys->get_system_language();
+            }
+
+            if (std::find(languages, languages + language_count, static_cast<int>(def_lang)) != languages + language_count) {
+                return static_cast<int>(def_lang);
+            } else {
+                return languages[0];
+            }
+        }
+
         return emit package_install_language_choose(languages, language_count);
     };
 }
@@ -1172,6 +1196,11 @@ void main_window::setup_and_switch_to_game_mode() {
 
 void main_window::on_progress_dialog_change(const std::size_t now, const std::size_t total) {
     current_progress_dialog_->setValue(static_cast<int>(now * 100 / total));
+
+    if (is_installing_batch_) {
+        current_progress_dialog_->setLabelText(tr("Package %1/%2 - %3%").arg(total_try_installed_).arg(total_to_install_).arg(
+            static_cast<float>(now * 100.0f) / static_cast<float>(total), 0, 'f', 2));
+    }
 }
 
 bool main_window::on_package_install_text_ask(const char *text, const bool one_button) {
@@ -1208,6 +1237,9 @@ int main_window::on_package_install_language_choose(const int *languages, const 
 }
 
 void main_window::spawn_package_install_camper(QString package_file_path) {
+    auto_choose_sis_language_ = false;
+    ignore_sis_text_msg_ = false;
+
     if (!package_file_path.isEmpty()) {
         eka2l1::manager::packages *pkgmngr = emulator_state_.symsys->get_packages();
         if (pkgmngr) {
@@ -1274,6 +1306,127 @@ void main_window::spawn_package_install_camper(QString package_file_path) {
     }
 }
 
+void main_window::spawn_multiple_install_packages(QList<QString> files) {
+    auto batch_diag = new batch_install_dialog(this, files);
+    connect(batch_diag, &batch_install_dialog::install_multiple, this, &main_window::on_batch_install_request_start, Qt::QueuedConnection);
+
+    batch_diag->show();
+}
+
+void main_window::on_batch_install_request_start(bool should_ignore_sis_msg, bool should_auto_choose_language,
+    QList<QString> files) {
+    ignore_sis_text_msg_ = should_ignore_sis_msg;
+    auto_choose_sis_language_ = should_auto_choose_language;
+
+    eka2l1::manager::packages *pkgmngr = emulator_state_.symsys->get_packages();
+    if (pkgmngr) {
+        current_progress_dialog_ = new QProgressDialog(QString{}, tr("Cancel"), 0, 100, this);
+
+        current_progress_dialog_->setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint & ~Qt::WindowMaximizeButtonHint & ~Qt::WindowCloseButtonHint);
+        current_progress_dialog_->setWindowTitle(tr("Installing packages progress"));
+        current_progress_dialog_->setAttribute(Qt::WA_DeleteOnClose, true);
+        current_progress_dialog_->setMinimumWidth(this->width() / 2);
+        current_progress_dialog_->setModal(true);
+        current_progress_dialog_->show();
+
+        drive_number install_drive = drive_e;
+        if (emulator_state_.symsys->is_s80_device_active()) {
+            install_drive = drive_d;
+        }
+
+        using install_abnormal_map = std::unordered_map<std::string, eka2l1::package::installation_result>;
+
+        std::atomic_size_t total_success_install = 0;
+        is_installing_batch_ = true;
+
+        QFuture<install_abnormal_map> install_future = QtConcurrent::run([this, pkgmngr, &files, install_drive, &total_success_install]() {
+            float percentage_each = 100.0f / static_cast<float>(files.size());
+            install_abnormal_map abnormal_map;
+
+            for (auto i = 0; i < files.size(); i++) {
+                if (current_progress_dialog_->wasCanceled()) {
+                    return abnormal_map;
+                }
+
+                auto res = pkgmngr->install_package(
+                    files[i].toStdU16String(),
+                    install_drive,
+                    [this, percentage_each, i](const std::size_t done, const std::size_t total) {
+                        float percentage_in_single = static_cast<float>(done) / static_cast<float>(total);
+                        float percentage_total = percentage_each * (static_cast<float>(i) + percentage_in_single);
+                        emit progress_dialog_change(static_cast<std::size_t>(percentage_total), 100); },
+                    [this] { return current_progress_dialog_->wasCanceled(); });
+
+                if (res != eka2l1::package::installation_result_success) {
+                    abnormal_map.emplace(files[i].toStdString(), res);
+                } else {
+                    total_success_install = total_success_install + 1;
+                }
+
+                emit package_try_install_count_changed(i, files.size());
+            }
+
+            return abnormal_map;
+        });
+
+        while (!install_future.isFinished()) {
+            QCoreApplication::processEvents();
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+
+        current_progress_dialog_->close();
+        is_installing_batch_ = false;
+
+        auto result = install_future.result();
+
+        if (result.empty()) {
+            if (total_success_install == files.size()) {
+                QMessageBox::information(this, tr("Installation success"), tr("All packages have been successfully installed"));
+            } else {
+                QMessageBox::information(this, tr("Installation success"), tr("%1/%2 packages have been successfully installed").arg(total_success_install).arg(files.size()));
+            }
+        } else {
+            QString error_str;
+
+            for (const auto &[file, res] : result) {
+            switch (res) {
+            case eka2l1::package::installation_result_invalid:
+                error_str += tr("Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.\n").arg(QString::fromStdString(file));
+                break;
+
+            case eka2l1::package::installation_result_aborted:
+                error_str += tr("Installation of package at path: %1 has been canceled.\n").arg(QString::fromStdString(file));
+                break;
+
+            default:
+                break;
+            }
+            }
+
+            auto box = new QMessageBox(this);
+
+            box->setWindowTitle(tr("Installation info"));
+
+            if (total_success_install == 0) {
+                box->setText(tr("%1/%2 packages failed to install!").arg(result.size()).arg(files.size()));
+            } else {
+                box->setText(tr("%1/%2 packages successfully installed. %3/%4 packages failed to install.").arg(
+                    total_success_install).arg(files.size()).arg(result.size()).arg(files.size()));
+            }
+
+            box->setAttribute(Qt::WA_DeleteOnClose);
+            box->setStandardButtons(QMessageBox::Ok);
+            box->setDetailedText(error_str);
+
+            box->show();
+        }
+
+        if (total_success_install > 0) {
+            force_refresh_applist();
+        }
+    }
+}
+
 void main_window::on_package_install_clicked() {
     QSettings settings;
     QString last_install_dir;
@@ -1288,6 +1441,28 @@ void main_window::on_package_install_clicked() {
         settings.setValue(LAST_PACKAGE_FOLDER_SETTING, QFileInfo(package_file_path).absoluteDir().path());
     }
     spawn_package_install_camper(package_file_path);
+}
+
+void main_window::on_multiple_package_install_clicked() {
+    QSettings settings;
+    QString last_install_dir;
+
+    QVariant last_install_dir_variant = settings.value(LAST_PACKAGE_FOLDER_SETTING);
+    if (last_install_dir_variant.isValid()) {
+            last_install_dir = last_install_dir_variant.toString();
+    }
+
+    QStringList package_file_paths = QFileDialog::getOpenFileNames(this, tr("Choose the files to install"), last_install_dir, tr("SIS file (*.sis *.sisx)"));
+    if (!package_file_paths.isEmpty()) {
+        settings.setValue(LAST_PACKAGE_FOLDER_SETTING, QFileInfo(package_file_paths[0]).absoluteDir().path());
+    }
+
+    QList<QString> file_paths;
+    for (const QString &package_file_path : package_file_paths) {
+        file_paths.push_back(package_file_path);
+    }
+
+    spawn_multiple_install_packages(file_paths);
 }
 
 void main_window::resizeEvent(QResizeEvent *event) {
@@ -1313,11 +1488,9 @@ void main_window::resizeEvent(QResizeEvent *event) {
 void main_window::dragEnterEvent(QDragEnterEvent *event) {
     if (event->mimeData()->hasUrls()) {
         QList<QUrl> list_url = event->mimeData()->urls();
-        if (list_url.size() == 1) {
-            QString local_path = list_url[0].toLocalFile();
-            if (local_path.endsWith(".sis") || local_path.endsWith(".sisx")) {
-                event->acceptProposedAction();
-            }
+        QString local_path = list_url[0].toLocalFile();
+        if (local_path.endsWith(".sis") || local_path.endsWith(".sisx")) {
+            event->acceptProposedAction();
         }
     }
 }
@@ -1329,6 +1502,18 @@ void main_window::dropEvent(QDropEvent *event) {
         if (local_path.endsWith(".sis") || local_path.endsWith(".sisx")) {
             spawn_package_install_camper(local_path);
         }
+    } else {
+        QList<QString> file_paths;
+
+        for (const QUrl &url : list_url) {
+            auto local_file_path = url.toLocalFile();
+
+            if (local_file_path.endsWith(".sis") || local_file_path.endsWith(".sisx")) {
+                file_paths.push_back(local_file_path);
+            }
+        }
+
+        spawn_multiple_install_packages(file_paths);
     }
 }
 
@@ -2030,4 +2215,14 @@ bool main_window::eventFilter(QObject *target, QEvent *event) {
     }
 
     return false;
+}
+
+void main_window::on_package_try_install_count_changed(const std::size_t count, const std::size_t total) {
+    if (current_progress_dialog_) {
+        total_try_installed_ = count;
+        total_to_install_ = total;
+
+        current_progress_dialog_->setLabelText(tr("Package %1/%2 - %3%").arg(count).arg(total)
+            .arg(static_cast<float>(count) / static_cast<float>(total) * 100.0f, 0, 'f', 2));
+    }
 }

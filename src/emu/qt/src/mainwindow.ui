@@ -46,11 +46,11 @@
           <pointsize>10</pointsize>
          </font>
         </property>
-        <property name="openExternalLinks">
-         <bool>true</bool>
-        </property>
         <property name="text">
          <string>App launcher is unavailable.&lt;br&gt;Visit &lt;a href=&quot;https://eka2l1.miraheze.org/wiki/Main_Page&quot;&gt;EKA2L1 wiki&lt;/a&gt; to get started, or install a device to continue.</string>
+        </property>
+        <property name="openExternalLinks">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -76,6 +76,7 @@
       <string>Install</string>
      </property>
      <addaction name="action_package"/>
+     <addaction name="action_multiple_packages"/>
      <addaction name="action_device"/>
      <addaction name="separator"/>
      <addaction name="action_ngage_card_game"/>
@@ -340,6 +341,11 @@
    </property>
    <property name="text">
     <string>Stretch to fill window (ignore aspect ratio)</string>
+   </property>
+  </action>
+  <action name="action_multiple_packages">
+   <property name="text">
+    <string>Multiple packages</string>
    </property>
   </action>
  </widget>

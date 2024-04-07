@@ -66,6 +66,7 @@ set(PROJECT_SOURCES
         include/qt/btnmap/singletouch.h
         include/qt/aboutdialog.h
         include/qt/applistwidget.h
+        include/qt/batch_install_dialog.h
         include/qt/btnetplay_friends_dialog.h
         include/qt/btnet_dialog.h
         include/qt/cmdhandler.h
@@ -97,6 +98,8 @@ set(PROJECT_SOURCES
         src/aboutdialog.cpp
         src/aboutdialog.ui
         src/applistwidget.cpp
+        src/batch_install_dialog.cpp
+        src/batch_install_dialog.ui
         src/btnetplay_friends_dialog.cpp
         src/btnet_dialog.cpp
         src/btnet_dialog.ui
@@ -202,7 +205,7 @@ if (WIN32)
 
     if (MSVC)
         set(EXTRA_EXEC_LIBRARIES ${EXTRA_EXEC_LIBRARIES} Delayimp windowsapp)
-        set(EXTRA_EXEC_LINK_FLAGS "/DELAYLOAD:API-MS-WIN-CORE-WINRT-L1-1-0.DLL")
+        set(EXTRA_EXEC_LINK_FLAGS "/DELAYLOAD:API-MS-WIN-CORE-WINRT-L1-1-0.DLL /DELAYLOAD:API-MS-WIN-CORE-COM-L1-1-0.DLL")
     endif()
 endif()
 
@@ -296,7 +299,7 @@ if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
     if (UNIX AND (NOT APPLE) AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU"))
         target_link_libraries(eka2l1_qt PRIVATE -Wl,--whole-archive $<TARGET_FILE:scripting> -Wl,--no-whole-archive)
     elseif(MSVC)
-        set(EXTRA_EXEC_LINK_FLAGS ${EXTRA_EXEC_LINK_FLAGS} /WHOLEARCHIVE:scripting.lib)
+        set(EXTRA_EXEC_LINK_FLAGS "${EXTRA_EXEC_LINK_FLAGS} /WHOLEARCHIVE:scripting.lib")
     else()
         target_link_libraries(eka2l1_qt PRIVATE scripting)
     endif()
