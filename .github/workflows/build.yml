@@ -149,6 +149,12 @@ jobs:
         arch: 'win64_msvc2019_64'
       if: matrix.os == 'windows-latest'
 
+    - name: "Install new Windows SDK"
+      uses: fbactions/setup-winsdk@v1
+      with:
+        winsdk-build-version: 22621
+      if: matrix.os == 'windows-latest'
+
     - name: Set up SDL 2.0.20 (ubuntu-latest)
       run: |
         SDL2VER=2.0.20
@@ -186,7 +192,7 @@ jobs:
       if: matrix.os != 'windows-latest'
     
     - name: CMake build
-      run: cmake --build build --config ${{ matrix.config }} --parallel 2 --target eka2l1_qt updater
+      run: cmake --build build --config ${{ matrix.config }} --parallel 2 -DCMAKE_SYSTEM_VERSION=10.0.22621.0 --target eka2l1_qt updater
       if: matrix.os == 'windows-latest'
 
     - name: Generate AppImage
