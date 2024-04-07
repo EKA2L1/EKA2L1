@@ -58,6 +58,7 @@ endif()
 set(PROJECT_SOURCES
         include/qt/btnmap/aim.h
         include/qt/btnmap/base.h
+        include/qt/btnmap/camerapan.h
         include/qt/btnmap/editor.h
         include/qt/btnmap/editor_widget.h
         include/qt/btnmap/executor.h
@@ -86,6 +87,7 @@ set(PROJECT_SOURCES
         include/qt/utils.h
         src/btnmap/aim.cpp
         src/btnmap/base.cpp
+        src/btnmap/camerapan.cpp
         src/btnmap/editor.cpp
         src/btnmap/editor_widget.cpp
         src/btnmap/editor_widget.ui
@@ -133,9 +135,7 @@ set(PROJECT_SOURCES
 if (WIN32)
     set(PROJECT_SOURCES ${PROJECT_SOURCES}
         include/qt/winutils.h
-        src/winutils.cpp
-            include/qt/btnmap/camerapan.h
-            src/btnmap/camerapan.cpp)
+        src/winutils.cpp)
 endif()
 
 set(UPDATE_SOURCES
