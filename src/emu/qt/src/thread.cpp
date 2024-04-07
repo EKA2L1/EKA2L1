@@ -407,9 +407,9 @@ namespace eka2l1::desktop {
         eka2l1::qt::window_transparent_manager transparent_manager(application);
 #endif
 
-        state.ui_main = new main_window(application, nullptr, state,
+        state.ui_main = new main_window(application, nullptr, state
 #if EKA2L1_PLATFORM(WIN32)
-                &transparent_manager
+                , &transparent_manager
 #endif
             );
         state.ui_main->setWindowTitle(get_emulator_window_title());
