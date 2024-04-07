@@ -184,15 +184,19 @@ jobs:
       if: matrix.os == 'macos-latest'
 
     - name: CMake configure
+      run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_NO_TERMINAL=ON -DEKA2L1_ENABLE_DISCORD_RICH_PRESENCE=ON -DCMAKE_PREFIX_PATH=${{ env.Qt5_DIR }} -DCMAKE_SYSTEM_VERSION="10.0.22621.0" -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+      if: matrix.os == 'windows-latest'
+
+    - name: CMake configure
       run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_NO_TERMINAL=ON -DEKA2L1_ENABLE_DISCORD_RICH_PRESENCE=ON -DCMAKE_PREFIX_PATH=${{ env.Qt5_DIR }} -DCMAKE_BUILD_TYPE=${{ matrix.config }}
-      if: matrix.os != 'macos-latest'
+      if: matrix.os == 'ubuntu-20.04'
 
     - name: CMake build
       run: cmake --build build --config ${{ matrix.config }} --parallel 2 --target eka2l1_qt
       if: matrix.os != 'windows-latest'
     
     - name: CMake build
-      run: cmake --build build --config ${{ matrix.config }} --parallel 2 -DCMAKE_SYSTEM_VERSION=10.0.22621.0 --target eka2l1_qt updater
+      run: cmake --build build --config ${{ matrix.config }} --parallel 2 --target eka2l1_qt updater
       if: matrix.os == 'windows-latest'
 
     - name: Generate AppImage
