@@ -14,12 +14,12 @@
     <message>
       <location filename="../src/symbian_input_dialog.ui" line="14"/>
       <source>Enter the text</source>
-      <translation type="unfinished">Enter the text</translation>
+      <translation>Metin girin</translation>
     </message>
     <message>
       <location filename="../src/symbian_input_dialog.ui" line="31"/>
       <source>Submit</source>
-      <translation type="unfinished">Submit</translation>
+      <translation>Gönder</translation>
     </message>
   </context>
   <context>
@@ -27,7 +27,7 @@
     <message>
       <location filename="../src/aboutdialog.ui" line="14"/>
       <source>About EKA2L1</source>
-      <translation type="unfinished">About EKA2L1</translation>
+      <translation>EKA2L1 Hakkında</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.ui" line="69"/>
@@ -42,32 +42,32 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="53"/>
       <source>&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Emülatörü kullandığınız için teşekkür ederiz!&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="64"/>
       <source>&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Ana geliştiriciler:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="78"/>
       <source>&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Katkıda Bulunanlar:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="92"/>
       <source>&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Simge:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="106"/>
       <source>&lt;b&gt;Honors:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Honors:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Başarılar:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="120"/>
       <source>&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Çevirmenler:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
   </context>
   <context>
@@ -91,32 +91,32 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="724"/>
       <source>&lt;br&gt;App UID: 0x%1</source>
-      <translation type="unfinished">&lt;br&gt;App UID: 0x%1</translation>
+      <translation>&lt;br&gt;Uygulama UID: 0x%1</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="796"/>
       <source>Enter a new name</source>
-      <translation type="unfinished">Enter a new name</translation>
+      <translation>Yeni bir isim girin</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
       <source>Update name failed</source>
-      <translation type="unfinished">Update name failed</translation>
+      <translation>Ad güncelleme başarısız oldu</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
       <source>An error occured while trying to rename the app!</source>
-      <translation type="unfinished">An error occured while trying to rename the app!</translation>
+      <translation>Uygulamayı yeniden adlandırmaya çalışırken bir hata meydana geldi!</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
       <source>Delete app failed</source>
-      <translation type="unfinished">Delete app failed</translation>
+      <translation>Uygulama silinemedi</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
       <source>An error occured while trying to delete the app!</source>
-      <translation type="unfinished">An error occured while trying to delete the app!</translation>
+      <translation>Uygulama silinmeye çalışılırken bir hata meydana geldi!</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="834"/>
@@ -134,7 +134,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="20"/>
       <source>Bluetooth netplay settings</source>
-      <translation type="unfinished">Bluetooth netplay settings</translation>
+      <translation>Bluetooth ağ ayarları</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="47"/>
@@ -144,42 +144,42 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="55"/>
       <source>Off</source>
-      <translation type="unfinished">Off</translation>
+      <translation>Kapalı</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="60"/>
       <source>Direct IP</source>
-      <translation type="unfinished">Direct IP</translation>
+      <translation>Direct-IP</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="65"/>
       <source>LAN</source>
-      <translation type="unfinished">LAN</translation>
+      <translation>LAN</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="115"/>
       <source>Server address</source>
-      <translation type="unfinished">Server address</translation>
+      <translation>Sunucu adresi</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="134"/>
       <source>Enable UPnP (for IPv4 public play)</source>
-      <translation type="unfinished">Enable UPnP (for IPv4 public play)</translation>
+      <translation>UPnP'yi etkinleştirin (IPv4 herkese açık oyun için)</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="166"/>
       <source>Save</source>
-      <translation type="unfinished">Save</translation>
+      <translation>Kaydet</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="188"/>
       <source>Open friends&apos; IP editor</source>
-      <translation type="unfinished">Open friends&apos; IP editor</translation>
+      <translation>Arkadaşlarınızın IP düzenleyicisini açın</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="225"/>
       <source>Players with the same password will be able to see each others. This can be empty.</source>
-      <translation type="unfinished">Players with the same password will be able to see each others. This can be empty.</translation>
+      <translation>Aynı şifreye sahip oyuncular birbirlerini görebilir. Boş bırakılabilir.</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="228"/>
@@ -189,22 +189,22 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="238"/>
       <source>Generate random</source>
-      <translation type="unfinished">Generate random</translation>
+      <translation>Rastgele oluştur</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="245"/>
       <source>Clear</source>
-      <translation type="unfinished">Clear</translation>
+      <translation>Temizle</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
       <source>Configuration not saved</source>
-      <translation type="unfinished">Configuration not saved</translation>
+      <translation>Yapılandırma kaydedilmedi</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="119"/>
       <source>The Bluetooth netplay configuration has not been saved. Do you want to save?</source>
-      <translation type="unfinished">The Bluetooth netplay configuration has not been saved. Do you want to save?</translation>
+      <translation>Bluetooth ağ yapılandırması kaydedilmedi. Kaydetmek istiyor musunuz?</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.cpp" line="127"/>
@@ -222,22 +222,22 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="70"/>
       <source>Modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Modify friends&apos; IP addresses</translation>
+      <translation>Arkadaşlarınızın IP adreslerini düzenleyin</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="85"/>
       <source>IP address (IPv4 or IPv6)</source>
-      <translation type="unfinished">IP address (IPv4 or IPv6)</translation>
+      <translation>IP adresi (IPv4 or IPv6)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="90"/>
       <source>Port (can be empty)</source>
-      <translation type="unfinished">Port (can be empty)</translation>
+      <translation>Port (boş bırakılabilir)</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="133"/>
       <source>Add more</source>
-      <translation type="unfinished">Add more</translation>
+      <translation>Daha fazla ekle</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="134"/>
@@ -247,48 +247,48 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="135"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>Güncelle</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="201"/>
       <source>Update friends success!</source>
-      <translation type="unfinished">Update friends success!</translation>
+      <translation>Arkadaş başarısı güncelle!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="201"/>
       <source>Friends&apos; IP addresses have been successfully saved!</source>
-      <translation type="unfinished">Friends&apos; IP addresses have been successfully saved!</translation>
+      <translation>Arkadaşlarınızın IP adresleri başarıyla kaydedildi!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="214"/>
       <source>Friend %1 has empty IP address!
 </source>
-      <translation type="unfinished">Friend %1 has empty IP address!
+      <translation>%1 Arkadaşın IP adresi boş!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="216"/>
       <source>Friend %1 has invalid IP address!
 </source>
-      <translation type="unfinished">Friend %1 has invalid IP address!
+      <translation>%1 Arkadaşın IP adresi geçersiz!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="221"/>
       <source>Friend %1 has invalid port number (must be between 0 and 65535)!
 </source>
-      <translation type="unfinished">Friend %1 has invalid port number (must be between 0 and 65535)!
+      <translation>%1 Arkadaşın port numarası geçersiz (0 ve 65535 arasında olmalıdır)!
 </translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="248"/>
       <source>Some errors in updating friends!</source>
-      <translation type="unfinished">Some errors in updating friends!</translation>
+      <translation>Arkadaşları güncellemede bazı hatalar oluştu!</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="249"/>
       <source>Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</source>
-      <translation type="unfinished">Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</translation>
+      <translation>Bazı arkadaşların IP adresleri güncellenemiyor (ayrıntılı metne bakın)&lt;br&gt;Güncellenebilen adresler kaydedildi.</translation>
     </message>
   </context>
   <context>
@@ -296,29 +296,29 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="20"/>
       <source>Device install wizard</source>
-      <translation type="unfinished">Device install wizard</translation>
+      <translation>Cihaz yükleme sihirbazı</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="55"/>
       <location filename="../src/device_install_dialog.ui" line="174"/>
       <location filename="../src/device_install_dialog.ui" line="207"/>
       <source>Browse</source>
-      <translation type="unfinished">Browse</translation>
+      <translation>Gözat</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="80"/>
       <source>Choose the installation method</source>
-      <translation type="unfinished">Choose the installation method</translation>
+      <translation>Kurulum yöntemini seçin</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="94"/>
       <source>Device dump (RPKG + ROM)</source>
-      <translation type="unfinished">Device dump (RPKG + ROM)</translation>
+      <translation>Cihaz dökümü (RPKG + ROM)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="99"/>
       <source>Firmware (VPL)</source>
-      <translation type="unfinished">Firmware (VPL)</translation>
+      <translation>Firmware (VPL)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="125"/>
@@ -333,47 +333,47 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="117"/>
       <source>Choose the firmware variant to install</source>
-      <translation type="unfinished">Choose the firmware variant to install</translation>
+      <translation>Yüklenecek ürün yazılımı varyantını seçin</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="199"/>
       <source>Installation completed</source>
-      <translation type="unfinished">Installation completed</translation>
+      <translation>Yükleme tamamlandı</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="200"/>
       <source>Device %1 (%2) has been successfully installed!</source>
-      <translation type="unfinished">Device %1 (%2) has been successfully installed!</translation>
+      <translation>Cihaz %1 (%2) başarıyla kuruldu!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="208"/>
       <source>The device has already been installed!</source>
-      <translation type="unfinished">The device has already been installed!</translation>
+      <translation>Cihaz zaten kuruldu!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="212"/>
       <source>Fail to determine product information from the dump!</source>
-      <translation type="unfinished">Fail to determine product information from the dump!</translation>
+      <translation>Dökümden ürün bilgisi belirlenemedi!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="216"/>
       <source>One of the FPSX files provided in the firmware is corrupted!</source>
-      <translation type="unfinished">One of the FPSX files provided in the firmware is corrupted!</translation>
+      <translation>Ürün yazılımında sağlanan FPSX dosyalarından biri bozuk!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="220"/>
       <source>An unknown error has occured. Please contact the developers with your log!</source>
-      <translation type="unfinished">An unknown error has occured. Please contact the developers with your log!</translation>
+      <translation>Bilinmeyen bir hata oluştu. Lütfen günlüğünüzle birlikte geliştiricilerle iletişime geçin!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="224"/>
       <source>The disk space is insufficient to perform the device install! Please free your disk space!</source>
-      <translation type="unfinished">The disk space is insufficient to perform the device install! Please free your disk space!</translation>
+      <translation>Cihaz kurulumunu gerçekleştirmek için disk alanı yetersiz! Lütfen disk alanınızı boşaltın!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="228"/>
       <source>Some files provided for installation do not exist anymore. Please keep them intact until the installation is done!</source>
-      <translation type="unfinished">Some files provided for installation do not exist anymore. Please keep them intact until the installation is done!</translation>
+      <translation>Kurulum için sağlanan bazı dosyalar artık mevcut değil. Lütfen kurulum tamamlanana kadar bunları sağlam tutun!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="232"/>
@@ -764,93 +764,93 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="345"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
-      <translation type="unfinished">Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</translation>
+      <translation>Mevcut tuş atamalarınızdan bazıları fare düğmeleriyle ilişkilidir. Bu nedenle benzetilmiş dokunmatik ekran devre dışı bırakılır.&lt;br&gt;&lt;br&gt;&lt;b&gt;Not:&lt;/b&gt;&lt;br&gt;Dokunmatik ekran, fare düğmelerini klavye tuşlarıyla yeniden bağlayarak yeniden etkinleştirilebilir.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="346"/>
       <location filename="../src/mainwindow.cpp" line="427"/>
       <source>Don&apos;t show this again</source>
-      <translation type="unfinished">Don&apos;t show this again</translation>
+      <translation>Bunu tekrar gösterme</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="426"/>
       <source>No device installed</source>
-      <translation type="unfinished">No device installed</translation>
+      <translation>Hiçbir cihaz kurulu değil</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="426"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
-      <translation type="unfinished">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</translation>
+      <translation>Herhangi bir cihaz yüklemediniz. Lütfen bir cihaz yükleyin veya EKA2L1&apos;in Github Wiki sayfasından yükleme kılavuzuna bakın.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="686"/>
       <source>Installing &lt;b&gt;%1&lt;/b&gt;</source>
-      <translation type="unfinished">Installing &lt;b&gt;%1&lt;/b&gt;</translation>
+      <translation>Yükleniyor &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="699"/>
       <source>Choose the N-Gage game card folder</source>
-      <translation type="unfinished">Choose the N-Gage game card folder</translation>
+      <translation>N-Gage oyun kartı klasörünü seçin</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="707"/>
       <source>Installing N-Gage game...</source>
-      <translation type="unfinished">Installing N-Gage game...</translation>
+      <translation>N-Gage oyunu yükleniyor...</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="730"/>
       <source>Install success!</source>
-      <translation type="unfinished">Install success!</translation>
+      <translation>Yükleme başarılı!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="730"/>
       <source>Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</source>
-      <translation type="unfinished">Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</translation>
+      <translation>N-Gage kart oyunu başarıyla yüklendi: &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="736"/>
       <source>Can&apos;t find the game data folder!</source>
-      <translation type="unfinished">Can&apos;t find the game data folder!</translation>
+      <translation>Oyun veri klasörü bulunamadı!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="740"/>
       <source>There is more than one game in the given card game folder!</source>
-      <translation type="unfinished">There is more than one game in the given card game folder!</translation>
+      <translation>Verilen kart oyunu klasöründe birden fazla oyun var!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="744"/>
       <source>The game information file does not exist in the card game folder!</source>
-      <translation type="unfinished">The game information file does not exist in the card game folder!</translation>
+      <translation>Oyun bilgi dosyası kart oyunu klasöründe mevcut değil!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="748"/>
       <source>The game information file has been corrupted. Please check your data&apos;s validity!</source>
-      <translation type="unfinished">The game information file has been corrupted. Please check your data&apos;s validity!</translation>
+      <translation>Oyun bilgi dosyası bozulmuş. Lütfen verilerinizin geçerliliğini kontrol edin!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="752"/>
       <source>General error occured...</source>
-      <translation type="unfinished">General error occured...</translation>
+      <translation>Genel bir hata oluştu...</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="757"/>
       <location filename="../src/mainwindow.cpp" line="759"/>
       <location filename="../src/mainwindow.cpp" line="1664"/>
       <source>Install failed</source>
-      <translation type="unfinished">Install failed</translation>
+      <translation>Yükleme başarısız</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="757"/>
       <source>Installation failed with error:
   -%1</source>
-      <translation type="unfinished">Installation failed with error:
+      <translation>Kurulum aşağıdaki hata ile başarısız oldu:
   -%1</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="759"/>
       <source>Installation of %1% failed with error:
   -%2</source>
-      <translation type="unfinished">Installation of %1% failed with error:
+      <translation>%1% kurulumu aşağıdaki hata ile başarısız oldu:
   -%2</translation>
     </message>
     <message>
@@ -862,57 +862,57 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="831"/>
       <source>Extracting game dump files</source>
-      <translation type="unfinished">Extracting game dump files</translation>
+      <translation>Oyun döküm dosyaları çıkarılıyor</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="853"/>
       <source>Mounting aborted</source>
-      <translation type="unfinished">Mounting aborted</translation>
+      <translation>Bağlama iptal edildi</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="858"/>
       <source>The ZIP file is corrupted!</source>
-      <translation type="unfinished">The ZIP file is corrupted!</translation>
+      <translation>ZIP dosyası hasarlı!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="863"/>
       <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
-      <translation type="unfinished">The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</translation>
+      <translation>ZIP kök klasöründe Sistem klasörü bulunamadı. Sistem klasörü oyun dökümünde bulunmalıdır.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="869"/>
       <source>The choosen file is not a ZIP file!</source>
-      <translation type="unfinished">The choosen file is not a ZIP file!</translation>
+      <translation>Seçili dosya bir ZIP dosyası değil!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="883"/>
       <source>Game card problem</source>
-      <translation type="unfinished">Game card problem</translation>
+      <translation>Oyun kartı sorunu</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="883"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
-      <translation type="unfinished">The game card dump has case-sensitive files. This may cause problems with the emulator.</translation>
+      <translation>Oyun kartı dökümünde büyük/küçük harfe duyarlı dosyalar bulunur. Bu emülatörde sorunlara neden olabilir.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="887"/>
       <source>Game card dump folder correction</source>
-      <translation type="unfinished">Game card dump folder correction</translation>
+      <translation>Oyun kartı dökümü klasörü düzeltmesi</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="887"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
-      <translation type="unfinished">The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</translation>
+      <translation>Seçilen yol hatalı görünüyor.&lt;br&gt;Emülatörün bunu düzeltmesini istiyor musunuz?</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="943"/>
       <source>Choose the game card dump folder</source>
-      <translation type="unfinished">Choose the game card dump folder</translation>
+      <translation>Oyun kartı döküm klasörünü seçin</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="963"/>
       <source>Choose the game card zip</source>
-      <translation type="unfinished">Choose the game card zip</translation>
+      <translation>Oyun kartı zip dosyasını seçin</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1034"/>
@@ -922,32 +922,32 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1034"/>
       <source>Fail to launch the selected application!</source>
-      <translation type="unfinished">Fail to launch the selected application!</translation>
+      <translation>Seçilen uygulama başlatılamadı!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1051"/>
       <source>Document</source>
-      <translation type="unfinished">Document</translation>
+      <translation>Döküman</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1069"/>
       <source>Choose a language for the package</source>
-      <translation type="unfinished">Choose a language for the package</translation>
+      <translation>Paket için bir dil seçin</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1090"/>
       <source>Installing package progress</source>
-      <translation type="unfinished">Installing package progress</translation>
+      <translation>Paket ilerlemesi yükleniyor</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1115"/>
       <source>Installation aborted</source>
-      <translation type="unfinished">Installation aborted</translation>
+      <translation>Kurulum iptal edildi</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1115"/>
       <source>The installation has been canceled</source>
-      <translation type="unfinished">The installation has been canceled</translation>
+      <translation>Kurulum iptal edildi</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1120"/>
@@ -957,82 +957,82 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1120"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
-      <translation type="unfinished">Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</translation>
+      <translation>Şu yola paket yüklenemedi: %1. Yolun geçerli bir SIS/SISX dosyası içerdiğinden emin olun.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1127"/>
       <source>Installation success</source>
-      <translation type="unfinished">Installation success</translation>
+      <translation>Yükleme başarılı</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1127"/>
       <source>Package has been successfully installed</source>
-      <translation type="unfinished">Package has been successfully installed</translation>
+      <translation>Paket başarıyla kuruldu</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1152"/>
       <source>Choose the file to install</source>
-      <translation type="unfinished">Choose the file to install</translation>
+      <translation>Yüklenecek dosyayı seçin</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1152"/>
       <source>SIS file (*.sis *.sisx)</source>
-      <translation type="unfinished">SIS file (*.sis *.sisx)</translation>
+      <translation>SIS dosyası (*.sis *.sisx)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1347"/>
       <source>Load theme failed!</source>
-      <translation type="unfinished">Load theme failed!</translation>
+      <translation>Tema yüklenemedi!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1347"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
-      <translation type="unfinished">The Dark theme&apos;s style file can&apos;t be found!</translation>
+      <translation>Koyu temanın stil dosyası bulunamıyor!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1482"/>
       <source>Continue to modify friends&apos; IP addresses</source>
-      <translation type="unfinished">Continue to modify friends&apos; IP addresses</translation>
+      <translation>Arkadaşlarınızın IP adreslerini değiştirmeye devam edin</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1483"/>
       <source>This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</source>
-      <translation type="unfinished">This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</translation>
+      <translation>Bu iletişim kutusu, başkalarının kişisel bilgilerini açığa çıkarma potansiyeline sahip olan, saklanan tüm IP adreslerini gösterecektir.&lt;br&gt;Devam etmek istiyor musunuz?</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1500"/>
       <source>Bluetooth manager service not available!</source>
-      <translation type="unfinished">Bluetooth manager service not available!</translation>
+      <translation>Bluetooth yöneticisi hizmeti mevcut değil!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1500"/>
       <source>The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</source>
-      <translation type="unfinished">The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</translation>
+      <translation>Taklit edilen cihazın Bluetooth yöneticisi hizmeti yok! Bluetooth desteklenmiyor.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1617"/>
       <source>Choose the JAR file to install</source>
-      <translation type="unfinished">Choose the JAR file to install</translation>
+      <translation>Yüklenecek JAR dosyasını seçin</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1617"/>
       <source>JAR file (*.jar)</source>
-      <translation type="unfinished">JAR file (*.jar)</translation>
+      <translation>JAR dosyası (*.jar)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1625"/>
       <source>%1 version %2 (by %3) has been installed!</source>
-      <translation type="unfinished">%1 version %2 (by %3) has been installed!</translation>
+      <translation>%1 sürüm %2 (%3 tarafından) yüklendi!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1628"/>
       <source>Install success</source>
-      <translation type="unfinished">Install success</translation>
+      <translation>Yükleme başarılı</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1640"/>
       <source>Can not add the JAR to the apps database!</source>
-      <translation type="unfinished">Can not add the JAR to the apps database!</translation>
+      <translation>JAR, uygulama veritabanına eklenemiyor!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1644"/>
@@ -1271,7 +1271,7 @@
       <location filename="../src/settings_dialog.ui" line="1096"/>
       <location filename="../src/settings_dialog.ui" line="1137"/>
       <source>Browse</source>
-      <translation type="unfinished">Browse</translation>
+      <translation>Gözat</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="445"/>
@@ -1418,7 +1418,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="764"/>
       <source>Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</source>
-      <translation type="unfinished">Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</translation>
+      <translation>Symbian'ın GLES1 API'si için yerel GPU hızlandırma gerçekleştirmesi için emülatöre izin verin.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="767"/>
@@ -1956,7 +1956,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/update_dialog.ui" line="126"/>
       <source>Update</source>
-      <translation type="unfinished">Update</translation>
+      <translation>Güncelle</translation>
     </message>
     <message>
       <location filename="../src/update_dialog.ui" line="139"/>
