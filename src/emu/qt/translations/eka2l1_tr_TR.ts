@@ -139,7 +139,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="47"/>
       <source>Mode</source>
-      <translation type="unfinished">Mode</translation>
+      <translation>Mod</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="55"/>
