@@ -25,6 +25,7 @@
 #include <QMessageBox>
 
 namespace eka2l1 {
+    class akn_skin_server;
     class window_server;
     class system;
 
@@ -51,6 +52,7 @@ static constexpr const char *ENABLE_DISCORD_RICH_PRESENCE_SETTING_NAME = "enable
 typedef void (*dialog_checkbox_toggled_callback)(bool toggled);
 
 eka2l1::window_server *get_window_server_through_system(eka2l1::system *sys);
+eka2l1::akn_skin_server *get_akn_skin_server_through_system(eka2l1::system *sys);
 eka2l1::epoc::screen *get_current_active_screen(eka2l1::system *sys, const int provided_num = -1);
 eka2l1::config::app_setting *get_active_app_setting(eka2l1::system *sys, eka2l1::config::app_settings &settings, const int provided_num = -1);
 

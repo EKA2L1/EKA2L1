@@ -597,7 +597,8 @@ void applist_widget::add_registeration_item_native(eka2l1::apa_app_registry &reg
         eka2l1::common::create_directories("cache");
 
         if (file_route) {
-            auto skin_pid = lister_->get_kernel_object_owner()->is_eka1() ? eka2l1::epoc::pid(0, 0) :skin_server_->get_active_skin_pid();
+            auto skin_pid = lister_->get_kernel_object_owner()->is_eka1() ? eka2l1::epoc::pid(0, 0) :
+                  skin_server_->get_active_skin_pid(io_);
 
             const std::uint64_t mif_last_modified = file_route->last_modify_since_0ad();
             const std::string cached_path = fmt::format("cache/debinarized_{}_{}_skin_{}_{}.svg",

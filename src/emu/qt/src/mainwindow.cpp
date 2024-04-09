@@ -584,11 +584,12 @@ void main_window::on_settings_triggered() {
         connect(settings_dialog_.data(), &settings_dialog::window_title_setting_changed, this, &main_window::on_window_title_setting_changed);
         connect(settings_dialog_.data(), &settings_dialog::hide_system_apps_changed, this, &main_window::on_hide_system_apps_changed, Qt::DirectConnection);
         connect(settings_dialog_.data(), &settings_dialog::theme_variant_combo_init, this, &main_window::on_theme_variant_combo_init);
+        connect(settings_dialog_.data(), &settings_dialog::skin_changed, this, &main_window::on_skin_changed);
 
         connect(this, &main_window::app_launching, settings_dialog_.data(), &settings_dialog::on_app_launching);
         connect(this, &main_window::controller_button_press, settings_dialog_.data(), &settings_dialog::on_controller_button_press);
         connect(this, &main_window::screen_focus_group_changed, settings_dialog_.data(), &settings_dialog::refresh_app_configuration_details);
-        connect(this, &main_window::restart_requested, settings_dialog_.data(), &settings_dialog::on_restart_requested_from_main);
+        connect(this, &main_window::restart_finished, settings_dialog_.data(), &settings_dialog::on_restart_finished_from_main);
 
         settings_dialog_->set_active_tab(0);
         settings_dialog_->show();
@@ -674,6 +675,8 @@ void main_window::on_device_set_requested(const int index) {
     ui_->action_restart->setEnabled(false);
     ui_->action_pause->setChecked(false);
 
+    emit restart_finished();
+
     setup_app_list(true);
 }
 
@@ -690,7 +693,6 @@ void main_window::on_restart_requested() {
     displayer_->removeEventFilter(this);
 
     on_device_set_requested(-1);
-    emit restart_requested();
 }
 
 void main_window::on_pause_toggled(bool checked) {
@@ -1755,6 +1757,10 @@ void main_window::on_window_title_setting_changed() {
 }
 
 void main_window::on_refresh_app_list_requested() {
+    force_refresh_applist();
+}
+
+void main_window::on_skin_changed() {
     force_refresh_applist();
 }
 

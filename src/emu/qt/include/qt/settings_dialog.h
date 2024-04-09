@@ -86,6 +86,7 @@ private:
     void update_device_settings();
     void set_current_language(const int lang);
     void refresh_available_system_languages(const int index = -1);
+    void update_skin_list();
     void refresh_device_utils_locking();
     void refresh_keybind_buttons();
     void refresh_keybind_profiles();
@@ -149,12 +150,13 @@ private slots:
     void on_audio_hsb_reset_clicked();
     void on_audio_sf2_reset_clicked();
     void on_theme_variant_choose(const int index);
+    void on_system_skin_choose(const int index);
 
 public slots:
     void on_app_launching();
     void on_controller_button_press(eka2l1::drivers::input_event event);
     void refresh_app_configuration_details();
-    void on_restart_requested_from_main();
+    void on_restart_finished_from_main();
 
 signals:
     void cursor_visibility_change(bool visible);
@@ -167,6 +169,7 @@ signals:
     void window_title_setting_changed();
     void hide_system_apps_changed();
     void theme_variant_combo_init(QWidget *container, QComboBox *widget);
+    void skin_changed();
 
 public:
     explicit settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::drivers::emu_controller *controller,

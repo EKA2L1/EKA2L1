@@ -240,6 +240,7 @@ private slots:
     void on_batch_install_request_start(bool should_ignore_sis_msg, bool should_auto_choose_language,
         QList<QString> files);
     void on_package_try_install_count_changed(const std::size_t count, const std::size_t total);
+    void on_skin_changed();
 
 signals:
     void progress_dialog_change(const std::size_t now, const std::size_t total);
@@ -247,7 +248,7 @@ signals:
     bool package_install_text_ask(const char *text, const bool one_button);
     int package_install_language_choose(const int *languages, const int language_count);
     void app_launching();
-    void restart_requested();
+    void restart_finished();
     void controller_button_press(eka2l1::drivers::input_event event);
     void screen_focus_group_changed();
     void input_dialog_delay_launch_asked();

@@ -40,6 +40,7 @@
 #include <services/window/screen.h>
 #include <services/window/window.h>
 #include <services/bluetooth/btman.h>
+#include <services/ui/skin/server.h>
 
 #include <system/devices.h>
 #include <system/epoc.h>
@@ -334,6 +335,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     }
 
     update_device_settings();
+    update_skin_list();
     refresh_available_system_languages();
     refresh_device_utils_locking();
 
@@ -425,6 +427,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->system_audio_midi_sf2_bank_reset, &QPushButton::clicked, this, &settings_dialog::on_audio_sf2_reset_clicked);
     connect(ui_->system_screen_buffer_sync_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_screen_buffer_sync_option_changed);
     connect(ui_->system_enable_hw_gles1_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_enable_hw_gles1_toggled);
+    connect(ui_->system_prop_skin_combobox, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_system_skin_choose);
 
     connect(ui_->settings_tab, &QTabWidget::currentChanged, this, &settings_dialog::on_tab_changed);
     connect(ui_->control_profile_add_btn, &QPushButton::clicked, this, &settings_dialog::on_control_profile_add_clicked);
@@ -518,6 +521,8 @@ void settings_dialog::on_device_combo_choose(const int index) {
 
     ui_->system_general_validate_dvc_btn->setDisabled(false);
     ui_->system_general_rescan_dvcs_btn->setDisabled(false);
+
+    ui_->system_prop_skin_combobox->setDisabled(true);
 
     emit restart(index);
 }
@@ -981,8 +986,9 @@ void settings_dialog::refresh_configuration_for_who(const bool clear) {
         kernel->unlock();
 }
 
-void settings_dialog::on_restart_requested_from_main() {
+void settings_dialog::on_restart_finished_from_main() {
     refresh_configuration_for_who(true);
+    update_skin_list();
 }
 
 void settings_dialog::refresh_app_configuration_details() {
@@ -1434,4 +1440,47 @@ void settings_dialog::on_background_opacity_changed(int value) {
     configuration_.serialize();
 
     ui_->emulator_display_bg_opacity_val_label->setText(QString("%1").arg(value));
+}
+
+void settings_dialog::update_skin_list() {
+    auto skin_server = get_akn_skin_server_through_system(system_);
+
+    if (!skin_server) {
+        return;
+    }
+
+    auto active_skin_id = skin_server->get_active_skin_pid(system_->get_io_system());
+    auto skin_list = skin_server->get_all_skin_infos();
+
+    ui_->system_prop_skin_combobox->clear();
+
+    int active_skin_index = 0;
+
+    for (std::size_t i = 0; i < skin_list.size(); i++) {
+        ui_->system_prop_skin_combobox->addItem(QString::fromStdU16String(skin_list[i].full_name.to_std_string(nullptr)));
+
+        if (skin_list[i].pid_ == active_skin_id) {
+            active_skin_index = static_cast<int>(i);
+        }
+    }
+
+    ui_->system_prop_skin_combobox->setCurrentIndex(active_skin_index);
+    ui_->system_prop_skin_combobox->setEnabled(true);
+}
+
+void settings_dialog::on_system_skin_choose(const int index) {
+    auto skin_server = get_akn_skin_server_through_system(system_);
+
+    if (!skin_server) {
+        return;
+    }
+
+    auto skin_list = skin_server->get_all_skin_infos();
+
+    if (index < 0 || index >= static_cast<int>(skin_list.size())) {
+        return;
+    }
+
+    skin_server->set_active_skin_pid(skin_list[index].pid_);
+    emit skin_changed();
 }

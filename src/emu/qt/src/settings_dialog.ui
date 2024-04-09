@@ -29,7 +29,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="general_widget">
       <attribute name="title">
@@ -928,67 +928,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</string>
           <string>Properties</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_9">
-          <item row="4" column="0">
-           <layout class="QHBoxLayout" name="system_prop_batlvl_layout" stretch="1,2,1">
-            <item>
-             <widget class="QLabel" name="system_prop_bat_label">
-              <property name="text">
-               <string>Battery level (0 - 100)</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSlider" name="system_prop_bat_slider">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="maximum">
-               <number>100</number>
-              </property>
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="system_prop_bat_current_val_label">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>0</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item row="3" column="0">
-           <layout class="QHBoxLayout" name="system_prop_lang_layout" stretch="1,2">
-            <item>
-             <widget class="QLabel" name="system_prop_lang_label">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>System language</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="system_prop_lang_combobox"/>
-            </item>
-           </layout>
-          </item>
-          <item row="6" column="0">
+          <item row="7" column="0">
            <layout class="QHBoxLayout" name="system_prop_imei_layout" stretch="1,2,2">
             <item>
              <widget class="QLabel" name="system_prop_imei_label">
@@ -1052,6 +992,86 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</string>
                <number>30</number>
               </property>
              </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="5" column="0">
+           <layout class="QHBoxLayout" name="system_prop_batlvl_layout" stretch="1,2,1">
+            <item>
+             <widget class="QLabel" name="system_prop_bat_label">
+              <property name="text">
+               <string>Battery level (0 - 100)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="system_prop_bat_slider">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="system_prop_bat_current_val_label">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>0</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="3" column="0">
+           <layout class="QHBoxLayout" name="system_prop_lang_layout" stretch="1,2">
+            <item>
+             <widget class="QLabel" name="system_prop_lang_label">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>System language</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="system_prop_lang_combobox"/>
+            </item>
+           </layout>
+          </item>
+          <item row="4" column="0">
+           <layout class="QHBoxLayout" name="system_prop_skin_widget" stretch="1,2">
+            <item>
+             <widget class="QLabel" name="system_prop_skin_label">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Skin</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="system_prop_skin_combobox"/>
             </item>
            </layout>
           </item>

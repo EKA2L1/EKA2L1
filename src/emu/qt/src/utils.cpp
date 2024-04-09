@@ -25,6 +25,7 @@
 #include <common/path.h>
 
 #include <kernel/kernel.h>
+#include <services/ui/skin/server.h>
 #include <services/ui/cap/oom_app.h>
 #include <services/window/classes/wingroup.h>
 #include <services/window/window.h>
@@ -191,4 +192,13 @@ std::optional<std::string> get_mmc_id_from_path(const std::string &path) {
     }
 
     return std::nullopt;
+}
+
+eka2l1::akn_skin_server *get_akn_skin_server_through_system(eka2l1::system *sys) {
+    eka2l1::kernel_system *kernel = sys->get_kernel_system();
+    if (!kernel) {
+        return nullptr;
+    }
+
+    return kernel->get_by_name<eka2l1::akn_skin_server>(eka2l1::AKN_SKIN_SERVER_NAME);
 }
