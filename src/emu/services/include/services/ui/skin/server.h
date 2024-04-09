@@ -92,6 +92,9 @@ namespace eka2l1 {
         fbs_server *fbss;
 
         std::map<epoc::pid, epoc::skn_file> skin_file_cache_;
+        std::vector<epoc::akn_skin_info_package> skin_info_cache_list_;
+
+        bool skin_info_list_cached_;
 
         void do_initialisation_pre();
         void do_initialisation();
@@ -115,10 +118,66 @@ namespace eka2l1 {
 
         void connect(service::ipc_context &ctx) override;
 
+        /**
+         * \brief Get the skin file with the given PID.
+         *
+         * The skin will be cached for future load.
+         *
+         * \param io Pointer to the IO system.
+         * \param skin_pid The PID of the skin file.
+         *
+         * \return The pointer to the skin file. Nullptr if the skin is not found.
+         */
         const epoc::skn_file *get_skin(io_system *io, const epoc::pid skin_pid);
+
+        /**
+         * \brief Get the active skin file.
+         *
+         * The skin will be cached for future load.
+         *
+         * \param io Pointer to the IO system.
+         *
+         * \return The pointer to the active skin file. Nullptr if the skin is not found.
+         */
         const epoc::skn_file *get_active_skin(io_system *io);
 
-        epoc::pid get_active_skin_pid();
+        epoc::pid get_active_skin_pid(io_system *io);
+
+        void set_active_skin_pid(const epoc::pid skin_pid);
+
+        /**
+         * \brief Get list of all skin information on the device.
+         *
+         * The function scans all drives, looking for files with the extension .skn. The file is not loaded in its whole,
+         * but only the header is read to get the information about the skin.<br><br>
+         *
+         * The function does not modify the skin file cache.<br><br>
+         *
+         * \return Array of skin information packages.
+         */
+        std::vector<epoc::akn_skin_info_package> get_all_skin_infos();
+
+        /**
+         * \brief Get list of all skin information on specified device's drives.
+         *
+         * The function scans drives specified in the drive bitmask, looking for files with the extension .skn.
+         * The file is not loaded in its whole, but only the header is read to get the information about the skin.<br><br>
+         *
+         * To get this function to scan a specific drive, you must turn the <i>n</i>th bit on the drive mask, where <i>n</i>
+         * is the drive number. For example, to scan drive C, you must set the 2nd bit of the mask.<br><br>
+         *
+         * \code{.cpp}
+         *     drive_mask |= (1 &lt;&lt; drive_c);
+         * \endcode
+         *
+         * The function does not modify the skin file cache.<br><br>
+         *
+         * \param io Pointer to the IO system.
+         * \param drive_mask The mask of drives to scan.
+         *
+         * \return Array of skin information packages.
+         */
+        std::vector<epoc::akn_skin_info_package> fresh_get_all_skin_infos(io_system *io, const std::uint32_t drive_mask);
     };
 
     /**

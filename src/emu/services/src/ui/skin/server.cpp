@@ -133,55 +133,13 @@ namespace eka2l1 {
         if (scan_mode == 4) {
             scan_drive_bitmask = 0xFFFFFFFF;
         } else if (scan_mode == 2) {
-            scan_drive_bitmask | static_cast<std::uint32_t>(drive_e);
+            scan_drive_bitmask |= static_cast<std::uint32_t>(drive_e);
         }
 
         auto io = ctx->sys->get_io_system();
-        auto list_files = epoc::find_skin_files(io, scan_drive_bitmask);
+        package_list_ = server<akn_skin_server>()->fresh_get_all_skin_infos(io, scan_drive_bitmask);
 
-        for (const auto& file_path: list_files) {
-            auto file_handle = io->open_file(file_path, READ_MODE | BIN_MODE);
-            if (!file_handle) {
-                continue;
-            }
-
-            eka2l1::ro_file_stream skin_file_stream(file_handle.get());
-            epoc::skn_file skin_parser(reinterpret_cast<common::ro_stream *>(&skin_file_stream), { 2, 8 },
-                language::any, true);
-
-            auto relative_dir = eka2l1::file_directory(file_path);
-            auto relative_dir_iterator = eka2l1::basic_path_iterator(relative_dir);
-
-            std::u16string pid_str;
-
-            while (relative_dir_iterator) {
-                pid_str = *relative_dir_iterator;
-                relative_dir_iterator++;
-            }
-
-            common::pystr pid_converter(common::ucs2_to_utf8(pid_str));
-            auto pid = pid_converter.as_int(0, 16);
-            auto package_dir = epoc::get_resource_path_of_skin(io, { pid, 0 });
-
-            // NOTE: This is stub
-            // TODO: Remove the stub
-            epoc::akn_skin_info_package package;
-            package.full_name.assign(nullptr, skin_parser.skin_name_.name);
-            package.skin_name_buf.assign(nullptr, skin_parser.skin_name_.name);
-            package.pid_ = { pid, 0 };
-            package.skin_directory_buf.assign(nullptr, package_dir.value_or(u""));
-            package.skin_ini_file_directory_buf.assign(nullptr, u"=");
-            package.idle_state_wall_paper_image_name.assign(nullptr, u"");
-            package.is_copyable = 1;
-            package.is_deletable = 1;
-            package.corrupted = 0;
-            package.color_scheme_id_ = { 0, 0 };
-            package.protection_type = epoc::akn_skin_protection_none;
-
-            package_list_.push_back(package);
-        }
-
-        std::uint32_t discovered_total = package_list_.size();
+        std::uint32_t discovered_total = static_cast<std::uint32_t>(package_list_.size());
 
         ctx->write_data_to_descriptor_argument<std::uint32_t>(0, discovered_total);
         ctx->complete(epoc::error_none);
@@ -425,11 +383,99 @@ namespace eka2l1 {
             do_initialisation_pre();
         }
 
-        return get_skin(io, settings_->active_skin_pid());
+        return get_skin(io, get_active_skin_pid(io));
     }
 
-    epoc::pid akn_skin_server::get_active_skin_pid() {
-        return settings_->active_skin_pid();
+    epoc::pid akn_skin_server::get_active_skin_pid(io_system *io) {
+        if (!settings_) {
+            do_initialisation_pre();
+        }
+
+        auto active_skin_pid = settings_->active_skin_pid();
+        if (active_skin_pid.first == 0) {
+            active_skin_pid = settings_->default_skin_pid();
+
+            if (active_skin_pid.first == 0) {
+                auto pid_opt = epoc::pick_first_skin(io);
+                if (pid_opt == std::nullopt) {
+                    LOG_ERROR(SERVICE_UI, "Unable to pick a skin as default (no skin folder fits requirements)!");
+                    return epoc::pid{ 0, 0 };
+                } else {
+                    active_skin_pid = pid_opt.value();
+                }
+            }
+
+            // Set it
+            settings_->active_skin_pid(active_skin_pid);
+        }
+
+        return active_skin_pid;
+    }
+
+    void akn_skin_server::set_active_skin_pid(const epoc::pid skin_pid) {
+        if (!settings_) {
+            do_initialisation_pre();
+        }
+
+        settings_->active_skin_pid(skin_pid);
+    }
+
+    std::vector<epoc::akn_skin_info_package> akn_skin_server::get_all_skin_infos() {
+        if (!skin_info_list_cached_) {
+            skin_info_cache_list_ = fresh_get_all_skin_infos(sys->get_io_system(), 0xFFFFFFFF);
+            skin_info_list_cached_ = true;
+        }
+
+        return skin_info_cache_list_;
+    }
+
+    std::vector<epoc::akn_skin_info_package> akn_skin_server::fresh_get_all_skin_infos(io_system *io, const std::uint32_t drive_mask) {
+        std::vector<epoc::akn_skin_info_package> package_list;
+        auto list_files = epoc::find_skin_files(io, drive_mask);
+
+        for (const auto& file_path: list_files) {
+            auto file_handle = io->open_file(file_path, READ_MODE | BIN_MODE);
+            if (!file_handle) {
+                continue;
+            }
+
+            eka2l1::ro_file_stream skin_file_stream(file_handle.get());
+            epoc::skn_file skin_parser(reinterpret_cast<common::ro_stream *>(&skin_file_stream), { 2, 8 },
+                language::any, true);
+
+            auto relative_dir = eka2l1::file_directory(file_path);
+            auto relative_dir_iterator = eka2l1::basic_path_iterator(relative_dir);
+
+            std::u16string pid_str;
+
+            while (relative_dir_iterator) {
+                pid_str = *relative_dir_iterator;
+                relative_dir_iterator++;
+            }
+
+            common::pystr pid_converter(common::ucs2_to_utf8(pid_str));
+            auto pid = pid_converter.as_int(0, 16);
+            auto package_dir = epoc::get_resource_path_of_skin(io, { pid, 0 });
+
+            // NOTE: This is stub
+            // TODO: Remove the stub
+            epoc::akn_skin_info_package package;
+            package.full_name.assign(nullptr, skin_parser.skin_name_.name);
+            package.skin_name_buf.assign(nullptr, skin_parser.skin_name_.name);
+            package.pid_ = { pid, 0 };
+            package.skin_directory_buf.assign(nullptr, package_dir.value_or(u""));
+            package.skin_ini_file_directory_buf.assign(nullptr, u"=");
+            package.idle_state_wall_paper_image_name.assign(nullptr, u"");
+            package.is_copyable = 1;
+            package.is_deletable = 1;
+            package.corrupted = 0;
+            package.color_scheme_id_ = { 0, 0 };
+            package.protection_type = epoc::akn_skin_protection_none;
+
+            package_list.push_back(package);
+        }
+
+        return package_list;
     }
 
     bool get_skin_icon(akn_skin_server *skin_server, io_system *io, const std::uint32_t app_uid, std::u16string &out_mif_path,
@@ -445,7 +491,7 @@ namespace eka2l1 {
             return false;
         }
 
-        std::optional<std::u16string> resource_path = epoc::get_resource_path_of_skin(io, skin_server->get_active_skin_pid());
+        std::optional<std::u16string> resource_path = epoc::get_resource_path_of_skin(io, skin_server->get_active_skin_pid(io));
         if (!resource_path.has_value()) {
             LOG_TRACE(SERVICE_UI, "No resource path found for skin!");
             return false;

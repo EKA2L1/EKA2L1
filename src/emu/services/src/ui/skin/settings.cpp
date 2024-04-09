@@ -178,30 +178,20 @@ namespace eka2l1::epoc {
 
     void akn_ss_settings::set_pid_to_skins_repo(const std::uint32_t key, const epoc::pid id, const bool uid_only) {
         central_repo_entry *active_skin_entry = skins_rep_->find_entry(key);
-        std::u16string data = epoc::pid_to_string(id);
+        std::u16string data = uid_only ? common::utf8_to_ucs2(common::to_string(id.first)) : epoc::pid_to_string(id);
 
         if (!active_skin_entry) {
             eka2l1::central_repo_entry_variant variant;
 
-            if (uid_only) {
-                variant.etype = central_repo_entry_type::integer;
-                variant.intd = id.first;
-            } else {
-                variant.etype = central_repo_entry_type::string;
-                variant.strd.resize(data.size() * 2);
-            }
+            variant.etype = central_repo_entry_type::string;
+            variant.strd.resize(data.size() * 2);
  
             std::memcpy(variant.strd.data(), data.data(), variant.strd.size());
 
             skins_rep_->add_new_entry(key, variant);
         } else {
-            if (uid_only) {
-                active_skin_entry->data.etype = central_repo_entry_type::integer;
-                active_skin_entry->data.intd = id.first;
-            } else {
-                active_skin_entry->data.etype = central_repo_entry_type::string;
-                active_skin_entry->data.strd.resize(data.size() * 2);
-            }
+            active_skin_entry->data.etype = central_repo_entry_type::string;
+            active_skin_entry->data.strd.resize(data.size() * 2);
 
             std::memcpy(active_skin_entry->data.strd.data(), data.data(), active_skin_entry->data.strd.size());
         }
