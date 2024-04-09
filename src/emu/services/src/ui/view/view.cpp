@@ -450,6 +450,8 @@ namespace eka2l1 {
 
         default:
             LOG_ERROR(SERVICE_UI, "Unimplemented view session opcode {}", ctx->msg->function);
+            ctx->complete(epoc::error_none);
+
             break;
         }
     }
