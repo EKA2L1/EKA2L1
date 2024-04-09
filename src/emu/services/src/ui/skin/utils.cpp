@@ -107,6 +107,46 @@ namespace eka2l1::epoc {
         return std::nullopt;
     }
 
+    std::vector<std::u16string> find_skin_files(eka2l1::io_system *io, const std::uint32_t drive_bitmask) {
+        std::vector<std::u16string> result;
+
+        for (drive_number drv = drive_a; drv <= drive_z; drv++) {
+            if (drive_bitmask & (1 << static_cast<int>(drv))) {
+                if (io->get_drive_entry(drv)) {
+                    std::u16string skin_folder_path(1, drive_to_char16(drv));
+                    skin_folder_path += u":";
+                    skin_folder_path += SKIN_FOLDER;
+
+                    auto dir = io->open_dir(skin_folder_path, {}, io_attrib_include_dir);
+
+                    if (!dir) {
+                        // No skin folder in this drive. Proceed as usual
+                        continue;
+                    }
+
+                    // Pick the first one that's not a folder
+                    while (auto entry = dir->get_next_entry()) {
+                        if (entry->type == io_component_type::dir) {
+                            auto dir_path = eka2l1::add_path(skin_folder_path, common::utf8_to_ucs2(entry->name));
+                            dir_path = eka2l1::add_path(dir_path, u"\\*.skn");
+
+                            auto dir_inner = io->open_dir(dir_path, {}, io_attrib_include_file);
+                            if (dir_inner) {
+                                while (auto entry_inner = dir_inner->get_next_entry()) {
+                                    if (entry_inner->type == io_component_type::file) {
+                                        result.push_back(common::utf8_to_ucs2(entry_inner->full_path));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
     std::optional<std::u16string> find_skin_file(eka2l1::io_system *io, const epoc::pid skin_pid) {
         for (drive_number drv = drive_a; drv <= drive_z; drv++) {
             if (io->get_drive_entry(drv)) {

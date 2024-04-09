@@ -21,13 +21,16 @@
 #include <services/ui/skin/skn.h>
 
 namespace eka2l1::epoc {
-    skn_file::skn_file(common::ro_stream *stream, plat_ver platform_version, ::language lang)
+    skn_file::skn_file(common::ro_stream *stream, plat_ver platform_version, ::language lang, bool need_header_only)
         : master_chunk_size_(0)
         , master_chunk_count_(0)
         , crr_filename_id_(0)
         , stream_(stream)
         , ver_(std::move(platform_version))
-        , importer_lang_(lang) {
+        , importer_lang_(lang)
+        , need_header_only_(need_header_only)
+        , readed_name_chunk_(false)
+        , readed_info_chunk_(false) {
         if (!read_master_chunk()) {
             LOG_ERROR(SERVICE_UI, "Reading master chunk failed!");
         }
@@ -74,11 +77,15 @@ namespace eka2l1::epoc {
             switch (chunk_type) {
             case as_desc_info: {
                 base_offset += handle_info_chunk(base_offset, info_);
+                readed_info_chunk_ = true;
+
                 break;
             }
 
             case as_desc_name: {
                 base_offset += handle_name_chunk(base_offset, skin_name_);
+                readed_name_chunk_ = true;
+
                 break;
             }
 
@@ -113,6 +120,10 @@ namespace eka2l1::epoc {
 
                 break;
             }
+            }
+
+            if (need_header_only_ && readed_info_chunk_ && readed_name_chunk_) {
+                break;
             }
         }
 
@@ -248,6 +259,10 @@ namespace eka2l1::epoc {
 
         process_attrib(base_offset + skn_desc_dfo_bitmap_attribs, bmp_info_.attrib);
 
+        if (bmp_info_.id_hash == 18184891531260) {
+                LOG_TRACE(KERNEL, "HI");
+        }
+
         bitmaps_.emplace(bmp_info_.id_hash, std::move(bmp_info_));
     }
 
@@ -257,6 +272,10 @@ namespace eka2l1::epoc {
 
         stream_->read(base_offset + skn_desc_dfo_bitmap_hash_id, &tab_.id_hash, 8);
 
+        // 0x101f84b6
+        if (static_cast<std::uint32_t>(tab_.id_hash >> 32) == 0x2000730f) {
+            LOG_TRACE(KERNEL, "HI");
+        }
         // Read count
         std::uint16_t count = 0;
         stream_->read(base_offset + skn_desc_dfo_img_table_images_count, &count, 2);

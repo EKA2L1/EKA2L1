@@ -313,7 +313,7 @@ namespace eka2l1::epoc {
          * 
          * \returns True on success.
          */
-        bool import(skn_file &skn, const std::u16string &filename_base);
+        bool import(const skn_file &skn, const std::u16string &filename_base);
 
         /**
          * \brief    Get an item's definition with given ID.

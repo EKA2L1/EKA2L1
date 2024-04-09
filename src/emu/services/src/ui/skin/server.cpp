@@ -27,6 +27,8 @@
 
 #include <common/cvt.h>
 #include <common/log.h>
+#include <common/path.h>
+#include <common/pystr.h>
 #include <utils/err.h>
 
 #include <kernel/kernel.h>
@@ -122,6 +124,94 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void akn_skin_server_session::enumerate_packages(service::ipc_context *ctx) {
+        package_list_.clear();
+
+        auto scan_mode = ctx->get_argument_value<std::uint32_t>(1).value();
+        auto scan_drive_bitmask = static_cast<std::uint32_t>(drive_c | drive_z);
+
+        if (scan_mode == 4) {
+            scan_drive_bitmask = 0xFFFFFFFF;
+        } else if (scan_mode == 2) {
+            scan_drive_bitmask | static_cast<std::uint32_t>(drive_e);
+        }
+
+        auto io = ctx->sys->get_io_system();
+        auto list_files = epoc::find_skin_files(io, scan_drive_bitmask);
+
+        for (const auto& file_path: list_files) {
+            auto file_handle = io->open_file(file_path, READ_MODE | BIN_MODE);
+            if (!file_handle) {
+                continue;
+            }
+
+            eka2l1::ro_file_stream skin_file_stream(file_handle.get());
+            epoc::skn_file skin_parser(reinterpret_cast<common::ro_stream *>(&skin_file_stream), { 2, 8 },
+                language::any, true);
+
+            auto relative_dir = eka2l1::file_directory(file_path);
+            auto relative_dir_iterator = eka2l1::basic_path_iterator(relative_dir);
+
+            std::u16string pid_str;
+
+            while (relative_dir_iterator) {
+                pid_str = *relative_dir_iterator;
+                relative_dir_iterator++;
+            }
+
+            common::pystr pid_converter(common::ucs2_to_utf8(pid_str));
+            auto pid = pid_converter.as_int(0, 16);
+            auto package_dir = epoc::get_resource_path_of_skin(io, { pid, 0 });
+
+            // NOTE: This is stub
+            // TODO: Remove the stub
+            epoc::akn_skin_info_package package;
+            package.full_name.assign(nullptr, skin_parser.skin_name_.name);
+            package.skin_name_buf.assign(nullptr, skin_parser.skin_name_.name);
+            package.pid_ = { pid, 0 };
+            package.skin_directory_buf.assign(nullptr, package_dir.value_or(u""));
+            package.skin_ini_file_directory_buf.assign(nullptr, u"=");
+            package.idle_state_wall_paper_image_name.assign(nullptr, u"");
+            package.is_copyable = 1;
+            package.is_deletable = 1;
+            package.corrupted = 0;
+            package.color_scheme_id_ = { 0, 0 };
+            package.protection_type = epoc::akn_skin_protection_none;
+
+            package_list_.push_back(package);
+        }
+
+        std::uint32_t discovered_total = package_list_.size();
+
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(0, discovered_total);
+        ctx->complete(epoc::error_none);
+    }
+
+    void akn_skin_server_session::retrieve_packages(service::ipc_context *ctx) {
+        std::uint32_t package_buffer_capacity = ctx->get_argument_value<std::uint32_t>(0).value();
+        std::uint32_t package_size = ctx->sys->get_symbian_version_use() < epocver::epoc95 ? epoc::SKIN_INFO_PACKAGE_SIZE_NO_ANIM_BG
+             : epoc::SKIN_INFO_PACKAGE_SIZE_NORMAL;
+
+        std::uint32_t bytes_copy = common::min(package_buffer_capacity, static_cast<std::uint32_t>(package_list_.size()))
+            * package_size;
+
+        if (ctx->get_argument_max_data_size(1) < bytes_copy) {
+            ctx->complete(epoc::error_overflow);
+            return;
+        }
+
+        auto ptr = ctx->get_descriptor_argument_ptr(1);
+        for (const auto& package: package_list_) {
+            std::memcpy(ptr, &package, package_size);
+            ptr += package_size;
+        }
+
+        ctx->set_descriptor_argument_length(1, bytes_copy);
+        ctx->complete(epoc::error_none);
+
+        package_list_.clear();
+    }
+
     void akn_skin_server_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case epoc::akn_skin_server_set_notify_handler: {
@@ -149,6 +239,24 @@ namespace eka2l1 {
             break;
         }
 
+        case epoc::akn_skin_server_enumerate_packages: {
+            enumerate_packages(ctx);
+            break;
+        }
+
+        case epoc::akn_skin_server_receive_packages: {
+            retrieve_packages(ctx);
+            break;
+        }
+
+        case epoc::akn_skin_server_disable_notify_skin_change: {
+            // Stub
+            LOG_TRACE(SERVICE_UI, "Disable skin change notify stubbed");
+
+            ctx->complete(epoc::error_none);
+            break;
+        }
+
         default: {
             LOG_ERROR(SERVICE_UI, "Unimplemented opcode: {}", epoc::akn_skin_server_opcode_to_str(static_cast<const epoc::akn_skin_server_opcode>(ctx->msg->function)));
 
@@ -158,12 +266,16 @@ namespace eka2l1 {
     }
 
     akn_skin_server::akn_skin_server(eka2l1::system *sys)
-        : service::typical_server(sys, "!AknSkinServer")
+        : service::typical_server(sys, AKN_SKIN_SERVER_NAME)
         , settings_(nullptr) {
     }
 
     void akn_skin_server::connect(service::ipc_context &ctx) {
         if (!settings_) {
+            do_initialisation_pre();
+        }
+
+        if (!chunk_maintainer_) {
             do_initialisation();
         }
 
@@ -197,12 +309,12 @@ namespace eka2l1 {
             }
         }
 
-        std::optional<std::u16string> skin_path = epoc::find_skin_file(io, skin_pid);
-        if (!skin_path.has_value()) {
+        auto skn_file = get_skin(io, skin_pid);
+        if (!skn_file) {
             skin_pid = DEFAULT_ALWAYS_EXIST_SKIN_PID;
-            skin_path = epoc::find_skin_file(io, skin_pid);
+            skn_file = get_skin(io, skin_pid);
             
-            if (!skin_path.has_value()) {
+            if (!skn_file) {
                 // What?
                 LOG_ERROR(SERVICE_UI, "Unable to find active skin file!");
                 return;
@@ -210,16 +322,10 @@ namespace eka2l1 {
         }
 
         std::optional<std::u16string> resource_path = epoc::get_resource_path_of_skin(io, skin_pid);
-
-        symfile skin_file_obj = io->open_file(skin_path.value(), READ_MODE | BIN_MODE);
-        eka2l1::ro_file_stream skin_file_stream(skin_file_obj.get());
-
-        epoc::skn_file skin_parser(reinterpret_cast<common::ro_stream *>(&skin_file_stream));
-
-        chunk_maintainer_->import(skin_parser, resource_path.value_or(u""));
+        chunk_maintainer_->import(*skn_file, resource_path.value_or(u""));
     }
 
-    void akn_skin_server::do_initialisation() {
+    void akn_skin_server::do_initialisation_pre() {
         kernel_system *kern = sys->get_kernel_system();
         server_ptr svr = kern->get_by_name<service::server>("!CentralRepository");
 
@@ -231,7 +337,9 @@ namespace eka2l1 {
 
         fbss = reinterpret_cast<fbs_server *>(&(*kern->get_by_name<service::server>(
             epoc::get_fbs_server_name_by_epocver(kern->get_epoc_version()))));
+    }
 
+    void akn_skin_server::do_initialisation() {
         // Create skin chunk
         skin_chunk_ = kern->create_and_add<kernel::chunk>(kernel::owner_type::kernel,
                               sys->get_memory_system(), nullptr, "AknsSrvSharedMemoryChunk",
@@ -290,5 +398,89 @@ namespace eka2l1 {
         }
 
         chunk_maintainer_->store_scalable_gfx(item_id, layout_info, bmp, msk);
+    }
+
+    const epoc::skn_file *akn_skin_server::get_skin(io_system *io, const epoc::pid skin_pid) {
+        if (skin_file_cache_.find(skin_pid) != skin_file_cache_.end()) {
+            return &skin_file_cache_.at(skin_pid);
+        }
+
+        std::optional<std::u16string> skin_path = epoc::find_skin_file(io, skin_pid);
+        if (!skin_path.has_value()) {
+            LOG_ERROR(SERVICE_UI, "Unable to find skin file with PID=(0x{:X}, 0x{:X}!", skin_pid.first, skin_pid.second);
+            return nullptr;
+        }
+
+        symfile skin_file_obj = io->open_file(skin_path.value(), READ_MODE | BIN_MODE);
+        eka2l1::ro_file_stream skin_file_stream(skin_file_obj.get());
+
+        epoc::skn_file skin_parser(reinterpret_cast<common::ro_stream *>(&skin_file_stream));
+        skin_file_cache_.emplace(skin_pid, std::move(skin_parser));
+
+        return &skin_file_cache_.at(skin_pid);
+    }
+
+    const epoc::skn_file *akn_skin_server::get_active_skin(io_system *io) {
+        if (!settings_) {
+            do_initialisation_pre();
+        }
+
+        return get_skin(io, settings_->active_skin_pid());
+    }
+
+    epoc::pid akn_skin_server::get_active_skin_pid() {
+        return settings_->active_skin_pid();
+    }
+
+    bool get_skin_icon(akn_skin_server *skin_server, io_system *io, const std::uint32_t app_uid, std::u16string &out_mif_path,
+        std::uint32_t &out_index, std::uint32_t &out_mask_index) {
+        if (skin_server->get_kernel_object_owner()->is_eka1()) {
+            return false;
+        }
+
+        const epoc::skn_file *skin = skin_server->get_active_skin(io);
+
+        if (!skin) {
+            LOG_TRACE(SERVICE_UI, "No active skin found!");
+            return false;
+        }
+
+        std::optional<std::u16string> resource_path = epoc::get_resource_path_of_skin(io, skin_server->get_active_skin_pid());
+        if (!resource_path.has_value()) {
+            LOG_TRACE(SERVICE_UI, "No resource path found for skin!");
+            return false;
+        }
+
+        epoc::pid icon_table_pid{ epoc::AKN_SKIN_ICON_MAJOR_UID, app_uid };
+        auto icon_table = skin->img_tabs_.find(static_cast<std::uint64_t>(icon_table_pid.second) << 32 | icon_table_pid.first);
+
+        if (icon_table == skin->img_tabs_.end() || icon_table->second.images.empty()) {
+            return false;
+        }
+
+        std::int32_t max_size = -1;
+        std::size_t max_index = 0;
+
+        // Grab the biggest image
+        for (auto i = 0; i < icon_table->second.images.size(); i++) {
+            auto img = skin->bitmaps_.find(icon_table->second.images[i]);
+            if (img == skin->bitmaps_.end()) {
+                continue;
+            }
+
+            if (max_size < 0 || img->second.attrib.image_size_x > max_size) {
+                max_size = img->second.attrib.image_size_x;
+                max_index = i;
+            }
+        }
+
+        auto img = skin->bitmaps_.find(icon_table->second.images[max_index]);
+        auto mif_path = add_path(resource_path.value(), skin->filenames_.at(img->second.filename_id));
+
+        out_index = img->second.bmp_idx & ~0x4000;
+        out_mask_index = img->second.mask_bitmap_idx & ~0x4000;
+        out_mif_path = mif_path;
+
+        return true;
     }
 }

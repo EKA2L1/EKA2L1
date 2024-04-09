@@ -26,14 +26,17 @@
 #include <services/ui/skin/skn.h>
 
 #include <queue>
-
+#include <map>
 #include <memory>
 
 namespace eka2l1 {
+    static constexpr const char *AKN_SKIN_SERVER_NAME = "!AknSkinServer";
+
     class akn_skin_server_session : public service::typical_session {
         eka2l1::ptr<void> client_handler_;
         epoc::notify_info nof_info_; ///< Notify info
         std::queue<epoc::akn_skin_server_change_handler_notification> nof_list_;
+        std::vector<epoc::akn_skin_info_package> package_list_;
 
         std::uint32_t flags{ 0 };
 
@@ -67,6 +70,9 @@ namespace eka2l1 {
 
         void store_scalable_gfx(service::ipc_context *ctx);
 
+        void enumerate_packages(service::ipc_context *ctx);
+        void retrieve_packages(service::ipc_context *ctx);
+
     public:
         explicit akn_skin_server_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version);
         ~akn_skin_server_session() override {}
@@ -85,6 +91,9 @@ namespace eka2l1 {
 
         fbs_server *fbss;
 
+        std::map<epoc::pid, epoc::skn_file> skin_file_cache_;
+
+        void do_initialisation_pre();
         void do_initialisation();
 
         /**
@@ -105,5 +114,27 @@ namespace eka2l1 {
             const std::uint32_t msk_handle);
 
         void connect(service::ipc_context &ctx) override;
+
+        const epoc::skn_file *get_skin(io_system *io, const epoc::pid skin_pid);
+        const epoc::skn_file *get_active_skin(io_system *io);
+
+        epoc::pid get_active_skin_pid();
     };
+
+    /**
+     * \brief Retrieve information about an application's current skin icon.
+     *
+     * Some skins will have custom icons for applications. This function will try to get information from skin file
+     * about the path of the MIF containing the icon and the index of the icon in the MIF.
+     *
+     * @param skin_server       The pointer to the skin server instance.
+     * @param app_uid           The UID of the application.
+     * @param out_mif_path      On success, the path of the MIF containing the icon in the Symbian filesystem.
+     * @param out_index         On success, the index of the icon in the MIF.
+     * @param out_mask_index    On success, the index of the mask of the icon in the MIF.
+     *
+     * @return True if the skin icon is found, false otherwise.
+     */
+    bool get_skin_icon(akn_skin_server *skin_server, io_system *io, const std::uint32_t app_uid, std::u16string &out_mif_path,
+        std::uint32_t &out_index, std::uint32_t &out_mask_index);
 }

@@ -20,6 +20,7 @@
 #pragma once
 
 #include <mem/ptr.h>
+#include <utils/des.h>
 
 #include <cstdint>
 #include <tuple>
@@ -45,6 +46,7 @@ namespace eka2l1::epoc {
         THEMES_UID = 0x102818E8,
         ICON_CAPTION_UID = 0x1028583D,
         AKN_SKIN_MAJOR_UID = 0x10005a26,
+        AKN_SKIN_ICON_MAJOR_UID = 0x101F84B6,
         AKN_WALLPAPER_FILENAME_ID = 0xC0DEF00D,
     
         // Specifics
@@ -110,6 +112,33 @@ namespace eka2l1::epoc {
     struct akns_item_def_v2 : public akns_item_def_v1 {
         std::int32_t next_hash_;
     };
+
+    enum akn_skin_protection_type : std::uint32_t {
+        akn_skin_protection_none = 0,
+        akn_skin_protection_drm = 1,
+        akn_skin_protection_no_rights = 2,
+    };
+
+    struct akn_skin_info_package {
+        pid pid_;
+        pid color_scheme_id_;
+        epoc::filename skin_directory_buf; // The directory of the skin package
+        epoc::filename skin_ini_file_directory_buf; // The directory containing the skin ini file
+        epoc::filename skin_name_buf; // The name of the skin package
+        epoc::filename idle_state_wall_paper_image_name; // The name of the idle state wallpaper mbm file
+        epoc::filename full_name; // The fully qualified skn-file name
+        std::uint32_t is_copyable; // Boolean value specifying if the skin package copyable
+        std::uint32_t is_deletable; // Boolean value specifying if the skin package is deletable
+        std::uint32_t idle_bg_image_index; // The index of the idle state background image
+        akn_skin_protection_type protection_type; // Specifies the DRM protection type in this skin
+        std::uint32_t corrupted; // Specifies if the skin is somehow corrupted
+        std::uint32_t support_anim_bg;
+    };
+
+    static constexpr std::size_t SKIN_INFO_PACKAGE_SIZE_NORMAL = sizeof(akn_skin_info_package);
+
+    // No anim bg
+    static constexpr std::size_t SKIN_INFO_PACKAGE_SIZE_NO_ANIM_BG = sizeof(akn_skin_info_package) - 4;
 
     static_assert(sizeof(akns_item_def_v2) == 24);
 

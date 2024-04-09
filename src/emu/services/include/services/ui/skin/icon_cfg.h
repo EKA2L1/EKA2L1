@@ -54,9 +54,11 @@ namespace eka2l1::epoc {
             device_manager *mngr, io_system *io_, const language lang_);
 
         /**
-         * \brief Check if an icon is already configured (?)
-         * 
-         * TODO: Find more about what this mean.
+         * \brief Check if an icon is already configured.
+         *
+         * Configured means it has been hardcoded and can not be changed by for example: theme/skin.
+         *
+         * An example for this would be the RealPlayer icon (credit: eskMaemo).
          * 
          * \param    app_uid The target UID we want to check.
          * \returns  1 on configured. 0 on not. -1 on cenrep file not present.

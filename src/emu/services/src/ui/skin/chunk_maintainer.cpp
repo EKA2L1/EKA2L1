@@ -821,7 +821,7 @@ namespace eka2l1::epoc {
         return true;
     }
 
-    bool akn_skin_chunk_maintainer::import(skn_file &skn, const std::u16string &filename_base) {
+    bool akn_skin_chunk_maintainer::import(const skn_file &skn, const std::u16string &filename_base) {
         // First up import filenames
         for (auto &filename : skn.filenames_) {
             if (!update_filename(filename.first, filename.second, filename_base)) {

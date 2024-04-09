@@ -38,6 +38,16 @@ namespace eka2l1::epoc {
     std::optional<std::u16string> find_skin_file(eka2l1::io_system *io, const epoc::pid skin_pid);
 
     /**
+     * @brief Find all skin files in indicated drives.
+     *
+     * @param io                Pointer to IO system.
+     * @param drive_bitmask     The bitmask of the drives to search.
+     *
+     * @return The list of path to skin files found.
+     */
+    std::vector<std::u16string> find_skin_files(eka2l1::io_system *io, const std::uint32_t drive_bitmask);
+
+    /**
      * @brief   Search the skin folders, and pick the first skin that's available.
      * 
      * @param   io              Pointer to IO system. Must not be null.
