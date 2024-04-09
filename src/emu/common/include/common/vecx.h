@@ -262,8 +262,8 @@ namespace eka2l1 {
         }
 
         vec4 operator*(const float rhs) const {
-            return vec4(static_cast<float>(x * rhs), static_cast<float>(y * rhs), static_cast<float>(z * rhs),
-                static_cast<float>(w * rhs));
+            return vec4(static_cast<int>(x * rhs), static_cast<int>(y * rhs), static_cast<int>(z * rhs),
+                static_cast<int>(w * rhs));
         }
     };
 
