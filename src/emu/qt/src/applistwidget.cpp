@@ -152,6 +152,7 @@ void applist_widget::configure_list_widget_to_grid(QListWidget *list_widget) {
     list_widget->setViewMode(QListWidget::ViewMode::IconMode);
     list_widget->setMovement(QListWidget::Movement::Static);
     list_widget->setMinimumHeight(icon_pixel_size_.height() + icon_padding_size_.height() + 200);
+    list_widget->setSortingEnabled(true);
 }
 
 applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::akn_skin_server *skin_server, eka2l1::fbs_server *fbss, eka2l1::io_system *io, eka2l1::j2me::app_list *lister_j2me, eka2l1::config::state &conf, const bool hide_system_apps, const bool ngage_mode)
