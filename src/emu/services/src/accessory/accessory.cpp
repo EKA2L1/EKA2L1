@@ -81,6 +81,8 @@ namespace eka2l1 {
 
             default:
                 LOG_ERROR(SERVICE_ACCESSORY, "Unimplemented opcode for Accessory single connection subsession 0x{:X}", ctx->msg->function);
+                ctx->complete(epoc::error_none);
+
                 break;
             }
         }
@@ -111,6 +113,7 @@ namespace eka2l1 {
                 return;
 
             default:
+                ctx->complete(epoc::error_none);
                 break;
             }
         }
