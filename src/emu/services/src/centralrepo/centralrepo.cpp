@@ -252,6 +252,7 @@ namespace eka2l1 {
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_notify_cancel_all, "CenRep::NofCancelAll");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_transaction_start, "CenRep::TransactionStart");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_transaction_cancel, "CenRep::TransactionCancel");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_transaction_commit, "CenRep::TransactionCommit");
     }
 
     void central_repo_client_session::init(service::ipc_context *ctx) {
@@ -584,6 +585,10 @@ namespace eka2l1 {
 
         case cen_rep_transaction_cancel:
             cancel_transaction(ctx);
+            break;
+
+        case cen_rep_transaction_commit:
+            commit_transaction(ctx);
             break;
 
         case cen_rep_get_find_res:

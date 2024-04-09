@@ -745,4 +745,9 @@ namespace eka2l1 {
         LOG_TRACE(SERVICE_CENREP, "TransactionCancel stubbed");
         ctx->complete(epoc::error_none);
     }
+
+    void central_repo_client_subsession::commit_transaction(service::ipc_context *ctx) {
+        LOG_TRACE(SERVICE_CENREP, "TransactionCommit stubbed");
+        ctx->complete(epoc::error_none);
+    }
 }

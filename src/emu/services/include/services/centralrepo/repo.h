@@ -210,6 +210,7 @@ namespace eka2l1 {
         void get_find_result(service::ipc_context *ctx);
         void start_transaction(service::ipc_context *ctx);
         void cancel_transaction(service::ipc_context *ctx);
+        void commit_transaction(service::ipc_context *ctx);
         void create_value(service::ipc_context *ctx);
 
         /**
