@@ -225,7 +225,8 @@ namespace eka2l1 {
 
     akn_skin_server::akn_skin_server(eka2l1::system *sys)
         : service::typical_server(sys, AKN_SKIN_SERVER_NAME)
-        , settings_(nullptr) {
+        , settings_(nullptr)
+        , skin_info_list_cached_(false) {
     }
 
     void akn_skin_server::connect(service::ipc_context &ctx) {
