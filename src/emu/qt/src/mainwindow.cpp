@@ -57,6 +57,7 @@
 #include <services/bluetooth/btman.h>
 #include <services/fbs/fbs.h>
 #include <services/ui/cap/oom_app.h>
+#include <services/ui/skin/server.h>
 #include <services/window/classes/wingroup.h>
 #include <services/window/screen.h>
 #include <services/window/window.h>
@@ -439,9 +440,10 @@ void main_window::setup_app_list(const bool load_now) {
 
         eka2l1::applist_server *al_serv = reinterpret_cast<eka2l1::applist_server *>(kernel->get_by_name<eka2l1::service::server>(al_server_name));
         eka2l1::fbs_server *fbs_serv = reinterpret_cast<eka2l1::fbs_server *>(kernel->get_by_name<eka2l1::service::server>(fbs_server_name));
+        eka2l1::akn_skin_server *skin_serv = reinterpret_cast<eka2l1::akn_skin_server *>(kernel->get_by_name<eka2l1::service::server>(eka2l1::AKN_SKIN_SERVER_NAME));
 
         if (al_serv && fbs_serv) {
-            applist_ = new applist_widget(this, al_serv, fbs_serv, system->get_io_system(), system->get_j2me_applist(), emulator_state_.conf, emulator_state_.conf.hide_system_apps, true);
+            applist_ = new applist_widget(this, al_serv, skin_serv, fbs_serv, system->get_io_system(), system->get_j2me_applist(), emulator_state_.conf, emulator_state_.conf.hide_system_apps, true);
             ui_->layout_main->addWidget(applist_);
 
             connect(applist_, &applist_widget::app_launch, this, &main_window::on_app_clicked);

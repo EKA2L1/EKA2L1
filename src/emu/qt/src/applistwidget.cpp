@@ -38,7 +38,9 @@
 #include <qt/utils.h>
 #include <services/applist/applist.h>
 #include <services/fbs/fbs.h>
+#include <services/ui/skin/server.h>
 #include <system/devices.h>
+#include <system/epoc.h>
 #include <utils/apacmd.h>
 #include <j2me/applist.h>
 #include <j2me/interface.h>
@@ -152,7 +154,7 @@ void applist_widget::configure_list_widget_to_grid(QListWidget *list_widget) {
     list_widget->setMinimumHeight(icon_pixel_size_.height() + icon_padding_size_.height() + 200);
 }
 
-applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss, eka2l1::io_system *io, eka2l1::j2me::app_list *lister_j2me, eka2l1::config::state &conf, const bool hide_system_apps, const bool ngage_mode)
+applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::akn_skin_server *skin_server, eka2l1::fbs_server *fbss, eka2l1::io_system *io, eka2l1::j2me::app_list *lister_j2me, eka2l1::config::state &conf, const bool hide_system_apps, const bool ngage_mode)
     : QWidget(parent)
     , search_bar_(nullptr)
     , device_combo_bar_(nullptr)
@@ -164,6 +166,7 @@ applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, 
     , loading_label_(nullptr)
     , j2me_mode_btn_(nullptr)
     , lister_(lister)
+    , skin_server_(skin_server)
     , lister_j2me_(lister_j2me)
     , no_app_visible_normal_label_(nullptr)
     , no_app_visible_hide_sysapp_label_(nullptr)
@@ -577,19 +580,34 @@ void applist_widget::add_registeration_item_native(eka2l1::apa_app_registry &reg
     bool icon_pair_rendered = false;
     QPixmap final_pixmap;
 
-    const std::u16string path_ext = eka2l1::common::lowercase_ucs2_string(eka2l1::path_extension(reg.icon_file_path));
+    std::u16string path_ext;
+    std::u16string path;
+    std::uint32_t icon_index = 0;
+    std::uint32_t icon_mask_index = 0;
+    
+    if (eka2l1::get_skin_icon(skin_server_, io_, reg.mandatory_info.uid, path, icon_index, icon_mask_index)) {
+        path_ext = eka2l1::common::lowercase_ucs2_string(eka2l1::path_extension(path));
+    } else {
+        path = reg.icon_file_path;
+        path_ext = eka2l1::common::lowercase_ucs2_string(eka2l1::path_extension(reg.icon_file_path));
+    }
 
     if (path_ext == u".mif") {
-        eka2l1::symfile file_route = io_->open_file(reg.icon_file_path, READ_MODE | BIN_MODE);
+        eka2l1::symfile file_route = io_->open_file(path, READ_MODE | BIN_MODE);
         eka2l1::common::create_directories("cache");
 
         if (file_route) {
+            auto skin_pid = lister_->get_kernel_object_owner()->is_eka1() ? eka2l1::epoc::pid(0, 0) :skin_server_->get_active_skin_pid();
+
             const std::uint64_t mif_last_modified = file_route->last_modify_since_0ad();
-            const std::string cached_path = fmt::format("cache/debinarized_{}.svg", eka2l1::common::pystr(app_name.toStdString()).strip_reserverd().strip().std_str());
+            const std::string cached_path = fmt::format("cache/debinarized_{}_{}_skin_{}_{}.svg",
+                eka2l1::common::pystr(app_name.toStdString()).strip_reserverd().strip().std_str(),
+                lister_->get_system()->get_device_manager()->get_current()->firmware_code,
+                skin_pid.first, skin_pid.second);
 
             std::unique_ptr<QSvgRenderer> renderer = nullptr;
 
-            if (eka2l1::common::exists(cached_path)) {
+            if (file_route && eka2l1::common::exists(cached_path)) {
                 if (eka2l1::common::get_last_modifiy_since_ad(eka2l1::common::utf8_to_ucs2(cached_path)) >= mif_last_modified) {
                     renderer = std::make_unique<QSvgRenderer>(QString::fromUtf8(cached_path.c_str()));
                 }
@@ -601,9 +619,9 @@ void applist_widget::add_registeration_item_native(eka2l1::apa_app_registry &reg
             if (!renderer && file_mif_parser.do_parse()) {
                 std::vector<std::uint8_t> data;
                 int dest_size = 0;
-                if (file_mif_parser.read_mif_entry(0, nullptr, dest_size) && (dest_size > 0)) {
+                if (file_mif_parser.read_mif_entry(icon_index, nullptr, dest_size) && (dest_size > 0)) {
                     data.resize(dest_size);
-                    file_mif_parser.read_mif_entry(0, data.data(), dest_size);
+                    file_mif_parser.read_mif_entry(icon_index, data.data(), dest_size);
 
                     eka2l1::common::ro_buf_stream inside_stream(data.data(), data.size());
                     std::unique_ptr<eka2l1::common::wo_std_file_stream> outfile_stream = std::make_unique<eka2l1::common::wo_std_file_stream>(cached_path, true);
@@ -651,13 +669,13 @@ void applist_widget::add_registeration_item_native(eka2l1::apa_app_registry &reg
             }
         }
     } else if (path_ext == u".mbm") {
-        eka2l1::symfile file_route = io_->open_file(reg.icon_file_path, READ_MODE | BIN_MODE);
+        eka2l1::symfile file_route = io_->open_file(path, READ_MODE | BIN_MODE);
         if (file_route) {
             eka2l1::ro_file_stream file_route_stream(file_route.get());
             eka2l1::loader::mbm_file file_mbm_parser(reinterpret_cast<eka2l1::common::ro_stream *>(&file_route_stream));
 
             if (file_mbm_parser.do_read_headers() && !file_mbm_parser.sbm_headers.empty()) {
-                eka2l1::loader::sbm_header *icon_header = &file_mbm_parser.sbm_headers[0];
+                eka2l1::loader::sbm_header *icon_header = &file_mbm_parser.sbm_headers[icon_index];
                 std::vector<std::uint8_t> converted_data(icon_header->size_pixels.x * icon_header->size_pixels.y * 4);
                 eka2l1::common::wo_buf_stream converted_write_stream(converted_data.data(), converted_data.size());
 

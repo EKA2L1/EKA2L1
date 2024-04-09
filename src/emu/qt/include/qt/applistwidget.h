@@ -34,6 +34,7 @@
 
 namespace eka2l1 {
     class applist_server;
+    class akn_skin_server;
     class fbs_server;
     class io_system;
 
@@ -124,6 +125,7 @@ public:
     QLabel *no_app_visible_hide_sysapp_label_;
 
     eka2l1::applist_server *lister_;
+    eka2l1::akn_skin_server *skin_server_;
     eka2l1::fbs_server *fbss_;
     eka2l1::io_system *io_;
     eka2l1::j2me::app_list *lister_j2me_;
@@ -174,7 +176,7 @@ protected:
     void changeEvent(QEvent *event) override;
 
 public:
-    explicit applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss, eka2l1::io_system *io,
+    explicit applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::akn_skin_server *skin_server, eka2l1::fbs_server *fbss, eka2l1::io_system *io,
         eka2l1::j2me::app_list *lister_j2me, eka2l1::config::state &conf, const bool hide_system_apps = true, const bool ngage_mode = false);
     ~applist_widget();
 
