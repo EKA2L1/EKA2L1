@@ -6,5 +6,6 @@
         <file>assets/update_notices/20230502_update_notice.png</file>
         <file>assets/loading.gif</file>
         <file>assets/icon_symbol.svg</file>
+        <file>assets/icon_symbol_dark.svg</file>
     </qresource>
 </RCC>

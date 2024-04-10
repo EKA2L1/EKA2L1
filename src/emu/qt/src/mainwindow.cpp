@@ -318,12 +318,8 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
 
     auto *slider_icon = new QLabel(this);
 
-    QPixmap pixmap = QIcon(":/assets/icon_symbol.svg").pixmap(QSize(current_device_label_->height(),
-        current_device_label_->height()));
-
     slider_icon->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     slider_icon->setFixedHeight(current_device_label_->height());
-    slider_icon->setPixmap(pixmap);
 
     slider_whole->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
@@ -340,14 +336,17 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     slider_whole->setLayout(slider_layout);
 
     current_device_label_->setAlignment(Qt::AlignCenter);
-    screen_status_label_->setAlignment(Qt::AlignRight);
+    screen_status_label_->setAlignment(Qt::AlignCenter);
 
     ui_->status_bar->addPermanentWidget(slider_whole, 1);
     ui_->status_bar->addPermanentWidget(current_device_label_, 1);
     ui_->status_bar->addPermanentWidget(screen_status_label_, 1);
 
+    icon_size_slider_widget_ = slider_whole;
+    icon_symbol_label_ = slider_icon;
+
     screen_status_label_->setVisible(false);
-    icon_size_slider_->setVisible(true);
+    icon_size_slider_widget_->setVisible(true);
 
     ui_->action_pause->setEnabled(false);
     ui_->action_restart->setEnabled(false);
@@ -707,7 +706,7 @@ void main_window::on_device_set_requested(const int index) {
     ui_->action_pause->setChecked(false);
 
     screen_status_label_->setVisible(false);
-    icon_size_slider_->setVisible(true);
+    icon_size_slider_widget_->setVisible(true);
 
     emit restart_finished();
 
@@ -1145,7 +1144,7 @@ void main_window::switch_to_game_display_mode() {
     ui_->action_rotate_drop_menu->setEnabled(true);
 
     screen_status_label_->setVisible(true);
-    icon_size_slider_->setVisible(false);
+    icon_size_slider_widget_->setVisible(false);
 
     before_margins_ = ui_->layout_centralwidget->contentsMargins();
     on_fullscreen_toogled(ui_->action_fullscreen->isChecked());
@@ -1698,6 +1697,7 @@ void main_window::on_theme_change_requested(const QString &text, const int varia
             QCoreApplication *app = QApplication::instance();
             if (app) {
                 std::unique_ptr<QFile> f;
+                bool need_load_more_stylesheet = true;
 
 #if EKA2L1_PLATFORM(WIN32)
                 if (win_transparent_manager_->is_supported()) {
@@ -1705,7 +1705,7 @@ void main_window::on_theme_change_requested(const QString &text, const int varia
                         if (!win_transparent_manager_->is_enabled()) {
                             if (num == 0) {
                                 application_.setStyleSheet("");
-                                return;
+                                need_load_more_stylesheet = false;
                             } else {
                                 f = std::make_unique<QFile>(":assets/themes/dark/style.qss");
                             }
@@ -1727,7 +1727,7 @@ void main_window::on_theme_change_requested(const QString &text, const int varia
 #endif
                     if (num == 0) {
                         application_.setStyleSheet("");
-                        return;
+                        need_load_more_stylesheet = false;
                     } else {
                         f = std::make_unique<QFile>(":assets/themes/dark/style.qss");
                     }
@@ -1736,25 +1736,32 @@ void main_window::on_theme_change_requested(const QString &text, const int varia
                 }
 #endif
 
-                if (!f || !f->exists()) {
-                    QMessageBox::critical(this, tr("Load theme failed!"), tr("The Dark theme's style file can't be found!"));
-                } else {
-                    f->open(QFile::ReadOnly | QFile::Text);
-                    QTextStream ts(f.get());
+                if (need_load_more_stylesheet) {
+                    if (!f || !f->exists()) {
+                        QMessageBox::critical(this, tr("Load theme failed!"), tr("The Dark theme's style file can't be found!"));
+                    } else {
+                        f->open(QFile::ReadOnly | QFile::Text);
+                        QTextStream ts(f.get());
 
-                    QString styleSheet = ts.readAll();
+                        QString styleSheet = ts.readAll();
 
 #if EKA2L1_PLATFORM(WIN32)
-                    if (win_transparent_manager_->is_supported() && win_transparent_manager_->is_enabled()) {
-                        auto accent_color = win_transparent_manager_->get_accent_color();
-                        auto rgb_string = QString("rgb(%1, %2, %3)").arg(accent_color.red()).arg(accent_color.green()).arg(accent_color.blue());
+                        if (win_transparent_manager_->is_supported() && win_transparent_manager_->is_enabled()) {
+                            auto accent_color = win_transparent_manager_->get_accent_color();
+                            auto rgb_string = QString("rgb(%1, %2, %3)").arg(accent_color.red()).arg(accent_color.green()).arg(accent_color.blue());
 
-                        styleSheet = styleSheet.arg(rgb_string);
-                    }
+                            styleSheet = styleSheet.arg(rgb_string);
+                        }
 #endif
 
-                    application_.setStyleSheet(styleSheet);
+                        application_.setStyleSheet(styleSheet);
+                    }
                 }
+
+                QPixmap pixmap = QIcon(num == 1 ? ":/assets/icon_symbol_dark.svg" : ":/assets/icon_symbol.svg").
+                                 pixmap(QSize(icon_symbol_label_->height(), icon_symbol_label_->height()));
+
+                icon_symbol_label_->setPixmap(pixmap);
             }
         }
     }
