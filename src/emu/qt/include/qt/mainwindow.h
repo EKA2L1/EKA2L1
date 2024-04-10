@@ -108,6 +108,7 @@ private:
 
     QLabel *current_device_label_;
     QLabel *screen_status_label_;
+    QSlider *icon_size_slider_;
 
     QPointer<settings_dialog> settings_dialog_;
     QActionGroup *rotate_group_;
@@ -241,6 +242,7 @@ private slots:
         QList<QString> files);
     void on_package_try_install_count_changed(const std::size_t count, const std::size_t total);
     void on_skin_changed();
+    void on_icon_size_slider_value_changed(int value);
 
 signals:
     void progress_dialog_change(const std::size_t now, const std::size_t total);

@@ -1155,3 +1155,7 @@ QTableWidget::item {
 
     border: 1px solid rgba(255, 255, 255, 13);
 }
+
+QStatusBar:item {
+    border: none;
+}

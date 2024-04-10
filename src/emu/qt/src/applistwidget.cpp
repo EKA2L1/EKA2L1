@@ -51,15 +51,17 @@
 #include <loader/svgb.h>
 #include <loader/nvg.h>
 
-static float ICON_GRID_SIZE_INCH = 0.7f;
-static float ICON_GRID_SPACING_SIZE_X_INCH = 0.2f;
-static float ICON_GRID_SPACING_SIZE_Y_INCH = 0.4f;
+static float ICON_GRID_SIZE = 48.0f;
+static float ICON_GRID_SIZE_DEFAULT = 64.0f;
+static float ICON_GRID_SIZE_MAX = 128.0f;
 static constexpr std::uint32_t WARE_APP_UID_START = 0x10300000;
 static const char *J2ME_MODE_ENABLED_SETTING = "J2MEModeEnabled";
 
 static inline bool is_app_reg_system_app(const eka2l1::apa_app_registry *reg) {
     return (reg->land_drive == drive_z) && (reg->mandatory_info.uid < WARE_APP_UID_START);
 }
+
+static const char *GRID_SIZE_SETTING = "IconGridSize";
 
 applist_search_bar::applist_search_bar(QWidget *parent)
     : QWidget(parent) {
@@ -146,8 +148,7 @@ void applist_widget::configure_list_widget_to_grid(QListWidget *list_widget) {
     list_widget->viewport()->setAutoFillBackground(false);
     list_widget->setFlow(QListWidget::Flow::LeftToRight);
     list_widget->setResizeMode(QListWidget::ResizeMode::Adjust);
-    list_widget->setSpacing(100);
-    list_widget->setGridSize(icon_pixel_size_ + icon_padding_size_);
+    list_widget->setSpacing(50);
     list_widget->setIconSize(icon_pixel_size_);
     list_widget->setViewMode(QListWidget::ViewMode::IconMode);
     list_widget->setMovement(QListWidget::Movement::Static);
@@ -194,8 +195,8 @@ applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, 
     loading_label_ = new QLabel;
     loading_gif_ = new QMovie(":/assets/loading.gif");
     loading_label_->setMovie(loading_gif_);
-    loading_gif_->setScaledSize(icon_pixel_size_ - QSize(2, 2));
-    loading_label_->setFixedSize(icon_pixel_size_);
+    loading_gif_->setScaledSize(QSize(ICON_GRID_SIZE_DEFAULT, ICON_GRID_SIZE_DEFAULT) - QSize(10, 10));
+    loading_label_->setFixedSize(QSize(ICON_GRID_SIZE_DEFAULT, ICON_GRID_SIZE_DEFAULT));
 
     no_app_visible_normal_label_ = new QLabel("No app installed on the device!");
     no_app_visible_hide_sysapp_label_ = new QLabel("No non-system app installed on the device!");
@@ -252,6 +253,9 @@ applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, 
     loading_gif_->start();
 
     setLayout(layout_);
+
+    // Retrieve icon size
+    set_icon_size(settings.value(GRID_SIZE_SETTING, ICON_GRID_SIZE_DEFAULT).toUInt());
 
     // Well, just make it a part of the window. Hehe
     configure_list_widget_to_grid(list_widget_);
@@ -661,7 +665,7 @@ void applist_widget::add_registeration_item_native(eka2l1::apa_app_registry &reg
             }
 
             if (renderer) {
-                final_pixmap = QPixmap(icon_pixel_size_);
+                final_pixmap = QPixmap(QSize(ICON_GRID_SIZE_MAX, ICON_GRID_SIZE_MAX));
                 final_pixmap.fill(Qt::transparent);
 
                 QPainter painter(&final_pixmap);
@@ -745,9 +749,9 @@ void applist_widget::add_registeration_item_native(eka2l1::apa_app_registry &reg
     if (!icon_pair_rendered) {
         final_icon = QIcon(":/assets/duck_tank.png");
     } else {
-        if ((final_pixmap.size().width() < icon_pixel_size_.width()) && (final_pixmap.size().height() < icon_pixel_size_.height())) {
-            QRect position_to_draw = QRect(0, 0, icon_pixel_size_.width(), icon_pixel_size_.height());
-            QPixmap another_pixmap(icon_pixel_size_);
+        if ((final_pixmap.size().width() < ICON_GRID_SIZE_MAX) && (final_pixmap.size().height() < ICON_GRID_SIZE_MAX)) {
+            QRect position_to_draw = QRect(0, 0, ICON_GRID_SIZE_MAX, ICON_GRID_SIZE_MAX);
+            QPixmap another_pixmap(QSize(ICON_GRID_SIZE_MAX, ICON_GRID_SIZE_MAX));
             another_pixmap.fill(Qt::transparent);
 
             QPainter another_pixmap_painter(&another_pixmap);
@@ -885,21 +889,25 @@ void applist_widget::on_j2me_list_widget_custom_menu_requested(const QPoint &pos
     menu.exec(mapToGlobal(pos));
 }
 
-void applist_widget::changeEvent(QEvent *event) {
-    auto desktop = QApplication::desktop();
-    auto dpiX = static_cast<float>(desktop->logicalDpiX());
+std::pair<std::uint32_t, std::uint32_t> applist_widget::get_icon_size_range() {
+    return std::make_pair(ICON_GRID_SIZE, ICON_GRID_SIZE_MAX);
+}
 
-    // Intentional by multiply by x
-    icon_pixel_size_ = QSize(static_cast<int>(ICON_GRID_SIZE_INCH * dpiX),
-                             static_cast<int>(ICON_GRID_SIZE_INCH * dpiX));
+void applist_widget::set_icon_size(const std::uint32_t size) {
+    QSettings settings;
+    settings.setValue(GRID_SIZE_SETTING, size);
 
-    icon_padding_size_ = QSize(static_cast<int>(ICON_GRID_SPACING_SIZE_X_INCH * dpiX),
-                               static_cast<int>(ICON_GRID_SPACING_SIZE_Y_INCH * dpiX));
+    icon_pixel_size_ = QSize(static_cast<float>(size), static_cast<float>(size));
+    icon_padding_size_ = QSize(0, static_cast<float>(size) / 2);
 
-    list_widget_->setGridSize(icon_pixel_size_ + icon_padding_size_);
-    list_widget_->setIconSize(icon_pixel_size_);
+    list_widget_->setIconSize(icon_pixel_size_ + icon_padding_size_);
     list_widget_->setMinimumHeight(icon_pixel_size_.height() + icon_padding_size_.height() + 200);
 
-    loading_gif_->setScaledSize(icon_pixel_size_ - QSize(10, 10));
-    loading_label_->setFixedSize(icon_pixel_size_);
+    for (qsizetype i = 0; i < list_widget_->count(); i++) {
+        list_widget_->item(static_cast<int>(i))->setSizeHint(icon_pixel_size_ + QSize(20, 20));
+    }
+}
+
+std::uint32_t applist_widget::get_icon_size() {
+    return icon_pixel_size_.width();
 }

@@ -313,11 +313,41 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     current_device_label_ = new QLabel(this);
     screen_status_label_ = new QLabel(this);
 
+    auto *slider_whole = new QFrame(this);
+    auto *slider_layout = new QHBoxLayout(slider_whole);
+
+    auto *slider_icon = new QLabel(this);
+
+    QPixmap pixmap = QIcon(":/assets/icon_symbol.svg").pixmap(QSize(current_device_label_->height(),
+        current_device_label_->height()));
+
+    slider_icon->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    slider_icon->setFixedHeight(current_device_label_->height());
+    slider_icon->setPixmap(pixmap);
+
+    slider_whole->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+
+    icon_size_slider_ = new QSlider(this);
+    icon_size_slider_->setStyleSheet("QSlider:horizontal { min-height: 0px; }");
+    icon_size_slider_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    icon_size_slider_->setOrientation(Qt::Horizontal);
+    icon_size_slider_->setMinimum(applist_->get_icon_size_range().first);
+    icon_size_slider_->setMaximum(applist_->get_icon_size_range().second);
+    icon_size_slider_->setValue(applist_->get_icon_size());
+
+    slider_layout->addWidget(slider_icon);
+    slider_layout->addWidget(icon_size_slider_);
+    slider_whole->setLayout(slider_layout);
+
     current_device_label_->setAlignment(Qt::AlignCenter);
     screen_status_label_->setAlignment(Qt::AlignRight);
 
+    ui_->status_bar->addPermanentWidget(slider_whole, 1);
     ui_->status_bar->addPermanentWidget(current_device_label_, 1);
     ui_->status_bar->addPermanentWidget(screen_status_label_, 1);
+
+    screen_status_label_->setVisible(false);
+    icon_size_slider_->setVisible(true);
 
     ui_->action_pause->setEnabled(false);
     ui_->action_restart->setEnabled(false);
@@ -409,6 +439,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
 
     connect(&inactivity_timer_, &QTimer::timeout, this, &main_window::on_mouse_inactive);
     connect(rotate_group_, &QActionGroup::triggered, this, &main_window::on_another_rotation_triggered);
+    connect(icon_size_slider_, &QSlider::valueChanged, this, &main_window::on_icon_size_slider_value_changed);
 
     connect(this, &main_window::progress_dialog_change, this, &main_window::on_progress_dialog_change, Qt::QueuedConnection);
     connect(this, &main_window::status_bar_update, this, &main_window::on_status_bar_update, Qt::QueuedConnection);
@@ -674,6 +705,9 @@ void main_window::on_device_set_requested(const int index) {
     ui_->action_pause->setEnabled(false);
     ui_->action_restart->setEnabled(false);
     ui_->action_pause->setChecked(false);
+
+    screen_status_label_->setVisible(false);
+    icon_size_slider_->setVisible(true);
 
     emit restart_finished();
 
@@ -1109,6 +1143,9 @@ void main_window::switch_to_game_display_mode() {
     ui_->action_pause->setEnabled(true);
     ui_->action_restart->setEnabled(true);
     ui_->action_rotate_drop_menu->setEnabled(true);
+
+    screen_status_label_->setVisible(true);
+    icon_size_slider_->setVisible(false);
 
     before_margins_ = ui_->layout_centralwidget->contentsMargins();
     on_fullscreen_toogled(ui_->action_fullscreen->isChecked());
@@ -2232,5 +2269,11 @@ void main_window::on_package_try_install_count_changed(const std::size_t count, 
 
         current_progress_dialog_->setLabelText(tr("Package %1/%2 - %3%").arg(count).arg(total)
             .arg(static_cast<float>(count) / static_cast<float>(total) * 100.0f, 0, 'f', 2));
+    }
+}
+
+void main_window::on_icon_size_slider_value_changed(int value) {
+    if (applist_) {
+        applist_->set_icon_size(value);
     }
 }

@@ -109,6 +109,7 @@ public:
 class applist_widget : public QWidget {
     Q_OBJECT;
 
+
 public:
     applist_search_bar *search_bar_;
     applist_device_combo *device_combo_bar_;
@@ -172,9 +173,6 @@ signals:
     void device_change_request(int index);
     void new_registeration_item_come(QListWidgetItem *item);
 
-protected:
-    void changeEvent(QEvent *event) override;
-
 public:
     explicit applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::akn_skin_server *skin_server, eka2l1::fbs_server *fbss, eka2l1::io_system *io,
         eka2l1::j2me::app_list *lister_j2me, eka2l1::config::state &conf, const bool hide_system_apps = true, const bool ngage_mode = false);
@@ -186,6 +184,10 @@ public:
     void update_devices(eka2l1::device_manager *mngr);
     void request_reload(const bool j2me);
     void request_reload();
+
+    std::pair<std::uint32_t, std::uint32_t> get_icon_size_range();
+    void set_icon_size(const std::uint32_t size);
+    std::uint32_t get_icon_size();
 };
 
 #endif // APPLISTWIDGET_H
