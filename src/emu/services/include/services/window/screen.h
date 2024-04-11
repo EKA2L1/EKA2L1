@@ -179,6 +179,27 @@ namespace eka2l1::epoc {
         const epoc::config::screen_mode &current_mode() const;
 
         /**
+         * @brief Get the real physical size of the screen, enforced by the native screen resolution.
+         * @return Real size of the screen.
+         */
+        eka2l1::vec2 size_real(drivers::graphics_driver *driver, const eka2l1::config::app_setting &setting) const;
+
+        /**
+         * @brief Get the real current size of the screen, enforced by the native screen resolution.
+         *
+         * The current size of the screen is already taken mode rotation into account.<br><br>
+         *
+         * For example, the current mode of the screen is rotate 90 and the screen size is 640x480, then
+         * the size returns by this function will be 480x640.
+         *
+         * @param driver        The graphics driver, this will provide the native fullscreen resolution in case it's needed.
+         * @param setting       The caller application setting.
+         *
+         * @return The real current size of the screen.
+         */
+        eka2l1::vec2 current_mode_size_real(drivers::graphics_driver *driver, const eka2l1::config::app_setting &setting) const;
+
+        /**
          * \brief Get the maximum number of modes this screen support.
          */
         const int total_screen_mode() const;

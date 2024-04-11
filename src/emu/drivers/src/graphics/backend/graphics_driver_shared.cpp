@@ -1178,4 +1178,8 @@ namespace eka2l1::drivers {
             break;
         }
     }
+
+    eka2l1::vec2 shared_graphics_driver::get_screen_size() {
+        return eka2l1::vec2(1920, 1080);
+    }
 }

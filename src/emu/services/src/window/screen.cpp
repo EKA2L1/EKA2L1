@@ -533,6 +533,57 @@ namespace eka2l1::epoc {
         return mode_info(physical_mode)->size;
     }
 
+    eka2l1::vec2 screen::size_real(drivers::graphics_driver *driver, const eka2l1::config::app_setting &setting) const {
+        if (setting.force_resolution.x == 0) {
+            return size();
+        } else if (setting.force_resolution.x > 0) {
+            // Check for valid resolution
+            if (setting.force_resolution.y > 0) {
+                return setting.force_resolution;
+            } else {
+                return size();
+            }
+        } else {
+            auto org_physical_size = size();
+            auto driver_size = driver->get_screen_size();
+
+            if (org_physical_size.x < org_physical_size.y) {
+                return (driver_size.x < driver_size.y) ? driver_size : eka2l1::vec2(driver_size.y, driver_size.x);
+            } else {
+                return (driver_size.x > driver_size.y) ? driver_size : eka2l1::vec2(driver_size.y, driver_size.x);
+            }
+        }
+    }
+
+    eka2l1::vec2 screen::current_mode_size_real(drivers::graphics_driver *driver, const eka2l1::config::app_setting &setting) const {
+        auto crr_mode_info = mode_info(crr_mode);
+
+        if (setting.force_resolution.x == 0) {
+            return crr_mode_info->size;
+        } else if (setting.force_resolution.x > 0) {
+            // Check for valid resolution
+            if (setting.force_resolution.y > 0) {
+                auto force_res = setting.force_resolution;
+                if (crr_mode_info->rotation == 90 || crr_mode_info->rotation == 270) {
+                    return eka2l1::vec2(force_res.y, force_res.x);
+                } else {
+                    return force_res;
+                }
+            } else {
+                return current_mode().size;
+            }
+        } else {
+            auto org_physical_size = current_mode().size;
+            auto driver_size = driver->get_screen_size();
+
+            if (org_physical_size.x < org_physical_size.y) {
+                return (driver_size.x < driver_size.y) ? driver_size : eka2l1::vec2(driver_size.y, driver_size.x);
+            } else {
+                return (driver_size.x > driver_size.y) ? driver_size : eka2l1::vec2(driver_size.y, driver_size.x);
+            }
+        }
+    }
+
     const int screen::total_screen_mode() const {
         return static_cast<int>(scr_config.modes.size());
     }

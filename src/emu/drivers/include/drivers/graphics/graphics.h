@@ -176,6 +176,8 @@ namespace eka2l1::drivers {
 
         virtual bool support_extension(const graphics_driver_extension ext) = 0;
         virtual bool query_extension_value(const graphics_driver_extension_query query, void *data_ptr) = 0;
+
+        virtual eka2l1::vec2 get_screen_size() = 0;
     };
 
     using graphics_driver_ptr = std::unique_ptr<graphics_driver>;

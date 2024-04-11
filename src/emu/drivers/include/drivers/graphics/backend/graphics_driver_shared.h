@@ -118,5 +118,7 @@ namespace eka2l1::drivers {
         virtual void dispatch(command &cmd);
 
         virtual void bind_swapchain_framebuf() = 0;
+
+        eka2l1::vec2 get_screen_size() override;
     };
 }

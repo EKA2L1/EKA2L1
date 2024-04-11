@@ -46,6 +46,14 @@ namespace eka2l1::config {
         // Designed for ONE (N-Gage)
         bool t9_bypass_hack;
 
+        /// Enable custom resoluton for games. While normal user interface are resolution-dependent, some games may
+        /// benefit from this hack.<br><br>
+        ///
+        /// If the X value is negative, it means the resolution will extend to the host's fullscreen size.
+        /// If the X value is zero, it means the resolution will not be enforced
+        /// If the X value is positive, it means the resolution will follow the X and Y value.
+        eka2l1::vec2 force_resolution;
+
         explicit app_setting();
     };
 
