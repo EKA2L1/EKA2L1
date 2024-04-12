@@ -414,6 +414,18 @@ namespace eka2l1 {
 
         void make_mouse_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_, epoc::screen *scr);
 
+        void force_resolution(const eka2l1::vec2 &resolution);
+
+        /**
+         * @brief Apply settings to the screen.
+         *
+         * This sets some static settings such as: native screen resolution.
+         *
+         * @param driver    The graphics driver.
+         * @param setting   The application setting.
+         */
+        void apply_static_setting(drivers::graphics_driver *driver, const eka2l1::config::app_setting &setting);
+
     public:
         explicit window_server(system *sys);
         ~window_server();

@@ -156,6 +156,7 @@ namespace eka2l1::epoc {
 
         void restore_from_config(drivers::graphics_driver *driver, const eka2l1::config::app_setting &setting);
         void store_to_config(drivers::graphics_driver *driver, eka2l1::config::app_setting &setting);
+
         void try_change_display_rescale(drivers::graphics_driver *driver, const float scale_factor);
 
         // ========================= UTILITIES FUNCTIONS ===========================
@@ -169,6 +170,8 @@ namespace eka2l1::epoc {
 
         /**
          * \brief Get the size of this screen, in pixels.
+         *
+         * This size is affected by native resolution setting.
          */
         eka2l1::vec2 size() const;
 
@@ -179,10 +182,10 @@ namespace eka2l1::epoc {
         const epoc::config::screen_mode &current_mode() const;
 
         /**
-         * @brief Get the real physical size of the screen, enforced by the native screen resolution.
-         * @return Real size of the screen.
+         * @brief Get the original size of the screen, unaffected by game configuration.
+         * @return The original size of the screen.
          */
-        eka2l1::vec2 size_real(drivers::graphics_driver *driver, const eka2l1::config::app_setting &setting) const;
+        eka2l1::vec2 size_orginal() const;
 
         /**
          * @brief Get the real current size of the screen, enforced by the native screen resolution.
@@ -293,5 +296,6 @@ namespace eka2l1::epoc {
 
         void ref_dsa_usage();
         void deref_dsa_usage();
+
     };
 }

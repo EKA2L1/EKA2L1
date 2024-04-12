@@ -64,7 +64,7 @@ namespace eka2l1::epoc {
         for (int i = 0; i < scr->scr_config.modes.size(); i++) {
             epoc::config::screen_mode &mode = scr->scr_config.modes[i];
 
-            if (mode.size == info->pixel_size && number_to_orientation(mode.rotation) == info->orientation) {
+            if (((mode.size_original == info->pixel_size) || (mode.size == info->pixel_size)) && number_to_orientation(mode.rotation) == info->orientation) {
                 // Eureka... Bắt được mày rồi....
                 local_screen_mode_ = i;
 
@@ -83,7 +83,7 @@ namespace eka2l1::epoc {
         for (int i = 0; i < scr->scr_config.modes.size(); i++) {
             epoc::config::screen_mode &mode = scr->scr_config.modes[i];
 
-            if (mode.size == info->pixel_size && number_to_orientation(mode.rotation) == info->orientation) {
+            if (((mode.size_original == info->pixel_size) || (mode.size == info->pixel_size)) && number_to_orientation(mode.rotation) == info->orientation) {
                 // Eureka... Bắt được mày rồi....
                 local_screen_mode_ = i;
 

@@ -34,6 +34,7 @@
 #include <common/path.h>
 #include <common/pystr.h>
 #include <config/config.h>
+#include <config/app_settings.h>
 #include <qt/applistwidget.h>
 #include <qt/utils.h>
 #include <services/applist/applist.h>

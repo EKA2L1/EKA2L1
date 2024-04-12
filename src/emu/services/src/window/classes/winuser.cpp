@@ -94,7 +94,7 @@ namespace eka2l1::epoc {
                 abs_rect.size = user->abs_rect.size;
             } else {
                 // Going fullscreen
-                abs_rect.size = scr->size();
+                abs_rect.size = scr->current_mode().size;
             }
         }
         

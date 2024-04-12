@@ -186,11 +186,14 @@ namespace eka2l1 {
             akn_screen_mode_info mode_info;
 
             // TODO: Change this based on user settings
+            // NOTE: Since this is passed down to the AKN framework, so that it will choose the layout based on the screen size
+            // from the CDL (Customized Display Language) engine, the screen size return here must be the same as on real phone
+            // That means we use the original size here (the other size is upscaled emualtor size)
             mode_info.loc = akn_softkey_loc::bottom;
             mode_info.mode_num = scr_config->modes[i].mode_number;
             mode_info.dmode = epoc::display_mode::color16ma;
             mode_info.info.orientation = epoc::number_to_orientation(scr_config->modes[i].rotation);
-            mode_info.info.pixel_size = scr_config->modes[i].size;
+            mode_info.info.pixel_size = scr_config->modes[i].size_original;
             mode_info.info.twips_size = mode_info.info.pixel_size * epoc::get_approximate_pixel_to_twips_mul(kern->get_epoc_version());
             mode_info.screen_style_hash = calculate_screen_style_hash(scr_config->modes[i].style);
 

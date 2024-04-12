@@ -67,6 +67,8 @@ namespace eka2l1 {
 
     namespace config {
         class app_settings;
+        struct app_setting;
+
         struct state;
     }
 
@@ -203,5 +205,30 @@ namespace eka2l1 {
         bool remove_system_reset_callback(const std::size_t h);
 
         void initialize_user_parties();
+
+        /**
+         * @brief Set the launch app setting.
+         *
+         * For the usage of launch app setting, refer to the function @ref get_launch_app_setting.<br><br>
+         *
+         * This is an interface exposed so that frontend can set launch app setting before launching the app.
+         * Do not use it if you intend to change some static settings of the app after it is launched.
+         *
+         * @param setting The setting of the app to launch
+         */
+        void set_launch_app_setting(const config::app_setting &setting);
+
+        /**
+         * @brief Get the launch app setting.
+         *
+         * Each app has its own setting, when launches through emulator file, the setting of the app
+         * can be get through this function.<br><br>
+         *
+         * Static setting likes this is used for situation such as native resolution mode (when the screen size
+         * is changed to native resolution at startup and only once)
+         *
+         * @return The launch app setting.
+         */
+        const config::app_setting &get_launch_app_setting();
     };
 }

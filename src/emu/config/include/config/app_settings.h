@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/vecx.h>
 #include <cstdint>
 #include <map>
 #include <string>

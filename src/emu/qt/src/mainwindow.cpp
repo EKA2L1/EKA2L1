@@ -66,6 +66,7 @@
 #include <j2me/applist.h>
 
 #include <QCheckBox>
+#include <QDesktopWidget>
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QFileDialog>
@@ -106,9 +107,9 @@ static void mode_change_screen(void *userdata, eka2l1::epoc::screen *scr, const 
         return;
     }
 
-    QSize new_minsize(scr->current_mode().size.x, scr->current_mode().size.y);
+    QSize new_minsize(scr->current_mode().size_original.x, scr->current_mode().size_original.y);
     if ((scr->ui_rotation % 180) != 0) {
-        new_minsize = QSize(scr->current_mode().size.y, scr->current_mode().size.x);
+        new_minsize = QSize(scr->current_mode().size_original.y, scr->current_mode().size_original.x);
     }
 
     QSettings settings;
@@ -118,6 +119,10 @@ static void mode_change_screen(void *userdata, eka2l1::epoc::screen *scr, const 
     if (allow_true_size_variant.toBool()) {
         new_minsize /= widget->devicePixelRatioF();
     }
+
+    auto desktop = QApplication::desktop();
+    new_minsize.setWidth(std::min(new_minsize.width(), desktop->width()));
+    new_minsize.setHeight(std::min(new_minsize.height(), desktop->height()));
 
     widget->setMinimumSize(new_minsize);
 }
@@ -188,7 +193,7 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     std::uint32_t x = 0;
     std::uint32_t y = 0;
     if (!state.stretch_to_fill_display) {
-        if (height > swapchain_size.y) {
+        if (height >= swapchain_size.y) {
             height = swapchain_size.y;
             mult_x = mult_y = height / size.y;
             width = size.x * mult_y;
@@ -313,7 +318,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     current_device_label_ = new QLabel(this);
     screen_status_label_ = new QLabel(this);
 
-    auto *slider_whole = new QFrame(this);
+    auto *slider_whole = new QWidget(this);
     auto *slider_layout = new QHBoxLayout(slider_whole);
 
     auto *slider_icon = new QLabel(this);
@@ -330,6 +335,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     icon_size_slider_->setMinimum(applist_->get_icon_size_range().first);
     icon_size_slider_->setMaximum(applist_->get_icon_size_range().second);
     icon_size_slider_->setValue(applist_->get_icon_size());
+    icon_size_slider_->setFixedHeight(current_device_label_->height());
 
     slider_layout->addWidget(slider_icon);
     slider_layout->addWidget(icon_size_slider_);
@@ -1206,6 +1212,11 @@ void main_window::set_discord_presence_current_playing(const std::string &name) 
 }
 
 void main_window::on_app_clicked(applist_widget_item *item) {
+    eka2l1::config::app_setting app_setting;
+    app_setting.force_resolution = eka2l1::vec2(1920, 1080);
+
+    emulator_state_.symsys->set_launch_app_setting(app_setting);
+
     if (!active_screen_draw_callback_) {
         setup_screen_draw();
     }
@@ -1707,6 +1718,14 @@ void main_window::on_theme_change_requested(const QString &text, const int varia
                                 application_.setStyleSheet("");
                                 need_load_more_stylesheet = false;
                             } else {
+                                if (num == 2) {
+                                    if (win_transparent_manager_->is_supported()) {
+                                        num = (win_transparent_manager_->is_system_dark_mode()) ? 1 : 0;
+                                    } else {
+                                        num = 1;
+                                    }
+                                }
+
                                 f = std::make_unique<QFile>(":assets/themes/dark/style.qss");
                             }
                         } else {
@@ -1714,8 +1733,12 @@ void main_window::on_theme_change_requested(const QString &text, const int varia
                             return;
                         }
                     } else {
-                        if (num == 2 && win_transparent_manager_->is_supported()) {
-                            num = (win_transparent_manager_->is_system_dark_mode()) ? 1 : 0;
+                        if (num == 2) {
+                            if (win_transparent_manager_->is_supported()) {
+                                num = (win_transparent_manager_->is_system_dark_mode()) ? 1 : 0;
+                            } else {
+                                num = 1;
+                            }
                         }
 
                         f = std::make_unique<QFile>(num == 0 ? ":assets/themes/QtWin11/light.qss" : ":assets/themes/QtWin11/dark.qss");
@@ -1725,6 +1748,10 @@ void main_window::on_theme_change_requested(const QString &text, const int varia
                     }
                 } else {
 #endif
+                    if (num > 1) {
+                        num = 1;
+                    }
+
                     if (num == 0) {
                         application_.setStyleSheet("");
                         need_load_more_stylesheet = false;

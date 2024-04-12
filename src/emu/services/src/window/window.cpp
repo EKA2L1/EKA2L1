@@ -1506,6 +1506,7 @@ namespace eka2l1 {
                     scr_mode.style = "";
                 }
 
+                scr_mode.size_original = scr_mode.size;
                 scr.modes.push_back(scr_mode);
             } while (!one_mode_only);
 
@@ -1859,6 +1860,66 @@ namespace eka2l1 {
         }
     }
 
+    void window_server::force_resolution(const eka2l1::vec2 &resolution) {
+        // Get the biggest resolution
+        eka2l1::vec2 max_resolution_original = screen_configs[0].modes[0].size_original;
+
+        for (std::size_t i = 0; i < screen_configs.size(); i++) {
+            for (std::size_t j = 0; j < screen_configs[i].modes.size(); j++) {
+                if (screen_configs[i].modes[j].rotation != 0) {
+                    continue;
+                }
+
+                int max_resolution_original_max_metric = std::max(max_resolution_original.x, max_resolution_original.y);
+                int iterating_resolution_max_metric = std::max(screen_configs[i].modes[j].size_original.x, screen_configs[i].modes[j].size_original.y);
+
+                if (iterating_resolution_max_metric > max_resolution_original_max_metric) {
+                    max_resolution_original = screen_configs[i].modes[j].size_original;
+                }
+            }
+        }
+
+        LOG_TRACE(SERVICE_WINDOW, "Max resolution original: {}x{}", max_resolution_original.x, max_resolution_original.y);
+
+        bool is_given_resolution_landscape = resolution.x > resolution.y;
+
+        // Begin to force resolution
+        for (std::size_t i = 0; i < screen_configs.size(); i++) {
+            for (std::size_t j = 0; j < screen_configs[i].modes.size(); j++) {
+                int iterating_resolution_max_metric = std::max(screen_configs[i].modes[j].size_original.x, screen_configs[i].modes[j].size_original.y);
+                int max_resolution_original_max_metric = std::max(max_resolution_original.x, max_resolution_original.y);
+
+                float scale_factor = static_cast<float>(iterating_resolution_max_metric) / static_cast<float>(max_resolution_original_max_metric);
+                bool is_iterating_resolution_landscape = screen_configs[i].modes[j].size_original.x > screen_configs[i].modes[j].size_original.y;
+
+                eka2l1::vec2 new_res = resolution;
+
+                if (is_given_resolution_landscape != is_iterating_resolution_landscape) {
+                    std::swap(new_res.y, new_res.x);
+                }
+
+                screen_configs[i].modes[j].size = eka2l1::vec2(static_cast<int>(new_res.x * scale_factor),
+                    static_cast<int>(new_res.y * scale_factor));
+
+                LOG_TRACE(SERVICE_WINDOW, "Factor {} resolution size: {}x{} new res size {} {}", scale_factor, screen_configs[i].modes[j].size.x, screen_configs[i].modes[j].size.y,
+                    new_res.x, new_res.y);
+            }
+        }
+    }
+
+    void window_server::apply_static_setting(drivers::graphics_driver *driver, const eka2l1::config::app_setting &setting) {
+        if (setting.force_resolution.x != 0) {
+            if (setting.force_resolution.x > 0) {
+                // Check for valid resolution
+                if (setting.force_resolution.y > 0) {
+                    force_resolution(setting.force_resolution);
+                }
+            } else {
+                force_resolution(driver->get_screen_size());
+            }
+        }
+    }
+
     static void create_screen_buffer_for_dsa(kernel_system *kern, epoc::screen *scr) {
         // Try to create memory chunk at kernel mapping, for DSA
         const std::string chunk_name = fmt::format("ScreenBuffer{}", scr->number);
@@ -2083,6 +2144,7 @@ namespace eka2l1 {
     void window_server::do_base_init() {
         load_wsini();
         parse_wsini();
+        apply_static_setting(get_graphics_driver(), sys->get_launch_app_setting());
         init_screens();
         init_ws_mem();
         init_repeatable();

@@ -31,7 +31,12 @@ namespace eka2l1::epoc {
             int screen_number;
             int mode_number;
 
+            /// The size of the screen, assigned by native resolution config
             eka2l1::vec2 size;
+
+            /// The size of the screen, unmodified
+            eka2l1::vec2 size_original;
+
             int rotation;
 
             std::string style;

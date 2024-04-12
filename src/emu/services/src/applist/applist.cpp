@@ -1341,7 +1341,7 @@ namespace eka2l1 {
 
                             if (get_registration(pid)) {
                                 child->logon([app_exit_callback](kernel::process *pr) {
-                                    app_exit_callback(pr);
+                                    //app_exit_callback(pr);
                                 });
 
                                 deferred_exit = true;
@@ -1350,7 +1350,7 @@ namespace eka2l1 {
                     }
 
                     if (!deferred_exit) {
-                        app_exit_callback(pr);
+                      //  app_exit_callback(pr);
                     }
                 } else {
                     app_exit_callback(pr);

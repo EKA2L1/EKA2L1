@@ -138,6 +138,7 @@ namespace eka2l1 {
 
         config::state *conf_;
         config::app_settings *app_settings_;
+        config::app_setting launch_app_setting_;
 
         std::atomic<bool> exit = false;
         std::atomic<bool> paused = false;
@@ -580,6 +581,14 @@ namespace eka2l1 {
         epoc::hal *get_hal(uint32_t category);
 
         void initialize_user_parties();
+
+        void set_launch_app_setting(const config::app_setting &setting) {
+            launch_app_setting_ = setting;
+        }
+
+        const config::app_setting &get_launch_app_setting() {
+            return launch_app_setting_;
+        }
     };
 
     void system_impl::do_state(common::chunkyseri &seri) {
@@ -1478,5 +1487,13 @@ namespace eka2l1 {
 
     bool system::is_s80_device_active() {
         return impl->is_s80_device_active();
+    }
+
+    void system::set_launch_app_setting(const config::app_setting &setting) {
+        impl->set_launch_app_setting(setting);
+    }
+
+    const config::app_setting &system::get_launch_app_setting() {
+        return impl->get_launch_app_setting();
     }
 }

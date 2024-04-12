@@ -156,7 +156,7 @@ private:
     std::size_t total_to_install_;
 
     bool is_installing_batch_;
-    QFrame *icon_size_slider_widget_;
+    QWidget *icon_size_slider_widget_;
     QLabel *icon_symbol_label_;
 
     void setup_screen_draw();
