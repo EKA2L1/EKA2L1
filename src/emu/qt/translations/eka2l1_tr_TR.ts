@@ -126,7 +126,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="835"/>
       <source>Delete</source>
-      <translation type="unfinished">Delete</translation>
+      <translation>Sil</translation>
     </message>
   </context>
   <context>
@@ -378,62 +378,62 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="232"/>
       <source>The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</source>
-      <translation type="unfinished">The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</translation>
+      <translation>Firmware dosyasındaki ROFS (Salt Okunur Dosya Sistemi) bozuk! Lütfen ürün yazılımı dosyalarınızın bozuk olmadığından emin olun.</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="236"/>
       <source>Fail to copy ROM file!</source>
-      <translation type="unfinished">Fail to copy ROM file!</translation>
+      <translation>ROM dosyası kopyalanamadı!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="240"/>
       <source>The provided ROM is corrupted! Please make sure your ROM is valid!</source>
-      <translation type="unfinished">The provided ROM is corrupted! Please make sure your ROM is valid!</translation>
+      <translation>Sağlanan ROM bozuk! Lütfen ROM'unuzun geçerli olduğundan emin olun!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="244"/>
       <source>The provided RPKG is corrupted! Please make sure your RPKG is valid!</source>
-      <translation type="unfinished">The provided RPKG is corrupted! Please make sure your RPKG is valid!</translation>
+      <translation>Sağlanan RPKG bozuk! Lütfen RPKG dosyanızın geçerli olduğundan emin olun!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="248"/>
       <source>The provided VPL file is invalid. Please check your firmware files again!</source>
-      <translation type="unfinished">The provided VPL file is invalid. Please check your firmware files again!</translation>
+      <translation>Sağlanan VPL dosyası geçersiz. Lütfen ürün yazılımı dosyalarınızı tekrar kontrol edin!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="256"/>
       <source>Installation failed</source>
-      <translation type="unfinished">Installation failed</translation>
+      <translation>Yükleme başarısız</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="265"/>
       <source>Choose VPL file</source>
-      <translation type="unfinished">Choose VPL file</translation>
+      <translation>VPL dosyasını seçin</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="266"/>
       <source>VPL file (*.vpl);;All files (*.*)</source>
-      <translation type="unfinished">VPL file (*.vpl);;All files (*.*)</translation>
+      <translation>VPL dosyaları (*.vpl);;Bütün dosyalar (*.*)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="275"/>
       <source>Choose the ROM</source>
-      <translation type="unfinished">Choose the ROM</translation>
+      <translation>ROM seçin</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="276"/>
       <source>ROM file (*.rom *.ROM);;All files (*.*)</source>
-      <translation type="unfinished">ROM file (*.rom *.ROM);;All files (*.*)</translation>
+      <translation>ROM dosyaları (*.rom *.ROM);;Tüm Dosyalar (*.*)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="300"/>
       <source>Choose the RPKG</source>
-      <translation type="unfinished">Choose the RPKG</translation>
+      <translation>RPKG seçin</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="301"/>
       <source>RPKG file (*.rpkg *.RPKG);;All files (*.*</source>
-      <translation type="unfinished">RPKG file (*.rpkg *.RPKG);;All files (*.*</translation>
+      <translation>RPKG dosyaları (*.rpkg *.RPKG);;Bütün dosyalar (*.*</translation>
     </message>
   </context>
   <context>
@@ -441,43 +441,43 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="17"/>
       <source>Touch mapping editor</source>
-      <translation type="unfinished">Touch mapping editor</translation>
+      <translation>Dokunmatik eşleme düzenleyici</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="26"/>
       <source>&lt;b&gt;Mapping elements&lt;/b&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Mapping elements&lt;/b&gt;</translation>
+      <translation>&lt;b&gt;Eşleme elemanları&lt;/b&gt;</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="40"/>
       <source>Joystick</source>
-      <translation type="unfinished">Joystick</translation>
+      <translation>Oyun kolu</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="45"/>
       <source>Single touch</source>
-      <translation type="unfinished">Single touch</translation>
+      <translation>Tek dokunuş</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="64"/>
       <source>For app: </source>
-      <translation type="unfinished">For app: </translation>
+      <translation>Uygulama için: </translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="105"/>
       <location filename="../src/btnmap/editor_widget.cpp" line="274"/>
       <source>Save and hide editor</source>
-      <translation type="unfinished">Save and hide editor</translation>
+      <translation>Düzenleyiciyi kaydet ve gizle</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="136"/>
       <source>Profile</source>
-      <translation type="unfinished">Profile</translation>
+      <translation>Profil</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="146"/>
       <source>Add</source>
-      <translation type="unfinished">Add</translation>
+      <translation>Ekle</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="153"/>
@@ -487,7 +487,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="181"/>
       <source>Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</source>
-      <translation type="unfinished">Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</translation>
+      <translation>Profiller uygulama/oyun başına kaydedilir. Düzenleme moduna girmek için &lt;b&gt;Düzenle&lt;/b&gt;'ye basın. Eşleme elemanını silmek için &lt;b&gt;Sil&lt;/b&gt;e basın ve kaldırmak istediğiniz öğeye tıklayın.</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="212"/>
@@ -497,17 +497,17 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="222"/>
       <source>Delete</source>
-      <translation type="unfinished">Delete</translation>
+      <translation>Sil</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="50"/>
       <source>Please wait for a game to be active!</source>
-      <translation type="unfinished">Please wait for a game to be active!</translation>
+      <translation>Lütfen oyunun aktif olmasını bekleyin!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="89"/>
       <source>For app: %1 (0x%2)</source>
-      <translation type="unfinished">For app: %1 (0x%2)</translation>
+      <translation>Uygulama için: %1 (0x%2)</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="151"/>
@@ -517,17 +517,17 @@
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
       <source>Error creating profile!</source>
-      <translation type="unfinished">Error creating profile!</translation>
+      <translation>Profil oluşturulurken hata oluştu!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
       <source>Profile name contains special characters or system error encountered!</source>
-      <translation type="unfinished">Profile name contains special characters or system error encountered!</translation>
+      <translation>Profil adı özel karakterler içeriyor veya sistem hatasıyla karşılaşıldı!</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.cpp" line="285"/>
       <source>Show editor</source>
-      <translation type="unfinished">Show editor</translation>
+      <translation>Düzenleyiciyi göster</translation>
     </message>
   </context>
   <context>
@@ -535,22 +535,22 @@
     <message>
       <location filename="../src/launch_process_dialog.ui" line="14"/>
       <source>Launch process</source>
-      <translation type="unfinished">Launch process</translation>
+      <translation>Süreci başlat</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="31"/>
       <source>Arguments</source>
-      <translation type="unfinished">Arguments</translation>
+      <translation>Argümanlar</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="51"/>
       <source>Executable path</source>
-      <translation type="unfinished">Executable path</translation>
+      <translation>Çalıştırılabilir yol</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="78"/>
       <source>Launch</source>
-      <translation type="unfinished">Launch</translation>
+      <translation>Başlat</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="85"/>
@@ -561,17 +561,17 @@
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
       <location filename="../src/launch_process_dialog.cpp" line="33"/>
       <source>Launch failed</source>
-      <translation type="unfinished">Launch failed</translation>
+      <translation>Başlatma başarısız</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
       <source>The executable path field is empty!</source>
-      <translation type="unfinished">The executable path field is empty!</translation>
+      <translation>Yürütülebilir yol alanı boş!</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="33"/>
       <source>The executable path is invalid or the executable is corrupted. Check the log for more info!</source>
-      <translation type="unfinished">The executable path is invalid or the executable is corrupted. Check the log for more info!</translation>
+      <translation>Yürütülebilir dosya yolu geçersiz veya yürütülebilir dosya bozuk. Daha fazla bilgi için günlüğü kontrol edin!</translation>
     </message>
   </context>
   <context>
@@ -579,7 +579,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="50"/>
       <source>App launcher is unavailable.&lt;br&gt;Install a device to continue.</source>
-      <translation type="unfinished">App launcher is unavailable.&lt;br&gt;Install a device to continue.</translation>
+      <translation>Uygulama başlatıcı kullanılamıyor.&lt;br&gt;Devam etmek için bir cihaz yükleyin.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="69"/>
@@ -594,7 +594,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="83"/>
       <source>Mount game card dump</source>
-      <translation type="unfinished">Mount game card dump</translation>
+      <translation>Oyun kartı yığınını takın</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="100"/>
@@ -604,7 +604,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="104"/>
       <source>Rotate screen</source>
-      <translation type="unfinished">Rotate screen</translation>
+      <translation>Ekranı döndür</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="117"/>
@@ -614,17 +614,17 @@
     <message>
       <location filename="../src/mainwindow.ui" line="124"/>
       <source>Emulation</source>
-      <translation type="unfinished">Emulation</translation>
+      <translation>Emülasyon</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="134"/>
       <source>Bluetooth</source>
-      <translation type="unfinished">Bluetooth</translation>
+      <translation>Bluetooth</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="138"/>
       <source>Netplay</source>
-      <translation type="unfinished">Netplay</translation>
+      <translation>Netplay</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="147"/>
@@ -649,7 +649,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="177"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>Paket yöneticisi</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="182"/>
@@ -699,67 +699,67 @@
     <message>
       <location filename="../src/mainwindow.ui" line="239"/>
       <source>Recent dumps</source>
-      <translation type="unfinished">Recent dumps</translation>
+      <translation>Son yığınlar</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="279"/>
       <source>Folder</source>
-      <translation type="unfinished">Folder</translation>
+      <translation>Klasör</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="289"/>
       <source>Refresh app list</source>
-      <translation type="unfinished">Refresh app list</translation>
+      <translation>Uygulama listesini yenile</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="294"/>
       <source>Friends&apos;s IP addresses</source>
-      <translation type="unfinished">Friends&apos;s IP addresses</translation>
+      <translation>Arkadaşlarınızın IP adresleri</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="299"/>
       <source>Button mapping editor</source>
-      <translation type="unfinished">Button mapping editor</translation>
+      <translation>Buton eşleme düzenleyici</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="304"/>
       <source>Touch mapping editor</source>
-      <translation type="unfinished">Touch mapping editor</translation>
+      <translation>Dokunmatik eşleme düzenleyici</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="309"/>
       <source>N-Gage card game</source>
-      <translation type="unfinished">N-Gage card game</translation>
+      <translation>N-Gage Kart Oyunu</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="314"/>
       <source>Check for update</source>
-      <translation type="unfinished">Check for update</translation>
+      <translation>Güncellemeleri denetle</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="319"/>
       <source>Launch process</source>
-      <translation type="unfinished">Launch process</translation>
+      <translation>Süreci başlat</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="329"/>
       <source>Configure</source>
-      <translation type="unfinished">Configure</translation>
+      <translation>Yapılandır</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="340"/>
       <source>Stretch to fill window (ignore aspect ratio)</source>
-      <translation type="unfinished">Stretch to fill window (ignore aspect ratio)</translation>
+      <translation>Pencereyi dolduracak şekilde genişlet (en boy oranını yoksay)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="268"/>
       <source>Clear menu</source>
-      <translation type="unfinished">Clear menu</translation>
+      <translation>Menüyü temizle</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="345"/>
       <source>Touchscreen disabled</source>
-      <translation type="unfinished">Touchscreen disabled</translation>
+      <translation>Dokunmatik ekran devre dışı</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="345"/>
@@ -917,7 +917,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1034"/>
       <source>Launch failed</source>
-      <translation type="unfinished">Launch failed</translation>
+      <translation>Başlatma başarısız</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1034"/>
@@ -952,7 +952,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1120"/>
       <source>Installation failed</source>
-      <translation type="unfinished">Installation failed</translation>
+      <translation>Yükleme başarısız</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1120"/>
@@ -1037,17 +1037,17 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1644"/>
       <source>The given file is not a valid JAR file!</source>
-      <translation type="unfinished">The given file is not a valid JAR file!</translation>
+      <translation>Verilen dosya geçerli bir JAR dosyası değil!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1648"/>
       <source>Can not find the JAR file!</source>
-      <translation type="unfinished">Can not find the JAR file!</translation>
+      <translation>JAR dosyası bulunamıyor!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1652"/>
       <source>The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</source>
-      <translation type="unfinished">The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</translation>
+      <translation>JAR'ın MIDP-2.0'a ihtiyacı var, ancak emülatör yalnızca S60v1 cihazlarında çalışan MIDP-1.0 JAR'ı destekliyor!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1656"/>
@@ -1065,7 +1065,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="17"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>Paket yöneticisi</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
@@ -1408,12 +1408,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="749"/>
       <source>Disable</source>
-      <translation type="unfinished">Disable</translation>
+      <translation>Pasif</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="754"/>
       <source>Enable</source>
-      <translation type="unfinished">Enable</translation>
+      <translation>Aktif</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="764"/>
@@ -1423,7 +1423,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="767"/>
       <source>Enable GPU accelerated GLES1</source>
-      <translation type="unfinished">Enable GPU accelerated GLES1</translation>
+      <translation>GPU hızlandırmalı GLES1'i etkinleştir</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="777"/>
@@ -1433,7 +1433,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="794"/>
       <source>Current</source>
-      <translation type="unfinished">Current</translation>
+      <translation>Geçerli</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="817"/>
@@ -1444,7 +1444,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="828"/>
       <source>Check for any unimported devices and correct existing one&apos;s infos.</source>
-      <translation type="unfinished">Check for any unimported devices and correct existing one&apos;s infos.</translation>
+      <translation>İçe aktarılmayan cihazları kontrol edin ve mevcut olanın bilgilerini düzeltin.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="831"/>
@@ -1459,17 +1459,17 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="841"/>
       <source>Validate current device</source>
-      <translation type="unfinished">Validate current device</translation>
+      <translation>Mevcut cihazı doğrula</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="859"/>
       <source>Properties</source>
-      <translation type="unfinished">Properties</translation>
+      <translation>Özellikler</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="867"/>
       <source>Battery level (0 - 100)</source>
-      <translation type="unfinished">Battery level (0 - 100)</translation>
+      <translation>Batarya seviyesi (0 - 100)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="896"/>
@@ -1481,47 +1481,47 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="913"/>
       <source>System language</source>
-      <translation type="unfinished">System language</translation>
+      <translation>Sistem dili</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="950"/>
       <source>Check</source>
-      <translation type="unfinished">Check</translation>
+      <translation>Kontrol et</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="967"/>
       <source>The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</source>
-      <translation type="unfinished">The name that will be displayed in emulated applications or games. Allow maximum of 30 characters.</translation>
+      <translation>Uygulamalarda veya oyunlarda görüntülenecek ad. Maksimum 30 karaktere izin verin.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="970"/>
       <source>Friendly phone name</source>
-      <translation type="unfinished">Friendly phone name</translation>
+      <translation>Dost telefon adı</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="995"/>
       <source>Hardware emulation</source>
-      <translation type="unfinished">Hardware emulation</translation>
+      <translation>Donanım emülasyonu</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1009"/>
       <source>CPU emulator</source>
-      <translation type="unfinished">CPU emulator</translation>
+      <translation>CPU emülasyonu</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1017"/>
       <source>Dynarmic (CPU recompiler)</source>
-      <translation type="unfinished">Dynarmic (CPU recompiler)</translation>
+      <translation>Dinamik (CPU yeniden derleyicisi)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1022"/>
       <source>Dyncom (CPU interpreter)</source>
-      <translation type="unfinished">Dyncom (CPU interpreter)</translation>
+      <translation>Dyncom (CPU yorumlayıcısı)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1034"/>
       <source>Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</source>
-      <translation type="unfinished">Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</translation>
+      <translation>Zamanlama işlemleri için doğruluk düzeyini seçin.&lt;br&gt;Seviye ne kadar yüksek olursa, o kadar fazla CPU gücü tüketilir, ancak bazı uygulamalarda potansiyel olarak daha hızlı işlem yapılır!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1037"/>
@@ -1546,7 +1546,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1068"/>
       <source>Audio</source>
-      <translation type="unfinished">Audio</translation>
+      <translation>Ses</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1076"/>
@@ -1582,7 +1582,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1198"/>
       <source>Volume</source>
-      <translation type="unfinished">Volume</translation>
+      <translation>Ses</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1240"/>
@@ -1592,17 +1592,17 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1255"/>
       <source>Profile</source>
-      <translation type="unfinished">Profile</translation>
+      <translation>Profil</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1278"/>
       <source>Add</source>
-      <translation type="unfinished">Add</translation>
+      <translation>Ekle</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1304"/>
       <source>Delete</source>
-      <translation type="unfinished">Delete</translation>
+      <translation>Sil</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1322"/>
@@ -1617,7 +1617,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1378"/>
       <source>Up arrow</source>
-      <translation type="unfinished">Up arrow</translation>
+      <translation>Yukarı ok</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1410"/>
@@ -1627,7 +1627,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1446"/>
       <source>Left arrow</source>
-      <translation type="unfinished">Left arrow</translation>
+      <translation>Sol ok</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1478"/>
@@ -1637,7 +1637,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1510"/>
       <source>Right arrow</source>
-      <translation type="unfinished">Right arrow</translation>
+      <translation>Sağ ok</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1546"/>
@@ -1647,7 +1647,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1578"/>
       <source>Down arrow</source>
-      <translation type="unfinished">Down arrow</translation>
+      <translation>Aşağı ok</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1610"/>
