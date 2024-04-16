@@ -105,8 +105,8 @@
     <string name="pref_bt_netplay_enable_upnp">UPnP\'yi etkinleştirin (IPv4 herkese açık oyun için)</string>
     <string name="pref_bt_netplay_server_address">Sunucu adresi</string>
     <string name="pref_bt_netplay_password">Şifre</string>
-    <string name="pref_bt_netplay_port_offset">Port offset</string>
-    <string name="action_context_delete">Delete</string>
+    <string name="pref_bt_netplay_port_offset">Port ofseti</string>
+    <string name="action_context_delete">Sil</string>
     <string name="action_context_rename">Adlandır</string>
     <string name="action_context_shortcut">Kısayol oluştur</string>
     <string name="action_context_launch_file">Başlama dosyası oluştur</string>
@@ -173,7 +173,7 @@
     <string name="error_name">İsim girin!</string>
     <string name="set_as_default">Varsayılan olarak ayarla</string>
     <string name="edit">Düzenle</string>
-    <string name="add">Add</string>
+    <string name="add">Ekle</string>
     <string name="add_profile_description">Yeni profil oluştur</string>
     <string name="enter_name">İsim girin</string>
     <string name="set_default_profile_description">Bu profili, daha sonra yüklenecek tüm uygulamalar için standart ayar olarak seçin</string>
@@ -201,5 +201,5 @@
     <string name="install_ng_game_cant_find_data_folder">Oyun veri klasörü bulunamadı!</string>
     <string name="install_ng_game_more_than_one_game">Verilen kart oyunu klasöründe birden fazla oyun var!</string>
     <string name="install_ng_game_no_game_info_file">Oyun bilgi dosyası kart oyunu klasöründe mevcut değil!</string>
-    <string name="install_ng_game_corrupted_game_info">The game information file has been corrupted. Please check your data\'s validity!</string>
+    <string name="install_ng_game_corrupted_game_info">Oyun bilgi dosyası bozulmuş. Lütfen verilerinizin geçerliliğini kontrol edin!</string>
 </resources>
