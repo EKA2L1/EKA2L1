@@ -492,7 +492,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="212"/>
       <source>Edit</source>
-      <translation type="unfinished">Edit</translation>
+      <translation>Düzenle</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="222"/>
@@ -1712,7 +1712,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="307"/>
       <source>Default</source>
-      <translation type="unfinished">Default</translation>
+      <translation>Varsayılan</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="445"/>
