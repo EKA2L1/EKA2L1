@@ -788,6 +788,7 @@ void main_window::on_new_device_added() {
         emulator_state_.init_event.wait();
 
         refresh_current_device_label();
+        refresh_mount_availbility();
         reprepare_touch_mappings();
         setup_app_list(true);
     } else {
