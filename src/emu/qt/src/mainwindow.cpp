@@ -1213,7 +1213,9 @@ void main_window::set_discord_presence_current_playing(const std::string &name) 
 
 void main_window::on_app_clicked(applist_widget_item *item) {
     eka2l1::config::app_setting app_setting;
-    app_setting.force_resolution = eka2l1::vec2(1920, 1080);
+
+    // NOTE: Use this feature in the future! Ha!
+    app_setting.force_resolution = eka2l1::vec2(0, 0);
 
     emulator_state_.symsys->set_launch_app_setting(app_setting);
 

@@ -1900,9 +1900,6 @@ namespace eka2l1 {
 
                 screen_configs[i].modes[j].size = eka2l1::vec2(static_cast<int>(new_res.x * scale_factor),
                     static_cast<int>(new_res.y * scale_factor));
-
-                LOG_TRACE(SERVICE_WINDOW, "Factor {} resolution size: {}x{} new res size {} {}", scale_factor, screen_configs[i].modes[j].size.x, screen_configs[i].modes[j].size.y,
-                    new_res.x, new_res.y);
             }
         }
     }
@@ -2144,7 +2141,7 @@ namespace eka2l1 {
     void window_server::do_base_init() {
         load_wsini();
         parse_wsini();
-        apply_static_setting(get_graphics_driver(), sys->get_launch_app_setting());
+        // apply_static_setting(get_graphics_driver(), sys->get_launch_app_setting());
         init_screens();
         init_ws_mem();
         init_repeatable();
