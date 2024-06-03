@@ -332,9 +332,6 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     icon_size_slider_->setStyleSheet("QSlider:horizontal { min-height: 0px; }");
     icon_size_slider_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     icon_size_slider_->setOrientation(Qt::Horizontal);
-    icon_size_slider_->setMinimum(applist_->get_icon_size_range().first);
-    icon_size_slider_->setMaximum(applist_->get_icon_size_range().second);
-    icon_size_slider_->setValue(applist_->get_icon_size());
     icon_size_slider_->setFixedHeight(current_device_label_->height());
 
     slider_layout->addWidget(slider_icon);
@@ -352,7 +349,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     icon_symbol_label_ = slider_icon;
 
     screen_status_label_->setVisible(false);
-    icon_size_slider_widget_->setVisible(true);
+    icon_size_slider_widget_->setVisible(false);
 
     ui_->action_pause->setEnabled(false);
     ui_->action_restart->setEnabled(false);
@@ -489,6 +486,12 @@ void main_window::setup_app_list(const bool load_now) {
             if (load_now) {
                 applist_->request_reload();
             }
+
+            icon_size_slider_->setMinimum(applist_->get_icon_size_range().first);
+            icon_size_slider_->setMaximum(applist_->get_icon_size_range().second);
+            icon_size_slider_->setValue(applist_->get_icon_size());
+
+            icon_size_slider_widget_->setVisible(true);
         }
     }
 
