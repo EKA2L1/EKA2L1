@@ -281,14 +281,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
 
     eka2l1::kernel_system *kernel = emulator_state_.symsys->get_kernel_system();
 
-    if (!emulator_state_.app_launch_from_command_line)
-        setup_app_list();
-
     setup_package_installer_ui_hooks();
-
-    if (!applist_) {
-        ui_->label_al_not_available->setVisible(true);
-    }
 
     displayer_ = new display_widget(this);
     displayer_->setVisible(false);
@@ -355,6 +348,13 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     ui_->action_restart->setEnabled(false);
 
     addAction(ui_->action_fullscreen);
+
+    if (!emulator_state_.app_launch_from_command_line)
+        setup_app_list();
+
+    if (!applist_) {
+        ui_->label_al_not_available->setVisible(true);
+    }
 
     refresh_current_device_label();
     make_default_binding_profile();
