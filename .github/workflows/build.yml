@@ -91,7 +91,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-20.04, windows-latest]
+        os: [windows-latest]
         config: [Release]
 
     steps:
