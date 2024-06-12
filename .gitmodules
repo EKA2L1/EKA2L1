@@ -103,3 +103,6 @@
 [submodule "src/external/freetype"]
 	path = src/external/freetype
 	url = https://github.com/freetype/freetype
+[submodule "src/external/libaaruformat"]
+	path = src/external/libaaruformat
+	url = https://github.com/eka2l1/libaaruformat

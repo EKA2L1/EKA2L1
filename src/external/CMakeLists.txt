@@ -349,6 +349,12 @@ set(FT_ENABLE_ERROR_STRINGS ON CACHE BOOL "" FORCE)
 
 add_subdirectory(freetype)
 
+option(AARU_BUILD_TESTS "Build tests for Aaru" OFF)
+option(AARU_BUILD_TOOLS "Build AAru tools" OFF)
+option(AARU_BUILD_SHARED "Build shared library" OFF)
+
+add_subdirectory(libaaruformat)
+
 set (capstone_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/capstone/include" PARENT_SCOPE)
 set (YAML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp/include" PARENT_SCOPE)
 set (LIBCXXABI_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libcxxabi/include" PARENT_SCOPE)
