@@ -1,9 +1,25 @@
 #include "aaru_filesystem.h"
+#include "common/path.h"
+#include <aaruformat.h>
 #include <common/log.h>
 #include <common/virtualmem.h>
-#include <aaruformat.h>
+#include <common/time.h>
 
 namespace eka2l1::vfs {
+    static std::uint64_t dos_time_to_0ad_time(const std::uint16_t last_modified_date, const std::uint16_t last_modified_time) {
+        struct tm time_info = {};
+        time_info.tm_year = 1980 + ((last_modified_date >> 9) & 0b1111111);
+        time_info.tm_mon = ((last_modified_date >> 5) & 0b1111) - 1;
+        time_info.tm_mday = last_modified_date & 0b11111;
+
+        time_info.tm_hour = (last_modified_time >> 11) & 0b11111;
+        time_info.tm_min = (last_modified_time >> 5) & 0b111111;
+        time_info.tm_sec = (last_modified_time & 0b11111) * 2;
+
+        auto epoch_time = mktime(&time_info);
+        return common::convert_microsecs_epoch_to_0ad(epoch_time * common::microsecs_per_sec);
+    }
+
     static std::uint32_t aaru_fat_image_read(void *userdata, void *buffer, std::uint32_t bytes) {
         auto *info = reinterpret_cast<ngage_mmc_image_info*>(userdata);
         if (!info) {
@@ -27,7 +43,7 @@ namespace eka2l1::vfs {
                 auto sector_index = info->starting_partition_sector_ + page_index * total_sectors_needed_load_per_page;
                 auto sector_to_load = common::min(total_sectors_needed_load_per_page, static_cast<std::uint32_t>(info->ending_partition_sector_ - sector_index + 1));
 
-                for (auto i = 0; i < sector_to_load; i++) {
+                for (auto i = 0U; i < sector_to_load; i++) {
                     std::uint32_t temp_size = info->sector_size_;
 
                     auto result_read = aaruf_read_sector(info->context_, sector_index, info->mapped_image_data_ + page_index * page_size +
@@ -44,7 +60,7 @@ namespace eka2l1::vfs {
             }
         }
 
-        auto end_file_offset = (info->ending_partition_sector_ - info->starting_partition_sector_ + 1) * info->sector_size_;
+        auto end_file_offset = info->get_image_size();
         auto actual_read = common::min(bytes, static_cast<std::uint32_t>(end_file_offset - info->current_offset_));
 
         std::memcpy(buffer, info->mapped_image_data_ + info->current_offset_, actual_read);
@@ -77,8 +93,71 @@ namespace eka2l1::vfs {
         return info->current_offset_;
     }
 
+    static std::optional<Fat::Entry> find_entry(Fat::Image *image, const std::u16string &path) {
+        if (path.empty()) {
+            return std::nullopt;
+        }
+
+        eka2l1::path_iterator_16 iterator(path);
+        std::int32_t size_stack = 0;
+
+        // Skip the root
+        iterator++;
+
+        Fat::Entry current_entry;
+
+        for (; iterator; iterator++) {
+            const std::u16string ite_value = *iterator;
+            if (ite_value == u"..") {
+                size_stack--;
+            } else if (ite_value != u".") {
+                size_stack++;
+            }
+
+            if (size_stack < 0) {
+                return std::nullopt;
+            }
+
+            if ((current_entry.entry.file_attributes & (int)Fat::EntryAttribute::DIRECTORY) == 0) {
+                return std::nullopt;
+            }
+
+            do {
+                if (!image->get_next_entry(current_entry)) {
+                    return std::nullopt;
+                }
+            } while (common::compare_ignore_case(ite_value, current_entry.get_filename()) != 0);
+
+            if (current_entry.entry.file_attributes & (int)Fat::EntryAttribute::DIRECTORY) {
+                Fat::Entry child_first_entry;
+
+                if (!image->get_first_entry_dir(current_entry, child_first_entry)) {
+                    return std::nullopt;
+                }
+
+                current_entry = child_first_entry;
+            }
+        }
+
+        return current_entry;
+    }
+
+    bool aaru_ngage_mmc_file_system::check_if_mounted(const std::u16string &path) const {
+        if (!image_info_ || path.empty()) {
+            return false;
+        }
+
+        auto drive_of_path = char16_to_drive(path[0]);
+        return drive_of_path == image_info_->mounted_drive_;
+    }
+
     bool aaru_ngage_mmc_file_system::exists(const std::u16string &path) {
-        return true;
+        if (!check_if_mounted(path)) {
+            return false;
+        }
+
+        auto entry = find_entry(image_info_->image_.get(), path);
+        return entry.has_value();
     }
 
     bool aaru_ngage_mmc_file_system::replace(const std::u16string &old_path, const std::u16string &new_path) {
@@ -92,8 +171,8 @@ namespace eka2l1::vfs {
      */
     bool aaru_ngage_mmc_file_system::mount_volume_from_path(const drive_number drv, const drive_media media,
         const std::uint32_t attrib, const std::u16string &physical_path) {
-        if (image_infos_.contains(drv)) {
-            LOG_ERROR(VFS, "Drive {} is already mounted!", drv);
+        if (image_info_ != nullptr) {
+            LOG_ERROR(VFS, "Can only mount one N-Gage MMC!");
             return false;
         }
 
@@ -175,6 +254,7 @@ namespace eka2l1::vfs {
         mmc_image_info->stream_ = file_stream;
         mmc_image_info->mapped_image_data_ = reinterpret_cast<std::uint8_t*>(premapped_sector_ptr);
         mmc_image_info->loaded_pages_.resize(size_to_premap / common::get_host_page_size());
+        mmc_image_info->mounted_drive_ = drv;
 
         std::fill(mmc_image_info->loaded_pages_.begin(), mmc_image_info->loaded_pages_.end(), 0);
 
@@ -183,25 +263,80 @@ namespace eka2l1::vfs {
             &aaru_fat_image_seek);
 
         mmc_image_info->image_ = std::move(fat_image);
-        image_infos_.emplace(drv, std::move(mmc_image_info));
+        image_info_ = std::move(mmc_image_info);
 
         return true;
     }
 
     bool aaru_ngage_mmc_file_system::unmount(const drive_number drv) {
+        if (!image_info_ || image_info_->mounted_drive_ != drv) {
+            return false;
+        }
+
+        common::unmap_memory(image_info_->mapped_image_data_, image_info_->get_image_size());
+
+        aaruf_close(image_info_->context_);
+        fclose(image_info_->stream_);
+
+        image_info_.reset();
+
         return true;
     }
 
     std::unique_ptr<file> aaru_ngage_mmc_file_system::open_file(const std::u16string &path, const int mode) {
-        return nullptr;
+        if (!check_if_mounted(path)) {
+            return nullptr;
+        }
+
+        auto entry = find_entry(image_info_->image_.get(), path);
+        if (!entry.has_value()) {
+            return nullptr;
+        }
+
+        if (entry->entry.file_attributes & (int)Fat::EntryAttribute::DIRECTORY) {
+            LOG_ERROR(VFS, "Can't open directory as file: {}", common::ucs2_to_utf8(path));
+            return nullptr;
+        }
+
+        return std::make_unique<aaru_ngage_mmc_file>(image_info_->image_.get(), std::move(entry.value()), path);
     }
 
     std::unique_ptr<directory> aaru_ngage_mmc_file_system::open_directory(const std::u16string &path, epoc::uid_type type, const std::uint32_t attrib) {
         return nullptr;
     }
 
+    static entry_info fat_entry_info_to_emulator(Fat::Entry &entry, const std::u16string &path) {
+        entry_info info;
+        info.size = entry.entry.file_size;
+        info.type = (entry.entry.file_attributes & (int)Fat::EntryAttribute::DIRECTORY) ? io_component_type::dir : io_component_type::file;
+        info.attribute = 0;
+
+        if (entry.entry.file_attributes & (int)Fat::EntryAttribute::HIDDEN) {
+            info.attribute |= io_attrib_hidden;
+        }
+
+        info.last_write = dos_time_to_0ad_time(entry.entry.last_modified_date, entry.entry.last_modified_time);
+
+        // FAT attribute is same as Symbian
+        info.has_raw_attribute = true;
+        info.raw_attribute = entry.entry.file_attributes;
+        info.name = common::ucs2_to_utf8(entry.get_filename());
+        info.full_path = common::ucs2_to_utf8(path);
+
+        return info;
+    }
+
     std::optional<entry_info> aaru_ngage_mmc_file_system::get_entry_info(const std::u16string &path) {
-        return std::nullopt;
+        if (!check_if_mounted(path)) {
+            return std::nullopt;
+        }
+
+        auto entry = find_entry(image_info_->image_.get(), path);
+        if (!entry.has_value()) {
+            return std::nullopt;
+        }
+
+        return fat_entry_info_to_emulator(entry.value(), path);
     }
 
     bool aaru_ngage_mmc_file_system::delete_entry(const std::u16string &path) {
@@ -220,6 +355,142 @@ namespace eka2l1::vfs {
     }
 
     std::optional<drive> aaru_ngage_mmc_file_system::get_drive_entry(const drive_number drv) {
-        return std::nullopt;
+        if (!image_info_ || image_info_->mounted_drive_ != drv) {
+            return std::nullopt;
+        }
+
+        drive drive_entry;
+        drive_entry.drive_name = common::ucs2_to_utf8(std::u16string(1, drive_to_char16(drv)) + u":");
+        drive_entry.media_type = drive_media::physical;
+        drive_entry.attribute = io_attrib_removeable | io_attrib_write_protected;
+
+        return drive_entry;
+    }
+
+    aaru_ngage_mmc_file::aaru_ngage_mmc_file(Fat::Image *image, Fat::Entry entry, const std::u16string &path)
+        : file(0) {
+        image_ = image;
+        entry_ = std::move(entry);
+        offset_ = 0;
+        full_path_ = path;
+    }
+
+    aaru_ngage_mmc_file::~aaru_ngage_mmc_file() {
+    }
+
+    /*! \brief Write to the file.
+     *
+     * Write binary data to a file open with WRITE_MODE
+     *
+     * \param data Pointer to the binary data.
+     * \param size The size of each element the binary data
+     * \param count Total element count.
+     *
+     * \returns Total bytes wrote. -1 if fail.
+     */
+    size_t aaru_ngage_mmc_file::write_file(const void *data, uint32_t size, uint32_t count) {
+        LOG_ERROR(VFS, "N-Gage MMC is read-only! Can't write to file {}", common::ucs2_to_utf8(entry_.get_filename()));
+        return 0;
+    }
+
+    /*! \brief Read from the file.
+     *
+     * Read from the file to the specified pointer
+     *
+     * \param data Pointer to the destination.
+     * \param size The size of each element to read
+     * \param count Total element count.
+     *
+     * \returns Total bytes read. -1 if fail.
+     */
+    size_t aaru_ngage_mmc_file::read_file(void *data, uint32_t size, uint32_t count) {
+        std::size_t total_size_want_read = size * count;
+        std::size_t actual_size = common::min(total_size_want_read, static_cast<std::size_t>(entry_.entry.file_size - offset_));
+
+        auto actual_read_size = image_->read_from_cluster(reinterpret_cast<std::uint8_t*>(data), static_cast<std::uint32_t>(tell()),
+            entry_.entry.starting_cluster, static_cast<std::uint32_t>(actual_size));
+
+        offset_ += actual_read_size;
+        return actual_read_size;
+    }
+
+    /*! \brief Get the file mode which specified with VFS system.
+         * \returns The file mode.
+     */
+    int aaru_ngage_mmc_file::file_mode() const {
+        return READ_MODE | BIN_MODE;
+    }
+
+    /*! \brief Get the full path of the file.
+     * \returns The full path of the file.
+     */
+    std::u16string aaru_ngage_mmc_file::file_name() const {
+        return full_path_;
+    }
+
+    /*! \brief Size of the file.
+         * \returns The size of the file.
+     */
+    uint64_t aaru_ngage_mmc_file::size() const {
+        return entry_.entry.file_size;
+    }
+
+    /*! \brief Seek the file with specified mode.
+     */
+    uint64_t aaru_ngage_mmc_file::seek(std::int64_t seek_off, file_seek_mode where) {
+        switch (where) {
+        case file_seek_mode::beg:
+            offset_ = static_cast<std::uint64_t>(common::max(0LL, seek_off));
+            break;
+
+        case file_seek_mode::crr:
+            offset_ = static_cast<std::uint64_t>(common::max(0LL, static_cast<std::int64_t>(offset_) + seek_off));
+            break;
+
+        case file_seek_mode::end:
+            offset_ = static_cast<std::uint64_t>(common::max(0LL, static_cast<std::int64_t>(entry_.entry.file_size) + seek_off));
+            break;
+
+        default:
+            break;
+        }
+
+        return offset_;
+    }
+
+    /*! \brief Get the position of the seek cursor.
+     * \returns The position of the seek cursor.
+     */
+    uint64_t aaru_ngage_mmc_file::tell() {
+        return offset_;
+    }
+
+    /*! \brief Close the file.
+         * \returns True if file is closed successfully.
+     */
+    bool aaru_ngage_mmc_file::close() {
+        return true;
+    }
+
+    /*! \brief Please don't use this. */
+    std::string aaru_ngage_mmc_file::get_error_descriptor() {
+        return "";
+    }
+
+    bool aaru_ngage_mmc_file::resize(const std::size_t new_size) {
+        LOG_ERROR(VFS, "N-Gage MMC is read-only! Can't resize file {}", common::ucs2_to_utf8(entry_.get_filename()));
+        return false;
+    }
+
+    bool aaru_ngage_mmc_file::flush() {
+        return true;
+    }
+
+    bool aaru_ngage_mmc_file::valid() {
+        return offset_ < entry_.entry.file_size;
+    }
+
+    std::uint64_t aaru_ngage_mmc_file::last_modify_since_0ad() {
+        return dos_time_to_0ad_time(entry_.entry.last_modified_date, entry_.entry.last_modified_time);
     }
 }

@@ -20,15 +20,115 @@ namespace eka2l1::vfs {
         std::unique_ptr<Fat::Image> image_;
         std::vector<std::uint64_t> loaded_pages_;
 
-        std::uint64_t current_offset_;
+        std::uint32_t current_offset_;
         std::uint32_t sector_size_;
         std::uint32_t starting_partition_sector_;
         std::uint32_t ending_partition_sector_;
+
+        drive_number mounted_drive_;
+
+        const std::size_t get_image_size() const {
+            return (ending_partition_sector_ - starting_partition_sector_ + 1) * sector_size_;
+        }
+    };
+
+    class aaru_ngage_mmc_file : public file {
+    private:
+        Fat::Image *image_;
+        Fat::Entry entry_;
+
+        std::uint64_t offset_;
+        std::u16string full_path_;
+
+    public:
+        explicit aaru_ngage_mmc_file(Fat::Image *image, Fat::Entry entry, const std::u16string &path);
+        ~aaru_ngage_mmc_file() override;
+
+        /*! \brief Write to the file.
+         *
+         * Write binary data to a file open with WRITE_MODE
+         *
+         * \param data Pointer to the binary data.
+         * \param size The size of each element the binary data
+         * \param count Total element count.
+         *
+         * \returns Total bytes wrote. -1 if fail.
+         */
+        size_t write_file(const void *data, uint32_t size, uint32_t count) override;
+
+        /*! \brief Read from the file.
+         *
+         * Read from the file to the specified pointer
+         *
+         * \param data Pointer to the destination.
+         * \param size The size of each element to read
+         * \param count Total element count.
+         *
+         * \returns Total bytes read. -1 if fail.
+         */
+        size_t read_file(void *data, uint32_t size, uint32_t count) override;
+
+        /*! \brief Get the file mode which specified with VFS system.
+         * \returns The file mode.
+         */
+        int file_mode() const override;
+
+        /*! \brief Get the full path of the file.
+         * \returns The full path of the file.
+         */
+        std::u16string file_name() const override;
+
+        /*! \brief Size of the file.
+         * \returns The size of the file.
+         */
+        uint64_t size() const override;
+
+        /*! \brief Seek the file with specified mode.
+         */
+        uint64_t seek(std::int64_t seek_off, file_seek_mode where) override;
+
+        /*! \brief Get the position of the seek cursor.
+         * \returns The position of the seek cursor.
+         */
+        uint64_t tell() override;
+
+        /*! \brief Close the file.
+         * \returns True if file is closed successfully.
+         */
+        bool close() override;
+
+        /*! \brief Please don't use this. */
+        std::string get_error_descriptor() override;
+
+        /*! \brief Check if the file is in ROM or not.
+         *
+         * Notice that files in Z: drive is not always ROM file. Z: drive is a combination
+         * of ROFS and ROM (please see EBootMagic.txt in sys/data).
+         */
+        bool is_in_rom() const override {
+            return false;
+        }
+
+        /*! \brief Get the address of the file in the ROM.
+        *
+        * If the file is not in ROM, this return a null pointer.
+         */
+        address rom_address() const override {
+            return 0;
+        }
+
+        bool resize(const std::size_t new_size) override;
+        bool flush() override;
+        bool valid() override;
+
+        std::uint64_t last_modify_since_0ad() override;
     };
 
     class aaru_ngage_mmc_file_system : abstract_file_system {
     private:
-        std::map<drive_number, std::unique_ptr<ngage_mmc_image_info>> image_infos_;
+       std::unique_ptr<ngage_mmc_image_info> image_info_;
+
+       bool check_if_mounted(const std::u16string &path) const;
 
     public:
         bool exists(const std::u16string &path) override;
