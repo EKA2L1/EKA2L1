@@ -1445,6 +1445,18 @@ namespace eka2l1 {
         }
     }
 
+    bool io_system::get_drive_metadata(drive_number drive, metadata_type type, void *data, std::uint32_t *size) {
+        const std::lock_guard<std::mutex> guard(access_lock);
+
+        for (auto &[id, fs] : filesystems) {
+            if (fs->get_drive_metadata(drive, type, data, size)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     symfile physical_file_proxy(const std::string &path, int mode) {
         return std::make_unique<physical_file>(common::utf8_to_ucs2(path), common::utf8_to_ucs2(path), mode);
     }

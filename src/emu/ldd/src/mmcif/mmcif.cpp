@@ -27,7 +27,10 @@
 #include <common/log.h>
 
 #include <common/pystr.h>
+#include <common/bytes.h>
 #include <config/config.h>
+#include <system/epoc.h>
+#include <vfs/vfs.h>
 
 namespace eka2l1::ldd {
     static void get_cid_from_config(config::state *conf, std::uint32_t *dat) {
@@ -72,7 +75,20 @@ namespace eka2l1::ldd {
                 mmcif_card_legacy *info = arg1.cast<mmcif_card_legacy>().get(r->owning_process());
                 if (info) {
                     info->ctype_ = mmcif_card_type_rom;
-                    get_cid_from_config(kern->get_config(), info->cid_);
+
+                    io_system *io = kern->get_system()->get_io_system();
+
+                    std::uint32_t size = sizeof(info->cid_);
+                    std::uint32_t cid_raw[4];
+
+                    if (!io || !io->get_drive_metadata(drive_e, metadata_type::metadata_cid, cid_raw, &size)) {
+                        get_cid_from_config(kern->get_config(), info->cid_);
+                    } else {
+                        info->cid_[0] = common::byte_swap(cid_raw[3]);
+                        info->cid_[1] = common::byte_swap(cid_raw[2]);
+                        info->cid_[2] = common::byte_swap(cid_raw[1]);
+                        info->cid_[3] = common::byte_swap(cid_raw[0]);
+                    }
                 }
                 break;
             }

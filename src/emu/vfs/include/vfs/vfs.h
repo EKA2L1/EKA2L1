@@ -243,6 +243,10 @@ namespace eka2l1 {
         drive_action_unmount = 1
     };
 
+    enum metadata_type {
+        metadata_cid = 0
+    };
+
     using drive_change_notify_callback = std::function<void(void *, drive_number, drive_action)>;
 
     /* \brief An abstract filesystem
@@ -311,6 +315,10 @@ namespace eka2l1 {
          * @brief Validate the filesystem for host to be able to use it.
          */
         virtual void validate_for_host() = 0;
+
+        virtual bool get_drive_metadata(drive_number drive, metadata_type type, void *data, std::uint32_t *size) {
+            return false;
+        }
     };
 
     std::shared_ptr<abstract_file_system> create_physical_filesystem(const epocver ver, const std::string &product_code);
@@ -449,6 +457,8 @@ namespace eka2l1 {
         bool unwatch_directory(const std::int64_t handle);
 
         bool install_memory(memory_system *mem);
+
+        bool get_drive_metadata(drive_number drive, metadata_type type, void *data, std::uint32_t *size);
     };
 
     symfile physical_file_proxy(const std::string &path, int mode);

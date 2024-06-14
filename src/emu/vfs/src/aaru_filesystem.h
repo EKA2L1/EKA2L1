@@ -183,5 +183,7 @@ namespace eka2l1::vfs {
 
         void validate_for_host() override {
         }
+
+        bool get_drive_metadata(drive_number drive, metadata_type type, void *data, std::uint32_t *size) override;
     };
 }

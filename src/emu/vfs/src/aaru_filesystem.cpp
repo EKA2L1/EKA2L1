@@ -7,6 +7,8 @@
 #include <common/wildcard.h>
 
 namespace eka2l1::vfs {
+    static constexpr const std::uint32_t MMC_CID_AARU_TAG = 54;
+
     static std::uint32_t chs_to_lba(std::uint32_t cylinder, std::uint32_t head, std::uint32_t sector, std::uint32_t max_head,
         std::uint32_t max_sectors) {
         if (max_head == 0 || max_sectors == 0) {
@@ -340,6 +342,11 @@ namespace eka2l1::vfs {
             return nullptr;
         }
 
+        if (((mode & WRITE_MODE) != 0) || ((mode & APPEND_MODE) != 0)) {
+            LOG_ERROR(VFS, "N-Gage MMC is read-only! Can't open file for writing: {}", common::ucs2_to_utf8(path));
+            return nullptr;
+        }
+
         auto entry = find_entry(image_info_->image_.get(), path);
         if (!entry.has_value()) {
             return nullptr;
@@ -437,6 +444,29 @@ namespace eka2l1::vfs {
         drive_entry.attribute = io_attrib_removeable | io_attrib_write_protected;
 
         return drive_entry;
+    }
+
+    bool aaru_ngage_mmc_file_system::get_drive_metadata(drive_number drive, metadata_type type, void *data, std::uint32_t *size) {
+        if (!image_info_ || image_info_->mounted_drive_ != drive) {
+            return false;
+        }
+
+        switch (type) {
+        case metadata_type::metadata_cid:
+            if (!data) {
+                if (size) {
+                    *size = aaruf_read_media_tag(image_info_->context_, nullptr, MMC_CID_AARU_TAG, size);
+                }
+
+                return false;
+            } else {
+                auto result = aaruf_read_media_tag(image_info_->context_, reinterpret_cast<std::uint8_t*>(data), MMC_CID_AARU_TAG, size);
+                return (result == AARUF_STATUS_OK);
+            }
+
+        default:
+            return false;
+        }
     }
 
     aaru_ngage_mmc_file::aaru_ngage_mmc_file(Fat::Image *image, Fat::Entry entry, const std::u16string &path)
