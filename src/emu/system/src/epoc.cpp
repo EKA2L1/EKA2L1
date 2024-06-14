@@ -149,6 +149,7 @@ namespace eka2l1 {
 
         std::optional<filesystem_id> rom_fs_id_;
         std::optional<filesystem_id> physical_fs_id_;
+        std::optional<filesystem_id> mmc_fs_id_;
 
         system *parent_;
 
@@ -605,6 +606,9 @@ namespace eka2l1 {
 
         file_system_inst physical_fs = create_physical_filesystem(epocver::epoc94, "");
         physical_fs_id_ = io_->add_filesystem(physical_fs);
+
+        file_system_inst mmc_fs = create_mmc_filesystem();
+        mmc_fs_id_ = io_->add_filesystem(mmc_fs);
 
         exmonitor = arm::create_exclusive_monitor(cpu_type, 1);
         cpu = arm::create_core(exmonitor.get(), cpu_type);

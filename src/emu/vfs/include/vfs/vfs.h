@@ -316,6 +316,7 @@ namespace eka2l1 {
     std::shared_ptr<abstract_file_system> create_physical_filesystem(const epocver ver, const std::string &product_code);
     std::shared_ptr<abstract_file_system> create_rom_filesystem(loader::rom *rom_cache, memory_system *mem,
         const epocver ver, const std::string &product_code);
+    std::shared_ptr<abstract_file_system> create_mmc_filesystem();
 
     using file_system_inst = std::shared_ptr<abstract_file_system>;
     using filesystem_id = std::size_t;

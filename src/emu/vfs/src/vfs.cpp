@@ -783,7 +783,7 @@ namespace eka2l1 {
 
         bool mount_volume_from_path(const drive_number drv, const drive_media media, const std::uint32_t attrib,
             const std::u16string &physical_path) override {
-            if (media == drive_media::rom) {
+            if (media != drive_media::physical) {
                 return false;
             }
 

@@ -6,6 +6,7 @@
 #include <vfs/vfs.h>
 
 #include <fat/fat.h>
+#include <re2/re2.h>
 
 #include <map>
 #include <memory>
@@ -124,13 +125,37 @@ namespace eka2l1::vfs {
         std::uint64_t last_modify_since_0ad() override;
     };
 
-    class aaru_ngage_mmc_file_system : abstract_file_system {
+    class aaru_ngage_mmc_directory : public directory {
+    private:
+        Fat::Image *image_;
+
+        Fat::Entry dir_entry_found_cur_;
+        std::optional<Fat::Entry> peeked_entry_;
+        bool has_peeked_;
+
+        std::u16string root_path_;
+        RE2 filename_matcher_;
+
+        bool iterate_to_next_entry();
+
+    public:
+        explicit aaru_ngage_mmc_directory(Fat::Image *image, Fat::Entry entry, const std::u16string &root_path,
+            const std::u16string &match_regex, const std::uint32_t attrib);
+
+        std::optional<entry_info> get_next_entry() override;
+        std::optional<entry_info> peek_next_entry() override;
+    };
+
+    class aaru_ngage_mmc_file_system : public abstract_file_system {
     private:
        std::unique_ptr<ngage_mmc_image_info> image_info_;
 
        bool check_if_mounted(const std::u16string &path) const;
 
     public:
+        explicit aaru_ngage_mmc_file_system();
+        ~aaru_ngage_mmc_file_system();
+
         bool exists(const std::u16string &path) override;
         bool replace(const std::u16string &old_path, const std::u16string &new_path) override;
 

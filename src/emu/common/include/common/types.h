@@ -147,7 +147,8 @@ enum class drive_media {
     physical,
     reflect,
     rom,
-    ram
+    ram,
+    mmc
 };
 
 enum class arm_emulator_type {

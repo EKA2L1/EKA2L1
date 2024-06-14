@@ -4,8 +4,18 @@
 #include <common/log.h>
 #include <common/virtualmem.h>
 #include <common/time.h>
+#include <common/wildcard.h>
 
 namespace eka2l1::vfs {
+    static std::uint32_t chs_to_lba(std::uint32_t cylinder, std::uint32_t head, std::uint32_t sector, std::uint32_t max_head,
+        std::uint32_t max_sectors) {
+        if (max_head == 0 || max_sectors == 0) {
+            return (cylinder * 16 + head) * 63 + sector - 1;
+        } else {
+            return (cylinder * max_head + head) * max_sectors + sector - 1;
+        }
+    }
+
     static std::uint64_t dos_time_to_0ad_time(const std::uint16_t last_modified_date, const std::uint16_t last_modified_time) {
         struct tm time_info = {};
         time_info.tm_year = 1980 + ((last_modified_date >> 9) & 0b1111111);
@@ -36,7 +46,7 @@ namespace eka2l1::vfs {
         auto ending_page = end_offset / page_size;
 
         for (auto page_index = starting_page; page_index <= ending_page; page_index++) {
-            if (info->loaded_pages_[page_index >> 6] & (1ULL << static_cast<std::uint8_t>(page_index & 63))) {
+            if ((info->loaded_pages_[page_index >> 6] & (1ULL << static_cast<std::uint8_t>(page_index & 63))) == 0) {
                 common::commit(info->mapped_image_data_ + page_index * page_size, page_size, prot::prot_read_write);
 
                 // Start loading
@@ -46,7 +56,7 @@ namespace eka2l1::vfs {
                 for (auto i = 0U; i < sector_to_load; i++) {
                     std::uint32_t temp_size = info->sector_size_;
 
-                    auto result_read = aaruf_read_sector(info->context_, sector_index, info->mapped_image_data_ + page_index * page_size +
+                    auto result_read = aaruf_read_sector(info->context_, sector_index + i, info->mapped_image_data_ + page_index * page_size +
                         i * info->sector_size_, &temp_size);
 
                     if (result_read != AARUF_STATUS_OK) {
@@ -64,6 +74,8 @@ namespace eka2l1::vfs {
         auto actual_read = common::min(bytes, static_cast<std::uint32_t>(end_file_offset - info->current_offset_));
 
         std::memcpy(buffer, info->mapped_image_data_ + info->current_offset_, actual_read);
+        info->current_offset_ += actual_read;
+
         return actual_read;
     }
 
@@ -105,6 +117,7 @@ namespace eka2l1::vfs {
         iterator++;
 
         Fat::Entry current_entry;
+        bool is_initial = true;
 
         for (; iterator; iterator++) {
             const std::u16string ite_value = *iterator;
@@ -118,28 +131,44 @@ namespace eka2l1::vfs {
                 return std::nullopt;
             }
 
-            if ((current_entry.entry.file_attributes & (int)Fat::EntryAttribute::DIRECTORY) == 0) {
-                return std::nullopt;
+            if (!is_initial) {
+                if ((current_entry.entry.file_attributes & (int)Fat::EntryAttribute::DIRECTORY) == 0) {
+                    return std::nullopt;
+                } else {
+                    Fat::Entry child_first_entry;
+
+                    if (!image->get_first_entry_dir(current_entry, child_first_entry)) {
+                        return std::nullopt;
+                    }
+
+                    current_entry = child_first_entry;
+                }
+            } else {
+                is_initial = false;
             }
 
             do {
                 if (!image->get_next_entry(current_entry)) {
                     return std::nullopt;
                 }
-            } while (common::compare_ignore_case(ite_value, current_entry.get_filename()) != 0);
 
-            if (current_entry.entry.file_attributes & (int)Fat::EntryAttribute::DIRECTORY) {
-                Fat::Entry child_first_entry;
-
-                if (!image->get_first_entry_dir(current_entry, child_first_entry)) {
+                if (current_entry.get_filename().empty()) {
                     return std::nullopt;
                 }
-
-                current_entry = child_first_entry;
-            }
+            } while (common::compare_ignore_case(ite_value, current_entry.get_filename()) != 0);
         }
 
         return current_entry;
+    }
+
+    aaru_ngage_mmc_file_system::aaru_ngage_mmc_file_system()
+        : image_info_(nullptr) {
+    }
+
+    aaru_ngage_mmc_file_system::~aaru_ngage_mmc_file_system() {
+        if (image_info_ != nullptr) {
+            unmount(image_info_->mounted_drive_);
+        }
     }
 
     bool aaru_ngage_mmc_file_system::check_if_mounted(const std::u16string &path) const {
@@ -173,6 +202,10 @@ namespace eka2l1::vfs {
         const std::uint32_t attrib, const std::u16string &physical_path) {
         if (image_info_ != nullptr) {
             LOG_ERROR(VFS, "Can only mount one N-Gage MMC!");
+            return false;
+        }
+
+        if (media != drive_media::mmc) {
             return false;
         }
 
@@ -211,7 +244,7 @@ namespace eka2l1::vfs {
             return false;
         }
 
-        if (first_sector_data[254] != 0x55 || first_sector_data[255] != 0xAA) {
+        if (first_sector_data[510] != 0x55 || first_sector_data[511] != 0xAA) {
             LOG_ERROR(VFS, "The MMC data does not have valid signature, please recheck!");
 
             aaruf_close(context);
@@ -224,10 +257,29 @@ namespace eka2l1::vfs {
         static constexpr const std::uint32_t FIRST_PARTITION_INFO_OFFSET = 0x1BE;
 
         std::uint32_t partition_first_sector_index = 0;
+        std::uint32_t partition_sector_count = 0;
         std::uint32_t partition_last_sector_index = 0;
 
-        std::memcpy(&partition_first_sector_index, first_sector_data.data() + FIRST_PARTITION_INFO_OFFSET + 1, 3);
-        std::memcpy(&partition_last_sector_index, first_sector_data.data() + FIRST_PARTITION_INFO_OFFSET + 5, 3);
+        std::memcpy(&partition_first_sector_index, first_sector_data.data() + FIRST_PARTITION_INFO_OFFSET + 8, sizeof(std::uint32_t));
+        std::memcpy(&partition_sector_count, first_sector_data.data() + FIRST_PARTITION_INFO_OFFSET + 12, sizeof(std::uint32_t));
+
+        if (partition_first_sector_index == 0 && partition_sector_count == 0) {
+            std::uint8_t start_head = first_sector_data[FIRST_PARTITION_INFO_OFFSET + 1];
+            std::uint8_t start_sector = first_sector_data[FIRST_PARTITION_INFO_OFFSET + 2] & 0b111111;
+            std::uint8_t start_cylinder = (static_cast<std::uint32_t>(first_sector_data[FIRST_PARTITION_INFO_OFFSET + 2] & 0xC0) << 2) | first_sector_data[FIRST_PARTITION_INFO_OFFSET + 3];
+
+            std::uint32_t end_head = first_sector_data[FIRST_PARTITION_INFO_OFFSET + 5];
+            std::uint32_t end_sector = first_sector_data[FIRST_PARTITION_INFO_OFFSET + 6] & 0b111111;
+            std::uint32_t end_cylinder = (static_cast<std::uint32_t>(first_sector_data[FIRST_PARTITION_INFO_OFFSET + 6] & 0xC0) << 2) | first_sector_data[FIRST_PARTITION_INFO_OFFSET + 7];
+
+            partition_first_sector_index = chs_to_lba(start_cylinder, start_head, start_sector, image_info.Heads,
+                image_info.SectorsPerTrack);
+
+            partition_last_sector_index = chs_to_lba(end_cylinder, end_head, end_sector, image_info.Heads,
+                image_info.SectorsPerTrack);
+        } else {
+            partition_last_sector_index = partition_first_sector_index + partition_sector_count - 1;
+        }
 
         if (partition_last_sector_index < partition_first_sector_index) {
             LOG_ERROR(VFS, "Invalid MMC: start partition sector index = {} > last partition sector index = {}",
@@ -302,7 +354,27 @@ namespace eka2l1::vfs {
     }
 
     std::unique_ptr<directory> aaru_ngage_mmc_file_system::open_directory(const std::u16string &path, epoc::uid_type type, const std::uint32_t attrib) {
-        return nullptr;
+        if (!check_if_mounted(path)) {
+            return nullptr;
+        }
+
+        auto dir = eka2l1::file_directory(path);
+        auto filename = eka2l1::filename(path);
+
+        auto dir_entry = find_entry(image_info_->image_.get(), dir);
+        if (!dir_entry.has_value()) {
+            return nullptr;
+        }
+
+        Fat::Entry first_entry_of_dir;
+        image_info_->image_->get_first_entry_dir(dir_entry.value(), first_entry_of_dir);
+
+        if (filename.empty()) {
+            filename = u"*";
+        }
+
+        return std::make_unique<aaru_ngage_mmc_directory>(image_info_->image_.get(), first_entry_of_dir, dir, filename,
+            attrib);
     }
 
     static entry_info fat_entry_info_to_emulator(Fat::Entry &entry, const std::u16string &path) {
@@ -492,5 +564,96 @@ namespace eka2l1::vfs {
 
     std::uint64_t aaru_ngage_mmc_file::last_modify_since_0ad() {
         return dos_time_to_0ad_time(entry_.entry.last_modified_date, entry_.entry.last_modified_time);
+    }
+
+    aaru_ngage_mmc_directory::aaru_ngage_mmc_directory(Fat::Image *image, Fat::Entry entry, const std::u16string &root_path,
+        const std::u16string &match_regex, const std::uint32_t attrib)
+        : directory(attrib)
+        , image_(image)
+        , dir_entry_found_cur_(std::move(entry))
+        , has_peeked_(false)
+        , root_path_(root_path)
+        , filename_matcher_(common::wstr_to_utf8(common::wildcard_to_regex_string(
+              common::ucs2_to_wstr(match_regex), false))) {
+    }
+
+    bool aaru_ngage_mmc_directory::iterate_to_next_entry() {
+        while (true) {
+            if (!image_->get_next_entry(dir_entry_found_cur_)) {
+                return false;
+            }
+
+            if (dir_entry_found_cur_.get_filename().empty()) {
+                return false;
+            }
+
+            if (attribute & io_attrib_include_dir) {
+                if ((dir_entry_found_cur_.entry.file_attributes & (int)Fat::EntryAttribute::DIRECTORY) == 0) {
+                    continue;
+                }
+            }
+
+            if (attribute & io_attrib_include_file) {
+                if ((dir_entry_found_cur_.entry.file_attributes & (int)Fat::EntryAttribute::ARCHIVE) == 0) {
+                    continue;
+                }
+            }
+
+            if (RE2::FullMatch(common::ucs2_to_utf8(dir_entry_found_cur_.get_filename()), filename_matcher_)) {
+                return true;
+            }
+        }
+    }
+
+    std::optional<entry_info> aaru_ngage_mmc_directory::get_next_entry() {
+        if (has_peeked_) {
+            if (peeked_entry_.has_value()) {
+                auto result = fat_entry_info_to_emulator(peeked_entry_.value(), eka2l1::add_path(root_path_, peeked_entry_->get_filename()));
+
+                dir_entry_found_cur_ = std::move(peeked_entry_.value());
+
+                has_peeked_ = false;
+                peeked_entry_ = std::nullopt;
+
+                return result;
+            } else {
+                return std::nullopt;
+            }
+        }
+
+        if (!iterate_to_next_entry()) {
+            return std::nullopt;
+        }
+
+        return fat_entry_info_to_emulator(dir_entry_found_cur_, eka2l1::add_path(root_path_, dir_entry_found_cur_.get_filename()));
+    }
+
+    std::optional<entry_info> aaru_ngage_mmc_directory::peek_next_entry() {
+        if (has_peeked_) {
+            if (peeked_entry_.has_value()) {
+                return fat_entry_info_to_emulator(peeked_entry_.value(), eka2l1::add_path(root_path_, peeked_entry_->get_filename()));
+            } else {
+                return std::nullopt;
+            }
+        }
+
+        auto previous_entry = dir_entry_found_cur_;
+        peeked_entry_ = std::nullopt;
+        has_peeked_ = true;
+
+        if (!iterate_to_next_entry()) {
+            return std::nullopt;
+        }
+
+        peeked_entry_ = dir_entry_found_cur_;
+        dir_entry_found_cur_ = previous_entry;
+
+        return fat_entry_info_to_emulator(peeked_entry_.value(), eka2l1::add_path(root_path_, peeked_entry_->get_filename()));
+    }
+}
+
+namespace eka2l1 {
+    std::shared_ptr<abstract_file_system> create_mmc_filesystem() {
+        return std::make_shared<vfs::aaru_ngage_mmc_file_system>();
     }
 }
