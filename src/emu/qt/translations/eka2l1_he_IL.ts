@@ -27,7 +27,7 @@
     <message>
       <location filename="../src/aboutdialog.ui" line="14"/>
       <source>About EKA2L1</source>
-      <translation type="unfinished">About EKA2L1</translation>
+      <translation>אודות EKA2L1</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.ui" line="69"/>
@@ -101,7 +101,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
       <source>Update name failed</source>
-      <translation type="unfinished">Update name failed</translation>
+      <translation>עדכון שם נכשל</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
@@ -111,7 +111,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
       <source>Delete app failed</source>
-      <translation type="unfinished">Delete app failed</translation>
+      <translation>מחיקת האפליקציה נכשלה</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="814"/>
@@ -134,7 +134,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="20"/>
       <source>Bluetooth netplay settings</source>
-      <translation type="unfinished">Bluetooth netplay settings</translation>
+      <translation>הגדרות Bluetooth netplay</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="47"/>

@@ -18,9 +18,9 @@
     <string name="exit">退出</string>
     <string name="rename">重命名</string>
     <string name="save_log">保存日志</string>
-    <string name="take_screenshot">Take screenshot</string>
-    <string name="screenshot">Screenshot</string>
-    <string name="take_screenshot_success">Screenshot saved to %s!</string>
+    <string name="take_screenshot">Fifa</string>
+    <string name="screenshot">Vnapk</string>
+    <string name="take_screenshot_success">Fifa 2010 </string>
     <string name="take_screenshot_fail">Failed to take screenshot!</string>
     <string name="opengl_required">此应用需要OpenGL ES 3.0及更高版本。</string>
     <string name="warning">警告</string>
