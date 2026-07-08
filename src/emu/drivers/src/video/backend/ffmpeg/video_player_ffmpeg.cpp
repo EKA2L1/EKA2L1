@@ -474,6 +474,8 @@ namespace eka2l1::drivers {
             } else if (temp_packet->stream_index == audio_stream_index_) {
                 audio_packets_.push(av_packet_clone(temp_packet));
             }
+
+            av_packet_unref(temp_packet);
         }
 
         // Wait until a confirmation that I can exit
