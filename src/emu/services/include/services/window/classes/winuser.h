@@ -24,6 +24,8 @@
 #include <services/window/classes/gstore.h>
 #include <services/window/common.h>
 
+#include <drivers/graphics/arena.h>
+
 #include <common/linked.h>
 #include <common/region.h>
 
@@ -65,6 +67,10 @@ namespace eka2l1::epoc {
     };
 
     struct canvas_base : public canvas_interface {
+    private:
+        drivers::graphics_command_builder driver_builder_;
+
+    public:
         epoc::display_mode dmode;
         epoc::window_type win_type;
 
@@ -99,7 +105,13 @@ namespace eka2l1::epoc {
         // NOTE: If you ever want to access this and call a function that can directly affect this list elements, copy it first
         std::vector<dsa*> directs_;
 
-        drivers::graphics_command_builder driver_builder_;
+        /// Lazily-initialized triple-buffer arena pool for driver_builder_.
+        std::unique_ptr<drivers::arena_pool<4>> driver_arena_pool_;
+
+        /** \brief Initialize the arena pool (if not yet) and acquire a fresh
+         *  arena for driver_builder_. Call after every retrieve_command_list(). */
+        void ensure_driver_arena();
+
         std::unique_ptr<epoc::gdi_store_command_segment> pending_segment_;
         std::vector<canvas_observer*> observers_;
 
@@ -128,6 +140,8 @@ namespace eka2l1::epoc {
         eka2l1::rect absolute_rect() const;
         eka2l1::vec2 size() const;
         eka2l1::vec2 size_for_egl_surface() const;
+
+        drivers::graphics_command_builder &get_command_builder();
 
         /**
          * \brief Set window extent in screen space.

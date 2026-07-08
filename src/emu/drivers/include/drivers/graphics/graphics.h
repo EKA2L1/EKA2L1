@@ -23,11 +23,13 @@
 #include <common/vecx.h>
 
 #include <drivers/driver.h>
+#include <drivers/graphics/arena.h>
 #include <drivers/graphics/common.h>
 #include <drivers/itc.h>
 
 #include <functional>
 #include <memory>
+#include <vector>
 
 namespace eka2l1::drivers {
     enum graphics_driver_opcode : std::uint16_t {
@@ -105,7 +107,8 @@ namespace eka2l1::drivers {
         graphics_driver_set_blend_colour,
         graphics_driver_read_framebuffer,
         graphics_driver_backup_state, // Backup all possible state to a struct
-        graphics_driver_restore_state // Restore previously backup data
+        graphics_driver_restore_state, // Restore previously backup data
+        graphics_driver_execute_command_list // Execute an embedded sub-command-list
     };
 
     enum graphics_driver_extension {
@@ -124,6 +127,48 @@ namespace eka2l1::drivers {
 
     protected:
         display_hook disp_hook_;
+
+        /// Three-tier arena pool system:
+        ///   - small:  64 KB → trivial single commands (resize, set_filter)
+        ///   - medium: 2 MB  → screen updates, batch cleanup, moderate data
+        ///   - large:  8 MB → tree walks, large texture uploads
+        arena_pool<4> large_arena_pool_{8 * 1024 * 1024};
+        arena_pool<8> medium_arena_pool_{2 * 1024 * 1024};
+        arena_pool<16> small_arena_pool_{64 * 1024};
+
+        /// Deferred destroy queue. Trivial single-destroy operations are
+        /// batched here to avoid wasting an entire arena on one command.
+        /// Flushed automatically by acquire_builder().
+        std::vector<drivers::handle> deferred_destroys_;
+
+        /** \brief Submit all queued deferred destroys as one batch. */
+        void flush_deferred_destroys() {
+            if (deferred_destroys_.empty()) {
+                return;
+            }
+
+            auto builder = acquire_builder_raw(small_arena_pool_);
+            for (const auto h : deferred_destroys_) {
+                builder.destroy(h);
+            }
+            deferred_destroys_.clear();
+
+            command_list list = builder.retrieve_command_list();
+            submit_command_list(list);
+        }
+
+        /** \brief Acquire an arena-backed builder from a specific pool, without flushing deferred work. */
+        template <std::size_t N>
+        graphics_command_builder acquire_builder_raw(arena_pool<N> &pool) {
+            graphics_command_builder builder;
+            arena *a = pool.acquire();
+            if (a) {
+                builder.set_building_arena(a);
+            }
+            // If a is nullptr, the builder stays in heap mode — safe fallback
+            // that avoids deadlock when the pool is temporarily exhausted.
+            return builder;
+        }
 
     public:
         explicit graphics_driver(graphic_api api)
@@ -170,6 +215,63 @@ namespace eka2l1::drivers {
          * \param cmd_list     Command list to submit.
          */
         virtual void submit_command_list(command_list &cmd_list) = 0;
+
+        /**
+         * \brief Create a large-arena command builder (16 MB arena).
+         *
+         * For tree-walk redraws, large texture uploads, and heavy operations.
+         * Automatically flushes pending deferred destroys first.
+         * For lighter operations, prefer acquire_builder_medium() or
+         * acquire_builder_small(). For single destroys, prefer defer_destroy().
+         */
+        graphics_command_builder acquire_builder() {
+            flush_deferred_destroys();
+            return acquire_builder_raw(large_arena_pool_);
+        }
+
+        /**
+         * \brief Create a medium-arena command builder (4 MB arena).
+         *
+         * For screen buffer updates, batch shader/resource cleanup, and
+         * moderate drawing (sync_from_bitmap, scroll, etc.).
+         */
+        graphics_command_builder acquire_builder_medium() {
+            return acquire_builder_raw(medium_arena_pool_);
+        }
+
+        /**
+         * \brief Create a small-arena command builder (64 KB arena).
+         *
+         * For trivial single-command operations (set_texture_filter,
+         * resize_bitmap, etc.). Not suitable for any data uploads.
+         */
+        graphics_command_builder acquire_builder_small() {
+            return acquire_builder_raw(small_arena_pool_);
+        }
+
+        /**
+         * \brief Queue a handle for deferred destruction.
+         *
+         * Instead of acquiring an entire arena-backed builder just to call
+         * destroy(), use this to batch multiple destroys together. The
+         * actual destruction happens when the next acquire_builder() is
+         * called, or explicitly via flush_deferred_destroys().
+         *
+         * This avoids wasting a 16 MB arena on a single 96-byte command.
+         */
+        void defer_destroy(const drivers::handle h) {
+            deferred_destroys_.push_back(h);
+        }
+
+        /**
+         * \brief Called by the render thread after consuming an arena-backed
+         *        command list. Returns the arena to the correct pool.
+         */
+        void signal_arena_consumed(arena *a) {
+            small_arena_pool_.release(a);
+            medium_arena_pool_.release(a);
+            large_arena_pool_.release(a);
+        }
 
         virtual void set_upscale_shader(const std::string &name) = 0;
         virtual std::string get_active_upscale_shader() const = 0;

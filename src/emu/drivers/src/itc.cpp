@@ -19,8 +19,11 @@
  */
 
 #include <drivers/driver.h>
+#include <drivers/graphics/arena.h>
 #include <drivers/graphics/graphics.h>
 #include <drivers/itc.h>
+
+#include <common/log.h>
 
 #include <chrono>
 #include <cstring>
@@ -45,9 +48,46 @@ namespace eka2l1::drivers {
         return status;
     }
 
-    static std::uint64_t make_data_copy(const void *source, const std::size_t size) {
+    bool graphics_command_builder::merge(command_list &another) {
+        if (!another.base_ || !another.size_) {
+            return true;
+        }
+
+        if (list_.base_ == nullptr) {
+            // Taking full ownership — arena metadata transfers correctly.
+            list_ = another;
+        } else {
+            // Embed the other list as a special "execute sub-list" command.
+            // The render thread processes it in-place, preserving each
+            // list's own arena. No data copying, no arena mixing.
+            command *cmd = list_.retrieve_next();
+            cmd->opcode_ = graphics_driver_execute_command_list;
+            std::memcpy(cmd->data_, &another, sizeof(command_list));
+            // Ownership transferred — clear 'another' so the caller
+            // doesn't double-free.
+            another.base_ = nullptr;
+            another.size_ = 0;
+            another.arena_ = nullptr;
+        }
+
+        if (!another.is_arena_backed() && another.base_) {
+            delete[] another.base_;
+        }
+        return true;
+    }
+
+    std::uint64_t graphics_command_builder::make_data_copy(const void *source, const std::size_t size) {
         if (!source) {
             return 0;
+        }
+
+        if (arena_) {
+            void *copy = arena_->allocate_and_copy(source, size);
+            if (copy) {
+                return reinterpret_cast<std::uint64_t>(copy);
+            }
+            // Arena overflow — rare fallback to heap.
+            LOG_WARN(DRIVER_GRAPHICS, "Arena overflow during make_data_copy ({} bytes), falling back to heap", size);
         }
 
         std::uint8_t *copy = new std::uint8_t[size];
@@ -451,7 +491,19 @@ namespace eka2l1::drivers {
             total_chunk_size += chunk_size[i];
         }
 
-        std::uint8_t *data = new std::uint8_t[total_chunk_size];
+        std::uint8_t *data = nullptr;
+
+        if (arena_) {
+            data = static_cast<std::uint8_t *>(arena_->allocate(total_chunk_size));
+            if (!data) {
+                // Arena overflow — fallback to heap.
+                LOG_WARN(DRIVER_GRAPHICS, "Arena overflow during update_buffer_data ({} bytes), falling back to heap", total_chunk_size);
+            }
+        }
+
+        if (!data) {
+            data = new std::uint8_t[total_chunk_size];
+        }
 
         for (int i = 0; i < chunk_count; i++) {
             std::copy(reinterpret_cast<const std::uint8_t *>(chunk_ptr[i]), reinterpret_cast<const std::uint8_t *>(chunk_ptr[i]) + chunk_size[i], data + cursor);
@@ -627,8 +679,20 @@ namespace eka2l1::drivers {
     }
 
     void graphics_command_builder::draw_polygons(const eka2l1::point *point_list, const std::size_t point_count) {
-        eka2l1::point *point_list_copied = new eka2l1::point[point_count];
-        memcpy(point_list_copied, point_list, point_count * sizeof(eka2l1::point));
+        const std::size_t copy_size = point_count * sizeof(eka2l1::point);
+        eka2l1::point *point_list_copied = nullptr;
+
+        if (arena_) {
+            point_list_copied = arena_->allocate_array<eka2l1::point>(point_count);
+            if (point_list_copied) {
+                std::memcpy(point_list_copied, point_list, copy_size);
+            }
+        }
+
+        if (!point_list_copied) {
+            point_list_copied = new eka2l1::point[point_count];
+            std::memcpy(point_list_copied, point_list, copy_size);
+        }
 
         command *cmd = list_.retrieve_next();
 

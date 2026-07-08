@@ -68,7 +68,7 @@ namespace eka2l1::drivers {
                 return;
         }
 
-        glad_set_post_callback(gl_post_callback_for_error);
+        //glad_set_post_callback(gl_post_callback_for_error);
     }
 
     ogl_graphics_driver::ogl_graphics_driver(const window_system_info &info)
@@ -771,7 +771,7 @@ namespace eka2l1::drivers {
 
         unpack_to_two_floats(cmd.data_[2], scale, temp);
 
-        delete[] to_clip_rects;
+        release_data_if_not_arena(current_dispatch_arena_, to_clip_rects);
 
         if (to_clip.empty()) {
             glDisable(GL_SCISSOR_TEST);
@@ -1344,7 +1344,7 @@ namespace eka2l1::drivers {
 
         glDrawElements(GL_LINES, static_cast<GLsizei>(indicies.size()), GL_UNSIGNED_INT, 0);
 
-        delete[] point_list;
+        release_data_if_not_arena(current_dispatch_arena_, point_list);
     }
 
     void ogl_graphics_driver::set_cull_face(command &cmd) {
@@ -1397,64 +1397,49 @@ namespace eka2l1::drivers {
         switch (var_type) {
         case shader_var_type::integer: {
             glUniform1iv(binding, static_cast<GLsizei>((cmd.data_[2] + 3) / 4), reinterpret_cast<const GLint *>(data));
-            delete[] data;
-
-            return;
+            break;
         }
 
         case shader_var_type::real:
             glUniform1fv(binding, static_cast<GLsizei>((cmd.data_[2] + 3) / 4), reinterpret_cast<const GLfloat*>(data));
-            delete[] data;
-
-            return;
+            break;
 
         case shader_var_type::mat2: {
             glUniformMatrix2fv(binding, static_cast<GLsizei>((cmd.data_[2] + 15) / 16), GL_FALSE, reinterpret_cast<const GLfloat *>(data));
-            delete[] data;
-
-            return;
+            break;
         }
 
         case shader_var_type::mat3: {
             glUniformMatrix2fv(binding, static_cast<GLsizei>((cmd.data_[2] + 35) / 36), GL_FALSE, reinterpret_cast<const GLfloat *>(data));
-            delete[] data;
-
-            return;
+            break;
         }
 
         case shader_var_type::mat4: {
             glUniformMatrix4fv(binding, static_cast<GLsizei>((cmd.data_[2] + 63) / 64), GL_FALSE, reinterpret_cast<const GLfloat *>(data));
-            delete[] data;
-
-            return;
+            break;
         }
 
         case shader_var_type::vec2: {
             glUniform2fv(binding, static_cast<GLsizei>((cmd.data_[2] + 7) / 8), reinterpret_cast<const GLfloat *>(data));
-            delete[] data;
-
-            return;
+            break;
         }
 
         case shader_var_type::vec3: {
             glUniform3fv(binding, static_cast<GLsizei>((cmd.data_[2] + 11) / 12), reinterpret_cast<const GLfloat *>(data));
-            delete[] data;
-
-            return;
+            break;
         }
 
         case shader_var_type::vec4: {
             glUniform4fv(binding, static_cast<GLsizei>((cmd.data_[2] + 15) / 16), reinterpret_cast<const GLfloat *>(data));
-            delete[] data;
-
-            return;
-        }
-
-        default:
             break;
         }
 
-        LOG_ERROR(DRIVER_GRAPHICS, "Unable to set GL uniform!");
+        default:
+            LOG_ERROR(DRIVER_GRAPHICS, "Unable to set GL uniform!");
+            break;
+        }
+
+        release_data_if_not_arena(current_dispatch_arena_, data);
     }
 
     void ogl_graphics_driver::set_texture_for_shader(command &cmd) {
@@ -1475,7 +1460,7 @@ namespace eka2l1::drivers {
 
         if (starting_slots + count >= GL_BACKEND_MAX_VBO_SLOTS) {
             LOG_ERROR(DRIVER_GRAPHICS, "Slot to bind VBO exceed maximum (startSlot={}, count={})", starting_slots, count);
-            delete[] arr;
+            release_data_if_not_arena(current_dispatch_arena_, arr);
 
             return;
         }
@@ -1490,7 +1475,7 @@ namespace eka2l1::drivers {
             vbo_slots_[starting_slots + i] = bufobj->buffer_handle();
         }
 
-        delete[] arr;
+        release_data_if_not_arena(current_dispatch_arena_, arr);
     }
 
     void ogl_graphics_driver::bind_index_buffer(command &cmd) {
@@ -1717,8 +1702,16 @@ namespace eka2l1::drivers {
 
     void ogl_graphics_driver::submit_command_list(command_list &list) {
         if ((list.size_ == 0) || !list.base_ || should_stop) {
-            if (list.base_) {
+            if (list.base_ && !list.is_arena_backed()) {
                 delete[] list.base_;
+            }
+
+            if (list.is_arena_backed()) {
+                if (!list.arena_release_fn_) {
+                    signal_arena_consumed(list.arena_);
+                } else {
+                    list.release_arena();
+                }
             }
 
             return;
@@ -1911,11 +1904,29 @@ namespace eka2l1::drivers {
                 break;
             }
 
+            // Set the current dispatch arena so that individual delete[]
+            // calls on command data pointers are suppressed for arena-backed
+            // data. The entire arena is recycled when finish_read() is called.
+            current_dispatch_arena_ = list->arena_;
+
             for (std::size_t i = 0; i < list->size_; i++) {
                 dispatch(list->base_[i]);
             }
 
-            delete[] list->base_;
+            current_dispatch_arena_ = nullptr;
+
+            if (list->is_arena_backed()) {
+                // Try private-pool release first (persistent builders like
+                // egl_context own their own arena pool). Falls through to
+                // global pools if no private callback is set.
+                if (!list->arena_release_fn_) {
+                    signal_arena_consumed(list->arena_);
+                } else {
+                    list->release_arena();
+                }
+            } else {
+                delete[] list->base_;
+            }
         }
     }
 

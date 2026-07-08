@@ -124,7 +124,7 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
         state_ptr->graphics_driver->wait_for(&state_ptr->present_status);
 
     eka2l1::desktop::emulator &state = *state_ptr;
-    eka2l1::drivers::graphics_command_builder builder;
+    auto builder = state_ptr->graphics_driver->acquire_builder();
 
     eka2l1::rect viewport;
     eka2l1::rect src;
@@ -1853,13 +1853,13 @@ bool main_window::load_background_image(const std::string &path) {
             return false;
         }
 
-        eka2l1::drivers::graphics_command_builder builder;
+        auto builder = emulator_state_.graphics_driver->acquire_builder_small();
         builder.set_texture_filter(background_image_texture_, true, eka2l1::drivers::filter_option::nearest);
         
         auto cmd_list = builder.retrieve_command_list();
         emulator_state_.graphics_driver->submit_command_list(cmd_list);
     } else {
-        eka2l1::drivers::graphics_command_builder builder;
+        auto builder = emulator_state_.graphics_driver->acquire_builder();
         if (previous_background_image_size_ != eka2l1::vec2(x, y)) {
             builder.recreate_texture(background_image_texture_, 2, 0, eka2l1::drivers::texture_format::rgba,
                 eka2l1::drivers::texture_format::rgba, eka2l1::drivers::texture_data_type::ubyte, data,

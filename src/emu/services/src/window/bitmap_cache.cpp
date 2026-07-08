@@ -62,7 +62,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        drivers::graphics_command_builder builder;
+        auto builder = drv->acquire_builder_medium();
 
         for (const auto tex_handle : driver_textures) {
             if (tex_handle) {

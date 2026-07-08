@@ -21,6 +21,7 @@
 
 #include <drivers/graphics/common.h>
 #include <drivers/itc.h>
+#include <drivers/graphics/arena.h>
 
 #include <dispatch/libraries/gles1/shaderman.h>
 #include <dispatch/libraries/vg/gnuVG_shaderman.hh>
@@ -536,6 +537,10 @@ namespace eka2l1::dispatch {
     struct egl_controller;
 
     struct egl_context {
+        /// Private triple-buffer arena pool for cmd_builder_. Eliminates
+        /// per-flush heap churn (~1.2 MB new/delete per GL frame).
+        eka2l1::drivers::arena_pool<4> cmd_arena_pool_{6 * 1024 * 1024};
+
         drivers::graphics_command_builder cmd_builder_;
 
         egl_surface *read_surface_;
@@ -551,6 +556,20 @@ namespace eka2l1::dispatch {
 
         explicit egl_context();
         virtual ~egl_context() = default;
+
+        /** \brief Acquire a fresh arena for cmd_builder_ from the private pool.
+         *  Falls back to heap mode if the pool is temporarily exhausted. */
+        void acquire_cmd_arena() {
+            eka2l1::drivers::arena *a = cmd_arena_pool_.acquire();
+            if (a) {
+                cmd_builder_.set_building_arena(a, &cmd_arena_pool_, &eka2l1::drivers::arena_pool_release<4>);
+            } else {
+                cmd_builder_.set_building_arena(nullptr);
+            }
+            // else: pool exhausted — cmd_builder_ stays in heap mode for
+            // this accumulation cycle. The next acquire_cmd_arena() call
+            // will try the pool again.
+        }
 
         virtual void destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder);
         virtual void flush_to_driver(egl_controller &controller, drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) = 0;

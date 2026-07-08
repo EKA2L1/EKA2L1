@@ -62,7 +62,7 @@ namespace eka2l1::dispatch {
 
     epoc_video_player::~epoc_video_player() {
         if (image_handle_) {
-            drivers::graphics_command_builder builder;
+            auto builder = driver_->acquire_builder_small();
             builder.destroy(image_handle_);
 
             drivers::command_list list = builder.retrieve_command_list();
@@ -147,12 +147,7 @@ namespace eka2l1::dispatch {
         video_player_->close();
 
         if (image_handle_) {
-            drivers::graphics_command_builder builder;
-            builder.destroy(image_handle_);
-
-            drivers::command_list list = builder.retrieve_command_list();
-            driver_->submit_command_list(list);
-
+            driver_->defer_destroy(image_handle_);
             image_handle_ = 0;
         }
     }
@@ -188,12 +183,13 @@ namespace eka2l1::dispatch {
             }
 
             const std::lock_guard<std::mutex> guard(posting.target_window_->scr->screen_mutex);
+            auto &driver_builder = posting.target_window_->get_command_builder();
 
             if (!image_handle_) {
                 image_handle_ = drivers::create_texture(driver_, 2, 0, drivers::texture_format::rgba, drivers::texture_format::rgba,
                     drivers::texture_data_type::ubyte, buffer_data, buffer_size, vid_size_v3);
             } else {
-                posting.target_window_->driver_builder_.update_texture(image_handle_, reinterpret_cast<const char*>(buffer_data), buffer_size, 0, drivers::texture_format::rgba,
+                driver_builder.update_texture(image_handle_, reinterpret_cast<const char*>(buffer_data), buffer_size, 0, drivers::texture_format::rgba,
                     drivers::texture_data_type::ubyte, eka2l1::vec3(0, 0, 0), vid_size_v3);
             }
 
@@ -224,9 +220,9 @@ namespace eka2l1::dispatch {
                 std::swap(dest_rect.size.x, dest_rect.size.y);
             }
 
-            posting.target_window_->driver_builder_.set_texture_filter(image_handle_, false, drivers::filter_option::linear);
-            posting.target_window_->driver_builder_.set_texture_filter(image_handle_, true, drivers::filter_option::linear);
-            posting.target_window_->driver_builder_.draw_bitmap(image_handle_, 0, dest_rect, eka2l1::rect(eka2l1::vec2(0, 0), eka2l1::vec2(0, 0)), eka2l1::vec2(0, 0), rotation_ * 90.0f);
+            driver_builder.set_texture_filter(image_handle_, false, drivers::filter_option::linear);
+            driver_builder.set_texture_filter(image_handle_, true, drivers::filter_option::linear);
+            driver_builder.draw_bitmap(image_handle_, 0, dest_rect, eka2l1::rect(eka2l1::vec2(0, 0), eka2l1::vec2(0, 0)), eka2l1::vec2(0, 0), rotation_ * 90.0f);
             posting.target_window_->content_changed(true);
 
             posting.target_window_->try_update(nullptr);

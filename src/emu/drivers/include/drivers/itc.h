@@ -225,16 +225,59 @@ namespace eka2l1::drivers {
     class graphics_command_builder {
     protected:
         command_list list_;
+        arena *arena_; ///< Optional backing arena for all allocations in this builder.
+
+        /**
+         * \brief Copy data into command-accessible memory.
+         *
+         * If an arena is active, the copy is placed in arena memory and
+         * the arena owns its lifetime. Otherwise, a heap allocation is made
+         * and the consumer is responsible for calling delete[].
+         *
+         * \returns A uint64_t encoding the pointer, suitable for storage
+         *          in command::data_[].
+         */
+        std::uint64_t make_data_copy(const void *source, const std::size_t size);
 
     public:
         explicit graphics_command_builder()
-            : list_(MAX_CAP_COMMAND_COUNT) {
+            : list_(MAX_CAP_COMMAND_COUNT)
+            , arena_(nullptr) {
         }
 
-        ~graphics_command_builder() {
-            if (list_.base_) {
-                delete list_.base_;
-            }
+        // No destructor cleanup: arena-backed builders are owned by the
+        // arena pool; heap-backed builders must have their command list
+        // retrieved and submitted before going out of scope. Any leak
+        // here is a bug the caller must fix.
+        ~graphics_command_builder() = default;
+
+        /** 
+         * \brief Set the arena for all subsequent allocations.
+         *
+         * Must be called before building any commands. The arena must remain
+         * valid until the command list has been fully consumed by the render
+         * thread.
+         */
+        void set_building_arena(arena *a) {
+            arena_ = a;
+            list_.set_arena(a);
+        }
+
+        /**
+         * \brief Set the arena with a private-pool release callback.
+         *
+         * Use this for persistent builders (egl_context, canvas_base) that
+         * own their own arena pool. The render thread calls \c release_fn
+         * to return the arena to the correct pool.
+         */
+        void set_building_arena(arena *a, void *pool_tag, arena_release_func release_fn) {
+            arena_ = a;
+            list_.set_arena(a, pool_tag, release_fn);
+        }
+
+        /** \brief Get the current arena (nullptr if heap mode). */
+        arena *get_building_arena() const {
+            return arena_;
         }
 
         bool is_empty() const {
@@ -246,7 +289,9 @@ namespace eka2l1::drivers {
         }
 
         void reset_list() {
-            delete list_.base_;
+            if (list_.base_ && !list_.is_arena_backed()) {
+                delete list_.base_;
+            }
 
             list_.size_ = 0;
             list_.base_ = nullptr;
@@ -256,6 +301,9 @@ namespace eka2l1::drivers {
             command_list copy = list_;
             list_.base_ = nullptr;
             list_.size_ = 0;
+            // The arena pointer travels with the list; the builder starts
+            // fresh for the next list (a new arena must be set via
+            // set_building_arena() before further building).
 
             return copy;
         }
@@ -264,25 +312,7 @@ namespace eka2l1::drivers {
             return list_.retrieve_next();
         }
 
-        bool merge(command_list &another) {
-            if (!another.base_ || !another.size_) {
-                return true;
-            }
-
-            if (list_.base_ == nullptr) {
-                list_ = another;
-            } else {
-                if (another.size_ + list_.size_ > list_.max_cap_) {
-                    return false;
-                }
-
-                std::memcpy(list_.base_ + list_.size_, another.base_, another.size_ * sizeof(command));
-                list_.size_ += another.size_;
-            }
-
-            delete[] another.base_;
-            return true;
-        }
+        bool merge(command_list &another);
 
         void set_brush_color_detail(const eka2l1::vec4 &color);
 

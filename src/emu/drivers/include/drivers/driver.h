@@ -24,6 +24,8 @@
 #include <condition_variable>
 #include <mutex>
 
+#include <drivers/graphics/arena.h>
+
 namespace eka2l1 {
     class graphics_driver;
 }
@@ -50,23 +52,74 @@ namespace eka2l1::drivers {
         }
     };
 
+    // Forward-declared: see drivers/graphics/arena.h
+    class arena;
+
+    /// Type-erased arena release callback. Called by the render thread after
+    /// dispatching an arena-backed command list. The pool tag is an opaque
+    /// pointer to an arena_pool<N> instance; the function knows the N and can
+    /// call pool->release(arena).
+    using arena_release_func = void (*)(void *pool_tag, arena *a);
+
     /**
      * \brief A linked list of command.
+     *
+     * Optionally backed by an arena allocator. When \c arena_ is set,
+     * command storage and associated variable data are allocated from
+     * the arena and must NOT be individually freed — the arena is
+     * recycled as a whole via \c release_arena().
      */
     struct command_list {
         command *base_;
 
         std::size_t size_;
         std::size_t max_cap_;
+        arena *arena_;
+
+        /// When non-null, called to return the arena to its owning pool.
+        /// If null, the global driver pools are tried (backward compat).
+        void *arena_pool_tag_ = nullptr;
+        arena_release_func arena_release_fn_ = nullptr;
 
         explicit command_list(std::size_t max_cap = 0)
             : base_(nullptr)
             , size_(0)
-            , max_cap_(max_cap) {
+            , max_cap_(max_cap)
+            , arena_(nullptr) {
         }
 
         bool empty() const {
             return (size_ == 0);
+        }
+
+        /** \brief True if this list is backed by an arena. */
+        bool is_arena_backed() const {
+            return (arena_ != nullptr);
+        }
+
+        /** \brief Set the backing arena. Must be called before renew(). */
+        void set_arena(arena *a) {
+            arena_ = a;
+            arena_pool_tag_ = nullptr;
+            arena_release_fn_ = nullptr;
+        }
+
+        /** 
+         * \brief Set the backing arena with a release callback for a
+         *        private (non-global) pool.
+         */
+        void set_arena(arena *a, void *pool_tag, arena_release_func fn) {
+            arena_ = a;
+            arena_pool_tag_ = pool_tag;
+            arena_release_fn_ = fn;
+        }
+
+        /** \brief Return the arena to its owning pool, if any. */
+        void release_arena() {
+            if (arena_ && arena_release_fn_) {
+                arena_release_fn_(arena_pool_tag_, arena_);
+                arena_ = nullptr;
+            }
         }
 
         command *retrieve_next() {
@@ -90,9 +143,22 @@ namespace eka2l1::drivers {
             if (max_cap_ == 0) {
                 return;
             }
-            // NOTE: After command all iterated, the base will be deleted.
-            // No memory leak!
-            base_ = new command[max_cap_];
+
+            if (arena_) {
+                // Allocate command array from the arena. Falls back to
+                // heap if the arena is full (should not happen with
+                // properly sized arenas).
+                const std::size_t cmd_size = max_cap_ * sizeof(command);
+                base_ = static_cast<command *>(arena_->allocate(cmd_size, alignof(command)));
+                if (!base_) {
+                    // Arena overflow — rare fallback to heap
+                    base_ = new command[max_cap_];
+                }
+            } else {
+                // NOTE: After command all iterated, the base will be deleted.
+                // No memory leak!
+                base_ = new command[max_cap_];
+            }
             size_ = 0;
         }
     };

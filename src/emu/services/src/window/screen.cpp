@@ -209,7 +209,7 @@ namespace eka2l1::epoc {
         }
 
         // Make command list first, and bind our screen bitmap
-        drivers::graphics_command_builder builder;
+        auto builder = driver->acquire_builder();
         const bool performed = redraw(builder, true);
     
         eka2l1::drivers::command_list retrieved = builder.retrieve_command_list();
@@ -223,20 +223,16 @@ namespace eka2l1::epoc {
     }
 
     void screen::deinit(drivers::graphics_driver *driver) {
-        // Make command list first, and bind our screen bitmap
+        // Deferred batch destroy — avoids wasting arenas on individual destroys.
+        // The next acquire_builder() call will flush any pending deferred work.
         if (driver) {
-            drivers::graphics_command_builder builder;
-
             if (dsa_texture) {
-                builder.destroy_bitmap(dsa_texture);
+                driver->defer_destroy(dsa_texture);
             }
 
             if (screen_texture) {
-                builder.destroy_bitmap(screen_texture);
+                driver->defer_destroy(screen_texture);
             }
-
-            eka2l1::drivers::command_list retrieved = builder.retrieve_command_list();
-            driver->submit_command_list(retrieved);
         }
     }
 
@@ -251,7 +247,7 @@ namespace eka2l1::epoc {
 
     void screen::resize(drivers::graphics_driver *driver, const eka2l1::vec2 &new_size) {
         // Make command list first, and bind our screen bitmap
-        drivers::graphics_command_builder builder;
+        auto builder = driver->acquire_builder();
         bool need_bind = true;
 
         eka2l1::vec2 screen_size_scaled = current_mode().size * display_scale_factor;
@@ -665,7 +661,7 @@ namespace eka2l1::epoc {
             // Resize the screen bitmap
             if (screen_texture) {
                 eka2l1::vec2 screen_size_scaled = current_mode().size * new_scale_factor;
-                drivers::graphics_command_builder cmd_builder;
+                auto cmd_builder = driver->acquire_builder_small();
 
                 cmd_builder.resize_bitmap(screen_texture, screen_size_scaled);
                 drivers::command_list retrieved = cmd_builder.retrieve_command_list();

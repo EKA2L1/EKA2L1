@@ -566,7 +566,7 @@ namespace eka2l1::dispatch {
     }
 
     void egl_context_es_shared::flush_to_driver(egl_controller &controller, drivers::graphics_driver *drv, const bool is_frame_swap_flush) {
-        drivers::graphics_command_builder transfer_builder;
+        auto transfer_builder = drv->acquire_builder_medium();
         vertex_buffer_pusher_.flush(transfer_builder);
         index_buffer_pusher_.flush(transfer_builder);
 
@@ -577,6 +577,11 @@ namespace eka2l1::dispatch {
         retrieved = cmd_builder_.retrieve_command_list();
 
         drv->submit_command_list(retrieved);
+
+        // Acquire a fresh arena for the next accumulation cycle.
+        // The render thread will return the previous arena via the
+        // release callback stored in the command_list.
+        acquire_cmd_arena();
         init_context_state();
 
         if (is_frame_swap_flush) {

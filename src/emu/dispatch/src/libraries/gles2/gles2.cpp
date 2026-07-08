@@ -1463,7 +1463,7 @@ APPLY_PENDING_ROUTES:
     static constexpr std::size_t MAXIMUM_UNDELETED_SHADER_MODULE_HANDLE = 15;
     static void cleanup_pending_shader_driver_handle(egl_context_es2 *ctx, drivers::graphics_driver *driver) {
         if (ctx->compiled_shader_cleanup_.size() >= MAXIMUM_UNDELETED_SHADER_MODULE_HANDLE) {
-            drivers::graphics_command_builder builder;
+            auto builder = driver->acquire_builder_medium();
             while (!ctx->compiled_shader_cleanup_.empty()) {
                 builder.destroy(ctx->compiled_shader_cleanup_.front());
                 ctx->compiled_shader_cleanup_.pop();
@@ -1723,7 +1723,7 @@ APPLY_PENDING_ROUTES:
     static constexpr std::size_t MAXIMUM_UNDELETED_PROGRAM_HANDLE = 10;
     static void cleanup_linked_program_driver_handle(egl_context_es2 *ctx, drivers::graphics_driver *driver) {
         if (ctx->linked_program_cleanup_.size() >= MAXIMUM_UNDELETED_SHADER_MODULE_HANDLE) {
-            drivers::graphics_command_builder builder;
+            auto builder = driver->acquire_builder_medium();
             while (!ctx->linked_program_cleanup_.empty()) {
                 builder.destroy(ctx->linked_program_cleanup_.front());
                 ctx->linked_program_cleanup_.pop();

@@ -38,7 +38,7 @@ namespace eka2l1::dispatch {
 
     gles1_shaderman::~gles1_shaderman() {
         if (driver_) {
-            drivers::graphics_command_builder builder;
+            auto builder = driver_->acquire_builder_medium();
 
             for (auto &module: vertex_cache_) {
                 builder.destroy(module.second);

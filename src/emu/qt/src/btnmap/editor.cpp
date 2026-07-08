@@ -24,6 +24,8 @@
 #include <common/fileutils.h>
 #include <common/cvt.h>
 
+#include <drivers/graphics/graphics.h>
+
 #include <vector>
 
 namespace eka2l1::qt::btnmap {
@@ -34,11 +36,8 @@ namespace eka2l1::qt::btnmap {
     }
 
     void editor::clean(drivers::graphics_driver *driver) {
-        // TODO: Really clean it out! But the driver should clear it out at the end anyway ;_;
-        drivers::graphics_command_builder builder;
-
         for (auto &resource: resources_) {
-            builder.destroy(resource.second);
+            driver->defer_destroy(resource.second);
         }
 
         resources_.clear();

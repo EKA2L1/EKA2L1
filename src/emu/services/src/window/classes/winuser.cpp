@@ -125,6 +125,37 @@ namespace eka2l1::epoc {
         }
 
         client->remove_redraws(this);
+
+        // Release any arena still held by driver_builder_ (acquired by the
+        // last ensure_driver_arena() call for a frame that never happened).
+        // This must happen before driver_arena_pool_ is destroyed, otherwise
+        // ~arena_pool() deadlocks waiting for the unreleased arena.
+        if (driver_builder_.get_building_arena()) {
+            drivers::command_list pending = driver_builder_.retrieve_command_list();
+            auto driver = client->get_ws().get_graphics_driver();
+
+            driver->submit_command_list(pending);
+        }
+    }
+
+    void canvas_base::ensure_driver_arena() {
+        if (!driver_arena_pool_) {
+            driver_arena_pool_ = std::make_unique<drivers::arena_pool<4>>(4 * 1024 * 1024);
+        }
+        drivers::arena *a = driver_arena_pool_->acquire();
+        if (a) {
+            driver_builder_.set_building_arena(a, driver_arena_pool_.get(),
+                &drivers::arena_pool_release<4>);
+        }
+        else {
+            driver_builder_.set_building_arena(nullptr);
+        }
+        // else: pool exhausted — driver_builder_ stays in heap mode;
+        // the next ensure_driver_arena() call will try the pool again.
+    }
+
+    drivers::graphics_command_builder &canvas_base::get_command_builder() {
+        return driver_builder_;
     }
 
     void canvas_base::add_canvas_observer(canvas_observer *ob) {
@@ -932,7 +963,8 @@ namespace eka2l1::epoc {
             return false;
         }
 
-        driver_builder_.reset_list();
+        auto &driver_builder = get_command_builder();
+        driver_builder.reset_list();
 
         eka2l1::vec2 abs_pos = absolute_position();
         auto color_extracted = common::rgba_to_vec(clear_color);
@@ -1221,8 +1253,12 @@ namespace eka2l1::epoc {
             }
         }
 
+        auto &driver_builder = get_command_builder();
+
         if (scr->flags_ & screen::FLAG_CLIENT_REDRAW_PENDING) {
-            drivers::command_list cmd_list = driver_builder_.retrieve_command_list();
+            drivers::command_list cmd_list = driver_builder.retrieve_command_list();
+            ensure_driver_arena();
+
             if (pending_segment_) {
                 builder.clip_bitmap_region(visible_region, scr->display_scale_factor);
 
@@ -1244,12 +1280,18 @@ namespace eka2l1::epoc {
                     drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
 
                     drv->submit_command_list(screen_draw_prev_list);
+
+                    builder = drv->acquire_builder();
                     builder.bind_bitmap(scr->screen_texture);
 
                     if (!builder.merge(cmd_list)) {
                         LOG_ERROR(SERVICE_WINDOW, "Unable to merge redraw window's command list to screen draw's command list!");
                     }
                 }
+            } else {
+                // Submit so graphics driver will clean up
+                drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
+                drv->submit_command_list(cmd_list);
             }
         }
 
@@ -1324,13 +1366,7 @@ namespace eka2l1::epoc {
             if (ping_pong_driver_win_id) {
                 // Let's just recreate later, just a temp for scrolling
                 drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
-                drivers::graphics_command_builder builder;
-
-                builder.destroy_bitmap(ping_pong_driver_win_id);
-
-                drivers::command_list retrieved = builder.retrieve_command_list();
-                drv->submit_command_list(retrieved);
-
+                drv->defer_destroy(ping_pong_driver_win_id);
                 ping_pong_driver_win_id = 0;
             }
 
@@ -1344,25 +1380,22 @@ namespace eka2l1::epoc {
             bitmap_->deref();
         }
 
-        drivers::graphics_command_builder builder;
-        drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
-
-        // Remove driver bitmap
-        if (driver_win_id) {
-            // Queue a resize command
-            builder.destroy_bitmap(driver_win_id);
-            driver_win_id = 0;
-        }
-
-        if (ping_pong_driver_win_id) {
-            // Let's just recreate later, just a temp for scrolling
+        // Only acquire an arena-backed builder if there is actual work to do,
+        // otherwise the arena would be leaked (never submitted to render thread).
+        if (driver_win_id || ping_pong_driver_win_id) {
             drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
+            auto builder = drv->acquire_builder_small();
 
-            builder.destroy_bitmap(ping_pong_driver_win_id);
-            ping_pong_driver_win_id = 0;
-        }
+            if (driver_win_id) {
+                builder.destroy_bitmap(driver_win_id);
+                driver_win_id = 0;
+            }
 
-        if (!builder.is_empty()) {
+            if (ping_pong_driver_win_id) {
+                builder.destroy_bitmap(ping_pong_driver_win_id);
+                ping_pong_driver_win_id = 0;
+            }
+
             drivers::command_list retrieved = builder.retrieve_command_list();
             drv->submit_command_list(retrieved);
         }
@@ -1417,7 +1450,8 @@ namespace eka2l1::epoc {
         }
 
         if (pending_segment_) {
-            gdi_command_builder gdi_builder(client->get_ws().get_graphics_driver(), driver_builder_,
+            auto &builder = get_command_builder();
+            gdi_command_builder gdi_builder(client->get_ws().get_graphics_driver(), builder,
                 *client->get_ws().get_bitmap_cache(), drivers::filter_option::linear, eka2l1::vec2(0, 0),
                 1.0f, common::region{});
 
@@ -1425,10 +1459,15 @@ namespace eka2l1::epoc {
             pending_segment_.reset();
         }
 
-        drivers::command_list list = driver_builder_.retrieve_command_list();
+        auto &driver_builder = get_command_builder();
+
+        drivers::command_list list = driver_builder.retrieve_command_list();
+        // Reacquire new arena
+        ensure_driver_arena();
+
         drv->submit_command_list(list);
 
-        driver_builder_.bind_bitmap(driver_win_id);
+        driver_builder.bind_bitmap(driver_win_id);
 
         // Sync back to the bitmap
         if (bitmap_) {
@@ -1463,8 +1502,8 @@ namespace eka2l1::epoc {
         if (resize_needed) {
             drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
 
-            // Queue a resize command
-            drivers::graphics_command_builder cmd_builder;
+            // Queue a resize command — use small arena, single cmd
+            auto cmd_builder = drv->acquire_builder_small();
 
             if (driver_win_id == 0) {
                 driver_win_id = drivers::create_bitmap(drv, abs_rect.size, 32);
@@ -1478,7 +1517,9 @@ namespace eka2l1::epoc {
             resize_needed = false;
         }
 
-        driver_builder_.bind_bitmap(driver_win_id);
+        auto &driver_builder = get_command_builder();
+
+        driver_builder.bind_bitmap(driver_win_id);
     }
 
     void bitmap_backed_canvas::sync_from_bitmap(std::optional<common::region> reg_clip) {
@@ -1491,7 +1532,7 @@ namespace eka2l1::epoc {
         epoc::bitmap_cache *cache = client->get_ws().get_bitmap_cache();
         drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
 
-        drivers::graphics_command_builder builder;
+        auto builder = drv->acquire_builder_medium();
         const drivers::handle to_draw_handle = cache->add_or_get(drv, bitmap_->bitmap_, &builder);
 
         eka2l1::vec2 to_draw_out_size(common::min<int>(bitmap_->bitmap_->header_.size_pixels.x, size().x),
@@ -1539,7 +1580,7 @@ namespace eka2l1::epoc {
         }
 
         drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
-        drivers::graphics_command_builder cmd_builder;
+        auto cmd_builder = drv->acquire_builder_medium();
 
         if (!clip_space.empty()) {
             cmd_builder.set_feature(drivers::graphics_feature::clipping, true);

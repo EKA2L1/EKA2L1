@@ -75,7 +75,7 @@ namespace eka2l1::android {
                     // submit request is too fast)
                     state_ptr->graphics_driver->wait_for(&state_ptr->present_status);
 
-                    drivers::graphics_command_builder builder;
+                    auto builder = state_ptr->graphics_driver->acquire_builder_medium();
                     state_ptr->launcher->draw(builder, scr, state_ptr->window->window_fb_size().x,
                                               state_ptr->window->window_fb_size().y);
 

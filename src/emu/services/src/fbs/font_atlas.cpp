@@ -55,12 +55,7 @@ namespace eka2l1::epoc {
 
     void font_atlas::destroy(drivers::graphics_driver *driver) {
         if (atlas_handle_) {
-            drivers::graphics_command_builder builder;
-            builder.destroy_bitmap(atlas_handle_);
-
-            drivers::command_list retrieved = builder.retrieve_command_list();
-            driver->submit_command_list(retrieved);
-
+            driver->defer_destroy(atlas_handle_);
             atlas_handle_ = 0;
             atlas_data_.reset();
         }
@@ -79,7 +74,7 @@ namespace eka2l1::epoc {
 
     bool font_atlas::draw_text(const std::u16string &text, const eka2l1::rect &text_box, const epoc::text_alignment alignment, drivers::graphics_driver *driver, drivers::graphics_command_builder &builder, const eka2l1::vec2f scale_vector) {
         const int width = get_atlas_width();
-        drivers::graphics_command_builder upload_builder;
+        auto upload_builder = driver->acquire_builder();
 
         if (!atlas_data_) {
             atlas_data_ = std::make_unique<std::uint8_t[]>(width * width * adapter_->get_atlas_bitmap_bits_per_pixel() / 8);

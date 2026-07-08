@@ -164,7 +164,8 @@ namespace eka2l1::drivers {
         : graphics_driver(gr_api)
         , binding(nullptr)
         , brush_color({ 255.0f, 255.0f, 255.0f, 255.0f })
-        , current_fb_height(0) {
+        , current_fb_height(0)
+        , current_dispatch_arena_(nullptr) {
     }
 
     shared_graphics_driver::~shared_graphics_driver() {
@@ -285,7 +286,7 @@ namespace eka2l1::drivers {
 
         update_bitmap(handle, size, offset, dim, data, pixels_per_line);
 
-        delete[] data;
+        release_data_if_not_arena(current_dispatch_arena_, data);
     }
 
     void shared_graphics_driver::update_texture(command &cmd) {
@@ -311,7 +312,7 @@ namespace eka2l1::drivers {
 
         obj->update_data(this, static_cast<int>(lvl), offset, dim, pixels_per_line, data_format, data_type, data, size, unpack_alignment);
 
-        delete[] data;
+        release_data_if_not_arena(current_dispatch_arena_, data);
     }
 
     void shared_graphics_driver::create_bitmap(command &cmd) {
@@ -592,7 +593,7 @@ namespace eka2l1::drivers {
         } else {
             if (data != nullptr) {
                 std::uint8_t *data_org = reinterpret_cast<std::uint8_t*>(data);
-                delete[] data_org;
+                release_data_if_not_arena(current_dispatch_arena_, data_org);
             }
         }
 
@@ -630,7 +631,7 @@ namespace eka2l1::drivers {
             finish(cmd.status_, 0);
         } else if ((initial_data != nullptr) && (existing_handle)) {
             std::uint8_t *data_casted = reinterpret_cast<std::uint8_t*>(initial_data);
-            delete[] data_casted;
+            release_data_if_not_arena(current_dispatch_arena_, data_casted);
         }
     }
 
@@ -664,7 +665,7 @@ namespace eka2l1::drivers {
             finish(cmd.status_, 0);
         } else if ((descs != nullptr) && (existing_handle)) {
             std::uint8_t *data_casted = reinterpret_cast<std::uint8_t*>(descs);
-            delete[] data_casted;
+            release_data_if_not_arena(current_dispatch_arena_, data_casted);
         }
     }
 
@@ -833,7 +834,7 @@ namespace eka2l1::drivers {
 
         bufobj->update_data(this, data, offset, size);
 
-        delete[] data;
+        release_data_if_not_arena(current_dispatch_arena_, data);
     }
 
     void shared_graphics_driver::destroy_object(command &cmd) {
@@ -1172,6 +1173,28 @@ namespace eka2l1::drivers {
         case graphics_driver_set_framebuffer_depth_stencil_buffer:
             set_fb_depth_stencil_buffer(cmd);
             break;
+
+        case graphics_driver_execute_command_list: {
+            command_list *sub = reinterpret_cast<command_list *>(cmd.data_);
+            arena *saved = current_dispatch_arena_;
+            current_dispatch_arena_ = sub->arena_;
+
+            for (std::size_t i = 0; i < sub->size_; i++) {
+                dispatch(sub->base_[i]);
+            }
+
+            if (sub->is_arena_backed()) {
+                if (sub->arena_release_fn_)
+                    sub->release_arena();
+                else
+                    signal_arena_consumed(sub->arena_);
+            } else if (sub->base_) {
+                delete[] sub->base_;
+            }
+
+            current_dispatch_arena_ = saved;
+            break;
+        }
 
         default:
             LOG_ERROR(DRIVER_GRAPHICS, "Unimplemented opcode {} for graphics driver", cmd.opcode_);

@@ -97,7 +97,7 @@ Java_com_github_eka2l1_emu_Emulator_getApps(
 static void redraw_screens_immediately() {
     state->graphics_driver->wait_for(&state->present_status);
 
-    eka2l1::drivers::graphics_command_builder builder;
+    auto builder = state->graphics_driver->acquire_builder_medium();
     state->launcher->draw(builder, state->winserv ? state->winserv->get_screens() : nullptr,
                           state->window->window_fb_size().x,
                           state->window->window_fb_size().y);

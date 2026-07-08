@@ -493,7 +493,7 @@ namespace eka2l1::dispatch {
             surface->scale(ctx, drv);
 
             if (ctx && surface->backed_window_->can_be_physically_seen()) {
-                drivers::graphics_command_builder &window_builder = surface->backed_window_->driver_builder_;
+                drivers::graphics_command_builder &window_builder = surface->backed_window_->get_command_builder();
                 window_builder.set_feature(drivers::graphics_feature::blend, false);
                 window_builder.set_feature(drivers::graphics_feature::depth_test, false);
 

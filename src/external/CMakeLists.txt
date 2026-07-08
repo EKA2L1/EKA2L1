@@ -96,6 +96,7 @@ add_subdirectory(glm)
 
 # Dynarmic: disable tests
 option(DYNARMIC_TESTS "Enable dynarmic tests" OFF)
+set(DYNARMIC_NO_BUNDLED_FMT ON)
 
 if (NOT ARCHITECTURE_ARM32)
     add_subdirectory(dynarmic)

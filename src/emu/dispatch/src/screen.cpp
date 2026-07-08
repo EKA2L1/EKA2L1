@@ -96,20 +96,21 @@ namespace eka2l1::dispatch {
         timing_->remove_event(vsync_notify_event_);
 
         if (drv) {
-            drivers::graphics_command_builder builder;
-            
             bool need_send_destroy = false;
 
             for (std::size_t i = 0; i < infos_.size(); i++) {
                 if (infos_[i].transfer_texture_ != 0) {
                     need_send_destroy = true;
-                    builder.destroy(infos_[i].transfer_texture_);
+                    break;
                 }
             }
 
             if (need_send_destroy) {
-                drivers::command_list retrieved = builder.retrieve_command_list();
-                drv->submit_command_list(retrieved);
+                for (std::size_t i = 0; i < infos_.size(); i++) {
+                    if (infos_[i].transfer_texture_ != 0) {
+                        drv->defer_destroy(infos_[i].transfer_texture_);
+                    }
+                }
             }
         }
     }
@@ -237,7 +238,7 @@ namespace eka2l1::dispatch {
                 }
 
                 eka2l1::drivers::filter_option filter = (kern->get_config()->nearest_neighbor_filtering ? eka2l1::drivers::filter_option::nearest : eka2l1::drivers::filter_option::linear);
-                drivers::graphics_command_builder builder;
+                auto builder = driver->acquire_builder_medium();
 
                 // Only one rectangle for now!
                 builder.update_bitmap(scr->dsa_texture, data_ptr, buffer_size, { 0, 0 }, screen_size);
@@ -346,7 +347,7 @@ namespace eka2l1::dispatch {
         post_info_copy.displayed_rect.transform_from_symbian_rectangle();
         post_info_copy.scale_to_rect.transform_from_symbian_rectangle();
 
-        drivers::graphics_command_builder builder;
+        auto builder = driver->acquire_builder_medium();
 
         while (scr != nullptr) {
             if (scr->number == screen_index) {

@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <drivers/graphics/arena.h>
 #include <drivers/graphics/fb.h>
 #include <drivers/graphics/graphics.h>
 #include <drivers/graphics/texture.h>
@@ -70,6 +71,11 @@ namespace eka2l1::drivers {
 
         glm::mat4 projection_matrix;
         eka2l1::vecx<float, 4> brush_color;
+
+        /// Set before dispatching a command list to indicate arena-backed data.
+        /// When non-null, individual delete[] calls on command data pointers
+        /// are suppressed — the arena is recycled as a whole.
+        arena *current_dispatch_arena_;
 
         drivers::handle append_graphics_object(graphics_object_instance &instance);
         bool delete_graphics_object(const drivers::handle handle);
