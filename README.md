@@ -37,7 +37,7 @@ The emulator *emulates* Symbian OS/N-Gage's kernel, and *reimplement* most of it
 
 For more information, discussion and support, please visit these links:
 
-- [**Homepage**](https://12l1.com/)
+- [**Homepage**](https://eka2l1.github.io/)
 - [**Emulator Wiki**](https://eka2l1.miraheze.org/wiki/Main_Page)
 - [**Discord server**](https://discord.gg/5Bm5SJ9)
 
@@ -57,7 +57,7 @@ From 2022, developing the emulator has shifted to become a part-time hobby and s
 
 Still, if you feel like our work has benefited you much and you want to support or give us some cheers, feel free to donate to two developers that maintain the PC/Android version by visiting the **Sponsor this project** section of the Github page.
 
-Visit this [link](https://12l1.com/quickstart/donation/) for more information.
+Visit this [link](https://eka2l1.github.io/quickstart/donation/) for more information.
 
   -------------
  *GIFs are provided by [**Stranno**](https://www.youtube.com/user/9esferas1)!*
