@@ -129,8 +129,8 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get -y install ccache libgtk-3-dev libpulse-dev libasound2-dev \
-          libsdl2-dev pulseaudio qtbase5-dev qtbase5-dev-tools qttools5-dev \
-          qttools5-dev-tools libqt5svg5-dev libqt5opengl5-dev
+          libsdl2-dev pulseaudio qtbase5-dev qtbase5-dev-tools qtbase5-private-dev \
+          qttools5-dev qttools5-dev-tools libqt5svg5-dev libqt5opengl5-dev
       if: matrix.label == 'linux'
 
     - name: Configure ccache
@@ -159,8 +159,12 @@ jobs:
         cache: true
       if: matrix.label == 'macos'
 
-    # tools_openssl_x64 ships the OpenSSL 1.1 runtime Qt Network expects on
-    # Windows; it used to be downloaded from a host that no longer resolves.
+    # The Windows build used to copy libcrypto-1_1/libssl-1_1 next to the binary,
+    # from a host that no longer resolves. There is no replacement: Qt dropped
+    # the tools_openssl_x64 package (OpenSSL 1.1 is end of life) and only ships
+    # tools_opensslv3_x64, which Qt 5.15.2 cannot load. Until Qt is bumped, the
+    # Windows artifact has no TLS backend, so the in-app updater cannot reach
+    # api.github.com.
     - name: Install Qt5 (Windows)
       uses: jurplel/install-qt-action@v4
       with:
@@ -168,20 +172,19 @@ jobs:
         host: 'windows'
         target: 'desktop'
         arch: 'win64_msvc2019_64'
-        tools: 'tools_openssl_x64'
         cache: true
       if: matrix.label == 'windows'
 
     - name: CMake configure (macOS)
-      run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_SCRIPTING_ABILITY=OFF -DEKA2L1_DEPLOY_DMG=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_ENABLE_DISCORD_RICH_PRESENCE=ON -DCMAKE_PREFIX_PATH=${{ env.QT_ROOT_DIR }} -DCMAKE_BUILD_TYPE=${{ env.config }}
+      run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_SCRIPTING_ABILITY=OFF -DEKA2L1_DEPLOY_DMG=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_ENABLE_DISCORD_RICH_PRESENCE=ON -DCMAKE_PREFIX_PATH=${{ env.QT_ROOT_DIR }} -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_BUILD_TYPE=${{ env.config }}
       if: matrix.label == 'macos'
 
     - name: CMake configure (Windows)
-      run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_NO_TERMINAL=ON -DEKA2L1_ENABLE_DISCORD_RICH_PRESENCE=ON -DCMAKE_PREFIX_PATH=${{ env.QT_ROOT_DIR }} -DCMAKE_BUILD_TYPE=${{ env.config }}
+      run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_NO_TERMINAL=ON -DEKA2L1_ENABLE_DISCORD_RICH_PRESENCE=ON -DCMAKE_PREFIX_PATH=${{ env.QT_ROOT_DIR }} -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_BUILD_TYPE=${{ env.config }}
       if: matrix.label == 'windows'
 
     - name: CMake configure (Linux)
-      run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_NO_TERMINAL=ON -DEKA2L1_ENABLE_DISCORD_RICH_PRESENCE=ON -DCMAKE_BUILD_TYPE=${{ env.config }}
+      run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_NO_TERMINAL=ON -DEKA2L1_ENABLE_DISCORD_RICH_PRESENCE=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_BUILD_TYPE=${{ env.config }}
       if: matrix.label == 'linux'
 
     - name: CMake build
@@ -206,21 +209,6 @@ jobs:
       id: git_short_sha
       run: echo "value=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
       shell: bash
-
-    - name: Copy OpenSSL binaries
-      run: |
-        $tools = $env:IQTA_TOOLS
-        if (-not $tools) { Write-Warning "Qt tools directory unknown, skipping OpenSSL"; exit 0 }
-        foreach ($dll in @("libcrypto-1_1-x64.dll", "libssl-1_1-x64.dll")) {
-          $src = Get-ChildItem -Path $tools -Filter $dll -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-          if ($src) {
-            Copy-Item $src.FullName ("build\bin\" + ($dll -replace "-x64", ""))
-          } else {
-            Write-Warning "$dll not found under $tools"
-          }
-        }
-      shell: pwsh
-      if: matrix.label == 'windows'
 
     - uses: actions/upload-artifact@v4
       with:
