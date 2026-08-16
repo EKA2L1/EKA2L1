@@ -35,6 +35,12 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wno-error)
 endif()
 
+if (APPLE)
+    # The bundled boost (pulled in by dynarmic) still uses std::unary_function,
+    # which libc++ no longer declares in C++17 and later modes.
+    add_compile_definitions(_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION=1)
+endif()
+
 if (EKA2L1_BUILD_VULKAN_BACKEND)
     set (BUILD_WITH_VULKAN 1)
 else()
