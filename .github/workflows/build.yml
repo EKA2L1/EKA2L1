@@ -17,7 +17,17 @@
 
 name: C/C++ CI
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
 
 jobs:
   build-android:
@@ -28,249 +38,261 @@ jobs:
         working-directory: ./src/emu/android
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
         submodules: recursive
 
     - name: Set up JDK 17
-      uses: actions/setup-java@v2
+      uses: actions/setup-java@v4
       with:
-        distribution: 'adopt'
+        distribution: 'temurin'
         java-version: '17'
 
     - name: Set up build environment
       run: |
         sudo apt-get update
-        sudo apt-get -y install build-essential libc6-dev g++-multilib
-      
+        sudo apt-get -y install build-essential libc6-dev
+
     - name: Build with Gradle
       run: ./gradlew assembleRelease -PciArg='-DCI=ON'
-    
-    - name: Setup build tool version variable
-      shell: bash
-      run: |
-        BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
-        echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
-        echo Last build tool version is: $BUILD_TOOL_VERSION
-    
-    - name: Sign APK
-      id: sign-android-app
-      uses: r0adkll/sign-android-release@v1.0.4
-      with:
-        releaseDirectory: ./src/emu/android/app/build/outputs/apk/release
-        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-        alias: ${{ secrets.ALIAS }}
-        keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-        keyPassword: ${{ secrets.KEY_PASSWORD }}
-      env:
-        BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
-    
+
     - name: Compute git short sha
       id: git_short_sha
-      run: echo "::set-output name=value::$(git rev-parse --short HEAD)"
+      run: echo "value=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
-    - name: Rename APK
+    # Signing secrets are not exposed to pull requests coming from a fork, so the
+    # APK is only signed when they are available. Everything else still runs, and
+    # the unsigned APK is uploaded instead so the build stays verifiable.
+    - name: Sign APK
+      env:
+        SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        ALIAS: ${{ secrets.ALIAS }}
+        KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        APK_NAME: eka2l1-${{ steps.git_short_sha.outputs.value }}.apk
       run: |
-        mv ${{ steps.sign-android-app.outputs.signedReleaseFile }} eka2l1-${{ steps.git_short_sha.outputs.value }}.apk
-        cp eka2l1-${{ steps.git_short_sha.outputs.value }}.apk android-latest.apk
-      working-directory: ${{ github.workspace }}
+        set -e
+        UNSIGNED=app/build/outputs/apk/release/app-release-unsigned.apk
+        OUT="${GITHUB_WORKSPACE}/${APK_NAME}"
+
+        if [ -z "${SIGNING_KEY}" ]; then
+          echo "No signing key available, uploading the unsigned APK."
+          cp "${UNSIGNED}" "${OUT}"
+          exit 0
+        fi
+
+        BUILD_TOOLS_VERSION=$(find "${ANDROID_HOME}/build-tools" -mindepth 1 -maxdepth 1 -printf "%f\n" | sort -V | tail -n 1)
+        echo "Signing with build tools ${BUILD_TOOLS_VERSION}"
+
+        echo "${SIGNING_KEY}" | base64 -d > "${RUNNER_TEMP}/keystore.jks"
+        "${ANDROID_HOME}/build-tools/${BUILD_TOOLS_VERSION}/apksigner" sign \
+          --ks "${RUNNER_TEMP}/keystore.jks" \
+          --ks-pass "pass:${KEY_STORE_PASSWORD}" \
+          --ks-key-alias "${ALIAS}" \
+          --key-pass "pass:${KEY_PASSWORD}" \
+          --out "${OUT}" "${UNSIGNED}"
+        rm -f "${RUNNER_TEMP}/keystore.jks"
 
     - name: Upload APK
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4
       with:
-        name: eka2l1-${{ steps.git_short_sha.outputs.value }}
+        name: eka2l1-${{ steps.git_short_sha.outputs.value }}-android
         path: eka2l1-${{ steps.git_short_sha.outputs.value }}.apk
 
   build-desktop:
     runs-on: ${{ matrix.os }}
     env:
       cache-version: v1
-      MACOSX_DEPLOYMENT_TARGET: 10.9
+      config: Release
+      MACOSX_DEPLOYMENT_TARGET: 10.15
 
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-20.04, windows-latest]
-        config: [Release]
+        include:
+          - os: windows-latest
+            label: windows
+          - os: macos-15-intel
+            label: macos
+          - os: ubuntu-24.04
+            label: linux
 
     steps:
-    - name: Set up build environment (macos-latest)
-      run: |
-        brew install ccache
-        echo "/usr/local/opt/ccache/libexec" >> $GITHUB_PATH
-        echo "CCACHE_DIR=/tmp/ccache" >> $GITHUB_ENV
-      if: matrix.os == 'macos-latest'
+    - name: Set up build environment (macOS)
+      run: brew install ccache
+      if: matrix.label == 'macos'
 
-    - name: Set up build environment (ubuntu-latest)
+    # Ubuntu ships Qt 5.15 and SDL 2.30, so both come from apt instead of being
+    # installed by aqt / built from source.
+    - name: Set up build environment (Linux)
       run: |
         sudo apt-get update
-        sudo apt-get -y install ccache libgtk-3-dev libpulse-dev libasound2-dev libsdl2-dev pulseaudio gcc-11 g++-11
-        echo "CCACHE_DIR=/tmp/ccache" >> $GITHUB_ENV
-        echo "CC=gcc-11" >> $GITHUB_ENV
-        echo "CXX=g++-11" >> $GITHUB_ENV
-      if: matrix.os == 'ubuntu-20.04'
-  
-    - uses: actions/cache@v1
-      with:
-        path: /tmp/ccache
-        key: ccache-${{ env.cache-version }}-${{ matrix.os }}-${{ matrix.config }}-${{ github.sha }}
-        restore-keys: ccache-${{ env.cache-version }}-${{ matrix.os }}-${{ matrix.config }}-
-      if: matrix.os != 'windows-latest'
+        sudo apt-get -y install ccache libgtk-3-dev libpulse-dev libasound2-dev \
+          libsdl2-dev pulseaudio qtbase5-dev qtbase5-dev-tools qttools5-dev \
+          qttools5-dev-tools libqt5svg5-dev libqt5opengl5-dev
+      if: matrix.label == 'linux'
 
-    - uses: actions/checkout@v2
+    - name: Configure ccache
+      run: echo "CCACHE_DIR=${{ runner.temp }}/ccache" >> "$GITHUB_ENV"
+      if: matrix.label != 'windows'
+
+    - uses: actions/cache@v4
+      with:
+        path: ${{ runner.temp }}/ccache
+        key: ccache-${{ env.cache-version }}-${{ matrix.label }}-${{ github.sha }}
+        restore-keys: ccache-${{ env.cache-version }}-${{ matrix.label }}-
+      if: matrix.label != 'windows'
+
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
         submodules: recursive
-          
-    - name: Cache Qt
-      id: cache-qt
-      uses: actions/cache@v1
-      with:
-        path: ../Qt
-        key: ${{ runner.os }}-QtCacheV5
 
-    - name: Install Qt5
-      uses: jurplel/install-qt-action@v2
+    - name: Install Qt5 (macOS)
+      uses: jurplel/install-qt-action@v4
       with:
         version: '5.15.2'
-        cached: ${{ steps.cache-qt.outputs.cache-hit }}
-        tools: ${{ env.QT_INSTALL_TOOLS }}
-      if: matrix.os != 'windows-latest'
-        
+        host: 'mac'
+        target: 'desktop'
+        arch: 'clang_64'
+        cache: true
+      if: matrix.label == 'macos'
+
+    # tools_openssl_x64 ships the OpenSSL 1.1 runtime Qt Network expects on
+    # Windows; it used to be downloaded from a host that no longer resolves.
     - name: Install Qt5 (Windows)
-      uses: jurplel/install-qt-action@v3
+      uses: jurplel/install-qt-action@v4
       with:
         version: '5.15.2'
-        cached: ${{ steps.cache-qt.outputs.cache-hit }}
-        aqtversion: '==3.1.*'
         host: 'windows'
         target: 'desktop'
         arch: 'win64_msvc2019_64'
-      if: matrix.os == 'windows-latest'
+        tools: 'tools_openssl_x64'
+        cache: true
+      if: matrix.label == 'windows'
 
-    - name: Set up SDL 2.0.20 (ubuntu-latest)
-      run: |
-        SDL2VER=2.0.20
-        if [[ ! -e ~/.ccache ]]; then
-          mkdir ~/.ccache
-        fi  
-        cd ~/.ccache
-        if [[ ! -e SDL2-${SDL2VER} ]]; then
-          curl -sLO https://libsdl.org/release/SDL2-${SDL2VER}.tar.gz
-          tar -xzf SDL2-${SDL2VER}.tar.gz
-          cd SDL2-${SDL2VER}
-          ./configure --prefix=/usr/local
-          make && cd ../
-          rm SDL2-${SDL2VER}.tar.gz
-        fi
-        sudo make -C SDL2-${SDL2VER} install
-      if: matrix.os == 'ubuntu-20.04'
+    - name: CMake configure (macOS)
+      run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_SCRIPTING_ABILITY=OFF -DEKA2L1_DEPLOY_DMG=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_ENABLE_DISCORD_RICH_PRESENCE=ON -DCMAKE_PREFIX_PATH=${{ env.QT_ROOT_DIR }} -DCMAKE_BUILD_TYPE=${{ env.config }}
+      if: matrix.label == 'macos'
 
-    - name: Patch Qt to fix compile error with GCC-11 (ubuntu-latest)
-      run: |
-        sed -i 's/ThreadEngineStarter<void>(ThreadEngine<void> \*_threadEngine)/ThreadEngineStarter(ThreadEngine<void> \*_threadEngine)/' "${{ env.Qt5_DIR }}/include/QtConcurrent/qtconcurrentthreadengine.h"
-      shell: bash
-      if: matrix.os == 'ubuntu-20.04'
-      
-    - name: CMake configure
-      run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_SCRIPTING_ABILITY=OFF -DEKA2L1_DEPLOY_DMG=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_ENABLE_DISCORD_RICH_PRESENCE=ON -DCMAKE_PREFIX_PATH=${{ env.Qt5_DIR }} -DCMAKE_BUILD_TYPE=${{ matrix.config }}
-      if: matrix.os == 'macos-latest'
+    - name: CMake configure (Windows)
+      run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_NO_TERMINAL=ON -DEKA2L1_ENABLE_DISCORD_RICH_PRESENCE=ON -DCMAKE_PREFIX_PATH=${{ env.QT_ROOT_DIR }} -DCMAKE_BUILD_TYPE=${{ env.config }}
+      if: matrix.label == 'windows'
 
-    - name: CMake configure
-      run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_NO_TERMINAL=ON -DEKA2L1_ENABLE_DISCORD_RICH_PRESENCE=ON -DCMAKE_PREFIX_PATH=${{ env.Qt5_DIR }} -DCMAKE_BUILD_TYPE=${{ matrix.config }}
-      if: matrix.os != 'macos-latest'
+    - name: CMake configure (Linux)
+      run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_NO_TERMINAL=ON -DEKA2L1_ENABLE_DISCORD_RICH_PRESENCE=ON -DCMAKE_BUILD_TYPE=${{ env.config }}
+      if: matrix.label == 'linux'
 
     - name: CMake build
-      run: cmake --build build --config ${{ matrix.config }} --parallel 2 --target eka2l1_qt
-      if: matrix.os != 'windows-latest'
-    
-    - name: CMake build
-      run: cmake --build build --config ${{ matrix.config }} --parallel 2 --target eka2l1_qt updater
-      if: matrix.os == 'windows-latest'
+      run: cmake --build build --config ${{ env.config }} --parallel 4 --target eka2l1_qt
+      if: matrix.label != 'windows'
 
+    - name: CMake build
+      run: cmake --build build --config ${{ env.config }} --parallel 4 --target eka2l1_qt updater
+      if: matrix.label == 'windows'
+
+    # linuxdeploy and its plugins are AppImages themselves, and the runner image
+    # no longer ships FUSE 2 to mount them.
     - name: Generate AppImage
+      env:
+        APPIMAGE_EXTRACT_AND_RUN: 1
       run: |
         chmod u+x scripts/generate_appimage.sh
         ./scripts/generate_appimage.sh
-      if: matrix.os == 'ubuntu-20.04'
+      if: matrix.label == 'linux'
 
     - name: Compute git short sha
       id: git_short_sha
-      run: echo "::set-output name=value::$(git rev-parse --short HEAD)"
-      
+      run: echo "value=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+      shell: bash
+
     - name: Copy OpenSSL binaries
       run: |
-        Invoke-WebRequest https://radrat.vn/eka2l1/roms/build/libcrypto-1_1-x64.dll -OutFile build\bin\libcrypto-1_1.dll
-        Invoke-WebRequest https://radrat.vn/eka2l1/roms/build/libssl-1_1-x64.dll -OutFile build\bin\libssl-1_1.dll
+        $tools = $env:IQTA_TOOLS
+        if (-not $tools) { Write-Warning "Qt tools directory unknown, skipping OpenSSL"; exit 0 }
+        foreach ($dll in @("libcrypto-1_1-x64.dll", "libssl-1_1-x64.dll")) {
+          $src = Get-ChildItem -Path $tools -Filter $dll -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($src) {
+            Copy-Item $src.FullName ("build\bin\" + ($dll -replace "-x64", ""))
+          } else {
+            Write-Warning "$dll not found under $tools"
+          }
+        }
       shell: pwsh
-      if: matrix.os == 'windows-latest'
+      if: matrix.label == 'windows'
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       with:
-        name: eka2l1-${{ steps.git_short_sha.outputs.value }}-${{ matrix.os }}
+        name: eka2l1-${{ steps.git_short_sha.outputs.value }}-${{ matrix.label }}
         path: build/bin
-      if: matrix.os != 'ubuntu-20.04'
+      if: matrix.label != 'linux'
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       with:
-        name: eka2l1-${{ steps.git_short_sha.outputs.value }}-${{ matrix.os }}
+        name: eka2l1-${{ steps.git_short_sha.outputs.value }}-${{ matrix.label }}
         path: build/eka2l1-qt-x64.AppImage
-      if: matrix.os == 'ubuntu-20.04'
+      if: matrix.label == 'linux'
 
   roll-release:
    needs: [build-android, build-desktop]
    runs-on: "ubuntu-latest"
-   if: github.ref == 'refs/heads/master'
+   if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+   permissions:
+     contents: write
    steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        submodules: recursive
-    
+
     - name: Compute git short sha
       id: git_short_sha
-      run: echo "::set-output name=value::$(git rev-parse --short HEAD)"
-      
-    - name: Download Windows Artifacts
-      uses: actions/download-artifact@v3
+      run: echo "value=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+    - name: Download Windows artifact
+      uses: actions/download-artifact@v4
       with:
-        name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-windows-latest"
+        name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-windows"
         path: windows-files
 
-    - name: Download MacOS Artifact
-      uses: actions/download-artifact@v3
+    - name: Download macOS artifact
+      uses: actions/download-artifact@v4
       with:
-        name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-macos-latest"
+        name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-macos"
         path: mac-files
-        
-    - name: Download Ubuntu Artifact
-      uses: actions/download-artifact@v3
+
+    - name: Download Linux artifact
+      uses: actions/download-artifact@v4
       with:
-        name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-ubuntu-20.04"
-        
-    - name: Download Android Artifact
-      uses: actions/download-artifact@v3
+        name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-linux"
+
+    - name: Download Android artifact
+      uses: actions/download-artifact@v4
       with:
-        name: "eka2l1-${{ steps.git_short_sha.outputs.value }}"
-        
+        name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-android"
+
     - name: Rename artifacts for release
       run: |
-        (cd windows-files && zip -r ../EKA2L1-Windows-x86_64.zip . && cd ..)
-        (cd mac-files && zip -r ../EKA2L1-MacOS-x86_64.zip . && cd ..)
+        (cd windows-files && zip -r ../EKA2L1-Windows-x86_64.zip .)
+        (cd mac-files && zip -r ../EKA2L1-MacOS-x86_64.zip .)
         mv eka2l1-qt-x64.AppImage EKA2L1-Linux-x86_64.AppImage
         mv eka2l1-${{ steps.git_short_sha.outputs.value }}.apk EKA2L1-Android.apk
 
+    # The release is a rolling one, so the tag has to be moved to the commit
+    # being published before the release itself is updated.
+    - name: Move the rolling tag
+      run: |
+        git tag -f continous
+        git push -f origin refs/tags/continous
+
     - name: Create release
-      uses: "marvinpinto/action-automatic-releases@latest"
+      uses: softprops/action-gh-release@v2
       with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "continous"
+        tag_name: continous
+        name: "Automatic CI builds"
         prerelease: false
-        title: "Automatic CI builds"
         files: |
           EKA2L1-Windows-x86_64.zip
           EKA2L1-MacOS-x86_64.zip
           EKA2L1-Linux-x86_64.AppImage
           EKA2L1-Android.apk
-
