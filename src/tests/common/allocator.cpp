@@ -84,48 +84,41 @@ TEST_CASE("bitmap_alloc_best_fit_multiple_fit", "bitmap_allocator") {
 TEST_CASE("bitmap_count_bit_aligned", "bitmap_allocator") {
     common::bitmap_allocator alloc(32 * 3);
 
-    // Bitmap 1: All bit on
-    alloc.set_word(0, 0xFFFFFFFF);
+    alloc.force_fill(0, 32);
+    alloc.force_fill(32, 12);
+    alloc.force_fill(64, 8);
 
-    // Bitmap 2: 12 bits on
-    alloc.set_word(1, 0xF00F00F0);
-
-    // Bitmap 3: 8 bits on
-    alloc.set_word(2, 0x00F00F00);
-
-    // First bitmap has 52 bits on, plus with bitmap 2 and 3, we got 52
+    // All 32 bits in the first word, 12 in the second and 8 in the third.
     REQUIRE(alloc.allocated_count(0, 32 * 3 - 1) == 52);
 }
 
 TEST_CASE("bitmap_count_unaligned_start", "bitmap_allocator") {
     common::bitmap_allocator alloc(32 * 3);
 
-    // Bitmap 1: Valid bit count starting from bit 6
-    alloc.set_word(0, 0b110011000011);
+    alloc.force_fill(2, 4);
+    alloc.force_fill(32, 12);
+    alloc.force_fill(64, 8);
 
-    // Bitmap 2: 12 bits on
-    alloc.set_word(1, 0xF00F00F0);
-
-    // Bitmap 3: 8 bits on
-    alloc.set_word(2, 0x00F00F00);
-
-    // First bitmap has 4 valid bits on (from offset 2), plus with bitmap 2 and 3, we got 24
+    // Four allocated bits from offset 2, plus 12 and 8 in the next words.
     REQUIRE(alloc.allocated_count(2, 32 * 3 - 3) == 24);
 }
 
 TEST_CASE("bitmap_count_unaligned_start_end", "bitmap_allocator") {
     common::bitmap_allocator alloc(32 * 3);
 
-    // Bitmap 1: Valid bit count starting from bit 6
-    alloc.set_word(0, 0b110011000011);
+    alloc.force_fill(2, 4);
+    alloc.force_fill(32, 12);
+    alloc.force_fill(67, 4);
 
-    // Bitmap 2: 12 bits on
-    alloc.set_word(1, 0xF00F00F0);
-
-    // Bitmap 3: 4 bits valid before offset 68
-    alloc.set_word(2, 0b10101110001111);
-
-    // First bitmap has 4 valid bits on (from offset 2), plus with bitmap 2 and 3 (4 bits before offset 70),
-    // we got 4 + 12 + 4 = 20 bits
+    // Both endpoints are inclusive: 4 + 12 + 4 allocated bits.
     REQUIRE(alloc.allocated_count(2, 70) == 20);
+}
+
+TEST_CASE("bitmap_count_single_bit", "bitmap_allocator") {
+    common::bitmap_allocator alloc(32);
+
+    alloc.force_fill(17, 1);
+
+    REQUIRE(alloc.allocated_count(17, 17) == 1);
+    REQUIRE(alloc.allocated_count(16, 16) == 0);
 }

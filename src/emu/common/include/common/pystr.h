@@ -231,7 +231,16 @@ namespace eka2l1::common {
             // Determine base
             std::basic_string<T> num_str_ = str_;
 
-            if ((num_str_.length() >= 2) && (base == -1)) {
+            if (num_str_.empty()) {
+                return def_;
+            }
+
+            const bool detect_base = (base == -1);
+            if (detect_base) {
+                base = 10;
+            }
+
+            if ((num_str_.length() >= 2) && detect_base) {
                 auto prefix = num_str_.substr(0, 2);
                 bool prefix_found = false;
 
@@ -254,20 +263,16 @@ namespace eka2l1::common {
                         base = 8;
                         prefix_found = true;
                         break;
-
-                    default:
-                        base = 10;
-                        break;
                     }
                 }
 
                 if (prefix_found) {
                     num_str_.erase(num_str_.begin(), num_str_.begin() + 2);
                 }
-            } else {
-                // Default the value
-                if (base == -1)
-                    base = 10;
+            }
+
+            if ((base < 2) || (base > 36) || num_str_.empty()) {
+                return def_;
             }
 
             I num_ = 0;
@@ -276,6 +281,10 @@ namespace eka2l1::common {
             if (num_str_[0] == static_cast<T>('-')) {
                 factor *= -1;
                 num_str_.erase(num_str_.begin(), num_str_.begin() + 1);
+            }
+
+            if (num_str_.empty()) {
+                return def_;
             }
 
             const int len_ = static_cast<const int>(num_str_.length());

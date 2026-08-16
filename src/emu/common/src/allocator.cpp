@@ -293,18 +293,19 @@ namespace eka2l1::common {
         }
 
         std::uint32_t start_bit = offset;
-        const std::uint32_t end_bit = offset_end;
-
         std::uint32_t allocated_count = 0;
 
-        while (start_bit < end_bit) {
-            const std::int32_t next_end_bit = static_cast<std::int32_t>(common::min<std::uint32_t>((((start_bit + 32) >> 5) << 5) - 1, end_bit));
-            const std::int32_t ext_count = (next_end_bit - start_bit + 1);
+        while (start_bit <= offset_end) {
+            const std::uint32_t word_index = start_bit >> 5;
+            const std::uint32_t end_bit = common::min<std::uint32_t>(
+                offset_end, (word_index << 5) + 31);
+            const std::uint32_t bit_count = end_bit - start_bit + 1;
+            const std::uint32_t mask = (bit_count == 32)
+                ? 0xFFFFFFFFU
+                : ((1U << bit_count) - 1) << (31 - (end_bit & 31));
 
-            std::uint32_t word_to_scan = (~words_[start_bit >> 5] >> (31 - (next_end_bit & 31))) & ((1 << ext_count) - 1);
-            allocated_count += number_of_set_bits(word_to_scan);
-
-            start_bit = next_end_bit + 1;
+            allocated_count += number_of_set_bits(~words_[word_index] & mask);
+            start_bit = end_bit + 1;
         }
 
         return allocated_count;

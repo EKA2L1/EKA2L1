@@ -60,7 +60,7 @@ TEST_CASE("mandatory_check_non_localise", "applist_registeration") {
     apa_app_registry reg;
 
     bool result = read_registeration_info(reinterpret_cast<common::ro_stream *>(&app_info_resource_stream),
-        reg, drive_c);
+        reg, drive_c, true);
 
     REQUIRE(result);
     REQUIRE(common::compare_ignore_case(reg.mandatory_info.app_path.to_std_string(nullptr),

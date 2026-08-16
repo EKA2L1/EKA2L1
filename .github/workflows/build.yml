@@ -197,12 +197,16 @@ jobs:
       if: matrix.label == 'linux'
 
     - name: CMake build
-      run: cmake --build build --config ${{ env.config }} --parallel 4 --target eka2l1_qt
+      run: cmake --build build --config ${{ env.config }} --parallel 4 --target eka2l1_qt ekatests
       if: matrix.label != 'windows'
 
     - name: CMake build
-      run: cmake --build build --config ${{ env.config }} --parallel 4 --target eka2l1_qt updater
+      run: cmake --build build --config ${{ env.config }} --parallel 4 --target eka2l1_qt updater ekatests
       if: matrix.label == 'windows'
+
+    # -C matters on the multi-config Windows generator; it is harmless elsewhere.
+    - name: Run unit tests
+      run: ctest --test-dir build -C ${{ env.config }} --output-on-failure
 
     # linuxdeploy and its plugins are AppImages themselves, and the runner image
     # no longer ships FUSE 2 to mount them.
