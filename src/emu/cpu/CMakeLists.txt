@@ -108,4 +108,4 @@ target_include_directories(cpu PRIVATE ${capstone_INCLUDE_DIRS})
 target_link_libraries(cpu PUBLIC common)
 target_link_libraries(cpu
         PRIVATE
-        capstone-static)
+        capstone)

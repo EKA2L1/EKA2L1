@@ -1,6 +1,12 @@
 include(ExternalProject)
 include(CheckSymbolExists)
 
+# Several of the vendored projects still declare a cmake_minimum_required below
+# 3.5, which CMake 4 refuses outright. They are not ours to change -- two of them
+# are submodules of dynarmic -- so the floor is relaxed for this subtree only,
+# rather than making every caller pass the flag.
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+
 add_library(miniz miniz/miniz.h miniz/miniz.c)
 target_include_directories(miniz PUBLIC miniz)
 
@@ -172,9 +178,28 @@ add_subdirectory(cubeb)
 
 
 # FFMPEG
-add_subdirectory(ffmpeg)
-if (APPLE)
-    target_link_libraries(ffmpeg INTERFACE "-framework CoreVideo" "iconv")
+if (APPLE AND CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+    # The prebuilt libraries in the submodule are x86_64 only; its own
+    # macos_arm64-build.sh produces the arm64 set from the same source.
+    set(FFMPEG_ARM64_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/macos/arm64/lib")
+    if (NOT EXISTS "${FFMPEG_ARM64_LIB_DIR}/libavcodec.a")
+        message(FATAL_ERROR "An Apple Silicon build needs ffmpeg: run macos_arm64-build.sh in src/external/ffmpeg")
+    endif()
+
+    add_library(ffmpeg INTERFACE)
+    target_include_directories(ffmpeg INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include")
+    target_link_libraries(ffmpeg INTERFACE
+            "${FFMPEG_ARM64_LIB_DIR}/libavformat.a"
+            "${FFMPEG_ARM64_LIB_DIR}/libavcodec.a"
+            "${FFMPEG_ARM64_LIB_DIR}/libswscale.a"
+            "${FFMPEG_ARM64_LIB_DIR}/libavutil.a"
+            "${FFMPEG_ARM64_LIB_DIR}/libswresample.a"
+            "z" "-framework CoreVideo" "iconv")
+else()
+    add_subdirectory(ffmpeg)
+    if (APPLE)
+        target_link_libraries(ffmpeg INTERFACE "-framework CoreVideo" "iconv")
+    endif()
 endif()
 
 option(CAPSTONE_BUILD_SHARED "Build shared library" OFF)
@@ -291,52 +316,8 @@ option(RE2_BUILD_TESTING "enable testing for RE2" OFF)
 add_subdirectory(re2)
 
 # Discord-RPC
-# NOTE: Literally brought this code from Vita3K. I give credits to the contributors! if you want
-# specific name here please raise an issue on the tracker! Thanks a lot
-
 if(ENABLE_DISCORD_RICH_PRESENCE)
-	if(NOT EXISTS "${CMAKE_BINARY_DIR}/external/discord_game_sdk.zip")
-		message(STATUS "Downloading discord gamesdk...")
-		file(DOWNLOAD https://dl-game-sdk.discordapp.net/2.5.6/discord_game_sdk.zip
-			"${CMAKE_BINARY_DIR}/external/discord_game_sdk.zip" SHOW_PROGRESS)
-	endif()
-endif()
-
-if(ENABLE_DISCORD_RICH_PRESENCE)
-	if(NOT EXISTS "${CMAKE_BINARY_DIR}/external/discord_game_sdk")
-		file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/external/discord_game_sdk")
-		execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf "${CMAKE_BINARY_DIR}/external/discord_game_sdk.zip"
-			WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/external/discord_game_sdk")
-		file(RENAME "${CMAKE_BINARY_DIR}/external/discord_game_sdk/lib/x86_64/discord_game_sdk.so"
-			"${CMAKE_BINARY_DIR}/external/discord_game_sdk/lib/x86_64/libdiscord_game_sdk.so")
-	endif()
-
-	add_library(discord-rpc STATIC
-		${CMAKE_BINARY_DIR}/external/discord_game_sdk/cpp/achievement_manager.cpp
-		${CMAKE_BINARY_DIR}/external/discord_game_sdk/cpp/activity_manager.cpp
-		${CMAKE_BINARY_DIR}/external/discord_game_sdk/cpp/application_manager.cpp
-		${CMAKE_BINARY_DIR}/external/discord_game_sdk/cpp/core.cpp
-		${CMAKE_BINARY_DIR}/external/discord_game_sdk/cpp/image_manager.cpp
-		${CMAKE_BINARY_DIR}/external/discord_game_sdk/cpp/lobby_manager.cpp
-		${CMAKE_BINARY_DIR}/external/discord_game_sdk/cpp/network_manager.cpp
-		${CMAKE_BINARY_DIR}/external/discord_game_sdk/cpp/overlay_manager.cpp
-		${CMAKE_BINARY_DIR}/external/discord_game_sdk/cpp/relationship_manager.cpp
-		${CMAKE_BINARY_DIR}/external/discord_game_sdk/cpp/storage_manager.cpp
-		${CMAKE_BINARY_DIR}/external/discord_game_sdk/cpp/store_manager.cpp
-		${CMAKE_BINARY_DIR}/external/discord_game_sdk/cpp/types.cpp
-		${CMAKE_BINARY_DIR}/external/discord_game_sdk/cpp/user_manager.cpp
-		${CMAKE_BINARY_DIR}/external/discord_game_sdk/cpp/voice_manager.cpp)
-
-	if(APPLE)
-		target_link_libraries(discord-rpc PUBLIC "${CMAKE_BINARY_DIR}/external/discord_game_sdk/lib/x86_64/discord_game_sdk.dylib")
-	elseif(WIN32)
-		target_link_libraries(discord-rpc PUBLIC "${CMAKE_BINARY_DIR}/external/discord_game_sdk/lib/x86_64/discord_game_sdk.dll.lib")
-	elseif(UNIX)
-		target_link_libraries(discord-rpc PUBLIC "${CMAKE_BINARY_DIR}/external/discord_game_sdk/lib/x86_64/libdiscord_game_sdk.so")
-	endif()
-
-	target_include_directories(discord-rpc PUBLIC "${CMAKE_BINARY_DIR}/external/discord_game_sdk/cpp")
-	set_property(TARGET discord-rpc PROPERTY FOLDER externals)
+	add_subdirectory(discord-rpc-build)
 endif()
 
 add_library(thread-pool INTERFACE)

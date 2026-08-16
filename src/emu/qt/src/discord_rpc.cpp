@@ -23,65 +23,66 @@
 #include <qt/discord_rpc.h>
 #include <qt/utils.h>
 
-#include <discord.h>
 #include <common/log.h>
+#include <discord_rpc.h>
 
 #include <QSettings>
 
+#include <ctime>
+
 namespace eka2l1::qt {
-    constexpr static const std::uint32_t UPDATE_INVOKE_PERIOD = 100;
-    constexpr static const discord::ClientId EKA2L1_CLIENT_ID = 434248613174968320;
+    constexpr static const char *EKA2L1_CLIENT_ID = "434248613174968320";
 
     discord_rpc::discord_rpc(QObject *parent)
         : QObject(parent)
-        , core_(nullptr)
+        , initialised_(false)
+        , start_time_(0)
         , update_timer_(new QTimer(this)) {
         QSettings settings;
-        if (settings.value(ENABLE_DISCORD_RICH_PRESENCE_SETTING_NAME, true).toBool()) {
-            if (discord::Core::Create(EKA2L1_CLIENT_ID, DiscordCreateFlags_NoRequireDiscord, &core_) != discord::Result::Ok) {
-                LOG_ERROR(FRONTEND_UI, "Failed to initialize Discord RPC");
-                return;
-            }
-
-            connect(update_timer_, &QTimer::timeout, this, &discord_rpc::on_update_timer_hit);
-            update_timer_->start(1000);
-        }
-    }
-
-    discord_rpc::~discord_rpc() {
-        delete core_;
-        delete update_timer_;
-    }
-    
-    void discord_rpc::on_update_timer_hit() {
-        core_->RunCallbacks();
-    }
-
-    void discord_rpc::update(const std::string &state, const std::string &detail, bool should_reset_timer) {
-        if (!core_) {
+        if (!settings.value(ENABLE_DISCORD_RICH_PRESENCE_SETTING_NAME, true).toBool()) {
             return;
         }
 
-        discord::Activity target_update_activity{};
-        target_update_activity.SetType(discord::ActivityType::Playing);
-        target_update_activity.SetDetails(detail.c_str());
-        target_update_activity.SetState(state.c_str());
+        DiscordEventHandlers handlers{};
+        Discord_Initialize(EKA2L1_CLIENT_ID, &handlers, 0, nullptr);
 
-        discord::ActivityAssets &assets = target_update_activity.GetAssets();
-        std::string large_text_std = tr("A Symbian/N-Gage emulator, available on PC and Android.").toStdString();
+        initialised_ = true;
+        start_time_ = static_cast<std::int64_t>(time(nullptr));
 
-        assets.SetLargeText(large_text_std.c_str());
-        assets.SetLargeImage("eka2l1_logo");
+        connect(update_timer_, &QTimer::timeout, this, &discord_rpc::on_update_timer_hit);
+        update_timer_->start(1000);
+    }
+
+    discord_rpc::~discord_rpc() {
+        if (initialised_) {
+            Discord_ClearPresence();
+            Discord_Shutdown();
+        }
+    }
+
+    void discord_rpc::on_update_timer_hit() {
+        Discord_RunCallbacks();
+    }
+
+    void discord_rpc::update(const std::string &state, const std::string &detail, bool should_reset_timer) {
+        if (!initialised_) {
+            return;
+        }
 
         if (should_reset_timer) {
-            target_update_activity.GetTimestamps().SetStart(time(nullptr));
+            start_time_ = static_cast<std::int64_t>(time(nullptr));
         }
-        
-        core_->ActivityManager().UpdateActivity(target_update_activity, [](discord::Result result) {
-            if (result != discord::Result::Ok) {
-                LOG_ERROR(FRONTEND_UI, "Error updating Discord Rich Presence, err_code: {}", static_cast<int>(result));
-            }
-        });
+
+        const std::string large_text = tr("A Symbian/N-Gage emulator, available on PC and Android.").toStdString();
+
+        DiscordRichPresence presence{};
+        presence.details = detail.c_str();
+        presence.state = state.c_str();
+        presence.largeImageKey = "eka2l1_logo";
+        presence.largeImageText = large_text.c_str();
+        presence.startTimestamp = start_time_;
+
+        Discord_UpdatePresence(&presence);
     }
 }
 #endif
