@@ -407,7 +407,13 @@ namespace eka2l1::common {
         }
 #endif
 
-        return std::make_unique<standard_dir_iterator>(eka2l1::add_path(path, filter));
+        std::string iterator_path = eka2l1::add_path(path, filter);
+        if (filter.empty() && !iterator_path.empty() &&
+            (iterator_path.back() != '/') && (iterator_path.back() != '\\')) {
+            iterator_path += eka2l1::get_separator();
+        }
+
+        return std::make_unique<standard_dir_iterator>(iterator_path);
     }
     
     std::string find_case_sensitive_file_name(const std::string &folder_path, const std::string &insensitive_name, const file_type type) {
