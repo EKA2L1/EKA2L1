@@ -71,42 +71,49 @@ namespace {
         }
     }
 
-    // Builds a direct-command NVG file with one DRAW_PATH command. Version 1, so
-    // neither the command block nor the offset vector needs the version 2 padding.
+    // Builds a direct-command NVG file with one DRAW_PATH command.
     //
-    //   0   signature, version, header size, type
-    //   26  path data type
-    //   36  viewport (x, y, w, h)
-    //   52  offset vector: count, then one offset pointing at the path data
-    //   56  command block: count, then the DRAW_PATH command
-    //   62  path data: segment count, segment types, padding, coordinates
+    //   0            signature, version, header size, type
+    //   26           path data type
+    //   36           viewport (x, y, w, h)
+    //   header_size  offset vector: count, then one offset pointing at the path data
+    //   ...          command block: count, then the DRAW_PATH command
+    //   ...          path data: segment count, segment types, padding, coordinates
+    //
+    // From version 2 the command block starts on a word boundary and carries two
+    // bytes of padding after its count, so both are placed the way Symbian's
+    // decoder expects to find them.
     std::vector<std::uint8_t> make_nvg(const std::vector<std::uint8_t> &segments,
-        const std::vector<std::int32_t> &coords, const std::uint16_t datatype) {
-        std::vector<std::uint8_t> buf(NVG_HEADER_SIZE, 0);
+        const std::vector<std::int32_t> &coords, const std::uint16_t datatype,
+        const std::uint8_t version = 1, const std::uint16_t header_size = NVG_HEADER_SIZE) {
+        std::vector<std::uint8_t> buf(header_size, 0);
 
         std::memcpy(buf.data(), "nvg", 3);
-        buf[OFF_VERSION] = 1;
-        put16(buf, OFF_HEADER_SIZE, static_cast<std::uint16_t>(NVG_HEADER_SIZE));
+        buf[OFF_VERSION] = version;
+        put16(buf, OFF_HEADER_SIZE, header_size);
         put16(buf, OFF_PATH_DATATYPE, datatype);
 
         const float viewport[4] = { 0.0f, 0.0f, 96.0f, 96.0f };
         std::memcpy(buf.data() + OFF_VIEWPORT, viewport, sizeof(viewport));
 
         // Offset vector: one entry, filled in once the data position is known.
-        buf.resize(NVG_HEADER_SIZE + 4, 0);
-        put16(buf, NVG_HEADER_SIZE, 1);
+        buf.resize(header_size + 4, 0);
+        put16(buf, header_size, 1);
+
+        // An odd offset vector count, so version 2 does not pad the command block.
+        std::size_t commands_offset = header_size + 4;
 
         // Command block: one DRAW_PATH (opcode 7) with the fill bit set, reading
         // entry 0 of the offset vector.
         const std::uint32_t command = (7u << 24) | 0x00020000u;
-        buf.resize(NVG_HEADER_SIZE + 6, 0);
-        put16(buf, NVG_HEADER_SIZE + 4, 1);
+        buf.resize(commands_offset + ((version >= 2) ? 4 : 2), 0);
+        put16(buf, commands_offset, 1);
 
         for (int i = 0; i < 4; i++) {
             buf.push_back(static_cast<std::uint8_t>((command >> (i * 8)) & 0xFF));
         }
 
-        put16(buf, NVG_HEADER_SIZE + 2, static_cast<std::uint16_t>(buf.size()));
+        put16(buf, header_size + 2, static_cast<std::uint16_t>(buf.size()));
 
         append16(buf, static_cast<std::int16_t>(segments.size()));
         buf.insert(buf.end(), segments.begin(), segments.end());
@@ -181,6 +188,17 @@ TEST_CASE("nvg_close_path_does_not_end_the_path", "nvg_file") {
     REQUIRE(count_of(svg, 'M') == 2);
     REQUIRE(svg.find("M 1 2") != std::string::npos);
     REQUIRE(svg.find("M 3 4") != std::string::npos);
+}
+
+TEST_CASE("nvg_version_2_command_block_is_found_at_an_odd_header_size", "nvg_file") {
+    // Symbian pads the version 2 command block based on the offset vector count
+    // alone -- an even count means padded -- not on where the block lands. The
+    // two rules only agree while the header size is a multiple of four. With an
+    // odd count and a header size of 54, deriving the padding from the address
+    // instead skips two bytes too far and the command block is misread.
+    const std::string svg = convert(make_nvg({ SEG_MOVE_TO }, { 16, 32 }, PATH_SIXTEEN_BIT, 2, 54));
+
+    REQUIRE(svg.find("M 1 2") != std::string::npos);
 }
 
 TEST_CASE("nvg_small_clockwise_arc_is_a_known_segment", "nvg_file") {
