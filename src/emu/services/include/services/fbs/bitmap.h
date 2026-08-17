@@ -125,4 +125,20 @@ namespace eka2l1::epoc {
     bool convert_to_rgba8888(fbs_server *serv, common::ro_stream &source, common::wo_stream &dest, loader::sbm_header &header, std::int32_t byte_width, const bitmap_file_compression comp, const bool make_standard_mask = false);
     bool convert_to_rgba8888(fbs_server *serv, bitwise_bitmap *bmp, common::wo_stream &dest, const bool make_standard_mask = false);
     bool convert_to_rgba8888(fbs_server *serv, loader::mbm_file &file, const std::size_t index, common::wo_stream &dest, const bool make_standard_mask = false);
+    /**
+     * @brief Composite a Symbian icon mask onto the icon's alpha channel.
+     *
+     * Both buffers must be RGBA8888 of the same dimensions, and the mask must have
+     * been produced by convert_to_rgba8888 with make_standard_mask set. The mask's
+     * polarity is worked out from its colour depth and its content; see the
+     * implementation for the two families involved.
+     *
+     * @param icon_rgba     Icon pixels, alpha channel overwritten in place.
+     * @param mask_rgba     Mask pixels, read only.
+     * @param width         Width in pixels of both buffers.
+     * @param height        Height in pixels of both buffers.
+     * @param mask_bpp      Colour depth the mask was stored at.
+     */
+    void apply_icon_mask_alpha(std::uint8_t *icon_rgba, const std::uint8_t *mask_rgba,
+        const std::size_t width, const std::size_t height, const std::uint32_t mask_bpp);
 }
