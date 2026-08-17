@@ -257,13 +257,56 @@ jobs:
         path: build/eka2l1-qt-x64.AppImage
       if: matrix.label == 'linux'
 
+  # Both slices are built unsigned. Signing a device build on CI mints a
+  # development certificate per run and Apple caps how many an account may hold,
+  # so a signing CI is a CI that eventually stops working; nothing here needs a
+  # signature to prove the code compiles and links.
+  build-ios:
+    runs-on: macos-latest
+    env:
+      EKA2L1_IOS_CONFIGURATION: Release
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: simulator
+          - label: device
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: recursive
+
+    # ffmpeg ships no iOS slice, and building one takes longer than the app
+    # itself. The slices differ per platform, so they are cached per label.
+    - name: Cache iOS ffmpeg
+      id: cache-ffmpeg
+      uses: actions/cache@v4
+      with:
+        path: src/external/ffmpeg/ios/${{ matrix.label }}
+        key: ffmpeg-ios-${{ matrix.label }}-${{ hashFiles('.git/modules/src/external/ffmpeg/HEAD') }}
+
+    - name: Build
+      run: ./scripts/build_ios.sh ${{ matrix.label }}
+
+    - name: Compute git short sha
+      id: git_short_sha
+      run: echo "value=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: eka2l1-${{ steps.git_short_sha.outputs.value }}-ios-${{ matrix.label }}
+        path: build/ios-${{ matrix.label }}/src/emu/ios/Release-iphone*/EKA2L1.app
+
   # One check with a stable name for branch protection to require. The matrix
   # job names carry their runner labels, so they change whenever an image is
   # swapped -- a required check pinned to those silently stops applying. This
   # one does not move.
   ci:
     name: CI
-    needs: [build-android, build-desktop]
+    needs: [build-android, build-desktop, build-ios]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -271,8 +314,10 @@ jobs:
       run: |
         echo "android:  ${{ needs.build-android.result }}"
         echo "desktop:  ${{ needs.build-desktop.result }}"
+        echo "ios:      ${{ needs.build-ios.result }}"
         if [ "${{ needs.build-android.result }}" != "success" ] || \
-           [ "${{ needs.build-desktop.result }}" != "success" ]; then
+           [ "${{ needs.build-desktop.result }}" != "success" ] || \
+           [ "${{ needs.build-ios.result }}" != "success" ]; then
           echo "::error::A build or test job did not pass"
           exit 1
         fi
