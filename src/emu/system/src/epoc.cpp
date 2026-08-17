@@ -1136,6 +1136,16 @@ namespace eka2l1 {
     }
 
     void system_impl::initialize_user_parties() {
+        // The dispatcher is created by setup_outsider(), which set_device() only
+        // reaches once the ROM has loaded. Without a device -- a fresh install,
+        // or a configured device whose ROM is missing -- there is nothing to
+        // initialise, and register_functions() would call through a null
+        // dispatcher. Every frontend calls this unconditionally.
+        if (!dispatcher_) {
+            LOG_ERROR(SYSTEM, "No device has been set up, skipping user-side initialisation");
+            return;
+        }
+
         get_lib_manager()->load_patch_libraries(PATCH_FOLDER_PATH);
         dispatch::libraries::register_functions(kern_.get(), dispatcher_.get());
 
