@@ -22,6 +22,8 @@
 
 #if EKA2L1_PLATFORM(WIN32)
 #include "backend/context_wgl.h"
+#elif EKA2L1_PLATFORM(IOS)
+#include "backend/context_eagl.h"
 #elif EKA2L1_PLATFORM(MACOS)
 #include "backend/context_agl.h"
 #elif EKA2L1_PLATFORM(ANDROID)
@@ -38,6 +40,8 @@ namespace eka2l1::drivers::graphics {
     std::unique_ptr<gl_context> make_gl_context(const drivers::window_system_info &system_info, const bool stereo, const bool core) {
 #if EKA2L1_PLATFORM(WIN32)
         return std::make_unique<gl_context_wgl>(system_info, stereo, core);
+#elif EKA2L1_PLATFORM(IOS)
+        return std::make_unique<gl_context_eagl>(system_info, stereo, core);
 #elif EKA2L1_PLATFORM(MACOS)
         return std::make_unique<gl_context_agl>(system_info, stereo, core);
 #elif EKA2L1_PLATFORM(ANDROID)

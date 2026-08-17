@@ -36,6 +36,7 @@ namespace eka2l1::config {
         std::uint32_t time_delay;
 
         int screen_rotation;
+        int screen_mode;
 
         float screen_upscale;
         std::uint32_t screen_upscale_method;

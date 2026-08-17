@@ -487,7 +487,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="181"/>
       <source>Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</source>
-      <translation>Profiller uygulama/oyun başına kaydedilir. Düzenleme moduna girmek için &lt;b&gt;Düzenle&lt;/b&gt;&apos;ye basın. Eşleme elemanını silmek için &lt;b&gt;Sil&lt;/b&gt&apos;e basın ve kaldırmak istediğiniz öğeye tıklayın.</translation>
+      <translation>Profiller uygulama/oyun başına kaydedilir. Düzenleme moduna girmek için &lt;b&gt;Düzenle&lt;/b&gt;&apos;ye basın. Eşleme elemanını silmek için &lt;b&gt;Sil&lt;/b&gt;&apos;e basın ve kaldırmak istediğiniz öğeye tıklayın.</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="212"/>

@@ -34,6 +34,8 @@
 #include <package/sis_v1_installer.h>
 #include <vfs/vfs.h>
 
+#include <cwctype>
+
 #include <fstream>
 #include <yaml-cpp/yaml.h>
 
@@ -80,7 +82,7 @@ namespace eka2l1 {
                         while (std::optional<entry_info> stub_file_info = stub_dir_iterator->get_next_entry()) {
                             auto stub_file_real_path = sys->get_raw_path(common::utf8_to_ucs2(stub_file_info->full_path));
                             if (stub_file_real_path.has_value()) {
-                                install_package(stub_file_real_path.value(), drv, nullptr, nullptr, true);
+                                install_package(stub_file_real_path.value(), drv, nullptr, nullptr, true, true);
                             }
                         }
                     }
@@ -530,7 +532,69 @@ namespace eka2l1 {
             }
         }
 
-        package::installation_result packages::install_package(const std::u16string &path, const drive_number drive, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb, const bool silent) {
+package::object *packages::package_owning_executable(const uid secure_id) {
+            if (!secure_id) {
+                return nullptr;
+            }
+
+            for (auto &[pkg_uid, obj] : objects_) {
+                for (const package::file_description &desc : obj.file_descriptions) {
+                    if (desc.sid == secure_id) {
+                        return &obj;
+                    }
+                }
+            }
+
+            return nullptr;
+        }
+
+        package::object *packages::package_owning_file(const std::u16string &file_path) {
+            if (file_path.empty()) {
+                return nullptr;
+            }
+
+            for (auto &[pkg_uid, obj] : objects_) {
+                for (const package::file_description &desc : obj.file_descriptions) {
+                    if (common::compare_ignore_case(desc.target, file_path) == 0) {
+                        return &obj;
+                    }
+                }
+            }
+
+            // No exact hit. The directory a caller knows an app binary by does not
+            // have to be the one the package installed it to: applist rebuilds an
+            // app path from the registration as <drive>:\system\programs\<name>.exe
+            // (or <drive>:\<name>.exe), while the package holds the real
+            // <drive>:\sys\bin\<name>.exe. Fall back to the drive and file name,
+            // and only answer when exactly one package claims that name — sharing
+            // it means the file alone cannot say who owns the app.
+            const std::u16string filename = eka2l1::filename(file_path);
+            if (filename.empty() || (file_path.length() < 2) || (file_path[1] != u':')) {
+                return nullptr;
+            }
+
+            package::object *only_match = nullptr;
+
+            for (auto &[pkg_uid, obj] : objects_) {
+                for (const package::file_description &desc : obj.file_descriptions) {
+                    if (desc.target.empty() || (std::towlower(desc.target[0]) != std::towlower(file_path[0]))
+                        || (common::compare_ignore_case(eka2l1::filename(desc.target), filename) != 0)) {
+                        continue;
+                    }
+
+                    if (only_match && (only_match != &obj)) {
+                        return nullptr;
+                    }
+
+                    only_match = &obj;
+                    break;
+                }
+            }
+
+            return only_match;
+        }
+
+        package::installation_result packages::install_package(const std::u16string &path, const drive_number drive, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb, const bool silent, const bool as_stub) {
             std::optional<loader::sis_type> sis_ver = loader::identify_sis_type(common::ucs2_to_utf8(path));
 
             if (!sis_ver) {
@@ -573,7 +637,7 @@ namespace eka2l1 {
                 final_obj.file_major_version = 5;
                 final_obj.file_minor_version = 4;
 
-                if (!loader::install_sis_old(path, sys, drive, final_obj, choose_lang, var_resolver, progress_cb, cancel_cb, silent)) {
+                if (!loader::install_sis_old(path, sys, drive, final_obj, choose_lang, var_resolver, progress_cb, cancel_cb, as_stub)) {
                     return package::installation_result_invalid;
                 }
 

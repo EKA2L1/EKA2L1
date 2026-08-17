@@ -109,3 +109,9 @@
 [submodule "src/external/rapidjson"]
 	path = src/external/rapidjson
 	url = https://github.com/Tencent/rapidjson
+[submodule "src/external/xz"]
+	path = src/external/xz
+	url = https://github.com/tukaani-project/xz
+[submodule "src/external/libarchive"]
+	path = src/external/libarchive
+	url = https://github.com/libarchive/libarchive

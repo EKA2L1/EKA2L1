@@ -36,5 +36,20 @@ namespace eka2l1 {
 
         device_installation_error install_rom(device_manager *dvc, const std::string &path, const std::string &rom_resident_path, const std::string &drives_z_resident_path, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb);
         device_installation_error install_rpkg(device_manager *dvc, const std::string &path, const std::string &devices_rom_path, std::string &firmware_code, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb);
+
+        /**
+         * @brief Install a device from a raw ROM image, plus the RPKG that goes with it if one is needed.
+         *
+         * Which of the two installers above applies is a property of the ROM: images that keep the device's
+         * files in ROFS instead of ROM carry nothing to populate drive Z with, so they need the RPKG dump
+         * alongside. This picks the right one and, on the RPKG path, drops the ROM image where the emulator
+         * expects to find it afterwards.
+         *
+         * @param rpkg_path Path to the RPKG, or an empty string when the caller has none. A ROM that turns
+         *                  out to need one then fails with device_installation_rpkg_missing.
+         */
+        device_installation_error install_rom_with_optional_rpkg(device_manager *dvc, const std::string &rom_path,
+            const std::string &rpkg_path, const std::string &rom_resident_path, const std::string &drives_z_resident_path,
+            progress_changed_callback progress_cb, cancel_requested_callback cancel_cb);
     }
 }

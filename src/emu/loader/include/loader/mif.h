@@ -25,9 +25,12 @@
 
 namespace eka2l1::common {
     class ro_stream;
+    class wo_stream;
 }
 
 namespace eka2l1::loader {
+    struct nvg_options;
+
     struct mif_header_v2 {
         int uid;
         int version;
@@ -94,4 +97,22 @@ namespace eka2l1::loader {
          */
         bool read_mif_entry(const std::size_t idx, std::uint8_t *buf, int &dest_size);
     };
+
+    /**
+     * \brief Convert an MIF icon entry into SVG text.
+     *
+     * The entry is what read_mif_entry gives back: an mif_icon_header followed by its
+     * payload. An SVG-typed entry can hold three different things - the SVGB binary
+     * form, plain SVG text, or a gzip-wrapped plain SVG (SVGZ) - and all three are
+     * handled here. NVG entries are converted too; raster entries are rejected.
+     *
+     * \param entry      Buffer holding the whole entry, header included.
+     * \param entry_size Size of that buffer.
+     * \param out        Stream receiving the SVG text.
+     * \param nvg_opts   Optional sizing hints, only used by NVG entries.
+     *
+     * \returns True if `out` received usable SVG.
+     */
+    bool convert_mif_icon_to_svg(std::uint8_t *entry, const std::size_t entry_size,
+        common::wo_stream &out, nvg_options *nvg_opts = nullptr);
 }

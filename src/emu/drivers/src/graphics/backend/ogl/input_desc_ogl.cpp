@@ -19,7 +19,12 @@
 
 #include <drivers/graphics/backend/ogl/common_ogl.h>
 #include <drivers/graphics/backend/ogl/input_desc_ogl.h>
+#include <common/platform.h>
+#if EKA2L1_PLATFORM(IOS)
+#include <drivers/graphics/backend/ogl/ios_gl_loader.h>
+#else
 #include <glad/glad.h>
+#endif
 
 #include <cstring>
 
@@ -38,6 +43,30 @@ namespace eka2l1::drivers {
     }
 
     bool input_descriptors_ogl::modify(drivers::graphics_driver *drv, input_descriptor *descs, const int count) {
+        // A VAO retains enabled attribute arrays. Disable locations that were present
+        // in the previous descriptor set but are absent from the replacement set.
+        if (vao_) {
+            GLint previous_vao = 0;
+            glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &previous_vao);
+            glBindVertexArray(vao_);
+
+            for (const input_descriptor_ogl &old_input : inputs_) {
+                bool still_present = false;
+                for (int i = 0; i < count; i++) {
+                    if (descs[i].location == old_input.location) {
+                        still_present = true;
+                        break;
+                    }
+                }
+
+                if (!still_present) {
+                    glDisableVertexAttribArray(old_input.location);
+                }
+            }
+
+            glBindVertexArray(static_cast<GLuint>(previous_vao));
+        }
+
         inputs_.clear();
 
         for (int i = 0; i < count; i++) {
@@ -45,7 +74,9 @@ namespace eka2l1::drivers {
                 return false;
             }
 
-            inputs_.push_back(*reinterpret_cast<input_descriptor_ogl*>(descs + i));
+            input_descriptor_ogl input;
+            static_cast<input_descriptor&>(input) = descs[i];
+            inputs_.push_back(input);
         }
 
         for (int i = 0; i < GL_BACKEND_MAX_VBO_SLOTS; i++) {

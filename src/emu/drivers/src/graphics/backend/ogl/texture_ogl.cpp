@@ -22,7 +22,12 @@
 #include <drivers/graphics/backend/ogl/texture_ogl.h>
 #include <drivers/graphics/backend/ogl/graphics_ogl.h>
 
+#include <common/platform.h>
+#if EKA2L1_PLATFORM(IOS)
+#include <drivers/graphics/backend/ogl/ios_gl_loader.h>
+#else
 #include <glad/glad.h>
+#endif
 
 #include <common/bytes.h>
 #include <common/log.h>
@@ -98,6 +103,16 @@ namespace eka2l1::drivers {
         drivers::texture_format converted_internal_format = internal_format;
         drivers::texture_format converted_format = format;
         drivers::texture_data_type converted_data_type = tex_data_type;
+
+#if EKA2L1_PLATFORM(IOS)
+        // Apple's BGRA extension (GL_APPLE_texture_format_BGRA8888) only accepts an RGBA
+        // internal format paired with a BGRA client format. Passing BGRA as the internal
+        // format is the GL_EXT_texture_format_BGRA8888 convention (Android/desktop) and is
+        // rejected here, leaving the texture empty.
+        if (converted_internal_format == drivers::texture_format::bgra) {
+            converted_internal_format = drivers::texture_format::rgba;
+        }
+#endif
 
         std::vector<std::uint8_t> converted_data;
         if (tex_data_type == drivers::texture_data_type::compressed) {

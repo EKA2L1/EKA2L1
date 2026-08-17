@@ -34,9 +34,9 @@ target_link_libraries(scripting PRIVATE common
         epocutils
         epocservs)
 
-if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
+if (EKA2L1_ENABLE_SCRIPTING_ABILITY AND EKA2L1_SCRIPTING_LUA)
     target_link_libraries(scripting PUBLIC liblua)
-endif (EKA2L1_ENABLE_SCRIPTING_ABILITY)
+endif ()
 
 if (UNIX OR APPLE)
     target_link_libraries(scripting PRIVATE epocutils)
@@ -49,4 +49,8 @@ set_target_properties(scripting PROPERTIES OUTPUT_NAME scripting
         LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin/$<0:>"
         LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_BINARY_DIR}/bin/$<0:>")
 
-add_assets(scripting ${CMAKE_CURRENT_SOURCE_DIR}/lua/eka2l1 scripts/eka2l1)
+# The Lua runtime modules and shipped *.lua patches are only meaningful when the
+# LuaJIT runtime is compiled in. Native-only builds carry the patches as C++.
+if (EKA2L1_SCRIPTING_LUA)
+    add_assets(scripting ${CMAKE_CURRENT_SOURCE_DIR}/lua/eka2l1 scripts/eka2l1)
+endif ()

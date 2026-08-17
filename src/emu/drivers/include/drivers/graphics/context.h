@@ -61,6 +61,17 @@ namespace eka2l1::drivers::graphics {
 
         virtual std::unique_ptr<gl_context> create_shared_context() = 0;
 
+        // On desktop / Android the EGL/WGL/AGL "default framebuffer" (FBO 0)
+        // is the window's back buffer, so binding 0 presents to screen. On
+        // iOS GLES there is no default framebuffer — we own an FBO whose
+        // color attachment is the CAEAGLLayer's drawable renderbuffer, and
+        // that handle is what must be bound when the driver wants to render
+        // to the swapchain. Backends that have a real default framebuffer
+        // can leave this at 0.
+        virtual unsigned int swapchain_framebuffer() const {
+            return 0;
+        }
+
         mode gl_mode() const {
             return m_opengl_mode;
         }

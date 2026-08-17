@@ -229,8 +229,6 @@ namespace eka2l1 {
         void sort_registry_list();
         void init();
 
-        bool delete_registry(const std::u16string &rsc_path);
-
         bool load_registry(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
             const language ideal_lang = language::en);
 
@@ -324,6 +322,15 @@ namespace eka2l1 {
     public:
         explicit applist_server(system *sys);
         ~applist_server() override;
+
+        /**
+         * \brief Forget a registeration without waiting for the next rescan.
+         *
+         * Used by frontends that delete an installed app's files themselves.
+         *
+         * \param rsc_path Path of the registeration file the entry was read from.
+         */
+        bool delete_registry(const std::u16string &rsc_path);
 
         /**
          * @brief       Get the legacy level of the server.

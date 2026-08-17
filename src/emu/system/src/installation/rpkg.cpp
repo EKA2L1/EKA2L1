@@ -187,6 +187,55 @@ namespace eka2l1::loader {
         return device_installation_none;
     }
 
+    device_installation_error install_rom_with_optional_rpkg(device_manager *dvcmngr, const std::string &rom_path,
+        const std::string &rpkg_path, const std::string &rom_resident_path, const std::string &drives_z_resident_path,
+        progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
+        if (!common::exists(rom_path)) {
+            return device_installation_not_exist;
+        }
+
+        if (!should_install_requires_additional_rpkg(rom_path)) {
+            return install_rom(dvcmngr, rom_path, rom_resident_path, drives_z_resident_path, progress_cb, cancel_cb);
+        }
+
+        if (rpkg_path.empty() || !common::exists(rpkg_path)) {
+            return device_installation_rpkg_missing;
+        }
+
+        // The resident ROM copy below is on this path only, and it is a sizeable share of the wait -
+        // leave it the last tenth of the bar.
+        progress_changed_callback wrapped_cb = nullptr;
+
+        if (progress_cb) {
+            wrapped_cb = [progress_cb](const std::size_t done, const std::size_t total) {
+                progress_cb(done * 9 / 10, total);
+            };
+        }
+
+        std::string firmware_code;
+        const device_installation_error result = install_rpkg(dvcmngr, rpkg_path, drives_z_resident_path,
+            firmware_code, wrapped_cb, cancel_cb);
+
+        if (result != device_installation_none) {
+            return result;
+        }
+
+        // Past the point of no return: the device is in devices.yml and its drive Z is populated, so a
+        // cancel arriving now is ignored rather than left half-installed.
+        const std::string rom_directory = add_path(rom_resident_path, common::lowercase_string(firmware_code) + "\\");
+        common::create_directories(rom_directory);
+
+        if (!common::copy_file(rom_path, add_path(rom_directory, "SYM.ROM"), true)) {
+            return device_installation_rom_fail_to_copy;
+        }
+
+        if (progress_cb) {
+            progress_cb(10, 10);
+        }
+
+        return device_installation_none;
+    }
+
     device_installation_error install_rpkg(device_manager *dvcmngr, const std::string &path, const std::string &devices_rom_path,
         std::string &firmware_code_ret, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         FILE *f = common::open_c_file(path.data(), "rb");

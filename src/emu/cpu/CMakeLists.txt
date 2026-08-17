@@ -90,9 +90,26 @@ add_library(cpu
         ${SOURCE_12L1R_PUBLIC}
         ${SOURCE_DYNCOM})
 
+
+
+# VFP's instruction-level trace sites sit directly on dyncom's hottest path: one
+# log line per float loaded or stored, each synchronously flushed (spdlog
+# flush_on = debug). Float-heavy guest code drowns in them. Compile them out
+# unless a diagnostic build explicitly asks for them — including in Debug, whose
+# default log filter is "*:trace" and would otherwise enable them by default.
+option(EKA2L1_DYNCOM_VFP_TRACE "Keep dyncom VFP trace logging" OFF)
+if (NOT EKA2L1_DYNCOM_VFP_TRACE)
+    target_compile_definitions(cpu PRIVATE EKA2L1_DYNCOM_DISABLE_VFP_TRACE=1)
+endif()
+
 if (ARCHITECTURE_ARM32)
     target_sources(cpu PRIVATE ${SOURCE_12L1R})
     target_link_libraries(cpu PRIVATE Catch2)
+elseif (EKA2L1_IOS AND NOT EKA2L1_IOS_DYNARMIC)
+    # iOS builds without EKA2L1_IOS_DYNARMIC run the dyncom interpreter only.
+    # This is the App Store / TestFlight configuration: no JIT code is
+    # compiled in.
+    message(STATUS "cpu: linking without dynarmic (dyncom only)")
 else()
     target_sources(cpu PRIVATE
             include/cpu/arm_dynarmic.h
@@ -101,6 +118,7 @@ else()
             PRIVATE
             dynarmic)
 endif()
+
 
 target_include_directories(cpu PUBLIC include)
 target_include_directories(cpu PRIVATE ${capstone_INCLUDE_DIRS})

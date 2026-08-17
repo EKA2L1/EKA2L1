@@ -21,7 +21,14 @@
 
 #include <common/algorithm.h>
 #include <common/log.h>
+#include <common/platform.h>
 #include <cpu/arm_utils.h>
+
+#if EKA2L1_PLATFORM(IOS) || EKA2L1_ARCH(ARM)
+#define EKA2L1_DEFAULT_ARM_EMULATOR_TYPE arm_emulator_type::dyncom
+#else
+#define EKA2L1_DEFAULT_ARM_EMULATOR_TYPE arm_emulator_type::dynarmic
+#endif
 
 namespace eka2l1::arm {
     void dump_context(const core::thread_context &uni) {
@@ -74,6 +81,6 @@ namespace eka2l1::arm {
             return arm_emulator_type::r12l1;
         }
 
-        return arm_emulator_type::dynarmic;
+        return EKA2L1_DEFAULT_ARM_EMULATOR_TYPE;
     }
 }
