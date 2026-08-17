@@ -37,7 +37,7 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="50"/>
       <source>&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</source>
-      <translation>&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</translation>
+      <translation>&lt;i&gt;Comit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="53"/>

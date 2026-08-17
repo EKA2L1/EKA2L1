@@ -83,7 +83,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="63"/>
       <source>Search</source>
-      <translation>ابحث</translation>
+      <translation>بحث</translation>
     </message>
   </context>
   <context>
@@ -242,7 +242,7 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="134"/>
       <source>Remove</source>
-      <translation>حذف</translation>
+      <translation>إزالة</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="135"/>
@@ -482,7 +482,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="153"/>
       <source>Remove</source>
-      <translation>حذف</translation>
+      <translation>إزالة</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="181"/>
@@ -634,7 +634,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="162"/>
       <source>About</source>
-      <translation>عن</translation>
+      <translation>حول</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="167"/>
@@ -654,7 +654,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="182"/>
       <source>Settings</source>
-      <translation>إعدادات</translation>
+      <translation>الإعدادات</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="190"/>
@@ -1070,7 +1070,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
       <source>Search</source>
-      <translation>ابحث</translation>
+      <translation>بحث</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="66"/>
@@ -1133,7 +1133,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="20"/>
       <source>Settings</source>
-      <translation>إعدادات</translation>
+      <translation>الإعدادات</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="36"/>
@@ -1428,7 +1428,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
       <location filename="../src/settings_dialog.ui" line="777"/>
       <source>Devices</source>
-      <translation>Device</translation>
+      <translation>الأجهزة</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="794"/>

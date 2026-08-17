@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/utils.cpp" line="126"/>
       <source>EKA2L1 - Symbian OS emulator</source>
-      <translation type="unfinished">EKA2L1 - Symbian OS emulator</translation>
+      <translation>EKA2L1-شبیه ساز سیستم عامل Symbian</translation>
     </message>
   </context>
   <context>
@@ -57,17 +57,17 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="92"/>
       <source>&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;نماد:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="106"/>
       <source>&lt;b&gt;Honors:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Honors:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;افتخارات:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="120"/>
       <source>&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;مترجمان:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
   </context>
   <context>
@@ -83,7 +83,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="63"/>
       <source>Search</source>
-      <translation type="unfinished">Search</translation>
+      <translation>جستجو</translation>
     </message>
   </context>
   <context>
@@ -91,12 +91,12 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="724"/>
       <source>&lt;br&gt;App UID: 0x%1</source>
-      <translation type="unfinished">&lt;br&gt;App UID: 0x%1</translation>
+      <translation>&lt;br&gt;UID برنامه: 0x%1</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="796"/>
       <source>Enter a new name</source>
-      <translation type="unfinished">Enter a new name</translation>
+      <translation>یک نام جدید وارد کنید</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="805"/>
@@ -121,7 +121,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="834"/>
       <source>Rename</source>
-      <translation type="unfinished">Rename</translation>
+      <translation>تغییر نام</translation>
     </message>
     <message>
       <location filename="../src/applistwidget.cpp" line="835"/>
@@ -139,32 +139,32 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="47"/>
       <source>Mode</source>
-      <translation type="unfinished">Mode</translation>
+      <translation>حالت</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="55"/>
       <source>Off</source>
-      <translation type="unfinished">Off</translation>
+      <translation>خاموش</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="60"/>
       <source>Direct IP</source>
-      <translation type="unfinished">Direct IP</translation>
+      <translation>IP مستقیم</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="65"/>
       <source>LAN</source>
-      <translation type="unfinished">LAN</translation>
+      <translation>LAN</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="115"/>
       <source>Server address</source>
-      <translation type="unfinished">Server address</translation>
+      <translation>آدرس سرور</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="134"/>
       <source>Enable UPnP (for IPv4 public play)</source>
-      <translation type="unfinished">Enable UPnP (for IPv4 public play)</translation>
+      <translation>فعال کردن UPnP (برای بازی عمومی IPv4)</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="166"/>
@@ -184,7 +184,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="228"/>
       <source>Password</source>
-      <translation type="unfinished">Password</translation>
+      <translation>گذرواژه</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="238"/>
@@ -242,7 +242,7 @@
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="134"/>
       <source>Remove</source>
-      <translation type="unfinished">Remove</translation>
+      <translation>حذف</translation>
     </message>
     <message>
       <location filename="../src/btnetplay_friends_dialog.cpp" line="135"/>
@@ -323,7 +323,7 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="125"/>
       <source>Install</source>
-      <translation type="unfinished">Install</translation>
+      <translation>نصب</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="138"/>
@@ -482,7 +482,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="153"/>
       <source>Remove</source>
-      <translation type="unfinished">Remove</translation>
+      <translation>حذف</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="181"/>
@@ -492,7 +492,7 @@
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="212"/>
       <source>Edit</source>
-      <translation type="unfinished">Edit</translation>
+      <translation>ویرایش</translation>
     </message>
     <message>
       <location filename="../src/btnmap/editor_widget.ui" line="222"/>
@@ -589,7 +589,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="73"/>
       <source>Install</source>
-      <translation type="unfinished">Install</translation>
+      <translation>نصب</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="83"/>
@@ -634,7 +634,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="162"/>
       <source>About</source>
-      <translation type="unfinished">About</translation>
+      <translation>درباره</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="167"/>
@@ -654,7 +654,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="182"/>
       <source>Settings</source>
-      <translation type="unfinished">Settings</translation>
+      <translation>تنظیمات</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="190"/>
@@ -1070,7 +1070,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
       <source>Search</source>
-      <translation type="unfinished">Search</translation>
+      <translation>جستجو</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="66"/>
@@ -1133,12 +1133,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="20"/>
       <source>Settings</source>
-      <translation type="unfinished">Settings</translation>
+      <translation>تنظیمات</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="36"/>
       <source>General</source>
-      <translation type="unfinished">General</translation>
+      <translation>عمومی</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="48"/>
@@ -1193,7 +1193,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="282"/>
       <source>Hide system applications</source>
-      <translation type="unfinished">Hide system applications</translation>
+      <translation>پنهان کردن اپلیکیشن های سیستمی</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="301"/>
@@ -1301,7 +1301,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="605"/>
       <source>Enable nearest neighbor filtering</source>
-      <translation type="unfinished">Enable nearest neighbor filtering</translation>
+      <translation>فعال کردن فیلتر نزدیکترین فرد</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="612"/>
@@ -1321,22 +1321,22 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="662"/>
       <source>Language</source>
-      <translation type="unfinished">Language</translation>
+      <translation>زبان</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="684"/>
       <source>Theme</source>
-      <translation type="unfinished">Theme</translation>
+      <translation>Theme</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="692"/>
       <source>Light</source>
-      <translation type="unfinished">Light</translation>
+      <translation>روشن</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="697"/>
       <source>Dark</source>
-      <translation type="unfinished">Dark</translation>
+      <translation>تاریک</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="633"/>
@@ -1346,7 +1346,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="470"/>
       <source>Background</source>
-      <translation type="unfinished">Background</translation>
+      <translation>پس زمینه</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="491"/>
@@ -1381,7 +1381,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="712"/>
       <source>System</source>
-      <translation type="unfinished">System</translation>
+      <translation>سیستم</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="718"/>
@@ -1428,7 +1428,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="777"/>
       <source>Devices</source>
-      <translation type="unfinished">Devices</translation>
+      <translation>دستگاه ها</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="794"/>
@@ -1439,7 +1439,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
       <location filename="../src/settings_dialog.ui" line="817"/>
       <location filename="../src/settings_dialog.ui" line="1291"/>
       <source>Rename</source>
-      <translation type="unfinished">Rename</translation>
+      <translation>تغییر نام</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="828"/>
@@ -1526,22 +1526,22 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.ui" line="1037"/>
       <source>Real-time accuracy</source>
-      <translation type="unfinished">Real-time accuracy</translation>
+      <translation>دقت زمان واقعی</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1045"/>
       <source>Low</source>
-      <translation type="unfinished">Low</translation>
+      <translation>کم</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1050"/>
       <source>Mid</source>
-      <translation type="unfinished">Mid</translation>
+      <translation>متوسط</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1055"/>
       <source>High</source>
-      <translation type="unfinished">High</translation>
+      <translation>زیاد</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1068"/>
@@ -1557,7 +1557,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
       <location filename="../src/settings_dialog.ui" line="1103"/>
       <location filename="../src/settings_dialog.ui" line="1144"/>
       <source>Reset</source>
-      <translation type="unfinished">Reset</translation>
+      <translation>بازنشانی</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1117"/>
@@ -1712,7 +1712,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</transla
     <message>
       <location filename="../src/settings_dialog.cpp" line="307"/>
       <source>Default</source>
-      <translation type="unfinished">Default</translation>
+      <translation>پیش فرض</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="445"/>

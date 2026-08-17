@@ -169,7 +169,7 @@
     <message>
       <location filename="../src/btnet_dialog.ui" line="166"/>
       <source>Save</source>
-      <translation type="unfinished">Save</translation>
+      <translation>Зберегти</translation>
     </message>
     <message>
       <location filename="../src/btnet_dialog.ui" line="188"/>
@@ -547,7 +547,7 @@
     <message>
       <location filename="../src/launch_process_dialog.ui" line="78"/>
       <source>Launch</source>
-      <translation type="unfinished">Launch</translation>
+      <translation>Запуск</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.ui" line="85"/>
@@ -558,7 +558,7 @@
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
       <location filename="../src/launch_process_dialog.cpp" line="33"/>
       <source>Launch failed</source>
-      <translation type="unfinished">Launch failed</translation>
+      <translation>Збій запуску</translation>
     </message>
     <message>
       <location filename="../src/launch_process_dialog.cpp" line="22"/>
@@ -741,12 +741,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="329"/>
       <source>Configure</source>
-      <translation type="unfinished">Configure</translation>
+      <translation>Налаштування</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="340"/>
       <source>Stretch to fill window (ignore aspect ratio)</source>
-      <translation type="unfinished">Stretch to fill window (ignore aspect ratio)</translation>
+      <translation>Розтягнути на все вікно (ігнорувати пропорції)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="268"/>
@@ -914,7 +914,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1034"/>
       <source>Launch failed</source>
-      <translation type="unfinished">Launch failed</translation>
+      <translation>Збій запуску</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1034"/>
@@ -1009,12 +1009,12 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1617"/>
       <source>Choose the JAR file to install</source>
-      <translation type="unfinished">Choose the JAR file to install</translation>
+      <translation>Виберіть файл JAR для встановлення</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1617"/>
       <source>JAR file (*.jar)</source>
-      <translation type="unfinished">JAR file (*.jar)</translation>
+      <translation>Файл JAR (*.jar)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1625"/>
@@ -1024,7 +1024,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="1628"/>
       <source>Install success</source>
-      <translation type="unfinished">Install success</translation>
+      <translation>Установлення успішне</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1640"/>
@@ -1348,17 +1348,17 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="491"/>
       <source>Image</source>
-      <translation type="unfinished">Image</translation>
+      <translation>Зображення</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="527"/>
       <source>Color</source>
-      <translation type="unfinished">Color</translation>
+      <translation>Колір</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="562"/>
       <source>Opacity</source>
-      <translation type="unfinished">Opacity</translation>
+      <translation>Непрозорість</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="585"/>

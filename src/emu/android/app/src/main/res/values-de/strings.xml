@@ -7,11 +7,11 @@
     <string name="settings">Einstellungen</string>
     <string name="packages">Pakete</string>
     <string name="devices">Endgeräte</string>
-    <string name="switch_devices">Switch devices</string>
-    <string name="profiles">Profiles</string>
+    <string name="switch_devices"></string>
+    <string name="profiles">Profile</string>
     <string name="processing">Verarbeitung läuft...</string>
     <string name="completed">Erledigt!</string>
-    <string name="cancelled">Cancelled</string>
+    <string name="cancelled">Abgebrochen</string>
     <string name="remove">Entfernen</string>
     <string name="mount_sd">MMC/SD-Karte mounten</string>
     <string name="no_devices_found">Keine Geräte gefunden</string>
@@ -23,7 +23,7 @@
     <string name="take_screenshot_success">Screenshot saved to %s!</string>
     <string name="take_screenshot_fail">Failed to take screenshot!</string>
     <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
-    <string name="warning">Warning</string>
+    <string name="warning">Achtung</string>
     <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
     <string name="install_ng_game">Install N-Gage game</string>
     <string name="notify_dialog_title">Notification</string>
