@@ -91,12 +91,12 @@
 
 #include <TargetConditionals.h>
 
-#if TARGET_OS_MAC
-#define EKA2L1_PLATFORM_MACOS 1
-#else
+// TARGET_OS_MAC is the Mach-O umbrella and is true on iOS too. Probe for the
+// device targets first; only fall back to MACOS if none of them match.
 #if TARGET_OS_IPHONE
 #define EKA2L1_PLATFORM_IOS 1
-#endif
+#elif TARGET_OS_MAC
+#define EKA2L1_PLATFORM_MACOS 1
 #endif
 #endif
 

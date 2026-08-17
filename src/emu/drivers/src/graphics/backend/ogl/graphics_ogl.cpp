@@ -20,6 +20,7 @@
 #include <common/algorithm.h>
 #include <common/log.h>
 #include <common/platform.h>
+#include <common/path.h>
 #include <common/rgb.h>
 #include <fstream>
 #include <sstream>
@@ -28,7 +29,12 @@
 #include <drivers/graphics/backend/ogl/graphics_ogl.h>
 #include <drivers/graphics/backend/ogl/buffer_ogl.h>
 #include <drivers/graphics/backend/ogl/fb_ogl.h>
+#include <common/platform.h>
+#if EKA2L1_PLATFORM(IOS)
+#include <drivers/graphics/backend/ogl/ios_gl_loader.h>
+#else
 #include <glad/glad.h>
+#endif
 
 #if EKA2L1_PLATFORM(ANDROID)
 #include <EGL/egl.h>
@@ -99,6 +105,14 @@ namespace eka2l1::drivers {
         context_->set_swap_interval(1);
 
         is_gles = (context_->gl_mode() == graphics::gl_context::mode::opengl_es);
+
+        {
+            GLint max_tex = 0;
+            glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_tex);
+            if (max_tex > 0) {
+                max_texture_size_ = static_cast<std::uint32_t>(max_tex);
+            }
+        }
 
         GLint major_gl = 0;
         GLint minor_gl = 0;
@@ -249,15 +263,15 @@ namespace eka2l1::drivers {
     static constexpr const char *pen_f_path = "resources//pen.frag";
 
     void ogl_graphics_driver::do_init() {
-        auto sprite_norm_vertex_module = std::make_unique<ogl_shader_module>(sprite_norm_v_path, shader_module_type::vertex);        
-        auto brush_vertex_module = std::make_unique<ogl_shader_module>(brush_v_path, shader_module_type::vertex);
-        auto pen_vertex_module = std::make_unique<ogl_shader_module>(pen_v_path, shader_module_type::vertex);
+        auto sprite_norm_vertex_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(sprite_norm_v_path), shader_module_type::vertex);
+        auto brush_vertex_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(brush_v_path), shader_module_type::vertex);
+        auto pen_vertex_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(pen_v_path), shader_module_type::vertex);
 
-        auto sprite_norm_fragment_module = std::make_unique<ogl_shader_module>(sprite_norm_f_path, shader_module_type::fragment);
-        auto sprite_mask_fragment_module = std::make_unique<ogl_shader_module>(sprite_mask_f_path, shader_module_type::fragment);
-        auto sprite_upscale_fragment_module = std::make_unique<ogl_shader_module>(sprite_upscaled_f_path, shader_module_type::fragment);
-        auto brush_fragment_module = std::make_unique<ogl_shader_module>(brush_f_path, shader_module_type::fragment);
-        auto pen_fragment_module = std::make_unique<ogl_shader_module>(pen_f_path, shader_module_type::fragment);
+        auto sprite_norm_fragment_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(sprite_norm_f_path), shader_module_type::fragment);
+        auto sprite_mask_fragment_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(sprite_mask_f_path), shader_module_type::fragment);
+        auto sprite_upscale_fragment_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(sprite_upscaled_f_path), shader_module_type::fragment);
+        auto brush_fragment_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(brush_f_path), shader_module_type::fragment);
+        auto pen_fragment_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(pen_f_path), shader_module_type::fragment);
 
         sprite_program = std::make_unique<ogl_shader_program>();
         mask_program = std::make_unique<ogl_shader_program>();
@@ -383,8 +397,8 @@ namespace eka2l1::drivers {
             }
         }
 
-        auto sprite_norm_vertex_module = std::make_unique<ogl_shader_module>(sprite_norm_v_path, shader_module_type::vertex);        
-        auto sprite_upscale_fragment_module = std::make_unique<ogl_shader_module>(pending_upscale_shader_, shader_module_type::fragment, extra_header);
+        auto sprite_norm_vertex_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(sprite_norm_v_path), shader_module_type::vertex);
+        auto sprite_upscale_fragment_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(pending_upscale_shader_), shader_module_type::fragment, extra_header);
 
         auto upscale_program_new = std::make_unique<ogl_shader_program>();
 
@@ -427,7 +441,10 @@ namespace eka2l1::drivers {
             new_surface_size_ = { -1, -1 };
         }
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // On iOS, there is no default framebuffer; the EAGL context owns the
+        // FBO whose color attachment is the CAEAGLLayer drawable. Bind that
+        // instead of 0 so the rendered frame actually lands in the layer.
+        glBindFramebuffer(GL_FRAMEBUFFER, context_ ? context_->swapchain_framebuffer() : 0);
     }
 
     void ogl_graphics_driver::update_surface(void *new_surface_set) {
@@ -803,12 +820,18 @@ namespace eka2l1::drivers {
         glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
         glStencilMask(0xFF);
 
+        GLboolean color_mask[4] = { GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE };
+        glGetBooleanv(GL_COLOR_WRITEMASK, color_mask);
+        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
         for (std::size_t i = 0; i < to_clip.rects_.size(); i++) {
             if (to_clip.rects_[i].valid()) {
                 to_clip.rects_[i].scale(scale);
                 draw_rectangle(to_clip.rects_[i]);
             }
         }
+
+        glColorMask(color_mask[0], color_mask[1], color_mask[2], color_mask[3]);
 
         glStencilFunc(GL_EQUAL, 1, 0xFF);
         glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
@@ -865,6 +888,17 @@ namespace eka2l1::drivers {
         if (vert_off == 0) {
             glDrawElements(prim_mode_to_gl_enum(prim_mode), count, data_format_to_gl_enum(val_type), reinterpret_cast<GLvoid *>(index_off_64));
         } else {
+#if EKA2L1_PLATFORM(IOS)
+            // ios_gl_loader's glDrawElementsBaseVertex stub drops the base vertex
+            // (GLES3.0 has no base-vertex draw). No caller passes a non-zero base
+            // today; surface it loudly if one ever does instead of silently
+            // rendering the wrong vertices.
+            static bool base_vertex_warned = false;
+            if (!base_vertex_warned) {
+                base_vertex_warned = true;
+                LOG_ERROR(DRIVER_GRAPHICS, "draw_indexed with non-zero base vertex ({}) is unsupported on iOS; geometry will use the wrong vertices", vert_off);
+            }
+#endif
             glDrawElementsBaseVertex(prim_mode_to_gl_enum(prim_mode), count, data_format_to_gl_enum(val_type), reinterpret_cast<GLvoid *>(index_off_64), vert_off);
         }
     }
@@ -1598,7 +1632,10 @@ namespace eka2l1::drivers {
         drivers::framebuffer_bind_type bind_type = static_cast<drivers::framebuffer_bind_type>(cmd.data_[1]);
 
         if (h == 0) {
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            // Handle 0 = "the swapchain". Most platforms get the window's
+            // default framebuffer (FBO 0); iOS GLES has none, so route to
+            // the EAGL-owned FBO instead.
+            glBindFramebuffer(GL_FRAMEBUFFER, context_ ? context_->swapchain_framebuffer() : 0);
             return;
         }
 

@@ -26,6 +26,10 @@
 #include "backend/android/sensor_android.h"
 #endif
 
+#if EKA2L1_PLATFORM(IOS)
+#include "backend/ios/sensor_ios.h"
+#endif
+
 namespace eka2l1::drivers {
     void sensor_property_data::set_int(const std::int32_t int_value, const std::int32_t item_index) {
         data_type_ = DATA_TYPE_INT;
@@ -76,6 +80,8 @@ namespace eka2l1::drivers {
     std::unique_ptr<sensor_driver> sensor_driver::instantiate() {
 #if EKA2L1_PLATFORM(ANDROID)
         return std::make_unique<sensor_driver_android>();
+#elif EKA2L1_PLATFORM(IOS)
+        return std::make_unique<sensor_driver_ios>();
 #endif
 
         return std::make_unique<sensor_driver_null>();

@@ -20,7 +20,12 @@
 
 #include <drivers/graphics/backend/ogl/common_ogl.h>
 #include <drivers/graphics/backend/ogl/fb_ogl.h>
+#include <common/platform.h>
+#if EKA2L1_PLATFORM(IOS)
+#include <drivers/graphics/backend/ogl/ios_gl_loader.h>
+#else
 #include <glad/glad.h>
+#endif
 
 #include <common/log.h>
 #include <common/platform.h>

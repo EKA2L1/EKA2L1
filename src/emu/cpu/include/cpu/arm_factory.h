@@ -30,11 +30,34 @@ namespace eka2l1 {
         using exclusive_monitor_instance = std::unique_ptr<exclusive_monitor>;
 
         /**
+         * \brief Runtime probe for whether the host can host a JIT.
+         *
+         * On iOS this answers whether the process was granted the right to map
+         * executable memory; a jailed App Store process never is.
+         */
+        bool host_can_jit();
+
+        /**
+         * \brief Coerce a requested backend down to what the host can actually
+         *        execute. Currently only iOS does any coercion (dynarmic → dyncom).
+         *
+         * \param requested  the type asked for by config / user.
+         * \param out_reason if non-null and a substitution happened, receives a
+         *                   short static string explaining why.
+         * \return the type the factory will actually instantiate.
+         */
+        arm_emulator_type resolve_emulator_type(arm_emulator_type requested, const char **out_reason = nullptr);
+
+        /**
          * \brief Create a new ARM CPU core.
-         * 
+         *
          * This factory methods provide various CPU translator backend for you to choose. The CPU must accompanies
          * with other system like kernel or timing, in order to help for emulation.
-         * 
+         *
+         * Unsupported backends on the current host are silently downgraded via
+         * resolve_emulator_type; callers wanting visibility should call that
+         * helper first.
+         *
          * \returns An instance to the CPU executor.
          */
         core_instance create_core(exclusive_monitor *monitor, arm_emulator_type arm_type);

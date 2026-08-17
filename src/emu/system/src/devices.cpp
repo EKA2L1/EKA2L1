@@ -356,6 +356,34 @@ namespace eka2l1 {
         return add_device_none;
     }
 
+    std::vector<std::string> per_device_storage_paths(const std::string &firmware_code) {
+        const std::string firmcode = common::lowercase_string(firmware_code);
+
+        std::vector<std::string> paths{
+            "drives/z/" + firmcode + "/",
+            "roms/" + firmcode + "/"
+        };
+
+        // Kept in step with the servers that write these: the central repository
+        // persists a repo per device (see central_repo::write_changes), and the
+        // message store keeps a mail folder and an MTM registry per device (see
+        // msv_server::init, which uses the older System paths on EKA1).
+        static const char *SHARED_DRIVE_DIRS[] = {
+            "private/10202be9/persists/",
+            "private/1000484b/mail2/",
+            "system/mail/",
+            "system/mtm/"
+        };
+
+        for (const char *drive : { "c", "d", "e" }) {
+            for (const char *dir : SHARED_DRIVE_DIRS) {
+                paths.push_back(std::string("drives/") + drive + "/" + dir + firmcode + "/");
+            }
+        }
+
+        return paths;
+    }
+
     bool device_manager::delete_device(const std::string &firmcode) {
         const std::lock_guard<std::mutex> guard(lock);
 

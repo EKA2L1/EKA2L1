@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>$(DEVELOPMENT_LANGUAGE)</string>
+    <key>CFBundleDisplayName</key>
+    <string>EKA2L1</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>EKA2L1</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>26.7.0</string>
+    <key>CFBundleVersion</key>
+    <string>260700</string>
+    <key>CFBundleIcons</key>
+    <dict>
+        <key>CFBundlePrimaryIcon</key>
+        <dict>
+            <key>CFBundleIconFiles</key>
+            <array>
+                <string>AppIcon60x60</string>
+            </array>
+            <key>CFBundleIconName</key>
+            <string>AppIcon</string>
+        </dict>
+    </dict>
+    <key>CFBundleIcons~ipad</key>
+    <dict>
+        <key>CFBundlePrimaryIcon</key>
+        <dict>
+            <key>CFBundleIconFiles</key>
+            <array>
+                <string>AppIcon60x60</string>
+                <string>AppIcon76x76</string>
+            </array>
+            <key>CFBundleIconName</key>
+            <string>AppIcon</string>
+        </dict>
+    </dict>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+    <!-- No proprietary encryption (only exempt HTTPS/system TLS), so every
+         TestFlight build skips the manual export-compliance questionnaire. -->
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
+    <key>UILaunchScreen</key>
+    <dict/>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>EKA2L1 saves emulator screenshots to your photo library when you choose Save Screenshot.</string>
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>arm64</string>
+    </array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    <key>UIFileSharingEnabled</key>
+    <true/>
+    <key>LSSupportsOpeningDocumentsInPlace</key>
+    <true/>
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>Symbian SIS Installer</string>
+            <key>CFBundleTypeRole</key>
+            <string>Viewer</string>
+            <key>LSHandlerRank</key>
+            <string>Owner</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>com.eka2l1.sis</string>
+                <string>com.eka2l1.sisx</string>
+            </array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>N-Gage 2.0 Game Package</string>
+            <key>CFBundleTypeRole</key>
+            <string>Viewer</string>
+            <key>LSHandlerRank</key>
+            <string>Owner</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>com.eka2l1.ngage</string>
+            </array>
+        </dict>
+    </array>
+    <key>UTImportedTypeDeclarations</key>
+    <array>
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>com.eka2l1.sis</string>
+            <key>UTTypeDescription</key>
+            <string>Symbian SIS Installer</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.data</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>sis</string>
+                </array>
+            </dict>
+        </dict>
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>com.eka2l1.sisx</string>
+            <key>UTTypeDescription</key>
+            <string>Symbian Signed SISX Installer</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.data</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>sisx</string>
+                </array>
+            </dict>
+        </dict>
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>com.eka2l1.ngage</string>
+            <key>UTTypeDescription</key>
+            <string>N-Gage 2.0 Game Package</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.data</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>n-gage</string>
+                </array>
+            </dict>
+        </dict>
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>com.eka2l1.rom</string>
+            <key>UTTypeDescription</key>
+            <string>Symbian Device ROM Dump</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.data</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>rom</string>
+                </array>
+            </dict>
+        </dict>
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>com.eka2l1.rpkg</string>
+            <key>UTTypeDescription</key>
+            <string>EKA2L1 Device Package</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.data</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>rpkg</string>
+                </array>
+            </dict>
+        </dict>
+        <!-- Not ours to name: this is the identifier 7-Zip and every reader of
+             its archives already use, so importing it lets the device picker
+             match .7z files typed by any other app on the system too. -->
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>org.7-zip.7-zip-archive</string>
+            <key>UTTypeDescription</key>
+            <string>7-Zip Archive</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.data</string>
+                <string>public.archive</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>7z</string>
+                </array>
+                <key>public.mime-type</key>
+                <array>
+                    <string>application/x-7z-compressed</string>
+                </array>
+            </dict>
+        </dict>
+    </array>
+    <key>NSCameraUsageDescription</key>
+    <string>Symbian apps running in the emulator can use the camera for their viewfinder and photo capture features.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Symbian apps running in the emulator can use the microphone for recording and voice features.</string>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>Bluetooth Netplay emulates Symbian Bluetooth multiplayer over your local network to find and connect to other EKA2L1 players.</string>
+</dict>
+</plist>

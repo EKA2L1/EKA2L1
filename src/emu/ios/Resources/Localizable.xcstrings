@@ -1,0 +1,1858 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "common.cancel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        }
+      }
+    },
+    "common.completed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed!"
+          }
+        }
+      }
+    },
+    "common.done" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        }
+      }
+    },
+    "common.error" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error"
+          }
+        }
+      }
+    },
+    "common.install" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install"
+          }
+        }
+      }
+    },
+    "common.ok" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
+    "controllerMapping.actions" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Function keys"
+          }
+        }
+      }
+    },
+    "controllerMapping.clearBinding" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Binding"
+          }
+        }
+      }
+    },
+    "controllerMapping.currentBinding %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Currently bound: %@"
+          }
+        }
+      }
+    },
+    "controllerMapping.deviceDisconnected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device disconnected."
+          }
+        }
+      }
+    },
+    "controllerMapping.directions" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Directions"
+          }
+        }
+      }
+    },
+    "controllerMapping.directions.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The left thumbstick works the same as the d-pad."
+          }
+        }
+      }
+    },
+    "controllerMapping.noController" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No game controller or keyboard connected."
+          }
+        }
+      }
+    },
+    "controllerMapping.numbers" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Number keys"
+          }
+        }
+      }
+    },
+    "controllerMapping.pressButton" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press a button on the controller…"
+          }
+        }
+      }
+    },
+    "controllerMapping.pressKey" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press a key on the keyboard…"
+          }
+        }
+      }
+    },
+    "controllerMapping.reset" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset to Defaults"
+          }
+        }
+      }
+    },
+    "device.rescan" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rescan devices"
+          }
+        }
+      }
+    },
+    "emulator.exit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exit Game"
+          }
+        }
+      }
+    },
+    "emulator.fps.accessibility" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game FPS"
+          }
+        }
+      }
+    },
+    "emulator.fpsLimit.unlimited" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlimited"
+          }
+        }
+      }
+    },
+    "emulator.guestFatal" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guest error"
+          }
+        }
+      }
+    },
+    "emulator.menu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game menu"
+          }
+        }
+      }
+    },
+    "emulator.menu.fpsLimit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frame Rate Limit"
+          }
+        }
+      }
+    },
+    "emulator.menu.fullScreen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Full Screen"
+          }
+        }
+      }
+    },
+    "emulator.menu.gameSettings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game Settings"
+          }
+        }
+      }
+    },
+    "emulator.menu.guestScreenMode" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guest Screen Mode"
+          }
+        }
+      }
+    },
+    "emulator.menu.lockOrientation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orientation Lock"
+          }
+        }
+      }
+    },
+    "emulator.notice" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game"
+          }
+        }
+      }
+    },
+    "emulator.saveScreenshot" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save Screenshot"
+          }
+        }
+      }
+    },
+    "emulator.screenshot.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not capture the screen."
+          }
+        }
+      }
+    },
+    "emulator.screenshot.saved" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Screenshot saved to Photos."
+          }
+        }
+      }
+    },
+    "home.appsCount %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps (%lld)"
+          }
+        }
+      }
+    },
+    "home.banner.booted %@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Booted %1$@ (%2$@)."
+          }
+        }
+      }
+    },
+    "home.banner.copied %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied %@."
+          }
+        }
+      }
+    },
+    "home.banner.importFailed %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import failed: %@"
+          }
+        }
+      }
+    },
+    "home.banner.installDeviceFirst" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install a device (ROM) first, then re-open the SIS file."
+          }
+        }
+      }
+    },
+    "home.banner.installedPackages %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Installed %lld package."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Installed %lld packages."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "home.banner.installingPackages %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Installing %lld package..."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Installing %lld packages..."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "home.banner.uninstallFailed %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to uninstall %@."
+          }
+        }
+      }
+    },
+    "home.banner.uninstalled %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uninstalled %@."
+          }
+        }
+      }
+    },
+    "home.empty.hiddenSystemApps" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No installed apps. Tap + to install a SIS / SISX package, or enable Show System Apps."
+          }
+        }
+      }
+    },
+    "home.empty.noApps" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No apps yet. Tap + to install a SIS / SISX package."
+          }
+        }
+      }
+    },
+    "home.error.bootRomFailed %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to boot ROM code %@."
+          }
+        }
+      }
+    },
+    "home.error.checkConsole" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check Console for details."
+          }
+        }
+      }
+    },
+    "home.error.deviceBootCrashed %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ took the app down while it was starting up, so it was skipped this time. Its ROM (or RPKG) dump is likely damaged — delete the device and install it again from a good dump."
+          }
+        }
+      }
+    },
+    "home.error.deviceBootCrashedTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device could not be started"
+          }
+        }
+      }
+    },
+    "home.error.initTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emulator failed to initialise"
+          }
+        }
+      }
+    },
+    "home.error.launchRomMissing %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Launch ROM code %@ is missing."
+          }
+        }
+      }
+    },
+    "home.fonts.imported %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Installed %lld font. Restart the device to use it."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Installed %lld fonts. Restart the device to use them."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "home.fonts.importing %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Installing %lld font…"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Installing %lld fonts…"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "home.fonts.unsupported" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No supported font selected. Pick a .ttf file."
+          }
+        }
+      }
+    },
+    "home.hideSystemApps" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide System Apps"
+          }
+        }
+      }
+    },
+    "home.install" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install"
+          }
+        }
+      }
+    },
+    "home.install.sis" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install SIS/SISX Package"
+          }
+        }
+      }
+    },
+    "home.installFonts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install Fonts"
+          }
+        }
+      }
+    },
+    "home.installFonts.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TrueType (TTF) files"
+          }
+        }
+      }
+    },
+    "home.installNGage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install N-Gage Card Game"
+          }
+        }
+      }
+    },
+    "home.installNGage.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requires N-Gage ROM"
+          }
+        }
+      }
+    },
+    "home.installNGage2" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import N-Gage 2.0 Game"
+          }
+        }
+      }
+    },
+    "home.installNGage2.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requires S60v3 ROM and N-Gage launcher"
+          }
+        }
+      }
+    },
+    "home.more" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More"
+          }
+        }
+      }
+    },
+    "home.ngage.error.chooseFolder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "N-Gage import failed: choose the game card folder that contains the system folder."
+          }
+        }
+      }
+    },
+    "home.ngage.error.generic %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "N-Gage import failed (error %lld)."
+          }
+        }
+      }
+    },
+    "home.ngage.error.multipleGames" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "N-Gage import failed: that folder contains more than one game."
+          }
+        }
+      }
+    },
+    "home.ngage.error.regCorrupt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "N-Gage import failed: the registration file is corrupted."
+          }
+        }
+      }
+    },
+    "home.ngage.error.regMissing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "N-Gage import failed: the registration file is missing."
+          }
+        }
+      }
+    },
+    "home.ngage.importFailed %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "N-Gage import failed: %@"
+          }
+        }
+      }
+    },
+    "home.ngage.installed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installed N-Gage game."
+          }
+        }
+      }
+    },
+    "home.ngage.installedNamed %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installed N-Gage game: %@."
+          }
+        }
+      }
+    },
+    "home.ngage.installing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installing N-Gage game..."
+          }
+        }
+      }
+    },
+    "home.ngage2.imported %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Imported %lld package. Open the N-Gage launcher to continue."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Imported %lld packages. Open the N-Gage launcher to continue."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "home.ngage2.importing %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Importing %lld N-Gage 2.0 package..."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Importing %lld N-Gage 2.0 packages..."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "home.noDevice.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No device installed"
+          }
+        }
+      }
+    },
+    "home.showSystemApps" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show System Apps"
+          }
+        }
+      }
+    },
+    "home.uninstall.action" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uninstall"
+          }
+        }
+      }
+    },
+    "home.uninstall.confirm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uninstall"
+          }
+        }
+      }
+    },
+    "home.uninstall.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This removes the package and its files from the device."
+          }
+        }
+      }
+    },
+    "home.uninstall.title %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uninstall %@?"
+          }
+        }
+      }
+    },
+    "import.archiveFile" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7z archive"
+          }
+        }
+      }
+    },
+    "import.archiveHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a .7z holding a device. Both common packagings work: a ROM image with its RPKG, or a device someone already unpacked into the emulator's folder layout (data/roms and data/drives/z).\n\nAnything else in the archive is ignored, so a pack meant to be dropped into the EKA2L1 folder by hand installs as-is."
+          }
+        }
+      }
+    },
+    "import.cancelled" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install cancelled."
+          }
+        }
+      }
+    },
+    "import.cancelling" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelling…"
+          }
+        }
+      }
+    },
+    "import.error.alreadyExists" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device to install already exists!"
+          }
+        }
+      }
+    },
+    "import.error.archiveCorrupt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The archive could not be read. It may be incomplete, or use a compression method this build does not support."
+          }
+        }
+      }
+    },
+    "import.error.archiveNoDevice" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The archive holds no device: it needs either a ROM image (with its RPKG, if the ROM needs one) or an unpacked drive Z tree."
+          }
+        }
+      }
+    },
+    "import.error.determineProduct" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to determine product information!"
+          }
+        }
+      }
+    },
+    "import.error.fpsxCorrupt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FPSX file is corrupted!"
+          }
+        }
+      }
+    },
+    "import.error.insufficient" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RPKG file is too small; the dump might be unfinished!"
+          }
+        }
+      }
+    },
+    "import.error.needRpkg" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This ROM requires an additional RPKG file. Please choose one and try again."
+          }
+        }
+      }
+    },
+    "import.error.notExist" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RPKG file specified cannot be opened!"
+          }
+        }
+      }
+    },
+    "import.error.rofsCorrupt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ROFS file is corrupted!"
+          }
+        }
+      }
+    },
+    "import.error.romCopy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to copy ROM to target destination!"
+          }
+        }
+      }
+    },
+    "import.error.romCorrupt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ROM file is corrupted!"
+          }
+        }
+      }
+    },
+    "import.error.rpkgCorrupt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The RPKG file provided is corrupt!"
+          }
+        }
+      }
+    },
+    "import.error.vplInvalid" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The firmware description file (VPL) is invalid!"
+          }
+        }
+      }
+    },
+    "import.error.wrongExtension %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please choose a %@ file."
+          }
+        }
+      }
+    },
+    "import.installing %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unpacking the dump… %lld%%"
+          }
+        }
+      }
+    },
+    "import.noDeviceInstalled" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please install a device. Files and ROM of a Symbian device are needed for the installation.\n\nNote: Each app needs a suitable Symbian device to run."
+          }
+        }
+      }
+    },
+    "import.noFileSelected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap to choose..."
+          }
+        }
+      }
+    },
+    "import.recommendedDevices" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recommended devices to install:\n\nS60v1: N-Gage\nS60v2: Nokia N70\nS60v3: Nokia 5320 XpressMusic, Nokia E5\nS60v5: Nokia 5800 XpressMusic, Nokia 5230\n\nFor S60v2 devices or higher, you may need to provide an additional file called RPKG.\n\nFor more info about device install, please check out our wiki: [eka2l1.miraheze.org](https://eka2l1.miraheze.org/wiki/Main_Page)"
+          }
+        }
+      }
+    },
+    "import.romFile" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ROM file"
+          }
+        }
+      }
+    },
+    "import.rpkgFile" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RPKG file (optional)"
+          }
+        }
+      }
+    },
+    "import.source" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install from"
+          }
+        }
+      }
+    },
+    "import.source.archive" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7z archive"
+          }
+        }
+      }
+    },
+    "import.source.looseFiles" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ROM / RPKG"
+          }
+        }
+      }
+    },
+    "import.stopInstall" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop installing"
+          }
+        }
+      }
+    },
+    "import.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install Device"
+          }
+        }
+      }
+    },
+    "key.call" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Call (green)"
+          }
+        }
+      }
+    },
+    "key.clear" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear (C)"
+          }
+        }
+      }
+    },
+    "key.down" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Down"
+          }
+        }
+      }
+    },
+    "key.end" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End (red)"
+          }
+        }
+      }
+    },
+    "key.left" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left"
+          }
+        }
+      }
+    },
+    "key.leftSoft" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left soft key"
+          }
+        }
+      }
+    },
+    "key.none" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not bound"
+          }
+        }
+      }
+    },
+    "key.right" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right"
+          }
+        }
+      }
+    },
+    "key.rightSoft" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right soft key"
+          }
+        }
+      }
+    },
+    "key.select" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK (Select)"
+          }
+        }
+      }
+    },
+    "key.up" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up"
+          }
+        }
+      }
+    },
+    "keypad.accessibility.clear" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear"
+          }
+        }
+      }
+    },
+    "keypad.editor.dragHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag to reposition this control"
+          }
+        }
+      }
+    },
+    "keypad.editor.editLayout" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Keypad Layout"
+          }
+        }
+      }
+    },
+    "keypad.editor.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag controls to adjust the layout"
+          }
+        }
+      }
+    },
+    "keypad.editor.numberPad" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Number pad"
+          }
+        }
+      }
+    },
+    "keypad.editor.reset" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset layout"
+          }
+        }
+      }
+    },
+    "onboarding.device.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start by importing a ROM dump from a device you own. Some newer S60 devices also need the matching RPKG file."
+          }
+        }
+      }
+    },
+    "onboarding.device.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install a Device"
+          }
+        }
+      }
+    },
+    "onboarding.done" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get Started"
+          }
+        }
+      }
+    },
+    "onboarding.install.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After a device is installed, use the + button to add SIS, SISX, or supported N-Gage content to the current device."
+          }
+        }
+      }
+    },
+    "onboarding.install.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Your Apps"
+          }
+        }
+      }
+    },
+    "onboarding.legal.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EKA2L1 does not include firmware, ROMs, or games. Use only content you own and dumped yourself."
+          }
+        }
+      }
+    },
+    "onboarding.legal.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bring Your Own Content"
+          }
+        }
+      }
+    },
+    "onboarding.next" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next"
+          }
+        }
+      }
+    },
+    "onboarding.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getting Started"
+          }
+        }
+      }
+    },
+    "peripheral.keyboard" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keyboard"
+          }
+        }
+      }
+    },
+    "settings.audio" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio"
+          }
+        }
+      }
+    },
+    "settings.clearData" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Emulator Data"
+          }
+        }
+      }
+    },
+    "settings.clearData.confirm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Data"
+          }
+        }
+      }
+    },
+    "settings.clearData.done" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emulator data was cleared. Restart EKA2L1 before installing or launching another device."
+          }
+        }
+      }
+    },
+    "settings.clearData.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This removes installed devices, apps, staged installers, fonts, logs, and generated emulator data from this app."
+          }
+        }
+      }
+    },
+    "settings.clearData.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear all emulator data?"
+          }
+        }
+      }
+    },
+    "settings.device" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device"
+          }
+        }
+      }
+    },
+    "settings.deviceName" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device name"
+          }
+        }
+      }
+    },
+    "settings.discord" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discord Server"
+          }
+        }
+      }
+    },
+    "settings.exportLog" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Log"
+          }
+        }
+      }
+    },
+    "settings.fpsOverlay" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FPS overlay"
+          }
+        }
+      }
+    },
+    "settings.graphics" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Graphics"
+          }
+        }
+      }
+    },
+    "settings.hideSystemApps" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide system apps"
+          }
+        }
+      }
+    },
+    "settings.integerScaling" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integer scaling"
+          }
+        }
+      }
+    },
+    "settings.jit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JIT recompiler (dynarmic)"
+          }
+        }
+      }
+    },
+    "settings.jit.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faster CPU emulation. Applies on the next app launch. Experimental: some apps may crash — turn it off if games misbehave."
+          }
+        }
+      }
+    },
+    "settings.jit.unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JIT permission is not active for this process. Enable JIT (debugger or a JIT enabler such as SideStore/StikDebug) and relaunch; otherwise the interpreter is used."
+          }
+        }
+      }
+    },
+    "settings.keypadOpacity" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keypad opacity"
+          }
+        }
+      }
+    },
+    "settings.library" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Library"
+          }
+        }
+      }
+    },
+    "settings.license" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licensed under GPLv3"
+          }
+        }
+      }
+    },
+    "settings.nearestFiltering" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nearest filtering"
+          }
+        }
+      }
+    },
+    "settings.netplay" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth Netplay"
+          }
+        }
+      }
+    },
+    "settings.netplay.directIpHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peers reach this device at its IP address and the discovery port above, so enter that pair on their side."
+          }
+        }
+      }
+    },
+    "settings.netplay.discoveryMode" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discovery mode"
+          }
+        }
+      }
+    },
+    "settings.netplay.friendAddress" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IP address"
+          }
+        }
+      }
+    },
+    "settings.netplay.friendPort" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Port"
+          }
+        }
+      }
+    },
+    "settings.netplay.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emulates Symbian Bluetooth multiplayer over the network. Changes apply from the next app launch. iOS will ask for Local Network permission on first use."
+          }
+        }
+      }
+    },
+    "settings.netplay.listenPort" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discovery port"
+          }
+        }
+      }
+    },
+    "settings.netplay.mode.directIp" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Direct IP"
+          }
+        }
+      }
+    },
+    "settings.netplay.mode.lan" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local network"
+          }
+        }
+      }
+    },
+    "settings.netplay.mode.off" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        }
+      }
+    },
+    "settings.netplay.mode.server" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Central server"
+          }
+        }
+      }
+    },
+    "settings.netplay.password" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Password"
+          }
+        }
+      }
+    },
+    "settings.netplay.serverUrl" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server address"
+          }
+        }
+      }
+    },
+    "settings.noLog" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No log file yet"
+          }
+        }
+      }
+    },
+    "settings.peripherals" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected devices"
+          }
+        }
+      }
+    },
+    "settings.storage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Storage"
+          }
+        }
+      }
+    },
+    "settings.storage.noRoms" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No ROMs installed."
+          }
+        }
+      }
+    },
+    "settings.support" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Support"
+          }
+        }
+      }
+    },
+    "settings.system" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System"
+          }
+        }
+      }
+    },
+    "settings.systemLanguage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System language"
+          }
+        }
+      }
+    },
+    "settings.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        }
+      }
+    },
+    "settings.wiki" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emulator Wiki"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

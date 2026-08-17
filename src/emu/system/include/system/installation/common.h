@@ -13,6 +13,12 @@ namespace eka2l1 {
         device_installation_vpl_file_invalid,
         device_installation_rofs_corrupt,
         device_installation_rom_file_corrupt,
-        device_installation_fpsx_corrupt
+        device_installation_fpsx_corrupt,
+        // The ROM needs an RPKG to populate drive Z, but none was supplied.
+        device_installation_rpkg_missing,
+        // An archive of device files could not be opened or decompressed.
+        device_installation_archive_corrupt,
+        // The archive opened fine but holds nothing that looks like a device dump.
+        device_installation_archive_no_device
     };
 }

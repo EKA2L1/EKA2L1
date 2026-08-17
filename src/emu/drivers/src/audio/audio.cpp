@@ -18,9 +18,14 @@
  */
 
 #include <drivers/audio/audio.h>
-#include <drivers/audio/backend/cubeb/audio_cubeb.h>
 
 #include <common/platform.h>
+
+#if EKA2L1_PLATFORM(IOS)
+#include <drivers/audio/backend/audiounit_ios/audio_audiounit_ios.h>
+#else
+#include <drivers/audio/backend/cubeb/audio_cubeb.h>
+#endif
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <drivers/audio/backend/wmf/wmf_loader.h>
@@ -139,7 +144,14 @@ namespace eka2l1::drivers {
         const player_type preferred_midi_backend) {
         switch (backend) {
         case audio_driver_backend::cubeb: {
+#if EKA2L1_PLATFORM(IOS)
+            // iOS has its own native AURemoteIO / AVAudioSession driver —
+            // cubeb on iOS would need invasive patches to the upstream
+            // CoreAudio HAL code path, see drivers/.../audiounit_ios/.
+            return std::make_unique<audiounit_ios_audio_driver>(initial_master_vol, preferred_midi_backend);
+#else
             return std::make_unique<cubeb_audio_driver>(initial_master_vol, preferred_midi_backend);
+#endif
         }
 
         default:

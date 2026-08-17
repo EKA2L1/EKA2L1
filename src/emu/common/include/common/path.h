@@ -252,4 +252,26 @@ namespace eka2l1 {
     bool has_filename(std::basic_string<T> path, bool symbian_use) {
         return filename(path, symbian_use) != "";
     }
+
+    /*! \brief Set the root that read-only runtime resources resolve against.
+     *
+     * The emulator opens its shipped resources (GLES shaders, MIDI banks, the
+     * HLE patch folder) through paths relative to the working directory, which
+     * desktop and Android point at a writable data tree the resources were
+     * installed into. iOS keeps them inside the read-only app bundle instead,
+     * so its frontend sets this root once at startup and every such lookup
+     * lands in the bundle without a staging copy.
+     *
+     * An empty root - the default - leaves those paths untouched, so nothing
+     * changes for the frontends that do not set it. Set it before the graphics
+     * and audio drivers are created; it is not meant to change afterwards.
+     */
+    void set_runtime_resource_root(const std::string &root);
+
+    /*! \brief Resolve a shipped-resource path against the runtime resource root.
+     *
+     * Returns the path unchanged when no root is set or when it is already
+     * absolute (a user-picked MIDI bank, for instance).
+     */
+    std::string runtime_resource_path(const std::string &path);
 }

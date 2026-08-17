@@ -1,7 +1,12 @@
 #pragma once
 
 #include <drivers/graphics/common.h>
+#include <common/platform.h>
+#if EKA2L1_PLATFORM(IOS)
+#include <drivers/graphics/backend/ogl/ios_gl_loader.h>
+#else
 #include <glad/glad.h>
+#endif
 
 namespace eka2l1::drivers {
     enum {

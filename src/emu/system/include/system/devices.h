@@ -138,4 +138,18 @@ namespace eka2l1 {
         */
         device *get(const std::uint8_t index);
     };
+
+    /*! \brief Storage folders that belong to one device alone.
+     *
+     * Drive Z and the ROM image are per-device by construction, but C, D and E are
+     * shared between every installed device: the servers that keep per-device state
+     * there name a folder after the firmware code. All of it has to go when a device
+     * is deleted, else reinstalling the same device inherits the old state - and one
+     * bad value in it survives every repair a user can perform from the UI.
+     *
+     * \param   firmware_code   The device's firmware code, in any case.
+     * \returns Folder paths relative to the emulator's data root, each with a
+     *          trailing separator. They are not guaranteed to exist.
+    */
+    std::vector<std::string> per_device_storage_paths(const std::string &firmware_code);
 }

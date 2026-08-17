@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!--
+        com.apple.security.cs.allow-jit stays commented out on purpose: iOS
+        runs the dyncom interpreter (dynarmic SIGSEGVs on real apps), so no
+        MAP_JIT / W^X path is engaged and requesting the JIT capability would
+        only complicate provisioning. Re-enable it if/when dynarmic is wired up.
+    -->
+    <!--
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    -->
+    <!--
+        The emulator maps large guest chunks (ROM + RAM + codeseg) and gets
+        jetsam-killed under the default per-app memory cap on big ROMs. This
+        entitlement raises that cap; it is honored for development-signed
+        builds against a registered team.
+    -->
+    <key>com.apple.developer.kernel.increased-memory-limit</key>
+    <true/>
+</dict>
+</plist>
