@@ -416,6 +416,18 @@ namespace eka2l1 {
             const bool support_dirty = true);
 
         /**
+         * \brief   Turn an NVG extended bitmap into a plain raster one, in place.
+         *
+         * Replaces the vector data in the shared region with rendered pixels in the
+         * bitmap's own display mode and clears the extended UID, so guest code that
+         * blits the bitmap itself gets pixels instead of the compressed commands.
+         *
+         * \param   bmp The server bitmap object.
+         * \returns True if the bitmap was an NVG one and has been rasterised.
+         */
+        bool rasterize_nvg_bitmap(fbsbitmap *bmp);
+
+        /**
          * \brief   Free a bitmap object.
          * 
          * The function frees bitmap pixels and allocated object from the server's heap.
