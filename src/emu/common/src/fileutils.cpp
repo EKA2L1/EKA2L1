@@ -36,6 +36,13 @@
 #include <unistd.h>
 #endif
 
+#if EKA2L1_PLATFORM(DARWIN)
+// Apple's off_t has always been 64-bit, so their SDKs never declared the
+// separate stat64 type the other POSIX targets use, and SDK 26 stopped
+// providing it entirely. Alias it so the shared POSIX path below still builds.
+#define stat64 stat
+#endif
+
 #if EKA2L1_PLATFORM(POSIX)
 #include <dirent.h>
 #endif

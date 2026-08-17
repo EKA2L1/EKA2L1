@@ -105,17 +105,17 @@ jobs:
     env:
       cache-version: v1
       config: Release
-      MACOSX_DEPLOYMENT_TARGET: 10.15
+      MACOSX_DEPLOYMENT_TARGET: 12.0
 
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: windows-2022
+          - os: windows-latest
             label: windows
-          - os: macos-15-intel
+          - os: macos-latest
             label: macos
-          - os: ubuntu-24.04
+          - os: ubuntu-latest
             label: linux
 
     steps:
@@ -123,14 +123,14 @@ jobs:
       run: brew install ccache
       if: matrix.label == 'macos'
 
-    # Ubuntu ships Qt 5.15 and SDL 2.30, so both come from apt instead of being
+    # Ubuntu ships Qt 6 and SDL 2, so both come from apt instead of being
     # installed by aqt / built from source.
     - name: Set up build environment (Linux)
       run: |
         sudo apt-get update
         sudo apt-get -y install ccache libgtk-3-dev libpulse-dev libasound2-dev \
-          libsdl2-dev pulseaudio qtbase5-dev qtbase5-dev-tools qtbase5-private-dev \
-          qttools5-dev qttools5-dev-tools libqt5svg5-dev libqt5opengl5-dev
+          libsdl2-dev pulseaudio qt6-base-dev qt6-base-private-dev qt6-tools-dev \
+          qt6-tools-dev-tools qt6-l10n-tools libqt6svg6-dev
       if: matrix.label == 'linux'
 
     - name: Configure ccache
@@ -149,38 +149,41 @@ jobs:
         fetch-depth: 0
         submodules: recursive
 
-    # The vendored dependencies cannot be configured by CMake 4: capstone sets
-    # CMP0048 to OLD and glm, fmt, spdlog and dynarmic still declare
-    # cmake_minimum_required(VERSION <3.5). Pinning keeps the build reproducible
-    # as runner images move on; drop it once those submodules are updated.
-    - name: Pin CMake
-      uses: lukka/get-cmake@v4.4.2
+    # The ffmpeg submodule ships prebuilt x86_64 libraries for macOS but not
+    # arm64 ones, so those are built from its own script and cached.
+    - name: Cache arm64 ffmpeg
+      id: cache-ffmpeg
+      uses: actions/cache@v4
       with:
-        cmakeVersion: '3.31.6'
+        path: src/external/ffmpeg/macos/arm64
+        key: ffmpeg-arm64-${{ hashFiles('.git/modules/src/external/ffmpeg/HEAD') }}
+      if: matrix.label == 'macos'
 
-    - name: Install Qt5 (macOS)
+    - name: Build arm64 ffmpeg
+      run: sh macos_arm64-build.sh
+      working-directory: src/external/ffmpeg
+      if: matrix.label == 'macos' && steps.cache-ffmpeg.outputs.cache-hit != 'true'
+
+    - name: Install Qt6 (macOS)
       uses: jurplel/install-qt-action@v4
       with:
-        version: '5.15.2'
+        version: '6.9.3'
         host: 'mac'
         target: 'desktop'
         arch: 'clang_64'
         cache: true
       if: matrix.label == 'macos'
 
-    # The Windows build used to copy libcrypto-1_1/libssl-1_1 next to the binary,
-    # from a host that no longer resolves. There is no replacement: Qt dropped
-    # the tools_openssl_x64 package (OpenSSL 1.1 is end of life) and only ships
-    # tools_opensslv3_x64, which Qt 5.15.2 cannot load. Until Qt is bumped, the
-    # Windows artifact has no TLS backend, so the in-app updater cannot reach
-    # api.github.com.
-    - name: Install Qt5 (Windows)
+    # Qt 6 links OpenSSL 3, so tools_opensslv3_x64 is the runtime Qt Network
+    # needs; the 1.1 package Qt used to publish is gone with OpenSSL 1.1 itself.
+    - name: Install Qt6 (Windows)
       uses: jurplel/install-qt-action@v4
       with:
-        version: '5.15.2'
+        version: '6.9.3'
         host: 'windows'
         target: 'desktop'
-        arch: 'win64_msvc2019_64'
+        arch: 'win64_msvc2022_64'
+        tools: 'tools_opensslv3_x64'
         cache: true
       if: matrix.label == 'windows'
 
@@ -213,6 +216,7 @@ jobs:
     - name: Generate AppImage
       env:
         APPIMAGE_EXTRACT_AND_RUN: 1
+        QMAKE: /usr/bin/qmake6
       run: |
         chmod u+x scripts/generate_appimage.sh
         ./scripts/generate_appimage.sh
@@ -222,6 +226,24 @@ jobs:
       id: git_short_sha
       run: echo "value=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
       shell: bash
+
+    # Restores the TLS backend the Windows build lost when Qt retired its
+    # OpenSSL 1.1 package: without it the in-app updater cannot reach
+    # api.github.com.
+    - name: Copy OpenSSL binaries
+      run: |
+        $tools = $env:IQTA_TOOLS
+        if (-not $tools) { Write-Warning "Qt tools directory unknown, skipping OpenSSL"; exit 0 }
+        foreach ($dll in @("libcrypto-3-x64.dll", "libssl-3-x64.dll")) {
+          $src = Get-ChildItem -Path $tools -Filter $dll -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($src) {
+            Copy-Item $src.FullName "build\bin\"
+          } else {
+            Write-Warning "$dll not found under $tools"
+          }
+        }
+      shell: pwsh
+      if: matrix.label == 'windows'
 
     - uses: actions/upload-artifact@v4
       with:

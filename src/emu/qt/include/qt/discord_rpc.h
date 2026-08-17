@@ -24,18 +24,16 @@
 #if ENABLE_DISCORD_RICH_PRESENCE
 #include <QObject>
 #include <QTimer>
+#include <cstdint>
 #include <memory>
-
-namespace discord {
-    class Core;
-}
 
 namespace eka2l1::qt {
     class discord_rpc : public QObject {
         Q_OBJECT
 
     private:
-        discord::Core *core_;
+        bool initialised_;
+        std::int64_t start_time_;
         QTimer *update_timer_;
 
     private slots:

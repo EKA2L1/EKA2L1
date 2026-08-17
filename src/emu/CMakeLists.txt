@@ -12,7 +12,12 @@ endif ()
 # Many of our code are optimized to utilize offsetof.
 # But it complains a lot with non-POD type, that's not what we want, so disable the warn flag.
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|GNU")
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X version to target for deployment" FORCE)
+    # 10.14 predates std::filesystem's availability in libc++ and Apple Silicon
+    # altogether, and it was forced even when the caller asked for something
+    # else. Only fill in a default, and make it one C++20 code can target.
+    if (NOT CMAKE_OSX_DEPLOYMENT_TARGET)
+        set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum OS X version to target for deployment" FORCE)
+    endif ()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-offsetof")
 endif ()
 

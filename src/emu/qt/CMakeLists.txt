@@ -276,14 +276,6 @@ if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
     endif()
 endif()
 
-if (ENABLE_DISCORD_RICH_PRESENCE AND WIN32)
-    add_custom_command(
-            TARGET eka2l1_qt
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/external/discord_game_sdk/lib/x86_64/discord_game_sdk.dll" "$<TARGET_FILE_DIR:eka2l1_qt>"
-    )
-endif()
-
 get_target_property(QMAKE_EXE Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
 get_filename_component(QT_BIN_DIR "${QMAKE_EXE}" DIRECTORY)
 
@@ -299,16 +291,16 @@ if(APPLE)
        OUTPUT_NAME EKA2L1
     )
 
-    # Copy Qt plugins into the bundle
-    if (${QT_VERSION_MAJOR} EQUAL 5)
-        get_target_property(qtcocoa_location Qt${QT_VERSION_MAJOR}::QCocoaIntegrationPlugin LOCATION)
-        target_sources(eka2l1_qt PRIVATE "${qtcocoa_location}")
-        set_source_files_properties("${qtcocoa_location}" PROPERTIES MACOSX_PACKAGE_LOCATION MacOS/platforms)
+    # Copy Qt plugins into the bundle. Without the platform plugin the app exits
+    # at startup with "no Qt platform plugin could be initialized"; qt6's
+    # qt_finalize_executable only deploys on install, not into the build tree.
+    get_target_property(qtcocoa_location Qt${QT_VERSION_MAJOR}::QCocoaIntegrationPlugin LOCATION)
+    target_sources(eka2l1_qt PRIVATE "${qtcocoa_location}")
+    set_source_files_properties("${qtcocoa_location}" PROPERTIES MACOSX_PACKAGE_LOCATION MacOS/platforms)
 
-        get_target_property(qtmacstyle_location Qt${QT_VERSION_MAJOR}::QMacStylePlugin LOCATION)
-        target_sources(eka2l1_qt PRIVATE "${qtmacstyle_location}")
-        set_source_files_properties("${qtmacstyle_location}" PROPERTIES MACOSX_PACKAGE_LOCATION MacOS/styles)
-    endif()
+    get_target_property(qtmacstyle_location Qt${QT_VERSION_MAJOR}::QMacStylePlugin LOCATION)
+    target_sources(eka2l1_qt PRIVATE "${qtmacstyle_location}")
+    set_source_files_properties("${qtmacstyle_location}" PROPERTIES MACOSX_PACKAGE_LOCATION MacOS/styles)
 
     # Copy icon into the bundle
     target_sources(eka2l1_qt PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/duck.icns")
@@ -318,8 +310,7 @@ if(APPLE)
         TARGET eka2l1_qt
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:eka2l1_qt>/patch"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/bin/patch/" "$<TARGET_FILE_DIR:eka2l1_qt>/patch/"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/external/sdl2/macos/SDL2.framework" "$<TARGET_FILE_DIR:eka2l1_qt>/Frameworks/SDL2.framework")
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/bin/patch/" "$<TARGET_FILE_DIR:eka2l1_qt>/patch/")
 
     # Update library references to make the bundle portable
     include(DolphinPostprocessBundle)
@@ -330,6 +321,14 @@ if(APPLE)
        ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/"
        $<TARGET_FILE:eka2l1_qt>)
 
+    # Everything above rewrites Mach-O headers, which invalidates the signature
+    # the linker produced. Apple Silicon refuses to run an unsigned binary at
+    # all -- the app is killed on launch with a code signature error -- so sign
+    # the bundle again once it is in its final shape.
+    add_custom_command(TARGET eka2l1_qt
+       POST_BUILD COMMAND
+       codesign --force --deep --sign - "$<TARGET_BUNDLE_DIR:eka2l1_qt>")
+
     if (EKA2L1_DEPLOY_DMG)
         find_program(MACDEPLOYQT_EXECUTABLE macdeployqt HINTS "${QT_BIN_DIR}")
 
@@ -337,7 +336,8 @@ if(APPLE)
             COMMAND "${MACDEPLOYQT_EXECUTABLE}"
                 "$<TARGET_FILE_DIR:eka2l1_qt>/../.."
                 -dmg
-                -always-overwrite)
+                -always-overwrite
+                -codesign=-)
 
         add_custom_command(TARGET eka2l1_qt POST_BUILD
             COMMAND rm -rf "${CMAKE_BINARY_DIR}/bin/EKA2L1.app")

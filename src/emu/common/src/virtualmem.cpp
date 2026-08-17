@@ -22,6 +22,8 @@
 #include <common/platform.h>
 #include <common/virtualmem.h>
 
+#include <cstdint>
+
 #if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
 #elif EKA2L1_PLATFORM(UNIX) || EKA2L1_PLATFORM(DARWIN)
@@ -33,6 +35,50 @@
 #endif
 
 namespace eka2l1::common {
+#if !EKA2L1_PLATFORM(WIN32)
+    // The Symbian memory model works in 4 KB pages, but a host page can be
+    // larger: 16 KB on Apple Silicon, 16 or 64 KB on some aarch64 Linux
+    // kernels. mprotect(2) rejects a range that is not a whole number of host
+    // pages with EINVAL, which used to leave the page PROT_NONE and take the
+    // next guest write out with SIGBUS. On a 4 KB host all of this is the
+    // identity.
+    static std::size_t host_page_size() {
+        static const std::size_t size = static_cast<std::size_t>(sysconf(_SC_PAGESIZE));
+        return size;
+    }
+
+    // Widen the range to the host pages containing it. Only ever touches pages
+    // belonging to the same chunk, whose reservation is host-page aligned.
+    static void grow_to_host_pages(void *&ptr, std::size_t &size) {
+        const std::size_t mask = host_page_size() - 1;
+        const std::uintptr_t addr = reinterpret_cast<std::uintptr_t>(ptr);
+        const std::uintptr_t aligned = addr & ~static_cast<std::uintptr_t>(mask);
+        const std::size_t head = addr - aligned;
+
+        ptr = reinterpret_cast<void *>(aligned);
+        size = (size + head + mask) & ~mask;
+    }
+
+    // Shrink the range to the host pages it fully covers, so taking one guest
+    // page away never revokes a neighbour that is still live. Returns false if
+    // nothing is left to act on.
+    static bool shrink_to_host_pages(void *&ptr, std::size_t &size) {
+        const std::size_t mask = host_page_size() - 1;
+        const std::uintptr_t addr = reinterpret_cast<std::uintptr_t>(ptr);
+        const std::uintptr_t aligned = (addr + mask) & ~static_cast<std::uintptr_t>(mask);
+        const std::size_t head = aligned - addr;
+
+        if (size <= head) {
+            return false;
+        }
+
+        ptr = reinterpret_cast<void *>(aligned);
+        size = (size - head) & ~mask;
+
+        return size != 0;
+    }
+#endif
+
     void *map_memory(const std::size_t size) {
 #if EKA2L1_PLATFORM(WIN32)
         return VirtualAlloc(nullptr, size,
@@ -68,7 +114,11 @@ namespace eka2l1::common {
 
         if (!res) {
 #else
-        const int result = mprotect(ptr, size, translate_protection(commit_prot));
+        void *mp_ptr = ptr;
+        std::size_t mp_size = size;
+        grow_to_host_pages(mp_ptr, mp_size);
+
+        const int result = mprotect(mp_ptr, mp_size, translate_protection(commit_prot));
 
         if (result == -1) {
 #endif
@@ -84,7 +134,13 @@ namespace eka2l1::common {
 
         if (!res) {
 #else
-        const auto result = mprotect(ptr, size, PROT_NONE);
+        void *mp_ptr = ptr;
+        std::size_t mp_size = size;
+        if (!shrink_to_host_pages(mp_ptr, mp_size)) {
+            return true;
+        }
+
+        const auto result = mprotect(mp_ptr, mp_size, PROT_NONE);
 
         if (result == -1) {
 #endif
@@ -103,7 +159,11 @@ namespace eka2l1::common {
 
         if (!res) {
 #else
-        const int result = mprotect(ptr, size, translate_protection(new_prot));
+        void *mp_ptr = ptr;
+        std::size_t mp_size = size;
+        grow_to_host_pages(mp_ptr, mp_size);
+
+        const int result = mprotect(mp_ptr, mp_size, translate_protection(new_prot));
 
         if (result == -1) {
 #endif
