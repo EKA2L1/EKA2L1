@@ -700,8 +700,15 @@ namespace eka2l1::loader {
 
         // 2 is the size of the vector count
         std::uint64_t commands_offset = vector_offset + 2 * vector_count;
-        if (((commands_offset % 4) != 0) && (version >= 2)) {
-            // Version 2 or above needs offset aligned
+
+        // From version 2 the command section starts on a word boundary. Symbian's
+        // own decoder decides that from the offset vector count alone -- an even
+        // count means the section is padded -- not from the resulting address, and
+        // the files were produced to be read by it. The two rules agree only while
+        // the header size is a multiple of four; for any other header size they
+        // disagree for every count, so follow the one the encoder was written
+        // against rather than the one that looks arithmetically right.
+        if ((version >= 2) && ((vector_count & 1) == 0)) {
             commands_offset += 2;
         }
 
