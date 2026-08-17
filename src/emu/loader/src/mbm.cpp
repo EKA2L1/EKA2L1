@@ -112,6 +112,16 @@ namespace eka2l1::loader {
             }
         } else {
             for (const std::size_t i : index_to_loads) {
+                // A client may ask for a bitmap index this MBM does not have — the
+                // FBS client passes whatever the guest requested. Skip it instead of
+                // indexing the trailer out of bounds; the caller checks the result
+                // with is_header_loaded() and reports not-found. The out-of-bounds
+                // read is silent undefined behaviour with an unhardened libc++ and
+                // an abort with a hardened one.
+                if (i >= trailer.sbm_offsets.size()) {
+                    continue;
+                }
+
                 if (!do_load_header(i))
                     return false;
 

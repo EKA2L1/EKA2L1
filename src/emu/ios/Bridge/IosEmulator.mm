@@ -304,10 +304,12 @@ namespace eka2l1::ios {
             const auto &mask_hdr = parser.sbm_headers[1];
             if (static_cast<std::size_t>(mask_hdr.size_pixels.x) == w
                 && static_cast<std::size_t>(mask_hdr.size_pixels.y) == h) {
-                // TODO: the mask is not applied yet -- deciding whether it is a soft
-                // or a colour-key mask lives in the icon work that follows this port,
-                // so icons render opaque until then.
-                (void)mask_hdr;
+                std::vector<std::uint8_t> mask_rgba(w * h * 4);
+                eka2l1::common::wo_buf_stream mask_dst(mask_rgba.data(), mask_rgba.size());
+                if (eka2l1::epoc::convert_to_rgba8888(fbsserv, parser, 1, mask_dst, true)) {
+                    eka2l1::epoc::apply_icon_mask_alpha(rgba.data(), mask_rgba.data(), w, h,
+                        mask_hdr.bit_per_pixels);
+                }
             }
         }
         return encode_rgba_to_png(rgba.data(), w, h, side);
@@ -332,7 +334,12 @@ namespace eka2l1::ios {
         if (auto *mask_bitmap = icon_pair->second) {
             if (static_cast<std::size_t>(mask_bitmap->header_.size_pixels.x) == w
                 && static_cast<std::size_t>(mask_bitmap->header_.size_pixels.y) == h) {
-                // TODO: see above -- mask application follows with the icon work.
+                std::vector<std::uint8_t> mask_rgba(w * h * 4);
+                eka2l1::common::wo_buf_stream mask_dst(mask_rgba.data(), mask_rgba.size());
+                if (eka2l1::epoc::convert_to_rgba8888(fbsserv, mask_bitmap, mask_dst, true)) {
+                    eka2l1::epoc::apply_icon_mask_alpha(rgba.data(), mask_rgba.data(), w, h,
+                        mask_bitmap->header_.bit_per_pixels);
+                }
             }
         }
         return encode_rgba_to_png(rgba.data(), w, h, side);

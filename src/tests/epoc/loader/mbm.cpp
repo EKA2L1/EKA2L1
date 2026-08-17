@@ -57,3 +57,33 @@ TEST_CASE("mbm_header_trailer_and_single_headers", "mbm_file") {
     REQUIRE(mbmf.sbm_headers[0].bitmap_size == 3545);
     REQUIRE(mbmf.sbm_headers[0].bit_per_pixels == 24);
 }
+
+/**
+ * A client can ask for a bitmap index the file does not have. The header read
+ * must skip it rather than index the trailer out of bounds.
+ */
+TEST_CASE("mbm_out_of_range_index_is_skipped", "mbm_file") {
+    std::ifstream fi("loaderassets/face.mbm", std::ios::binary);
+    REQUIRE(!fi.bad());
+    REQUIRE(!fi.fail());
+
+    std::vector<std::uint8_t> data;
+
+    fi.seekg(0, std::ios::end);
+    const std::uint64_t fsize = fi.tellg();
+
+    data.resize(fsize);
+    fi.seekg(0, std::ios::beg);
+
+    fi.read(reinterpret_cast<char *>(&data[0]), data.size());
+
+    common::ro_buf_stream stream(&data[0], data.size());
+    loader::mbm_file mbmf(reinterpret_cast<common::ro_stream *>(&stream));
+
+    // face.mbm holds a single bitmap, so index 1 is one past the end.
+    mbmf.index_to_loads = { 1 };
+
+    REQUIRE(mbmf.do_read_headers());
+    REQUIRE(mbmf.trailer.count == 1);
+    REQUIRE(!mbmf.is_header_loaded(1));
+}

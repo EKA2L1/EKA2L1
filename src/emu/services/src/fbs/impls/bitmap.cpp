@@ -1583,6 +1583,85 @@ namespace eka2l1 {
             common::ro_buf_stream buf_stream(data.data(), data.size());
             return convert_to_rgba8888(serv, buf_stream, dest, file.sbm_headers[index], -1, static_cast<bitmap_file_compression>(file.sbm_headers[index].compression), make_standard_mask);
         }
+
+        static bool mask_depth_is_soft(const std::uint32_t bpp) {
+            return (bpp > 1) && (bpp <= 8);
+        }
+
+        // The exception: a few S60v2 AIF icons store a *binary* stencil at 8bpp, in
+        // the colour-key polarity the contract above describes, so the soft reading
+        // turns them inside out - the shape goes fully transparent while the backdrop
+        // stays opaque, which reads as a blank icon.
+        // The mask content settles it. An icon's outer frame is transparent by
+        // definition, so a mask that holds only white plus one other level, has a
+        // solid white border and some non-white interior, can only be colour-key.
+        // Masks with a real alpha ramp, with an already-transparent black border, or
+        // fully opaque ones (a full-bleed icon) keep the soft reading.
+        static bool soft_mask_reads_inside_out(const std::uint8_t *mask_rgba, const std::size_t width,
+            const std::size_t height) {
+            static constexpr std::uint8_t WHITE_MIN = 250;
+
+            if ((width < 3) || (height < 3)) {
+                return false;
+            }
+
+            std::uint8_t other_level = 0;
+            bool has_other_level = false;
+
+            for (std::size_t i = 0; i < width * height; i++) {
+                const std::uint8_t level = mask_rgba[i * 4];
+
+                if (level >= WHITE_MIN) {
+                    continue;
+                }
+
+                if (!has_other_level) {
+                    other_level = level;
+                    has_other_level = true;
+                } else if (level != other_level) {
+                    // Three or more levels: a genuine alpha ramp.
+                    return false;
+                }
+            }
+
+            if (!has_other_level) {
+                return false;
+            }
+
+            for (std::size_t x = 0; x < width; x++) {
+                if ((mask_rgba[x * 4] < WHITE_MIN) || (mask_rgba[((height - 1) * width + x) * 4] < WHITE_MIN)) {
+                    return false;
+                }
+            }
+
+            for (std::size_t y = 0; y < height; y++) {
+                if ((mask_rgba[(y * width) * 4] < WHITE_MIN) || (mask_rgba[(y * width + width - 1) * 4] < WHITE_MIN)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        void apply_icon_mask_alpha(std::uint8_t *icon_rgba, const std::uint8_t *mask_rgba,
+            const std::size_t width, const std::size_t height, const std::uint32_t mask_bpp) {
+            if (!icon_rgba || !mask_rgba) {
+                return;
+            }
+
+            const bool soft = mask_depth_is_soft(mask_bpp) && !soft_mask_reads_inside_out(mask_rgba, width, height);
+
+            // A soft mask maps its gray value straight to alpha (white opaque). The
+            // mask is gray-valued, so its red channel carries the luminance directly
+            // and anti-aliased edges are preserved. A colour-key mask instead inverts
+            // the pure-white test that make_standard_mask left in the alpha channel,
+            // so only the white backdrop becomes transparent.
+            for (std::size_t i = 0; i < width * height; i++) {
+                icon_rgba[i * 4 + 3] = soft
+                    ? mask_rgba[i * 4]
+                    : static_cast<std::uint8_t>(255 - mask_rgba[i * 4 + 3]);
+            }
+        }
     }
 
     void fbscli::background_compress_bitmap(service::ipc_context *ctx) {
