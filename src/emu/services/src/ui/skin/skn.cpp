@@ -248,7 +248,8 @@ namespace eka2l1::epoc {
 
         process_attrib(base_offset + skn_desc_dfo_bitmap_attribs, bmp_info_.attrib);
 
-        bitmaps_.emplace(bmp_info_.id_hash, std::move(bmp_info_));
+        // Later definitions override earlier ones; emplace would keep the first.
+        bitmaps_[bmp_info_.id_hash] = std::move(bmp_info_);
     }
 
     void skn_file::process_image_table_def_chunk(std::uint32_t base_offset) {
@@ -268,8 +269,13 @@ namespace eka2l1::epoc {
 
         process_attrib(offset_of_attrib, tab_.attrib);
 
-        // Move first
-        skn_image_table &tab_ref_ = img_tabs_.emplace(tab_.id_hash, std::move(tab_)).first->second;
+        // Move first. A skin may define the same item more than once (the later
+        // definition overrides the earlier one), so *assign* instead of emplace:
+        // emplace keeps the existing entry, and the append below would then stack
+        // the new entries on top of the old ones. A frame table that ends up with
+        // 18 instead of 9 images fails Avkon's EAknsFrameElementsN check and the
+        // whole frame silently goes undrawn.
+        skn_image_table &tab_ref_ = (img_tabs_[tab_.id_hash] = std::move(tab_));
 
         // Read entry
         for (std::uint16_t i = 0; i < count; i++) {
@@ -298,8 +304,9 @@ namespace eka2l1::epoc {
 
         process_attrib(offset_of_attrib, tab_.attrib);
 
-        // Move first
-        skn_color_table &tab_ref_ = color_tabs_.emplace(tab_.id_hash, std::move(tab_)).first->second;
+        // Move first. Same override rule as the image table above: assign so a
+        // re-definition replaces the old colours instead of appending to them.
+        skn_color_table &tab_ref_ = (color_tabs_[tab_.id_hash] = std::move(tab_));
 
         // Read entry
         for (std::uint16_t i = 0; i < count; i++) {
@@ -360,7 +367,7 @@ namespace eka2l1::epoc {
             anim_.frames.push_back(frame);
         }
 
-        bitmap_anims_.emplace(anim_.id_hash, std::move(anim_));
+        bitmap_anims_[anim_.id_hash] = std::move(anim_);
     }
 
     std::string skn_file::process_string(std::uint32_t base_offset, const std::uint16_t size) {

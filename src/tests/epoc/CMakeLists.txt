@@ -12,5 +12,6 @@ set(CORE_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/services/svg_icon.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/centralrepo/crebinloader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/centralrepo/creiniloader.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/services/ui/skin/skn.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/utils/sec.cpp
     PARENT_SCOPE)
