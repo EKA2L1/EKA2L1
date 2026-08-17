@@ -257,6 +257,26 @@ jobs:
         path: build/eka2l1-qt-x64.AppImage
       if: matrix.label == 'linux'
 
+  # One check with a stable name for branch protection to require. The matrix
+  # job names carry their runner labels, so they change whenever an image is
+  # swapped -- a required check pinned to those silently stops applying. This
+  # one does not move.
+  ci:
+    name: CI
+    needs: [build-android, build-desktop]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check the build and test jobs
+      run: |
+        echo "android:  ${{ needs.build-android.result }}"
+        echo "desktop:  ${{ needs.build-desktop.result }}"
+        if [ "${{ needs.build-android.result }}" != "success" ] || \
+           [ "${{ needs.build-desktop.result }}" != "success" ]; then
+          echo "::error::A build or test job did not pass"
+          exit 1
+        fi
+
   roll-release:
    needs: [build-android, build-desktop]
    runs-on: "ubuntu-latest"
