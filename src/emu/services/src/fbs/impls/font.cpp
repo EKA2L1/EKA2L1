@@ -22,6 +22,7 @@
  */
 
 #include <services/fbs/fbs.h>
+#include <services/fbs/linked_font_config.h>
 
 #include <common/cvt.h>
 #include <common/log.h>
@@ -1137,19 +1138,65 @@ namespace eka2l1 {
 
         // Add fonts
         const auto extension = common::lowercase_string(eka2l1::path_extension(common::ucs2_to_utf8(path)));
-        epoc::adapter::font_file_adapter_kind adapter_kind = epoc::adapter::font_file_adapter_kind::none;
 
         if (extension == ".ttf") {
-            adapter_kind = epoc::adapter::font_file_adapter_kind::freetype;
-        } else if (extension == ".gdr") {
-            adapter_kind = epoc::adapter::font_file_adapter_kind::gdr;
+            return persistent_font_store.add_fonts(buf, epoc::adapter::font_file_adapter_kind::freetype);
         }
 
-        if (adapter_kind != epoc::adapter::font_file_adapter_kind::none) {
-            persistent_font_store.add_fonts(buf, adapter_kind);
+        if (extension == ".gdr") {
+            return persistent_font_store.add_fonts(buf, epoc::adapter::font_file_adapter_kind::gdr);
         }
 
-        return true;
+        // CFontStore::AddFileL offers the file to every rasterizer and keeps
+        // whichever one recognises it, so the extension is only ever a hint. A
+        // ROM font really can be named something else: the 5320 carries its
+        // Chinese font as s60sc.ccc, a TrueType file all the same, and skipping
+        // it leaves the device with no CJK glyphs at all.
+        for (const auto kind : { epoc::adapter::font_file_adapter_kind::freetype,
+                 epoc::adapter::font_file_adapter_kind::gdr }) {
+            if (persistent_font_store.add_fonts(buf, kind)) {
+                LOG_TRACE(SERVICE_FBS, "Loaded font file {} by content", common::ucs2_to_utf8(path));
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Linked typefaces are assembled once every font is in the store: their
+    // components can sit on a different drive than the link.ini naming them.
+    void fbs_server::load_linked_fonts(eka2l1::io_system *io) {
+        for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
+            if (io->get_drive_entry(drv)) {
+                load_linked_fonts_from_directory(io, std::u16string{ drive_to_char16(drv) } + (kern->is_eka1() ? u":\\System\\Fonts\\" : u":\\Resource\\Fonts\\"));
+            }
+        }
+    }
+
+    void fbs_server::load_linked_fonts_from_directory(eka2l1::io_system *io, const std::u16string &fonts_folder_path) {
+        const std::u16string link_path = fonts_folder_path + u"link.ini";
+        symfile f = io->open_file(link_path, READ_MODE | BIN_MODE);
+
+        if (!f) {
+            return;
+        }
+
+        std::vector<std::uint8_t> buf(static_cast<std::size_t>(f->size()));
+        const bool read_ok = !buf.empty()
+            && (f->read_file(buf.data(), 1, static_cast<std::uint32_t>(buf.size())) == buf.size());
+
+        f->close();
+
+        if (!read_ok) {
+            return;
+        }
+
+        for (const auto &spec : epoc::parse_linked_font_config(epoc::decode_linked_font_config(buf.data(), buf.size()))) {
+            if (persistent_font_store.add_linked_font(spec.name, spec.component_names, spec.canonical)) {
+                LOG_TRACE(SERVICE_FBS, "Registered linked typeface {} from {}", common::ucs2_to_utf8(spec.name),
+                    common::ucs2_to_utf8(link_path));
+            }
+        }
     }
 
     void fbs_server::load_fonts(eka2l1::io_system *io) {

@@ -369,6 +369,7 @@ namespace eka2l1 {
         epoc::font_store persistent_font_store;
 
         void load_fonts(eka2l1::io_system *io);
+        void load_linked_fonts(eka2l1::io_system *io);
 
         std::atomic<service::uid> connection_id_counter{ 0x1234 }; // Easier to debug
 
@@ -379,6 +380,7 @@ namespace eka2l1 {
 
     protected:
         void load_fonts_from_directory(eka2l1::io_system *io, eka2l1::directory *dir);
+        void load_linked_fonts_from_directory(eka2l1::io_system *io, const std::u16string &fonts_folder_path);
         void initialize_server();
 
         bool add_single_font(eka2l1::io_system *io, const std::u16string &path);

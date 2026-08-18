@@ -422,6 +422,11 @@ namespace eka2l1 {
         // Probably also indicates that font aren't loaded yet
         load_fonts(sys->get_io_system());
 
+        // A CJK variant presents a Latin font and a CJK font as one typeface
+        // through link.ini. Both have to be in the store before the typefaces
+        // naming them can be assembled.
+        load_linked_fonts(sys->get_io_system());
+
         fs_server = kern->get_by_name<service::server>(epoc::fs::get_server_name_through_epocver(
             kern->get_epoc_version()));
 

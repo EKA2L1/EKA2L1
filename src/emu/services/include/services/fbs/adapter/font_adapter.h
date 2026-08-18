@@ -45,11 +45,12 @@ namespace eka2l1::epoc::adapter {
      * \brief Base class for adapter.
      */
     class font_file_adapter_base {
-    protected:
-        virtual std::uint32_t get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint, const std::uint32_t metric_identifier, const bool vertical = false) = 0;
-
     public:
         virtual ~font_file_adapter_base() {}
+
+        // Public so that an adapter presenting other adapters as one typeface
+        // (see linked_font_file_adapter) can forward this per glyph.
+        virtual std::uint32_t get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint, const std::uint32_t metric_identifier, const bool vertical = false) = 0;
 
         virtual bool is_valid() = 0;
         virtual bool vectorizable() const = 0;
@@ -59,6 +60,14 @@ namespace eka2l1::epoc::adapter {
 
         virtual bool get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) = 0;
 
+        /**
+         * @brief Rasterize one glyph.
+         *
+         * @param bmp_type In, the format the caller would like, or
+         *                 default_glyph_bitmap for whatever suits the adapter.
+         *                 Out, the format it really produced -- an adapter is
+         *                 free to ignore the request.
+         */
         virtual std::uint8_t *get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier,
             int *rasterized_width, int *rasterized_height, std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type,
             open_font_character_metric &character_metric)
@@ -163,6 +172,27 @@ namespace eka2l1::epoc::adapter {
             return 8;
         }
     };
+
+    /**
+     * @brief Number of words a monochrome glyph of this size can ever need.
+     */
+    std::size_t monochrome_glyph_word_count(const std::int32_t width, const std::int32_t height);
+
+    /**
+     * @brief Encode 1 bit per pixel scanlines the way Symbian wants a
+     *        monochrome glyph bitmap.
+     *
+     * A run is a mode bit -- 0 for "the single scanline that follows repeats",
+     * 1 for "this many scanlines follow verbatim" -- then a four bit count,
+     * then the scanline bits, everything least significant bit first. The
+     * source is packed the same way, row major, `width * height` bits.
+     *
+     * @param dest Buffer of at least monochrome_glyph_word_count() words,
+     *             zeroed.
+     * @returns The number of bits written.
+     */
+    std::uint32_t compress_monochrome_glyph(const std::uint32_t *source, const std::int32_t width,
+        const std::int32_t height, std::uint32_t *dest);
 
     enum class font_file_adapter_kind {
         none,

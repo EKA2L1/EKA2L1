@@ -169,93 +169,14 @@ namespace eka2l1::epoc::adapter {
         const std::int16_t target_width = the_char->metric_->move_in_pixels_ - the_char->metric_->left_adj_in_pixels_ - the_char->metric_->right_adjust_in_pixels_;
         const std::int16_t target_height = the_char->metric_->height_in_pixels_;
 
-        // RLE this baby! Alloc this big to gurantee compressed data will always fit. If the compression is bad
+        // Alloc this big to gurantee compressed data will always fit. If the compression is bad
         // we also add 5 more words. in case compression is not effective at all.
-        const std::size_t total_compressed_word = ((static_cast<std::uint32_t>(target_width * target_height) + 31) >> 5) + 5;
+        const std::size_t total_compressed_word = monochrome_glyph_word_count(target_width, target_height);
         std::uint32_t *compressed_bitmap = new std::uint32_t[total_compressed_word];
         std::fill(compressed_bitmap, compressed_bitmap + total_compressed_word, 0);
 
-        std::int16_t total_line_processed_so_far = 0;
-        std::uint32_t total_bit_write = 0;
-
-#define WRITE_BIT_32(bit)                                                               \
-    compressed_bitmap[(total_bit_write >> 5)] |= ((bit & 1) << (total_bit_write & 31)); \
-    total_bit_write++
-
-        auto compare_line_equal = [&](std::uint32_t p_l1, std::uint32_t p_l2, const std::uint32_t n) -> bool {
-            std::uint32_t left = n;
-
-            while (left > 0) {
-                std::uint32_t to_read = std::min<std::uint32_t>(left, 32);
-
-                std::uint32_t pos1 = (p_l1 * target_width + n - left);
-                std::uint32_t pos2 = (p_l2 * target_width + n - left);
-
-                std::uint32_t maximum_1 = 32U - (pos1 & 31);
-                std::uint32_t maximum_2 = 32U - (pos2 & 31);
-
-                std::uint32_t part1read = std::min<std::uint32_t>(maximum_1, to_read);
-                std::uint32_t part2read = std::min<std::uint32_t>(maximum_2, to_read);
-
-                std::uint32_t l1p = common::extract_bits(src[pos1 >> 5], (pos1 & 31), part1read) | ((maximum_1 < to_read) ? (common::extract_bits(src[(pos1 >> 5) + 1], 0, to_read - maximum_1) << part1read) : 0);
-
-                std::uint32_t l2p = common::extract_bits(src[pos2 >> 5], (pos2 & 31), part2read) | ((maximum_2 < to_read) ? (common::extract_bits(src[(pos2 >> 5) + 1], 0, to_read - maximum_2) << part2read) : 0);
-
-                if (l1p != l2p) {
-                    return false;
-                }
-
-                left -= to_read;
-            }
-
-            return true;
-        };
-
-        while (total_line_processed_so_far < target_height) {
-            bool mode = false;
-            std::int8_t count = 2;
-
-            if (total_line_processed_so_far == (target_height - 1)) {
-                count = 1;
-                mode = false;
-            } else {
-                mode = compare_line_equal(total_line_processed_so_far, total_line_processed_so_far + 1, target_width);
-
-                bool got_in = false;
-
-                while ((count < 15) && (total_line_processed_so_far + count < target_height) && (compare_line_equal(total_line_processed_so_far + (mode ? 0 : (count - 1)), total_line_processed_so_far + count, target_width) == mode)) {
-                    count++;
-                    got_in = true;
-                }
-
-                if (got_in) {
-                    count--;
-                }
-            }
-
-            WRITE_BIT_32(mode ? 0 : 1); // Repeat mode if line equal
-
-            // Write the repeat count
-            WRITE_BIT_32(count & 1);
-            WRITE_BIT_32((count >> 1) & 1);
-            WRITE_BIT_32((count >> 2) & 1);
-            WRITE_BIT_32((count >> 3) & 1);
-
-            // Write the line content
-            std::uint32_t loc = total_line_processed_so_far * target_width;
-
-            for (std::size_t j = 0; j < (mode ? 1 : count); j++) {
-                for (std::size_t i = 0; i < target_width; i++) {
-                    // Give up being fast lol
-                    WRITE_BIT_32((src[(loc + i) >> 5] >> ((loc + i) & 31)) & 1);
-                }
-
-                loc += target_width;
-            }
-
-            total_line_processed_so_far += count;
-        }
-#undef WRITE_BIT_32
+        const std::uint32_t total_bit_write = compress_monochrome_glyph(src, target_width, target_height,
+            compressed_bitmap);
 
         if (bmp_type)
             *bmp_type = epoc::glyph_bitmap_type::monochrome_glyph_bitmap;

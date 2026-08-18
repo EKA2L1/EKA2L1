@@ -21,9 +21,109 @@
 #include <services/fbs/adapter/freetype_font_adapter.h>
 #include <services/fbs/adapter/gdr_font_adapter.h>
 #include <services/fbs/adapter/stb_font_adapter.h>
+#include <common/bytes.h>
 #include <common/log.h>
 
 namespace eka2l1::epoc::adapter {
+
+    std::size_t monochrome_glyph_word_count(const std::int32_t width, const std::int32_t height) {
+        // Enough for the scanline bits even when nothing compresses, plus room
+        // for the run headers.
+        return ((static_cast<std::uint32_t>(width * height) + 31) >> 5) + 5;
+    }
+
+    std::uint32_t compress_monochrome_glyph(const std::uint32_t *src, const std::int32_t width,
+        const std::int32_t height, std::uint32_t *dest) {
+        std::int32_t total_line_processed_so_far = 0;
+        std::uint32_t total_bit_write = 0;
+
+#define WRITE_BIT_32(bit)                                                               \
+    dest[(total_bit_write >> 5)] |= ((bit & 1) << (total_bit_write & 31)); \
+    total_bit_write++
+
+        auto compare_line_equal = [&](std::uint32_t p_l1, std::uint32_t p_l2, const std::uint32_t n) -> bool {
+            std::uint32_t left = n;
+
+            while (left > 0) {
+                std::uint32_t to_read = std::min<std::uint32_t>(left, 32);
+
+                std::uint32_t pos1 = (p_l1 * width + n - left);
+                std::uint32_t pos2 = (p_l2 * width + n - left);
+
+                std::uint32_t maximum_1 = 32U - (pos1 & 31);
+                std::uint32_t maximum_2 = 32U - (pos2 & 31);
+
+                std::uint32_t part1read = std::min<std::uint32_t>(maximum_1, to_read);
+                std::uint32_t part2read = std::min<std::uint32_t>(maximum_2, to_read);
+
+                // common::extract_bits numbers bits from one, so a zero based
+                // position has to be handed over as p + 1. Passing zero shifts
+                // by an underflowed count, which is how identical scanlines
+                // used to compare unequal and every glyph ended up written out
+                // in full.
+                std::uint32_t l1p = common::extract_bits(src[pos1 >> 5], (pos1 & 31) + 1, part1read) | ((maximum_1 < to_read) ? (common::extract_bits(src[(pos1 >> 5) + 1], 1, to_read - maximum_1) << part1read) : 0);
+
+                std::uint32_t l2p = common::extract_bits(src[pos2 >> 5], (pos2 & 31) + 1, part2read) | ((maximum_2 < to_read) ? (common::extract_bits(src[(pos2 >> 5) + 1], 1, to_read - maximum_2) << part2read) : 0);
+
+                if (l1p != l2p) {
+                    return false;
+                }
+
+                left -= to_read;
+            }
+
+            return true;
+        };
+
+        while (total_line_processed_so_far < height) {
+            bool mode = false;
+            std::int8_t count = 2;
+
+            if (total_line_processed_so_far == (height - 1)) {
+                count = 1;
+                mode = false;
+            } else {
+                mode = compare_line_equal(total_line_processed_so_far, total_line_processed_so_far + 1, width);
+
+                bool got_in = false;
+
+                while ((count < 15) && (total_line_processed_so_far + count < height) && (compare_line_equal(total_line_processed_so_far + (mode ? 0 : (count - 1)), total_line_processed_so_far + count, width) == mode)) {
+                    count++;
+                    got_in = true;
+                }
+
+                if (got_in) {
+                    count--;
+                }
+            }
+
+            WRITE_BIT_32(mode ? 0 : 1); // Repeat mode if line equal
+
+            // Write the repeat count
+            WRITE_BIT_32(count & 1);
+            WRITE_BIT_32((count >> 1) & 1);
+            WRITE_BIT_32((count >> 2) & 1);
+            WRITE_BIT_32((count >> 3) & 1);
+
+            // Write the line content
+            std::uint32_t loc = total_line_processed_so_far * width;
+
+            for (std::size_t j = 0; j < (mode ? 1 : count); j++) {
+                for (std::size_t i = 0; i < width; i++) {
+                    // Give up being fast lol
+                    WRITE_BIT_32((src[(loc + i) >> 5] >> ((loc + i) & 31)) & 1);
+                }
+
+                loc += width;
+            }
+
+            total_line_processed_so_far += count;
+        }
+#undef WRITE_BIT_32
+
+        return total_bit_write;
+    }
+
     bool font_file_adapter_base::make_text_shape(const std::size_t face_index, const open_font_shaping_parameter &params, const std::u16string &text, const std::uint32_t metric_identifier, open_font_shaping_header &shaping_header, std::uint8_t *shaping_data) {
         if (params.text_range_[0] > params.text_range_[1]) {
             LOG_ERROR(SERVICE_FBS, "Text start position is larger than text end position in shaping parameter!");

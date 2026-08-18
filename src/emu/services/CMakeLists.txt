@@ -61,6 +61,7 @@ add_library(epocservs
         include/services/fbs/adapter/font_adapter.h
         include/services/fbs/adapter/freetype_font_adapter.h
         include/services/fbs/adapter/gdr_font_adapter.h
+        include/services/fbs/adapter/linked_font_adapter.h
         include/services/fbs/adapter/stb_font_adapter.h
         include/services/fbs/bitmap.h
         include/services/fbs/compress_queue.h
@@ -68,6 +69,7 @@ add_library(epocservs
         include/services/fbs/font.h
         include/services/fbs/font_atlas.h
         include/services/fbs/font_store.h
+        include/services/fbs/linked_font_config.h
         include/services/fbs/palette.h
         include/services/featmgr/featmgr.h
         include/services/fs/sec.h
@@ -209,6 +211,7 @@ add_library(epocservs
         src/fbs/adapter/font_adapter.cpp
         src/fbs/adapter/freetype_font_adapter.cpp
         src/fbs/adapter/gdr_font_adapter.cpp
+        src/fbs/adapter/linked_font_adapter.cpp
         src/fbs/adapter/stb_font_adapter.cpp
         src/fbs/compress_queue.cpp
         src/fbs/fbs.cpp
@@ -216,6 +219,7 @@ add_library(epocservs
         src/fbs/impls/bitmap.cpp
         src/fbs/impls/font.cpp
         src/fbs/impls/font_store.cpp
+        src/fbs/impls/linked_font_config.cpp
         src/featmgr/featmgr.cpp
         src/fs/dirs.cpp
         src/fs/drives.cpp
