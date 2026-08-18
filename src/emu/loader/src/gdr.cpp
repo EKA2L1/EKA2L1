@@ -156,6 +156,16 @@ namespace eka2l1::loader::gdr {
         }
     }
 
+    // The first three words and the checksum are written as literal constants by
+    // fnttran (bitmapfonttools/src/FNTRECRD.CPP, FontStoreFile::ExternalizeHeader),
+    // and their values are in bitmapfonttools/inc/UID.H. They are what says a file
+    // is a font store at all -- without checking them, any file at all is parsed
+    // as one, and a stream of unrelated bytes walks the parser through counts and
+    // offsets that mean nothing.
+    static constexpr std::uint32_t GDR_STORE_WRITE_ONCE_LAYOUT_UID = 268435511; // KStoreWriteOnceLayoutUid
+    static constexpr std::uint32_t GDR_FONT_STORE_FILE_UID = 268435513; // KFontStoreFileUid
+    static constexpr std::uint32_t GDR_FONT_STORE_FILE_CHECKSUM = 0x47393853; // KFontStoreFileChecksum
+
     bool parse_store_header(common::ro_stream *stream, header &the_header) {
         std::size_t read = 0;
 
@@ -174,6 +184,12 @@ namespace eka2l1::loader::gdr {
             + sizeof(the_header.collection_uid_) + sizeof(the_header.pixel_aspect_ratio_) + sizeof(the_header.id_offset_2_);
 
         if (read != size_of_beginning_header) {
+            return false;
+        }
+
+        if ((the_header.store_write_once_layout_uid_ != GDR_STORE_WRITE_ONCE_LAYOUT_UID)
+            || (the_header.font_store_file_uid_ != GDR_FONT_STORE_FILE_UID)
+            || (the_header.font_store_file_checksum_ != GDR_FONT_STORE_FILE_CHECKSUM)) {
             return false;
         }
 
