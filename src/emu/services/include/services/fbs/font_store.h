@@ -41,7 +41,19 @@ namespace eka2l1::epoc {
         epoc::open_font_metrics metrics;
 
         std::uint32_t metric_identifier;
+
+        // Imported by the user into <storage>/fonts rather than shipped by the
+        // device; see font_store::attach_user_font_fallbacks.
+        bool user_font = false;
     };
+
+    /**
+     * @brief Score a candidate face against a request, higher being better.
+     *
+     * Port of CFontStore's MatchFontSpecsInPixels. Exposed for tests.
+     */
+    int match_font_spec(const open_font_face_attrib &candidate, const std::u16string &candidate_name,
+        const epoc::font_spec_base &spec, const std::int32_t candidate_height);
 
     // A set of fonts
     class font_store {
@@ -51,6 +63,10 @@ namespace eka2l1::epoc {
 
         eka2l1::io_system *io;
 
+        // Linked typefaces occupy the front of open_font_store; see
+        // add_linked_font.
+        std::size_t linked_font_count_ = 0;
+
     protected:
         void folder_change_callback(const std::u16string &path, int action);
 
@@ -59,7 +75,39 @@ namespace eka2l1::epoc {
             : io(io) {
         }
 
-        void add_fonts(std::vector<std::uint8_t> &buf, const epoc::adapter::font_file_adapter_kind adapter_kind);
+        /**
+         * @brief Add every face of a font file to the store.
+         * @returns True if the file was one this adapter kind can read.
+         */
+        bool add_fonts(std::vector<std::uint8_t> &buf, const epoc::adapter::font_file_adapter_kind adapter_kind,
+            const bool user_font = false);
+
+        /**
+         * @brief Present faces already in the store as one linked typeface.
+         *
+         * Mirrors the S60 linked font that a CJK variant declares in link.ini:
+         * `component_names` are face names in lookup order and `canonical` is
+         * the index of the one that lends the typeface its attributes.
+         *
+         * @returns True if every component was found and the typeface was added.
+         */
+        bool add_linked_font(const std::u16string &name, const std::vector<std::u16string> &component_names,
+            const std::size_t canonical);
+
+        /**
+         * @brief Let the fonts the user imported stand in for glyphs the
+         *        device's own fonts do not have.
+         *
+         * A CJK variant ships a link.ini pairing its Latin typeface with a CJK
+         * one; a Latin-only ROM ships neither the font nor the link, so an
+         * imported font would sit in the store unused -- nothing asks for it by
+         * name, and nothing about a request says which script it is about to
+         * draw. Every device face is therefore given the imported fonts as
+         * trailing components of a linked typeface, which is the same
+         * arrangement link.ini describes, with the device's own face canonical
+         * so nothing about its appearance or metrics changes.
+         */
+        void attach_user_font_fallbacks();
 
         open_font_info *seek_the_open_font(epoc::font_spec_base &spec);
         open_font_info *seek_the_font_by_uid(const epoc::uid the_uid, epoc::open_font_metrics &target_metric, std::uint32_t *metric_identifier = nullptr);

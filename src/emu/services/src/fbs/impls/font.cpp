@@ -22,8 +22,11 @@
  */
 
 #include <services/fbs/fbs.h>
+#include <services/fbs/linked_font_config.h>
 
+#include <common/buffer.h>
 #include <common/cvt.h>
+#include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
 #include <common/vecx.h>
@@ -1124,32 +1127,118 @@ namespace eka2l1 {
         }
     }
 
+    // The name only picks the adapter, so it can be a guest or a host path.
+    bool fbs_server::add_font(common::ro_stream &stream, const std::string &name, const bool user_font) {
+        std::vector<std::uint8_t> buf(static_cast<std::size_t>(stream.size()));
+
+        if (buf.empty() || (stream.read(buf.data(), buf.size()) != buf.size())) {
+            LOG_ERROR(SERVICE_FBS, "Unable to read font file {}", name);
+            return false;
+        }
+
+        const auto extension = common::lowercase_string(eka2l1::path_extension(name));
+
+        if (extension == ".ttf") {
+            return persistent_font_store.add_fonts(buf, epoc::adapter::font_file_adapter_kind::freetype, user_font);
+        }
+
+        if (extension == ".gdr") {
+            return persistent_font_store.add_fonts(buf, epoc::adapter::font_file_adapter_kind::gdr, user_font);
+        }
+
+        // CFontStore::AddFileL offers the file to every rasterizer and keeps
+        // whichever one recognises it, so the extension is only ever a hint. A
+        // ROM font really can be named something else: the 5320 carries its
+        // Chinese font as s60sc.ccc, a TrueType file all the same, and skipping
+        // it leaves the device with no CJK glyphs at all.
+        for (const auto kind : { epoc::adapter::font_file_adapter_kind::freetype,
+                 epoc::adapter::font_file_adapter_kind::gdr }) {
+            if (persistent_font_store.add_fonts(buf, kind, user_font)) {
+                LOG_TRACE(SERVICE_FBS, "Loaded font file {} by content", name);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     bool fbs_server::add_single_font(eka2l1::io_system *io, const std::u16string &path) {
         symfile f = io->open_file(path, READ_MODE | BIN_MODE);
-        const std::uint64_t fsize = f->size();
 
-        std::vector<std::uint8_t> buf;
+        if (!f) {
+            return false;
+        }
 
-        buf.resize(fsize);
-        f->read_file(&buf[0], 1, static_cast<std::uint32_t>(buf.size()));
+        ro_file_stream stream(f.get());
+        add_font(stream, common::ucs2_to_utf8(path));
+
+        // A file we have no adapter for is not a failure: add_font_file_store
+        // reports this back to the guest, and it used to accept anything that
+        // existed.
+        return true;
+    }
+
+    // Fonts the user imported through a frontend. They live in <storage>/fonts,
+    // outside the guest drives, so one import serves every installed device and
+    // survives a device being reinstalled (which rewrites its Z drive).
+    void fbs_server::load_custom_fonts(const std::string &storage) {
+        const std::string fonts_folder_path = eka2l1::add_path(storage, "fonts");
+        auto folder = common::make_directory_iterator(fonts_folder_path, "");
+
+        if (!folder || !folder->is_valid()) {
+            return;
+        }
+
+        common::dir_entry entry;
+
+        while (folder->next_entry(entry) >= 0) {
+            if ((entry.name == ".") || (entry.name == "..")) {
+                continue;
+            }
+
+            const std::string font_path = eka2l1::add_path(fonts_folder_path, entry.name);
+            common::ro_std_file_stream stream(font_path, true);
+
+            if (stream.valid() && add_font(stream, entry.name, true)) {
+                LOG_TRACE(SERVICE_FBS, "Loaded custom font {}", font_path);
+            }
+        }
+    }
+
+    // Linked typefaces are assembled once every font is in the store: their
+    // components can sit on a different drive than the link.ini naming them.
+    void fbs_server::load_linked_fonts(eka2l1::io_system *io) {
+        for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
+            if (io->get_drive_entry(drv)) {
+                load_linked_fonts_from_directory(io, std::u16string{ drive_to_char16(drv) } + (kern->is_eka1() ? u":\\System\\Fonts\\" : u":\\Resource\\Fonts\\"));
+            }
+        }
+    }
+
+    void fbs_server::load_linked_fonts_from_directory(eka2l1::io_system *io, const std::u16string &fonts_folder_path) {
+        const std::u16string link_path = fonts_folder_path + u"link.ini";
+        symfile f = io->open_file(link_path, READ_MODE | BIN_MODE);
+
+        if (!f) {
+            return;
+        }
+
+        std::vector<std::uint8_t> buf(static_cast<std::size_t>(f->size()));
+        const bool read_ok = !buf.empty()
+            && (f->read_file(buf.data(), 1, static_cast<std::uint32_t>(buf.size())) == buf.size());
 
         f->close();
 
-        // Add fonts
-        const auto extension = common::lowercase_string(eka2l1::path_extension(common::ucs2_to_utf8(path)));
-        epoc::adapter::font_file_adapter_kind adapter_kind = epoc::adapter::font_file_adapter_kind::none;
-
-        if (extension == ".ttf") {
-            adapter_kind = epoc::adapter::font_file_adapter_kind::freetype;
-        } else if (extension == ".gdr") {
-            adapter_kind = epoc::adapter::font_file_adapter_kind::gdr;
+        if (!read_ok) {
+            return;
         }
 
-        if (adapter_kind != epoc::adapter::font_file_adapter_kind::none) {
-            persistent_font_store.add_fonts(buf, adapter_kind);
+        for (const auto &spec : epoc::parse_linked_font_config(epoc::decode_linked_font_config(buf.data(), buf.size()))) {
+            if (persistent_font_store.add_linked_font(spec.name, spec.component_names, spec.canonical)) {
+                LOG_TRACE(SERVICE_FBS, "Registered linked typeface {} from {}", common::ucs2_to_utf8(spec.name),
+                    common::ucs2_to_utf8(link_path));
+            }
         }
-
-        return true;
     }
 
     void fbs_server::load_fonts(eka2l1::io_system *io) {

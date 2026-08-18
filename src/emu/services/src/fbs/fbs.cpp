@@ -422,6 +422,21 @@ namespace eka2l1 {
         // Probably also indicates that font aren't loaded yet
         load_fonts(sys->get_io_system());
 
+        // User-imported fonts are stored outside the guest drives, so they need
+        // a separate pass. They are appended after the ROM set, and
+        // seek_the_open_font takes the first exact face-name match, so an
+        // imported font never displaces a ROM one -- it only adds coverage.
+        load_custom_fonts(sys->get_config()->storage);
+
+        // A CJK variant presents a Latin font and a CJK font as one typeface
+        // through link.ini. Both have to be in the store before the typefaces
+        // naming them can be assembled.
+        load_linked_fonts(sys->get_io_system());
+
+        // Anything imported is only useful once the device's own faces can
+        // reach it, the ROM having no link.ini that mentions it.
+        persistent_font_store.attach_user_font_fallbacks();
+
         fs_server = kern->get_by_name<service::server>(epoc::fs::get_server_name_through_epocver(
             kern->get_epoc_version()));
 

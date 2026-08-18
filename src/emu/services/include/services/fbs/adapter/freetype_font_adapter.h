@@ -83,6 +83,10 @@ namespace eka2l1::epoc::adapter {
            return antialised_glyph_bitmap;
        }
 
+       // Glyphs this adapter rendered as monochrome, which unlike the
+       // antialiased ones are its own allocations rather than FreeType's.
+       std::vector<std::uint8_t *> owned_monochrome_bitmaps_;
+
        bool does_glyph_exist(std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier) override;
 
        std::size_t count() override;

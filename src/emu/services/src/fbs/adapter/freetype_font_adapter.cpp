@@ -232,7 +232,12 @@ namespace eka2l1::epoc::adapter {
             return nullptr;
         }
 
-        auto err = FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER);
+        // A caller backing a monochrome face asks for that format; FreeType's
+        // own monochrome rasteriser, hinted, is far kinder to small CJK glyphs
+        // than thresholding a grey one would be.
+        const bool want_monochrome = bmp_type && (*bmp_type == glyph_bitmap_type::monochrome_glyph_bitmap);
+
+        auto err = FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER | (want_monochrome ? FT_LOAD_TARGET_MONO : 0));
         if (err) {
             LOG_ERROR(SERVICE_FBS, "Failed to load glyph for face to get glyph bitmap, error: {}", FT_Error_String(err));
             return nullptr;
@@ -249,10 +254,14 @@ namespace eka2l1::epoc::adapter {
             *rasterized_height = static_cast<int>(bitmap.rows);
         }
 
+        const glyph_bitmap_type produced = (bitmap.pixel_mode == FT_PIXEL_MODE_MONO)
+            ? glyph_bitmap_type::monochrome_glyph_bitmap
+            : glyph_bitmap_type::antialised_glyph_bitmap;
+
         total_size = bitmap.width * bitmap.rows;
 
         if (bmp_type) {
-            *bmp_type = glyph_bitmap_type::antialised_glyph_bitmap;
+            *bmp_type = produced;
         }
 
         character_metric.width = ft_convention_to_int_pixel(glyph->metrics.width);
@@ -263,12 +272,62 @@ namespace eka2l1::epoc::adapter {
         character_metric.vertical_bearing_x = ft_convention_to_int_pixel(glyph->metrics.vertBearingX);
         character_metric.vertical_bearing_y = ft_convention_to_int_pixel(glyph->metrics.vertBearingY);
         character_metric.vertical_advance = ft_convention_to_int_pixel(glyph->metrics.vertAdvance);
-        character_metric.bitmap_type = glyph_bitmap_type::antialised_glyph_bitmap;
+        character_metric.bitmap_type = produced;
 
-        return bitmap.buffer;
+        if (produced != glyph_bitmap_type::monochrome_glyph_bitmap) {
+            return bitmap.buffer;
+        }
+
+        const std::int32_t width = static_cast<std::int32_t>(bitmap.width);
+        const std::int32_t height = static_cast<std::int32_t>(bitmap.rows);
+
+        // Hinting grid-fits a monochrome glyph, so the bitmap is not the size
+        // the outline metrics describe. The client decodes the runs using these
+        // metrics, and reading a glyph as wider than it was encoded walks off
+        // the end of the shared chunk, so report what was actually rasterised.
+        character_metric.width = static_cast<std::int16_t>(width);
+        character_metric.height = static_cast<std::int16_t>(height);
+        character_metric.horizontal_bearing_x = static_cast<std::int16_t>(glyph->bitmap_left);
+        character_metric.horizontal_bearing_y = static_cast<std::int16_t>(glyph->bitmap_top);
+
+        // FreeType packs a monochrome row most significant bit first and pads
+        // it to whole bytes; a Symbian glyph is one run of bits, least
+        // significant first, run-length encoded from there.
+
+        std::vector<std::uint32_t> bits((static_cast<std::size_t>(width) * height + 31) >> 5, 0);
+
+        for (std::int32_t y = 0; y < height; y++) {
+            const std::uint8_t *row = bitmap.buffer + static_cast<std::ptrdiff_t>(y) * bitmap.pitch;
+
+            for (std::int32_t x = 0; x < width; x++) {
+                if (row[x >> 3] & (0x80 >> (x & 7))) {
+                    const std::int32_t index = y * width + x;
+                    bits[index >> 5] |= (1u << (index & 31));
+                }
+            }
+        }
+
+        const std::size_t word_count = monochrome_glyph_word_count(width, height);
+        std::uint32_t *compressed = new std::uint32_t[word_count];
+        std::fill(compressed, compressed + word_count, 0);
+
+        total_size = ((compress_monochrome_glyph(bits.data(), width, height, compressed) + 31) >> 5) * 4;
+
+        std::uint8_t *result = reinterpret_cast<std::uint8_t *>(compressed);
+        owned_monochrome_bitmaps_.push_back(result);
+
+        return result;
     }
 
     void freetype_font_adapter::free_glyph_bitmap(std::uint8_t *data) {
+        // Antialiased glyphs live in FreeType's own slot and are replaced by
+        // the next load; only the monochrome ones are ours to release.
+        auto owned = std::find(owned_monochrome_bitmaps_.begin(), owned_monochrome_bitmaps_.end(), data);
+
+        if (owned != owned_monochrome_bitmaps_.end()) {
+            owned_monochrome_bitmaps_.erase(owned);
+            delete[] reinterpret_cast<std::uint32_t *>(data);
+        }
     }
 
     std::int32_t freetype_font_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) {

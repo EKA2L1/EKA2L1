@@ -2,6 +2,7 @@ set(CORE_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/mem.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/vfs.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/e32img.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/loader/gdr.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/mbm.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/mif.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/nvg.cpp
@@ -10,6 +11,8 @@ set(CORE_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/svgb.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/applist/registeration.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/fbs/bitmap.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/services/fbs/fontmatch.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/services/fbs/linkedfont.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/svg_icon.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/centralrepo/crebinloader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/centralrepo/creiniloader.cpp
