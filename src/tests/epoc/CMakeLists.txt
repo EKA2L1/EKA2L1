@@ -7,6 +7,7 @@ set(CORE_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/nvg.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/rsc.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/spi.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/loader/svgb.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/applist/registeration.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/fbs/bitmap.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/svg_icon.cpp

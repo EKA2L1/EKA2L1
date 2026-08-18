@@ -56,6 +56,10 @@ namespace eka2l1::loader {
         int is_new_ = 0;
         int wrap_level_ = 0;
 
+        /// Set while the element being closed holds character data, so the closing tag
+        /// is not indented into the text content.
+        bool inline_content_ = false;
+
         std::vector<svgb_convert_error_description> &error_list_;
 
         explicit svgb_decode_state(std::vector<svgb_convert_error_description> &descs)
@@ -109,6 +113,7 @@ namespace eka2l1::loader {
     SVG_ATTR_DECODE_PROTOTYPE(svgb_decode_dash_array);
     SVG_ATTR_DECODE_PROTOTYPE(svgb_decode_un);
     SVG_ATTR_DECODE_PROTOTYPE(svgb_decode_aspect_ratio);
+    SVG_ATTR_DECODE_PROTOTYPE(svgb_decode_coord);
 
     static const svg_attr SVGB_ATTRS[] = {
 
@@ -166,8 +171,8 @@ namespace eka2l1::loader {
         { "letterSpacing", svgb_decode_fail }, /* 45   2D */
         { "cx", svgb_decode_float }, /* 46   2E */
         { "cy", svgb_decode_float }, /* 47   2F */
-        { "y", svgb_decode_float }, /* 48   30 */
-        { "x", svgb_decode_float }, /* 49   31 */
+        { "y", svgb_decode_coord }, /* 48   30 */
+        { "x", svgb_decode_coord }, /* 49   31 */
 
         { "y1", svgb_decode_float }, /* 50   32 */
         { "y2", svgb_decode_float }, /* 51   33 */
@@ -265,6 +270,7 @@ namespace eka2l1::loader {
     };
 
 #define SVG_ELEMENT_SVG 0
+#define SVG_ELEMENT_TEXT 25
 #define SVG_ELEMENT_MEDIA_ANIMATION 47
 
     static const svg_element_attr SVG_ATTR_SVG[] = {
@@ -335,16 +341,48 @@ namespace eka2l1::loader {
         std::string indent(state.wrap_level_, ' ');
         indent += "<" + tag;
 
+        state.inline_content_ = false;
         return out.write_text(indent);
     }
 
     bool xml_close_tag(svgb_decode_state &state, common::wo_stream &out, std::string tag, bool eol) {
         state.wrap_indent(-1);
 
-        std::string indent(state.wrap_level_, ' ');
+        std::string indent(state.inline_content_ ? 0 : state.wrap_level_, ' ');
         indent += "</" + tag + (eol ? ">\xD\xA" : ">") + "\n";
 
+        state.inline_content_ = false;
         return out.write_text(indent);
+    }
+
+    /**
+     * Escapes the characters that may not appear literally in element content.
+     */
+    static std::string xml_escape_text(const std::string &text) {
+        std::string escaped;
+        escaped.reserve(text.size());
+
+        for (const char c : text) {
+            switch (c) {
+            case '&':
+                escaped += "&amp;";
+                break;
+
+            case '<':
+                escaped += "&lt;";
+                break;
+
+            case '>':
+                escaped += "&gt;";
+                break;
+
+            default:
+                escaped += c;
+                break;
+            }
+        }
+
+        return escaped;
     }
 
     /**
@@ -426,7 +464,9 @@ namespace eka2l1::loader {
     }
 
     std::optional<std::string> read_svgb_string_from_stream(common::ro_stream &in) {
-        char len;
+        // Unsigned: the length byte spans the full 0..255 range, and `char` is signed
+        // on the platforms this runs on.
+        std::uint8_t len;
         if (in.read(&len, 1) != 1) {
             return std::nullopt;
         }
@@ -474,6 +514,52 @@ namespace eka2l1::loader {
 
         state.add_error(in, svgb_convert_error_eof);
         return false;
+    }
+
+    /**
+     * Decodes the x/y attributes.
+     *
+     * On <text> these are coordinate *lists* (SVG lets one text element position each
+     * of its glyphs), so the binariser writes a one-byte count in front of the floats.
+     * Everywhere else x/y is a single number with no count. Reading the list form as a
+     * plain float desynchronises the attribute stream and the rest of the icon is lost.
+     */
+    static bool svgb_decode_coord(svgb_decode_state &state, const svg_attr *attr, const svg_element *elem, common::ro_stream &in, common::wo_stream &out) {
+        if (!elem || (elem->code_ != SVG_ELEMENT_TEXT)) {
+            return svgb_read_write_float_attr(state, attr, elem, in, out);
+        }
+
+        std::uint8_t count = 0;
+        if (in.read(&count, 1) != 1) {
+            state.add_error(in, svgb_convert_error_eof);
+            return false;
+        }
+
+        std::string buf;
+
+        for (std::uint8_t i = 0; i < count; i++) {
+            float value;
+            if (!read_f32_from_stream(state, in, &value)) {
+                state.add_error(in, svgb_convert_error_eof);
+                return false;
+            }
+
+            if (i > 0)
+                buf += ' ';
+
+            svgb_fomat_float(&buf, value, true);
+        }
+
+        if (count == 0) {
+            return true;
+        }
+
+        if (!xml_write_attr_no_esc(out, attr->name_, buf)) {
+            state.add_error(in, svgb_convert_error_write_fail);
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -1123,18 +1209,24 @@ namespace eka2l1::loader {
                         decode_state.add_error(in, svgb_convert_error_write_fail);
                         return false;
                     }
-                } else if (c == SVG_CDATA) { /*
-                    char * str = read_svgb_string_from_stream(in);
-                    if (str) {
-                        Bool wrap = WRAP_IsEnabled(out);
-                        if (wrap) WRAP_Enable(out, False);
-                        FILE_Puts(out, str);
-                        if (wrap) WRAP_Enable(out, True);
-                        MEM_Free(str);
-                    } else {
-                        return False;
-                        */
-                    decode_state.add_error(in, svgb_convert_error_cdata_ignored);
+                } else if (c == SVG_CDATA) {
+                    // Character data of the enclosing element (a <text> body, in
+                    // practice). It has to be consumed even when it is of no interest:
+                    // leaving the bytes in the stream desynchronises everything after
+                    // it, and the rest of the icon is dropped.
+                    std::optional<std::string> raw = read_svgb_string_from_stream(in);
+                    if (!raw.has_value()) {
+                        decode_state.add_error(in, svgb_convert_error_eof);
+                        return false;
+                    }
+
+                    const std::u16string data(reinterpret_cast<char16_t *>(raw->data()), raw->size() / 2);
+                    if (!out.write_text(xml_escape_text(common::ucs2_to_utf8(data)))) {
+                        decode_state.add_error(in, svgb_convert_error_write_fail);
+                        return false;
+                    }
+
+                    decode_state.inline_content_ = true;
                 } else if (c < COUNT(SVGB_ELEMS)) {
                     const svg_element *elem = SVGB_ELEMS + c;
                     const svg_decode_elem_status s = svgb_decode_element(decode_state, elem, in, out);
