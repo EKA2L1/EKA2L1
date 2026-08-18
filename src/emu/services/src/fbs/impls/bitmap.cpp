@@ -1766,6 +1766,25 @@ namespace eka2l1 {
             return convert_to_rgba8888(serv, buf_stream, dest, file.sbm_headers[index], -1, static_cast<bitmap_file_compression>(file.sbm_headers[index].compression), make_standard_mask);
         }
 
+        // Symbian icon masks come in two families with opposite polarities. BITGDI's
+        // CFbsBitGc::BitBltMasked (bitgdi/sbit/BITBLT.CPP) picks between them:
+        //
+        //     if (aMaskBitmap->DisplayMode() == EGray256)
+        //         DoBitBltAlpha(..., EFalse);          // alpha blend, aInvertMask ignored
+        //     ...
+        //     const TDrawMode drawMode = aInvertMask ? EDrawModeAND : EDrawModeANDNOT;
+        //
+        // So only an EGray256 mask is a real alpha/soft mask, where luminance is the
+        // alpha and white is opaque. Every other display mode is a binary stencil
+        // whose polarity comes from the caller, and Avkon passes aInvertMask=ETrue
+        // almost everywhere (EIKCLBD.CPP, EIKMENUB.CPP, Aknscind.cpp, ...), which
+        // ANDs the mask in as-is: white keeps the destination, so white is
+        // transparent.
+        //
+        // We keep classifying by depth rather than by that display mode, because
+        // some S60v2 icons carry gray-valued opacity in a mask the header flags as
+        // colour, and treating those as stencils inverts them. Depth alone gets
+        // every mask in the 6680 ROM right except the handful covered below.
         static bool mask_depth_is_soft(const std::uint32_t bpp) {
             return (bpp > 1) && (bpp <= 8);
         }
