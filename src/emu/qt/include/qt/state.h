@@ -80,7 +80,13 @@ namespace eka2l1::desktop {
         bool stretch_to_fill_display;
 
         common::event graphics_event;
+
+        // init_event asks the OS thread to (re)attempt the stage two initialisation, init_done_event
+        // reports an attempt back. They must stay separate: outside of Win32 common::event auto-resets
+        // on wait, so one event for both directions lets the requester swallow its own signal.
         common::event init_event;
+        common::event init_done_event;
+
         common::event pause_event;
         common::event kill_event;
 

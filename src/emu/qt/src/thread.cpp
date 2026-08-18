@@ -279,7 +279,7 @@ namespace eka2l1::desktop {
             }
 
             const bool success = state.stage_two();
-            state.init_event.set();
+            state.init_done_event.set();
 
             if (first_time) {
                 state.graphics_event.wait();
@@ -290,9 +290,10 @@ namespace eka2l1::desktop {
                 break;
             }
 
-            // Try wait for initialization from other parties to make this success.
-            state.init_event.reset();
+            // Try wait for initialization from other parties to make this success. Reset only
+            // after the wait returned, so a request raised while we were busy is not dropped.
             state.init_event.wait();
+            state.init_event.reset();
         }
 
         // Register SEH handler for this thread
@@ -352,7 +353,8 @@ namespace eka2l1::desktop {
 
         // Instantiate UI and High-level interface threads
         std::thread os_thread_obj(os_thread, std::ref(state));
-        state.init_event.wait();
+        state.init_done_event.wait();
+        state.init_done_event.reset();
 
         eka2l1::common::arg_parser parser(argc, argv);
 

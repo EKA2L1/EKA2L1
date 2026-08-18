@@ -1304,19 +1304,24 @@ namespace eka2l1 {
 
     void window_server::load_wsini() {
         io_system *io = sys->get_io_system();
-        std::optional<eka2l1::drive> drv;
-        drive_number dn = drive_z;
+        drive_number rom_drive = drive_invalid;
 
-        for (; dn >= drive_a; dn = (drive_number)((int)dn - 1)) {
-            drv = io->get_drive_entry(dn);
+        for (int i = static_cast<int>(drive_z); i >= static_cast<int>(drive_a); i--) {
+            std::optional<eka2l1::drive> drv = io->get_drive_entry(static_cast<drive_number>(i));
 
             if (drv && drv->media_type == drive_media::rom) {
+                rom_drive = static_cast<drive_number>(i);
                 break;
             }
         }
 
+        if (rom_drive == drive_invalid) {
+            LOG_ERROR(SERVICE_WINDOW, "No ROM drive is mounted, app using window server will broken");
+            return;
+        }
+
         std::u16string wsini_path;
-        wsini_path += static_cast<char16_t>((char)dn + 'A');
+        wsini_path += static_cast<char16_t>(static_cast<char>(rom_drive) + 'A');
         wsini_path += u":\\system\\data\\wsini.ini";
 
         auto wsini_path_host = io->get_raw_path(wsini_path);
