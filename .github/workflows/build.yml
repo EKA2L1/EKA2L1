@@ -266,11 +266,16 @@ jobs:
     env:
       EKA2L1_IOS_CONFIGURATION: Release
 
+    # Device only. Both slices are arm64 and compile almost the same translation
+    # units, so the simulator build was mostly a second copy of the device one at
+    # twice the wall clock -- and what actually has to keep working is that the app
+    # builds for a phone. The cost is that code behind TARGET_OS_SIMULATOR (the
+    # synthetic camera backend) is no longer compiled by CI; add the label back if
+    # that grows past a stub.
     strategy:
       fail-fast: false
       matrix:
         include:
-          - label: simulator
           - label: device
 
     steps:
