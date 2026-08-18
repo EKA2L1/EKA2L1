@@ -41,6 +41,10 @@ namespace eka2l1::epoc {
         epoc::open_font_metrics metrics;
 
         std::uint32_t metric_identifier;
+
+        // Imported by the user into <storage>/fonts rather than shipped by the
+        // device; see font_store::attach_user_font_fallbacks.
+        bool user_font = false;
     };
 
     /**
@@ -75,7 +79,8 @@ namespace eka2l1::epoc {
          * @brief Add every face of a font file to the store.
          * @returns True if the file was one this adapter kind can read.
          */
-        bool add_fonts(std::vector<std::uint8_t> &buf, const epoc::adapter::font_file_adapter_kind adapter_kind);
+        bool add_fonts(std::vector<std::uint8_t> &buf, const epoc::adapter::font_file_adapter_kind adapter_kind,
+            const bool user_font = false);
 
         /**
          * @brief Present faces already in the store as one linked typeface.
@@ -88,6 +93,21 @@ namespace eka2l1::epoc {
          */
         bool add_linked_font(const std::u16string &name, const std::vector<std::u16string> &component_names,
             const std::size_t canonical);
+
+        /**
+         * @brief Let the fonts the user imported stand in for glyphs the
+         *        device's own fonts do not have.
+         *
+         * A CJK variant ships a link.ini pairing its Latin typeface with a CJK
+         * one; a Latin-only ROM ships neither the font nor the link, so an
+         * imported font would sit in the store unused -- nothing asks for it by
+         * name, and nothing about a request says which script it is about to
+         * draw. Every device face is therefore given the imported fonts as
+         * trailing components of a linked typeface, which is the same
+         * arrangement link.ini describes, with the device's own face canonical
+         * so nothing about its appearance or metrics changes.
+         */
+        void attach_user_font_fallbacks();
 
         open_font_info *seek_the_open_font(epoc::font_spec_base &spec);
         open_font_info *seek_the_font_by_uid(const epoc::uid the_uid, epoc::open_font_metrics &target_metric, std::uint32_t *metric_identifier = nullptr);

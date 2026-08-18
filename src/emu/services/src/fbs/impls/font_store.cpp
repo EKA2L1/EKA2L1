@@ -35,7 +35,8 @@ namespace eka2l1::epoc {
         }
     }
 
-    bool font_store::add_fonts(std::vector<std::uint8_t> &buf, const epoc::adapter::font_file_adapter_kind adapter_kind) {
+    bool font_store::add_fonts(std::vector<std::uint8_t> &buf, const epoc::adapter::font_file_adapter_kind adapter_kind,
+        const bool user_font) {
         auto adapter = epoc::adapter::make_font_file_adapter(adapter_kind, buf);
 
         if (!adapter || !adapter->is_valid()) {
@@ -72,6 +73,7 @@ namespace eka2l1::epoc {
                 info.idx = static_cast<std::int32_t>(i);
                 info.face_attrib = attrib;
                 info.adapter = adapter.get();
+                info.user_font = user_font;
 
                 open_font_store.push_back(std::move(info));
             }
@@ -212,6 +214,65 @@ namespace eka2l1::epoc {
         font_adapters.push_back(std::move(adapter));
 
         return true;
+    }
+
+    void font_store::attach_user_font_fallbacks() {
+        struct fallback_font {
+            epoc::adapter::linked_font_file_adapter::component component_;
+            const open_font_face_attrib *attrib_;
+        };
+
+        std::vector<fallback_font> fallbacks;
+
+        for (auto &info : open_font_store) {
+            if (info.user_font) {
+                fallbacks.push_back({ { info.adapter, info.idx }, &info.face_attrib });
+            }
+        }
+
+        if (fallbacks.empty()) {
+            return;
+        }
+
+        for (auto &info : open_font_store) {
+            if (info.user_font) {
+                continue;
+            }
+
+            std::vector<epoc::adapter::linked_font_file_adapter::component> components;
+            components.push_back({ info.adapter, info.idx });
+
+            open_font_face_attrib attrib = info.face_attrib;
+
+            for (const auto &fallback : fallbacks) {
+                // A glyph bitmap reaches the guest in the format the font as a
+                // whole declares, so a component is only of use where the
+                // linked adapter can present its glyphs as that format.
+                if (!epoc::adapter::can_present_glyph_as(fallback.component_.adapter_->get_output_bitmap_type(),
+                        info.adapter->get_output_bitmap_type())) {
+                    continue;
+                }
+
+                components.push_back(fallback.component_);
+
+                for (std::size_t word = 0; word < 4; word++) {
+                    attrib.coverage[word] |= fallback.attrib_->coverage[word];
+                }
+            }
+
+            if (components.size() == 1) {
+                continue;
+            }
+
+            info.face_attrib = attrib;
+
+            auto adapter = std::make_unique<epoc::adapter::linked_font_file_adapter>(std::move(components), 0, attrib);
+
+            info.adapter = adapter.get();
+            info.idx = 0;
+
+            font_adapters.push_back(std::move(adapter));
+        }
     }
 
     open_font_info *font_store::seek_the_font_by_uid(const epoc::uid the_uid, open_font_metrics &target_metric, std::uint32_t *metric_identifier) {

@@ -24,7 +24,9 @@
 #include <services/fbs/fbs.h>
 #include <services/fbs/linked_font_config.h>
 
+#include <common/buffer.h>
 #include <common/cvt.h>
+#include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
 #include <common/vecx.h>
@@ -1125,26 +1127,23 @@ namespace eka2l1 {
         }
     }
 
-    bool fbs_server::add_single_font(eka2l1::io_system *io, const std::u16string &path) {
-        symfile f = io->open_file(path, READ_MODE | BIN_MODE);
-        const std::uint64_t fsize = f->size();
+    // The name only picks the adapter, so it can be a guest or a host path.
+    bool fbs_server::add_font(common::ro_stream &stream, const std::string &name, const bool user_font) {
+        std::vector<std::uint8_t> buf(static_cast<std::size_t>(stream.size()));
 
-        std::vector<std::uint8_t> buf;
+        if (buf.empty() || (stream.read(buf.data(), buf.size()) != buf.size())) {
+            LOG_ERROR(SERVICE_FBS, "Unable to read font file {}", name);
+            return false;
+        }
 
-        buf.resize(fsize);
-        f->read_file(&buf[0], 1, static_cast<std::uint32_t>(buf.size()));
-
-        f->close();
-
-        // Add fonts
-        const auto extension = common::lowercase_string(eka2l1::path_extension(common::ucs2_to_utf8(path)));
+        const auto extension = common::lowercase_string(eka2l1::path_extension(name));
 
         if (extension == ".ttf") {
-            return persistent_font_store.add_fonts(buf, epoc::adapter::font_file_adapter_kind::freetype);
+            return persistent_font_store.add_fonts(buf, epoc::adapter::font_file_adapter_kind::freetype, user_font);
         }
 
         if (extension == ".gdr") {
-            return persistent_font_store.add_fonts(buf, epoc::adapter::font_file_adapter_kind::gdr);
+            return persistent_font_store.add_fonts(buf, epoc::adapter::font_file_adapter_kind::gdr, user_font);
         }
 
         // CFontStore::AddFileL offers the file to every rasterizer and keeps
@@ -1154,13 +1153,56 @@ namespace eka2l1 {
         // it leaves the device with no CJK glyphs at all.
         for (const auto kind : { epoc::adapter::font_file_adapter_kind::freetype,
                  epoc::adapter::font_file_adapter_kind::gdr }) {
-            if (persistent_font_store.add_fonts(buf, kind)) {
-                LOG_TRACE(SERVICE_FBS, "Loaded font file {} by content", common::ucs2_to_utf8(path));
+            if (persistent_font_store.add_fonts(buf, kind, user_font)) {
+                LOG_TRACE(SERVICE_FBS, "Loaded font file {} by content", name);
                 return true;
             }
         }
 
         return false;
+    }
+
+    bool fbs_server::add_single_font(eka2l1::io_system *io, const std::u16string &path) {
+        symfile f = io->open_file(path, READ_MODE | BIN_MODE);
+
+        if (!f) {
+            return false;
+        }
+
+        ro_file_stream stream(f.get());
+        add_font(stream, common::ucs2_to_utf8(path));
+
+        // A file we have no adapter for is not a failure: add_font_file_store
+        // reports this back to the guest, and it used to accept anything that
+        // existed.
+        return true;
+    }
+
+    // Fonts the user imported through a frontend. They live in <storage>/fonts,
+    // outside the guest drives, so one import serves every installed device and
+    // survives a device being reinstalled (which rewrites its Z drive).
+    void fbs_server::load_custom_fonts(const std::string &storage) {
+        const std::string fonts_folder_path = eka2l1::add_path(storage, "fonts");
+        auto folder = common::make_directory_iterator(fonts_folder_path, "");
+
+        if (!folder || !folder->is_valid()) {
+            return;
+        }
+
+        common::dir_entry entry;
+
+        while (folder->next_entry(entry) >= 0) {
+            if ((entry.name == ".") || (entry.name == "..")) {
+                continue;
+            }
+
+            const std::string font_path = eka2l1::add_path(fonts_folder_path, entry.name);
+            common::ro_std_file_stream stream(font_path, true);
+
+            if (stream.valid() && add_font(stream, entry.name, true)) {
+                LOG_TRACE(SERVICE_FBS, "Loaded custom font {}", font_path);
+            }
+        }
     }
 
     // Linked typefaces are assembled once every font is in the store: their
