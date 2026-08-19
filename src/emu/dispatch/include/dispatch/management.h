@@ -91,6 +91,27 @@ namespace eka2l1::dispatch {
             return objs_[h - 1].get();
         }
 
+        /**
+         * \brief       Take out every object matching a predicate, without destroying them.
+         *
+         * Handles of the detached objects are freed for reuse. Destroying an object can block
+         * (an audio stream waits out the render callback in flight), so callers that must not
+         * block in place can move the objects out here and destroy them at a safer point.
+         *
+         * \param       pred    Predicate receiving a reference to the object.
+         * \param       out     Vector the matching objects are appended to.
+         */
+        template <typename Predicate>
+        void detach_objects_if(Predicate pred, std::vector<std::unique_ptr<T>> &out) {
+            const std::lock_guard<std::mutex> guard(lock_);
+
+            for (auto &obj : objs_) {
+                if (obj && pred(*obj)) {
+                    out.push_back(std::move(obj));
+                }
+            }
+        }
+
         typename std::vector<std::unique_ptr<T>>::iterator begin() {
             return objs_.begin();
         }

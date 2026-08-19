@@ -23,6 +23,8 @@
 
 namespace eka2l1 {
     class alf_streamer_session : public service::typical_session {
+        std::unique_ptr<service::ipc_context> pending_plugin_request_;
+
     public:
         explicit alf_streamer_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version);
         void fetch(service::ipc_context *ctx) override;

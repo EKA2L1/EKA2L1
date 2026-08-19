@@ -21,6 +21,7 @@
 
 #include <common/algorithm.h>
 
+#include <atomic>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -45,13 +46,15 @@ namespace eka2l1::drivers {
         dsp_stream_notification_done = 1
     };
 
-    using dsp_stream_notification_callback = std::function<void(void *)>;
+    // Return false when the notification cannot be delivered yet. Streaming
+    // backends will retry buffer notifications on a later audio callback.
+    using dsp_stream_notification_callback = std::function<bool(void *)>;
     using dsp_stream_userdata = void *;
 
     struct dsp_stream {
     protected:
-        std::size_t samples_played_;
-        std::size_t samples_copied_;
+        std::atomic<std::size_t> samples_played_;
+        std::atomic<std::size_t> samples_copied_;
 
         std::uint32_t freq_;
         std::uint32_t channels_;
@@ -70,15 +73,15 @@ namespace eka2l1::drivers {
         explicit dsp_stream();
         virtual ~dsp_stream() = default;
         virtual const std::uint32_t samples_played() const {
-            return static_cast<std::uint32_t>(samples_played_);
+            return static_cast<std::uint32_t>(samples_played_.load(std::memory_order_relaxed));
         }
 
         virtual const std::uint64_t samples_copied() const {
-            return samples_copied_;
+            return samples_copied_.load(std::memory_order_relaxed);
         }
 
         const std::uint64_t bytes_rendered() const {
-            return samples_played_ * channels_ * sizeof(std::uint16_t);
+            return samples_played_.load(std::memory_order_relaxed) * channels_ * sizeof(std::uint16_t);
         }
 
         virtual const four_cc format() const {

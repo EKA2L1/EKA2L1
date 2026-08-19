@@ -25,6 +25,7 @@
 
 #include <common/container.h>
 
+#include <atomic>
 #include <cstdint>
 #include <functional>
 #include <mutex>
@@ -46,7 +47,7 @@ namespace eka2l1::drivers {
         std::array<std::string, MIDI_BANK_TYPE_MAX> midi_banks_;
 
         std::uint32_t master_volume_ = 100;
-        bool suspend_ = false;
+        std::atomic<bool> suspend_{false};
 
         std::mutex lock_;
 
@@ -85,15 +86,15 @@ namespace eka2l1::drivers {
         }
 
         bool suspending() const {
-            return suspend_;
+            return suspend_.load();
         }
 
         virtual void suspend() {
-            suspend_ = true;
+            suspend_.store(true);
         }
 
         virtual void resume() {
-            suspend_ = false;
+            suspend_.store(false);
         }
 
         void master_volume(const std::uint32_t value);

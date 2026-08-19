@@ -197,6 +197,8 @@ namespace eka2l1::epoc {
         mmf_dev_newarch_btbe_data = 56,
         mmf_dev_newarch_close = 62,
         mmf_dev_newarch_paused_record_complete_evt = 63,
+        mmf_dev_newarch_get_time_played = 64,
+        mmf_dev_newarch_set_client_thread_info = 65,
         mmf_dev_newarch_is_resume_supported = 66,
         mmf_dev_newarch_resume = 67
     };

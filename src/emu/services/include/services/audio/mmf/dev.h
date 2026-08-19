@@ -64,6 +64,11 @@ namespace eka2l1 {
         kernel::chunk *buffer_chunk_;
         kernel::handle last_buffer_handle_;
 
+        /// A3F only: whether the recording chunk handle has already been handed to the
+        /// client through BufferToBeEmptiedData. The client keeps the chunk open until
+        /// the chunk is recreated or recording stops.
+        bool record_chunk_published_;
+
         epoc::notify_info finish_info_;
         epoc::notify_info buffer_info_;
         epoc::mmf_dev_hw_buf_v2 *buffer_buf_;
@@ -125,6 +130,7 @@ namespace eka2l1 {
         void copy_fourcc_array(service::ipc_context *ctx);
         void set_config(service::ipc_context *ctx);
         void get_config(service::ipc_context *ctx);
+        void samples_recorded(service::ipc_context *ctx);
         void samples_played(service::ipc_context *ctx);
         void stop(service::ipc_context *ctx);
         void play_init(service::ipc_context *ctx);
@@ -132,6 +138,7 @@ namespace eka2l1 {
         void async_command(service::ipc_context *ctx);
         void request_resource_notification(service::ipc_context *ctx);
         void get_buffer(service::ipc_context *ctx);
+        void get_recorded_buffer(service::ipc_context *ctx);
         void cancel_complete_error(service::ipc_context *ctx);
         void complete_error(service::ipc_context *ctx);
         void cancel_get_buffer(service::ipc_context *ctx);

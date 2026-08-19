@@ -54,6 +54,12 @@ namespace eka2l1::drivers {
     }
 
     dsp_output_stream_ffmpeg::~dsp_output_stream_ffmpeg() {
+        // Stop the hardware stream (joins the render thread) before freeing the
+        // ffmpeg state below and before the vtable degrades to the abstract base,
+        // otherwise an in-flight data_callback() would call the now-pure
+        // decode_data() (or touch freed codec_/av_format_).
+        shutdown_stream();
+
         if (codec_) {
             avcodec_close(codec_);
             avcodec_free_context(&codec_);

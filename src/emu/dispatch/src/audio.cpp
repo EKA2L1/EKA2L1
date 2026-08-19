@@ -25,6 +25,7 @@
 #include <system/epoc.h>
 
 #include <kernel/kernel.h>
+#include <kernel/process.h>
 #include <utils/err.h>
 #include <utils/reqsts.h>
 
@@ -67,7 +68,8 @@ namespace eka2l1::dispatch {
     dsp_medium::dsp_medium(dsp_manager *manager, const dsp_medium_type type)
         : manager_(manager)
         , logical_volume_(10)
-        , type_(type) {
+        , type_(type)
+        , owner_process_id_(0) {
     }
 
     dsp_epoc_stream::dsp_epoc_stream(std::unique_ptr<drivers::dsp_stream> &stream, dsp_manager *manager)
@@ -78,6 +80,14 @@ namespace eka2l1::dispatch {
     dsp_epoc_stream::~dsp_epoc_stream() {
         if (ll_stream_) {
             ll_stream_->stop();
+            // stop() above is only a virtual stop; the backend keeps pulling the
+            // data callback, which re-enters our more-buffer lambda and locks
+            // lock_. Destroy the stream here, while lock_ and copied_info_ are
+            // still alive — the backend destructor stops the hardware stream and
+            // waits out any callback in flight. Default member destruction order
+            // would tear the mutex down first (render thread then throws off a
+            // destroyed mutex and aborts in std::terminate).
+            ll_stream_.reset();
         }
     }
 
@@ -101,6 +111,16 @@ namespace eka2l1::dispatch {
     }
 
     dsp_epoc_player::~dsp_epoc_player() {
+        // Same shape as ~dsp_epoc_stream: the driver's notify-done lambda
+        // dereferences this object (eplayer->impl_->...) from the render
+        // thread, and unique_ptr nulls impl_ before running the deleter, so
+        // default member destruction leaves a window where the callback reads
+        // a null impl_. Stop the hardware stream (waits out any callback in
+        // flight) and destroy the player while the rest of us is still alive.
+        if (impl_) {
+            impl_->stop();
+            impl_.reset();
+        }
     }
 
     void dsp_epoc_player::volume(const std::uint32_t volume) {
@@ -123,6 +143,11 @@ namespace eka2l1::dispatch {
 
         dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
         std::unique_ptr<dsp_medium> player_epoc = std::make_unique<dsp_epoc_player>(&manager, init_flags);
+
+        kernel::process *pr = sys->get_kernel_system()->crr_process();
+        if (pr) {
+            player_epoc->owner_process_id(pr->unique_id());
+        }
 
         return manager.add_object(player_epoc);
     }
@@ -176,7 +201,8 @@ namespace eka2l1::dispatch {
 
         const std::string url_u8 = common::ucs2_to_utf8(url_str);
 
-        if (!eplayer->impl_ || !eplayer->impl_->open_url(url_u8)) {
+        bool supplied = eplayer->impl_ && eplayer->impl_->open_url(url_u8);
+        if (!supplied) {
             drivers::audio_driver *driver = sys->get_audio_driver();
             std::vector<drivers::player_type> types = driver->get_suitable_player_types(url_u8);
 
@@ -185,16 +211,16 @@ namespace eka2l1::dispatch {
                     continue;
                 }
                 auto new_player = drivers::new_audio_player(driver, types[i]);
-                if (new_player) {
-                    bool open_res = new_player->open_url(url_u8);
-                    
-                    if (!eplayer->impl_ || open_res)
-                        eplayer->impl_ = std::move(new_player);
-
-                    if (open_res)
-                        break;
+                if (new_player && new_player->open_url(url_u8)) {
+                    eplayer->impl_ = std::move(new_player);
+                    supplied = true;
+                    break;
                 }
             }
+        }
+
+        if (!supplied) {
+            return epoc::error_not_supported;
         }
 
         // Restore old stream values
@@ -224,7 +250,8 @@ namespace eka2l1::dispatch {
         eplayer->custom_stream_ = std::make_unique<epoc::rw_des_stream>(buffer, pr);
         common::rw_stream *custom_good_stream = reinterpret_cast<common::rw_stream *>(eplayer->custom_stream_.get());
 
-        if (!eplayer->impl_ || !eplayer->impl_->open_custom(custom_good_stream)) {
+        bool supplied = eplayer->impl_ && eplayer->impl_->open_custom(custom_good_stream);
+        if (!supplied) {
             drivers::audio_driver *driver = sys->get_audio_driver();
             std::vector<drivers::player_type> types = driver->get_suitable_player_types("");
 
@@ -233,16 +260,16 @@ namespace eka2l1::dispatch {
                     continue;
                 }
                 auto new_player = drivers::new_audio_player(driver, types[i]);
-                if (new_player) {
-                    const bool open_res = new_player->open_custom(custom_good_stream);
-                    if (open_res || !eplayer->impl_) {
-                        eplayer->impl_ = std::move(new_player);
-                    }
-
-                    if (open_res)
-                        break;
+                if (new_player && new_player->open_custom(custom_good_stream)) {
+                    eplayer->impl_ = std::move(new_player);
+                    supplied = true;
+                    break;
                 }
             }
+        }
+
+        if (!supplied) {
+            return epoc::error_not_supported;
         }
 
         // Restore old stream values
@@ -351,6 +378,22 @@ namespace eka2l1::dispatch {
         return epoc::error_none;
     }
 
+    // The audio/DSP driver fires buffer-ready notifications on its own render thread,
+    // which can race with the guest thread that armed the request being torn down (app
+    // exit, player/stream death). notify_info::complete() dereferences notify_info::requester,
+    // so completing a notification whose requester thread has already been destroyed is a
+    // use-after-free (observed crashing in notify_info::complete on the CoreAudio render
+    // thread). Validate the requester against the kernel's live thread list under the kernel
+    // lock and drop the stale notification instead of dereferencing a dangling pointer.
+    static void complete_audio_notify_if_alive_locked(kernel_system *kern, epoc::notify_info &info) {
+        if (!info.empty() && kern->is_thread_alive(info.requester)) {
+            info.complete(epoc::error_none);
+        } else {
+            // Requester is gone; drop the stale notification without signalling it.
+            info.sts = 0;
+        }
+    }
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_notify_any_done, eka2l1::ptr<void> handle, eka2l1::ptr<epoc::request_status> sts) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
@@ -365,12 +408,26 @@ namespace eka2l1::dispatch {
         info.requester = sys->get_kernel_system()->crr_thread();
         info.sts = sts;
 
-        if (!eplayer->impl_->notify_any_done([eplayer](std::uint8_t *data) {
-                epoc::notify_info *info = reinterpret_cast<epoc::notify_info *>(data);
-                kernel_system *kern = info->requester->get_kernel_object_owner();
+        kernel_system *kern = sys->get_kernel_system();
+        const std::uint32_t player_handle = handle.ptr_address();
 
-                kern->lock();
-                info->complete(epoc::error_none);
+        // The play-done callback runs on the audio backend's render thread, which must never
+        // block on the kernel lock: the guest stops or destroys a player from a dispatch call
+        // that runs under that lock, and the host stop waits for the render callback in flight
+        // to return (AudioOutputUnitStop is synchronous). Blocking here deadlocks the two, and
+        // with them every other thread that wants the kernel lock afterwards - seen on iOS as a
+        // scene-update watchdog kill with the guest inside eaudio_player_play, which stops the
+        // previous stream first. Complete only when the lock happens to be free, and otherwise
+        // let the emulation thread do it.
+        if (!eplayer->impl_->notify_any_done([eplayer, kern, dispatcher, player_handle](std::uint8_t *data) {
+                if (!kern->try_lock()) {
+                    dispatcher->defer_player_notify(player_handle);
+                    return;
+                }
+
+                epoc::notify_info *info = reinterpret_cast<epoc::notify_info *>(data);
+                complete_audio_notify_if_alive_locked(kern, *info);
+
                 kern->unlock();
 
                 eplayer->impl_->clear_notify_done();
@@ -574,24 +631,43 @@ namespace eka2l1::dispatch {
 
         dsp_epoc_stream *stream_org_new = reinterpret_cast<dsp_epoc_stream *>(stream_new.get());
 
+        kernel_system *kern = sys->get_kernel_system();
+
+        kernel::process *owner_pr = kern->crr_process();
+        if (owner_pr) {
+            stream_new->owner_process_id(owner_pr->unique_id());
+        }
+
+        // Registered after the stream is in the manager so the callback can name it by handle.
+        // Nothing can fire it in between: the stream has not been started yet.
+        const std::uint32_t stream_handle = manager.add_object(stream_new);
+
         stream_org_new->ll_stream_->register_callback(
-            drivers::dsp_stream_notification_more_buffer, [](void *userdata) {
+            drivers::dsp_stream_notification_more_buffer, [kern, dispatcher, stream_handle](void *userdata) {
                 dsp_epoc_stream *epoc_stream = reinterpret_cast<dsp_epoc_stream *>(userdata);
-                const std::lock_guard<std::mutex> guard(epoc_stream->lock_);
 
-                epoc::notify_info &info = epoc_stream->copied_info_;
-
-                if (!info.empty()) {
-                    kernel_system *kern = info.requester->get_kernel_object_owner();
-
-                    kern->lock();
-                    info.complete(epoc::error_none);
-                    kern->unlock();
+                // The buffer-ready callback runs on the audio backend's render thread, which must
+                // never block on the kernel lock (see eaudio_player_notify_any_done for the
+                // deadlock this avoids). Hand the notification to the emulation thread instead of
+                // dropping it: the driver would only retry one hardware buffer later, and a title
+                // that streams small buffers - Asphalt 2 writes 32ms at a time - runs its ring
+                // buffer dry after a couple of missed turns, which is heard as stuttering audio.
+                if (!kern->try_lock()) {
+                    dispatcher->defer_stream_buffer_notify(stream_handle);
+                    return true;
                 }
-            },
-            stream_new.get());
 
-        return manager.add_object(stream_new);
+                {
+                    const std::lock_guard<std::mutex> guard(epoc_stream->lock_);
+                    complete_audio_notify_if_alive_locked(kern, epoc_stream->copied_info_);
+                }
+
+                kern->unlock();
+                return true;
+            },
+            stream_org_new);
+
+        return stream_handle;
     }
 
     // DSP streams
