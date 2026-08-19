@@ -685,9 +685,11 @@ void main_window::on_new_device_added() {
         emulator_state_.symsys->mount(drive_d, drive_media::physical, eka2l1::add_path(emulator_state_.conf.storage, "/drives/d/"), io_attrib_internal);
         emulator_state_.symsys->mount(drive_e, drive_media::physical, eka2l1::add_path(emulator_state_.conf.storage, "/drives/e/"), io_attrib_removeable);
 
-        // Set and wait for reinitialization
+        // Set and wait for reinitialization. The app list built below needs the ROM drive that
+        // only the stage two initialisation mounts, so this really has to wait for the retry.
+        emulator_state_.init_done_event.reset();
         emulator_state_.init_event.set();
-        emulator_state_.init_event.wait();
+        emulator_state_.init_done_event.wait();
 
         refresh_current_device_label();
         reprepare_touch_mappings();

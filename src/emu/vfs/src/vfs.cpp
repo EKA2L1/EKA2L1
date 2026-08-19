@@ -672,11 +672,19 @@ namespace eka2l1 {
             const std::string root = eka2l1::root_name(path_ucs8);
             std::u16string vert_path_copy = vert_path;
 
-            if (root == "" || !mappings[ascii_to_drive_number(static_cast<char>(std::towlower(root[0])))].second) {
+            if (root == "") {
                 return std::nullopt;
             }
 
-            drive &drv = mappings[ascii_to_drive_number(static_cast<char>(std::towlower(root[0])))].first;
+            const char root_letter = static_cast<char>(std::towlower(root[0]));
+
+            // root_name only looks for a ':', so this is not necessarily a drive letter. Anything
+            // else would index the mappings array out of bounds.
+            if ((root_letter < 'a') || (root_letter > 'z') || !mappings[ascii_to_drive_number(root_letter)].second) {
+                return std::nullopt;
+            }
+
+            drive &drv = mappings[ascii_to_drive_number(root_letter)].first;
             std::u16string map_path = common::utf8_to_ucs2(drv.real_path);
 
             if (!eka2l1::is_separator(static_cast<char>(map_path.back()))) {
