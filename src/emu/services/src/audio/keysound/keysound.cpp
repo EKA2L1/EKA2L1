@@ -46,9 +46,8 @@ namespace eka2l1 {
                 [this](std::int16_t *dest, std::size_t frames) {
                     return play_sounds(dest, frames);
                 });
+            state_.target_freq_ = aud_driver->native_sample_rate();
         }
-
-        state_.target_freq_ = aud_driver->native_sample_rate();
     }
 
     keysound_session::parser_state::parser_state()
@@ -254,6 +253,10 @@ namespace eka2l1 {
 
         if (info->type_ == epoc::keysound::sound_type::sound_type_file) {
             LOG_WARN(SERVICE_KEYSOUND, "Sound type file unsupported, skip. Please revisit");
+            return;
+        }
+
+        if (!aud_out_) {
             return;
         }
 

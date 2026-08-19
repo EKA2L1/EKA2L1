@@ -71,6 +71,10 @@ namespace eka2l1::drivers {
         }
 
         synth_ = load_bank_from_file(bank_path);
+        if (!synth_) {
+            LOG_ERROR(DRIVER_AUD, "Failed to load SF2 bank: {}", bank_path);
+            return;
+        }
 
         tsf_channel_set_bank_preset(synth_, 9, 128, 0);
         tsf_set_output(synth_, (TSF_CHANNEL_COUNT == 1) ? TSF_MONO : TSF_STEREO_INTERLEAVED, TSF_SAMPLE_RATE, 0.0f);
@@ -81,16 +85,20 @@ namespace eka2l1::drivers {
     }
     
     player_tsf::~player_tsf() {
+        // Stop the hardware stream first: it blocks until the render callback
+        // in flight returns, and that callback renders through synth_ /
+        // begin_msg_. Freeing them first leaves the callback chewing on freed
+        // memory (host heap corruption on the CoreAudio/cubeb render thread).
+        if (output_) {
+            output_->stop();
+        }
+
         if (synth_) {
             tsf_close(synth_);
         }
 
         if (begin_msg_) {
             tml_free(begin_msg_);
-        }
-
-        if (output_) {
-            output_->stop();
         }
 
         if (driver_) {
@@ -102,7 +110,7 @@ namespace eka2l1::drivers {
         std::size_t frame_count_org = frame_count;
         std::size_t block_frame_count = TSF_RENDER_EFFECTSAMPLEBLOCK;
 
-        if (!playing_message_) {
+        if (!synth_ || !playing_message_) {
             memset(buffer, 0, frame_count * TSF_CHANNEL_COUNT * sizeof(std::int16_t));
             return frame_count;
         }
@@ -226,7 +234,7 @@ namespace eka2l1::drivers {
             return true;
         }
 
-        if (!begin_msg_) {
+        if (!synth_ || !begin_msg_) {
             return false;
         }
 
@@ -276,6 +284,10 @@ namespace eka2l1::drivers {
     }
 
     bool player_tsf::open_url(const std::string &url) {
+        if (!synth_) {
+            return false;
+        }
+
         // Roundabout cause fopen can't read UTF8 url (which is what TML uses)
         common::ro_std_file_stream stream(url, true);
         if (!stream.valid()) {
@@ -314,6 +326,10 @@ namespace eka2l1::drivers {
     }
 
     bool player_tsf::open_custom(common::rw_stream *stream) {
+        if (!synth_) {
+            return false;
+        }
+
         tsf_stream tstream;
         tstream.data = stream;
         tstream.read = [](void *data, void *ptr, unsigned int size) -> int {
@@ -354,10 +370,10 @@ namespace eka2l1::drivers {
 
         repeat_count_ = repeat_times;
         repeat_left_ = repeat_count_;
-        silence_intervals_us_ = silence_intervals_us_;
-
-        if (silence_intervals_us_ < 0) {
+        if (silence_intervals_micros < 0) {
             silence_intervals_us_ = 0;
+        } else {
+            silence_intervals_us_ = static_cast<std::uint32_t>(silence_intervals_micros);
         }
     }
 

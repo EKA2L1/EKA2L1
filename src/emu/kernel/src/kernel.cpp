@@ -655,6 +655,13 @@ namespace eka2l1 {
         }
     }
 
+    void kernel_system::call_process_exit_callbacks(kernel::process *pr) {
+        for (auto &process_exit_callback_func : process_exit_callback_funcs_) {
+            if (process_exit_callback_func)
+                process_exit_callback_func(pr);
+        }
+    }
+
     std::size_t kernel_system::register_process_switch_callback(process_switch_callback callback) {
         return process_switch_callback_funcs_.add(callback);
     }
@@ -695,6 +702,10 @@ namespace eka2l1 {
         return guomen_process_run_callback_funcs_.add(callback);
     }
 
+    std::size_t kernel_system::register_process_exit_callback(process_exit_callback callback) {
+        return process_exit_callback_funcs_.add(callback);
+    }
+
     bool kernel_system::unregister_ipc_send_callback(const std::size_t handle) {
         return ipc_send_callbacks_.remove(handle);
     }
@@ -733,6 +744,10 @@ namespace eka2l1 {
     
     bool kernel_system::unregister_guomen_process_run_callback(const std::size_t handle) {
         return guomen_process_run_callback_funcs_.remove(handle);
+    }
+
+    bool kernel_system::unregister_process_exit_callback(const std::size_t handle) {
+        return process_exit_callback_funcs_.remove(handle);
     }
 
     ldd::factory_instantiate_func kernel_system::suitable_ldd_instantiate_func(const char *name) {

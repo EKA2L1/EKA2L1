@@ -423,6 +423,11 @@ namespace eka2l1::kernel {
 
         // Cleanup resources
         if (!kern->wipeout_in_progress()) {
+            // HLE state this process owns outside of the kernel (dispatcher audio players
+            // for instance) is released by the guest destructors, which never run when the
+            // process is killed or panics. Let the owners drop it now.
+            kern->call_process_exit_callbacks(this);
+
             finish_logons();
             process_handles.reset();
         }

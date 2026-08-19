@@ -443,6 +443,15 @@ namespace eka2l1::drivers {
     }
 
     player_ffmpeg::~player_ffmpeg() {
+        // Stop the hardware stream before freeing the decode contexts: the
+        // render callback pulls get_more_data(), which reads them, and once
+        // this destructor finishes the vtable rolls back to player_shared
+        // where get_more_data is pure. ~player_shared's own stop runs too
+        // late for both.
+        if (output_stream_) {
+            output_stream_->stop();
+        }
+
         deinit();
     }
 }

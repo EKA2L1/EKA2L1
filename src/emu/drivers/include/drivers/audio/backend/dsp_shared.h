@@ -24,6 +24,7 @@
 
 #include <common/container.h>
 
+#include <atomic>
 #include <mutex>
 #include <vector>
 
@@ -44,10 +45,21 @@ namespace eka2l1::drivers {
         std::size_t avg_frame_count_;
 
         bool virtual_stop;
-        bool more_requested;
+
+        // Written by the guest thread (write()/stop()) and by the host audio
+        // render thread (data_callback()), with no lock in common.
+        std::atomic<bool> more_requested;
 
     protected:
         virtual bool internal_decode_running_out();
+
+        // Stops and releases the backing hardware stream, joining its render
+        // thread so no further data_callback() can fire. MUST be invoked at the
+        // very top of every most-derived destructor: the OS render callback
+        // dispatches virtuals (decode_data(), ...) on this object, and by the
+        // time ~dsp_output_stream_shared() runs the derived vtable has already
+        // been torn down, so an in-flight callback would hit __cxa_pure_virtual.
+        void shutdown_stream();
 
     public:
         explicit dsp_output_stream_shared(drivers::audio_driver *aud);
@@ -84,7 +96,7 @@ namespace eka2l1::drivers {
         drivers::audio_driver *aud_;
 
         common::ring_buffer<std::uint16_t, RING_BUFFER_MAX_SAMPLE_COUNT> ring_buffer_;
-        std::mutex callback_lock_;
+        std::mutex input_state_lock_;
 
         std::queue<input_read_request> read_queue_;
         std::uint32_t read_bytes_; 
