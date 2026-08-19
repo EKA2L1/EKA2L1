@@ -32,6 +32,7 @@
 #include <services/bluetooth/btman.h>
 #include <services/centralrepo/centralrepo.h>
 #include <services/comm/comm.h>
+#include <services/domain/domain.h>
 #include <services/drm/helper.h>
 #include <services/drm/notifier/notifier.h>
 #include <services/drm/rights/rights.h>
@@ -183,6 +184,11 @@ namespace eka2l1::epoc {
         DEFINE_INT_PROP(sys, epoc::SYS_CATEGORY, epoc::SOFTWARE_INSTALL_KEY, 0);
         DEFINE_INT_PROP(sys, epoc::SYS_CATEGORY, epoc::SOFTWARE_LASTEST_UID_INSTALLATION, 0);
 
+        // Published by the secure backup engine on a real device. Clients that watch the
+        // backup state (File manager's backup engine for one) read it while constructing and
+        // leave with KErrNotFound if it was never defined, taking the whole app down.
+        DEFINE_INT_PROP(sys, epoc::SYS_CATEGORY, epoc::BACKUP_RESTORE_KEY, epoc::BACKUP_RESTORE_NORMAL_STATE);
+
         // From Domain Server request
         DEFINE_INT_PROP(sys, 0x1020e406, 0x250, 0);
 
@@ -255,6 +261,7 @@ namespace eka2l1 {
             } else {
                 CREATE_SERVER(sys, goom_monitor_server);
                 CREATE_SERVER(sys, alf_streamer_server);
+                CREATE_SERVER(sys, dm_domain_server);
 
                 // MMF server family
                 {

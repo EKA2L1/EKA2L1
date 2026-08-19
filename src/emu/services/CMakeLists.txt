@@ -45,6 +45,7 @@ add_library(epocservs
         include/services/internet/browser.h
         include/services/internet/connmonitor.h
         include/services/internet/nifman.h
+        include/services/domain/domain.h
         include/services/drm/notifier/events.h
         include/services/drm/notifier/notifier.h
         include/services/drm/rights/object.h
@@ -195,6 +196,7 @@ add_library(epocservs
         src/internet/browser.cpp
         src/internet/connmonitor.cpp
         src/internet/nifman.cpp
+        src/domain/domain.cpp
         src/drm/notifier/events.cpp
         src/drm/notifier/exchange.cpp
         src/drm/notifier/notifier.cpp
