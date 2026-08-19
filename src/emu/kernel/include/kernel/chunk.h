@@ -78,7 +78,7 @@ namespace eka2l1 {
 		*/
         class chunk : public kernel_obj {
             // The reversed region that the chunk can commit to
-            mem::mem_model_chunk *mmc_impl_;
+            mem::mem_model_chunk *mmc_impl_ = nullptr;
             std::unique_ptr<mem::mem_model_chunk> mmc_impl_unq_;
 
             memory_system *mem;
@@ -155,6 +155,17 @@ namespace eka2l1 {
 
             bool is_chunk_heap() const {
                 return is_heap;
+            }
+
+            /*! \brief Whether the memory model backing of this chunk exists.
+             *
+             * The constructor only logs when the memory model refuses to create the chunk (address
+             * space exhausted, chunk table full, ...), so the object still exists but is hollow.
+             * Creators must check this and report KErrNoMemory instead of handing the guest a
+             * handle to a chunk that can not be operated on.
+            */
+            bool valid() const {
+                return mmc_impl_ != nullptr;
             }
 
             const std::size_t max_size() const;

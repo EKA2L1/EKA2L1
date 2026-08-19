@@ -77,9 +77,17 @@ namespace eka2l1::mem {
         mchunk->own_process_ = this;
         mchunk->granularity_shift_ = control_->chunk_shift_;
 
-        chunk = reinterpret_cast<mem_model_chunk *>(mchunk);
+        const int result = mchunk->do_create(create_info);
 
-        return mchunk->do_create(create_info);
+        if (result != MEM_MODEL_CHUNK_ERR_OK) {
+            // Give the slot back and leave the out pointer untouched, so that the caller
+            // never ends up owning a chunk struct that was never initialised.
+            chunks_[mchunk->chunk_id_in_mmp_ - 1].reset();
+            return result;
+        }
+
+        chunk = reinterpret_cast<mem_model_chunk *>(mchunk);
+        return result;
     }
 
     void multiple_mem_model_process::delete_chunk(mem_model_chunk *chunk) {

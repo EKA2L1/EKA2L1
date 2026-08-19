@@ -117,6 +117,7 @@ namespace eka2l1::mem::flexible {
 
         // Ok nice nice nice. Add this to list of attachment
         attachs_.push_back(std::move(attach_info));
+        fl_chunk->attachers_.push_back(this);
 
         return true;
     }
@@ -145,6 +146,8 @@ namespace eka2l1::mem::flexible {
         fl_chunk->mem_obj_->detach_mapping(chunk_ite->map_.get());
 
         attachs_.erase(chunk_ite);
+        fl_chunk->remove_attacher(this);
+
         return true;
     }
 
@@ -152,9 +155,25 @@ namespace eka2l1::mem::flexible {
         control_flexible *fl_control = reinterpret_cast<control_flexible *>(control_);
 
         for (auto &attach: attachs_) {
-            attach.chunk_->mem_obj_->detach_mapping(attach.map_.get());
-            fl_control->chunk_mngr_->destroy(reinterpret_cast<flexible_mem_model_chunk *>(attach.chunk_));
+            flexible_mem_model_chunk *chunk = reinterpret_cast<flexible_mem_model_chunk *>(attach.chunk_);
+
+            chunk->mem_obj_->detach_mapping(attach.map_.get());
+            chunk->remove_attacher(this);
+
+            // Only free the chunk struct once nobody else has it mapped. Attaching is not
+            // ownership: a global chunk outlives the process that created it as long as a handle
+            // to it exists, and freeing it here would both unmap it from a live process and leave
+            // that process holding an attach info to freed memory.
+            if (chunk->attachers_.empty()) {
+                fl_control->chunk_mngr_->destroy(chunk);
+            } else if (chunk->owner_ == this) {
+                // The last attacher standing frees it instead. Hand the chunk over rather than
+                // leaving owner_ pointing at us, which is about to be freed.
+                chunk->owner_ = chunk->attachers_.front();
+            }
         }
+
+        attachs_.clear();
     }
 
     static bool should_do_cpu_manipulate(const std::uint32_t flags) {

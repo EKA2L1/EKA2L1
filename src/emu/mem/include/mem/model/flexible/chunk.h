@@ -39,12 +39,25 @@ namespace eka2l1::mem::flexible {
 
         flexible_mem_model_process *owner_;
 
+        /**
+         * @brief Processes that currently hold an attachment (and therefore a mapping) to this
+         *        chunk.
+         *
+         * A chunk is not owned by the process that created it: a global chunk stays alive as long
+         * as a handle to it exists, and any process opening that handle gets its own mapping. Each
+         * attach info in flexible_mem_model_process::attachs_ points straight at this struct, so
+         * this struct has to know who to tell before it dies.
+         */
+        std::vector<flexible_mem_model_process *> attachers_;
+
         std::unique_ptr<memory_object> mem_obj_;
         std::unique_ptr<common::bitmap_allocator> page_bma_;
 
         vm_address fixed_addr_;
         std::unique_ptr<mapping> fixed_mapping_;
         bool is_addr_shared_;
+
+        void remove_attacher(flexible_mem_model_process *process);
 
     public:
         explicit flexible_mem_model_chunk(control_base *control, const asid id);
