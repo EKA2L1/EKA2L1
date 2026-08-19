@@ -36,8 +36,12 @@ namespace eka2l1::mem::flexible {
     }
 
     control_flexible::~control_flexible() {
-        kern_addr_space_.reset();
+        // Destroy the chunks before the kernel address space. A shared chunk's
+        // fixed mapping is owned by kern_addr_space_, and tearing that mapping
+        // down (mapping::~mapping -> unmap / section deallocate) dereferences
+        // the address space, so the address space must outlive the chunks.
         chunk_mngr_.reset();
+        kern_addr_space_.reset();
     }
 
     mmu_base *control_flexible::get_or_create_mmu(arm::core *cc) {

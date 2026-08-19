@@ -100,6 +100,29 @@ namespace eka2l1::mem::flexible {
         const std::uint32_t start_offset = page_offset << control_->page_size_bits_;
         const std::uint32_t size_to_decommit = static_cast<std::uint32_t>(total_pages << control_->page_size_bits_);
 
+        control_flexible *ctrl_fx = reinterpret_cast<control_flexible *>(control_);
+
+        // Remove guest mappings and cached host translations before making the
+        // backing inaccessible. This matches the multiple memory model and
+        // prevents a concurrent CPU fast-path access from reaching a page after
+        // common::decommit has reclaimed it.
+        for (auto &mapping : mappings_) {
+            if (!mapping->unmap(page_offset, total_pages)) {
+                LOG_WARN(MEMORY, "Unable to unmap decommitted memory from a mapping!");
+            }
+
+            // Invalidate the CPU TLB for every mapping, not just the one owned by the
+            // current address space: kernel/shared fixed mappings (code, ROM) are visible
+            // from every address space, so the running core may hold entries for them
+            // even while another address space is current, and the host memory is about
+            // to be freed. Dirtying a foreign or stale entry is always safe.
+            for (auto &mm : ctrl_fx->mmus_) {
+                mm->unmap_from_cpu(mapping->base_ + start_offset, size_to_decommit);
+            }
+        }
+
+        page_arr_.alter(page_offset, static_cast<std::uint32_t>(total_pages), prot_none, true);
+
         if (!external_) {
             const bool deresult = common::decommit(reinterpret_cast<std::uint8_t *>(data_) + start_offset,
                 size_to_decommit);
@@ -109,24 +132,6 @@ namespace eka2l1::mem::flexible {
             }
         }
 
-        control_flexible *ctrl_fx = reinterpret_cast<control_flexible *>(control_);
-
-        // Unmap decomitted memory from all mappings
-        for (auto &mapping : mappings_) {
-            if (!mapping->unmap(page_offset, total_pages)) {
-                LOG_WARN(MEMORY, "Unable to unmap decommitted memory from a mapping!");
-            }
-
-            for (auto &mm : ctrl_fx->mmus_) {
-                if (mapping->owner_->id() == mm->current_addr_space()) {
-                    // Unmap from to CPU right away
-                    mm->unmap_from_cpu(mapping->base_ + start_offset, size_to_decommit);
-                    break;
-                }
-            }
-        }
-
-        page_arr_.alter(page_offset, static_cast<std::uint32_t>(total_pages), prot_none, true);
         return true;
     }
 
@@ -145,6 +150,23 @@ namespace eka2l1::mem::flexible {
 
         if (ite == mappings_.end()) {
             return false;
+        }
+
+        // Chunk/process teardown detaches mappings before destroying their
+        // memory object. If detach merely erases the pointer, decommit() can no
+        // longer find this virtual range and the CPU TLB keeps host pointers
+        // past the backing allocation's lifetime. Clear the page tables first
+        // so a miss cannot repopulate the entry, then invalidate the full
+        // mapping on every core. mapping::~mapping() repeats unmap(), which is
+        // intentionally harmless.
+        if (!layout->unmap(0, layout->occupied_)) {
+            LOG_WARN(MEMORY, "Unable to unmap detached memory mapping!");
+        }
+
+        control_flexible *ctrl_fx = reinterpret_cast<control_flexible *>(control_);
+        const std::size_t mapping_size = layout->occupied_ << control_->page_size_bits_;
+        for (auto &mm : ctrl_fx->mmus_) {
+            mm->unmap_from_cpu(layout->base_, mapping_size);
         }
 
         mappings_.erase(ite);

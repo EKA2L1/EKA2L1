@@ -1375,13 +1375,21 @@ namespace eka2l1::epoc {
             att = kernel::chunk_attrib::anonymous;
         }
 
-        const kernel::handle h = kern->create_and_add<kernel::chunk>(
-                                         owner == epoc::owner_process ? kernel::owner_type::process : kernel::owner_type::thread,
-                                         mem, kern->crr_process(), name ? name->to_std_string(kern->crr_process()) : "", create_info.initial_bottom,
-                                         create_info.initial_top, create_info.max_size, perm, type, access, att, create_info.clear_bytes)
-                                     .first;
+        const auto chunk_res = kern->create_and_add<kernel::chunk>(
+            owner == epoc::owner_process ? kernel::owner_type::process : kernel::owner_type::thread,
+            mem, kern->crr_process(), name ? name->to_std_string(kern->crr_process()) : "", create_info.initial_bottom,
+            create_info.initial_top, create_info.max_size, perm, type, access, att, create_info.clear_bytes);
+
+        const kernel::handle h = chunk_res.first;
 
         if (h == kernel::INVALID_HANDLE) {
+            return epoc::error_no_memory;
+        }
+
+        if (!chunk_res.second->valid()) {
+            // The memory model refused this chunk. Drop the handle instead of letting the guest
+            // operate on a chunk that has no backing at all.
+            kern->close(h);
             return epoc::error_no_memory;
         }
 
@@ -3566,13 +3574,21 @@ namespace eka2l1::epoc {
             max_size = common::align(description->max_size_, mem->get_page_size());
         }
 
-        kernel::handle h = kern->create_and_add<kernel::chunk>(get_handle_owner_from_eka1_attribute(attribute),
-                                   mem, target_process, chunk_name, bottom, top, max_size, init_prot, type_of_chunk,
-                                   access_type, chunk_attribute)
-                               .first;
+        const auto chunk_res = kern->create_and_add<kernel::chunk>(get_handle_owner_from_eka1_attribute(attribute),
+            mem, target_process, chunk_name, bottom, top, max_size, init_prot, type_of_chunk,
+            access_type, chunk_attribute);
+
+        kernel::handle h = chunk_res.first;
 
         if (h == kernel::INVALID_HANDLE) {
             // Maybe out of memory, just don't throw general error since it's hard to debug
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_no_memory);
+            return epoc::error_no_memory;
+        }
+
+        if (!chunk_res.second->valid()) {
+            // Memory model could not back this chunk, so it is unusable. See chunk_new.
+            kern->close(h);
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_no_memory);
             return epoc::error_no_memory;
         }
