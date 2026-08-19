@@ -46,6 +46,37 @@ TEST_CASE("two_prop_in_a_section", "ini_test") {
     REQUIRE(prop2_ptr->get_as<common::ini_pair>()->get<common::ini_value>(0)->get_value() == "4");
 }
 
+TEST_CASE("quoted_value_keeps_separators", "ini_test") {
+    common::ini_file ini;
+    ini.load("commonassets/test3.ini");
+
+    auto sec_ptr = ini.find("quoted");
+    REQUIRE(sec_ptr);
+
+    common::ini_section *sec = sec_ptr->get_as<common::ini_section>();
+
+    // A quoted value ends at its closing quote. Commas, tabs and '=' inside it are
+    // ordinary characters: central repository string entries pack whole
+    // comma-separated setting lists into one quoted value.
+    auto prop_ptr = sec->find("0x10001");
+    REQUIRE(prop_ptr);
+
+    common::ini_pair *prop = prop_ptr->get_as<common::ini_pair>();
+    REQUIRE(prop->get<common::ini_value>(0)->get_value() == "string");
+    REQUIRE(prop->get<common::ini_value>(1)->get_value()
+        == "QualitySetLevel=98,VideoCodecMimeType=video/mp4v-es; profile-level-id=2,VideoWidth=176");
+
+    // The closing quote is consumed, so what trails it tokenizes normally.
+    REQUIRE(prop->get<common::ini_value>(2)->get_value() == "0");
+
+    prop_ptr = sec->find("0x10002");
+    REQUIRE(prop_ptr);
+
+    prop = prop_ptr->get_as<common::ini_pair>();
+    REQUIRE(prop->get<common::ini_value>(1)->get_value() == "plain");
+    REQUIRE(prop->get<common::ini_value>(2)->get_value() == "5");
+}
+
 TEST_CASE("recursive_prop_with_comma", "ini_test") {
     common::ini_file ini;
     ini.load("commonassets/test2.ini");

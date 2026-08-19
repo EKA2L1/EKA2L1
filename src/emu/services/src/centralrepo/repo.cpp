@@ -33,17 +33,14 @@
 namespace eka2l1 {
     std::uint32_t central_repo::get_default_meta_for_new_key(const std::uint32_t key) {
         for (std::size_t i = 0; i < meta_range.size(); i++) {
-            if (meta_range[i].high_key) {
-                // Normal range
-                if (meta_range[i].low_key <= key
-                    && key <= meta_range[i].high_key) {
-                    return meta_range[i].default_meta_data;
-                }
-            } else {
-                if ((meta_range[i].key_mask & key)
-                    == (meta_range[i].low_key & key)) {
-                    return meta_range[i].default_meta_data;
-                }
+            // Normal range
+            if ((meta_range[i].low_key <= key) && (key <= meta_range[i].high_key)) {
+                return meta_range[i].default_meta_data;
+            }
+
+            // Or a partial key: the low key is the pattern the masked key must match.
+            if (meta_range[i].key_mask && ((meta_range[i].key_mask & key) == meta_range[i].low_key)) {
+                return meta_range[i].default_meta_data;
             }
         }
 
