@@ -51,15 +51,11 @@ namespace eka2l1::mem::flexible {
         // exit first. Their attach info points straight at this struct, so make them drop it now,
         // while our mapping list and memory object are still alive. Otherwise the next teardown
         // walks freed memory and dereferences a garbage mem_obj_.
+        // Every entry got here through attach_chunk(), which only records an attacher after it
+        // has stored the matching attach info, so detach_chunk() always finds it and calls
+        // remove_attacher(). The list therefore shrinks on every iteration.
         while (!attachers_.empty()) {
-            flexible_mem_model_process *attacher = attachers_.back();
-            attacher->detach_chunk(this);
-
-            // detach_chunk() removes itself from the list, except for an address-shared chunk,
-            // which never records an attacher in the first place. Keep the loop finite anyway.
-            if (!attachers_.empty() && (attachers_.back() == attacher)) {
-                attachers_.pop_back();
-            }
+            attachers_.back()->detach_chunk(this);
         }
 
         if (fixed_mapping_ && (flags_ & MEM_MODEL_CHUNK_REGION_USER_CODE)) {

@@ -167,9 +167,9 @@ namespace eka2l1::mem::flexible {
             if (chunk->attachers_.empty()) {
                 fl_control->chunk_mngr_->destroy(chunk);
             } else if (chunk->owner_ == this) {
-                // The last attacher standing frees it instead. Hand the chunk over rather than
-                // leaving owner_ pointing at us, which is about to be freed.
-                chunk->owner_ = chunk->attachers_.front();
+                // Somebody else still has it mapped, so the last one out frees it. Stop claiming
+                // to own it: this process is about to be freed.
+                chunk->owner_ = nullptr;
             }
         }
 

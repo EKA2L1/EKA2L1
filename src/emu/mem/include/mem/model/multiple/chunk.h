@@ -30,20 +30,24 @@ namespace eka2l1::mem {
     struct mem_model_process;
 
     struct multiple_mem_model_chunk : public mem_model_chunk {
-        vm_address base_;
-        void *host_base_;
+        // Zeroed rather than left to do_create(), which is allowed to fail: the destructor runs
+        // decommit(0, max_size_) unconditionally, so a struct that never got created would
+        // otherwise walk page_tabs_ with a garbage size and dereference a page table that was
+        // never assigned.
+        vm_address base_{ 0 };
+        void *host_base_{ nullptr };
 
         mem_model_process *own_process_{ nullptr };
 
-        std::size_t chunk_id_in_mmp_;
+        std::size_t chunk_id_in_mmp_{ 0 };
 
-        std::size_t committed_;
-        std::size_t max_size_;
+        std::size_t committed_{ 0 };
+        std::size_t max_size_{ 0 };
 
         std::vector<std::uint32_t> page_tabs_;
         std::vector<asid> attached_asids_;
 
-        std::uint16_t granularity_shift_;
+        std::uint16_t granularity_shift_{ 0 };
         std::uint32_t create_flags_{ 0 };
 
         std::unique_ptr<common::bitmap_allocator> page_bma_;

@@ -21,6 +21,7 @@
 
 #include <config/config.h>
 #include <mem/allocator/std_page_allocator.h>
+#include <mem/chunk.h>
 #include <mem/control.h>
 #include <mem/process.h>
 
@@ -90,4 +91,41 @@ TEST_CASE("chunk_creation_failure_does_not_leak_a_slot", "mem") {
     REQUIRE(chunk != nullptr);
 
     fixture.process->delete_chunk(chunk);
+}
+
+TEST_CASE("a_global_chunk_outlives_the_process_that_created_it", "mem") {
+    // Attaching to a chunk is not owning it: kernel::chunk::open_to() maps a global chunk
+    // (FbsSharedChunk, WsGlobalMemChunk, the skin chunk) into every process that opens a
+    // handle, and Symbian keeps such a chunk alive for as long as a handle exists. A process
+    // exiting must therefore not free a chunk struct somebody else still has mapped -- the
+    // survivor's attach info points straight at it.
+    //
+    // Without the fix this is a use-after-free rather than a wrong value, so it reports as a
+    // pass on an ordinary build and is caught under a sanitiser. It is written as a test
+    // anyway: it pins the ownership rule, and it is exactly the shape of regression an
+    // ASan job would exist to catch.
+    config::state conf;
+    mem::basic_page_table_allocator alloc;
+    mem::control_impl control = mem::make_new_control(nullptr, &alloc, &conf, 12, false,
+        mem::mem_model_type::flexible);
+
+    auto creator = mem::make_new_mem_model_process(control.get(), mem::mem_model_type::flexible);
+    auto opener = mem::make_new_mem_model_process(control.get(), mem::mem_model_type::flexible);
+
+    mem::mem_model_chunk_creation_info info = unsatisfiable_chunk();
+    info.flags |= mem::MEM_MODEL_CHUNK_REGION_USER_GLOBAL;
+
+    mem::mem_model_chunk *chunk = nullptr;
+    REQUIRE(creator->create_chunk(chunk, info) == mem::MEM_MODEL_CHUNK_ERR_OK);
+    REQUIRE(chunk != nullptr);
+
+    // A second process opens a handle to it and gets its own mapping.
+    REQUIRE(opener->attach_chunk(chunk));
+
+    // The creator exits first.
+    creator.reset();
+
+    // The chunk is still mapped by the opener, so it must still be there.
+    REQUIRE(chunk->max() >= 0x1000);
+    REQUIRE(opener->detach_chunk(chunk));
 }

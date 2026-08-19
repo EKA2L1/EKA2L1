@@ -30,7 +30,10 @@ namespace eka2l1::mem::flexible {
     mapping::mapping(address_space *owner)
         : owner_(owner)
         , region_flags_(0)
-        , off_start_in_page_quantity_(0) {
+        , off_start_in_page_quantity_(0)
+        , occupied_(0) {
+        // occupied_ is only assigned by a successful instantiate(), but the destructor uses it
+        // unconditionally -- and attach_chunk() destroys a mapping whose instantiate() failed.
     }
 
     mapping::~mapping() {
