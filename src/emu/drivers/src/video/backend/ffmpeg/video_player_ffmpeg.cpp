@@ -30,7 +30,20 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
+#include <deque>
+
 namespace eka2l1::drivers {
+    // Read-ahead bounds for the decode loop. Video packets are buffered so that
+    // reading is never throttled by the video display pacing (which used to leave
+    // less than one video frame worth of audio queued, causing audio underruns).
+    static constexpr std::size_t MAX_PENDING_IMAGE_PACKETS = 64;
+    static constexpr std::size_t MAX_PENDING_AUDIO_PACKETS = 96;
+
+    // Free slots that must be available in the decoded sample ring before another
+    // audio packet is decoded into it. Covers the largest common frame (AAC:
+    // 2048 samples/channel, stereo) with margin.
+    static constexpr std::size_t AUDIO_RING_DECODE_HEADROOM = 8192;
+
     video_player_ffmpeg::video_player_ffmpeg(audio_driver *driver)
         : video_player()
         , stream_(nullptr)
@@ -159,9 +172,9 @@ namespace eka2l1::drivers {
                     if (!stream_) {
                         LOG_ERROR(DRIVER_VID, "Error while create audio output stream!");
                         avcodec_free_context(&audio_codec_ctx_);
+                    } else {
+                        stream_->set_volume(volume_ / 10.0f);
                     }
-
-                    stream_->set_volume(volume_ / 10.0f);
                 }
             }
         }
@@ -213,6 +226,10 @@ namespace eka2l1::drivers {
 
         should_stop_ = false;
         done_event_.reset();
+
+        // Leftover from a previous play. The stream is stopped here, so nobody
+        // is consuming the ring.
+        pending_samples_.reset();
 
         if (stream_) {
             stream_->start();
@@ -302,11 +319,23 @@ namespace eka2l1::drivers {
         const std::uint8_t channel_count = stream_->get_channels();
         const std::size_t sample_total_count = channel_count * frames;
 
-        // Fill all zero first in case we got nothing
+        // Fill all zero first in case we got nothing. Decoding happens on the decode
+        // thread: this callback runs on the realtime audio thread and only drains
+        // the sample ring.
         std::fill(output_buffer, output_buffer + sample_total_count, 0);
 
-        // Try to get more by decoding
-        while (pending_samples_.size() < sample_total_count) {
+        pending_samples_.pop(output_buffer, common::min(sample_total_count, pending_samples_.size()));
+        return frames;
+    }
+
+    void video_player_ffmpeg::decode_pending_audio() {
+        if (!audio_codec_ctx_ || !stream_) {
+            return;
+        }
+
+        const std::uint8_t channel_count = stream_->get_channels();
+
+        while ((pending_samples_.capacity() - pending_samples_.size()) >= AUDIO_RING_DECODE_HEADROOM) {
             std::optional<AVPacket*> packet_op = audio_packets_.pop();
             if (!packet_op.has_value()) {
                 break;
@@ -314,66 +343,50 @@ namespace eka2l1::drivers {
 
             AVPacket *packet = std::move(packet_op.value());
             int result = avcodec_send_packet(audio_codec_ctx_, packet);
+            av_packet_free(&packet);
+
             if (result < 0) {
                 LOG_ERROR(DRIVER_VID, "Sending video's audio packet failed with code {}", result);
-                av_packet_free(&packet);
-
-                break;
+                continue;
             }
 
             if (!temp_audio_frame_) {
                 temp_audio_frame_ = av_frame_alloc();
             }
 
-            result = avcodec_receive_frame(audio_codec_ctx_, temp_audio_frame_);
-            if (result == AVERROR(EAGAIN)) {
-                av_packet_free(&packet);
-                continue;
-            }
+            while (avcodec_receive_frame(audio_codec_ctx_, temp_audio_frame_) >= 0) {
+                if (!resample_context_) {
+                    const int dest_channel_type = (channel_count == 2) ? AV_CH_LAYOUT_STEREO : AV_CH_LAYOUT_MONO;
+                    AVStream *audio_stream = format_ctx_->streams[audio_stream_index_];
 
-            if (result < 0) {
-                LOG_ERROR(DRIVER_VID, "Decode video's audio packet failed with code {}", result);
-                av_packet_free(&packet);
+                    resample_context_ = swr_alloc_set_opts(nullptr, dest_channel_type, AV_SAMPLE_FMT_S16, stream_->get_sample_rate(),
+                        audio_stream->codecpar->channel_layout, static_cast<AVSampleFormat>(audio_stream->codecpar->format), audio_stream->codecpar->sample_rate,
+                        0, nullptr);
 
-                break;
-            }
+                    if (swr_init(resample_context_) < 0) {
+                        LOG_ERROR(DRIVER_AUD, "Error initializing audio resample context!");
+                        swr_free(&resample_context_);
 
-            av_packet_free(&packet);
+                        return;
+                    }
+                }
 
-            if (!resample_context_) {
-                const int dest_channel_type = (channel_count == 2) ? AV_CH_LAYOUT_STEREO : AV_CH_LAYOUT_MONO;
-                AVStream *audio_stream = format_ctx_->streams[audio_stream_index_];
+                std::vector<std::uint16_t> data_temp(channel_count * temp_audio_frame_->nb_samples);
 
-                resample_context_ = swr_alloc_set_opts(nullptr, dest_channel_type, AV_SAMPLE_FMT_S16, stream_->get_sample_rate(),
-                    audio_stream->codecpar->channel_layout, static_cast<AVSampleFormat>(audio_stream->codecpar->format), audio_stream->codecpar->sample_rate,
-                    0, nullptr);
+                std::uint8_t *data_temp_ptr = reinterpret_cast<std::uint8_t*>(data_temp.data());
+                const std::uint8_t **source = const_cast<const std::uint8_t**>(temp_audio_frame_->extended_data);
 
-                if (swr_init(resample_context_) < 0) {
-                    LOG_ERROR(DRIVER_AUD, "Error initializing audio resample context!");
-                    swr_free(&resample_context_);
+                result = swr_convert(resample_context_, &data_temp_ptr, temp_audio_frame_->nb_samples, source,
+                    temp_audio_frame_->nb_samples);
 
+                if (result < 0) {
+                    LOG_ERROR(DRIVER_VID, "Unable to resample video audio to PCM16 format!");
                     break;
                 }
+
+                pending_samples_.push(data_temp.data(), static_cast<std::size_t>(result) * channel_count);
             }
-
-            std::vector<std::uint16_t> data_temp(channel_count * temp_audio_frame_->nb_samples);
-
-            std::uint8_t *data_temp_ptr = reinterpret_cast<std::uint8_t*>(data_temp.data());
-            const std::uint8_t **source = const_cast<const std::uint8_t**>(temp_audio_frame_->extended_data);
-            
-            result = swr_convert(resample_context_, &data_temp_ptr, temp_audio_frame_->nb_samples, source,
-                temp_audio_frame_->nb_samples);
-
-            if (result < 0) {
-                LOG_ERROR(DRIVER_VID, "Unable to resample video audio to PCM16 format!");
-                break;
-            }
-
-            pending_samples_.push(data_temp);
         }
-
-        pending_samples_.pop(output_buffer, common::min(sample_total_count, pending_samples_.size()));
-        return frames;
     }
 
     void video_player_ffmpeg::video_audio_decode_loop() {
@@ -390,36 +403,87 @@ namespace eka2l1::drivers {
         std::uint64_t amount_to_sleep = static_cast<std::uint64_t>(common::microsecs_per_sec / fps_);
         bool complete_callback_called = false;
 
+        // Video packets read ahead of their display time. Reading must not be
+        // throttled by the video pacing sleep below, else the audio stream is fed
+        // with less than one video frame worth of samples of margin and underruns
+        // (audible stutter) whenever an iteration overshoots the frame period.
+        std::deque<AVPacket*> pending_image_packets;
+
+        const bool has_image_decoder = image_codec_ctx_ && image_frame_available_callback_;
+        const bool has_audio_output = audio_codec_ctx_ && stream_;
+
+        // Target decoded-audio backlog before the reader relaxes (~0.5s).
+        const std::size_t audio_samples_low_water = has_audio_output
+            ? common::min<std::size_t>(static_cast<std::size_t>(stream_->get_sample_rate()) * stream_->get_channels() / 2,
+                pending_samples_.capacity() / 2)
+            : 0;
+
+        bool eof_reached = false;
+        bool read_failed = false;
+
         while (!should_stop_) {
-            int result = av_read_frame(format_ctx_, temp_packet);
-            if (result < 0) {
-                if (result == AVERROR(EAGAIN)) {
-                    continue;
-                }
-
-                should_stop_ = true;
-
-                if (result == AVERROR_EOF) {
-                    if (play_complete_callback_) {
-                        play_complete_callback_(play_complete_callback_userdata_, 0);
-                        complete_callback_called = true;
-                    }
-
-                    break;
-                } else {
-                    LOG_ERROR(DRIVER_VID, "Unable to read the current video frame!");
-
-                    if (play_complete_callback_) {
-                        play_complete_callback_(play_complete_callback_userdata_, -1);
-                        complete_callback_called = true;
-                    }
-
+            // Read ahead until a video frame is in hand and the audio backlog is
+            // comfortable (or the safety caps are hit).
+            while (!eof_reached && !should_stop_ && (pending_image_packets.size() < MAX_PENDING_IMAGE_PACKETS)) {
+                // Hard cap: never hold more compressed audio than this, even while
+                // still hunting for a video packet (the video stream may simply
+                // end before the audio stream does).
+                if (audio_packets_.size() >= MAX_PENDING_AUDIO_PACKETS) {
                     break;
                 }
+
+                const bool audio_buffered_enough = !has_audio_output
+                    || (pending_samples_.size() >= audio_samples_low_water);
+
+                const bool image_satisfied = !has_image_decoder || !pending_image_packets.empty();
+
+                if (audio_buffered_enough && image_satisfied) {
+                    break;
+                }
+
+                int result = av_read_frame(format_ctx_, temp_packet);
+                if (result < 0) {
+                    if (result == AVERROR(EAGAIN)) {
+                        continue;
+                    }
+
+                    eof_reached = true;
+                    read_failed = (result != AVERROR_EOF);
+
+                    break;
+                }
+
+                if ((temp_packet->stream_index == image_stream_index_) && has_image_decoder) {
+                    pending_image_packets.push_back(av_packet_clone(temp_packet));
+                } else if ((temp_packet->stream_index == audio_stream_index_) && has_audio_output) {
+                    audio_packets_.push(av_packet_clone(temp_packet));
+                }
+
+                av_packet_unref(temp_packet);
             }
 
-            if ((temp_packet->stream_index == image_stream_index_) && image_frame_available_callback_) {
-                result = avcodec_send_packet(image_codec_ctx_, temp_packet);
+            if (read_failed) {
+                should_stop_ = true;
+                LOG_ERROR(DRIVER_VID, "Unable to read the current video frame!");
+
+                if (play_complete_callback_) {
+                    play_complete_callback_(play_complete_callback_userdata_, -1);
+                    complete_callback_called = true;
+                }
+
+                break;
+            }
+
+            // Top up the decoded sample ring that the realtime audio callback drains.
+            decode_pending_audio();
+
+            if (!pending_image_packets.empty()) {
+                AVPacket *image_packet = pending_image_packets.front();
+                pending_image_packets.pop_front();
+
+                int result = avcodec_send_packet(image_codec_ctx_, image_packet);
+                av_packet_free(&image_packet);
+
                 if (result < 0) {
                     LOG_ERROR(DRIVER_VID, "Error while sending video frame packet to decoder!");
                     should_stop_ = true;
@@ -471,9 +535,37 @@ namespace eka2l1::drivers {
 
                     last_update_us_ = common::get_current_utc_time_in_microseconds_since_epoch();
                 }
-            } else if (temp_packet->stream_index == audio_stream_index_) {
-                audio_packets_.push(av_packet_clone(temp_packet));
+            } else if (eof_reached) {
+                // Everything read. Let the buffered audio finish playing before
+                // reporting completion, since reading ran ahead of realtime.
+                const bool audio_drained = !has_audio_output
+                    || ((audio_packets_.size() == 0) && (pending_samples_.size() == 0))
+                    || !stream_->is_playing();
+
+                if (audio_drained) {
+                    should_stop_ = true;
+
+                    if (play_complete_callback_) {
+                        play_complete_callback_(play_complete_callback_userdata_, 0);
+                        complete_callback_called = true;
+                    }
+
+                    break;
+                }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            } else {
+                // Audio-only content (or no displayable frame yet): pace gently while
+                // keeping the sample ring topped up.
+                std::this_thread::sleep_for(std::chrono::milliseconds(5));
             }
+        }
+
+        while (!pending_image_packets.empty()) {
+            AVPacket *leftover = pending_image_packets.front();
+            pending_image_packets.pop_front();
+
+            av_packet_free(&leftover);
         }
 
         // Wait until a confirmation that I can exit

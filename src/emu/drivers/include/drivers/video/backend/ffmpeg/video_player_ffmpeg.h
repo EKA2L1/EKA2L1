@@ -66,6 +66,7 @@ namespace eka2l1::drivers {
 
         void reset_contexts();
         bool prepare_codecs();
+        void decode_pending_audio();
 
     public:
         explicit video_player_ffmpeg(audio_driver *driver);
