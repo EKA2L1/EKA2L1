@@ -87,6 +87,56 @@ namespace eka2l1 {
 
     static const char16_t *APA_APP_RUNNER = u"apprun.exe";
 
+    // Which of two registrations for the same app uid to keep. An installed copy
+    // supersedes the one in ROM, the way it does on a device; otherwise the drive the
+    // scan reaches first wins, so the answer does not depend on scan order.
+    static bool should_replace_duplicate_registry(const apa_app_registry &replacement, const apa_app_registry &existing) {
+        if (replacement.mandatory_info.uid != existing.mandatory_info.uid) {
+            return false;
+        }
+
+        if ((existing.land_drive == drive_z) != (replacement.land_drive == drive_z)) {
+            return existing.land_drive == drive_z;
+        }
+
+        return replacement.land_drive < existing.land_drive;
+    }
+
+    // load_registry() checks for a registration of the same path before it starts
+    // reading, but the read happens outside the lock, so two workers can both get past
+    // that check. Repeat it here, where the entry actually goes in, and settle app uids
+    // claimed by more than one registration file while we hold the lock.
+    static bool commit_registry(std::vector<apa_app_registry> &regs, apa_app_registry &&reg) {
+        auto same_path = std::find_if(regs.begin(), regs.end(), [&reg](const apa_app_registry &existing) {
+            return (common::compare_ignore_case(existing.rsc_path, reg.rsc_path) == 0);
+        });
+
+        if (same_path != regs.end()) {
+            if (same_path->last_rsc_modified == reg.last_rsc_modified) {
+                return false;
+            }
+
+            regs.erase(same_path);
+        }
+
+        if (reg.mandatory_info.uid != 0) {
+            auto same_uid = std::find_if(regs.begin(), regs.end(), [&reg](const apa_app_registry &existing) {
+                return existing.mandatory_info.uid == reg.mandatory_info.uid;
+            });
+
+            if (same_uid != regs.end()) {
+                if (!should_replace_duplicate_registry(reg, *same_uid)) {
+                    return false;
+                }
+
+                regs.erase(same_uid);
+            }
+        }
+
+        regs.push_back(std::move(reg));
+        return true;
+    }
+
     applist_server::applist_server(system *sys)
         : service::typical_server(sys, get_app_list_server_name_by_epocver(sys->get_symbian_version_use()))
         , drive_change_handle_(0)
@@ -195,9 +245,7 @@ namespace eka2l1 {
         }
 
         const std::lock_guard<std::mutex> guard(list_access_mut_);
-        regs.push_back(std::move(reg));
-
-        return true;
+        return commit_registry(regs, std::move(reg));
     }
 
     bool applist_server::load_registry(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
@@ -333,8 +381,7 @@ namespace eka2l1 {
         }
 
         const std::lock_guard<std::mutex> guard(list_access_mut_);
-        regs.push_back(std::move(reg));
-        return true;
+        return commit_registry(regs, std::move(reg));
     }
 
     bool applist_server::delete_registry(const std::u16string &rsc_path) {
