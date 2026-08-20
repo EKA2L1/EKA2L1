@@ -359,6 +359,19 @@ namespace eka2l1 {
         context.complete(epoc::error_none);
     }
 
+    void loader_server::load_physical_device(service::ipc_context &context) {
+        std::optional<utf16_str> pdd_name = context.get_argument_value<utf16_str>(1);
+        if (!pdd_name.has_value()) {
+            context.complete(epoc::error_argument);
+            return;
+        }
+
+        // Same answer as the logical driver above: the device the client is about to
+        // open is an HLE service here, not a driver loaded into the emulated kernel.
+        LOG_TRACE(SERVICE_LOADER, "Trying to load PDD {}", common::ucs2_to_utf8(pdd_name.value()));
+        context.complete(epoc::error_none);
+    }
+
     void loader_server::load_locale(service::ipc_context &context) {
         context.complete(epoc::error_not_found);
     }
@@ -373,5 +386,6 @@ namespace eka2l1 {
         REGISTER_IPC(loader_server, check_library_hash, ECheckLibraryHash, "Loader::CheckLibraryHash");
         REGISTER_IPC(loader_server, load_locale, ELoadLocale, "Loader::LoadLocale");
         REGISTER_IPC(loader_server, load_logical_device, ELoadLogicalDevice, "Loader::LoadLogicalDevice");
+        REGISTER_IPC(loader_server, load_physical_device, ELoadPhysicalDevice, "Loader::LoadPhysicalDevice");
     }
 }
