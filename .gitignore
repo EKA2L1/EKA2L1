@@ -22,3 +22,6 @@ cmake-build-*
 # dyncom differential test harness).
 EKA2L1.log
 EKA2L1_TakeThis.log
+
+# Bitmap the painter test writes next to wherever ekatests is run from.
+testpaint.bmp
