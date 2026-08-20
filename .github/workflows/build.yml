@@ -309,9 +309,35 @@ jobs:
   # job names carry their runner labels, so they change whenever an image is
   # swapped -- a required check pinned to those silently stops applying. This
   # one does not move.
+  dyncom-difftest:
+    name: dyncom differential test
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    # Same package set as the Linux desktop job. The harness itself only needs
+    # cpu + common + dynarmic, but src/emu/qt is added unconditionally on
+    # desktop, so CMake still has to find Qt at configure time.
+    - name: Set up build environment
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install build-essential libc6-dev libgtk-3-dev \
+          libpulse-dev libasound2-dev libsdl2-dev qt6-base-dev \
+          qt6-base-private-dev qt6-tools-dev qt6-tools-dev-tools \
+          qt6-l10n-tools libqt6svg6-dev
+
+    # Its own build directory on purpose: the harness needs
+    # EKA2L1_DYNCOM_DIFFTEST, which instruments the cpu library, so it must not
+    # share a tree with the jobs that publish artifacts.
+    - name: Run the dyncom differential test
+      run: ./scripts/cpu_difftest.sh 1 20000
+
   ci:
     name: CI
-    needs: [build-android, build-desktop, build-ios]
+    needs: [build-android, build-desktop, build-ios, dyncom-difftest]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -320,9 +346,11 @@ jobs:
         echo "android:  ${{ needs.build-android.result }}"
         echo "desktop:  ${{ needs.build-desktop.result }}"
         echo "ios:      ${{ needs.build-ios.result }}"
+        echo "difftest: ${{ needs.dyncom-difftest.result }}"
         if [ "${{ needs.build-android.result }}" != "success" ] || \
            [ "${{ needs.build-desktop.result }}" != "success" ] || \
-           [ "${{ needs.build-ios.result }}" != "success" ]; then
+           [ "${{ needs.build-ios.result }}" != "success" ] || \
+           [ "${{ needs.dyncom-difftest.result }}" != "success" ]; then
           echo "::error::A build or test job did not pass"
           exit 1
         fi

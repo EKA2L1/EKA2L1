@@ -12,6 +12,15 @@
 #include <cpu/dyncom/armstate.h>
 
 namespace eka2l1::arm {
+#if defined(EKA2L1_DYNCOM_DIFFTEST)
+    // Test-only instrumentation for the translation-time loop accelerator. It
+    // only ever attaches during block translation, so a harness must be able to
+    // assert it was actually exercised rather than silently skipped.
+    void dyncom_reset_loop_accel_counters_for_test();
+    std::uint64_t dyncom_loop_accel_attaches_for_test();
+    std::uint64_t dyncom_loop_accel_bulk_iterations_for_test();
+#endif
+
     class dyncom_core final : public core {
     private:
         arm::exclusive_monitor *monitor_;
@@ -19,6 +28,12 @@ namespace eka2l1::arm {
         r12l1::tlb mem_cache_;
 
         std::uint32_t ticks_executed_;
+
+        // True once the scheduler starts feeding us asids (primary core). While
+        // false (e.g. the dyncom interpreter embedded in another backend as a
+        // fallback) we keep the old behaviour of wiping the translation cache on
+        // every load_context, since nobody tells us when the address space flips.
+        bool asid_instruction_cache_ = false;
 
     public:
         explicit dyncom_core(arm::exclusive_monitor *monitor, const std::size_t page_bits);
@@ -66,6 +81,8 @@ namespace eka2l1::arm {
         void clear_instruction_cache() override;
 
         void imb_range(address addr, std::size_t size) override;
+
+        void set_asid(const std::uint32_t asid) override;
 
         std::uint32_t get_num_instruction_executed() override;
 

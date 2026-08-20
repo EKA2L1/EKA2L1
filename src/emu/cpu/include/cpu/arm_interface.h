@@ -196,6 +196,13 @@ namespace eka2l1::arm {
         virtual void clear_instruction_cache() = 0;
         virtual void imb_range(address addr, std::size_t size) = 0;
 
+        // Informs the core which address space (process) is about to run, so a
+        // backend can tag its translation cache per-process instead of throwing
+        // it away on every context switch. No-op for backends that don't care.
+        virtual void set_asid(const std::uint32_t asid) {
+            (void)asid;
+        }
+
         virtual bool should_clear_old_memory_map() const {
             return true;
         }

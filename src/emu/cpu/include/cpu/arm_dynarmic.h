@@ -35,6 +35,15 @@ namespace eka2l1 {
     namespace arm {
         class dynarmic_core_callback;
 
+#if defined(EKA2L1_DYNCOM_DIFFTEST)
+        // Test-only instrumentation: dynarmic silently hands some instructions to
+        // its embedded dyncom interpreter. A differential harness that uses
+        // dynarmic as dyncom's oracle must be able to see that happen.
+        void dynarmic_note_interpreter_fallback_for_test(const std::size_t num_insts);
+        void dynarmic_reset_interpreter_fallback_for_test();
+        std::uint64_t dynarmic_interpreter_fallback_for_test();
+#endif
+
         class dynarmic_exclusive_monitor : public exclusive_monitor {
         private:
             friend class dynarmic_core;
