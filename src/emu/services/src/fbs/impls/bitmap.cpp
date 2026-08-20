@@ -447,11 +447,16 @@ namespace eka2l1 {
         std::size_t avail_dest_size = common::align(size_when_compressed, 4);
         void *data = nullptr;
 
-        if (is_large_bitmap(static_cast<std::uint32_t>(avail_dest_size))) {
-            data = large_chunk_allocator->allocate(avail_dest_size);
-        } else {
-            data = shared_chunk_allocator->allocate(avail_dest_size);
-            *err_code = fbs_load_data_err_small_bitmap;
+        {
+            // Shared with worker-thread bitmap creation; see create_bitmap().
+            const std::lock_guard<std::recursive_mutex> guard(allocator_lock_);
+
+            if (is_large_bitmap(static_cast<std::uint32_t>(avail_dest_size))) {
+                data = large_chunk_allocator->allocate(avail_dest_size);
+            } else {
+                data = shared_chunk_allocator->allocate(avail_dest_size);
+                *err_code = fbs_load_data_err_small_bitmap;
+            }
         }
 
         if (data == nullptr) {
@@ -916,6 +921,11 @@ namespace eka2l1 {
     }
 
     fbsbitmap *fbs_server::create_bitmap(fbs_bitmap_data_info &info, const bool alloc_data, const bool support_current_display_mode_flag, const bool support_dirty) {
+        // Registry loading (applist server) calls this from a worker thread pool, so guard
+        // the whole routine: it both lazily initializes the server and mutates the shared
+        // chunk allocators, none of which are otherwise thread-safe.
+        const std::lock_guard<std::recursive_mutex> guard(allocator_lock_);
+
         if (!shared_chunk || !large_chunk) {
             initialize_server();
         }
@@ -997,6 +1007,9 @@ namespace eka2l1 {
             return false;
         }
 
+        // See create_bitmap(): the chunk allocators are shared with worker threads.
+        const std::lock_guard<std::recursive_mutex> guard(allocator_lock_);
+
         bool no_failure = true;
 
         if (bmp->bitmap_->data_offset_) {
@@ -1022,6 +1035,28 @@ namespace eka2l1 {
         });
 
         return no_failure;
+    }
+
+    std::size_t fbs_server::readable_bytes_from(const std::uint8_t *ptr) const {
+        // Membership is tested against the whole reserved range so a pointer past
+        // the committed end still resolves to this chunk (and clamps to zero)
+        // instead of falling through with an unbounded size.
+        if (shared_chunk && base_shared_chunk && (ptr >= base_shared_chunk) && (ptr < base_shared_chunk + shared_chunk->max_size())) {
+            const std::uint8_t *committed_end = base_shared_chunk + shared_chunk->committed();
+            return (ptr < committed_end) ? static_cast<std::size_t>(committed_end - ptr) : 0;
+        }
+
+        if (large_chunk && base_large_chunk && (ptr >= base_large_chunk) && (ptr < base_large_chunk + large_chunk->max_size())) {
+            const std::uint8_t *committed_end = base_large_chunk + large_chunk->committed();
+            return (ptr < committed_end) ? static_cast<std::size_t>(committed_end - ptr) : 0;
+        }
+
+        // Pixels always come out of one of the two chunks above, whatever the
+        // bitmap's age or format: even a bitmap read straight from a ROM MBM is
+        // decompressed into them (load_data_to_rom). A pointer that lands outside
+        // both was computed from a header field that no longer describes reality,
+        // and following it walks host memory the emulator does not own.
+        return 0;
     }
 
     bool fbs_server::is_large_bitmap(const std::uint32_t compressed_size) const {

@@ -289,7 +289,7 @@ namespace eka2l1::dispatch {
                     // Automatically flag and save this settings
                     if (scr->focus) {
                         scr->focus->saved_setting.screen_upscale_method = 1;
-                        scr->restore_from_config(driver, scr->focus->saved_setting);
+                        scr->restore_from_config(driver, scr->focus->saved_setting, nullptr);
                         scr->try_change_display_rescale(driver, scr->display_scale_factor);
                     }
                 }

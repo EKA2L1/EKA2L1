@@ -100,7 +100,13 @@ namespace eka2l1::epoc {
         screen *next;
 
         kernel::chunk *screen_buffer_chunk;
+        // Keeps redraw/window-tree access separate from callback registries.
+        // Focus callbacks can be fired while screen_mutex is already held during
+        // window teardown, so sharing that non-recursive mutex deadlocks.
         std::mutex screen_mutex;
+        std::mutex focus_callback_mutex;
+        std::mutex screen_redraw_callback_mutex;
+        std::mutex screen_mode_change_callback_mutex;
 
         // Position of this screen in graphics driver
         // Update in graphics driver thread and read in os thread
@@ -154,7 +160,13 @@ namespace eka2l1::epoc {
         void abort_all_dsas(const std::int32_t reason);
         void recalculate_visible_regions(bool dont_trigger_redraw = false);
 
-        void restore_from_config(drivers::graphics_driver *driver, const eka2l1::config::app_setting &setting);
+        // `winserv` is the server to notify when restoring the setting changes the
+        // screen mode. Pass null from callers that only want the scaling half of the
+        // setting re-applied (see the DSA upscale path); the mode is then left alone,
+        // since changing it without telling clients would leave them drawing for the
+        // old one.
+        void restore_from_config(drivers::graphics_driver *driver, const eka2l1::config::app_setting &setting,
+            window_server *winserv);
         void store_to_config(drivers::graphics_driver *driver, eka2l1::config::app_setting &setting);
         void try_change_display_rescale(drivers::graphics_driver *driver, const float scale_factor);
 
@@ -166,6 +178,11 @@ namespace eka2l1::epoc {
          * @returns     Pointer to the start of the screen data.
          */
         std::uint8_t *screen_buffer_ptr();
+
+        /**
+         * \brief Get the number of bytes between rows in the emulated framebuffer.
+         */
+        std::uint32_t screen_buffer_byte_width() const;
 
         /**
          * \brief Get the size of this screen, in pixels.

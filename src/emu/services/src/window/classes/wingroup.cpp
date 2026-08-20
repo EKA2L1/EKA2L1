@@ -73,7 +73,8 @@ namespace eka2l1::epoc {
         saved_setting = *the_setting;
 
         if (this == scr->focus) {
-            scr->restore_from_config(client->get_ws().get_graphics_driver(), saved_setting);
+            scr->restore_from_config(client->get_ws().get_graphics_driver(), saved_setting,
+                &client->get_ws());
         }
     }
 

@@ -53,6 +53,24 @@ struct TScreenInfo {
 static const TInt KScalingInterfaceID = 1;
 static const TInt KOrientationInterfaceID = 6;
 static const TInt KFastBlit2InterfaceID = 5;
+static const TInt KSurfaceInterfaceID = 8;
+
+namespace Scdv {
+    // ABI-compatible subset of Symbian's TSurfaceId/MSurfaceId. Keeping the
+    // declarations local avoids depending on partner-only screen-driver
+    // headers while exposing the interface expected by newer BitGDI clients.
+    struct TSurfaceId {
+        TUint32 iInternal[4];
+    };
+
+    class MSurfaceId {
+    public:
+        virtual void GetSurface(TSurfaceId &aSurface) const = 0;
+        virtual TUint DeviceOrientationsAvailable() const = 0;
+        virtual TBool SetDeviceOrientation(TUint aOrientation) = 0;
+        virtual TUint DeviceOrientation() const = 0;
+    };
+}
 
 class CFbsDrawDevice : public CBase {
 public:

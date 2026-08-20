@@ -61,6 +61,21 @@ namespace eka2l1::dispatch {
     }
 
     epoc_video_player::~epoc_video_player() {
+        // Join the decode thread before touching postings: it may be inside
+        // post_new_image right now.
+        video_player_->close();
+
+        {
+            const std::lock_guard<std::mutex> guard(postings_lock_);
+
+            for (auto &posting : postings_) {
+                if (posting.target_window_) {
+                    posting.target_window_->remove_canvas_observer(this);
+                    posting.target_window_ = nullptr;
+                }
+            }
+        }
+
         if (image_handle_) {
             drivers::graphics_command_builder builder;
             builder.destroy(image_handle_);
@@ -94,6 +109,8 @@ namespace eka2l1::dispatch {
             return -1;
         }
 
+        const std::lock_guard<std::mutex> guard(postings_lock_);
+
         auto find_res = std::find_if(postings_.begin(), postings_.end(), [the_canvas](const epoc_video_posting_target &target) {
             return target.target_window_ == the_canvas;
         });
@@ -106,6 +123,10 @@ namespace eka2l1::dispatch {
         epoc_video_posting_target post_target;
         post_target.target_window_ = the_canvas;
 
+        // The decode thread posts frames through this raw pointer: track the
+        // window's death so the posting drops instead of dangling.
+        the_canvas->add_canvas_observer(this);
+
         return static_cast<std::int32_t>(postings_.add(post_target));
     }
 
@@ -113,6 +134,8 @@ namespace eka2l1::dispatch {
         if (managed_handle <= 0) {
             return;
         }
+
+        const std::lock_guard<std::mutex> guard(postings_lock_);
 
         epoc_video_posting_target *target = postings_.get(static_cast<std::size_t>(managed_handle));
         if (target != nullptr) {
@@ -124,7 +147,31 @@ namespace eka2l1::dispatch {
         if (managed_handle <= 0) {
             return;
         }
+
+        const std::lock_guard<std::mutex> guard(postings_lock_);
+
+        epoc_video_posting_target *target = postings_.get(static_cast<std::size_t>(managed_handle));
+        if (target && target->target_window_) {
+            target->target_window_->remove_canvas_observer(this);
+        }
+
         postings_.remove(static_cast<std::size_t>(managed_handle));
+    }
+
+    void epoc_video_player::on_window_size_changed(epoc::canvas_interface *obj) {
+    }
+
+    void epoc_video_player::on_window_destroyed(epoc::canvas_interface *obj) {
+        // Fired from the canvas destructor. Null the posting so the decode
+        // thread stops touching the dying window; the container treats a null
+        // window as a free slot.
+        const std::lock_guard<std::mutex> guard(postings_lock_);
+
+        for (auto &posting : postings_) {
+            if (posting.target_window_ == obj) {
+                posting.target_window_ = nullptr;
+            }
+        }
     }
 
     std::uint32_t epoc_video_player::max_volume() const {
@@ -181,6 +228,11 @@ namespace eka2l1::dispatch {
     void epoc_video_player::post_new_image(const std::uint8_t *buffer_data, const std::size_t buffer_size) {
         const eka2l1::vec2 vid_size = video_player_->get_video_size();
         const eka2l1::vec3 vid_size_v3 = eka2l1::vec3(vid_size.x, vid_size.y, 0);
+
+        // Held across the whole post so a window can not be destroyed from
+        // under us mid-iteration (window death nulls the posting under this
+        // same lock).
+        const std::lock_guard<std::mutex> guard(postings_lock_);
 
         for (auto &posting: postings_) {
             if (posting.target_window_ == nullptr) {

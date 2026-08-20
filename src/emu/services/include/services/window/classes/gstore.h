@@ -49,6 +49,24 @@ namespace eka2l1::epoc {
         gdi_store_command_update_texture
     };
 
+    // Whether replaying this opcode puts any pixel on the target. The clipping
+    // opcodes only carry state along to the drawing commands after them, so a
+    // store holding nothing else can't reproduce what is on screen.
+    static inline bool gdi_store_command_draws_pixels(const gdi_store_command_opcode opcode) {
+        switch (opcode) {
+        case gdi_store_command_draw_rect:
+        case gdi_store_command_draw_line:
+        case gdi_store_command_draw_polygon:
+        case gdi_store_command_draw_bitmap:
+        case gdi_store_command_draw_text:
+        case gdi_store_command_update_texture:
+            return true;
+
+        default:
+            return false;
+        }
+    }
+
     struct gdi_store_command_draw_rect_data {
         eka2l1::vec4 color_;
         eka2l1::rect rect_;

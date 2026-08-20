@@ -53,6 +53,7 @@ public:
 class CFbsTwentyfourBitAlphaDrawDevice : public CFbsThirtyTwoBitsDrawDevice {
 public:
     TInt Construct(TSize aSize, TInt aDataStride);
+    void SetPremultipliedAlphaMode();
 };
 
 class CFbsTwentyfourBitUnsignedByteDrawDevice : public CFbsThirtyTwoBitsDrawDevice {

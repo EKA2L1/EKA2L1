@@ -157,13 +157,32 @@ namespace eka2l1::epoc {
     void screen::sync_screen_buffer_data(drivers::graphics_driver *driver) {
         std::uint8_t *buffer_ptr = screen_buffer_ptr();
         const config::screen_mode &crrmode = current_mode();
+        const std::uint32_t bits_per_pixel = epoc::get_bpp_from_display_mode(disp_mode);
+        const std::uint32_t tight_pitch = epoc::get_byte_width(crrmode.size.x, bits_per_pixel);
+        const std::uint32_t framebuffer_pitch = (bits_per_pixel == 32)
+            ? screen_buffer_byte_width()
+            : tight_pitch;
 
+        if (framebuffer_pitch == tight_pitch) {
+            drivers::read_bitmap(driver, screen_texture, eka2l1::point(0, 0), eka2l1::object_size(crrmode.size),
+                get_bpp_from_display_mode(disp_mode), buffer_ptr);
+
+            if ((crrmode.rotation == 90) || (crrmode.rotation == 180)) {
+                flip_screen_image(buffer_ptr, tight_pitch, crrmode.size.y);
+            }
+            return;
+        }
+
+        std::vector<std::uint8_t> tight_buffer(tight_pitch * crrmode.size.y);
         drivers::read_bitmap(driver, screen_texture, eka2l1::point(0, 0), eka2l1::object_size(crrmode.size),
-            get_bpp_from_display_mode(disp_mode), buffer_ptr);
+            get_bpp_from_display_mode(disp_mode), tight_buffer.data());
 
         if ((crrmode.rotation == 90) || (crrmode.rotation == 180)) {
-            const std::uint32_t current_pitch = epoc::get_byte_width(crrmode.size.x, epoc::get_bpp_from_display_mode(disp_mode));
-            flip_screen_image(buffer_ptr, current_pitch, crrmode.size.y);
+            flip_screen_image(tight_buffer.data(), tight_pitch, crrmode.size.y);
+        }
+
+        for (std::int32_t y = 0; y < crrmode.size.y; y++) {
+            std::memcpy(buffer_ptr + y * framebuffer_pitch, tight_buffer.data() + y * tight_pitch, tight_pitch);
         }
     }
 
@@ -180,6 +199,7 @@ namespace eka2l1::epoc {
         builder.set_feature(eka2l1::drivers::graphics_feature::depth_test, false);
         builder.set_feature(eka2l1::drivers::graphics_feature::blend, false);
         builder.set_feature(eka2l1::drivers::graphics_feature::clipping, false);
+        builder.set_feature(eka2l1::drivers::graphics_feature::stencil_test, false);
 
         builder.clear(eka2l1::vecx<float, 6>({ 0.0, 0.0, 0.0, 0.0, 1.0, 0.0 }), drivers::draw_buffer_bit_depth_buffer
             | drivers::draw_buffer_bit_stencil_buffer | ((flags_ & FLAG_SERVER_REDRAW_PENDING) ? drivers::draw_buffer_bit_color_buffer : 0));
@@ -192,7 +212,7 @@ namespace eka2l1::epoc {
         // We dont care about visible regions. Nowadays, detect visible region to reduce pixel plotting is
         // just not really worth the time, since GPU draws so fast. Symbian code still has it though.
         window_drawer_walker adrawwalker(builder);
-        root->walk_tree(&adrawwalker, window_tree_walk_style::bonjour_children);
+        root->walk_tree_back_to_front(&adrawwalker);
 
         // Done! Unbind and submit this to the driver
         builder.bind_bitmap(0);
@@ -257,8 +277,11 @@ namespace eka2l1::epoc {
         eka2l1::vec2 screen_size_scaled = current_mode().size * display_scale_factor;
 
         if (!screen_texture) {
-            // Create new one!
+            // Create new one! Its content is undefined until something draws over it, and a
+            // fullscreen app that leaves part of the screen alone (the control pane area, for
+            // instance) would present that leftover memory as garbage. Ask for a clearing redraw.
             screen_texture = drivers::create_bitmap(driver, screen_size_scaled, 32);
+            flags_ |= FLAG_SERVER_REDRAW_PENDING;
         } else {
             builder.bind_bitmap(screen_texture);
             builder.resize_bitmap(screen_texture, screen_size_scaled);
@@ -290,7 +313,13 @@ namespace eka2l1::epoc {
         return next_to_focus;
     }
 
-    void screen::restore_from_config(drivers::graphics_driver *driver, const eka2l1::config::app_setting &setting) {
+    void screen::restore_from_config(drivers::graphics_driver *driver,
+        const eka2l1::config::app_setting &setting, window_server *winserv) {
+        if (winserv && (setting.screen_mode >= 0) && (setting.screen_mode < total_screen_mode())
+            && (setting.screen_mode != crr_mode)) {
+            set_screen_mode(winserv, driver, setting.screen_mode);
+        }
+
         refresh_rate = static_cast<std::uint8_t>(setting.fps);
         flags_ &= ~FLAG_SCREEN_UPSCALE_FACTOR_LOCK;
 
@@ -308,6 +337,7 @@ namespace eka2l1::epoc {
 
     void screen::store_to_config(drivers::graphics_driver *driver, eka2l1::config::app_setting &setting) {
         setting.fps = refresh_rate;
+        setting.screen_mode = crr_mode;
 
         if (flags_ & FLAG_SCREEN_UPSCALE_FACTOR_LOCK) {
             setting.screen_upscale_method = 1;
@@ -375,14 +405,15 @@ namespace eka2l1::epoc {
                 serv->send_focus_group_change_events(new_focus_screen);
                 new_focus_screen->fire_focus_change_callbacks(focus_change_target);
 
-                new_focus_screen->restore_from_config(serv->get_graphics_driver(), alternative_focus->saved_setting);
+                new_focus_screen->restore_from_config(serv->get_graphics_driver(),
+                    alternative_focus->saved_setting, serv);
             } else if (focus && is_me_currently_focus) {
                 focus->gain_focus();
 
                 serv->send_focus_group_change_events(this);
                 fire_focus_change_callbacks(focus_change_target);
 
-                restore_from_config(serv->get_graphics_driver(), focus->saved_setting);
+                restore_from_config(serv->get_graphics_driver(), focus->saved_setting, serv);
             }
         }
 
@@ -394,7 +425,7 @@ namespace eka2l1::epoc {
     }
 
     void screen::fire_focus_change_callbacks(const focus_change_property property) {
-        const std::lock_guard<std::mutex> guard(screen_mutex);
+        const std::lock_guard<std::mutex> guard(focus_callback_mutex);
 
         for (auto &callback : focus_callbacks) {
             if (callback.second)
@@ -403,6 +434,8 @@ namespace eka2l1::epoc {
     }
 
     void screen::fire_screen_redraw_callbacks(const bool is_dsa) {
+        const std::lock_guard<std::mutex> guard(screen_redraw_callback_mutex);
+
         for (auto &callback : screen_redraw_callbacks) {
             if (callback.second)
                 callback.second(callback.first, this, is_dsa);
@@ -410,6 +443,8 @@ namespace eka2l1::epoc {
     }
 
     void screen::fire_screen_mode_change_callbacks(const int old_mode) {
+        const std::lock_guard<std::mutex> guard(screen_mode_change_callback_mutex);
+
         for (auto &callback : screen_mode_change_callbacks) {
             if (callback.second)
                 callback.second(callback.first, this, old_mode);
@@ -417,38 +452,38 @@ namespace eka2l1::epoc {
     }
 
     std::size_t screen::add_focus_change_callback(void *userdata, focus_change_callback_handler handler) {
-        const std::lock_guard<std::mutex> guard(screen_mutex);
+        const std::lock_guard<std::mutex> guard(focus_callback_mutex);
 
         focus_change_callback callback_pair = { userdata, handler };
         return focus_callbacks.add(callback_pair);
     }
 
     bool screen::remove_focus_change_callback(const std::size_t cb) {
-        const std::lock_guard<std::mutex> guard(screen_mutex);
+        const std::lock_guard<std::mutex> guard(focus_callback_mutex);
         return focus_callbacks.remove(cb);
     }
 
     std::size_t screen::add_screen_redraw_callback(void *userdata, screen_redraw_callback_handler handler) {
-        const std::lock_guard<std::mutex> guard(screen_mutex);
+        const std::lock_guard<std::mutex> guard(screen_redraw_callback_mutex);
 
         screen_redraw_callback callback_pair = { userdata, handler };
         return screen_redraw_callbacks.add(callback_pair);
     }
 
     bool screen::remove_screen_redraw_callback(const std::size_t cb) {
-        const std::lock_guard<std::mutex> guard(screen_mutex);
+        const std::lock_guard<std::mutex> guard(screen_redraw_callback_mutex);
         return screen_redraw_callbacks.remove(cb);
     }
 
     std::size_t screen::add_screen_mode_change_callback(void *userdata, screen_mode_change_callback_handler handler) {
-        const std::lock_guard<std::mutex> guard(screen_mutex);
+        const std::lock_guard<std::mutex> guard(screen_mode_change_callback_mutex);
 
         screen_mode_change_callback callback_pair = { userdata, handler };
         return screen_mode_change_callbacks.add(callback_pair);
     }
 
     bool screen::remove_screen_mode_change_callback(const std::size_t cb) {
-        const std::lock_guard<std::mutex> guard(screen_mutex);
+        const std::lock_guard<std::mutex> guard(screen_mode_change_callback_mutex);
         return screen_mode_change_callbacks.remove(cb);
     }
 
@@ -573,6 +608,20 @@ namespace eka2l1::epoc {
         return reinterpret_cast<std::uint8_t *>(screen_buffer_chunk->host_base()) + sizeof(std::uint16_t) * WORD_PALETTE_ENTRIES_COUNT;
     }
 
+    std::uint32_t screen::screen_buffer_byte_width() const {
+        const std::uint32_t bits_per_pixel = epoc::get_bpp_from_display_mode(disp_mode);
+        const std::uint32_t tight_pitch = epoc::get_byte_width(size().x, bits_per_pixel);
+
+        // ScreenPlay phones expose their 32-bit display framebuffer with a
+        // 64-byte-aligned pitch. Keep older bitmap-screen architectures on
+        // their word-aligned layout.
+        if (is_screenplay_architecture() && (bits_per_pixel == 32)) {
+            return (tight_pitch + 63) & ~63U;
+        }
+
+        return tight_pitch;
+    }
+
     struct window_visible_region_calc_walker: public window_tree_walker {
         common::region visible_left_region_;
         bool trigger_redraw_;
@@ -616,7 +665,7 @@ namespace eka2l1::epoc {
                     winuser->report_visiblity_change();
 
                     if (trigger_redraw_) {
-                        winuser->flags |= screen::FLAG_SERVER_REDRAW_PENDING;
+                        winuser->scr->flags_ |= screen::FLAG_SERVER_REDRAW_PENDING;
                     }
                 }
             }

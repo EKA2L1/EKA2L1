@@ -25,14 +25,13 @@
 #include <drivers/video/video.h>
 #include <drivers/itc.h>
 #include <mem/ptr.h>
+#include <services/window/classes/winuser.h>
 #include <utils/des.h>
 #include <utils/reqsts.h>
 
-namespace eka2l1 {
-    namespace epoc {
-        struct canvas_base;
-    }
+#include <mutex>
 
+namespace eka2l1 {
     namespace drivers {
         class audio_driver;
     }
@@ -47,12 +46,17 @@ namespace eka2l1::dispatch {
         eka2l1::rect display_rect_;
     };
 
-    class epoc_video_player {
+    class epoc_video_player : public epoc::canvas_observer {
     private:
         drivers::handle image_handle_;
         drivers::video_player_instance video_player_;
 
         common::identity_container<epoc_video_posting_target> postings_;
+
+        // Guards postings_ and the windows it points to: the decode thread posts
+        // frames while guest threads register/unregister windows and the window
+        // server destroys them.
+        std::mutex postings_lock_;
 
         drivers::graphics_driver *driver_;
         std::unique_ptr<common::ro_stream> custom_stream_;
@@ -94,6 +98,9 @@ namespace eka2l1::dispatch {
 
         void post_new_image(const std::uint8_t *buffer_data, const std::size_t buffer_size);
         std::uint64_t position() const;
+
+        void on_window_size_changed(epoc::canvas_interface *obj) override;
+        void on_window_destroyed(epoc::canvas_interface *obj) override;
     };
 
     BRIDGE_FUNC_DISPATCHER(eka2l1::ptr<void>, evideo_player_inst);

@@ -35,6 +35,7 @@
     }                                                                             \
     TInt name::Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride) {  \
         iScreenNumber = aScreenNumber;                                            \
+        iDeviceOrientation = 1;                                                   \
         return base::Construct(aSize, aDataStride);                               \
     }                                                                             \
     TInt name::InitScreen() {                                                     \
@@ -45,6 +46,40 @@
         updateRect.iTl = TPoint(0, 0);                                            \
         updateRect.iBr = updateRect.iTl + iSize;                                  \
         UpdateScreen(1, iScreenNumber, 1, &updateRect);                           \
+    }                                                                             \
+    TInt name::GetInterface(TInt aInterfaceId, TAny *&aInterface) {               \
+        if (aInterfaceId == KSurfaceInterfaceID) {                                \
+            aInterface = static_cast<Scdv::MSurfaceId *>(this);                   \
+            return KErrNone;                                                      \
+        }                                                                         \
+        return base::GetInterface(aInterfaceId, aInterface);                      \
+    }                                                                             \
+    void name::GetSurface(Scdv::TSurfaceId &aSurface) const {                     \
+        aSurface.iInternal[0] = iScreenNumber;                                    \
+        aSurface.iInternal[1] = 0;                                                \
+        aSurface.iInternal[2] = 0x1027549A;                                       \
+        aSurface.iInternal[3] = 0x01000000;                                       \
+    }                                                                             \
+    TUint name::DeviceOrientationsAvailable() const {                             \
+        return 1 | 2 | 4 | 8;                                                     \
+    }                                                                             \
+    TBool name::SetDeviceOrientation(TUint aOrientation) {                        \
+        TOrientation orientation;                                                 \
+        switch (aOrientation) {                                                   \
+        case 1: orientation = EOrientationNormal; break;                          \
+        case 2: orientation = EOrientationRotate90; break;                        \
+        case 4: orientation = EOrientationRotate180; break;                       \
+        case 8: orientation = EOrientationRotate270; break;                       \
+        default: return EFalse;                                                   \
+        }                                                                         \
+        if (!base::SetOrientation(orientation)) {                                 \
+            return EFalse;                                                       \
+        }                                                                         \
+        iDeviceOrientation = aOrientation;                                        \
+        return ETrue;                                                             \
+    }                                                                             \
+    TUint name::DeviceOrientation() const {                                       \
+        return iDeviceOrientation;                                                \
     }
 
 SCRDVC_IMPL(CFbsTwelveBitScreenDrawDevice, CFbsTwelveBitDrawDevice)

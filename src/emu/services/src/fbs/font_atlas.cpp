@@ -78,7 +78,13 @@ namespace eka2l1::epoc {
     }
 
     bool font_atlas::draw_text(const std::u16string &text, const eka2l1::rect &text_box, const epoc::text_alignment alignment, drivers::graphics_driver *driver, drivers::graphics_command_builder &builder, const eka2l1::vec2f scale_vector) {
-        const int width = get_atlas_width();
+        // Clamp the atlas to what the GPU can actually allocate. Large fonts
+        // (e.g. high display-scale rendering) would otherwise request an atlas
+        // bigger than GL_MAX_TEXTURE_SIZE; the create then fails and the
+        // incomplete atlas samples as opaque black, turning every glyph drawn
+        // from it into a solid block (seen on the iOS GLES simulator, max 4096).
+        const int width = common::min<int>(get_atlas_width(),
+            static_cast<int>(driver->max_texture_size()));
         drivers::graphics_command_builder upload_builder;
 
         if (!atlas_data_) {

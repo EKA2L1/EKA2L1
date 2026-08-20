@@ -477,6 +477,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
+        const std::lock_guard<std::recursive_mutex> guard(allocator_lock_);
         return shared_chunk_allocator->allocate(s);
     }
 
@@ -486,6 +487,7 @@ namespace eka2l1 {
             return false;
         }
 
+        const std::lock_guard<std::recursive_mutex> guard(allocator_lock_);
         return shared_chunk_allocator->freep(ptr);
     }
 
@@ -495,6 +497,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
+        const std::lock_guard<std::recursive_mutex> guard(allocator_lock_);
         return large_chunk_allocator->allocate(s);
     }
 
@@ -504,6 +507,7 @@ namespace eka2l1 {
             return false;
         }
 
+        const std::lock_guard<std::recursive_mutex> guard(allocator_lock_);
         return large_chunk_allocator->freep(ptr);
     }
 

@@ -110,6 +110,17 @@ namespace eka2l1::epoc {
     }
 
     canvas_base::~canvas_base() {
+        // Detach observers first, while this object is still intact: EGL
+        // surfaces keep a raw backed-window pointer and outlive windows whose
+        // owner exited without destroying them (freed later by the dispatcher,
+        // which would then unregister against a dangling window).
+        while (!observers_.empty()) {
+            canvas_observer *ob = observers_.back();
+            observers_.pop_back();
+
+            ob->on_window_destroyed(this);
+        }
+
         if (in_visibility_delay_report_) {
             ntimer *timer = client->get_ws().get_ntimer();
             timer->unschedule_event(client->get_ws().get_deliver_delay_report_visiblity_event(),
@@ -457,6 +468,29 @@ namespace eka2l1::epoc {
             }
 
             fps_count_++;
+
+            // A client (partial) redraw only repaints this window and does not
+            // recomposite the windows stacked on top of it. When this window is
+            // partially occluded (its visible region is fragmented rather than
+            // its whole bounding rect), a client-only redraw would bleed into
+            // the occluding windows' area and leave it stale, because those
+            // windows have no client content to repaint over it. This happens
+            // e.g. with a live camera viewfinder redrawing every frame beneath a
+            // stationary Avkon menu pane. Escalate to a full server recomposite
+            // so the occluding windows are redrawn on top, back-to-front.
+            bool fully_visible = false;
+            if (!visible_region.empty()) {
+                if (flags & flag_shape_region) {
+                    fully_visible = visible_region.identical(shape_region);
+                } else {
+                    fully_visible = (visible_region.rects_.size() == 1) &&
+                        (visible_region.rects_[0] == bounding_rect());
+                }
+            }
+
+            if (!visible_region.empty() && !fully_visible) {
+                scr->flags_ |= screen::FLAG_SERVER_REDRAW_PENDING;
+            }
 
             // We need a redraw from the client side, so set this
             scr->set_client_draw_pending();
@@ -979,6 +1013,10 @@ namespace eka2l1::epoc {
                 invalidate(new_bounding_rect);
             } else {
                 redraw_region.clip(new_bounding_rect);
+
+                if (redraw_region.rects_.empty()) {
+                    client->remove_redraws(this);
+                }
             }
 
             if (scr->is_screenplay_architecture() || (!scr->scr_config.blt_offscreen && scr->scr_config.flicker_free)) {
@@ -1041,6 +1079,11 @@ namespace eka2l1::epoc {
         redraw_segments_.promote_last_segment();
 
         if (content_changed()) {
+            // Newly completed redraw content must be composited in correct z-order:
+            // an incremental client-path update can be overdrawn by later updates of
+            // windows behind this one (or was skipped entirely if a full server pass
+            // ran before this content arrived). Request a full server recomposite.
+            scr->flags_ |= screen::FLAG_SERVER_REDRAW_PENDING;
             try_update(ctx.msg->own_thr);
         }
 
@@ -1110,6 +1153,7 @@ namespace eka2l1::epoc {
     void redraw_msg_canvas::add_draw_command(gdi_store_command &command) {
         const std::lock_guard<std::mutex> guard(scr->screen_mutex);
 
+        bool created_non_redraw_segment = false;
         if ((flags & flags_in_redraw) == 0) {
             eka2l1::rect full_size_rect(eka2l1::vec2(0, 0), abs_rect.size);
 
@@ -1124,13 +1168,24 @@ namespace eka2l1::epoc {
             if (!current_segment || (current_segment->type_ != gdi_store_command_segment_non_redraw)) {
                 // Create a new non redraw segment, covers the entire screen
                 redraw_segments_.add_new_segment(full_size_rect, gdi_store_command_segment_non_redraw);
+                created_non_redraw_segment = true;
             }
         }
 
-        content_changed(true);
+        // Only actual drawing counts as new content. A clipping opcode on its own
+        // leaves the window exactly as it was, and treating it as a change makes
+        // end_redraw ask for a full server recomposite: that clears the screen
+        // bitmap and replays a store which, without any drawing command, cannot
+        // put the pixels back.
+        if (gdi_store_command_draws_pixels(command.opcode_)) {
+            content_changed(true);
+        }
 
         gdi_store_command_segment *current_segment = redraw_segments_.get_current_segment();
         current_segment->add_command(command);
+        if (created_non_redraw_segment || (flags & flags_enable_alpha)) {
+            scr->flags_ |= screen::FLAG_SERVER_REDRAW_PENDING;
+        }
 
         canvas_base::add_draw_command(command);
     }
@@ -1635,8 +1690,17 @@ namespace eka2l1::epoc {
             ctx.complete(epoc::error_none);
             break;
 
+        case EWsWinOpEnableBackup:
+            // This window is already a bitmap-backed (backup) canvas, so enabling
+            // backup is a no-op. Just acknowledge it.
+            ctx.complete(epoc::error_none);
+            break;
+
         default:
             LOG_ERROR(SERVICE_WINDOW, "Unimplemented bitmap backed canavas opcode 0x{:X}!", cmd.header.op);
+            // Still complete the synchronous request: leaving it dangling blocks
+            // the guest's SendReceive forever and deadlocks the whole UI.
+            ctx.complete(epoc::error_none);
             break;
         }
 
