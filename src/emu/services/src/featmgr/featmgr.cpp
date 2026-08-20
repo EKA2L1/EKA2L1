@@ -45,8 +45,10 @@ namespace eka2l1 {
         feature_id_thai = 1081,
         feature_id_chinese = 1096,
         feature_id_flash_lite_viewer = 1145,
+        feature_id_flash_lite_browser_plugin = 1146,
         feature_id_pen_calibration = 1658,
-        feature_id_tactile_feedback = 1718
+        feature_id_tactile_feedback = 1718,
+        feature_id_help = 1012
     };
 
     void featmgr_server::do_feature_scanning(system *sys) {
@@ -60,6 +62,18 @@ namespace eka2l1 {
         enable_features.push_back(feature_id_pen);
         enable_features.push_back(feature_id_vibra);
         enable_features.push_back(feature_id_pen_calibration);
+
+        // Every S60 device ships the help application, and AVKON adjusts a menu pane
+        // depending on whether it is there. A ROM's featreg.cfg is usually near-empty
+        // here, so anything not listed reads as unsupported: the Calculator's Options
+        // menu then panics with EIKCOCTL 8 instead of opening.
+        enable_features.push_back(feature_id_help);
+
+        // Browser-hosted Flash Lite is a separate feature from the standalone viewer
+        // below, so report it only when the ROM carries the browser plug-in itself.
+        if (sys->get_io_system()->exist(u"z:\\sys\\bin\\npflashlite.dll")) {
+            enable_features.push_back(feature_id_flash_lite_browser_plugin);
+        }
 
         // 2. Are we welcoming SVG? Check for OpenVG, cause it should be there if this feature is available
         if (sys->get_io_system()->exist(u"z:\\sys\\bin\\libopenvg.dll")) {
