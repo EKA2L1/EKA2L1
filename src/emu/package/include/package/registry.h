@@ -96,6 +96,22 @@ namespace eka2l1::package {
         void do_state(common::chunkyseri &seri);
     };
 
+    /**
+     * @brief Whether a package may install to, or remove, this path.
+     *
+     * Follows the checks SWI runs over every file description it plans
+     * (SecurityCheckUtil::CheckFileName in installationservices/swi): a
+     * drive-qualified path no longer than KMaxFileName, no doubled separator, no
+     * parent-directory escape, and an ASCII-only name under \\sys\\bin. Its check
+     * for the writable SwiCertstore is left out; the emulator has none.
+     *
+     * SWI fails the whole operation on a target it rejects
+     * (KErrSISInvalidTargetFile). Here the entry is skipped instead, so one
+     * description read differently than SWI would read it cannot cost the user an
+     * installation.
+     */
+    bool is_valid_target_path(const std::u16string &target);
+
     struct file_description {
         std::u16string target;
         std::u16string mime_type;
@@ -157,7 +173,9 @@ namespace eka2l1::package {
         std::vector<property> properties;
         std::int32_t owned_file_descriptions;
         std::vector<file_description> file_descriptions;
-        std::uint32_t in_rom;
+        // Both are read to decide whether a package may be uninstalled at all, so
+        // they must not be left over from whatever was on the stack.
+        std::uint32_t in_rom{ 0 };
         std::uint32_t signed_;
         std::uint32_t signed_by_sucert;
         std::uint32_t deletable_preinstalled;
@@ -171,7 +189,7 @@ namespace eka2l1::package {
         std::vector<std::int32_t> supported_language_ids;
         std::vector<std::u16string> localized_package_names;
         std::vector<std::u16string> localized_vendor_names;
-        std::uint32_t is_removable;
+        std::uint32_t is_removable{ 0 };
 
         void do_state(common::chunkyseri &seri);
         bool is_preinstalled() const {

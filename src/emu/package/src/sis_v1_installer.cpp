@@ -203,6 +203,7 @@ namespace eka2l1::loader {
 
         info.current_drives = info.drives;
         info.is_removable = !stub;
+        info.in_rom = stub;
 
         language choosen_language = language::en;
         std::size_t choosen_language_index = 0;

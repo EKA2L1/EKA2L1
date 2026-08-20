@@ -78,6 +78,14 @@ namespace eka2l1 {
             void traverse_tree_and_add_packages(loader::sis_registry_tree &tree);
             void install_sis_stubs();
 
+            // Delete "<drive>:\private\<sid>\" on every writable drive: the data
+            // directory that belongs to an executable which has just been removed.
+            void remove_private_directories(const epoc::uid sid);
+
+            // Delete the files an installed package owns that its replacement does
+            // not, so an upgrade stops dragging the old version's leftovers along.
+            void remove_stale_files(package::object &installed, const package::object &replacement);
+
         public:
             mutable std::mutex lockdown;
 
