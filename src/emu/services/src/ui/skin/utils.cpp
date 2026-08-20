@@ -141,7 +141,9 @@ namespace eka2l1::epoc {
         std::u16string formal_path = u"\\resource\\skins\\";
         formal_path += pid_to_string(skin_pid);
 
-        for (drive_number drv = drive_z; drv >= drive_a; drv--) {
+        // Stepping one below drive_a would leave the enum's value range.
+        for (int drv_index = drive_z; drv_index >= drive_a; drv_index--) {
+            const drive_number drv = static_cast<drive_number>(drv_index);
             if (io->get_drive_entry(drv)) {
                 std::u16string skin_folder_path(1, drive_to_char16(drv));
                 skin_folder_path += u":";

@@ -335,22 +335,77 @@ jobs:
     - name: Run the dyncom differential test
       run: ./scripts/cpu_difftest.sh 1 20000
 
+  sanitisers:
+    name: sanitisers
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Set up build environment
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install build-essential clang libc6-dev libgtk-3-dev \
+          libpulse-dev libasound2-dev libsdl2-dev qt6-base-dev \
+          qt6-base-private-dev qt6-tools-dev qt6-tools-dev-tools \
+          qt6-l10n-tools libqt6svg6-dev
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    # Its own build directory, like the difftest job: the sanitisers change code
+    # generation everywhere, so this tree must not be shared with the jobs that
+    # publish artifacts. XZ_SANDBOX=no is xz's own instruction when it sees
+    # -fsanitize=: its Landlock sandbox and the sanitisers cannot both be on.
+    #
+    # Every C source in this tree is vendored -- the emulator itself is C++ -- and
+    # some of those libraries read unaligned on purpose: miniz turns on
+    # MINIZ_USE_UNALIGNED_LOADS_AND_STORES for x86, which is what CI runs on. So
+    # the alignment check is dropped for C, and kept everywhere it can find one of
+    # our own bugs.
+    - name: CMake configure
+      env:
+        CC: clang
+        CXX: clang++
+        SANITISER_FLAGS: -fsanitize=address,undefined -fno-omit-frame-pointer
+      run: >
+        cmake -B build-sanitisers -DCI=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        -DEKA2L1_ENABLE_SCRIPTING_ABILITY=OFF -DXZ_SANDBOX=no
+        -DCMAKE_C_FLAGS="$SANITISER_FLAGS -fno-sanitize=alignment"
+        -DCMAKE_CXX_FLAGS="$SANITISER_FLAGS"
+        -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+
+    - name: Build the unit tests
+      run: cmake --build build-sanitisers --parallel 4 --target ekatests
+
+    # halt_on_error makes an undefined-behaviour report fail the job; without it
+    # UBSan only prints and the test still passes. Leak detection stays off for
+    # now: the suite exits with objects the emulator never frees on purpose, and
+    # sorting those out is a separate piece of work from catching memory errors
+    # and undefined behaviour.
+    - name: Run the unit tests under the sanitisers
+      env:
+        ASAN_OPTIONS: detect_leaks=0
+        UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+      run: ctest --test-dir build-sanitisers --output-on-failure
+
   ci:
     name: CI
-    needs: [build-android, build-desktop, build-ios, dyncom-difftest]
+    needs: [build-android, build-desktop, build-ios, dyncom-difftest, sanitisers]
     if: always()
     runs-on: ubuntu-latest
     steps:
     - name: Check the build and test jobs
       run: |
-        echo "android:  ${{ needs.build-android.result }}"
-        echo "desktop:  ${{ needs.build-desktop.result }}"
-        echo "ios:      ${{ needs.build-ios.result }}"
-        echo "difftest: ${{ needs.dyncom-difftest.result }}"
+        echo "android:    ${{ needs.build-android.result }}"
+        echo "desktop:    ${{ needs.build-desktop.result }}"
+        echo "ios:        ${{ needs.build-ios.result }}"
+        echo "difftest:   ${{ needs.dyncom-difftest.result }}"
+        echo "sanitisers: ${{ needs.sanitisers.result }}"
         if [ "${{ needs.build-android.result }}" != "success" ] || \
            [ "${{ needs.build-desktop.result }}" != "success" ] || \
            [ "${{ needs.build-ios.result }}" != "success" ] || \
-           [ "${{ needs.dyncom-difftest.result }}" != "success" ]; then
+           [ "${{ needs.dyncom-difftest.result }}" != "success" ] || \
+           [ "${{ needs.sanitisers.result }}" != "success" ]; then
           echo "::error::A build or test job did not pass"
           exit 1
         fi

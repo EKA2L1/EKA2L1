@@ -74,7 +74,9 @@ namespace eka2l1 {
         void packages::install_sis_stubs() {
             static constexpr const char16_t *STUB_SIS_DIRECTORY = u"{}:\\system\\install\\";
 
-            for (drive_number drv = drive_z; drv >= drive_a; drv--) {
+            // Stepping one below drive_a would leave the enum's value range.
+            for (int drv_index = drive_z; drv_index >= drive_a; drv_index--) {
+                const drive_number drv = static_cast<drive_number>(drv_index);
                 if (sys->get_drive_entry(drv)) {
                     const std::u16string stub_directory = fmt::format(STUB_SIS_DIRECTORY, drive_to_char16(drv));
                     std::unique_ptr<directory> stub_dir_iterator = sys->open_dir(stub_directory, {}, io_attrib_include_file);

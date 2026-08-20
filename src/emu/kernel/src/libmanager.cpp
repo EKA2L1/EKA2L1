@@ -666,7 +666,9 @@ namespace eka2l1::hle {
 
     drive_number lib_manager::get_drive_rom() {
         if (rom_drv_ == drive_invalid) {
-            for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
+            // Stepping one below drive_a would leave the enum's value range.
+            for (int drv_index = drive_z; drv_index >= drive_a; drv_index--) {
+                const drive_number drv = static_cast<drive_number>(drv_index);
                 if (auto ent = io_->get_drive_entry(drv)) {
                     if (ent->media_type == drive_media::rom) {
                         rom_drv_ = drv;
