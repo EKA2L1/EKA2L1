@@ -1,0 +1,11 @@
+; Package embedding another one, so uninstall has a child to recurse into.
+&EN
+
+#{"EKA2L1 Embedder"}, (0xE1234570), 1, 0, 0
+
+%{"EKA2L1"}
+:"EKA2L1"
+
+"host.txt" - "!:\eka2l1test\host.txt"
+
+@"embedded.sis",(0xE1234571)

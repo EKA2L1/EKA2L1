@@ -1,0 +1,11 @@
+; Version 2 of ifblock.pkg: same package UID, a different set of files. base.txt
+; stays, everything else the first version installed is gone.
+&EN
+
+#{"EKA2L1 IfBlock Test"}, (0xE1234567), 2, 0, 0
+
+%{"EKA2L1"}
+:"EKA2L1"
+
+"base.txt" - "!:\eka2l1test\base.txt"
+"new.txt" - "!:\eka2l1test\new.txt"

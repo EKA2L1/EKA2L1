@@ -13,9 +13,11 @@ add_executable(ekatests
 target_link_libraries(ekatests PRIVATE
     Catch2
     common
+    config
     epocio
     epockern
     epocloader
+    epocpkg
     epocservs
     lunasvg)
 
@@ -47,3 +49,6 @@ add_assets(ekatests ${SERVICES_CENTRALREPO_ASSETS_PATH} "centralrepoassets")
 
 set(SERVICES_APPLIST_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/epoc/services/applist/assets/")
 add_assets(ekatests ${SERVICES_APPLIST_ASSETS_PATH} "applistassets")
+
+set(PACKAGE_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/epoc/package/assets/")
+add_assets(ekatests ${PACKAGE_ASSETS_PATH} "packageassets")

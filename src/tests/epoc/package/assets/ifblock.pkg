@@ -1,0 +1,24 @@
+; Minimal SIS used by EKA2L1 unit tests. base.txt sits in the controller's own
+; install block, cond.txt/other.txt behind a conditional, sample.dll is an
+; executable so the installer has a secure ID to resolve, and lang.txt is a
+; language-dependent file (which SIS records with an undefined operation).
+&EN,FR
+
+#{"EKA2L1 IfBlock Test","EKA2L1 IfBlock Test FR"}, (0xE1234567), 1, 0, 0
+
+%{"EKA2L1","EKA2L1"}
+:"EKA2L1"
+
+"base.txt" - "!:\eka2l1test\base.txt"
+"sample.dll" - "!:\eka2l1test\sample.dll"
+
+{
+"lang_en.txt"
+"lang_fr.txt"
+} - "!:\eka2l1test\lang.txt"
+
+IF NOT EXISTS("Z:\eka2l1_no_such_file.txt")
+"cond.txt" - "!:\eka2l1test\cond.txt"
+ELSE
+"other.txt" - "!:\eka2l1test\other.txt"
+ENDIF

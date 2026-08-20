@@ -1,0 +1,9 @@
+; Embedded package for EKA2L1 unit tests, installed as part of embedder.sis.
+&EN
+
+#{"EKA2L1 Embedded"}, (0xE1234571), 1, 0, 0
+
+%{"EKA2L1"}
+:"EKA2L1"
+
+"guest.txt" - "!:\eka2l1test\guest.txt"
