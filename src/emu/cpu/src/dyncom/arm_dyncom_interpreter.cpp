@@ -1264,8 +1264,11 @@ static void LnSWoUB(ImmediateOffset)(ARMul_State *cpu, unsigned int inst, unsign
                 CHECK_READ_REG15_WA(cpu, BITS(ls_inst_, 0, 3));                      \
             (addr_out) = BIT(ls_inst_, 23) ? (ls_base_ + ls_off_)                    \
                                            : (ls_base_ - ls_off_);                   \
-        } else {                                                                     \
+        } else if (inst_cream->get_addr) {                                           \
             inst_cream->get_addr(cpu, inst_cream->inst, (addr_out));                 \
+        } else {                                                                     \
+            undef_inst = inst_cream->inst;                                           \
+            goto UNDEFINED_ADDRESSING_MODE;                                          \
         }                                                                            \
     } while (0)
 
@@ -1290,8 +1293,11 @@ static void LnSWoUB(ImmediateOffset)(ARMul_State *cpu, unsigned int inst, unsign
                 CHECK_READ_REG15_WA(cpu, BITS(ls_inst_, 0, 3));                      \
             (addr_out) = BIT(ls_inst_, 23) ? (ls_base_ + ls_off_)                    \
                                            : (ls_base_ - ls_off_);                   \
-        } else {                                                                     \
+        } else if (inst_cream->get_addr) {                                           \
             inst_cream->get_addr(cpu, inst_cream->inst, (addr_out));                 \
+        } else {                                                                     \
+            undef_inst = inst_cream->inst;                                           \
+            goto UNDEFINED_ADDRESSING_MODE;                                          \
         }                                                                            \
     } while (0)
 
@@ -1843,7 +1849,9 @@ static unsigned int InterpreterTranslateInstruction(ARMul_State *cpu, const std:
             inst);
         LOG_ERROR(eka2l1::CPU_DYNCOM, "cpsr={:#X}, cpu->TFlag={}, r15={:#010X}", cpu->Cpsr, cpu->TFlag,
             cpu->Reg[15]);
-        CITRA_IGNORE_EXIT(-1);
+        cpu->RaiseException(eka2l1::arm::exception_type_undefined_inst, phys_addr);
+        inst_base = nullptr;
+        return 0;
     }
     inst_base = arm_instruction_trans[idx](cpu, inst, idx);
 
@@ -1886,6 +1894,10 @@ static int InterpreterTranslateBlock(ARMul_State *cpu, std::size_t &bb_start, st
     while (ret == TransExtData::NON_BRANCH) {
         unsigned int inst_size = InterpreterTranslateInstruction(cpu, phys_addr, inst_base);
 
+        if (!inst_base) {
+            return FETCH_EXCEPTION;
+        }
+
         size++;
 
         phys_addr += inst_size;
@@ -1909,6 +1921,10 @@ static int InterpreterTranslateSingle(ARMul_State *cpu, std::size_t &bb_start, s
     std::uint32_t pc_start = cpu->Reg[15];
 
     InterpreterTranslateInstruction(cpu, phys_addr, inst_base);
+
+    if (!inst_base) {
+        return FETCH_EXCEPTION;
+    }
 
     if (inst_base->br == TransExtData::NON_BRANCH) {
         inst_base->br = TransExtData::SINGLE_STEP;
@@ -2638,6 +2654,7 @@ unsigned InterpreterMainLoop(ARMul_State *cpu, std::uint32_t &num_instrs) {
 #endif
     arm_inst *inst_base;
     unsigned int addr;
+    unsigned int undef_inst = 0;
 
     std::size_t ptr;
 
@@ -5635,6 +5652,22 @@ YIELD_INST : {
 #define VFP_INTERPRETER_IMPL
 #include <cpu/dyncom/vfp/vfpinstr.h>
 #undef VFP_INTERPRETER_IMPL
+
+UNDEFINED_ADDRESSING_MODE : {
+    // GetAddressingOp() has no entry for this encoding, so the translator stored
+    // a null addressing function. That means the guest is running an undefined
+    // or unpredictable load/store form (data executed as code, for instance).
+    // Report it as an undefined instruction: calling through the null pointer
+    // would take the host process down instead of the offending guest thread.
+    LOG_ERROR(eka2l1::CPU_DYNCOM, "Undefined load/store addressing mode (instruction 0x{:08X}) at 0x{:08X}",
+        undef_inst, cpu->Reg[15]);
+
+    SAVE_NZCVT;
+    cpu->RaiseException(eka2l1::arm::exception_type_undefined_inst, cpu->Reg[15]);
+    cpu->NumInstrsToExecute = 0;
+
+    return num_instrs;
+}
 
 END : {
     SAVE_NZCVT;
