@@ -28,6 +28,7 @@
 #include <cpu/dyncom/vfp/vfp.h>
 #include <cpu/12l1r/exclusive_monitor.h>
 
+#include <common/log.h>
 #include <common/types.h>
 
 #include <bit>
@@ -907,6 +908,7 @@ struct backend_env {
     std::uint64_t exceptions = 0;
     exception_type last_exception = exception_type_unk;
     std::uint32_t last_exception_pc = 0;
+    std::uint64_t syscalls = 0;
 
     backend_env()
         : mem(ARENA_MEM_SIZE, 0) {
@@ -968,7 +970,7 @@ void wire_backend(backend_env &e) {
         ep->last_exception_pc = pc;
         return false;
     };
-    cp->system_call_handler = [](const std::uint32_t) {};
+    cp->system_call_handler = [ep](const std::uint32_t) { ep->syscalls++; };
 }
 
 std::unique_ptr<backend_env> make_dyncom_env() {
@@ -1718,6 +1720,99 @@ std::uint32_t check_vfp_mac_cancellation(backend_env &dc, backend_env &da) {
     return 1;
 }
 
+// ---------------------------------------------------------------------------
+// Instructions dyncom cannot execute must become guest exceptions
+// ---------------------------------------------------------------------------
+// A guest that jumps into data executes whatever the bytes decode to. Three of
+// those paths used to end somewhere other than a guest exception:
+//
+//  * GetAddressingOp() covers fewer encodings than the ldr/str and misc
+//    load/store decode patterns accept, and returns null for the rest. The
+//    handlers called through that pointer -- host death at pc = 0, with the
+//    guest instruction still sitting in an argument register.
+//  * decode_arm_instruction() failure left `idx` uninitialised and the
+//    translator indexed arm_instruction_trans[] with it.
+//  * Thumb BKPT was translated to 0xEF000000, which is SVC. A guest breakpoint
+//    entered the system-call handler and never raised a breakpoint exception.
+//
+// dynarmic is not an oracle here: what a backend does with an UNPREDICTABLE or
+// unallocated encoding is its own business. The assertion is only that dyncom
+// reports it to the guest instead of acting on it.
+
+struct undef_case {
+    const char *name;
+    std::uint32_t inst; // ARM encoding, or Thumb halfword when `thumb`
+    bool thumb;
+    bool cond_hi;       // prefix with a compare that makes cond = HI pass
+    exception_type want;
+    const char *why;
+};
+
+std::uint32_t check_undefined_instructions(backend_env &dc) {
+    // The ARM cases are unconditional so that no flag setup is needed, except
+    // the first: that one is the exact instruction from the crash report, and
+    // it carries cond = HI.
+    static const undef_case cases[] = {
+        { "mls-null-addr-field", 0x80A3EEF8u, false, true, exception_type_undefined_inst,
+            "post-indexed STRD with write-back (BITS(21,22) == 1), the encoding that "
+            "killed the host in the field" },
+        { "mls-null-addr", 0xE02000B0u, false, false, exception_type_undefined_inst,
+            "post-indexed STRH with write-back" },
+        { "ls-null-addr", 0xE6000010u, false, false, exception_type_undefined_inst,
+            "media-space encoding the STR decode pattern accepts because it does not "
+            "exclude bit 4" },
+        { "undecodable", 0xE0500090u, false, false, exception_type_undefined_inst,
+            "unallocated encoding in the multiply space" },
+        { "thumb-bkpt", 0x0000BEABu, true, false, exception_type_breakpoint,
+            "Thumb BKPT #0xAB" },
+    };
+
+    std::uint32_t failures = 0;
+    for (const undef_case &c : cases) {
+        program p;
+        p.addr = PROG_CODE_LO;
+        p.thumb = c.thumb;
+        p.kind = c.name;
+        p.budget = 64;
+
+        if (c.cond_hi) {
+            p.init[0] = 1;
+            p.init[1] = 2;
+            push32(p.code, 0xE1510000u); // cmp r1, r0 -> C set, Z clear, so HI passes
+        }
+        if (c.thumb) {
+            push16(p.code, static_cast<std::uint16_t>(c.inst));
+            push16(p.code, 0xE7FEu); // b .
+        } else {
+            push32(p.code, c.inst);
+            push32(p.code, 0xEAFFFFFEu); // b .
+        }
+
+        install(dc, p);
+        dc.cpu->clear_instruction_cache();
+        dc.cpu->imb_range(p.addr, p.code.size());
+        dc.exceptions = 0;
+        dc.syscalls = 0;
+        dc.last_exception = exception_type_unk;
+
+        // Reaching the next line at all is half the assertion: unfixed, three
+        // of these cases branch through a null or garbage function pointer.
+        execute(dc, p);
+
+        if (dc.exceptions == 1 && dc.last_exception == c.want && dc.syscalls == 0) {
+            continue;
+        }
+        std::printf("[DIVERGENCE] %s: %s should raise exception %d, got %llu exception(s) "
+                    "(last = %d) and %llu system call(s)\n",
+            c.name, c.why, static_cast<int>(c.want),
+            static_cast<unsigned long long>(dc.exceptions),
+            static_cast<int>(dc.last_exception),
+            static_cast<unsigned long long>(dc.syscalls));
+        failures++;
+    }
+    return failures;
+}
+
 // VFP: the host-float fast path against dynarmic's own VFP implementation.
 std::uint32_t suite_vfp(backend_env &dc, backend_env &da, std::uint32_t base_seed,
     std::uint32_t count, coverage &cov) {
@@ -1763,6 +1858,15 @@ std::uint32_t suite_vfp(backend_env &dc, backend_env &da, std::uint32_t base_see
 } // namespace
 
 int main(int argc, char **argv) {
+    // Without this every LOG_* in the code under test dereferences a null
+    // `log::filterings` (the non-scripting COND_CHECK does not guard it), so
+    // any interpreter path that logs would take the harness down instead of
+    // reporting. Diagnostics are then muted, because the cases below execute
+    // instructions the interpreter is *expected* to complain about; the harness
+    // prints its own message when one of them fails.
+    eka2l1::log::setup_log(nullptr);
+    eka2l1::log::filterings->reset_all(spdlog::level::critical);
+
     std::uint32_t base_seed = 1;
     std::uint32_t count = 200000;
     if (argc > 1) base_seed = static_cast<std::uint32_t>(std::strtoul(argv[1], nullptr, 0));
@@ -1893,6 +1997,7 @@ int main(int argc, char **argv) {
         { "vfp   ", suite_vfp(*dc, *da, base_seed, programs / 2 + 4, cov) },
     };
     failures += check_vfp_mac_cancellation(*dc, *da);
+    failures += check_undefined_instructions(*dc);
     for (const suite_result &sr : results) {
         std::printf("  %s %s\n", sr.name, sr.failures ? "FAIL" : "ok");
         failures += sr.failures;
@@ -1922,7 +2027,8 @@ int main(int argc, char **argv) {
 
     if (failures == 0) {
         std::printf("dyncom_difftest: PASS (%u single-instruction cases vs golden, "
-                    "%llu programs vs dynarmic, VFP soft/host A/B, negative control)\n",
+                    "%llu programs vs dynarmic, VFP soft/host A/B, undefined-instruction "
+                    "reporting, negative control)\n",
             count, static_cast<unsigned long long>(cov.programs));
         return 0;
     }
