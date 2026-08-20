@@ -27,6 +27,22 @@
 #include <dynarmic/interface/A32/coprocessor.h>
 
 namespace eka2l1::arm {
+#if defined(EKA2L1_DYNCOM_DIFFTEST)
+    static std::uint64_t g_interpreter_fallback_insts = 0;
+
+    void dynarmic_note_interpreter_fallback_for_test(const std::size_t num_insts) {
+        g_interpreter_fallback_insts += num_insts;
+    }
+
+    void dynarmic_reset_interpreter_fallback_for_test() {
+        g_interpreter_fallback_insts = 0;
+    }
+
+    std::uint64_t dynarmic_interpreter_fallback_for_test() {
+        return g_interpreter_fallback_insts;
+    }
+#endif
+
     class dynarmic_core_cp15 : public Dynarmic::A32::Coprocessor {
         std::uint32_t uprw;
         std::uint32_t data_sync_barrier;
@@ -236,6 +252,14 @@ namespace eka2l1::arm {
         }
 
         void InterpreterFallback(Dynarmic::A32::VAddr addr, size_t num_insts) override {
+#if defined(EKA2L1_DYNCOM_DIFFTEST)
+            // The differential harness uses dynarmic as an independent oracle for
+            // dyncom. Any instruction that lands here is executed by dynarmic's
+            // *embedded dyncom*, so the case degenerates into dyncom-vs-dyncom and
+            // proves nothing. Count it so the harness can reject those cases
+            // instead of scoring them as agreement.
+            dynarmic_note_interpreter_fallback_for_test(num_insts);
+#endif
             if (!parent.interpreter_callback_inited) {
                 parent.interpreter.read_code = parent.read_code;
                 parent.interpreter.read_8bit = parent.read_8bit;

@@ -5,6 +5,7 @@
 #define CITRA_IGNORE_EXIT(x)
 
 #include <algorithm>
+#include <bit>
 #include <cinttypes>
 #include <common/log.h>
 #include <common/types.h>
@@ -17,6 +18,8 @@
 #include <cpu/dyncom/armsupp.h>
 #include <cpu/dyncom/vfp/vfp.h>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include <cpu/arm_interface.h>
 
@@ -30,12 +33,10 @@
 #define ROTATE_RIGHT_32(n, i) ROTATE_RIGHT(n, i, 32)
 #define ROTATE_LEFT_32(n, i) ROTATE_LEFT(n, i, 32)
 
-static bool CondPassed(const ARMul_State *cpu, unsigned int cond) {
-    const bool n_flag = cpu->NFlag != 0;
-    const bool z_flag = cpu->ZFlag != 0;
-    const bool c_flag = cpu->CFlag != 0;
-    const bool v_flag = cpu->VFlag != 0;
-
+// Reference predicate for one (cond, NZCV) combination; only used at compile
+// time to build the branchless lookup table below.
+static constexpr bool CondPassedRef(unsigned int cond, bool n_flag, bool z_flag, bool c_flag,
+    bool v_flag) {
     switch (cond) {
     case ConditionCode::EQ:
         return z_flag;
@@ -71,6 +72,945 @@ static bool CondPassed(const ARMul_State *cpu, unsigned int cond) {
     }
 
     return false;
+}
+
+// Bit f of kCondPassedTable[cond] answers CondPassedRef for the flag nibble
+// f = N<<3 | Z<<2 | C<<1 | V, turning the per-instruction predicate into one
+// load + shift that the compiler can inline at every handler site.
+static constexpr std::uint16_t BuildCondMask(unsigned int cond) {
+    std::uint16_t mask = 0;
+    for (unsigned int f = 0; f < 16; ++f) {
+        if (CondPassedRef(cond, (f >> 3) & 1, (f >> 2) & 1, (f >> 1) & 1, f & 1))
+            mask = static_cast<std::uint16_t>(mask | (1u << f));
+    }
+    return mask;
+}
+
+static constexpr std::uint16_t kCondPassedTable[16] = {
+    BuildCondMask(0), BuildCondMask(1), BuildCondMask(2), BuildCondMask(3),
+    BuildCondMask(4), BuildCondMask(5), BuildCondMask(6), BuildCondMask(7),
+    BuildCondMask(8), BuildCondMask(9), BuildCondMask(10), BuildCondMask(11),
+    BuildCondMask(12), BuildCondMask(13), BuildCondMask(14), BuildCondMask(15)
+};
+
+#if defined(_MSC_VER)
+#define DYNCOM_FORCE_INLINE __forceinline
+#else
+#define DYNCOM_FORCE_INLINE inline __attribute__((always_inline))
+#endif
+
+static DYNCOM_FORCE_INLINE bool CondPassed(const ARMul_State *cpu, unsigned int cond) {
+    const unsigned int flags = ((cpu->NFlag != 0) << 3) | ((cpu->ZFlag != 0) << 2)
+        | ((cpu->CFlag != 0) << 1) | (cpu->VFlag != 0);
+    return (kCondPassedTable[cond & 15] >> flags) & 1;
+}
+
+// ---------------------------------------------------------------------------
+// Optional guest-execution profiler (-DEKA2L1_DYNCOM_PROFILE). Counts, per
+// executed instruction, the opcode and the (previous,current) consecutive pair
+// within a basic block, plus the per-block instruction-count distribution, and
+// periodically logs the hottest opcodes / pairs. Used to pick which instruction
+// patterns are worth fusing into super-ops. Zero overhead when not defined.
+// ---------------------------------------------------------------------------
+#ifdef EKA2L1_DYNCOM_PROFILE
+#include <algorithm>
+#include <vector>
+namespace {
+    constexpr int PROF_NUM_OPS = 202; // == arm_instruction_trans_len
+    const char *kProfOpNames[PROF_NUM_OPS] = {
+        "VMLA","VMLS","VNMLA","VNMLS","VNMUL","VMUL","VADD","VSUB","VDIV","VMOVI","VMOVR","VABS","VNEG","VSQRT","VCMP",
+        "VCMP2","VCVTBDS","VCVTBFF","VCVTBFI","VMOVBRS","VMSR","VMOVBRC","VMRS","VMOVBCR","VMOVBRRSS","VMOVBRRD","VSTR",
+        "VPUSH","VSTM","VPOP","VLDR","VLDM","SRS","RFE","BKPT","BLX","CPS","PLD","SETEND","CLREX","REV16","USAD8","SXTB",
+        "UXTB","SXTH","SXTB16","UXTH","UXTB16","CPY","UXTAB","SSUB8","SHSUB8","SSUBADDX","STREX","STREXB","SWP","SWPB",
+        "SSUB16","SSAT16","SHSUBADDX","QSUBADDX","SHADDSUBX","SHADD8","SHADD16","SEL","SADDSUBX","SADD8","SADD16","SHSUB16",
+        "UMAAL","UXTAB16","USUBADDX","USUB8","USUB16","USAT16","USADA8","UQSUBADDX","UQSUB8","UQSUB16","UQADDSUBX","UQADD8",
+        "UQADD16","SXTAB","UHSUBADDX","UHSUB8","UHSUB16","UHADDSUBX","UHADD8","UHADD16","UADDSUBX","UADD8","UADD16","SXTAH",
+        "SXTAB16","QADD8","BXJ","CLZ","UXTAH","BX","REV","BLX2","REVSH","QADD","QADD16","QADDSUBX","LDREX","QDADD","QDSUB",
+        "QSUB","LDREXB","QSUB8","QSUB16","SMUAD","SMMUL","SMUSD","SMLSD","SMLSLD","SMMLA","SMMLS","SMLALD","SMLAD","SMLAW",
+        "SMULW","PKHTB","PKHBT","SMUL","SMLALXY","SMLA","MCRR","MRRC","CMP","TST","TEQ","CMN","SMULL","UMULL","UMLAL",
+        "SMLAL","MUL","MLA","SSAT","USAT","MRS","MSR","AND","BIC","LDM","EOR","ADD","RSB","RSC","SBC","ADC","SUB","ORR",
+        "MVN","MOV","STM","LDM2","LDRSH","STM2","LDM3","LDRSB","STRD","LDRH","STRH","LDRD","STRT","STRBT","LDRBT","LDRT",
+        "MRC","MCR","MSR2","MSR3","MSR4","MSR5","MSR6","LDRB","STRB","LDR","LDRCOND","STR","CDP","STC","LDC","LDREXD",
+        "STREXD","LDREXH","STREXH","NOP","YIELD","WFE","WFI","SEV","SWI","BBL","B_2_THUMB","B_COND_THUMB","BL_1_THUMB",
+        "BL_2_THUMB","BLX_1_THUMB"
+    };
+    inline const char *prof_op_name(int idx) {
+        return (idx >= 0 && idx < PROF_NUM_OPS) ? kProfOpNames[idx] : "?";
+    }
+    struct dyncom_profiler {
+        std::uint64_t op_count[PROF_NUM_OPS] = {};
+        std::vector<std::uint64_t> pair_count;
+        std::uint64_t block_len[64] = {};
+        std::uint64_t total_insts = 0;
+        std::uint64_t total_blocks = 0;
+        std::uint64_t next_dump = 50000000ull;
+        // Sparse guest-PC histogram (64-byte buckets, sampled every 64th
+        // instruction) to attribute hot loops to guest code regions. The code
+        // bytes are snapshotted on first touch, while the bucket's page is
+        // guaranteed mapped in the current process (reading them at dump time
+        // from an unrelated process faults the guest).
+        struct pc_bucket {
+            std::uint64_t count = 0;
+            std::uint32_t code[16] = {};
+        };
+        std::unordered_map<std::uint32_t, pc_bucket> pc_hist;
+        std::uint64_t pc_samples = 0;
+        dyncom_profiler()
+            : pair_count(static_cast<std::size_t>(PROF_NUM_OPS) * PROF_NUM_OPS, 0) {}
+    };
+    dyncom_profiler g_dyncom_profiler;
+
+    void dyncom_profile_dump(ARMul_State *cpu) {
+        dyncom_profiler &p = g_dyncom_profiler;
+        if (p.total_insts == 0)
+            return;
+        // Write to a plain file in the cwd (Documents/data on iOS) so the output
+        // bypasses the per-category log filter (CPU.DynCom is silenced there).
+        std::FILE *f = std::fopen("dyncom_profile.txt", "w");
+        if (!f)
+            return;
+        std::fprintf(f, "=== dyncom profile: %llu insts, %llu blocks, %.2f insts/block ===\n",
+            (unsigned long long)p.total_insts, (unsigned long long)p.total_blocks,
+            p.total_blocks ? (double)p.total_insts / p.total_blocks : 0.0);
+        std::vector<int> ops(PROF_NUM_OPS);
+        for (int i = 0; i < PROF_NUM_OPS; i++) ops[i] = i;
+        std::sort(ops.begin(), ops.end(), [&](int a, int b) { return p.op_count[a] > p.op_count[b]; });
+        for (int i = 0; i < 25 && p.op_count[ops[i]]; i++)
+            std::fprintf(f, "  op   %-12s %13llu (%.1f%%)\n", prof_op_name(ops[i]), (unsigned long long)p.op_count[ops[i]],
+                100.0 * (double)p.op_count[ops[i]] / p.total_insts);
+        std::vector<std::size_t> pairs;
+        for (std::size_t i = 0; i < p.pair_count.size(); i++)
+            if (p.pair_count[i]) pairs.push_back(i);
+        std::sort(pairs.begin(), pairs.end(), [&](std::size_t a, std::size_t b) { return p.pair_count[a] > p.pair_count[b]; });
+        for (std::size_t i = 0; i < 40 && i < pairs.size(); i++) {
+            const int a = static_cast<int>(pairs[i] / PROF_NUM_OPS);
+            const int b = static_cast<int>(pairs[i] % PROF_NUM_OPS);
+            std::fprintf(f, "  pair %-10s -> %-10s %13llu (%.1f%%)\n", prof_op_name(a), prof_op_name(b),
+                (unsigned long long)p.pair_count[pairs[i]], 100.0 * (double)p.pair_count[pairs[i]] / p.total_insts);
+        }
+        for (int i = 0; i < 16; i++)
+            if (p.block_len[i])
+                std::fprintf(f, "  blocklen %2d : %13llu\n", i, (unsigned long long)p.block_len[i]);
+        if (p.pc_samples) {
+            std::vector<std::pair<std::uint32_t, const dyncom_profiler::pc_bucket *>> hot;
+            hot.reserve(p.pc_hist.size());
+            for (const auto &kv : p.pc_hist)
+                hot.emplace_back(kv.first, &kv.second);
+            std::sort(hot.begin(), hot.end(),
+                [](const auto &a, const auto &b) { return a.second->count > b.second->count; });
+            std::fprintf(f, "  pc-hist: %llu samples, %zu buckets (64B)\n",
+                (unsigned long long)p.pc_samples, p.pc_hist.size());
+            for (std::size_t i = 0; i < 48 && i < hot.size(); i++)
+                std::fprintf(f, "  pc %08X %13llu (%.2f%%)\n", hot[i].first,
+                    (unsigned long long)hot[i].second->count,
+                    100.0 * (double)hot[i].second->count / p.pc_samples);
+            for (std::size_t i = 0; i < 10 && i < hot.size(); i++) {
+                std::fprintf(f, "  code %08X:", hot[i].first);
+                for (int w = 0; w < 16; w++)
+                    std::fprintf(f, " %08X", hot[i].second->code[w]);
+                std::fprintf(f, "\n");
+            }
+        }
+        std::fclose(f);
+    }
+}
+#define PROF_STEP(cpu, the_idx)                                                              \
+    do {                                                                                     \
+        dyncom_profiler &pp_ = g_dyncom_profiler;                                            \
+        const int idx_ = (the_idx);                                                          \
+        if (idx_ >= PROF_NUM_OPS)                                                             \
+            break; /* synthetic ops (loop accel) have no table slot */                        \
+        pp_.op_count[idx_]++;                                                                 \
+        pp_.total_insts++;                                                                    \
+        if ((pp_.total_insts & 63) == 0) {                                                    \
+            const std::uint32_t pcb_ = (cpu)->Reg[15] & ~63u;                                 \
+            auto &bkt_ = pp_.pc_hist[pcb_];                                                   \
+            if (bkt_.count++ == 0)                                                            \
+                for (int w_ = 0; w_ < 16; w_++)                                               \
+                    bkt_.code[w_] = (cpu)->ReadMemory32(pcb_ + w_ * 4);                       \
+            pp_.pc_samples++;                                                                 \
+        }                                                                                     \
+        if ((cpu)->prof_prev >= 0)                                                            \
+            pp_.pair_count[static_cast<std::size_t>((cpu)->prof_prev) * PROF_NUM_OPS + idx_]++; \
+        (cpu)->prof_prev = idx_;                                                              \
+        if ((cpu)->prof_block_len < 63)                                                       \
+            (cpu)->prof_block_len++;                                                          \
+        if (pp_.total_insts >= pp_.next_dump) {                                               \
+            dyncom_profile_dump(cpu);                                                         \
+            pp_.next_dump += 50000000ull;                                                    \
+        }                                                                                     \
+    } while (0)
+#define PROF_BLOCK_ENTER(cpu)                                                                \
+    do {                                                                                     \
+        dyncom_profiler &pp_ = g_dyncom_profiler;                                            \
+        pp_.total_blocks++;                                                                   \
+        pp_.block_len[(cpu)->prof_block_len & 63]++;                                          \
+        (cpu)->prof_block_len = 0;                                                            \
+        (cpu)->prof_prev = -1;                                                                \
+    } while (0)
+#else
+#define PROF_STEP(cpu, the_idx) ((void)0)
+#define PROF_BLOCK_ENTER(cpu) ((void)0)
+#endif
+
+// ---------------------------------------------------------------------------
+// Translation-time bulk-loop acceleration.
+//
+// Guest-side pixel-conversion / copy / fill loops (e.g. an RGB565->32bpp
+// convert measured at 14% of Brothers in Arms gameplay) interpret a handful
+// of instructions per element. When a translated Thumb block is a
+// single-block do-while loop of the canonical shape
+//
+//     do { v = load(src); store(dst, f(v)); src += s; dst += d; }
+//     while (--counter != 0);
+//
+// a symbolic one-iteration simulation proves the shape and a synthetic
+// instruction prepended to the block then executes up to counter-1
+// iterations natively through the dyncom TLB. The LAST iteration is always
+// left to the interpreter, so flags, scratch registers and the loop exit
+// come out of real interpretation; the bulk step only advances the
+// induction registers (base pointers + counter), whose per-iteration deltas
+// the matcher proved constant. Any TLB miss simply stops the bulk step and
+// hands the remainder back to the interpreter, so faults and IPC unmapping
+// keep their interpreted behaviour.
+// ---------------------------------------------------------------------------
+
+// Dispatch index of the synthetic bulk-loop instruction. The label table ends
+// with DISPATCH/INIT_INST_LENGTH/END at 202..204 (kept for the switch
+// fallback); 205 is the first free slot and is only ever produced by the
+// emitter below, never by the decoder.
+static constexpr unsigned int LOOP_ACCEL_IDX = 205;
+
+enum accel_chain_op : std::uint8_t {
+    ACC_SHL,
+    ACC_SHR,
+    ACC_SAR,
+    ACC_AND,
+    ACC_ORR,
+    ACC_EOR,
+    ACC_ADD,
+    ACC_SUB,
+    ACC_SXTB,
+    ACC_SXTH,
+};
+
+enum accel_val_kind : std::uint8_t {
+    ACC_VAL_CONST, // constant
+    ACC_VAL_CHAIN, // ops applied to the iteration's loaded value
+    ACC_VAL_REG, // invariant register + offset
+};
+
+struct accel_store {
+    std::int32_t off; // relative to the dst base register's iteration value
+    std::uint8_t width; // 1/2/4 bytes
+    std::uint8_t kind; // accel_val_kind
+    std::uint8_t reg; // ACC_VAL_REG: the invariant register
+    std::uint8_t nops; // ACC_VAL_CHAIN: number of chain ops
+    std::uint32_t cval; // ACC_VAL_CONST value / ACC_VAL_REG offset
+    struct {
+        std::uint8_t op;
+        std::uint32_t imm;
+    } ops[8];
+};
+
+struct loop_accel_inst {
+    std::uint8_t has_load;
+    std::uint8_t load_width; // 1/2/4
+    std::uint8_t load_signed;
+    std::uint8_t src_reg;
+    std::int32_t src_off;
+    std::int32_t src_step; // > 0
+
+    std::uint8_t dst_reg;
+    std::int32_t dst_min_off;
+    std::int32_t dst_step; // >= span, > 0
+    std::uint8_t span; // dense bytes written per iteration
+    std::uint8_t store_count;
+    accel_store stores[4];
+
+    std::uint8_t ind_count;
+    struct {
+        std::uint8_t reg;
+        std::int32_t delta;
+    } ind[8];
+
+    std::uint8_t counter_reg;
+    std::uint16_t body_len; // guest instructions per iteration (incl. branch)
+};
+
+namespace {
+    // Symbolic value for the one-iteration abstract interpretation.
+    struct accel_sym {
+        enum kind_t : std::uint8_t { S_CONST,
+            S_AFFINE, // INIT(reg) + c
+            S_CHAIN, // chain ops over the loaded value
+            S_TOP } kind;
+        std::uint8_t reg; // S_AFFINE base
+        std::uint8_t nops;
+        std::uint32_t c; // S_CONST value / S_AFFINE offset
+        struct {
+            std::uint8_t op;
+            std::uint32_t imm;
+        } ops[8];
+
+        static accel_sym make_const(std::uint32_t v) {
+            accel_sym s{};
+            s.kind = S_CONST;
+            s.c = v;
+            return s;
+        }
+        static accel_sym make_affine(std::uint8_t r, std::uint32_t off) {
+            accel_sym s{};
+            s.kind = S_AFFINE;
+            s.reg = r;
+            s.c = off;
+            return s;
+        }
+        static accel_sym make_top() {
+            accel_sym s{};
+            s.kind = S_TOP;
+            return s;
+        }
+        bool push_op(std::uint8_t op, std::uint32_t imm) {
+            if (nops >= 8)
+                return false;
+            ops[nops].op = op;
+            ops[nops].imm = imm;
+            nops++;
+            return true;
+        }
+    };
+
+    inline std::uint32_t accel_apply_op(std::uint32_t v, std::uint8_t op, std::uint32_t imm) {
+        switch (op) {
+        case ACC_SHL:
+            return (imm >= 32) ? 0 : (v << imm);
+        case ACC_SHR:
+            return (imm >= 32) ? 0 : (v >> imm);
+        case ACC_SAR:
+            return static_cast<std::uint32_t>(static_cast<std::int32_t>(v) >> ((imm >= 32) ? 31 : imm));
+        case ACC_AND:
+            return v & imm;
+        case ACC_ORR:
+            return v | imm;
+        case ACC_EOR:
+            return v ^ imm;
+        case ACC_ADD:
+            return v + imm;
+        case ACC_SUB:
+            return v - imm;
+        case ACC_SXTB:
+            return static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<std::int8_t>(v)));
+        case ACC_SXTH:
+            return static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<std::int16_t>(v)));
+        }
+        return v;
+    }
+}
+
+#if defined(EKA2L1_DYNCOM_DIFFTEST)
+// Test-only instrumentation. The accelerator only ever attaches to block
+// translation, so a harness that never reaches it would score "no divergence"
+// while proving nothing about it; these let the harness assert it was exercised.
+static std::uint64_t g_loop_accel_attaches = 0;
+static std::uint64_t g_loop_accel_bulk_iterations = 0;
+
+namespace eka2l1::arm {
+    void dyncom_reset_loop_accel_counters_for_test() {
+        g_loop_accel_attaches = 0;
+        g_loop_accel_bulk_iterations = 0;
+    }
+
+    std::uint64_t dyncom_loop_accel_attaches_for_test() {
+        return g_loop_accel_attaches;
+    }
+
+    std::uint64_t dyncom_loop_accel_bulk_iterations_for_test() {
+        return g_loop_accel_bulk_iterations;
+    }
+}
+#endif
+
+// Symbolically simulate one iteration of the candidate Thumb loop at
+// [pc_start .. terminal Bcc]. Returns true and fills `out` when the body is a
+// provably uniform single-load copy/convert/fill loop.
+static bool analyze_thumb_bulk_loop(ARMul_State *cpu, std::uint32_t pc_start, loop_accel_inst &out) {
+    constexpr int MAX_BODY = 24;
+
+    accel_sym sym[8];
+    for (int i = 0; i < 8; i++)
+        sym[i] = accel_sym::make_affine(static_cast<std::uint8_t>(i), 0);
+
+    enum { ACC_NONE,
+        ACC_READ,
+        ACC_WRITE };
+    std::uint8_t first_access[8] = {};
+
+    enum { FLAG_OTHER,
+        FLAG_CMP0,
+        FLAG_SUB1 };
+    int last_flag = FLAG_OTHER;
+    int flag_reg = -1;
+
+    bool have_load = false;
+    bool store_seen = false; // bulk exec is load-then-stores: reject other orders
+    std::uint8_t load_width = 0, load_signed = 0, src_reg = 0;
+    std::int32_t src_off = 0;
+
+    int store_count = 0;
+    struct {
+        std::uint8_t base;
+        std::int32_t off;
+        std::uint8_t width;
+        accel_sym val;
+    } raw_stores[4];
+
+    // Reading a register: record read-before-write and return its symbol.
+    auto rd_sym = [&](int r) -> accel_sym & {
+        if (first_access[r] == ACC_NONE)
+            first_access[r] = ACC_READ;
+        return sym[r];
+    };
+    auto wr_sym = [&](int r, const accel_sym &v) {
+        if (first_access[r] == ACC_NONE)
+            first_access[r] = ACC_WRITE;
+        sym[r] = v;
+    };
+
+    // rd = rn OP imm-const.
+    auto apply_const = [&](const accel_sym &a, std::uint8_t op, std::uint32_t imm) -> accel_sym {
+        accel_sym r = a;
+        switch (a.kind) {
+        case accel_sym::S_CONST:
+            r.c = accel_apply_op(a.c, op, imm);
+            return r;
+        case accel_sym::S_AFFINE:
+            if (op == ACC_ADD) {
+                r.c = a.c + imm;
+                return r;
+            }
+            if (op == ACC_SUB) {
+                r.c = a.c - imm;
+                return r;
+            }
+            return accel_sym::make_top();
+        case accel_sym::S_CHAIN:
+            if (!r.push_op(op, imm))
+                return accel_sym::make_top();
+            return r;
+        default:
+            return accel_sym::make_top();
+        }
+    };
+
+    std::uint32_t pc = pc_start;
+    int count = 0;
+    bool matched_branch = false;
+
+    while (count < MAX_BODY) {
+        const std::uint32_t word = cpu->ReadCode(pc & 0xFFFFFFFC);
+        const std::uint16_t hw = (pc & 2) ? static_cast<std::uint16_t>(word >> 16)
+                                          : static_cast<std::uint16_t>(word & 0xFFFF);
+        count++;
+
+        if ((hw & 0xF000) == 0xD000) {
+            // Bcc / SWI. Terminal only, must be BNE back to pc_start.
+            const std::uint32_t cond = (hw >> 8) & 0xF;
+            if (cond >= 0xE)
+                return false; // undefined / SWI
+            const std::int32_t soff = static_cast<std::int32_t>(static_cast<std::int8_t>(hw & 0xFF)) * 2;
+            const std::uint32_t target = pc + 4 + soff;
+            if (cond != 0x1 /*NE*/ || target != pc_start)
+                return false;
+            matched_branch = true;
+            break;
+        }
+
+        switch (hw >> 13) {
+        case 0: { // 000: shift imm / add-sub reg-imm3
+            if (((hw >> 11) & 3) != 3) {
+                const int opk = (hw >> 11) & 3; // LSL/LSR/ASR
+                const int rm = (hw >> 3) & 7, rd = hw & 7;
+                std::uint32_t imm = (hw >> 6) & 31;
+                std::uint8_t op = (opk == 0) ? ACC_SHL : (opk == 1) ? ACC_SHR
+                                                                    : ACC_SAR;
+                if (opk != 0 && imm == 0)
+                    imm = 32; // LSR/ASR #32 encodings
+                wr_sym(rd, apply_const(rd_sym(rm), op, imm));
+                last_flag = FLAG_OTHER;
+            } else {
+                const int rd = hw & 7, rn = (hw >> 3) & 7;
+                const bool sub = (hw >> 9) & 1;
+                const bool immf = (hw >> 10) & 1;
+                const int rm_or_imm = (hw >> 6) & 7;
+                accel_sym res;
+                const accel_sym a = rd_sym(rn);
+                if (immf) {
+                    res = apply_const(a, sub ? ACC_SUB : ACC_ADD, static_cast<std::uint32_t>(rm_or_imm));
+                    if (sub && rm_or_imm == 1 && rd == rn) {
+                        last_flag = FLAG_SUB1;
+                        flag_reg = rd;
+                    } else {
+                        last_flag = FLAG_OTHER;
+                    }
+                } else {
+                    const accel_sym b = rd_sym(rm_or_imm);
+                    if (b.kind == accel_sym::S_CONST)
+                        res = apply_const(a, sub ? ACC_SUB : ACC_ADD, b.c);
+                    else if (!sub && a.kind == accel_sym::S_CONST)
+                        res = apply_const(b, ACC_ADD, a.c);
+                    else
+                        res = accel_sym::make_top();
+                    last_flag = FLAG_OTHER;
+                }
+                wr_sym(rd, res);
+            }
+            break;
+        }
+        case 1: { // 001: MOV/CMP/ADD/SUB imm8
+            const int opk = (hw >> 11) & 3;
+            const int rd = (hw >> 8) & 7;
+            const std::uint32_t imm = hw & 0xFF;
+            switch (opk) {
+            case 0: // MOV
+                wr_sym(rd, accel_sym::make_const(imm));
+                last_flag = FLAG_OTHER;
+                break;
+            case 1: { // CMP
+                const accel_sym &a = rd_sym(rd);
+                if (imm == 0 && a.kind == accel_sym::S_AFFINE && a.reg == rd) {
+                    last_flag = FLAG_CMP0;
+                    flag_reg = rd;
+                } else {
+                    last_flag = FLAG_OTHER;
+                }
+                break;
+            }
+            case 2: // ADD
+                wr_sym(rd, apply_const(rd_sym(rd), ACC_ADD, imm));
+                last_flag = FLAG_OTHER;
+                break;
+            case 3: // SUB
+                wr_sym(rd, apply_const(rd_sym(rd), ACC_SUB, imm));
+                if (imm == 1) {
+                    last_flag = FLAG_SUB1;
+                    flag_reg = rd;
+                } else {
+                    last_flag = FLAG_OTHER;
+                }
+                break;
+            }
+            break;
+        }
+        case 2: { // 010: ALU reg / hi-reg / PC-literal / reg-offset mem
+            if ((hw & 0xFC00) == 0x4000) { // format 4 ALU
+                const int aop = (hw >> 6) & 0xF;
+                const int rm = (hw >> 3) & 7, rd = hw & 7;
+                switch (aop) {
+                case 0x0: // AND
+                case 0x1: // EOR
+                case 0xC: { // ORR
+                    const accel_sym b = rd_sym(rm);
+                    const accel_sym a = rd_sym(rd);
+                    const std::uint8_t op = (aop == 0x0) ? ACC_AND : (aop == 0x1) ? ACC_EOR
+                                                                                  : ACC_ORR;
+                    if (b.kind == accel_sym::S_CONST)
+                        wr_sym(rd, apply_const(a, op, b.c));
+                    else if (a.kind == accel_sym::S_CONST)
+                        wr_sym(rd, apply_const(b, op, a.c));
+                    else
+                        wr_sym(rd, accel_sym::make_top());
+                    last_flag = FLAG_OTHER;
+                    break;
+                }
+                case 0x2: // LSL reg
+                case 0x3: // LSR reg
+                case 0x4: { // ASR reg
+                    const accel_sym b = rd_sym(rm);
+                    const accel_sym a = rd_sym(rd);
+                    const std::uint8_t op = (aop == 0x2) ? ACC_SHL : (aop == 0x3) ? ACC_SHR
+                                                                                  : ACC_SAR;
+                    if (b.kind == accel_sym::S_CONST && (b.c & 0xFF) < 32)
+                        wr_sym(rd, apply_const(a, op, b.c & 0xFF));
+                    else
+                        wr_sym(rd, accel_sym::make_top());
+                    last_flag = FLAG_OTHER;
+                    break;
+                }
+                case 0x8: // TST
+                case 0xA: // CMP reg
+                case 0xB: // CMN
+                    rd_sym(rm);
+                    rd_sym(rd);
+                    last_flag = FLAG_OTHER;
+                    break;
+                case 0x9: { // NEG (RSB #0)
+                    const accel_sym b = rd_sym(rm);
+                    if (b.kind == accel_sym::S_CONST)
+                        wr_sym(rd, accel_sym::make_const(0u - b.c));
+                    else
+                        wr_sym(rd, accel_sym::make_top());
+                    last_flag = FLAG_OTHER;
+                    break;
+                }
+                case 0xD: { // MUL
+                    const accel_sym b = rd_sym(rm);
+                    const accel_sym a = rd_sym(rd);
+                    if (a.kind == accel_sym::S_CONST && b.kind == accel_sym::S_CONST)
+                        wr_sym(rd, accel_sym::make_const(a.c * b.c));
+                    else
+                        wr_sym(rd, accel_sym::make_top());
+                    last_flag = FLAG_OTHER;
+                    break;
+                }
+                case 0xE: { // BIC
+                    const accel_sym b = rd_sym(rm);
+                    const accel_sym a = rd_sym(rd);
+                    if (b.kind == accel_sym::S_CONST)
+                        wr_sym(rd, apply_const(a, ACC_AND, ~b.c));
+                    else
+                        wr_sym(rd, accel_sym::make_top());
+                    last_flag = FLAG_OTHER;
+                    break;
+                }
+                case 0xF: { // MVN
+                    const accel_sym b = rd_sym(rm);
+                    if (b.kind == accel_sym::S_CONST)
+                        wr_sym(rd, accel_sym::make_const(~b.c));
+                    else
+                        wr_sym(rd, apply_const(b, ACC_EOR, 0xFFFFFFFFu));
+                    last_flag = FLAG_OTHER;
+                    break;
+                }
+                default:
+                    return false; // ADC/SBC/ROR read or thread flags
+                }
+            } else if ((hw & 0xF800) == 0x4800) {
+                return false; // LDR literal: loop-invariant unknown, v1 rejects
+            } else if ((hw & 0xFC00) == 0x4400) {
+                return false; // hi-reg ops / BX
+            } else { // 0101: reg-offset load/store
+                const int opk = (hw >> 9) & 7;
+                const int rm = (hw >> 6) & 7, rn = (hw >> 3) & 7, rd = hw & 7;
+                const accel_sym bsym = rd_sym(rn);
+                const accel_sym osym = rd_sym(rm);
+                accel_sym addr;
+                if (bsym.kind == accel_sym::S_AFFINE && osym.kind == accel_sym::S_CONST)
+                    addr = apply_const(bsym, ACC_ADD, osym.c);
+                else if (osym.kind == accel_sym::S_AFFINE && bsym.kind == accel_sym::S_CONST)
+                    addr = apply_const(osym, ACC_ADD, bsym.c);
+                else
+                    return false;
+                // opk: 0 STR,1 STRH,2 STRB,3 LDRSB,4 LDR,5 LDRH,6 LDRB,7 LDRSH
+                static const std::uint8_t widths[8] = { 4, 2, 1, 1, 4, 2, 1, 2 };
+                const bool is_load = opk >= 3;
+                const std::uint8_t w = widths[opk];
+                if (is_load) {
+                    if (have_load || store_seen)
+                        return false;
+                    have_load = true;
+                    load_width = w;
+                    load_signed = (opk == 3 || opk == 7);
+                    src_reg = addr.reg;
+                    src_off = static_cast<std::int32_t>(addr.c);
+                    accel_sym lv{};
+                    lv.kind = accel_sym::S_CHAIN;
+                    if (load_signed && !lv.push_op(w == 1 ? ACC_SXTB : ACC_SXTH, 0))
+                        return false;
+                    wr_sym(rd, lv);
+                } else {
+                    if (store_count >= 4)
+                        return false;
+                    const accel_sym v = rd_sym(rd);
+                    if (v.kind == accel_sym::S_TOP)
+                        return false;
+                    raw_stores[store_count].base = addr.reg;
+                    raw_stores[store_count].off = static_cast<std::int32_t>(addr.c);
+                    raw_stores[store_count].width = w;
+                    raw_stores[store_count].val = v;
+                    store_count++;
+                    store_seen = true;
+                }
+                // Memory ops leave the flags untouched: keep last_flag as-is.
+            }
+            break;
+        }
+        case 3: // 011: LDR/STR/LDRB/STRB imm5
+        case 4: { // 100: LDRH/STRH imm5 / SP-relative
+            std::uint8_t w;
+            bool is_load;
+            std::uint32_t imm_off;
+            const int rn = (hw >> 3) & 7, rd = hw & 7;
+            if ((hw >> 13) == 3) {
+                const bool byte = (hw >> 12) & 1;
+                is_load = (hw >> 11) & 1;
+                w = byte ? 1 : 4;
+                imm_off = ((hw >> 6) & 31) * (byte ? 1u : 4u);
+            } else {
+                if ((hw >> 12) & 1)
+                    return false; // 1001x: SP-relative
+                is_load = (hw >> 11) & 1;
+                w = 2;
+                imm_off = ((hw >> 6) & 31) * 2u;
+            }
+            const accel_sym bsym = rd_sym(rn);
+            if (bsym.kind != accel_sym::S_AFFINE)
+                return false;
+            const std::int32_t off = static_cast<std::int32_t>(bsym.c + imm_off);
+            if (is_load) {
+                if (have_load || store_seen)
+                    return false;
+                have_load = true;
+                load_width = w;
+                load_signed = 0;
+                src_reg = bsym.reg;
+                src_off = off;
+                accel_sym lv{};
+                lv.kind = accel_sym::S_CHAIN;
+                wr_sym(rd, lv);
+            } else {
+                if (store_count >= 4)
+                    return false;
+                const accel_sym v = rd_sym(rd);
+                if (v.kind == accel_sym::S_TOP)
+                    return false;
+                raw_stores[store_count].base = bsym.reg;
+                raw_stores[store_count].off = off;
+                raw_stores[store_count].width = w;
+                raw_stores[store_count].val = v;
+                store_count++;
+                store_seen = true;
+            }
+            break;
+        }
+        default:
+            return false; // SP-ops, misc, LDM/STM, unconditional B, BL, ...
+        }
+
+        pc += 2;
+    }
+
+    if (!matched_branch || store_count == 0)
+        return false;
+
+    // Loop condition: flags at the branch must come from CMP rc,#0 or
+    // SUBS rc,#1 with rc ending the body at INIT(rc)-1.
+    if ((last_flag != FLAG_CMP0 && last_flag != FLAG_SUB1) || flag_reg < 0)
+        return false;
+    const int rc = flag_reg;
+    if (sym[rc].kind != accel_sym::S_AFFINE || sym[rc].reg != rc || sym[rc].c != 0xFFFFFFFFu)
+        return false;
+
+    // Uniformity: every register read before written must end the body as
+    // INIT(self) + constant delta.
+    std::int32_t deltas[8];
+    for (int r = 0; r < 8; r++) {
+        deltas[r] = 0;
+        if (first_access[r] == ACC_READ) {
+            if (sym[r].kind != accel_sym::S_AFFINE || sym[r].reg != r)
+                return false;
+            deltas[r] = static_cast<std::int32_t>(sym[r].c);
+        }
+    }
+
+    // Stores: single dst base with positive step, dense byte tiling.
+    const std::uint8_t q = raw_stores[0].base;
+    std::int32_t min_off = raw_stores[0].off;
+    for (int i = 0; i < store_count; i++) {
+        if (raw_stores[i].base != q)
+            return false;
+        min_off = std::min(min_off, raw_stores[i].off);
+    }
+    if (first_access[q] != ACC_READ)
+        return false;
+    const std::int32_t dst_step = deltas[q];
+    std::uint32_t covered = 0;
+    std::uint32_t span_bytes = 0;
+    for (int i = 0; i < store_count; i++) {
+        const std::uint32_t rel = static_cast<std::uint32_t>(raw_stores[i].off - min_off);
+        if (rel + raw_stores[i].width > 32)
+            return false;
+        const std::uint32_t mask = ((raw_stores[i].width == 4) ? 0xFu : (raw_stores[i].width == 2) ? 0x3u
+                                                                                                   : 0x1u)
+            << rel;
+        if (covered & mask)
+            return false; // overlapping bytes: order-dependent, reject
+        covered |= mask;
+        span_bytes = std::max(span_bytes, rel + raw_stores[i].width);
+    }
+    if (covered != ((span_bytes >= 32) ? 0xFFFFFFFFu : ((1u << span_bytes) - 1)))
+        return false; // gaps in the written span
+    if (span_bytes > 8)
+        return false;
+    if (dst_step < static_cast<std::int32_t>(span_bytes))
+        return false; // must advance past what it wrote (also rejects step<=0)
+
+    // Load: positive stride.
+    if (have_load) {
+        if (first_access[src_reg] != ACC_READ)
+            return false;
+        if (deltas[src_reg] <= 0)
+            return false;
+    }
+
+    // Store values: only const / chain-of-load / invariant-register.
+    for (int i = 0; i < store_count; i++) {
+        const accel_sym &v = raw_stores[i].val;
+        if (v.kind == accel_sym::S_CHAIN && !have_load)
+            return false;
+        if (v.kind == accel_sym::S_AFFINE && deltas[v.reg] != 0)
+            return false;
+    }
+
+    // Build the descriptor.
+    out = loop_accel_inst{};
+    out.has_load = have_load ? 1 : 0;
+    out.load_width = load_width;
+    out.load_signed = load_signed;
+    out.src_reg = src_reg;
+    out.src_off = src_off;
+    out.src_step = have_load ? deltas[src_reg] : 0;
+    out.dst_reg = q;
+    out.dst_min_off = min_off;
+    out.dst_step = dst_step;
+    out.span = static_cast<std::uint8_t>(span_bytes);
+    out.store_count = static_cast<std::uint8_t>(store_count);
+    for (int i = 0; i < store_count; i++) {
+        accel_store &s = out.stores[i];
+        s.off = raw_stores[i].off;
+        s.width = raw_stores[i].width;
+        const accel_sym &v = raw_stores[i].val;
+        if (v.kind == accel_sym::S_CONST) {
+            s.kind = ACC_VAL_CONST;
+            s.cval = v.c;
+        } else if (v.kind == accel_sym::S_AFFINE) {
+            s.kind = ACC_VAL_REG;
+            s.reg = v.reg;
+            s.cval = v.c;
+        } else {
+            s.kind = ACC_VAL_CHAIN;
+            s.nops = v.nops;
+            for (int k = 0; k < v.nops; k++) {
+                s.ops[k].op = v.ops[k].op;
+                s.ops[k].imm = v.ops[k].imm;
+            }
+        }
+    }
+    out.ind_count = 0;
+    for (int r = 0; r < 8; r++) {
+        if (first_access[r] == ACC_READ && deltas[r] != 0) {
+            if (out.ind_count >= 8)
+                return false;
+            out.ind[out.ind_count].reg = static_cast<std::uint8_t>(r);
+            out.ind[out.ind_count].delta = deltas[r];
+            out.ind_count++;
+        }
+    }
+    out.counter_reg = static_cast<std::uint8_t>(rc);
+    out.body_len = static_cast<std::uint16_t>(count);
+    return true;
+}
+
+// Execute up to `want` full iterations natively through the dyncom TLB.
+// Returns the number of iterations actually performed; the caller advances
+// the induction registers by that count. Stops early at any TLB miss so the
+// interpreter (and its slow path / fault behaviour) takes over exactly where
+// the bulk run left off.
+static std::uint32_t run_accel_bulk(ARMul_State *cpu, const loop_accel_inst *d, std::uint32_t want) {
+    eka2l1::arm::r12l1::tlb *tlb = cpu->mem_cache_;
+    const std::uint32_t page_size = static_cast<std::uint32_t>(tlb->page_mask) + 1;
+
+    std::uint32_t src = d->has_load ? (cpu->Reg[d->src_reg] + d->src_off) : 0;
+    std::uint32_t dst = cpu->Reg[d->dst_reg] + d->dst_min_off;
+
+    // Pre-resolve invariant register store values.
+    std::uint32_t reg_vals[4];
+    for (int i = 0; i < d->store_count; i++)
+        reg_vals[i] = (d->stores[i].kind == ACC_VAL_REG)
+            ? (cpu->Reg[d->stores[i].reg] + d->stores[i].cval)
+            : d->stores[i].cval;
+
+    std::uint32_t done = 0;
+    while (done < want) {
+        std::uint8_t *hs = nullptr;
+        std::uint32_t it = want - done;
+
+        if (d->has_load) {
+            hs = tlb->lookup(src);
+            if (!hs)
+                break;
+            const std::uint32_t room = page_size - (src & static_cast<std::uint32_t>(tlb->page_mask));
+            if (room < d->load_width)
+                break;
+            it = std::min<std::uint32_t>(it, (room - d->load_width) / static_cast<std::uint32_t>(d->src_step) + 1);
+        }
+
+        std::uint8_t *hd = tlb->lookup(dst);
+        if (!hd)
+            break;
+        const std::uint32_t room_d = page_size - (dst & static_cast<std::uint32_t>(tlb->page_mask));
+        if (room_d < d->span)
+            break;
+        it = std::min<std::uint32_t>(it, (room_d - d->span) / static_cast<std::uint32_t>(d->dst_step) + 1);
+        if (!it)
+            break;
+
+        for (std::uint32_t i = 0; i < it; i++) {
+            std::uint32_t lv = 0;
+            if (d->has_load) {
+                switch (d->load_width) {
+                case 1:
+                    lv = *hs;
+                    break;
+                case 2: {
+                    std::uint16_t t;
+                    std::memcpy(&t, hs, 2);
+                    lv = t;
+                    break;
+                }
+                default: {
+                    std::memcpy(&lv, hs, 4);
+                    break;
+                }
+                }
+                hs += d->src_step;
+            }
+            for (int s = 0; s < d->store_count; s++) {
+                const accel_store &st = d->stores[s];
+                std::uint32_t v;
+                if (st.kind == ACC_VAL_CHAIN) {
+                    v = lv;
+                    for (int k = 0; k < st.nops; k++)
+                        v = accel_apply_op(v, st.ops[k].op, st.ops[k].imm);
+                } else {
+                    v = reg_vals[s];
+                }
+                std::uint8_t *p = hd + (st.off - d->dst_min_off);
+                switch (st.width) {
+                case 1:
+                    *p = static_cast<std::uint8_t>(v);
+                    break;
+                case 2: {
+                    const std::uint16_t t = static_cast<std::uint16_t>(v);
+                    std::memcpy(p, &t, 2);
+                    break;
+                }
+                default:
+                    std::memcpy(p, &v, 4);
+                    break;
+                }
+            }
+            hd += d->dst_step;
+        }
+
+        src += it * static_cast<std::uint32_t>(d->src_step);
+        dst += it * static_cast<std::uint32_t>(d->dst_step);
+        done += it;
+    }
+#if defined(EKA2L1_DYNCOM_DIFFTEST)
+    g_loop_accel_bulk_iterations += done;
+#endif
+    return done;
 }
 
 static unsigned int DPO(Immediate)(ARMul_State *cpu, unsigned int sht_oper) {
@@ -227,6 +1167,55 @@ static unsigned int DPO(RotateRightByRegister)(ARMul_State *cpu, unsigned int sh
     return shifter_operand;
 }
 
+// Inlined shifter-operand evaluation. This used to be a statement expression so
+// it could stay usable where a plain expression was expected; MSVC has no such
+// extension, and a force-inlined function does the same job everywhere.
+static DYNCOM_FORCE_INLINE unsigned int compute_shifter_operand(ARMul_State *cpu,
+    const shtop_fp_t f_, const unsigned int so_) {
+    unsigned int v_;
+    if (f_ == DataProcessingOperandsImmediate) {
+        v_ = ROTATE_RIGHT_32(BITS(so_, 0, 7), BITS(so_, 8, 11) * 2);
+        cpu->shifter_carry_out = (BITS(so_, 8, 11) == 0) ? cpu->CFlag : BIT(v_, 31);
+    } else if (f_ == DataProcessingOperandsRegister) {
+        v_ = CHECK_READ_REG15(cpu, BITS(so_, 0, 3));
+        cpu->shifter_carry_out = cpu->CFlag;
+    } else if (f_ == DataProcessingOperandsLogicalShiftLeftByImmediate) {
+        const unsigned int rm_ = CHECK_READ_REG15(cpu, BITS(so_, 0, 3));
+        const unsigned int imm_ = BITS(so_, 7, 11);
+        if (imm_ == 0) {
+            v_ = rm_;
+            cpu->shifter_carry_out = cpu->CFlag;
+        } else {
+            v_ = rm_ << imm_;
+            cpu->shifter_carry_out = BIT(rm_, 32 - imm_);
+        }
+    } else if (f_ == DataProcessingOperandsArithmeticShiftRightByImmediate) {
+        const unsigned int rm_ = CHECK_READ_REG15(cpu, BITS(so_, 0, 3));
+        const unsigned int imm_ = BITS(so_, 7, 11);
+        if (imm_ == 0) {
+            v_ = BIT(rm_, 31) ? 0xFFFFFFFF : 0;
+            cpu->shifter_carry_out = BIT(rm_, 31);
+        } else {
+            v_ = static_cast<unsigned int>(static_cast<int>(rm_) >> imm_);
+            cpu->shifter_carry_out = BIT(rm_, imm_ - 1);
+        }
+    } else if (f_ == DataProcessingOperandsLogicalShiftRightByImmediate) {
+        const unsigned int rm_ = CHECK_READ_REG15(cpu, BITS(so_, 0, 3));
+        const unsigned int imm_ = BITS(so_, 7, 11);
+        if (imm_ == 0) {
+            v_ = 0;
+            cpu->shifter_carry_out = BIT(rm_, 31);
+        } else {
+            v_ = rm_ >> imm_;
+            cpu->shifter_carry_out = BIT(rm_, imm_ - 1);
+        }
+    } else {
+        v_ = f_(cpu, so_);
+    }
+    return v_;
+}
+
+
 #define DEBUG_MSG                                        \
     LOG_DEBUG(eka2l1::CPU_DYNCOM, "inst is {:x}", inst); \
     CITRA_IGNORE_EXIT(0)
@@ -252,6 +1241,59 @@ static void LnSWoUB(ImmediateOffset)(ARMul_State *cpu, unsigned int inst, unsign
 
     virt_addr = addr;
 }
+
+// Fast path for the dominant single load/store addressing form: immediate
+// offset, no write-back (`[Rn, #+/-imm12]`). The generic path calls
+// inst_cream->get_addr through a function pointer -- a polymorphic indirect
+// branch at the shared handler site. This inlines the trivial base +/- imm12
+// computation for that common form and only falls back to the pointer for the
+// rarer modes; the pointer compare is one well-predicted branch.
+#define LS_GET_ADDR(addr_out)                                                        \
+    do {                                                                             \
+        if (inst_cream->get_addr == LnSWoUBImmediateOffset) {                        \
+            const unsigned int ls_inst_ = inst_cream->inst;                          \
+            const std::uint32_t ls_base_ =                                           \
+                CHECK_READ_REG15_WA(cpu, BITS(ls_inst_, 16, 19));                    \
+            (addr_out) = BIT(ls_inst_, 23) ? (ls_base_ + BITS(ls_inst_, 0, 11))      \
+                                           : (ls_base_ - BITS(ls_inst_, 0, 11));     \
+        } else if (inst_cream->get_addr == LnSWoUBRegisterOffset) {                  \
+            const unsigned int ls_inst_ = inst_cream->inst;                          \
+            const std::uint32_t ls_base_ =                                           \
+                CHECK_READ_REG15_WA(cpu, BITS(ls_inst_, 16, 19));                    \
+            const std::uint32_t ls_off_ =                                            \
+                CHECK_READ_REG15_WA(cpu, BITS(ls_inst_, 0, 3));                      \
+            (addr_out) = BIT(ls_inst_, 23) ? (ls_base_ + ls_off_)                    \
+                                           : (ls_base_ - ls_off_);                   \
+        } else {                                                                     \
+            inst_cream->get_addr(cpu, inst_cream->inst, (addr_out));                 \
+        }                                                                            \
+    } while (0)
+
+// LS_GET_ADDR for the miscellaneous (halfword/doubleword) load/store family,
+// whose dominant addressing forms are the split-immediate and register
+// offsets computed by MLnSImmediateOffset / MLnSRegisterOffset.
+#define MLS_GET_ADDR(addr_out)                                                       \
+    do {                                                                             \
+        if (inst_cream->get_addr == MLnSImmediateOffset) {                           \
+            const unsigned int ls_inst_ = inst_cream->inst;                          \
+            const std::uint32_t ls_base_ =                                           \
+                CHECK_READ_REG15_WA(cpu, BITS(ls_inst_, 16, 19));                    \
+            const std::uint32_t ls_off_ =                                            \
+                (BITS(ls_inst_, 8, 11) << 4) | BITS(ls_inst_, 0, 3);                 \
+            (addr_out) = BIT(ls_inst_, 23) ? (ls_base_ + ls_off_)                    \
+                                           : (ls_base_ - ls_off_);                   \
+        } else if (inst_cream->get_addr == MLnSRegisterOffset) {                     \
+            const unsigned int ls_inst_ = inst_cream->inst;                          \
+            const std::uint32_t ls_base_ =                                           \
+                CHECK_READ_REG15_WA(cpu, BITS(ls_inst_, 16, 19));                    \
+            const std::uint32_t ls_off_ =                                            \
+                CHECK_READ_REG15_WA(cpu, BITS(ls_inst_, 0, 3));                      \
+            (addr_out) = BIT(ls_inst_, 23) ? (ls_base_ + ls_off_)                    \
+                                           : (ls_base_ - ls_off_);                   \
+        } else {                                                                     \
+            inst_cream->get_addr(cpu, inst_cream->inst, (addr_out));                 \
+        }                                                                            \
+    } while (0)
 
 static void LnSWoUB(RegisterOffset)(ARMul_State *cpu, unsigned int inst, unsigned int &virt_addr) {
     unsigned int Rn = BITS(inst, 16, 19);
@@ -541,16 +1583,15 @@ static void MLnS(RegisterPostIndexed)(ARMul_State *cpu, unsigned int inst,
     }
 }
 
+// Register count of an LDM/STM register list, replacing the former 1..16
+// iteration shift loop executed on every block transfer.
+static inline int CountSetBits16(unsigned int v) {
+    return std::popcount(v & 0xFFFFu);
+}
+
 static void LdnStM(DecrementBefore)(ARMul_State *cpu, unsigned int inst, unsigned int &virt_addr) {
     unsigned int Rn = BITS(inst, 16, 19);
-    unsigned int i = BITS(inst, 0, 15);
-    int count = 0;
-
-    while (i) {
-        if (i & 1)
-            count++;
-        i = i >> 1;
-    }
+    const int count = CountSetBits16(BITS(inst, 0, 15));
 
     virt_addr = CHECK_READ_REG15_WA(cpu, Rn) - count * 4;
 
@@ -560,14 +1601,7 @@ static void LdnStM(DecrementBefore)(ARMul_State *cpu, unsigned int inst, unsigne
 
 static void LdnStM(IncrementBefore)(ARMul_State *cpu, unsigned int inst, unsigned int &virt_addr) {
     unsigned int Rn = BITS(inst, 16, 19);
-    unsigned int i = BITS(inst, 0, 15);
-    int count = 0;
-
-    while (i) {
-        if (i & 1)
-            count++;
-        i = i >> 1;
-    }
+    const int count = CountSetBits16(BITS(inst, 0, 15));
 
     virt_addr = CHECK_READ_REG15_WA(cpu, Rn) + 4;
 
@@ -577,14 +1611,7 @@ static void LdnStM(IncrementBefore)(ARMul_State *cpu, unsigned int inst, unsigne
 
 static void LdnStM(IncrementAfter)(ARMul_State *cpu, unsigned int inst, unsigned int &virt_addr) {
     unsigned int Rn = BITS(inst, 16, 19);
-    unsigned int i = BITS(inst, 0, 15);
-    int count = 0;
-
-    while (i) {
-        if (i & 1)
-            count++;
-        i = i >> 1;
-    }
+    const int count = CountSetBits16(BITS(inst, 0, 15));
 
     virt_addr = CHECK_READ_REG15_WA(cpu, Rn);
 
@@ -594,13 +1621,7 @@ static void LdnStM(IncrementAfter)(ARMul_State *cpu, unsigned int inst, unsigned
 
 static void LdnStM(DecrementAfter)(ARMul_State *cpu, unsigned int inst, unsigned int &virt_addr) {
     unsigned int Rn = BITS(inst, 16, 19);
-    unsigned int i = BITS(inst, 0, 15);
-    int count = 0;
-    while (i) {
-        if (i & 1)
-            count++;
-        i = i >> 1;
-    }
+    const int count = CountSetBits16(BITS(inst, 0, 15));
     unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
     unsigned int start_addr = rn - count * 4 + 4;
 
@@ -842,6 +1863,26 @@ static int InterpreterTranslateBlock(ARMul_State *cpu, std::size_t &bb_start, st
     std::uint32_t phys_addr = addr;
     std::uint32_t pc_start = cpu->Reg[15];
 
+    // Bulk-loop acceleration pre-pass: if this Thumb block is a canonical
+    // copy/convert/fill do-while loop, prepend a synthetic instruction that
+    // batches iterations natively (see loop_accel_inst above). The block body
+    // itself is still translated normally right after it.
+    if (cpu->TFlag) {
+        loop_accel_inst accel_desc;
+        if (analyze_thumb_bulk_loop(cpu, pc_start, accel_desc)) {
+            const std::size_t alloc_size = sizeof(arm_inst) + sizeof(loop_accel_inst);
+            arm_inst *accel_base = reinterpret_cast<arm_inst *>(&cpu->trans_cache_buf[cpu->trans_cache_buf_top]);
+            cpu->trans_cache_buf_top += ((alloc_size + 7) >> 3) << 3;
+            accel_base->idx = LOOP_ACCEL_IDX;
+            accel_base->cond = ConditionCode::AL;
+            accel_base->br = TransExtData::NON_BRANCH;
+            *reinterpret_cast<loop_accel_inst *>(accel_base->component) = accel_desc;
+#if defined(EKA2L1_DYNCOM_DIFFTEST)
+            ++g_loop_accel_attaches;
+#endif
+        }
+    }
+
     while (ret == TransExtData::NON_BRANCH) {
         unsigned int inst_size = InterpreterTranslateInstruction(cpu, phys_addr, inst_base);
 
@@ -855,7 +1896,7 @@ static int InterpreterTranslateBlock(ARMul_State *cpu, std::size_t &bb_start, st
         ret = inst_base->br;
     };
 
-    cpu->instruction_cache[pc_start] = bb_start;
+    cpu->instruction_cache[cpu->make_instruction_cache_key(pc_start)] = bb_start;
 
     return KEEP_GOING;
 }
@@ -873,7 +1914,7 @@ static int InterpreterTranslateSingle(ARMul_State *cpu, std::size_t &bb_start, s
         inst_base->br = TransExtData::SINGLE_STEP;
     }
 
-    cpu->instruction_cache[pc_start] = bb_start;
+    cpu->instruction_cache[cpu->make_instruction_cache_key(pc_start)] = bb_start;
 
     return KEEP_GOING;
 }
@@ -920,7 +1961,15 @@ unsigned InterpreterMainLoop(ARMul_State *cpu, std::uint32_t &num_instrs) {
 #define RDLO cpu->Reg[inst_cream->RdLo]
 #define LINK_RTN_ADDR (cpu->Reg[14] = cpu->Reg[15] + 4)
 #define SET_PC (cpu->Reg[15] = cpu->Reg[15] + 8 + inst_cream->signed_immed_24)
-#define SHIFTER_OPERAND inst_cream->shtop_func(cpu, inst_cream->shifter_operand)
+// Like LS_GET_ADDR, but for the data-processing shifter operand: inline the
+// dominant forms at the call site behind well-predicted pointer compares,
+// instead of the polymorphic indirect shtop_func() call. Immediate (`#imm` ->
+// rotate of imm8), plain register (`Rm`, no shift -- the dominant form in
+// Thumb-translated code) and the immediate LSL/ASR/LSR shifts are handled
+// inline; register-specified shifts and rotates fall back. A
+// statement-expression keeps it usable wherever the old macro was an
+// expression.
+#define SHIFTER_OPERAND compute_shifter_operand(cpu, inst_cream->shtop_func, inst_cream->shifter_operand)
 
 #define FETCH_INST                                 \
     if (inst_base->br != TransExtData::NON_BRANCH) \
@@ -934,12 +1983,14 @@ unsigned InterpreterMainLoop(ARMul_State *cpu, std::uint32_t &num_instrs) {
 // clunky switch statement.
 #if defined __GNUC__ || defined __clang__
 #define GOTO_NEXT_INST                         \
+    PROF_STEP(cpu, inst_base->idx);            \
     if (num_instrs >= cpu->NumInstrsToExecute) \
         goto END;                              \
     num_instrs++;                              \
     goto *InstLabel[inst_base->idx]
 #else
 #define GOTO_NEXT_INST                         \
+    PROF_STEP(cpu, inst_base->idx);            \
     if (num_instrs >= cpu->NumInstrsToExecute) \
         goto END;                              \
     num_instrs++;                              \
@@ -1354,6 +2405,8 @@ unsigned InterpreterMainLoop(ARMul_State *cpu, std::uint32_t &num_instrs) {
         goto INIT_INST_LENGTH;                 \
     case 204:                                  \
         goto END;                              \
+    case 205:                                  \
+        goto LOOP_ACCEL_INST;                  \
     }
 #endif
 
@@ -1580,7 +2633,8 @@ unsigned InterpreterMainLoop(ARMul_State *cpu, std::uint32_t &num_instrs) {
         &&BLX_1_THUMB,
         &&DISPATCH,
         &&INIT_INST_LENGTH,
-        &&END };
+        &&END,
+        &&LOOP_ACCEL_INST };
 #endif
     arm_inst *inst_base;
     unsigned int addr;
@@ -1589,6 +2643,7 @@ unsigned InterpreterMainLoop(ARMul_State *cpu, std::uint32_t &num_instrs) {
 
     LOAD_NZCVT;
 DISPATCH : {
+    PROF_BLOCK_ENTER(cpu);
     if (!cpu->NirqSig) {
         if (!(cpu->Cpsr & 0x80)) {
             goto END;
@@ -1601,18 +2656,73 @@ DISPATCH : {
         cpu->Reg[15] &= 0xfffffffc;
 
     // Find the cached instruction cream, otherwise translate it...
-    auto itr = cpu->instruction_cache.find(cpu->Reg[15]);
-    if (itr != cpu->instruction_cache.end()) {
-        ptr = itr->second;
-    } else if (cpu->NumInstrsToExecute != 1) {
-        if (InterpreterTranslateBlock(cpu, ptr, cpu->Reg[15]) == FETCH_EXCEPTION)
-            goto END;
+    const std::uint64_t block_key = cpu->make_instruction_cache_key(cpu->Reg[15]);
+    ARMul_State::block_l1_entry &l1 = cpu->block_l1_cache[ARMul_State::block_l1_index(block_key)];
+    if (l1.key == block_key) {
+        // Fast path: hot blocks skip the unordered_map entirely.
+        ptr = l1.ptr;
     } else {
-        if (InterpreterTranslateSingle(cpu, ptr, cpu->Reg[15]) == FETCH_EXCEPTION)
-            goto END;
+        auto itr = cpu->instruction_cache.find(block_key);
+        if (itr != cpu->instruction_cache.end()) {
+            ptr = itr->second;
+        } else {
+            // The translation buffer is a bump allocator that is no longer reset
+            // on every context switch (blocks are kept across processes via the
+            // asid tag). Flush everything if a fresh block could run past the
+            // buffer end. TRANS_CACHE_FLUSH_RESERVE comfortably exceeds the
+            // largest possible single basic block (capped at one page).
+            constexpr std::size_t TRANS_CACHE_FLUSH_RESERVE = 2 * 1024 * 1024;
+            if (cpu->trans_cache_buf_top + TRANS_CACHE_FLUSH_RESERVE > TRANS_CACHE_SIZE) {
+                cpu->instruction_cache.clear();
+                cpu->trans_cache_buf_top = 0;
+                cpu->flush_block_l1_cache();
+            }
+
+            if (cpu->NumInstrsToExecute != 1) {
+                if (InterpreterTranslateBlock(cpu, ptr, cpu->Reg[15]) == FETCH_EXCEPTION)
+                    goto END;
+            } else {
+                if (InterpreterTranslateSingle(cpu, ptr, cpu->Reg[15]) == FETCH_EXCEPTION)
+                    goto END;
+            }
+        }
+
+        // Re-index: a flush above may have moved the slot; refill from the live
+        // key so the next visit hits. (l1 reference is still valid -- the cache
+        // is a fixed array -- but recompute defensively after a possible flush.)
+        ARMul_State::block_l1_entry &slot = cpu->block_l1_cache[ARMul_State::block_l1_index(block_key)];
+        slot.key = block_key;
+        slot.ptr = ptr;
     }
 
     inst_base = (arm_inst *)&cpu->trans_cache_buf[ptr];
+    GOTO_NEXT_INST;
+}
+LOOP_ACCEL_INST : {
+    loop_accel_inst *const inst_cream = (loop_accel_inst *)inst_base->component;
+    const std::uint32_t iter_left = cpu->Reg[inst_cream->counter_reg];
+    if (iter_left > 1) {
+        // Bulk at most iter_left-1 iterations: the last one always runs
+        // interpreted so flags, scratch registers and the loop exit come from
+        // real interpretation. Cap by the remaining quantum so blocking /
+        // reschedule behaviour keeps its granularity.
+        const std::uint64_t quantum_rem = (cpu->NumInstrsToExecute > num_instrs)
+            ? (cpu->NumInstrsToExecute - num_instrs)
+            : 0;
+        const std::uint64_t cap = quantum_rem / inst_cream->body_len + 1;
+        const std::uint32_t want = static_cast<std::uint32_t>(
+            std::min<std::uint64_t>(cap, iter_left - 1));
+        if (want) {
+            const std::uint32_t done = run_accel_bulk(cpu, inst_cream, want);
+            if (done) {
+                for (int i = 0; i < inst_cream->ind_count; i++)
+                    cpu->Reg[inst_cream->ind[i].reg] += static_cast<std::uint32_t>(inst_cream->ind[i].delta) * done;
+                num_instrs += static_cast<std::uint64_t>(done) * inst_cream->body_len;
+            }
+        }
+    }
+    INC_PC(sizeof(loop_accel_inst));
+    FETCH_INST;
     GOTO_NEXT_INST;
 }
 ADC_INST : {
@@ -1655,8 +2765,11 @@ ADD_INST : {
         std::uint32_t rn_val = 0;
 
         // The ADR thumb instruction got disguised, under ADD. However unlike the other,
-        // it uses aligned PC. So have to check
-        if (cpu->TFlag) {
+        // it uses aligned PC. So have to check -- but the distinction only matters when
+        // Rn is the PC, so ordinary registers skip the per-execution code re-read.
+        if (inst_cream->Rn != 15) {
+            rn_val = cpu->Reg[inst_cream->Rn];
+        } else if (cpu->TFlag) {
             std::uint32_t inst = cpu->ReadCode(cpu->Reg[15] & 0xFFFFFFFC);
             inst = GetThumbInstruction(inst, cpu->Reg[15]);
 
@@ -2014,34 +3127,38 @@ LDM_INST : {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         inst_cream->get_addr(cpu, inst_cream->inst, addr);
 
+        // The register list maps to contiguous, ascending addresses -- resolve the
+        // host page once and reuse it for the whole run (see block_cursor).
+        ARMul_State::block_cursor ldm_cur;
+
         unsigned int inst = inst_cream->inst;
         if (BIT(inst, 22) && !BIT(inst, 15)) {
             for (int i = 0; i < 13; i++) {
                 if (BIT(inst, i)) {
-                    cpu->Reg[i] = cpu->ReadMemory32(addr);
+                    cpu->Reg[i] = cpu->ReadMemory32Block(addr, ldm_cur);
                     addr += 4;
                 }
             }
             if (BIT(inst, 13)) {
                 if (cpu->Mode == USER32MODE)
-                    cpu->Reg[13] = cpu->ReadMemory32(addr);
+                    cpu->Reg[13] = cpu->ReadMemory32Block(addr, ldm_cur);
                 else
-                    cpu->Reg_usr[0] = cpu->ReadMemory32(addr);
+                    cpu->Reg_usr[0] = cpu->ReadMemory32Block(addr, ldm_cur);
 
                 addr += 4;
             }
             if (BIT(inst, 14)) {
                 if (cpu->Mode == USER32MODE)
-                    cpu->Reg[14] = cpu->ReadMemory32(addr);
+                    cpu->Reg[14] = cpu->ReadMemory32Block(addr, ldm_cur);
                 else
-                    cpu->Reg_usr[1] = cpu->ReadMemory32(addr);
+                    cpu->Reg_usr[1] = cpu->ReadMemory32Block(addr, ldm_cur);
 
                 addr += 4;
             }
         } else if (!BIT(inst, 22)) {
             for (int i = 0; i < 16; i++) {
                 if (BIT(inst, i)) {
-                    unsigned int ret = cpu->ReadMemory32(addr);
+                    unsigned int ret = cpu->ReadMemory32Block(addr, ldm_cur);
 
                     // For armv5t, should enter thumb when bits[0] is non-zero.
                     if (i == 15) {
@@ -2056,7 +3173,7 @@ LDM_INST : {
         } else if (BIT(inst, 22) && BIT(inst, 15)) {
             for (int i = 0; i < 15; i++) {
                 if (BIT(inst, i)) {
-                    cpu->Reg[i] = cpu->ReadMemory32(addr);
+                    cpu->Reg[i] = cpu->ReadMemory32Block(addr, ldm_cur);
                     addr += 4;
                 }
             }
@@ -2067,7 +3184,7 @@ LDM_INST : {
                 LOAD_NZCVT;
             }
 
-            cpu->Reg[15] = cpu->ReadMemory32(addr);
+            cpu->Reg[15] = cpu->ReadMemory32Block(addr, ldm_cur);
         }
 
         if (BIT(inst, 15)) {
@@ -2099,7 +3216,7 @@ SXTH_INST : {
 }
 LDR_INST : {
     ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
-    inst_cream->get_addr(cpu, inst_cream->inst, addr);
+    LS_GET_ADDR(addr);
 
     unsigned int value = cpu->ReadMemory32(addr);
     cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
@@ -2120,7 +3237,7 @@ LDR_INST : {
 LDRCOND_INST : {
     if (CondPassed(cpu, inst_base->cond)) {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
-        inst_cream->get_addr(cpu, inst_cream->inst, addr);
+        LS_GET_ADDR(addr);
 
         unsigned int value = cpu->ReadMemory32(addr);
         cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
@@ -2163,7 +3280,7 @@ UXTAH_INST : {
 LDRB_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
-        inst_cream->get_addr(cpu, inst_cream->inst, addr);
+        LS_GET_ADDR(addr);
 
         cpu->Reg[BITS(inst_cream->inst, 12, 15)] = cpu->ReadMemory8(addr);
     }
@@ -2175,7 +3292,7 @@ LDRB_INST : {
 LDRBT_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
-        inst_cream->get_addr(cpu, inst_cream->inst, addr);
+        LS_GET_ADDR(addr);
 
         const std::uint32_t dest_index = BITS(inst_cream->inst, 12, 15);
         const std::uint32_t previous_mode = cpu->Mode;
@@ -2196,7 +3313,7 @@ LDRD_INST : {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         // Should check if RD is even-numbered, Rd != 14, addr[0:1] == 0, (CP15_reg1_U == 1 ||
         // addr[2] == 0)
-        inst_cream->get_addr(cpu, inst_cream->inst, addr);
+        MLS_GET_ADDR(addr);
 
         // The 3DS doesn't have LPAE (Large Physical Access Extension), so it
         // wouldn't do this as a single read.
@@ -2267,7 +3384,7 @@ LDREXD_INST : {
 LDRH_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
-        inst_cream->get_addr(cpu, inst_cream->inst, addr);
+        MLS_GET_ADDR(addr);
 
         cpu->Reg[BITS(inst_cream->inst, 12, 15)] = cpu->ReadMemory16(addr);
     }
@@ -2279,7 +3396,7 @@ LDRH_INST : {
 LDRSB_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
-        inst_cream->get_addr(cpu, inst_cream->inst, addr);
+        MLS_GET_ADDR(addr);
         unsigned int value = cpu->ReadMemory8(addr);
         if (BIT(value, 7)) {
             value |= 0xffffff00;
@@ -2294,7 +3411,7 @@ LDRSB_INST : {
 LDRSH_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
-        inst_cream->get_addr(cpu, inst_cream->inst, addr);
+        MLS_GET_ADDR(addr);
 
         unsigned int value = cpu->ReadMemory16(addr);
         if (BIT(value, 15)) {
@@ -2310,7 +3427,7 @@ LDRSH_INST : {
 LDRT_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
-        inst_cream->get_addr(cpu, inst_cream->inst, addr);
+        LS_GET_ADDR(addr);
 
         const std::uint32_t dest_index = BITS(inst_cream->inst, 12, 15);
         const std::uint32_t previous_mode = cpu->Mode;
@@ -3525,39 +4642,43 @@ STM_INST : {
         unsigned int old_RN = cpu->Reg[Rn];
 
         inst_cream->get_addr(cpu, inst_cream->inst, addr);
+
+        // Contiguous, ascending stores -- resolve the host page once (see block_cursor).
+        ARMul_State::block_cursor stm_cur;
+
         if (BIT(inst_cream->inst, 22) == 1) {
             for (int i = 0; i < 13; i++) {
                 if (BIT(inst_cream->inst, i)) {
-                    cpu->WriteMemory32(addr, cpu->Reg[i]);
+                    cpu->WriteMemory32Block(addr, cpu->Reg[i], stm_cur);
                     addr += 4;
                 }
             }
             if (BIT(inst_cream->inst, 13)) {
                 if (cpu->Mode == USER32MODE)
-                    cpu->WriteMemory32(addr, cpu->Reg[13]);
+                    cpu->WriteMemory32Block(addr, cpu->Reg[13], stm_cur);
                 else
-                    cpu->WriteMemory32(addr, cpu->Reg_usr[0]);
+                    cpu->WriteMemory32Block(addr, cpu->Reg_usr[0], stm_cur);
 
                 addr += 4;
             }
             if (BIT(inst_cream->inst, 14)) {
                 if (cpu->Mode == USER32MODE)
-                    cpu->WriteMemory32(addr, cpu->Reg[14]);
+                    cpu->WriteMemory32Block(addr, cpu->Reg[14], stm_cur);
                 else
-                    cpu->WriteMemory32(addr, cpu->Reg_usr[1]);
+                    cpu->WriteMemory32Block(addr, cpu->Reg_usr[1], stm_cur);
 
                 addr += 4;
             }
             if (BIT(inst_cream->inst, 15)) {
-                cpu->WriteMemory32(addr, cpu->Reg[15] + 8);
+                cpu->WriteMemory32Block(addr, cpu->Reg[15] + 8, stm_cur);
             }
         } else {
             for (unsigned int i = 0; i < 15; i++) {
                 if (BIT(inst_cream->inst, i)) {
                     if (i == Rn)
-                        cpu->WriteMemory32(addr, old_RN);
+                        cpu->WriteMemory32Block(addr, old_RN, stm_cur);
                     else
-                        cpu->WriteMemory32(addr, cpu->Reg[i]);
+                        cpu->WriteMemory32Block(addr, cpu->Reg[i], stm_cur);
 
                     addr += 4;
                 }
@@ -3565,7 +4686,7 @@ STM_INST : {
 
             // Check PC reg
             if (BIT(inst_cream->inst, 15)) {
-                cpu->WriteMemory32(addr, cpu->Reg[15] + 8);
+                cpu->WriteMemory32Block(addr, cpu->Reg[15] + 8, stm_cur);
             }
         }
     }
@@ -3594,7 +4715,7 @@ SXTB_INST : {
 STR_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
-        inst_cream->get_addr(cpu, inst_cream->inst, addr);
+        LS_GET_ADDR(addr);
 
         unsigned int reg = BITS(inst_cream->inst, 12, 15);
         unsigned int value = cpu->Reg[reg];
@@ -3634,7 +4755,7 @@ UXTAB_INST : {
 STRB_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
-        inst_cream->get_addr(cpu, inst_cream->inst, addr);
+        LS_GET_ADDR(addr);
         unsigned int value = cpu->Reg[BITS(inst_cream->inst, 12, 15)] & 0xff;
         cpu->WriteMemory8(addr, value);
     }
@@ -3646,7 +4767,7 @@ STRB_INST : {
 STRBT_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
-        inst_cream->get_addr(cpu, inst_cream->inst, addr);
+        LS_GET_ADDR(addr);
 
         const std::uint32_t previous_mode = cpu->Mode;
         const std::uint32_t value = cpu->Reg[BITS(inst_cream->inst, 12, 15)] & 0xff;
@@ -3663,7 +4784,7 @@ STRBT_INST : {
 STRD_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
-        inst_cream->get_addr(cpu, inst_cream->inst, addr);
+        MLS_GET_ADDR(addr);
 
         // The 3DS doesn't have the Large Physical Access Extension (LPAE)
         // so STRD wouldn't store these as a single write.
@@ -3735,7 +4856,7 @@ STREXH_INST : {
 STRH_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
-        inst_cream->get_addr(cpu, inst_cream->inst, addr);
+        MLS_GET_ADDR(addr);
 
         unsigned int value = cpu->Reg[BITS(inst_cream->inst, 12, 15)] & 0xffff;
         cpu->WriteMemory16(addr, value);
@@ -3748,7 +4869,7 @@ STRH_INST : {
 STRT_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
-        inst_cream->get_addr(cpu, inst_cream->inst, addr);
+        LS_GET_ADDR(addr);
 
         const std::uint32_t previous_mode = cpu->Mode;
         const std::uint32_t rt_index = BITS(inst_cream->inst, 12, 15);

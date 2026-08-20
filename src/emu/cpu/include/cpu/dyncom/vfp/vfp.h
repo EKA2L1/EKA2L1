@@ -22,7 +22,13 @@
 
 #include <cpu/dyncom/vfp/vfp_helper.h> /* for references to cdp SoftFloat functions */
 
-#define VFP_DEBUG_UNTESTED(x) LOG_TRACE(eka2l1::CPU_DYNCOM, "in func {}, " #x " untested", __FUNCTION__);
+#if defined(EKA2L1_DYNCOM_DISABLE_VFP_TRACE)
+#define VFP_LOG_TRACE(...) ((void)0)
+#else
+#define VFP_LOG_TRACE(...) LOG_TRACE(__VA_ARGS__)
+#endif
+
+#define VFP_DEBUG_UNTESTED(x) VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "in func {}, " #x " untested", __FUNCTION__);
 #define CHECK_VFP_ENABLED
 #define CHECK_VFP_CDP_RET vfp_raise_exceptions(cpu, ret, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
@@ -35,6 +41,12 @@ void vfp_put_double(ARMul_State *state, std::uint64_t val, std::uint32_t reg);
 void vfp_raise_exceptions(ARMul_State *state, std::uint32_t exceptions, std::uint32_t inst, std::uint32_t fpscr);
 std::uint32_t vfp_single_cpdo(ARMul_State *state, std::uint32_t inst, std::uint32_t fpscr);
 std::uint32_t vfp_double_cpdo(ARMul_State *state, std::uint32_t inst, std::uint32_t fpscr);
+
+#if defined(EKA2L1_DYNCOM_DIFFTEST)
+void vfp_set_single_host_fast_for_test(bool enabled);
+void vfp_reset_single_host_fast_hits_for_test();
+std::uint64_t vfp_single_host_fast_hits_for_test();
+#endif
 
 void VMOVBRS(ARMul_State *state, std::uint32_t to_arm, std::uint32_t t, std::uint32_t n, std::uint32_t *value);
 void VMOVBRRD(ARMul_State *state, std::uint32_t to_arm, std::uint32_t t, std::uint32_t t2, std::uint32_t n, std::uint32_t *value1, std::uint32_t *value2);

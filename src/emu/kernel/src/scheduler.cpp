@@ -116,8 +116,9 @@ namespace eka2l1::kernel {
 
                 run_core->flush_tlb();
 
-                // NOTE: This is not needed now
-                //run_core->set_asid(mm_process->address_space_id());
+                // Let the core tag its translation cache with the new address
+                // space so blocks survive this switch instead of being discarded.
+                run_core->set_asid(mm_process->address_space_id());
             }
 
             run_core->load_context(crr_thread->ctx);

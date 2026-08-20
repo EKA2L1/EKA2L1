@@ -30,6 +30,9 @@ namespace eka2l1::arm {
         , ticks_executed_(0)
         , mem_cache_(page_bits) {
         state_ = std::make_unique<ARMul_State>(this, USER32MODE);
+        // Cache the data TLB on the state so the inline memory accessors can hit
+        // it without needing the full dyncom_core definition in armstate.h.
+        state_->mem_cache_ = &mem_cache_;
     }
 
     dyncom_core::~dyncom_core() {
@@ -129,7 +132,13 @@ namespace eka2l1::arm {
     }
 
     void dyncom_core::load_context(const thread_context &ctx) {
-        clear_instruction_cache();
+        // When the scheduler drives asids (primary core), translated blocks are
+        // tagged per address space and stay valid across thread/process switches,
+        // so there is no need to wipe the cache here. Only the fallback-embedded
+        // interpreter, which never receives an asid, still clears eagerly.
+        if (!asid_instruction_cache_) {
+            clear_instruction_cache();
+        }
 
         for (uint8_t i = 0; i < 16; i++) {
             state_->Reg[i] = ctx.cpu_registers[i];
@@ -160,10 +169,16 @@ namespace eka2l1::arm {
     void dyncom_core::clear_instruction_cache() {
         state_->instruction_cache.clear();
         state_->trans_cache_buf_top = 0;
+        state_->flush_block_l1_cache();
     }
 
     void dyncom_core::imb_range(address addr, std::size_t size) {
         clear_instruction_cache();
+    }
+
+    void dyncom_core::set_asid(const std::uint32_t asid) {
+        state_->instruction_cache_asid = asid;
+        asid_instruction_cache_ = true;
     }
 
     std::uint32_t dyncom_core::get_num_instruction_executed() {

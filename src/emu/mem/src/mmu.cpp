@@ -237,14 +237,22 @@ namespace eka2l1::mem {
     }
 
     bool mmu_base::read_code(const vm_address addr, std::uint32_t *data) {
-        std::uint32_t *code = reinterpret_cast<std::uint32_t *>(manager_->get_host_pointer(
-            current_addr_space(), addr));
-
-        if (!code) {
+        // Mirror the data readers: resolve via page_info and seed the CPU TLB so
+        // repeated fetches from the same code page (block translation, runtime
+        // re-reads) skip the page-directory walk. The TLB caches the host page
+        // pointer, not the instruction word, so reads stay current; SMC still
+        // invalidates the entry through make_dirty / imb_range.
+        page_info *inf = manager_->get_page_info(current_addr_space(), addr);
+        if (!inf || !inf->host_addr) {
             return false;
         }
 
-        *data = *code;
+        *data = *reinterpret_cast<std::uint32_t *>(
+            reinterpret_cast<std::uint8_t *>(inf->host_addr) + (addr & manager_->offset_mask_));
+
+        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t *>(inf->host_addr),
+            inf->perm);
+
         return true;
     }
 }

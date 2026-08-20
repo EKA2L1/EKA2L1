@@ -25,21 +25,7 @@ std::uint8_t ARMul_UnsignedAbsoluteDifference(std::uint8_t left, std::uint8_t ri
     return right - left;
 }
 
-// Add with carry, indicates if a carry-out or signed overflow occurred.
-std::uint32_t AddWithCarry(std::uint32_t left, std::uint32_t right, std::uint32_t carry_in, bool *carry_out_occurred,
-    bool *overflow_occurred) {
-    std::uint64_t unsigned_sum = (std::uint64_t)left + (std::uint64_t)right + (std::uint64_t)carry_in;
-    std::int64_t signed_sum = (std::int64_t)(std::int32_t)left + (std::int64_t)(std::int32_t)right + (std::int64_t)carry_in;
-    std::uint64_t result = (unsigned_sum & 0xFFFFFFFF);
-
-    if (carry_out_occurred)
-        *carry_out_occurred = (result != unsigned_sum);
-
-    if (overflow_occurred)
-        *overflow_occurred = ((std::int64_t)(std::int32_t)result != signed_sum);
-
-    return (std::uint32_t)result;
-}
+// AddWithCarry is now an inline hot-path helper in armsupp.h.
 
 // Compute whether an addition of A and B, giving RESULT, overflowed.
 bool AddOverflow(std::uint32_t a, std::uint32_t b, std::uint32_t result) {
