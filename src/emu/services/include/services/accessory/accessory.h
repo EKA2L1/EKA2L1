@@ -38,12 +38,14 @@ namespace eka2l1 {
 
     public:
         explicit accessory_subsession(accessory_server *svr);
+        virtual ~accessory_subsession() = default;
         virtual bool fetch(service::ipc_context *ctx) = 0;
     };
 
     struct accessory_single_connection_subsession : public accessory_subsession {
     protected:
         epoc::notify_info accessory_connected_nof_;
+        epoc::notify_info connection_status_nof_;
 
     public:
         explicit accessory_single_connection_subsession(accessory_server *svr);
@@ -52,6 +54,19 @@ namespace eka2l1 {
         void notify_new_accessory_connected(service::ipc_context *ctx);
         void cancel_notify_new_accessory_connected(service::ipc_context *ctx);
         void get_accessory_connection_status(service::ipc_context *ctx);
+    };
+
+    // RAccessoryMode. Nothing plugs into the emulator, so the mode is always
+    // hand-portable and a mode-changed notification never fires.
+    struct accessory_mode_subsession : public accessory_subsession {
+    protected:
+        epoc::notify_info mode_changed_nof_;
+
+    public:
+        explicit accessory_mode_subsession(accessory_server *svr);
+
+        bool fetch(service::ipc_context *ctx) override;
+        void get_accessory_mode(service::ipc_context *ctx);
     };
 
     using accessory_subsession_instance = std::unique_ptr<accessory_subsession>;
@@ -65,5 +80,6 @@ namespace eka2l1 {
 
         void fetch(service::ipc_context *ctx) override;
         void create_accessory_single_connection_subsession(service::ipc_context *ctx);
+        void create_accessory_mode_subsession(service::ipc_context *ctx);
     };
 }
