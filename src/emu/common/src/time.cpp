@@ -26,12 +26,19 @@
 #include <common/platform.h>
 #include <common/time.h>
 #include <ctime>
+#include <cstdlib>
+#include <string>
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
 #include <timeapi.h>
 
 #pragma comment(lib, "winmm.lib")
+#elif EKA2L1_PLATFORM(DARWIN)
+#include <CoreFoundation/CoreFoundation.h>
+#elif EKA2L1_PLATFORM(POSIX)
+#include <limits.h>
+#include <unistd.h>
 #endif
 
 namespace eka2l1::common {
@@ -57,18 +64,104 @@ namespace eka2l1::common {
     }
 
     int get_current_utc_offset() {
-#if EKA2L1_PLATFORM(WIN32)
-        TIME_ZONE_INFORMATION tz_info{};
-        GetTimeZoneInformation(&tz_info);
+        const std::time_t current_time = std::time(nullptr);
+        return get_local_time_zone_info(static_cast<std::int64_t>(current_time)).offset_seconds;
+    }
 
-        // The bias is in minutes
-        return -(tz_info.Bias) * 60;
+    local_time_zone_info get_local_time_zone_info(const std::int64_t unix_seconds) {
+        const std::time_t timestamp = static_cast<std::time_t>(unix_seconds);
+        std::tm local_time{};
+
+#if EKA2L1_PLATFORM(WIN32)
+        if (localtime_s(&local_time, &timestamp) != 0) {
+            return { 0, false };
+        }
+
+        std::tm local_copy = local_time;
+        const std::time_t local_as_utc = _mkgmtime(&local_copy);
+        return {
+            static_cast<int>(local_as_utc - timestamp),
+            local_time.tm_isdst > 0
+        };
 #else
-        std::time_t current_time;
-        std::time(&current_time);
-        struct std::tm *timeinfo = std::localtime(&current_time);
-        return static_cast<int>(timeinfo->tm_gmtoff);
+        if (!localtime_r(&timestamp, &local_time)) {
+            return { 0, false };
+        }
+
+        return {
+            static_cast<int>(local_time.tm_gmtoff),
+            local_time.tm_isdst > 0
+        };
 #endif
+    }
+
+    std::string get_current_time_zone_name() {
+        const char *environment_name = std::getenv("TZ");
+        if (environment_name && environment_name[0] != '\0' && environment_name[0] != ':') {
+            return environment_name;
+        }
+
+#if EKA2L1_PLATFORM(WIN32)
+        DYNAMIC_TIME_ZONE_INFORMATION info{};
+        if (GetDynamicTimeZoneInformation(&info) != TIME_ZONE_ID_INVALID) {
+            const int needed = WideCharToMultiByte(CP_UTF8, 0, info.TimeZoneKeyName, -1,
+                nullptr, 0, nullptr, nullptr);
+            if (needed > 1) {
+                std::string result(static_cast<std::size_t>(needed), '\0');
+                WideCharToMultiByte(CP_UTF8, 0, info.TimeZoneKeyName, -1,
+                    result.data(), needed, nullptr, nullptr);
+                result.resize(static_cast<std::size_t>(needed - 1));
+                return result;
+            }
+        }
+#elif EKA2L1_PLATFORM(DARWIN)
+        CFTimeZoneRef zone = CFTimeZoneCopySystem();
+        if (zone) {
+            CFStringRef name = CFTimeZoneGetName(zone);
+            const CFIndex length = name ? CFStringGetLength(name) : 0;
+            const CFIndex maximum = CFStringGetMaximumSizeForEncoding(length, kCFStringEncodingUTF8) + 1;
+            std::string result;
+
+            if (maximum > 1) {
+                result.resize(static_cast<std::size_t>(maximum));
+                if (CFStringGetCString(name, result.data(), maximum, kCFStringEncodingUTF8)) {
+                    result.resize(std::char_traits<char>::length(result.c_str()));
+                } else {
+                    result.clear();
+                }
+            }
+
+            CFRelease(zone);
+            if (!result.empty()) {
+                return result;
+            }
+        }
+#elif EKA2L1_PLATFORM(POSIX)
+        char link_target[PATH_MAX + 1]{};
+        const ssize_t length = readlink("/etc/localtime", link_target, PATH_MAX);
+        if (length > 0) {
+            link_target[length] = '\0';
+            const std::string path(link_target);
+            const std::string marker = "/zoneinfo/";
+            const std::size_t marker_position = path.find(marker);
+            if (marker_position != std::string::npos) {
+                return path.substr(marker_position + marker.size());
+            }
+        }
+#endif
+
+        const std::time_t current_time = std::time(nullptr);
+        std::tm local_time{};
+#if EKA2L1_PLATFORM(WIN32)
+        if (localtime_s(&local_time, &current_time) == 0 && _tzname[0]) {
+            return _tzname[local_time.tm_isdst > 0 ? 1 : 0];
+        }
+#else
+        if (localtime_r(&current_time, &local_time) && local_time.tm_zone) {
+            return local_time.tm_zone;
+        }
+#endif
+        return "UTC";
     }
 
     struct basic_teletimer_micro : public teletimer {

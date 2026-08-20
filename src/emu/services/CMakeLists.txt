@@ -119,6 +119,7 @@ add_library(epocservs
         include/services/socket/server.h
         include/services/socket/socket.h
         include/services/sysagt/sysagt.h
+        include/services/timezone/timezone.h
         include/services/ui/cap/coestorage.h
         include/services/ui/cap/consts.h
         include/services/ui/cap/eiksrv.h
@@ -272,6 +273,7 @@ add_library(epocservs
         src/socket/socket.cpp
         src/socket/server.cpp
         src/sysagt/sysagt.cpp
+        src/timezone/timezone.cpp
         src/ui/cap/coestorage.cpp
         src/ui/cap/eiksrv.cpp
         src/ui/cap/oom_app.cpp
