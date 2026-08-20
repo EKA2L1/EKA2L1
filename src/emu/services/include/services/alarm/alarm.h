@@ -24,7 +24,9 @@
 
 namespace eka2l1 {
     enum alarm_opcode {
+        alarm_get_alarm_id_list_for_category = 9,
         alarm_get_alarm_id_list_by_state = 11,
+        alarm_get_alarm_id_list = 12,
         alarm_notify_change = 19,
         alarm_notify_change_cancel = 20,
         alarm_fetch_transfer_buffer = 21
@@ -57,7 +59,7 @@ namespace eka2l1 {
         explicit alarm_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
 
         void fetch(service::ipc_context *ctx) override;
-        void get_alarm_id_list_by_state(service::ipc_context *ctx);
+        void stream_alarm_id_list(service::ipc_context *ctx);
         void fetch_transfer_buffer(service::ipc_context *ctx);
         void notify_change(service::ipc_context *ctx);
         void notify_change_cancel(service::ipc_context *ctx);
