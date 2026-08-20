@@ -39,6 +39,11 @@ private:
 	HBufC8 *iDataBuffer;
 	CFbsBitmap *iDataBitmap;
 
+	// DataL() must hand out a descriptor that outlives the call. HBufC8::Des()
+	// returns a TPtr8 by value, so returning its address gives the caller a
+	// pointer into a dead stack frame.
+	TPtr8 iDataDes;
+
 public:
 	CCameraImageBufferImpl();
 
@@ -51,6 +56,10 @@ public:
 
 	TUint8 *DataPtr();
 	void EndDataAccess();
+
+	// Publish how many bytes were actually filled in. Without it the buffer
+	// stays zero-length and FrameSize()/DataL() report no image at all.
+	void SetDataLength(TInt aLength);
 
 	TBool IsFree() {
 		return (!iDataBuffer && !iDataBitmap);

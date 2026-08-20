@@ -71,6 +71,13 @@ namespace eka2l1::dispatch {
         current_scale_ = 0.0f;
     }
 
+    void egl_surface::on_window_destroyed(epoc::canvas_interface *interface) {
+        // The window dies before this surface does when its owner exits
+        // without eglDestroySurface; every other user of the pointer already
+        // handles it being null.
+        backed_window_ = nullptr;
+    }
+
     void egl_surface::scale(egl_context *context, drivers::graphics_driver *drv) {
         if (current_scale_ != backed_screen_->display_scale_factor) {
             // Silently resize and scale

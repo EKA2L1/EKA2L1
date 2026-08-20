@@ -70,6 +70,16 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(const TSize &aSize, TDisplayMod
 
         break;
 
+    case EColor16MAPAlter:
+        newDevice = new (ELeave) CFbsTwentyfourBitAlphaDrawDevice;
+        CleanupStack::PushL(newDevice);
+        User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitAlphaDrawDevice *>(newDevice)->Construct(aSize, aDataStride));
+        reinterpret_cast<CFbsTwentyfourBitAlphaDrawDevice *>(newDevice)->SetPremultipliedAlphaMode();
+
+        LogOut(KScdvCat, _L("INFO:: A new 24 bit premultiplied alpha bitmap device has been instantiated!"));
+
+        break;
+
     case EColor16MUAlter:
         newDevice = new (ELeave) CFbsTwentyfourBitUnsignedByteDrawDevice;
         CleanupStack::PushL(newDevice);
@@ -132,6 +142,16 @@ static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny 
         User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitAlphaScreenDrawDevice *>(device)->Construct(aScreenNo, aSize, -1));
 
         LogOut(KScdvCat, _L("INFO:: A new 24 bit alpha screen device has been instantiated!"));
+
+        break;
+
+    case EColor16MAPAlter:
+        device = new (ELeave) CFbsTwentyfourBitAlphaScreenDrawDevice;
+        CleanupStack::PushL(device);
+        User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitAlphaScreenDrawDevice *>(device)->Construct(aScreenNo, aSize, -1));
+        reinterpret_cast<CFbsTwentyfourBitAlphaScreenDrawDevice *>(device)->SetPremultipliedAlphaMode();
+
+        LogOut(KScdvCat, _L("INFO:: A new 24 bit premultiplied alpha screen device has been instantiated!"));
 
         break;
 

@@ -25,13 +25,14 @@
 
 namespace eka2l1::drivers {
     struct input_descriptor_ogl : public input_descriptor {
+        bool updated_ = false;
+
         bool is_updated() const {
-            return format >> 13;
+            return updated_;
         }
 
         void set_updated(const bool rr) {
-            format &= ~(1 << 13);
-            if (rr) format |= (1 << 13);
+            updated_ = rr;
         }
     };
 

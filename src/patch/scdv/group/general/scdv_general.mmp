@@ -13,10 +13,11 @@ TARGETTYPE	  dll
 UID			  0x10003B19 0xee000002
 
 USERINCLUDE	    ..\..\inc
-SYSTEMINCLUDE   \epoc32\include ..\..\..\priv\inc
+SYSTEMINCLUDE   \epoc32\include \epoc32\include\platform ..\..\..\priv\inc
 
 SOURCEPATH	  ..\..\src
 
+SOURCE        aeabi.cpp
 SOURCE        panic.cpp
 SOURCE		  scdv.cpp
 SOURCE        drawdvcbuf.cpp

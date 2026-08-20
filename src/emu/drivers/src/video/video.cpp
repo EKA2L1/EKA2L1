@@ -17,11 +17,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <drivers/video/backend/ffmpeg/video_player_ffmpeg.h>
 #include <drivers/video/video.h>
+
+#include <common/platform.h>
+
+#if EKA2L1_HAS_FFMPEG
+#include <drivers/video/backend/ffmpeg/video_player_ffmpeg.h>
+#endif
 
 namespace eka2l1::drivers {
     video_player_instance new_best_video_player(audio_driver *drv) {
+#if EKA2L1_HAS_FFMPEG
         return std::make_unique<video_player_ffmpeg>(drv);
+#else
+        (void)drv;
+        return nullptr;
+#endif
     }
 }

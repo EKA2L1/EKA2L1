@@ -27,7 +27,8 @@
 
 CCameraImageBufferImpl::CCameraImageBufferImpl()
     : iDataBuffer(NULL)
-    , iDataBitmap(NULL) {
+    , iDataBitmap(NULL)
+    , iDataDes(NULL, 0, 0) {
 }
 
 void CCameraImageBufferImpl::ConstructL(TInt aDataSize) {
@@ -40,12 +41,27 @@ void CCameraImageBufferImpl::ConstructL(TInt aDataSize) {
         delete iDataBitmap;
 
     iDataBitmap = NULL;
+    iDataDes.Set(iDataBuffer->Des());
+}
+
+void CCameraImageBufferImpl::SetDataLength(TInt aLength) {
+    if (!iDataBuffer) {
+        return;
+    }
+
+    // HBufC8::Des() hands back an EBufCPtr descriptor, so setting the length
+    // through it also updates the heap descriptor's own length.
+    TPtr8 des = iDataBuffer->Des();
+    des.SetLength(aLength);
+
+    iDataDes.Set(des);
 }
 
 void CCameraImageBufferImpl::ConstructBitmapL(TSize aSize, TInt aFormat) {
     if (iDataBuffer) {
         delete iDataBuffer;
         iDataBuffer = NULL;
+        iDataDes.Set(NULL, 0, 0);
     }
 
     if (iDataBitmap) {
@@ -61,7 +77,11 @@ TDesC8 *CCameraImageBufferImpl::DataL(TInt aFrameIndex) {
         User::Leave(KErrArgument);
     }
 
-    return &iDataBuffer->Des();
+    if (!iDataBuffer) {
+        User::Leave(KErrNotReady);
+    }
+
+    return &iDataDes;
 }
 
 TUint8 *CCameraImageBufferImpl::DataPtr() {
@@ -106,6 +126,7 @@ void CCameraImageBufferImpl::Release() {
     if (iDataBuffer) {
         delete iDataBuffer;
         iDataBuffer = NULL;
+        iDataDes.Set(NULL, 0, 0);
     }
 
     if (iDataBitmap) {
@@ -124,14 +145,9 @@ CCameraImageCaptureObject::CCameraImageCaptureObject()
 }
 
 CCameraImageCaptureObject::~CCameraImageCaptureObject() {
-    if (!iDataBuffer) {
-        delete iDataBuffer;
-    }
+    delete iDataBuffer;
+    delete iDataBitmap;
 
-    if (!iDataBitmap) {
-        delete iDataBitmap;
-    }
-    
     for (TInt i = 0; i < iImageBuffers.Count(); i++) {
         delete iImageBuffers[i];
     }
@@ -238,6 +254,13 @@ void CCameraImageCaptureObject::HandleCompleteV1() {
                 }
 
                 error = ECamReceiveImage(0, iDispatch, &imageBufferSize, iDataBuffer->Ptr(), EImageStackCaptureImage);
+
+                if (error == KErrNone) {
+                    // The bytes went straight into the heap descriptor's data
+                    // area, which leaves its length at zero. Publish it, or the
+                    // observer sees an empty image.
+                    iDataBuffer->Des().SetLength(imageBufferSize);
+                }
             } else {
                 iDataBitmap->BeginDataAccess();
                 error = ECamReceiveImage(0, iDispatch, &imageBufferSize, (TUint8*)iDataBitmap->DataAddress(), EImageStackCaptureImage);
@@ -269,8 +292,11 @@ void CCameraImageCaptureObject::HandleCompleteV2() {
     if (buffer == NULL) {
         LogOut(KCameraCat, _L("Failed to get a free image camera buffer!"));
 
-        // It still needs a reference :(
-        observer->ImageBufferReady(*buffer, KErrNoMemory);
+        // The callback takes a reference, so an empty spare buffer has to stand
+        // in for one: dereferencing NULL here would take the client down with a
+        // KERN-EXEC 3 instead of reporting the error.
+        CCameraImageBufferImpl emptyBuffer;
+        observer->ImageBufferReady(emptyBuffer, KErrNoMemory);
         return;
     }
 
@@ -293,6 +319,10 @@ void CCameraImageCaptureObject::HandleCompleteV2() {
 
         error = ECamReceiveImage(0, iDispatch, &imageBufferSize, buffer->DataPtr(), EImageStackCaptureImage);
         buffer->EndDataAccess();
+
+        if ((error == KErrNone) && (iBitmapDisplayMode == ENone)) {
+            buffer->SetDataLength(imageBufferSize);
+        }
 
         if (error != KErrNone) {
             LogOut(KCameraCat, _L("Failed to receive image data!"));

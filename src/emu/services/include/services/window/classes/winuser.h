@@ -49,6 +49,12 @@ namespace eka2l1::epoc {
     struct canvas_observer {
     public:
         virtual void on_window_size_changed(canvas_interface *obj) = 0;
+
+        // Observers hold raw pointers to the window; the canvas destructor
+        // fires this so they can drop theirs. The window may outlive its
+        // client (app exit destroys windows while EGL surfaces linger in the
+        // dispatcher), so an unnotified observer dangles.
+        virtual void on_window_destroyed(canvas_interface *obj) = 0;
     };
 
     struct canvas_interface : public epoc::window {

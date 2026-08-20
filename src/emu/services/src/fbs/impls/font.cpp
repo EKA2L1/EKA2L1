@@ -584,7 +584,12 @@ namespace eka2l1 {
     }
 
     void fbscli::get_nearest_font(service::ipc_context *ctx) {
-        epoc::font_spec_v1 spec = *ctx->get_argument_data_from_descriptor<epoc::font_spec_v1>(0);
+        std::optional<epoc::font_spec_v1> spec_arg = ctx->get_argument_data_from_descriptor<epoc::font_spec_v1>(0);
+        if (!spec_arg) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+        epoc::font_spec_v1 spec = *spec_arg;
 
         // 1 x int of Max height - 2 x int of device size
         std::optional<eka2l1::vec3> size_info = ctx->get_argument_data_from_descriptor<eka2l1::vec3>(2);
@@ -600,7 +605,11 @@ namespace eka2l1 {
         // TODO: Find out if spec height is always in twips for eka2.
         if (serv->kern->is_eka1() || is_twips) {
             spec.height = static_cast<std::int32_t>(static_cast<float>(spec.height) / epoc::get_approximate_pixel_to_twips_mul(serv->kern->get_epoc_version()));
-            size_info->x = static_cast<std::int32_t>(static_cast<float>(size_info->x) / epoc::get_approximate_pixel_to_twips_mul(serv->kern->get_epoc_version()));
+            // Design-height requests, including the EKA1 form, do not carry
+            // the max-height/device-size descriptor in slot 2.
+            if (size_info) {
+                size_info->x = static_cast<std::int32_t>(static_cast<float>(size_info->x) / epoc::get_approximate_pixel_to_twips_mul(serv->kern->get_epoc_version()));
+            }
         }
 
         // Observing font plugin on real phone, it seems to clamp the height between 2 to 256.

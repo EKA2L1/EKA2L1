@@ -119,6 +119,21 @@ namespace eka2l1::epoc {
         graphics_orientation orientation;
     };
 
+    // Binary layout of Symbian's TSizeMode, returned by
+    // CWsScreenDevice::GetCurrentScreenModeAttributes().
+    struct screen_size_mode_attributes {
+        graphics_orientation rotation;
+        eka2l1::vec2 origin;
+        eka2l1::vec2 screen_size;
+        eka2l1::vec2 screen_twips_size;
+        std::uint32_t alternative_rotations;
+        eka2l1::rect pointer_cursor_area;
+        eka2l1::vec2 screen_scale;
+        display_mode default_display_mode;
+    };
+
+    static_assert(sizeof(screen_size_mode_attributes) == 60);
+
     struct canvas_base;
 
     namespace ws {

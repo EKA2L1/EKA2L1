@@ -58,7 +58,10 @@ namespace eka2l1::epoc {
 
         void visible_region_changed(const common::region &new_region);
 
-        void do_cancel();
+        // complete_request: whether the outstanding "must stop" request has to be completed by the
+        // server. Only true when the server is the one tearing the DSA down (abort); a client
+        // -initiated cancel is completed by ws32 itself - see do_cancel().
+        void do_cancel(const bool complete_request);
         void abort(const std::int32_t reason);
 
         void get_sync_info(service::ipc_context &ctx, ws_cmd &cmd);

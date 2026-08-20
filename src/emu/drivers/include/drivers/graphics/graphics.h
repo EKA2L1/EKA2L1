@@ -141,6 +141,19 @@ namespace eka2l1::drivers {
         }
 
         /**
+         * \brief Largest 2D texture dimension the backend can allocate.
+         *
+         * Used to keep dynamically-grown textures (e.g. the font glyph atlas)
+         * within what the GPU accepts — exceeding it makes texture creation
+         * fail and the texture sample as opaque black. The conservative default
+         * matches the GLES 3.0 minimum guarantee; backends override with the
+         * real queried value.
+         */
+        virtual std::uint32_t max_texture_size() const {
+            return 2048;
+        }
+
+        /**
          * \brief Set a hook when display function is called.
          *
          * On Vulkan, display may be done using vkQueueDisplayKHR, then you can hook to do things like for example,

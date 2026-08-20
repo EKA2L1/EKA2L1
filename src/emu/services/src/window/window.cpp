@@ -100,15 +100,22 @@ namespace eka2l1::epoc {
 
     window_server_client::~window_server_client() {
         window_server &serv = get_ws();
-        bool canceling = false;
+
+        // Destroying our objects unlinks windows from the screen tree and frees their
+        // stored draw commands. The animation scheduler walks that very tree on the
+        // timing thread, guarded only by screen_mutex, so tearing down without it lets
+        // the walker read a window that is halfway through its own destructor.
+        //
+        // On emulator wipeout the timing thread may already be on its way out, so the
+        // scheduled redraws are cancelled first and the screens are only taken when
+        // this client is the one that performed the cancel.
+        bool lock_screens = true;
 
         if (serv.get_kernel_system()->wipeout_in_progress()) {
-            if (serv.anim_sched.cancel_all()) {
-                canceling = true;
-            }
+            lock_screens = serv.anim_sched.cancel_all();
         }
 
-        if (canceling) {
+        if (lock_screens) {
             epoc::screen *scr = serv.screens;
             while (scr) {
                 scr->screen_mutex.lock();
@@ -118,7 +125,7 @@ namespace eka2l1::epoc {
 
         objects.clear();
 
-        if (canceling) {
+        if (lock_screens) {
             epoc::screen *scr = serv.screens;
             while (scr) {
                 scr->screen_mutex.unlock();
@@ -240,7 +247,23 @@ namespace eka2l1::epoc {
             return false;
         }
 
+        // Freeing a window unlinks it from the screen tree the animation scheduler
+        // walks on the timing thread. Hold the redraw lock so the walker never sees
+        // a half-destroyed window. See the client destructor for the same reason.
+        epoc::screen *scr = get_ws().screens;
+        while (scr) {
+            scr->screen_mutex.lock();
+            scr = scr->next;
+        }
+
         objects[idx - 1].reset();
+
+        scr = get_ws().screens;
+        while (scr) {
+            scr->screen_mutex.unlock();
+            scr = scr->next;
+        }
+
         return true;
     }
 
@@ -1365,9 +1388,18 @@ namespace eka2l1 {
                 loader::rom *rom_info = kern->get_rom_info();
                 const epoc::display_mode conv_res = epoc::get_display_mode_from_bpp(rom_info->header.eka1_diff1.bits_per_pixel, true);
 
-                if (scr_mode_global != epoc::display_mode::color_last) {
+                if (conv_res != epoc::display_mode::color_last) {
                     scr_mode_global = conv_res;
                     use_in_ini = false;
+
+                    // A 4K-colour panel is driven through a 16-bit framebuffer: two bytes
+                    // per pixel with the top four unused. Reporting EColor4K makes apps
+                    // that map a display mode to a *byte* stride come up with zero bytes
+                    // per pixel, so they allocate nothing and then blit 16bpp over the
+                    // heap (X-Plore on the N-Gage panics with USER 44 that way).
+                    if (scr_mode_global == epoc::display_mode::color4k) {
+                        scr_mode_global = epoc::display_mode::color64k;
+                    }
                 }
             }
 

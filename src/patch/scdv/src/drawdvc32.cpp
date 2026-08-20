@@ -293,6 +293,10 @@ TInt CFbsTwentyfourBitAlphaDrawDevice::Construct(TSize aSize, TInt aDataStride) 
     return KErrNone;
 }
 
+void CFbsTwentyfourBitAlphaDrawDevice::SetPremultipliedAlphaMode() {
+    iDisplayMode = (TDisplayMode)EColor16MAPAlter;
+}
+
 TInt CFbsTwentyfourBitUnsignedByteDrawDevice::Construct(TSize aSize, TInt aDataStride) {
     const TInt result = ConstructInner(aSize, aDataStride);
     if (result != KErrNone) {

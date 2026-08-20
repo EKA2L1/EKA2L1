@@ -225,7 +225,7 @@ namespace eka2l1::drivers {
             return is_gles;
         }
 
-        std::uint32_t max_texture_size() const {
+        std::uint32_t max_texture_size() const override {
             return max_texture_size_;
         }
 

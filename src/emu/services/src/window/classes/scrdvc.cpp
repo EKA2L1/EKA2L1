@@ -331,6 +331,34 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case ws_sd_op_get_current_screen_mode_attributes: {
+            const epoc::config::screen_mode &mode = scr->current_mode();
+            std::uint32_t alternative_rotations = 0;
+
+            for (int i = 0; i < scr->total_screen_mode(); i++) {
+                const epoc::config::screen_mode *candidate = scr->mode_info(i);
+                if (candidate) {
+                    alternative_rotations |= 1U << static_cast<std::uint32_t>(
+                        get_orientation_from_rotation(candidate->rotation));
+                }
+            }
+
+            const screen_size_mode_attributes attributes = {
+                number_to_orientation(mode.rotation),
+                eka2l1::vec2(0, 0),
+                mode.size,
+                mode.size * epoc::get_approximate_pixel_to_twips_mul(ctx.sys->get_symbian_version_use()),
+                alternative_rotations,
+                eka2l1::rect(eka2l1::vec2(0, 0), mode.size),
+                eka2l1::vec2(1, 1),
+                scr->disp_mode
+            };
+
+            ctx.write_data_to_descriptor_argument(reply_slot, attributes);
+            ctx.complete(epoc::error_none);
+            break;
+        }
+
         case ws_sd_op_display_mode: {
             ctx.complete(static_cast<int>(scr->disp_mode));
             break;
@@ -366,6 +394,12 @@ namespace eka2l1::epoc {
         case ws_sd_op_get_scan_line:
             LOG_TRACE(SERVICE_WINDOW, "Get scanline stubbed");
             ctx.complete(epoc::error_none);
+            break;
+
+        case ws_sd_op_extension_supported:
+            // No display-control, display-mapping, or debug-composition
+            // extensions are currently exposed by the HLE window server.
+            ctx.complete(0);
             break;
 
         default: {

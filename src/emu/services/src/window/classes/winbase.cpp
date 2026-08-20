@@ -289,7 +289,10 @@ namespace eka2l1::epoc {
 
         // Patching out user opcode.
         if ((cli_ver.major == WS_MAJOR_VER) && (cli_ver.minor == WS_MINOR_VER)) {
-            if ((cli_ver.build <= WS_OLDARCH_VER) || (kern->get_epoc_version() <= epocver::epoc80)) {
+            // The window-server client version determines this opcode table.
+            // Some EKA1/EPOC 8.0 releases report a newer build and already
+            // include EWsWinOpAbsPosition.
+            if (cli_ver.build <= WS_OLDARCH_VER) {
                 // Skip absolute position opcode
                 if (cmd.header.op >= EWsWinOpAbsPosition) {
                     cmd.header.op += 1;

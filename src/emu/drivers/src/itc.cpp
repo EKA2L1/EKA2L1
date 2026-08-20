@@ -29,6 +29,10 @@ using namespace std::chrono_literals;
 
 namespace eka2l1::drivers {
     static int send_sync_command(graphics_driver *drv, command cmd) {
+        if (!drv) {
+            return -1;
+        }
+
         int status = -100;
         cmd.status_ = &status;
 

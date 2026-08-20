@@ -2,7 +2,7 @@ TARGET		    priv.lib
 TARGETTYPE	    lib
 UID			    0
 
-SYSTEMINCLUDE   ..\inc \epoc32\include
+SYSTEMINCLUDE   ..\inc \epoc32\include \epoc32\include\platform
 
 SOURCEPATH	    ..\src
 
