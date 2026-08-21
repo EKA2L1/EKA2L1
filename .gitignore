@@ -25,3 +25,7 @@ EKA2L1_TakeThis.log
 
 # Bitmap the painter test writes next to wherever ekatests is run from.
 testpaint.bmp
+
+# Python bytecode caches, e.g. from the patch DLL build scripts
+__pycache__/
+*.pyc
