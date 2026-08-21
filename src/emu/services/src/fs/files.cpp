@@ -35,6 +35,30 @@
 #include <services/fs/sec.h>
 
 namespace eka2l1 {
+    // Whether the directory is exactly the calling process's own private directory,
+    // <drive>:\private\<sid>\.
+    static bool is_process_own_private_dir(kernel::process *pr, const std::u16string &dir) {
+        if (!pr) {
+            return false;
+        }
+
+        const std::u16string root = eka2l1::root_name(dir, true);
+        if (root.empty()) {
+            return false;
+        }
+
+        const std::uint32_t uid = std::get<2>(pr->get_uid_type());
+        const std::u16string own = root + u"\\private\\"
+            + common::utf8_to_ucs2(common::uppercase_string(common::to_string(uid, std::hex))) + u"\\";
+
+        std::u16string normalized = eka2l1::transform_separators<char16_t>(dir, true, eka2l1::get_separator_16);
+        if (normalized.empty() || !eka2l1::is_separator(normalized.back())) {
+            normalized += u'\\';
+        }
+
+        return common::compare_ignore_case(normalized, own) == 0;
+    }
+
     bool file_attrib::claim_exclusive(const kernel::uid pr_uid) {
         if (owner == pr_uid) {
             flags |= static_cast<std::uint32_t>(fs_file_attrib_flag::exclusive);
@@ -819,6 +843,16 @@ namespace eka2l1 {
 
         {
             auto file_dir = eka2l1::file_directory(*name_res);
+
+            // A process's own private directory exists on a device, so a missing file
+            // there reports KErrNotFound. Here it only appears once something has
+            // written to it, and the guest gets KErrPathNotFound instead -- a
+            // different error, which fallback paths do not recognise. The metadata
+            // server reads its schema from C:\private\200009F3\ and only falls back
+            // to the ROM copy on KErrNotFound, so it dies on a clean drive.
+            if (!io->exist(file_dir) && is_process_own_private_dir(ctx->msg->own_thr->owning_process(), file_dir)) {
+                io->create_directories(file_dir);
+            }
 
             // Do a check to return epoc::error_path_not_found
             if (!io->exist(file_dir)) {
