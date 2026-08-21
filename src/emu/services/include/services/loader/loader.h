@@ -59,6 +59,8 @@ namespace eka2l1 {
 
         void load_logical_device(service::ipc_context &context);
 
+        void load_physical_device(service::ipc_context &context);
+
         void get_info_from_header(service::ipc_context &context);
 
         void delete_loader(service::ipc_context &context);
