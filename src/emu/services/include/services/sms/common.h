@@ -185,6 +185,7 @@ namespace eka2l1::epoc::sms {
         sms_pdu_type pdu_type_;
         sms_address service_center_address_;
 
+        virtual ~sms_pdu() = default;
         virtual void absorb(common::chunkyseri &seri) = 0;
     };
 
