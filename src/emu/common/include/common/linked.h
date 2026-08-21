@@ -73,7 +73,7 @@ namespace eka2l1::common {
         }
 
         bool alone() const {
-            return next == previous;
+            return (next == nullptr) && (previous == nullptr);
         }
     };
 

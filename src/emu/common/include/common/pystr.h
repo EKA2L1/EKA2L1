@@ -152,7 +152,7 @@ namespace eka2l1::common {
         basic_pystr<T> lstrip() const {
             auto news = str_;
 
-            while (news[0] == static_cast<T>(' ')) {
+            while (!news.empty() && news[0] == static_cast<T>(' ')) {
                 news.erase(news.begin(), news.begin() + 1);
             }
 
@@ -162,7 +162,7 @@ namespace eka2l1::common {
         basic_pystr<T> rstrip() const {
             auto news = str_;
 
-            while (news.back() == static_cast<T>(' ')) {
+            while (!news.empty() && news.back() == static_cast<T>(' ')) {
                 news.pop_back();
             }
 

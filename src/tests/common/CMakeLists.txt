@@ -4,9 +4,13 @@ set(COMMON_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/bytes.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/chunkyseri.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/crypt.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/flate.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ini.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/linked.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/paint.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/path.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/pystr.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/region.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/runlen.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/sync.cpp
     PARENT_SCOPE)

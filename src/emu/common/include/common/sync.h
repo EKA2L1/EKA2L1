@@ -82,6 +82,8 @@ namespace eka2l1::common {
         explicit event();
         ~event();
 
+        // Auto-reset event semantics: set stores one pending signal, and a
+        // successful wait consumes it atomically.
         void set();
 
         void wait();

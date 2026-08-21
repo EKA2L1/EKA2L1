@@ -131,7 +131,6 @@ namespace eka2l1::kernel {
             if (kern->should_core_idle_when_inactive()) {
                 kern->unlock();
                 idle_event.wait();
-                idle_event.reset();
                 kern->lock();
             }
         }

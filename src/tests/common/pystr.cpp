@@ -85,3 +85,13 @@ TEST_CASE("str_to_fp_fract_neg", "pystr") {
     common::pystr test("-60.56");
     REQUIRE(test.as_fp<float>() == -60.56f);
 }
+
+// Python's str.strip() family returns an empty string for an empty string
+// rather than raising; this type exists to mirror it.
+TEST_CASE("strip_empty", "pystr") {
+    common::pystr test("");
+
+    REQUIRE(test.lstrip().std_str().empty());
+    REQUIRE(test.rstrip().std_str().empty());
+    REQUIRE(test.strip().std_str().empty());
+}
