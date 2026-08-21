@@ -51,8 +51,13 @@ namespace eka2l1 {
 
     void alarm_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
+        // All three list requests stream the id array into the transfer buffer and hand
+        // its size back in slot 1. Their filter argument only narrows a queue that is
+        // always empty here, so one implementation answers all of them.
+        case alarm_get_alarm_id_list_for_category:
         case alarm_get_alarm_id_list_by_state:
-            get_alarm_id_list_by_state(ctx);
+        case alarm_get_alarm_id_list:
+            stream_alarm_id_list(ctx);
             break;
 
         case alarm_fetch_transfer_buffer:
@@ -73,9 +78,7 @@ namespace eka2l1 {
         }
     }
 
-    void alarm_session::get_alarm_id_list_by_state(service::ipc_context *ctx) {
-        auto state = ctx->get_argument_value<std::uint32_t>(0);
-
+    void alarm_session::stream_alarm_id_list(service::ipc_context *ctx) {
         common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
         populate_alarm_ids(seri, alarm_ids);
 
