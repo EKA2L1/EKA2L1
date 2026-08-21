@@ -168,7 +168,10 @@ namespace eka2l1::common {
             mask = 0xFFFFFFFFU;
             end_bit -= 32;
 
-            if (end_bit < 32) {
+            // Only a positive remainder describes a partial last word. A negative
+            // one would shift by more than 32 bits, and the loop is about to end
+            // with the mask unused anyway.
+            if ((end_bit > 0) && (end_bit < 32)) {
                 mask = ~(mask >> static_cast<std::uint32_t>(end_bit));
             }
         }

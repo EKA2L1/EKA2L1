@@ -75,7 +75,9 @@ namespace eka2l1 {
 
         drive_number drv_target = drive_z;
 
-        for (drive_number drv = drive_z; drv >= drive_a; drv--) {
+        // Stepping one below drive_a would leave the enum's value range.
+        for (int drv_index = drive_z; drv_index >= drive_a; drv_index--) {
+            const drive_number drv = static_cast<drive_number>(drv_index);
             auto drv_entry = io->get_drive_entry(drv);
 
             if (drv_entry && (drv_entry->media_type == drive_media::rom)) {

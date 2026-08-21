@@ -27,14 +27,16 @@
 
 namespace eka2l1::common {
     void chunkyseri::absorb_impl(std::uint8_t *dat, const std::size_t s) {
-        if (buf + s > end && mode != SERI_MODE_MEASURE) {
+        if (mode == SERI_MODE_MEASURE) {
+            measured += s;
+            return;
+        }
+
+        if (buf + s > end) {
             return;
         }
 
         switch (mode) {
-        case SERI_MODE_MEASURE:
-            break;
-
         case SERI_MODE_WRITE: {
             if (dat)
                 memcpy(reinterpret_cast<void *>(buf), reinterpret_cast<const void *>(dat), s);
@@ -57,10 +59,12 @@ namespace eka2l1::common {
     }
 
     bool chunkyseri::expect(const std::uint8_t *dat, const std::size_t s) {
-        switch (mode) {
-        case SERI_MODE_MEASURE:
-            break;
+        if (mode == SERI_MODE_MEASURE) {
+            measured += s;
+            return true;
+        }
 
+        switch (mode) {
         case SERI_MODE_WRITE: {
             memcpy(reinterpret_cast<void *>(buf), reinterpret_cast<const void *>(dat), s);
             break;

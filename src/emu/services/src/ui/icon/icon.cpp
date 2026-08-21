@@ -111,7 +111,9 @@ namespace eka2l1 {
         // No drive/dir component? Search the well-known resource folders on every drive.
         if ((path.find(u':') == std::u16string::npos) && (path.find(u'\\') == std::u16string::npos)) {
             static const char16_t *kPrefixes[] = { u"\\resource\\apps\\", u"\\resource\\" };
-            for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(drv - 1)) {
+            // Stepping one below drive_a would leave the enum's value range.
+            for (int drv_index = drive_z; drv_index >= drive_a; drv_index--) {
+                const drive_number drv = static_cast<drive_number>(drv_index);
                 auto entry = io->get_drive_entry(drv);
                 if (!entry) {
                     continue;

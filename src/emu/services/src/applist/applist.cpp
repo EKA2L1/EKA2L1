@@ -516,7 +516,9 @@ namespace eka2l1 {
         std::atomic_bool global_modified = false;
 
         if (avail_drives_ == 0) {
-            for (drive_number drv = drive_z; drv >= drive_a; drv--) {
+            // Stepping one below drive_a would leave the enum's value range.
+            for (int drv_index = drive_z; drv_index >= drive_a; drv_index--) {
+                const drive_number drv = static_cast<drive_number>(drv_index);
                 if (io->get_drive_entry(drv)) {
                     avail_drives_ |= 1 << (drv - drive_a);
                 }

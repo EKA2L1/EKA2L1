@@ -496,7 +496,9 @@ namespace eka2l1 {
             io_system *io = sys->get_io_system();
 
             // Ignore drive z.
-            for (drive_number drv = drive_y; drv >= drive_a; drv--) {
+            // Stepping one below drive_a would leave the enum's value range.
+            for (int drv_index = drive_y; drv_index >= drive_a; drv_index--) {
+                const drive_number drv = static_cast<drive_number>(drv_index);
                 if (io->get_drive_entry(drv)) {
                     system_apps_dir[0] = drive_to_char16(drv);
                     shared_data_dir[0] = drive_to_char16(drv);
@@ -512,7 +514,9 @@ namespace eka2l1 {
         io_system *io = sys->get_io_system();
 
         // Ignore drive z.
-        for (drive_number drv = drive_y; drv >= drive_a; drv--) {
+        // Stepping one below drive_a would leave the enum's value range.
+        for (int drv_index = drive_y; drv_index >= drive_a; drv_index--) {
+            const drive_number drv = static_cast<drive_number>(drv_index);
             if (io->get_drive_entry(drv)) {
                 temp_data_dir[0] = drive_to_char16(drv);
 

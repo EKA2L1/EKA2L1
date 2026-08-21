@@ -1217,7 +1217,9 @@ namespace eka2l1 {
     // Linked typefaces are assembled once every font is in the store: their
     // components can sit on a different drive than the link.ini naming them.
     void fbs_server::load_linked_fonts(eka2l1::io_system *io) {
-        for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
+        // Stepping one below drive_a would leave the enum's value range.
+        for (int drv_index = drive_z; drv_index >= drive_a; drv_index--) {
+            const drive_number drv = static_cast<drive_number>(drv_index);
             if (io->get_drive_entry(drv)) {
                 load_linked_fonts_from_directory(io, std::u16string{ drive_to_char16(drv) } + (kern->is_eka1() ? u":\\System\\Fonts\\" : u":\\Resource\\Fonts\\"));
             }
@@ -1252,7 +1254,9 @@ namespace eka2l1 {
 
     void fbs_server::load_fonts(eka2l1::io_system *io) {
         // Search all drives
-        for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
+        // Stepping one below drive_a would leave the enum's value range.
+        for (int drv_index = drive_z; drv_index >= drive_a; drv_index--) {
+            const drive_number drv = static_cast<drive_number>(drv_index);
             if (io->get_drive_entry(drv)) {
                 const std::u16string fonts_folder_path = std::u16string{ drive_to_char16(drv) } + (kern->is_eka1() ? u":\\System\\Fonts\\" : u":\\Resource\\Fonts\\");
                 auto folder = io->open_dir(fonts_folder_path, {}, io_attrib_include_file);

@@ -108,7 +108,7 @@ namespace eka2l1::mem::flexible {
             }
         }
 
-        delete segments_;
+        delete[] segments_;
     }
 
     void page_array::alter(const std::uint32_t index, const std::uint32_t count, const prot perm, const bool is_clear) {
