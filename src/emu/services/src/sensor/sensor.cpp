@@ -310,8 +310,12 @@ namespace eka2l1 {
 
             // Taking the kernel lock before touching the session or the IPC message
             // serialises this completion against StopListening, CloseChannel and
-            // session teardown, all of which run on the emulated thread.
-            if (callback_state->session_) {
+            // session teardown, all of which run on the emulated thread. The lock
+            // does not help during wipeout, though: the session is still reachable
+            // while the threads and the scheduler behind it are already gone, so
+            // completing would dewait a thread that no longer has scheduler state.
+            // Same reason session::disconnect() checks it before signalling.
+            if (!kern->is_wiping() && callback_state->session_) {
                 callback_state->session_->complete_channel_data_request_locked(kern, channel_id, data, packet_sent);
             }
 
