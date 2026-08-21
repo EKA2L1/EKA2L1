@@ -93,6 +93,12 @@ namespace eka2l1::kernel {
 
         collected_memory_ -= seg->get_used_memory_size();
         in_list_count_--;
+
+        // Return the reference taken in add(codeseg*). Kept as the last
+        // statement: if this was the final reference the codeseg is destroyed
+        // right here, so a caller that keeps using the segment afterwards
+        // (codeseg::attach() does) must hold its own reference first.
+        seg->decrease_access_count();
     }
 
     void codedump_collector::cleanup(std::uint64_t upcoming_memory_size) {

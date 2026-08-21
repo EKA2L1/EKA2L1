@@ -142,8 +142,6 @@ namespace eka2l1 {
 
             std::uint32_t additional_mode_;
 
-            drive_number get_drive_rom();
-
             void apply_pending_patches();
             void apply_trick_or_treat_algo();
             void jump_trampoline_through_svc();
@@ -154,6 +152,8 @@ namespace eka2l1 {
 
             explicit lib_manager(kernel_system *kern, io_system *ios, memory_system *mems);
             ~lib_manager();
+
+            drive_number get_drive_rom();
 
             address get_entry_point_call_routine_address() const;
             address get_thread_entry_routine_address() const;

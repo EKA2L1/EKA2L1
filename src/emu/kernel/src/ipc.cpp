@@ -18,8 +18,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/log.h>
+
 #include <kernel/ipc.h>
 #include <kernel/session.h>
+#include <kernel/thread.h>
 
 namespace eka2l1 {
     ipc_arg::ipc_arg(int arg0, const int aflag) {
@@ -85,10 +88,32 @@ namespace eka2l1 {
     }
 
     void ipc_msg::unref() {
+        // Guard against a double unref (e.g. a server completing a message
+        // whose client already released it). Wrapping the unsigned count
+        // would poison the slot forever and desync the owner thread's
+        // access accounting.
+        if (ref_count == 0) {
+            LOG_WARN(KERNEL, "Unreferencing an already-released IPC message (id {}, function 0x{:X})", id, function);
+            return;
+        }
+
         if (--ref_count == 0) {
             if (msg_session) {
                 session_msg_link.deque();
             }
+
+            // A message released while still sitting in a server's delivered
+            // queue (its session died before the server received it) must
+            // leave that queue too, or the server later pops the freed slot -
+            // possibly recycled by a new exchange by then - and completes it
+            // again against the wrong owner.
+            if (delivered_msg_link.next) {
+                delivered_msg_link.deque();
+            }
+
+            // Read this before dropping the access count: the drop may destroy
+            // a stopped owner on the spot, and own_thr must not be touched after.
+            const bool owner_stopped = own_thr && (own_thr->current_state() == kernel::thread_state::stop);
 
             if (own_thr) {
                 own_thr->decrease_access_count();
@@ -97,6 +122,19 @@ namespace eka2l1 {
             switch (type) {
             case ipc_message_type_disconnect:
                 type = ipc_message_type_wild;
+                break;
+
+            case ipc_message_type_sync:
+                // A live thread keeps its sync message for reuse, so the slot
+                // normally stays reserved. Only reclaim it when the owner died
+                // with this message still in flight (free_msg skipped it then).
+                // The drop above may have destroyed that owner, so drop the
+                // pointer along with the slot reservation.
+                if (owner_stopped) {
+                    type = ipc_message_type_wild;
+                    own_thr = nullptr;
+                }
+
                 break;
 
             case ipc_message_type_session:

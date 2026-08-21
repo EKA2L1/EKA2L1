@@ -31,3 +31,16 @@ TEST_CASE("single roundabout member is linked", "linked") {
     REQUIRE(member.alone());
     REQUIRE(queue.empty());
 }
+
+TEST_CASE("roundabout_reset_leaves_the_members_untouched", "linked") {
+    common::roundabout queue;
+    common::double_linked_queue_element member;
+
+    queue.push(&member);
+    queue.reset();
+
+    // The ring is empty, and the member still believes it is enqueued: reset()
+    // exists for the case where the members are already dead memory.
+    REQUIRE(queue.empty());
+    REQUIRE_FALSE(member.alone());
+}

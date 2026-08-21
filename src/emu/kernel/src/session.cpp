@@ -191,7 +191,11 @@ namespace eka2l1 {
 
                 if (msg) {
                     if ((msg->msg_status == ipc_message_status::accepted) || (msg->msg_status == ipc_message_status::delivered)) {
-                        if (msg->own_thr && (msg->own_thr->current_state() != kernel::thread_state::stop)) {
+                        // During kernel wipeout the owning threads and the scheduler are being
+                        // torn down, so signal_request() would dewait a thread whose scheduler
+                        // state is already gone (native crash in thread_scheduler::dewait). The
+                        // requests need not be completed then; only the normal-close path does.
+                        if (!kern->is_wiping() && msg->own_thr && (msg->own_thr->current_state() != kernel::thread_state::stop)) {
                             epoc::request_status *final_sts = msg->request_sts.get(msg->own_thr->owning_process());
                             if (final_sts) {
                                 msg->msg_status = ipc_message_status::completed;
@@ -220,10 +224,19 @@ namespace eka2l1 {
                 }
             }
 
-            disconnect_msg_->own_thr->decrease_access_count();
+            // unref clears own_thr when it releases a message whose owner
+            // already stopped, so the disconnect message may no longer carry
+            // the creator thread this pairs with (its count died with it).
+            if (disconnect_msg_->own_thr) {
+                disconnect_msg_->own_thr->decrease_access_count();
+            }
 
-            // Free the message pool anyway
+            // Free the message pool anyway. The pool dies with this session,
+            // so a message that is still referenced (free_msg leaves those to
+            // their final unref) must not call back into the freed session
+            // through set_slot_free.
             for (const auto &msg : msgs_pool) {
+                msg.second->msg_session = nullptr;
                 kern->free_msg(msg.second);
             }
 

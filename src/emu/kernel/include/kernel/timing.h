@@ -94,6 +94,15 @@ namespace eka2l1 {
 
         void reset();
 
+        /**
+         * @brief Stop the timer thread and drop all pending events.
+         *
+         * Event callbacks fire on the timer thread and reach deep into kernel and
+         * service state, so the thread must be joined before any of that state is
+         * torn down. Safe to call multiple times; reset() restarts the thread.
+         */
+        void stop();
+
         inline int64_t ms_to_cycles(int ms) {
             return CPU_HZ_ / 1000 * ms;
         }

@@ -54,11 +54,19 @@ namespace eka2l1 {
         pause_evt_.set();
 
         if (timer_thread_) {
-            timer_thread_->join();
+            if (timer_thread_->joinable()) {
+                timer_thread_->join();
+            }
+
+            timer_thread_.reset();
         }
 
         events_.clear();
         teletimer_->stop();
+    }
+
+    void ntimer::stop() {
+        wipeout();
     }
 
     void ntimer::reset() {
@@ -69,11 +77,15 @@ namespace eka2l1 {
         new_event_evt_.reset();
         pause_evt_.reset();
 
+        // Start the teletimer before the thread that reads it. The loop calls
+        // advance() -> microseconds() straight away, so starting it afterwards
+        // races the timestamp initialisation and can hand the loop a stale
+        // start_ from the previous run.
+        teletimer_->start();
+
         timer_thread_ = std::make_unique<std::thread>([this]() {
             loop();
         });
-
-        teletimer_->start();
     }
 
     void ntimer::set_realtime_level(const realtime_level lvl) {

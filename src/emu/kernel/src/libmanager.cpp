@@ -848,7 +848,7 @@ namespace eka2l1::hle {
             std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>>
                 result{ std::nullopt, std::nullopt };
 
-            if (io_->exist(lib_path)) {
+            if (io_->exist(path)) {
                 symfile f = io_->open_file(path, READ_MODE | BIN_MODE | additional_mode_);
                 if (!f) {
                     return result;
@@ -923,6 +923,26 @@ namespace eka2l1::hle {
             return std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>>{};
         }
 
+        if (!eka2l1::has_root_name(lib_path, true)) {
+            // A path like \sys\bin\foo.exe names a directory but no drive. Symbian's
+            // loader searches every drive for it; opening it verbatim finds nothing.
+            for (drive_number drv = drive_a; drv <= drive_z; drv = static_cast<drive_number>(static_cast<int>(drv) + 1)) {
+                std::u16string candidate(1, drive_to_char16(drv));
+                candidate += u':';
+                candidate += lib_path;
+
+                auto result = open_and_get(candidate);
+                if (result.first != std::nullopt || result.second != std::nullopt) {
+                    if (full_path)
+                        *full_path = candidate;
+
+                    return result;
+                }
+            }
+
+            return std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>>{};
+        }
+
         if (full_path) {
             *full_path = lib_path;
         }
@@ -952,7 +972,7 @@ namespace eka2l1::hle {
 
             eka2l1::ro_file_stream image_data_stream(f.get());
 
-            if (f->is_in_rom()) {
+            if (f->is_in_rom() && !loader::is_e32img(reinterpret_cast<common::ro_stream *>(&image_data_stream))) {
                 auto romimg = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&image_data_stream), mem_, kern_->get_epoc_version(), is_driver_lib);
                 if (!romimg) {
                     return nullptr;
@@ -972,6 +992,26 @@ namespace eka2l1::hle {
         };
 
         std::u16string lib_path = name;
+
+        // A Symbian absolute path can be rooted without naming a drive (for
+        // example, "\\sys\\bin\\foo.dll"). Resolve that form against each
+        // mounted drive instead of treating it as a complete VFS path.
+        if (eka2l1::has_root_dir(lib_path) && eka2l1::root_name(lib_path, true).empty()) {
+            for (drive_number drv = drive_a; drv <= drive_z; drv = static_cast<drive_number>(static_cast<int>(drv) + 1)) {
+                std::u16string candidate(1, drive_to_char16(drv));
+                candidate += u':';
+                candidate += lib_path;
+
+                if (io_->exist(candidate)) {
+                    if (codeseg_ptr result = load_depend_on_drive(candidate, is_driver_lib)) {
+                        result->set_full_path(candidate);
+                        return result;
+                    }
+                }
+            }
+
+            return nullptr;
+        }
 
         // Create a new codeseg, we should try search these files
         // Absolute yet ?
@@ -1038,16 +1078,29 @@ namespace eka2l1::hle {
     }
 
     void lib_manager::jump_trampoline_through_svc() {
-        kernel::thread *crr = kern_->crr_thread();
-        arm::core::thread_context &context = crr->get_thread_context();
-        address lookup_addr = (context.get_pc() | ((context.cpsr & 0x20) ? 1 : 0));
+        arm::core *cpu = kern_->get_cpu();
+        const bool thumb = (cpu->get_cpsr() & 0x20) != 0;
+
+        // CPU backends advance PC before invoking the SVC handler. The
+        // trampoline map is keyed by the address at which the SVC was
+        // installed, so recover that instruction address before lookup.
+        const address lookup_addr = (cpu->get_pc() - (thumb ? 2 : 4)) | (thumb ? 1 : 0);
+
+        auto branch_to = [cpu](const address target) {
+            std::uint32_t cpsr = cpu->get_cpsr() & ~0x20;
+            if (target & 1) {
+                cpsr |= 0x20;
+            }
+            cpu->set_cpsr(cpsr);
+            cpu->set_pc(target & ~1);
+        };
 
         auto ite = trampoline_lookup_.find(lookup_addr);
         if (ite != trampoline_lookup_.end()) {
-            context.set_pc(ite->second);
+            branch_to(ite->second);
         } else {
             LOG_ERROR(KERNEL, "Unable to find jump for patched address 0x{:X} (impossible)", lookup_addr);
-            context.set_pc(context.get_lr());
+            branch_to(cpu->get_lr());
         }
     }
 
