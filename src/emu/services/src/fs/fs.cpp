@@ -327,8 +327,27 @@ namespace eka2l1 {
             ctx->complete(epoc::error_none);
             break;
 
+        // Free space never crosses the client's threshold here, since the emulator
+        // never reports one, so the request stays outstanding the way it would on a
+        // device with a quiet disk. Completing it instead makes a client that re-arms
+        // on completion spin. The cancel is the only thing that ends it.
+        case epoc::fs_msg_notify_disk_space:
+            disk_space_notify_.complete(epoc::error_cancel);
+            disk_space_notify_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+            break;
+
+        case epoc::fs_msg_notify_disk_space_cancel:
+            disk_space_notify_.complete(epoc::error_cancel);
+            ctx->complete(epoc::error_none);
+            break;
+
         default: {
             LOG_ERROR(SERVICE_EFSRV, "Unknown FSServer client opcode {}!", ctx->msg->function);
+
+            // Every other request is one a real file server answers straight away, so
+            // dropping it wedges the client: the harvester mounts its file-system
+            // plugins with Fs::MountPlugin and waits for the reply that never came.
+            ctx->complete(epoc::error_not_supported);
             break;
         }
 
