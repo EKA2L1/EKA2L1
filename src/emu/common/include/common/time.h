@@ -25,6 +25,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 
 namespace eka2l1::common {
     enum : uint64_t {
@@ -61,6 +62,23 @@ namespace eka2l1::common {
      * @brief Get host's UTC offset.
      */
     int get_current_utc_offset();
+
+    struct local_time_zone_info {
+        int offset_seconds;
+        bool daylight_saving;
+    };
+
+    /**
+     * @brief Get the host time-zone state at a Unix timestamp.
+     */
+    local_time_zone_info get_local_time_zone_info(std::int64_t unix_seconds);
+
+    /**
+     * @brief Get the host system time-zone identifier.
+     *
+     * IANA identifiers are returned on Apple and POSIX hosts where available.
+     */
+    std::string get_current_time_zone_name();
 
     /**
      * @brief Timer that translate host timing to a target frequency.
