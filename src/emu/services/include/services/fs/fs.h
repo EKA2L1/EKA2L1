@@ -323,7 +323,7 @@ namespace eka2l1 {
         void get_default_system_path(service::ipc_context *ctx);
 
         enum {
-            FLAG_INITED = 0
+            FLAG_INITED = 1 << 0
         };
 
         std::uint32_t flags;
