@@ -370,7 +370,11 @@ namespace eka2l1 {
 
                 dvcmngr_->clear();
 
-                std::string rom_drive_name = std::string(1, static_cast<char>(drive_to_char16(romdrv)));
+                // The installers create the drive folder in lower case ("drives/z/"),
+                // and on a case-sensitive filesystem an upper-case probe finds nothing
+                // and then persists the cleared device list below.
+                std::string rom_drive_name = common::lowercase_string(
+                    std::string(1, static_cast<char>(drive_to_char16(romdrv))));
 
                 std::string storage_path;
                 common::get_current_directory(storage_path);
@@ -397,7 +401,10 @@ namespace eka2l1 {
                         std::string manu, firm_name, model;
                         loader::determine_rpkg_product_info(full_entry_path, manu, firm_name, model);
 
-                        const std::string rom_directory = eka2l1::add_path(storage_path, eka2l1::add_path("roms", firm_name + "\\"));
+                        // install_rom/install_rpkg save the ROM under roms/<lowercase
+                        // firmcode>/, so match that or a case-sensitive filesystem sees
+                        // no SYM.ROM and deletes an otherwise valid dump below.
+                        const std::string rom_directory = eka2l1::add_path(storage_path, eka2l1::add_path("roms", common::lowercase_string(firm_name) + "\\"));
                         const std::string rom_file = eka2l1::add_path(rom_directory, "SYM.ROM");
                         if (!common::exists(rom_file)) {
                             LOG_ERROR(SYSTEM, "Removing broken device: {} ({})", model, firm_name);
@@ -953,9 +960,18 @@ namespace eka2l1 {
             }
         }
 
-        const std::string aif_file = eka2l1::add_path(system_apps_folder_path, eka2l1::add_path(specific_app, specific_app + ".aif"));
+        const std::string app_folder = eka2l1::add_path(system_apps_folder_path, specific_app + eka2l1::get_separator());
+        std::string aif_file = eka2l1::add_path(app_folder, specific_app + ".aif");
         if (!common::exists(aif_file)) {
-            return ngage_game_card_no_game_registeration_info;
+            // Game-card dumps vary the registration file's extension casing (Call of
+            // Duty ships "6R48.AIF"), so on case-sensitive storage resolve the real
+            // name before declaring the registration missing.
+            const std::string real_aif_name = common::find_case_sensitive_file_name(
+                app_folder, specific_app + ".aif", common::FILE_REGULAR);
+            if (real_aif_name.empty()) {
+                return ngage_game_card_no_game_registeration_info;
+            }
+            aif_file = eka2l1::add_path(app_folder, real_aif_name);
         }
 
         common::ro_std_file_stream aif_file_stream(aif_file, true);
@@ -1019,7 +1035,6 @@ namespace eka2l1 {
             } else {
                 return ngage_game_card_no_game_data_folder;
             }
-            return ngage_game_card_no_game_data_folder;
         }
 
         std::string specific_app, specific_app_2;
@@ -1083,11 +1098,16 @@ namespace eka2l1 {
 
         std::uint32_t copied_count = 0;
 
-        common::copy_folder(folder_path, drive_e_path_root, common::is_platform_case_sensitive() ? common::FOLDER_COPY_FLAG_LOWERCASE_NAME : 0, 
+        const bool copied = common::copy_folder(
+            folder_path, drive_e_path_root,
+            common::is_platform_case_sensitive() ? common::FOLDER_COPY_FLAG_LOWERCASE_NAME : 0,
             [&](const std::size_t copied, const std::size_t total) {
                 if (progress_cb)
                     progress_cb(copied * 100 / total, total_percentage);
             });
+        if (!copied) {
+            return ngage_game_card_general_error;
+        }
 
         // Remove the app registeration file of the original
         if (!specific_app_2.empty()) {

@@ -19,6 +19,7 @@
  */
 
 #include <catch2/catch.hpp>
+#include <common/fileutils.h>
 #include <common/path.h>
 #include <cstring>
 
@@ -115,4 +116,22 @@ TEST_CASE("replace_extension", "path_resolving_test") {
     std::string expected = eka2l1::replace_extension(test_path, ".mom");
 
     REQUIRE(expected == "hiyou.ne.mom");
+}
+
+TEST_CASE("find_case_sensitive_directory_name", "path_resolving_test") {
+    REQUIRE(eka2l1::common::find_case_sensitive_file_name(
+                "commonassets", "mixedcasedirectory", eka2l1::common::FILE_DIRECTORY)
+        == "MixedCaseDirectory");
+}
+
+TEST_CASE("copy_folder_lowercases_destination_without_lowercasing_source", "path_resolving_test") {
+    const std::string destination = "commonassets-copy-output";
+    eka2l1::common::delete_folder(destination);
+
+    REQUIRE(eka2l1::common::copy_folder(
+        "commonassets", destination, eka2l1::common::FOLDER_COPY_FLAG_LOWERCASE_NAME));
+    REQUIRE(eka2l1::common::exists(
+        eka2l1::add_path(destination, "mixedcasedirectory/marker.txt")));
+
+    REQUIRE(eka2l1::common::delete_folder(destination));
 }

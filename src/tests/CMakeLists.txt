@@ -14,6 +14,7 @@ target_link_libraries(ekatests PRIVATE
     Catch2
     common
     config
+    epoc
     epocio
     epockern
     epocloader
