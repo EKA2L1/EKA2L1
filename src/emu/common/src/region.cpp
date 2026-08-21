@@ -192,24 +192,18 @@ namespace eka2l1::common {
     }
 
     void region::clip(const eka2l1::rect &bounding) {
-        eka2l1::vec2 top_left = bounding.top;
-        eka2l1::vec2 bottom_right = bounding.bottom_right();
+        if ((bounding.size.x <= 0) || (bounding.size.y <= 0)) {
+            rects_.clear();
+            return;
+        }
 
-        for (std::size_t i = 0; i < rects_.size(); i++) {
-            if (rects_[i].top.x < top_left.x) {
-                rects_[i].top.x = top_left.x;
-            }
+        for (std::size_t i = 0; i < rects_.size();) {
+            rects_[i] = rects_[i].intersect(bounding);
 
-            if (rects_[i].top.y < top_left.y) {
-                rects_[i].top.x = top_left.x;
-            }
-
-            if (rects_[i].bottom_right().x > bottom_right.x) {
-                rects_[i].size.x = bottom_right.x - rects_[i].top.x;
-            }
-            
-            if (rects_[i].bottom_right().y > bottom_right.y) {
-                rects_[i].size.y = bottom_right.y - rects_[i].top.y;
+            if ((rects_[i].size.x <= 0) || (rects_[i].size.y <= 0)) {
+                rects_.erase(rects_.begin() + i);
+            } else {
+                i++;
             }
         }
     }

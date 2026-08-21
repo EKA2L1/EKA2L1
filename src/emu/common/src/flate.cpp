@@ -603,7 +603,24 @@ namespace eka2l1 {
 
                 // Things are still remain shit
                 if (remain > 0) {
-                    tbits = swap_bo(*buf_ptr++);
+                    if (remain >= 32) {
+                        tbits = swap_bo(*buf_ptr++);
+                    } else {
+                        // Final partial word: the stream does not have to be word-sized,
+                        // so a full 32-bit load would run past the caller's buffer.
+                        // Assemble the valid bytes instead; the missing low bytes are
+                        // zero and never consumed (count is capped by remain below).
+                        const std::uint8_t *tail = reinterpret_cast<const std::uint8_t *>(buf_ptr);
+                        const int valid_bytes = (remain + 7) / 8;
+
+                        tbits = 0;
+                        for (int i = 0; i < valid_bytes; i++) {
+                            tbits |= static_cast<std::uint32_t>(tail[i]) << (24 - (i * 8));
+                        }
+
+                        buf_ptr++;
+                    }
+
                     count += 32;
                     remain -= 32;
 
