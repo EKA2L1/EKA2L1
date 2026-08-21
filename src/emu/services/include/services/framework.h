@@ -55,7 +55,10 @@ namespace eka2l1::service {
                     return lhs->id < rhs;
                 });
 
-            if (result == objs.end()) {
+            // lower_bound lands on the first object with a greater or equal id, so an
+            // id nothing owns resolves to an unrelated object, which the caller then
+            // reads through the wrong type. remove() above makes the same check.
+            if ((result == objs.end()) || ((*result)->id != id)) {
                 return nullptr;
             }
 
