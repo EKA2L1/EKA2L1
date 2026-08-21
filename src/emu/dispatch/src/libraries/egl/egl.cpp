@@ -92,7 +92,13 @@ namespace eka2l1::dispatch {
 
         return EGL_TRUE;
     }
-    
+
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_terminate_emu, egl_display display) {
+        // Every resource this display owns is released with the objects that hold
+        // it, so there is nothing left to tear down here.
+        return EGL_TRUE;
+    }
+
     BRIDGE_FUNC_LIBRARY(egl_boolean, egl_get_configs_emu, egl_display display, egl_config *configs, std::int32_t config_array_size, std::int32_t *config_total_size) {        
         if (!config_total_size) {
             egl_push_error(sys, EGL_BAD_PARAMETER_EMU);
@@ -821,6 +827,40 @@ namespace eka2l1::dispatch {
         }
 
         return sys->get_dispatcher()->lookup_dispatcher_function_by_symbol(procname);
+    }
+
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_query_profiling_data_nok_emu, egl_display display,
+        std::uint32_t query_bits, std::int32_t *data, std::int32_t data_size, std::int32_t *data_count) {
+        if (!data_count || (query_bits & ~(EGL_PROF_QUERY_GLOBAL_BIT_NOK_EMU |
+            EGL_PROF_QUERY_MEMORY_USAGE_BIT_NOK_EMU)) != 0) {
+            egl_push_error(sys, EGL_BAD_PARAMETER_EMU);
+            return EGL_FALSE;
+        }
+
+        // EGL_NOK_resource_profiling2 returns a flat attribute/value array and reports
+        // its size in EGLint elements. There is no fixed GPU memory heap to report
+        // here, so the answer is a stable budget with no tracked use.
+        constexpr std::int32_t PROFILING_DATA[] = {
+            EGL_PROF_TOTAL_MEMORY_NOK_EMU, 64 * 1024 * 1024,
+            EGL_PROF_USED_MEMORY_NOK_EMU, 0
+        };
+        constexpr std::int32_t PROFILING_DATA_SIZE = sizeof(PROFILING_DATA) / sizeof(PROFILING_DATA[0]);
+
+        *data_count = PROFILING_DATA_SIZE;
+        if (!data) {
+            return EGL_TRUE;
+        }
+
+        if (data_size < PROFILING_DATA_SIZE) {
+            egl_push_error(sys, EGL_BAD_PARAMETER_EMU);
+            return EGL_FALSE;
+        }
+
+        for (std::int32_t i = 0; i < PROFILING_DATA_SIZE; ++i) {
+            data[i] = PROFILING_DATA[i];
+        }
+
+        return EGL_TRUE;
     }
 
     BRIDGE_FUNC_LIBRARY(egl_boolean, egl_bind_api_emu, const std::uint32_t bind_api) {

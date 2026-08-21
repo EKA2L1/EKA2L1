@@ -1009,7 +1009,7 @@ namespace eka2l1::dispatch {
     void gles_driver_texture::update() {
         if (change_flags_ & FLAG_MIN_FILTER_CHANGED) {
             drivers::filter_option opt;
-            if (gl_enum_to_mag_filter(min_filter_, opt)) {
+            if (gl_enum_to_min_filter(min_filter_, opt)) {
                 context_.cmd_builder_.set_texture_filter(driver_handle_, true, opt);
             }
         }

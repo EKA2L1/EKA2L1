@@ -71,8 +71,10 @@ namespace eka2l1::dispatch {
         
         rotation_type rotation_;
 
+        kernel_system *kern_;
+
     public:
-        explicit epoc_video_player(drivers::graphics_driver *grdrv, drivers::audio_driver *auddrv);
+        explicit epoc_video_player(kernel_system *kern, drivers::graphics_driver *grdrv, drivers::audio_driver *auddrv);
         ~epoc_video_player();
 
         std::int32_t register_window(kernel_system *kern, window_server *serv, const std::uint32_t wss_handle, const std::uint32_t win_handle);

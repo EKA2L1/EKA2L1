@@ -461,7 +461,11 @@ namespace eka2l1::dispatch {
 
     static constexpr const char *EGL_STATIC_STRING_VENDOR = "EKA2L1";
     static constexpr const char *EGL_STATIC_STRING_VERSION = "1.4";
-    static constexpr const char *EGL_STATIC_STRING_EXTENSION = "EGL_KHR_create_context";
+    static constexpr const char *EGL_STATIC_STRING_EXTENSION = "EGL_KHR_create_context EGL_NOK_resource_profiling2";
+    static constexpr std::uint32_t EGL_PROF_QUERY_GLOBAL_BIT_NOK_EMU = 0x0001;
+    static constexpr std::uint32_t EGL_PROF_QUERY_MEMORY_USAGE_BIT_NOK_EMU = 0x0002;
+    static constexpr std::int32_t EGL_PROF_TOTAL_MEMORY_NOK_EMU = 0x3070;
+    static constexpr std::int32_t EGL_PROF_USED_MEMORY_NOK_EMU = 0x3071;
     static constexpr std::uint32_t MAX_EGL_FB_WIDTH = 2048;
     static constexpr std::uint32_t MAX_EGL_FB_HEIGHT = 2048;
 

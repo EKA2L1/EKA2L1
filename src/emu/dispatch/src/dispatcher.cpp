@@ -244,7 +244,7 @@ namespace eka2l1::dispatch {
             add_static_string(GLES_STATIC_STRING_KEY_EXTENSIONS, dispatch::get_es1_extensions(driver));
             add_static_string(GLES_STATIC_STRING_KEY_VERSION, GLES1_STATIC_STRING_VERSION);
             add_static_string(GLES_STATIC_STRING_KEY_VENDOR_ES2, GLES2_STATIC_STRING_VENDOR);
-            add_static_string(GLES_STATIC_STRING_KEY_RENDERER_ES2, GLES2_STATIC_STRING_VENDOR);
+            add_static_string(GLES_STATIC_STRING_KEY_RENDERER_ES2, GLES2_STATIC_STRING_RENDERER);
             add_static_string(GLES_STATIC_STRING_KEY_EXTENSIONS_ES2, dispatch::get_es2_extensions(driver));
             add_static_string(GLES_STATIC_STRING_KEY_VERSION_ES2, GLES2_STATIC_STRING_VERSION);
             add_static_string(GLES_STATIC_STRING_SHADER_LANGUAGE_VERSION_ES2, GLES2_STATIC_STRING_SHADER_LANGUAGE_VERSION);
@@ -425,11 +425,33 @@ namespace eka2l1::dispatch {
         }
 
         auto ite = symbol_lookup_.find(symbol);
-        if (ite == symbol_lookup_.end()) {
-            return 0;
+        if (ite != symbol_lookup_.end()) {
+            return ite->second;
         }
 
-        return ite->second;
+        // An extension entry point reached through eglGetProcAddress has no library
+        // ordinal, so patch_libraries() never built its guest trampoline. Build one on
+        // first lookup for any symbol the dispatcher does register.
+        for (const auto &dispatch_func : dispatch::dispatch_funcs) {
+            if (!dispatch_func.second.second || symbol != std::string(dispatch_func.second.second)) {
+                continue;
+            }
+
+            const address entry = trampoline_chunk_->base(nullptr).ptr_address() + trampoline_allocated_;
+            std::uint32_t *start_base = reinterpret_cast<std::uint32_t *>(reinterpret_cast<std::uint8_t *>(
+                trampoline_chunk_->host_base()) + trampoline_allocated_);
+
+            start_base[0] = 0xEFC10001;
+            start_base[1] = 0xE12FFF1E; // BX LR
+            start_base[2] = dispatch_func.first;
+
+            symbol_lookup_.emplace(symbol, entry);
+            trampoline_allocated_ += 12;
+
+            return entry;
+        }
+
+        return 0;
     }
 }
 

@@ -2706,7 +2706,6 @@ APPLY_PENDING_ROUTES:
             return;
         }
 
-        ctx->attributes_[index].constant_vcomp_count_ = 0;
         ctx->attributes_[index].normalized_ = normalized;
         ctx->attrib_changed_ = true;
     }
