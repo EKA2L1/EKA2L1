@@ -46,12 +46,16 @@
 #include <config/config.h>
 
 namespace eka2l1 {
-    static const std::array<std::u16string, 6> RECOG_MIME_TYPES = {
+    static const std::array<std::u16string, 10> RECOG_MIME_TYPES = {
         u"image/png",
         u"image/jpeg",
         u"image/bmp",
+        u"audio/wav",
         u"audio/mpeg",
         u"video/mp4",
+        u"text/html",
+        u"text/xml",
+        u"application/x-shockwave-flash",
         u"application/octet-stream"
     };
 
@@ -979,30 +983,94 @@ namespace eka2l1 {
         get_app_for_document_impl(ctx, path.value());
     }
 
-    std::string applist_server::recognize_data_impl(common::ro_stream &stream) {
+    data_recog_result applist_server::recognize_data_impl(common::ro_stream &stream, const std::u16string &name) {
+        data_recog_result result{};
+        const std::u16string extension = eka2l1::path_extension(name);
+
+        // Match the S60 web recognizer. It identifies XHTML as text/html; it
+        // does not advertise a separate application/xhtml+xml data type.
+        if ((common::compare_ignore_case(extension, u".html") == 0)
+            || (common::compare_ignore_case(extension, u".htm") == 0)
+            || (common::compare_ignore_case(extension, u".shtml") == 0)
+            || (common::compare_ignore_case(extension, u".shtm") == 0)
+            || (common::compare_ignore_case(extension, u".xhtml") == 0)) {
+            result.type_.type_name_.assign(nullptr, "text/html");
+            result.confidence_rating_ = data_recognition_confidence_probable;
+            return result;
+        }
+
+        if (common::compare_ignore_case(extension, u".xml") == 0) {
+            result.type_.type_name_.assign(nullptr, "text/xml");
+            result.confidence_rating_ = data_recognition_confidence_probable;
+            return result;
+        }
+
         std::uint8_t magic4[4] = { 0, 0, 0, 0 };
 
         stream.seek(0, common::seek_where::beg);
         stream.read(magic4, 4);
 
+        if ((common::compare_ignore_case(extension, u".swf") == 0)
+            || (((magic4[0] == 'F') || (magic4[0] == 'C') || (magic4[0] == 'Z'))
+                && (magic4[1] == 'W') && (magic4[2] == 'S'))) {
+            result.type_.type_name_.assign(nullptr, "application/x-shockwave-flash");
+            result.confidence_rating_ = data_recognition_confidence_probable;
+            return result;
+        }
+
         // MP3
         if ((magic4[0] == 0xFF) && ((magic4[1] == 0xFB) || (magic4[1] == 0xF3) || (magic4[1] == 0xF2))) {
-            return "audio/mpeg";
+            result.type_.type_name_.assign(nullptr, "audio/mpeg");
+            result.confidence_rating_ = data_recognition_confidence_probable;
+            return result;
         }
 
         // MP3 ver2
         if ((magic4[0] == 0x49) && (magic4[1] == 0x44) && (magic4[2] == 0x33)) {
-            return "audio/mpeg";
+            result.type_.type_name_.assign(nullptr, "audio/mpeg");
+            result.confidence_rating_ = data_recognition_confidence_probable;
+            return result;
         }
 
         std::uint8_t magic8[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
         stream.read(magic8, 8);
 
-        if (memcmp(magic8, "ftypmp42", 8) == 0) {
-            return "video/mp4";
+        // RIFF size occupies bytes 4-7, followed by the WAVE form type.
+        if ((memcmp(magic4, "RIFF", 4) == 0) && (memcmp(magic8 + 4, "WAVE", 4) == 0)) {
+            result.type_.type_name_.assign(nullptr, "audio/wav");
+            result.confidence_rating_ = data_recognition_confidence_certain;
+            return result;
         }
 
-        return "application/octet-stream";
+        if (memcmp(magic8, "ftypmp42", 8) == 0) {
+            result.type_.type_name_.assign(nullptr, "video/mp4");
+            result.confidence_rating_ = data_recognition_confidence_probable;
+            return result;
+        }
+
+        // Probable, not possible: EPossible is numerically zero, which a client reads
+        // as "nothing recognised this" and answers by taking another path entirely.
+        result.type_.type_name_.assign(nullptr, "application/octet-stream");
+        result.confidence_rating_ = data_recognition_confidence_probable;
+        return result;
+    }
+
+    void applist_server::recognize_data(service::ipc_context &ctx) {
+        std::uint8_t *data = ctx.get_descriptor_argument_ptr(2);
+        const std::size_t data_size = ctx.get_argument_data_size(2);
+        const std::optional<std::u16string> name = ctx.get_argument_value<std::u16string>(1);
+
+        if (!data && data_size != 0) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        std::uint8_t empty_data = 0;
+        common::ro_buf_stream stream(data ? data : &empty_data, data_size);
+        const data_recog_result result = recognize_data_impl(stream, name.value_or(std::u16string()));
+
+        ctx.write_data_to_descriptor_argument<data_recog_result>(0, result);
+        ctx.complete(epoc::error_none);
     }
 
     void applist_server::recognize_data_by_file_handle(service::ipc_context &ctx) {
@@ -1018,17 +1086,14 @@ namespace eka2l1 {
         const std::uint64_t current_pos = source_file->tell();
         ro_file_stream stream_read(source_file);
 
-        const std::string mime_res = recognize_data_impl(stream_read);
+        const data_recog_result result = recognize_data_impl(stream_read, source_file->file_name());
         source_file->seek(current_pos, file_seek_mode::beg);
 
-        if (mime_res.empty()) {
+        if (result.type_.type_name_.get_length() == 0) {
             LOG_WARN(SERVICE_APPLIST, "File MIME data is not recognizable (filename: {})!", common::ucs2_to_utf8(source_file->file_name()));
             ctx.complete(epoc::error_not_supported);
+            return;
         }
-
-        data_recog_result result;
-        result.confidence_rating_ = 10;             // TODO: Fill with actual value
-        result.type_.type_name_.assign(nullptr, mime_res);
 
         ctx.write_data_to_descriptor_argument<data_recog_result>(0, result);
         ctx.complete(epoc::error_none);
@@ -1280,6 +1345,10 @@ namespace eka2l1 {
 
             case applist_request_app_for_document_passed_by_file_handle:
                 server<applist_server>()->get_app_for_document_by_file_handle(*ctx);
+                break;
+
+            case applist_request_recognize_data:
+                server<applist_server>()->recognize_data(*ctx);
                 break;
 
             case applist_request_recognize_data_passed_by_file_handle:
