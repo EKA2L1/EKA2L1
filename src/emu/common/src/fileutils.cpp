@@ -28,6 +28,8 @@
 #include <re2/re2.h>
 
 #include <fstream>
+#include <stack>
+#include <utility>
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
@@ -425,6 +427,9 @@ namespace eka2l1::common {
     
     std::string find_case_sensitive_file_name(const std::string &folder_path, const std::string &insensitive_name, const file_type type) {
         auto ite = make_directory_iterator(folder_path, "");
+        // next_entry() only populates dir_entry::type when detail is enabled.
+        // Without it, type-filtered lookups can never match on POSIX.
+        ite->detail = true;
         const std::u16string insensitive_name_u16 = common::utf8_to_ucs2(insensitive_name);
 
         common::dir_entry entry;
@@ -809,22 +814,27 @@ namespace eka2l1::common {
         std::uint64_t total_copied = 0;
 
         auto do_copy_stuffs = [&](const bool is_measuring) {
-            std::stack<std::string> folder_stacks;
+            // Keep source and destination paths separate. Lowercase-name mode
+            // transforms destination names, but the source may live on a
+            // case-sensitive filesystem and must retain its real spelling.
+            std::stack<std::pair<std::string, std::string>> folder_stacks;
             common::dir_entry entry;
 
-            folder_stacks.push(std::string(1, eka2l1::get_separator()));
+            const std::string root_path(1, eka2l1::get_separator());
+            folder_stacks.push({ root_path, root_path });
 
             while (!folder_stacks.empty()) {
                 if (cancel_cb && cancel_cb()) {
                     break;
                 }
                 if (!is_measuring)
-                    create_directories(eka2l1::add_path(dest_folder_to_reside, folder_stacks.top()));
+                    create_directories(eka2l1::add_path(dest_folder_to_reside, folder_stacks.top().second));
 
-                const std::string top_path = folder_stacks.top();
+                const std::string source_top_path = folder_stacks.top().first;
+                const std::string dest_top_path = folder_stacks.top().second;
 
-                auto iterator = make_directory_iterator(add_path(target_folder, top_path), "");
-                if (!iterator) {
+                auto iterator = make_directory_iterator(add_path(target_folder, source_top_path), "");
+                if (!iterator || !iterator->is_valid()) {
                     return false;
                 }
                 iterator->detail = true;
@@ -863,7 +873,17 @@ namespace eka2l1::common {
                     }
 
                     if (entry.type == common::file_type::FILE_DIRECTORY) {
-                        folder_stacks.push(eka2l1::add_path(top_path, name_to_use + eka2l1::get_separator()));
+                        // In in-place lowercase mode the directory has just
+                        // been renamed, so traversal must follow the new name.
+                        // A real copy keeps following the original source name.
+                        const std::string &source_name_to_use =
+                            (no_copy && (flags & FOLDER_COPY_FLAG_LOWERCASE_NAME))
+                            ? name_to_use
+                            : entry.name;
+                        folder_stacks.push({
+                            eka2l1::add_path(source_top_path, source_name_to_use + eka2l1::get_separator()),
+                            eka2l1::add_path(dest_top_path, name_to_use + eka2l1::get_separator())
+                        });
                     } else {
                         if (is_measuring) {
                             total_size += entry.size;
@@ -873,7 +893,7 @@ namespace eka2l1::common {
                                     continue;
                                 }
 
-                                if (!common::copy_file(eka2l1::add_path(iterator->dir_name, entry.name), eka2l1::add_path(eka2l1::add_path(dest_folder_to_reside, top_path), name_to_use), overwrite_on_file_exist)) {
+                                if (!common::copy_file(eka2l1::add_path(iterator->dir_name, entry.name), eka2l1::add_path(eka2l1::add_path(dest_folder_to_reside, dest_top_path), name_to_use), overwrite_on_file_exist)) {
                                     return false;
                                 }
 
@@ -902,28 +922,39 @@ namespace eka2l1::common {
             return true;
         }
 
-        auto iterator = make_directory_iterator(target_folder, "");
-        if (!iterator) {
-            return false;
-        }
-
-        iterator->detail = true;
-
-        common::dir_entry entry;
-
-        while (iterator->next_entry(entry) == 0) {
-            std::string name = add_path(iterator->dir_name, entry.name);
-
-            if (entry.type == common::file_type::FILE_DIRECTORY) {
-                if ((entry.name != ".") && (entry.name != "..")) {
-                    name += eka2l1::get_separator();
-
-                    delete_folder(name);
-                }
+        {
+            auto iterator = make_directory_iterator(target_folder, "");
+            if (!iterator) {
+                return false;
             }
-            common::remove(name);
+
+            iterator->detail = true;
+
+            common::dir_entry entry;
+
+            while (iterator->next_entry(entry) == 0) {
+                std::string name = add_path(iterator->dir_name, entry.name);
+
+                if (entry.type == common::file_type::FILE_DIRECTORY) {
+                    if ((entry.name != ".") && (entry.name != "..")) {
+                        name += eka2l1::get_separator();
+
+                        delete_folder(name);
+                    }
+                }
+                common::remove(name);
+            }
         }
-        return common::remove(target_folder);
+
+        // remove() tells a directory from a file by the trailing separator, and the
+        // caller need not have supplied one. The iterator is also closed by now: a
+        // directory Windows still has a handle open on cannot be removed.
+        std::string folder_to_remove = target_folder;
+        if (folder_to_remove.empty() || !eka2l1::is_separator(folder_to_remove.back())) {
+            folder_to_remove += eka2l1::get_separator();
+        }
+
+        return common::remove(folder_to_remove);
     }
 
     FILE *open_c_file(const std::string &target_file, const char *mode) {

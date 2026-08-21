@@ -1,0 +1,1 @@
+Used by the case-sensitive directory lookup regression test.
