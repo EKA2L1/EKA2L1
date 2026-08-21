@@ -32,6 +32,7 @@ namespace eka2l1::drivers::camera {
 namespace eka2l1::dispatch {
     BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_number_of_cameras);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_create, std::int32_t index, drivers::camera::info *cam_info);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_duplicate, std::uint32_t handle, drivers::camera::info *cam_info);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_claim, std::uint32_t handle);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_power_on, std::uint32_t handle);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, ecam_power_off, std::uint32_t handle);

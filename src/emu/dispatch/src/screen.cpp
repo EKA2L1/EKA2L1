@@ -24,6 +24,7 @@
 
 #include <drivers/graphics/graphics.h>
 #include <kernel/kernel.h>
+#include <kernel/thread.h>
 #include <services/window/common.h>
 #include <services/window/window.h>
 #include <services/window/classes/wingroup.h>
@@ -42,14 +43,31 @@ namespace eka2l1::dispatch {
     }
 
     void screen_post_transferer::complete_notify(epoc::notify_info *info) {
-        const std::lock_guard<std::mutex> guard(lock_);
+        {
+            const std::lock_guard<std::mutex> guard(lock_);
 
-        auto ite = std::find(vsync_notifies_.begin(), vsync_notifies_.end(), info);
-        if (ite != vsync_notifies_.end()) {
+            auto ite = std::find(vsync_notifies_.begin(), vsync_notifies_.end(), info);
+            if (ite == vsync_notifies_.end()) {
+                delete info;
+                return;
+            }
+
             vsync_notifies_.erase(ite);
         }
 
+        // Completing a guest request needs the kernel lock; this runs on the posting
+        // thread, so take it here rather than signalling the guest unlocked.
+        kernel_system *kern = info->requester ? info->requester->get_kernel_object_owner() : nullptr;
+        if (kern) {
+            kern->lock();
+        }
+
         info->complete(epoc::error_none);
+
+        if (kern) {
+            kern->unlock();
+        }
+
         delete info;
     }
 
@@ -207,7 +225,20 @@ namespace eka2l1::dispatch {
                 const eka2l1::vec2 screen_size = mode_info.size;
 
                 const char *data_ptr = reinterpret_cast<const char *>(scr->screen_buffer_ptr());
-                const std::size_t buffer_size = mode_info.size.x * mode_info.size.y * 4;
+                // A ScreenPlay screen under an active DSA keeps its own row pitch, which
+                // is not the tightly packed one the texture upload assumes.
+                const std::uint32_t bits_per_pixel = epoc::get_bpp_from_display_mode(scr->disp_mode);
+                const std::size_t dsa_screen_pitch = scr->screen_buffer_byte_width();
+                const std::size_t tight_screen_pitch = mode_info.size.x * sizeof(std::uint32_t);
+                const bool use_screenplay_pitch = scr->is_screenplay_architecture()
+                    && (scr->active_dsa_count_ > 0) && (bits_per_pixel == 32);
+                const std::size_t screen_pitch = use_screenplay_pitch
+                    ? dsa_screen_pitch
+                    : tight_screen_pitch;
+                const std::size_t buffer_size = screen_pitch * mode_info.size.y;
+                const std::size_t pixels_per_line = (screen_pitch != tight_screen_pitch)
+                    ? screen_pitch / sizeof(std::uint32_t)
+                    : 0;
 
                 std::uint64_t next_vsync_us = 0;
                 scr->vsync(sys->get_ntimer(), next_vsync_us);
@@ -240,7 +271,8 @@ namespace eka2l1::dispatch {
                 drivers::graphics_command_builder builder;
 
                 // Only one rectangle for now!
-                builder.update_bitmap(scr->dsa_texture, data_ptr, buffer_size, { 0, 0 }, screen_size);
+                builder.update_bitmap(scr->dsa_texture, data_ptr, buffer_size, { 0, 0 }, screen_size,
+                    pixels_per_line);
 
                 // NOTE: This is a hack for some apps that dont fill alpha
                 // TODO: Figure out why or better solution (maybe the display mode is not really correct?)

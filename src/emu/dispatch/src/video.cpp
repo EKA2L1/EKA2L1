@@ -37,12 +37,13 @@ namespace eka2l1::dispatch {
         data.target_window_ = nullptr;
     }
 
-    epoc_video_player::epoc_video_player(drivers::graphics_driver *grdrv, drivers::audio_driver *auddrv)
+    epoc_video_player::epoc_video_player(kernel_system *kern, drivers::graphics_driver *grdrv, drivers::audio_driver *auddrv)
         : image_handle_(0)
         , video_player_(nullptr)
         , driver_(grdrv)
         , custom_stream_(nullptr)
         , rotation_(ROTATION_TYPE_NONE)
+        , kern_(kern)
         , postings_(posting_target_free_check_func, posting_target_free_func) {
         video_player_ = drivers::new_best_video_player(auddrv);
         video_player_->set_image_frame_available_callback([](void *userdata, const std::uint8_t *data, const std::size_t data_size) {
@@ -303,11 +304,19 @@ namespace eka2l1::dispatch {
     }
     
     void epoc_video_player::on_play_done(const int error) {
-        if (error == 0) {
-            play_done_notify_.complete(epoc::error_none);
+        // Fired on the decode thread. Completing a guest notify needs the kernel
+        // lock, and the requester may already be gone. The bridge calls that join
+        // this thread release the kernel lock around the join, so taking it here
+        // cannot deadlock.
+        kern_->lock();
+
+        if (!play_done_notify_.empty() && kern_->is_thread_alive(play_done_notify_.requester)) {
+            play_done_notify_.complete((error == 0) ? epoc::error_none : epoc::error_general);
         } else {
-            play_done_notify_.complete(epoc::error_general);
+            play_done_notify_.sts = 0;
         }
+
+        kern_->unlock();
     }
     
     BRIDGE_FUNC_DISPATCHER(eka2l1::ptr<void>, evideo_player_inst) {
@@ -315,12 +324,25 @@ namespace eka2l1::dispatch {
         drivers::graphics_driver *grdrv = sys->get_graphics_driver();
         drivers::audio_driver *auddrv = sys->get_audio_driver();
 
-        std::unique_ptr<epoc_video_player> player = std::make_unique<epoc_video_player>(grdrv, auddrv);
+        std::unique_ptr<epoc_video_player> player = std::make_unique<epoc_video_player>(sys->get_kernel_system(), grdrv, auddrv);
         return dispatcher->video_player_container_.add_object(player);
     }
 
     BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_destroy, const std::uint32_t handle) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        dispatch::epoc_video_player *player = dispatcher->video_player_container_.get_object(handle);
+
+        // Joining the decode thread while holding the kernel lock deadlocks
+        // against on_play_done taking that lock on the decode thread: close
+        // (which joins) with the lock released, then remove the object.
+        if (player) {
+            kernel_system *kern = sys->get_kernel_system();
+
+            kern->unlock();
+            player->close();
+            kern->lock();
+        }
+
         return dispatcher->video_player_container_.remove_object(handle);
     }
     
@@ -468,7 +490,14 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
+        // play restarts any previous session (joining the decode thread): keep
+        // the kernel lock released around it so on_play_done cannot deadlock.
+        kernel_system *kern = sys->get_kernel_system();
+
+        kern->unlock();
         player->play(range);
+        kern->lock();
+
         return epoc::error_none;
     }
     
@@ -510,7 +539,12 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
+        kernel_system *kern = sys->get_kernel_system();
+
+        kern->unlock();
         player->close();
+        kern->lock();
+
         return epoc::error_none;
     }
 
@@ -523,7 +557,12 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
+        kernel_system *kern = sys->get_kernel_system();
+
+        kern->unlock();
         player->stop();
+        kern->lock();
+
         return epoc::error_none;
     }
     

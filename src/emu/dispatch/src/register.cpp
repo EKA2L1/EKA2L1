@@ -88,6 +88,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER(0x68, ecam_query_still_image_size),
         BRIDGE_REGISTER_DISPATCHER(0x69, ecam_take_image),
         BRIDGE_REGISTER_DISPATCHER(0x6B, ecam_receive_image),
+        BRIDGE_REGISTER_DISPATCHER(0x71, ecam_duplicate),
         BRIDGE_REGISTER_DISPATCHER(0x72, ecam_start_viewfinder),
         BRIDGE_REGISTER_DISPATCHER(0x73, ecam_next_viewfinder_frame),
         BRIDGE_REGISTER_DISPATCHER(0x74, ecam_stop_viewfinder_frame),
@@ -134,7 +135,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1113, egl_query_string_emu, "eglQueryString"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1114, egl_query_surface_emu, "eglQuerySurface"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1115, egl_swap_buffers_emu, "eglSwapBuffers"),
-        //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1116, egl_terminate_emu, "eglTerminate"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1116, egl_terminate_emu, "eglTerminate"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1117, egl_wait_gl_emu, "eglWaitGL"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1118, egl_wait_native_emu, "eglWaitNative"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1119, gl_active_texture_emu, "glActiveTexture"),
@@ -477,5 +478,6 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1456, vg_create_paint_emu, "vgCreatePaint"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1457, vg_load_identity_emu, "vgLoadIdentity"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1458, vg_draw_path_emu, "vgDrawPath"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1459, egl_query_profiling_data_nok_emu, "eglQueryProfilingDataNOK"),
     };
 }
