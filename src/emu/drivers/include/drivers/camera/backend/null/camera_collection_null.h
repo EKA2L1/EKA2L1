@@ -28,7 +28,7 @@ namespace eka2l1::drivers::camera {
             return 0;
         }
 
-        std::unique_ptr<instance> make_camera(const std::uint32_t camera_index) {
+        std::unique_ptr<instance> make_camera(const std::uint32_t camera_index) override {
             return nullptr;
         }
     };

@@ -44,8 +44,6 @@
 #include <vector>
 
 #include <loader/mif.h>
-#include <loader/svgb.h>
-#include <loader/nvg.h>
 
 static QSize ICON_GRID_SIZE = QSize(64, 64);
 static QSize ICON_GRID_SPACING_SIZE = QSize(20, 20);
@@ -602,37 +600,15 @@ void applist_widget::add_registeration_item_native(eka2l1::apa_app_registry &reg
                     data.resize(dest_size);
                     file_mif_parser.read_mif_entry(0, data.data(), dest_size);
 
-                    eka2l1::common::ro_buf_stream inside_stream(data.data(), data.size());
                     std::unique_ptr<eka2l1::common::wo_std_file_stream> outfile_stream = std::make_unique<eka2l1::common::wo_std_file_stream>(cached_path, true);
+                    const bool converted = eka2l1::loader::convert_mif_icon_to_svg(data.data(), data.size(), *outfile_stream);
+                    outfile_stream.reset();
 
-                    eka2l1::loader::mif_icon_header header;
-                    inside_stream.read(&header, sizeof(eka2l1::loader::mif_icon_header));
-
-                    std::vector<eka2l1::loader::svgb_convert_error_description> errors;
-                    std::vector<eka2l1::loader::nvg_convert_error_description> errors_nvg;
-
-                    if (header.type == eka2l1::loader::mif_icon_type_svg) {
-                        if (!eka2l1::loader::convert_svgb_to_svg(inside_stream, *outfile_stream, errors)) {
-                            if (errors[0].reason_ == eka2l1::loader::svgb_convert_error_invalid_file) {
-                                outfile_stream->write(reinterpret_cast<const char *>(data.data()) + sizeof(eka2l1::loader::mif_icon_header), data.size() - sizeof(eka2l1::loader::mif_icon_header));
-                            }
-                        }
-
-                        outfile_stream.reset();
+                    if (converted) {
                         renderer = std::make_unique<QSvgRenderer>(QString::fromUtf8(cached_path.c_str()));
                     } else {
-                        inside_stream = eka2l1::common::ro_buf_stream(data.data() + sizeof(eka2l1::loader::mif_icon_header),
-                            data.size() - sizeof(eka2l1::loader::mif_icon_header));
-
-                        if (eka2l1::loader::convert_nvg_to_svg(inside_stream, *outfile_stream, errors_nvg)) {
-                            outfile_stream.reset();
-                            renderer = std::make_unique<QSvgRenderer>(QString::fromUtf8(cached_path.c_str()));
-                        } else  {
-                            LOG_ERROR(eka2l1::FRONTEND_UI, "Icon for app {} can't be decoded!", header.type, app_name.toStdString());
-                            outfile_stream.reset();
-
-                            eka2l1::common::remove(cached_path);
-                        }  
+                        LOG_ERROR(eka2l1::FRONTEND_UI, "Icon for app {} can't be decoded!", app_name.toStdString());
+                        eka2l1::common::remove(cached_path);
                     }
                 }
             }

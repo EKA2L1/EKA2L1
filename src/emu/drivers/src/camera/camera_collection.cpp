@@ -3,6 +3,8 @@
 
 #include <common/platform.h>
 
+#include <type_traits>
+
 #if EKA2L1_PLATFORM(ANDROID)
 #include <drivers/camera/backend/android/camera_collection_android.h>
 #elif EKA2L1_PLATFORM(IOS)
@@ -16,6 +18,11 @@
 #endif
 
 namespace eka2l1::drivers::camera {
+    // [expr.delete]/3: deleting a derived object through a base pointer without
+    // a virtual destructor is undefined.
+    static_assert(std::has_virtual_destructor_v<collection>,
+        "camera::collection is owned polymorphically and must be destroyed polymorphically");
+
     std::unique_ptr<collection> collection_detail = nullptr;
 
     collection *get_collection() {
