@@ -30,6 +30,8 @@
 #include <memory>
 
 namespace eka2l1 {
+    struct sensor_client_session_callback_state;
+
     class sensor_server : public service::typical_server {
     public:
         explicit sensor_server(eka2l1::system *sys);
@@ -38,13 +40,17 @@ namespace eka2l1 {
 
     struct sensor_client_session : public service::typical_session {
     private:
+        std::shared_ptr<sensor_client_session_callback_state> callback_state_;
         std::map<std::uint32_t, std::unique_ptr<drivers::sensor>> channels_;
         std::map<std::uint32_t, std::unique_ptr<service::ipc_context>> channel_data_msgs_;
         std::map<std::uint32_t, std::uint64_t> ask_recv_time_;
 
         drivers::sensor *get_sensor_channel(const std::uint32_t id);
+        void complete_channel_data_request_locked(kernel_system *kern, const std::uint32_t channel_id,
+            std::vector<std::uint8_t> &data, std::size_t packet_sent);
     public:
         explicit sensor_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
+        ~sensor_client_session() override;
 
         void fetch(service::ipc_context *ctx) override;
         void query_channels(eka2l1::service::ipc_context *ctx);
@@ -55,7 +61,5 @@ namespace eka2l1 {
         void channel_data(eka2l1::service::ipc_context *ctx);
         void get_property(eka2l1::service::ipc_context *ctx);
         void get_all_properties(eka2l1::service::ipc_context *ctx);
-
-        void complete_channel_data_request(const std::uint32_t channel_id, std::vector<std::uint8_t> &data, std::size_t packet_sent);
     };
 }
