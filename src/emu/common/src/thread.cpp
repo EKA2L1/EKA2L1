@@ -25,6 +25,10 @@
 #include <pthread.h>
 #endif
 
+#if EKA2L1_PLATFORM(DARWIN)
+#include <pthread/qos.h>
+#endif
+
 #include <common/cvt.h>
 #include <common/thread.h>
 
@@ -122,6 +126,33 @@ namespace eka2l1::common {
     }
 
     void set_thread_priority(const thread_priority pri) {
+#if EKA2L1_PLATFORM(DARWIN)
+        // Darwin schedules by QoS class, and pthread_setschedparam() is not a
+        // weaker way of saying the same thing: per <pthread/qos.h>, a call to it
+        // "will unset the QOS class" and the thread is then "permanently
+        // opted-out of the QOS class system", with later requests failing
+        // EPERM. So the portable path below does not merely fail to help here,
+        // it disables the mechanism that decides how these threads are run --
+        // including, on Apple silicon, whether they land on a P core.
+        qos_class_t qos = QOS_CLASS_DEFAULT;
+
+        switch (pri) {
+        case thread_priority_low:
+            qos = QOS_CLASS_UTILITY;
+            break;
+        case thread_priority_normal:
+            qos = QOS_CLASS_DEFAULT;
+            break;
+        case thread_priority_high:
+            qos = QOS_CLASS_USER_INITIATED;
+            break;
+        case thread_priority_very_high:
+            qos = QOS_CLASS_USER_INTERACTIVE;
+            break;
+        }
+
+        pthread_set_qos_class_self_np(qos, 0);
+#else
         pthread_t this_thread = pthread_self();
 
         std::int32_t max_prio = sched_get_priority_max(SCHED_OTHER);
@@ -136,6 +167,7 @@ namespace eka2l1::common {
         }
 
         pthread_setschedparam(this_thread, SCHED_OTHER, &params);
+#endif
     }
 #endif
 }
