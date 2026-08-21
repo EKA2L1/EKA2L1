@@ -46,6 +46,12 @@ namespace eka2l1 {
 
             signal_info info;
             bool outstanding;
+            int activate_defer_count_ = 0;
+
+            // Whether the outstanding request may be completed now. Reschedules the
+            // event and answers false while the guest has issued the request but not
+            // yet made it active.
+            bool fire_or_defer();
 
         public:
             timer(kernel_system *kern, ntimer *timing, std::string name,
@@ -60,6 +66,10 @@ namespace eka2l1 {
 
             bool request_finish();
             bool cancel_request();
+
+            // Complete the outstanding request, unless it has to be deferred.
+            // Must be called with the kernel lock held.
+            void fire();
         };
     }
 }

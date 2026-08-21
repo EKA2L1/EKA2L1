@@ -460,14 +460,16 @@ namespace eka2l1 {
                 return false;
             }
 
-            sleep_level = 0;
+            sleep_level = 1;
 
-            while (state == thread_state::run) {
-                wait_for_any_request();
-                sleep_level++;
+            // A host-side frame-pacing sleep. It must not consume or restore guest
+            // request signals: the request semaphore carries the active scheduler's
+            // accounting, and one extra signal there is a stray-signal panic.
+            if (!scheduler->sleep(this, ussecs, true)) {
+                sleep_level = 0;
+                return false;
             }
 
-            scheduler->sleep(this, ussecs, false);
             return true;
         }
 
@@ -482,13 +484,20 @@ namespace eka2l1 {
             kern->lock();
 
             if (sleep_nof_sts) {
-                (sleep_nof_sts.get(owning_process()))->set(errcode, kern->is_eka1());
+                // The wakeup event can already be in flight - popped from the timing
+                // queue and running outside the timing lock - when the sleeping thread
+                // is torn down. The guest request status page may be unmapped by then,
+                // so translation returns null. Guard it like notify_info::complete.
+                epoc::request_status *sts_real = sleep_nof_sts.get(owning_process());
+                if (sts_real) {
+                    sts_real->set(errcode, kern->is_eka1());
+                }
                 sleep_nof_sts = 0;
 
                 signal_request();
             } else {
-                signal_request(sleep_level);
                 sleep_level = 0;
+                scheduler->dewait(this);
             }
 
             sleep_nof_sts = 0;

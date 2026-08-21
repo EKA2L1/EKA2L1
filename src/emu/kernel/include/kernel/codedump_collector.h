@@ -60,5 +60,22 @@ namespace eka2l1::kernel {
         void force_clean() {
             clean_impl();
         }
+
+        /**
+         * @brief Forget every collected entry without freeing it.
+         *
+         * The intrusive link nodes live inside the codesegs / attached infos
+         * themselves, so once the kernel has wiped those objects out the
+         * lists dangle into freed memory. Called from kernel wipeout after
+         * the codeseg container is destroyed; a normal clean would walk (and
+         * write through) the dead nodes.
+         */
+        void wipe() {
+            attach_list_.reset();
+            in_decease_list_.reset();
+
+            collected_memory_ = 0;
+            in_list_count_ = 0;
+        }
     };
 }

@@ -83,10 +83,52 @@ namespace eka2l1::epoc {
         return nullptr;
     }
 
+    static bool find_rom_entry_containing_addr(const loader::rom_dir &dir, const std::u16string &path_so_far,
+        const std::uint32_t addr, std::u16string &result) {
+        static constexpr std::uint8_t FILE_ATTRIB_DIR = 0x10;
+
+        for (const auto &entry : dir.entries) {
+            if (entry.attrib & FILE_ATTRIB_DIR) {
+                continue;
+            }
+
+            if ((entry.address_lin <= addr) && (addr - entry.address_lin < entry.size)) {
+                result = path_so_far + entry.name;
+                return true;
+            }
+        }
+
+        for (const auto &subdir : dir.subdirs) {
+            if (find_rom_entry_containing_addr(subdir, path_so_far + subdir.name + u"\\", addr, result)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     static std::optional<std::u16string> get_dll_full_path(kernel_system *kern, const std::uint32_t addr) {
         codeseg_ptr ss = get_codeseg_from_addr(kern, kern->crr_process(), addr, true);
         if (ss) {
             return ss->get_full_path();
+        }
+
+        // A statically linked XIP DLL runs in place from ROM and only gets a codeseg
+        // once it appears in some image's DLL reference chain, so an address inside
+        // one (gflm.dll, say) does not resolve above. The ROM file tree records the
+        // linear address range of every XIP entry, which is enough to name the image
+        // the address belongs to.
+        loader::rom *rom_info = kern->get_rom_info();
+        if (rom_info) {
+            std::u16string prefix(1, drive_to_char16(kern->get_lib_manager()->get_drive_rom()));
+            prefix += u":\\";
+
+            for (const auto &root : rom_info->root.root_dirs) {
+                std::u16string result;
+                if (find_rom_entry_containing_addr(root.dir, prefix, addr, result)) {
+                    return result;
+                }
+            }
         }
 
         return std::nullopt;
@@ -647,6 +689,28 @@ namespace eka2l1::epoc {
         full_path_ptr.get(crr_pr)->assign(crr_pr, path_utf8);
     }
 
+    // Exec::GetModuleNameFromAddress. Unlike Dll::FileName's executive it reports
+    // whether the address could be attributed at all, and its callers branch on that
+    // code: TExtendedLocale::GetLocaleDllName, and the SQL server on startup.
+    BRIDGE_FUNC(std::int32_t, get_module_name_from_address, std::int32_t addr, eka2l1::ptr<epoc::des8> module_name_ptr) {
+        std::optional<std::u16string> full_path = get_dll_full_path(kern, addr);
+
+        if (!full_path) {
+            LOG_TRACE(KERNEL, "No module contains address 0x{:X}", static_cast<std::uint32_t>(addr));
+            return epoc::error_not_found;
+        }
+
+        kernel::process *crr_pr = kern->crr_process();
+        epoc::des8 *module_name = module_name_ptr.get(crr_pr);
+
+        if (!module_name) {
+            return epoc::error_argument;
+        }
+
+        module_name->assign(crr_pr, common::ucs2_to_utf8(*full_path));
+        return epoc::error_none;
+    }
+
     /***********************************/
     /* LOCALE */
     /**********************************/
@@ -790,6 +854,13 @@ namespace eka2l1::epoc {
         if ((int)msg->args.get_arg_type(param) & (int)ipc_arg_type::flag_des) {
             epoc::desc_base *base = eka2l1::ptr<epoc::desc_base>(msg->args.args[param]).get(msg->own_thr->owning_process());
 
+            // The slot is typed as a descriptor, but the client may still have passed
+            // a null or unmapped address. Symbian answers KErrBadDescriptor there
+            // rather than faulting the server.
+            if (!base) {
+                return epoc::error_bad_descriptor;
+            }
+
             return base->get_length();
         }
 
@@ -811,7 +882,13 @@ namespace eka2l1::epoc {
 
         if ((int)type & (int)ipc_arg_type::flag_des) {
             kernel::process *own_pr = msg->own_thr->owning_process();
-            return eka2l1::ptr<epoc::des8>(msg->args.args[param]).get(own_pr)->get_max_length(own_pr);
+            epoc::des8 *base = eka2l1::ptr<epoc::des8>(msg->args.args[param]).get(own_pr);
+
+            if (!base) {
+                return epoc::error_bad_descriptor;
+            }
+
+            return base->get_max_length(own_pr);
         }
 
         return epoc::error_bad_descriptor;
@@ -895,6 +972,7 @@ namespace eka2l1::epoc {
 
         ipc_arg_type arg_type = msg->args.get_arg_type(param);
         if (!(static_cast<std::uint32_t>(arg_type) & static_cast<std::uint32_t>(ipc_arg_type::flag_des))) {
+            msg->unref();
             return epoc::error_argument;
         }
 
@@ -902,6 +980,7 @@ namespace eka2l1::epoc {
         std::uint8_t *param_ptr_host = param_ptr.get(msg->own_thr->owning_process());
 
         if (!param_ptr_host || !info_host) {
+            msg->unref();
             return epoc::error_argument;
         }
 
@@ -930,6 +1009,7 @@ namespace eka2l1::epoc {
 
         ipc_arg_type arg_type = msg->args.get_arg_type(param);
         if (!(static_cast<std::uint32_t>(arg_type) & static_cast<std::uint32_t>(ipc_arg_type::flag_des))) {
+            msg->unref();
             return epoc::error_argument;
         }
 
@@ -937,6 +1017,7 @@ namespace eka2l1::epoc {
         std::uint8_t *param_ptr_host = param_ptr.get(msg->own_thr->owning_process());
 
         if (!param_ptr_host || !info_host) {
+            msg->unref();
             return epoc::error_argument;
         }
 
@@ -944,6 +1025,7 @@ namespace eka2l1::epoc {
         epoc::desc8 *des_des = des_des_ptr.get(crr_process);
 
         if (!des_des) {
+            msg->unref();
             return epoc::error_argument;
         }
 
@@ -954,6 +1036,7 @@ namespace eka2l1::epoc {
 
         const std::int32_t result = do_ipc_manipulation(kern, msg->own_thr, param_ptr_host, info_copy, start_offset);
         if (result < 0) {
+            msg->unref();
             return result;
         }
 
@@ -3109,18 +3192,18 @@ namespace eka2l1::epoc {
 
         kernel::process *process_to_operate = thr_to_operate->owning_process();
 
-        if (is_write) {
-            if (len > static_cast<std::int32_t>(buf->get_length())) {
-                return epoc::error_overflow;
-            }
-        } else {
-            if (len > static_cast<std::int32_t>(buf->get_max_length(process_to_operate))) {
-                return epoc::error_underflow;
-            }
+        // The byte count comes from the separate length argument, not from the
+        // descriptor: callers hand over a plain buffer (a TPtr8 built with the
+        // two-argument constructor still has a zero length) and let the command header
+        // say how much of it to transfer. Both directions are therefore bounded by the
+        // descriptor's capacity, which get_max_length() reports as the length for the
+        // constant descriptor types that have no separate maximum.
+        if (len > static_cast<std::int32_t>(buf->get_max_length(crr))) {
+            return is_write ? epoc::error_overflow : epoc::error_underflow;
         }
 
         std::uint8_t *buf_ptr = reinterpret_cast<std::uint8_t *>(buf->get_pointer_raw(crr));
-        
+
         if (len == 4) {
             if (is_write) {
                 std::uint32_t data = *reinterpret_cast<std::uint32_t*>(buf_ptr);
@@ -3136,22 +3219,25 @@ namespace eka2l1::epoc {
 
                 std::uint32_t final_result_data = result.value();
                 std::memcpy(buf_ptr, &final_result_data, 4);
+
+                return epoc::error_none;
             }
 
-            return epoc::error_none;
-        }
-
-        std::uint8_t *dest_of_operate = reinterpret_cast<std::uint8_t *>(process_to_operate->get_ptr_on_addr_space(addr));
-
-        if (!dest_of_operate) {
-            LOG_WARN(KERNEL, "Destination to operate is null, return success still.");
-            return epoc::error_none;
-        }
-
-        if (is_write) {
-            std::memcpy(dest_of_operate, buf_ptr, len);
+            // Fall through to the instruction cache flush below: four bytes is exactly
+            // one ARM instruction, and patching one is what this command is for.
         } else {
-            std::memcpy(buf_ptr, dest_of_operate, len);
+            std::uint8_t *dest_of_operate = reinterpret_cast<std::uint8_t *>(process_to_operate->get_ptr_on_addr_space(addr));
+
+            if (!dest_of_operate) {
+                LOG_WARN(KERNEL, "Destination to operate is null, return success still.");
+                return epoc::error_none;
+            }
+
+            if (is_write) {
+                std::memcpy(dest_of_operate, buf_ptr, len);
+            } else {
+                std::memcpy(buf_ptr, dest_of_operate, len);
+            }
         }
 
         // Check if we should recompile
@@ -5645,6 +5731,81 @@ namespace eka2l1::epoc {
         return chn->do_request(request_nof_info, func, args[0], args[1], false);
     }
 
+    // TChannelCreateInfo8, as Exec::ChannelCreate receives it.
+    struct logical_channel_create_info {
+        epoc::version version;
+        std::int32_t unit;
+        eka2l1::ptr<epoc::desc8> physical_device;
+        eka2l1::ptr<epoc::desc8> info;
+    };
+
+    BRIDGE_FUNC(std::int32_t, logical_channel_create, eka2l1::ptr<epoc::desc8> device_name_des,
+        eka2l1::ptr<logical_channel_create_info> create_info_ptr, std::int32_t owner) {
+        kernel::process *process = kern->crr_process();
+        epoc::desc8 *device_name = device_name_des.get(process);
+        logical_channel_create_info *create_info = create_info_ptr.get(process);
+
+        if (!device_name || !create_info) {
+            return epoc::error_argument;
+        }
+
+        const std::string name = common::lowercase_string(device_name->to_std_string(process));
+        ldd::factory *factory = kern->get_by_name<ldd::factory>(name);
+
+        if (!factory) {
+            const auto factory_func = kern->suitable_ldd_instantiate_func(name.c_str());
+            if (!factory_func) {
+                LOG_TRACE(KERNEL, "Logical device {} is not emulated", name);
+                return epoc::error_not_found;
+            }
+
+            ldd::factory_instance factory_instance = factory_func(kern->get_system());
+            factory = kern->add_object(factory_instance);
+            if (!factory) {
+                return epoc::error_no_memory;
+            }
+
+            factory->install();
+        }
+
+        std::unique_ptr<ldd::channel> channel = factory->make_channel(create_info->version);
+        if (!channel) {
+            return epoc::error_not_supported;
+        }
+
+        ldd::channel *added_channel = kern->add_object(channel);
+        if (!added_channel) {
+            return epoc::error_no_memory;
+        }
+
+        added_channel->set_owner(process);
+        return kern->open_handle_with_thread(kern->crr_thread(), added_channel,
+            owner == epoc::owner_process ? kernel::owner_type::process : kernel::owner_type::thread);
+    }
+
+    // The emulated logical devices are built in, so there is no image to load. A
+    // channel is created straight from the factory instead, and E32Loader::DeviceLoad
+    // has nothing to do.
+    BRIDGE_FUNC(std::int32_t, logical_device_load) {
+        return epoc::error_not_supported;
+    }
+
+    BRIDGE_FUNC(std::int32_t, logical_device_free, eka2l1::ptr<epoc::desc8> device_name_des, std::int32_t) {
+        kernel::process *process = kern->crr_process();
+        epoc::desc8 *device_name = device_name_des.get(process);
+        if (!device_name) {
+            return epoc::error_argument;
+        }
+
+        const std::string name = common::lowercase_string(device_name->to_std_string(process));
+        ldd::factory *factory = kern->get_by_name<ldd::factory>(name);
+        if (!factory) {
+            return epoc::error_not_found;
+        }
+
+        return factory->decrease_access_count();
+    }
+
     BRIDGE_FUNC(std::int32_t, logical_channel_do_control_eka1, const int func, eka2l1::ptr<void> arg1,
         eka2l1::ptr<void> arg2, const kernel::handle h) {
         return logical_channel_do_control(kern, h, func, arg1, arg2);
@@ -5663,9 +5824,6 @@ namespace eka2l1::epoc {
         return 0;
     }
 
-    BRIDGE_FUNC(std::int32_t, get_locale_dll_name) {
-        return epoc::error_none;
-    }
 
     const eka2l1::hle::func_map svc_register_funcs_v10 = {
         /* FAST EXECUTIVE CALL */
@@ -5735,7 +5893,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x3A, request_signal),
         BRIDGE_REGISTER(0x3B, handle_name),
         BRIDGE_REGISTER(0x3C, handle_full_name),
-        BRIDGE_REGISTER(0x3E, handle_info),
+        BRIDGE_REGISTER(0x3D, handle_info),
         BRIDGE_REGISTER(0x3E, handle_count),
         BRIDGE_REGISTER(0x3F, after),
         BRIDGE_REGISTER(0x41, message_complete),
@@ -5769,8 +5927,14 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x78, thread_rename),
         BRIDGE_REGISTER(0x7B, process_logon),
         BRIDGE_REGISTER(0x7C, process_logon_cancel),
-        BRIDGE_REGISTER(0x7F, server_create),
+        BRIDGE_REGISTER(0x7D, thread_process),
+        BRIDGE_REGISTER(0x7E, server_create),
+        BRIDGE_REGISTER(0x7F, server_create), // ServerCreateWithOptions
         BRIDGE_REGISTER(0x80, session_create),
+        BRIDGE_REGISTER(0x81, session_create_from_handle),
+        BRIDGE_REGISTER(0x82, logical_device_load),
+        BRIDGE_REGISTER(0x83, logical_device_free),
+        BRIDGE_REGISTER(0x84, logical_channel_create),
         BRIDGE_REGISTER(0x85, timer_create),
         BRIDGE_REGISTER(0x86, timer_after), // Actually TimerHighRes
         BRIDGE_REGISTER(0x87, after), // Actually AfterHighRes
@@ -5801,6 +5965,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xBA, message_queue_notify_data_available),
         BRIDGE_REGISTER(0xBB, message_queue_cancel_notify_available),
         BRIDGE_REGISTER(0xBD, property_define),
+        BRIDGE_REGISTER(0xBE, property_delete),
         BRIDGE_REGISTER(0xBF, property_attach),
         BRIDGE_REGISTER(0xC0, property_subscribe),
         BRIDGE_REGISTER(0xC1, property_cancel),
@@ -5828,7 +5993,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xDF, mutex_is_held),
         BRIDGE_REGISTER(0xE0, leave_start),
         BRIDGE_REGISTER(0xE1, leave_end),
-        BRIDGE_REGISTER(0xE3, get_locale_dll_name),
+        BRIDGE_REGISTER(0xE3, get_module_name_from_address),
         BRIDGE_REGISTER(0xE6, session_security_info),
         BRIDGE_REGISTER(0xE9, btrace_out),
         BRIDGE_REGISTER(0xF6, thread_user_exiting),
@@ -6005,6 +6170,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xDE, mutex_is_held),
         BRIDGE_REGISTER(0xDF, leave_start),
         BRIDGE_REGISTER(0xE0, leave_end),
+        BRIDGE_REGISTER(0xE2, get_module_name_from_address),
         BRIDGE_REGISTER(0xE5, session_security_info),
         BRIDGE_REGISTER(0xE8, btrace_out)
     };
@@ -6110,6 +6276,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x6E, mutex_create),
         BRIDGE_REGISTER(0x6F, semaphore_create),
         BRIDGE_REGISTER(0x70, thread_open_by_id),
+        BRIDGE_REGISTER(0x71, process_open_by_id),
         BRIDGE_REGISTER(0x72, thread_kill),
         BRIDGE_REGISTER(0x73, thread_logon),
         BRIDGE_REGISTER(0x74, thread_logon_cancel),
@@ -6161,6 +6328,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xBF, property_cancel),
         BRIDGE_REGISTER(0xC0, property_get_int),
         BRIDGE_REGISTER(0xC1, property_get_bin),
+        BRIDGE_REGISTER(0xC2, property_set_int),
         BRIDGE_REGISTER(0xC3, property_set_bin),
         BRIDGE_REGISTER(0xC4, property_find_get_int),
         BRIDGE_REGISTER(0xC5, property_find_get_bin),
@@ -6178,6 +6346,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xDD, mutex_is_held),
         BRIDGE_REGISTER(0xDE, leave_start),
         BRIDGE_REGISTER(0xDF, leave_end),
+        BRIDGE_REGISTER(0xE1, get_module_name_from_address),
         BRIDGE_REGISTER(0xE4, session_security_info),
         BRIDGE_REGISTER(0xE7, btrace_out)
     };

@@ -160,6 +160,14 @@ namespace eka2l1 {
         explicit system_impl(system *parent, system_create_components &param);
 
         ~system_impl() {
+            // Join the timer thread before anything else goes away: its event
+            // callbacks (kernel timers, animation scheduler redraws) run
+            // concurrently and reach into the kernel, window server and font state
+            // that the teardown below frees.
+            if (timing_) {
+                timing_->stop();
+            }
+
 #if ENABLE_SCRIPTING
             scripting_.reset();
 #endif

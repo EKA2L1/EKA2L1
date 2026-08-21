@@ -173,6 +173,8 @@ namespace eka2l1::kernel {
 
         void calculate_hash();
         void free_attached_data(attached_info &info);
+        void apply_relocations(std::uint8_t *code_base_ptr, std::uint8_t *data_base_ptr,
+            address code_run_addr, address data_run_addr, bool data_only);
 
     public:
         /*! \brief Create a new codeseg

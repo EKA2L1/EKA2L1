@@ -186,6 +186,19 @@ namespace eka2l1::kernel {
             }
         }
 
+        // A ready thread can briefly outlive its process's memory model during a
+        // multi-step teardown. Drop the stale entries so switch_context receives a
+        // runnable thread with a valid address space.
+        while (next_thread) {
+            kernel::process *owner = next_thread->owning_process();
+            if (owner && owner->get_mem_model()) {
+                break;
+            }
+
+            dequeue_thread_from_ready(next_thread);
+            next_thread = next_ready_thread();
+        }
+
         switch_context(crr_thread, next_thread);
     }
 
@@ -281,6 +294,7 @@ namespace eka2l1::kernel {
 
             thr->state = thread_state::wait;
             dequeue_thread_from_ready(thr);
+            kern->prepare_reschedule();
         }
 
         // Schedule the thread to be waken up

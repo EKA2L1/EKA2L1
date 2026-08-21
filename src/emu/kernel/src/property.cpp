@@ -120,7 +120,14 @@ namespace eka2l1 {
                 return false;
             }
 
-            (*subscription_iterator)->complete(epoc::error_cancel);
+            // The subscriber thread may already have exited (e.g. this reference is only
+            // now being torn down via decrease_access_count). notify_info::complete()
+            // dereferences the requester thread, so only signal it while it is still alive;
+            // otherwise just drop the stale subscription.
+            if (kern->is_thread_alive((*subscription_iterator)->requester)) {
+                (*subscription_iterator)->complete(epoc::error_cancel);
+            }
+
             subscription_queue.erase(subscription_iterator);
 
             return true;
@@ -128,7 +135,10 @@ namespace eka2l1 {
 
         void property::notify_request(const std::int32_t err) {
             while (auto subscription = subscription_queue.pop()) {
-                subscription.value()->complete(err);
+                // Same rationale as cancel(): never complete to a requester that has died.
+                if (kern->is_thread_alive(subscription.value()->requester)) {
+                    subscription.value()->complete(err);
+                }
             }
         }
 

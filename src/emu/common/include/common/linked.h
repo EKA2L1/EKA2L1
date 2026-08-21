@@ -112,6 +112,14 @@ namespace eka2l1::common {
         bool empty() const {
             return (elem_.next == &elem_);
         }
+
+        // Re-initialise to an empty ring without dequeuing the current members.
+        // Only valid when every enqueued element is known to be dead already:
+        // their link nodes must not be touched.
+        void reset() {
+            elem_.next = &elem_;
+            elem_.previous = &elem_;
+        }
     };
 
     template <size_t NUM>
