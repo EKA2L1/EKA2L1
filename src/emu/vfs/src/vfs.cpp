@@ -309,6 +309,15 @@ namespace eka2l1 {
     if (closed)    \
         LOG_WARN(VFS, "File {} closed but operation still continues", common::ucs2_to_utf8(input_name));
 
+// An open that failed (or a resize that could not get its handle back) leaves
+// this file without a host FILE. Fail the operation instead of handing a null
+// handle to the C library, which faults inside it.
+#define NO_HANDLE_RETURN(val)                                                                 \
+    if (!file) {                                                                              \
+        LOG_ERROR(VFS, "File {} has no host handle open", common::ucs2_to_utf8(input_name));   \
+        return val;                                                                           \
+    }
+
         physical_file(const utf16_str &vfs_path, const utf16_str &real_path, const int mode)
             : file(nullptr) {
             init(vfs_path, real_path, mode);
@@ -322,6 +331,13 @@ namespace eka2l1 {
             return file && !feof(file);
         }
 
+        // Whether the host actually handed us a file. Unlike valid() this does
+        // not care about the stream position, so it can be asked right after
+        // construction.
+        bool is_open() const {
+            return file != nullptr;
+        }
+
         int file_mode() const override {
             return fmode;
         }
@@ -329,9 +345,15 @@ namespace eka2l1 {
         void init(const utf16_str &vfs_path, const utf16_str &real_path, const int mode) {
             // Disable directory check here
             closed = false;
-            file = common::open_c_file(common::ucs2_to_utf8(real_path).c_str(), translate_mode(mode));
 
+            // Fill the descriptive members in first, so a failed open still
+            // leaves a fully initialised object behind (an uninitialised fmode
+            // would make the mode checks below read garbage).
+            input_name = vfs_path;
             physical_path = real_path;
+            fmode = mode;
+
+            file = common::open_c_file(common::ucs2_to_utf8(real_path).c_str(), translate_mode(mode));
 
             // LOG_TRACE(VFS, "Open with mode: {}", cmode);
 
@@ -339,9 +361,6 @@ namespace eka2l1 {
                 LOG_ERROR(VFS, "Can't open file: {}", common::ucs2_to_utf8(real_path));
                 return;
             }
-
-            input_name = vfs_path;
-            fmode = mode;
         }
 
         void shutdown() {
@@ -352,18 +371,21 @@ namespace eka2l1 {
 
         size_t write_file(const void *data, uint32_t size, uint32_t count) override {
             WARN_CLOSE
+            NO_HANDLE_RETURN(0)
 
             return fwrite(data, size, count, file) * size;
         }
 
         size_t read_file(void *data, uint32_t size, uint32_t count) override {
             WARN_CLOSE
+            NO_HANDLE_RETURN(0)
 
             return fread(data, size, count, file) * size;
         }
 
         std::uint64_t size() const override {
             WARN_CLOSE
+            NO_HANDLE_RETURN(0)
 
             auto crr_pos = ftell(file);
             fseek(file, 0, SEEK_END);
@@ -377,7 +399,11 @@ namespace eka2l1 {
         bool close() override {
             WARN_CLOSE
 
-            fclose(file);
+            if (file) {
+                fclose(file);
+                file = nullptr;
+            }
+
             closed = true;
 
             return true;
@@ -385,12 +411,14 @@ namespace eka2l1 {
 
         uint64_t tell() override {
             WARN_CLOSE
+            NO_HANDLE_RETURN(0)
 
             return ftell(file);
         }
 
         std::uint64_t seek(std::int64_t seek_off, file_seek_mode where) override {
             WARN_CLOSE
+            NO_HANDLE_RETURN(0xFFFFFFFFFFFFFFFF)
 
             if (where == file_seek_mode::address) {
                 return 0xFFFFFFFFFFFFFFFF;
@@ -420,6 +448,7 @@ namespace eka2l1 {
 
         bool flush() override {
             WARN_CLOSE
+            NO_HANDLE_RETURN(false)
 
             if (!(fmode & WRITE_MODE)) {
                 // Undefined behaviour on all platforms.
@@ -436,9 +465,12 @@ namespace eka2l1 {
                 return false;
             }
 
+            NO_HANDLE_RETURN(false)
+
             // Temporary close the file to let resize function works.
             const std::uint64_t saved_pos = tell();
             fclose(file);
+            file = nullptr;
 
             int err_code = common::resize(common::ucs2_to_utf8(physical_path), new_size);
 
@@ -448,6 +480,15 @@ namespace eka2l1 {
 #else
             file = fopen(common::ucs2_to_utf8(physical_path).c_str(), translate_mode(fmode, true));
 #endif
+
+            if (!file) {
+                // The reopen can fail for reasons outside our control (the host
+                // is out of descriptors, the file disappeared under us, ...).
+                // Stay handle-less: every other operation now fails cleanly
+                // instead of faulting on a null FILE inside the C library.
+                LOG_ERROR(VFS, "Can't reopen file {} after resize", common::ucs2_to_utf8(physical_path));
+                return false;
+            }
 
             fseek(file, static_cast<long>(saved_pos), SEEK_SET);
 
@@ -944,7 +985,16 @@ namespace eka2l1 {
                 return nullptr;
             }
 
-            return std::make_unique<physical_file>(path, *real_path, mode);
+            auto opened = std::make_unique<physical_file>(path, *real_path, mode);
+
+            if (!opened->is_open()) {
+                // The host refused to give us a handle. Report the file as not
+                // openable, so the caller answers the guest with an error
+                // instead of getting a file object with nothing behind it.
+                return nullptr;
+            }
+
+            return opened;
         }
 
         std::int64_t watch_directory(const std::u16string &path, common::directory_watcher_callback callback,
@@ -1085,7 +1135,7 @@ namespace eka2l1 {
             auto ff = physical_file_system::open_file(new_path, mode);
 
             // Dont change order!
-            if (!entry || ((mode & PREFER_PHYSICAL) && (ff->size() != entry->size))) {
+            if (!entry || (ff && (mode & PREFER_PHYSICAL) && (ff->size() != entry->size))) {
                 return ff;
             }
 

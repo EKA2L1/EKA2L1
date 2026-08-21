@@ -37,3 +37,16 @@ TEST_CASE("get_physical", "vfs") {
 
     REQUIRE(eka2l1::common::compare_ignore_case(*actual_path_b, std::u16string(u"drive_b") + static_cast<char16_t>(eka2l1::get_separator()) + u"despacito3leak") == 0);
 }
+
+TEST_CASE("open_file_the_host_refuses", "vfs") {
+    eka2l1::io_system io;
+    io_scope_guard guard(io);
+
+    io.mount_physical_path(drive_number::drive_a, drive_media::physical, io_attrib_internal,
+        u".");
+
+    // The parent directory does not exist, so the host refuses the handle.
+    // RFile::Replace answers KErrPathNotFound there; the file server never hands
+    // back a file object with nothing behind it.
+    REQUIRE(io.open_file(u"A:\\NoSuchFolder\\NotHere.txt", WRITE_MODE | BIN_MODE) == nullptr);
+}
