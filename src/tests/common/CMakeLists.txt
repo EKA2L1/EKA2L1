@@ -14,4 +14,5 @@ set(COMMON_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/region.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/runlen.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/sync.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/thread.cpp
     PARENT_SCOPE)
