@@ -1813,6 +1813,116 @@ std::uint32_t check_undefined_instructions(backend_env &dc) {
     return failures;
 }
 
+// A scripting hook or debugger does not just observe a breakpoint: it restores
+// the instruction the BKPT displaced and asks the core to stop so the caller can
+// single-step it. dyncom has to hand control back in a state where that step is
+// possible -- PC still on the breakpoint, and still in the instruction set the
+// guest was running. Getting either wrong is silent: the guest resumes and dies
+// somewhere else entirely.
+std::uint32_t check_breakpoint_resume(backend_env &dc) {
+    // Thumb, because that is the case where the instruction set can be lost:
+    // BKPT is two bytes and an ARM-mode resume would read the next halfword as
+    // part of a 4-byte instruction.
+    static constexpr std::uint16_t DISPLACED = 0x2001u; // movs r0, #1
+    static constexpr std::uint16_t THUMB_BKPT = 0xBE00u;
+
+    static_assert(PROG_CODE_LO == 0x10000u,
+        "the BX target above is built from this literal");
+
+    program p;
+    p.addr = PROG_CODE_LO;
+    p.thumb = false;
+    p.kind = "bkpt-resume";
+    p.budget = 64;
+
+    // Enter Thumb with a BX at run time rather than starting there. That is what
+    // leaves CPSR.T stale behind the live TFlag, which is the state the handler
+    // has to be handed back in one piece.
+    const std::uint32_t bkpt_addr = PROG_CODE_LO + 0x10;
+
+    push32(p.code, 0xE3A02801u);          // mov r2, #0x10000
+    push32(p.code, 0xE2822011u);          // add r2, r2, #0x11   (bkpt_addr | 1)
+    push32(p.code, 0xE12FFF12u);          // bx  r2
+    push32(p.code, 0xE1A00000u);          // nop (pad to bkpt_addr)
+    push16(p.code, THUMB_BKPT);
+    push16(p.code, 0x2102u);              // movs r1, #2
+    push16(p.code, 0xE7FEu);              // b .
+
+    install(dc, p);
+    core *cpu = dc.cpu.get();
+    std::uint8_t *mem = dc.mem.data();
+    bool handled = false;
+
+    auto previous_handler = cpu->exception_handler;
+    cpu->exception_handler = [cpu, mem, bkpt_addr, &handled](exception_type t,
+                                 const std::uint32_t) -> bool {
+        if (t != exception_type_breakpoint) {
+            return false;
+        }
+
+        // What manager::scripts::handle_breakpoint does: stop the core, put the
+        // displaced instruction back, and rewind PC onto it.
+        handled = true;
+        cpu->stop();
+        std::memcpy(mem + bkpt_addr, &DISPLACED, sizeof(DISPLACED));
+        cpu->imb_range(bkpt_addr, sizeof(DISPLACED));
+        cpu->set_pc(bkpt_addr);
+        return true;
+    };
+
+    cpu->clear_instruction_cache();
+    cpu->imb_range(p.addr, p.code.size());
+    dc.exceptions = 0;
+    dc.syscalls = 0;
+
+    execute(dc, p);
+
+    const std::uint32_t pc_after = cpu->get_pc();
+    const std::uint32_t cpsr_after = cpu->get_cpsr();
+
+    std::uint32_t failures = 0;
+
+    if (!handled) {
+        std::printf("[DIVERGENCE] bkpt-resume: the Thumb BKPT never reached the handler\n");
+        return 1;
+    }
+
+    if (pc_after != bkpt_addr) {
+        std::printf("[DIVERGENCE] bkpt-resume: PC moved to %08X, expected to stay on the "
+                    "breakpoint at %08X -- the displaced instruction would be skipped\n",
+            pc_after, bkpt_addr);
+        failures++;
+    }
+
+    if ((cpsr_after & 0x20u) == 0) {
+        std::printf("[DIVERGENCE] bkpt-resume: CPSR.T cleared (cpsr=%08X) -- the guest would "
+                    "resume in ARM mode on Thumb code\n",
+            cpsr_after);
+        failures++;
+    }
+
+    // The step the hook stopped for. It must execute the restored instruction,
+    // in Thumb, and land on the next halfword.
+    cpu->set_pc(bkpt_addr);
+    cpu->run(1);
+
+    if (cpu->get_reg(0) != 1) {
+        std::printf("[DIVERGENCE] bkpt-resume: single step left r0=%08X, expected 1 -- the "
+                    "restored instruction did not execute\n",
+            cpu->get_reg(0));
+        failures++;
+    }
+
+    if (cpu->get_pc() != bkpt_addr + sizeof(DISPLACED)) {
+        std::printf("[DIVERGENCE] bkpt-resume: single step ended at %08X, expected %08X\n",
+            cpu->get_pc(), static_cast<std::uint32_t>(bkpt_addr + sizeof(DISPLACED)));
+        failures++;
+    }
+
+    cpu->exception_handler = previous_handler;
+    return failures;
+}
+
 // VFP: the host-float fast path against dynarmic's own VFP implementation.
 std::uint32_t suite_vfp(backend_env &dc, backend_env &da, std::uint32_t base_seed,
     std::uint32_t count, coverage &cov) {
@@ -1998,6 +2108,7 @@ int main(int argc, char **argv) {
     };
     failures += check_vfp_mac_cancellation(*dc, *da);
     failures += check_undefined_instructions(*dc);
+    failures += check_breakpoint_resume(*dc);
     for (const suite_result &sr : results) {
         std::printf("  %s %s\n", sr.name, sr.failures ? "FAIL" : "ok");
         failures += sr.failures;
@@ -2028,7 +2139,7 @@ int main(int argc, char **argv) {
     if (failures == 0) {
         std::printf("dyncom_difftest: PASS (%u single-instruction cases vs golden, "
                     "%llu programs vs dynarmic, VFP soft/host A/B, undefined-instruction "
-                    "reporting, negative control)\n",
+                    "reporting, breakpoint resume, negative control)\n",
             count, static_cast<unsigned long long>(cov.programs));
         return 0;
     }
