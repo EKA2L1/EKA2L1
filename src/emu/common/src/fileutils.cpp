@@ -28,6 +28,8 @@
 #include <re2/re2.h>
 
 #include <fstream>
+#include <map>
+#include <mutex>
 #include <stack>
 #include <utility>
 
@@ -435,7 +437,7 @@ namespace eka2l1::common {
         common::dir_entry entry;
 
         while (ite->next_entry(entry) == 0) {
-            if (type == entry.type) {
+            if ((type == FILE_INVALID) || (type == entry.type)) {
                 if (common::compare_ignore_case(common::utf8_to_ucs2(entry.name), insensitive_name_u16) == 0) {
                     return entry.name;
                 }
@@ -788,12 +790,113 @@ namespace eka2l1::common {
         return true;
     }
 
-    bool is_system_case_insensitive() {
+    bool is_path_case_insensitive(const std::string &path) {
 #if EKA2L1_PLATFORM(WIN32)
+        (void)path;
         return true;
+#elif defined(_PC_CASE_SENSITIVE)
+        // Walk up to something that exists: the caller may be asking about a file it is
+        // about to create, and pathconf() needs a real path.
+        std::string probe = path;
+
+        while (!probe.empty() && !exists(probe)) {
+            // file_directory() keeps the trailing separator, so drop it before asking
+            // again or the walk stops on the first parent instead of climbing.
+            while (!probe.empty() && eka2l1::is_separator(probe.back())) {
+                probe.pop_back();
+            }
+
+            const std::string parent = eka2l1::file_directory(probe);
+
+            if (parent == probe) {
+                break;
+            }
+
+            probe = parent;
+        }
+
+        while (!probe.empty() && (probe.size() > 1) && eka2l1::is_separator(probe.back())) {
+            probe.pop_back();
+        }
+
+        if (probe.empty() || !exists(probe)) {
+            return false;
+        }
+
+        static std::mutex probe_lock;
+        static std::map<std::string, bool> probed;
+
+        const std::lock_guard<std::mutex> guard(probe_lock);
+        auto cached = probed.find(probe);
+
+        if (cached != probed.end()) {
+            return cached->second;
+        }
+
+        // 1 = case-sensitive, 0 = not. A negative return means the volume does not answer,
+        // in which case assume the stricter of the two and let the caller fold names.
+        const long sensitive = ::pathconf(probe.c_str(), _PC_CASE_SENSITIVE);
+        const bool insensitive = (sensitive == 0);
+
+        probed.emplace(probe, insensitive);
+        return insensitive;
 #else
+        (void)path;
         return false;
 #endif
+    }
+
+    std::string resolve_case_insensitive_path(const std::string &base, const std::string &relative) {
+        if (!exists(base)) {
+            return add_path(base, relative);
+        }
+
+        const char separator = static_cast<char>(eka2l1::get_separator());
+        std::string resolved = base;
+
+        if (!resolved.empty() && !eka2l1::is_separator(resolved.back())) {
+            resolved += separator;
+        }
+
+        std::size_t pos = 0;
+
+        while (pos < relative.size()) {
+            while ((pos < relative.size()) && eka2l1::is_separator(relative[pos])) {
+                pos++;
+            }
+
+            std::size_t end = pos;
+
+            while ((end < relative.size()) && !eka2l1::is_separator(relative[end])) {
+                end++;
+            }
+
+            if (end == pos) {
+                break;
+            }
+
+            const std::string component = relative.substr(pos, end - pos);
+            const bool is_last = (end >= relative.size());
+
+            if (exists(resolved + component)) {
+                resolved += component;
+            } else {
+                // Intermediate components have to be directories; the last one can be either,
+                // and may legitimately not be there yet if the caller is creating it.
+                const std::string real = find_case_sensitive_file_name(resolved, component,
+                    is_last ? FILE_INVALID : FILE_DIRECTORY);
+
+                resolved += real.empty() ? component : real;
+            }
+
+            if (!is_last) {
+                resolved += separator;
+            }
+
+            pos = end;
+        }
+
+        return resolved;
     }
 
     bool copy_folder(const std::string &target_folder, const std::string &dest_folder_to_reside, const std::uint32_t flags, progress_changed_callback progress_cb,
