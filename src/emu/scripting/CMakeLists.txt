@@ -16,6 +16,7 @@ add_library(scripting
         src/emulog.cpp
         src/instance.cpp
         src/manager.cpp
+        src/builtin_patches.cpp
         src/message.cpp
         src/mem.cpp
         src/hook.cpp

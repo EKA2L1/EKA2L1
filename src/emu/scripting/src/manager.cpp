@@ -33,7 +33,10 @@
 #include <kernel/kernel.h>
 #include <system/epoc.h>
 
+#include <xxhash.h>
+
 namespace eka2l1::manager {
+#ifdef ENABLE_SCRIPTING_LUA
     static void script_file_changed_callback(void *data, common::directory_changes &changes) {
         scripts *manager = reinterpret_cast<scripts*>(data);
         for (std::size_t i = 0; i < changes.size(); i++) {
@@ -49,6 +52,7 @@ namespace eka2l1::manager {
                 manager->import_module("scripts/" + changes[i].filename_);
         }
     }
+#endif
 
     breakpoint_info::breakpoint_info()
         : addr_(0)
@@ -190,6 +194,7 @@ namespace eka2l1::manager {
     }
 
     void scripts::import_all_modules() {
+#ifdef ENABLE_SCRIPTING_LUA
         // Import all scripts
         std::string cur_dir;
         common::get_current_directory(cur_dir);
@@ -214,8 +219,14 @@ namespace eka2l1::manager {
         // Listen for script change
         folder_watcher.watch("scripts/", script_file_changed_callback, this, common::directory_change_move | common::directory_change_creation
             | common::directory_change_last_write);
+#else
+        // No Lua runtime: the shipped scripts/*.lua patches are compiled in as
+        // native C++ instead.
+        register_builtin_patches();
+#endif
     }
 
+#ifdef ENABLE_SCRIPTING_LUA
     bool scripts::import_module(const std::string &path) {
         const std::string name_full = eka2l1::filename(path);
         const std::string name = eka2l1::replace_extension(name_full, "");
@@ -289,39 +300,48 @@ namespace eka2l1::manager {
         }
     }
 
-    bool scripts::call_module_entry(const std::string &module) {
-        if (!ipc_send_callback_handle) {
-            kernel_system *kern = sys->get_kernel_system();
+#endif
 
-            ipc_send_callback_handle = kern->register_ipc_send_callback([this](const std::string &svr_name, const int ord, const ipc_arg &args, address reqstsaddr, kernel::thread *callee) {
-                call_ipc_send(svr_name, ord, args.args[0], args.args[1], args.args[2], args.args[3], args.flag, reqstsaddr, callee);
-            });
-
-            ipc_complete_callback_handle = kern->register_ipc_complete_callback([this](ipc_msg *msg, const std::int32_t complete_code) {
-                if (msg->msg_session)
-                    call_ipc_complete(msg->msg_session->get_server()->name(), msg->function, msg);
-            });
-
-            breakpoint_hit_callback_handle = kern->register_breakpoint_hit_callback([this](arm::core *core, kernel::thread *correspond, const vaddress addr) {
-                handle_breakpoint(core, correspond, addr);
-            });
-
-            process_switch_callback_handle = kern->register_process_switch_callback([this](arm::core *core, kernel::process *old_one, kernel::process *new_one) {
-                handle_process_switch(core, old_one, new_one);
-            });
-
-            codeseg_loaded_callback_handle = kern->register_codeseg_loaded_callback([this](const std::string &name, kernel::process *attacher, codeseg_ptr target) {
-                handle_codeseg_loaded(name, attacher, target);
-            });
-
-            uid_change_callback_handle = kern->register_uid_process_change_callback([this](kernel::process *aff, kernel::process_uid_type type) {
-                handle_uid_process_change(aff, std::get<2>(type));
-            });
-
-            imb_range_callback_handle = kern->register_imb_range_callback([this](kernel::process *pr, const address addr, const std::size_t size) {
-                handle_imb_range(pr, addr, size);
-            });
+    void scripts::register_kernel_hooks() {
+        if (ipc_send_callback_handle) {
+            return;
         }
+
+        kernel_system *kern = sys->get_kernel_system();
+
+        ipc_send_callback_handle = kern->register_ipc_send_callback([this](const std::string &svr_name, const int ord, const ipc_arg &args, address reqstsaddr, kernel::thread *callee) {
+            call_ipc_send(svr_name, ord, args.args[0], args.args[1], args.args[2], args.args[3], args.flag, reqstsaddr, callee);
+        });
+
+        ipc_complete_callback_handle = kern->register_ipc_complete_callback([this](ipc_msg *msg, const std::int32_t complete_code) {
+            if (msg->msg_session)
+                call_ipc_complete(msg->msg_session->get_server()->name(), msg->function, msg);
+        });
+
+        breakpoint_hit_callback_handle = kern->register_breakpoint_hit_callback([this](arm::core *core, kernel::thread *correspond, const vaddress addr) {
+            handle_breakpoint(core, correspond, addr);
+        });
+
+        process_switch_callback_handle = kern->register_process_switch_callback([this](arm::core *core, kernel::process *old_one, kernel::process *new_one) {
+            handle_process_switch(core, old_one, new_one);
+        });
+
+        codeseg_loaded_callback_handle = kern->register_codeseg_loaded_callback([this](const std::string &name, kernel::process *attacher, codeseg_ptr target) {
+            handle_codeseg_loaded(name, attacher, target);
+        });
+
+        uid_change_callback_handle = kern->register_uid_process_change_callback([this](kernel::process *aff, kernel::process_uid_type type) {
+            handle_uid_process_change(aff, std::get<2>(type));
+        });
+
+        imb_range_callback_handle = kern->register_imb_range_callback([this](kernel::process *pr, const address addr, const std::size_t size) {
+            handle_imb_range(pr, addr, size);
+        });
+    }
+
+#ifdef ENABLE_SCRIPTING_LUA
+    bool scripts::call_module_entry(const std::string &module) {
+        register_kernel_hooks();
 
         if (modules.find(module) == modules.end()) {
             return false;
@@ -331,12 +351,13 @@ namespace eka2l1::manager {
         current_module = state;
 
         if (lua_pcall(state->lua_state(), 0, 0, 0) != LUA_OK) {
-            LOG_ERROR(SCRIPTING, "Error executing script entry of {}: {}", module, lua_tostring(state->lua_state(), -1));            
+            LOG_ERROR(SCRIPTING, "Error executing script entry of {}: {}", module, lua_tostring(state->lua_state(), -1));
             return false;
         }
 
         return true;
     }
+#endif
 
     std::uint32_t scripts::register_ipc(const std::string &server_name, const int opcode, const int invoke_when, void* func) {
         std::size_t handle = 0;
@@ -366,6 +387,15 @@ namespace eka2l1::manager {
             [=](const breakpoint_info &info) { return (info.attached_process_ == 0) || (info.attached_process_ == pr->get_uid()); });
 
         auto &source_insts = breakpoints[aligned].source_insts_;
+
+        if ((ite != breakpoints[aligned].list_.end())
+            && (ite->flags_ & breakpoint_info::FLAG_ROM_IMAGE)
+            && !source_insts.empty()) {
+            // A ROM instruction has one physical preimage shared by every
+            // process. Do not capture the already-installed BKPT again under
+            // another process UID.
+            return;
+        }
 
         if (ite == breakpoints[aligned].list_.end() || source_insts.find(pr->get_uid()) != source_insts.end() || !data) {
             return;
@@ -401,6 +431,17 @@ namespace eka2l1::manager {
         auto source_value = sources.find(pr->get_uid());
 
         if (source_value == sources.end()) {
+            const breakpoint_info_list &list = breakpoints[target & ~1].list_;
+            if (!list.empty() && (list[0].flags_ & breakpoint_info::FLAG_ROM_IMAGE)
+                && !sources.empty()) {
+                // ROM instructions are physically shared by all processes, so
+                // the saved preimage may have been recorded under a different
+                // process UID from the one that ultimately hits the hook.
+                source_value = sources.begin();
+            }
+        }
+
+        if (source_value == sources.end()) {
             return false;
         }
 
@@ -421,7 +462,7 @@ namespace eka2l1::manager {
 
     void scripts::write_back_breakpoints(kernel::process *pr) {
         for (const auto &[addr, info] : breakpoints) {
-            if (!info.list_.empty()) {
+            if (!info.list_.empty() && !(info.list_[0].flags_ & breakpoint_info::FLAG_ROM_IMAGE)) {
                 write_back_breakpoint(pr, info.list_[0].addr_);
             }
         }
@@ -509,7 +550,8 @@ namespace eka2l1::manager {
         return static_cast<std::uint32_t>(handle);
     }
 
-    std::uint32_t scripts::register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid, const std::uint32_t uid3, const std::uint32_t seghash, breakpoint_hit_func func) {
+    std::uint32_t scripts::register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid,
+        const std::uint32_t uid3, const std::uint32_t seghash, breakpoint_hit_func func) {
         const std::string lib_name_lower = common::lowercase_string(lib_name);
         std::size_t handle = 0;
 
@@ -531,36 +573,38 @@ namespace eka2l1::manager {
             hle::lib_manager *manager = sys->get_lib_manager();
             if (manager) {
                 if (codeseg_ptr seg = manager->load(common::utf8_to_ucs2(lib_name))) {
-                    std::vector<kernel::process*> processes = seg->attached_processes();
+                    const bool identity_matches = ((uid3 == 0) || (std::get<2>(seg->get_uids()) == uid3))
+                        && ((seghash == 0) || (seg->get_hash() == seghash));
 
-                    if (process_uid != 0) {
-                        auto find_res = std::find_if(processes.begin(), processes.end(), [process_uid](kernel::process *target) {
-                            return (target->get_uid() == process_uid);
-                        });
-
-                        kernel::process *finally = nullptr;
-                        if (find_res != processes.end()) {
-                            finally = *find_res;
-                        }
-
-                        processes.clear();
-                        processes.push_back(finally);
-                    }
-
-                    for (kernel::process *process: processes) {
-                        address base = seg->get_code_run_addr(process);
-
-                        if (base == 0) {
-                            LOG_ERROR(SCRIPTING, "Can't retrieve code run address of process base {} with UID", process->name(), process_uid);
-                        }
-
-                        if (seg->is_rom()) {
-                            base = 0;
-                        }
-
+                    if (identity_matches && seg->is_rom()) {
+                        // ROM hook addresses are already absolute and do not
+                        // depend on a process attachment. Some system DLLs are
+                        // loaded before scripting starts, so waiting for a new
+                        // codeseg-attached event would leave them unresolved.
                         info.invoke_->category_ = script_function::META_CATEGORY_BREAKPOINT;
-                        info.addr_ += base;
-                        info.flags_ = 0;
+                        info.flags_ = breakpoint_info::FLAG_ROM_IMAGE;
+                    } else if (identity_matches) {
+                        std::vector<kernel::process*> processes = seg->attached_processes();
+
+                        if (process_uid != 0) {
+                            processes.erase(std::remove_if(processes.begin(), processes.end(), [process_uid](kernel::process *target) {
+                                return target->get_uid() != process_uid;
+                            }), processes.end());
+                        }
+
+                        for (kernel::process *process: processes) {
+                            address base = seg->get_code_run_addr(process);
+
+                            if (base == 0) {
+                                LOG_ERROR(SCRIPTING, "Can't retrieve code run address of process base {} with UID", process->name(), process_uid);
+                                continue;
+                            }
+
+                            info.invoke_->category_ = script_function::META_CATEGORY_BREAKPOINT;
+                            info.addr_ += base;
+                            info.flags_ = 0;
+                            break;
+                        }
                     }
                 }
             }
@@ -582,6 +626,55 @@ namespace eka2l1::manager {
         }
 
         return static_cast<std::uint32_t>(handle);
+    }
+
+    std::uint32_t scripts::register_rom_export_breakpoint(const std::string &lib_name, const std::uint32_t ordinal,
+        const std::uint32_t method_hash, const std::uint32_t hook_offset, const std::uint32_t process_uid,
+        const std::uint32_t uid3, breakpoint_hit_func func) {
+        hle::lib_manager *manager = sys->get_lib_manager();
+        if (!manager) {
+            return INVALID_HOOK_HANDLE;
+        }
+
+        codeseg_ptr seg = manager->load(common::utf8_to_ucs2(lib_name));
+        if (!seg || !seg->is_rom() || (uid3 && (std::get<2>(seg->get_uids()) != uid3))) {
+            return INVALID_HOOK_HANDLE;
+        }
+
+        std::vector<std::uint32_t> &exports = seg->get_export_table_raw();
+        if ((ordinal == 0) || (ordinal > exports.size())) {
+            return INVALID_HOOK_HANDLE;
+        }
+
+        const address method_entry = exports[ordinal - 1];
+        const address method_start = method_entry & ~1;
+        std::uint8_t *mapped_code = nullptr;
+        const address code_start = seg->get_code_run_addr(nullptr, &mapped_code);
+        const address code_end = code_start + seg->get_code_size();
+        if (!mapped_code || (method_start < code_start) || (method_start >= code_end)) {
+            return INVALID_HOOK_HANDLE;
+        }
+
+        address method_end = code_end;
+        for (const std::uint32_t exported : exports) {
+            const address candidate = exported & ~1;
+            if ((candidate > method_start) && (candidate < method_end)) {
+                method_end = candidate;
+            }
+        }
+
+        if ((method_end <= method_start) || (hook_offset >= (method_end - method_start))) {
+            return INVALID_HOOK_HANDLE;
+        }
+
+        const std::uint32_t actual_hash = XXH32(mapped_code + (method_start - code_start),
+            method_end - method_start, 0x5B001101);
+        if (actual_hash != method_hash) {
+            return INVALID_HOOK_HANDLE;
+        }
+
+        const address hook_address = (method_start + hook_offset) | (method_entry & 1);
+        return register_breakpoint(lib_name, hook_address, process_uid, uid3, 0, func);
     }
 
     void scripts::patch_library_hook(const codeseg_ptr &seg) {
@@ -617,6 +710,16 @@ namespace eka2l1::manager {
                     patched.addr_ += new_code_addr;
                     patched.flags_ &= ~breakpoint_info::FLAG_BASED_IMAGE;
                     patched.invoke_->category_ = script_function::META_CATEGORY_BREAKPOINT;
+
+                    if (seg->is_rom()) {
+                        patched.flags_ |= breakpoint_info::FLAG_ROM_IMAGE;
+                        const breakpoint_info_list &existing = breakpoints[patched.addr_ & ~1].list_;
+                        if (std::find_if(existing.begin(), existing.end(), [&](const breakpoint_info &info) {
+                                return info.invoke_ == patched.invoke_;
+                            }) != existing.end()) {
+                            continue;
+                        }
+                    }
 
                     breakpoints[patched.addr_ & ~1].list_.push_back(patched);
 
@@ -700,12 +803,27 @@ namespace eka2l1::manager {
         running_core->save_context(correspond->get_thread_context());
 
         if (!last_breakpoint_script_hits[correspond->unique_id()].hit_) {
-            const vaddress cur_addr = addr | ((running_core->get_cpsr() & 0x20) >> 5);
+            bool is_thumb = (running_core->get_cpsr() & 0x20) != 0;
+            const auto registered = breakpoints.find(addr & ~1);
+            if ((registered != breakpoints.end()) && !registered->second.list_.empty()) {
+                // Dyncom translates Thumb instructions to its internal ARM
+                // form and may report CPSR.T clear while handling BKPT. The
+                // registered hook address retains the authoritative mode bit.
+                is_thumb = (registered->second.list_[0].addr_ & 1) != 0;
+            }
+            const vaddress cur_addr = addr | (is_thumb ? 1 : 0);
+
+            // Resume from the instruction temporarily restored below. Do this
+            // before invoking the patch so callbacks that intentionally change
+            // PC (for example, to skip a broken guest-code path) keep control
+            // of the final resume address.
+            correspond->get_thread_context().set_pc(addr);
+            running_core->set_pc(addr);
 
             if (call_breakpoints(cur_addr, correspond->owning_process()->get_uid())) {
                 breakpoint_hit_info &info = last_breakpoint_script_hits[correspond->unique_id()];
                 info.hit_ = true;
-                const std::uint32_t last_breakpoint_script_size_ = (running_core->get_cpsr() & 0x20) ? 2 : 4;
+                const std::uint32_t last_breakpoint_script_size_ = is_thumb ? 2 : 4;
                 info.addr_ = cur_addr;
 
                 bool should_full_flush = false;
@@ -719,9 +837,6 @@ namespace eka2l1::manager {
                 {
                     running_core->imb_range(addr, last_breakpoint_script_size_);
                 }
-
-                correspond->get_thread_context().set_pc(addr);
-                running_core->set_pc(addr);
             }
         }
     }

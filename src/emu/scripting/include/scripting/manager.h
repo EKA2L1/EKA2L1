@@ -19,11 +19,14 @@
 
 #pragma once
 
+#include <common/configure.h>
 #include <common/types.h>
 #include <common/watcher.h>
 #include <common/container.h>
 
+#ifdef ENABLE_SCRIPTING_LUA
 #include <scripting/lua_helper.h>
+#endif
 #include <scripting/platform.h>
 
 #include <map>
@@ -89,9 +92,12 @@ namespace eka2l1::manager {
     };
     
     struct script_module {
+#ifdef ENABLE_SCRIPTING_LUA
         scripting::luacpp_state state_;
+#endif
         common::identity_container<std::unique_ptr<script_function>> functions_;
 
+#ifdef ENABLE_SCRIPTING_LUA
         explicit script_module(lua_State *state)
             : state_(state) {
         }
@@ -99,6 +105,12 @@ namespace eka2l1::manager {
         lua_State *lua_state() {
             return state_.state_;
         }
+#else
+        // Native-only builds have no Lua state; the module just owns the
+        // built-in patch functions.
+        explicit script_module() {
+        }
+#endif
     };
 
     struct breakpoint_info {
@@ -107,7 +119,8 @@ namespace eka2l1::manager {
 
         enum {
             FLAG_IS_ORDINAL = 1 << 0,
-            FLAG_BASED_IMAGE = 1 << 1
+            FLAG_BASED_IMAGE = 1 << 1,
+            FLAG_ROM_IMAGE = 1 << 2
         };
 
         std::uint8_t flags_;
@@ -170,8 +183,19 @@ namespace eka2l1::manager {
         common::directory_watcher folder_watcher;
 
     protected:
+#ifdef ENABLE_SCRIPTING_LUA
         bool call_module_entry(const std::string &module);
+#endif
         bool remove_function_impl(script_function *func);
+
+        /**
+         * \brief Register the kernel-level callbacks (breakpoint hit, process
+         *        switch, codeseg loaded, ...) the scripting engine relies on.
+         *
+         * Idempotent. Called both from the Lua module-entry path and from the
+         * native built-in patch path so breakpoints fire in either mode.
+         */
+        void register_kernel_hooks();
 
         /**
          * \brief Patch ordinal breakpoints with address based on code base address of given image.
@@ -194,9 +218,20 @@ namespace eka2l1::manager {
         explicit scripts(system *sys);
         ~scripts();
 
+#ifdef ENABLE_SCRIPTING_LUA
         bool import_module(const std::string &path);
         void unload_module(const std::string &path);
+#endif
         void import_all_modules();
+
+        /**
+         * \brief Register the built-in game/OS compatibility patches directly in
+         *        C++ (no Lua runtime).
+         *
+         * Used on platforms that cannot host LuaJIT (iOS: no writable-executable
+         * memory). Mirrors the shipped scripts/*.lua patches.
+         */
+        void register_builtin_patches();
 
         void handle_breakpoint(arm::core *running_core, kernel::thread *thr_triggered, const std::uint32_t addr);
         bool last_breakpoint_hit(kernel::thread *thr);
@@ -222,7 +257,11 @@ namespace eka2l1::manager {
          * \param func              The hook.
          */
         std::uint32_t register_library_hook(const std::string &name, const std::uint32_t ord, const std::uint32_t process_uid, const std::uint32_t uid3, const std::uint32_t seghash, breakpoint_hit_func func);
-        std::uint32_t register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid, const std::uint32_t uid3, const std::uint32_t seghash, breakpoint_hit_func func);
+        std::uint32_t register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid,
+            const std::uint32_t uid3, const std::uint32_t seghash, breakpoint_hit_func func);
+        std::uint32_t register_rom_export_breakpoint(const std::string &lib_name, const std::uint32_t ordinal,
+            const std::uint32_t method_hash, const std::uint32_t hook_offset, const std::uint32_t process_uid,
+            const std::uint32_t uid3, breakpoint_hit_func func);
         std::uint32_t register_ipc(const std::string &server_name, const int opcode, const int invoke_when, void* func);
 
         bool call_breakpoints(const std::uint32_t addr, const std::uint32_t process_uid);
@@ -268,7 +307,9 @@ namespace eka2l1::manager {
         void call(script_function *func, Args... args) {
             current_module = func->parent_;
             func->cast<T>()(args...);
+#ifdef ENABLE_SCRIPTING_LUA
             lua_gc(current_module->lua_state(), LUA_GCCOLLECT, 0);
+#endif
             current_module = nullptr;
         }
     };

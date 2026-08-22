@@ -51,6 +51,13 @@ EKA2L1_EXPORT std::uint32_t eka2l1_cpu_register_bkpt_hook(const char *image_name
     return eka2l1::scripting::get_current_instance()->get_scripts()->register_breakpoint(image_name, addr, process_uid, uid3, seghash, func);
 }
 
+EKA2L1_EXPORT std::uint32_t eka2l1_cpu_register_rom_export_bkpt_hook(const char *image_name, const std::uint32_t ordinal,
+    const std::uint32_t method_hash, const std::uint32_t hook_offset, const std::uint32_t process_uid,
+    const std::uint32_t uid3, eka2l1::manager::breakpoint_hit_func func) {
+    return eka2l1::scripting::get_current_instance()->get_scripts()->register_rom_export_breakpoint(
+        image_name, ordinal, method_hash, hook_offset, process_uid, uid3, func);
+}
+
 EKA2L1_EXPORT std::uint32_t eka2l1_register_ipc_sent_hook(const char *server_name, const int opcode, eka2l1::manager::ipc_sent_func func) {
     return eka2l1::scripting::get_current_instance()->get_scripts()->register_ipc(server_name, opcode, 0, reinterpret_cast<void *>(func));
 }

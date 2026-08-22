@@ -75,9 +75,10 @@ if (EKA2L1_IOS)
 
     set(EKA2L1_BUILD_TOOLS OFF CACHE BOOL "Disabled on iOS" FORCE)
     set(EKA2L1_BUILD_TESTS OFF CACHE BOOL "Disabled on iOS" FORCE)
-    # The LuaJIT runtime needs writable-executable memory, which iOS forbids on
-    # a non-jailbroken device, so scripting is off there for now.
-    set(EKA2L1_ENABLE_SCRIPTING_ABILITY OFF CACHE BOOL "Disabled on iOS" FORCE)
+    # iOS keeps the scripting engine (for the built-in native game patches) but
+    # cannot use the LuaJIT runtime: JIT/FFI callbacks need writable-executable
+    # memory, which iOS forbids on non-jailbroken devices. Build native-only.
+    set(EKA2L1_ENABLE_SCRIPTING_ABILITY ON CACHE BOOL "Native patches only on iOS" FORCE)
     set(EKA2L1_SCRIPTING_LUA OFF CACHE BOOL "No LuaJIT on iOS" FORCE)
     set(EKA2L1_BUILD_VULKAN_BACKEND OFF CACHE BOOL "Disabled on iOS" FORCE)
     set(EKA2L1_BUILD_PATCH OFF CACHE BOOL "Disabled on iOS" FORCE)
@@ -144,6 +145,10 @@ endif()
 if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
     set (ENABLE_SCRIPTING 1)
 endif(EKA2L1_ENABLE_SCRIPTING_ABILITY)
+
+if (EKA2L1_ENABLE_SCRIPTING_ABILITY AND EKA2L1_SCRIPTING_LUA)
+    set (ENABLE_SCRIPTING_LUA 1)
+endif()
 
 if (CI)
     set (BUILD_FOR_USER 1)
