@@ -2910,9 +2910,17 @@ BKPT_INST : {
         LOG_DEBUG(eka2l1::CPU_DYNCOM, "Breakpoint instruction hit. Immediate: {:#010X}", inst_cream->imm);
 
         // Call the handler
+        SAVE_NZCVT;
         cpu->RaiseException(eka2l1::arm::exception_type_breakpoint, cpu->Reg[15]);
 
         LOAD_NZCVT;
+
+        // A debugger or scripting hook may stop the core so it can restore and
+        // single-step the displaced instruction. In that case the breakpoint
+        // itself must not advance PC first.
+        if (cpu->NumInstrsToExecute == 0) {
+            goto END;
+        }
 
         if (cpu->Reg[15] != pc) {
             goto DISPATCH;
