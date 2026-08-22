@@ -138,6 +138,7 @@ namespace eka2l1 {
 
         config::state *conf_;
         config::app_settings *app_settings_;
+        std::string cache_root_;
 
         std::atomic<bool> exit = false;
         std::atomic<bool> paused = false;
@@ -628,9 +629,26 @@ namespace eka2l1 {
         , adriver(param.audio_)
         , conf_(param.conf_)
         , app_settings_(param.settings_)
+        , cache_root_(param.cache_root_)
         , exit(false) {
 #if EKA2L1_ARCH(ARM)
         cpu_type = arm_emulator_type::r12l1;
+#elif EKA2L1_PLATFORM(IOS)
+        // dyncom by default: dynarmic's A32 backend is not robust enough to be
+        // the one an App Store build lands on, and the JIT win is in sustained
+        // execution rather than the launch this decides. Builds that carry it
+        // (EKA2L1_IOS_DYNARMIC) let the user opt in, through ios_use_jit rather
+        // than cpu_backend -- the latter defaults to "dynarmic" for desktop and
+        // may already be persisted, which must not enable a JIT by itself.
+        cpu_type = arm_emulator_type::dyncom;
+#if EKA2L1_IOS_DYNARMIC
+        if (conf_->ios_use_jit && arm::host_can_jit()) {
+            cpu_type = arm_emulator_type::dynarmic;
+        }
+#endif
+        LOG_INFO(SYSTEM, "iOS CPU backend: {} (JIT opt-in: {}, JIT permission: {})",
+            (cpu_type == arm_emulator_type::dynarmic) ? "dynarmic" : "dyncom",
+            conf_->ios_use_jit, arm::host_can_jit());
 #else
         cpu_type = /*arm::string_to_arm_emulator_type(conf_->cpu_backend);*/ arm_emulator_type::dynarmic;
 #endif
@@ -702,6 +720,12 @@ namespace eka2l1 {
 
         if (paused) {
             return 1;
+        }
+
+        if (dispatcher_) {
+            // Objects orphaned by a dead process are destroyed here, where no kernel lock is
+            // held: an audio teardown waits out the render callback, which needs that lock.
+            dispatcher_->flush_pending_teardown();
         }
 
         bool should_step = false;
@@ -865,7 +889,10 @@ namespace eka2l1 {
         std::string current_dir;
         common::get_current_directory(current_dir);
 
-        const std::string temp_folder = eka2l1::absolute_path("cache/temp/", current_dir);
+        const std::string cache_root = cache_root_.empty()
+            ? eka2l1::absolute_path("cache/", current_dir)
+            : cache_root_;
+        const std::string temp_folder = eka2l1::add_path(cache_root, "temp/");
 
         eka2l1::common::delete_folder(temp_folder);
         eka2l1::common::create_directories(temp_folder);
@@ -1174,7 +1201,7 @@ namespace eka2l1 {
             return;
         }
 
-        get_lib_manager()->load_patch_libraries(PATCH_FOLDER_PATH);
+        get_lib_manager()->load_patch_libraries(runtime_resource_path(PATCH_FOLDER_PATH));
         dispatch::libraries::register_functions(kern_.get(), dispatcher_.get());
 
         service::init_services_post_bootup(parent_);
