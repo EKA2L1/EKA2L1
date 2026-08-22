@@ -168,6 +168,14 @@ namespace eka2l1::epoc::socket {
                     get_host_name(ctx);
                     return;
 
+                case socket_reform_hr_set_host_name:
+                    set_host_name(ctx);
+                    return;
+
+                case socket_reform_hr_cancel:
+                    cancel(ctx);
+                    return;
+
                 case socket_reform_hr_close:
                     close(ctx);
                     return;
@@ -183,6 +191,26 @@ namespace eka2l1::epoc::socket {
                 switch (ctx->msg->function) {
                 case socket_hr_get_by_name:
                     get_by_name(ctx);
+                    return;
+
+                case socket_hr_get_by_address:
+                    get_by_address(ctx);
+                    return;
+
+                case socket_hr_next:
+                    next(ctx);
+                    return;
+
+                case socket_hr_get_host_name:
+                    get_host_name(ctx);
+                    return;
+
+                case socket_hr_set_host_name:
+                    set_host_name(ctx);
+                    return;
+
+                case socket_hr_cancel:
+                    cancel(ctx);
                     return;
 
                 case socket_hr_close:

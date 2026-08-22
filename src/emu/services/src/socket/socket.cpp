@@ -346,8 +346,15 @@ namespace eka2l1::epoc::socket {
         kernel::process *requester = ctx->msg->own_thr->owning_process();
         epoc::des8 *packet_des = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[2]).get(requester);
         
+        // The reworked client packs RecvOneOrMore exactly like Recv --
+        // TIpcArgs(someFlags, &aLen, &aBuffer), esockserver/csock/CS_CLI.CPP -- so what the
+        // branch below distinguishes is client versions, not opcodes. Selecting it on
+        // one_or_more alone makes a pre-S^3 client, which still puts the transfer length
+        // package first, read that descriptor as flags and never get it written back.
+        const bool length_package_first = (ctx->sys->get_symbian_version_use() < epocver::epoc95);
+
         std::uint32_t *size_return = nullptr;
-        if (has_return_length && (!one_or_more || has_addr)) {
+        if (has_return_length && (length_package_first || !one_or_more || has_addr)) {
             size_return = reinterpret_cast<std::uint32_t*>(ctx->get_descriptor_argument_ptr(0));
             if (!size_return) {
                 ctx->complete(epoc::error_argument);
@@ -696,6 +703,10 @@ namespace eka2l1::epoc::socket {
                     write(ctx);
                     return;
 
+                case socket_reform_so_read:
+                    read(ctx);
+                    return;
+
                 case socket_reform_so_send:
                     send(ctx, true, false);
                     return;
@@ -732,6 +743,10 @@ namespace eka2l1::epoc::socket {
                     sock_->cancel_connect();
                     ctx->complete(epoc::error_none);
 
+                    return;
+
+                case socket_reform_so_cancel_accept:
+                    cancel_accept(ctx);
                     return;
 
                 case socket_reform_so_set_opt:
@@ -771,6 +786,10 @@ namespace eka2l1::epoc::socket {
                 }
             } else {
                 switch (ctx->msg->function) {
+                case socket_so_set_opt:
+                    set_option(ctx);
+                    return;
+
                 case socket_so_get_opt:
                     get_option(ctx);
                     return;
@@ -797,6 +816,10 @@ namespace eka2l1::epoc::socket {
 
                 case socket_so_write:
                     write(ctx);
+                    return;
+
+                case socket_so_read:
+                    read(ctx);
                     return;
 
                 case socket_so_send:
