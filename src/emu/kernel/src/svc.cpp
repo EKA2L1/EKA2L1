@@ -5336,14 +5336,20 @@ namespace eka2l1::epoc {
         return result;
     }
 
+    // Reaching these two means the client used the legacy TAny*[4] send, which
+    // writes four words and no argument-type header. Whether the kernel is old
+    // enough for is_ipc_old() does not come into it: EKA1 runs up to and
+    // including Symbian OS 8.1a, and is_ipc_old() stops at epoc7, so on 7.0,
+    // 8.0 and 8.1a it would have session_send_general read a fifth word the
+    // client never wrote.
     BRIDGE_FUNC(std::int32_t, session_send_sync_eka1, kernel::handle session_handle, const std::int32_t ord,
         std::uint32_t *args, eka2l1::ptr<epoc::request_status> status) {
-        return session_send_general(kern, session_handle, ord, args, status, kern->is_ipc_old(), true);
+        return session_send_general(kern, session_handle, ord, args, status, true, true);
     }
 
     BRIDGE_FUNC(std::int32_t, session_send_eka1, kernel::handle session_handle, const std::int32_t ord,
         std::uint32_t *args, eka2l1::ptr<epoc::request_status> status) {
-        return session_send_general(kern, session_handle, ord, args, status, kern->is_ipc_old(), false);
+        return session_send_general(kern, session_handle, ord, args, status, true, false);
     }
 
     std::int32_t thread_ipc_to_des_eka1(kernel_system *kern, address client_ptr_addr, epoc::des8 *des_ptr, std::int32_t offset, kernel::handle client_thread_h,
