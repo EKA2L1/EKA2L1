@@ -674,11 +674,19 @@ namespace eka2l1 {
     }
 
     void applist_server::app_language(service::ipc_context &ctx) {
-        LOG_TRACE(SERVICE_APPLIST, "AppList::AppLanguage stubbed to returns ELangEnglish");
+        // Apparc derives this from the phone language -- "Get application language
+        // for current phone language" in aplappinforeader.cpp, which then narrows it
+        // to the nearest localised resource file the app actually ships. Answering a
+        // constant here pins every app's UI to English whatever the locale says.
+        // EKA2L1 has no per-app resource set to narrow against, so the phone language
+        // is the whole answer; keep the old reply for the values that are not one
+        // (ELangTest and the internal "any").
+        language app_lang = kern->get_current_language();
+        if ((app_lang < language::en) || (app_lang == language::any)) {
+            app_lang = language::en;
+        }
 
-        language default_lang = language::en;
-
-        ctx.write_data_to_descriptor_argument<language>(1, default_lang);
+        ctx.write_data_to_descriptor_argument<language>(1, app_lang);
         ctx.complete(0);
     }
 
