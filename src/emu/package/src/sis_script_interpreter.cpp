@@ -135,7 +135,7 @@ namespace eka2l1 {
             common::create_directories(rp);
 
             // Delete the file, starts over
-            if (common::is_system_case_insensitive() && common::exists(path)) {
+            if (common::is_path_case_insensitive(path) && common::exists(path)) {
                 if (!common::remove(path)) {
                     LOG_WARN(PACKAGE, "Unable to remove {} to extract new file", path);
                 }

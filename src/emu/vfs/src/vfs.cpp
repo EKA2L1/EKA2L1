@@ -751,11 +751,27 @@ namespace eka2l1 {
 
             std::u16string vert_path_no_root = vert_path_copy.substr(root.size());
 
-            if (!common::is_system_case_insensitive()) {
+            // Fold to match what validate_for_host() did to the tree when it mounted the
+            // drive -- same predicate, so the two cannot drift apart.
+            if (common::is_platform_case_sensitive()) {
                 vert_path_no_root = common::lowercase_ucs2_string(vert_path_no_root);
             }
 
-            return eka2l1::add_path(map_path, vert_path_no_root);
+            const std::u16string folded_path = eka2l1::add_path(map_path, vert_path_no_root);
+            const std::string map_path_utf8 = common::ucs2_to_utf8(map_path);
+
+            if (common::is_path_case_insensitive(map_path_utf8)
+                || common::exists(common::ucs2_to_utf8(folded_path))) {
+                return folded_path;
+            }
+
+            // validate_for_host() folds the whole tree to lower case when it mounts a drive,
+            // which is why looking up the folded name works at all. It cannot cover what
+            // arrives afterwards, though: a game data folder copied straight into the drive
+            // through a file manager keeps the spelling it came with, and on a volume that
+            // distinguishes case it is then invisible. Recover it from the real entries.
+            return common::utf8_to_ucs2(common::resolve_case_insensitive_path(map_path_utf8,
+                common::ucs2_to_utf8(vert_path_no_root)));
         }
 
     public:
@@ -906,9 +922,10 @@ namespace eka2l1 {
                 return std::unique_ptr<directory>(nullptr);
             }
 
-            if (!common::is_system_case_insensitive()) {
+            if (common::is_platform_case_sensitive()) {
                 filter = common::lowercase_string(filter);
             }
+
 
             return std::make_unique<physical_directory>(this, new_path_utf8,
                 common::ucs2_to_utf8(vir_path), filter, type, attrib);

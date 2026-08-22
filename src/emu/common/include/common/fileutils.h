@@ -98,7 +98,30 @@ namespace eka2l1::common {
 
     bool delete_folder(const std::string &target_folder);
 
-    bool is_system_case_insensitive();
+    /**
+     * @brief Whether the filesystem holding @p path matches names without regard to case.
+     *
+     * This is a property of the volume, not of the build: the same Apple platform
+     * gives a case-insensitive volume on macOS and a case-sensitive one on iOS, and a
+     * Linux user can mount either. @p path need not exist -- its nearest existing
+     * ancestor is what gets probed. Answers are cached per probed directory.
+     */
+    bool is_path_case_insensitive(const std::string &path);
+
+    /**
+     * @brief Resolve @p relative against @p base, matching each component without regard
+     *        to case.
+     *
+     * For use on case-sensitive volumes, where files placed there by hand keep the
+     * spelling they arrived with while EKA2L1 looks them up folded to lower case.
+     *
+     * A component that matches nothing is appended as it was given, so a path being
+     * created inside an existing mixed-case directory still resolves its parents.
+     *
+     * @param base      Host directory to resolve from. Returned unchanged if missing.
+     * @param relative  Path relative to @p base, separated by either separator.
+     */
+    std::string resolve_case_insensitive_path(const std::string &base, const std::string &relative);
 
     /*! \brief Create a directory. */
     void create_directory(std::string path);
@@ -176,7 +199,7 @@ namespace eka2l1::common {
      * 
      * @param folder_path       The path of the folder to search for the insensitive filename/folder name.
      * @param insensitive_name  The insensitve file name to search
-     * @param type              The type of entry to match (file or folder?)
+     * @param type              The type of entry to match, or FILE_INVALID for any.
      * 
      * @return std::string      Sensitive filename/folder name. Empty on not found.
      */
