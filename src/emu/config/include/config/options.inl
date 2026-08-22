@@ -82,6 +82,7 @@ OPTION(btnet-password, btnet_password, "")
 OPTION(btnet-discovery-mode, btnet_discovery_mode, 0)
 OPTION(enable-upnp, enable_upnp, true)
 OPTION(extensive-logging, extensive_logging, false)
+OPTION(ios-use-jit, ios_use_jit, false)
 
 #ifdef OPTION
 #undef OPTION
