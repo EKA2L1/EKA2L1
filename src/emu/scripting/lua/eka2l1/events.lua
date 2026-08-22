@@ -41,6 +41,7 @@ ffi.cdef([[
 
     uint32_t eka2l1_cpu_register_lib_hook(const char *lib_name, const uint32_t ord, const uint32_t process_uid, const uint32_t codesegUid3, const uint32_t codesegHash, breakpoint_hit_lua_func func);
     uint32_t eka2l1_cpu_register_bkpt_hook(const char *image_name, const uint32_t addr, const uint32_t process_uid, const uint32_t codesegUid3, const uint32_t codesegHash, breakpoint_hit_lua_func func);
+    uint32_t eka2l1_cpu_register_rom_export_bkpt_hook(const char *image_name, const uint32_t ordinal, const uint32_t methodHash, const uint32_t hookOffset, const uint32_t process_uid, const uint32_t codesegUid3, breakpoint_hit_lua_func func);
     uint32_t eka2l1_register_ipc_sent_hook(const char *server_name, const int opcode, ipc_sent_lua_func func);
     uint32_t eka2l1_register_ipc_completed_hook(const char *server_name, const int opcode, ipc_completed_lua_func func);
 
@@ -110,6 +111,28 @@ function events.registerBreakpointHook(libName, addr, processUid, codesegUid3, f
         local ran, errorMsg = pcall(func)
         if not ran then
             common.log('Error running breakpoint script, ' .. errorMsg)
+        end
+    end)
+end
+
+--- Register a breakpoint at an offset inside a ROM export after verifying only
+--- that exported method's code bytes. This avoids firmware-specific absolute
+--- addresses and whole-DLL hashes while refusing methods with unknown code.
+---
+--- @param libName Name of the ROM library containing the method.
+--- @param ordinal Export ordinal used to locate the method dynamically.
+--- @param methodHash XXH32 fingerprint of the method, up to the next export.
+--- @param hookOffset Byte offset from the method entry to the breakpoint.
+--- @param processUid UID3 of the process to restrict the callback to, or 0.
+--- @param codesegUid3 UID3 of the ROM library.
+--- @param func Callback function with no parameter and no return.
+function events.registerRomExportBreakpointHook(libName, ordinal, methodHash, hookOffset, processUid, codesegUid3, func)
+    local libNameInC = ffi.new("char[?]", #libName + 1, libName)
+    return ffi.C.eka2l1_cpu_register_rom_export_bkpt_hook(libNameInC, ordinal,
+        methodHash, hookOffset, processUid, codesegUid3, function ()
+        local ran, errorMsg = pcall(func)
+        if not ran then
+            common.log('Error running ROM export breakpoint script, ' .. errorMsg)
         end
     end)
 end
