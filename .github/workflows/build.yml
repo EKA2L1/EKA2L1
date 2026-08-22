@@ -257,18 +257,22 @@ jobs:
         path: build/eka2l1-qt-x64.AppImage
       if: matrix.label == 'linux'
 
-  # Pull requests and branch pushes only need an unsigned device build to prove
-  # the code compiles and links. A push to master additionally produces the
-  # App Store-signed IPA used by both TestFlight and the rolling release.
-  # That release path requires APPLE_TEAM_ID, APPSTORE_ISSUER_ID,
-  # APPSTORE_KEY_ID, and APPSTORE_PRIVATE_KEY repository secrets. A persisted
-  # IOS_DEV_SIGNING_KEY (.p12, base64 encoded) and its password are strongly
-  # recommended so automatic signing does not create a certificate on every run.
+  # Device only, and never signed. Signing on CI mints a development certificate
+  # per run and Apple caps how many an account may hold, so a signing CI is a CI
+  # that eventually stops working; an App Store export needs a distribution
+  # certificate on top of that, which this repository does not hold. Nothing
+  # here needs a signature to prove the code compiles, links and packages.
+  #
+  # Both slices are arm64 and compile almost the same translation units, so a
+  # simulator build would be mostly a second copy of the device one at twice the
+  # wall clock -- and what has to keep working is that the app builds for a
+  # phone. The cost is that code behind TARGET_OS_SIMULATOR (the synthetic
+  # camera backend) is not compiled here; add a matrix back if that grows past
+  # a stub.
   build-ios:
     runs-on: macos-26
     env:
       EKA2L1_IOS_CONFIGURATION: Release
-      EKA2L1_IOS_ARCHIVE_PATH: build/ios-device/EKA2L1.xcarchive
 
     steps:
     - uses: actions/checkout@v4
@@ -285,49 +289,36 @@ jobs:
         path: src/external/ffmpeg/ios/device
         key: ffmpeg-ios-device-${{ hashFiles('.git/modules/src/external/ffmpeg/HEAD') }}
 
-    - name: Build unsigned device app
-      if: github.event_name != 'push' || github.ref != 'refs/heads/master'
+    - name: Build
       run: ./scripts/build_ios.sh device
-
-    - name: Build, sign, and upload iOS release
-      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-      env:
-        APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
-        APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
-        APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
-        IOS_DEV_SIGNING_KEY: ${{ secrets.IOS_DEV_SIGNING_KEY }}
-        IOS_DEV_SIGNING_KEY_PASSWORD: ${{ secrets.IOS_DEV_SIGNING_KEY_PASSWORD }}
-        IOS_DIST_SIGNING_KEY: ${{ secrets.IOS_DIST_SIGNING_KEY }}
-        IOS_DIST_SIGNING_KEY_PASSWORD: ${{ secrets.IOS_DIST_SIGNING_KEY_PASSWORD }}
-      run: ./scripts/ios_release.sh
 
     - name: Compute git short sha
       id: git_short_sha
       run: echo "value=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
-    - name: Upload unsigned iOS build
-      if: github.event_name != 'push' || github.ref != 'refs/heads/master'
-      uses: actions/upload-artifact@v4
+    # Payload/EKA2L1.app zipped as an .ipa, which is the shape the sideloading
+    # tools expect. It carries no signature, so installing it needs something
+    # that applies one -- AltStore, Sideloadly, or Xcode with a developer
+    # account. Packaging here rather than in the release job keeps the .app out
+    # of an artifact zip, which does not preserve a bundle's symlinks.
+    - name: Package unsigned IPA
+      run: |
+        set -euo pipefail
+        app="build/ios-device/src/emu/ios/${EKA2L1_IOS_CONFIGURATION}-iphoneos/EKA2L1.app"
+        if [ ! -d "${app}" ]; then
+          echo "Built app not found: ${app}" >&2
+          exit 1
+        fi
+        rm -rf build/ios-release
+        mkdir -p build/ios-release/Payload
+        cp -R "${app}" build/ios-release/Payload/
+        (cd build/ios-release && zip -qry EKA2L1-iOS-unsigned.ipa Payload && rm -rf Payload)
+
+    - uses: actions/upload-artifact@v4
       with:
         name: eka2l1-${{ steps.git_short_sha.outputs.value }}-ios-device
-        path: build/ios-device/src/emu/ios/Release-iphoneos/EKA2L1.app
-
-    - name: Upload signed IPA
-      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-      uses: actions/upload-artifact@v4
-      with:
-        name: eka2l1-${{ steps.git_short_sha.outputs.value }}-ios-signed
-        path: build/ios-release/EKA2L1-iOS.ipa
+        path: build/ios-release/EKA2L1-iOS-unsigned.ipa
         if-no-files-found: error
-
-    - name: Upload iOS dSYM
-      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-      uses: actions/upload-artifact@v4
-      with:
-        name: eka2l1-${{ steps.git_short_sha.outputs.value }}-ios-dSYM
-        path: ${{ env.EKA2L1_IOS_ARCHIVE_PATH }}/dSYMs
-        if-no-files-found: warn
 
   # One check with a stable name for branch protection to require. The matrix
   # job names carry their runner labels, so they change whenever an image is
@@ -471,10 +462,10 @@ jobs:
       with:
         name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-android"
 
-    - name: Download signed iOS artifact
+    - name: Download iOS artifact
       uses: actions/download-artifact@v4
       with:
-        name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-ios-signed"
+        name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-ios-device"
 
     - name: Rename artifacts for release
       run: |
@@ -501,4 +492,4 @@ jobs:
           EKA2L1-MacOS-x86_64.zip
           EKA2L1-Linux-x86_64.AppImage
           EKA2L1-Android.apk
-          EKA2L1-iOS.ipa
+          EKA2L1-iOS-unsigned.ipa
