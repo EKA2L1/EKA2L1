@@ -1,5 +1,6 @@
 set(CORE_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/devices.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/audio.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mem.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/vfs.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/kernel/ipc_arg.cpp

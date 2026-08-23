@@ -203,7 +203,10 @@ namespace eka2l1::drivers {
         if (!output_stream_ || !freq_ || !output_stream_->current_frame_position(&pos_in_frames)) {
             return 0;
         }
-        return pos_in_frames * channels_ * 1000000ULL / freq_;
+        // Audio backends report PCM frames, not interleaved scalar samples. A
+        // frame already contains one sample for every channel, so multiplying
+        // by channels_ makes stereo media report time at exactly 2x speed.
+        return frames_to_microseconds(pos_in_frames, freq_);
     }
 
     player_shared::player_shared(audio_driver *driver)
