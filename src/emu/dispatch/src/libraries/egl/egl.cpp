@@ -497,29 +497,11 @@ namespace eka2l1::dispatch {
         if (surface->backed_window_) {
             egl_context *ctx = surface->bounded_context_;
             surface->scale(ctx, drv);
+            surface->backed_window_->set_presented_surface(surface->handle_);
 
             if (ctx && surface->backed_window_->can_be_physically_seen()) {
                 drivers::graphics_command_builder &window_builder = surface->backed_window_->driver_builder_;
-                window_builder.set_feature(drivers::graphics_feature::blend, false);
-                window_builder.set_feature(drivers::graphics_feature::depth_test, false);
-
-                eka2l1::rect dest_rect = surface->backed_window_->abs_rect;
-                dest_rect.scale(surface->backed_screen_->display_scale_factor);
-
-                int rotation = 0;
-
-                if (surface->backed_window_->flags & epoc::window::flag_fix_native_orientation) {
-                    // Surface is also upside down. So a 180 flip :(
-                    rotation = (surface->backed_screen_->current_mode().rotation + 180) % 360;
-                    eka2l1::drivers::advance_draw_pos_around_origin(dest_rect, rotation);
-
-                    if (rotation % 180 != 0) {
-                        std::swap(dest_rect.size.x, dest_rect.size.y);
-                    }
-                }
-
-                window_builder.draw_bitmap(surface->handle_, 0, dest_rect, eka2l1::rect(eka2l1::vec2(0, 0), eka2l1::vec2(0, 0)),
-                    eka2l1::vec2(0, 0), static_cast<float>(rotation), drivers::bitmap_draw_flag_flip);
+                surface->backed_window_->draw_presented_surface(window_builder);
 
                 surface->backed_window_->content_changed(true);
             }

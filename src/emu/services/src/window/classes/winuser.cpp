@@ -152,6 +152,45 @@ namespace eka2l1::epoc {
         }
     }
 
+    void canvas_base::set_presented_surface(const drivers::handle handle) {
+        presented_surface_handle_ = handle;
+    }
+
+    void canvas_base::clear_presented_surface(const drivers::handle handle) {
+        if (presented_surface_handle_ == handle) {
+            presented_surface_handle_ = 0;
+        }
+    }
+
+    bool canvas_base::draw_presented_surface(drivers::graphics_command_builder &builder) {
+        if (!presented_surface_handle_ || !can_be_physically_seen()) {
+            return false;
+        }
+
+        builder.set_feature(drivers::graphics_feature::blend, false);
+        builder.set_feature(drivers::graphics_feature::depth_test, false);
+        builder.clip_bitmap_region(visible_region, scr->display_scale_factor);
+
+        eka2l1::rect dest_rect = abs_rect;
+        dest_rect.scale(scr->display_scale_factor);
+
+        int rotation = 0;
+        if (flags & flag_fix_native_orientation) {
+            rotation = (scr->current_mode().rotation + 180) % 360;
+            drivers::advance_draw_pos_around_origin(dest_rect, rotation);
+
+            if (rotation % 180 != 0) {
+                std::swap(dest_rect.size.x, dest_rect.size.y);
+            }
+        }
+
+        builder.draw_bitmap(presented_surface_handle_, 0, dest_rect,
+            eka2l1::rect(eka2l1::vec2(0, 0), eka2l1::vec2(0, 0)),
+            eka2l1::vec2(0, 0), static_cast<float>(rotation),
+            drivers::bitmap_draw_flag_flip);
+        return true;
+    }
+
     bool canvas_base::is_dsa_active() const {
         return !directs_.empty();
     }
@@ -1261,7 +1300,12 @@ namespace eka2l1::epoc {
                         break;
                     }
                 }
+            }
 
+            // A window surface is its background; stored GDI commands appear above it.
+            draw_presented_surface(builder);
+
+            if (!segments.empty()) {
                 builder.clip_bitmap_region(visible_region, scr->display_scale_factor);
 
                 gdi_command_builder gdi_builder(client->get_ws().get_graphics_driver(), builder,
