@@ -245,8 +245,13 @@ namespace eka2l1::desktop {
 
         state.joystick_controller->start_polling();
 
+        // Do not reset graphics_event here. The initialization above set it to release the OS
+        // thread, which consumes the signal itself now that common::event is auto-reset. Clearing
+        // it before that waiter has re-acquired the event lock erases the wake, and the OS thread
+        // never leaves its startup wait -- no guest instruction ever runs, and the later shutdown
+        // handshake over the same event deadlocks with it.
+
         // Keep running. User which want to change the graphics backend will have to restart EKA2L1.
-        state.graphics_event.reset();
         state.graphics_driver->run();
 
         result = graphics_driver_thread_deinitialization(state);
@@ -290,10 +295,10 @@ namespace eka2l1::desktop {
                 break;
             }
 
-            // Try wait for initialization from other parties to make this success. Reset only
-            // after the wait returned, so a request raised while we were busy is not dropped.
+            // Try wait for initialization from other parties to make this success. The wait
+            // consumes the signal by itself; resetting afterwards would drop a request raised
+            // between the wait returning and the reset.
             state.init_event.wait();
-            state.init_event.reset();
         }
 
         // Register SEH handler for this thread
@@ -318,7 +323,6 @@ namespace eka2l1::desktop {
 
             if (state.should_emu_pause && !state.should_emu_quit) {
                 state.pause_event.wait();
-                state.pause_event.reset();
             }
         }
 
@@ -354,7 +358,6 @@ namespace eka2l1::desktop {
         // Instantiate UI and High-level interface threads
         std::thread os_thread_obj(os_thread, std::ref(state));
         state.init_done_event.wait();
-        state.init_done_event.reset();
 
         eka2l1::common::arg_parser parser(argc, argv);
 
