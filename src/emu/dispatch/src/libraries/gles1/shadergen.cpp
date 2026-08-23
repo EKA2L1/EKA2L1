@@ -37,6 +37,48 @@ namespace eka2l1::dispatch {
         } else {
             input_decl += "#version 140\n"
                 "#extension GL_ARB_explicit_attrib_location : require\n";
+
+            // inverse() only became a GLSL built-in in 1.50, and the desktop context can
+            // go as low as GL 3.1 (see gl_context::s_desktop_opengl_versions), so raising
+            // the shader version is not an option. Supply our own instead. Strict drivers
+            // (Apple's) reject the built-in call outright, which fails every GLES1 program.
+            external_func +=
+                "mat4 eka2l1Inverse(mat4 m) {\n"
+                "\tfloat a00 = m[0][0], a01 = m[0][1], a02 = m[0][2], a03 = m[0][3];\n"
+                "\tfloat a10 = m[1][0], a11 = m[1][1], a12 = m[1][2], a13 = m[1][3];\n"
+                "\tfloat a20 = m[2][0], a21 = m[2][1], a22 = m[2][2], a23 = m[2][3];\n"
+                "\tfloat a30 = m[3][0], a31 = m[3][1], a32 = m[3][2], a33 = m[3][3];\n"
+                "\tfloat b00 = a00 * a11 - a01 * a10;\n"
+                "\tfloat b01 = a00 * a12 - a02 * a10;\n"
+                "\tfloat b02 = a00 * a13 - a03 * a10;\n"
+                "\tfloat b03 = a01 * a12 - a02 * a11;\n"
+                "\tfloat b04 = a01 * a13 - a03 * a11;\n"
+                "\tfloat b05 = a02 * a13 - a03 * a12;\n"
+                "\tfloat b06 = a20 * a31 - a21 * a30;\n"
+                "\tfloat b07 = a20 * a32 - a22 * a30;\n"
+                "\tfloat b08 = a20 * a33 - a23 * a30;\n"
+                "\tfloat b09 = a21 * a32 - a22 * a31;\n"
+                "\tfloat b10 = a21 * a33 - a23 * a31;\n"
+                "\tfloat b11 = a22 * a33 - a23 * a32;\n"
+                "\tfloat det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;\n"
+                "\treturn mat4(\n"
+                "\t\ta11 * b11 - a12 * b10 + a13 * b09,\n"
+                "\t\ta02 * b10 - a01 * b11 - a03 * b09,\n"
+                "\t\ta31 * b05 - a32 * b04 + a33 * b03,\n"
+                "\t\ta22 * b04 - a21 * b05 - a23 * b03,\n"
+                "\t\ta12 * b08 - a10 * b11 - a13 * b07,\n"
+                "\t\ta00 * b11 - a02 * b08 + a03 * b07,\n"
+                "\t\ta32 * b02 - a30 * b05 - a33 * b01,\n"
+                "\t\ta20 * b05 - a22 * b02 + a23 * b01,\n"
+                "\t\ta10 * b10 - a11 * b08 + a13 * b06,\n"
+                "\t\ta01 * b08 - a00 * b10 - a03 * b06,\n"
+                "\t\ta30 * b04 - a31 * b02 + a33 * b00,\n"
+                "\t\ta21 * b02 - a20 * b04 - a23 * b00,\n"
+                "\t\ta11 * b07 - a10 * b09 - a12 * b06,\n"
+                "\t\ta00 * b09 - a01 * b07 + a02 * b06,\n"
+                "\t\ta31 * b01 - a30 * b03 - a32 * b00,\n"
+                "\t\ta20 * b03 - a21 * b01 + a22 * b00) / det;\n"
+                "}\n";
         }
 
         input_decl += "layout (location = 0) in vec4 inPosition;\n";
@@ -92,8 +134,9 @@ namespace eka2l1::dispatch {
             main_body += "\tmNormal = uNormal;\n";
         }
 
-        main_body += "\tmat3 modelViewTrInv = mat3(inverse(transpose(uViewModelMat)));\n"
-                     "\tmNormal = modelViewTrInv * mNormal;\n";
+        main_body += fmt::format("\tmat3 modelViewTrInv = mat3({}(transpose(uViewModelMat)));\n",
+                         is_es ? "inverse" : "eka2l1Inverse")
+                   + "\tmNormal = modelViewTrInv * mNormal;\n";
 
         if (vertex_statuses & egl_context_es1::VERTEX_STATE_NORMAL_ENABLE_RESCALE) {
             // This bit is from ANGLE's renderer T_T
