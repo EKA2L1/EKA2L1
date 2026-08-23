@@ -650,7 +650,7 @@ namespace eka2l1 {
             (cpu_type == arm_emulator_type::dynarmic) ? "dynarmic" : "dyncom",
             conf_->ios_use_jit, arm::host_can_jit());
 #else
-        cpu_type = /*arm::string_to_arm_emulator_type(conf_->cpu_backend);*/ arm_emulator_type::dynarmic;
+        cpu_type = arm::string_to_arm_emulator_type(conf_->cpu_backend);
 #endif
         dvcmngr_ = std::make_unique<device_manager>(conf_);
 

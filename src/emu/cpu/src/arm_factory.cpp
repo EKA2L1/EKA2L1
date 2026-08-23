@@ -112,7 +112,29 @@ namespace eka2l1::arm {
             resolved = arm_emulator_type::dyncom;
         }
 #else
-        (void)requested;
+        // Three of the four enum values have no core on some desktop host: unicorn
+        // support is gone everywhere, 12l1r needs a 32-bit ARM host, and dynarmic is
+        // compiled out of dyncom-only builds. cpu_backend is free text out of
+        // config.yml, so an unsupported name otherwise reaches create_core, which
+        // answers null and takes the emulator down during startup with nothing said.
+        if (requested == arm_emulator_type::unicorn) {
+            reason = "the unicorn backend is no longer supported";
+            resolved = arm_emulator_type::dyncom;
+        }
+
+#if !EKA2L1_ARCH(ARM)
+        if (requested == arm_emulator_type::r12l1) {
+            reason = "the 12l1r recompiler needs a 32-bit ARM host";
+            resolved = arm_emulator_type::dyncom;
+        }
+#endif
+
+#if !EKA2L1_CPU_HAS_DYNARMIC
+        if (requested == arm_emulator_type::dynarmic) {
+            reason = "dynarmic is not compiled into this build";
+            resolved = arm_emulator_type::dyncom;
+        }
+#endif
 #endif
 
         if (out_reason) {
@@ -152,7 +174,11 @@ namespace eka2l1::arm {
     }
 
     exclusive_monitor_instance create_exclusive_monitor(arm_emulator_type arm_type, const std::size_t core_count) {
-        switch (arm_type) {
+        // Resolve exactly as create_core does. Its caller passes the same requested
+        // type to both, and a downgraded core must not be paired with a monitor
+        // built for the backend that was asked for. create_core reports the
+        // downgrade; staying quiet here keeps it to a single message.
+        switch (resolve_emulator_type(arm_type)) {
         case arm_emulator_type::unicorn:
             return nullptr;
 
