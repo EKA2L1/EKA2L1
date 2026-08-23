@@ -109,6 +109,9 @@ namespace eka2l1::epoc {
         std::unique_ptr<epoc::gdi_store_command_segment> pending_segment_;
         std::vector<canvas_observer*> observers_;
 
+        // EGL window surfaces are not part of the GDI redraw command store.
+        drivers::handle presented_surface_handle_{ 0 };
+
         explicit canvas_base(window_server_client_ptr client, screen *scr, window *parent, const epoc::window_type type_of_window, const epoc::display_mode dmode, const std::uint32_t client_handle);
         virtual ~canvas_base() override;
 
@@ -118,6 +121,10 @@ namespace eka2l1::epoc {
         virtual void handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) = 0;
         virtual void add_draw_command(gdi_store_command &command);
         virtual void prepare_for_draw() {}
+
+        void set_presented_surface(drivers::handle handle);
+        void clear_presented_surface(drivers::handle handle);
+        bool draw_presented_surface(drivers::graphics_command_builder &builder);
 
         virtual bool scroll(eka2l1::rect clip_space, const eka2l1::vec2 offset, eka2l1::rect source_rect) {
             return true;

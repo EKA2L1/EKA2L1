@@ -62,6 +62,7 @@ namespace eka2l1::dispatch {
     
     egl_surface::~egl_surface() {
         if (backed_window_) {
+            backed_window_->clear_presented_surface(handle_);
             backed_window_->remove_canvas_observer(this);
         }
     }
