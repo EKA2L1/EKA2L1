@@ -20,6 +20,8 @@ target_link_libraries(ekatests PRIVATE
     epocloader
     epocpkg
     epocservs
+    epocdispatch
+    libtess2
     lunasvg)
 
 # The fixtures are copied next to the executable, and the tests open them by a

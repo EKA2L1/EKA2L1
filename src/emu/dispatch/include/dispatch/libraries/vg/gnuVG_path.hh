@@ -94,6 +94,10 @@ namespace gnuVG {
 				      const VGubyte *pathSegments,
 				      const T *pathData) {
 			path_dirty = true;
+			// OpenVG stores path coordinates as compact values decoded by S * scale + bias.
+			auto decode = [this](T value) {
+				return static_cast<VGfloat>(value) * scale + bias;
+			};
 
 			VGint remaining_segments = numSegments;
 			const VGubyte *sgmt = pathSegments;
@@ -111,24 +115,24 @@ namespace gnuVG {
 					/* commands with ONE parameter */
 				case VG_HLINE_TO:
 				case VG_VLINE_TO:
-					s_coordinates.push_back((VGfloat)(*(dat++)));
+					s_coordinates.push_back(decode(*(dat++)));
 					break;
 
 					/* commands with TWO parameters */
 				case VG_SQUAD_TO:
 				case VG_LINE_TO:
 				case VG_MOVE_TO:
-					s_coordinates.push_back((VGfloat)(*(dat++)));
-					s_coordinates.push_back((VGfloat)(*(dat++)));
+					s_coordinates.push_back(decode(*(dat++)));
+					s_coordinates.push_back(decode(*(dat++)));
 					break;
 
 					/* commands with FOUR parameters */
 				case VG_SCUBIC_TO:
 				case VG_QUAD_TO:
-					s_coordinates.push_back((VGfloat)(*(dat++)));
-					s_coordinates.push_back((VGfloat)(*(dat++)));
-					s_coordinates.push_back((VGfloat)(*(dat++)));
-					s_coordinates.push_back((VGfloat)(*(dat++)));
+					s_coordinates.push_back(decode(*(dat++)));
+					s_coordinates.push_back(decode(*(dat++)));
+					s_coordinates.push_back(decode(*(dat++)));
+					s_coordinates.push_back(decode(*(dat++)));
 					break;
 
 					/* commands with FIVE parameters */
@@ -136,21 +140,21 @@ namespace gnuVG {
 				case VG_SCWARC_TO:
 				case VG_LCCWARC_TO:
 				case VG_LCWARC_TO:
-					s_coordinates.push_back((VGfloat)(*(dat++)));
-					s_coordinates.push_back((VGfloat)(*(dat++)));
-					s_coordinates.push_back((VGfloat)(*(dat++)));
-					s_coordinates.push_back((VGfloat)(*(dat++)));
-					s_coordinates.push_back((VGfloat)(*(dat++)));
+					s_coordinates.push_back(decode(*(dat++)));
+					s_coordinates.push_back(decode(*(dat++)));
+					s_coordinates.push_back(decode(*(dat++)));
+					s_coordinates.push_back(decode(*(dat++)));
+					s_coordinates.push_back(decode(*(dat++)));
 					break;
 
 					/* commands with SIX parameters */
 				case VG_CUBIC_TO:
-					s_coordinates.push_back((VGfloat)(*(dat++)));
-					s_coordinates.push_back((VGfloat)(*(dat++)));
-					s_coordinates.push_back((VGfloat)(*(dat++)));
-					s_coordinates.push_back((VGfloat)(*(dat++)));
-					s_coordinates.push_back((VGfloat)(*(dat++)));
-					s_coordinates.push_back((VGfloat)(*(dat++)));
+					s_coordinates.push_back(decode(*(dat++)));
+					s_coordinates.push_back(decode(*(dat++)));
+					s_coordinates.push_back(decode(*(dat++)));
+					s_coordinates.push_back(decode(*(dat++)));
+					s_coordinates.push_back(decode(*(dat++)));
+					s_coordinates.push_back(decode(*(dat++)));
 					break;
 				}
 				sgmt++;
@@ -161,55 +165,7 @@ namespace gnuVG {
 		void vgAppendPathData(VGint numSegments,
 				      const VGubyte *pathSegments,
 				      const VGfloat *pathData) {
-			path_dirty = true;
-
-			VGint remaining_segments = numSegments;
-			const VGubyte *sgmt = pathSegments;
-			size_t nrcoords = 0;
-
-			while(remaining_segments) {
-				switch( (*sgmt) & (~0x00000001) ) {
-					/* commands with ZERO parameters */
-				case VG_CLOSE_PATH:
-					break;
-
-					/* commands with ONE parameter */
-				case VG_HLINE_TO:
-				case VG_VLINE_TO:
-					nrcoords += 1;
-					break;
-
-					/* commands with TWO parameters */
-				case VG_SQUAD_TO:
-				case VG_LINE_TO:
-				case VG_MOVE_TO:
-					nrcoords += 2;
-					break;
-
-					/* commands with FOUR parameters */
-				case VG_SCUBIC_TO:
-				case VG_QUAD_TO:
-					nrcoords += 4;
-					break;
-
-					/* commands with FIVE parameters */
-				case VG_SCCWARC_TO:
-				case VG_SCWARC_TO:
-				case VG_LCCWARC_TO:
-				case VG_LCWARC_TO:
-					nrcoords += 5;
-					break;
-
-					/* commands with SIX parameters */
-				case VG_CUBIC_TO:
-					nrcoords += 6;
-					break;
-				}
-				sgmt++;
-				remaining_segments--;
-			}
-			s_segments.insert(s_segments.end(), pathSegments, pathSegments + numSegments);
-			s_coordinates.insert(s_coordinates.end(), pathData, pathData + nrcoords);
+			vgAppendPathData<VGfloat>(numSegments, pathSegments, pathData);
 		}
 
 		template <typename T>
@@ -223,7 +179,6 @@ namespace gnuVG {
 			}
 
 			path_dirty = true;
-			size_t nrcoords = 0;
 
 			for (VGint i = 0; i < numSegments; i++) {
 				std::size_t num_coords = 0;
@@ -234,12 +189,9 @@ namespace gnuVG {
 					num_coords = s_segment_start_offset_in_coords[startIndex + i + 1] - start_offset;
 				}
 
-				if constexpr (std::is_same_v<T, float>) {
-					std::memcpy(s_coordinates.data() + start_offset, pathData, num_coords * sizeof(float));
-				} else {
-					for (std::size_t i = 0; i < num_coords; i++) {
-						s_coordinates[start_offset + i] = (VGfloat)pathData[i];
-					}
+				for (std::size_t coordinate_index = 0; coordinate_index < num_coords; coordinate_index++) {
+					s_coordinates[start_offset + coordinate_index]
+						= static_cast<VGfloat>(pathData[coordinate_index]) * scale + bias;
 				}
 
 				pathData += num_coords;

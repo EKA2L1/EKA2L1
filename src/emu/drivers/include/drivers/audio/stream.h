@@ -23,6 +23,11 @@
 #include <functional>
 
 namespace eka2l1::drivers {
+    constexpr std::uint64_t frames_to_microseconds(const std::uint64_t frames,
+        const std::uint32_t sample_rate) {
+        return sample_rate ? frames * 1000000ULL / sample_rate : 0;
+    }
+
     using data_callback = std::function<std::size_t(std::int16_t *, std::size_t)>;
     class audio_driver;
 
