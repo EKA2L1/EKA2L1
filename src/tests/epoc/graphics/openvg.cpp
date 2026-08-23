@@ -84,12 +84,13 @@ TEST_CASE("OpenVG stroke cap state validates and round-trips", "[openvg]") {
     REQUIRE(context.vgGeti(VG_STROKE_CAP_STYLE) == VG_CAP_ROUND);
 }
 
-TEST_CASE("OpenVG arc fallback advances through both cubic quadrants", "[openvg]") {
+TEST_CASE("OpenVG oversized arc scales radii and preserves its endpoint", "[openvg]") {
     gnuVG::Context context;
     gnuVG::SimplifiedPath path(&context);
     const VGubyte segments[] = { VG_MOVE_TO, VG_SCCWARC_TO };
-    // The endpoints are farther apart than the supplied unit radii, forcing
-    // the half-ellipse fallback described by the OpenVG arc algorithm.
+    // OpenVG Appendix A scales undersized radii uniformly. The resulting
+    // half ellipse consists only of complete quadrants, whose transformed
+    // endpoint must still be the exact endpoint supplied by the guest.
     const VGfloat coordinates[] = { 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 3.0f, 0.0f };
 
     path.simplify_path(segments, coordinates, 2);
@@ -98,7 +99,7 @@ TEST_CASE("OpenVG arc fallback advances through both cubic quadrants", "[openvg]
     REQUIRE(path.segments[1].t == gnuVG::SimplifiedPath::sp_cubic_to);
     REQUIRE(path.segments[1].ep != gnuVG::Point(3.0f, 0.0f));
     REQUIRE(path.segments[2].ep.x == Approx(3.0f));
-    REQUIRE(path.segments[2].ep.y == Approx(0.0f));
+    REQUIRE(path.segments[2].ep.y == 0.0f);
 }
 
 TEST_CASE("OpenVG open-contour caps extend the stroke as specified", "[openvg]") {

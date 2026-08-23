@@ -286,11 +286,16 @@ namespace gnuVG {
 					    c2_m.x, c2_m.y,
 					    ep_m.x, ep_m.y);
 				last_qp = ep;
-				add_cubic(c1_m, c2_m, ep_m);
-				pen = ep_m;
+				// Matrix evaluation can leave a tiny rounding error at an exact
+				// quadrant boundary. Keep the path endpoint identical to the
+				// endpoint supplied by the guest, as the partial-arc path does.
+				Point cubic_end = (k == quadrants - 1 && last_angle == 0.0f)
+					? end_point : ep_m;
+				add_cubic(c1_m, c2_m, cubic_end);
+				pen = cubic_end;
 				bbox_modifier(c1_m.x, c1_m.y);
 				bbox_modifier(c2_m.x, c2_m.y);
-				bbox_modifier(ep_m.x, ep_m.y);
+				bbox_modifier(cubic_end.x, cubic_end.y);
 			}
 
 			if(last_angle > 0.0f) {
