@@ -87,9 +87,10 @@ int main(int argc, char *argv[]) {
     eka2l1::common::copy_folder(app_path_str + "/patch", data_path_str + "/patch", 0, nullptr);
     eka2l1::common::copy_folder(app_path_str + "/resources", data_path_str + "/resources", 0, nullptr);
 
-    if (!eka2l1::common::exists(data_path_str + "/scripts/")) {
-        eka2l1::common::copy_folder(app_path_str + "/scripts", data_path_str + "/scripts", 0, nullptr);
-    }
+    // Keep shipped compatibility scripts current across application upgrades.
+    // copy_folder merges into the destination, so separately named user scripts
+    // remain untouched while updated bundled scripts replace stale copies.
+    eka2l1::common::copy_folder(app_path_str + "/scripts", data_path_str + "/scripts", 0, nullptr);
     
     if (!eka2l1::common::exists(data_path_str + "/compat/")) {
         eka2l1::common::copy_folder(app_path_str + "/compat", data_path_str + "/compat", 0, nullptr);

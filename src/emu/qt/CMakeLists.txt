@@ -256,6 +256,19 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/qt/resources/" "$<TARGET_FILE_DIR:eka2l1_qt>/resources/"
     )
 
+if (EKA2L1_ENABLE_SCRIPTING_ABILITY AND EKA2L1_SCRIPTING_LUA)
+    # Stage the Lua runtime with the frontend as well as with the scripting
+    # library. Packaging may remove bin/ after a successful build; an
+    # incremental rebuild does not relink the unchanged static library and
+    # therefore would not rerun that target's asset-copy command.
+    add_custom_command(
+            TARGET eka2l1_qt
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:eka2l1_qt>/scripts/eka2l1"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/scripting/lua/eka2l1/" "$<TARGET_FILE_DIR:eka2l1_qt>/scripts/eka2l1/"
+        )
+endif ()
+
 if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
     if (LUA_DLL_PATH)
         add_custom_command(
@@ -267,7 +280,9 @@ if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
 
     set_target_properties(eka2l1_qt PROPERTIES ENABLE_EXPORTS 1)
 
-    if (UNIX AND (NOT APPLE) AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU"))
+    if (APPLE)
+        target_link_libraries(eka2l1_qt PRIVATE -Wl,-force_load,$<TARGET_FILE:scripting>)
+    elseif(UNIX AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU"))
         target_link_libraries(eka2l1_qt PRIVATE -Wl,--whole-archive $<TARGET_FILE:scripting> -Wl,--no-whole-archive)
     elseif(MSVC)
         set_target_properties(eka2l1_qt PROPERTIES LINK_FLAGS /WHOLEARCHIVE:scripting.lib)
