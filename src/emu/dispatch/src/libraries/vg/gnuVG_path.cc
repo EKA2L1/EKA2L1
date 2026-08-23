@@ -251,8 +251,9 @@ namespace gnuVG {
 			ma.memrealloc = GvgAllocator::gvg_realloc;
 
 		}
-		if(!tess)
-			tess = tessNewTess(ma_p);
+		if(tess)
+			tessDeleteTess(tess);
+		tess = tessNewTess(ma_p);
 	}
 
 	void Path::vgDrawPath_fill_regular(const GraphicState &state) {

@@ -43,6 +43,7 @@ namespace gnuVG {
 
 	static Point pen, last_direction, first_direction;
 	static JoinStyle join_style, default_join_style;
+	static VGCapStyle cap_style;
 
 	static Point contour_start;
 	static bool start_new_contour;
@@ -87,8 +88,10 @@ namespace gnuVG {
 		if (dsq == 0.0)
 			return VG_FALSE; /* Points are coincident */
 		disc = 1.0 / dsq - 1.0 / 4.0;
-		if (disc < 0.0)
+		if (disc < -1.0e-7)
 			return VG_FALSE; /* Points are too far apart */
+		if (disc < 0.0)
+			disc = 0.0; /* Exact diameters can round a few ULPs below zero. */
 
 		s = sqrt(disc);
 		sdx = s*dx;
@@ -172,6 +175,27 @@ namespace gnuVG {
 
 		if(pen == end_point)
 			return;
+
+		// Appendix A of the OpenVG specification requires radii that are too
+		// small for the endpoints to be scaled up uniformly before solving for
+		// the center. Without this correction the fallback half ellipse does not
+		// end at the requested point.
+		if (rh != 0.0f && rv != 0.0f) {
+			const VGfloat rotation = rot * static_cast<VGfloat>(M_PI / 180.0);
+			const VGfloat cosine = cos(rotation);
+			const VGfloat sine = sin(rotation);
+			const VGfloat dx = (pen.x - end_point.x) * 0.5f;
+			const VGfloat dy = (pen.y - end_point.y) * 0.5f;
+			const VGfloat x = cosine * dx + sine * dy;
+			const VGfloat y = -sine * dx + cosine * dy;
+			const VGfloat radii_check = x * x / (rh * rh) + y * y / (rv * rv);
+
+			if (radii_check > 1.0f) {
+				const VGfloat correction = sqrt(radii_check);
+				rh *= correction;
+				rv *= correction;
+			}
+		}
 
 		Point c0, c1;
 		VGboolean success = findEllipses(rh, rv, rot,
@@ -340,11 +364,12 @@ namespace gnuVG {
 					    c1_m.x, c1_m.y,
 					    c2_m.x, c2_m.y,
 					    ep_m.x, ep_m.y);
-				add_cubic(c1_m, c2_m, end_point);
-				pen = end_point;
+				Point cubic_end = (k == 1) ? end_point : ep_m;
+				add_cubic(c1_m, c2_m, cubic_end);
+				pen = cubic_end;
 				bbox_modifier(c1_m.x, c1_m.y);
 				bbox_modifier(c2_m.x, c2_m.y);
-				bbox_modifier(end_point.x, end_point.y);
+				bbox_modifier(cubic_end.x, cubic_end.y);
 			}
 		}
 	}
@@ -766,6 +791,49 @@ namespace gnuVG {
 			t_array.push_back(vertice_index[k]);
 	}
 
+	static Point point_at(unsigned int index) {
+		const unsigned int offset = index << 1;
+		return Point(v_array[offset], v_array[offset + 1]);
+	}
+
+	static void offset_point(unsigned int index, const Point &offset) {
+		const unsigned int vertex_offset = index << 1;
+		v_array[vertex_offset] += offset.x;
+		v_array[vertex_offset + 1] += offset.y;
+	}
+
+	static void add_round_fan(const Point &center, unsigned int first_index,
+		unsigned int last_index, VGfloat sweep) {
+		const Point first = point_at(first_index);
+		const Point radius = first - center;
+		const VGfloat start_angle = atan2(radius.y, radius.x);
+		const VGfloat max_step = static_cast<VGfloat>(M_PI / 12.0);
+		int steps = static_cast<int>(ceil(fabs(sweep) / max_step));
+		if (steps < 1)
+			steps = 1;
+
+		const unsigned int center_index = nr_vertices;
+		push_vertice(center);
+		unsigned int previous = first_index;
+		for (int step = 1; step <= steps; ++step) {
+			unsigned int next = last_index;
+			if (step != steps) {
+				const VGfloat angle = start_angle + sweep * step / steps;
+				next = nr_vertices;
+				push_vertice(center + Point(cos(angle) * radius.length(),
+					sin(angle) * radius.length()));
+			}
+			if (sweep < 0.0f) {
+				const unsigned int triangle[] = { previous, next, center_index };
+				push_triangle(triangle);
+			} else {
+				const unsigned int triangle[] = { previous, center_index, next };
+				push_triangle(triangle);
+			}
+			previous = next;
+		}
+	}
+
 	static void add_miter_join(VGfloat angle, const Point &last_normal, const Point &new_normal) {
 		// convert the angle between the direction into the angle
 		// between the old line segment and the new
@@ -803,16 +871,54 @@ namespace gnuVG {
 	}
 
 	static void add_bevel_join(VGfloat angle, const Point &last_normal, const Point &new_normal) {
+		const unsigned int join_center = nr_vertices;
+		push_vertice(pen);
 		if(angle < 0.0f) { // bevel on left side of direction
 			unsigned int triangle[] = {
-				previous_segment[1], current_segment[0], previous_segment[3]
+				previous_segment[1], current_segment[0], join_center
 			};
 			push_triangle(triangle);
 		} else { // bevel on right side
 			unsigned int triangle[] = {
-				previous_segment[3], current_segment[0], current_segment[2]
+				previous_segment[3], join_center, current_segment[2]
 			};
 			push_triangle(triangle);
+		}
+	}
+
+	static void add_round_join(VGfloat angle) {
+		if (angle < 0.0f)
+			add_round_fan(pen, previous_segment[1], current_segment[0], angle);
+		else
+			add_round_fan(pen, previous_segment[3], current_segment[2], angle);
+	}
+
+	static void add_open_contour_caps() {
+		if (nr_vertices == 0 || first_direction.length() == 0.0f
+			|| last_direction.length() == 0.0f)
+			return;
+
+		switch (cap_style) {
+		case VG_CAP_ROUND:
+			add_round_fan(contour_start, first_segment[0], first_segment[2],
+				static_cast<VGfloat>(M_PI));
+			add_round_fan(pen, current_segment[3], current_segment[1],
+				static_cast<VGfloat>(M_PI));
+			break;
+		case VG_CAP_SQUARE: {
+			const Point start_extension = (-stroke_width * 0.5f / first_direction.length())
+				* first_direction;
+			const Point end_extension = (stroke_width * 0.5f / last_direction.length())
+				* last_direction;
+			offset_point(first_segment[0], start_extension);
+			offset_point(first_segment[2], start_extension);
+			offset_point(current_segment[1], end_extension);
+			offset_point(current_segment[3], end_extension);
+			break;
+		}
+		case VG_CAP_BUTT:
+		default:
+			break;
 		}
 	}
 
@@ -840,8 +946,7 @@ namespace gnuVG {
 					break;
 
 				case join_round:
-					// xxx not properly implemented yet
-					add_bevel_join(angle, last_normal, new_normal);
+					add_round_join(angle);
 					break;
 				case join_miter:
 					add_bevel_join(angle, last_normal, new_normal);
@@ -931,6 +1036,9 @@ namespace gnuVG {
 		// store the miter limit internally
 		miter_limit = context->get_miter_limit();
 
+		// store the cap style internally
+		cap_style = context->get_cap_style();
+
 		// get default join style
 		switch(context->get_join_style()) {
 		case VG_JOIN_STYLE_FORCE_SIZE:
@@ -990,6 +1098,8 @@ namespace gnuVG {
 				join_style = default_join_style;
 				close_to_first_segment();
 				add_join(first_direction);
+			} else if (dash_pattern.empty()) {
+				add_open_contour_caps();
 			}
 
 			join_style = no_join;

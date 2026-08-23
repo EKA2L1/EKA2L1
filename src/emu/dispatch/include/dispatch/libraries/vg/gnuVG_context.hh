@@ -131,6 +131,7 @@ namespace gnuVG {
 		VGfloat stroke_width, stroke_dash_phase;
 		bool stroke_dash_phase_reset;
 		VGfloat miter_limit;
+		VGCapStyle cap_style;
 		VGJoinStyle join_style;
 
 		/* Paint info */
@@ -298,6 +299,7 @@ namespace gnuVG {
 		// getters for stroke data
 		VGfloat get_stroke_width();
 		VGfloat get_miter_limit();
+		VGCapStyle get_cap_style();
 		VGJoinStyle get_join_style();
 		std::vector<VGfloat> get_dash_pattern();
 		VGfloat get_dash_phase();

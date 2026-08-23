@@ -37,6 +37,7 @@ namespace gnuVG {
 		, stroke_width(1.0f)
 		, stroke_dash_phase_reset(false)
 		, miter_limit(4.0f)
+		, cap_style(VG_CAP_BUTT)
 		, join_style(VG_JOIN_MITER)
 		, current_framebuffer(&screen_buffer)
 		, idalloc(1)
@@ -252,6 +253,10 @@ namespace gnuVG {
 
 	VGfloat Context::get_miter_limit() {
 		return miter_limit;
+	}
+
+	VGCapStyle Context::get_cap_style() {
+		return cap_style;
 	}
 
 	VGJoinStyle Context::get_join_style() {
@@ -553,6 +558,16 @@ namespace gnuVG {
 
 			/* Stroke parameters */
 		case VG_STROKE_CAP_STYLE:
+			switch((VGCapStyle)value) {
+			case VG_CAP_BUTT:
+			case VG_CAP_ROUND:
+			case VG_CAP_SQUARE:
+				cap_style = (VGCapStyle)value;
+				break;
+			default:
+				set_error(VG_ILLEGAL_ARGUMENT_ERROR);
+				break;
+			}
 			break;
 		case VG_STROKE_JOIN_STYLE:
 			switch((VGJoinStyle)value) {
@@ -844,7 +859,7 @@ namespace gnuVG {
 
 			/* Stroke parameters */
 		case VG_STROKE_CAP_STYLE:
-			break;
+			return cap_style;
 		case VG_STROKE_JOIN_STYLE:
 			return join_style;
 		case VG_STROKE_DASH_PHASE_RESET:
@@ -1043,7 +1058,7 @@ namespace gnuVG {
 		const float *texcoord2d,
 		const std::size_t texcoord_buffer_size,
 		const std::int32_t texcoord_stride) {
-		eka2l1::drivers::input_descriptor descriptor[2];
+		eka2l1::drivers::input_descriptor descriptor[2]{};
 		eka2l1::drivers::handle buffers[2];
 
 		if (!vertex2d) {
@@ -1673,14 +1688,15 @@ namespace gnuVG {
 	}
 
 	void Context::render_elements(const GraphicState &state, const std::uint32_t *indices, std::int32_t nr_indices) {
-		if(active_shader) {
+		if(active_shader && indices && nr_indices > 0) {
 			if (!index_buffer_pusher.is_initialized()) {
 				index_buffer_pusher.initialize(eka2l1::common::MB(2));
 			}
 
 			std::size_t indices_offset = 0;
 			eka2l1::drivers::handle index_buffer_handle = index_buffer_pusher.push_buffer(state.driver,
-				reinterpret_cast<const std::uint8_t*>(indices), 6 * sizeof(std::uint32_t), indices_offset);
+				reinterpret_cast<const std::uint8_t*>(indices),
+				static_cast<std::size_t>(nr_indices) * sizeof(std::uint32_t), indices_offset);
 
 			active_shader->set_current_graphics_command_builder(cmd_builder_);
 			active_shader->render_elements(index_buffer_handle, indices_offset, nr_indices);
