@@ -7,9 +7,10 @@ import UniformTypeIdentifiers
 //     (Android `no_device_installed`). The CTA opens the import Form.
 //   - One or more devices → app grid for the current device. The navigation
 //     title doubles as a device menu (tap the title) holding the device
-//     switcher and, below a divider, "Install device"; the ellipsis menu holds
-//     Settings, the system-apps toggle and help; the "+" menu installs a SIS,
-//     a classic N-Gage game card, or an N-Gage 2.0 package onto the device.
+//     switcher and, below a divider, "Install device" and "Manage devices";
+//     the ellipsis menu holds Settings, the system-apps toggle and help; the
+//     "+" menu installs a SIS, a classic N-Gage game card, or an N-Gage 2.0
+//     package onto the device.
 
 // SIS files only — device ROM / RPKG go through ImportDeviceView's own picker.
 private let sisTypes: [UTType] = {
@@ -73,18 +74,18 @@ private struct FallbackUnavailableView<Actions: View>: View {
 
 struct ContentView: View {
     @State private var booted = false
-    @State private var devices: [EKA2L1DeviceItem] = []
-    @State private var currentIndex: Int = -1
-    @State private var apps: [EKA2L1AppItem] = []
+    // Devices, booted index, app list and the busy flag live in one store so
+    // the device-manager page works off exactly the same state and operations.
+    @StateObject private var store = DeviceStore()
     @State private var bootError: String?
     @State private var banner: String?
     // Device the previous run crashed on while booting (corrupt ROM/RPKG).
     // Auto-boot skipped it, so say why instead of leaving the user wondering
     // which device they ended up on.
     @State private var failedBootDevice: String?
-    @State private var switching = false
 
     @State private var showingImportDevice = false
+    @State private var showingDeviceManager = false
     @State private var homeImportTarget: HomeImportTarget = .sis
     @State private var showingHomeImporter = false
     @State private var showingSettings = false
@@ -114,19 +115,15 @@ struct ContentView: View {
     // has booted, so URLs are queued here and drained once boot completes.
     @State private var pendingOpenURLs: [URL] = []
 
-    private var currentDevice: EKA2L1DeviceItem? {
-        devices.first { $0.index == currentIndex } ?? devices.first
-    }
-
     // Apps shown in the list, honouring the "show system apps" toggle.
     private var visibleApps: [EKA2L1AppItem] {
-        showSystemApps ? apps : apps.filter { !$0.system }
+        showSystemApps ? store.apps : store.apps.filter { !$0.system }
     }
 
     // Hint shown when the visible list is empty. If system apps are hidden but
     // some exist, point the user at the toggle instead of the install prompt.
     private var emptyAppsHint: String {
-        if !showSystemApps && !apps.isEmpty {
+        if !showSystemApps && !store.apps.isEmpty {
             return String(localized: "home.empty.hiddenSystemApps")
         }
         return String(localized: "home.empty.noApps")
@@ -164,7 +161,7 @@ struct ContentView: View {
                                                 systemImage: "exclamationmark.triangle",
                                                 message: bootError) { EmptyView() }
                     }
-                } else if devices.isEmpty {
+                } else if store.devices.isEmpty {
                     emptyState
                 } else {
                     appList
@@ -173,17 +170,25 @@ struct ContentView: View {
             // Status messages ride above the home content only; EmulatorView is
             // a pushed destination, so a toast never covers the guest screen.
             .toast(message: $banner)
-            .navigationTitle(currentDevice?.displayName ?? "EKA2L1")
+            .navigationTitle(store.currentDevice?.displayName ?? "EKA2L1")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbarContent }
             .toolbarTitleMenu { titleMenuContent }
             .navigationDestination(isPresented: $showingSettings) { SettingsView() }
+            .navigationDestination(isPresented: $showingDeviceManager) {
+                DeviceManagerView(store: store) { showingImportDevice = true }
+            }
             .navigationDestination(isPresented: $showingAutoLaunch) {
                 if let uid = autoLaunchUID { EmulatorView(uid: uid) }
             }
             .sheet(isPresented: $showingImportDevice) {
                 ImportDeviceView { installed in
-                    if installed { bootNewestDevice() }
+                    guard installed else { return }
+                    Task {
+                        if await store.bootNewestDevice() {
+                            banner = String(localized: "common.completed")
+                        }
+                    }
                 }
             }
             .sheet(isPresented: $showingOnboarding) {
@@ -217,11 +222,13 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .eka2l1AppListInvalidated)) { _ in
             // A settings action (e.g. a system-language switch) changed how the
             // app list should render; re-scan so the new captions show.
-            guard booted, currentIndex >= 0 else { return }
-            apps = EKA2L1Bridge.shared.rescanApps()
+            guard booted else { return }
+            store.reloadApps()
         }
-        .onReceive(NotificationCenter.default.publisher(for: .eka2l1DevicesChanged)) { note in
-            handleDevicesChanged(note)
+        .onReceive(NotificationCenter.default.publisher(for: .eka2l1DevicesChanged)) { _ in
+            // A device was renamed in Settings: only the titles changed, so
+            // re-read the list to refresh the nav title and device switcher.
+            store.reloadDevices()
         }
         .onReceive(NotificationCenter.default.publisher(for: AVAudioSession.interruptionNotification)) { note in
             guard let rawType = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
@@ -327,7 +334,7 @@ struct ContentView: View {
                             }
                         }
                     }
-                    .id(currentIndex)
+                    .id(store.currentIndex)
                 }
             }
             .padding()
@@ -336,20 +343,20 @@ struct ContentView: View {
 
     // The navigation title's tap menu (SwiftUI toolbarTitleMenu): the device
     // switcher with a checkmark on the active device, then "Install device"
-    // below a divider.
+    // and "Manage devices" below a divider.
     @ViewBuilder
     private var titleMenuContent: some View {
-        ForEach(devices) { dev in
+        ForEach(store.devices) { dev in
             Button {
-                switchDevice(to: dev.index)
+                Task { await store.switchDevice(to: dev.index) }
             } label: {
-                if dev.index == currentIndex {
+                if dev.index == store.currentIndex {
                     Label(dev.displayName, systemImage: "checkmark")
                 } else {
                     Text(dev.displayName)
                 }
             }
-            .disabled(switching)
+            .disabled(store.busy)
         }
 
         Divider()
@@ -359,14 +366,14 @@ struct ContentView: View {
         } label: {
             Label("import.title", systemImage: "square.and.arrow.down")
         }
-        .disabled(switching)
+        .disabled(store.busy)
 
         Button {
-            rescanDevices()
+            showingDeviceManager = true
         } label: {
-            Label("device.rescan", systemImage: "arrow.clockwise")
+            Label("devices.title", systemImage: "list.bullet")
         }
-        .disabled(switching)
+        .disabled(store.busy)
     }
 
     private var statusToolbarItem: some ToolbarContent {
@@ -383,7 +390,7 @@ struct ContentView: View {
         // task (device switch, SIS/N-Gage install) is in flight; its result is
         // reported by the toast instead. On iOS 26 the shared glass background
         // is hidden so the spinner sits directly on the content.
-        if switching {
+        if store.busy {
             if #available(iOS 26.0, *) {
                 statusToolbarItem.sharedBackgroundVisibility(.hidden)
             } else {
@@ -391,7 +398,7 @@ struct ContentView: View {
             }
         }
 
-        if !devices.isEmpty {
+        if !store.devices.isEmpty {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Menu("home.install", systemImage: "plus") {
                     Button {
@@ -433,7 +440,7 @@ struct ContentView: View {
                         Image(systemName: "textformat")
                     }
                 }
-                .disabled(switching)
+                .disabled(store.busy)
 
                 Menu("home.more", systemImage: "ellipsis.circle") {
                     Button {
@@ -460,7 +467,7 @@ struct ContentView: View {
                         Label("onboarding.title", systemImage: "questionmark.circle")
                     }
                 }
-                .disabled(switching)
+                .disabled(store.busy)
             }
         }
     }
@@ -469,7 +476,7 @@ struct ContentView: View {
         guard !booted else { return }
         if EKA2L1Bridge.shared.start(documentsPath: documentsRoot()) {
             booted = true
-            refresh()
+            store.refresh()
             reportFailedBootDevice()
             selectLaunchRomThenAutoLaunch()
             processPendingOpenURLs()
@@ -494,7 +501,7 @@ struct ContentView: View {
             handleNGage2Import(.success(ngage2URLs))
         }
         guard !sisURLs.isEmpty else { return }
-        guard currentIndex >= 0 else {
+        guard store.currentIndex >= 0 else {
             banner = String(localized: "home.banner.installDeviceFirst")
             return
         }
@@ -511,34 +518,27 @@ struct ContentView: View {
         }
         launchRomHandled = true
 
-        guard let target = devices.first(where: { $0.firmwareCode.caseInsensitiveCompare(code) == .orderedSame }) else {
+        guard let target = store.device(withFirmwareCode: code) else {
             bootError = String(localized: "home.error.launchRomMissing \(code)")
             return
         }
-        guard target.index != currentIndex else {
+        guard target.index != store.currentIndex else {
             maybeAutoLaunch()
             return
         }
 
-        switching = true
-        DispatchQueue.global(qos: .userInitiated).async {
-            let ok = EKA2L1Bridge.bootDevice(at: target.index)
-            DispatchQueue.main.async {
-                switching = false
-                guard ok else {
-                    bootError = String(localized: "home.error.bootRomFailed \(target.firmwareCode)")
-                    return
-                }
-                currentIndex = target.index
-                apps = EKA2L1Bridge.shared.rescanApps()
-                banner = String(localized: "home.banner.booted \(target.displayName) \(target.firmwareCode)")
-                maybeAutoLaunch()
+        Task {
+            guard await store.boot(at: target.index) else {
+                bootError = String(localized: "home.error.bootRomFailed \(target.firmwareCode)")
+                return
             }
+            banner = String(localized: "home.banner.booted \(target.displayName) \(target.firmwareCode)")
+            maybeAutoLaunch()
         }
     }
 
     private func maybeAutoLaunch() {
-        guard !autoLaunchHandled, currentIndex >= 0, let uid = Self.launchAppUIDArgument() else { return }
+        guard !autoLaunchHandled, store.currentIndex >= 0, let uid = Self.launchAppUIDArgument() else { return }
         autoLaunchHandled = true
         autoLaunchUID = uid
         Task { @MainActor in
@@ -576,136 +576,16 @@ struct ContentView: View {
     // launches, where an alert would sit on top of the app list.
     private func reportFailedBootDevice() {
         guard let code = EKA2L1Bridge.shared.takeFailedBootDeviceCode(), !Self.isAutomationLaunch else { return }
-        let device = devices.first { $0.firmwareCode.caseInsensitiveCompare(code) == .orderedSame }
+        let device = store.device(withFirmwareCode: code)
         failedBootDevice = device.map { "\($0.displayName) (\(code))" } ?? code
-    }
-
-    private func refresh() {
-        devices = EKA2L1Bridge.shared.installedDevices()
-        currentIndex = EKA2L1Bridge.shared.currentDeviceIndex()
-        apps = currentIndex >= 0 ? EKA2L1Bridge.shared.rescanApps() : []
-    }
-
-    private func switchDevice(to index: Int) {
-        guard index != currentIndex, !switching else { return }
-        switching = true
-        DispatchQueue.global(qos: .userInitiated).async {
-            let ok = EKA2L1Bridge.bootDevice(at: index)
-            DispatchQueue.main.async {
-                if ok {
-                    currentIndex = index
-                    apps = EKA2L1Bridge.shared.rescanApps()
-                    banner = nil
-                }
-                switching = false
-            }
-        }
-    }
-
-    // Called after a successful device install. installedDevices() appends the
-    // newly-added device last, so boot that one.
-    private func bootNewestDevice() {
-        devices = EKA2L1Bridge.shared.installedDevices()
-        guard let newest = devices.last else { return }
-        switching = true
-        DispatchQueue.global(qos: .userInitiated).async {
-            let ok = EKA2L1Bridge.bootDevice(at: newest.index)
-            DispatchQueue.main.async {
-                if ok {
-                    currentIndex = newest.index
-                    apps = EKA2L1Bridge.shared.rescanApps()
-                    banner = String(localized: "common.completed")
-                }
-                switching = false
-            }
-        }
-    }
-
-    // Mirrors the Android device-list screen's "Rescan devices" action: rebuild
-    // device_manager from what's on drive Z (recovers devices dropped from
-    // devices.yml), then boot the resulting current device (always index 0
-    // when the scan finds anything).
-    private func rescanDevices() {
-        guard !switching else { return }
-        switching = true
-        DispatchQueue.global(qos: .userInitiated).async {
-            let found = EKA2L1Bridge.rescanDevices()
-            let bootedOK = found && EKA2L1Bridge.bootDevice(at: 0)
-            DispatchQueue.main.async {
-                devices = EKA2L1Bridge.shared.installedDevices()
-                if bootedOK {
-                    currentIndex = 0
-                    apps = EKA2L1Bridge.shared.rescanApps()
-                } else if devices.isEmpty {
-                    currentIndex = -1
-                    apps = []
-                }
-                banner = String(localized: "common.completed")
-                switching = false
-            }
-        }
     }
 
     private func uninstall(_ app: EKA2L1AppItem) {
         pendingUninstall = nil
         let ok = EKA2L1Bridge.shared.uninstallApp(uid: app.uid)
-        apps = EKA2L1Bridge.shared.rescanApps()
+        store.reloadApps()
         banner = ok ? String(localized: "home.banner.uninstalled \(app.name)")
                     : String(localized: "home.banner.uninstallFailed \(app.name)")
-    }
-
-    // A ROM was deleted or all data was reset from Settings. Re-sync the device
-    // list; if the booted device itself was removed, boot device_manager's
-    // adjusted current (the previous ROM) so the running system matches
-    // devices.yml, or drop to the empty state when nothing remains.
-    private func handleDevicesChanged(_ note: Notification) {
-        // A rename only rewrites device titles; the count and current index are
-        // unchanged, so just re-read the list (refreshing the nav title + device
-        // switcher) without rebooting or re-scanning apps.
-        if note.userInfo?["renamed"] as? Bool == true {
-            devices = EKA2L1Bridge.shared.installedDevices()
-            return
-        }
-
-        let deletedFirmcode = note.userInfo?["firmcode"] as? String
-        let wasCurrent = deletedFirmcode.map { code in
-            currentDevice?.firmwareCode.caseInsensitiveCompare(code) == .orderedSame
-        } ?? true
-
-        let newDevices = EKA2L1Bridge.shared.installedDevices()
-        devices = newDevices
-        banner = nil
-
-        if newDevices.isEmpty {
-            currentIndex = -1
-            apps = []
-            return
-        }
-
-        guard wasCurrent else {
-            // The booted device is unchanged; only indices shifted. Re-sync
-            // from device_manager's adjusted current.
-            currentIndex = EKA2L1Bridge.shared.currentDeviceIndex()
-            apps = EKA2L1Bridge.shared.rescanApps()
-            return
-        }
-
-        // The booted device was deleted: fall back to the previous ROM in the
-        // list (clamped into range), so repeated deletes walk backwards until
-        // the list is empty. `currentIndex` still holds the deleted device's
-        // old position at this point.
-        let target = min(max(0, currentIndex - 1), newDevices.count - 1)
-        switching = true
-        DispatchQueue.global(qos: .userInitiated).async {
-            let ok = EKA2L1Bridge.bootDevice(at: target)
-            DispatchQueue.main.async {
-                if ok {
-                    currentIndex = target
-                    apps = EKA2L1Bridge.shared.rescanApps()
-                }
-                switching = false
-            }
-        }
     }
 
     private func handleHomeImport(_ result: Result<[URL], Error>) {
@@ -732,22 +612,21 @@ struct ContentView: View {
             // security-scoped, so hold the scope across the install call.
             // Extraction can take a while for large packages, so run it off
             // the main thread with the busy indicator up.
-            switching = true
             banner = String(localized: "home.banner.installingPackages \(urls.count)")
-            DispatchQueue.global(qos: .userInitiated).async {
-                var installed = 0
-                for url in urls {
-                    let ext = url.pathExtension.lowercased()
-                    guard ext == "sis" || ext == "sisx" else { continue }
-                    let scoped = url.startAccessingSecurityScopedResource()
-                    defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-                    if EKA2L1Bridge.shared.installSis(atPath: url.path) { installed += 1 }
+            Task {
+                let installed = await store.perform {
+                    var installed = 0
+                    for url in urls {
+                        let ext = url.pathExtension.lowercased()
+                        guard ext == "sis" || ext == "sisx" else { continue }
+                        let scoped = url.startAccessingSecurityScopedResource()
+                        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+                        if EKA2L1Bridge.installSis(atPath: url.path) { installed += 1 }
+                    }
+                    return installed
                 }
-                DispatchQueue.main.async {
-                    switching = false
-                    apps = EKA2L1Bridge.shared.rescanApps()
-                    banner = String(localized: "home.banner.installedPackages \(installed)")
-                }
+                store.reloadApps()
+                banner = String(localized: "home.banner.installedPackages \(installed)")
             }
         }
     }
@@ -758,22 +637,20 @@ struct ContentView: View {
             banner = String(localized: "home.ngage.importFailed \(err.localizedDescription)")
         case .success(let urls):
             guard let url = urls.first else { return }
-            switching = true
             banner = String(localized: "home.ngage.installing")
-            DispatchQueue.global(qos: .userInitiated).async {
-                let scoped = url.startAccessingSecurityScopedResource()
-                defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-                let report = EKA2L1Bridge.installNGageGame(folderPath: url.path)
-                DispatchQueue.main.async {
-                    switching = false
-                    apps = EKA2L1Bridge.shared.rescanApps()
-                    if report.succeeded {
-                        let name = report.gameName.trimmingCharacters(in: .whitespacesAndNewlines)
-                        banner = name.isEmpty ? String(localized: "home.ngage.installed")
-                                              : String(localized: "home.ngage.installedNamed \(name)")
-                    } else {
-                        banner = ngageErrorMessage(report.result)
-                    }
+            Task {
+                let report = await store.perform { () -> EKA2L1NGageInstallItem in
+                    let scoped = url.startAccessingSecurityScopedResource()
+                    defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+                    return EKA2L1Bridge.installNGageGame(folderPath: url.path)
+                }
+                store.reloadApps()
+                if report.succeeded {
+                    let name = report.gameName.trimmingCharacters(in: .whitespacesAndNewlines)
+                    banner = name.isEmpty ? String(localized: "home.ngage.installed")
+                                          : String(localized: "home.ngage.installedNamed \(name)")
+                } else {
+                    banner = ngageErrorMessage(report.result)
                 }
             }
         }
@@ -794,33 +671,33 @@ struct ContentView: View {
         case .failure(let err):
             banner = String(localized: "home.ngage.importFailed \(err.localizedDescription)")
         case .success(let urls):
-            switching = true
             banner = String(localized: "home.ngage2.importing \(urls.count)")
-            DispatchQueue.global(qos: .userInitiated).async {
-                let dir = Self.ngage2StagingDir()
-                let fm = FileManager.default
-                var imported = 0
-                do {
-                    try fm.createDirectory(atPath: dir, withIntermediateDirectories: true)
-                    for url in urls {
-                        guard url.pathExtension.lowercased() == "n-gage" else { continue }
-                        let scoped = url.startAccessingSecurityScopedResource()
-                        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-                        let dst = (dir as NSString).appendingPathComponent(url.lastPathComponent)
-                        if fm.fileExists(atPath: dst) { try fm.removeItem(atPath: dst) }
-                        try fm.copyItem(at: url, to: URL(fileURLWithPath: dst))
-                        imported += 1
+            let dir = Self.ngage2StagingDir()
+            Task {
+                let outcome = await store.perform { () -> Result<Int, Error> in
+                    let fm = FileManager.default
+                    var imported = 0
+                    do {
+                        try fm.createDirectory(atPath: dir, withIntermediateDirectories: true)
+                        for url in urls {
+                            guard url.pathExtension.lowercased() == "n-gage" else { continue }
+                            let scoped = url.startAccessingSecurityScopedResource()
+                            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+                            let dst = (dir as NSString).appendingPathComponent(url.lastPathComponent)
+                            if fm.fileExists(atPath: dst) { try fm.removeItem(atPath: dst) }
+                            try fm.copyItem(at: url, to: URL(fileURLWithPath: dst))
+                            imported += 1
+                        }
+                    } catch {
+                        return .failure(error)
                     }
-                } catch {
-                    DispatchQueue.main.async {
-                        switching = false
-                        banner = String(localized: "home.ngage.importFailed \(error.localizedDescription)")
-                    }
-                    return
+                    return .success(imported)
                 }
-                DispatchQueue.main.async {
-                    switching = false
+                switch outcome {
+                case .success(let imported):
                     banner = String(localized: "home.ngage2.imported \(imported)")
+                case .failure(let error):
+                    banner = String(localized: "home.ngage.importFailed \(error.localizedDescription)")
                 }
             }
         }
@@ -847,33 +724,32 @@ struct ContentView: View {
                 banner = String(localized: "home.fonts.unsupported")
                 return
             }
-            switching = true
             banner = String(localized: "home.fonts.importing \(fonts.count)")
-            DispatchQueue.global(qos: .userInitiated).async {
-                let dir = Self.fontInstallDir()
-                let fm = FileManager.default
-                var imported = 0
-                var failure: String?
-                for url in fonts {
-                    let scoped = url.startAccessingSecurityScopedResource()
-                    defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-                    do {
-                        try fm.createDirectory(atPath: dir, withIntermediateDirectories: true)
-                        let dst = (dir as NSString).appendingPathComponent(url.lastPathComponent)
-                        if fm.fileExists(atPath: dst) { try fm.removeItem(atPath: dst) }
-                        try fm.copyItem(at: url, to: URL(fileURLWithPath: dst))
-                        imported += 1
-                    } catch {
-                        failure = error.localizedDescription
+            let dir = Self.fontInstallDir()
+            Task {
+                let outcome = await store.perform { () -> (imported: Int, failure: String?) in
+                    let fm = FileManager.default
+                    var imported = 0
+                    var failure: String?
+                    for url in fonts {
+                        let scoped = url.startAccessingSecurityScopedResource()
+                        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+                        do {
+                            try fm.createDirectory(atPath: dir, withIntermediateDirectories: true)
+                            let dst = (dir as NSString).appendingPathComponent(url.lastPathComponent)
+                            if fm.fileExists(atPath: dst) { try fm.removeItem(atPath: dst) }
+                            try fm.copyItem(at: url, to: URL(fileURLWithPath: dst))
+                            imported += 1
+                        } catch {
+                            failure = error.localizedDescription
+                        }
                     }
+                    return (imported, failure)
                 }
-                DispatchQueue.main.async {
-                    switching = false
-                    if let failure, imported == 0 {
-                        banner = String(localized: "home.banner.importFailed \(failure)")
-                    } else {
-                        banner = String(localized: "home.fonts.imported \(imported)")
-                    }
+                if let failure = outcome.failure, outcome.imported == 0 {
+                    banner = String(localized: "home.banner.importFailed \(failure)")
+                } else {
+                    banner = String(localized: "home.fonts.imported \(outcome.imported)")
                 }
             }
         }

@@ -155,12 +155,6 @@ typedef NS_ENUM(NSInteger, EKA2L1InstallResult) {
                      toName:(NSString *)name
     NS_SWIFT_NAME(renameDevice(at:to:));
 
-// Reset the in-memory device list + booted-device selection to the empty
-// state, matching a fresh install. The caller removes the sandbox storage
-// tree separately; this only clears device_manager and conf.device so the
-// frontend surface returns to "no device installed" without an app restart.
-- (void)resetDevicesState;
-
 // Mirrors the Android/Qt "Rescan devices" action: rebuild device_manager by
 // walking drive Z's storage tree for device dumps (recovers devices dropped
 // from devices.yml, e.g. after restoring a backup that lost it). Does NOT
