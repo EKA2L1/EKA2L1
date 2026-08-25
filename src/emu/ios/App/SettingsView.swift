@@ -12,16 +12,12 @@ struct SettingsView: View {
     @State private var mappingTarget: PeripheralManager.Peripheral?
     @AppStorage("ios.showFPSOverlay") private var showFPSOverlay = true
 
-    @State private var audioMasterVolume = 100.0
     @State private var integerScaling = true
     @State private var nearestNeighborFiltering = true
     @State private var hideSystemApps = true
     @State private var useJIT = false
     @State private var availableLanguages: [EKA2L1LanguageItem] = []
     @State private var systemLanguageCode = -1
-
-    // Installed ROMs shown in the Storage section, with swipe-to-delete.
-    @State private var installedDevices: [EKA2L1DeviceItem] = []
 
     // Editable name of the currently-booted device. Committed to
     // device_manager when the settings page closes (mirrors the Android
@@ -40,20 +36,9 @@ struct SettingsView: View {
     @State private var btFriends: [BTNetFriend] = []
     @State private var newFriendAddress = ""
     @State private var newFriendPort = ""
-    @State private var storageBytes: UInt64 = 0
-    @State private var clearDataMessage: String?
-    @State private var showingClearDataConfirmation = false
-    // A ROM delete / data wipe stops the emulator loop and takes the session
-    // lock, which must not happen on the main thread (see storageBusy use
-    // below), so both run off it and gate the section while they do.
-    @State private var storageBusy = false
 
     private var logURL: URL {
         URL(fileURLWithPath: documentsRoot()).appendingPathComponent("data/EKA2L1.log")
-    }
-
-    private var storageText: String {
-        ByteCountFormatter.string(fromByteCount: Int64(storageBytes), countStyle: .file)
     }
 
     var body: some View {
@@ -96,12 +81,6 @@ struct SettingsView: View {
                 Toggle("settings.integerScaling", isOn: $integerScaling)
                 Toggle("settings.nearestFiltering", isOn: $nearestNeighborFiltering)
                 Toggle("settings.fpsOverlay", isOn: $showFPSOverlay)
-            }
-            Section("settings.audio") {
-                Slider(value: $audioMasterVolume, in: 0...100, step: 1)
-                Text(verbatim: "\(Int(audioMasterVolume))%")
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
             }
             Section {
                 Picker("settings.netplay.discoveryMode", selection: $btDiscoveryMode) {
@@ -184,50 +163,6 @@ struct SettingsView: View {
             Section("settings.library") {
                 Toggle("settings.hideSystemApps", isOn: $hideSystemApps)
             }
-            Section("settings.storage") {
-                if installedDevices.isEmpty {
-                    Text("settings.storage.noRoms")
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(installedDevices) { device in
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(device.displayName)
-                            Text(device.firmwareCode)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .onDelete { offsets in
-                        deleteROMs(at: offsets)
-                    }
-                    .deleteDisabled(storageBusy)
-                }
-                Button(role: .destructive) {
-                    showingClearDataConfirmation = true
-                } label: {
-                    Label {
-                        Text("settings.clearData")
-                        Text(storageText)
-                    } icon: {
-                        Image(systemName: "trash")
-                    }
-                }
-                // Attach the confirmation to the button so iOS 26 can present it
-                // in its newer button-anchored style.
-                .confirmationDialog("settings.clearData.title",
-                                    isPresented: $showingClearDataConfirmation,
-                                    titleVisibility: .visible) {
-                    Button("settings.clearData.confirm", role: .destructive, action: clearData)
-                    Button("common.cancel", role: .cancel) {}
-                } message: {
-                    Text("settings.clearData.message")
-                }
-                if let clearDataMessage {
-                    Text(clearDataMessage)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
             Section("settings.support") {
                 if FileManager.default.fileExists(atPath: logURL.path) {
                     ShareLink(item: logURL) {
@@ -259,14 +194,11 @@ struct SettingsView: View {
         }
         .onAppear {
             load()
-            installedDevices = EKA2L1Bridge.shared.installedDevices()
             loadDeviceName()
-            refreshStorageUsage()
         }
         .onDisappear {
             commitDeviceRename()
         }
-        .onChange(of: audioMasterVolume) { _ in save() }
         .onChange(of: useJIT) { _ in save() }
         .onChange(of: integerScaling) { _ in save() }
         .onChange(of: nearestNeighborFiltering) { _ in save() }
@@ -316,9 +248,6 @@ struct SettingsView: View {
 
     private func load() {
         let snapshot = EKA2L1Bridge.shared.currentConfigSnapshot()
-        if let volume = snapshot["audioMasterVolume"] as? NSNumber {
-            audioMasterVolume = Double(truncating: volume)
-        }
         if let value = snapshot["integerScaling"] as? NSNumber {
             integerScaling = value.boolValue
         }
@@ -358,7 +287,8 @@ struct SettingsView: View {
     // the field shows exactly what the home surface displays.
     private func loadDeviceName() {
         currentDeviceIndex = EKA2L1Bridge.shared.currentDeviceIndex()
-        let current = installedDevices.first { $0.index == currentDeviceIndex }
+        let current = EKA2L1Bridge.shared.installedDevices()
+            .first { $0.index == currentDeviceIndex }
         deviceName = current?.displayName ?? ""
         originalDeviceName = deviceName
     }
@@ -371,17 +301,12 @@ struct SettingsView: View {
         guard !trimmed.isEmpty, trimmed != originalDeviceName else { return }
         guard EKA2L1Bridge.shared.renameDevice(at: currentDeviceIndex, to: trimmed) else { return }
         originalDeviceName = trimmed
-        // Tell the home surface to refresh its title / device switcher. The
-        // "renamed" flag keeps it from treating this like a delete (which
-        // would reboot a different device).
-        NotificationCenter.default.post(name: .eka2l1DevicesChanged,
-                                        object: nil,
-                                        userInfo: ["renamed": true])
+        // Tell the home surface to refresh its title / device switcher.
+        NotificationCenter.default.post(name: .eka2l1DevicesChanged, object: nil)
     }
 
     private func save() {
         let snapshot: [String: Any] = [
-            "audioMasterVolume": Int(audioMasterVolume),
             "integerScaling": integerScaling,
             "nearestNeighborFiltering": nearestNeighborFiltering,
             "hideSystemApps": hideSystemApps,
@@ -405,101 +330,4 @@ struct SettingsView: View {
         newFriendPort = ""
         save()
     }
-
-    private func refreshStorageUsage() {
-        DispatchQueue.global(qos: .utility).async {
-            let bytes = directorySize(at: URL(fileURLWithPath: documentsRoot()))
-            DispatchQueue.main.async {
-                storageBytes = bytes
-            }
-        }
-    }
-
-    // Swipe-to-delete on the ROM list. Resolve each row back to a live
-    // device_manager index at delete time (indices shift as devices are
-    // removed), delete the ROM, and tell the home surface to reboot to the
-    // previous ROM (or drop to the empty state) via the shared notification.
-    //
-    // deleteDevice blocks on the emulator's session lock, and the reboot the
-    // notification kicks off holds that same lock while it bounces the render
-    // layer onto the main queue — running the delete on the main thread would
-    // deadlock the two against each other on a second swipe. So the deletes run
-    // on a background queue, one notification per device, back on the main
-    // queue so the home surface reboots between them.
-    private func deleteROMs(at offsets: IndexSet) {
-        guard !storageBusy else { return }
-        let firmcodes = offsets.map { installedDevices[$0].firmwareCode }
-        storageBusy = true
-        // Drop the rows now: the list is rebuilt from device_manager once the
-        // deletes land, and leaving them until then would let a second swipe
-        // target a row that is already on its way out.
-        installedDevices.removeAll { firmcodes.contains($0.firmwareCode) }
-        DispatchQueue.global(qos: .userInitiated).async {
-            for firmcode in firmcodes {
-                guard let liveIndex = EKA2L1Bridge.installedDevices()
-                    .first(where: { $0.firmwareCode == firmcode })?.index else { continue }
-                _ = EKA2L1Bridge.deleteDevice(at: liveIndex)
-                DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: .eka2l1DevicesChanged,
-                                                    object: nil,
-                                                    userInfo: ["firmcode": firmcode])
-                }
-            }
-            DispatchQueue.main.async {
-                installedDevices = EKA2L1Bridge.shared.installedDevices()
-                storageBusy = false
-                refreshStorageUsage()
-            }
-        }
-    }
-
-    private func clearData() {
-        guard !storageBusy else { return }
-        EKA2L1Bridge.shared.pause()
-        EKA2L1Bridge.shared.closeRunningApp()
-        storageBusy = true
-        installedDevices = []
-        clearDataMessage = nil
-        // resetDevicesState blocks on the session lock and the wipe walks the
-        // whole sandbox tree; neither belongs on the main thread (see
-        // deleteROMs). Drop the in-memory device list first so the home surface
-        // can return to the empty state, then wipe the storage tree (data/
-        // holds the drives, config and logs, roms/ the installed ROM images;
-        // sis/ and import_tmp/ are staging folders older versions left behind).
-        DispatchQueue.global(qos: .userInitiated).async {
-            EKA2L1Bridge.resetDevicesState()
-            let root = URL(fileURLWithPath: documentsRoot())
-            let fm = FileManager.default
-            for name in ["data", "sis", "roms", "import_tmp"] {
-                try? fm.removeItem(at: root.appendingPathComponent(name))
-            }
-            DispatchQueue.main.async {
-                storageBusy = false
-                NotificationCenter.default.post(name: .eka2l1DevicesChanged, object: nil)
-                clearDataMessage = String(localized: "settings.clearData.done")
-                refreshStorageUsage()
-            }
-        }
-    }
-}
-
-private func directorySize(at url: URL) -> UInt64 {
-    let keys: Set<URLResourceKey> = [.isRegularFileKey, .fileSizeKey, .totalFileAllocatedSizeKey]
-    guard let enumerator = FileManager.default.enumerator(
-        at: url,
-        includingPropertiesForKeys: Array(keys),
-        options: [.skipsHiddenFiles]
-    ) else {
-        return 0
-    }
-
-    var total: UInt64 = 0
-    for case let fileURL as URL in enumerator {
-        guard let values = try? fileURL.resourceValues(forKeys: keys),
-              values.isRegularFile == true else {
-            continue
-        }
-        total += UInt64(values.totalFileAllocatedSize ?? values.fileSize ?? 0)
-    }
-    return total
 }

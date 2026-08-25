@@ -1562,23 +1562,6 @@ namespace eka2l1::ios {
     return YES;
 }
 
-- (void)resetDevicesState {
-    if (!_state) {
-        return;
-    }
-    std::lock_guard<std::recursive_mutex> session_lock(_state->session_mutex);
-    auto loop_lock = eka2l1::ios::pause_loop_and_lock(_state.get());
-    if (_state->symsys) {
-        if (auto *dvc = _state->symsys->get_device_manager()) {
-            dvc->clear();
-        }
-    }
-    _state->conf.device = -1;
-    _lastAppList = nil;
-    // mounted stays false: with no device the frontend shows the empty state
-    // and never ticks a guest, so leaving the loop paused is correct.
-}
-
 - (BOOL)rescanDevices {
     if (!_state) {
         return NO;

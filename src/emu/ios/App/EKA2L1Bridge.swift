@@ -47,10 +47,11 @@ struct EKA2L1LanguageItem: Identifiable, Hashable {
     var id: Int { code }
 }
 
-// Cross-view frontend signals. Posted by settings actions that mutate emulator
-// state the home surface owns, so ContentView can refresh without a shared
-// store: the app list after a language switch, and the device list / booted
-// device after a ROM install/delete or a full data reset.
+// Cross-view frontend signals. Posted by the settings page when it mutates
+// emulator state the home surface owns, so ContentView can refresh without a
+// shared store: the app list after a system-language switch, and the device
+// list after a device rename. (The device-manager page needs neither — it runs
+// on the home surface's own state and actions.)
 extension Notification.Name {
     static let eka2l1AppListInvalidated = Notification.Name("eka2l1AppListInvalidated")
     static let eka2l1DevicesChanged = Notification.Name("eka2l1DevicesChanged")
@@ -146,14 +147,6 @@ final class EKA2L1Bridge {
         EKA2L1Emulator.shared().deleteDevice(at: UInt(index))
     }
 
-    // Reset the in-memory device list to empty (used by the full data reset,
-    // which removes the sandbox storage tree separately). Blocks on the session
-    // lock, so — like the other heavy device operations — it is only reachable
-    // off the main queue.
-    nonisolated static func resetDevicesState() {
-        EKA2L1Emulator.shared().resetDevicesState()
-    }
-
     // Rebuild the device list from what's on drive Z (recovers devices dropped
     // from devices.yml). Does not reboot; the caller boots the resulting
     // current device (index 0) when this returns true, mirroring installDevice.
@@ -194,8 +187,11 @@ final class EKA2L1Bridge {
         emulator.closeRunningApp()
     }
 
-    func installSis(atPath path: String) -> Bool {
-        emulator.installSis(atPath: path)
+    // SIS extraction can take a while for large packages, so — like the other
+    // heavy operations — it is called off the main queue; the Obj-C side
+    // serialises against the emulator loop itself.
+    nonisolated static func installSis(atPath path: String) -> Bool {
+        EKA2L1Emulator.shared().installSis(atPath: path)
     }
 
     nonisolated static func installNGageGame(folderPath: String) -> EKA2L1NGageInstallItem {

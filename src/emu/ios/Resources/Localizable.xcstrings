@@ -181,6 +181,66 @@
         }
       }
     },
+    "devices.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap a device to switch to it. Swipe left to remove it along with its data."
+          }
+        }
+      }
+    },
+    "devices.installed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installed Devices"
+          }
+        }
+      }
+    },
+    "devices.none" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No devices installed."
+          }
+        }
+      }
+    },
+    "devices.rescanHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rescanning rebuilds the list from the device files already on disk — use it if an installed device went missing."
+          }
+        }
+      }
+    },
+    "devices.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage Devices"
+          }
+        }
+      }
+    },
+    "devices.working" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Working…"
+          }
+        }
+      }
+    },
     "emulator.exit" : {
       "localizations" : {
         "en" : {
@@ -1423,66 +1483,6 @@
         }
       }
     },
-    "settings.audio" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Audio"
-          }
-        }
-      }
-    },
-    "settings.clearData" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear Emulator Data"
-          }
-        }
-      }
-    },
-    "settings.clearData.confirm" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear Data"
-          }
-        }
-      }
-    },
-    "settings.clearData.done" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Emulator data was cleared. Restart EKA2L1 before installing or launching another device."
-          }
-        }
-      }
-    },
-    "settings.clearData.message" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This removes installed devices, apps, staged installers, fonts, logs, and generated emulator data from this app."
-          }
-        }
-      }
-    },
-    "settings.clearData.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear all emulator data?"
-          }
-        }
-      }
-    },
     "settings.device" : {
       "localizations" : {
         "en" : {
@@ -1779,26 +1779,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Connected devices"
-          }
-        }
-      }
-    },
-    "settings.storage" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Storage"
-          }
-        }
-      }
-    },
-    "settings.storage.noRoms" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No ROMs installed."
           }
         }
       }
