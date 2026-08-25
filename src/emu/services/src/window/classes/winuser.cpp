@@ -488,16 +488,24 @@ namespace eka2l1::epoc {
             const std::uint64_t crr = timing->microseconds();
             const std::uint64_t time_spend_per_frame_us = 1000000 / scr->refresh_rate;
 
-            std::uint64_t wait_time = 0;
+            // Composite on the next frame boundary, never right away - including
+            // when this window has been idle for longer than a frame. The
+            // boundaries are taken on the global clock, so every window shares
+            // them: updates landing in the same interval coalesce into one
+            // composite that shows the last state, the way a real display only
+            // scans out whatever the frame buffer holds at the vsync.
+            //
+            // Publishing an idle window's first update immediately instead is
+            // what made clients flash an intermediate frame: an EGL client that
+            // pauses between scenes submits its construction frame and the
+            // completed frame a millisecond or two apart, and compositing the
+            // first one on arrival puts it on screen for a full frame interval
+            // before the completed one is paced in.
+            const std::uint64_t next_frame_boundary = ((crr + time_spend_per_frame_us)
+                / time_spend_per_frame_us) * time_spend_per_frame_us;
 
-            if (crr < time_spend_per_frame_us + last_draw_) {
-                // Originally - (crr - last_draw_), but preventing overflow
-                wait_time = time_spend_per_frame_us + last_draw_ - crr;
-            } else {
-                wait_time = 0;
-            }
-
-            last_draw_ = ((crr + time_spend_per_frame_us - 1) / time_spend_per_frame_us) * time_spend_per_frame_us;
+            const std::uint64_t wait_time = next_frame_boundary - crr;
+            last_draw_ = next_frame_boundary;
 
             if (crr - last_fps_sync_ >= common::microsecs_per_sec) {
                 scr->last_fps = fps_count_;
