@@ -580,27 +580,17 @@ namespace eka2l1 {
             // Process file
             for (auto &wrap_file : install_block.files.fields) {
                 sis_file_des *file = reinterpret_cast<sis_file_des *>(wrap_file.get());
-                std::string raw_path = "";
-                std::string install_path = "";
+                const std::u16string file_target = resolve_file_target(file->target.unicode_string, install_drive);
 
                 if (file->target.unicode_string.length() > 0) {
                     // A package does not get to install to a path it has no business
                     // naming. See is_valid_target_path for what that means, and why
                     // the entry is skipped rather than the install failed.
-                    if (!package::is_valid_target_path(resolve_file_target(file->target.unicode_string, install_drive))) {
+                    if (!package::is_valid_target_path(file_target)) {
                         LOG_ERROR(PACKAGE, "SIS names an invalid install target, skipping it: {}",
                             common::ucs2_to_utf8(file->target.unicode_string));
                         continue;
                     }
-
-                    install_path = get_install_path(file->target.unicode_string, install_drive);
-
-                    const std::optional<std::u16string> raw_path_opt = io->get_raw_path(common::utf8_to_ucs2(install_path));
-                    if (!raw_path_opt) {
-                        LOG_ERROR(PACKAGE, "Unable to resolve SIS install target: {}", install_path);
-                        return false;
-                    }
-                    raw_path = common::ucs2_to_utf8(*raw_path_opt);
                 }
 
                 // Register before the operation switch, the way
@@ -609,8 +599,7 @@ namespace eka2l1 {
                 // matter at uninstall time (FILENULL). An entry a text prompt asked
                 // to skip is never installed, so it is not the package's to own.
                 if (register_files && !skip_next_file) {
-                    register_file_description(io, file, resolve_file_target(file->target.unicode_string, install_drive),
-                        parent_tree.package_info);
+                    register_file_description(io, file, file_target, parent_tree.package_info);
                 }
 
                 switch (file->op) {
@@ -667,6 +656,17 @@ namespace eka2l1 {
                         }
 
                         if (!install_data->data_units.fields.empty()) {
+                            std::string raw_path;
+                            if (!file_target.empty()) {
+                                const std::string install_path = get_install_path(file->target.unicode_string, install_drive);
+                                const std::optional<std::u16string> raw_path_opt = io->get_raw_path(common::utf8_to_ucs2(install_path));
+                                if (!raw_path_opt) {
+                                    LOG_ERROR(PACKAGE, "Unable to resolve SIS install target: {}", install_path);
+                                    return false;
+                                }
+                                raw_path = common::ucs2_to_utf8(*raw_path_opt);
+                            }
+
                             extract_target_info info;
                             info.file_path_ = raw_path;
                             info.data_unit_block_index_ = file->idx;
@@ -674,11 +674,10 @@ namespace eka2l1 {
 
                             extract_targets.push_back(info);
                             extract_target_accumulated_size += file->uncompressed_len;
-                        }
 
-                        const std::string raw_path_lower = common::lowercase_string(raw_path);
-                        if (FOUND_STR(raw_path_lower.find(".sis")) || FOUND_STR(raw_path_lower.find(".sisx"))) {
-                            if (!install_data->data_units.fields.empty() && (loader::identify_sis_type(raw_path).has_value())) {
+                            const std::string raw_path_lower = common::lowercase_string(raw_path);
+                            if ((FOUND_STR(raw_path_lower.find(".sis")) || FOUND_STR(raw_path_lower.find(".sisx")))
+                                && loader::identify_sis_type(raw_path).has_value()) {
                                 LOG_INFO(PACKAGE, "Detected an SmartInstaller SIS, path at: {}", raw_path);
                                 gathered_sis_paths.push_back(common::utf8_to_ucs2(raw_path));
                             }

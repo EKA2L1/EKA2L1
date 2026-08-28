@@ -128,6 +128,31 @@ TEST_CASE("case_insensitive_resolve_passes_through_a_path_already_spelled_right"
     REQUIRE(eka2l1::filename(resolved) == "entry.dat");
 }
 
+TEST_CASE("case_insensitive_resolve_does_not_treat_wildcards_as_literal_names", "casepath") {
+    scratch_tree tree("casepath_wildcard");
+
+    if (!volume_distinguishes_case(tree.root)) {
+        SUCCEED("volume matches names without regard to case; wildcard fallback is not used");
+        return;
+    }
+
+    tree.make_dir("RESOURCE/APPS");
+
+#if !defined(_WIN32)
+    // POSIX permits '*' in a literal filename. It is a useful sentinel here:
+    // the old resolver enumerated APPS and incorrectly treated this entry as a
+    // case-insensitive match for a guest wildcard pattern.
+    tree.make_file("RESOURCE/APPS/VisualRadio.r*");
+#endif
+
+    const std::string resolved = common::resolve_case_insensitive_path(tree.root,
+        "resource\\apps\\visualradio.r*");
+    const std::string expected_prefix = eka2l1::add_path(tree.root,
+        "RESOURCE/APPS/");
+
+    REQUIRE(resolved == expected_prefix + "visualradio.r*");
+}
+
 TEST_CASE("path_case_sensitivity_is_answered_per_path_not_per_build", "casepath") {
     scratch_tree tree("casepath_probe");
 
