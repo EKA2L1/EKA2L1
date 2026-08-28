@@ -430,8 +430,10 @@ namespace eka2l1::common {
     std::string find_case_sensitive_file_name(const std::string &folder_path, const std::string &insensitive_name, const file_type type) {
         auto ite = make_directory_iterator(folder_path, "");
         // next_entry() only populates dir_entry::type when detail is enabled.
-        // Without it, type-filtered lookups can never match on POSIX.
-        ite->detail = true;
+        // Ask for it only when the caller filters by type: on POSIX this stats
+        // every entry, which turns a name-only lookup in a large ROM directory
+        // into thousands of unnecessary system calls.
+        ite->detail = (type != FILE_INVALID);
         const std::u16string insensitive_name_u16 = common::utf8_to_ucs2(insensitive_name);
 
         common::dir_entry entry;
@@ -877,6 +879,16 @@ namespace eka2l1::common {
 
             const std::string component = relative.substr(pos, end - pos);
             const bool is_last = (end >= relative.size());
+
+            // A wildcard component is a pattern for a later directory lookup,
+            // not a literal host filename. Looking for it case-insensitively can
+            // never resolve the pattern and needlessly walks the whole directory.
+            // Once a pattern appears, neither it nor any suffix can name a concrete
+            // path yet, so keep the already-resolved prefix and append the rest.
+            if (component.find_first_of("*?") != std::string::npos) {
+                resolved += relative.substr(pos);
+                break;
+            }
 
             if (exists(resolved + component)) {
                 resolved += component;
