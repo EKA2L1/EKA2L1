@@ -34,6 +34,10 @@ namespace eka2l1::loader {
     };
 
     loader::rom_dir *rom::burn_tree_find_dir(const std::string &vir_path) {
+        if (root.root_dirs.empty()) {
+            return nullptr;
+        }
+
         auto ite = path_iterator(vir_path);
         loader::rom_dir *last_dir_found = &(root.root_dirs[0].dir);
 
@@ -283,6 +287,14 @@ namespace eka2l1::loader {
             common::seek_where::beg);
 
         romf.root = read_root_dir_list(romf, stream);
+
+        // Nothing in the header identifies a ROM image, so a file that is not one at all still parses -
+        // it just ends up with no root directory, because the offsets read out of it point nowhere. Say
+        // so here instead of handing back a rom whose burn tree every caller then has to guard against.
+        if (romf.root.root_dirs.empty()) {
+            LOG_ERROR(LOADER, "ROM image has no root directory, it is likely not a ROM at all");
+            return std::nullopt;
+        }
 
         return romf;
     }
