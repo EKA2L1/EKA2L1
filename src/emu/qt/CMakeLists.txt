@@ -353,9 +353,6 @@ if(APPLE)
                 -dmg
                 -always-overwrite
                 -codesign=-)
-
-        add_custom_command(TARGET eka2l1_qt POST_BUILD
-            COMMAND rm -rf "${CMAKE_BINARY_DIR}/bin/EKA2L1.app")
     endif()
 endif()
 
