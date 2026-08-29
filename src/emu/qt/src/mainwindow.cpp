@@ -67,13 +67,16 @@
 #include <QCheckBox>
 #include <QDragEnterEvent>
 #include <QDropEvent>
+#include <QEventLoop>
 #include <QFileDialog>
 #include <QFuture>
+#include <QFutureWatcher>
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QProgressDialog>
 #include <QSettings>
 #include <QLineEdit>
+#include <QThreadPool>
 #include <QtConcurrent/QtConcurrent>
 
 #include <stb_image.h>
@@ -91,6 +94,41 @@ static constexpr const char *LAST_INSTALL_NGAGE_GAME_CARD_FOLDER_SETTING = "last
 static constexpr const char *NO_DEVICE_INSTALL_DISABLE_NOF_SETTING = "disableNoDeviceInstallNotify";
 static constexpr const char *NO_TOUCHSCREEN_DISABLE_WARN_SETTING = "disableNoTouchscreenWarn";
 static constexpr const char *STRETCH_DISPLAY_SETTING = "stretchDisplay";
+
+// Runs a long operation off the GUI thread while keeping the event loop alive, so the
+// progress dialog stays responsive and the worker can still call back into the GUI
+// through blocking-queued connections.
+//
+// The pool is deliberately private rather than the global one. QtGui farms large
+// rasterisation jobs out to QThreadPool::globalInstance() and waits on a semaphore for
+// them; if the worker occupies the global pool and then blocks on the GUI thread (the
+// SIS installer does exactly that when it asks the user to pick a package language),
+// the paint triggered by that dialog can never be serviced and the two deadlock. On a
+// single-core host the global pool has exactly one thread, so this is not a race -- it
+// happens every time a multi-language package is installed.
+template <typename Func>
+static auto run_off_gui_thread(Func &&func) -> decltype(func()) {
+    using result_type = decltype(func());
+
+    QThreadPool pool;
+    pool.setMaxThreadCount(1);
+
+    QFutureWatcher<result_type> watcher;
+    QEventLoop loop;
+
+    QObject::connect(&watcher, &QFutureWatcherBase::finished, &loop, &QEventLoop::quit);
+
+    QFuture<result_type> future = QtConcurrent::run(&pool, std::forward<Func>(func));
+    watcher.setFuture(future);
+
+    // No events are processed between this check and exec(), so a completion landing in
+    // the gap stays queued and still quits the loop.
+    if (!future.isFinished()) {
+        loop.exec();
+    }
+
+    return future.result();
+}
 
 static void mode_change_screen(void *userdata, eka2l1::epoc::screen *scr, const int old_mode) {
     eka2l1::desktop::emulator *state_ptr = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
@@ -738,7 +776,7 @@ void main_window::on_install_ngage_card_game_clicked() {
         current_progress_dialog_->setCancelButton(nullptr);
         current_progress_dialog_->show();
 
-        QFuture<eka2l1::ngage_game_card_install_error> install_future = QtConcurrent::run([this, install_folder]() -> eka2l1::ngage_game_card_install_error {
+        const eka2l1::ngage_game_card_install_error install_future_result = run_off_gui_thread([this, install_folder]() -> eka2l1::ngage_game_card_install_error {
             return emulator_state_.symsys->install_ngage_game_card(install_folder.toStdString(), [this](const std::string &game_name) {
                 emit install_ngage_game_name_available(QString::fromStdString(game_name));
             }, [this](const std::size_t done, const std::size_t total) {
@@ -746,13 +784,7 @@ void main_window::on_install_ngage_card_game_clicked() {
             });
         });
 
-        while (!install_future.isFinished()) {
-            QCoreApplication::processEvents();
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
-
         current_progress_dialog_->close();
-        const eka2l1::ngage_game_card_install_error install_future_result = install_future.result();
 
         if (install_future_result == eka2l1::ngage_game_card_install_success) {
             QMessageBox::information(this, tr("Install success!"), tr("Successfully install N-Gage card game: <b>%1</b>").arg(ngage_game_installing_name_));
@@ -869,15 +901,10 @@ void main_window::mount_game_card_dump(QString mount_path) {
         current_progress_dialog_->setAttribute(Qt::WA_DeleteOnClose, true);
         current_progress_dialog_->show();
 
-        QFuture<eka2l1::zip_mount_error> extract_future = QtConcurrent::run([this, mount_path]() -> eka2l1::zip_mount_error {
+        const eka2l1::zip_mount_error extract_result = run_off_gui_thread([this, mount_path]() -> eka2l1::zip_mount_error {
             return emulator_state_.symsys->mount_game_zip(
                 drive_e, drive_media::physical, mount_path.toStdString(), 0, [this](const std::size_t done, const std::size_t total) { emit progress_dialog_change(done, total); }, [this] { return current_progress_dialog_->wasCanceled(); });
         });
-
-        while (!extract_future.isFinished()) {
-            QCoreApplication::processEvents();
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
 
         bool no_more_info = false;
 
@@ -889,7 +916,7 @@ void main_window::mount_game_card_dump(QString mount_path) {
         const QString title_dialog = tr("Mounting aborted");
 
         if (!no_more_info) {
-            switch (extract_future.result()) {
+            switch (extract_result) {
             case eka2l1::zip_mount_error_corrupt: {
                 QMessageBox::critical(this, title_dialog, tr("The ZIP file is corrupted!"));
                 break;
@@ -1190,17 +1217,12 @@ void main_window::spawn_package_install_camper(QString package_file_path) {
                 install_drive = drive_d;
             }
 
-            QFuture<eka2l1::package::installation_result> install_future = QtConcurrent::run([this, pkgmngr, package_file_path, install_drive]() {
+            const eka2l1::package::installation_result install_result = run_off_gui_thread([this, pkgmngr, package_file_path, install_drive]() {
                 return pkgmngr->install_package(
                     package_file_path.toStdU16String(),
                     install_drive,
                     [this](const std::size_t done, const std::size_t total) { emit progress_dialog_change(done, total); }, [this] { return current_progress_dialog_->wasCanceled(); });
             });
-
-            while (!install_future.isFinished()) {
-                QCoreApplication::processEvents();
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            }
 
             bool no_more_info = false;
 
@@ -1211,7 +1233,7 @@ void main_window::spawn_package_install_camper(QString package_file_path) {
             current_progress_dialog_->close();
 
             if (!no_more_info) {
-                switch (install_future.result()) {
+                switch (install_result) {
                 case eka2l1::package::installation_result_aborted: {
                     QMessageBox::information(this, tr("Installation aborted"), tr("The installation has been canceled"));
                     break;
@@ -1234,7 +1256,7 @@ void main_window::spawn_package_install_camper(QString package_file_path) {
                 }
             }
 
-            if (install_future.result() == eka2l1::package::installation_result_success) {
+            if (install_result == eka2l1::package::installation_result_success) {
                 force_refresh_applist();
             }
         }
