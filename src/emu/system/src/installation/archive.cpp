@@ -54,14 +54,17 @@ namespace eka2l1::loader {
 
         kind type = unknown;
 
-        // rom_and_rpkg. Indices into the entry list.
+        // Index into the entry list of the image that becomes SYM.ROM. Set for both layouts.
         std::size_t rom_index = 0;
+
+        // rom_and_rpkg. Index into the entry list.
         std::size_t rpkg_index = 0;
         bool has_rpkg = false;
 
         // data_dump. Lowercased, ends with '/'.
         std::string z_prefix;
         std::vector<std::size_t> z_files;
+        // Everything sitting in the dump's ROM folder; `rom_index` is the one picked out of it.
         std::vector<std::size_t> rom_files;
         // The pack's own devices.yml, when it ships one.
         std::size_t devices_yml_index = 0;
@@ -115,6 +118,32 @@ namespace eka2l1::loader {
         return false;
     }
 
+    /**
+     * @brief Pick the image to install out of everything found in a dump's ROM folder.
+     *
+     * The folder is not always just the one file: N-Gage packs keep the raw sections the ROM was
+     * assembled from (`BOOT-<uid>.dmp`, `ROOT-<uid>.dmp`) next to `SYM.ROM`, and the boot section is an
+     * 8 KB block that parses into a ROM with no root directory at all. Prefer the name the emulator
+     * writes itself, then a .rom extension, and only then fall back to the largest file.
+     */
+    static std::size_t pick_rom_file(const std::vector<common::archive_entry_info> &entries,
+        const std::vector<std::size_t> &candidates) {
+        std::size_t best = candidates.front();
+        int best_rank = -1;
+
+        for (const std::size_t index : candidates) {
+            const std::string name = common::lowercase_string(eka2l1::filename(entries[index].path, false));
+            const int rank = (name == "sym.rom") ? 2 : (has_extension(name, ".rom") ? 1 : 0);
+
+            if ((rank > best_rank) || ((rank == best_rank) && (entries[index].size > entries[best].size))) {
+                best = index;
+                best_rank = rank;
+            }
+        }
+
+        return best;
+    }
+
     static archive_device_layout determine_layout(const std::vector<common::archive_entry_info> &entries) {
         archive_device_layout layout;
 
@@ -162,6 +191,7 @@ namespace eka2l1::loader {
             if (!layout.z_files.empty() && !layout.rom_files.empty()) {
                 layout.type = archive_device_layout::data_dump;
                 layout.z_prefix = z_prefix;
+                layout.rom_index = pick_rom_file(entries, layout.rom_files);
 
                 return layout;
             }
@@ -373,11 +403,11 @@ namespace eka2l1::loader {
         // The ROM is written under the name the emulator looks for straight away, so placing it later is
         // just a move.
         const std::string rom_temp_file = add_path(temp_rom_path, "SYM.ROM");
-        destinations[layout.rom_files.front()] = rom_temp_file;
+        destinations[layout.rom_index] = rom_temp_file;
 
         if (layout.rom_files.size() > 1) {
-            LOG_WARN(SYSTEM, "Archive holds {} ROM images for this device, using {}", layout.rom_files.size(),
-                entries[layout.rom_files.front()].path);
+            LOG_WARN(SYSTEM, "The ROM folder of this dump holds {} files, using {}", layout.rom_files.size(),
+                entries[layout.rom_index].path);
         }
 
         const std::string packaged_devices_yml = add_path(temp_rom_path, "devices.yml");
