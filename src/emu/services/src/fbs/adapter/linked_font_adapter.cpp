@@ -210,21 +210,89 @@ namespace eka2l1::epoc::adapter {
             metric_for(index, metric_identifier), vertical);
     }
 
-    std::int32_t linked_font_file_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) {
-        // The packing state belongs to one adapter, so an atlas can only be
-        // built from the canonical component. Nothing in the font store uses
-        // this path (only the Qt button-map overlay does, with its own font).
-        return canonical().adapter_->begin_get_atlas(atlas_ptr, atlas_size);
+    bool linked_font_file_adapter::can_share_atlas(const std::size_t component_index) {
+        // Every component draws into the one buffer the caller uploads as a
+        // single texture, in whatever format it writes. Only those writing the
+        // format the atlas was made in -- the canonical's -- can take part; a
+        // gdr face backed by an imported TrueType font is the case that cares.
+        return components_[component_index].adapter_->get_atlas_bitmap_bits_per_pixel()
+            == components_[canonical_].adapter_->get_atlas_bitmap_bits_per_pixel();
     }
 
-    bool linked_font_file_adapter::get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code,
-        int *unicode_point, const char16_t num_code, const std::uint32_t metric_identifier, character_info *info) {
-        return canonical().adapter_->get_glyph_atlas(handle, canonical().face_index_, start_code, unicode_point, num_code,
-            metric_identifier, info);
+    // Sort `codes` by the component that draws them and run `handler` once per
+    // component, so a component still sees its glyphs as one batch. `slots`
+    // maps each entry of the group back to its index in the caller's arrays.
+    template <typename F>
+    bool linked_font_file_adapter::for_each_component_group(const int *codes, const std::size_t count,
+        const std::uint32_t metric_identifier, F handler) {
+        std::map<std::size_t, std::pair<std::vector<int>, std::vector<std::size_t>>> groups;
+
+        for (std::size_t i = 0; i < count; i++) {
+            const std::size_t chosen = component_index_for(static_cast<std::uint32_t>(codes[i]), metric_identifier);
+
+            auto &group = groups[can_share_atlas(chosen) ? chosen : canonical_];
+
+            group.first.push_back(codes[i]);
+            group.second.push_back(i);
+        }
+
+        for (auto &group : groups) {
+            if (!handler(components_[group.first], group.first, group.second.first, group.second.second)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    void linked_font_file_adapter::end_get_atlas(const std::int32_t handle) {
-        canonical().adapter_->end_get_atlas(handle);
+    // The atlas belongs to the caller, which packs it and tells each component
+    // where to draw, so these two only have to route a codepoint to the
+    // component that can draw it -- exactly as get_glyph_bitmap() does.
+    bool linked_font_file_adapter::measure_atlas_glyphs(const std::size_t idx, const int *codes, const std::size_t count,
+        const std::uint32_t metric_identifier, eka2l1::vec2 *sizes) {
+        return for_each_component_group(codes, count, metric_identifier,
+            [&](const component &comp, const std::size_t component_index, const std::vector<int> &group,
+                const std::vector<std::size_t> &slots) {
+                std::vector<eka2l1::vec2> measured(group.size());
+
+                if (!comp.adapter_->measure_atlas_glyphs(comp.face_index_, group.data(), group.size(),
+                        metric_for(component_index, metric_identifier), measured.data())) {
+                    return false;
+                }
+
+                for (std::size_t i = 0; i < group.size(); i++) {
+                    sizes[slots[i]] = measured[i];
+                }
+
+                return true;
+            });
+    }
+
+    bool linked_font_file_adapter::render_atlas_glyphs(const std::size_t idx, const int *codes, const std::size_t count,
+        const std::uint32_t metric_identifier, std::uint8_t *atlas, const eka2l1::vec2 atlas_size,
+        const eka2l1::vec2 *positions, character_info *info) {
+        return for_each_component_group(codes, count, metric_identifier,
+            [&](const component &comp, const std::size_t component_index, const std::vector<int> &group,
+                const std::vector<std::size_t> &slots) {
+                std::vector<eka2l1::vec2> where(group.size());
+                std::vector<character_info> drawn(group.size());
+
+                for (std::size_t i = 0; i < group.size(); i++) {
+                    where[i] = positions[slots[i]];
+                }
+
+                if (!comp.adapter_->render_atlas_glyphs(comp.face_index_, group.data(), group.size(),
+                        metric_for(component_index, metric_identifier), atlas, atlas_size, where.data(),
+                        drawn.data())) {
+                    return false;
+                }
+
+                for (std::size_t i = 0; i < group.size(); i++) {
+                    info[slots[i]] = drawn[i];
+                }
+
+                return true;
+            });
     }
 
     std::uint8_t linked_font_file_adapter::get_atlas_bitmap_bits_per_pixel() {
@@ -250,14 +318,30 @@ namespace eka2l1::epoc::adapter {
         // is still to hand: the per-glyph calls only ever see the canonical's
         // identifier, and handing a gdr bitmap index to FreeType as a pixel
         // size renders the glyph at a couple of pixels tall.
+        //
+        // What they are asked for is the size the canonical actually settled
+        // on, not the one the client asked for. A linked typeface has to look
+        // like one face, and a bitmap canonical only stocks a few sizes, so it
+        // routinely lands somewhere other than the request. Where the request
+        // is itself unusable -- S60v2 clients have been seen asking for two
+        // pixels while the canonical renders at thirteen -- passing it on
+        // shrinks every fallback glyph to nothing.
+        const std::uint16_t settled_size = (metrics->max_height > 0)
+            ? static_cast<std::uint16_t>(metrics->max_height)
+            : targeted_font_size;
+
         std::vector<std::uint32_t> &identifiers = metric_identifiers_[canonical_identifier];
         identifiers.assign(components_.size(), canonical_identifier);
 
         for (std::size_t i = 0; i < components_.size(); i++) {
+            if (i == canonical_) {
+                continue;
+            }
+
             std::uint32_t component_identifier = canonical_identifier;
 
-            if (components_[i].adapter_->get_nearest_supported_metric(components_[i].face_index_, targeted_font_size,
-                    &component_identifier, is_design_font_size)) {
+            if (components_[i].adapter_->get_nearest_supported_metric(components_[i].face_index_, settled_size,
+                    &component_identifier, false)) {
                 identifiers[i] = component_identifier;
             }
         }

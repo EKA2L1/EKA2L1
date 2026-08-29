@@ -32,18 +32,10 @@
 namespace eka2l1::epoc::adapter {
    class freetype_font_adapter : public font_file_adapter_base {
    private:
-       struct atlas_pack_state {
-           std::uint8_t *atlas_base_;
-           eka2l1::vec2 atlas_size_;
-           std::vector<stbrp_node> atlas_node_;
-           stbrp_context atlas_context_;
-       };
-
        std::vector<std::uint8_t> data_;
        std::vector<FT_Face> faces_;
        bool is_valid_;
 
-       common::identity_container<std::unique_ptr<atlas_pack_state>> pack_states_;
        std::vector<std::uint32_t> current_font_sizes_;
 
    protected:
@@ -72,12 +64,12 @@ namespace eka2l1::epoc::adapter {
 
        void free_glyph_bitmap(std::uint8_t *data) override;
 
-       std::int32_t begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) override;
+       bool measure_atlas_glyphs(const std::size_t idx, const int *codes, const std::size_t count,
+           const std::uint32_t metric_identifier, eka2l1::vec2 *sizes) override;
 
-       bool get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point, const char16_t num_code,
-           const std::uint32_t metric_identifier, character_info *info) override;
-
-       void end_get_atlas(const std::int32_t handle) override;
+       bool render_atlas_glyphs(const std::size_t idx, const int *codes, const std::size_t count,
+           const std::uint32_t metric_identifier, std::uint8_t *atlas, const eka2l1::vec2 atlas_size,
+           const eka2l1::vec2 *positions, character_info *info) override;
 
        glyph_bitmap_type get_output_bitmap_type() const override {
            return antialised_glyph_bitmap;

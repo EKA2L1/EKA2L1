@@ -23,20 +23,12 @@
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <stb_truetype.h>
 
+#include <cstring>
+
 namespace eka2l1::epoc::adapter {
-    static void free_stb_pack_context(std::unique_ptr<stbtt_pack_context> &ctx) {
-        stbtt_PackEnd(ctx.get());
-        ctx.reset();
-    }
-
-    static bool is_stb_pack_context_free(std::unique_ptr<stbtt_pack_context> &ctx) {
-        return (ctx == nullptr);
-    }
-
     stb_font_file_adapter::stb_font_file_adapter(std::vector<std::uint8_t> &data_)
         : data_(data_)
-        , flags_(0)
-        , contexts_(is_stb_pack_context_free, free_stb_pack_context) {
+        , flags_(0) {
         count_ = stbtt_GetNumberOfFonts(&data_[0]);
 
         if (count_ > 0) {
@@ -295,46 +287,103 @@ namespace eka2l1::epoc::adapter {
         stbtt_FreeBitmap(data, nullptr);
     }
 
-    std::int32_t stb_font_file_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) {
-        std::unique_ptr<stbtt_pack_context> context = std::make_unique<stbtt_pack_context>();
-        if (stbtt_PackBegin(context.get(), atlas_ptr, atlas_size.x, atlas_size.y, 0, 1, nullptr) == 0) {
-            return -1;
-        }
+    // stb_truetype's packer normally gathers, packs and renders in one call.
+    // The atlas does its own packing, so the two halves are driven separately
+    // here: a pack context is built per call purely to carry the oversampling
+    // settings and, when rendering, the destination buffer. Padding is left at
+    // zero so a rectangle's position is the position stb draws at.
+    bool stb_font_file_adapter::measure_atlas_glyphs(const std::size_t idx, const int *codes, const std::size_t count,
+        const std::uint32_t metric_identifier, eka2l1::vec2 *sizes) {
+        int off = 0;
+        stbtt_fontinfo *font_info = get_or_create_info(static_cast<int>(idx), &off);
 
-        return static_cast<std::int32_t>(contexts_.add(context));
-    }
-
-    void stb_font_file_adapter::end_get_atlas(const std::int32_t handle) {
-        contexts_.remove(static_cast<std::size_t>(handle));
-    }
-
-    bool stb_font_file_adapter::get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point,
-        const char16_t num_code, const std::uint32_t font_size, character_info *info) {
-        auto character_infos = std::make_unique<stbtt_packedchar[]>(num_code);
-        std::unique_ptr<stbtt_pack_context> *context_ptr = contexts_.get(handle);
-
-        if (!context_ptr) {
+        if (!font_info) {
             return false;
         }
 
-        stbtt_pack_context *context = context_ptr->get();
-        stbtt_PackSetOversampling(context, 2, 2);
+        std::vector<int> codepoints(codes, codes + count);
+        auto packed = std::make_unique<stbtt_packedchar[]>(count);
+        auto rects = std::make_unique<stbrp_rect[]>(count);
+
+        stbtt_pack_context context;
+
+        if (!stbtt_PackBegin(&context, nullptr, 1, 1, 0, 0, nullptr)) {
+            return false;
+        }
+
+        stbtt_PackSetOversampling(&context, 2, 2);
 
         stbtt_pack_range range;
-        range.array_of_unicode_codepoints = unicode_point;
-        range.chardata_for_range = character_infos.get();
-        range.font_size = static_cast<float>(font_size);
-        range.num_chars = num_code;
-        range.first_unicode_codepoint_in_range = start_code;
+        range.array_of_unicode_codepoints = codepoints.data();
+        range.chardata_for_range = packed.get();
+        range.font_size = static_cast<float>(metric_identifier);
+        range.num_chars = static_cast<int>(count);
+        range.first_unicode_codepoint_in_range = 0;
 
-        if (!stbtt_PackFontRanges(context, data_.data(), static_cast<int>(idx), &range, 1)) {
+        const int gathered = stbtt_PackFontRangesGatherRects(&context, font_info, &range, 1, rects.get());
+        stbtt_PackEnd(&context);
+
+        if (gathered != static_cast<int>(count)) {
             return false;
         }
 
-        if (info) {
-            std::memcpy(info, character_infos.get(), num_code * sizeof(character_info));
+        for (std::size_t i = 0; i < count; i++) {
+            sizes[i] = eka2l1::vec2(rects[i].w, rects[i].h);
         }
 
+        return true;
+    }
+
+    bool stb_font_file_adapter::render_atlas_glyphs(const std::size_t idx, const int *codes, const std::size_t count,
+        const std::uint32_t metric_identifier, std::uint8_t *atlas, const eka2l1::vec2 atlas_size,
+        const eka2l1::vec2 *positions, character_info *info) {
+        int off = 0;
+        stbtt_fontinfo *font_info = get_or_create_info(static_cast<int>(idx), &off);
+
+        if (!font_info) {
+            return false;
+        }
+
+        std::vector<int> codepoints(codes, codes + count);
+        auto packed = std::make_unique<stbtt_packedchar[]>(count);
+        auto rects = std::make_unique<stbrp_rect[]>(count);
+
+        stbtt_pack_context context;
+
+        if (!stbtt_PackBegin(&context, atlas, atlas_size.x, atlas_size.y, atlas_size.x, 0, nullptr)) {
+            return false;
+        }
+
+        stbtt_PackSetOversampling(&context, 2, 2);
+
+        stbtt_pack_range range;
+        range.array_of_unicode_codepoints = codepoints.data();
+        range.chardata_for_range = packed.get();
+        range.font_size = static_cast<float>(metric_identifier);
+        range.num_chars = static_cast<int>(count);
+        range.first_unicode_codepoint_in_range = 0;
+
+        if (stbtt_PackFontRangesGatherRects(&context, font_info, &range, 1, rects.get()) != static_cast<int>(count)) {
+            stbtt_PackEnd(&context);
+            return false;
+        }
+
+        // Hand stb the placement the atlas decided on, in the form its renderer
+        // expects from a packer that has run.
+        for (std::size_t i = 0; i < count; i++) {
+            rects[i].x = static_cast<stbrp_coord>(positions[i].x);
+            rects[i].y = static_cast<stbrp_coord>(positions[i].y);
+            rects[i].was_packed = 1;
+        }
+
+        const int rendered = stbtt_PackFontRangesRenderIntoRects(&context, font_info, &range, 1, rects.get());
+        stbtt_PackEnd(&context);
+
+        if (!rendered) {
+            return false;
+        }
+
+        std::memcpy(info, packed.get(), count * sizeof(character_info));
         return true;
     }
 

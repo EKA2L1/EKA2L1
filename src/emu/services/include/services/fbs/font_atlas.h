@@ -36,6 +36,10 @@ namespace eka2l1::drivers {
 namespace eka2l1::epoc {
 #define ESTIMATE_MAX_CHAR_IN_ATLAS_WIDTH 50
 
+    // The rectangle packer, kept out of this header so that including it does
+    // not drag stb in. Defined in font_atlas.cpp.
+    struct atlas_packing_state;
+
     /**
      * \brief Font atlas is a texture contains glyph bitmaps.
      * 
@@ -55,10 +59,30 @@ namespace eka2l1::epoc {
         std::unique_ptr<std::uint8_t[]> atlas_data_;
 
         std::size_t typeface_idx_;
-        std::int32_t pack_handle_;
+
+        // The atlas packs itself. An adapter only measures and draws glyphs --
+        // it cannot own the packing, because a linked typeface draws from
+        // several adapters into this one buffer and they would each lay it out
+        // from scratch, overwriting one another.
+        std::unique_ptr<atlas_packing_state> pack_state_;
+
+        // Every glyph is padded on all sides, so that filtering a glyph never
+        // samples the one packed next to it.
+        static constexpr int GLYPH_PADDING = 5;
+
+        // How many of the coldest characters a rebuild drops, to leave the
+        // refilled atlas some room to grow into.
+        static constexpr std::size_t EVICT_ON_REBUILD = 5;
+
+        bool begin_packing(const int width);
+        bool pack_glyphs(const std::vector<int> &codes, adapter::character_info *infos);
 
     public:
         explicit font_atlas();
+
+        // Out of line: pack_state_ points at a type this header only forward
+        // declares.
+        ~font_atlas();
 
         explicit font_atlas(adapter::font_file_adapter_base *adapter, const std::size_t typeface_idx, const char16_t initial_start,
             const char16_t initial_char_count, const int font_size, const std::uint32_t metric_identifier_);

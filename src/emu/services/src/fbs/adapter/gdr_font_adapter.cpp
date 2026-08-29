@@ -21,20 +21,7 @@
 #include <common/log.h>
 #include <services/fbs/adapter/gdr_font_adapter.h>
 
-#define STB_RECT_PACK_IMPLEMENTATION
-#include <stb_rect_pack.h>
-
 namespace eka2l1::epoc::adapter {
-    static bool is_gdr_pack_context_free(gdr_font_atlas_pack_context &ctx) {
-        return (ctx.pack_dest_ == nullptr);
-    }
-
-    static void free_gdr_pack_context(gdr_font_atlas_pack_context &ctx) {
-        ctx.pack_nodes_.clear();
-        ctx.pack_context_.reset();
-        ctx.pack_dest_ = nullptr;
-    }
-
     static open_font_metrics build_of_metrics_from_font_bitmap(const loader::gdr::font_bitmap *target_bitmap) {
         open_font_metrics metrics;
 
@@ -55,8 +42,7 @@ namespace eka2l1::epoc::adapter {
         return metrics;
     }
 
-    gdr_font_file_adapter::gdr_font_file_adapter(std::vector<std::uint8_t> &data)
-        : pack_contexts_(is_gdr_pack_context_free, free_gdr_pack_context) {
+    gdr_font_file_adapter::gdr_font_file_adapter(std::vector<std::uint8_t> &data) {
         // Instantiate a read-only buffer stream
         buf_stream_ = std::make_unique<common::ro_buf_stream>(&data[0], data.size());
 
@@ -217,108 +203,69 @@ namespace eka2l1::epoc::adapter {
         }
     }
 
-    std::int32_t gdr_font_file_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) {
-        gdr_font_atlas_pack_context context;
-        context.pack_context_ = std::make_unique<stbrp_context>();
-        context.pack_nodes_.resize(atlas_size.y);
-
-        stbrp_init_target(context.pack_context_.get(), atlas_size.x, atlas_size.y, context.pack_nodes_.data(), static_cast<int>(context.pack_nodes_.size()));
-        context.pack_dest_ = atlas_ptr;
-        context.pack_size_ = atlas_size;
-
-        return static_cast<std::int32_t>(pack_contexts_.add(context));
-    }
-
-    static float calculate_scale_factor_of_font(const int target_size, const int font_general_height, const int char_height) {
-        return static_cast<float>(target_size) / ((char_height == 0) ? static_cast<float>(font_general_height) : static_cast<float>(char_height));
-    }
-
-    bool gdr_font_file_adapter::get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point, const char16_t num_code,
-        const std::uint32_t metric_identifier, character_info *info) {
-        gdr_font_atlas_pack_context *context = pack_contexts_.get(handle);
-
-        if (!context) {
-            return false;
-        }
-
-        std::vector<stbrp_rect> rect_build;
-        std::vector<const loader::gdr::character *> the_chars;
-        rect_build.resize(num_code);
-
-        for (char16_t i = 0; i < num_code; i++) {
-            const char16_t ucode = (unicode_point) ? static_cast<char16_t>(unicode_point[i]) : start_code + i;
-            const loader::gdr::character *c = get_character(idx, ucode, metric_identifier);
-
-            rect_build[i].x = 0;
-            rect_build[i].y = 0;
+    bool gdr_font_file_adapter::measure_atlas_glyphs(const std::size_t idx, const int *codes, const std::size_t count,
+        const std::uint32_t metric_identifier, eka2l1::vec2 *sizes) {
+        for (std::size_t i = 0; i < count; i++) {
+            const loader::gdr::character *c = get_character(idx, static_cast<std::uint32_t>(codes[i]), metric_identifier);
 
             if (!c) {
-                rect_build[i].w = 0;
-                rect_build[i].h = 0;
-            } else {
-                rect_build[i].w = static_cast<stbrp_coord>(c->metric_->move_in_pixels_ - c->metric_->left_adj_in_pixels_ - c->metric_->right_adjust_in_pixels_);
-                rect_build[i].h = c->metric_->height_in_pixels_;
+                sizes[i] = eka2l1::vec2(0, 0);
+                continue;
             }
 
-            the_chars.push_back(c);
+            sizes[i] = eka2l1::vec2(c->metric_->move_in_pixels_ - c->metric_->left_adj_in_pixels_
+                    - c->metric_->right_adjust_in_pixels_,
+                c->metric_->height_in_pixels_);
         }
 
-        if (stbrp_pack_rects(context->pack_context_.get(), rect_build.data(), num_code) == 0) {
-            return false;
-        }
+        return true;
+    }
 
-        for (char16_t i = 0; i < num_code; i++) {
-            if (the_chars[i]) {
-                // Copy those info to character infos
-                info[i].x0 = rect_build[i].x;
-                info[i].y0 = rect_build[i].y;
-                info[i].x1 = rect_build[i].x + rect_build[i].w;
-                info[i].y1 = rect_build[i].y + the_chars[i]->metric_->height_in_pixels_;
+    bool gdr_font_file_adapter::render_atlas_glyphs(const std::size_t idx, const int *codes, const std::size_t count,
+        const std::uint32_t metric_identifier, std::uint8_t *atlas, const eka2l1::vec2 atlas_size,
+        const eka2l1::vec2 *positions, character_info *info) {
+        for (std::size_t i = 0; i < count; i++) {
+            const loader::gdr::character *c = get_character(idx, static_cast<std::uint32_t>(codes[i]), metric_identifier);
 
-                const std::int16_t target_width = the_chars[i]->metric_->move_in_pixels_ - the_chars[i]->metric_->left_adj_in_pixels_ - the_chars[i]->metric_->right_adjust_in_pixels_;
+            if (!c) {
+                info[i] = character_info{};
+                continue;
+            }
 
-                info[i].xoff = the_chars[i]->metric_->left_adj_in_pixels_;
-                info[i].yoff = -(the_chars[i]->metric_->ascent_in_pixels_);
-                info[i].xoff2 = info[i].xoff + target_width;
-                info[i].yoff2 = info[i].yoff + (the_chars[i]->metric_->height_in_pixels_);
-                info[i].xadv = the_chars[i]->metric_->move_in_pixels_;
+            const std::int16_t target_width = c->metric_->move_in_pixels_ - c->metric_->left_adj_in_pixels_
+                - c->metric_->right_adjust_in_pixels_;
+            const std::int16_t target_height = c->metric_->height_in_pixels_;
 
-                const loader::gdr::bitmap &bmp = the_chars[i]->data_;
+            info[i].x0 = static_cast<std::uint16_t>(positions[i].x);
+            info[i].y0 = static_cast<std::uint16_t>(positions[i].y);
+            info[i].x1 = static_cast<std::uint16_t>(positions[i].x + target_width);
+            info[i].y1 = static_cast<std::uint16_t>(positions[i].y + target_height);
 
-                // UWU gonna copy data to you. Simple scaling algorithm WARNING!
-                for (int y = rect_build[i].y; y < rect_build[i].y + rect_build[i].h; y++) {
-                    for (int x = rect_build[i].x; x < rect_build[i].x + rect_build[i].w; x++) {
-                        const float y_in_rect = static_cast<float>(y - rect_build[i].y);
-                        const float x_in_rect = static_cast<float>(x - rect_build[i].x);
+            info[i].xoff = c->metric_->left_adj_in_pixels_;
+            info[i].yoff = -(c->metric_->ascent_in_pixels_);
+            info[i].xoff2 = info[i].xoff + target_width;
+            info[i].yoff2 = info[i].yoff + target_height;
+            info[i].xadv = c->metric_->move_in_pixels_;
 
-                        const std::uint32_t src_scale_loc = (static_cast<std::int16_t>(y_in_rect) * target_width + static_cast<std::int16_t>(x_in_rect));
-                        if (src_scale_loc >= static_cast<std::uint32_t>(target_width * the_chars[i]->metric_->height_in_pixels_)) {
-                            // Nothing, just black
-                            context->pack_dest_[context->pack_size_.x * y + x] = 0;
-                        } else {
-                            context->pack_dest_[context->pack_size_.x * y + x] = ((bmp[src_scale_loc >> 5] >> (src_scale_loc & 31)) & 1) * 0xFF;
-                        }
+            const loader::gdr::bitmap &bmp = c->data_;
+
+            for (std::int16_t y = 0; y < target_height; y++) {
+                for (std::int16_t x = 0; x < target_width; x++) {
+                    const std::uint32_t src_loc = static_cast<std::uint32_t>(y) * target_width + x;
+                    std::uint8_t *dest = atlas + (positions[i].y + y) * atlas_size.x + positions[i].x + x;
+
+                    if (src_loc >= static_cast<std::uint32_t>(target_width * target_height)) {
+                        *dest = 0;
+                    } else {
+                        *dest = static_cast<std::uint8_t>(((bmp[src_loc >> 5] >> (src_loc & 31)) & 1) * 0xFF);
                     }
                 }
-            } else {
-                info[i].xoff = 0;
-                info[i].xoff2 = 0;
-                info[i].yoff = 0;
-                info[i].yoff2 = 0;
-                info[i].xadv = 0;
-                info[i].x0 = 0;
-                info[i].y0 = 0;
-                info[i].x1 = 0;
-                info[i].y1 = 0;
             }
         }
 
         return true;
     }
 
-    void gdr_font_file_adapter::end_get_atlas(const std::int32_t handle) {
-        pack_contexts_.remove(handle);
-    }
     
     bool gdr_font_file_adapter::has_character(const std::size_t face_index, const std::int32_t codepoint, const std::uint32_t metric_identifier) {
         return (get_character(face_index, codepoint, metric_identifier) != nullptr);

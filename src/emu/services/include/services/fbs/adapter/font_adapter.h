@@ -79,36 +79,47 @@ namespace eka2l1::epoc::adapter {
         virtual bool does_glyph_exist(std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier) = 0;
 
         /**
-         * @brief   Initialize getting glyph atlas.
-         * 
-         * Each pixel is 8 bits.
-         * 
-         * @param   atlas_ptr Pointer to destination data which glyph bitmap will be written to.
-         * @param   atlas_size Size of the atlas.
-         * 
-         * @returns Handle to the atlas get context. -1 on failure.
+         * @brief   Measure how much atlas space each glyph needs.
+         *
+         * Packing the glyphs is the caller's job -- the atlas is its buffer,
+         * and only it can see every glyph that has to fit -- so an adapter is
+         * asked to do the two things only it can: say how big a glyph is, and
+         * draw one. A glyph the face cannot supply reports an empty size and
+         * must be skipped by the caller.
+         *
+         * @param   idx                 Index of the face to measure against.
+         * @param   codes               The Unicode codepoints to measure.
+         * @param   count               How many codepoints `codes` holds.
+         * @param   metric_identifier   The size, as this adapter addresses it.
+         * @param   sizes               On return, each glyph's size in pixels.
+         *
+         * @returns True on success.
          */
-        virtual std::int32_t begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) = 0;
+        virtual bool measure_atlas_glyphs(const std::size_t idx, const int *codes, const std::size_t count,
+            const std::uint32_t metric_identifier, eka2l1::vec2 *sizes) = 0;
 
         /**
-         * \brief Get an atlas contains glyphs bitmap.
-         * 
-         * \param handle        Handle to the atlas get context returned in begin_get_atlas.
-         * \param idx           Index of the typeface we want to get glyph bitmaps from.
-         * \param start_code    First unicode point in a range to get glyph bitmap. 0 to use unicode array.
-         * \param unicode_point Pointer to an array of unicode point which we want to rasterize. NULL to ingore.
-         * \param num_code      Number of unicode point to rasterize.
-         * \param font_size     Size of the font to render.
-         * \param info          Pointer to array which will contains character info in the atlas. Can be NULL to ignore.
-         * 
-         * \returns True on success. 
+         * @brief   Draw glyphs into an atlas, at positions the caller chose.
+         *
+         * `positions` holds the top-left corner each glyph is to be drawn at,
+         * one per codepoint, in the same order as `codes`. They come from the
+         * caller's packing of the sizes measure_atlas_glyphs() reported, so an
+         * adapter draws where it is told rather than deciding for itself.
+         *
+         * @param   idx                 Index of the face to draw from.
+         * @param   codes               The Unicode codepoints to draw.
+         * @param   count               How many codepoints `codes` holds.
+         * @param   metric_identifier   The size, as this adapter addresses it.
+         * @param   atlas               The atlas buffer to draw into.
+         * @param   atlas_size          Its dimensions; the width is also the row stride.
+         * @param   positions           Where each glyph goes.
+         * @param   info                On return, each glyph's placement and metrics.
+         *
+         * @returns True on success.
          */
-        virtual bool get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point,
-            const char16_t num_code, const std::uint32_t metric_identifier, character_info *info)
-            = 0;
-
-        // End getting atlas.
-        virtual void end_get_atlas(const std::int32_t handle) = 0;
+        virtual bool render_atlas_glyphs(const std::size_t idx, const int *codes, const std::size_t count,
+            const std::uint32_t metric_identifier, std::uint8_t *atlas, const eka2l1::vec2 atlas_size,
+            const eka2l1::vec2 *positions, character_info *info) = 0;
 
         /**
          * \brief Get total number of font this file consists of.
