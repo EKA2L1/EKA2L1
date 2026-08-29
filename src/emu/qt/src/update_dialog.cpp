@@ -61,13 +61,15 @@ static const char *UPDATE_FILE_STORE_PATH = "staging\\update.zip";
 static const char *INVALID_JSON_ERR_STR = "Invalid response from GitHub about newest update! Please check your internet connection!";
 static const char *NO_AUTO_CHECK_UPDATE_SETTING = "noAutoCheckUpdate";
 
+// These have to match the names the "roll-release" job of .github/workflows/build.yml
+// uploads to the rolling release, or the updater will never find anything to download.
 static QString get_platform_release_filename() {
 #if EKA2L1_PLATFORM(WIN32)
-    return QString("windows-latest.zip");
+    return QString("EKA2L1-Windows-x86_64.zip");
 #elif EKA2L1_PLATFORM(UNIX)
-    return QString("ubuntu-latest.zip");
+    return QString("EKA2L1-Linux-x86_64.AppImage");
 #else
-    return QString("macos-latest.zip");
+    return QString("EKA2L1-MacOS-arm64.dmg");
 #endif
 }
 
@@ -76,7 +78,8 @@ update_dialog::update_dialog(QWidget *parent)
     , ui_(new Ui::update_dialog)
     , access_manager_(new QNetworkAccessManager(this))
     , download_reply_(nullptr)
-    , downloaded_file_(nullptr) {
+    , downloaded_file_(nullptr)
+    , explicit_up_(false) {
     ui_->setupUi(this);
     ui_->cancel_button->hide();
     ui_->download_progress_bar->hide();
@@ -102,16 +105,29 @@ update_dialog::~update_dialog() {
     delete access_manager_;
 }
 
+// Both of these end the update check, so they also close the dialog: an
+// automatic check keeps it hidden, and a hidden dialog that is never closed is
+// never deleted either (WA_DeleteOnClose).
 void update_dialog::report_info(const QString &info_string) {
+    LOG_INFO(eka2l1::FRONTEND_UI, "Update check: {}", info_string.toStdString());
+
     if (explicit_up_) {
         QMessageBox::information(this, tr("Update success"), info_string);
     }
+
+    close();
 }
 
 void update_dialog::report_error(const QString &info_string) {
+    // An automatic check shows nothing, so the log is the only trace of why it
+    // gave up.
+    LOG_ERROR(eka2l1::FRONTEND_UI, "Update check failed: {}", info_string.toStdString());
+
     if (explicit_up_) {
         QMessageBox::critical(this, tr("Update failed"), info_string);
     }
+
+    close();
 }
 
 void update_dialog::on_tag_request_complete(QNetworkReply *reply) {
@@ -140,7 +156,6 @@ void update_dialog::on_tag_request_complete(QNetworkReply *reply) {
                         tag_download_link_request();
                     } else {
                         report_info(tr("The emulator is already updated to lastest version!"));
-                        close();
                     }
 
                     found = true;

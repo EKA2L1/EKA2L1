@@ -475,6 +475,8 @@ jobs:
       with:
         name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-ios-device"
 
+    # get_platform_release_filename() in src/emu/qt/src/update_dialog.cpp looks
+    # the asset up by this exact name, so renaming one means renaming both.
     - name: Rename artifacts for release
       run: |
         (cd windows-files && zip -r ../EKA2L1-Windows-x86_64.zip .)
