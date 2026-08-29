@@ -18,14 +18,26 @@
 #include <drivers/graphics/graphics.h>
 #include <services/fbs/font_atlas.h>
 
+#define STB_RECT_PACK_IMPLEMENTATION
+#include <stb_rect_pack.h>
+
 #include <common/algorithm.h>
 #include <common/time.h>
 
+#include <cstring>
+
 namespace eka2l1::epoc {
+    struct atlas_packing_state {
+        std::vector<stbrp_node> nodes_;
+        stbrp_context context_;
+        int width_;
+    };
+
+    font_atlas::~font_atlas() = default;
+
     font_atlas::font_atlas()
         : atlas_handle_(0)
-        , atlas_data_(nullptr)
-        , pack_handle_(0) {
+        , atlas_data_(nullptr) {
     }
 
     font_atlas::font_atlas(adapter::font_file_adapter_base *adapter, const std::size_t typeface_idx, const char16_t initial_start,
@@ -36,8 +48,7 @@ namespace eka2l1::epoc {
         , size_(font_size)
         , initial_range_(initial_start, initial_char_count)
         , typeface_idx_(typeface_idx)
-        , atlas_data_(nullptr)
-        , pack_handle_(0) {
+        , atlas_data_(nullptr) {
     }
 
     void font_atlas::init(adapter::font_file_adapter_base *adapter, const std::size_t typeface_idx, const char16_t initial_start,
@@ -48,7 +59,7 @@ namespace eka2l1::epoc {
         size_ = font_size;
         initial_range_ = { initial_start, initial_char_count };
         typeface_idx_ = typeface_idx;
-        pack_handle_ = 0;
+        pack_state_.reset();
 
         atlas_data_.reset();
     }
@@ -65,9 +76,7 @@ namespace eka2l1::epoc {
             atlas_data_.reset();
         }
 
-        if (pack_handle_) {
-            adapter_->end_get_atlas(pack_handle_);
-        }
+        pack_state_.reset();
 
         last_use_.clear();
         characters_.clear();
@@ -75,6 +84,57 @@ namespace eka2l1::epoc {
 
     int font_atlas::get_atlas_width() const {
         return common::align(ESTIMATE_MAX_CHAR_IN_ATLAS_WIDTH * size_, 1024);
+    }
+
+    bool font_atlas::begin_packing(const int width) {
+        if (!pack_state_) {
+            pack_state_ = std::make_unique<atlas_packing_state>();
+        }
+
+        // stb wants one node per atlas column to place rectangles precisely.
+        pack_state_->nodes_.resize(width);
+        pack_state_->width_ = width;
+
+        stbrp_init_target(&pack_state_->context_, width, width, pack_state_->nodes_.data(),
+            static_cast<int>(pack_state_->nodes_.size()));
+
+        return true;
+    }
+
+    bool font_atlas::pack_glyphs(const std::vector<int> &codes, adapter::character_info *infos) {
+        if (!pack_state_ || codes.empty()) {
+            return (pack_state_ != nullptr);
+        }
+
+        std::vector<eka2l1::vec2> sizes(codes.size());
+
+        if (!adapter_->measure_atlas_glyphs(typeface_idx_, codes.data(), codes.size(), metric_identifier_,
+                sizes.data())) {
+            return false;
+        }
+
+        std::vector<stbrp_rect> rects(codes.size());
+
+        for (std::size_t i = 0; i < codes.size(); i++) {
+            rects[i].x = 0;
+            rects[i].y = 0;
+            rects[i].w = static_cast<stbrp_coord>(sizes[i].x + GLYPH_PADDING * 2);
+            rects[i].h = static_cast<stbrp_coord>(sizes[i].y + GLYPH_PADDING * 2);
+        }
+
+        if (!stbrp_pack_rects(&pack_state_->context_, rects.data(), static_cast<int>(rects.size()))) {
+            // Out of room. The caller decides whether to rebuild the atlas.
+            return false;
+        }
+
+        std::vector<eka2l1::vec2> positions(codes.size());
+
+        for (std::size_t i = 0; i < codes.size(); i++) {
+            positions[i] = eka2l1::vec2(rects[i].x + GLYPH_PADDING, rects[i].y + GLYPH_PADDING);
+        }
+
+        return adapter_->render_atlas_glyphs(typeface_idx_, codes.data(), codes.size(), metric_identifier_,
+            atlas_data_.get(), { pack_state_->width_, pack_state_->width_ }, positions.data(), infos);
     }
 
     bool font_atlas::draw_text(const std::u16string &text, const eka2l1::rect &text_box, const epoc::text_alignment alignment, drivers::graphics_driver *driver, drivers::graphics_command_builder &builder, const eka2l1::vec2f scale_vector) {
@@ -89,23 +149,25 @@ namespace eka2l1::epoc {
 
         if (!atlas_data_) {
             atlas_data_ = std::make_unique<std::uint8_t[]>(width * width * adapter_->get_atlas_bitmap_bits_per_pixel() / 8);
-            auto cinfos = std::make_unique<adapter::character_info[]>(initial_range_.second);
 
-            pack_handle_ = adapter_->begin_get_atlas(atlas_data_.get(), { width, width });
+            std::vector<int> initial_codes(initial_range_.second);
 
-            if (pack_handle_ == -1) {
-                return false;
+            for (char16_t i = 0; i < initial_range_.second; i++) {
+                initial_codes[i] = initial_range_.first + i;
             }
 
-            if (!adapter_->get_glyph_atlas(pack_handle_, typeface_idx_, initial_range_.first, nullptr, initial_range_.second,
-                    metric_identifier_, cinfos.get())) {
+            std::vector<adapter::character_info> cinfos(initial_codes.size());
+
+            begin_packing(width);
+
+            if (!pack_glyphs(initial_codes, cinfos.data())) {
                 return false;
             }
 
             // initialize the last used list and character map
-            for (char16_t i = 0; i < initial_range_.second; i++) {
-                last_use_.push_back(initial_range_.first + i);
-                characters_.emplace(initial_range_.first + i, cinfos[i]);
+            for (std::size_t i = 0; i < initial_codes.size(); i++) {
+                last_use_.push_back(initial_codes[i]);
+                characters_.emplace(static_cast<char16_t>(initial_codes[i]), cinfos[i]);
             }
 
             // Submit the bitmap through another queue, in case the command list above never got submitted
@@ -138,36 +200,48 @@ namespace eka2l1::epoc {
         last_use_.erase(last_use_.end() - unique_char.size(), last_use_.end());
 
         if (!to_rast.empty()) {
-            // Try to rasterize these
-            auto cinfos = std::make_unique<adapter::character_info[]>(to_rast.size());
+            std::vector<adapter::character_info> cinfos(to_rast.size());
 
-            if (!adapter_->get_glyph_atlas(pack_handle_, typeface_idx_, 0, to_rast.data(), static_cast<char16_t>(to_rast.size()), metric_identifier_,
-                    cinfos.get())) {
-                // Try to redo the atlas, getting latest use characters.
-                adapter_->end_get_atlas(pack_handle_);
-                pack_handle_ = adapter_->begin_get_atlas(atlas_data_.get(), { width, width });
-
-                if (pack_handle_ == -1) {
-                    return false;
-                }
-
-                if (!adapter_->get_glyph_atlas(pack_handle_, typeface_idx_, 0, &last_use_[0], static_cast<char16_t>(characters_.size() - 5),
-                        metric_identifier_, cinfos.get())) {
-                    return false;
-                }
-
-                for (std::size_t i = 0; i < characters_.size() - 5; i++) {
-                    characters_[last_use_[i]] = cinfos[i];
+            if (pack_glyphs(to_rast, cinfos.data())) {
+                for (std::size_t i = 0; i < to_rast.size(); i++) {
+                    characters_.emplace(static_cast<char16_t>(to_rast[i]), cinfos[i]);
                 }
             } else {
-                // Update the characters
-                for (char16_t i = 0; i < static_cast<char16_t>(to_rast.size()); i++) {
-                    characters_.emplace(to_rast[i], cinfos[i]);
+                // Out of room: rebuild the atlas from the characters used most
+                // recently, plus the ones that did not fit. `last_use_` has the
+                // hottest first, so dropping its tail evicts the coldest.
+                std::vector<int> rebuild(last_use_.begin(),
+                    last_use_.begin() + common::min<std::size_t>(last_use_.size(), characters_.size()));
+
+                rebuild.erase(std::remove_if(rebuild.begin(), rebuild.end(), [&](const int code) {
+                    return characters_.find(static_cast<char16_t>(code)) == characters_.end();
+                }), rebuild.end());
+
+                if (rebuild.size() > EVICT_ON_REBUILD) {
+                    rebuild.resize(rebuild.size() - EVICT_ON_REBUILD);
                 }
 
-                upload_builder.update_bitmap(atlas_handle_, reinterpret_cast<const char *>(atlas_data_.get()),
-                    width * width * adapter_->get_atlas_bitmap_bits_per_pixel() / 8, { 0, 0 }, { width, width });
+                rebuild.insert(rebuild.end(), to_rast.begin(), to_rast.end());
+
+                std::vector<adapter::character_info> rebuilt(rebuild.size());
+
+                std::memset(atlas_data_.get(), 0,
+                    width * width * adapter_->get_atlas_bitmap_bits_per_pixel() / 8);
+                begin_packing(width);
+
+                if (!pack_glyphs(rebuild, rebuilt.data())) {
+                    return false;
+                }
+
+                characters_.clear();
+
+                for (std::size_t i = 0; i < rebuild.size(); i++) {
+                    characters_[static_cast<char16_t>(rebuild[i])] = rebuilt[i];
+                }
             }
+
+            upload_builder.update_bitmap(atlas_handle_, reinterpret_cast<const char *>(atlas_data_.get()),
+                width * width * adapter_->get_atlas_bitmap_bits_per_pixel() / 8, { 0, 0 }, { width, width });
         }
 
         eka2l1::vec2 cur_pos = text_box.top;

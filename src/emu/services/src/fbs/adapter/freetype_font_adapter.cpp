@@ -64,7 +64,11 @@ namespace eka2l1::epoc::adapter {
             currentMaxHeightInFontUnit = FT_MulFix(
                 boundingBoxHeightInFontUnit, aFace->size->metrics.y_scale );
         }
-        while ( currentMaxHeightInFontUnit > maxHeightInFontUnit )
+        // The lower bound is ours, not Symbian's: FT_Set_Pixel_Sizes fails at
+        // zero, which leaves currentMaxHeightInFontUnit unchanged and spins
+        // this loop forever. A caller asking for an unusably small height is
+        // enough to reach that.
+        while ( ( currentMaxHeightInFontUnit > maxHeightInFontUnit ) && ( designHeightInPixels > 1 ) )
         {
             designHeightInPixels--;
             FT_Set_Pixel_Sizes( aFace, designHeightInPixels, designHeightInPixels );
@@ -330,109 +334,98 @@ namespace eka2l1::epoc::adapter {
         }
     }
 
-    std::int32_t freetype_font_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) {
-        auto pack_state = std::make_unique<atlas_pack_state>();
-
-        pack_state->atlas_base_ = atlas_ptr;
-        pack_state->atlas_size_ = atlas_size;
-
-        pack_state->atlas_node_.resize(atlas_size.x);
-
-        stbrp_init_target(&pack_state->atlas_context_, atlas_size.x, atlas_size.y, pack_state->atlas_node_.data(),
-            static_cast<int>(pack_state->atlas_node_.size()));
-        std::memset(pack_state->atlas_base_, 0, atlas_size.x * atlas_size.y);
-
-        return static_cast<std::int32_t>(pack_states_.add(pack_state));
-    }
-
-    bool freetype_font_adapter::get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point, const char16_t num_code, const std::uint32_t metric_identifier, character_info *info) {
-        auto pack_state = pack_states_.get(handle);
-
-        if (!pack_state) {
+    bool freetype_font_adapter::measure_atlas_glyphs(const std::size_t idx, const int *codes, const std::size_t count,
+        const std::uint32_t metric_identifier, eka2l1::vec2 *sizes) {
+        if (idx >= faces_.size()) {
             return false;
         }
 
-        auto pack_state_ptr = pack_state->get();
         auto face = faces_[idx];
-
-        if (!face) {
-            return false;
-        }
 
         if (!set_font_size(idx, metric_identifier)) {
             return false;
         }
 
-        std::vector<stbrp_rect> pack_rects(num_code);
-
-        for (auto i = 0; i < num_code; i++) {
-            const char16_t char_code = unicode_point ? unicode_point[i] : static_cast<char16_t>(start_code + i);
-            auto err = FT_Load_Char(face, char_code, FT_LOAD_BITMAP_METRICS_ONLY);
+        for (std::size_t i = 0; i < count; i++) {
+            auto err = FT_Load_Char(face, static_cast<FT_ULong>(codes[i]), FT_LOAD_BITMAP_METRICS_ONLY);
 
             if (err) {
-                LOG_WARN(SERVICE_FBS, "Failed to load character code 0x{:X} for face to get glyph atlas, error: {}",
-                    static_cast<int>(char_code), FT_Error_String(err));
+                LOG_WARN(SERVICE_FBS, "Failed to load character code 0x{:X} for face to measure glyph atlas, error: {}",
+                    codes[i], FT_Error_String(err));
+
+                sizes[i] = eka2l1::vec2(0, 0);
+                continue;
             }
 
-            pack_rects[i].x = 0;
-            pack_rects[i].y = 0;
-            pack_rects[i].w = face->glyph->bitmap.width + 10;
-            pack_rects[i].h = face->glyph->bitmap.rows + 10;
+            // Metrics-only loading reports the plain (non-LCD) bitmap, while
+            // rendering goes through the LCD filter and is averaged back down
+            // by three. The two agree to within the filter's couple of pixels,
+            // which the caller's padding absorbs.
+            sizes[i] = eka2l1::vec2(static_cast<int>(face->glyph->bitmap.width),
+                static_cast<int>(face->glyph->bitmap.rows));
         }
 
-        if (!stbrp_pack_rects(&pack_state_ptr->atlas_context_, pack_rects.data(), static_cast<int>(pack_rects.size()))) {
-            LOG_ERROR(SERVICE_FBS, "Failed to pack rects for glyph atlas");
+        return true;
+    }
+
+    bool freetype_font_adapter::render_atlas_glyphs(const std::size_t idx, const int *codes, const std::size_t count,
+        const std::uint32_t metric_identifier, std::uint8_t *atlas, const eka2l1::vec2 atlas_size,
+        const eka2l1::vec2 *positions, character_info *info) {
+        if (idx >= faces_.size()) {
             return false;
         }
 
-        // Render and put bitmap to atlas
-        for (auto i = 0; i < num_code; i++) {
-            const char16_t char_code = unicode_point ? unicode_point[i] : static_cast<char16_t>(start_code + i);
-            auto err = FT_Load_Char(face, char_code, FT_LOAD_DEFAULT);
+        auto face = faces_[idx];
 
-            if (err) {
-                LOG_WARN(SERVICE_FBS, "Failed to load character code 0x{:X} for face to get glyph atlas, error: {}",
-                    static_cast<int>(char_code), FT_Error_String(err));
+        if (!set_font_size(idx, metric_identifier)) {
+            return false;
+        }
+
+        for (std::size_t i = 0; i < count; i++) {
+            auto err = FT_Load_Char(face, static_cast<FT_ULong>(codes[i]), FT_LOAD_DEFAULT);
+
+            if (!err) {
+                err = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_LCD);
             }
 
-            err = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_LCD);
             if (err) {
                 LOG_WARN(SERVICE_FBS, "Failed to render character code 0x{:X} for face to get glyph atlas, error: {}",
-                static_cast<int>(char_code), FT_Error_String(err));
+                    codes[i], FT_Error_String(err));
+
+                info[i] = character_info{};
+                continue;
             }
 
             auto glyph = face->glyph;
             auto bitmap = glyph->bitmap;
 
-            auto &rect = pack_rects[i];
-            auto dest = pack_state_ptr->atlas_base_ + (rect.x + 5) * 4 + (rect.y + 5) * pack_state_ptr->atlas_size_.x * 4;
+            std::uint8_t *dest = atlas + positions[i].x * 4 + positions[i].y * atlas_size.x * 4;
 
-            for (auto y = 0; y < bitmap.rows; y++) {
-                for (auto x = 0; x < bitmap.width / 3; x++) {
+            for (std::uint32_t y = 0; y < bitmap.rows; y++) {
+                for (std::uint32_t x = 0; x < bitmap.width / 3; x++) {
                     auto average = static_cast<float>(bitmap.buffer[x * 3 + y * bitmap.pitch] +
                         bitmap.buffer[x * 3 + y * bitmap.pitch + 1] +
                         bitmap.buffer[x * 3 + y * bitmap.pitch + 2]) / 3.0f;
 
                     eka2l1::vec4 color(bitmap.buffer[x * 3 + y * bitmap.pitch], bitmap.buffer[x * 3 + y * bitmap.pitch + 1],
-                       bitmap.buffer[x * 3 + y * bitmap.pitch +2], static_cast<std::uint8_t>(average));
+                       bitmap.buffer[x * 3 + y * bitmap.pitch + 2], static_cast<std::uint8_t>(average));
 
                     float max = (static_cast<float>(std::max({ color.x, color.y, color.z })) / 255.0f);
                     int min = std::min({ color.x, color.y, color.z });
 
                     color = color * max + eka2l1::vec4(color.x, color.y, color.z, min) * (1.0f - max);
 
-                    dest[x * 4 + y * pack_state_ptr->atlas_size_.x * 4 + 0] = color.x;
-                    dest[x * 4 + y * pack_state_ptr->atlas_size_.x * 4 + 1] = color.y;
-                    dest[x * 4 + y * pack_state_ptr->atlas_size_.x * 4 + 2] = color.z;
-                    dest[x * 4 + y * pack_state_ptr->atlas_size_.x * 4 + 3] = color.w;
-
+                    dest[x * 4 + y * atlas_size.x * 4 + 0] = color.x;
+                    dest[x * 4 + y * atlas_size.x * 4 + 1] = color.y;
+                    dest[x * 4 + y * atlas_size.x * 4 + 2] = color.z;
+                    dest[x * 4 + y * atlas_size.x * 4 + 3] = color.w;
                 }
             }
 
-            info[i].x0 = rect.x + 5;
-            info[i].y0 = rect.y + 5;
-            info[i].x1 = rect.x + 5 + bitmap.width / 3;
-            info[i].y1 = rect.y + 5 + bitmap.rows;
+            info[i].x0 = static_cast<std::uint16_t>(positions[i].x);
+            info[i].y0 = static_cast<std::uint16_t>(positions[i].y);
+            info[i].x1 = static_cast<std::uint16_t>(positions[i].x + bitmap.width / 3);
+            info[i].y1 = static_cast<std::uint16_t>(positions[i].y + bitmap.rows);
             info[i].xadv = ft_convention_to_float(glyph->metrics.horiAdvance);
             info[i].xoff = static_cast<float>(glyph->bitmap_left);
             info[i].yoff = static_cast<float>(-glyph->bitmap_top);
@@ -443,9 +436,6 @@ namespace eka2l1::epoc::adapter {
         return true;
     }
 
-    void freetype_font_adapter::end_get_atlas(const std::int32_t handle) {
-        pack_states_.remove(handle);
-    }
 
     bool freetype_font_adapter::does_glyph_exist(std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier) {
         if (idx >= faces_.size()) {

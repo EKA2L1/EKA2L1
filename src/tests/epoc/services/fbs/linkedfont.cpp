@@ -23,6 +23,7 @@
 #include <services/fbs/linked_font_config.h>
 
 #include <set>
+#include <vector>
 
 using namespace eka2l1;
 
@@ -172,16 +173,39 @@ namespace {
             return advance_;
         }
 
-        std::int32_t begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) override {
-            return 0;
-        }
+        std::vector<int> measured_codes_;
+        std::vector<int> rendered_codes_;
+        std::uint32_t last_atlas_metric_identifier_ = 0xFFFFFFFF;
 
-        bool get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point,
-            const char16_t num_code, const std::uint32_t metric_identifier, epoc::adapter::character_info *info) override {
+        bool measure_atlas_glyphs(const std::size_t idx, const int *codes, const std::size_t count,
+            const std::uint32_t metric_identifier, eka2l1::vec2 *sizes) override {
+            last_atlas_metric_identifier_ = metric_identifier;
+
+            for (std::size_t i = 0; i < count; i++) {
+                measured_codes_.push_back(codes[i]);
+                sizes[i] = codepoints_.count(codes[i]) ? eka2l1::vec2(4, 6) : eka2l1::vec2(0, 0);
+            }
+
             return true;
         }
 
-        void end_get_atlas(const std::int32_t handle) override {
+        bool render_atlas_glyphs(const std::size_t idx, const int *codes, const std::size_t count,
+            const std::uint32_t metric_identifier, std::uint8_t *atlas, const eka2l1::vec2 atlas_size,
+            const eka2l1::vec2 *positions, epoc::adapter::character_info *info) override {
+            last_atlas_metric_identifier_ = metric_identifier;
+
+            for (std::size_t i = 0; i < count; i++) {
+                rendered_codes_.push_back(codes[i]);
+
+                info[i] = {};
+                info[i].x0 = static_cast<std::uint16_t>(positions[i].x);
+                info[i].y0 = static_cast<std::uint16_t>(positions[i].y);
+                info[i].x1 = static_cast<std::uint16_t>(positions[i].x + 4);
+                info[i].y1 = static_cast<std::uint16_t>(positions[i].y + 6);
+                info[i].xadv = static_cast<float>(advance_);
+            }
+
+            return true;
         }
 
         std::optional<epoc::open_font_metrics> get_metric_with_uid(const std::size_t face_index, const std::uint32_t uid,
@@ -189,10 +213,15 @@ namespace {
             return std::nullopt;
         }
 
+        // Non-zero when this face renders at a fixed height whatever is asked
+        // for, the way a bitmap face does.
+        std::int16_t settled_height_ = 0;
+
         std::optional<epoc::open_font_metrics> get_nearest_supported_metric(const std::size_t face_index,
             const std::uint16_t targeted_font_size, std::uint32_t *metric_identifier, bool is_design_font_size) override {
             epoc::open_font_metrics metrics{};
             metrics.design_height = static_cast<std::int16_t>(targeted_font_size);
+            metrics.max_height = settled_height_ ? settled_height_ : static_cast<std::int16_t>(targeted_font_size);
 
             if (metric_identifier) {
                 *metric_identifier = targeted_font_size;
@@ -211,6 +240,7 @@ namespace {
             const std::uint16_t targeted_font_size, std::uint32_t *metric_identifier, bool is_design_font_size) override {
             epoc::open_font_metrics metrics{};
             metrics.design_height = static_cast<std::int16_t>(targeted_font_size);
+            metrics.max_height = settled_height_ ? settled_height_ : static_cast<std::int16_t>(targeted_font_size);
 
             // Whatever the size, this face only has two bitmaps.
             if (metric_identifier) {
@@ -387,6 +417,64 @@ TEST_CASE("linked_font_adapter_translates_metric_identifiers", "fbs") {
     // ...while the other component is addressed the way it expects, by size.
     REQUIRE(linked.get_glyph_advance(0, CJK_CODE, metric_identifier, false) == 13);
     REQUIRE(cjk.last_metric_identifier_ == 17);
+}
+
+TEST_CASE("linked_font_adapter_packs_each_glyph_from_the_component_that_has_it", "fbs") {
+    // The atlas is how S60 UI text actually reaches the screen, so a component
+    // whose glyphs never enter it is of no use for anything the canonical face
+    // lacks -- which is every character the typeface was linked together for.
+    fake_font_adapter latin({ LATIN_CODE }, 7);
+    fake_font_adapter cjk({ CJK_CODE }, 13);
+
+    epoc::adapter::linked_font_file_adapter linked({ { &latin, 0 }, { &cjk, 0 } }, 0, {});
+
+    const int codes[] = { LATIN_CODE, CJK_CODE };
+    eka2l1::vec2 sizes[2] = {};
+
+    REQUIRE(linked.measure_atlas_glyphs(0, codes, 2, 0, sizes));
+
+    // Each component is asked only about what it can draw, and both glyphs
+    // come back with a size.
+    REQUIRE(latin.measured_codes_ == std::vector<int>{ LATIN_CODE });
+    REQUIRE(cjk.measured_codes_ == std::vector<int>{ CJK_CODE });
+    REQUIRE(sizes[0].x > 0);
+    REQUIRE(sizes[1].x > 0);
+
+    std::vector<std::uint8_t> atlas(64 * 64, 0);
+    const eka2l1::vec2 positions[] = { { 1, 2 }, { 20, 30 } };
+    epoc::adapter::character_info info[2] = {};
+
+    REQUIRE(linked.render_atlas_glyphs(0, codes, 2, 0, atlas.data(), { 64, 64 }, positions, info));
+
+    REQUIRE(latin.rendered_codes_ == std::vector<int>{ LATIN_CODE });
+    REQUIRE(cjk.rendered_codes_ == std::vector<int>{ CJK_CODE });
+
+    // Placement is reported back in the caller's order, not the order the
+    // components happened to be consulted in.
+    REQUIRE(info[0].x0 == 1);
+    REQUIRE(info[0].y0 == 2);
+    REQUIRE(info[1].x0 == 20);
+    REQUIRE(info[1].y0 == 30);
+}
+
+TEST_CASE("linked_font_adapter_sizes_fallbacks_off_the_canonical", "fbs") {
+    // A bitmap canonical stocks a handful of sizes and takes the nearest, so a
+    // request it cannot honour costs it nothing. A scalable fallback handed
+    // that same request renders to it exactly -- at two pixels the glyphs come
+    // out one pixel square. What keeps a linked typeface looking like one face
+    // is sizing the fallback off what the canonical settled on.
+    indexed_font_adapter device({ LATIN_CODE }, 7);
+    device.settled_height_ = 13;
+
+    fake_font_adapter cjk({ CJK_CODE }, 13);
+
+    epoc::adapter::linked_font_file_adapter linked({ { &device, 0 }, { &cjk, 0 } }, 0, {});
+
+    std::uint32_t metric_identifier = 0;
+    REQUIRE(linked.get_nearest_supported_metric(0, 2, &metric_identifier, false).has_value());
+
+    REQUIRE(linked.get_glyph_advance(0, CJK_CODE, metric_identifier, false) == 13);
+    REQUIRE(cjk.last_metric_identifier_ == 13);
 }
 
 TEST_CASE("linked_font_adapter_asks_components_for_the_face_format", "fbs") {

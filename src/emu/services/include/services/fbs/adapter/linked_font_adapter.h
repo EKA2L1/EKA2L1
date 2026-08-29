@@ -21,6 +21,7 @@
 
 #include <services/fbs/adapter/font_adapter.h>
 
+#include <map>
 #include <unordered_map>
 #include <vector>
 
@@ -88,6 +89,17 @@ namespace eka2l1::epoc::adapter {
         // than nothing).
         std::size_t component_index_for(const std::uint32_t code, const std::uint32_t metric_identifier);
 
+        // Can this component draw into an atlas made for the canonical one?
+        // Only if it writes the same pixel format.
+        bool can_share_atlas(const std::size_t component_index);
+
+        // Group `codes` by the component that draws each of them, then hand
+        // every group to `handler` as one batch, along with where each entry
+        // came from in the caller's arrays.
+        template <typename F>
+        bool for_each_component_group(const int *codes, const std::size_t count,
+            const std::uint32_t metric_identifier, F handler);
+
     public:
         explicit linked_font_file_adapter(std::vector<component> components, const std::size_t canonical,
             const open_font_face_attrib &attrib);
@@ -112,10 +124,11 @@ namespace eka2l1::epoc::adapter {
         std::uint32_t get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint,
             const std::uint32_t metric_identifier, const bool vertical = false) override;
 
-        std::int32_t begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) override;
-        bool get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point,
-            const char16_t num_code, const std::uint32_t metric_identifier, character_info *info) override;
-        void end_get_atlas(const std::int32_t handle) override;
+        bool measure_atlas_glyphs(const std::size_t idx, const int *codes, const std::size_t count,
+            const std::uint32_t metric_identifier, eka2l1::vec2 *sizes) override;
+        bool render_atlas_glyphs(const std::size_t idx, const int *codes, const std::size_t count,
+            const std::uint32_t metric_identifier, std::uint8_t *atlas, const eka2l1::vec2 atlas_size,
+            const eka2l1::vec2 *positions, character_info *info) override;
         std::uint8_t get_atlas_bitmap_bits_per_pixel() override;
 
         std::optional<open_font_metrics> get_metric_with_uid(const std::size_t face_index, const std::uint32_t uid,
