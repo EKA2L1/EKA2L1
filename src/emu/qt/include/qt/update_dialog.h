@@ -41,6 +41,7 @@ private:
 
     std::string new_commit_hash_;
     QString download_url_;
+    QString release_page_url_;
     QNetworkReply *download_reply_;
     QFile *downloaded_file_;
 
