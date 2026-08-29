@@ -249,7 +249,15 @@ jobs:
       with:
         name: eka2l1-${{ steps.git_short_sha.outputs.value }}-${{ matrix.label }}
         path: build/bin
-      if: matrix.label != 'linux'
+      if: matrix.label == 'windows'
+
+    # The bundle left in build/bin is what macdeployqt packed into the DMG, not
+    # a second deliverable, and the DMG is what people install from.
+    - uses: actions/upload-artifact@v4
+      with:
+        name: eka2l1-${{ steps.git_short_sha.outputs.value }}-${{ matrix.label }}
+        path: build/bin/EKA2L1.dmg
+      if: matrix.label == 'macos'
 
     - uses: actions/upload-artifact@v4
       with:
@@ -470,7 +478,7 @@ jobs:
     - name: Rename artifacts for release
       run: |
         (cd windows-files && zip -r ../EKA2L1-Windows-x86_64.zip .)
-        (cd mac-files && zip -r ../EKA2L1-MacOS-x86_64.zip .)
+        mv mac-files/EKA2L1.dmg EKA2L1-MacOS-arm64.dmg
         mv eka2l1-qt-x64.AppImage EKA2L1-Linux-x86_64.AppImage
         mv eka2l1-${{ steps.git_short_sha.outputs.value }}.apk EKA2L1-Android.apk
 
@@ -489,7 +497,7 @@ jobs:
         prerelease: false
         files: |
           EKA2L1-Windows-x86_64.zip
-          EKA2L1-MacOS-x86_64.zip
+          EKA2L1-MacOS-arm64.dmg
           EKA2L1-Linux-x86_64.AppImage
           EKA2L1-Android.apk
           EKA2L1-iOS-unsigned.ipa
