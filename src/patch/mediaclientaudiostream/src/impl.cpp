@@ -31,7 +31,14 @@
 
 #include <e32std.h>
 
-static const TUint32 KWaitBufferTimeInMicroseconds = 100000;
+// How long the client is given to hand over the next buffer once the sound device has
+// run out of queued data before we treat it as "the client is done" and report
+// KErrUnderflow. On hardware the client is only ever this late when it really has
+// stopped streaming; under emulation the whole guest can be held up for longer than
+// that by host-side work, and a client that takes KErrUnderflow as terminal (Puyo Pop
+// does) never recovers. A client that explicitly announced the end of its stream does
+// not wait at all - see HandleBufferInsufficient().
+static const TUint32 KWaitBufferTimeInMicroseconds = 500000;
 
 // This sits between the redraw priority (50) and ws events priority (100) of the UI framework.
 // Audio is intensive, we don't want redraw too take two much time, but at same time, we also
@@ -123,6 +130,11 @@ void CMMFMdaOutputBufferQueue::RunL() {
         if (iCopied) {
             iCopied->iLink.Deque();
             delete iCopied;
+
+            // WriteAndWait() below normally hands us the next node, but it is skipped
+            // when the stream was cancelled or stopped. Leaving the freed node here
+            // would hand CleanQueue() a dangling buffer to report.
+            iCopied = NULL;
         }
     }
 
@@ -135,11 +147,30 @@ void CMMFMdaOutputBufferQueue::RunL() {
 void CMMFMdaOutputBufferQueue::CleanQueue() {
     CMMFMdaAudioOutputStream *outputStream = (CMMFMdaAudioOutputStream*) iStream;
 
-    if (iCopied)
-        outputStream->iCallback.MaoscBufferCopied(KErrAbort, *iCopied->iBuffer);
+    // Take the queue away before telling the client about it: MaoscBufferCopied may write
+    // a new buffer or stop us again, and walking the live queue would either never
+    // terminate or touch a node the callback has already taken back.
+    TDblQue<TMMFMdaBufferNode> aborted(_FOFF(TMMFMdaBufferNode, iLink));
 
-    CMMFMdaBufferQueue::CleanQueue();
+    while (!iBufferNodes.IsEmpty()) {
+        TMMFMdaBufferNode *node = iBufferNodes.First();
+        node->iLink.Deque();
+
+        aborted.AddLast(*node);
+    }
+
     iCopied = NULL;
+
+    // Every buffer the client handed over is now given back. MMF aborts all of them, not
+    // only the one that happened to be in flight - a client that waits for its buffers
+    // before reusing or freeing them would otherwise never get the rest back.
+    while (!aborted.IsEmpty()) {
+        TMMFMdaBufferNode *node = aborted.First();
+        node->iLink.Deque();
+
+        outputStream->iCallback.MaoscBufferCopied(KErrAbort, *node->iBuffer);
+        delete node;
+    }
 }
 
 void CMMFMdaOutputBufferQueue::StartTransfer() {
@@ -246,6 +277,10 @@ void CMMFMdaAudioStream::ConstructBaseL(TBool aIsIn) {
 
 TBool CMMFMdaAudioStream::HasAlreadyPlay() const {
     return (iOpen.IsActive() || (iState != EMdaStateStop));
+}
+
+TBool CMMFMdaAudioStream::IsOpenPending() const {
+    return iOpen.IsActive();
 }
 
 TInt CMMFMdaAudioStream::RequestStop() {

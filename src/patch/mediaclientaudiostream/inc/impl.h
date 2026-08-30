@@ -139,6 +139,7 @@ public:
     void SetPriorityUnimplNotified();
     
     TBool HasAlreadyPlay() const;
+    TBool IsOpenPending() const;
 };
 
 class CMMFMdaAudioOutputStream : public CMMFMdaAudioStream {
