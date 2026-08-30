@@ -210,7 +210,7 @@ private slots:
     void on_btnet_friends_dialog_requested_from_conf();
     void on_action_stretch_to_fill_toggled(bool checked);
     void on_question_dialog_open_request();
-    void on_app_exited(eka2l1::kernel::process *proc);
+    void on_app_exited(const int exit_type, const int exit_reason, const QString exit_category);
 
 signals:
     void progress_dialog_change(const std::size_t now, const std::size_t total);
@@ -225,7 +225,7 @@ signals:
     void input_dialog_close_request();
     void install_ngage_game_name_available(QString name);
     void question_dialog_open_request();
-    void app_exited(eka2l1::kernel::process *proc);
+    void app_exited(const int exit_type, const int exit_reason, const QString exit_category);
 
 public:
     main_window(QApplication &app, QWidget *parent, eka2l1::desktop::emulator &emulator_state);

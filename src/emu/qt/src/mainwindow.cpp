@@ -1083,21 +1083,22 @@ void main_window::switch_to_game_display_mode() {
     on_fullscreen_toogled(ui_->action_fullscreen->isChecked());
 }
 
-void main_window::on_app_exited(eka2l1::kernel::process *target_proc) {
+void main_window::on_app_exited(const int exit_type, const int exit_reason, const QString exit_category) {
+    const eka2l1::kernel::entity_exit_type exit_type_enum = static_cast<eka2l1::kernel::entity_exit_type>(exit_type);
     bool shown_msg = false;
 
-    if (target_proc->get_exit_type() == eka2l1::kernel::entity_exit_type::kill) {
-        if ((target_proc->get_exit_reason() == 0) || (target_proc->get_exit_category() == u"None")) {
+    if (exit_type_enum == eka2l1::kernel::entity_exit_type::kill) {
+        if ((exit_reason == 0) || (exit_category == QStringLiteral("None"))) {
             tray_icon_->showMessage(tr("Application exited"), tr("The application exited normally"), emu_icon_, 1500);
             shown_msg = true;
         }
     }
 
     if (!shown_msg) {
-        QString category_exit = QString::fromStdU16String(target_proc->get_exit_category());
-        int reason_exit = target_proc->get_exit_reason();
+        const QString &category_exit = exit_category;
+        const int reason_exit = exit_reason;
 
-        switch (target_proc->get_exit_type()) {
+        switch (exit_type_enum) {
         case eka2l1::kernel::entity_exit_type::kill:
             tray_icon_->showMessage(tr("Application exited"), tr("The application was killed with code: %1/%2").arg(category_exit).arg(reason_exit), emu_icon_, 1500);
             break;
@@ -1123,7 +1124,15 @@ void main_window::on_app_exited(eka2l1::kernel::process *target_proc) {
 }
 
 std::function<void(eka2l1::kernel::process *)> main_window::get_process_exit_callback() {
-    return [this](eka2l1::kernel::process *proc) { emit app_exited(proc); };
+    // Snapshot the exit details here rather than handing the GUI thread a process pointer.
+    // The callback runs from process::kill on the emulator thread and the process is torn
+    // down as soon as it returns, so by the time the queued slot runs the pointer is stale.
+    // Qt also refuses to queue an unregistered pointer type, which used to drop the signal
+    // entirely and leave the window stuck on the dead app instead of the application list.
+    return [this](eka2l1::kernel::process *proc) {
+        emit app_exited(static_cast<int>(proc->get_exit_type()), proc->get_exit_reason(),
+            QString::fromStdU16String(proc->get_exit_category()));
+    };
 }
 
 void main_window::set_discord_presence_current_playing(const std::string &name) {

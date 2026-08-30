@@ -20,17 +20,32 @@
 #include "watcher_unix.h"
 #include <common/log.h>
 
+#include <cerrno>
+#include <poll.h>
+#include <sys/eventfd.h>
 #include <sys/inotify.h>
 
 namespace eka2l1::common {
     static constexpr std::size_t EVENT_MAX_SIZE = sizeof(struct inotify_event) + 16;
 
     directory_watcher_impl::directory_watcher_impl()
-        : should_stop(false) {
+        : stop_event_(-1)
+        , should_stop(false) {
         instance_ = inotify_init();
 
         if (instance_ == -1) {
             LOG_ERROR(COMMON, "Error creating INotify instance!");
+            return;
+        }
+
+        stop_event_ = eventfd(0, EFD_CLOEXEC);
+
+        if (stop_event_ == -1) {
+            LOG_ERROR(COMMON, "Error creating the watcher stop event!");
+
+            close(instance_);
+            instance_ = -1;
+
             return;
         }
 
@@ -53,11 +68,43 @@ namespace eka2l1::common {
             };
 
             while (!should_stop) {
+                struct pollfd waits[2];
+
+                waits[0].fd = instance_;
+                waits[0].events = POLLIN;
+                waits[0].revents = 0;
+                waits[1].fd = stop_event_;
+                waits[1].events = POLLIN;
+                waits[1].revents = 0;
+
+                if (poll(waits, 2, -1) == -1) {
+                    if (errno == EINTR) {
+                        continue;
+                    }
+
+                    LOG_ERROR(COMMON, "Error waiting for notify event!");
+                    break;
+                }
+
+                // The destructor asked us to leave. Check this before draining inotify so
+                // that a folder still being touched can not keep the thread here.
+                if (waits[1].revents & POLLIN) {
+                    break;
+                }
+
+                if (!(waits[0].revents & POLLIN)) {
+                    continue;
+                }
+
                 const ssize_t length = read(instance_, &events_[0], events_.size());
 
-                if (length == -1) {
+                if (length <= 0) {
+                    if ((length == -1) && ((errno == EINTR) || (errno == EAGAIN))) {
+                        continue;
+                    }
+
                     LOG_ERROR(COMMON, "Error reading notify event!");
-                    should_stop = true;
+                    break;
                 }
 
                 std::size_t i = 0;
@@ -65,7 +112,7 @@ namespace eka2l1::common {
                 int last_wd = -1;
 
                 // Parse all event
-                while (i < length) {
+                while (i < static_cast<std::size_t>(length)) {
                     struct inotify_event *evt = reinterpret_cast<struct inotify_event *>(&events_[i]);
 
                     directory_change change;
@@ -118,13 +165,29 @@ namespace eka2l1::common {
     }
 
     directory_watcher_impl::~directory_watcher_impl() {
+        if (instance_ == -1) {
+            return;
+        }
+
         for (auto &wd : container_) {
             inotify_rm_watch(instance_, wd);
         }
 
         should_stop = true;
-        wait_thread_->join();
 
+        // Kick the watch thread out of poll(). Without this it stays blocked until some
+        // watched folder happens to change, and the join below never returns: emulator
+        // shutdown runs this destructor, so the whole process hangs on exit.
+        const std::uint64_t wake = 1;
+        if (write(stop_event_, &wake, sizeof(wake)) != static_cast<ssize_t>(sizeof(wake))) {
+            LOG_ERROR(COMMON, "Error waking the watch thread up for shutdown!");
+        }
+
+        if (wait_thread_) {
+            wait_thread_->join();
+        }
+
+        close(stop_event_);
         close(instance_);
     }
 

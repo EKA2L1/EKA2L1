@@ -40,6 +40,10 @@ namespace eka2l1::common {
 
         int instance_;
 
+        // Written to by the destructor so the watch thread wakes up from its poll instead
+        // of sitting in inotify's read() forever.
+        int stop_event_;
+
         std::atomic<bool> should_stop;
 
         std::vector<int> container_;
