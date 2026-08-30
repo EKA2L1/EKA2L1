@@ -749,28 +749,17 @@ namespace eka2l1 {
                 }
             }
 
-            std::u16string vert_path_no_root = vert_path_copy.substr(root.size());
-
-            // Fold to match what validate_for_host() did to the tree when it mounted the
-            // drive -- same predicate, so the two cannot drift apart.
-            if (common::is_platform_case_sensitive()) {
-                vert_path_no_root = common::lowercase_ucs2_string(vert_path_no_root);
+            const std::u16string vert_path_no_root = vert_path_copy.substr(root.size());
+            const std::u16string exact_path = eka2l1::add_path(map_path, vert_path_no_root);
+            if (common::exists(common::ucs2_to_utf8(exact_path))) {
+                return exact_path;
             }
 
-            const std::u16string folded_path = eka2l1::add_path(map_path, vert_path_no_root);
-            const std::string map_path_utf8 = common::ucs2_to_utf8(map_path);
-
-            if (common::is_path_case_insensitive(map_path_utf8)
-                || common::exists(common::ucs2_to_utf8(folded_path))) {
-                return folded_path;
-            }
-
-            // validate_for_host() folds the whole tree to lower case when it mounts a drive,
-            // which is why looking up the folded name works at all. It cannot cover what
-            // arrives afterwards, though: a game data folder copied straight into the drive
-            // through a file manager keeps the spelling it came with, and on a volume that
-            // distinguishes case it is then invisible. Recover it from the real entries.
-            return common::utf8_to_ucs2(common::resolve_case_insensitive_path(map_path_utf8,
+            // Symbian file systems are case-insensitive but case-preserving. Resolve from
+            // the real entries on hosts that distinguish case instead of lowercasing the
+            // guest path: directory enumeration must still return the spelling installed
+            // by the application.
+            return common::utf8_to_ucs2(common::resolve_case_insensitive_path(common::ucs2_to_utf8(map_path),
                 common::ucs2_to_utf8(vert_path_no_root)));
         }
 
@@ -922,11 +911,6 @@ namespace eka2l1 {
                 return std::unique_ptr<directory>(nullptr);
             }
 
-            if (common::is_platform_case_sensitive()) {
-                filter = common::lowercase_string(filter);
-            }
-
-
             return std::make_unique<physical_directory>(this, new_path_utf8,
                 common::ucs2_to_utf8(vir_path), filter, type, attrib);
         }
@@ -982,7 +966,7 @@ namespace eka2l1 {
                     return nullptr;
                 }
 
-                if ((mode & WRITE_MODE) && (mappings[static_cast<int>(drv)].first.attribute & io_attrib_write_protected)) {
+                if ((mode & (WRITE_MODE | APPEND_MODE)) && (mappings[static_cast<int>(drv)].first.attribute & io_attrib_write_protected)) {
                     LOG_ERROR(VFS, "Request to open {} with write mode, but the drive is write-protected!",
                         common::ucs2_to_utf8(path));
 
@@ -1058,18 +1042,8 @@ namespace eka2l1 {
         }
 
         void validate_for_host() override {
-            if (common::is_platform_case_sensitive()) {
-                LOG_INFO(VFS, "Iterating through all emulated drive to lowercase all filesystem entities!");
-
-                for (auto &mapping : mappings) {
-                    if (!mapping.second) {
-                        continue;
-                    }
-
-                    common::copy_folder(mapping.first.real_path, mapping.first.real_path, common::FOLDER_COPY_FLAG_LOWERCASE_NAME,
-                        nullptr);
-                }
-            }
+            // Case-sensitive hosts are handled at lookup time. Rewriting a mounted tree
+            // loses the spelling that Symbian directory enumeration is required to keep.
         }
     };
 
