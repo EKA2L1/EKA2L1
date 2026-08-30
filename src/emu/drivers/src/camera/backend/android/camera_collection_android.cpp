@@ -33,40 +33,59 @@ namespace eka2l1::drivers::camera {
     }
 
     void collection_android::handle_image_capture_delivered(int index, const void *bytes, const std::size_t size, const int error) {
-        const std::lock_guard<std::mutex> guard(reserve_lock_);
-        auto ite = current_reserved_.find(index);
-        if ((ite != current_reserved_.end()) && (ite->second != nullptr)) {
-            const std::lock_guard<std::mutex> guard(ite->second->callback_lock_);
-            if (ite->second->active_capture_img_callback_) {
-                ite->second->active_capture_img_callback_(bytes, size, error);
+        camera_capture_image_done_callback callback;
+
+        {
+            const std::lock_guard<std::mutex> reserve_guard(reserve_lock_);
+            auto ite = current_reserved_.find(index);
+            if ((ite != current_reserved_.end()) && (ite->second != nullptr)) {
+                const std::lock_guard<std::mutex> callback_guard(ite->second->callback_lock_);
+                callback = ite->second->active_capture_img_callback_;
                 ite->second->active_capture_img_callback_ = nullptr;
+            } else {
+                LOG_TRACE(DRIVER_CAM, "Unable to find active reserved camera with index {} for returning capture bytes", index);
             }
-        } else {
-            LOG_TRACE(DRIVER_CAM, "Unable to find active reserved camera with index {} for returning capture bytes", index);
+        }
+
+        // The HLE completion takes the guest kernel lock. Camera teardown may
+        // already hold that lock while waiting for reserve_lock_, so never
+        // invoke a backend callback under either driver mutex.
+        if (callback) {
+            callback(bytes, size, error);
         }
     }
 
     void collection_android::handle_frame_viewfinder_delivered(int index, const void *bytes, const std::size_t size, const int error) {
-        const std::lock_guard<std::mutex> guard(reserve_lock_);
-        auto ite = current_reserved_.find(index);
-        if ((ite != current_reserved_.end()) && (ite->second != nullptr)) {
-            const std::lock_guard<std::mutex> guard(ite->second->callback_lock_);
-            if (ite->second->active_frame_viewfinder_callback_) {
-                ite->second->active_frame_viewfinder_callback_(bytes, size, error);
+        camera_capture_image_done_callback callback;
+
+        {
+            const std::lock_guard<std::mutex> reserve_guard(reserve_lock_);
+            auto ite = current_reserved_.find(index);
+            if ((ite != current_reserved_.end()) && (ite->second != nullptr)) {
+                const std::lock_guard<std::mutex> callback_guard(ite->second->callback_lock_);
+                callback = ite->second->active_frame_viewfinder_callback_;
+            } else {
+                LOG_TRACE(DRIVER_CAM, "Unable to find active reserved camera with index {} for returning capture bytes", index);
             }
-        } else {
-            LOG_TRACE(DRIVER_CAM, "Unable to find active reserved camera with index {} for returning capture bytes", index);
+        }
+
+        if (callback) {
+            callback(bytes, size, error);
         }
     }
 
     bool collection_android::reserved_wants_new_frame(int index) {
-        auto ite = current_reserved_.find(index);
-        if ((ite != current_reserved_.end())  && (ite->second != nullptr)) {
-            const std::lock_guard<std::mutex> guard(ite->second->callback_lock_);
-            if (ite->second->wants_new_frame_callback_) {
-                return ite->second->wants_new_frame_callback_();
+        camera_wants_new_frame_callback callback;
+
+        {
+            const std::lock_guard<std::mutex> reserve_guard(reserve_lock_);
+            auto ite = current_reserved_.find(index);
+            if ((ite != current_reserved_.end())  && (ite->second != nullptr)) {
+                const std::lock_guard<std::mutex> callback_guard(ite->second->callback_lock_);
+                callback = ite->second->wants_new_frame_callback_;
             }
         }
-        return false;
+
+        return callback ? callback() : false;
     }
 }

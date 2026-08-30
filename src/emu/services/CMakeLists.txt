@@ -38,6 +38,7 @@ add_library(epocservs
         include/services/centralrepo/centralrepo.h
         include/services/centralrepo/common.h
         include/services/centralrepo/repo.h
+        include/services/camera/camera.h
         include/services/comm/comm.h
         include/services/internet/protocols/common.h
         include/services/internet/protocols/inet.h
@@ -192,6 +193,7 @@ add_library(epocservs
         src/centralrepo/centralrepo.cpp
         src/centralrepo/cre.cpp
         src/centralrepo/repo.cpp
+        src/camera/camera.cpp
         src/comm/comm.cpp
         src/internet/protocols/overall.cpp
         src/internet/protocols/resolver.cpp

@@ -35,6 +35,7 @@
 #include <services/backup/backup.h>
 #include <services/bluetooth/bt.h>
 #include <services/bluetooth/btman.h>
+#include <services/camera/camera.h>
 #include <services/centralrepo/centralrepo.h>
 #include <services/comm/comm.h>
 #include <services/domain/domain.h>
@@ -268,6 +269,10 @@ namespace eka2l1 {
             CREATE_SERVER_D(sys, fs_server);
             CREATE_SERVER(sys, loader_server);
             CREATE_SERVER(sys, shutdown_server);
+
+            if (sys->get_kernel_system()->is_eka1()) {
+                CREATE_SERVER(sys, camera_server);
+            }
 
             config::state *cfg = sys->get_config();
 
