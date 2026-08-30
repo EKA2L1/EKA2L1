@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/algorithm.h>
 #include <common/log.h>
 #include <drivers/audio/backend/dsp_shared.h>
 
@@ -26,6 +27,7 @@ namespace eka2l1::drivers {
         , aud_(aud)
         , virtual_stop(true)
         , more_requested(false)
+        , last_write_samples_(0)
         , avg_frame_count_(0) {
     }
 
@@ -126,6 +128,7 @@ namespace eka2l1::drivers {
 
         virtual_stop = true;
         more_requested = false;
+        last_write_samples_.store(0, std::memory_order_relaxed);
 
         buffer_.reset();
 
@@ -140,13 +143,33 @@ namespace eka2l1::drivers {
             buffer_.push(data, (data_size + 1) / 2);
         }
 
+        last_write_samples_.store((data_size + 1) / 2, std::memory_order_relaxed);
+
         more_requested = false;
         return true;
     }
 
+    std::size_t dsp_output_stream_shared::low_water_mark_samples() const {
+        // Real MMF hands the client buffer to the sound device as soon as it arrives and
+        // completes the copy notification right away, so the client always has a whole
+        // buffer period to prepare the next one. Only asking for more once the ring is
+        // nearly dry (four render callbacks, tens of milliseconds) shrinks that budget to
+        // almost nothing: a client that misses the window once sees the stream run dry,
+        // reports KErrUnderflow and - Puyo Pop on the N-Gage does exactly this - never
+        // streams again. Keep a whole guest buffer queued ahead instead, so the guest gets
+        // its own buffer period to answer, and cap the lookahead so a title writing huge
+        // buffers does not turn into seconds of latency.
+        const std::size_t hardware_low = avg_frame_count_ * channels_ * 4;
+        const std::size_t half_second = static_cast<std::size_t>(freq_) * common::max<std::size_t>(channels_, 1) / 2;
+        const std::size_t guest_buffer = common::min<std::size_t>(
+            last_write_samples_.load(std::memory_order_relaxed), half_second);
+
+        return common::max(hardware_low, guest_buffer);
+    }
+
     bool dsp_output_stream_shared::internal_decode_running_out() {
         if (format_ == PCM16_FOUR_CC_CODE) {
-            return (buffer_.size() <= (avg_frame_count_ * channels_ * 4));
+            return (buffer_.size() <= low_water_mark_samples());
         }
 
         return false;
@@ -206,17 +229,26 @@ namespace eka2l1::drivers {
     }
 
     std::uint64_t dsp_output_stream_shared::position() {
+        if (!freq_) {
+            return 0;
+        }
+
         return samples_played_.load(std::memory_order_relaxed) * 1000000ULL / freq_;
     }
 
     std::uint64_t dsp_output_stream_shared::real_time_position() {
-        std::uint64_t frame_streamed = 0;
-        if (!stream_->current_frame_position(&frame_streamed)) {
-            LOG_ERROR(DRIVER_AUD, "Fail to retrieve streamed sample count!");
-            return 0;
-        }
-
-        return frame_streamed * channels_ * 1000000ULL / freq_;
+        // Counts the guest's own audio as it reaches the hardware, not wall clock. The
+        // backing hardware stream has a free-running frame counter, but it keeps ticking
+        // through the silence we pad an empty ring with and through a virtual stop, and it
+        // survives reset_stat(). Reporting that as CMdaAudioOutputStream::Position() breaks
+        // guests two ways: a title restarting a stream (reset_stat + stop + write, which is
+        // what the media client patch does) reads the whole previous playback back, and a
+        // title that paces its writes off the position - Puyo Pop feeds one buffer per
+        // reported step - sees the position jump several buffers ahead whenever we are late
+        // and stops feeding. samples_played_ only advances on samples actually taken out of
+        // the ring and is cleared by reset_stat(), which is the position a real device
+        // reports.
+        return position();
     }
 
     dsp_input_stream_shared::dsp_input_stream_shared(drivers::audio_driver *aud)
