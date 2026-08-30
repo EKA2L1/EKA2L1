@@ -1135,7 +1135,7 @@ namespace eka2l1 {
 
         const bool copied = common::copy_folder(
             folder_path, drive_e_path_root,
-            common::is_platform_case_sensitive() ? common::FOLDER_COPY_FLAG_LOWERCASE_NAME : 0,
+            0,
             [&](const std::size_t copied, const std::size_t total) {
                 if (progress_cb)
                     progress_cb(copied * 100 / total, total_percentage);
@@ -1156,16 +1156,13 @@ namespace eka2l1 {
 
         if (!explicit_lib_copy.empty() || !explicit_program_copy.empty()) {
             std::uint32_t percentage_per_explicit_copy = (!explicit_lib_copy.empty() && !explicit_program_copy.empty()) ? 50 : 100;
-            std::uint32_t flags_copy = 0;
-
-            common::is_platform_case_sensitive() ? (flags_copy |= common::FOLDER_COPY_FLAG_LOWERCASE_NAME) : 0;
             std::uint32_t current_perct = 100;
 
             const std::string app_folder_dest = eka2l1::add_path(eka2l1::add_path(drive_e_path, "apps\\"), specific_app + "\\");
 
             if (!explicit_lib_copy.empty()) {
                 common::copy_folder(eka2l1::add_path(system_folder_path, explicit_lib_copy + "\\"), app_folder_dest,
-                                    flags_copy, [&](const std::size_t copied, const std::size_t total) {
+                                    0, [&](const std::size_t copied, const std::size_t total) {
                     if (progress_cb)
                         progress_cb(current_perct + (copied * percentage_per_explicit_copy / total), total_percentage);
                 });
@@ -1175,7 +1172,7 @@ namespace eka2l1 {
 
             if (!explicit_program_copy.empty()) {
                 common::copy_folder(eka2l1::add_path(system_folder_path, explicit_program_copy + "\\"), app_folder_dest,
-                                    flags_copy, [&](const std::size_t copied, const std::size_t total) {
+                                    0, [&](const std::size_t copied, const std::size_t total) {
                     if (progress_cb)
                         progress_cb(current_perct + (copied * percentage_per_explicit_copy / total), total_percentage);
                 });

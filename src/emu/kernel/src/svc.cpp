@@ -2468,6 +2468,11 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(void, thread_set_flags, kernel::handle h, std::uint32_t clear_mask, std::uint32_t set_mask) {
         thread_ptr thr = kern->get<kernel::thread>(h);
 
+        if (!thr) {
+            LOG_ERROR(KERNEL, "invalid thread handle 0x{:x}", h);
+            return;
+        }
+
         uint32_t org_flags = thr->get_flags();
         uint32_t new_flags = ((org_flags & ~clear_mask) | set_mask);
 
@@ -3721,6 +3726,16 @@ namespace eka2l1::epoc {
             name_of_sema = common::ucs2_to_utf8(name_of_sema_des->to_std_string(target_process));
         }
 
+        // Named kernel objects live in a global namespace. EKA1 clients commonly
+        // try CreateGlobal first and fall back to OpenGlobal on KErrAlreadyExists;
+        // creating a second object here leaves the two clients synchronising on
+        // different semaphores.
+        if ((access_of_sema == kernel::access_type::global_access)
+            && kern->get_by_name_and_type<kernel::legacy::semaphore>(name_of_sema, kernel::object_type::sema)) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_already_exists);
+            return epoc::error_already_exists;
+        }
+
         const kernel::handle h = kern->create_and_add<kernel::legacy::semaphore>(get_handle_owner_from_eka1_attribute(attribute),
                                          name_of_sema, create_info->arg3_, access_of_sema)
                                      .first;
@@ -4126,6 +4141,35 @@ namespace eka2l1::epoc {
         pr->rename(name_to_rename_str);
 
         finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
+    std::int32_t process_kill_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread, const kernel::entity_exit_type exit_type) {
+        kernel::process *pr = kern->get<kernel::process>(create_info->arg0_);
+
+        if (!pr) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
+            return epoc::error_bad_handle;
+        }
+
+        const std::int32_t reason = static_cast<std::int32_t>(create_info->arg1_);
+        std::u16string category = u"None";
+
+        if (exit_type == kernel::entity_exit_type::panic) {
+            epoc::desc16 *category_des = eka2l1::ptr<epoc::desc16>(create_info->arg2_).get(target_thread->owning_process());
+
+            if (!category_des) {
+                finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+                return epoc::error_argument;
+            }
+
+            category = category_des->to_std_string(target_thread->owning_process());
+        }
+
+        // Complete before killing: the target may be the calling process itself.
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        pr->kill(exit_type, category, reason);
         return epoc::error_none;
     }
 
@@ -4916,6 +4960,15 @@ namespace eka2l1::epoc {
             case epoc::eka1_executor::execute_v6_rename_process:
                 return process_rename_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
+            case epoc::eka1_executor::execute_v6_kill_process:
+                return process_kill_eka1(kern, attribute, create_info, finish_signal, crr_thread, kernel::entity_exit_type::kill);
+
+            case epoc::eka1_executor::execute_v6_terminate_process:
+                return process_kill_eka1(kern, attribute, create_info, finish_signal, crr_thread, kernel::entity_exit_type::terminate);
+
+            case epoc::eka1_executor::execute_v6_panic_process:
+                return process_kill_eka1(kern, attribute, create_info, finish_signal, crr_thread, kernel::entity_exit_type::panic);
+
             case epoc::eka1_executor::execute_v6_logon_process:
                 return process_logon_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
@@ -5045,6 +5098,15 @@ namespace eka2l1::epoc {
 
             case epoc::eka1_executor::execute_v80_rename_process:
                 return process_rename_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_kill_process:
+                return process_kill_eka1(kern, attribute, create_info, finish_signal, crr_thread, kernel::entity_exit_type::kill);
+
+            case epoc::eka1_executor::execute_v80_terminate_process:
+                return process_kill_eka1(kern, attribute, create_info, finish_signal, crr_thread, kernel::entity_exit_type::terminate);
+
+            case epoc::eka1_executor::execute_v80_panic_process:
+                return process_kill_eka1(kern, attribute, create_info, finish_signal, crr_thread, kernel::entity_exit_type::panic);
 
             case epoc::eka1_executor::execute_v80_logon_process:
                 return process_logon_eka1(kern, attribute, create_info, finish_signal, crr_thread);
@@ -5214,6 +5276,15 @@ namespace eka2l1::epoc {
 
             case epoc::eka1_executor::execute_v81a_rename_process:
                 return process_rename_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v81a_kill_process:
+                return process_kill_eka1(kern, attribute, create_info, finish_signal, crr_thread, kernel::entity_exit_type::kill);
+
+            case epoc::eka1_executor::execute_v81a_terminate_process:
+                return process_kill_eka1(kern, attribute, create_info, finish_signal, crr_thread, kernel::entity_exit_type::terminate);
+
+            case epoc::eka1_executor::execute_v81a_panic_process:
+                return process_kill_eka1(kern, attribute, create_info, finish_signal, crr_thread, kernel::entity_exit_type::panic);
 
             case epoc::eka1_executor::execute_v81a_logon_process:
                 return process_logon_eka1(kern, attribute, create_info, finish_signal, crr_thread);
@@ -5829,7 +5900,6 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(std::uint32_t, superpage_config) {
         return 0;
     }
-
 
     const eka2l1::hle::func_map svc_register_funcs_v10 = {
         /* FAST EXECUTIVE CALL */
@@ -6684,6 +6754,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC00034, thread_resume),
         BRIDGE_REGISTER(0xC00035, thread_suspend),
         BRIDGE_REGISTER(0xC00037, thread_set_priority_eka1),
+        BRIDGE_REGISTER(0xC0003B, thread_set_flags_eka1),
         BRIDGE_REGISTER(0xC00046, thread_request_complete_eka1),
         BRIDGE_REGISTER(0xC00047, timer_cancel),
         BRIDGE_REGISTER(0xC00048, timer_after_eka1),

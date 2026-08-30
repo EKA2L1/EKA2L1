@@ -435,13 +435,13 @@ namespace eka2l1 {
             }
 
             auto load_registry_task = loading_thread_pool_.submit_loop<std::size_t>(0, register_file_paths.size(),
-                [this, &register_file_paths, &modified, io](std::size_t idx) {
+                [this, &register_file_paths, &modified, io, drv](std::size_t idx) {
                     bool entry_modified = false;
 
                     if (kern->is_eka1()) {
-                        entry_modified = load_registry_oldarch(io, register_file_paths[idx], drive_number(idx % drive_count), language::en);
+                        entry_modified = load_registry_oldarch(io, register_file_paths[idx], drv, language::en);
                     } else {
-                        entry_modified = load_registry(io, register_file_paths[idx], drive_number(idx % drive_count), language::en);
+                        entry_modified = load_registry(io, register_file_paths[idx], drv, language::en);
                     }
 
                     if (entry_modified) {

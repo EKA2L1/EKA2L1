@@ -71,7 +71,10 @@ namespace eka2l1::epoc {
         std::uint32_t unkXX[3];
         std::uint32_t result_handle;
         epoc::owner_type handle_owner_;
+        std::uint32_t trailing_[6];
     };
 
-    static_assert(sizeof(ldr_info_eka1) == 1660);
+    // Symbian OS 6.1's TLoaderInfo constructor initialises through offset 0x690
+    // and RLoader packages the entire 0x694-byte object for IPC.
+    static_assert(sizeof(ldr_info_eka1) == 1684);
 }

@@ -43,6 +43,17 @@ TEST_CASE("absolute", "path_resolving_test") {
     REQUIRE(eka2l1::absolute_path(example_path, current_dir, true) == expected);
 }
 
+TEST_CASE("absolute_rooted_path_uses_current_symbian_drive", "path_resolving_test") {
+    const std::string example_path = "\\log.txt";
+    const std::string current_dir = "E:\\system\\apps\\bowling\\";
+
+    REQUIRE(eka2l1::absolute_path(example_path, current_dir, true) == "E:\\log.txt");
+    REQUIRE(eka2l1::absolute_path(std::string("/log.txt"), current_dir, true) == "E:\\log.txt");
+    REQUIRE(eka2l1::absolute_path(std::u16string(u"\\log.txt"),
+                std::u16string(u"E:\\system\\apps\\bowling\\"), true)
+        == u"E:\\log.txt");
+}
+
 TEST_CASE("add_path_mess", "path_resolving_test") {
     const std::string example_path = "Z:\\sys/bin\\hi";
     const std::string example_path2 = "ha/ma";

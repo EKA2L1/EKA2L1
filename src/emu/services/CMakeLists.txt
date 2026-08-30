@@ -38,6 +38,7 @@ add_library(epocservs
         include/services/centralrepo/centralrepo.h
         include/services/centralrepo/common.h
         include/services/centralrepo/repo.h
+        include/services/camera/camera.h
         include/services/comm/comm.h
         include/services/internet/protocols/common.h
         include/services/internet/protocols/inet.h
@@ -99,6 +100,8 @@ add_library(epocservs
         include/services/msv/store.h
         include/services/notifier/notifier.h
         include/services/notifier/queries.h
+        include/services/posix/op.h
+        include/services/posix/posix.h
         include/services/redir/redir.h
         include/services/remcon/common.h
         include/services/remcon/controller.h
@@ -190,6 +193,7 @@ add_library(epocservs
         src/centralrepo/centralrepo.cpp
         src/centralrepo/cre.cpp
         src/centralrepo/repo.cpp
+        src/camera/camera.cpp
         src/comm/comm.cpp
         src/internet/protocols/overall.cpp
         src/internet/protocols/resolver.cpp
@@ -249,6 +253,7 @@ add_library(epocservs
         src/msv/store.cpp
         src/notifier/notifier.cpp
         src/notifier/queries.cpp
+        src/posix/posix.cpp
         src/redir/redir.cpp
         src/remcon/common.cpp
         src/remcon/controller.cpp
