@@ -50,8 +50,16 @@ namespace eka2l1::drivers {
         // render thread (data_callback()), with no lock in common.
         std::atomic<bool> more_requested;
 
+        // Size in samples of the last buffer the guest handed us. Drives how much
+        // audio we keep queued ahead - see low_water_mark_samples().
+        std::atomic<std::size_t> last_write_samples_;
+
     protected:
         virtual bool internal_decode_running_out();
+
+        // How little unplayed audio may sit in the ring before we ask the guest for
+        // the next buffer.
+        std::size_t low_water_mark_samples() const;
 
         // Stops and releases the backing hardware stream, joining its render
         // thread so no further data_callback() can fire. MUST be invoked at the
