@@ -229,17 +229,26 @@ namespace eka2l1::drivers {
     }
 
     std::uint64_t dsp_output_stream_shared::position() {
+        if (!freq_) {
+            return 0;
+        }
+
         return samples_played_.load(std::memory_order_relaxed) * 1000000ULL / freq_;
     }
 
     std::uint64_t dsp_output_stream_shared::real_time_position() {
-        std::uint64_t frame_streamed = 0;
-        if (!stream_->current_frame_position(&frame_streamed)) {
-            LOG_ERROR(DRIVER_AUD, "Fail to retrieve streamed sample count!");
-            return 0;
-        }
-
-        return frame_streamed * channels_ * 1000000ULL / freq_;
+        // Counts the guest's own audio as it reaches the hardware, not wall clock. The
+        // backing hardware stream has a free-running frame counter, but it keeps ticking
+        // through the silence we pad an empty ring with and through a virtual stop, and it
+        // survives reset_stat(). Reporting that as CMdaAudioOutputStream::Position() breaks
+        // guests two ways: a title restarting a stream (reset_stat + stop + write, which is
+        // what the media client patch does) reads the whole previous playback back, and a
+        // title that paces its writes off the position - Puyo Pop feeds one buffer per
+        // reported step - sees the position jump several buffers ahead whenever we are late
+        // and stops feeding. samples_played_ only advances on samples actually taken out of
+        // the ring and is cleared by reset_stat(), which is the position a real device
+        // reports.
+        return position();
     }
 
     dsp_input_stream_shared::dsp_input_stream_shared(drivers::audio_driver *aud)
