@@ -10,7 +10,7 @@ import UniformTypeIdentifiers
 //     switcher and, below a divider, "Install device" and "Manage devices";
 //     the ellipsis menu holds Settings, the system-apps toggle and help; the
 //     "+" menu installs a SIS, a classic N-Gage game card, or an N-Gage 2.0
-//     package onto the device.
+//     package onto the device. Pulling the grid down re-scans the registry.
 
 // SIS files only — device ROM / RPKG go through ImportDeviceView's own picker.
 private let sisTypes: [UTType] = {
@@ -339,6 +339,8 @@ struct ContentView: View {
             }
             .padding()
         }
+        // Pull down on the grid to re-scan the device's app registry.
+        .refreshable { await store.refreshApps() }
     }
 
     // The navigation title's tap menu (SwiftUI toolbarTitleMenu): the device
