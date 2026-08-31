@@ -123,6 +123,14 @@ namespace eka2l1::common {
      */
     std::string resolve_case_insensitive_path(const std::string &base, const std::string &relative);
 
+    /**
+     * @brief Drop the cached folded listings used by resolve_case_insensitive_path().
+     *
+     * Called whenever this module changes the shape of a directory; a host directory's
+     * modification stamp alone only has a second of resolution.
+     */
+    void invalidate_folded_directory_indexes();
+
     /*! \brief Create a directory. */
     void create_directory(std::string path);
 

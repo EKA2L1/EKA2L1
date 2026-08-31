@@ -225,9 +225,19 @@ namespace eka2l1::dispatch {
                 const eka2l1::vec2 screen_size = mode_info.size;
 
                 const char *data_ptr = reinterpret_cast<const char *>(scr->screen_buffer_ptr());
+
+                // WINDOWMODE tells us what WSERV composes in, not what a direct screen
+                // access client writes into the panel buffer. Most EKA1 guests take the
+                // reported mode and write that many bytes per pixel, but a few hardcode
+                // 16-bit pixels and would be shredded by a 32-bit upload. The two cases
+                // are distinguishable: at 16 bits the guest only ever fills the first
+                // half of the (always 32-bit sized) buffer. Start narrow and widen the
+                // moment anything lands in the upper half.
+                const bool dsa_depth_changed = scr->promote_dsa_depth_if_deep_pixels_written();
+
                 // A ScreenPlay screen under an active DSA keeps its own row pitch, which
                 // is not the tightly packed one the texture upload assumes.
-                const std::uint32_t bits_per_pixel = epoc::get_bpp_from_display_mode(scr->disp_mode);
+                const std::uint32_t bits_per_pixel = epoc::get_bpp_from_display_mode(scr->dsa_disp_mode);
                 const std::size_t dsa_screen_pitch = scr->screen_buffer_byte_width();
                 const std::size_t tight_screen_pitch = mode_info.size.x * sizeof(std::uint32_t);
                 const bool use_screenplay_pitch = scr->is_screenplay_architecture()
@@ -249,13 +259,25 @@ namespace eka2l1::dispatch {
 
                 std::unique_lock<std::mutex> guard(scr->screen_mutex);
 
+                if (dsa_depth_changed && scr->dsa_texture) {
+                    // The transfer texture was made for the old depth; drop it and let the
+                    // block below build one that matches.
+                    drivers::graphics_command_builder discard_builder;
+                    discard_builder.destroy_bitmap(scr->dsa_texture);
+
+                    drivers::command_list discard_list = discard_builder.retrieve_command_list();
+                    driver->submit_command_list(discard_list);
+
+                    scr->dsa_texture = 0;
+                }
+
                 if (!scr->dsa_texture) {
                     const int max_square_width = common::max<int>(screen_size.x, screen_size.y);
 
                     kern->unlock();
                     guard.unlock();
 
-                    drivers::handle bitmap_handle = drivers::create_bitmap(driver, eka2l1::vec2(max_square_width, max_square_width), epoc::get_bpp_from_display_mode(scr->disp_mode));
+                    drivers::handle bitmap_handle = drivers::create_bitmap(driver, eka2l1::vec2(max_square_width, max_square_width), bits_per_pixel);
 
                     kern->lock();
                     guard.lock();
@@ -276,7 +298,7 @@ namespace eka2l1::dispatch {
 
                 // NOTE: This is a hack for some apps that dont fill alpha
                 // TODO: Figure out why or better solution (maybe the display mode is not really correct?)
-                switch (scr->disp_mode) {
+                switch (scr->dsa_disp_mode) {
                 case epoc::display_mode::color16m:
                 case epoc::display_mode::color16mu:
                 case epoc::display_mode::color16ma:
