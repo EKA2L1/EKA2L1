@@ -1851,8 +1851,9 @@ namespace eka2l1::ios {
     // is back, so an orphaned player would keep playing forever. Destroy them here instead,
     // now that the kernel lock is released: an audio teardown waits out the render callback
     // in flight, and that callback needs the kernel lock to finish guest notifications.
-    // TODO: the deferred-teardown queue this used to drain arrives with the audio
-    // lifetime work that follows this port; there is nothing to flush yet.
+    if (auto *dispatcher = _state->symsys->get_dispatcher()) {
+        dispatcher->flush_pending_teardown();
+    }
 }
 
 - (BOOL)installSisAtPath:(NSString *)sisPath {
