@@ -54,6 +54,9 @@ namespace eka2l1::drivers {
 namespace eka2l1::epoc {
     const std::uint32_t WORD_PALETTE_ENTRIES_COUNT = 16;
 
+    // The direct screen access buffer is handed to the guest pre-filled with this value.
+    const std::uint8_t SCREEN_BUFFER_UNTOUCHED_FILL = 255;
+
     struct window;
     struct window_group;
     struct screen;
@@ -85,6 +88,12 @@ namespace eka2l1::epoc {
         drivers::handle dsa_texture;    ///< Texture use for temporary DSA transfer
 
         epoc::display_mode disp_mode;
+
+        // Pixel format of the direct screen access framebuffer. Usually the same as
+        // disp_mode, but EKA1 panels expose a 16-bit framebuffer while WSERV composes
+        // in the deeper mode their wsini.ini declares.
+        epoc::display_mode dsa_disp_mode;
+        epoc::display_mode dsa_disp_mode_initial;
 
         std::uint64_t last_vsync;
         std::uint64_t last_fps_check;
@@ -205,6 +214,18 @@ namespace eka2l1::epoc {
         const void get_max_num_colors(int &colors, int &greys) const;
 
         void sync_screen_buffer_data(drivers::graphics_driver *driver);
+
+        /**
+         * @brief Widen the assumed direct screen access pixel depth once the guest proves
+         *        it writes deeper pixels than the conservative starting guess.
+         */
+        bool promote_dsa_depth_if_deep_pixels_written();
+
+        /**
+         * @brief Forget what the last direct screen access client wrote, so the next one
+         *        is measured on its own frames.
+         */
+        void reset_dsa_depth_guess();
 
         /**
          * \brief Set screen mode.

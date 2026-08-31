@@ -115,6 +115,8 @@ namespace eka2l1::epoc {
         , screen_texture(0)
         , dsa_texture(0)
         , disp_mode(display_mode::color16ma)
+        , dsa_disp_mode(display_mode::color16ma)
+        , dsa_disp_mode_initial(display_mode::color16ma)
         , last_vsync(0)
         , last_fps_check(0)
         , last_fps(0)
@@ -130,6 +132,8 @@ namespace eka2l1::epoc {
         , screen_mode_change_callbacks(screen_mode_change_callback_free_check_func, screen_mode_change_callback_free_func) {
         root = std::make_unique<epoc::window>(nullptr, this, nullptr);
         disp_mode = scr_conf.disp_mode;
+        dsa_disp_mode = scr_conf.dsa_disp_mode;
+        dsa_disp_mode_initial = scr_conf.dsa_disp_mode;
 
         for (std::size_t i = 0; i < scr_config.modes.size(); i++) {
             if (scr_config.modes[i].rotation == 0) {
@@ -154,10 +158,69 @@ namespace eka2l1::epoc {
         delete pitcher;
     }
 
+    void screen::reset_dsa_depth_guess() {
+        dsa_disp_mode = dsa_disp_mode_initial;
+
+        if (!screen_buffer_chunk || (dsa_disp_mode == disp_mode)) {
+            return;
+        }
+
+        // Repaint the untouched marker so the next client is judged on its own writes.
+        const eka2l1::vec2 buffer_size = current_mode().size;
+        const std::size_t narrow_bytes = epoc::get_byte_width(buffer_size.x,
+            epoc::get_bpp_from_display_mode(dsa_disp_mode)) * buffer_size.y;
+        const std::size_t wide_bytes = epoc::get_byte_width(buffer_size.x,
+            epoc::get_bpp_from_display_mode(disp_mode)) * buffer_size.y;
+
+        if (wide_bytes > narrow_bytes) {
+            std::fill(screen_buffer_ptr() + narrow_bytes, screen_buffer_ptr() + wide_bytes,
+                SCREEN_BUFFER_UNTOUCHED_FILL);
+        }
+    }
+
+    bool screen::promote_dsa_depth_if_deep_pixels_written() {
+        if (dsa_disp_mode == disp_mode) {
+            return false;
+        }
+
+        if (!screen_buffer_chunk) {
+            return false;
+        }
+
+        // The buffer is always allocated for the composed mode, so a guest writing at the
+        // narrower depth leaves the tail of every frame untouched. Anything in there can
+        // only have come from the guest: the WSERV write-back honours dsa_disp_mode too.
+        const eka2l1::vec2 buffer_size = current_mode().size;
+        const std::size_t narrow_bytes = epoc::get_byte_width(buffer_size.x,
+            epoc::get_bpp_from_display_mode(dsa_disp_mode)) * buffer_size.y;
+        const std::size_t wide_bytes = epoc::get_byte_width(buffer_size.x,
+            epoc::get_bpp_from_display_mode(disp_mode)) * buffer_size.y;
+
+        if (wide_bytes <= narrow_bytes) {
+            dsa_disp_mode = disp_mode;
+            return true;
+        }
+
+        const std::uint8_t *tail = screen_buffer_ptr() + narrow_bytes;
+        const std::size_t tail_size = wide_bytes - narrow_bytes;
+
+        for (std::size_t i = 0; i < tail_size; i++) {
+            if (tail[i] != SCREEN_BUFFER_UNTOUCHED_FILL) {
+                LOG_INFO(SERVICE_WINDOW, "Direct screen access writes {} bit pixels, switching the framebuffer format",
+                    epoc::get_bpp_from_display_mode(disp_mode));
+
+                dsa_disp_mode = disp_mode;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     void screen::sync_screen_buffer_data(drivers::graphics_driver *driver) {
         std::uint8_t *buffer_ptr = screen_buffer_ptr();
         const config::screen_mode &crrmode = current_mode();
-        const std::uint32_t bits_per_pixel = epoc::get_bpp_from_display_mode(disp_mode);
+        const std::uint32_t bits_per_pixel = epoc::get_bpp_from_display_mode(dsa_disp_mode);
         const std::uint32_t tight_pitch = epoc::get_byte_width(crrmode.size.x, bits_per_pixel);
         const std::uint32_t framebuffer_pitch = (bits_per_pixel == 32)
             ? screen_buffer_byte_width()
@@ -165,7 +228,7 @@ namespace eka2l1::epoc {
 
         if (framebuffer_pitch == tight_pitch) {
             drivers::read_bitmap(driver, screen_texture, eka2l1::point(0, 0), eka2l1::object_size(crrmode.size),
-                get_bpp_from_display_mode(disp_mode), buffer_ptr);
+                bits_per_pixel, buffer_ptr);
 
             if ((crrmode.rotation == 90) || (crrmode.rotation == 180)) {
                 flip_screen_image(buffer_ptr, tight_pitch, crrmode.size.y);
@@ -175,7 +238,7 @@ namespace eka2l1::epoc {
 
         std::vector<std::uint8_t> tight_buffer(tight_pitch * crrmode.size.y);
         drivers::read_bitmap(driver, screen_texture, eka2l1::point(0, 0), eka2l1::object_size(crrmode.size),
-            get_bpp_from_display_mode(disp_mode), tight_buffer.data());
+            bits_per_pixel, tight_buffer.data());
 
         if ((crrmode.rotation == 90) || (crrmode.rotation == 180)) {
             flip_screen_image(tight_buffer.data(), tight_pitch, crrmode.size.y);
@@ -686,6 +749,10 @@ namespace eka2l1::epoc {
     }
 
     void screen::ref_dsa_usage() {
+        if (active_dsa_count_ == 0) {
+            reset_dsa_depth_guess();
+        }
+
         active_dsa_count_++;
 
         if (need_update_visible_regions()) {
