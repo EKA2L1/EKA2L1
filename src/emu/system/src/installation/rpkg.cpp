@@ -37,6 +37,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <unordered_set>
 #include <vector>
 
 namespace eka2l1::loader {
@@ -65,7 +66,9 @@ namespace eka2l1::loader {
         return true;
     }
 
-    static bool extract_file(const std::string &devices_rom_path, FILE *parent, rpkg_entry &ent, const std::size_t total, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
+    static bool extract_file(const std::string &devices_rom_path, FILE *parent, rpkg_entry &ent, const std::size_t total,
+        std::unordered_set<std::string> &created_directories, progress_changed_callback progress_cb,
+        cancel_requested_callback cancel_cb) {
         std::string file_full_relative = common::ucs2_to_utf8(ent.path.substr(3));
         std::transform(file_full_relative.begin(), file_full_relative.end(), file_full_relative.begin(),
             ::tolower);
@@ -73,13 +76,22 @@ namespace eka2l1::loader {
         std::string real_path = add_path(add_path(devices_rom_path, "/temp/"), file_full_relative);
 
         std::string dir = eka2l1::file_directory(real_path);
-        common::create_directories(dir);
+        const bool directory_is_cached = created_directories.find(dir) != created_directories.end();
+        if (!directory_is_cached) {
+            common::create_directories(dir);
+        }
 
         common::wo_std_file_stream wf(real_path, true);
 
         if (!wf.valid()) {
             LOG_INFO(SYSTEM, "Skipping with real path: {}, dir: {}", real_path, dir);
             return false;
+        }
+
+        if (!directory_is_cached) {
+            // Opening the output proves the directory exists. Cache only after
+            // that succeeds so a transient creation failure can still be retried.
+            created_directories.emplace(dir);
         }
 
         int64_t left = ent.data_size;
@@ -298,6 +310,11 @@ namespace eka2l1::loader {
             return device_installation_rpkg_corrupt;
         }
 
+        // An RPKG usually contains many files in the same directory. Keep this
+        // cache local to one extraction so repeated entries do not stat the same
+        // directory hierarchy again, without retaining stale filesystem state.
+        std::unordered_set<std::string> created_directories;
+
         while (!feof(f)) {
             total_read_size = 0;
 
@@ -324,7 +341,7 @@ namespace eka2l1::loader {
 
             LOG_INFO(SYSTEM, "Extracting: {}", common::ucs2_to_utf8(entry.path));
 
-            if (!extract_file(devices_rom_path, f, entry, total_size, progress_cb, cancel_cb)) {
+            if (!extract_file(devices_rom_path, f, entry, total_size, created_directories, progress_cb, cancel_cb)) {
                 break;
             }
 
