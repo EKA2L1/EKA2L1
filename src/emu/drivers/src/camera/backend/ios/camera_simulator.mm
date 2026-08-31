@@ -168,7 +168,7 @@ namespace eka2l1::drivers::camera {
             return ios_encode_bgra_to_jpeg(bgra.data(), width, height, out);
         }
 
-        return ios_convert_bgra_to_guest(bgra.data(), static_cast<std::size_t>(width) * 4,
+        return convert_bgra_to_guest(bgra.data(), static_cast<std::size_t>(width) * 4,
             width, height, format, out);
     }
 
@@ -344,8 +344,8 @@ namespace eka2l1::drivers::camera {
         }
 
         std::vector<frame_format> supported_frame_formats() override {
-            return std::vector<frame_format>(std::begin(IOS_SUPPORTED_FORMATS),
-                std::end(IOS_SUPPORTED_FORMATS));
+            return std::vector<frame_format>(std::begin(SUPPORTED_FRAME_FORMATS),
+                std::end(SUPPORTED_FRAME_FORMATS));
         }
 
         std::vector<eka2l1::vec2> supported_output_image_sizes(const frame_format) override {
@@ -375,7 +375,7 @@ namespace eka2l1::drivers::camera {
             result.options_supported_ = CAPTURE_OPTION_ALL;
             result.supported_image_formats_ = 0;
 
-            for (const frame_format format: IOS_SUPPORTED_FORMATS) {
+            for (const frame_format format: SUPPORTED_FRAME_FORMATS) {
                 result.supported_image_formats_ |= static_cast<std::uint32_t>(format);
             }
 
@@ -389,7 +389,7 @@ namespace eka2l1::drivers::camera {
                 return;
             }
 
-            if (!ios_is_supported_format(format)) {
+            if (!is_supported_frame_format(format)) {
                 LOG_ERROR(DRIVER_CAM, "Capture format {} is not supported!", static_cast<int>(format));
                 callback(nullptr, 0, -1);
                 return;
@@ -436,7 +436,7 @@ namespace eka2l1::drivers::camera {
                 return;
             }
 
-            if (!ios_is_supported_format(format)) {
+            if (!is_supported_frame_format(format)) {
                 LOG_ERROR(DRIVER_CAM, "Viewfinder format {} is not supported!", static_cast<int>(format));
                 return;
             }

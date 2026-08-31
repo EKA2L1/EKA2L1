@@ -23,6 +23,19 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-offsetof")
 endif ()
 
+# Qt Multimedia backs the desktop camera. It is a separate package on most
+# distributions, and only Qt 6 has the capture session API the backend uses, so
+# a build without it keeps the null camera rather than failing. The lookup lives
+# here, in the scope both drivers/ and qt/ inherit the imported target from --
+# the frontend's deployment step walks the libraries drivers links.
+if (EKA2L1_ENABLE_QT_CAMERA AND NOT ANDROID AND NOT EKA2L1_IOS)
+    find_package(Qt6 COMPONENTS Multimedia QUIET)
+
+    if (NOT Qt6Multimedia_FOUND)
+        message(STATUS "Qt Multimedia was not found, the desktop camera backend will not be built")
+    endif ()
+endif ()
+
 add_subdirectory(bridge)
 add_subdirectory(common)
 add_subdirectory(config)

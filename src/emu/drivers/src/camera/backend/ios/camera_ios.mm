@@ -468,7 +468,7 @@ using eka2l1::drivers::camera::instance_ios;
     bool converted_ok = false;
 
     if ((rotation == 0) && (source_width == _viewfinderWidth) && (source_height == _viewfinderHeight)) {
-        converted_ok = eka2l1::drivers::camera::ios_convert_bgra_to_guest(base, stride,
+        converted_ok = eka2l1::drivers::camera::convert_bgra_to_guest(base, stride,
             _viewfinderWidth, _viewfinderHeight, _viewfinderFormat, converted);
     } else {
         CGImageRef source_image = eka2l1::drivers::camera::ios_create_cgimage_from_bgra(base,
@@ -478,7 +478,7 @@ using eka2l1::drivers::camera::instance_ios;
             std::vector<std::uint8_t> scaled;
             if (eka2l1::drivers::camera::ios_render_cgimage_to_bgra(source_image, _viewfinderWidth,
                 _viewfinderHeight, rotation, scaled)) {
-                converted_ok = eka2l1::drivers::camera::ios_convert_bgra_to_guest(scaled.data(),
+                converted_ok = eka2l1::drivers::camera::convert_bgra_to_guest(scaled.data(),
                     static_cast<std::size_t>(_viewfinderWidth) * 4, _viewfinderWidth,
                     _viewfinderHeight, _viewfinderFormat, converted);
             }
@@ -611,7 +611,7 @@ using eka2l1::drivers::camera::instance_ios;
     CGImageRelease(image);
 
     std::vector<std::uint8_t> converted;
-    if (render_ok && eka2l1::drivers::camera::ios_convert_bgra_to_guest(bgra.data(),
+    if (render_ok && eka2l1::drivers::camera::convert_bgra_to_guest(bgra.data(),
         static_cast<std::size_t>(_captureWidth) * 4, _captureWidth, _captureHeight,
         format, converted)) {
         [self deliverCaptureBytes:converted.data() size:converted.size() error:0];
@@ -765,7 +765,7 @@ namespace eka2l1::drivers::camera {
     }
 
     std::vector<frame_format> instance_ios::supported_frame_formats() {
-        return std::vector<frame_format>(std::begin(IOS_SUPPORTED_FORMATS), std::end(IOS_SUPPORTED_FORMATS));
+        return std::vector<frame_format>(std::begin(SUPPORTED_FRAME_FORMATS), std::end(SUPPORTED_FRAME_FORMATS));
     }
 
     std::vector<eka2l1::vec2> instance_ios::supported_output_image_sizes(const frame_format frame_format) {
@@ -804,7 +804,7 @@ namespace eka2l1::drivers::camera {
         result.options_supported_ = CAPTURE_OPTION_ALL;
         result.supported_image_formats_ = 0;
 
-        for (const frame_format format: IOS_SUPPORTED_FORMATS) {
+        for (const frame_format format: SUPPORTED_FRAME_FORMATS) {
             result.supported_image_formats_ |= static_cast<std::uint32_t>(format);
         }
 
@@ -832,7 +832,7 @@ namespace eka2l1::drivers::camera {
             return;
         }
 
-        if (!ios_is_supported_format(format)) {
+        if (!is_supported_frame_format(format)) {
             LOG_ERROR(DRIVER_CAM, "Viewfinder format {} is not supported!", static_cast<int>(format));
             return;
         }
@@ -910,7 +910,7 @@ namespace eka2l1::drivers::camera {
             }
         }
 
-        if (!ios_is_supported_format(format)) {
+        if (!is_supported_frame_format(format)) {
             LOG_ERROR(DRIVER_CAM, "Image capture format {} is not supported!", static_cast<int>(format));
             callback(nullptr, 0, -1);
             return;
