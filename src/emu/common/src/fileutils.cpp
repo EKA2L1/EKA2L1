@@ -427,26 +427,73 @@ namespace eka2l1::common {
         return std::make_unique<standard_dir_iterator>(iterator_path);
     }
     
+    // A folded index of one host directory. Building it costs a full enumeration, so it
+    // is kept until the directory's modification stamp moves: guests probe the same ROM
+    // directories thousands of times while loading, and on a case-sensitive volume every
+    // spelling mismatch would otherwise re-walk the whole thing.
+    struct folded_directory_index {
+        std::uint64_t stamp;
+        std::map<std::string, std::string> entries;
+    };
+
+    static std::string fold_file_name(const std::string &name) {
+        return common::ucs2_to_utf8(common::lowercase_ucs2_string(common::utf8_to_ucs2(name)));
+    }
+
+    static std::uint64_t directory_change_stamp(const std::string &folder_path) {
+        return common::get_last_modifiy_since_ad(common::utf8_to_ucs2(folder_path));
+    }
+
+    static std::mutex folded_index_lock;
+    static std::map<std::string, folded_directory_index> folded_indexes;
+
+    void invalidate_folded_directory_indexes() {
+        const std::lock_guard<std::mutex> guard(folded_index_lock);
+        folded_indexes.clear();
+    }
+
     std::string find_case_sensitive_file_name(const std::string &folder_path, const std::string &insensitive_name, const file_type type) {
-        auto ite = make_directory_iterator(folder_path, "");
-        // next_entry() only populates dir_entry::type when detail is enabled.
-        // Ask for it only when the caller filters by type: on POSIX this stats
-        // every entry, which turns a name-only lookup in a large ROM directory
-        // into thousands of unnecessary system calls.
-        ite->detail = (type != FILE_INVALID);
-        const std::u16string insensitive_name_u16 = common::utf8_to_ucs2(insensitive_name);
+        const std::uint64_t stamp = directory_change_stamp(folder_path);
+        const std::string folded_name = fold_file_name(insensitive_name);
 
-        common::dir_entry entry;
+        const std::lock_guard<std::mutex> guard(folded_index_lock);
+        auto cached = folded_indexes.find(folder_path);
 
-        while (ite->next_entry(entry) == 0) {
-            if ((type == FILE_INVALID) || (type == entry.type)) {
-                if (common::compare_ignore_case(common::utf8_to_ucs2(entry.name), insensitive_name_u16) == 0) {
-                    return entry.name;
-                }
+        if ((cached == folded_indexes.end()) || (cached->second.stamp != stamp)) {
+            folded_directory_index index;
+            index.stamp = stamp;
+
+            auto ite = make_directory_iterator(folder_path, "");
+
+            // next_entry() only populates dir_entry::type when detail is enabled, which
+            // stats every entry on POSIX. The index is a name lookup; the one entry a
+            // caller cares about is cheaper to stat on its own below.
+            ite->detail = false;
+
+            common::dir_entry entry;
+
+            while (ite->next_entry(entry) == 0) {
+                index.entries.emplace(fold_file_name(entry.name), entry.name);
+            }
+
+            cached = folded_indexes.insert_or_assign(folder_path, std::move(index)).first;
+        }
+
+        auto found = cached->second.entries.find(folded_name);
+
+        if (found == cached->second.entries.end()) {
+            return "";
+        }
+
+        if (type != FILE_INVALID) {
+            const bool entry_is_directory = is_dir(add_path(folder_path, found->second));
+
+            if (entry_is_directory != (type == FILE_DIRECTORY)) {
+                return "";
             }
         }
 
-        return "";
+        return found->second;
     }
 
     int resize(const std::string &path, const std::uint64_t size) {
@@ -500,6 +547,8 @@ namespace eka2l1::common {
     }
 
     bool remove(const std::string &path) {
+        invalidate_folded_directory_indexes();
+
 #if EKA2L1_PLATFORM(WIN32)
         const std::wstring path_w = common::utf8_to_wstr(path);
 
@@ -519,6 +568,8 @@ namespace eka2l1::common {
     }
 
     bool move_file(const std::string &path, const std::string &new_path) {
+        invalidate_folded_directory_indexes();
+
 #if EKA2L1_PLATFORM(WIN32)
         const std::wstring path_s_w = common::utf8_to_wstr(path);
         const std::wstring path_d_w = common::utf8_to_wstr(new_path);
@@ -654,6 +705,8 @@ namespace eka2l1::common {
     }
 
     void create_directory(std::string path) {
+        invalidate_folded_directory_indexes();
+
 #if EKA2L1_PLATFORM(POSIX)
 #if EKA2L1_PLATFORM(ANDROID)
         if (is_content_uri(path)) {
@@ -723,6 +776,8 @@ namespace eka2l1::common {
     }
 
     void create_directories(std::string path) {
+        invalidate_folded_directory_indexes();
+
 #if EKA2L1_PLATFORM(ANDROID)
         if (is_content_uri(path)) {
             android::content_uri uri = android::content_uri(path);
