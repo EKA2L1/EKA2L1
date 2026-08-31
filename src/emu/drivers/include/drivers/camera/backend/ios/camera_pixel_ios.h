@@ -33,7 +33,7 @@ namespace eka2l1::drivers::camera {
 
     // Formats the backend can produce from a BGRA source. Mirrors the Android
     // backend's advertised set.
-    extern const frame_format IOS_SUPPORTED_FORMATS[7];
+    extern const frame_format IOS_SUPPORTED_FORMATS[8];
 
     bool ios_is_supported_format(const frame_format format);
 

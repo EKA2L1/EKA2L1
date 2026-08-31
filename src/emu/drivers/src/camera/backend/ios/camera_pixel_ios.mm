@@ -26,9 +26,9 @@
 namespace eka2l1::drivers::camera {
     // Formats the backend can synthesize from a BGRA source. Mirrors the
     // Android backend's advertised set.
-    const frame_format IOS_SUPPORTED_FORMATS[7] = {
+    const frame_format IOS_SUPPORTED_FORMATS[8] = {
         FRAME_FORMAT_ARGB8888, FRAME_FORMAT_JPEG, FRAME_FORMAT_RGB565,
-        FRAME_FORMAT_FBSBMP_COLOR64K, FRAME_FORMAT_FBSBMP_COLOR16M,
+        FRAME_FORMAT_FBSBMP_COLOR4K, FRAME_FORMAT_FBSBMP_COLOR64K, FRAME_FORMAT_FBSBMP_COLOR16M,
         FRAME_FORMAT_FBSBMP_COLOR16MU, FRAME_FORMAT_EXIF
     };
 
@@ -105,9 +105,12 @@ namespace eka2l1::drivers::camera {
             return true;
         }
 
+        case FRAME_FORMAT_FBSBMP_COLOR4K:
         case FRAME_FORMAT_FBSBMP_COLOR64K:
         case FRAME_FORMAT_RGB565: {
-            const std::size_t dest_stride = (format == FRAME_FORMAT_FBSBMP_COLOR64K)
+            const bool is_fbs = (format == FRAME_FORMAT_FBSBMP_COLOR4K)
+                || (format == FRAME_FORMAT_FBSBMP_COLOR64K);
+            const std::size_t dest_stride = is_fbs
                 ? (static_cast<std::size_t>(width) * 2 + 3) / 4 * 4
                 : static_cast<std::size_t>(width) * 2;
             dest.resize(dest_stride * height);
@@ -117,10 +120,18 @@ namespace eka2l1::drivers::camera {
                 std::uint8_t *dest_row = dest.data() + y * dest_stride;
 
                 for (int x = 0; x < width; x++) {
-                    const std::uint16_t pixel = static_cast<std::uint16_t>(
-                        ((src_row[x * 4 + 0] & 0xF8) >> 3) |
-                        ((src_row[x * 4 + 1] & 0xFC) << 3) |
-                        ((src_row[x * 4 + 2] & 0xF8) << 8));
+                    std::uint16_t pixel = 0;
+                    if (format == FRAME_FORMAT_FBSBMP_COLOR4K) {
+                        pixel = static_cast<std::uint16_t>(
+                            (src_row[x * 4 + 0] >> 4)
+                            | (src_row[x * 4 + 1] & 0xF0)
+                            | ((src_row[x * 4 + 2] & 0xF0) << 4));
+                    } else {
+                        pixel = static_cast<std::uint16_t>(
+                            ((src_row[x * 4 + 0] & 0xF8) >> 3)
+                            | ((src_row[x * 4 + 1] & 0xFC) << 3)
+                            | ((src_row[x * 4 + 2] & 0xF8) << 8));
+                    }
 
                     dest_row[x * 2 + 0] = static_cast<std::uint8_t>(pixel & 0xFF);
                     dest_row[x * 2 + 1] = static_cast<std::uint8_t>(pixel >> 8);
