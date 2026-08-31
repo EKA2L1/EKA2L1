@@ -85,6 +85,19 @@ namespace eka2l1::epoc::bt {
         }
     }
 
+    bool btinet_socket::set_option(const std::uint32_t option_id, const std::uint32_t option_family,
+        std::uint8_t *buffer, const std::size_t avail_size) {
+        // KBTSetNoSecurityRequired is handled by Symbian's common
+        // CBluetoothSAP before protocol-specific options. Inet netplay has no
+        // Bluetooth security manager to configure, so accepting it represents
+        // the requested no-security policy for every emulated Bluetooth SAP.
+        if ((option_family == SOL_BT_SAP_BASE) && (option_id == BT_SET_NO_SECURITY_REQUIRED)) {
+            return true;
+        }
+
+        return socket::set_option(option_id, option_family, buffer, avail_size);
+    }
+
     void btinet_socket::bind(const epoc::socket::saddress &addr, epoc::notify_info &info) {
         if (addr.port_ > midman::MAX_PORT) {
             LOG_ERROR(SERVICE_BLUETOOTH, "Bluetooth bind port is only allowed to be from 1 to 60!");

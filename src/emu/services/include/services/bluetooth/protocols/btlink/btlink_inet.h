@@ -120,10 +120,8 @@ namespace eka2l1::epoc::bt {
             return epoc::socket::byte_order_little_endian;
         }
 
-        virtual std::unique_ptr<epoc::socket::socket> make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket::socket_type sock_type) override {
-            // L2CAP will be the one handling this. This stack is currently only used for managing links.
-            return nullptr;
-        }
+        virtual std::unique_ptr<epoc::socket::socket> make_socket(const std::uint32_t family_id,
+            const std::uint32_t protocol_id, const socket::socket_type sock_type) override;
 
         virtual std::unique_ptr<epoc::socket::socket> make_empty_base_link_socket() {
             return nullptr;

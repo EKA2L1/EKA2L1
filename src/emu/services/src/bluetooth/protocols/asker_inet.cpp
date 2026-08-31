@@ -36,11 +36,37 @@ namespace eka2l1::epoc::bt {
         , retry_times_(0)
         , callback_(nullptr)
         , in_transfer_data_callback_(true)
-        , asker_id_(midman->new_asker_id()) {
+        , asker_id_(midman->new_asker_id())
+        , alive_(std::make_shared<std::atomic<bool>>(true)) {
         request_done_evt_.set();
     }
     
+    void asker_inet::shutdown_handles() {
+        shutdown_uv_handle(asker_);
+        shutdown_uv_handle(asker_retry_timer_);
+    }
+
     asker_inet::~asker_inet() {
+        // A posted uvlooper task owns a separate uv_async handle and can run after
+        // our shared_ptr to the task is released. Make queued callbacks harmless
+        // before ordering handle teardown on the loop thread.
+        alive_->store(false, std::memory_order_release);
+
+        if (!libuv::default_looper->started()) {
+            return;
+        }
+
+        // RSocket::Close runs while the Symbian thread holds the kernel lock. The
+        // shared libuv loop can simultaneously be waiting for that lock in an inet
+        // callback, so waiting here would deadlock. The callbacks already reject work
+        // through alive_; transfer handle ownership to the loop and return immediately.
+        auto asker = std::move(asker_);
+        auto retry_timer = std::move(asker_retry_timer_);
+
+        libuv::default_looper->one_shot([asker = std::move(asker), retry_timer = std::move(retry_timer)]() mutable {
+            shutdown_uv_handle(asker);
+            shutdown_uv_handle(retry_timer);
+        });
     }
 
     void asker_inet::handle_request_failure() {
@@ -56,7 +82,11 @@ namespace eka2l1::epoc::bt {
     }
 
     void asker_inet::listen_to_data() {
-        asker_->on<uvw::udp_data_event>([this](const uvw::udp_data_event &event, uvw::udp_handle &handle) {
+        asker_->on<uvw::udp_data_event>([this, alive = alive_](const uvw::udp_data_event &event, uvw::udp_handle &handle) {
+            if (!alive->load(std::memory_order_acquire)) {
+                return;
+            }
+
             if (event.length < 4) {
                 return;
             }
@@ -80,7 +110,11 @@ namespace eka2l1::epoc::bt {
             }
         });
 
-        asker_->on<uvw::error_event>([this](const uvw::error_event &event, uvw::udp_handle &handle) {
+        asker_->on<uvw::error_event>([this, alive = alive_](const uvw::error_event &event, uvw::udp_handle &handle) {
+            if (!alive->load(std::memory_order_acquire)) {
+                return;
+            }
+
             handle_request_failure();
         });
 
@@ -94,7 +128,11 @@ namespace eka2l1::epoc::bt {
         if (asker_->send(*reinterpret_cast<const sockaddr *>(&dest_), buffer_.data(), static_cast<std::uint32_t>(buffer_.size())) < 0) {
             handle_request_failure();
         } else {
-            asker_retry_timer_->on<uvw::timer_event>([this](const uvw::timer_event &event, uvw::timer_handle &handle) {
+            asker_retry_timer_->on<uvw::timer_event>([this, alive = alive_](const uvw::timer_event &event, uvw::timer_handle &handle) {
+                if (!alive->load(std::memory_order_acquire)) {
+                    return;
+                }
+
                 handle_request_failure();
             });
 
@@ -113,8 +151,15 @@ namespace eka2l1::epoc::bt {
         GUEST_TO_BSD_ADDR(addr, addr_host);
 
         if (addr_host == nullptr) {
-            callback_(nullptr, BT_COMM_INET_INVALID_ADDR);
+            response_cb(nullptr, BT_COMM_INET_INVALID_ADDR);
             return;
+        }
+
+        if (addr_host->sa_family == AF_INET) {
+            std::memset(&dest_, 0, sizeof(dest_));
+            std::memcpy(&dest_, addr_host, sizeof(sockaddr_in));
+        } else {
+            std::memcpy(&dest_, addr_host, sizeof(sockaddr_in6));
         }
 
         request_done_evt_.reset();
@@ -122,16 +167,16 @@ namespace eka2l1::epoc::bt {
 
         retry_times_ = 0;
         callback_ = response_cb;
-        dest_addr_ = addr;
 
         buffer_.clear();
         buffer_.insert(buffer_.begin(), reinterpret_cast<char*>(&asker_id_), reinterpret_cast<char*>(&asker_id_ + 1));
         buffer_.insert(buffer_.end(), request, request + request_size);
 
         if (!send_data_task_) {
-            send_data_task_ = libuv::create_task([this]() {
-                sockaddr *addr_host = nullptr;
-                GUEST_TO_BSD_ADDR(dest_addr_, addr_host);
+            send_data_task_ = libuv::create_task([this, alive = alive_]() {
+                if (!alive->load(std::memory_order_acquire)) {
+                    return;
+                }
 
                 auto default_loop = uvw::loop::get_default();
 
@@ -147,12 +192,6 @@ namespace eka2l1::epoc::bt {
 
                 if (!asker_retry_timer_) {
                     asker_retry_timer_ = default_loop->resource<uvw::timer_handle>();
-                }
-
-                if (addr_host->sa_family == AF_INET) {
-                    std::memcpy(&dest_, addr_host, sizeof(sockaddr_in));
-                } else {
-                    std::memcpy(&dest_, addr_host, sizeof(sockaddr_in6));
                 }
 
                 listen_to_data();

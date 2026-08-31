@@ -43,6 +43,9 @@ namespace eka2l1::epoc::bt {
         SOL_BT_LINK_MANAGER = 0x1011,
         SOL_BT_L2CAP = 0x1012,
         SOL_BT_RFCOMM = 0x1013,
+        SOL_BT_SAP_BASE = 0x2020,
+
+        BT_SET_NO_SECURITY_REQUIRED = 0x0997,
 
         HCI_READ_SCAN_ENABLE = 14,
         HCI_WRITE_SCAN_ENABLE = 15,

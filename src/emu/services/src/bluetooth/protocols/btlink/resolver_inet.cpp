@@ -19,6 +19,7 @@
 
 #include <common/log.h>
 #include <services/bluetooth/btmidman.h>
+#include <services/bluetooth/protocols/base_inet.h>
 #include <services/bluetooth/protocols/btlink/btlink_inet.h>
 #include <services/bluetooth/protocols/btmidman_inet.h>
 #include <services/bluetooth/protocols/common.h>
@@ -31,6 +32,43 @@
 #include <utils/err.h>
 
 namespace eka2l1::epoc::bt {
+    namespace {
+        constexpr std::uint32_t K_UNDEFINED_PROTOCOL_OPTION_LEVEL = 0xFFFFFFFE;
+
+        class btlink_control_inet_socket final : public btinet_socket {
+        public:
+            btlink_control_inet_socket(btlink_inet_protocol *protocol,
+                std::unique_ptr<epoc::socket::socket> &inet_socket)
+                : btinet_socket(protocol, inet_socket) {
+            }
+
+            bool set_option(const std::uint32_t option_id, const std::uint32_t option_family,
+                std::uint8_t *buffer, const std::size_t avail_size) override {
+                // Symbian 8.1 Bluetooth opens the raw link-manager control
+                // socket with an undefined protocol level, then enables the
+                // provider with option 1. There is no host-side data path to
+                // configure; accepting it makes the existing HCI/LM controls
+                // available to the client.
+                if ((option_family == K_UNDEFINED_PROTOCOL_OPTION_LEVEL) && (option_id == 1)) {
+                    return true;
+                }
+
+                return btinet_socket::set_option(option_id, option_family, buffer, avail_size);
+            }
+        };
+    }
+
+    std::unique_ptr<epoc::socket::socket> btlink_inet_protocol::make_socket(const std::uint32_t family_id,
+        const std::uint32_t protocol_id, const socket::socket_type sock_type) {
+        // Link-manager sockets do not carry user data. They are nevertheless
+        // opened as raw sockets by Bluetooth clients to issue HCI/link-manager
+        // ioctls (for example, to change the scan mode). Reuse the common
+        // Bluetooth socket implementation without a backing TCP socket so
+        // those control operations remain available.
+        std::unique_ptr<epoc::socket::socket> empty_socket;
+        return std::make_unique<btlink_control_inet_socket>(this, empty_socket);
+    }
+
     btlink_inet_host_resolver::btlink_inet_host_resolver(btlink_inet_protocol *papa)
         : papa_(papa)
         , friend_name_entry_(nullptr)

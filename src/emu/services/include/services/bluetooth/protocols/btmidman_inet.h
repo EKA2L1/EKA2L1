@@ -39,6 +39,25 @@ typedef struct uv_timer_s uv_timer_t;
 typedef struct uv_buf_t uv_buf_t;
 
 namespace eka2l1::epoc::bt {
+    /**
+     * @brief Disconnect and close a libuv handle. Must be called on the loop thread.
+     *
+     * A uvw handle keeps a self-reference alive inside libuv from init() until close(),
+     * so releasing the owning shared_ptr does not stop it: it keeps dispatching events
+     * into listeners that captured a `this` which is about to be freed. Owners have to
+     * drop the listeners and close the handle before they go away.
+     */
+    template <typename T>
+    inline void shutdown_uv_handle(std::shared_ptr<T> &handle) {
+        if (!handle) {
+            return;
+        }
+
+        handle->reset();
+        handle->close();
+        handle.reset();
+    }
+
     static constexpr std::uint32_t TIMEOUT_HEARING_STRANGER_MS = 2000;
     static constexpr std::uint16_t CENTRAL_SERVER_STANDARD_PORT = 27138;
     static constexpr std::uint16_t HARBOUR_PORT = 35689;
@@ -81,6 +100,11 @@ namespace eka2l1::epoc::bt {
         std::vector<friend_info> friends_;
         common::bitmap_allocator allocated_ports_;
         std::array<std::uint16_t, MAX_PORT> port_refs_;
+        // Host ports we actually asked the router to forward. A port ref is not
+        // proof of a mapping (accept() refs a port that was never published),
+        // so unmapping must follow this instead, or we delete a stranger's
+        // mapping on the same router.
+        std::array<bool, MAX_PORT> port_upnp_mapped_;
         std::uint32_t port_offset_;
         bool enable_upnp_;
 
@@ -88,6 +112,7 @@ namespace eka2l1::epoc::bt {
 
         std::shared_ptr<uvw::udp_handle> lan_discovery_call_listener_socket_;
         std::shared_ptr<uvw::tcp_handle> matching_server_socket_;
+        std::vector<char> matching_server_receive_buffer_;
 
         std::shared_ptr<uvw::udp_handle> bluetooth_queries_server_socket_;
         std::shared_ptr<uvw::timer_handle> hearing_timeout_timer_;
@@ -126,7 +151,7 @@ namespace eka2l1::epoc::bt {
         void handle_matching_server_msg(std::int64_t nread, const char *buf_ptr);
         void send_login();
         void send_logout(const bool close_and_reset = true);
-        void read_and_add_friend(const char *buf, char &buf_pointer);
+        void read_and_add_friend(const char *buf, std::int64_t nread, std::int64_t &buf_pointer);
         void add_friend(epoc::bt::friend_info &info);
         void on_timeout_friend_search();
 

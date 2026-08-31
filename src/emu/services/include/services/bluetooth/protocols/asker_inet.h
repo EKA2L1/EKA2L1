@@ -24,6 +24,7 @@
 #include <common/sync.h>
 #include <uvlooper/uvlooper.h>
 
+#include <atomic>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -63,8 +64,7 @@ namespace eka2l1::epoc::bt {
 
         bool in_transfer_data_callback_;
         std::uint32_t asker_id_;
-
-        epoc::socket::saddress dest_addr_;
+        std::shared_ptr<std::atomic<bool>> alive_;
 
         void keep_sending_data();
         void handle_request_failure();
@@ -77,6 +77,15 @@ namespace eka2l1::epoc::bt {
     public:
         explicit asker_inet(midman_inet *midman);
         ~asker_inet();
+
+        /**
+         * @brief Close the libuv handles so they stop calling back into this object.
+         *
+         * Must be run on the loop thread. Idempotent. The owner has to call this before
+         * anything the response callback refers to is destroyed, since the retry timer
+         * keeps firing until the handle is actually closed.
+         */
+        void shutdown_handles();
 
         bool check_is_real_port_mapped(const epoc::socket::saddress &addr, const std::uint32_t real_port);
         std::optional<device_address> get_device_address(const epoc::socket::saddress &dest_friend);

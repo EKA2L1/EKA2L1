@@ -48,6 +48,9 @@ namespace eka2l1::epoc::bt {
         explicit btinet_socket(btlink_inet_protocol *protocol, std::unique_ptr<epoc::socket::socket> &inet_socket);
         virtual ~btinet_socket() override;
 
+        bool set_option(const std::uint32_t option_id, const std::uint32_t option_family,
+            std::uint8_t *buffer, const std::size_t avail_size) override;
+
         void bind(const epoc::socket::saddress &addr, epoc::notify_info &info) override;
         void accept(std::unique_ptr<epoc::socket::socket> *pending_sock, epoc::notify_info &complete_info) override;
         void send(const std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr, std::uint32_t flags, epoc::notify_info &complete_info) override;
