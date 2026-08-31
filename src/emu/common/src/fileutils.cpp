@@ -799,6 +799,13 @@ namespace eka2l1::common {
         } else
 #endif
         {
+            // Most callers use this as an idempotent operation. Avoid walking and
+            // statting every path component when the complete directory already
+            // exists, which is especially costly for bulk file extraction.
+            if (get_file_type(path) == file_type::FILE_DIRECTORY) {
+                return;
+            }
+
             std::string crr_path;
 
             path_iterator ite;
