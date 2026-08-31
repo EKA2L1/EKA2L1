@@ -176,6 +176,11 @@ namespace eka2l1 {
             break;
 
         case notifier_cancel:
+            if (const std::optional<epoc::uid> plugin_uid = ctx->get_argument_value<epoc::uid>(0)) {
+                if (epoc::notifier::plugin_base *plug = server<notifier_server>()->get_plugin(*plugin_uid)) {
+                    plug->cancel();
+                }
+            }
             ctx->complete(epoc::error_none);
             break;
 

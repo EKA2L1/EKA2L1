@@ -39,9 +39,11 @@ namespace eka2l1::epoc::bt {
             addr_bind.sin6_family = AF_INET;
             addr_bind.sin6_port = htons(static_cast<std::uint16_t>(LAN_DISCOVERY_PORT));
 
-            lan_discovery_call_listener_socket_->bind(*reinterpret_cast<sockaddr*>(&addr_bind));
-            lan_discovery_call_listener_socket_->on<uvw::error_event>([this](const uvw::error_event &event, uvw::udp_handle &handle) {
-                handle_lan_discovery_receive(nullptr, event.code(), nullptr);
+            if (const int bind_err = lan_discovery_call_listener_socket_->bind(*reinterpret_cast<sockaddr*>(&addr_bind)); bind_err < 0) {
+                LOG_ERROR(SERVICE_BLUETOOTH, "Can't bind the LAN discovery socket to port {}! Libuv error code={}", LAN_DISCOVERY_PORT, bind_err);
+            }
+            lan_discovery_call_listener_socket_->on<uvw::error_event>([](const uvw::error_event &event, uvw::udp_handle &handle) {
+                LOG_ERROR(SERVICE_BLUETOOTH, "Error on the LAN discovery listener socket! Libuv error code={}", event.code());
             });
 
             lan_discovery_call_listener_socket_->on<uvw::udp_data_event>([this](const uvw::udp_data_event &event, uvw::udp_handle &handle) {
@@ -58,6 +60,11 @@ namespace eka2l1::epoc::bt {
     }
 
     void midman_inet::handle_lan_discovery_receive(const char *buf, std::int64_t nread, const sockaddr *addr) {
+        // Broadcast datagrams come from the network, so they may be truncated or hostile.
+        if (!addr || !buf || (nread < 1)) {
+            return;
+        }
+
         const std::uint32_t LOCALHOST_ADDR = 0x100007F;
         if ((memcmp(&(reinterpret_cast<const sockaddr_in*>(addr)->sin_addr), local_addr_.user_data_, 4) == 0) ||
             (memcmp(&(reinterpret_cast<const sockaddr_in*>(addr)->sin_addr), &LOCALHOST_ADDR, 4) == 0)) {
@@ -70,7 +77,14 @@ namespace eka2l1::epoc::bt {
             add_lan_friend(addr);
         } else if (buf[0] == QUERY_OPCODE_GET_PLAYERS) {
             // Accept this discover call by sending back to the one waving at us!
-            if ((buf[1] == password_.length()) && (std::memcmp(password_.data(), buf + 2, buf[1]) == 0)) {
+            const std::int64_t password_length = (nread < 2) ? -1 : static_cast<std::uint8_t>(buf[1]);
+
+            if ((password_length < 0) || (nread < 2 + password_length)) {
+                LOG_ERROR(SERVICE_BLUETOOTH, "LAN discovery call is truncated (got {} bytes)", nread);
+                return;
+            }
+
+            if ((password_length == static_cast<std::int64_t>(password_.length())) && (std::memcmp(password_.data(), buf + 2, static_cast<std::size_t>(password_length)) == 0)) {
                 for (std::uint16_t i = 0; i < RETRY_LAN_DISCOVERY_TIME_MAX; i++) {
                     lan_discovery_call_listener_socket_->send(*addr, &exist_opcode, 1);
                 }

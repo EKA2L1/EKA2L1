@@ -81,9 +81,8 @@ namespace eka2l1::epoc::bt {
 
             matching_server_socket_copy_copy->bind(*reinterpret_cast<sockaddr*>(&addr_temp));
 
-            matching_server_socket_copy_copy->on<uvw::error_event>([this](const uvw::error_event &event, uvw::tcp_handle &handle) {
-                // Accept the fate and resend login
-                send_login();
+            matching_server_socket_copy_copy->on<uvw::error_event>([](const uvw::error_event &event, uvw::tcp_handle &handle) {
+                LOG_ERROR(SERVICE_BLUETOOTH, "Error on the central Bluetooth Netplay server socket! Libuv error code={}", event.code());
             });
 
             matching_server_socket_copy_copy->on<uvw::connect_event>([matching_server_socket_copy_copy, this](const uvw::connect_event &event, uvw::tcp_handle &handle) {
@@ -92,6 +91,10 @@ namespace eka2l1::epoc::bt {
                 });
 
                 matching_server_socket_copy_copy->read();
+
+                // The server puts us in the room named by our password, so it has to
+                // hear the login before it can answer any player query.
+                send_login();
             });
 
             int err = matching_server_socket_copy_copy->connect(*reinterpret_cast<const sockaddr *>(&meta_server_addr));
@@ -135,7 +138,7 @@ namespace eka2l1::epoc::bt {
         int err = matching_server_socket_->write(&package, 1);
 
         if (err < 0) {
-            LOG_ERROR(SERVICE_BLUETOOTH, , err);
+            LOG_ERROR(SERVICE_BLUETOOTH, "Fail to send logout request to server! Libuv's error code {}", err);
         }
 
         if (close_and_reset) {
@@ -146,28 +149,94 @@ namespace eka2l1::epoc::bt {
     }
 
     void midman_inet::handle_matching_server_msg(std::int64_t nread, const char *buf) {
-        if (buf[0] == QUERY_OPCODE_NOTIFY_PLAYER_EXISTENCE) {
-            if (!current_active_observer_) {
+        if (!buf || (nread <= 0)) {
+            return;
+        }
+
+        // Opcode, player count, then one entry per player: a type byte, an address
+        // of at most 16 bytes and an optional port. Anything past that is not a
+        // message this protocol can produce, so stop reassembling instead of
+        // growing the buffer on whatever the socket keeps handing us.
+        static constexpr std::size_t MAX_MATCHING_SERVER_MESSAGE_SIZE = 2 + 255 * (1 + 16 + 2);
+
+        matching_server_receive_buffer_.insert(matching_server_receive_buffer_.end(), buf, buf + nread);
+        if (matching_server_receive_buffer_.size() > MAX_MATCHING_SERVER_MESSAGE_SIZE) {
+            LOG_ERROR(SERVICE_BLUETOOTH, "Matching server sent an oversized reply");
+            matching_server_receive_buffer_.clear();
+            return;
+        }
+
+        while (matching_server_receive_buffer_.size() >= 2) {
+            const std::uint8_t opcode = static_cast<std::uint8_t>(matching_server_receive_buffer_[0]);
+            if (opcode == QUERY_OPCODE_SERVER_PORT_EXTENSION) {
+                if (static_cast<std::uint8_t>(matching_server_receive_buffer_[1]) >= 1) {
+                    const std::uint16_t advertised_port = static_cast<std::uint16_t>(port_);
+                    char package[] = {
+                        static_cast<char>(QUERY_OPCODE_SERVER_PORT_EXTENSION),
+                        static_cast<char>(advertised_port >> 8),
+                        static_cast<char>(advertised_port & 0xFF)
+                    };
+                    matching_server_socket_->write(package, sizeof(package));
+                }
+                matching_server_receive_buffer_.erase(matching_server_receive_buffer_.begin(),
+                    matching_server_receive_buffer_.begin() + 2);
+                continue;
+            }
+
+            if (opcode != QUERY_OPCODE_NOTIFY_PLAYER_EXISTENCE) {
+                LOG_ERROR(SERVICE_BLUETOOTH, "Matching server sent unknown opcode {}", opcode);
+                matching_server_receive_buffer_.clear();
                 return;
+            }
+
+            const std::uint8_t friend_count = static_cast<std::uint8_t>(matching_server_receive_buffer_[1]);
+            std::size_t packet_size = 2;
+            bool complete = true;
+            for (std::uint8_t i = 0; i < friend_count; i++) {
+                if (packet_size >= matching_server_receive_buffer_.size()) {
+                    complete = false;
+                    break;
+                }
+
+                const std::uint8_t address_type = static_cast<std::uint8_t>(matching_server_receive_buffer_[packet_size]);
+                if (address_type > 3) {
+                    LOG_ERROR(SERVICE_BLUETOOTH, "Player list from the matching server has invalid address type {}", address_type);
+                    matching_server_receive_buffer_.clear();
+                    return;
+                }
+
+                const bool is_ipv4 = (address_type == 1) || (address_type == 2);
+                const bool has_port = (address_type == 2) || (address_type == 3);
+                packet_size += 1 + (is_ipv4 ? 4 : 16) + (has_port ? 2 : 0);
+                if (packet_size > matching_server_receive_buffer_.size()) {
+                    complete = false;
+                    break;
+                }
+            }
+
+            if (!complete) {
+                return;
+            }
+
+            if (!current_active_observer_) {
+                matching_server_receive_buffer_.erase(matching_server_receive_buffer_.begin(),
+                    matching_server_receive_buffer_.begin() + packet_size);
+                continue;
             }
 
             hearing_timeout_timer_->stop();
 
-            char friend_count = buf[1];
-            char packet_stream_pointer = 2;
+            std::int64_t packet_stream_pointer = 2;
 
-            for (char i = 0; i < friend_count; i++) {
-                if (packet_stream_pointer >= nread) {
-                    break;
-                }
-
-                read_and_add_friend(buf, packet_stream_pointer);
+            for (std::uint8_t i = 0; i < friend_count; i++) {
+                read_and_add_friend(matching_server_receive_buffer_.data(), packet_size, packet_stream_pointer);
             }
+
+            matching_server_receive_buffer_.erase(matching_server_receive_buffer_.begin(),
+                matching_server_receive_buffer_.begin() + packet_size);
 
             // No need to restart, it's one time thing
             on_timeout_friend_search();
         }
-
-        return;
     }
 }

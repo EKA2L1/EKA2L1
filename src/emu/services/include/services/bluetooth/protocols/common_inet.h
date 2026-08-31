@@ -14,6 +14,7 @@ namespace eka2l1::epoc::bt {
 
         QUERY_OPCODE_SERVER_LOGIN,
         QUERY_OPCODE_SERVER_LOGOUT,
+        QUERY_OPCODE_SERVER_PORT_EXTENSION,
         QUERY_OPCODE_RESULT_START = 100
     };
 }
