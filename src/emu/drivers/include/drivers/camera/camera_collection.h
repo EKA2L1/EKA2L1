@@ -36,4 +36,26 @@ namespace eka2l1::drivers::camera {
     };
 
     collection *get_collection();
+
+    // How far, counter-clockwise, a frame that is already upright in the host
+    // device's natural orientation still has to turn to be upright in the guest's
+    // picture. A backend owns the raw-readout-to-natural step, which is its own
+    // business, and adds this on top. The presenter keeps the value current: a
+    // guest switches screen mode, and the host interface rotates, while a camera
+    // runs.
+    //
+    // Close to the accelerometer's angle, but not the same one, and the difference
+    // is easy to miss because it vanishes in the orientation most testing happens
+    // in:
+    //
+    //   camera        = (mode.rotation - panel_mount) - host_interface_rotation
+    //   accelerometer = (mode.rotation - panel_mount) + host_interface_rotation
+    //
+    // The host terms have opposite signs. Turning the phone counter-clockwise
+    // spins the scene clockwise inside a sensor buffer, while the interface
+    // counter-rotates the picture to keep it upright for the viewer. The guest
+    // terms match: an app that composes for a rotated panel has already laid the
+    // frame out for that panel.
+    void set_frame_rotation(const int degrees);
+    int frame_rotation();
 }

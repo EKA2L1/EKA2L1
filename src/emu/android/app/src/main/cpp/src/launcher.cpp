@@ -21,6 +21,8 @@
 #include <android/launcher.h>
 #include <android/state.h>
 
+#include <drivers/camera/camera_collection.h>
+
 #include <package/manager.h>
 #include <system/devices.h>
 
@@ -581,6 +583,15 @@ namespace eka2l1::android {
 
         if (scr) {
             auto &crr_mode = scr->current_mode();
+
+            // A camera is bolted to the device body, so a guest needs its frames
+            // rotated into the picture it composes for. Only the guest term is
+            // known here; the host interface's own rotation is added by the
+            // backend, which reads the display rotation directly (see
+            // EmulatorCamera.receiveViewfinderFeed).
+            const eka2l1::epoc::config::screen_mode *natural_mode = scr->mode_info(0);
+            drivers::camera::set_frame_rotation(crr_mode.rotation
+                - (natural_mode ? natural_mode->rotation : 0));
 
             eka2l1::vec2 size = crr_mode.size;
             src.size = size;

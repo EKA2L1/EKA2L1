@@ -21,7 +21,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cstring>
-#include <limits>
+#include <vector>
 
 namespace eka2l1 {
     namespace {
@@ -53,11 +53,26 @@ namespace eka2l1 {
         std::atomic<bool> done{ false };
     };
 
+    // Frames arrive on a driver thread for as long as the feed runs, so the state
+    // the callback touches outlives the session it was started from.
+    struct camera_session::feed_state {
+        system *sys;
+
+        // Only read/written with the kernel lock held.
+        std::shared_ptr<capture_state> pending;
+
+        std::atomic<bool> wants_frame{ false };
+        std::atomic<bool> stopped{ false };
+        std::atomic<bool> failed{ false };
+    };
+
     camera_session::camera_session(service::typical_server *server, const kernel::uid client_session_uid,
         const epoc::version client_version)
         : service::typical_session(server, client_session_uid, client_version)
         , low_quality_(false)
-        , night_mode_(false) {
+        , night_mode_(false)
+        , feed_size_(0, 0)
+        , feed_format_(0) {
     }
 
     camera_session::~camera_session() {
@@ -96,6 +111,8 @@ namespace eka2l1 {
     }
 
     void camera_session::turn_off() {
+        stop_feed();
+
         if (pending_capture_) {
             const std::shared_ptr<capture_state> state = pending_capture_;
             state->cancelled.store(true);
@@ -122,6 +139,164 @@ namespace eka2l1 {
         }
     }
 
+    void camera_session::stop_feed() {
+        if (!feed_) {
+            return;
+        }
+
+        // Retire the shared state before the driver so that a frame already in
+        // flight on the driver thread finds the feed stopped and does nothing.
+        feed_->stopped.store(true);
+        feed_->wants_frame.store(false);
+        feed_->pending.reset();
+        feed_.reset();
+
+        feed_size_ = eka2l1::vec2(0, 0);
+        feed_format_ = 0;
+
+        if (camera_) {
+            camera_->stop_viewfinder_feed();
+        }
+
+        LOG_TRACE(HLE_CAMERA, "Camera frame feed stopped");
+    }
+
+    bool camera_session::start_feed(system *sys, const eka2l1::vec2 &size, const std::uint32_t format,
+        const std::shared_ptr<capture_state> &first_request) {
+        std::shared_ptr<feed_state> feed = std::make_shared<feed_state>();
+        feed->sys = sys;
+        feed->pending = first_request;
+        feed->wants_frame.store(true);
+
+        feed_ = feed;
+        feed_size_ = size;
+        feed_format_ = format;
+
+        kernel_system *kern = sys->get_kernel_system();
+
+        // Drivers normally deliver on their own thread, but a feed that fails to
+        // start reports it through the same callback, synchronously. Let that call
+        // take the kernel lock instead of deadlocking against this thread.
+        kern->unlock();
+        camera_->receive_viewfinder_feed(size, static_cast<drivers::camera::frame_format>(format),
+            [feed]() {
+                return feed->wants_frame.load() && !feed->stopped.load();
+            },
+            [feed](const void *buffer, const std::size_t buffer_size, const int error) {
+                if (feed->stopped.load() || !feed->wants_frame.load()) {
+                    return;
+                }
+
+                kernel_system *kern = feed->sys->get_kernel_system();
+                kernel_lock guard(kern);
+
+                if (feed->stopped.load() || kern->is_wiping()) {
+                    return;
+                }
+
+                if (error < 0) {
+                    feed->failed.store(true);
+                }
+
+                const std::shared_ptr<capture_state> state = feed->pending;
+                feed->pending.reset();
+                feed->wants_frame.store(false);
+
+                if (state) {
+                    deliver_frame(state, buffer, buffer_size, error);
+                }
+            });
+        kern->lock();
+
+        // A feed that cannot start reports it through the same callback, which has
+        // already completed the request by now. Tear the dead feed down so that the
+        // next request tries again instead of waiting forever.
+        if (feed->failed.load()) {
+            LOG_ERROR(HLE_CAMERA, "Unable to start the camera frame feed!");
+            stop_feed();
+            return false;
+        }
+
+        LOG_TRACE(HLE_CAMERA, "Camera frame feed started at {}x{}, format 0x{:X}",
+            size.x, size.y, format);
+        return true;
+    }
+
+    void camera_session::deliver_frame(const std::shared_ptr<capture_state> &state, const void *buffer,
+        const std::size_t buffer_size, const int error) {
+        kernel_system *kern = state->sys->get_kernel_system();
+
+        if (state->cancelled.load() || state->done.exchange(true)) {
+            return;
+        }
+
+        if (!kern->is_thread_alive(state->notify.requester)) {
+            if (state->owns_bitmap && state->bitmap && (state->bitmap->count == 0)) {
+                state->fbs->remove(state->bitmap);
+                state->bitmap = nullptr;
+            }
+
+            return;
+        }
+
+        int result = epoc::error_none;
+        fbs_server *fbs = state->fbs;
+        fbsbitmap *bitmap = fbs ? fbs->get<fbsbitmap>(state->bitmap_handle) : nullptr;
+
+        if ((error < 0) || !buffer) {
+            result = epoc::error_general;
+        } else if (!bitmap || (bitmap->kind != fbsobj_kind::bitmap)) {
+            result = epoc::error_bad_handle;
+        } else {
+            epoc::display_mode mode = bitmap->bitmap_->settings_.current_display_mode();
+            if (mode == epoc::display_mode::none) {
+                mode = bitmap->bitmap_->settings_.initial_display_mode();
+            }
+
+            const std::size_t source_bytes = static_cast<std::size_t>(state->source_stride)
+                * state->source_size.y;
+            const std::size_t target_bytes = static_cast<std::size_t>(state->target_stride)
+                * state->target_size.y;
+
+            if ((bitmap->bitmap_->header_.size_pixels != state->target_size)
+                || (mode != state->target_mode)
+                || (bitmap->bitmap_->data_size() < target_bytes)
+                || (buffer_size < source_bytes)) {
+                result = epoc::error_underflow;
+            } else {
+                const std::uint8_t *source = reinterpret_cast<const std::uint8_t *>(buffer);
+                std::uint8_t *target = bitmap->bitmap_->data_pointer(fbs);
+
+                if ((state->source_size == state->target_size)
+                    && (state->source_stride == state->target_stride)) {
+                    std::memcpy(target, source, target_bytes);
+                } else {
+                    std::memset(target, 0, target_bytes);
+
+                    for (int y = 0; y < state->target_size.y; y++) {
+                        const int source_y = y * state->source_size.y / state->target_size.y;
+                        for (int x = 0; x < state->target_size.x; x++) {
+                            const int source_x = x * state->source_size.x / state->target_size.x;
+                            std::memcpy(target + static_cast<std::size_t>(y) * state->target_stride
+                                    + static_cast<std::size_t>(x) * state->bytes_per_pixel,
+                                source + static_cast<std::size_t>(source_y) * state->source_stride
+                                    + static_cast<std::size_t>(source_x) * state->bytes_per_pixel,
+                                state->bytes_per_pixel);
+                        }
+                    }
+                }
+            }
+        }
+
+        if ((result != epoc::error_none) && state->owns_bitmap
+            && state->bitmap && (state->bitmap->count == 0)) {
+            state->fbs->remove(state->bitmap);
+            state->bitmap = nullptr;
+        }
+
+        state->notify.complete(result);
+    }
+
     void camera_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case camera_turn_on:
@@ -141,6 +316,7 @@ namespace eka2l1 {
             }
 
             night_mode_ = (*lighting == 1);
+            LOG_TRACE(HLE_CAMERA, "Camera night mode set to {}", night_mode_);
             if (camera_) {
                 camera_->set_parameter(drivers::camera::PARAMETER_KEY_EXPOSURE,
                     night_mode_ ? drivers::camera::EXPOSURE_MODE_NIGHT : drivers::camera::EXPOSURE_MODE_AUTO);
@@ -158,6 +334,7 @@ namespace eka2l1 {
             }
 
             low_quality_ = (*quality == 1);
+            LOG_TRACE(HLE_CAMERA, "Camera low quality mode set to {}", low_quality_);
             ctx->complete(epoc::error_none);
             break;
         }
@@ -219,29 +396,17 @@ namespace eka2l1 {
             const std::uint32_t bits_per_pixel = low_quality_ ? 12 : 24;
             const std::uint32_t bytes_per_pixel = low_quality_ ? 2 : 3;
 
-            const std::vector<eka2l1::vec2> sizes = camera_->supported_output_image_sizes(format);
-            if (sizes.empty()) {
+            // Frames come from the viewfinder feed, which delivers exactly the
+            // requested size in the requested guest format. A driver that does not
+            // know the format would drop the feed request without reporting it, so
+            // reject it here rather than leaving the client waiting forever.
+            const std::vector<drivers::camera::frame_format> formats = camera_->supported_frame_formats();
+            if (std::find(formats.begin(), formats.end(), format) == formats.end()) {
                 ctx->complete(epoc::error_not_supported);
                 break;
             }
 
-            std::size_t size_index = 0;
-            std::uint64_t best_distance = std::numeric_limits<std::uint64_t>::max();
-            for (std::size_t i = 0; i < sizes.size(); i++) {
-                const std::int64_t dx = static_cast<std::int64_t>(sizes[i].x) - expected_size.x;
-                const std::int64_t dy = static_cast<std::int64_t>(sizes[i].y) - expected_size.y;
-                const std::uint64_t distance = static_cast<std::uint64_t>(dx * dx + dy * dy);
-                if (distance < best_distance) {
-                    best_distance = distance;
-                    size_index = i;
-                }
-            }
-
-            const eka2l1::vec2 source_size = sizes[size_index];
-            if ((source_size.x <= 0) || (source_size.y <= 0)) {
-                ctx->complete(epoc::error_not_supported);
-                break;
-            }
+            const eka2l1::vec2 source_size = expected_size;
 
             if (!bitmap) {
                 bool support_current_display_mode = true;
@@ -306,82 +471,25 @@ namespace eka2l1 {
             state->bytes_per_pixel = bytes_per_pixel;
             pending_capture_ = state;
 
-            // Backends normally complete on their capture queue, but request
-            // setup failures may invoke the callback synchronously. Let that
-            // callback take the kernel lock instead of deadlocking here.
-            kern->unlock();
-            camera_->capture_image(static_cast<std::uint32_t>(size_index), format,
-                [state](const void *buffer, const std::size_t buffer_size, const int error) {
-                    if (state->cancelled.load()) {
-                        return;
-                    }
+            // GetImage is how this protocol implements a viewfinder: apps poll it
+            // frame after frame. Serving each poll with a still capture makes the
+            // host run its whole photo pipeline (and, on iOS, the shutter sound)
+            // per frame, so take frames from the viewfinder feed and leave it
+            // running between requests instead.
+            if (feed_ && (feed_->failed.load() || (feed_size_ != expected_size)
+                || (feed_format_ != static_cast<std::uint32_t>(format)))) {
+                // A feed that reported an error stays dead, and the quality
+                // setting can change the size and format between requests.
+                stop_feed();
+            }
 
-                    kernel_system *kern = state->sys->get_kernel_system();
-                    kernel_lock guard(kern);
+            if (feed_) {
+                feed_->pending = state;
+                feed_->wants_frame.store(true);
+            } else {
+                start_feed(ctx->sys, expected_size, static_cast<std::uint32_t>(format), state);
+            }
 
-                    if (state->cancelled.load() || kern->is_wiping() || state->done.exchange(true)) {
-                        return;
-                    }
-
-                    if (!kern->is_thread_alive(state->notify.requester)) {
-                        if (state->owns_bitmap && state->bitmap && (state->bitmap->count == 0)) {
-                            state->fbs->remove(state->bitmap);
-                            state->bitmap = nullptr;
-                        }
-                        return;
-                    }
-
-                    int result = epoc::error_none;
-                    fbs_server *fbs = state->fbs;
-                    fbsbitmap *bitmap = fbs ? fbs->get<fbsbitmap>(state->bitmap_handle) : nullptr;
-
-                    if ((error < 0) || !buffer) {
-                        result = epoc::error_general;
-                    } else if (!bitmap || (bitmap->kind != fbsobj_kind::bitmap)) {
-                        result = epoc::error_bad_handle;
-                    } else {
-                        epoc::display_mode mode = bitmap->bitmap_->settings_.current_display_mode();
-                        if (mode == epoc::display_mode::none) {
-                            mode = bitmap->bitmap_->settings_.initial_display_mode();
-                        }
-
-                        const std::size_t source_bytes = static_cast<std::size_t>(state->source_stride)
-                            * state->source_size.y;
-                        const std::size_t target_bytes = static_cast<std::size_t>(state->target_stride)
-                            * state->target_size.y;
-                        if ((bitmap->bitmap_->header_.size_pixels != state->target_size)
-                            || (mode != state->target_mode)
-                            || (bitmap->bitmap_->data_size() < target_bytes)
-                            || (buffer_size < source_bytes)) {
-                            result = epoc::error_underflow;
-                        } else {
-                            const std::uint8_t *source = reinterpret_cast<const std::uint8_t *>(buffer);
-                            std::uint8_t *target = bitmap->bitmap_->data_pointer(fbs);
-                            std::memset(target, 0, target_bytes);
-
-                            for (int y = 0; y < state->target_size.y; y++) {
-                                const int source_y = y * state->source_size.y / state->target_size.y;
-                                for (int x = 0; x < state->target_size.x; x++) {
-                                    const int source_x = x * state->source_size.x / state->target_size.x;
-                                    std::memcpy(target + static_cast<std::size_t>(y) * state->target_stride
-                                            + static_cast<std::size_t>(x) * state->bytes_per_pixel,
-                                        source + static_cast<std::size_t>(source_y) * state->source_stride
-                                            + static_cast<std::size_t>(source_x) * state->bytes_per_pixel,
-                                        state->bytes_per_pixel);
-                                }
-                            }
-                        }
-                    }
-
-                    if ((result != epoc::error_none) && state->owns_bitmap
-                        && state->bitmap && (state->bitmap->count == 0)) {
-                        state->fbs->remove(state->bitmap);
-                        state->bitmap = nullptr;
-                    }
-
-                    state->notify.complete(result);
-                });
-            kern->lock();
             break;
         }
 

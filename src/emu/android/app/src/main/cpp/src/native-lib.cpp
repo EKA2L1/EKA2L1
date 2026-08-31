@@ -382,6 +382,12 @@ Java_com_github_eka2l1_emu_EmulatorCamera_onFrameViewfinderDelivered(JNIEnv *env
     }
 }
 extern "C"
+JNIEXPORT jint JNICALL
+Java_com_github_eka2l1_emu_EmulatorCamera_guestFrameRotation(JNIEnv *env, jclass clazz) {
+    return eka2l1::drivers::camera::frame_rotation();
+}
+
+extern "C"
 JNIEXPORT jboolean JNICALL
 Java_com_github_eka2l1_emu_EmulatorCamera_doesCameraAllowNewFrame(JNIEnv *env, jclass clazz,
                                                                   jint index) {

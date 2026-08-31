@@ -22,13 +22,14 @@
 #import <ImageIO/ImageIO.h>
 
 #include <drivers/camera/backend/ios/camera_pixel_ios.h>
+#include <drivers/camera/camera_collection.h>
 
 namespace eka2l1::drivers::camera {
     // Formats the backend can synthesize from a BGRA source. Mirrors the
     // Android backend's advertised set.
-    const frame_format IOS_SUPPORTED_FORMATS[7] = {
+    const frame_format IOS_SUPPORTED_FORMATS[8] = {
         FRAME_FORMAT_ARGB8888, FRAME_FORMAT_JPEG, FRAME_FORMAT_RGB565,
-        FRAME_FORMAT_FBSBMP_COLOR64K, FRAME_FORMAT_FBSBMP_COLOR16M,
+        FRAME_FORMAT_FBSBMP_COLOR4K, FRAME_FORMAT_FBSBMP_COLOR64K, FRAME_FORMAT_FBSBMP_COLOR16M,
         FRAME_FORMAT_FBSBMP_COLOR16MU, FRAME_FORMAT_EXIF
     };
 
@@ -105,9 +106,12 @@ namespace eka2l1::drivers::camera {
             return true;
         }
 
+        case FRAME_FORMAT_FBSBMP_COLOR4K:
         case FRAME_FORMAT_FBSBMP_COLOR64K:
         case FRAME_FORMAT_RGB565: {
-            const std::size_t dest_stride = (format == FRAME_FORMAT_FBSBMP_COLOR64K)
+            const bool is_fbs = (format == FRAME_FORMAT_FBSBMP_COLOR4K)
+                || (format == FRAME_FORMAT_FBSBMP_COLOR64K);
+            const std::size_t dest_stride = is_fbs
                 ? (static_cast<std::size_t>(width) * 2 + 3) / 4 * 4
                 : static_cast<std::size_t>(width) * 2;
             dest.resize(dest_stride * height);
@@ -117,10 +121,18 @@ namespace eka2l1::drivers::camera {
                 std::uint8_t *dest_row = dest.data() + y * dest_stride;
 
                 for (int x = 0; x < width; x++) {
-                    const std::uint16_t pixel = static_cast<std::uint16_t>(
-                        ((src_row[x * 4 + 0] & 0xF8) >> 3) |
-                        ((src_row[x * 4 + 1] & 0xFC) << 3) |
-                        ((src_row[x * 4 + 2] & 0xF8) << 8));
+                    std::uint16_t pixel = 0;
+                    if (format == FRAME_FORMAT_FBSBMP_COLOR4K) {
+                        pixel = static_cast<std::uint16_t>(
+                            (src_row[x * 4 + 0] >> 4)
+                            | (src_row[x * 4 + 1] & 0xF0)
+                            | ((src_row[x * 4 + 2] & 0xF0) << 4));
+                    } else {
+                        pixel = static_cast<std::uint16_t>(
+                            ((src_row[x * 4 + 0] & 0xF8) >> 3)
+                            | ((src_row[x * 4 + 1] & 0xFC) << 3)
+                            | ((src_row[x * 4 + 2] & 0xF8) << 8));
+                    }
 
                     dest_row[x * 2 + 0] = static_cast<std::uint8_t>(pixel & 0xFF);
                     dest_row[x * 2 + 1] = static_cast<std::uint8_t>(pixel >> 8);
@@ -137,9 +149,19 @@ namespace eka2l1::drivers::camera {
         return false;
     }
 
-    // Draw a CGImage scaled into a top-down BGRX buffer of exactly dw x dh.
+    // Every built-in iOS camera reads out landscape-right, so a raw buffer sits
+    // 90 degrees counter-clockwise from upright in the host's natural (portrait)
+    // orientation. The capture connection is pinned to that native readout, so
+    // this offset is a constant rather than something to query per frame.
+    static constexpr int IOS_SENSOR_CCW_FROM_NATURAL = 90;
+
+    int ios_frame_rotation_ccw() {
+        const int total = frame_rotation() - IOS_SENSOR_CCW_FROM_NATURAL;
+        return ((total % 360) + 360) % 360;
+    }
+
     bool ios_render_cgimage_to_bgra(CGImageRef image, const int dw, const int dh,
-        std::vector<std::uint8_t> &out) {
+        const int rotation_ccw_deg, std::vector<std::uint8_t> &out) {
         out.resize(static_cast<std::size_t>(dw) * 4 * dh);
 
         CGColorSpaceRef color_space = CGColorSpaceCreateDeviceRGB();
@@ -153,7 +175,35 @@ namespace eka2l1::drivers::camera {
         }
 
         CGContextSetInterpolationQuality(context, kCGInterpolationLow);
-        CGContextDrawImage(context, CGRectMake(0, 0, dw, dh), image);
+
+        const int rotation = ((rotation_ccw_deg % 360) + 360) % 360;
+
+        if (rotation == 0) {
+            CGContextDrawImage(context, CGRectMake(0, 0, dw, dh), image);
+            CGContextRelease(context);
+
+            return true;
+        }
+
+        // A bitmap context puts row 0 at the top and +Y upwards, so the user
+        // space is upright and a positive CGContext rotation is counter-
+        // clockwise in the picture too.
+        const double source_width = static_cast<double>(CGImageGetWidth(image));
+        const double source_height = static_cast<double>(CGImageGetHeight(image));
+        const bool extents_swapped = ((rotation % 180) != 0);
+        const double rotated_width = extents_swapped ? source_height : source_width;
+        const double rotated_height = extents_swapped ? source_width : source_height;
+
+        if ((source_width <= 0.0) || (source_height <= 0.0)) {
+            CGContextRelease(context);
+            return false;
+        }
+
+        CGContextTranslateCTM(context, dw * 0.5, dh * 0.5);
+        CGContextRotateCTM(context, rotation * M_PI / 180.0);
+        CGContextScaleCTM(context, dw / rotated_width, dh / rotated_height);
+        CGContextDrawImage(context, CGRectMake(-source_width * 0.5, -source_height * 0.5,
+            source_width, source_height), image);
         CGContextRelease(context);
 
         return true;
