@@ -46,6 +46,7 @@
 #include <drivers/input/common.h>
 #include <drivers/itc.h>
 #include <drivers/hwrm/vibration.h>
+#include <drivers/camera/camera_collection.h>
 #include <drivers/sensor/sensor.h>
 #include <services/window/screen.h>
 #include <kernel/kernel.h>
@@ -685,11 +686,24 @@ namespace eka2l1::ios {
         // rot=270), unlike Symbian^3 (rot=0). Refreshing here tracks both
         // guest screen-mode switches and host rotations (a host rotation
         // re-attaches the surface, which re-presents even a static screen).
-        if (state->sensor_driver) {
+        {
             const eka2l1::epoc::config::screen_mode *natural_mode = scr->mode_info(0);
             const int panel_mount = natural_mode ? natural_mode->rotation : 0;
-            state->sensor_driver->set_motion_rotation(mode.rotation - panel_mount
-                + state->host_interface_rotation_deg.load(std::memory_order_relaxed));
+            const int picture_rotation = mode.rotation - panel_mount
+                + state->host_interface_rotation_deg.load(std::memory_order_relaxed);
+
+            if (state->sensor_driver) {
+                state->sensor_driver->set_motion_rotation(picture_rotation);
+            }
+
+            // A camera is bolted to the device body, so it needs the mirror of the
+            // accelerometer's angle for the host term: turning the phone counter-
+            // clockwise spins the scene clockwise inside the sensor buffer, while
+            // the interface counter-rotates the picture to stay upright for the
+            // viewer. The guest term keeps its sign -- an app that composes for a
+            // rotated panel already lays the frame out for it.
+            eka2l1::drivers::camera::set_frame_rotation(mode.rotation - panel_mount
+                - state->host_interface_rotation_deg.load(std::memory_order_relaxed));
         }
         eka2l1::rect src;
         src.size = mode.size;

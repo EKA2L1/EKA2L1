@@ -22,6 +22,7 @@
 #import <ImageIO/ImageIO.h>
 
 #include <drivers/camera/backend/ios/camera_pixel_ios.h>
+#include <drivers/camera/camera_collection.h>
 
 namespace eka2l1::drivers::camera {
     // Formats the backend can synthesize from a BGRA source. Mirrors the
@@ -148,9 +149,19 @@ namespace eka2l1::drivers::camera {
         return false;
     }
 
-    // Draw a CGImage scaled into a top-down BGRX buffer of exactly dw x dh.
+    // Every built-in iOS camera reads out landscape-right, so a raw buffer sits
+    // 90 degrees counter-clockwise from upright in the host's natural (portrait)
+    // orientation. The capture connection is pinned to that native readout, so
+    // this offset is a constant rather than something to query per frame.
+    static constexpr int IOS_SENSOR_CCW_FROM_NATURAL = 90;
+
+    int ios_frame_rotation_ccw() {
+        const int total = frame_rotation() - IOS_SENSOR_CCW_FROM_NATURAL;
+        return ((total % 360) + 360) % 360;
+    }
+
     bool ios_render_cgimage_to_bgra(CGImageRef image, const int dw, const int dh,
-        std::vector<std::uint8_t> &out) {
+        const int rotation_ccw_deg, std::vector<std::uint8_t> &out) {
         out.resize(static_cast<std::size_t>(dw) * 4 * dh);
 
         CGColorSpaceRef color_space = CGColorSpaceCreateDeviceRGB();
@@ -164,7 +175,35 @@ namespace eka2l1::drivers::camera {
         }
 
         CGContextSetInterpolationQuality(context, kCGInterpolationLow);
-        CGContextDrawImage(context, CGRectMake(0, 0, dw, dh), image);
+
+        const int rotation = ((rotation_ccw_deg % 360) + 360) % 360;
+
+        if (rotation == 0) {
+            CGContextDrawImage(context, CGRectMake(0, 0, dw, dh), image);
+            CGContextRelease(context);
+
+            return true;
+        }
+
+        // A bitmap context puts row 0 at the top and +Y upwards, so the user
+        // space is upright and a positive CGContext rotation is counter-
+        // clockwise in the picture too.
+        const double source_width = static_cast<double>(CGImageGetWidth(image));
+        const double source_height = static_cast<double>(CGImageGetHeight(image));
+        const bool extents_swapped = ((rotation % 180) != 0);
+        const double rotated_width = extents_swapped ? source_height : source_width;
+        const double rotated_height = extents_swapped ? source_width : source_height;
+
+        if ((source_width <= 0.0) || (source_height <= 0.0)) {
+            CGContextRelease(context);
+            return false;
+        }
+
+        CGContextTranslateCTM(context, dw * 0.5, dh * 0.5);
+        CGContextRotateCTM(context, rotation * M_PI / 180.0);
+        CGContextScaleCTM(context, dw / rotated_width, dh / rotated_height);
+        CGContextDrawImage(context, CGRectMake(-source_width * 0.5, -source_height * 0.5,
+            source_width, source_height), image);
         CGContextRelease(context);
 
         return true;

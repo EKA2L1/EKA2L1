@@ -12,6 +12,7 @@ import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Looper;
 import android.util.Log;
 import android.util.Size;
+import android.view.Surface;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -411,6 +412,22 @@ public class EmulatorCamera {
         }
     }
 
+    // How far, counter-clockwise, a frame that is upright in the device's natural
+    // orientation still has to turn to be upright in the guest's picture.
+    //
+    // Display.getRotation() reports how far the screen has turned counter-
+    // clockwise from natural; the interface counter-rotates by the same amount to
+    // stay upright for the viewer, while the camera keeps looking out of the
+    // device body -- so it enters with the display's sign. The native side
+    // contributes the guest term alone (see launcher.cpp), because only the
+    // backend can see the host display.
+    private int frameRotationDegrees() {
+        final int display_rotation =
+            applicationActivity.getWindowManager().getDefaultDisplay().getRotation() * 90;
+
+        return ((guestFrameRotation() + display_rotation) % 360 + 360) % 360;
+    }
+
     private int getTargetCaptureRotation() {
         int rotation = applicationActivity.getWindowManager().getDefaultDisplay().getRotation() * 90;
         int cameraOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
@@ -445,13 +462,18 @@ public class EmulatorCamera {
         applicationActivity.runOnUiThread(() -> {
             Size sizeFinned = new Size(width, height);
 
+            // Pin the target to the device's natural orientation so that the
+            // per-image rotation degrees always mean "rotate by this to be upright
+            // in the natural orientation", whatever the display was doing when the
+            // use case got bound. The display's own rotation is folded back in per
+            // frame, together with the guest's, in frameRotationDegrees().
             currentAnalysis = new ImageAnalysis.Builder()
                     .setTargetResolution(sizeFinned)
+                    .setTargetRotation(Surface.ROTATION_0)
                     .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                     .build();
 
             camera = cameraProvider.bindToLifecycle(applicationActivity, getCameraSelector(), currentAnalysis);
-            currentAnalysis.getTargetRotation();
 
             currentAnalysis.setAnalyzer(cameraExecutor,
                     image -> {
@@ -463,7 +485,14 @@ public class EmulatorCamera {
                         ByteBuffer imageBuffer = image.getPlanes()[0].getBuffer();
 
                         Size sizeRotatedReceived = new Size(image.getWidth(), image.getHeight());
-                        int rotationGivenByImage = image.getImageInfo().getRotationDegrees();
+
+                        // getRotationDegrees() turns the raw frame upright in the
+                        // device's natural orientation (the target is pinned to it
+                        // above); frameRotationDegrees() carries it the rest of the
+                        // way into the guest's picture. postRotate turns clockwise,
+                        // so the counter-clockwise remainder is subtracted.
+                        int rotationGivenByImage = ((image.getImageInfo().getRotationDegrees()
+                                - frameRotationDegrees()) % 360 + 360) % 360;
 
                         Bitmap finalBitmap = null;
                         int stride = image.getPlanes()[0].getRowStride();
@@ -786,6 +815,11 @@ public class EmulatorCamera {
 
         return buffer;
     }
+
+    // The rotation, counter-clockwise, that the guest's picture sits at from the
+    // emulated device's natural orientation. Read per frame: an app switches
+    // screen mode while the camera runs.
+    private static native int guestFrameRotation();
 
     private static native boolean doesCameraAllowNewFrame(int index);
     private static native void onCaptureImageDelivered(int index, byte[] rawData, int errorCode);

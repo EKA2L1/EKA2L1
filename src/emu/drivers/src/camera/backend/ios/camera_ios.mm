@@ -232,17 +232,22 @@ using eka2l1::drivers::camera::instance_ios;
         return;
     }
 
-    // Deliver upright (portrait) pixels, matching what the Android backend
-    // produces after rotating by the Camera2-reported rotation degrees.
+    // Pin the connection to the cameras' native landscape-right readout instead
+    // of asking AVFoundation to rotate. A guest needs frames upright in *its*
+    // picture, which depends on the emulated screen mode and on the host
+    // interface orientation, so the whole rotation is done in the pixel path
+    // (ios_frame_rotation_ccw) where it costs nothing on top of the rescale
+    // that already happens. Pinning also keeps the buffer geometry fixed, so
+    // the delegate can reason about it without querying the connection back.
     if (@available(iOS 17.0, *)) {
-        if ([connection isVideoRotationAngleSupported:90.0]) {
-            connection.videoRotationAngle = 90.0;
+        if ([connection isVideoRotationAngleSupported:0.0]) {
+            connection.videoRotationAngle = 0.0;
         }
     } else {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
         if (connection.supportsVideoOrientation) {
-            connection.videoOrientation = AVCaptureVideoOrientationPortrait;
+            connection.videoOrientation = AVCaptureVideoOrientationLandscapeRight;
         }
 #pragma clang diagnostic pop
     }
@@ -457,10 +462,12 @@ using eka2l1::drivers::camera::instance_ios;
     const int source_width = static_cast<int>(CVPixelBufferGetWidth(pixel_buffer));
     const int source_height = static_cast<int>(CVPixelBufferGetHeight(pixel_buffer));
 
+    const int rotation = eka2l1::drivers::camera::ios_frame_rotation_ccw();
+
     std::vector<std::uint8_t> converted;
     bool converted_ok = false;
 
-    if ((source_width == _viewfinderWidth) && (source_height == _viewfinderHeight)) {
+    if ((rotation == 0) && (source_width == _viewfinderWidth) && (source_height == _viewfinderHeight)) {
         converted_ok = eka2l1::drivers::camera::ios_convert_bgra_to_guest(base, stride,
             _viewfinderWidth, _viewfinderHeight, _viewfinderFormat, converted);
     } else {
@@ -470,7 +477,7 @@ using eka2l1::drivers::camera::instance_ios;
         if (source_image) {
             std::vector<std::uint8_t> scaled;
             if (eka2l1::drivers::camera::ios_render_cgimage_to_bgra(source_image, _viewfinderWidth,
-                _viewfinderHeight, scaled)) {
+                _viewfinderHeight, rotation, scaled)) {
                 converted_ok = eka2l1::drivers::camera::ios_convert_bgra_to_guest(scaled.data(),
                     static_cast<std::size_t>(_viewfinderWidth) * 4, _viewfinderWidth,
                     _viewfinderHeight, _viewfinderFormat, converted);
@@ -542,9 +549,13 @@ using eka2l1::drivers::camera::instance_ios;
 
     const eka2l1::drivers::camera::frame_format format = _captureFormat;
 
+    // A still is bolted to the device the same way a viewfinder frame is: a
+    // guest saving it expects the picture the right way up for its own screen.
+    const int rotation = eka2l1::drivers::camera::ios_frame_rotation_ccw();
+
     if ((format == eka2l1::drivers::camera::FRAME_FORMAT_JPEG) ||
         (format == eka2l1::drivers::camera::FRAME_FORMAT_EXIF)) {
-        if ((image_width == _captureWidth) && (image_height == _captureHeight)) {
+        if ((rotation == 0) && (image_width == _captureWidth) && (image_height == _captureHeight)) {
             CGImageRelease(image);
             [self deliverCaptureBytes:jpeg_data.bytes size:jpeg_data.length error:0];
             return;
@@ -554,7 +565,7 @@ using eka2l1::drivers::camera::instance_ios;
         // the sensor output size differs from the requested one.
         std::vector<std::uint8_t> scaled;
         bool ok = eka2l1::drivers::camera::ios_render_cgimage_to_bgra(image, _captureWidth,
-            _captureHeight, scaled);
+            _captureHeight, rotation, scaled);
         CGImageRelease(image);
 
         CGImageRef scaled_image = nullptr;
@@ -596,7 +607,7 @@ using eka2l1::drivers::camera::instance_ios;
 
     std::vector<std::uint8_t> bgra;
     const bool render_ok = eka2l1::drivers::camera::ios_render_cgimage_to_bgra(image, _captureWidth,
-        _captureHeight, bgra);
+        _captureHeight, rotation, bgra);
     CGImageRelease(image);
 
     std::vector<std::uint8_t> converted;

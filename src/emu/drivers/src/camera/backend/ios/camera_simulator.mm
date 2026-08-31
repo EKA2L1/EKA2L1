@@ -22,6 +22,7 @@
 
 #include <drivers/camera/backend/ios/camera_pixel_ios.h>
 #include <drivers/camera/backend/ios/camera_simulator.h>
+#include <drivers/camera/camera_collection.h>
 
 #include <common/log.h>
 
@@ -129,8 +130,39 @@ namespace eka2l1::drivers::camera {
 
     static bool encode_pattern(const int width, const int height, const std::uint32_t frame_index,
         const bool front_facing, const frame_format format, std::vector<std::uint8_t> &out) {
+        // The pattern stands in for a raw sensor readout, in the landscape shape
+        // and with the same orientation a built-in camera hands over, and then
+        // goes through the exact rotate-and-stretch the device backend applies.
+        // Generating straight at the requested size skipped the orientation path
+        // altogether, which is what left the simulator blind to frames arriving
+        // sideways on hardware.
+        const int sensor_width = std::max(width, height);
+        const int sensor_height = std::min(width, height);
+        const int rotation = ios_frame_rotation_ccw();
+
+        std::vector<std::uint8_t> sensor_bgra;
+        synthesize_test_pattern_bgra(sensor_width, sensor_height, frame_index, front_facing,
+            sensor_bgra);
+
         std::vector<std::uint8_t> bgra;
-        synthesize_test_pattern_bgra(width, height, frame_index, front_facing, bgra);
+
+        if ((rotation == 0) && (sensor_width == width) && (sensor_height == height)) {
+            bgra = std::move(sensor_bgra);
+        } else {
+            CGImageRef sensor_image = ios_create_cgimage_from_bgra(sensor_bgra.data(),
+                static_cast<std::size_t>(sensor_width) * 4, sensor_width, sensor_height);
+            if (!sensor_image) {
+                return false;
+            }
+
+            const bool rendered = ios_render_cgimage_to_bgra(sensor_image, width, height,
+                rotation, bgra);
+            CGImageRelease(sensor_image);
+
+            if (!rendered) {
+                return false;
+            }
+        }
 
         if ((format == FRAME_FORMAT_JPEG) || (format == FRAME_FORMAT_EXIF)) {
             return ios_encode_bgra_to_jpeg(bgra.data(), width, height, out);

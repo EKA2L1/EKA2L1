@@ -45,9 +45,23 @@ namespace eka2l1::drivers::camera {
         const int width, const int height, const frame_format format,
         std::vector<std::uint8_t> &dest);
 
-    // Draw a CGImage scaled into a top-down BGRX buffer of exactly dw x dh.
+    // Draw a CGImage into a top-down BGRX buffer of exactly dw x dh, rotated
+    // counter-clockwise by rotation_ccw_deg (a multiple of 90) on the way.
+    //
+    // The destination is filled edge to edge, so a source whose rotated extents
+    // have a different aspect ratio is stretched rather than letterboxed. That
+    // is deliberate: a guest scales the frame over its own window, and the two
+    // stretches largely cancel -- the way they do on the hardware, whose sensor
+    // buffer has a fixed shape whatever the screen is.
     bool ios_render_cgimage_to_bgra(CGImageRef image, const int dw, const int dh,
-        std::vector<std::uint8_t> &out);
+        const int rotation_ccw_deg, std::vector<std::uint8_t> &out);
+
+    // The angle, counter-clockwise, that a raw capture buffer must be rotated by
+    // to be upright in the guest's picture. Built-in cameras output landscape
+    // frames whatever the interface is doing, so a fixed offset takes them to
+    // the host's natural orientation, and camera::frame_rotation() takes them
+    // the rest of the way (see camera_collection.h).
+    int ios_frame_rotation_ccw();
 
     // Wrap a top-down BGRX buffer as a CGImage. The buffer must outlive the image.
     CGImageRef ios_create_cgimage_from_bgra(const std::uint8_t *base, const std::size_t stride,
