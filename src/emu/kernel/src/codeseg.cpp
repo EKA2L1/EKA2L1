@@ -57,14 +57,28 @@ namespace eka2l1::kernel {
         code_addr = info.code_load_addr;
         data_addr = info.data_load_addr;
 
+        // The source pointers come from translating guest addresses supplied by an
+        // image header. A malformed or mislocated header yields a null pointer here,
+        // and copying from it takes the emulator down with a segfault far away from
+        // the actual cause. Refuse the copy and leave the buffer unpopulated instead.
         if (info.data_size) {
-            constant_data = std::make_unique<std::uint8_t[]>(info.data_size);
-            std::copy(info.constant_data, info.constant_data + info.data_size, constant_data.get());
+            if (info.constant_data) {
+                constant_data = std::make_unique<std::uint8_t[]>(info.data_size);
+                std::copy(info.constant_data, info.constant_data + info.data_size, constant_data.get());
+            } else {
+                LOG_ERROR(KERNEL, "Code segment {} claims {} bytes of constant data but supplies no "
+                                  "pointer to it; skipping the copy", name, info.data_size);
+            }
         }
 
         if (code_addr == 0) {
-            code_data = std::make_unique<std::uint8_t[]>(info.code_size);
-            std::copy(info.code_data, info.code_data + info.code_size, code_data.get());
+            if (info.code_data) {
+                code_data = std::make_unique<std::uint8_t[]>(info.code_size);
+                std::copy(info.code_data, info.code_data + info.code_size, code_data.get());
+            } else {
+                LOG_ERROR(KERNEL, "Code segment {} has no load address and no code data pointer; "
+                                  "skipping the copy", name);
+            }
         }
 
         relocation_list = info.relocation_list;

@@ -80,8 +80,8 @@ namespace eka2l1::kernel {
 
         epoc::security_info sinfo;
 
-        std::uint8_t *constant_data;
-        std::uint8_t *code_data;
+        std::uint8_t *constant_data = nullptr;
+        std::uint8_t *code_data = nullptr;
     };
 
     enum codeseg_state {

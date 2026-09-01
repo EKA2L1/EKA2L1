@@ -717,6 +717,18 @@ namespace eka2l1::hle {
         info.exception_descriptor = romimg.header.exception_des;
         info.constant_data = reinterpret_cast<std::uint8_t *>(mem_->get_real_pointer(romimg.header.data_address));
 
+        // A ROM image that declares constant data must point at an address we can
+        // map. When it does not, the header we parsed is not a real image header --
+        // parse_romimg only fails on short reads, so arbitrary bytes parse "fine" --
+        // and going ahead would copy from a null pointer using a nonsense length.
+        if (romimg.header.data_size && !info.constant_data) {
+            LOG_ERROR(KERNEL, "ROM image {} declares {} bytes of constant data at unmapped address 0x{:X}; "
+                              "refusing to load it", common::ucs2_to_utf8(path), romimg.header.data_size,
+                romimg.header.data_address);
+
+            return nullptr;
+        }
+
         const std::string seg_name = (path.empty()) ? "codeseg" :
             common::lowercase_string(common::ucs2_to_utf8(eka2l1::filename(path)));
 
@@ -805,7 +817,13 @@ namespace eka2l1::hle {
                             common::ro_buf_stream buf_stream(eka2l1::ptr<std::uint8_t>(romimg_addr).get(mem_), 0xFFFF);
 
                             // Load new romimage and add dependency
-                            loader::romimg rimg = *loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&buf_stream), mem_, kern_->get_epoc_version());
+                            auto rimg_parsed = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&buf_stream), mem_, kern_->get_epoc_version());
+                            if (!rimg_parsed) {
+                                LOG_ERROR(KERNEL, "Unable to parse ROM image dependency at address 0x{:X}, skipping it", romimg_addr);
+                                continue;
+                            }
+
+                            loader::romimg rimg = std::move(*rimg_parsed);
                             std::u16string path_to_dll;
 
                             for (std::size_t i = 0; i < search_paths.size(); i++) {
