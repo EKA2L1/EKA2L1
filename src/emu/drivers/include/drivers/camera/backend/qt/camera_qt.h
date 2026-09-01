@@ -31,10 +31,9 @@ namespace eka2l1::drivers::camera {
     class instance_qt;
 
     // Qt Multimedia objects of one camera, plus the callbacks the guest armed.
-    // Defined in the implementation so no Qt header leaks into the driver
-    // interface, and it outlives instance_qt on purpose: a session is torn down
-    // by the camera thread, so nothing running there ever points back at an
-    // instance that a guest thread may already have destroyed.
+    // Defined in the implementation so no Qt header leaks out, and it outlives
+    // instance_qt on purpose: the camera thread tears a session down, so
+    // nothing running there points back at a destroyed instance.
     struct session_qt;
 
     session_qt *make_session_qt(const std::uint32_t camera_index);
@@ -47,9 +46,7 @@ namespace eka2l1::drivers::camera {
     };
 
     // Qt Multimedia-backed camera collection for the desktop frontend. Every
-    // host video input is exposed, the default one first: unlike a phone, a
-    // desktop has no fixed back/front pair, and a guest that only ever opens
-    // camera 0 should get the input the user actually has.
+    // host video input is exposed, the host's own default first.
     class collection_qt : public collection {
     private:
         friend class instance_qt;

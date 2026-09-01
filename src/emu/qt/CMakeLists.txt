@@ -320,6 +320,26 @@ if(APPLE)
     target_sources(eka2l1_qt PRIVATE "${qtmacstyle_location}")
     set_source_files_properties("${qtmacstyle_location}" PROPERTIES MACOSX_PACKAGE_LOCATION MacOS/styles)
 
+    # Two more plugins the camera backend does not work without.
+    if (Qt6Multimedia_FOUND)
+        # Without a media backend plugin QtMultimedia enumerates no camera at
+        # all. Which one a Qt build ships differs, so take what was found.
+        foreach (media_plugin IN LISTS QT_ALL_PLUGINS_FOUND_BY_FIND_PACKAGE_multimedia)
+            set(media_plugin_target "Qt${QT_VERSION_MAJOR}::${media_plugin}")
+            if (TARGET ${media_plugin_target})
+                get_target_property(media_plugin_location ${media_plugin_target} LOCATION)
+                target_sources(eka2l1_qt PRIVATE "${media_plugin_location}")
+                set_source_files_properties("${media_plugin_location}" PROPERTIES MACOSX_PACKAGE_LOCATION MacOS/multimedia)
+            endif ()
+        endforeach ()
+
+        # A still reaches the guest as JPEG, which is a plugin rather than one
+        # of QtGui's built-in formats: without it QImage::save fails.
+        get_target_property(qtjpeg_location Qt${QT_VERSION_MAJOR}::QJpegPlugin LOCATION)
+        target_sources(eka2l1_qt PRIVATE "${qtjpeg_location}")
+        set_source_files_properties("${qtjpeg_location}" PROPERTIES MACOSX_PACKAGE_LOCATION MacOS/imageformats)
+    endif ()
+
     # Copy icon into the bundle
     target_sources(eka2l1_qt PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/duck.icns")
     set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/duck.icns" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)

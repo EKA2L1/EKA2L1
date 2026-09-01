@@ -34,6 +34,9 @@
 #include <QMediaCaptureSession>
 #include <QMediaDevices>
 #include <QMetaObject>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+#include <QPermissions>
+#endif
 #include <QSize>
 #include <QThread>
 #include <QTimer>
@@ -42,39 +45,28 @@
 #include <QVideoSink>
 
 #include <algorithm>
+#include <functional>
 #include <mutex>
 #include <utility>
 
-// convert_bgra_to_guest() reads B,G,R,A from consecutive bytes, which is what
-// QImage::Format_ARGB32 (a quint32 0xAARRGGBB) lays out on a little-endian host
-// only.
 static_assert(Q_BYTE_ORDER == Q_LITTLE_ENDIAN,
     "The Qt camera backend assumes QImage::Format_ARGB32 is B,G,R,A in memory");
 
 namespace eka2l1::drivers::camera {
     namespace {
-        // A still capture that never reports back would leave the guest's
-        // request outstanding forever, so give the device a deadline to become
-        // ready.
+        // How long the device gets to become ready for a still capture.
         constexpr int CAPTURE_READY_TIMEOUT_MS = 5000;
 
         constexpr int JPEG_QUALITY = 80;
 
-        // Releasing and re-reserving the camera in quick succession makes Qt
-        // reopen the device, which fails while the old handle is still going
-        // down. Let a released camera settle first, and check again on the way
-        // out: a guest that comes straight back never loses the device.
+        // Let a released camera settle before it is closed: Qt fails a reopen
+        // while the old handle is still going down.
         constexpr int CAMERA_IDLE_STOP_DELAY_MS = 750;
 
-        // One event loop, shared by every camera, owns all the Qt Multimedia
-        // objects: QCamera and friends deliver through queued signals, so they
-        // need a thread that runs one. It must not be the GUI thread -- a frame
-        // handler completes the guest request under the emulator kernel lock,
-        // and a guest thread can hold that lock while waiting on the GUI thread.
-        //
-        // Nothing on the guest path ever joins this thread. Teardown posts work
-        // and returns, because the guest thread doing the teardown may be
-        // holding the very kernel lock an in-flight delivery is waiting for.
+        // One event loop owns every Qt Multimedia object. Not the GUI thread: a
+        // frame handler completes the guest request under the emulator kernel
+        // lock, which a guest thread can hold while waiting on the GUI thread.
+        // Nothing on the guest path ever joins this thread either.
         QThread *shared_camera_thread() {
             static QThread *thread = []() -> QThread * {
                 QThread *created = new QThread();
@@ -82,10 +74,8 @@ namespace eka2l1::drivers::camera {
                 created->start();
 
                 if (QCoreApplication *app = QCoreApplication::instance()) {
-                    // Direct connection: QThread::quit() is thread-safe, while
-                    // the QThread object itself lives on whichever guest thread
-                    // first opened a camera and has no event loop of its own to
-                    // deliver a queued call to.
+                    // Direct: quit() is thread-safe, and this QThread has no event loop of
+                    // its own to deliver a queued call to.
                     QObject::connect(app, &QCoreApplication::aboutToQuit, app, [created]() {
                         created->quit();
                         created->wait(1000);
@@ -102,8 +92,7 @@ namespace eka2l1::drivers::camera {
             return static_cast<qint64>(size.width()) * size.height();
         }
 
-        // "No camera" is the hardest thing to tell apart from a broken Qt
-        // Multimedia backend, so say once what the host actually offers.
+        // Tells a host with no camera apart from a broken Qt Multimedia backend.
         void log_video_inputs_once(const QList<QCameraDevice> &devices) {
             static std::once_flag logged;
 
@@ -120,9 +109,42 @@ namespace eka2l1::drivers::camera {
             });
         }
 
-        // Index 0 is the device the host itself defaults to. A desktop has no
-        // fixed back/front pair like a phone does, and a guest that only ever
-        // opens camera 0 should get the input the user actually has.
+        // Qt only *checks* this permission; raising the prompt is the
+        // application's job. Platforms with nothing to ask report it granted.
+        void request_camera_permission(QObject *context, std::function<void(bool)> done) {
+#if QT_VERSION < QT_VERSION_CHECK(6, 5, 0)
+            // Before 6.5 the backends ask the system themselves.
+            (void)context;
+            done(true);
+#else
+            const QCameraPermission permission;
+
+            switch (qApp->checkPermission(permission)) {
+            case Qt::PermissionStatus::Granted:
+                done(true);
+                return;
+
+            case Qt::PermissionStatus::Denied:
+                done(false);
+                return;
+
+            case Qt::PermissionStatus::Undetermined:
+                break;
+            }
+
+            // Raise it on the application's thread; the answer comes back on the
+            // context object's, which is the camera thread.
+            QMetaObject::invokeMethod(qApp, [context, done = std::move(done)]() {
+                qApp->requestPermission(QCameraPermission(), context,
+                    [done](const QPermission &result) {
+                    done(result.status() == Qt::PermissionStatus::Granted);
+                });
+            }, Qt::QueuedConnection);
+#endif
+        }
+
+        // Index 0 is the host's own default. A desktop has no fixed back/front
+        // pair, and a guest that only opens camera 0 should get the real one.
         QList<QCameraDevice> ordered_video_inputs() {
             if (!QCoreApplication::instance()) {
                 return {};
@@ -147,9 +169,8 @@ namespace eka2l1::drivers::camera {
             return ordered;
         }
 
-        // Advertise a ladder of Symbian-era capture sizes clamped to what the
-        // device can actually produce, largest first -- the same shape the
-        // Android and iOS backends expose.
+        // Symbian-era capture sizes clamped to what the device can produce,
+        // largest first, the same shape Android and iOS expose.
         std::vector<eka2l1::vec2> build_image_size_ladder(const QCameraDevice &device) {
             QSize max_size(0, 0);
 
@@ -211,11 +232,9 @@ namespace eka2l1::drivers::camera {
             return true;
         }
 
-        // Rotate a frame into the guest's picture, then fill the requested
-        // extent edge to edge. Stretching rather than letterboxing is
-        // deliberate: a guest scales the frame over its own window and the two
-        // stretches largely cancel, the way they do on hardware whose sensor
-        // buffer has a fixed shape whatever the screen is.
+        // Rotate into the guest's picture, then fill the requested extent edge to
+        // edge. Stretching rather than letterboxing is deliberate: the guest
+        // scales the frame over its own window and the two stretches cancel.
         bool image_to_guest(QImage image, const int dest_width, const int dest_height,
             const int rotation_ccw_deg, const frame_format format, std::vector<std::uint8_t> &out) {
             if (image.isNull() || (dest_width <= 0) || (dest_height <= 0)) {
@@ -225,8 +244,7 @@ namespace eka2l1::drivers::camera {
             const int rotation = ((rotation_ccw_deg % 360) + 360) % 360;
 
             if (rotation != 0) {
-                // A QTransform angle turns the picture clockwise once the y-down
-                // image space is accounted for, so counter-clockwise is negative.
+                // QTransform rotates clockwise in y-down image space.
                 image = image.transformed(QTransform().rotate(-rotation), Qt::FastTransformation);
             }
 
@@ -256,8 +274,8 @@ namespace eka2l1::drivers::camera {
         }
     }
 
-    // No Q_OBJECT macro: every connection made here binds a lambda to this
-    // object as context, so nothing in the class needs moc.
+    // No Q_OBJECT: every connection binds a lambda with this object as
+    // context, so nothing here needs moc.
     struct session_qt : public QObject {
         QCameraDevice device_;
         std::vector<eka2l1::vec2> image_sizes_;
@@ -268,22 +286,32 @@ namespace eka2l1::drivers::camera {
         QVideoSink *sink_ = nullptr;
         QImageCapture *image_capture_ = nullptr;
 
-        // Viewfinder state is read by handle_frame(), which runs on whichever
-        // thread Qt produced the frame on -- see the connection below.
+        // Read by handle_frame(), which runs on whichever thread produced the
+        // frame.
         std::mutex viewfinder_lock_;
         bool viewfinder_active_ = false;
         eka2l1::vec2 viewfinder_size_;
         frame_format viewfinder_format_ = FRAME_FORMAT_FBSBMP_COLOR64K;
+
+        // A start that arrives before the host has answered waits for it.
+        enum class permission_state {
+            pending,
+            granted,
+            denied
+        };
+
+        permission_state permission_ = permission_state::pending;
+        bool start_deferred_ = false;
+        eka2l1::vec2 deferred_start_size_;
 
         bool capture_active_ = false;
         bool capture_waiting_ready_ = false;
         eka2l1::vec2 capture_size_;
         frame_format capture_format_ = FRAME_FORMAT_JPEG;
 
-        // Guest-armed callbacks, the one piece of state both threads touch.
-        // Copy under the lock and invoke outside it: a completion takes the
-        // emulator kernel lock, and a guest thread that holds that lock may be
-        // clearing these at the same moment.
+        // Guest-armed callbacks, the one piece of state both threads touch. Copy
+        // under the lock and invoke outside it: a completion takes the emulator
+        // kernel lock a guest thread may hold while clearing these.
         std::mutex callback_lock_;
         camera_capture_image_done_callback viewfinder_callback_;
         camera_capture_image_done_callback capture_callback_;
@@ -295,11 +323,8 @@ namespace eka2l1::drivers::camera {
         }
 
         ~session_qt() override {
-            // Members are torn down after this body runs, and the Qt children
-            // only after that, so stop the camera here: a viewfinder frame is
-            // handled straight from the thread Qt produced it on, and stopping
-            // is what waits for one already in flight. Without it a late frame
-            // could reach a half-destroyed session.
+            // Stop before the members die: a viewfinder frame is handled on Qt's own
+            // thread, and stopping is what waits for one already in flight.
             if (camera_) {
                 camera_->stop();
             }
@@ -344,10 +369,8 @@ namespace eka2l1::drivers::camera {
             viewfinder_active_ = false;
         }
 
-        // The guest is done with the camera, not just with this viewfinder run.
-        // Only here is the capture device actually let go: a guest stops and
-        // restarts the viewfinder around a still, and every stop/start of the
-        // device is a chance for Qt to fail the reopen.
+        // Only a release lets the device go. A guest stops and restarts the
+        // viewfinder around a still, and every reopen is a chance for Qt to fail.
         void release_camera() {
             QMetaObject::invokeMethod(this, [this]() {
                 stop_camera_if_idle();
@@ -384,31 +407,17 @@ namespace eka2l1::drivers::camera {
 
         void build_qt_objects() {
             capture_session_ = new QMediaCaptureSession(this);
-            camera_ = new QCamera(device_, this);
             sink_ = new QVideoSink(this);
             image_capture_ = new QImageCapture(this);
 
-            capture_session_->setCamera(camera_);
             capture_session_->setVideoSink(sink_);
             capture_session_->setImageCapture(image_capture_);
 
-            // Direct: convert on the thread that produced the frame. A queued
-            // connection would let frames pile up behind a conversion slower
-            // than the capture rate, and the guest wants the newest frame, not
-            // a backlog.
+            // Direct: convert on Qt's own thread. A queued connection would pile
+            // frames up behind a slow conversion, and the guest wants the newest.
             connect(sink_, &QVideoSink::videoFrameChanged, this, [this](const QVideoFrame &frame) {
                 handle_frame(frame);
             }, Qt::DirectConnection);
-
-            connect(camera_, &QCamera::errorOccurred, this,
-                [this](QCamera::Error error, const QString &message) {
-                if (error == QCamera::NoError) {
-                    return;
-                }
-
-                LOG_ERROR(DRIVER_CAM, "Camera error: {}", message.toStdString());
-                fail_active_requests();
-            });
 
             connect(image_capture_, &QImageCapture::imageCaptured, this,
                 [this](int, const QImage &preview) {
@@ -428,6 +437,71 @@ namespace eka2l1::drivers::camera {
                     issue_capture();
                 }
             });
+
+            // Qt binds the device when the camera joins the session, and binding it
+            // unpermitted fails for good, so wait for the answer first.
+            request_camera_permission(this, [this](const bool granted) {
+                resolve_permission(granted);
+            });
+        }
+
+        void resolve_permission(const bool granted) {
+            if (!granted) {
+                permission_ = permission_state::denied;
+                LOG_ERROR(DRIVER_CAM, "The host denies EKA2L1 access to the camera");
+                fail_active_requests();
+
+                return;
+            }
+
+            permission_ = permission_state::granted;
+
+            camera_ = new QCamera(device_, this);
+
+            connect(camera_, &QCamera::errorOccurred, this,
+                [this](QCamera::Error error, const QString &message) {
+                if (error == QCamera::NoError) {
+                    return;
+                }
+
+                LOG_ERROR(DRIVER_CAM, "Camera error: {}", message.toStdString());
+                fail_active_requests();
+            });
+
+            capture_session_->setCamera(camera_);
+
+            if (start_deferred_) {
+                start_deferred_ = false;
+                start_camera(deferred_start_size_);
+            }
+
+            if (capture_waiting_ready_) {
+                arm_capture_ready_deadline();
+            }
+        }
+
+        // Everything that wants the device open goes through here.
+        void start_camera(const eka2l1::vec2 &size) {
+            if (camera_ && camera_->isActive()) {
+                return;
+            }
+
+            switch (permission_) {
+            case permission_state::granted:
+                apply_format_covering(size);
+                camera_->start();
+                break;
+
+            case permission_state::pending:
+                start_deferred_ = true;
+                deferred_start_size_ = size;
+                break;
+
+            case permission_state::denied:
+                LOG_ERROR(DRIVER_CAM, "The host denies EKA2L1 access to the camera");
+                fail_active_requests();
+                break;
+            }
         }
 
         void start_viewfinder(const eka2l1::vec2 &size, const frame_format format) {
@@ -438,10 +512,7 @@ namespace eka2l1::drivers::camera {
                 viewfinder_active_ = true;
             }
 
-            if (!camera_->isActive()) {
-                apply_format_covering(size);
-                camera_->start();
-            }
+            start_camera(size);
         }
 
         void request_capture(const eka2l1::vec2 &size, const frame_format format) {
@@ -449,9 +520,12 @@ namespace eka2l1::drivers::camera {
             capture_format_ = format;
             capture_active_ = true;
 
-            if (!camera_->isActive()) {
-                apply_format_covering(size);
-                camera_->start();
+            start_camera(size);
+
+            if (permission_ == permission_state::pending) {
+                // The deadline would otherwise run down while the host is still asking.
+                capture_waiting_ready_ = true;
+                return;
             }
 
             if (image_capture_->isReadyForCapture()) {
@@ -460,7 +534,11 @@ namespace eka2l1::drivers::camera {
             }
 
             capture_waiting_ready_ = true;
+            arm_capture_ready_deadline();
+        }
 
+        // An unanswered capture would leave the guest's request outstanding.
+        void arm_capture_ready_deadline() {
             QTimer::singleShot(CAPTURE_READY_TIMEOUT_MS, this, [this]() {
                 if (capture_waiting_ready_) {
                     capture_waiting_ready_ = false;
@@ -480,11 +558,9 @@ namespace eka2l1::drivers::camera {
         // Pick the smallest camera format that still covers what the guest
         // asked for, so the conversion below scales down rather than up.
         void apply_format_covering(const eka2l1::vec2 &size) {
-            // Qt reopens the capture device to change format, and the reopen
-            // fails ("Camera is in use") while the camera is running. A frame
-            // is rescaled to the guest's size anyway, so a running camera keeps
-            // whatever format it started with.
-            if (camera_->isActive()) {
+            // Qt reopens the device to change format and fails while it runs; a frame
+            // is rescaled to the guest's size anyway.
+            if (!camera_ || camera_->isActive()) {
                 return;
             }
 
@@ -493,8 +569,7 @@ namespace eka2l1::drivers::camera {
                 return;
             }
 
-            // Rotating a frame into the guest's picture can swap the requested
-            // edges, so match the long edge against the long one.
+            // Rotation can swap the requested edges, so match long against long.
             const int long_edge = std::max(size.x, size.y);
             const int short_edge = std::min(size.x, size.y);
 
@@ -667,13 +742,12 @@ namespace eka2l1::drivers::camera {
             return;
         }
 
-        // Clear first: a delivery that is already on its way then finds nothing
-        // to complete instead of reaching a guest object being torn down.
+        // Clear first: a delivery already on its way then finds nothing to
+        // complete.
         session->clear_callbacks();
 
-        // Never joined from here. deleteLater runs on the camera thread, and
-        // destroying the QCamera there stops it; blocking on that from a guest
-        // thread would hold the kernel lock an in-flight delivery may want.
+        // Never joined: blocking on the camera thread from here would hold the
+        // kernel lock an in-flight delivery may want.
         session->deleteLater();
     }
 
@@ -708,10 +782,9 @@ namespace eka2l1::drivers::camera {
     }
 
     bool instance_qt::set_parameter(const parameter_key key, const std::uint32_t value) {
-        // A host webcam exposes none of these knobs through Qt Multimedia, but a
-        // guest that is told a parameter is supported and then gets a failure
-        // back tends to leave, so remember what it set and hand the same value
-        // back -- the same contract the iOS backend keeps.
+        // Qt exposes none of these knobs, but a guest told a parameter is
+        // supported and then handed a failure tends to leave, so echo back what
+        // it set -- the contract the iOS backend keeps.
         switch (key) {
         case PARAMETER_KEY_OPTICAL_ZOOM:
             stub_optical_zoom_ = value;
