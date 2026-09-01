@@ -336,11 +336,22 @@ namespace eka2l1::mem {
         } else {
             addr &= ~(((1 << control_->page_per_tab_shift_) << control_->page_size_bits_) - 1);
 
-            // Mark those as allocated
-            max_size_ = chunk_sec->alloc_.force_fill((addr - chunk_sec->beg_) >> control_->page_size_bits_,
-                static_cast<int>(total_pt << control_->page_per_tab_shift_), false);
+            // A forced address does not have to lie inside the section the flags picked:
+            // a moving-model ROM sits at 0xF8000000, while this model's ROM section covers
+            // 0x80000000..0x90000000. Only mark pages in the section allocator when the
+            // chunk actually falls inside the section -- an out-of-section offset would
+            // run far past the end of the allocator's bitmap. The internal flag is set
+            // either way, so the destructor also knows not to give a foreign range back.
+            if ((addr >= chunk_sec->beg_) && (addr < chunk_sec->end_)) {
+                // Mark those as allocated
+                max_size_ = chunk_sec->alloc_.force_fill((addr - chunk_sec->beg_) >> control_->page_size_bits_,
+                    static_cast<int>(total_pt << control_->page_per_tab_shift_), false);
 
-            max_size_ <<= control_->page_size_bits_;
+                max_size_ <<= control_->page_size_bits_;
+            } else {
+                max_size_ = static_cast<std::size_t>(total_pt) << control_->chunk_shift_;
+            }
+
             create_flags_ |= MEM_MODEL_CHUNK_INTERNAL_FORCE_FILL;
         }
 

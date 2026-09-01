@@ -338,6 +338,7 @@ namespace eka2l1 {
 
         mutable std::atomic<kernel::uid> uid_counter_;
         void *rom_map_;
+        std::size_t rom_map_size_;
 
         std::uint64_t base_time_;
         std::uint32_t cpu_hz_;
@@ -515,6 +516,7 @@ namespace eka2l1 {
         codeseg_ptr pull_codeseg_by_ep(const address ep);
 
         bool map_rom(const mem::vm_address addr, const std::string &path);
+        void unmap_rom();
         bool should_panic_be_blocked(kernel::thread *thr, const std::string &category, const std::int32_t code);
 
         epocver get_epoc_version() const {

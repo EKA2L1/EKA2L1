@@ -46,6 +46,7 @@
 #include <kernel/scheduler.h>
 #include <kernel/thread.h>
 #include <loader/romimage.h>
+#include <mem/control.h>
 #include <mem/mem.h>
 #include <mem/ptr.h>
 #include <vfs/vfs.h>
@@ -82,6 +83,7 @@ namespace eka2l1 {
         , realtime_ipc_signal_evt_(0)
         , uid_counter_(0)
         , rom_map_(nullptr)
+        , rom_map_size_(0)
         , kern_ver_(epocver::epoc94)
         , lang_(language::en)
         , global_data_chunk_(nullptr)
@@ -104,11 +106,7 @@ namespace eka2l1 {
         wiping_ = true;
         timing_->remove_event(realtime_ipc_signal_evt_);
 
-        if (rom_map_) {
-            common::unmap_file(rom_map_);
-        }
-
-        rom_map_ = nullptr;
+        unmap_rom();
 
 #define OBJECT_CONTAINER_CLEANUP(container) \
     for (auto &obj : container) {           \
@@ -1355,28 +1353,82 @@ namespace eka2l1 {
     }
 
     bool kernel_system::map_rom(const mem::vm_address addr, const std::string &path) {
-        rom_map_ = common::map_file(path, prot_read_write, 0, true);
         const std::size_t rom_size = common::file_size(path);
 
-        if (!rom_map_) {
-            return false;
+        // The memory model can only place a chunk at a chunk-span-aligned base; a forced
+        // address gets aligned down to the previous boundary. Most ROMs declare an aligned
+        // base, and the file mapping can then back the chunk directly. A ROM with an
+        // unaligned base (e.g. 0xF80F1000 on the Nokia 5500 Sport) must instead be placed
+        // at its in-chunk offset, in a buffer starting at the aligned base - otherwise
+        // every guest-to-host translation inside the ROM comes out shifted by the
+        // discarded bits, and the ROM's tail ends up outside the chunk entirely.
+        const mem::vm_address aligned_base = addr & ~mem_->get_control()->chunk_mask_;
+        const std::size_t rebase_offset = addr - aligned_base;
+
+        if (rebase_offset == 0) {
+            rom_map_ = common::map_file(path, prot_read_write, 0, true);
+            rom_map_size_ = 0;
+
+            if (!rom_map_) {
+                return false;
+            }
+        } else {
+            LOG_INFO(KERNEL, "ROM base 0x{:X} is not chunk-aligned, mapping the ROM at offset 0x{:X} of a chunk at 0x{:X}",
+                addr, rebase_offset, aligned_base);
+
+            rom_map_size_ = rebase_offset + rom_size;
+            rom_map_ = common::map_memory(rom_map_size_);
+
+            if (!rom_map_) {
+                return false;
+            }
+
+            if (!common::commit(rom_map_, rom_map_size_, prot_read_write)) {
+                unmap_rom();
+                return false;
+            }
+
+            void *rom_file_map = common::map_file(path, prot_read, 0, true);
+
+            if (!rom_file_map) {
+                unmap_rom();
+                return false;
+            }
+
+            std::memcpy(reinterpret_cast<std::uint8_t *>(rom_map_) + rebase_offset, rom_file_map, rom_size);
+            common::unmap_file(rom_file_map);
         }
 
         LOG_TRACE(KERNEL, "Rom mapped to address: 0x{:x}", reinterpret_cast<std::uint64_t>(rom_map_));
 
+        const std::size_t chunk_size = rebase_offset + rom_size;
+
         // Don't care about the result as long as it's not null.
-        kernel::chunk *rom_chunk = create<kernel::chunk>(mem_, nullptr, "ROM", 0, static_cast<address>(rom_size),
-            rom_size, prot_read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::rom,
-            kernel::chunk_attrib::none, 0x00, false, addr, rom_map_);
+        kernel::chunk *rom_chunk = create<kernel::chunk>(mem_, nullptr, "ROM", 0, static_cast<address>(chunk_size),
+            chunk_size, prot_read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::rom,
+            kernel::chunk_attrib::none, 0x00, false, aligned_base, rom_map_);
 
         if (!rom_chunk) {
             LOG_ERROR(KERNEL, "Can't create ROM chunk!");
 
-            common::unmap_file(rom_map_);
+            unmap_rom();
             return false;
         }
 
         return true;
+    }
+
+    void kernel_system::unmap_rom() {
+        if (rom_map_) {
+            if (rom_map_size_) {
+                common::unmap_memory(rom_map_, rom_map_size_);
+            } else {
+                common::unmap_file(rom_map_);
+            }
+        }
+
+        rom_map_ = nullptr;
+        rom_map_size_ = 0;
     }
 
     void kernel_system::stop_cores_idling() {

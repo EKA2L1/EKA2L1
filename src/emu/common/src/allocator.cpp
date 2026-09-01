@@ -130,6 +130,12 @@ namespace eka2l1::common {
     }
 
     int bitmap_allocator::force_fill(const std::uint32_t offset, const int size, const bool or_mode) {
+        // The loop below only guards against running over the end of the bitmap;
+        // an offset already past it would start reading and writing foreign memory.
+        if ((offset >> 5) >= words_.size()) {
+            return 0;
+        }
+
         std::uint32_t *word = &words_[0] + (offset >> 5);
         const std::uint32_t set_bit = offset & 31;
         int end_bit = static_cast<int>(set_bit + size);
