@@ -717,13 +717,16 @@ namespace eka2l1::hle {
         info.exception_descriptor = romimg.header.exception_des;
         info.constant_data = reinterpret_cast<std::uint8_t *>(mem_->get_real_pointer(romimg.header.data_address));
 
-        // A ROM image that declares constant data must point at an address we can
-        // map. When it does not, the header we parsed is not a real image header --
+        // A ROM image executes code in place, so it must carry a code address, and
+        // any constant data it declares must sit at an address we can map. When
+        // either does not hold, the header we parsed is not a real image header --
         // parse_romimg only fails on short reads, so arbitrary bytes parse "fine" --
-        // and going ahead would copy from a null pointer using a nonsense length.
-        if (romimg.header.data_size && !info.constant_data) {
-            LOG_ERROR(KERNEL, "ROM image {} declares {} bytes of constant data at unmapped address 0x{:X}; "
-                              "refusing to load it", common::ucs2_to_utf8(path), romimg.header.data_size,
+        // and constructing a codeseg from it would copy from a null pointer using
+        // a nonsense length.
+        if ((romimg.header.data_size && !info.constant_data) || !romimg.header.code_address) {
+            LOG_ERROR(KERNEL, "ROM image {} has an invalid header (code address 0x{:X}, {} bytes of "
+                              "constant data at address 0x{:X}); refusing to load it",
+                common::ucs2_to_utf8(path), romimg.header.code_address, romimg.header.data_size,
                 romimg.header.data_address);
 
             return nullptr;
