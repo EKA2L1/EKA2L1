@@ -301,8 +301,8 @@ if(APPLE)
        MACOSX_BUNDLE_BUNDLE_VERSION 0.0.4.2
        MACOSX_BUNDLE_SHORT_VERSION_STRING 0.0.4.2
        MACOSX_BUNDLE_ICON_FILE duck.icns
-       # Carries NSCameraUsageDescription, without which macOS kills the
-       # process the moment the camera backend reaches AVFoundation.
+       # Carries NSCameraUsageDescription; without it macOS kills the process
+       # the moment the camera backend reaches AVFoundation.
        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/macos/Info.plist.in"
        XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS "${CMAKE_CURRENT_SOURCE_DIR}/EKA2L1.entitlements"
        XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS "--deep --options=runtime"
@@ -323,8 +323,14 @@ if(APPLE)
     # Two more plugins the camera backend does not work without.
     if (Qt6Multimedia_FOUND)
         # Without a media backend plugin QtMultimedia enumerates no camera at
-        # all. Which one a Qt build ships differs, so take what was found.
-        foreach (media_plugin IN LISTS QT_ALL_PLUGINS_FOUND_BY_FIND_PACKAGE_multimedia)
+        # all. Prefer the native one: Qt's FFmpeg backend links Qt's own FFmpeg
+        # dylibs, which do not belong in this bundle.
+        set(media_plugins ${QT_ALL_PLUGINS_FOUND_BY_FIND_PACKAGE_multimedia})
+        if ("QDarwinMediaPlugin" IN_LIST media_plugins)
+            set(media_plugins QDarwinMediaPlugin)
+        endif ()
+
+        foreach (media_plugin IN LISTS media_plugins)
             set(media_plugin_target "Qt${QT_VERSION_MAJOR}::${media_plugin}")
             if (TARGET ${media_plugin_target})
                 get_target_property(media_plugin_location ${media_plugin_target} LOCATION)
@@ -333,8 +339,8 @@ if(APPLE)
             endif ()
         endforeach ()
 
-        # A still reaches the guest as JPEG, which is a plugin rather than one
-        # of QtGui's built-in formats: without it QImage::save fails.
+        # A still reaches the guest as JPEG, a plugin rather than one of
+        # QtGui's built-in formats: without it QImage::save fails.
         get_target_property(qtjpeg_location Qt${QT_VERSION_MAJOR}::QJpegPlugin LOCATION)
         target_sources(eka2l1_qt PRIVATE "${qtjpeg_location}")
         set_source_files_properties("${qtjpeg_location}" PROPERTIES MACOSX_PACKAGE_LOCATION MacOS/imageformats)

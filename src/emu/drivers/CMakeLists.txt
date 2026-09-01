@@ -160,9 +160,7 @@ else()
         src/sdl2_scoping.cpp
         src/sdl2_scoping.h)
 
-    # The desktop camera rides on Qt Multimedia, the same Qt the frontend
-    # already links (src/emu/CMakeLists.txt looks it up, in the scope both this
-    # directory and the frontend inherit it from).
+    # The desktop camera rides on Qt Multimedia, looked up in src/emu.
     if (Qt6Multimedia_FOUND)
         target_sources(drivers PRIVATE
             include/drivers/camera/backend/qt/camera_qt.h

@@ -208,13 +208,9 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
 
     auto &crr_mode = scr->current_mode();
 
-    // A host camera is bolted to the monitor, not to the emulated device, and
-    // the guest picture is already drawn in the orientation the guest composed
-    // it for. The one thing a camera frame still has to follow is the rotation
-    // the user asked the presenter for: the draw below turns the picture
-    // clockwise by ui_rotation (the projection is y-down, so a positive angle
-    // reads clockwise on screen), so a frame turned counter-clockwise by the
-    // same amount inside the picture comes out upright on the monitor.
+    // A host camera is bolted to the monitor, not to the emulated device. The
+    // draw below turns the picture clockwise by ui_rotation, so a frame turned
+    // counter-clockwise by the same amount comes out upright on the monitor.
     eka2l1::drivers::camera::set_frame_rotation(scr->ui_rotation);
 
     eka2l1::vec2 size = crr_mode.size;

@@ -29,9 +29,8 @@
 
 namespace eka2l1::drivers::camera {
     // CoreGraphics-side helpers of the iOS camera backend, shared with the
-    // simulator backend so a synthetic frame reaches the guest through exactly
-    // the same path a real capture does. The format set and the BGRA-to-guest
-    // repacking they feed live in camera_pixel.h, which every backend shares.
+    // simulator one. The format set and the repacking they feed are in
+    // camera_pixel.h.
 
     // Draw a CGImage into a top-down BGRX buffer of exactly dw x dh, rotated
     // counter-clockwise by rotation_ccw_deg (a multiple of 90) on the way.
