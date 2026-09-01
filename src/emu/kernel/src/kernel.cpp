@@ -106,8 +106,6 @@ namespace eka2l1 {
         wiping_ = true;
         timing_->remove_event(realtime_ipc_signal_evt_);
 
-        unmap_rom();
-
 #define OBJECT_CONTAINER_CLEANUP(container) \
     for (auto &obj : container) {           \
         if (obj)                            \
@@ -175,6 +173,12 @@ namespace eka2l1 {
             btrace_inst_->close_trace_session();
 
         cpu_->clear_instruction_cache();
+
+        // Only now is the host backing safe to release: the ROM chunk destroyed
+        // with the containers above held page-table entries and CPU mappings
+        // pointing into it.
+        unmap_rom();
+
         wiping_ = false;
     }
 
