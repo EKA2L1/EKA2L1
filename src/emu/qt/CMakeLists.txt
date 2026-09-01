@@ -21,15 +21,9 @@ endif()
 
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools Svg Network ${EXCLUSIVE_QT_COMPONENTS} REQUIRED)
 
-# displaywidget.cpp includes <qpa/qplatformnativeinterface.h> on the X11/Wayland
-# path, to pull the native display and surface handles out of Qt. Distributions
-# disagree about where those private headers live: Debian and Ubuntu drop them
-# into the QtGui include directory, where Qt6::Gui already finds them and no
-# Qt6GuiPrivate CMake package is shipped at all, while Arch and Qt's own
-# installers put them under a versioned subdirectory that only Qt6::GuiPrivate
-# adds. So ask for the component, but do not require it -- where it is missing
-# the headers are already reachable. Windows, macOS and Haiku take the winId()
-# path instead, matching the #include guard in displaywidget.cpp.
+# displaywidget.cpp includes <qpa/qplatformnativeinterface.h> on X11/Wayland.
+# Some distributions expose those private headers only through Qt6::GuiPrivate,
+# others through Qt6::Gui and ship no such package -- so ask, but do not require.
 if (NOT WIN32 AND NOT APPLE AND NOT CMAKE_SYSTEM_NAME STREQUAL "Haiku"
         AND ${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     find_package(Qt${QT_VERSION_MAJOR} QUIET COMPONENTS GuiPrivate)
