@@ -57,6 +57,11 @@ namespace eka2l1::kernel {
         code_addr = info.code_load_addr;
         data_addr = info.data_load_addr;
 
+        // The creators guarantee these pointers before construction - a nonzero
+        // data_size comes with constant data to copy, and a missing load address
+        // comes with a code buffer (see the header validation in load_as_romimg).
+        // A half-initialized codeseg must never exist: later paths dereference
+        // these buffers whenever the sizes are nonzero.
         if (info.data_size) {
             constant_data = std::make_unique<std::uint8_t[]>(info.data_size);
             std::copy(info.constant_data, info.constant_data + info.data_size, constant_data.get());
@@ -727,6 +732,10 @@ namespace eka2l1::kernel {
     }
 
     bool codeseg::add_dependency(const codeseg_dependency_info &codeseg) {
+        if (!codeseg.dep_) {
+            return false;
+        }
+
         // Check if this codeseg is unique first (no duplicate)
         // We don't check the UID though (TODO)
         auto result = std::find_if(dependencies.begin(), dependencies.end(),

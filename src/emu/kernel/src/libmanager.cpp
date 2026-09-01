@@ -717,6 +717,21 @@ namespace eka2l1::hle {
         info.exception_descriptor = romimg.header.exception_des;
         info.constant_data = reinterpret_cast<std::uint8_t *>(mem_->get_real_pointer(romimg.header.data_address));
 
+        // A ROM image executes code in place, so it must carry a code address, and
+        // any constant data it declares must sit at an address we can map. When
+        // either does not hold, the header we parsed is not a real image header --
+        // parse_romimg only fails on short reads, so arbitrary bytes parse "fine" --
+        // and constructing a codeseg from it would copy from a null pointer using
+        // a nonsense length.
+        if ((romimg.header.data_size && !info.constant_data) || !romimg.header.code_address) {
+            LOG_ERROR(KERNEL, "ROM image {} has an invalid header (code address 0x{:X}, {} bytes of "
+                              "constant data at address 0x{:X}); refusing to load it",
+                common::ucs2_to_utf8(path), romimg.header.code_address, romimg.header.data_size,
+                romimg.header.data_address);
+
+            return nullptr;
+        }
+
         const std::string seg_name = (path.empty()) ? "codeseg" :
             common::lowercase_string(common::ucs2_to_utf8(eka2l1::filename(path)));
 
@@ -726,14 +741,19 @@ namespace eka2l1::hle {
             return cs;
         }
 
+        const int baseline_access_count = cs->get_access_count();
+
         struct dll_ref_table {
             std::uint16_t flags;
             std::uint16_t num_entries;
             std::uint32_t rom_img_headers_ref[25];
         };
 
-        // Find dependencies
-        std::function<void(loader::rom_image_header *, codeseg_ptr)> dig_dependencies;
+        // Find dependencies. Returns false when a listed dependency cannot be
+        // loaded: the ROM dependency table has no optional entries, so a missing
+        // one leaves an incomplete graph whose holes resurface later as ordinal
+        // or execution errors far from the cause.
+        std::function<bool(loader::rom_image_header *, codeseg_ptr)> dig_dependencies;
         dig_dependencies = [&](loader::rom_image_header *header, codeseg_ptr acs) {
             if (header->dll_ref_table_address != 0) {
                 dll_ref_table *ref_table = eka2l1::ptr<dll_ref_table>(header->dll_ref_table_address).get(mem_);
@@ -805,7 +825,13 @@ namespace eka2l1::hle {
                             common::ro_buf_stream buf_stream(eka2l1::ptr<std::uint8_t>(romimg_addr).get(mem_), 0xFFFF);
 
                             // Load new romimage and add dependency
-                            loader::romimg rimg = *loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&buf_stream), mem_, kern_->get_epoc_version());
+                            auto rimg_parsed = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&buf_stream), mem_, kern_->get_epoc_version());
+                            if (!rimg_parsed) {
+                                LOG_ERROR(KERNEL, "Unable to parse ROM image dependency of {} at address 0x{:X}", acs->name(), romimg_addr);
+                                return false;
+                            }
+
+                            loader::romimg rimg = std::move(*rimg_parsed);
                             std::u16string path_to_dll;
 
                             for (std::size_t i = 0; i < search_paths.size(); i++) {
@@ -827,14 +853,37 @@ namespace eka2l1::hle {
                             kernel::codeseg_dependency_info dep_info;
                             dep_info.dep_ = load_as_romimg(rimg, path_to_dll);
 
-                            acs->add_dependency(dep_info);
+                            if (!dep_info.dep_) {
+                                LOG_ERROR(KERNEL, "Failed to load ROM image dependency {} of {}",
+                                    common::ucs2_to_utf8(path_to_dll), acs->name());
+                                return false;
+                            }
+
+                            if (!acs->add_dependency(dep_info)) {
+                                return false;
+                            }
                         }
                     }
                 }
             }
+
+            return true;
         };
 
-        dig_dependencies(&romimg.header, cs);
+        if (!dig_dependencies(&romimg.header, cs)) {
+            LOG_ERROR(KERNEL, "ROM image {} depends on an image that cannot be loaded; refusing to load it",
+                common::ucs2_to_utf8(path));
+
+            // A dependency loaded before the failing one may already reference this
+            // codeseg (the ROM graph has cycles); destroying it then would leave a
+            // dangling dependency, so only reclaim it when nothing looked at it.
+            if (cs->get_access_count() == baseline_access_count) {
+                kern_->destroy(cs);
+            }
+
+            return nullptr;
+        }
+
         try_apply_patch(cs);
 
         return cs;
