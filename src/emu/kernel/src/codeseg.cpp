@@ -741,6 +741,10 @@ namespace eka2l1::kernel {
     }
 
     bool codeseg::add_dependency(const codeseg_dependency_info &codeseg) {
+        if (!codeseg.dep_) {
+            return false;
+        }
+
         // Check if this codeseg is unique first (no duplicate)
         // We don't check the UID though (TODO)
         auto result = std::find_if(dependencies.begin(), dependencies.end(),

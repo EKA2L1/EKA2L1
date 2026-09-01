@@ -845,6 +845,12 @@ namespace eka2l1::hle {
                             kernel::codeseg_dependency_info dep_info;
                             dep_info.dep_ = load_as_romimg(rimg, path_to_dll);
 
+                            if (!dep_info.dep_) {
+                                LOG_ERROR(KERNEL, "Failed to load ROM image dependency {} of {}, skipping it",
+                                    common::ucs2_to_utf8(path_to_dll), acs->name());
+                                continue;
+                            }
+
                             acs->add_dependency(dep_info);
                         }
                     }
