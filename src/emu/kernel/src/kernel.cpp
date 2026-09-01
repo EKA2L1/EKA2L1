@@ -1359,15 +1359,21 @@ namespace eka2l1 {
     bool kernel_system::map_rom(const mem::vm_address addr, const std::string &path) {
         const std::size_t rom_size = common::file_size(path);
 
-        // The memory model can only place a chunk at a chunk-span-aligned base; a forced
-        // address gets aligned down to the previous boundary. Most ROMs declare an aligned
-        // base, and the file mapping can then back the chunk directly. A ROM with an
-        // unaligned base (e.g. 0xF80F1000 on the Nokia 5500 Sport) must instead be placed
-        // at its in-chunk offset, in a buffer starting at the aligned base - otherwise
-        // every guest-to-host translation inside the ROM comes out shifted by the
-        // discarded bits, and the ROM's tail ends up outside the chunk entirely.
-        const mem::vm_address aligned_base = addr & ~mem_->get_control()->chunk_mask_;
-        const std::size_t rebase_offset = addr - aligned_base;
+        // The multiple model can only place a chunk on a chunk-span boundary; a forced
+        // address below one gets aligned down. Most ROMs declare an aligned base, and
+        // the file mapping can then back the chunk directly. A ROM with an unaligned
+        // base (e.g. 0xF80F1000 on the Nokia 5500 Sport) must instead be placed at its
+        // in-chunk offset, in a buffer starting at the aligned base - otherwise every
+        // guest-to-host translation inside the ROM comes out shifted by the discarded
+        // bits, and the ROM's tail ends up outside the chunk entirely. The flexible
+        // model honors page-granular forced addresses and keeps the declared base.
+        mem::vm_address chunk_base = addr;
+        std::size_t rebase_offset = 0;
+
+        if (mem_->get_model_type() == mem::mem_model_type::multiple) {
+            chunk_base = addr & ~mem_->get_control()->chunk_mask_;
+            rebase_offset = addr - chunk_base;
+        }
 
         if (rebase_offset == 0) {
             rom_map_ = common::map_file(path, prot_read_write, 0, true);
@@ -1378,7 +1384,7 @@ namespace eka2l1 {
             }
         } else {
             LOG_INFO(KERNEL, "ROM base 0x{:X} is not chunk-aligned, mapping the ROM at offset 0x{:X} of a chunk at 0x{:X}",
-                addr, rebase_offset, aligned_base);
+                addr, rebase_offset, chunk_base);
 
             rom_map_size_ = rebase_offset + rom_size;
             rom_map_ = common::map_memory(rom_map_size_);
@@ -1387,6 +1393,11 @@ namespace eka2l1 {
                 return false;
             }
 
+            // The pad below the base is committed on purpose: this kind of ROM is
+            // sectioned, and the guest reads data below the declared base during boot
+            // (the section start holds the ROM header, for one) - leaving a hole there
+            // faults the boot. The dump carries no content for that range, so
+            // zero-filled pages are the closest thing to the real ROM's prefix.
             if (!common::commit(rom_map_, rom_map_size_, prot_read_write)) {
                 unmap_rom();
                 return false;
@@ -1408,9 +1419,9 @@ namespace eka2l1 {
         const std::size_t chunk_size = rebase_offset + rom_size;
 
         // Don't care about the result as long as it's not null.
-        kernel::chunk *rom_chunk = create<kernel::chunk>(mem_, nullptr, "ROM", 0, static_cast<address>(chunk_size),
-            chunk_size, prot_read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::rom,
-            kernel::chunk_attrib::none, 0x00, false, aligned_base, rom_map_);
+        kernel::chunk *rom_chunk = create<kernel::chunk>(mem_, nullptr, "ROM", 0,
+            static_cast<address>(chunk_size), chunk_size, prot_read_write_exec, kernel::chunk_type::normal,
+            kernel::chunk_access::rom, kernel::chunk_attrib::none, 0x00, false, chunk_base, rom_map_);
 
         if (!rom_chunk) {
             LOG_ERROR(KERNEL, "Can't create ROM chunk!");
