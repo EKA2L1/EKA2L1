@@ -22,28 +22,15 @@
 #include <CoreGraphics/CoreGraphics.h>
 
 #include <drivers/camera/camera.h>
+#include <drivers/camera/camera_pixel.h>
 
 #include <cstdint>
 #include <vector>
 
 namespace eka2l1::drivers::camera {
-    // Pixel-side contract of the iOS camera backend, shared with the simulator
-    // backend so a synthetic frame reaches the guest through exactly the same
-    // packing rules a real capture does.
-
-    // Formats the backend can produce from a BGRA source. Mirrors the Android
-    // backend's advertised set.
-    extern const frame_format IOS_SUPPORTED_FORMATS[8];
-
-    bool ios_is_supported_format(const frame_format format);
-
-    // Repack a top-down BGRA buffer into the guest-facing pixel layout. Byte
-    // orders and row alignments follow what the Android backend delivers:
-    // FBS bitmap scanlines are 4-byte aligned, raw RGB565 rows are tight, and
-    // ARGB8888 means R,G,B,A byte order.
-    bool ios_convert_bgra_to_guest(const std::uint8_t *src, const std::size_t src_stride,
-        const int width, const int height, const frame_format format,
-        std::vector<std::uint8_t> &dest);
+    // CoreGraphics-side helpers of the iOS camera backend, shared with the
+    // simulator one. The format set and the repacking they feed are in
+    // camera_pixel.h.
 
     // Draw a CGImage into a top-down BGRX buffer of exactly dw x dh, rotated
     // counter-clockwise by rotation_ccw_deg (a multiple of 90) on the way.

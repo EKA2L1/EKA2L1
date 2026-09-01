@@ -38,7 +38,28 @@
 
 #include <memory>
 
+#if EKA2L1_PLATFORM(UNIX)
+// The AppImage bundles Qt's GStreamer backend but none of the plugins it needs,
+// leaving Qt Multimedia with no camera. Its FFmpeg backend is bundled whole, so
+// prefer that inside an AppImage. An explicit choice still wins.
+static void prefer_selfcontained_media_backend() {
+    if (!qEnvironmentVariableIsEmpty("QT_MEDIA_BACKEND")) {
+        return;
+    }
+
+    if (qEnvironmentVariableIsEmpty("APPIMAGE") && qEnvironmentVariableIsEmpty("APPDIR")) {
+        return;
+    }
+
+    qputenv("QT_MEDIA_BACKEND", "ffmpeg");
+}
+#endif
+
 int main(int argc, char *argv[]) {
+#if EKA2L1_PLATFORM(UNIX)
+    prefer_selfcontained_media_backend();
+#endif
+
     QApplication a(argc, argv);
 
     QCoreApplication::setOrganizationName("EKA2L1");

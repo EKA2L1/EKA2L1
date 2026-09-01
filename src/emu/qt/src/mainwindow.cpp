@@ -52,6 +52,8 @@
 
 #include <config/app_settings.h>
 
+#include <drivers/camera/camera_collection.h>
+
 #include <package/manager.h>
 #include <services/applist/applist.h>
 #include <services/bluetooth/btman.h>
@@ -205,6 +207,11 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     }
 
     auto &crr_mode = scr->current_mode();
+
+    // A host camera is bolted to the monitor, not to the emulated device. The
+    // draw below turns the picture clockwise by ui_rotation, so a frame turned
+    // counter-clockwise by the same amount comes out upright on the monitor.
+    eka2l1::drivers::camera::set_frame_rotation(scr->ui_rotation);
 
     eka2l1::vec2 size = crr_mode.size;
     if ((scr->ui_rotation % 180) != 0) {

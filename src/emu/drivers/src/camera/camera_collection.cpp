@@ -16,6 +16,8 @@
 #if TARGET_OS_SIMULATOR
 #include <drivers/camera/backend/ios/camera_simulator.h>
 #endif
+#elif defined(EKA2L1_HAVE_QT_CAMERA)
+#include <drivers/camera/backend/qt/camera_qt.h>
 #endif
 
 namespace eka2l1::drivers::camera {
@@ -55,6 +57,8 @@ namespace eka2l1::drivers::camera {
                 collection_detail = std::make_unique<collection_simulator>();
             }
 #endif
+#elif defined(EKA2L1_HAVE_QT_CAMERA)
+            collection_detail = std::make_unique<collection_qt>();
 #else
             collection_detail = std::make_unique<collection_null>();
 #endif
