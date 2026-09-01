@@ -21,6 +21,14 @@ endif()
 
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools Svg Network ${EXCLUSIVE_QT_COMPONENTS} REQUIRED)
 
+# displaywidget.cpp includes <qpa/qplatformnativeinterface.h> on X11/Wayland.
+# Some distributions expose those private headers only through Qt6::GuiPrivate,
+# others through Qt6::Gui and ship no such package -- so ask, but do not require.
+if (NOT WIN32 AND NOT APPLE AND NOT CMAKE_SYSTEM_NAME STREQUAL "Haiku"
+        AND ${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    find_package(Qt${QT_VERSION_MAJOR} QUIET COMPONENTS GuiPrivate)
+endif()
+
 # Make list of TS files, and add them to resources. Credits from Yuzu CMakeLists
 set(TS_FOLDER translations)
 
@@ -179,6 +187,10 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 else()
     set(EXCLUSIVE_QT_LIBRARIES
         Qt${QT_VERSION_MAJOR}::OpenGL)
+endif()
+
+if (TARGET Qt${QT_VERSION_MAJOR}::GuiPrivate)
+    list(APPEND EXCLUSIVE_QT_LIBRARIES Qt${QT_VERSION_MAJOR}::GuiPrivate)
 endif()
 
 target_link_libraries(eka2l1_qt PRIVATE
