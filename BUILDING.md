@@ -19,6 +19,9 @@
 - MacOS X:
     * XCode 12.4 or higher.
 
+- iOS:
+    * XCode 26 or higher.
+
 - Linux:
     * clang/g++: Clang 10.0/GCC 10.1 or higher is recommended. Note that Clang is not tested or built on the CI, but it should compile fine if compliation with GCC goes OK. If not, please open an issue.
 
@@ -46,4 +49,21 @@
 
 ### On Android
 
-- With Android Studio opened, navigate to File/Open and choose the ```source code root/src/android/``` folder. The android project for EKA2L1 should setup and ready. 
+- With Android Studio opened, navigate to File/Open and choose the ```source code root/src/android/``` folder. The android project for EKA2L1 should setup and ready.
+
+### On iOS
+
+Requires Xcode (macOS host). Use `scripts/build_ios.sh` rather than invoking CMake/xcodebuild directly — it wires up the FFmpeg sub-build, the iOS toolchain file, and per-flavor defaults (dynarmic JIT, code signing):
+
+```sh
+scripts/build_ios.sh simulator       # simulator build (unsigned)
+scripts/build_ios.sh device          # device build, unsigned (sideload IPA)
+scripts/build_ios.sh device-signed   # device build, code-signed (needs EKA2L1_IOS_DEVELOPMENT_TEAM)
+scripts/build_ios.sh install         # build signed device build + install to a connected phone
+scripts/build_ios.sh archive         # signed .xcarchive for TestFlight / App Store
+scripts/build_ios.sh clean           # remove build/ios-* directories
+```
+
+Notable environment variables (see the script header for the full list): `EKA2L1_IOS_CONFIGURATION` (Debug by default; use `Release` for performance/regression testing), `EKA2L1_IOS_DEPLOYMENT_TARGET` (default 16.0), `EKA2L1_IOS_DEVELOPMENT_TEAM` and `EKA2L1_IOS_DEVICE` (device signing/install). The dynarmic JIT is compiled in for simulator and unsigned-device builds but forced off for signed device/archive builds, since App Store/TestFlight processes can never map executable pages — the emulator falls back to the dyncom interpreter there.
+
+On iOS the following options are always forced OFF regardless of the command line: `EKA2L1_BUILD_TOOLS`, `EKA2L1_BUILD_TESTS`, `EKA2L1_BUILD_VULKAN_BACKEND`, `EKA2L1_BUILD_PATCH`, `EKA2L1_DEPLOY_DMG`, `EKA2L1_ENABLE_DISCORD_RICH_PRESENCE`. `EKA2L1_ENABLE_SCRIPTING_ABILITY` stays ON for the built-in native patches, but `EKA2L1_SCRIPTING_LUA` is forced OFF: the LuaJIT runtime needs writable-executable memory, which iOS does not allow. 
