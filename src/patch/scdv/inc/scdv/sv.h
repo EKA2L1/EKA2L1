@@ -38,6 +38,10 @@ struct TFastBlitInfo {
 extern "C" {
 HLE_DISPATCH_FUNC(void, UpdateScreen, 1, const TUint32 aScreenNumber, const TUint32 aNumberOfRect, const TRect *aRectanglesz);
 HLE_DISPATCH_FUNC(void, FastBlit, 2, const TFastBlitInfo *aInfo);
+
+// Bytes between two rows of the emulator's framebuffer. Whatever draws into it has to
+// use this, or the emulator reads back rows nothing ever wrote.
+HLE_DISPATCH_FUNC(TInt, GetScreenFramebufferRowBytes, 6, const TUint32 aScreenNumber, const TInt aDisplayMode);
 }
 
 #endif

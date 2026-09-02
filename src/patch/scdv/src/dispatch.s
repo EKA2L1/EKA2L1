@@ -21,9 +21,13 @@
 
 .global UpdateScreen
 .global FastBlit
+.global GetScreenFramebufferRowBytes
 
 UpdateScreen:
     CallHleDispatch 0x1
 
 FastBlit:
     CallHleDispatch 0x2
+
+GetScreenFramebufferRowBytes:
+    CallHleDispatch 0x6

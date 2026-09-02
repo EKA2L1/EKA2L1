@@ -56,4 +56,6 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_DISPATCHER(std::int32_t, wait_vsync, const std::int32_t screen_index, eka2l1::ptr<epoc::request_status> sts);
     BRIDGE_FUNC_DISPATCHER(void, cancel_wait_vsync, const std::int32_t screen_index, eka2l1::ptr<epoc::request_status> sts);
     BRIDGE_FUNC_DISPATCHER(void, fast_blit, fast_blit_info *info);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, get_screen_buffer_byte_width, const std::uint32_t screen_number,
+        const std::int32_t display_mode);
 }

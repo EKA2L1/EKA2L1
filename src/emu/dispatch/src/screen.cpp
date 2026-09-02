@@ -235,16 +235,12 @@ namespace eka2l1::dispatch {
                 // moment anything lands in the upper half.
                 const bool dsa_depth_changed = scr->promote_dsa_depth_if_deep_pixels_written();
 
-                // A ScreenPlay screen under an active DSA keeps its own row pitch, which
-                // is not the tightly packed one the texture upload assumes.
+                // Every writer lays its rows out at the pitch the screen reports, so read
+                // it back with that one. Only a 32-bit framebuffer is ever padded.
                 const std::uint32_t bits_per_pixel = epoc::get_bpp_from_display_mode(scr->dsa_disp_mode);
-                const std::size_t dsa_screen_pitch = scr->screen_buffer_byte_width();
                 const std::size_t tight_screen_pitch = mode_info.size.x * sizeof(std::uint32_t);
-                const bool use_screenplay_pitch = scr->is_screenplay_architecture()
-                    && (scr->active_dsa_count_ > 0) && (bits_per_pixel == 32);
-                const std::size_t screen_pitch = use_screenplay_pitch
-                    ? dsa_screen_pitch
-                    : tight_screen_pitch;
+                const std::size_t framebuffer_pitch = scr->screen_buffer_byte_width(scr->dsa_disp_mode);
+                const std::size_t screen_pitch = common::max(framebuffer_pitch, tight_screen_pitch);
                 const std::size_t buffer_size = screen_pitch * mode_info.size.y;
                 const std::size_t pixels_per_line = (screen_pitch != tight_screen_pitch)
                     ? screen_pitch / sizeof(std::uint32_t)
@@ -353,6 +349,23 @@ namespace eka2l1::dispatch {
 
             scr = scr->next;
         }
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, get_screen_buffer_byte_width, const std::uint32_t screen_number,
+        const std::int32_t display_mode) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        epoc::screen *scr = dispatcher->winserv_->get_screens();
+
+        while (scr != nullptr) {
+            if (scr->number == static_cast<int>(screen_number)) {
+                return static_cast<std::int32_t>(scr->screen_buffer_byte_width(
+                    static_cast<epoc::display_mode>(display_mode)));
+            }
+
+            scr = scr->next;
+        }
+
+        return 0;
     }
 
     BRIDGE_FUNC_DISPATCHER(std::int32_t, wait_vsync, const std::int32_t screen_index, eka2l1::ptr<epoc::request_status> sts) {

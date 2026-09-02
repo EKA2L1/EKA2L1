@@ -1343,6 +1343,23 @@ namespace eka2l1 {
         }
     }
 
+    void fbscli::set_bitmap_size_in_twips(service::ipc_context *ctx) {
+        const epoc::handle handle = *(ctx->get_argument_value<std::uint32_t>(0));
+        fbsbitmap *bmp = obj_table_.get<fbsbitmap>(handle);
+
+        if (!bmp) {
+            ctx->complete(epoc::error_unknown);
+            return;
+        }
+
+        // Metadata only, like the client-side CFbsBitmap::SetSizeInTwips this replaces.
+        bmp = get_clean_bitmap(bmp);
+        bmp->bitmap_->header_.size_twips = eka2l1::object_size(*(ctx->get_argument_value<int>(1)),
+            *(ctx->get_argument_value<int>(2)));
+
+        ctx->complete(epoc::error_none);
+    }
+
     void fbscli::cancel_notify_dirty_bitmap(service::ipc_context *ctx) {
         if (server<fbs_server>()->compressor)
             server<fbs_server>()->compressor->cancel(dirty_nof_);

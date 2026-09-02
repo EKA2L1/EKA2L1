@@ -39,6 +39,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER(3, wait_vsync),
         BRIDGE_REGISTER_DISPATCHER(4, cancel_wait_vsync),
         BRIDGE_REGISTER_DISPATCHER(5, flexible_post),
+        BRIDGE_REGISTER_DISPATCHER(6, get_screen_buffer_byte_width),
         BRIDGE_REGISTER_DISPATCHER(0x20, eaudio_player_inst),
         BRIDGE_REGISTER_DISPATCHER(0x21, eaudio_player_notify_any_done),
         BRIDGE_REGISTER_DISPATCHER(0x22, eaudio_player_supply_url),

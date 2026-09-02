@@ -260,6 +260,9 @@ namespace eka2l1 {
         */
         void app_language(service::ipc_context &ctx);
 
+        /*! \brief Get how many applications the list holds, as the completion code. */
+        void app_count(service::ipc_context &ctx);
+
         /*! \brief Request the server to run app.
          *
          * Iter through every AppList plugins, set status to true

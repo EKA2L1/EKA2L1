@@ -690,6 +690,20 @@ namespace eka2l1 {
         ctx.complete(0);
     }
 
+    void applist_server::app_count(service::ipc_context &ctx) {
+        // Apparc answers with the count as the completion code, and leaves control panel
+        // items out of the application list.
+        std::int32_t count = 0;
+
+        for (const auto &reg : regs) {
+            if (!(reg.caps.flags & apa_capability::control_panel_item)) {
+                count++;
+            }
+        }
+
+        ctx.complete(count);
+    }
+
     void applist_server::get_app_info(service::ipc_context &ctx) {
         const epoc::uid app_uid = *ctx.get_argument_value<epoc::uid>(0);
         apa_app_registry *reg = get_registration(app_uid);
@@ -1317,6 +1331,10 @@ namespace eka2l1 {
                 server<applist_server>()->app_language(*ctx);
                 break;
 
+            case applist_request_app_count:
+                server<applist_server>()->app_count(*ctx);
+                break;
+
             case applist_request_rule_based_launching:
                 server<applist_server>()->is_accepted_to_run(*ctx);
                 break;
@@ -1383,6 +1401,13 @@ namespace eka2l1 {
 
             case applist_request_get_next_app:
                 get_next_app(*ctx);
+                break;
+
+            // Registries are scanned before any guest process runs, so the first scan is
+            // always complete already and the observer is satisfied as it registers.
+            case applist_request_register_list_population_complete_observer:
+            case applist_request_cancel_list_population_complete_observer:
+                ctx->complete(epoc::error_none);
                 break;
 
             default:
