@@ -17,9 +17,9 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>26.7.0</string>
+    <string>26.9.0</string>
     <key>CFBundleVersion</key>
-    <string>260700</string>
+    <string>260940</string>
     <key>CFBundleIcons</key>
     <dict>
         <key>CFBundlePrimaryIcon</key>
