@@ -23,6 +23,7 @@
 #include <common/dynamicfile.h>
 #include <common/log.h>
 
+#include <kernel/kernel.h>
 #include <services/centralrepo/centralrepo.h>
 #include <services/centralrepo/cre.h>
 #include <services/context.h>
@@ -807,6 +808,20 @@ namespace eka2l1 {
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_transaction_cancel, "CenRep::TransactionCancel");
     }
 
+    // 9.1 sessions own one repository and have no subsession id.
+    decltype(central_repo_client_session::client_subsessions)::iterator
+    central_repo_client_session::resolve_subsession(service::ipc_context *ctx) {
+        auto subsession_ite = client_subsessions.find(*ctx->get_argument_value<std::uint32_t>(3));
+
+        if ((subsession_ite == client_subsessions.end())
+            && (ctx->sys->get_kernel_system()->get_epoc_version() == epocver::epoc91)
+            && (client_subsessions.size() == 1)) {
+            return client_subsessions.begin();
+        }
+
+        return subsession_ite;
+    }
+
     void central_repo_client_session::init(service::ipc_context *ctx) {
         // The UID repo to load
         const std::uint32_t repo_uid = *ctx->get_argument_value<std::uint32_t>(0);
@@ -833,7 +848,7 @@ namespace eka2l1 {
 
         repo->attached.push_back(&res.first->second);
 
-        bool result = ctx->write_data_to_descriptor_argument<std::uint32_t>(3, idcounter);
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(3, idcounter);
         ctx->complete(epoc::error_none);
     }
 
@@ -1069,11 +1084,11 @@ namespace eka2l1 {
 
         default: {
             // We find the repo subsession and redirect message to subsession
-            const std::uint32_t subsession_uid = *ctx->get_argument_value<std::uint32_t>(3);
-            auto subsession_ite = client_subsessions.find(subsession_uid);
+            auto subsession_ite = resolve_subsession(ctx);
 
             if (subsession_ite == client_subsessions.end()) {
-                LOG_ERROR(SERVICE_CENREP, "Subsession ID passed not found 0x{:X}", subsession_uid);
+                LOG_ERROR(SERVICE_CENREP, "Subsession ID passed not found 0x{:X}",
+                    *ctx->get_argument_value<std::uint32_t>(3));
                 ctx->complete(epoc::error_argument);
 
                 return;
@@ -1209,7 +1224,10 @@ namespace eka2l1 {
 
     void central_repo_client_session::close(service::ipc_context *ctx) {
         device_manager *mngr = ctx->sys->get_device_manager();
-        const int err = closerep(ctx->sys->get_io_system(), mngr, 0, *ctx->get_argument_value<std::uint32_t>(3));
+        auto subsession_ite = resolve_subsession(ctx);
+        const int err = (subsession_ite == client_subsessions.end())
+            ? -1
+            : closerep(ctx->sys->get_io_system(), mngr, 0, subsession_ite->first);
 
         switch (err) {
         case 0: {

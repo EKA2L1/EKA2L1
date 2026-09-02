@@ -379,6 +379,9 @@ namespace eka2l1::hle {
         case epocver::epoc80:
             return "v80";
 
+        case epocver::epoc91:
+            return "v91";
+
         case epocver::epoc93fp1:
             return "v93fp1";
             
@@ -689,6 +692,42 @@ namespace eka2l1::hle {
         return import_e32img(&img, mem_, kern_, *this, path);
     }
 
+    // Stage ROFS ROM images at their linked address.
+    bool lib_manager::stage_rom_image_outside_core(common::ro_stream *stream, const address code_address) {
+        const std::uint64_t image_size = stream->size();
+
+        if (mem_->get_real_pointer(code_address)) {
+            return true;
+        }
+
+        const address image_base = code_address - loader::rom_image_header_file_size(kern_->get_epoc_version());
+
+        mem::control_base *control = mem_->get_control();
+        const std::uint32_t table_size = (1U << control->page_per_tab_shift_) << control->page_size_bits_;
+        const address chunk_addr = image_base & ~(table_size - 1);
+        const std::size_t head_gap = image_base - chunk_addr;
+        const std::size_t chunk_size = head_gap + static_cast<std::size_t>(image_size);
+
+        kernel::chunk *img_chunk = kern_->create<kernel::chunk>(mem_, nullptr, "ROFS image", static_cast<address>(head_gap),
+            static_cast<address>(chunk_size), chunk_size, prot_read_write_exec, kernel::chunk_type::normal,
+            kernel::chunk_access::rom, kernel::chunk_attrib::none, 0x00, false, chunk_addr);
+
+        if (!img_chunk) {
+            LOG_ERROR(KERNEL, "Can't map a ROM image linked at 0x{:X}", image_base);
+            return false;
+        }
+
+        std::uint8_t *host = reinterpret_cast<std::uint8_t *>(img_chunk->host_base()) + head_gap;
+
+        if (stream->read(host, static_cast<std::uint32_t>(image_size)) != image_size) {
+            kern_->destroy(img_chunk);
+            return false;
+        }
+
+        stream->seek(0, common::seek_where::beg);
+        return true;
+    }
+
     codeseg_ptr lib_manager::load_as_romimg(loader::romimg &romimg, const std::u16string &path, const bool only_shell) {
         if (auto seg = kern_->pull_codeseg_by_ep(romimg.header.entry_point)) {
             return seg;
@@ -717,21 +756,6 @@ namespace eka2l1::hle {
         info.exception_descriptor = romimg.header.exception_des;
         info.constant_data = reinterpret_cast<std::uint8_t *>(mem_->get_real_pointer(romimg.header.data_address));
 
-        // A ROM image executes code in place, so it must carry a code address, and
-        // any constant data it declares must sit at an address we can map. When
-        // either does not hold, the header we parsed is not a real image header --
-        // parse_romimg only fails on short reads, so arbitrary bytes parse "fine" --
-        // and constructing a codeseg from it would copy from a null pointer using
-        // a nonsense length.
-        if ((romimg.header.data_size && !info.constant_data) || !romimg.header.code_address) {
-            LOG_ERROR(KERNEL, "ROM image {} has an invalid header (code address 0x{:X}, {} bytes of "
-                              "constant data at address 0x{:X}); refusing to load it",
-                common::ucs2_to_utf8(path), romimg.header.code_address, romimg.header.data_size,
-                romimg.header.data_address);
-
-            return nullptr;
-        }
-
         const std::string seg_name = (path.empty()) ? "codeseg" :
             common::lowercase_string(common::ucs2_to_utf8(eka2l1::filename(path)));
 
@@ -741,19 +765,14 @@ namespace eka2l1::hle {
             return cs;
         }
 
-        const int baseline_access_count = cs->get_access_count();
-
         struct dll_ref_table {
             std::uint16_t flags;
             std::uint16_t num_entries;
             std::uint32_t rom_img_headers_ref[25];
         };
 
-        // Find dependencies. Returns false when a listed dependency cannot be
-        // loaded: the ROM dependency table has no optional entries, so a missing
-        // one leaves an incomplete graph whose holes resurface later as ordinal
-        // or execution errors far from the cause.
-        std::function<bool(loader::rom_image_header *, codeseg_ptr)> dig_dependencies;
+        // Find dependencies
+        std::function<void(loader::rom_image_header *, codeseg_ptr)> dig_dependencies;
         dig_dependencies = [&](loader::rom_image_header *header, codeseg_ptr acs) {
             if (header->dll_ref_table_address != 0) {
                 dll_ref_table *ref_table = eka2l1::ptr<dll_ref_table>(header->dll_ref_table_address).get(mem_);
@@ -775,7 +794,6 @@ namespace eka2l1::hle {
                     }
 
                     if (auto ref_seg = kern_->pull_codeseg_by_ep(entry_point)) {
-                        // Add ref
                         kernel::codeseg_dependency_info dep_info;
                         dep_info.dep_ = ref_seg;
 
@@ -825,13 +843,7 @@ namespace eka2l1::hle {
                             common::ro_buf_stream buf_stream(eka2l1::ptr<std::uint8_t>(romimg_addr).get(mem_), 0xFFFF);
 
                             // Load new romimage and add dependency
-                            auto rimg_parsed = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&buf_stream), mem_, kern_->get_epoc_version());
-                            if (!rimg_parsed) {
-                                LOG_ERROR(KERNEL, "Unable to parse ROM image dependency of {} at address 0x{:X}", acs->name(), romimg_addr);
-                                return false;
-                            }
-
-                            loader::romimg rimg = std::move(*rimg_parsed);
+                            loader::romimg rimg = *loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&buf_stream), mem_, kern_->get_epoc_version());
                             std::u16string path_to_dll;
 
                             for (std::size_t i = 0; i < search_paths.size(); i++) {
@@ -853,37 +865,14 @@ namespace eka2l1::hle {
                             kernel::codeseg_dependency_info dep_info;
                             dep_info.dep_ = load_as_romimg(rimg, path_to_dll);
 
-                            if (!dep_info.dep_) {
-                                LOG_ERROR(KERNEL, "Failed to load ROM image dependency {} of {}",
-                                    common::ucs2_to_utf8(path_to_dll), acs->name());
-                                return false;
-                            }
-
-                            if (!acs->add_dependency(dep_info)) {
-                                return false;
-                            }
+                            acs->add_dependency(dep_info);
                         }
                     }
                 }
             }
-
-            return true;
         };
 
-        if (!dig_dependencies(&romimg.header, cs)) {
-            LOG_ERROR(KERNEL, "ROM image {} depends on an image that cannot be loaded; refusing to load it",
-                common::ucs2_to_utf8(path));
-
-            // A dependency loaded before the failing one may already reference this
-            // codeseg (the ROM graph has cycles); destroying it then would leave a
-            // dangling dependency, so only reclaim it when nothing looked at it.
-            if (cs->get_access_count() == baseline_access_count) {
-                kern_->destroy(cs);
-            }
-
-            return nullptr;
-        }
-
+        dig_dependencies(&romimg.header, cs);
         try_apply_patch(cs);
 
         return cs;
@@ -1021,9 +1010,18 @@ namespace eka2l1::hle {
 
             eka2l1::ro_file_stream image_data_stream(f.get());
 
-            if (f->is_in_rom() && !loader::is_e32img(reinterpret_cast<common::ro_stream *>(&image_data_stream))) {
+            const bool is_e32 = loader::is_e32img(reinterpret_cast<common::ro_stream *>(&image_data_stream));
+            const bool is_rom = !is_e32 && (f->is_in_rom() || (kern_->get_epoc_version() == epocver::epoc91));
+
+            if (is_rom) {
                 auto romimg = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&image_data_stream), mem_, kern_->get_epoc_version(), is_driver_lib);
                 if (!romimg) {
+                    return nullptr;
+                }
+
+                if ((kern_->get_epoc_version() == epocver::epoc91)
+                    && !stage_rom_image_outside_core(reinterpret_cast<common::ro_stream *>(&image_data_stream),
+                        romimg->header.code_address)) {
                     return nullptr;
                 }
 
@@ -1366,6 +1364,10 @@ namespace eka2l1::hle {
 
         case epocver::epoc94:
             epoc::register_epocv94(*this);
+            break;
+
+        case epocver::epoc91:
+            epoc::register_epocv91(*this);
             break;
 
         case epocver::epoc93fp1:

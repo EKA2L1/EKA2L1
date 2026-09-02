@@ -182,6 +182,7 @@ namespace eka2l1 {
 
             codeseg_ptr load_as_e32img(loader::e32img &img, const std::u16string &path = u"");
             codeseg_ptr load_as_romimg(loader::romimg &img, const std::u16string &path = u"", const bool only_shell = false);
+            bool stage_rom_image_outside_core(common::ro_stream *stream, address code_address);
 
             void load_patch_libraries(const std::string &patch_folder);
             bool try_apply_patch(codeseg_ptr original);

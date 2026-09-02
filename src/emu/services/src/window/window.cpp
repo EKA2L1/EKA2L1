@@ -1578,6 +1578,18 @@ namespace eka2l1 {
                 }
             } while (true);
 
+            // The 5500 wsini has one fixed screen mode and no hardware state.
+            if ((kern->get_epoc_version() == epocver::epoc91)
+                && scr.hardware_states.empty() && !scr.modes.empty()) {
+                epoc::config::hardware_state only_state;
+
+                only_state.state_number = 0;
+                only_state.mode_normal = scr.modes[0].mode_number;
+                only_state.mode_alternative = scr.modes[0].mode_number;
+
+                scr.hardware_states.push_back(only_state);
+            }
+
             screen_configs.push_back(scr);
         } while ((screen_node != nullptr) && (!one_screen_only));
     }

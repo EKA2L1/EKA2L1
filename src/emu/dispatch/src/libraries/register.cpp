@@ -19,6 +19,7 @@
 
 #include <dispatch/dispatcher.h>
 #include <dispatch/libraries/register.h>
+#include <dispatch/libraries/featmgr/register.h>
 #include <dispatch/libraries/sysutils/register.h>
 #include <dispatch/libraries/egl/register.h>
 #include <dispatch/libraries/gles1/register.h>
@@ -46,8 +47,12 @@ namespace eka2l1::dispatch::libraries {
                 disp->patch_libraries(u"Z:\\System\\Libs\\libgles_cm.dll", LIBGLES_CM_PATCH_INFOS,
                     LIBGLES_CM_PATCH_COUNT);
             }
-        } else if (kern->get_epoc_version() >= epocver::epoc93fp1) {
+        } else if (kern->get_epoc_version() >= epocver::epoc91) {
             config::state *conf = kern->get_config();
+
+            if (kern->get_epoc_version() == epocver::epoc91) {
+                disp->patch_libraries(u"Z:\\Sys\\Bin\\FEATMGR.DLL", FEATMGR_PATCH_INFOS, FEATMGR_PATCH_COUNT);
+            }
 
             if (conf->enable_hw_gles1) {
                 disp->patch_libraries(u"Z:\\Sys\\Bin\\libgles_cm.dll", LIBGLES_CM_PATCH_INFOS, LIBGLES_CM_PATCH_COUNT);

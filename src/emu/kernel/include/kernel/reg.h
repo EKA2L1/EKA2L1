@@ -11,6 +11,7 @@ namespace eka2l1::epoc {
      * @brief Register Symbian 9.3 supervisor calls.
      * @param mngr Reference to library manager.
      **/
+    void register_epocv91(hle::lib_manager &mngr);
     void register_epocv93(hle::lib_manager &mngr);
 
     /**

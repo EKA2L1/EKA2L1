@@ -44,7 +44,9 @@ namespace eka2l1 {
     }
 
     void oom_ui_app_server::connect(service::ipc_context &ctx) {
-        create_session<oom_ui_app_session>(&ctx);
+        // 9.1 SGC parameters are four plain integers.
+        const bool old_layout = (ctx.sys->get_symbian_version_use() == epocver::epoc91);
+        create_session<oom_ui_app_session>(&ctx, old_layout);
         typical_server::connect(ctx);
     }
 
@@ -175,9 +177,14 @@ namespace eka2l1 {
         akn_config.num_screen_mode = static_cast<std::int32_t>(scr_config->modes.size());
         akn_config.num_hardware_mode = static_cast<std::int32_t>(scr_config->hardware_states.size());
 
+        // Symbian 9.1's SAknScreenModeInfo predates the final two fields.
+        const std::size_t mode_info_size = (kern->get_epoc_version() == epocver::epoc91)
+            ? offsetof(akn_screen_mode_info, screen_style_hash)
+            : sizeof(akn_screen_mode_info);
+
         // Static check on those pointer
         akn_config.screen_modes = sizeof(akn_layout_config);
-        akn_config.hardware_infos = sizeof(akn_layout_config) + sizeof(akn_screen_mode_info) * akn_config.num_screen_mode;
+        akn_config.hardware_infos = static_cast<address>(sizeof(akn_layout_config) + mode_info_size * akn_config.num_screen_mode);
 
         std::string result;
         result.append(reinterpret_cast<char *>(&akn_config), sizeof(akn_layout_config));
@@ -194,7 +201,7 @@ namespace eka2l1 {
             mode_info.info.twips_size = mode_info.info.pixel_size * epoc::get_approximate_pixel_to_twips_mul(kern->get_epoc_version());
             mode_info.screen_style_hash = calculate_screen_style_hash(scr_config->modes[i].style);
 
-            result.append(reinterpret_cast<char *>(&mode_info), sizeof(akn_screen_mode_info));
+            result.append(reinterpret_cast<char *>(&mode_info), mode_info_size);
         }
 
         for (std::size_t i = 0; i < scr_config->hardware_states.size(); i++) {
@@ -235,7 +242,7 @@ namespace eka2l1 {
         if (!params.has_value()) {
             if (old_layout) {
                 params = std::make_optional<epoc::sgc_params>();
-                params->app_screen_mode = 0;
+                params->app_screen_mode = epoc::KAKN_SCREEN_MODE_UNSET;
                 params->window_group_id = ctx.get_argument_value<std::int32_t>(0).value();
                 params->bit_flags = ctx.get_argument_value<std::uint32_t>(1).value();
                 params->sp_layout = ctx.get_argument_value<std::uint32_t>(2).value();

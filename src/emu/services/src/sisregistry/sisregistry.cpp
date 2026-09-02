@@ -168,7 +168,8 @@ namespace eka2l1 {
             if ((ctx->msg->function >= sisregistry_get_matching_supported_languages) && (ctx->msg->function <= sisregistry_separator_minimum_read_user_data)) {
                 ctx->msg->function++;                
 
-                if (ctx->sys->get_symbian_version_use() == epocver::epoc93fp1) {
+                const epocver version = ctx->sys->get_symbian_version_use();
+                if ((version == epocver::epoc91) || (version == epocver::epoc93fp1)) {
                     ctx->msg->function++;
                 }
             }
@@ -883,7 +884,8 @@ namespace eka2l1 {
             return;
         }
 
-        bool old_ver_sisreg = ctx->sys->get_symbian_version_use() == epocver::epoc93fp1;
+        const epocver version = ctx->sys->get_symbian_version_use();
+        bool old_ver_sisreg = (version == epocver::epoc91) || (version == epocver::epoc93fp1);
 
         std::optional<sisregistry_stub_extraction_mode> package_mode;
         if (old_ver_sisreg) {

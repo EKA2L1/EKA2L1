@@ -52,6 +52,7 @@
 #include <vfs/vfs.h>
 
 #include <loader/e32img.h>
+#include <loader/rom.h>
 #include <loader/romimage.h>
 
 #include <re2/re2.h>
@@ -174,9 +175,7 @@ namespace eka2l1 {
 
         cpu_->clear_instruction_cache();
 
-        // Only now is the host backing safe to release: the ROM chunk destroyed
-        // with the containers above held page-table entries and CPU mappings
-        // pointing into it.
+        // Release ROM backing after its chunk mappings are gone.
         unmap_rom();
 
         wiping_ = false;
@@ -498,6 +497,11 @@ namespace eka2l1 {
         mem_ = new_mem;
     }
 
+    bool kernel_system::is_address_in_rom(const address addr) const {
+        const address rom_start = rom_info_->header.rom_base;
+        return (addr >= rom_start) && (addr - rom_start < rom_info_->header.rom_size);
+    }
+
     // For user-provided EPOC version
     void kernel_system::set_epoc_version(const epocver ver) {
         kern_ver_ = ver;
@@ -506,6 +510,20 @@ namespace eka2l1 {
         // Set CPU SVC handler
         cpu_->system_call_handler = [this](const std::uint32_t ordinal) {
             // crr_thread()->add_last_syscall(ordinal);
+            // 9.1 ROM stubs leave their return address in r12.
+            if ((kern_ver_ == epocver::epoc91) && (ordinal != 0xFF)
+                && is_address_in_rom(cpu_->get_pc())) {
+                const std::uint32_t jump_back = cpu_->get_reg(12);
+                std::uint32_t cpsr = cpu_->get_cpsr() & ~0x20;
+
+                if (jump_back & 0b1) {
+                    cpsr |= 0x20;
+                }
+
+                cpu_->set_pc(jump_back & ~0b1);
+                cpu_->set_cpsr(cpsr);
+            }
+
             get_lib_manager()->call_svc(ordinal);
 
             // EKA1 does not use BX LR to jump back, they let kernel do it
@@ -1359,18 +1377,11 @@ namespace eka2l1 {
     bool kernel_system::map_rom(const mem::vm_address addr, const std::string &path) {
         const std::size_t rom_size = common::file_size(path);
 
-        // The multiple model can only place a chunk on a chunk-span boundary; a forced
-        // address below one gets aligned down. Most ROMs declare an aligned base, and
-        // the file mapping can then back the chunk directly. A ROM with an unaligned
-        // base (e.g. 0xF80F1000 on the Nokia 5500 Sport) must instead be placed at its
-        // in-chunk offset, in a buffer starting at the aligned base - otherwise every
-        // guest-to-host translation inside the ROM comes out shifted by the discarded
-        // bits, and the ROM's tail ends up outside the chunk entirely. The flexible
-        // model honors page-granular forced addresses and keeps the declared base.
+        // The multiple model needs padding before an unaligned ROM base.
         mem::vm_address chunk_base = addr;
         std::size_t rebase_offset = 0;
 
-        if (mem_->get_model_type() == mem::mem_model_type::multiple) {
+        if ((kern_ver_ == epocver::epoc91) && (mem_->get_model_type() == mem::mem_model_type::multiple)) {
             chunk_base = addr & ~mem_->get_control()->chunk_mask_;
             rebase_offset = addr - chunk_base;
         }
@@ -1393,11 +1404,7 @@ namespace eka2l1 {
                 return false;
             }
 
-            // The pad below the base is committed on purpose: this kind of ROM is
-            // sectioned, and the guest reads data below the declared base during boot
-            // (the section start holds the ROM header, for one) - leaving a hole there
-            // faults the boot. The dump carries no content for that range, so
-            // zero-filled pages are the closest thing to the real ROM's prefix.
+            // The 5500 reads the zero-filled section prefix during boot.
             if (!common::commit(rom_map_, rom_map_size_, prot_read_write)) {
                 unmap_rom();
                 return false;

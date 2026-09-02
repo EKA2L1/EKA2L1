@@ -10,6 +10,7 @@ set(CORE_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/mbm.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/mif.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/nvg.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/loader/romimg.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/rsc.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/spi.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/svgb.cpp
@@ -30,5 +31,6 @@ set(CORE_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/services/socket/opcodes.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/ui/iconops.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/ui/skin/skn.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/utils/obj.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/utils/sec.cpp
     PARENT_SCOPE)

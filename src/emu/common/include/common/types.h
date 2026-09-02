@@ -69,6 +69,7 @@ enum class epocver {
     epoc81a,
     eka2,      ///< Mark for EKA2
     epoc81b,
+    epoc91,    ///< S60v3 initial (Symbian OS 9.1)
     epoc93fp1, ///< S60v3 Feature pack 1
     epoc93fp2, ///< S60v3 Feature pack 2
     epoc94,    ///< S60v5

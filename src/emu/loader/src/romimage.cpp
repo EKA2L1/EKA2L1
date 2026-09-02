@@ -75,12 +75,27 @@ namespace eka2l1::loader {
             return std::nullopt;
         }
 
+        // ROFS images may need their export table read from the dumped file.
+        const std::uint32_t image_base = img.header.code_address - rom_image_header_file_size(os_ver);
+
         ptr<uint32_t> export_off(img.header.export_dir_address);
 
         for (int32_t i = 0; i < img.header.export_dir_count; i++) {
-            auto export_addr = *export_off.get(mem);
-            img.exports.push_back(export_addr);
+            std::uint32_t *export_ptr = export_off.get(mem);
+            std::uint32_t export_entry = 0;
 
+            if (export_ptr || (os_ver != epocver::epoc91)) {
+                export_entry = *export_ptr;
+            } else {
+                const std::uint32_t file_offset = export_off.ptr_address() - image_base;
+
+                const std::uint64_t saved = stream->tell();
+                stream->seek(file_offset, common::seek_where::beg);
+                stream->read(&export_entry, 4);
+                stream->seek(saved, common::seek_where::beg);
+            }
+
+            img.exports.push_back(export_entry);
             export_off += 4;
         }
 

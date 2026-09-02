@@ -254,6 +254,11 @@ bool list_devices_option_handler(eka2l1::common::arg_parser *parser, void *userd
             break;
         }
 
+        case epocver::epoc91: {
+            std::cout << " 9.1";
+            break;
+        }
+
         case epocver::epoc93fp1: {
             std::cout << " 9.3 FP1";
             break;

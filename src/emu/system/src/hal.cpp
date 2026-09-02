@@ -89,7 +89,7 @@ namespace eka2l1::epoc {
 
             if (system_version >= epocver::epoc10) {
                 system_ram_size = static_cast<int>(common::MB(256));
-            } else if (system_version >= epocver::epoc93fp1) {
+            } else if (system_version >= epocver::epoc91) {
                 system_ram_size = static_cast<int>(common::MB(128));
             } else if (system_version >= epocver::epoc80) {
                 system_ram_size = static_cast<int>(common::MB(64));

@@ -666,6 +666,11 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    // Symbian 9.1 keys TLS by the DLL handle, like EKA1.
+    BRIDGE_FUNC(std::int32_t, dll_set_tls_no_uid, kernel::handle h, eka2l1::ptr<void> data_set) {
+        return dll_set_tls(kern, h, static_cast<std::int32_t>(h), data_set);
+    }
+
     BRIDGE_FUNC(void, dll_free_tls, kernel::handle h) {
         kernel::thread *thr = kern->crr_thread();
         thr->close_tls_slot(h);
@@ -6249,6 +6254,12 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xE2, get_module_name_from_address),
         BRIDGE_REGISTER(0xE5, session_security_info),
         BRIDGE_REGISTER(0xE8, btrace_out)
+    };
+
+    // Register 9.1 ABI differences before the shared 9.3 table.
+    const eka2l1::hle::func_map svc_register_funcs_v91_diff = {
+        BRIDGE_REGISTER(0x4D, dll_tls_eka1),
+        BRIDGE_REGISTER(0x75, dll_set_tls_no_uid)
     };
 
     const eka2l1::hle::func_map svc_register_funcs_v93 = {

@@ -333,6 +333,7 @@ namespace eka2l1::epoc {
     int do_hal_by_data_num(eka2l1::system *sys, const std::uint32_t data_num, void *data);
 
     ///> @brief The SVC map for Symbian S60v3.
+    extern const eka2l1::hle::func_map svc_register_funcs_v91_diff;
     extern const eka2l1::hle::func_map svc_register_funcs_v93;
 
     ///> @brief The SVC map for Symbian S60v5.

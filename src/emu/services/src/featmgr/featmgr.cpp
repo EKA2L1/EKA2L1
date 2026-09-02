@@ -150,6 +150,31 @@ namespace eka2l1 {
         return true;
     }
 
+    bool featmgr_server::is_feature_supported(system *sys, const epoc::uid feature_id) {
+        if (!config_loaded) {
+            if (!load_featmgr_configs(sys->get_io_system())) {
+                LOG_ERROR(SERVICE_FEATMGR, "Error loading feature manager server config!");
+            }
+
+            do_feature_scanning(sys);
+            std::sort(enable_features.begin(), enable_features.end());
+
+            config_loaded = true;
+        }
+
+        if (std::binary_search(enable_features.begin(), enable_features.end(), feature_id)) {
+            return true;
+        }
+
+        for (const auto &feature_range : enable_feature_ranges) {
+            if ((feature_range.low_uid <= feature_id) && (feature_id <= feature_range.high_uid)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     void featmgr_server::feature_supported(service::ipc_context &ctx) {
         if (!config_loaded) {
             bool succ = load_featmgr_configs(ctx.sys->get_io_system());

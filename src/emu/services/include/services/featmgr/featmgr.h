@@ -64,5 +64,8 @@ namespace eka2l1 {
 
     public:
         featmgr_server(system *sys);
+
+        // Used by the 9.1 FEATMGR.DLL patch.
+        bool is_feature_supported(system *sys, const epoc::uid feature_id);
     };
 }

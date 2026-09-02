@@ -517,6 +517,9 @@ namespace eka2l1 {
 
         bool map_rom(const mem::vm_address addr, const std::string &path);
         void unmap_rom();
+
+        bool is_address_in_rom(const address addr) const;
+
         bool should_panic_be_blocked(kernel::thread *thr, const std::string &category, const std::int32_t code);
 
         epocver get_epoc_version() const {

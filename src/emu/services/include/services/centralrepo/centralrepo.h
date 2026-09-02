@@ -52,6 +52,8 @@ namespace eka2l1 {
 
         void handle_message(service::ipc_context *ctx);
 
+        decltype(client_subsessions)::iterator resolve_subsession(service::ipc_context *ctx);
+
         void init(service::ipc_context *ctx);
         void close(service::ipc_context *ctx);
 

@@ -28,7 +28,7 @@ namespace eka2l1::epoc::apa {
         , parent_window_group_id_(0)
         , debug_mem_fail_(0)
         , app_startup_instrumentation_event_id_base_(0)
-        , parent_process_id_(0) {
+        , parent_process_id_(-1) {
     }
 
     void command_line::do_it_newarch(common::chunkyseri &seri) {
@@ -71,6 +71,21 @@ namespace eka2l1::epoc::apa {
         }
 
         return 'R';
+    }
+
+    std::string command_line::to_buffer() {
+        common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
+        do_it_newarch(seri);
+
+        std::string data;
+        data.resize(seri.size());
+
+        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(data.data()), data.length(),
+            common::chunkyseri_mode::SERI_MODE_WRITE);
+
+        do_it_newarch(seri);
+
+        return data;
     }
 
     std::u16string command_line::to_string(const bool oldarch) {
