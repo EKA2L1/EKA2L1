@@ -63,6 +63,11 @@ namespace eka2l1::loader {
 
             case 9: {
                 switch (minor) {
+                case 1: {
+                    ver = epocver::epoc91;
+                    break;
+                }
+
                 case 3: {
                     // Note: This should be detected through SIS!
                     ver = epocver::epoc93fp2;
@@ -108,7 +113,11 @@ namespace eka2l1::loader {
                 return epocver::epoc10;
 
         case 3:
-            if (minor <= 1) {
+            if (minor == 0) {
+                return epocver::epoc91;
+            }
+
+            if (minor == 1) {
                 return epocver::epoc93fp1;
             }
 

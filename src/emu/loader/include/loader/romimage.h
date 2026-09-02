@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <common/types.h>
+
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -70,6 +72,11 @@ namespace eka2l1::loader {
         std::uint32_t module;
         std::uint32_t exception_des;
     };
+
+    // Serialized ROM headers are smaller than rom_image_header.
+    constexpr std::uint32_t rom_image_header_file_size(const epocver ver) {
+        return (ver <= epocver::eka2) ? 100 : 120;
+    }
 
     struct romimg {
         rom_image_header header;

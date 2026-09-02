@@ -301,6 +301,7 @@ namespace eka2l1 {
             case epocver::epoc81b:
                 return preset::SYSTEM_CPU_HZ_S60V2;
 
+            case epocver::epoc91:
             case epocver::epoc93fp1:
             case epocver::epoc93fp2:
                 return preset::SYSTEM_CPU_HZ_S60V3;

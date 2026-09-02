@@ -57,7 +57,7 @@ namespace eka2l1::epoc {
 
     bool object_table::remove(handle obj_handle) {
         const std::size_t idx = obj_handle & 0xFFFF;
-        if (idx > objects.size() || idx == 0) {
+        if (idx > objects.size() || idx == 0 || !objects[idx - 1]) {
             return false;
         }
 

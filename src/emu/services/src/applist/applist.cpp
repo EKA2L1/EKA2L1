@@ -1427,7 +1427,8 @@ namespace eka2l1 {
     static constexpr std::uint8_t ENVIRONMENT_SLOT_MAIN = 1;
 
     bool applist_server::launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id,
-                                    kernel::process *requester, const epoc::uid known_uid, std::function<void(kernel::process*)> app_exit_callback) {
+                                    kernel::process *requester, const epoc::uid known_uid, std::function<void(kernel::process*)> app_exit_callback,
+                                    const std::string *environment_main) {
         static constexpr std::size_t MINIMAL_LAUNCH_STACK_SIZE = 0x10000;
         static constexpr std::size_t MINIMAL_LAUNCH_STACK_SIZE_S3 = 0x80000;
 
@@ -1443,7 +1444,10 @@ namespace eka2l1 {
             return false;
         }
 
-        if (legacy_level() < APA_LEGACY_LEVEL_MORDEN) {
+        // Symbian 9.1 reads the command line from process environment slot 1.
+        if (environment_main && !environment_main->empty()) {
+            pr->set_arg_slot(ENVIRONMENT_SLOT_MAIN, reinterpret_cast<std::uint8_t *>(
+                const_cast<char *>(environment_main->data())), environment_main->length());
         }
 
         if (thread_id)
@@ -1541,8 +1545,21 @@ namespace eka2l1 {
         std::u16string executable_to_run;
         registry.get_launch_parameter(executable_to_run, parameter);
 
-        std::u16string apacmddat = parameter.to_string(legacy_level() < APA_LEGACY_LEVEL_MORDEN);
-        return launch_app(executable_to_run, apacmddat, thread_id, nullptr, registry.mandatory_info.uid, app_exit_callback);
+        const bool oldarch = (legacy_level() < APA_LEGACY_LEVEL_MORDEN);
+
+        std::u16string apacmddat = parameter.to_string(oldarch);
+        std::string environment_main;
+
+        if (!oldarch && (kern->get_epoc_version() == epocver::epoc91)) {
+            epoc::apa::command_line environment_parameter = parameter;
+            environment_parameter.launch_cmd_ = epoc::apa::command_run;
+            environment_parameter.document_name_.clear();
+
+            environment_main = environment_parameter.to_buffer();
+        }
+
+        return launch_app(executable_to_run, apacmddat, thread_id, nullptr, registry.mandatory_info.uid, app_exit_callback,
+            environment_main.empty() ? nullptr : &environment_main);
     }
 
     std::optional<apa_app_masked_icon_bitmap> applist_server::get_icon(apa_app_registry &registry, const std::int8_t index) {

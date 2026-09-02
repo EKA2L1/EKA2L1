@@ -37,6 +37,9 @@ namespace eka2l1 {
     class window_server;
 
     namespace epoc {
+        // KAknScreenModeUnset
+        static constexpr std::int32_t KAKN_SCREEN_MODE_UNSET = -1;
+
         struct sgc_params {
             std::int32_t window_group_id;
 

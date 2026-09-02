@@ -234,7 +234,7 @@ namespace eka2l1 {
                 // FileWriteDirty does not exist
                 if (ctx->msg->function >= epoc::fs_msg_file_write_dirty)
                     ctx->msg->function++;
-            } else if (version == epocver::epoc93fp1) {
+            } else if ((version == epocver::epoc93fp1) || (version == epocver::epoc91)) {
                 // From SetSystemDrive to FileWriteDirty, does not exist
                 if (ctx->msg->function >= epoc::fs_msg_set_system_drive) {
                     ctx->msg->function += epoc::fs_msg_file_write_dirty - epoc::fs_msg_set_system_drive + 1;

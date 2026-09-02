@@ -25,6 +25,12 @@
 #include <kernel/libmanager.h>
 
 namespace eka2l1::epoc {
+    void register_epocv91(eka2l1::hle::lib_manager &mngr) {
+        // insert() keeps the earlier 9.1 overrides.
+        ADD_SVC_REGISTERS(mngr, svc_register_funcs_v91_diff);
+        ADD_SVC_REGISTERS(mngr, svc_register_funcs_v93);
+    }
+
     void register_epocv93(eka2l1::hle::lib_manager &mngr) {
         ADD_SVC_REGISTERS(mngr, svc_register_funcs_v93);
     }
