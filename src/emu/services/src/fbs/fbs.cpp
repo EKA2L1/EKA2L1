@@ -207,6 +207,11 @@ namespace eka2l1 {
             break;
         }
 
+        case fbs_bitmap_set_size_in_twips: {
+            set_bitmap_size_in_twips(ctx);
+            break;
+        }
+
         case fbs_bitmap_notify_dirty: {
             notify_dirty_bitmap(ctx);
             break;

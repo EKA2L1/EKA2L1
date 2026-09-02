@@ -20,6 +20,7 @@
 #include <cdsb.h>
 
 #include "log.h"
+#include "scdv/draw.h"
 #include "scdv/panic.h"
 #include "scdv/sv.h"
 
@@ -103,6 +104,13 @@ TInt CDirectScreenBitmapImpl::BeginUpdate(TAcceleratedBitmapInfo &aBitmapInfo) {
     aBitmapInfo.iAddress = reinterpret_cast<TUint8 *>(iData);
     aBitmapInfo.iSize = iSize;
     aBitmapInfo.iLinePitch = iSize.iWidth * 4;
+#ifdef EKA2
+    // Same framebuffer, same row layout as the screen draw device.
+    const TInt rowBytes = GetScreenFramebufferRowBytes(6, iScreenNum, EColor16MAAlter);
+    if (rowBytes >= aBitmapInfo.iLinePitch) {
+        aBitmapInfo.iLinePitch = rowBytes;
+    }
+#endif
     aBitmapInfo.iPixelShift = 5; // Should be 2^5 = 32
 
     return KErrNone;

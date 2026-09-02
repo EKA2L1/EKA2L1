@@ -190,8 +190,12 @@ namespace eka2l1::epoc {
 
         /**
          * \brief Get the number of bytes between rows in the emulated framebuffer.
+         *
+         * Every writer has to agree on this: the display HAL reports it and the screen
+         * draw device is built with it.
          */
         std::uint32_t screen_buffer_byte_width() const;
+        std::uint32_t screen_buffer_byte_width(const epoc::display_mode mode) const;
 
         /**
          * \brief Get the size of this screen, in pixels.

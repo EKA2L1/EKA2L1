@@ -145,7 +145,13 @@ namespace eka2l1 {
         fbs_atlas_font_count,
         fbs_atlas_glyph_count,
         fbs_oogm_notification,
-        fbs_get_glyph_cache_metrics
+        fbs_get_glyph_cache_metrics,
+
+        // Past the public TFbsMessage enum: Symbian^3 fbserv moves these CFbsBitmap
+        // header mutations server-side, where stock Symbian does them in the client.
+        fbs_bitmap_set_display_mode = 73,
+        fbs_bitmap_set_size_in_twips = 74,
+        fbs_bitmap_swap_width_height = 75
     };
 
     enum fbs_legacy_level {
@@ -210,6 +216,7 @@ namespace eka2l1 {
         void duplicate_bitmap(service::ipc_context *ctx);
         void create_bitmap(service::ipc_context *ctx);
         void resize_bitmap(service::ipc_context *ctx);
+        void set_bitmap_size_in_twips(service::ipc_context *ctx);
         void notify_dirty_bitmap(service::ipc_context *ctx);
         void cancel_notify_dirty_bitmap(service::ipc_context *ctx);
         void get_clean_bitmap(service::ipc_context *ctx);

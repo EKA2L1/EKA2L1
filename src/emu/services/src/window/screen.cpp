@@ -222,9 +222,7 @@ namespace eka2l1::epoc {
         const config::screen_mode &crrmode = current_mode();
         const std::uint32_t bits_per_pixel = epoc::get_bpp_from_display_mode(dsa_disp_mode);
         const std::uint32_t tight_pitch = epoc::get_byte_width(crrmode.size.x, bits_per_pixel);
-        const std::uint32_t framebuffer_pitch = (bits_per_pixel == 32)
-            ? screen_buffer_byte_width()
-            : tight_pitch;
+        const std::uint32_t framebuffer_pitch = screen_buffer_byte_width(dsa_disp_mode);
 
         if (framebuffer_pitch == tight_pitch) {
             drivers::read_bitmap(driver, screen_texture, eka2l1::point(0, 0), eka2l1::object_size(crrmode.size),
@@ -672,8 +670,15 @@ namespace eka2l1::epoc {
     }
 
     std::uint32_t screen::screen_buffer_byte_width() const {
-        const std::uint32_t bits_per_pixel = epoc::get_bpp_from_display_mode(disp_mode);
-        const std::uint32_t tight_pitch = epoc::get_byte_width(size().x, bits_per_pixel);
+        return screen_buffer_byte_width(disp_mode);
+    }
+
+    std::uint32_t screen::screen_buffer_byte_width(const epoc::display_mode mode) const {
+        const std::uint32_t bits_per_pixel = epoc::get_bpp_from_display_mode(mode);
+
+        // The buffer is laid out for the mode currently displayed, not for the panel's
+        // native orientation, so a rotated mode gets its own row length.
+        const std::uint32_t tight_pitch = epoc::get_byte_width(current_mode().size.x, bits_per_pixel);
 
         // ScreenPlay phones expose their 32-bit display framebuffer with a
         // 64-byte-aligned pitch. Keep older bitmap-screen architectures on
