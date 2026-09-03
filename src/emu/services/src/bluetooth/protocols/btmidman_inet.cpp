@@ -51,6 +51,13 @@ namespace eka2l1::epoc::bt {
         , password_(conf.btnet_password)
         , discovery_mode_(static_cast<discovery_mode>(conf.btnet_discovery_mode))
         , asker_counter_(0) {
+        // Local state the guest still reaches with discovery off.
+        std::fill(port_refs_.begin(), port_refs_.end(), 0);
+        std::fill(port_upnp_mapped_.begin(), port_upnp_mapped_.end(), false);
+        for (std::uint32_t i = 0; i < 6; i++) {
+            random_device_addr_.addr_[i] = static_cast<std::uint8_t>(random_range(0, 0xFF));
+        }
+
         if (discovery_mode_ == DISCOVERY_MODE_OFF) {
             return;
         }
@@ -58,9 +65,6 @@ namespace eka2l1::epoc::bt {
         if (discovery_mode_ == DISCOVERY_MODE_LAN) {
             port_ = HARBOUR_PORT;
         }
-
-        std::fill(port_refs_.begin(), port_refs_.end(), 0);
-        std::fill(port_upnp_mapped_.begin(), port_upnp_mapped_.end(), false);
 
         std::vector<std::uint64_t> errs;
         update_friend_list(conf.friend_addresses, errs);
@@ -72,10 +76,6 @@ namespace eka2l1::epoc::bt {
             } else if (errs[i] & FRIEND_UPDATE_ERROR_INVALID_ADDR) {
                 LOG_ERROR(SERVICE_BLUETOOTH, "Bluetooth netplay friend address number {} has invalid address ({})", index + 1, conf.friend_addresses[index].addr_);
             }
-        }
-
-        for (std::uint32_t i = 0; i < 6; i++) {
-            random_device_addr_.addr_[i] = static_cast<std::uint8_t>(random_range(0, 0xFF));
         }
 
         auto looper = libuv::default_looper;
@@ -200,6 +200,10 @@ namespace eka2l1::epoc::bt {
     void midman_inet::reset_friend_timeout_timer() {
         if (!reset_timeout_timer_task_) {
             reset_timeout_timer_task_ = libuv::create_task([this]() {
+                if (!hearing_timeout_timer_) {
+                    return;
+                }
+
                 const std::uint32_t duration = (discovery_mode_ == DISCOVERY_MODE_LAN) ? TIMEOUT_HEARING_STRANGER_LAN_MS : TIMEOUT_HEARING_STRANGER_MS;
                 const auto duration_chrono = std::chrono::milliseconds(duration);
 
@@ -561,10 +565,6 @@ lookup:
     }
 
     void midman_inet::ref_and_public_port(const std::uint16_t virtual_port) {
-        if (discovery_mode_ == DISCOVERY_MODE_OFF) {
-            return;
-        }
-
         if ((virtual_port > MAX_PORT) || (virtual_port == 0)) {
             LOG_ERROR(SERVICE_BLUETOOTH, "Port {} is out of allowed range!", virtual_port);
             return;
@@ -580,10 +580,6 @@ lookup:
     }
     
     std::uint16_t midman_inet::get_free_port() {
-        if (discovery_mode_ == DISCOVERY_MODE_OFF) {
-            return 0;
-        }
-
         // Reserve first 20 ports for system
         int size = 1;
         const int offset = allocated_ports_.allocate_from(20, size, false);
@@ -595,9 +591,6 @@ lookup:
     }
 
     void midman_inet::ref_port(const std::uint16_t virtual_port) {
-        if (discovery_mode_ == DISCOVERY_MODE_OFF) {
-            return;
-        }
         if ((virtual_port > MAX_PORT) || (virtual_port == 0)) {
             LOG_ERROR(SERVICE_BLUETOOTH, "Port {} is out of allowed range!", virtual_port);
             return;
@@ -607,10 +600,6 @@ lookup:
     }
 
     void midman_inet::close_port(const std::uint16_t virtual_port) {
-        if (discovery_mode_ == DISCOVERY_MODE_OFF) {
-            return;
-        }
-
         if ((virtual_port > MAX_PORT) || (virtual_port == 0)) {
             LOG_ERROR(SERVICE_BLUETOOTH, "Port {} is out of allowed range!", virtual_port);
             return;
@@ -781,6 +770,11 @@ lookup:
     }
 
     void midman_inet::begin_hearing_stranger_call(inet_stranger_call_observer *observer) {
+        // No discovery means no handle to search with; callers complete on their own.
+        if (discovery_mode_ == DISCOVERY_MODE_OFF) {
+            return;
+        }
+
         const std::lock_guard<std::mutex> guard(friends_lock_);
 
         for (std::size_t i = 0; i < friends_.size(); i++) {
@@ -798,6 +792,10 @@ lookup:
     }
 
     void midman_inet::unregister_stranger_call_observer(inet_stranger_call_observer *observer) {
+        if (discovery_mode_ == DISCOVERY_MODE_OFF) {
+            return;
+        }
+
         const std::lock_guard<std::mutex> guard(friends_lock_);
         if (observer == current_active_observer_) {
             current_active_observer_ = nullptr;

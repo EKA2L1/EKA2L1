@@ -77,6 +77,13 @@ namespace eka2l1::epoc::notifier {
         }
 
         auto *midman = static_cast<epoc::bt::midman_inet *>(btman->get_midman());
+
+        // Netplay off: no discovery runs, so answer like a search that found nobody.
+        if (midman->get_discovery_mode() == epoc::bt::DISCOVERY_MODE_OFF) {
+            complete_info.complete(epoc::error_not_found);
+            return;
+        }
+
         epoc::bt::device_address selected_address{};
         if (midman->get_friend_device_address(0, selected_address)) {
             complete_info.complete(write_selected_device(kern_, response, complete_info, selected_address));
