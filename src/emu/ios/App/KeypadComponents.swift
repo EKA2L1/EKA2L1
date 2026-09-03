@@ -206,7 +206,7 @@ struct ClearKey: View {
 struct SlidingDPad: View {
     var diameter: CGFloat = 130
 
-    private let innerRatio: CGFloat = 0.34
+    private let innerRatio: CGFloat = 0.4
 
     @State private var activeScans: Set<UInt32> = []
     @State private var impacts = 0
