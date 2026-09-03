@@ -138,6 +138,22 @@ namespace eka2l1 {
         }
 
         static void do_white_fill(std::uint8_t *dest, const std::size_t size, epoc::display_mode mode) {
+            // EColor4K keeps 12 bits in a 16-bit pixel, so an all-ones byte fill gives 0xFFFF
+            // rather than white. Every other mode's all-ones pattern is already white.
+            if (mode == epoc::display_mode::color4k) {
+                const std::size_t pixel_count = size >> 1;
+                for (std::size_t i = 0; i < pixel_count; i++) {
+                    dest[i * 2] = 0xFF;
+                    dest[i * 2 + 1] = 0x0F;
+                }
+
+                if (size & 1) {
+                    dest[size - 1] = 0xFF;
+                }
+
+                return;
+            }
+
             std::fill(dest, dest + size, 0xFF);
         }
 
@@ -178,7 +194,7 @@ namespace eka2l1 {
             byte_width_ = get_byte_width(info.size_pixels.width(), static_cast<std::uint8_t>(info.bit_per_pixels));
 
             if (white_fill && (data_offset_ != 0)) {
-                do_white_fill(reinterpret_cast<std::uint8_t *>(data), info.bitmap_size - sizeof(loader::sbm_header), settings_.current_display_mode());
+                do_white_fill(reinterpret_cast<std::uint8_t *>(data), info.bitmap_size - sizeof(loader::sbm_header), disp_mode);
             }
         }
 
