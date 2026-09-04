@@ -53,6 +53,7 @@ namespace eka2l1::drivers {
 
     struct dsp_stream {
     protected:
+        // Interleaved samples, not frames.
         std::atomic<std::size_t> samples_played_;
         std::atomic<std::size_t> samples_copied_;
 
@@ -81,7 +82,7 @@ namespace eka2l1::drivers {
         }
 
         const std::uint64_t bytes_rendered() const {
-            return samples_played_.load(std::memory_order_relaxed) * channels_ * sizeof(std::uint16_t);
+            return samples_played_.load(std::memory_order_relaxed) * sizeof(std::uint16_t);
         }
 
         virtual const four_cc format() const {
