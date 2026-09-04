@@ -143,7 +143,9 @@ namespace eka2l1::package {
 
     struct controller_info {
         epoc::version version;
-        std::int32_t offset;
+
+        // The {:04x} field of CONTROLLER_FILE_FORMAT.
+        std::int32_t offset{ 0 };
         hash_container hash;
 
         void do_state(common::chunkyseri &seri);

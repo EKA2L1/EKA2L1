@@ -47,6 +47,14 @@ namespace {
     // from the first version's file list (new.txt joins it).
     static constexpr const char *IF_BLOCK_V2_SIS_PATH = "packageassets//ifblock_v2.sis";
 
+    // assets/ifblock_pu.pkg: a partial upgrade of the same package UID, carrying only
+    // C:\eka2l1test\patch.txt.
+    static constexpr const char *IF_BLOCK_PU_SIS_PATH = "packageassets//ifblock_pu.sis";
+
+    // assets/ifblock_sp.pkg: an augmentation of the same package UID, carrying only
+    // C:\eka2l1test\addon.txt.
+    static constexpr const char *IF_BLOCK_SP_SIS_PATH = "packageassets//ifblock_sp.sis";
+
     // assets/embedder.pkg installs C:\eka2l1test\host.txt and embeds embedded.pkg,
     // which installs C:\eka2l1test\guest.txt under its own UID.
     static constexpr const char *EMBEDDER_SIS_PATH = "packageassets//embedder.sis";
@@ -477,6 +485,63 @@ TEST_CASE("upgrading_removes_files_the_new_version_dropped", "package_manager") 
     REQUIRE_FALSE(env.io.exist(u"C:\\eka2l1test\\cond.txt"));
     REQUIRE_FALSE(env.io.exist(u"C:\\eka2l1test\\sample.dll"));
     REQUIRE_FALSE(env.io.exist(u"C:\\eka2l1test\\lang.txt"));
+}
+
+// Installer::UninstallPkg (secureswitools/swisistools/source/interpretsislib):
+// a partial upgrade removes nothing, and SisRegistry::GenerateCtlFile gives its
+// controller NextSisControllerIndex() rather than the base package's index 0.
+TEST_CASE("a_partial_upgrade_keeps_the_base_package", "package_manager") {
+    package_test_env env("partial_upgrade_keeps_base");
+    REQUIRE(env.install_if_block_sis());
+
+    const std::u16string base_controller = u"C:\\sys\\install\\sisregistry\\e1234567\\00000000_0000.ctl";
+    const std::u16string patch_controller = u"C:\\sys\\install\\sisregistry\\e1234567\\00000000_0001.ctl";
+
+    REQUIRE(env.io.exist(base_controller));
+    const std::uint64_t base_controller_size = env.io.get_entry_info(base_controller)->size;
+
+    REQUIRE(env.install_sis(IF_BLOCK_PU_SIS_PATH));
+
+    REQUIRE(env.io.exist(u"C:\\eka2l1test\\base.txt"));
+    REQUIRE(env.io.exist(u"C:\\eka2l1test\\cond.txt"));
+    REQUIRE(env.io.exist(u"C:\\eka2l1test\\sample.dll"));
+    REQUIRE(env.io.exist(u"C:\\eka2l1test\\patch.txt"));
+
+    package::object *pkg = env.packages->package(IF_BLOCK_PACKAGE_UID, 0);
+    REQUIRE(pkg != nullptr);
+    REQUIRE(env.owns_file(*pkg, u"C:\\eka2l1test\\base.txt"));
+    REQUIRE(env.owns_file(*pkg, u"C:\\eka2l1test\\sample.dll"));
+    REQUIRE(env.owns_file(*pkg, u"C:\\eka2l1test\\patch.txt"));
+
+    REQUIRE(env.packages->package(IF_BLOCK_PACKAGE_UID, 1) == nullptr);
+    REQUIRE(env.packages->augmentations(IF_BLOCK_PACKAGE_UID).empty());
+
+    REQUIRE(env.io.get_entry_info(base_controller)->size == base_controller_size);
+    REQUIRE(env.io.exist(patch_controller));
+}
+
+// Installer::UninstallPkg removes, for an augmentation, only the entry carrying the
+// same package and vendor name.
+TEST_CASE("an_augmentation_keeps_the_base_package", "package_manager") {
+    package_test_env env("augmentation_keeps_base");
+    REQUIRE(env.install_if_block_sis());
+    REQUIRE(env.install_sis(IF_BLOCK_SP_SIS_PATH));
+    REQUIRE(env.install_sis(IF_BLOCK_SP_SIS_PATH));
+
+    REQUIRE(env.io.exist(u"C:\\eka2l1test\\base.txt"));
+    REQUIRE(env.io.exist(u"C:\\eka2l1test\\cond.txt"));
+    REQUIRE(env.io.exist(u"C:\\eka2l1test\\sample.dll"));
+    REQUIRE(env.io.exist(u"C:\\eka2l1test\\addon.txt"));
+
+    package::object *base = env.packages->package(IF_BLOCK_PACKAGE_UID, 0);
+    REQUIRE(base != nullptr);
+    REQUIRE(base->install_type == package::install_type_normal_install);
+    REQUIRE(env.owns_file(*base, u"C:\\eka2l1test\\base.txt"));
+    REQUIRE_FALSE(env.owns_file(*base, u"C:\\eka2l1test\\addon.txt"));
+
+    std::vector<package::object *> extras = env.packages->augmentations(IF_BLOCK_PACKAGE_UID);
+    REQUIRE(extras.size() == 1);
+    REQUIRE(env.owns_file(*extras[0], u"C:\\eka2l1test\\addon.txt"));
 }
 
 TEST_CASE("invalid_target_paths_are_rejected", "package_manager") {

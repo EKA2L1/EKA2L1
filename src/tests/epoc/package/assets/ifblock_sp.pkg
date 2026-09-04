@@ -1,0 +1,10 @@
+; Augmentation of ifblock.pkg: gets its own registry entry under the base
+; package's UID and must not disturb the base.
+&EN
+
+#{"EKA2L1 IfBlock Addon"}, (0xE1234567), 1, 0, 0, TYPE=SP
+
+%{"EKA2L1"}
+:"EKA2L1"
+
+"addon.txt" - "!:\eka2l1test\addon.txt"

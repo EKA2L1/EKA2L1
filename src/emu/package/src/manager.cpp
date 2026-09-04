@@ -252,6 +252,20 @@ namespace eka2l1 {
             return results;
         }
 
+        package::object *packages::augmentation(const uid app_uid, const std::u16string &package_name,
+            const std::u16string &vendor_name) {
+            auto ite_range = objects_.equal_range(app_uid);
+            for (auto ite = ite_range.first; ite != ite_range.second; ite++) {
+                if ((ite->second.install_type == package::install_type_augmentations)
+                    && (common::compare_ignore_case(ite->second.package_name, package_name) == 0)
+                    && (common::compare_ignore_case(ite->second.vendor_name, vendor_name) == 0)) {
+                    return &(ite->second);
+                }
+            }
+
+            return nullptr;
+        }
+
         std::vector<package::object *> packages::dependents(const uid app_uid) {
             std::vector<package::object *> results;
 
@@ -358,27 +372,23 @@ namespace eka2l1 {
             }
             }
 
-            if (!pkg.controller_infos.empty() && no_new_package) {
-                // Find free index
+            if (no_new_package) {
+                // SisRegistry::GenerateCtlFile puts an upgrade's controller at
+                // NextSisControllerIndex(). The slot is looked for on disk because
+                // offsets older builds recorded were never initialised.
+                const std::u16string folder = get_virtual_registry_folder(residing_, pkg.uid);
                 static constexpr std::int32_t MAX_INDEX = 100000;
-                for (std::size_t m = 0; m < pkg.controller_infos.size(); m++) {
-                    for (std::int32_t i = 0; i < MAX_INDEX; i++) {
-                        bool overlapped = false;
-                        for (const auto &controller_info : base_package->controller_infos) {
-                            if (controller_info.offset == i) {
-                                overlapped = true;
-                                break;
-                            }
-                        }
 
-                        if (!overlapped) {
-                            ctrl_offset = i;
-                            pkg.controller_infos[m].offset = i;
-
-                            break;
-                        }
+                for (std::int32_t i = 0; i < MAX_INDEX; i++) {
+                    if (!sys->exist(add_path(folder, fmt::format(package::CONTROLLER_FILE_FORMAT, base_package->index, i)))) {
+                        ctrl_offset = i;
+                        break;
                     }
                 }
+            }
+
+            for (package::controller_info &info : pkg.controller_infos) {
+                info.offset = ctrl_offset;
             }
 
             if (no_new_package) {
@@ -644,14 +654,29 @@ namespace eka2l1 {
 
         void packages::traverse_tree_and_add_packages(loader::sis_registry_tree &tree) {
             // TODO: We should ask for user permission first!
-            if (package::object *obj = installed(tree.package_info.uid) ? package(tree.package_info.uid) : nullptr) {
-                // An upgrade plans the installed version's files for removal
-                // (CInstallationPlanner::ProcessFilesToRemoveL) and lays the new ones
-                // down after. Here the new files are written by the time we get to
-                // this point, so only what the new version no longer carries may go:
-                // deleting the old list wholesale would take them with it.
-                remove_stale_files(*obj, tree.package_info);
-                remove_registeration(*obj);
+            // Installer::UninstallPkg draws these lines; a partial upgrade displaces
+            // nothing at all.
+            package::object *displaced = nullptr;
+
+            switch (tree.package_info.install_type) {
+            case package::install_type_normal_install:
+                displaced = installed(tree.package_info.uid) ? package(tree.package_info.uid) : nullptr;
+                break;
+
+            case package::install_type_augmentations:
+                displaced = augmentation(tree.package_info.uid, tree.package_info.package_name,
+                    tree.package_info.vendor_name);
+                break;
+
+            default:
+                break;
+            }
+
+            if (displaced) {
+                // The new files are already on disk here, so dropping the old file list
+                // wholesale would take them with it.
+                remove_stale_files(*displaced, tree.package_info);
+                remove_registeration(*displaced);
             }
 
             add_package(tree.package_info, &tree.controller_binary);
