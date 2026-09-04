@@ -911,7 +911,8 @@ namespace eka2l1::common {
     }
 
     std::string resolve_case_insensitive_path(const std::string &base, const std::string &relative) {
-        if (!exists(base)) {
+        // A content URI is not a host path: only add_path() knows how to extend one.
+        if (is_content_uri(base) || !exists(base)) {
             return add_path(base, relative);
         }
 
@@ -991,21 +992,23 @@ namespace eka2l1::common {
         std::uint64_t total_copied = 0;
 
         auto do_copy_stuffs = [&](const bool is_measuring) {
-            // Keep source and destination paths separate. Lowercase-name mode
-            // transforms destination names, but the source may live on a
-            // case-sensitive filesystem and must retain its real spelling.
+            // The source path stays relative to target_folder and keeps its real
+            // spelling; the destination is absolute and resolved against what is already
+            // on disk, so a dump spelling a folder "System" lands in an existing
+            // "system" instead of beside it. Two host directories differing only in case
+            // hide each other from every case-insensitive lookup done afterwards.
             std::stack<std::pair<std::string, std::string>> folder_stacks;
             common::dir_entry entry;
 
             const std::string root_path(1, eka2l1::get_separator());
-            folder_stacks.push({ root_path, root_path });
+            folder_stacks.push({ root_path, eka2l1::add_path(dest_folder_to_reside, root_path) });
 
             while (!folder_stacks.empty()) {
                 if (cancel_cb && cancel_cb()) {
                     break;
                 }
                 if (!is_measuring)
-                    create_directories(eka2l1::add_path(dest_folder_to_reside, folder_stacks.top().second));
+                    create_directories(folder_stacks.top().second);
 
                 const std::string source_top_path = folder_stacks.top().first;
                 const std::string dest_top_path = folder_stacks.top().second;
@@ -1059,7 +1062,7 @@ namespace eka2l1::common {
                             : entry.name;
                         folder_stacks.push({
                             eka2l1::add_path(source_top_path, source_name_to_use + eka2l1::get_separator()),
-                            eka2l1::add_path(dest_top_path, name_to_use + eka2l1::get_separator())
+                            resolve_case_insensitive_path(dest_top_path, name_to_use) + eka2l1::get_separator()
                         });
                     } else {
                         if (is_measuring) {
@@ -1070,7 +1073,7 @@ namespace eka2l1::common {
                                     continue;
                                 }
 
-                                if (!common::copy_file(eka2l1::add_path(iterator->dir_name, entry.name), eka2l1::add_path(eka2l1::add_path(dest_folder_to_reside, dest_top_path), name_to_use), overwrite_on_file_exist)) {
+                                if (!common::copy_file(eka2l1::add_path(iterator->dir_name, entry.name), resolve_case_insensitive_path(dest_top_path, name_to_use), overwrite_on_file_exist)) {
                                     return false;
                                 }
 
