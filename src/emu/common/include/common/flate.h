@@ -20,7 +20,7 @@
 #pragma once
 
 #include <cstdint>
-#include <miniz.h>
+#include <zlib.h>
 #include <vector>
 
 #define CHUNK_SIZE 0x2000
@@ -29,7 +29,7 @@
 namespace eka2l1 {
     /*! \brief Namespace contains all function related to Deflate/Inflate */
     namespace flate {
-        bool inflate_data(mz_stream *stream, void *in, void *out, uint32_t in_size, uint32_t *out_size = nullptr);
+        bool inflate_data(z_stream *stream, void *in, void *out, uint32_t in_size, uint32_t *out_size = nullptr);
 
         // Made specificlly for Image Compressing
         enum : uint64_t {

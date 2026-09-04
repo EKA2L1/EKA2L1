@@ -303,13 +303,13 @@ namespace eka2l1::loader {
             common::ro_std_file_stream sis_file(common::ucs2_to_utf8(path), true);
             sis_file.seek(data_info->position, common::seek_where::beg);
 
-            mz_stream stream;
+            z_stream stream;
 
             stream.zalloc = nullptr;
             stream.zfree = nullptr;
 
             if (!(res->header.op & 0x8)) {
-                if (inflateInit(&stream) != MZ_OK) {
+                if (inflateInit(&stream) != Z_OK) {
                     return false;
                 }
             }

@@ -40,7 +40,7 @@
 #include <package/manager.h>
 #include <package/sis_script_interpreter.h>
 
-#include <miniz.h>
+#include <zlib.h>
 
 namespace eka2l1 {
     namespace loader {
@@ -101,12 +101,12 @@ namespace eka2l1 {
             }
 
             compressed.uncompressed_data.resize(compressed.uncompressed_size);
-            mz_stream stream;
+            z_stream stream;
 
             stream.zalloc = nullptr;
             stream.zfree = nullptr;
 
-            if (inflateInit(&stream) != MZ_OK) {
+            if (inflateInit(&stream) != Z_OK) {
                 LOG_ERROR(PACKAGE, "Can not intialize inflate stream");
             }
 
@@ -161,13 +161,13 @@ namespace eka2l1 {
             std::vector<unsigned char> temp_inflated_chunk;
             temp_inflated_chunk.resize(CHUNK_MAX_INFLATED_SIZE);
 
-            mz_stream stream;
+            z_stream stream;
 
             stream.zalloc = nullptr;
             stream.zfree = nullptr;
 
             if (compressed.algorithm == sis_compressed_algorithm::deflated) {
-                if (inflateInit(&stream) != MZ_OK) {
+                if (inflateInit(&stream) != Z_OK) {
                     LOG_ERROR(PACKAGE, "Can not intialize inflate stream");
                 }
             }

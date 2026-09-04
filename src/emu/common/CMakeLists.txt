@@ -133,8 +133,14 @@ file(MAKE_DIRECTORY "${COMMON_GENERATED_INCLUDE_DIR}/common")
 target_include_directories(common PUBLIC
         "${COMMON_GENERATED_INCLUDE_DIR}"
         include)
-target_link_libraries(common PUBLIC fmt miniz spdlog)
+target_link_libraries(common PUBLIC fmt spdlog zlibstatic)
 target_link_libraries(common PRIVATE archive_static pugixml miniupnpc::miniupnpc re2::re2)
+
+if (WIN32)
+    # libarchive names its temporary files with BCryptGenRandom whatever ENABLE_CNG says, but only links
+    # bcrypt when that option is on. It cannot be added to its own target from here (CMP0079).
+    target_link_libraries(common PRIVATE bcrypt)
+endif()
 target_link_libraries(common PRIVATE miniupnpc::miniupnpc)
 
 if (UNIX OR APPLE)

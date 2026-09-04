@@ -93,10 +93,9 @@ namespace eka2l1::j2me {
             }
 
             std::string jar_real_path = common::ucs2_to_utf8(io->get_raw_path(jar_path).value());
-            FILE *f_jar = common::open_c_file(jar_real_path, "rb");
             std::string jad_content;
 
-            install_error err = create_jad_fake_link_from_jar(f_jar, jad_content);
+            install_error err = create_jad_fake_link_from_jar(jar_real_path, jad_content);
             if (err != INSTALL_ERROR_JAR_SUCCESS) {
                 LOG_ERROR(J2ME, "Can't create JAD file for launch. Error code {}", static_cast<int>(err));
                 return;
@@ -123,8 +122,7 @@ namespace eka2l1::j2me {
     }
 
     install_error install_for_kmidrun(system *sys, app_list *applist, const std::string &path, app_entry &entry_info) {
-        FILE *jar_file_handle = common::open_c_file(path, "rb");
-        if (jar_file_handle == nullptr) {
+        if (!common::exists(path)) {
             return INSTALL_ERROR_JAR_NOT_FOUND;
         }
 
@@ -132,7 +130,7 @@ namespace eka2l1::j2me {
         int midp_ver;
         std::string jad_content;
 
-        install_error fin_err = get_app_entry(jar_file_handle, entry, jad_content, midp_ver);
+        install_error fin_err = get_app_entry(path, entry, jad_content, midp_ver);
         if (fin_err != INSTALL_ERROR_JAR_SUCCESS) {
             return fin_err;
         }
@@ -141,14 +139,10 @@ namespace eka2l1::j2me {
             return INSTALL_ERROR_JAR_ONLY_MIDP1_SUPPORTED;
         }
 
-        fseek(jar_file_handle, 0, SEEK_SET);
-
         std::string real_icon_path;
-        if (extract_icon_to_store(jar_file_handle, *sys->get_config(), entry, real_icon_path) == INSTALL_ERROR_JAR_SUCCESS) {
+        if (extract_icon_to_store(path, *sys->get_config(), entry, real_icon_path) == INSTALL_ERROR_JAR_SUCCESS) {
             entry.icon_path_ = real_icon_path;
         }
-        
-        fclose(jar_file_handle);
 
         std::uint32_t add_res = applist->add_entry(entry, true);
         if (add_res == static_cast<std::uint32_t>(-1)) {

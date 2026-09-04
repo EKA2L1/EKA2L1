@@ -7,18 +7,16 @@ include(CheckSymbolExists)
 # rather than making every caller pass the flag.
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
-add_library(miniz miniz/miniz.h miniz/miniz.c)
-target_include_directories(miniz PUBLIC miniz)
-
-# libarchive, used to read device dumps packed as .7z. It is here rather than a bare 7z decoder so that
-# adding zip/tar/rar support later is a matter of flipping options instead of another vendored codebase.
+# libarchive is the one archive reader in this tree: device dumps packed as .7z, N-Gage game cards as
+# .zip / .7z / .rar. It is here rather than a bare 7z decoder so that another container is a matter of
+# flipping options instead of another vendored codebase.
 #
 # Everything it can autodetect is switched off on purpose. libarchive's CMake probes the *host* for
 # liblzma, zlib, bzip2, OpenSSL and friends; on an iOS or Android build those probes find the macOS or
 # Homebrew dylibs and the link step fails (same trap freetype falls into further down). So: every backend
-# is disabled, and LZMA - the one 7z actually needs - is built from the xz submodule and handed to
-# libarchive below. To add another compression method later, build it here the same way rather than
-# turning its ENABLE_ switch back on.
+# is disabled, and the two we actually need - LZMA for 7z, zlib for zip - are built from the xz and zlib
+# submodules and handed to libarchive below. To add another compression method later, build it here the
+# same way rather than turning its ENABLE_ switch back on.
 set(EKA2L1_SAVED_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 set(BUILD_SHARED_LIBS OFF)
 
@@ -54,11 +52,35 @@ set(LIBLZMA_HAS_LZMA_PRESET TRUE CACHE INTERNAL "")
 
 set(ENABLE_LZMA ON CACHE BOOL "" FORCE)
 
+# Same story for zlib. Without it libarchive's zip reader only handles stored entries; it is also the
+# emulator's own deflate, for the Symbian formats that carry one. zlib's CMakeLists is not used - it
+# renames zconf.h in the source tree and insists on a shared library plus examples - so the sources are
+# listed here and the checked-in zconf.h serves as the configuration.
+add_library(zlibstatic STATIC
+        zlib/adler32.c zlib/compress.c zlib/crc32.c zlib/deflate.c zlib/gzclose.c zlib/gzlib.c
+        zlib/gzread.c zlib/gzwrite.c zlib/infback.c zlib/inffast.c zlib/inflate.c zlib/inftrees.c
+        zlib/trees.c zlib/uncompr.c zlib/zutil.c)
+target_include_directories(zlibstatic PUBLIC zlib)
+
+if (UNIX OR APPLE)
+    set_property(TARGET zlibstatic PROPERTY POSITION_INDEPENDENT_CODE ON)
+    # zlib probes these itself only through its own configure/CMake, neither of which runs here.
+    target_compile_definitions(zlibstatic PRIVATE HAVE_UNISTD_H HAVE_STDARG_H)
+endif()
+
+# Short-circuit libarchive's FIND_PACKAGE(ZLIB) exactly the way LibLZMA is handled above: a cached
+# include dir skips find_path, and ZLIB_LIBRARY naming the target skips find_library and still resolves
+# at generate time. The version test reads zlib.h from the include dir, so it passes on its own.
+set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/zlib" CACHE PATH "" FORCE)
+set(ZLIB_LIBRARY zlibstatic)
+
+set(ENABLE_ZLIB ON CACHE BOOL "" FORCE)
+
 # Nothing here uses libarchive's regex matching, and letting it search costs a
 # build: on MSVC no POSIX regex library is found, and libarchive's fall-through
 # for that case fatals with "libgcc not found" instead of moving on.
 set(POSIX_REGEX_LIB "NONE" CACHE STRING "" FORCE)
-foreach (libarchive_backend MBEDTLS NETTLE OPENSSL LIBB2 LZ4 LZO ZSTD ZLIB BZip2 LIBXML2 EXPAT
+foreach (libarchive_backend MBEDTLS NETTLE OPENSSL LIBB2 LZ4 LZO ZSTD BZip2 LIBXML2 EXPAT
         WIN32_XMLLITE PCREPOSIX PCRE2POSIX LIBGCC CNG ICONV XATTR ACL)
     set(ENABLE_${libarchive_backend} OFF CACHE BOOL "" FORCE)
 endforeach()
@@ -86,6 +108,10 @@ add_subdirectory(libarchive EXCLUDE_FROM_ALL)
 set(CMAKE_TRY_COMPILE_TARGET_TYPE ${EKA2L1_SAVED_TRY_COMPILE_TARGET_TYPE})
 
 set(BUILD_SHARED_LIBS ${EKA2L1_SAVED_BUILD_SHARED_LIBS})
+
+# archive.h declares everything __declspec(dllimport) on Windows unless LIBARCHIVE_STATIC is defined,
+# and libarchive sets it only on the target itself, never on its interface.
+target_compile_definitions(archive_static INTERFACE LIBARCHIVE_STATIC)
 
 if (UNIX OR APPLE)
     set_property(TARGET liblzma PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -483,6 +509,11 @@ if (EKA2L1_IOS)
     set(FT_DISABLE_BZIP2 ON CACHE BOOL "" FORCE)
     set(FT_DISABLE_BROTLI ON CACHE BOOL "" FORCE)
 endif()
+
+# freetype's own find_package(ZLIB) now answers with zlibstatic, which is deliberate, but its
+# install(EXPORT) then refuses to generate because that target is in no export set. Nothing here is
+# ever `cmake --install`ed.
+set(SKIP_INSTALL_ALL ON)
 
 add_subdirectory(freetype)
 

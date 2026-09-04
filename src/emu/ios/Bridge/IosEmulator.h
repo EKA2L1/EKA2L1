@@ -192,10 +192,10 @@ typedef NS_ENUM(NSInteger, EKA2L1InstallResult) {
 // S80 devices and drive E otherwise, mirroring the Android install path.
 - (BOOL)installSisAtPath:(NSString *)sisPath;
 
-// Install an N-Gage game-card folder. Returns the core
-// ngage_game_card_install_error code plus the detected game name when
-// available. Heavy; call from a background queue.
-- (EKA2L1NGageInstallReport *)installNGageGameAtFolderPath:(NSString *)folderPath;
+// Install a classic N-Gage game card, given either the card folder or an
+// archive holding it. Returns the core ngage_game_card_install_error code plus
+// the detected game name when available. Heavy; call from a background queue.
+- (EKA2L1NGageInstallReport *)installNGageGameAtPath:(NSString *)cardPath;
 
 // Uninstall a user-installed package by its app UID. Deletes the package's
 // files and registration; ROM/system apps cannot be uninstalled. Returns NO if

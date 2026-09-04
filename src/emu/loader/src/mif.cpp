@@ -24,7 +24,7 @@
 #include <loader/svgb.h>
 
 #include <cstring>
-#include <miniz.h>
+#include <zlib.h>
 
 namespace eka2l1::loader {
     // Upper bound on what a single icon may inflate to. The gzip trailer's size field
@@ -42,8 +42,8 @@ namespace eka2l1::loader {
         gzip_flag_comment = 0x10
     };
 
-    // Inflate a gzip stream. miniz's inflate only understands zlib-wrapped or raw
-    // deflate, so the gzip header is skipped by hand and the body run as raw deflate.
+    // Inflate a gzip stream. inflate() is driven in raw mode here, so the gzip header is
+    // skipped by hand and only the deflate body is fed to it.
     static bool decompress_gzip(const std::uint8_t *data, const std::size_t size,
         std::vector<std::uint8_t> &dest) {
         if ((size < GZIP_HEADER_SIZE + GZIP_TRAILER_SIZE) || (data[0] != 0x1F) || (data[1] != 0x8B)
@@ -92,28 +92,29 @@ namespace eka2l1::loader {
 
         reserved = common::min<std::size_t>(common::max<std::size_t>(reserved, 1024), MAX_INFLATED_ICON_SIZE);
 
-        mz_stream stream;
+        z_stream stream;
         std::memset(&stream, 0, sizeof(stream));
 
-        if (mz_inflateInit2(&stream, -MZ_DEFAULT_WINDOW_BITS) != MZ_OK) {
+        if (inflateInit2(&stream, -MAX_WBITS) != Z_OK) {
             return false;
         }
 
-        stream.next_in = data + pos;
+        // zlib's next_in is not const unless ZLIB_CONST is defined; inflate only reads through it.
+        stream.next_in = const_cast<std::uint8_t *>(data + pos);
         stream.avail_in = static_cast<unsigned int>(size - pos - GZIP_TRAILER_SIZE);
 
         dest.resize(reserved);
-        int res = MZ_OK;
+        int res = Z_OK;
 
         while (true) {
             stream.next_out = dest.data() + stream.total_out;
             stream.avail_out = static_cast<unsigned int>(dest.size() - stream.total_out);
 
-            res = mz_inflate(&stream, MZ_SYNC_FLUSH);
+            res = inflate(&stream, Z_SYNC_FLUSH);
 
-            if (((res == MZ_OK) || (res == MZ_BUF_ERROR)) && (stream.total_out == dest.size())) {
+            if (((res == Z_OK) || (res == Z_BUF_ERROR)) && (stream.total_out == dest.size())) {
                 if (dest.size() >= MAX_INFLATED_ICON_SIZE) {
-                    res = MZ_BUF_ERROR;
+                    res = Z_BUF_ERROR;
                     break;
                 }
 
@@ -124,9 +125,9 @@ namespace eka2l1::loader {
             break;
         }
 
-        mz_inflateEnd(&stream);
+        inflateEnd(&stream);
 
-        if (res != MZ_STREAM_END) {
+        if (res != Z_STREAM_END) {
             dest.clear();
             return false;
         }
