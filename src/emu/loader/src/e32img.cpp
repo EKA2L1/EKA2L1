@@ -33,7 +33,6 @@
 #include <utils/err.h>
 
 #include <cstdio>
-#include <miniz.h>
 #include <sstream>
 
 namespace eka2l1::loader {
@@ -107,8 +106,13 @@ namespace eka2l1::loader {
 
         stream->seek(offset, common::beg);
 
-        stream->read(reinterpret_cast<void *>(&section.size), 4);
-        stream->read(reinterpret_cast<void *>(&section.num_relocs), 4);
+        section.size = 0;
+        section.num_relocs = 0;
+
+        if ((stream->read(reinterpret_cast<void *>(&section.size), 4) != 4)
+            || (stream->read(reinterpret_cast<void *>(&section.num_relocs), 4) != 4)) {
+            return;
+        }
 
         if (section.size <= 8) {
             section.num_relocs = 0;
@@ -116,12 +120,18 @@ namespace eka2l1::loader {
         }
 
         for (uint32_t i = 0; i < section.num_relocs; i++) {
-            e32_reloc_entry reloc_entry;
+            e32_reloc_entry reloc_entry{};
 
-            stream->read(reinterpret_cast<void *>(&reloc_entry.base), 4);
-            stream->read(reinterpret_cast<void *>(&reloc_entry.size), 4);
+            // The entry's own length sizes the block below, so it must never be left unread.
+            if ((stream->read(reinterpret_cast<void *>(&reloc_entry.base), 4) != 4)
+                || (stream->read(reinterpret_cast<void *>(&reloc_entry.size), 4) != 4)) {
+                break;
+            }
 
-            assert((reloc_entry.size) % 2 == 0);
+            if ((reloc_entry.size < 8) || (reloc_entry.size % 2 != 0)
+                || (reloc_entry.size - 8 > stream->left())) {
+                break;
+            }
 
             reloc_entry.rels_info.resize(((reloc_entry.size - 8) / 2));
 
@@ -151,9 +161,59 @@ namespace eka2l1::loader {
     static void parse_iat(e32img &img) {
         uint32_t *imp_addr = reinterpret_cast<uint32_t *>(img.data.data() + img.header.code_offset + img.header.text_size);
 
-        while (*imp_addr != 0) {
+        // A malformed image has no terminating zero word, so bound the walk by the table it lives in.
+        const std::uint32_t max_entries = (img.header.code_size - img.header.text_size) / 4;
+
+        for (std::uint32_t i = 0; (i < max_entries) && (*imp_addr != 0); i++) {
             img.iat.its.push_back(*imp_addr++);
         }
+    }
+
+    // These offsets come straight out of the file and nothing downstream re-checks them.
+    static bool validate_e32img_layout(const e32img &img) {
+        const std::uint64_t size = img.data.size();
+
+        const auto within = [size](const char *what, const std::uint64_t offset,
+                                const std::uint64_t length) {
+            if (offset + length > size) {
+                LOG_ERROR(LOADER, "E32Image is corrupt: {} at {} spans {} bytes, past the {}-byte image",
+                    what, offset, length, size);
+                return false;
+            }
+
+            return true;
+        };
+
+        if (img.header.text_size > img.header.code_size) {
+            LOG_ERROR(LOADER, "E32Image is corrupt: text section ({}) is larger than the code section ({})",
+                img.header.text_size, img.header.code_size);
+            return false;
+        }
+
+        if (!within("code", img.header.code_offset, img.header.code_size)) {
+            return false;
+        }
+
+        if ((img.header.export_dir_offset != 0)
+            && !within("export directory", img.header.export_dir_offset,
+                static_cast<std::uint64_t>(img.header.export_dir_count) * 4)) {
+            return false;
+        }
+
+        // These three carry their own lengths, so only their entry points can be checked here.
+        if ((img.header.dll_ref_table_count != 0) && !within("import section", img.header.import_offset, 4)) {
+            return false;
+        }
+
+        if ((img.header.code_reloc_offset != 0) && !within("code relocations", img.header.code_reloc_offset, 8)) {
+            return false;
+        }
+
+        if ((img.header.data_reloc_offset != 0) && !within("data relocations", img.header.data_reloc_offset, 8)) {
+            return false;
+        }
+
+        return true;
     }
 
     static constexpr std::uint32_t E32IMG_SIGNATURE = 0x434F5045;
@@ -387,7 +447,9 @@ namespace eka2l1::loader {
             stream->read(img.data.data(), static_cast<uint32_t>(img.data.size()));
         }
 
-        const std::uint32_t import_export_table_size = img.header.code_size - img.header.text_size;
+        if (!validate_e32img_layout(img)) {
+            return std::nullopt;
+        }
 
         parse_export_dir(img);
         parse_iat(img);
@@ -403,12 +465,15 @@ namespace eka2l1::loader {
         img.import_section.imports.resize(img.header.dll_ref_table_count);
 
         for (auto &import : img.import_section.imports) {
-            decompressed_stream.read(reinterpret_cast<void *>(&import.dll_name_offset), 4);
-            decompressed_stream.read(reinterpret_cast<void *>(&import.number_of_imports), 4);
+            // number_of_imports sizes the ordinal block below, so it must never be left unread.
+            if ((decompressed_stream.read(reinterpret_cast<void *>(&import.dll_name_offset), 4) != 4)
+                || (decompressed_stream.read(reinterpret_cast<void *>(&import.number_of_imports), 4) != 4)) {
+                break;
+            }
 
             img.dll_names.push_back(import.dll_name);
 
-            if (import.number_of_imports == 0) {
+            if (import.number_of_imports <= 0) {
                 continue;
             }
 
@@ -418,7 +483,9 @@ namespace eka2l1::loader {
             char temp = 1;
 
             while (temp != 0) {
-                decompressed_stream.read(&temp, 1);
+                if (decompressed_stream.read(&temp, 1) != 1) {
+                    break;
+                }
 
                 if (temp != 0) {
                     import.dll_name += temp;
@@ -426,6 +493,10 @@ namespace eka2l1::loader {
             }
 
             decompressed_stream.seek(static_cast<uint32_t>(crr_size), common::beg);
+
+            if (static_cast<std::uint64_t>(import.number_of_imports) * 4 > decompressed_stream.left()) {
+                break;
+            }
 
             import.ordinals.resize(import.number_of_imports);
 

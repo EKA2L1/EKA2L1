@@ -151,7 +151,9 @@ namespace eka2l1 {
             }
 
             uint64_t left() override {
-                return end - beg - crr_pos;
+                // seek() accepts a position past the end, where an unguarded subtraction would wrap.
+                const std::uint64_t total = static_cast<std::uint64_t>(end - beg);
+                return (crr_pos >= total) ? 0 : (total - crr_pos);
             }
 
             void seek(const std::int64_t amount, seek_where wh) override {
@@ -169,8 +171,7 @@ namespace eka2l1 {
             }
 
             std::uint64_t read(void *buf, const std::uint64_t read_size) override {
-                std::uint64_t actual_read_size = common::min(read_size,
-                    static_cast<std::uint64_t>(end - beg - crr_pos));
+                std::uint64_t actual_read_size = common::min(read_size, left());
 
                 if (actual_read_size == 0) {
                     return 0;
@@ -250,7 +251,8 @@ namespace eka2l1 {
             }
 
             uint64_t left() override {
-                return end - beg - crr_pos;
+                const std::uint64_t total = static_cast<std::uint64_t>(end - beg);
+                return (crr_pos >= total) ? 0 : (total - crr_pos);
             }
 
             void seek(const std::int64_t amount, seek_where wh) override {
