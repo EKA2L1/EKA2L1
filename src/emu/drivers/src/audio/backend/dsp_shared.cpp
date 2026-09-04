@@ -229,11 +229,8 @@ namespace eka2l1::drivers {
     }
 
     std::uint64_t dsp_output_stream_shared::position() {
-        if (!freq_) {
-            return 0;
-        }
-
-        return samples_played_.load(std::memory_order_relaxed) * 1000000ULL / freq_;
+        const std::uint32_t channels = common::max<std::uint32_t>(channels_, 1);
+        return frames_to_microseconds(samples_played_.load(std::memory_order_relaxed) / channels, freq_);
     }
 
     std::uint64_t dsp_output_stream_shared::real_time_position() {
@@ -346,7 +343,8 @@ namespace eka2l1::drivers {
     }
 
     std::uint64_t dsp_input_stream_shared::position() {
-        return samples_played_.load(std::memory_order_relaxed) * 1000000ULL / freq_;
+        const std::uint32_t channels = common::max<std::uint32_t>(channels_, 1);
+        return frames_to_microseconds(samples_played_.load(std::memory_order_relaxed) / channels, freq_);
     }
 
     std::size_t dsp_input_stream_shared::record_data_callback(std::int16_t *buffer, std::size_t frames) {

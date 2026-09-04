@@ -724,7 +724,7 @@ namespace eka2l1::epoc::internet {
         if (iterator.start()) {
             while (iterator.next(info_temp) == sizeof(inet_interface_info)) {
                 if ((info_temp.addr_.family_ == epoc::internet::INET_ADDRESS_FAMILY) &&
-                    (info_temp.addr_.user_data_[0] != 127) && (*info_temp.addr_.addr_long() != 0)) {
+                    ((*info_temp.addr_.addr_long() >> 24) != 127) && (*info_temp.addr_.addr_long() != 0)) {
                     broadcast = info_temp.broadcast_addr_;
                     broadcast.port_ = 0;
 
@@ -1302,7 +1302,7 @@ namespace eka2l1::epoc::internet {
                 ULONG mask_value = 0;
                 ConvertLengthToIpv4Mask(addr_from_raw->OnLinkPrefixLength, &mask_value);
 
-                *info.netmask_addr_.addr_long() = static_cast<std::uint32_t>(mask_value);
+                *info.netmask_addr_.addr_long() = ntohl(static_cast<std::uint32_t>(mask_value));
                 *info.broadcast_addr_.addr_long() = *info.addr_.addr_long() | (~*info.netmask_addr_.addr_long());
             
                 info.netmask_addr_.family_ = INET_ADDRESS_FAMILY;

@@ -29,7 +29,8 @@
     if (addr.family_ == epoc::internet::INET_ADDRESS_FAMILY) {                                          \
         ipv4_addr.sin_family = AF_INET;                                                                 \
         ipv4_addr.sin_port = htons(static_cast<std::uint16_t>(addr.port_));                             \
-        std::memcpy(&ipv4_addr.sin_addr, addr.user_data_, 4);                                           \
+        ipv4_addr.sin_addr.s_addr =                                                                     \
+            htonl(*reinterpret_cast<const std::uint32_t *>(addr.user_data_));                           \
         dest_ptr = reinterpret_cast<sockaddr*>(&ipv4_addr);                                             \
     } else if (addr.family_ == epoc::internet::INET6_ADDRESS_FAMILY) {                                                                                            \
         ipv6_addr.sin6_family = AF_INET6;                                                               \

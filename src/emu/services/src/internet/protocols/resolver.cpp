@@ -65,7 +65,8 @@ namespace eka2l1::epoc::internet {
 
         sinet_address &in_guest = static_cast<sinet_address&>(dest_addr);
 
-        std::memcpy(in_guest.addr_long(), &in->sin_addr, 4);
+        // TInetAddr keeps the IPv4 address as a host-order TUint32.
+        *in_guest.addr_long() = ntohl(in->sin_addr.s_addr);
         in_guest.port_ = ntohs(in->sin_port);
 
         if (data_len) {

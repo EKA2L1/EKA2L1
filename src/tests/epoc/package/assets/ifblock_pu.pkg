@@ -1,0 +1,10 @@
+; Partial upgrade of ifblock.pkg. Same package UID, carries one file the base
+; package does not have; everything the base installed has to survive it.
+&EN
+
+#{"EKA2L1 IfBlock Test"}, (0xE1234567), 1, 0, 0, TYPE=PU
+
+%{"EKA2L1"}
+:"EKA2L1"
+
+"patch.txt" - "!:\eka2l1test\patch.txt"
