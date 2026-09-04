@@ -333,7 +333,8 @@ namespace eka2l1::epoc::bt {
 
             std::uint32_t *addr_value_ptr = converted_addr.address_32x4();
 
-            std::memcpy(addr_value_ptr + 3, info.real_addr_.user_data_, 4);
+            // The v6 payload is network-ordered bytes, the v4 one a host-order word.
+            addr_value_ptr[3] = htonl(*reinterpret_cast<const std::uint32_t *>(info.real_addr_.user_data_));
             addr_value_ptr[2] = 0xFFFF0000;
 
             info.real_addr_ = converted_addr;
@@ -386,7 +387,11 @@ namespace eka2l1::epoc::bt {
 
         if (is_ipv4) {
             info.real_addr_.family_ = epoc::internet::INET_ADDRESS_FAMILY;
-            std::memcpy(static_cast<epoc::internet::sinet_address &>(info.real_addr_).addr_long(), buf + buf_pointer, address_size);
+
+            // The wire is network-ordered; saddress keeps IPv4 host-ordered.
+            std::uint32_t addr_raw = 0;
+            std::memcpy(&addr_raw, buf + buf_pointer, address_size);
+            *static_cast<epoc::internet::sinet_address &>(info.real_addr_).addr_long() = ntohl(addr_raw);
         } else {
             info.real_addr_.family_ = epoc::internet::INET6_ADDRESS_FAMILY;
             std::memcpy(static_cast<epoc::internet::sinet6_address &>(info.real_addr_).address_32x4(), buf + buf_pointer, address_size);

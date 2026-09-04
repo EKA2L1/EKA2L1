@@ -65,9 +65,12 @@ namespace eka2l1::epoc::bt {
             return;
         }
 
-        const std::uint32_t LOCALHOST_ADDR = 0x100007F;
-        if ((memcmp(&(reinterpret_cast<const sockaddr_in*>(addr)->sin_addr), local_addr_.user_data_, 4) == 0) ||
-            (memcmp(&(reinterpret_cast<const sockaddr_in*>(addr)->sin_addr), &LOCALHOST_ADDR, 4) == 0)) {
+        // saddress keeps IPv4 host-ordered, the datagram's sockaddr network-ordered.
+        const std::uint32_t LOCALHOST_ADDR = 0x7F000001;
+        const std::uint32_t sender_addr = ntohl(reinterpret_cast<const sockaddr_in *>(addr)->sin_addr.s_addr);
+
+        if ((sender_addr == *reinterpret_cast<const std::uint32_t *>(local_addr_.user_data_)) ||
+            (sender_addr == LOCALHOST_ADDR)) {
             return;
         }
 
