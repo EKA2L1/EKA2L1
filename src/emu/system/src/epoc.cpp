@@ -1096,7 +1096,8 @@ namespace eka2l1 {
         common::get_current_directory(current_dir);
 
         std::string drive_e_path_root = eka2l1::absolute_path(drive_e_path, current_dir);
-        drive_e_path = eka2l1::add_path(drive_e_path_root, "system\\");
+        drive_e_path = common::resolve_case_insensitive_path(drive_e_path_root, "system")
+            + eka2l1::get_separator();
 
         if (!common::exists(drive_e_path)) {
             common::create_directories(drive_e_path);
@@ -1142,13 +1143,14 @@ namespace eka2l1 {
                     progress_cb(copied * 100 / total, total_percentage);
             });
         if (!copied) {
+            LOG_ERROR(SYSTEM, "Failed to copy N-Gage card content from {} to {}", folder_path, drive_e_path_root);
             return ngage_game_card_general_error;
         }
 
         // Remove the app registeration file of the original
         if (!specific_app_2.empty()) {
-            const std::string real_aif_remove = eka2l1::add_path(drive_e_path, eka2l1::add_path(
-                    "\\apps\\", eka2l1::add_path(specific_app, specific_app + ".aif")));
+            const std::string real_aif_remove = common::resolve_case_insensitive_path(drive_e_path,
+                eka2l1::add_path("\\apps\\", eka2l1::add_path(specific_app, specific_app + ".aif")));
             common::remove(real_aif_remove);
         }
 
@@ -1159,7 +1161,8 @@ namespace eka2l1 {
             std::uint32_t percentage_per_explicit_copy = (!explicit_lib_copy.empty() && !explicit_program_copy.empty()) ? 50 : 100;
             std::uint32_t current_perct = 100;
 
-            const std::string app_folder_dest = eka2l1::add_path(eka2l1::add_path(drive_e_path, "apps\\"), specific_app + "\\");
+            const std::string app_folder_dest = common::resolve_case_insensitive_path(drive_e_path,
+                eka2l1::add_path("apps\\", specific_app)) + eka2l1::get_separator();
 
             if (!explicit_lib_copy.empty()) {
                 common::copy_folder(eka2l1::add_path(system_folder_path, explicit_lib_copy + "\\"), app_folder_dest,

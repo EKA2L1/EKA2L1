@@ -63,6 +63,20 @@ namespace {
     bool volume_distinguishes_case(const std::string &dir) {
         return !common::is_path_case_insensitive(dir);
     }
+
+    std::size_t count_entries(const std::string &dir) {
+        auto ite = common::make_directory_iterator(dir, "");
+        common::dir_entry entry;
+        std::size_t count = 0;
+
+        while (ite && ite->is_valid() && (ite->next_entry(entry) == 0)) {
+            if ((entry.name != ".") && (entry.name != "..")) {
+                count++;
+            }
+        }
+
+        return count;
+    }
 }
 
 TEST_CASE("case_insensitive_resolve_finds_entries_stored_in_another_case", "casepath") {
@@ -168,4 +182,42 @@ TEST_CASE("path_case_sensitivity_is_answered_per_path_not_per_build", "casepath"
     // And it has to agree with what the filesystem actually does.
     tree.make_file("Probe.dat");
     REQUIRE(common::exists(eka2l1::add_path(tree.root, "probe.dat")) == insensitive);
+}
+
+TEST_CASE("copy_folder_folds_a_differently_cased_name_into_the_existing_one", "casepath") {
+    scratch_tree source("casefold_copy_source");
+    scratch_tree dest("casefold_copy_dest");
+
+    // A game card dump spells its folders in upper case; the drive it is copied
+    // onto already holds the lower-case ones every other install path creates.
+    source.make_file("System/Apps/GAME/GAME.APP");
+    source.make_file("System/Libs/GAMEUTILS.DLL");
+
+    dest.make_file("system/apps/other/other.app");
+    dest.make_file("system/libs/gameutils.dll");
+
+    REQUIRE(common::copy_folder(source.root, dest.root, 0));
+
+    // One system folder, not two: a second one differing only in case would hide
+    // everything in the first from every case-insensitive lookup.
+    REQUIRE(count_entries(dest.root) == 1);
+    REQUIRE(count_entries(eka2l1::add_path(dest.root, "system")) == 2);
+    REQUIRE(count_entries(eka2l1::add_path(dest.root, "system/libs")) == 1);
+
+    REQUIRE(common::exists(eka2l1::add_path(dest.root, "system/apps/other/other.app")));
+    REQUIRE(common::exists(eka2l1::add_path(dest.root, "system/apps/GAME/GAME.APP")));
+}
+
+TEST_CASE("copy_folder_keeps_names_the_destination_has_no_counterpart_for", "casepath") {
+    scratch_tree source("casefold_keep_source");
+    scratch_tree dest("casefold_keep_dest");
+
+    source.make_file("System/Apps/GAME/GAME.APP");
+    dest.make_dir("system");
+
+    REQUIRE(common::copy_folder(source.root, dest.root, 0));
+
+    // Only "System" had something to fold onto. The rest arrives spelled as the
+    // source spelled it, the way a case-preserving filesystem behaves.
+    REQUIRE(common::exists(eka2l1::add_path(dest.root, "system/Apps/GAME/GAME.APP")));
 }
