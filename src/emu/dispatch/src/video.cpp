@@ -37,10 +37,10 @@ namespace eka2l1::dispatch {
         data.target_window_ = nullptr;
     }
 
-    epoc_video_player::epoc_video_player(kernel_system *kern, drivers::graphics_driver *grdrv, drivers::audio_driver *auddrv)
-        : image_handle_(0)
+    epoc_video_player::epoc_video_player(kernel_system *kern, drivers::graphics_driver *, drivers::audio_driver *auddrv, bool legacy_display)
+        : surface_(std::make_shared<epoc::window_surface>())
+        , legacy_display_(legacy_display)
         , video_player_(nullptr)
-        , driver_(grdrv)
         , custom_stream_(nullptr)
         , rotation_(ROTATION_TYPE_NONE)
         , kern_(kern)
@@ -62,28 +62,39 @@ namespace eka2l1::dispatch {
     }
 
     epoc_video_player::~epoc_video_player() {
-        // Join the decode thread before touching postings: it may be inside
-        // post_new_image right now.
-        video_player_->close();
-
-        {
-            const std::lock_guard<std::mutex> guard(postings_lock_);
-
-            for (auto &posting : postings_) {
-                if (posting.target_window_) {
-                    posting.target_window_->remove_canvas_observer(this);
-                    posting.target_window_ = nullptr;
-                }
+        close();
+        for (auto &posting : postings_) {
+            if (posting.target_window_) {
+                posting.target_window_->remove_canvas_observer(this);
             }
         }
+    }
 
-        if (image_handle_) {
-            drivers::graphics_command_builder builder;
-            builder.destroy(image_handle_);
-
-            drivers::command_list list = builder.retrieve_command_list();
-            driver_->submit_command_list(list);
+    void epoc_video_player::attach_target(epoc_video_posting_target &target) {
+        if (surface_created_ && target.target_window_) {
+            auto *window = target.target_window_;
+            const std::lock_guard<std::mutex> guard(window->scr->screen_mutex);
+            if (legacy_display_ && window->scr->is_screenplay_architecture()) {
+                target.displaced_surface_ = window->background_surface_.surface;
+                target.displaced_config_ = window->background_surface_.config;
+            }
+            window->attach_surface(surface_, target.config_, !window->scr->is_screenplay_architecture());
         }
+    }
+
+    void epoc_video_player::detach_target(epoc_video_posting_target &target) {
+        auto *window = target.target_window_;
+        if (window) {
+            const std::lock_guard<std::mutex> guard(window->scr->screen_mutex);
+            // The legacy HLE controller borrows the display; WServ itself never restores attachments.
+            auto displaced = target.displaced_surface_.lock();
+            if (legacy_display_ && displaced && window->background_surface_.surface == surface_) {
+                window->attach_surface(displaced, target.displaced_config_);
+            } else {
+                window->detach_surface(surface_);
+            }
+        }
+        target.displaced_surface_.reset();
     }
 
     std::int32_t epoc_video_player::register_window(kernel_system *kern, window_server *serv, const std::uint32_t wss_handle, const std::uint32_t win_handle) {
@@ -103,14 +114,12 @@ namespace eka2l1::dispatch {
             return -1;
         }
 
-        // Get the window
-        epoc::canvas_base *the_canvas = reinterpret_cast<epoc::canvas_base*>(real_client->get_object(win_handle));
-        if (!the_canvas) {
+        auto *object = real_client->get_object(win_handle);
+        epoc::canvas_base *the_canvas = dynamic_cast<epoc::canvas_base*>(object);
+        if (!the_canvas || the_canvas->win_type == epoc::window_type::backed_up) {
             LOG_ERROR(HLE_DISPATCHER, "Unable to retrieve the drawable window object! (ID=0x{:X}, WCID=0x{:X})", win_handle, ss->unique_id());
             return -1;
         }
-
-        const std::lock_guard<std::mutex> guard(postings_lock_);
 
         auto find_res = std::find_if(postings_.begin(), postings_.end(), [the_canvas](const epoc_video_posting_target &target) {
             return target.target_window_ == the_canvas;
@@ -124,38 +133,59 @@ namespace eka2l1::dispatch {
         epoc_video_posting_target post_target;
         post_target.target_window_ = the_canvas;
 
-        // The decode thread posts frames through this raw pointer: track the
-        // window's death so the posting drops instead of dangling.
+        post_target.config_.rotation = static_cast<int>(rotation_) * 90;
+        post_target.config_.viewport = crop_region_;
         the_canvas->add_canvas_observer(this);
-
+        attach_target(post_target);
         return static_cast<std::int32_t>(postings_.add(post_target));
     }
 
     void epoc_video_player::set_target_rect(const std::int32_t managed_handle, const eka2l1::rect &display_rect) {
-        if (managed_handle <= 0) {
-            return;
-        }
+        set_target_geometry(managed_handle, video_window_geometry{ display_rect, display_rect });
+    }
 
-        const std::lock_guard<std::mutex> guard(postings_lock_);
-
-        epoc_video_posting_target *target = postings_.get(static_cast<std::size_t>(managed_handle));
-        if (target != nullptr) {
-            target->display_rect_ = display_rect;
+    std::int32_t epoc_video_player::set_target_geometry(std::int32_t managed_handle, const video_window_geometry &geometry) {
+        auto *target = managed_handle > 0 ? postings_.get(static_cast<std::size_t>(managed_handle)) : nullptr;
+        if (!target || !target->target_window_) {
+            return epoc::error_bad_handle;
         }
+        if (geometry.extent.size.x < 0 || geometry.extent.size.y < 0 || geometry.clip.size.x < 0 || geometry.clip.size.y < 0) {
+            return epoc::error_argument;
+        }
+        target->config_.extent = geometry.extent;
+        target->config_.clip = geometry.clip;
+        auto *window = target->target_window_;
+        const std::lock_guard<std::mutex> guard(window->scr->screen_mutex);
+        window->configure_surface(surface_, target->config_);
+        return epoc::error_none;
+    }
+
+    std::int32_t epoc_video_player::set_crop_region(const eka2l1::rect &crop) {
+        if (crop.size.x < 0 || crop.size.y < 0 || crop.top.x < 0 || crop.top.y < 0) {
+            return epoc::error_argument;
+        }
+        crop_region_ = crop.empty() ? std::nullopt : std::optional<eka2l1::rect>(crop);
+        for (auto &posting : postings_) {
+            posting.config_.viewport = crop_region_;
+            if (posting.target_window_) {
+                const std::lock_guard<std::mutex> guard(posting.target_window_->scr->screen_mutex);
+                posting.target_window_->configure_surface(surface_, posting.config_);
+            }
+        }
+        return epoc::error_none;
     }
 
     void epoc_video_player::unregister_window(const std::int32_t managed_handle) {
         if (managed_handle <= 0) {
             return;
         }
-
-        const std::lock_guard<std::mutex> guard(postings_lock_);
-
-        epoc_video_posting_target *target = postings_.get(static_cast<std::size_t>(managed_handle));
+        auto *target = postings_.get(static_cast<std::size_t>(managed_handle));
         if (target && target->target_window_) {
-            target->target_window_->remove_canvas_observer(this);
+            detach_target(*target);
+            auto *window = target->target_window_;
+            const std::lock_guard<std::mutex> guard(window->scr->screen_mutex);
+            window->remove_canvas_observer(this);
         }
-
         postings_.remove(static_cast<std::size_t>(managed_handle));
     }
 
@@ -163,11 +193,7 @@ namespace eka2l1::dispatch {
     }
 
     void epoc_video_player::on_window_destroyed(epoc::canvas_interface *obj) {
-        // Fired from the canvas destructor. Null the posting so the decode
-        // thread stops touching the dying window; the container treats a null
-        // window as a free slot.
-        const std::lock_guard<std::mutex> guard(postings_lock_);
-
+        // Window observers are kernel-serialized; decoder callbacks only use surface_.
         for (auto &posting : postings_) {
             if (posting.target_window_ == obj) {
                 posting.target_window_ = nullptr;
@@ -188,25 +214,41 @@ namespace eka2l1::dispatch {
     }
 
     void epoc_video_player::play(const std::uint64_t *range) {
+        if (!surface_) {
+            surface_ = std::make_shared<epoc::window_surface>();
+        }
+        surface_->set_streaming(true);
+        if (!surface_created_) {
+            surface_created_ = true;
+            for (auto &posting : postings_) {
+                attach_target(posting);
+            }
+        } else {
+            for (auto &posting : postings_) {
+                if (posting.target_window_) {
+                    const std::lock_guard<std::mutex> guard(posting.target_window_->scr->screen_mutex);
+                    posting.target_window_->surface_damage();
+                }
+            }
+        }
         video_player_->play(range);
     }
 
     void epoc_video_player::close() {
         video_player_->close();
-
-        if (image_handle_) {
-            drivers::graphics_command_builder builder;
-            builder.destroy(image_handle_);
-
-            drivers::command_list list = builder.retrieve_command_list();
-            driver_->submit_command_list(list);
-
-            image_handle_ = 0;
+        for (auto &posting : postings_) {
+            detach_target(posting);
         }
+        surface_created_ = false;
+        surface_.reset();
+        custom_stream_.reset();
     }
-    
+
     void epoc_video_player::stop() {
         video_player_->stop();
+        if (surface_) {
+            surface_->set_streaming(false);
+        }
     }
 
     bool epoc_video_player::open_file(const std::u16string &real_path) {
@@ -224,66 +266,17 @@ namespace eka2l1::dispatch {
 
     void epoc_video_player::set_rotation(const int rotation) {
         rotation_ = common::clamp(ROTATION_TYPE_NONE, ROTATION_TYPE_CLOCKWISE270, static_cast<rotation_type>(rotation));
+        for (auto &posting : postings_) {
+            if (posting.target_window_) {
+                posting.config_.rotation = static_cast<int>(rotation_) * 90;
+                const std::lock_guard<std::mutex> guard(posting.target_window_->scr->screen_mutex);
+                posting.target_window_->configure_surface(surface_, posting.config_);
+            }
+        }
     }
 
     void epoc_video_player::post_new_image(const std::uint8_t *buffer_data, const std::size_t buffer_size) {
-        const eka2l1::vec2 vid_size = video_player_->get_video_size();
-        const eka2l1::vec3 vid_size_v3 = eka2l1::vec3(vid_size.x, vid_size.y, 0);
-
-        // Held across the whole post so a window can not be destroyed from
-        // under us mid-iteration (window death nulls the posting under this
-        // same lock).
-        const std::lock_guard<std::mutex> guard(postings_lock_);
-
-        for (auto &posting: postings_) {
-            if (posting.target_window_ == nullptr) {
-                continue;
-            }
-
-            const std::lock_guard<std::mutex> guard(posting.target_window_->scr->screen_mutex);
-
-            if (!image_handle_) {
-                image_handle_ = drivers::create_texture(driver_, 2, 0, drivers::texture_format::rgba, drivers::texture_format::rgba,
-                    drivers::texture_data_type::ubyte, buffer_data, buffer_size, vid_size_v3);
-            } else {
-                posting.target_window_->driver_builder_.update_texture(image_handle_, reinterpret_cast<const char*>(buffer_data), buffer_size, 0, drivers::texture_format::rgba,
-                    drivers::texture_data_type::ubyte, eka2l1::vec3(0, 0, 0), vid_size_v3);
-            }
-
-            eka2l1::rect dest_rect = posting.display_rect_;
-            dest_rect.top += posting.target_window_->abs_rect.top;
-            dest_rect.scale(posting.target_window_->scr->display_scale_factor);
-
-            // Try to change position for good rotation
-            switch (rotation_) {
-            case 1:
-                dest_rect.top.x += dest_rect.size.x;
-                break;
-
-            case 2:
-                dest_rect.top.x += dest_rect.size.x;
-                dest_rect.top.y += dest_rect.size.y;
-                break;
-
-            case 3:
-                dest_rect.top.y += dest_rect.size.y;
-                break;
-
-            default:
-                break;
-            }
-
-            if (rotation_ & 1) {
-                std::swap(dest_rect.size.x, dest_rect.size.y);
-            }
-
-            posting.target_window_->driver_builder_.set_texture_filter(image_handle_, false, drivers::filter_option::linear);
-            posting.target_window_->driver_builder_.set_texture_filter(image_handle_, true, drivers::filter_option::linear);
-            posting.target_window_->driver_builder_.draw_bitmap(image_handle_, 0, dest_rect, eka2l1::rect(eka2l1::vec2(0, 0), eka2l1::vec2(0, 0)), eka2l1::vec2(0, 0), rotation_ * 90.0f);
-            posting.target_window_->content_changed(true);
-
-            posting.target_window_->try_update(nullptr);
-        }
+        surface_->publish_pixels(buffer_data, buffer_size, video_player_->get_video_size());
     }
 
     std::uint64_t epoc_video_player::position() const {
@@ -304,6 +297,7 @@ namespace eka2l1::dispatch {
     }
     
     void epoc_video_player::on_play_done(const int error) {
+        surface_->set_streaming(false);
         // Fired on the decode thread. Completing a guest notify needs the kernel
         // lock, and the requester may already be gone. The bridge calls that join
         // this thread release the kernel lock around the join, so taking it here
@@ -328,18 +322,38 @@ namespace eka2l1::dispatch {
         return dispatcher->video_player_container_.add_object(player);
     }
 
+    BRIDGE_FUNC_DISPATCHER(eka2l1::ptr<void>, evideo_player_inst_with_version, const std::uint32_t version) {
+        if (version != 1 && version != 2) {
+            return eka2l1::ptr<void>(0);
+        }
+        auto player = std::make_unique<epoc_video_player>(sys->get_kernel_system(), sys->get_graphics_driver(),
+            sys->get_audio_driver(), version == 1);
+        return sys->get_dispatcher()->video_player_container_.add_object(player);
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_set_crop, const std::uint32_t handle, const eka2l1::rect *crop) {
+        auto *player = sys->get_dispatcher()->video_player_container_.get_object(handle);
+        if (!player) {
+            return epoc::error_bad_handle;
+        }
+        if (!crop) {
+            return epoc::error_argument;
+        }
+        auto transformed = *crop;
+        transformed.transform_from_symbian_rectangle();
+        return player->set_crop_region(transformed);
+    }
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_destroy, const std::uint32_t handle) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         dispatch::epoc_video_player *player = dispatcher->video_player_container_.get_object(handle);
 
-        // Joining the decode thread while holding the kernel lock deadlocks
-        // against on_play_done taking that lock on the decode thread: close
-        // (which joins) with the lock released, then remove the object.
+        // Decoder completion takes the kernel lock, so join before removing the player.
         if (player) {
             kernel_system *kern = sys->get_kernel_system();
 
             kern->unlock();
-            player->close();
+            player->stop();
             kern->lock();
         }
 
@@ -371,11 +385,28 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
+        if (!disp_rect) {
+            return epoc::error_argument;
+        }
         eka2l1::rect transformed_rect = *disp_rect;
         transformed_rect.transform_from_symbian_rectangle();
 
         player->set_target_rect(managed_win_handle, transformed_rect);
         return epoc::error_none;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_set_geometry, const std::uint32_t handle, const std::int32_t managed_handle, const video_window_geometry *geometry) {
+        auto *player = sys->get_dispatcher()->video_player_container_.get_object(handle);
+        if (!player) {
+            return epoc::error_bad_handle;
+        }
+        if (!geometry) {
+            return epoc::error_argument;
+        }
+        video_window_geometry transformed = *geometry;
+        transformed.extent.transform_from_symbian_rectangle();
+        transformed.clip.transform_from_symbian_rectangle();
+        return player->set_target_geometry(managed_handle, transformed);
     }
 
     BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_unregister_window, const std::uint32_t handle, const std::int32_t managed_handle) {
@@ -490,13 +521,13 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
-        // play restarts any previous session (joining the decode thread): keep
-        // the kernel lock released around it so on_play_done cannot deadlock.
+        // Stop outside the kernel lock; attachment changes in play need it held.
         kernel_system *kern = sys->get_kernel_system();
 
         kern->unlock();
-        player->play(range);
+        player->stop();
         kern->lock();
+        player->play(range);
 
         return epoc::error_none;
     }
@@ -542,8 +573,9 @@ namespace eka2l1::dispatch {
         kernel_system *kern = sys->get_kernel_system();
 
         kern->unlock();
-        player->close();
+        player->stop();
         kern->lock();
+        player->close();
 
         return epoc::error_none;
     }

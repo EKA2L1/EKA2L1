@@ -360,6 +360,7 @@ struct SystemMenuKey: View {
     private var fpsLimitPicker: some View {
         let picker = Picker("emulator.menu.fpsLimit", selection: actions.frameLimit) {
             Text(verbatim: "15").tag(15)
+            Text(verbatim: "25").tag(25)
             Text(verbatim: "30").tag(30)
             Text(verbatim: "60").tag(60)
             Text("emulator.fpsLimit.unlimited").tag(0)

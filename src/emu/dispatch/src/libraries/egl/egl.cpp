@@ -494,25 +494,23 @@ namespace eka2l1::dispatch {
 
         drivers::graphics_driver *drv = sys->get_graphics_driver();
 
-        if (surface->backed_window_) {
-            egl_context *ctx = surface->bounded_context_;
+        egl_context *ctx = surface->bounded_context_;
+        if (surface->backed_window_ && ctx) {
             surface->scale(ctx, drv);
-            surface->backed_window_->set_presented_surface(surface->handle_);
+        }
+        if (ctx) {
+            ctx->flush_to_driver(controller, drv, true);
+        }
 
-            if (ctx && surface->backed_window_->can_be_physically_seen()) {
-                drivers::graphics_command_builder &window_builder = surface->backed_window_->driver_builder_;
-                surface->backed_window_->draw_presented_surface(window_builder);
-
-                surface->backed_window_->content_changed(true);
+        if (surface->backed_window_) {
+            {
+                const std::lock_guard<std::mutex> guard(surface->backed_screen_->screen_mutex);
+                if (ctx && surface->presented_->publish_bitmap(drv, surface->handle_, surface->dimension_ * surface->current_scale_)) {
+                    surface->backed_window_->content_changed(true);
+                }
             }
-        }
-
-        if (surface->bounded_context_) {
-            surface->bounded_context_->flush_to_driver(controller, drv, true);
-        }
-
-        if (surface->backed_window_)
             surface->backed_window_->try_update(sys->get_kernel_system()->crr_thread());
+        }
 
         return EGL_TRUE;
     }

@@ -58,10 +58,22 @@ namespace eka2l1 {
     };
     #pragma pack(pop)
 
+    // OpenChannel also uses this count to size the client receive buffer.
+    constexpr std::uint32_t SENSOR_MAX_BUFFERING_COUNT = 4;
+
     struct listening_parameters {
         std::uint32_t desired_buffering_count;
         std::uint32_t maximum_buffering_count;
         std::uint32_t buffering_period;
+
+        void normalize_buffering_counts(std::uint32_t limit) {
+            if (desired_buffering_count == 0 || desired_buffering_count > limit) {
+                desired_buffering_count = limit;
+            }
+            if (maximum_buffering_count < desired_buffering_count || maximum_buffering_count > limit) {
+                maximum_buffering_count = limit;
+            }
+        }
     };
 
     struct data_count_ret_val {

@@ -22,13 +22,21 @@
 
 #include <e32std.h>
 
+struct TVideoWindowGeometry {
+    TRect iExtent;
+    TRect iClip;
+};
+
 #define HLE_DISPATCH_FUNC(ret, name, ARGS...) \
     ret name(const TUint32 func_id, ##ARGS)
 
 extern "C" {
 HLE_DISPATCH_FUNC(TAny*, EVideoPlayerCreate);
+HLE_DISPATCH_FUNC(TAny*, EVideoPlayerCreateForVersion, TInt aVersion);
+HLE_DISPATCH_FUNC(TInt, EVideoPlayerSetCropRegion, TAny *aInstance, const TRect *aCrop);
 HLE_DISPATCH_FUNC(TInt, EVideoPlayerRegisterWindow, TAny *aInstance, TInt aWsSsHandle, TInt aWindowHandle);
 HLE_DISPATCH_FUNC(TInt, EVideoPlayerSetClipRect, TAny *aInstance, TInt aWindowManagedHandle, const TRect *aRect);
+HLE_DISPATCH_FUNC(TInt, EVideoPlayerSetGeometry, TAny *aInstance, TInt aWindowManagedHandle, const TVideoWindowGeometry *aGeometry);
 HLE_DISPATCH_FUNC(TInt, EVideoPlayerOpenUrl, TAny *aInstance, const TDesC *aUrl);
 HLE_DISPATCH_FUNC(TInt, EVideoPlayerOpenDes, TAny *aInstance, const TDesC8 *aDescContent);
 HLE_DISPATCH_FUNC(TInt, EVideoPlayerPlay, TAny *aInstance, const TTimeIntervalMicroSeconds *aRange);

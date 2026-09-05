@@ -1399,6 +1399,12 @@ namespace eka2l1 {
                 scr_mode_global = epoc::string_to_display_mode(modes[0]);
             }
 
+            // NGA render stages report every 32bpp target as DisplayMode16M (EColor16MA).
+            if ((kern->get_epoc_version() >= epocver::epoc10)
+                && (epoc::get_bpp_from_display_mode(scr_mode_global) == 32)) {
+                scr_mode_global = epoc::display_mode::color16ma;
+            }
+
             dsa_mode_global = scr_mode_global;
 
             // WINDOWMODE is the mode WSERV composes in; it is not proof of what a direct

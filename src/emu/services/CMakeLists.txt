@@ -326,6 +326,7 @@ add_library(epocservs
         src/window/io.cpp
         src/window/scheduler.cpp
         src/window/screen.cpp
+        src/window/surface.cpp
         src/window/util.cpp
         src/window/window.cpp)
 

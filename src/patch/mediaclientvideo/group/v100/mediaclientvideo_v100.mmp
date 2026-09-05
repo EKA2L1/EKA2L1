@@ -11,7 +11,7 @@ SOURCE          VideoPlayerBody.cpp dispatch.s
 
 nostrictdef
 
-LIBRARY		    euser.lib mediaclient.lib efsrv.lib
+LIBRARY		    euser.lib mediaclient.lib efsrv.lib ws32.lib
 STATICLIBRARY   priv.lib
 
 DEBUGGABLE_UDEBONLY
