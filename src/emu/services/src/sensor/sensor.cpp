@@ -156,6 +156,7 @@ namespace eka2l1 {
                 list[i].vendor_id.assign(nullptr, infos[i].vendor_);
                 list[i].quantity = infos[i].quantity_;
                 list[i].data_item_size = infos[i].item_size_;
+                list[i].channel_data_type_id = infos[i].data_type_;
             }
         }
 

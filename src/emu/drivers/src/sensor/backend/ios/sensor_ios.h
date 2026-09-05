@@ -21,6 +21,7 @@
 
 #include <common/linked.h>
 #include <drivers/sensor/sensor.h>
+#include <drivers/sensor/rotation.h>
 
 #include <atomic>
 #include <memory>
@@ -39,6 +40,7 @@ namespace eka2l1::drivers {
         friend class sensor_driver_ios;
 
         sensor_driver_ios *driver_;
+        sensor_type type_;
         bool listening_;
 
         std::vector<std::uint8_t> events_translated_;
@@ -62,7 +64,7 @@ namespace eka2l1::drivers {
             std::size_t &packet_count_out);
 
     public:
-        explicit sensor_ios(sensor_driver_ios *driver);
+        explicit sensor_ios(sensor_driver_ios *driver, sensor_type type);
         ~sensor_ios() override;
 
         bool get_property(const sensor_property prop, const std::int32_t item_index,
@@ -77,7 +79,7 @@ namespace eka2l1::drivers {
         std::vector<sensor_property_data> get_all_properties(const sensor_property *prop_value = nullptr) override;
 
         std::uint32_t data_packet_size() const override {
-            return sizeof(sensor_accelerometer_axis_data);
+            return type_ == SENSOR_TYPE_ROTATION ? sizeof(sensor_rotation_data) : sizeof(sensor_accelerometer_axis_data);
         }
     };
 

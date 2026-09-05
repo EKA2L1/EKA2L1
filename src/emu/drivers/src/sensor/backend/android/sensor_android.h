@@ -46,6 +46,7 @@ namespace eka2l1::drivers {
         std::uint32_t active_accel_measure_range_;
         std::uint32_t active_sampling_rate_;
         int sensor_type_;
+        bool rotation_;
         std::mutex lock_;
 
         common::double_linked_queue_element listening_link_;
@@ -55,7 +56,7 @@ namespace eka2l1::drivers {
         bool enable_sensor_with_params();
 
     public:
-        explicit sensor_android(sensor_driver_android *driver, ASensorRef const asensor);
+        explicit sensor_android(sensor_driver_android *driver, ASensorRef const asensor, bool rotation = false);
         ~sensor_android() override;
 
         bool get_property(const sensor_property prop, const std::int32_t item_index,
