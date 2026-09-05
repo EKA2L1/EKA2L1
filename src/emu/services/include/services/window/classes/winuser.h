@@ -23,6 +23,7 @@
 #include <services/window/classes/winbase.h>
 #include <services/window/classes/gstore.h>
 #include <services/window/common.h>
+#include <services/window/surface.h>
 
 #include <common/linked.h>
 #include <common/region.h>
@@ -109,8 +110,9 @@ namespace eka2l1::epoc {
         std::unique_ptr<epoc::gdi_store_command_segment> pending_segment_;
         std::vector<canvas_observer*> observers_;
 
-        // EGL window surfaces are not part of the GDI redraw command store.
-        drivers::handle presented_surface_handle_{ 0 };
+        window_surface_attachment background_surface_;
+        // Pre-ScreenPlay direct rendering does not replace a GCE background.
+        window_surface_attachment direct_surface_;
 
         explicit canvas_base(window_server_client_ptr client, screen *scr, window *parent, const epoc::window_type type_of_window, const epoc::display_mode dmode, const std::uint32_t client_handle);
         virtual ~canvas_base() override;
@@ -122,9 +124,13 @@ namespace eka2l1::epoc {
         virtual void add_draw_command(gdi_store_command &command);
         virtual void prepare_for_draw() {}
 
-        void set_presented_surface(drivers::handle handle);
-        void clear_presented_surface(drivers::handle handle);
-        bool draw_presented_surface(drivers::graphics_command_builder &builder);
+        void attach_surface(const std::shared_ptr<window_surface> &surface, const surface_configuration &config, bool direct = false);
+        void detach_surface(const std::shared_ptr<window_surface> &surface);
+        void configure_surface(const std::shared_ptr<window_surface> &surface, const surface_configuration &config);
+        bool draw_surface(drivers::graphics_command_builder &builder, window_surface_attachment &attachment);
+        bool surface_changed() const;
+        bool surface_streaming() const;
+        void surface_damage();
 
         virtual bool scroll(eka2l1::rect clip_space, const eka2l1::vec2 offset, eka2l1::rect source_rect) {
             return true;
@@ -265,6 +271,10 @@ namespace eka2l1::epoc {
     };
 
     struct redraw_msg_canvas : public canvas_base {
+        drivers::handle surface_ui_ = 0;
+        eka2l1::vec2 surface_ui_size_{ 0, 0 };
+        float surface_ui_scale_ = 1.0f;
+
         common::region redraw_region;
         common::region background_region;           // Region to paint background on screen
         eka2l1::rect redraw_rect_curr;
@@ -274,6 +284,9 @@ namespace eka2l1::epoc {
 
         explicit redraw_msg_canvas(window_server_client_ptr client, screen *scr, window *parent,
             const epoc::display_mode dmode, const std::uint32_t client_handle);
+        ~redraw_msg_canvas() override;
+        void update_surface_ui(drivers::graphics_command_builder &builder);
+        bool draw_surface_window(drivers::graphics_command_builder &builder);
 
         void invalidate(const eka2l1::rect &irect);
         void on_activate() override;

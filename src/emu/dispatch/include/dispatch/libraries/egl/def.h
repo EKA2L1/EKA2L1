@@ -516,6 +516,7 @@ namespace eka2l1::dispatch {
 
     struct egl_surface : public epoc::canvas_observer {
         drivers::handle handle_;
+        std::shared_ptr<epoc::window_surface> presented_;
         egl_config config_;
 
         epoc::screen *backed_screen_;

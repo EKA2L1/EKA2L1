@@ -189,8 +189,7 @@ namespace eka2l1 {
             return;
         }
 
-        // Should always be like this hopefully
-        std::uint32_t max_buffer = 4;
+        std::uint32_t max_buffer = SENSOR_MAX_BUFFERING_COUNT;
         std::uint32_t data_item_size = controller->data_packet_size();
 
         ctx->write_data_to_descriptor_argument(1, max_buffer);
@@ -246,6 +245,7 @@ namespace eka2l1 {
             return;
         }
 
+        params->normalize_buffering_counts(SENSOR_MAX_BUFFERING_COUNT);
         if (!channel->listen_for_data(params->desired_buffering_count, params->maximum_buffering_count,
                                       params->buffering_period)) {
             LOG_ERROR(SERVICE_SENSOR, "Failed to listen for channel data!");

@@ -2,6 +2,7 @@
 #define MEDIACLIENTVIDEO_VIDEO_PLAYER_BODY_H
 
 #include "VideoPlayer1P2.h"
+#include "dispatch.h"
 
 enum TVideoPlayerState {
     EVideoPlayerStateIdle = 0,
@@ -38,11 +39,14 @@ private:
     struct TDisplayWindowInfo {
         const RWindowBase *iWindow;
         TInt iManagedHandle;
+        TVideoWindowGeometry iGeometry;
     };
 
     RArray<TDisplayWindowInfo> iWindowInfos;
     RWindowBase *iActiveWindow;
+    TInt iActiveWindowHandle;
     TRect iActiveClipRect;
+    TRect iCropRegion;
 
     TAny *iDispatchInstance;
     TReal32 iVideoFps;
@@ -56,19 +60,21 @@ private:
 
     CBody(MVideoPlayerUtilityObserver &aObserver, TInt aVersion);
 
-    void ConstructL(RWsSession &aWsSession, RWindowBase &aWindow, const TRect &aClipRect);
+    void ConstructL(RWsSession &aWsSession, RWindowBase &aWindow, const TRect &aWindowRect, const TRect &aClipRect);
     void Construct2L();
     
 public:
-    static CBody *NewL(MVideoPlayerUtilityObserver &aObserver, RWsSession &aWsSession, RWindowBase &aWindow, const TRect &aClipRect);
+    static CBody *NewL(MVideoPlayerUtilityObserver &aObserver, RWsSession &aWsSession, RWindowBase &aWindow, const TRect &aWindowRect, const TRect &aClipRect);
     static CBody *New2L(MVideoPlayerUtilityObserver &aObserver);
 
     ~CBody();
 
     void SetOwnedWindowL(RWsSession &aSession, RWindowBase &aWindow);
-    void SetDisplayRectL(const TRect &aClipRect);
-    void AddDisplayWindowL(RWsSession &aSession, RWindowBase &aWindow);
+    void SetDisplayRectL(const TRect &aWindowRect, const TRect &aClipRect);
+    void AddDisplayWindowL(RWsSession &aSession, RWindowBase &aWindow, const TRect &aExtent, const TRect &aClipRect);
     void SetDisplayRectForWindowL(const RWindow &aWindow, const TRect &aClipRect);
+    void SetVideoExtentL(const RWindow &aWindow, const TRect &aExtent);
+    void SetCropRegionL(const TRect &aCrop);
     void RemoveDisplayWindow(const RWindow &aWindow);
 
     void OpenFileL(const TDesC &aPath);
@@ -102,8 +108,8 @@ public:
     virtual void RunL();
     virtual void DoCancel();
 
-    void GetDisplayRect(TRect &aClipRect) {
-        aClipRect = iActiveClipRect;
+    void GetCropRegion(TRect &aCrop) const {
+        aCrop = iCropRegion;
     }
 };
 

@@ -100,7 +100,7 @@ namespace eka2l1::epoc {
         }
 
         bool draw_text(const std::u16string &text, const eka2l1::rect &box, const epoc::text_alignment alignment, drivers::graphics_driver *driver,
-            drivers::graphics_command_builder &builder, const eka2l1::vec2f scale_vector);
+            drivers::graphics_command_builder &builder, const eka2l1::vec2f scale_vector, bool source_over_alpha = false);
 
         int get_char_size() const {
             return size_;

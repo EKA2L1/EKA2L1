@@ -42,6 +42,9 @@
 .global EVideoPlayerSetVolume
 .global EVideoPlayerSetRotation
 .global EVideoPlayerUnregisterWindow
+.global EVideoPlayerSetGeometry
+.global EVideoPlayerCreateForVersion
+.global EVideoPlayerSetCropRegion
 
 EVideoPlayerCreate:
     CallHleDispatch 0x80
@@ -111,3 +114,12 @@ EVideoPlayerSetRotation:
 
 EVideoPlayerUnregisterWindow:
 	CallHleDispatch 0x96
+
+EVideoPlayerSetGeometry:
+	CallHleDispatch 0x97
+
+EVideoPlayerCreateForVersion:
+	CallHleDispatch 0x98
+
+EVideoPlayerSetCropRegion:
+	CallHleDispatch 0x99

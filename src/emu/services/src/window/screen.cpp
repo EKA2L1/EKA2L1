@@ -37,6 +37,7 @@ namespace eka2l1::epoc {
     struct window_drawer_walker : public window_tree_walker {
         drivers::graphics_command_builder &builder_;
         std::uint32_t total_redrawed_;
+        canvas_base *streaming_window_ = nullptr;
 
         explicit window_drawer_walker(drivers::graphics_command_builder &builder)
             : builder_(builder)
@@ -49,6 +50,10 @@ namespace eka2l1::epoc {
             }
 
             epoc::canvas_base *cv = reinterpret_cast<epoc::canvas_base*>(win);
+
+            if (cv->can_be_physically_seen() && cv->surface_streaming()) {
+                streaming_window_ = cv;
+            }
 
             if (cv->draw(builder_))
                 total_redrawed_++;
@@ -280,6 +285,11 @@ namespace eka2l1::epoc {
 
         // Remove pending draw flags...
         flags_ &= ~(FLAG_SERVER_REDRAW_PENDING | FLAG_CLIENT_REDRAW_PENDING);
+
+        // Keep consuming visible decoder mailboxes at display boundaries.
+        if (adrawwalker.streaming_window_) {
+            adrawwalker.streaming_window_->canvas_base::try_update(nullptr);
+        }
 
         return adrawwalker.total_redrawed_;
     }

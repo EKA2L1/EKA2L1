@@ -56,13 +56,19 @@ namespace eka2l1::dispatch {
         }
 
         if (backed_window_) {
+            const std::lock_guard<std::mutex> guard(backed_screen_->screen_mutex);
+            presented_ = std::make_shared<epoc::window_surface>();
+            epoc::surface_configuration configuration;
+            configuration.native_orientation = true;
+            backed_window_->attach_surface(presented_, configuration);
             backed_window_->add_canvas_observer(this);
         }
     }
     
     egl_surface::~egl_surface() {
         if (backed_window_) {
-            backed_window_->clear_presented_surface(handle_);
+            const std::lock_guard<std::mutex> guard(backed_screen_->screen_mutex);
+            backed_window_->detach_surface(presented_);
             backed_window_->remove_canvas_observer(this);
         }
     }

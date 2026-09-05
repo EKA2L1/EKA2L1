@@ -228,10 +228,11 @@ namespace eka2l1::epoc {
         eka2l1::vec2 position_;
         common::region clip_;
         drivers::filter_option texture_filter_;
+        bool premultiplied_target_;
 
     public:
         explicit gdi_command_builder(drivers::graphics_driver *drv, drivers::graphics_command_builder &builder, bitmap_cache &bcache,
-            drivers::filter_option texture_filter, const eka2l1::vec2 &position, float scale_factor, const common::region &clip);
+            drivers::filter_option texture_filter, const eka2l1::vec2 &position, float scale_factor, const common::region &clip, bool premultiplied_target = false);
 
         void set_position(const eka2l1::vec2 &pos) {
             position_ = pos;
@@ -246,6 +247,7 @@ namespace eka2l1::epoc {
         }
 
         void build_segment(const gdi_store_command_segment &segment);
+        void build_texture_updates(const gdi_store_command_segment &segment);
         void build_single_command(const gdi_store_command &command);
         void build_command_draw_rect(const gdi_store_command_draw_rect_data &cmd);
         void build_command_draw_line(const gdi_store_command_draw_line_data &cmd);
