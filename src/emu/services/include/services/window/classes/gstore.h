@@ -25,6 +25,7 @@
 #include <drivers/graphics/common.h>
 #include <drivers/itc.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 
@@ -147,7 +148,7 @@ namespace eka2l1::epoc {
 
     struct gdi_store_command {
         gdi_store_command_opcode opcode_ = gdi_store_command_invalid;
-        std::uint8_t data_[MAX_COMMAND_STORE_DATA_SIZE];
+        alignas(std::max_align_t) std::uint8_t data_[MAX_COMMAND_STORE_DATA_SIZE];
         std::shared_ptr<std::vector<std::uint8_t>> dynamic_data_;
 
         std::uint8_t *allocate_dynamic_data(const std::size_t size) {
@@ -161,11 +162,15 @@ namespace eka2l1::epoc {
 
         template <typename T>
         T &get_data_struct() {
+            static_assert(sizeof(T) <= MAX_COMMAND_STORE_DATA_SIZE);
+            static_assert(alignof(T) <= alignof(std::max_align_t));
             return *reinterpret_cast<T*>(data_);
         }
         
         template <typename T>
         const T &get_data_struct_const() const {
+            static_assert(sizeof(T) <= MAX_COMMAND_STORE_DATA_SIZE);
+            static_assert(alignof(T) <= alignof(std::max_align_t));
             return *reinterpret_cast<const T*>(data_);
         }
     };

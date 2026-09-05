@@ -22,6 +22,24 @@
 
 using namespace eka2l1;
 
+TEMPLATE_TEST_CASE("GDI command storage aligns every payload", "[window_surface],[gdi_store]",
+    epoc::gdi_store_command_draw_rect_data,
+    epoc::gdi_store_command_draw_line_data,
+    epoc::gdi_store_command_draw_polygon_data,
+    epoc::gdi_store_command_draw_text_data,
+    epoc::gdi_store_command_draw_bitmap_data,
+    epoc::gdi_store_command_update_texture_data,
+    epoc::gdi_store_command_set_clip_rect_single_data,
+    epoc::gdi_store_command_set_clip_rect_multiple_data) {
+    epoc::gdi_store_command commands[2];
+    for (auto &command : commands) {
+        REQUIRE(reinterpret_cast<std::uintptr_t>(command.data_) % alignof(TestType) == 0);
+        REQUIRE(static_cast<void *>(&command.get_data_struct<TestType>()) == command.data_);
+        const auto &stored = command;
+        REQUIRE(static_cast<const void *>(&stored.get_data_struct_const<TestType>()) == command.data_);
+    }
+}
+
 namespace {
     class surface_driver : public drivers::graphics_driver {
         drivers::handle next_ = 1;
