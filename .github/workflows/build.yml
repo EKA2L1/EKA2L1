@@ -381,12 +381,6 @@ jobs:
     # generation everywhere, so this tree must not be shared with the jobs that
     # publish artifacts. XZ_SANDBOX=no is xz's own instruction when it sees
     # -fsanitize=: its Landlock sandbox and the sanitisers cannot both be on.
-    #
-    # Every C source in this tree is vendored -- the emulator itself is C++ -- and
-    # some of those libraries read unaligned on purpose: miniz turns on
-    # MINIZ_USE_UNALIGNED_LOADS_AND_STORES for x86, which is what CI runs on. So
-    # the alignment check is dropped for C, and kept everywhere it can find one of
-    # our own bugs.
     - name: CMake configure
       env:
         CC: clang
@@ -395,7 +389,7 @@ jobs:
       run: >
         cmake -B build-sanitisers -DCI=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo
         -DEKA2L1_ENABLE_SCRIPTING_ABILITY=OFF -DXZ_SANDBOX=no
-        -DCMAKE_C_FLAGS="$SANITISER_FLAGS -fno-sanitize=alignment"
+        -DCMAKE_C_FLAGS="$SANITISER_FLAGS"
         -DCMAKE_CXX_FLAGS="$SANITISER_FLAGS"
         -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
 

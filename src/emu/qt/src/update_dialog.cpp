@@ -38,7 +38,7 @@
 #include <common/path.h>
 #include <common/log.h>
 
-#include <miniz.h>
+#include <common/archive.h>
 
 #include <cstring>
 #include <QFile>
@@ -443,51 +443,49 @@ void update_dialog::on_new_update_download_finished(QNetworkReply *reply) {
         ui_->download_progress_bar->setValue(ui_->download_progress_bar->maximum());
 
 #if EKA2L1_PLATFORM(WIN32)
-        std::unique_ptr<mz_zip_archive> archive = std::make_unique<mz_zip_archive>();
-        if (!mz_zip_reader_init_file(archive.get(), UPDATE_FILE_STORE_PATH, 0)) {
+        std::vector<eka2l1::common::archive_entry_info> entries;
+
+        if (!eka2l1::common::list_archive(UPDATE_FILE_STORE_PATH, entries)) {
             update_encounter_error(tr("Downloaded update is not in zip format!"));
             return;
         }
 
-        const std::uint32_t num_files = mz_zip_reader_get_num_files(archive.get());
         static const char *UPDATER_FOLDER = "updater";
         static const char *UPDATER_FILENAME = "updater.exe";
         static const char *UPDATER_EXEC_LAUNCH_PATH = "updater\\updater.exe";
 
         bool updater_patched = false;
-        for (std::uint32_t i = 0; i < num_files; i++) {
-            mz_zip_archive_file_stat file_stat;
-            if (mz_zip_reader_file_stat(archive.get(), i, &file_stat)) {
-                if ((file_stat.m_external_attr & 0x10) == 0) {
-                    std::string filename = file_stat.m_filename;
-                    filename = filename.substr(0, eka2l1::common::min(strlen(UPDATER_FOLDER), filename.length()));
 
-                    if (eka2l1::common::compare_ignore_case(filename.c_str(), UPDATER_FOLDER) == 0) {
-                        eka2l1::common::create_directories(eka2l1::file_directory(file_stat.m_filename));
-                        FILE *c_file = eka2l1::common::open_c_file(file_stat.m_filename, "wb");
-                        if (!c_file) {
-                            continue;
-                        }
-                        if (mz_zip_reader_extract_file_to_cfile(archive.get(), file_stat.m_filename, c_file, 0)) {
-                            std::string real_filename = eka2l1::filename(file_stat.m_filename);
-                            if (eka2l1::common::compare_ignore_case(real_filename.c_str(), UPDATER_FILENAME) == 0)
-                                updater_patched = true;
-                        } else {
-                            mz_zip_reader_end(archive.get());
-                            update_encounter_error(tr("Failed to update the updater program!"));
-                            return;
-                        }
-                        fclose(c_file);
-                    }
+        // Only the updater folder is unpacked here, straight over the running installation: the updater
+        // is what performs the rest of the update, so it has to be the new build before it is launched.
+        const bool unpacked = eka2l1::common::extract_archive(UPDATE_FILE_STORE_PATH,
+            [&](const eka2l1::common::archive_entry_info &entry) -> std::string {
+                if (entry.is_directory) {
+                    return std::string();
                 }
-            } else {
-                mz_zip_reader_end(archive.get());
-                update_encounter_error(tr("Update zip file is corrupted!"));
-                return;
-            }
+
+                const std::string head = entry.path.substr(0,
+                    eka2l1::common::min(strlen(UPDATER_FOLDER), entry.path.length()));
+
+                if (eka2l1::common::compare_ignore_case(head.c_str(), UPDATER_FOLDER) != 0) {
+                    return std::string();
+                }
+
+                const std::string real_filename = eka2l1::filename(entry.path);
+
+                if (eka2l1::common::compare_ignore_case(real_filename.c_str(), UPDATER_FILENAME) == 0) {
+                    updater_patched = true;
+                }
+
+                return entry.path;
+            },
+            nullptr, nullptr);
+
+        if (!unpacked) {
+            update_encounter_error(tr("Failed to update the updater program!"));
+            return;
         }
 
-        mz_zip_reader_end(archive.get());
         if (!updater_patched) {
             update_encounter_error(tr("Can't find the updater program in the update archive file!"));
             return;

@@ -217,6 +217,31 @@
                 </array>
             </dict>
         </dict>
+        <!-- Same reasoning as 7z above: com.rarlab.rar-archive is the identifier
+             every reader of RAR archives already uses. -->
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>com.rarlab.rar-archive</string>
+            <key>UTTypeDescription</key>
+            <string>RAR Archive</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.data</string>
+                <string>public.archive</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>rar</string>
+                </array>
+                <key>public.mime-type</key>
+                <array>
+                    <string>application/x-rar-compressed</string>
+                    <string>application/vnd.rar</string>
+                </array>
+            </dict>
+        </dict>
     </array>
     <key>NSCameraUsageDescription</key>
     <string>Symbian apps running in the emulator can use the camera for their viewfinder and photo capture features.</string>

@@ -33,7 +33,7 @@
 #include <common/fileutils.h>
 #include <common/path.h>
 
-#include <miniz.h>
+#include <common/archive.h>
 #include <memory>
 
 #include <cstdio>
@@ -96,33 +96,29 @@ public:
     }
 
     bool extract() {
-        std::unique_ptr<mz_zip_archive> archive = std::make_unique<mz_zip_archive>();
-        if (!mz_zip_reader_init_file(archive.get(), ZIP_STAGING_FILENAME, 0)) {
+        std::vector<common::archive_entry_info> entries;
+
+        if (!common::list_archive(ZIP_STAGING_FILENAME, entries)) {
             return notify_error(tr("Downloaded update is not a zip file!"));
         }
 
-        // Locate the system folder, if does not exist, is not a valid game card dump
-        const std::uint32_t num_files = mz_zip_reader_get_num_files(archive.get());
-
-        std::vector<std::pair<std::string, std::uint32_t>> list_files;
-
-        for (std::uint32_t i = 0; i < num_files; i++) {
-            mz_zip_archive_file_stat file_stat;
-            if (mz_zip_reader_file_stat(archive.get(), i, &file_stat)) {
-                if ((file_stat.m_external_attr & 0x10) == 0) {
-                    std::string filename = file_stat.m_filename;
-                    filename = filename.substr(0, common::min(strlen(UPDATER_FOLDER_NAME), filename.length()));
-
-                    if (common::compare_ignore_case(filename.c_str(), UPDATER_FOLDER_NAME) == 0) {
-                        continue;
-                    }
-                    total_uncomp_size_ += file_stat.m_uncomp_size;
-                    list_files.push_back(std::make_pair(file_stat.m_filename, i));
-                }
-            } else {
-                mz_zip_reader_end(archive.get());
-                return notify_error(tr("The downloaded archive zip is corrupted"));
+        // The updater is running out of its own folder, so its files are the one thing the update must
+        // not overwrite.
+        const auto wanted = [](const common::archive_entry_info &entry) {
+            if (entry.is_directory) {
+                return false;
             }
+
+            const std::string head = entry.path.substr(0,
+                common::min(strlen(UPDATER_FOLDER_NAME), entry.path.length()));
+
+            return common::compare_ignore_case(head.c_str(), UPDATER_FOLDER_NAME) != 0;
+        };
+
+        // Progress runs against the whole archive, skipped entries included: that is the total the
+        // extractor counts against, and it still has to read past what we do not want.
+        for (const common::archive_entry_info &entry : entries) {
+            total_uncomp_size_ += entry.size;
         }
 
         std::string current_dir;
@@ -133,54 +129,26 @@ public:
         eka2l1::common::delete_folder(temp_folder);
         eka2l1::common::create_directories(temp_folder);
 
-        struct callback_data {
-            FILE *stream_ = nullptr;
-            update_window *self_;
-            std::uint64_t uncomp_progress_ = 0;
+        const bool unpacked = common::extract_archive(ZIP_STAGING_FILENAME,
+            [&](const common::archive_entry_info &entry) -> std::string {
+                if (!wanted(entry)) {
+                    return std::string();
+                }
 
-            void reset() {
-                if (stream_)
-                    fclose(stream_);
-            }
+                emit_update_log(tr("Extracted: %1").arg(QString::fromStdString(entry.path)));
+                return eka2l1::add_path(temp_folder, entry.path);
+            },
+            [this](const std::size_t done, const std::size_t total) {
+                if (total) {
+                    emit_update_progress_bar(done);
+                }
+            },
+            nullptr);
 
-            ~callback_data() {
-                reset();
-            }
-        } cb_data;
-
-        cb_data.self_ = this;
-
-        for (std::size_t extracted = 0; extracted < list_files.size(); extracted++) {
-            const std::string path_to_file = eka2l1::add_path(temp_folder, list_files[extracted].first);
-            common::create_directories(eka2l1::file_directory(path_to_file));
-
-            cb_data.reset();
-            cb_data.stream_ = common::open_c_file(path_to_file, "wb");
-
-            if (!mz_zip_reader_extract_to_callback(
-                    archive.get(), static_cast<mz_uint>(list_files[extracted].second), [](void *userdata, mz_uint64 offset, const void *buf, std::size_t n) -> std::size_t {
-                        callback_data *data_ptr = reinterpret_cast<callback_data *>(userdata);
-                        std::size_t written = fwrite(buf, 1, n, data_ptr->stream_);
-
-                        if (written == n) {
-                            data_ptr->uncomp_progress_ += written;
-                            data_ptr->self_->emit_update_progress_bar(data_ptr->uncomp_progress_);
-                        }
-
-                        return static_cast<std::size_t>(written);
-                    },
-                    &cb_data, 0)) {
-                cb_data.reset();
-                eka2l1::common::delete_folder(temp_folder);
-
-                mz_zip_reader_end(archive.get());
-                return notify_error(tr("The downloaded archive zip is corrupted"));
-            }
-
-            emit_update_log(tr("Extracted: %1").arg(QString::fromStdString(list_files[extracted].first)));
+        if (!unpacked) {
+            eka2l1::common::delete_folder(temp_folder);
+            return notify_error(tr("The downloaded archive zip is corrupted"));
         }
-
-        mz_zip_reader_end(archive.get());
 
         common::copy_folder(temp_folder, "..", 0, [this](const std::uint64_t current, const std::uint64_t total) {
             emit_update_progress_bar(100 * current / total, true);

@@ -115,3 +115,6 @@
 [submodule "src/external/libarchive"]
 	path = src/external/libarchive
 	url = https://github.com/libarchive/libarchive
+[submodule "src/external/zlib"]
+	path = src/external/zlib
+	url = https://github.com/madler/zlib

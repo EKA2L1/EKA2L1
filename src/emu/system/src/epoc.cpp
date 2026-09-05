@@ -21,6 +21,7 @@
 #include <common/configure.h>
 
 #include <common/algorithm.h>
+#include <common/archive.h>
 #include <common/chunkyseri.h>
 #include <common/container.h>
 #include <common/cvt.h>
@@ -62,6 +63,7 @@
 #include <kernel/libmanager.h>
 #include <kernel/timing.h>
 #include <ldd/collection.h>
+#include <loader/e32img.h>
 #include <loader/rom.h>
 #include <package/manager.h>
 #include <services/init.h>
@@ -77,8 +79,6 @@
 #include <services/window/window.h>
 #include <system/devices.h>
 #include <system/software.h>
-
-#include <miniz.h>
 
 namespace eka2l1 {
     // https://www.techiedelight.com/check-if-a-string-ends-with-another-string-in-cpp/
@@ -104,6 +104,16 @@ namespace eka2l1 {
         , conf_(nullptr)
         , settings_(nullptr) {
     }
+
+    // A game card can hold two builds of one title, `<code>` and `<code>_1`, sharing an app UID.
+    struct ngage_game_card_layout {
+        std::string app_folder_to_run;
+
+        // Empty when the card holds a single folder.
+        std::string app_folder_to_unregister;
+
+        std::string app_folder_for_libs;
+    };
 
     class system_impl {
         std::mutex mut;
@@ -578,8 +588,9 @@ namespace eka2l1 {
 
         void mount(drive_number drv, const drive_media media, std::string path, const std::uint32_t attrib = io_attrib_none);
         zip_mount_error mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t attrib = io_attrib_none, progress_changed_callback progress_cb = nullptr, cancel_requested_callback cancel_cb = nullptr);
-        ngage_game_card_install_error install_ngage_game_card(const std::string &folder_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb = nullptr);
-        ngage_game_card_install_error find_singular_ngage_game(const std::string &system_apps_folder_path, apa_app_registry &result, std::string *app_folder_name_1 = nullptr, std::string *app_folder_name_2 = nullptr);
+        ngage_game_card_install_error install_ngage_game_card(const std::string &card_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb = nullptr);
+        ngage_game_card_install_error install_ngage_game_card_archive(const std::string &archive_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb);
+        ngage_game_card_install_error find_singular_ngage_game(const std::string &system_apps_folder_path, apa_app_registry &result, ngage_game_card_layout *layout_out = nullptr);
         bool get_ngage_game_info_mounted(apa_app_registry &result);
 
         bool reset(const bool lock_sys, const std::int32_t new_index = -1);
@@ -839,51 +850,20 @@ namespace eka2l1 {
     }
 
     zip_mount_error system_impl::mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t base_attrib, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
-        std::unique_ptr<mz_zip_archive> archive = std::make_unique<mz_zip_archive>();
-        if (!mz_zip_reader_init_file(archive.get(), zip_path.c_str(), 0)) {
+        std::vector<common::archive_entry_info> entries;
+
+        if (!common::list_archive(zip_path, entries)) {
             return zip_mount_error_not_zip;
         }
 
-        // Locate the system folder, if does not exist, is not a valid game card dump
-        const std::uint32_t num_files = mz_zip_reader_get_num_files(archive.get());
-        bool system_found = false;
-
-        std::vector<std::string> list_files;
-
-        struct extract_zip_callback_data {
-            progress_changed_callback progress_cb_;
-            cancel_requested_callback cancel_cb_;
-            std::size_t total_uncomp_size_;
-            std::size_t size_uncomped_so_far_;
-            std::unique_ptr<std::ofstream> file_stream_;
-            bool was_canceled_;
-        } callback_data;
-
-        callback_data.progress_cb_ = progress_cb;
-        callback_data.cancel_cb_ = cancel_cb;
-        callback_data.total_uncomp_size_ = 0;
-        callback_data.size_uncomped_so_far_ = 0;
-        callback_data.was_canceled_ = false;
-
-        for (std::uint32_t i = 0; i < num_files; i++) {
-            mz_zip_archive_file_stat file_stat;
-            if (mz_zip_reader_file_stat(archive.get(), i, &file_stat)) {
-                // Length of system
-                std::string root_folder(file_stat.m_filename, file_stat.m_filename + 6);
-                if (common::compare_ignore_case(root_folder.c_str(), "system") == 0) {
-                    system_found = true;
-                }
-
-                list_files.push_back(file_stat.m_filename);
-                callback_data.total_uncomp_size_ += file_stat.m_uncomp_size;
-            } else {
-                mz_zip_reader_end(archive.get());
-                return zip_mount_error_corrupt;
-            }
-        }
+        // What is unpacked becomes the drive root, so `system` has to sit at the top of the archive.
+        const bool system_found = std::any_of(entries.begin(), entries.end(),
+            [](const common::archive_entry_info &entry) {
+                return (entry.path.size() >= 6)
+                    && (common::compare_ignore_case(entry.path.substr(0, 6).c_str(), "system") == 0);
+            });
 
         if (!system_found) {
-            mz_zip_reader_end(archive.get());
             return zip_mount_error_no_system_folder;
         }
 
@@ -895,57 +875,55 @@ namespace eka2l1 {
             : cache_root_;
         const std::string temp_folder = eka2l1::add_path(cache_root, "temp/");
 
-        eka2l1::common::delete_folder(temp_folder);
-        eka2l1::common::create_directories(temp_folder);
+        common::delete_folder(temp_folder);
+        common::create_directories(temp_folder);
 
-        std::uint32_t extracted = 0;
+        const bool unpacked = common::extract_archive(zip_path,
+            [&](const common::archive_entry_info &entry) -> std::string {
+                return entry.path.empty() ? std::string() : eka2l1::add_path(temp_folder, entry.path);
+            },
+            progress_cb, cancel_cb);
 
-        for (std::size_t extracted = 0; extracted < list_files.size(); extracted++) {
-            const std::string path_to_file = eka2l1::add_path(temp_folder, list_files[extracted]);
-            common::create_directories(eka2l1::file_directory(path_to_file));
-            callback_data.file_stream_ = std::make_unique<std::ofstream>(path_to_file, std::ios::binary);
-
-            if (!mz_zip_reader_extract_to_callback(
-                    archive.get(), static_cast<mz_uint>(extracted), [](void *userdata, mz_uint64 offset, const void *buf, std::size_t n) -> std::size_t {
-                        extract_zip_callback_data *data_ptr = reinterpret_cast<extract_zip_callback_data *>(userdata);
-
-                        if (data_ptr->cancel_cb_ && data_ptr->cancel_cb_()) {
-                            data_ptr->was_canceled_ = true;
-                            return 0;
-                        }
-
-                        std::size_t written = data_ptr->file_stream_->tellp();
-                        data_ptr->file_stream_->write(reinterpret_cast<const char *>(buf), n);
-
-                        std::size_t current_pos = data_ptr->file_stream_->tellp();
-                        written = current_pos - written;
-
-                        if (written == n) {
-                            data_ptr->size_uncomped_so_far_ += written;
-
-                            if (data_ptr->progress_cb_) {
-                                data_ptr->progress_cb_(data_ptr->size_uncomped_so_far_, data_ptr->total_uncomp_size_);
-                            }
-                        }
-
-                        return static_cast<std::size_t>(written);
-                    },
-                    &callback_data, 0)) {
-                callback_data.file_stream_.reset();
-                eka2l1::common::delete_folder(temp_folder);
-
-                mz_zip_reader_end(archive.get());
-                return zip_mount_error_corrupt;
-            }
+        if (!unpacked) {
+            common::delete_folder(temp_folder);
+            return zip_mount_error_corrupt;
         }
 
-        mz_zip_reader_end(archive.get());
         mount(drv, media, temp_folder, base_attrib | io_attrib_removeable);
 
         return zip_mount_error_none;
     }
 
-    ngage_game_card_install_error system_impl::find_singular_ngage_game(const std::string &system_apps_folder_path, apa_app_registry &result, std::string *folder_1, std::string *folder_2) {
+    // Some card dumps carry a stub in the `_1` folder rather than a build, so which one runs is decided
+    // on whether its image parses at all.
+    static bool ngage_app_image_loadable(const std::string &system_apps_folder_path,
+        const std::string &app_folder_name) {
+        const std::string app_folder = eka2l1::add_path(system_apps_folder_path,
+            app_folder_name + eka2l1::get_separator());
+
+        std::string app_file = eka2l1::add_path(app_folder, app_folder_name + ".app");
+
+        if (!common::exists(app_file)) {
+            const std::string real_name = common::find_case_sensitive_file_name(app_folder,
+                app_folder_name + ".app", common::FILE_REGULAR);
+
+            if (real_name.empty()) {
+                return false;
+            }
+
+            app_file = eka2l1::add_path(app_folder, real_name);
+        }
+
+        common::ro_std_file_stream app_stream(app_file, true);
+
+        if (!app_stream.valid()) {
+            return false;
+        }
+
+        return loader::parse_e32img(reinterpret_cast<common::ro_stream *>(&app_stream)).has_value();
+    }
+
+    ngage_game_card_install_error system_impl::find_singular_ngage_game(const std::string &system_apps_folder_path, apa_app_registry &result, ngage_game_card_layout *layout_out) {
         std::unique_ptr<common::dir_iterator> apps_folder_ite = common::make_directory_iterator(system_apps_folder_path, "");
         apps_folder_ite->detail = true;
 
@@ -980,19 +958,29 @@ namespace eka2l1 {
             return ngage_game_card_no_game_data_folder;
         }
 
-        // Handle game fix folder
+        // Two folders are only ever the `<code>` and `<code>_1` builds of one title.
+        std::string base_app = specific_app;
+
         if (!specific_app_2.empty()) {
             const bool app1_ends_with1 = std_string_ends_with(specific_app, "_1");
             const bool app2_ends_with1 = std_string_ends_with(specific_app_2, "_1");
-            if (!app1_ends_with1 && !app2_ends_with1) {
+
+            if (app1_ends_with1 == app2_ends_with1) {
                 return ngage_game_card_more_than_one_data_folder;
             }
 
-            if (app1_ends_with1) {
-                if (app2_ends_with1) {
-                    return ngage_game_card_more_than_one_data_folder;
-                }
-                std::swap(specific_app, specific_app_2);
+            const std::string alternate_app = app1_ends_with1 ? specific_app : specific_app_2;
+            base_app = app1_ends_with1 ? specific_app_2 : specific_app;
+
+            if (ngage_app_image_loadable(system_apps_folder_path, alternate_app)) {
+                specific_app = alternate_app;
+                specific_app_2 = base_app;
+            } else {
+                LOG_WARN(SYSTEM, "{} is not a loadable image, running the {} build instead", alternate_app,
+                    base_app);
+
+                specific_app = base_app;
+                specific_app_2 = alternate_app;
             }
         }
 
@@ -1017,12 +1005,10 @@ namespace eka2l1 {
             return ngage_game_card_registeration_corrupted;
         }
 
-        if (folder_1) {
-            *folder_1 = specific_app;
-        }
-
-        if (folder_2) {
-            *folder_2 = specific_app_2;
+        if (layout_out) {
+            layout_out->app_folder_to_run = specific_app;
+            layout_out->app_folder_to_unregister = specific_app_2;
+            layout_out->app_folder_for_libs = base_app;
         }
 
         return ngage_game_card_install_success;
@@ -1034,28 +1020,144 @@ namespace eka2l1 {
             return false;
         }
 
-        std::string folder_1, folder_2;
-        if (!find_singular_ngage_game(common::ucs2_to_utf8(path_apps.value()), result, &folder_1, &folder_2) == ngage_game_card_install_success) {
+        ngage_game_card_layout layout;
+        if (find_singular_ngage_game(common::ucs2_to_utf8(path_apps.value()), result, &layout)
+            != ngage_game_card_install_success) {
             return false;
         }
 
-        if (!folder_2.empty()) {
-            folder_1 = folder_2;
-        }
+        const std::string &run_folder = layout.app_folder_to_run;
 
-        result.mandatory_info.app_path = eka2l1::add_path(u"E:\\system\\apps\\", common::utf8_to_ucs2(eka2l1::add_path(folder_1, folder_1 + ".app")));
+        result.mandatory_info.app_path = eka2l1::add_path(u"E:\\system\\apps\\", common::utf8_to_ucs2(eka2l1::add_path(run_folder, run_folder + ".app")));
         return true;
     }
 
-    ngage_game_card_install_error system_impl::install_ngage_game_card(const std::string &folder_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb) {
-        std::string system_folder_path = eka2l1::add_path(folder_path, "\\system\\");
+    // Unpacking is measured in bytes and installing in files, so progress needs a scale of its own.
+    static constexpr std::size_t NGAGE_CARD_ARCHIVE_PROGRESS_TOTAL = 1000;
+
+    // Cards are packed both ways, with the card folder at the top or with its contents directly, so the
+    // `system/apps` tree anchors the search. Shallowest wins: a game's own "system" folder must not.
+    static bool find_ngage_card_root_in_archive(const std::vector<common::archive_entry_info> &entries,
+        std::string &prefix_out) {
+        static const std::string MARKER = "system/apps/";
+
+        bool found = false;
+
+        for (const common::archive_entry_info &entry : entries) {
+            const std::string lowered = common::lowercase_string(entry.path);
+            const std::size_t marker_pos = lowered.find(MARKER);
+
+            if ((marker_pos == std::string::npos) || ((marker_pos != 0) && (lowered[marker_pos - 1] != '/'))) {
+                continue;
+            }
+
+            if (!found || (marker_pos < prefix_out.size())) {
+                prefix_out = entry.path.substr(0, marker_pos);
+                found = true;
+            }
+        }
+
+        return found;
+    }
+
+    ngage_game_card_install_error system_impl::install_ngage_game_card_archive(const std::string &archive_path,
+        std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb) {
+        std::vector<common::archive_entry_info> entries;
+
+        if (!common::list_archive(archive_path, entries)) {
+            LOG_ERROR(SYSTEM, "Unable to read the N-Gage game card archive {}", archive_path);
+            return ngage_game_card_general_error;
+        }
+
+        std::string card_prefix;
+
+        if (!find_ngage_card_root_in_archive(entries, card_prefix)) {
+            return ngage_game_card_no_game_data_folder;
+        }
+
+        std::string current_dir;
+        common::get_current_directory(current_dir);
+
+        const std::string cache_root = cache_root_.empty()
+            ? eka2l1::absolute_path("cache/", current_dir)
+            : cache_root_;
+        const std::string staging = eka2l1::add_path(cache_root, "ngagecard/");
+
+        common::delete_folder(staging);
+
+        std::vector<std::string> destinations(entries.size());
+
+        for (std::size_t i = 0; i < entries.size(); i++) {
+            if (entries[i].path.compare(0, card_prefix.size(), card_prefix) != 0) {
+                continue;
+            }
+
+            const std::string relative = entries[i].path.substr(card_prefix.size());
+
+            if (!relative.empty()) {
+                destinations[i] = eka2l1::add_path(staging, relative);
+            }
+        }
+
+        progress_changed_callback extract_progress_cb = nullptr;
+        progress_changed_callback install_progress_cb = nullptr;
+
+        if (progress_cb) {
+            extract_progress_cb = [progress_cb](const std::size_t done, const std::size_t total) {
+                if (total) {
+                    progress_cb(done * NGAGE_CARD_ARCHIVE_PROGRESS_TOTAL / 2 / total,
+                        NGAGE_CARD_ARCHIVE_PROGRESS_TOTAL);
+                }
+            };
+
+            install_progress_cb = [progress_cb](const std::size_t done, const std::size_t total) {
+                if (total) {
+                    progress_cb(NGAGE_CARD_ARCHIVE_PROGRESS_TOTAL / 2
+                            + done * NGAGE_CARD_ARCHIVE_PROGRESS_TOTAL / 2 / total,
+                        NGAGE_CARD_ARCHIVE_PROGRESS_TOTAL);
+                }
+            };
+        }
+
+        // extract_archive walks the container once, in the order list_archive reported it.
+        std::size_t next_index = 0;
+
+        const bool extracted = common::extract_archive(archive_path,
+            [&](const common::archive_entry_info &) -> std::string {
+                const std::size_t index = next_index++;
+                return (index < destinations.size()) ? destinations[index] : std::string();
+            },
+            extract_progress_cb, nullptr);
+
+        if (!extracted) {
+            LOG_ERROR(SYSTEM, "Unable to unpack the N-Gage game card archive {}", archive_path);
+            common::delete_folder(staging);
+
+            return ngage_game_card_general_error;
+        }
+
+        const ngage_game_card_install_error result = install_ngage_game_card(staging, game_name_found_cb,
+            install_progress_cb);
+
+        common::delete_folder(staging);
+
+        return result;
+    }
+
+    ngage_game_card_install_error system_impl::install_ngage_game_card(const std::string &card_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb) {
+        // An archive is unpacked first, so everything below only ever sees a real directory tree.
+        if (!common::is_dir(card_path)) {
+            return install_ngage_game_card_archive(card_path, game_name_found_cb, progress_cb);
+        }
+
+        std::string system_folder_path = eka2l1::add_path(card_path, "\\system\\");
         if (!common::exists(system_folder_path)) {
             if (common::is_platform_case_sensitive()) {
-                std::string system_real_name = common::find_case_sensitive_file_name(folder_path + "\\", "system", common::FILE_DIRECTORY);
+                std::string system_real_name = common::find_case_sensitive_file_name(card_path + "\\", "system", common::FILE_DIRECTORY);
                 if (system_real_name.empty()) {
                     return ngage_game_card_no_game_data_folder;
                 }
-                system_folder_path = eka2l1::add_path(folder_path, system_real_name + "\\");
+                system_folder_path = eka2l1::add_path(card_path, system_real_name + "\\");
             } else {
                 return ngage_game_card_no_game_data_folder;
             }
@@ -1073,10 +1175,10 @@ namespace eka2l1 {
             }
         }
 
-        std::string specific_app, specific_app_2;
+        ngage_game_card_layout layout;
 
         apa_app_registry app_reg_temp;
-        ngage_game_card_install_error err_find = find_singular_ngage_game(system_apps_folder_path, app_reg_temp, &specific_app, &specific_app_2);
+        ngage_game_card_install_error err_find = find_singular_ngage_game(system_apps_folder_path, app_reg_temp, &layout);
         if (err_find != ngage_game_card_install_success) {
             return err_find;
         }
@@ -1136,21 +1238,22 @@ namespace eka2l1 {
         std::uint32_t copied_count = 0;
 
         const bool copied = common::copy_folder(
-            folder_path, drive_e_path_root,
+            card_path, drive_e_path_root,
             0,
             [&](const std::size_t copied, const std::size_t total) {
                 if (progress_cb)
                     progress_cb(copied * 100 / total, total_percentage);
             });
         if (!copied) {
-            LOG_ERROR(SYSTEM, "Failed to copy N-Gage card content from {} to {}", folder_path, drive_e_path_root);
+            LOG_ERROR(SYSTEM, "Failed to copy N-Gage card content from {} to {}", card_path, drive_e_path_root);
             return ngage_game_card_general_error;
         }
 
-        // Remove the app registeration file of the original
-        if (!specific_app_2.empty()) {
+        // Both builds carry the same app UID, so only one of them may stay registered.
+        if (!layout.app_folder_to_unregister.empty()) {
+            const std::string &drop = layout.app_folder_to_unregister;
             const std::string real_aif_remove = common::resolve_case_insensitive_path(drive_e_path,
-                eka2l1::add_path("\\apps\\", eka2l1::add_path(specific_app, specific_app + ".aif")));
+                eka2l1::add_path("\\apps\\", eka2l1::add_path(drop, drop + ".aif")));
             common::remove(real_aif_remove);
         }
 
@@ -1162,7 +1265,7 @@ namespace eka2l1 {
             std::uint32_t current_perct = 100;
 
             const std::string app_folder_dest = common::resolve_case_insensitive_path(drive_e_path,
-                eka2l1::add_path("apps\\", specific_app)) + eka2l1::get_separator();
+                eka2l1::add_path("apps\\", layout.app_folder_for_libs)) + eka2l1::get_separator();
 
             if (!explicit_lib_copy.empty()) {
                 common::copy_folder(eka2l1::add_path(system_folder_path, explicit_lib_copy + "\\"), app_folder_dest,
@@ -1478,8 +1581,8 @@ namespace eka2l1 {
         return impl->mount_game_zip(drv, media, zip_path, base_attrib, progress_cb, cancel_cb);
     }
 
-    ngage_game_card_install_error system::install_ngage_game_card(const std::string &folder_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb) {
-        return impl->install_ngage_game_card(folder_path, game_name_found_cb, progress_cb);
+    ngage_game_card_install_error system::install_ngage_game_card(const std::string &card_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb) {
+        return impl->install_ngage_game_card(card_path, game_name_found_cb, progress_cb);
     }
 
     bool system::reset() {

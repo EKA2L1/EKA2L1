@@ -32,7 +32,6 @@ target_link_libraries(epoc PRIVATE
         FAT
         gdbstub
         j2me
-        miniz
         pugixml)
 
 if (EKA2L1_ENABLE_SCRIPTING_ABILITY)

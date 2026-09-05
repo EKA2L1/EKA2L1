@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/algorithm.h>
 #include <common/archive.h>
 #include <common/buffer.h>
 #include <common/cvt.h>
@@ -153,6 +154,60 @@ namespace eka2l1::common {
                 return false;
             }
         }
+    }
+
+    bool read_archive_entry(const std::string &path, const std::string &entry_path,
+        std::vector<char> &content_out, const std::uint64_t max_size) {
+        archive_ptr reader = open_archive(path);
+
+        if (!reader) {
+            return false;
+        }
+
+        struct archive_entry *entry = nullptr;
+        int result = ARCHIVE_OK;
+
+        while ((result = archive_read_next_header(reader.get(), &entry)) == ARCHIVE_OK) {
+            const archive_entry_info info = describe_entry(entry);
+
+            if (info.is_directory || (common::compare_ignore_case(info.path.c_str(), entry_path.c_str()) != 0)) {
+                continue;
+            }
+
+            // Not every format fills the declared size in, so grow as it arrives.
+            std::vector<char> buffer(ARCHIVE_READ_BLOCK_SIZE);
+
+            content_out.clear();
+
+            for (;;) {
+                const la_ssize_t read = archive_read_data(reader.get(), buffer.data(), buffer.size());
+
+                if (read == 0) {
+                    return true;
+                }
+
+                if (read < 0) {
+                    LOG_ERROR(COMMON, "Unable to decompress {} out of {}: {}", info.path, path,
+                        archive_error_string(reader.get()));
+                    return false;
+                }
+
+                if (max_size && (content_out.size() + static_cast<std::uint64_t>(read) > max_size)) {
+                    LOG_ERROR(COMMON, "Entry {} of {} is larger than the {} bytes allowed", info.path, path,
+                        max_size);
+                    return false;
+                }
+
+                content_out.insert(content_out.end(), buffer.begin(), buffer.begin() + read);
+            }
+        }
+
+        if (result != ARCHIVE_EOF) {
+            LOG_ERROR(COMMON, "Unable to read the contents of archive {}: {}", path,
+                archive_error_string(reader.get()));
+        }
+
+        return false;
     }
 
     bool extract_archive(const std::string &path,

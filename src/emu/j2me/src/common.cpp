@@ -21,6 +21,8 @@
 #include <j2me/applist.h>
 
 #include <common/algorithm.h>
+#include <common/archive.h>
+#include <common/buffer.h>
 #include <common/fileutils.h>
 #include <common/path.h>
 #include <common/pystr.h>
@@ -28,105 +30,58 @@
 #include <config/config.h>
 
 #include <fmt/format.h>
-#include <miniz.h>
 #include <memory>
 #include <sstream>
 
 namespace eka2l1::j2me {
-    static bool locate_file_in_zip(mz_zip_archive *archive, const std::string &full_path, mz_uint &index, std::uint64_t &size) {
-        mz_zip_archive_file_stat stat;
-        for (mz_uint i = 0; i < mz_zip_reader_get_num_files(archive); i++) {
-            if (mz_zip_reader_file_stat(archive, i, &stat)) {
-                if (common::compare_ignore_case(full_path.c_str(), stat.m_filename) == 0) {
-                    index = i;
-                    size = stat.m_uncomp_size;
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    install_error create_jad_fake_link_from_jar(FILE *jar_file_handle, std::string &jad_content) {
-        std::unique_ptr<mz_zip_archive> archive = std::make_unique<mz_zip_archive>();
-        if (!mz_zip_reader_init_cfile(archive.get(), jar_file_handle, 0, 0)) {
-            return INSTALL_ERROR_JAR_INVALID;
-        }
-
+    install_error create_jad_fake_link_from_jar(const std::string &jar_path, std::string &jad_content) {
         static const char *MANIFEST_FILE_PATH = "META-INF/MANIFEST.MF";
-        std::uint32_t index = 0;
-        std::uint64_t fsize = 0;
-        
-        if (!locate_file_in_zip(archive.get(), MANIFEST_FILE_PATH, index, fsize)) {
+
+        std::vector<char> manifest;
+
+        if (!common::read_archive_entry(jar_path, MANIFEST_FILE_PATH, manifest, common::MB(1))) {
             return INSTALL_ERROR_JAR_INVALID;
         }
 
-        // Suspicous large
-        if (fsize >= common::MB(1)) {
-            return INSTALL_ERROR_JAR_INVALID;
-        }
-
-        char *string_buffer = new char[fsize];
-        if (!mz_zip_reader_extract_to_mem(archive.get(), index, string_buffer, fsize, 0)) {
-            delete[] string_buffer;
-            return INSTALL_ERROR_JAR_INVALID;
-        }
-
-        mz_zip_reader_end(archive.get());
-
-        fseek(jar_file_handle, 0, SEEK_END);
-        long file_size = ftell(jar_file_handle);
-
-        jad_content = std::string(string_buffer, fsize);
+        jad_content = std::string(manifest.data(), manifest.size());
         jad_content += "\n";
         jad_content += "MIDlet-Jar-URL: https://12z1.com/jar/fake.jar\n";
-        jad_content += fmt::format("MIDlet-Jar-Size: {}", file_size);
+        jad_content += fmt::format("MIDlet-Jar-Size: {}", common::file_size(jar_path));
 
-        delete[] string_buffer;
         return INSTALL_ERROR_JAR_SUCCESS;
     }
 
-    install_error extract_icon_to_store(FILE *jar_file_handle, const config::state &conf, const app_entry &entry, std::string &final_real_path) {
-        std::unique_ptr<mz_zip_archive> archive = std::make_unique<mz_zip_archive>();
-        if (!mz_zip_reader_init_cfile(archive.get(), jar_file_handle, 0, 0)) {
-            return INSTALL_ERROR_JAR_INVALID;
-        }
-
+    install_error extract_icon_to_store(const std::string &jar_path, const config::state &conf, const app_entry &entry, std::string &final_real_path) {
         const std::string fname = eka2l1::filename(entry.icon_path_);
         const std::string relative_path = fmt::format("j2me\\{}_{}_{}", common::lowercase_string(entry.name_),
             common::lowercase_string(entry.version_), fname);
         const std::string storing_file = eka2l1::add_path(conf.storage, relative_path);
 
-        FILE *out_file = common::open_c_file(storing_file, "wb");
-        if (!out_file) {
+        std::vector<char> icon;
+
+        if (!common::read_archive_entry(jar_path, entry.icon_path_, icon)) {
+            LOG_WARN(J2ME, "Can't extract icon file with path {} for storing. Ignoring...", entry.icon_path_);
+
+            final_real_path = "";
+            return INSTALL_ERROR_JAR_SUCCESS;
+        }
+
+        common::create_directories(eka2l1::file_directory(storing_file));
+        common::wo_std_file_stream out_file(storing_file, true);
+
+        if (!out_file.valid() || (out_file.write(icon.data(), icon.size()) != icon.size())) {
             LOG_WARN(J2ME, "Can't open storing icon file!");
 
             final_real_path = "";
             return INSTALL_ERROR_JAR_SUCCESS;
         }
 
-        std::uint32_t index = 0;
-        std::uint64_t fsize = 0;
-        
-        if (!locate_file_in_zip(archive.get(), entry.icon_path_.c_str(), index, fsize)) {
-            return INSTALL_ERROR_JAR_INVALID;
-        }
-
-        if (!mz_zip_reader_extract_to_cfile(archive.get(), index, out_file, 0)) {
-            LOG_WARN(J2ME, "Can't extract icon file with path {} for storing. Ignoring...", entry.icon_path_);
-            final_real_path = "";
-        } else {
-            final_real_path = relative_path;
-        }
-
-        fclose(out_file);
-
+        final_real_path = relative_path;
         return INSTALL_ERROR_JAR_SUCCESS;
     }
     
-    install_error get_app_entry(FILE *jar_file_handle, app_entry &entry, std::string &jad_content, int &midp_ver) {
-        install_error return_err = create_jad_fake_link_from_jar(jar_file_handle, jad_content);
+    install_error get_app_entry(const std::string &jar_path, app_entry &entry, std::string &jad_content, int &midp_ver) {
+        install_error return_err = create_jad_fake_link_from_jar(jar_path, jad_content);
 
         if (return_err != INSTALL_ERROR_JAR_SUCCESS) {
             return return_err;

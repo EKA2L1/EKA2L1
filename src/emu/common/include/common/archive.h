@@ -65,4 +65,17 @@ namespace eka2l1::common {
     bool extract_archive(const std::string &path,
         const std::function<std::string(const archive_entry_info &)> &choose_destination,
         progress_changed_callback progress_cb, cancel_requested_callback cancel_cb);
+
+    /**
+     * @brief Read a single named entry of an archive into memory.
+     *
+     * @param entry_path Path as stored in the archive, matched case-insensitively against the
+     *                   '/'-normalised entry names.
+     * @param max_size   Refuse an entry larger than this, so a malformed or hostile archive cannot ask
+     *                   for an unbounded allocation. Zero means no limit.
+     *
+     * @returns False if the archive could not be read, holds no such entry, or the entry is too big.
+     */
+    bool read_archive_entry(const std::string &path, const std::string &entry_path,
+        std::vector<char> &content_out, const std::uint64_t max_size = 0);
 }

@@ -28,7 +28,6 @@
 #include <cctype>
 #include <cwctype>
 
-#include <miniz.h>
 #include <stack>
 
 namespace eka2l1::loader {

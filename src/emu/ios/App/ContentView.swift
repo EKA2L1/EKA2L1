@@ -22,6 +22,16 @@ private let sisTypes: [UTType] = {
     return types
 }()
 
+// Classic N-Gage game cards: a folder tree, but usually passed around packed.
+// The installer unpacks an archive itself, sniffing the container by content.
+private let ngageCardTypes: [UTType] = {
+    var types: [UTType] = [.folder, .zip]
+    for type in archiveTypes + rarTypes where !types.contains(type) {
+        types.append(type)
+    }
+    return types
+}()
+
 // N-Gage 2.0 game packages (.n-gage). Copied onto the E drive for the N-Gage
 // launcher to install from; see handleNGage2Import.
 private let ngage2Types: [UTType] =
@@ -134,7 +144,7 @@ struct ContentView: View {
         case .sis:
             return sisTypes
         case .ngage:
-            return [.folder]
+            return ngageCardTypes
         case .ngage2:
             return ngage2Types
         case .font:
@@ -143,8 +153,8 @@ struct ContentView: View {
     }
 
     private var homeImporterAllowsMultipleSelection: Bool {
-        // Folder-based classic N-Gage install picks a single game card; SIS
-        // packages, .n-gage packages and fonts can be batch-imported.
+        // A classic N-Gage install takes one game card at a time; SIS packages,
+        // .n-gage packages and fonts can be batch-imported.
         homeImportTarget != .ngage
     }
 
@@ -644,7 +654,7 @@ struct ContentView: View {
                 let report = await store.perform { () -> EKA2L1NGageInstallItem in
                     let scoped = url.startAccessingSecurityScopedResource()
                     defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-                    return EKA2L1Bridge.installNGageGame(folderPath: url.path)
+                    return EKA2L1Bridge.installNGageGame(cardPath: url.path)
                 }
                 store.reloadApps()
                 if report.succeeded {
@@ -802,6 +812,7 @@ private let rpkgTypes: [UTType] = importTypes(extension: "rpkg", declaredAs: "co
 // and everything that reads its archives use, so we import that one rather than
 // minting a com.eka2l1.* type nothing else would recognise.
 private let archiveTypes: [UTType] = importTypes(extension: "7z", declaredAs: "org.7-zip.7-zip-archive")
+private let rarTypes: [UTType] = importTypes(extension: "rar", declaredAs: "com.rarlab.rar-archive")
 
 // Shared between the main queue (which sets it from the Stop button) and the
 // install thread (which polls it between files), so the accesses are locked.

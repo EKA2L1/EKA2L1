@@ -19,7 +19,7 @@
  */
 
 #include <loader/sis_fields.h>
-#include <miniz.h>
+#include <zlib.h>
 
 #include <common/advstream.h>
 #include <common/log.h>
@@ -276,7 +276,7 @@ namespace eka2l1 {
                     compressed.compressed_data.resize(us);
                     stream->read(reinterpret_cast<char *>(compressed.compressed_data.data()), us);
 
-                    mz_stream stream;
+                    z_stream stream;
 
                     stream.avail_in = 0;
                     stream.next_in = 0;

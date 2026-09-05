@@ -734,7 +734,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "N-Gage import failed: choose the game card folder that contains the system folder."
+            "value" : "N-Gage import failed: choose the game card folder or archive that contains the system folder."
           }
         }
       }
@@ -754,7 +754,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "N-Gage import failed: that folder contains more than one game."
+            "value" : "N-Gage import failed: that game card contains more than one game."
           }
         }
       }

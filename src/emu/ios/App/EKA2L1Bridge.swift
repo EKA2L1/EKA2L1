@@ -194,8 +194,8 @@ final class EKA2L1Bridge {
         EKA2L1Emulator.shared().installSis(atPath: path)
     }
 
-    nonisolated static func installNGageGame(folderPath: String) -> EKA2L1NGageInstallItem {
-        let report = EKA2L1Emulator.shared().installNGageGame(atFolderPath: folderPath)
+    nonisolated static func installNGageGame(cardPath: String) -> EKA2L1NGageInstallItem {
+        let report = EKA2L1Emulator.shared().installNGageGame(atPath: cardPath)
         return EKA2L1NGageInstallItem(result: report.result, gameName: report.gameName)
     }
 

@@ -41,7 +41,7 @@ namespace eka2l1::j2me {
 
     struct app_entry;
 
-    install_error create_jad_fake_link_from_jar(FILE *jar_file_handle, std::string &jad_content);
-    install_error get_app_entry(FILE *jar_file_handle, app_entry &entry, std::string &jad_content, int &midp_ver);
-    install_error extract_icon_to_store(FILE *jar_file_handle, const config::state &conf, const app_entry &entry, std::string &final_real_path);
+    install_error create_jad_fake_link_from_jar(const std::string &jar_path, std::string &jad_content);
+    install_error get_app_entry(const std::string &jar_path, app_entry &entry, std::string &jad_content, int &midp_ver);
+    install_error extract_icon_to_store(const std::string &jar_path, const config::state &conf, const app_entry &entry, std::string &final_real_path);
 }

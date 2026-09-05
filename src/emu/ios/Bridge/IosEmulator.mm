@@ -1869,7 +1869,7 @@ namespace eka2l1::ios {
     return result == eka2l1::package::installation_result_success ? YES : NO;
 }
 
-- (EKA2L1NGageInstallReport *)installNGageGameAtFolderPath:(NSString *)folderPath {
+- (EKA2L1NGageInstallReport *)installNGageGameAtPath:(NSString *)cardPath {
     EKA2L1NGageInstallReport *report = [[EKA2L1NGageInstallReport alloc] init];
     report.result = eka2l1::ngage_game_card_general_error;
     report.gameName = @"";
@@ -1889,7 +1889,7 @@ namespace eka2l1::ios {
         std::lock_guard<std::recursive_mutex> session_lock(_state->session_mutex);
         const bool was_mounted = _state->mounted;
         auto loop_lock = eka2l1::ios::pause_loop_and_lock(_state.get());
-        result = _state->symsys->install_ngage_game_card(folderPath.UTF8String, [&](std::string name) {
+        result = _state->symsys->install_ngage_game_card(cardPath.UTF8String, [&](std::string name) {
             gameName = std::move(name);
         });
         _state->mounted = was_mounted;

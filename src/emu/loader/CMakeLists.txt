@@ -43,6 +43,6 @@ target_link_libraries(epocloader
         common
         epocmem
         epocutils
-        miniz
+        zlibstatic
         glm
         )
