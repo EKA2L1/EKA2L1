@@ -97,7 +97,7 @@ namespace eka2l1::dispatch {
         }
 
         // Add version and qualifiers for shader that is missing it
-        if (drv->is_stricted()) {
+        if (drv->is_stricted() || drv->support_extension(drivers::graphics_driver_extension_glsl_es_100)) {
             changed_source.insert(0, "#version 100\n");
 
             std::string str_precision;

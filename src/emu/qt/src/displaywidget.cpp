@@ -194,11 +194,21 @@ void display_widget::keyReleaseEvent(QKeyEvent *event) {
     }
 }
 
+static int mouse_button_index(Qt::MouseButtons buttons) {
+    std::uint32_t mask = static_cast<std::uint32_t>(buttons);
+    int index = -1;
+    while (mask) {
+        ++index;
+        mask >>= 1;
+    }
+    return index;
+}
+
 void display_widget::mousePressEvent(QMouseEvent *event) {
     const qreal pixel_ratio = devicePixelRatioF();
 
     if (raw_mouse_event) {
-        const int button = eka2l1::common::find_most_significant_bit_one(event->button());
+        const int button = mouse_button_index(event->button());
         raw_mouse_event(userdata_, eka2l1::vec3(event->pos().x() * pixel_ratio, event->pos().y() * pixel_ratio, 0), button, 0, 0);
     }
 }
@@ -207,7 +217,7 @@ void display_widget::mouseReleaseEvent(QMouseEvent *event) {
     if (raw_mouse_event) {
         const qreal pixel_ratio = devicePixelRatioF();
 
-        const int button = eka2l1::common::find_most_significant_bit_one(event->button());
+        const int button = mouse_button_index(event->button());
         raw_mouse_event(userdata_, eka2l1::vec3(event->pos().x() * pixel_ratio, event->pos().y() * pixel_ratio, 0), button, 2, 0);
     }
 }
@@ -217,7 +227,7 @@ void display_widget::mouseMoveEvent(QMouseEvent *event) {
     const qreal pixel_ratio = devicePixelRatioF();
 
     if (raw_mouse_event) {
-        const int button = (event->buttons() == Qt::NoButton) ? -1 : eka2l1::common::find_most_significant_bit_one(event->buttons());
+        const int button = mouse_button_index(event->buttons());
         raw_mouse_event(userdata_, eka2l1::vec3(event->pos().x() * pixel_ratio, event->pos().y() * pixel_ratio, 0), button, 1, 0);
     }
 }

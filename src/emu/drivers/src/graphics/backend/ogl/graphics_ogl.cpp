@@ -171,6 +171,10 @@ namespace eka2l1::drivers {
                 glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &anisotrophy_max_);
             }
 
+            if (strcmp(reinterpret_cast<const char*>(next_extension), "GL_ARB_ES2_compatibility") == 0) {
+                feature_flags_ |= OGL_FEATURE_SUPPORT_GLSL_ES_100;
+            }
+
             if (strcmp(reinterpret_cast<const char*>(next_extension), "GL_ARB_ES3_1_compatibility") == 0) {
                 feature_flags_ |= OGL_FEATURE_COMPABILITY_ES31;
             }
@@ -220,6 +224,10 @@ namespace eka2l1::drivers {
     }
 
     bool ogl_graphics_driver::support_extension(const graphics_driver_extension ext) {
+        if (ext == graphics_driver_extension_glsl_es_100) {
+            return is_gles || (feature_flags_ & OGL_FEATURE_SUPPORT_GLSL_ES_100);
+        }
+
         if (ext == graphics_driver_extension_anisotrophy_filtering) {
             return (feature_flags_ & OGL_FEATURE_SUPPORT_ANISOTROPHY);
         }
