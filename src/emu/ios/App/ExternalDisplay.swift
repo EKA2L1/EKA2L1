@@ -1,6 +1,10 @@
 import QuartzCore
 import UIKit
 
+extension Notification.Name {
+    static let externalGameDisplayChanged = Notification.Name("EKA2L1ExternalGameDisplayChanged")
+}
+
 @MainActor
 final class ExternalDisplay {
     static let shared = ExternalDisplay()
@@ -8,6 +12,7 @@ final class ExternalDisplay {
     private weak var outputView: ExternalGameView?
     private var gameVisible = false
     private var foreground = false
+    private(set) var isDisplayingGame = false
     var onSurfaceChange: (() -> Void)?
 
     func connect(_ view: ExternalGameView) {
@@ -32,16 +37,28 @@ final class ExternalDisplay {
         refresh()
     }
 
+    func setPointer(position: CGPoint?, pictureSize: CGSize, touching: Bool) {
+        outputView?.setPointer(position: position, pictureSize: pictureSize, touching: touching)
+    }
+
     func refresh() {
         let phase = outputView?.window?.windowScene?.activationState
         let enabled = gameVisible && foreground && (phase == .foregroundActive || phase == .foregroundInactive)
         outputView?.isHidden = !enabled
         EKA2L1Bridge.shared.setExternalDisplay(layer: outputView?.renderLayer, enabled: enabled)
+        if isDisplayingGame != enabled {
+            isDisplayingGame = enabled
+            NotificationCenter.default.post(name: .externalGameDisplayChanged, object: nil)
+        }
         if enabled { onSurfaceChange?() }
     }
 }
 
 final class ExternalGameView: UIView {
+    private let cursor = CAShapeLayer()
+    private var pointerPosition: CGPoint?
+    private var pictureSize = CGSize.zero
+
     override class var layerClass: AnyClass { CAEAGLLayer.self }
     var renderLayer: CAEAGLLayer { layer as! CAEAGLLayer }
 
@@ -55,6 +72,27 @@ final class ExternalGameView: UIView {
             kEAGLDrawablePropertyRetainedBacking: false,
             kEAGLDrawablePropertyColorFormat: kEAGLColorFormatRGBA8
         ]
+        let path = UIBezierPath()
+        path.move(to: .zero)
+        path.addLine(to: CGPoint(x: 0, y: 29))
+        path.addLine(to: CGPoint(x: 8, y: 22))
+        path.addLine(to: CGPoint(x: 14, y: 34))
+        path.addLine(to: CGPoint(x: 20, y: 31))
+        path.addLine(to: CGPoint(x: 14, y: 19))
+        path.addLine(to: CGPoint(x: 25, y: 19))
+        path.close()
+        cursor.path = path.cgPath
+        cursor.bounds = CGRect(x: 0, y: 0, width: 26, height: 35)
+        cursor.anchorPoint = .zero
+        cursor.strokeColor = UIColor.black.cgColor
+        cursor.lineWidth = 2
+        cursor.lineJoin = .round
+        cursor.shadowColor = UIColor.black.cgColor
+        cursor.shadowOpacity = 0.6
+        cursor.shadowRadius = 2
+        cursor.shadowOffset = CGSize(width: 0, height: 1)
+        cursor.isHidden = true
+        layer.addSublayer(cursor)
     }
 
     @available(*, unavailable)
@@ -63,7 +101,31 @@ final class ExternalGameView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         contentScaleFactor = window?.windowScene?.screen.scale ?? 1
+        cursor.contentsScale = contentScaleFactor
         ExternalDisplay.shared.refresh()
+        layoutPointer()
+    }
+
+    func setPointer(position: CGPoint?, pictureSize: CGSize, touching: Bool) {
+        pointerPosition = position
+        self.pictureSize = pictureSize
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        cursor.fillColor = touching ? UIColor.systemCyan.cgColor : UIColor.white.cgColor
+        layoutPointer()
+        CATransaction.commit()
+    }
+
+    private func layoutPointer() {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        cursor.isHidden = pointerPosition == nil || pictureSize.width <= 0 || pictureSize.height <= 0
+        if let point = pointerPosition {
+            let rect = ControllerPointerState.fittedRect(size: pictureSize, in: bounds)
+            cursor.position = CGPoint(x: rect.minX + point.x * max(rect.width - 1, 0),
+                                      y: rect.minY + point.y * max(rect.height - 1, 0))
+        }
+        CATransaction.commit()
     }
 }
 

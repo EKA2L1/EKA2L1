@@ -2,11 +2,20 @@ import GameController
 import QuartzCore
 import UIKit
 
-private final class PeripheralInputBridge: @unchecked Sendable {
+@MainActor
+private final class PeripheralInputBridge {
     private let threshold: Float = 0.45
     private let lock = NSLock()
     private var activeScansByToken: [String: UInt32] = [:]
     private var observers: [NSObjectProtocol] = []
+    private var controllers: [GCController] = []
+    private let pointer = ControllerPointerDriver()
+    private var running = false
+    private var foreground = false
+    private var fullscreen = false
+    private var pressedTokens: Set<String> = []
+    private var suppressedUntilRelease: Set<String> = []
+    private var features = ControllerFeatures()
     // Mapping of the active controller peripheral; empty when the keyboard
     // (or nothing) is active. Refreshed whenever the peripheral set changes —
     // that is the only time the active selection can move while the emulator
@@ -19,6 +28,9 @@ private final class PeripheralInputBridge: @unchecked Sendable {
     private var keyboardEnabled = true
 
     func start() {
+        guard !running else { return }
+        running = true
+        foreground = UIApplication.shared.applicationState == .active
         keyboardMapping = PeripheralMappingStore.keyboardScanMapping()
         // Touch the manager first so its connect/disconnect observers are
         // registered ahead of ours and refresh() reads updated state.
@@ -28,17 +40,42 @@ private final class PeripheralInputBridge: @unchecked Sendable {
                                         .GCKeyboardDidConnect, .GCKeyboardDidDisconnect] {
             observers.append(center.addObserver(forName: name, object: nil,
                                                 queue: .main) { [weak self] _ in
-                self?.refresh()
+                MainActor.assumeIsolated { self?.refresh() }
+            })
+        }
+        observers.append(center.addObserver(forName: .externalGameDisplayChanged, object: nil,
+                                            queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.refreshPointerAvailability() }
+        })
+        for name in [UIApplication.willResignActiveNotification, UIApplication.didBecomeActiveNotification] {
+            observers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                let active = note.name == UIApplication.didBecomeActiveNotification
+                MainActor.assumeIsolated {
+                    self?.foreground = active
+                    self?.refresh()
+                }
             })
         }
     }
 
     func stop() {
+        running = false
+        pointer.setEnabled(false)
         observers.forEach(NotificationCenter.default.removeObserver)
         observers.removeAll()
-        GCController.controllers().forEach { $0.extendedGamepad?.valueChangedHandler = nil }
+        controllers.forEach { $0.extendedGamepad?.valueChangedHandler = nil }
+        controllers.removeAll()
         GCKeyboard.coalesced?.keyboardInput?.keyChangedHandler = nil
         releaseAll()
+        EKA2L1Bridge.shared.setGameController(nil, motion: false, vibration: false)
+        pressedTokens.removeAll()
+        suppressedUntilRelease.removeAll()
+    }
+
+    func setFullscreen(_ fullscreen: Bool) {
+        guard self.fullscreen != fullscreen else { return }
+        self.fullscreen = fullscreen
+        refreshPointerAvailability()
     }
 
     // GameController delivers key events app-wide rather than through the
@@ -50,30 +87,63 @@ private final class PeripheralInputBridge: @unchecked Sendable {
         if !enabled {
             releaseKeyboard()
         }
+        refresh()
     }
 
     private func refresh() {
+        guard running else { return }
         // The active peripheral may have changed; drop held keys so a key
         // pressed on the previous device can't stay stuck down.
         releaseAll()
+        pointer.setEnabled(false)
         mapping = PeripheralManager.shared.activeControllerMapping()
-        for controller in GCController.controllers() {
+        features = PeripheralManager.shared.activeController.map {
+            ControllerFeatures.load(deviceKey: PeripheralManager.deviceKey(for: $0))
+        } ?? ControllerFeatures()
+        pointer.configuration = features
+        suppressedUntilRelease.formUnion(pressedTokens)
+        controllers.forEach { $0.extendedGamepad?.valueChangedHandler = nil }
+        controllers = GCController.controllers()
+        for controller in controllers {
             attach(controller)
         }
+        let controller = foreground && keyboardEnabled ? PeripheralManager.shared.activeController : nil
+        EKA2L1Bridge.shared.setGameController(controller, motion: features.motionEnabled,
+                                            vibration: features.vibrationEnabled)
+        if let gamepad = PeripheralManager.shared.activeController?.extendedGamepad {
+            pressedTokens = Set(HostButton.allCases
+                .filter { $0.isPressed(on: gamepad, threshold: threshold) }.map(\.rawValue))
+        } else {
+            pressedTokens.removeAll()
+        }
+        pointer.handle(pressed: pressedTokens)
+        refreshPointerAvailability()
         if let controller = PeripheralManager.shared.activeController,
            let gamepad = controller.extendedGamepad {
             handleAll(gamepad, from: controller)
         }
+        GCKeyboard.coalesced?.handlerQueue = .main
         GCKeyboard.coalesced?.keyboardInput?.keyChangedHandler = { [weak self] _, _, keyCode, pressed in
-            self?.handleKey(usage: Int(keyCode.rawValue), pressed: pressed)
+            MainActor.assumeIsolated {
+                self?.handleKey(usage: Int(keyCode.rawValue), pressed: pressed)
+            }
         }
+    }
+
+    private func refreshPointerAvailability() {
+        pointer.setEnabled(running && foreground && keyboardEnabled && fullscreen && features.pointerEnabled
+            && ExternalDisplay.shared.isDisplayingGame && PeripheralManager.shared.activeController != nil)
+        applyControllerKeys()
     }
 
     private func attach(_ controller: GCController) {
         guard let gamepad = controller.extendedGamepad else { return }
+        controller.handlerQueue = .main
         gamepad.valueChangedHandler = { [weak self, weak controller] pad, _ in
-            guard let controller else { return }
-            self?.handleAll(pad, from: controller)
+            MainActor.assumeIsolated {
+                guard let controller else { return }
+                self?.handleAll(pad, from: controller)
+            }
         }
     }
 
@@ -83,21 +153,22 @@ private final class PeripheralInputBridge: @unchecked Sendable {
     // active peripheral drives the guest; refresh() releases anything a
     // previously active pad still held.
     private func handleAll(_ gamepad: GCExtendedGamepad, from controller: GCController) {
-        guard PeripheralManager.shared.isActive(controller) else { return }
+        guard running, PeripheralManager.shared.isActive(controller) else { return }
+        pressedTokens = Set(HostButton.allCases
+            .filter { $0.isPressed(on: gamepad, threshold: threshold) }.map(\.rawValue))
+        pointer.handle(pressed: pressedTokens)
+        applyControllerKeys()
+    }
+
+    private func applyControllerKeys() {
+        suppressedUntilRelease.formIntersection(pressedTokens)
+        suppressedUntilRelease.formUnion(pointer.consumedTokens.intersection(pressedTokens))
         for button in HostButton.allCases {
             updateButton(token: button.rawValue,
-                         pressed: button.isPressed(on: gamepad, threshold: threshold))
+                         pressed: running && foreground && keyboardEnabled
+                            && pressedTokens.contains(button.rawValue)
+                            && !suppressedUntilRelease.contains(button.rawValue))
         }
-        // The left thumbstick drives the d-pad bindings; separate state
-        // tokens so releasing the stick doesn't drop a still-held d-pad key.
-        updateButton(token: "leftStick.up", mappingToken: HostButton.dpadUp.rawValue,
-                     pressed: gamepad.leftThumbstick.yAxis.value > threshold)
-        updateButton(token: "leftStick.down", mappingToken: HostButton.dpadDown.rawValue,
-                     pressed: gamepad.leftThumbstick.yAxis.value < -threshold)
-        updateButton(token: "leftStick.left", mappingToken: HostButton.dpadLeft.rawValue,
-                     pressed: gamepad.leftThumbstick.xAxis.value < -threshold)
-        updateButton(token: "leftStick.right", mappingToken: HostButton.dpadRight.rawValue,
-                     pressed: gamepad.leftThumbstick.xAxis.value > threshold)
     }
 
     // Hardware keyboard. Only presses are gated: a key held across a suspend
@@ -105,7 +176,7 @@ private final class PeripheralInputBridge: @unchecked Sendable {
     // releaseAll(), and its release must still be forwarded if it arrives
     // later, so it cannot stay stuck down in the guest.
     private func handleKey(usage: Int, pressed: Bool) {
-        if pressed, !keyboardEnabled || !PeripheralManager.shared.keyboardCanDrive {
+        if pressed, !running || !foreground || !keyboardEnabled || !PeripheralManager.shared.keyboardCanDrive {
             return
         }
         updateInput(token: KeyboardKey.token(forUsage: usage),
@@ -142,10 +213,8 @@ private final class PeripheralInputBridge: @unchecked Sendable {
         }
     }
 
-    // `token` keys the press state (d-pad and left stick track separately),
-    // `mappingToken` keys the user mapping (both share one direction entry).
-    private func updateButton(token: String, mappingToken: String? = nil, pressed: Bool) {
-        updateInput(token: token, scan: mapping[mappingToken ?? token] ?? 0, pressed: pressed)
+    private func updateButton(token: String, pressed: Bool) {
+        updateInput(token: token, scan: mapping[token] ?? 0, pressed: pressed)
     }
 
     private func updateInput(token: String, scan: UInt32, pressed: Bool) {
@@ -354,6 +423,7 @@ final class EmulatorViewController: UIViewController {
     // Forwarded to the render view; see EKA2L1RenderView.anchorsDisplayTop.
     var anchorsDisplayTop = false {
         didSet {
+            peripheralInput.setFullscreen(!anchorsDisplayTop)
             if isViewLoaded {
                 gameView.anchorsDisplayTop = anchorsDisplayTop
             }

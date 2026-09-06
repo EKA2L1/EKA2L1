@@ -148,6 +148,7 @@ elseif (EKA2L1_IOS)
         src/camera/backend/ios/camera_pixel_ios.mm
         src/camera/backend/ios/camera_simulator.mm
         src/sensor/backend/ios/sensor_ios.h
+        include/drivers/sensor/backend/ios/controller_motion.h
         src/sensor/backend/ios/sensor_ios.mm)
 else()
     target_sources(drivers PRIVATE
@@ -258,6 +259,7 @@ if (EKA2L1_IOS)
         "-framework CoreAudio"
         "-framework CoreHaptics"
         "-framework CoreMotion"
+        "-framework GameController"
         "-framework CoreMedia"
         "-framework CoreVideo"
         "-framework CoreGraphics"

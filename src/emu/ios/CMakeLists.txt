@@ -47,6 +47,8 @@ set(EKA2L1_IOS_SOURCES
     "${EKA2L1_IOS_APP_DIR}/Haptics.swift"
     "${EKA2L1_IOS_APP_DIR}/EmulatorViewController.swift"
     "${EKA2L1_IOS_APP_DIR}/ControllerMapping.swift"
+    "${EKA2L1_IOS_APP_DIR}/ControllerPointer.swift"
+    "${EKA2L1_IOS_APP_DIR}/ControllerPointerDriver.swift"
     "${EKA2L1_IOS_APP_DIR}/SettingsView.swift"
     "${EKA2L1_IOS_APP_DIR}/Toast.swift"
     "${EKA2L1_IOS_BRIDGE_DIR}/IosEmulator.h"

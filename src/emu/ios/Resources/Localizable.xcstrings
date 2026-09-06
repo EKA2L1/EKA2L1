@@ -116,7 +116,47 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The left thumbstick works the same as the d-pad."
+            "value" : "The d-pad and both thumbsticks can be mapped independently."
+          }
+        }
+      }
+    },
+    "controllerMapping.leftStickDown" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left Stick Down"
+          }
+        }
+      }
+    },
+    "controllerMapping.leftStickLeft" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left Stick Left"
+          }
+        }
+      }
+    },
+    "controllerMapping.leftStickRight" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left Stick Right"
+          }
+        }
+      }
+    },
+    "controllerMapping.leftStickUp" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left Stick Up"
           }
         }
       }
@@ -167,6 +207,156 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reset to Defaults"
+          }
+        }
+      }
+    },
+    "controllerMapping.rightStickDown" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right Stick Down"
+          }
+        }
+      }
+    },
+    "controllerMapping.rightStickLeft" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right Stick Left"
+          }
+        }
+      }
+    },
+    "controllerMapping.rightStickRight" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right Stick Right"
+          }
+        }
+      }
+    },
+    "controllerMapping.rightStickUp" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right Stick Up"
+          }
+        }
+      }
+    },
+    "controllerPointer.down" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pointer down"
+          }
+        }
+      }
+    },
+    "controllerPointer.enabled" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controller pointer"
+          }
+        }
+      }
+    },
+    "controllerPointer.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pointer controls require an external display and Full Screen. Hold Touch while moving to drag. Hidden pointers restore game key bindings. Motion and vibration use the controller when supported."
+          }
+        }
+      }
+    },
+    "controllerPointer.left" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pointer left"
+          }
+        }
+      }
+    },
+    "controllerPointer.motion" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controller motion"
+          }
+        }
+      }
+    },
+    "controllerPointer.right" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pointer right"
+          }
+        }
+      }
+    },
+    "controllerPointer.section" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirPlay & Full Screen"
+          }
+        }
+      }
+    },
+    "controllerPointer.toggle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show / hide pointer"
+          }
+        }
+      }
+    },
+    "controllerPointer.touch" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touch / drag"
+          }
+        }
+      }
+    },
+    "controllerPointer.up" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pointer up"
+          }
+        }
+      }
+    },
+    "controllerPointer.vibration" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controller vibration"
           }
         }
       }

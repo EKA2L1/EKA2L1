@@ -46,8 +46,10 @@
 #include <drivers/input/common.h>
 #include <drivers/itc.h>
 #include <drivers/hwrm/vibration.h>
+#include <drivers/hwrm/backend/vibration_ios.h>
 #include <drivers/camera/camera_collection.h>
 #include <drivers/sensor/sensor.h>
+#include <drivers/sensor/backend/ios/controller_motion.h>
 #include <services/window/screen.h>
 #include <kernel/kernel.h>
 #include <kernel/process.h>
@@ -395,6 +397,8 @@ namespace eka2l1::ios {
         std::recursive_mutex session_mutex;
 
         std::mutex layer_mutex;
+        std::mutex display_geometry_mutex;
+        eka2l1::rect display_rect;
         std::condition_variable layer_cv;
         bool layer_dirty = false;
         void *pending_layer = nullptr;
@@ -694,6 +698,8 @@ namespace eka2l1::ios {
 
             if (state->sensor_driver) {
                 state->sensor_driver->set_motion_rotation(picture_rotation);
+                eka2l1::drivers::set_controller_motion_rotation(state->sensor_driver.get(),
+                    mode.rotation - panel_mount);
             }
 
             // A camera is bolted to the device body, so it needs the mirror of the
@@ -735,6 +741,10 @@ namespace eka2l1::ios {
         }
 
         const eka2l1::rect external_crop = dest;
+        {
+            std::lock_guard<std::mutex> geometry_lock(state->display_geometry_mutex);
+            state->display_rect = external_crop;
+        }
 
         scr->set_native_scale_factor(state->graphics_driver.get(), scale, scale);
         scr->absolute_pos = dest.top;
@@ -2089,6 +2099,10 @@ namespace eka2l1::ios {
         return;
     }
     {
+        std::lock_guard<std::mutex> lock(_state->display_geometry_mutex);
+        _state->display_rect = {};
+    }
+    {
         std::lock_guard<std::mutex> lk(_state->layer_mutex);
         _state->pending_layer = nullptr;
         _state->layer_dirty = true;
@@ -2101,6 +2115,7 @@ namespace eka2l1::ios {
 
 - (void)pause {
     if (!_state) return;
+    eka2l1::drivers::hwrm::set_vibration_suspended(true);
     _state->paused = true;
     // Break the idle wait so a parked loop returns and the os_thread settles on
     // its paused sleep promptly instead of after the next guest timer.
@@ -2127,6 +2142,7 @@ namespace eka2l1::ios {
 
 - (void)resume {
     if (!_state) return;
+    eka2l1::drivers::hwrm::set_vibration_suspended(false);
     NSError *err = nil;
     const BOOL audio_session_active =
         [[AVAudioSession sharedInstance] setActive:YES error:&err];
@@ -2143,6 +2159,20 @@ namespace eka2l1::ios {
     // Resume guest execution only after host devices have been restored, so
     // guest stream start/stop calls cannot race the AudioUnit restart above.
     _state->paused = false;
+}
+
+- (CGRect)guestDisplayRect {
+    if (!_state) return CGRectZero;
+    std::lock_guard<std::mutex> lock(_state->display_geometry_mutex);
+    const auto &rect = _state->display_rect;
+    return CGRectMake(rect.top.x, rect.top.y, rect.size.x, rect.size.y);
+}
+
+- (void)setGameController:(GCController *)controller motion:(BOOL)motion vibration:(BOOL)vibration {
+    if (!_state) return;
+    eka2l1::drivers::set_controller_motion_source(_state->sensor_driver.get(),
+        motion ? (__bridge void *)controller : nullptr);
+    eka2l1::drivers::hwrm::set_controller_haptic_source(vibration ? (__bridge void *)controller : nullptr);
 }
 
 - (void)submitPointerEventAtX:(CGFloat)x
