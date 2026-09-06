@@ -19,6 +19,7 @@
 
 #include <drivers/input/common.h>
 
+#include <qt/qt_log.h>
 #include <qt/state.h>
 #include <qt/thread.h>
 #include <qt/utils.h>
@@ -59,6 +60,10 @@ int main(int argc, char *argv[]) {
 #if EKA2L1_PLATFORM(UNIX)
     prefer_selfcontained_media_backend();
 #endif
+
+    // Ahead of QApplication on purpose: constructing it loads the platform plugin, and
+    // what Qt has to say when that goes wrong is said once and then the process dies.
+    eka2l1::desktop::install_qt_message_handler();
 
     QApplication a(argc, argv);
 
