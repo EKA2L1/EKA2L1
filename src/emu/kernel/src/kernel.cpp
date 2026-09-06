@@ -1377,11 +1377,19 @@ namespace eka2l1 {
     bool kernel_system::map_rom(const mem::vm_address addr, const std::string &path) {
         const std::size_t rom_size = common::file_size(path);
 
-        // The multiple model needs padding before an unaligned ROM base.
+        // The multiple model can only place a chunk on a chunk-span boundary, so a
+        // forced address below one gets aligned down. A ROM whose base is unaligned
+        // (0xF80F1000 on the Nokia 5500 Sport) therefore has to be placed at its
+        // in-chunk offset inside a buffer that starts at the aligned base; otherwise
+        // every guest-to-host translation inside the ROM comes out shifted by the
+        // discarded bits and the ROM's tail falls outside the chunk. Whether that is
+        // needed is a property of the ROM, not of the OS version it carries: an
+        // aligned base leaves rebase_offset at zero and takes the file-mapping path
+        // below unchanged, so this stays keyed off the address alone.
         mem::vm_address chunk_base = addr;
         std::size_t rebase_offset = 0;
 
-        if ((kern_ver_ == epocver::epoc91) && (mem_->get_model_type() == mem::mem_model_type::multiple)) {
+        if (mem_->get_model_type() == mem::mem_model_type::multiple) {
             chunk_base = addr & ~mem_->get_control()->chunk_mask_;
             rebase_offset = addr - chunk_base;
         }
