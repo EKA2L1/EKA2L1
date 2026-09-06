@@ -734,6 +734,8 @@ namespace eka2l1::ios {
             dest.top.y = std::min(anchor_top, max_top);
         }
 
+        const eka2l1::rect external_crop = dest;
+
         scr->set_native_scale_factor(state->graphics_driver.get(), scale, scale);
         scr->absolute_pos = dest.top;
 
@@ -755,6 +757,7 @@ namespace eka2l1::ios {
 
         builder.load_backup_state();
         state->present_status[slot] = -100;
+        state->window->external_display.enqueue_frame(external_crop, swapchain_size);
         builder.present(&state->present_status[slot]);
         eka2l1::drivers::command_list commands = builder.retrieve_command_list();
         state->graphics_driver->submit_command_list(commands);
@@ -2074,6 +2077,12 @@ namespace eka2l1::ios {
     }
 }
 
+
+- (void)setExternalDisplayLayer:(CAEAGLLayer *)layer enabled:(BOOL)enabled {
+    if (_state && _state->window) {
+        _state->window->external_display.set_surface((__bridge void *)layer, enabled);
+    }
+}
 
 - (void)detachLayer {
     if (!_state) {

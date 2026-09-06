@@ -192,6 +192,7 @@ elseif (EKA2L1_IOS)
         src/graphics/backend/context_eagl.mm
         include/drivers/graphics/backend/emu_window_ios.h
         src/graphics/backend/emu_window_ios.mm
+        src/graphics/backend/ios_external_display.mm
         src/ui/input_dialog_ios.mm
     )
 elseif(APPLE)

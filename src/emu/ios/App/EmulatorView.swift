@@ -542,6 +542,7 @@ enum DisplayOrientation {
 
     private static var activeScene: UIWindowScene? {
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+            .filter { $0.session.role == .windowApplication }
         return scenes.first { $0.activationState == .foregroundActive } ?? scenes.first
     }
 

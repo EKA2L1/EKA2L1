@@ -83,6 +83,12 @@ struct SettingsView: View {
                 Toggle("settings.fpsOverlay", isOn: $showFPSOverlay)
             }
             Section {
+                Text("settings.airplay.hint")
+                    .foregroundStyle(.secondary)
+            } header: {
+                Text(verbatim: "AirPlay")
+            }
+            Section {
                 Picker("settings.netplay.discoveryMode", selection: $btDiscoveryMode) {
                     Text("settings.netplay.mode.off").tag(0)
                     Text("settings.netplay.mode.directIp").tag(1)

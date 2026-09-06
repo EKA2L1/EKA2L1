@@ -209,6 +209,8 @@ typedef NS_ENUM(NSInteger, EKA2L1InstallResult) {
          pixelSize:(CGSize)pixelSize
               scale:(CGFloat)scale NS_SWIFT_NAME(attach(layer:pixelSize:scale:));
 - (void)detachLayer NS_SWIFT_NAME(detachLayer());
+- (void)setExternalDisplayLayer:(nullable CAEAGLLayer *)layer enabled:(BOOL)enabled
+    NS_SWIFT_NAME(setExternalDisplay(layer:enabled:));
 
 - (void)pause;
 - (void)resume;

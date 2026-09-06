@@ -207,6 +207,10 @@ final class EKA2L1Bridge {
         emulator.attach(layer: layer, pixelSize: pixelSize, scale: scale)
     }
 
+    func setExternalDisplay(layer: CAEAGLLayer?, enabled: Bool) {
+        emulator.setExternalDisplay(layer: layer, enabled: enabled)
+    }
+
     func detachLayer() {
         emulator.detachLayer()
     }

@@ -14,6 +14,8 @@ struct CAEAGLLayer;
 
 #include <drivers/graphics/context.h>
 
+namespace eka2l1::drivers { class ios_external_display; }
+
 namespace eka2l1::drivers::graphics {
     // EAGL-backed GLES3 context for the iOS frontend.
     //
@@ -66,5 +68,6 @@ namespace eka2l1::drivers::graphics {
         unsigned int m_depthbuffer = 0;
 
         bool m_paused = false;
+        ios_external_display *m_external_display = nullptr;
     };
 }
