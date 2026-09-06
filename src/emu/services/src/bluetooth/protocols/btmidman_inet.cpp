@@ -267,7 +267,7 @@ namespace eka2l1::epoc::bt {
             name_utf8.insert(name_utf8.begin(), opcode_result_signature);
             name_utf8.insert(name_utf8.begin(), reinterpret_cast<const char*>(&asker_id), reinterpret_cast<const char*>(&asker_id + 1));
 
-            bluetooth_queries_server_socket_->send(*sender, name_utf8.data(), static_cast<std::uint32_t>(name_utf8.size()));
+            bluetooth_queries_server_socket_->send(*sender, copy_control_packet(name_utf8.data(), name_utf8.size()), static_cast<std::uint32_t>(name_utf8.size()));
             break;
         }
 
@@ -289,7 +289,7 @@ namespace eka2l1::epoc::bt {
 
             check_result.push_back(final_result);
 
-            bluetooth_queries_server_socket_->send(*sender, check_result.data(), static_cast<std::uint32_t>(check_result.size()));
+            bluetooth_queries_server_socket_->send(*sender, copy_control_packet(check_result.data(), check_result.size()), static_cast<std::uint32_t>(check_result.size()));
             break;
         }
 
@@ -302,7 +302,7 @@ namespace eka2l1::epoc::bt {
             buf_result.push_back(opcode_result_signature);
             buf_result.insert(buf_result.end(), reinterpret_cast<char *>(&temp_uint), reinterpret_cast<char *>(&temp_uint + 1));
 
-            bluetooth_queries_server_socket_->send(*sender, buf_result.data(), static_cast<std::uint32_t>(buf_result.size()));
+            bluetooth_queries_server_socket_->send(*sender, copy_control_packet(buf_result.data(), buf_result.size()), static_cast<std::uint32_t>(buf_result.size()));
             break;
         }
 
@@ -312,7 +312,7 @@ namespace eka2l1::epoc::bt {
             buf_result.push_back(opcode_result_signature);
             buf_result.insert(buf_result.end(), reinterpret_cast<char *>(&random_device_addr_), reinterpret_cast<char *>(&random_device_addr_ + 1));
 
-            bluetooth_queries_server_socket_->send(*sender, buf_result.data(), static_cast<std::uint32_t>(buf_result.size()));
+            bluetooth_queries_server_socket_->send(*sender, copy_control_packet(buf_result.data(), buf_result.size()), static_cast<std::uint32_t>(buf_result.size()));
             break;
         }
 
@@ -760,9 +760,9 @@ lookup:
                     });
 
                     lan_discovery_call_listener_socket_->broadcast(true);
-                    lan_discovery_call_listener_socket_->send(*reinterpret_cast<sockaddr*>(&server_addr_modded), broadcast_buf.data(), static_cast<std::uint32_t>(broadcast_buf.size()));
+                    lan_discovery_call_listener_socket_->send(*reinterpret_cast<sockaddr*>(&server_addr_modded), copy_control_packet(broadcast_buf.data(), broadcast_buf.size()), static_cast<std::uint32_t>(broadcast_buf.size()));
                 } else if ((discovery_mode_ == DISCOVERY_MODE_PROXY_SERVER) && matching_server_socket_) {
-                    matching_server_socket_->write(&request_friends, 1);
+                    matching_server_socket_->write(copy_control_packet(&request_friends, 1), 1);
                 }
 
                 if ((discovery_mode_ != DISCOVERY_MODE_LAN) || (retried_lan_discovery_times_ == 0)) {

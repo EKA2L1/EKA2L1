@@ -1,6 +1,17 @@
+#pragma once
+
 #include <cstdint>
+#include <cstring>
+#include <memory>
 
 namespace eka2l1::epoc::bt {
+    // uvw raw-pointer sends borrow the bytes until asynchronous completion.
+    inline std::unique_ptr<char[]> copy_control_packet(const char *data, const std::size_t size) {
+        auto packet = std::make_unique<char[]>(size);
+        std::memcpy(packet.get(), data, size);
+        return packet;
+    }
+
     enum query_opcode : std::uint8_t {
         QUERY_OPCODE_GET_NAME,
         QUERY_OPCODE_GET_VIRTUAL_BLUETOOTH_ADDRESS,

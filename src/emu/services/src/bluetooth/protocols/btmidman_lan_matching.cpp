@@ -89,7 +89,7 @@ namespace eka2l1::epoc::bt {
 
             if ((password_length == static_cast<std::int64_t>(password_.length())) && (std::memcmp(password_.data(), buf + 2, static_cast<std::size_t>(password_length)) == 0)) {
                 for (std::uint16_t i = 0; i < RETRY_LAN_DISCOVERY_TIME_MAX; i++) {
-                    lan_discovery_call_listener_socket_->send(*addr, &exist_opcode, 1);
+                    lan_discovery_call_listener_socket_->send(*addr, copy_control_packet(&exist_opcode, 1), 1);
                 }
             }
         }
