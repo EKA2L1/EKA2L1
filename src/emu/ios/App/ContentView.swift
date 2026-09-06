@@ -235,11 +235,6 @@ struct ContentView: View {
             guard booted else { return }
             store.reloadApps()
         }
-        .onReceive(NotificationCenter.default.publisher(for: .eka2l1DevicesChanged)) { _ in
-            // A device was renamed in Settings: only the titles changed, so
-            // re-read the list to refresh the nav title and device switcher.
-            store.reloadDevices()
-        }
         .onReceive(NotificationCenter.default.publisher(for: AVAudioSession.interruptionNotification)) { note in
             guard let rawType = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
                   let type = AVAudioSession.InterruptionType(rawValue: rawType) else {

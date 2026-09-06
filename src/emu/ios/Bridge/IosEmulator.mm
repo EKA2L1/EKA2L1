@@ -58,6 +58,7 @@
 #include <loader/mif.h>
 #include <package/manager.h>
 #include <services/applist/applist.h>
+#include <services/bluetooth/btman.h>
 #include <services/fbs/bitmap.h>
 #include <services/fbs/fbs.h>
 #include <services/window/window.h>
@@ -2465,7 +2466,17 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
     }
     NSString *deviceDisplayName = snapshot[@"deviceDisplayName"];
     if ([deviceDisplayName isKindOfClass:NSString.class]) {
+        std::lock_guard<std::recursive_mutex> session_lock(_state->session_mutex);
         _state->conf.device_display_name = deviceDisplayName.UTF8String;
+        if (_state->symsys && _state->mounted) {
+            auto *kern = _state->symsys->get_kernel_system();
+            eka2l1::kernel_lock lock(kern);
+            auto *server = kern->get_by_name<eka2l1::btman_server>(
+                eka2l1::get_btman_server_name_by_epocver(kern->get_epoc_version()));
+            if (server) {
+                server->device_name(eka2l1::common::utf8_to_ucs2(_state->conf.device_display_name));
+            }
+        }
     }
     NSString *logFilter = snapshot[@"logFilter"];
     if ([logFilter isKindOfClass:NSString.class]) {

@@ -19,12 +19,7 @@ struct SettingsView: View {
     @State private var availableLanguages: [EKA2L1LanguageItem] = []
     @State private var systemLanguageCode = -1
 
-    // Editable name of the currently-booted device. Committed to
-    // device_manager when the settings page closes (mirrors the Android
-    // rename dialog, but applied on dismiss). -1 = no device booted yet.
-    @State private var currentDeviceIndex = -1
-    @State private var deviceName = ""
-    @State private var originalDeviceName = ""
+    @State private var friendlyPhoneName = ""
 
     // BT netplay. Mirrors the Android BTNetplaySettingsFragment surface; the
     // bluetooth midman reads these at device boot, so edits apply from the
@@ -44,15 +39,13 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("settings.device") {
-                if currentDeviceIndex >= 0 {
-                    HStack {
-                        Text("settings.deviceName")
-                        Spacer()
-                        TextField("settings.deviceName", text: $deviceName)
-                            .multilineTextAlignment(.trailing)
-                            .foregroundStyle(.secondary)
-                            .submitLabel(.done)
-                    }
+                HStack {
+                    Text("settings.friendlyPhoneName")
+                    Spacer()
+                    TextField("settings.friendlyPhoneName", text: $friendlyPhoneName)
+                        .multilineTextAlignment(.trailing)
+                        .foregroundStyle(.secondary)
+                        .submitLabel(.done)
                 }
                 if !availableLanguages.isEmpty {
                     Picker("settings.systemLanguage", selection: $systemLanguageCode) {
@@ -200,11 +193,8 @@ struct SettingsView: View {
         }
         .onAppear {
             load()
-            loadDeviceName()
         }
-        .onDisappear {
-            commitDeviceRename()
-        }
+        .onChange(of: friendlyPhoneName) { _ in save() }
         .onChange(of: useJIT) { _ in save() }
         .onChange(of: integerScaling) { _ in save() }
         .onChange(of: nearestNeighborFiltering) { _ in save() }
@@ -266,6 +256,7 @@ struct SettingsView: View {
         if let value = snapshot["jitEnabled"] as? NSNumber {
             useJIT = value.boolValue
         }
+        friendlyPhoneName = snapshot["deviceDisplayName"] as? String ?? ""
         availableLanguages = EKA2L1Bridge.shared.availableLanguages()
         systemLanguageCode = EKA2L1Bridge.shared.currentLanguageCode()
         if let value = snapshot["btnetDiscoveryMode"] as? NSNumber {
@@ -289,30 +280,9 @@ struct SettingsView: View {
         }
     }
 
-    // Seed the device-name field from the booted device's current title, so
-    // the field shows exactly what the home surface displays.
-    private func loadDeviceName() {
-        currentDeviceIndex = EKA2L1Bridge.shared.currentDeviceIndex()
-        let current = EKA2L1Bridge.shared.installedDevices()
-            .first { $0.index == currentDeviceIndex }
-        deviceName = current?.displayName ?? ""
-        originalDeviceName = deviceName
-    }
-
-    // Persist a device rename on page close. Skips no-ops and blank names so a
-    // device never ends up with an empty title.
-    private func commitDeviceRename() {
-        guard currentDeviceIndex >= 0 else { return }
-        let trimmed = deviceName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, trimmed != originalDeviceName else { return }
-        guard EKA2L1Bridge.shared.renameDevice(at: currentDeviceIndex, to: trimmed) else { return }
-        originalDeviceName = trimmed
-        // Tell the home surface to refresh its title / device switcher.
-        NotificationCenter.default.post(name: .eka2l1DevicesChanged, object: nil)
-    }
-
     private func save() {
         let snapshot: [String: Any] = [
+            "deviceDisplayName": friendlyPhoneName,
             "integerScaling": integerScaling,
             "nearestNeighborFiltering": nearestNeighborFiltering,
             "hideSystemApps": hideSystemApps,

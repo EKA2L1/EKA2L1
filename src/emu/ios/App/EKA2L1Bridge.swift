@@ -48,14 +48,9 @@ struct EKA2L1LanguageItem: Identifiable, Hashable {
     var id: Int { code }
 }
 
-// Cross-view frontend signals. Posted by the settings page when it mutates
-// emulator state the home surface owns, so ContentView can refresh without a
-// shared store: the app list after a system-language switch, and the device
-// list after a device rename. (The device-manager page needs neither — it runs
-// on the home surface's own state and actions.)
+// Settings signals the home surface to reload captions after a language change.
 extension Notification.Name {
     static let eka2l1AppListInvalidated = Notification.Name("eka2l1AppListInvalidated")
-    static let eka2l1DevicesChanged = Notification.Name("eka2l1DevicesChanged")
 }
 
 @MainActor
@@ -88,9 +83,7 @@ final class EKA2L1Bridge {
         emulator.currentDeviceIndex()
     }
 
-    // Rename an installed device (updates its model + devices.yml). The home
-    // surface refreshes its title / device list off the eka2l1DevicesChanged
-    // notification the caller posts on success.
+    // Rename an installed device (updates its model + devices.yml).
     @discardableResult
     func renameDevice(at index: Int, to name: String) -> Bool {
         emulator.renameDevice(at: UInt(index), to: name)
