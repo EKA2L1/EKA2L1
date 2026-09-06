@@ -18,6 +18,7 @@
  */
 
 #include "sensor_android.h"
+#include <drivers/sensor/rotation.h>
 #include <common/log.h>
 #include <common/time.h>
 #include <common/android/jniutils.h>
@@ -25,6 +26,7 @@
 
 namespace eka2l1::drivers {
     static constexpr int SENSOR_LOOPER_ID = 3;
+    static constexpr std::uint32_t ROTATION_CHANNEL_FLAG = 0x80000000;
 
     // These values are taken from Nokia 5800 Xpress Music
     static constexpr std::int32_t ACCELEROMETER_SCALE_RANGE_MAX = 127;
@@ -38,7 +40,7 @@ namespace eka2l1::drivers {
     static const std::int32_t ACCELEROMETER_MEASURE_RANGE_MAX_OPTION = sizeof(ACCELEROMETER_MEASURE_RANGE_AVAILABLE) / sizeof(double);
     static const std::int32_t SAMPLING_RATE_MAX_OPTION = sizeof(SAMPLING_RATE_AVAILABLE) / sizeof(std::int32_t);
 
-    sensor_android::sensor_android(sensor_driver_android *driver, ASensorRef const asensor)
+    sensor_android::sensor_android(sensor_driver_android *driver, ASensorRef const asensor, bool rotation)
         : driver_(driver)
         , asensor_(asensor)
         , event_queue_(nullptr)
@@ -48,7 +50,8 @@ namespace eka2l1::drivers {
         , packet_size_(0)
         , active_accel_measure_range_(0)
         , active_sampling_rate_(1)
-        , sensor_type_(0) {
+        , sensor_type_(0)
+        , rotation_(rotation) {
         event_queue_ = ASensorManager_createEventQueue(ASensorManager_getInstance(), common::jni::main_looper,
                                         SENSOR_LOOPER_ID, [](int fd, int events, void *data) {
             sensor_android *sensor = reinterpret_cast<sensor_android*>(data);
@@ -66,7 +69,7 @@ namespace eka2l1::drivers {
 
         switch (sensor_type_) {
             case ASENSOR_TYPE_ACCELEROMETER:
-                packet_size_ = sizeof(sensor_accelerometer_axis_data);
+                packet_size_ = rotation_ ? sizeof(sensor_rotation_data) : sizeof(sensor_accelerometer_axis_data);
                 break;
 
             default:
@@ -85,6 +88,31 @@ namespace eka2l1::drivers {
 
     bool sensor_android::get_property(const sensor_property prop, const std::int32_t item_index,
                       const std::int32_t array_index, sensor_property_data &data) {
+        data = {};
+        data.property_id_ = prop;
+        data.item_index_ = -1;
+        data.array_index_ = SENSOR_PROPERTY_SINGLE;
+        if (rotation_) {
+            switch (prop) {
+            case SENSOR_PROPERTY_MEASURE_RANGE:
+                data.set_double(359.0);
+                data.set_double_range(0.0, 359.0);
+                return true;
+            case SENSOR_PROPERTY_ACCURACY:
+                data.set_double(ROTATION_RESOLUTION_DEGREES / 360.0);
+                data.set_double_range(data.float_value_, data.float_value_);
+                return true;
+            case SENSOR_PROPERTY_AVAILABILITY:
+                data.set_int(1);
+                data.set_int_range(0, 1);
+                return true;
+            case SENSOR_PROPERTY_SAMPLE_RATE:
+                break;
+            default:
+                return false;
+            }
+        }
+
         // Handle global property
         bool global_handled = true;
 
@@ -164,6 +192,9 @@ namespace eka2l1::drivers {
     }
 
     bool sensor_android::set_property(const sensor_property_data &data) {
+        if (rotation_ && data.property_id_ != SENSOR_PROPERTY_SAMPLE_RATE) {
+            return false;
+        }
         bool global_handled = true;
         switch (data.property_id_) {
             case SENSOR_PROPERTY_SAMPLE_RATE:
@@ -176,6 +207,7 @@ namespace eka2l1::drivers {
                     active_sampling_rate_ = static_cast<std::uint32_t>(data.int_value_);
                     ASensorEventQueue_setEventRate(event_queue_, asensor_, static_cast<std::int32_t>(
                             common::microsecs_per_sec / SAMPLING_RATE_AVAILABLE[active_sampling_rate_]));
+                    return true;
                 } else {
                     LOG_ERROR(SERVICE_SENSOR, "Trying to set read-only sample rate property! Only current sample rate index can be set!");
                     return false;
@@ -231,6 +263,13 @@ namespace eka2l1::drivers {
         // Hope it's fine :D
         switch (event.type) {
             case ASENSOR_TYPE_ACCELEROMETER: {
+                if (rotation_) {
+                    const auto data = rotation_from_acceleration(common::get_current_utc_time_in_microseconds_since_0ad(),
+                        event.acceleration.x, event.acceleration.y, event.acceleration.z);
+                    const auto *bytes = reinterpret_cast<const std::uint8_t *>(&data);
+                    events_translated_.insert(events_translated_.end(), bytes, bytes + sizeof(data));
+                    break;
+                }
                 sensor_accelerometer_axis_data axis_data;
 
                 static constexpr float alpha = 0.8f;
@@ -413,44 +452,42 @@ namespace eka2l1::drivers {
             }
         }
 
-        sensor_info info;
-
         for (int i = 0; i < sensor_count_; i++) {
-            int type = ASensor_getType(all_sensors_[i]);
-
-            // Add and handle types that we currently supported here!
-            switch (type) {
-                case ASENSOR_TYPE_ACCELEROMETER:
-                    info.type_ = SENSOR_TYPE_ACCELEROMETER;
-                    info.quantity_ = SENSOR_DATA_QUANTITY_ACCELERATION;
-                    info.data_type_ = SENSOR_DATA_TYPE_ACCELOREMETER_AXIS;
-                    info.item_size_ = sizeof(sensor_accelerometer_axis_data);
-                    break;
-
-                default:
-                    continue;
-            }
-
-            if (search_info.type_ != info.type_) {
+            if (ASensor_getType(all_sensors_[i]) != ASENSOR_TYPE_ACCELEROMETER) {
                 continue;
             }
 
-            info.name_ = ASensor_getName(all_sensors_[i]);
-            info.vendor_ = ASensor_getVendor(all_sensors_[i]);
-            info.id_ = static_cast<std::uint32_t>(i + 1);
+            for (const bool rotation : { false, true }) {
+                sensor_info info;
+                info.type_ = rotation ? SENSOR_TYPE_ROTATION : SENSOR_TYPE_ACCELEROMETER;
+                info.quantity_ = rotation ? SENSOR_DATA_QUANTITY_ROTATION : SENSOR_DATA_QUANTITY_ACCELERATION;
+                info.data_type_ = rotation ? SENSOR_DATA_TYPE_ROTATION : SENSOR_DATA_TYPE_ACCELOREMETER_AXIS;
+                info.item_size_ = rotation ? sizeof(sensor_rotation_data) : sizeof(sensor_accelerometer_axis_data);
 
-            results.push_back(info);
+                if ((search_info.type_ && search_info.type_ != info.type_)
+                    || (search_info.data_type_ && search_info.data_type_ != info.data_type_)
+                    || (search_info.quantity_ && search_info.quantity_ != info.quantity_)) {
+                    continue;
+                }
+
+                info.name_ = ASensor_getName(all_sensors_[i]);
+                info.vendor_ = ASensor_getVendor(all_sensors_[i]);
+                info.id_ = static_cast<std::uint32_t>(i + 1) | (rotation ? ROTATION_CHANNEL_FLAG : 0);
+                results.push_back(info);
+            }
         }
 
         return results;
     }
 
     std::unique_ptr<sensor> sensor_driver_android::new_sensor_controller(const std::uint32_t id) {
-        if ((id == 0) || (id > static_cast<std::uint32_t>(sensor_count_))) {
+        const std::uint32_t native_id = id & ~ROTATION_CHANNEL_FLAG;
+        if ((native_id == 0) || (native_id > static_cast<std::uint32_t>(sensor_count_))
+            || ASensor_getType(all_sensors_[native_id - 1]) != ASENSOR_TYPE_ACCELEROMETER) {
             return nullptr;
         }
 
-        return std::make_unique<sensor_android>(this, all_sensors_[id - 1]);
+        return std::make_unique<sensor_android>(this, all_sensors_[native_id - 1], (id & ROTATION_CHANNEL_FLAG) != 0);
     }
 
     void sensor_driver_android::track_active_listener(common::double_linked_queue_element *link) {

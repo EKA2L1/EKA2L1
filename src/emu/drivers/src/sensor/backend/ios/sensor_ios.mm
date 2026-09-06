@@ -42,6 +42,7 @@ namespace eka2l1::drivers {
 
     static constexpr double STANDARD_GRAVITY_MS2 = 9.80665;
     static constexpr std::uint32_t ACCELEROMETER_SENSOR_ID = 1;
+    static constexpr std::uint32_t ROTATION_SENSOR_ID = 2;
 
     // The CoreMotion handler runs on its own NSOperationQueue thread and may
     // already be queued when the driver goes away, so it only reaches the
@@ -62,8 +63,9 @@ namespace eka2l1::drivers {
 
     // ---- sensor_ios ---------------------------------------------------------
 
-    sensor_ios::sensor_ios(sensor_driver_ios *driver)
+    sensor_ios::sensor_ios(sensor_driver_ios *driver, sensor_type type)
         : driver_(driver)
+        , type_(type)
         , listening_(false)
         , packets_wanted_(1)
         , packets_buffered_(0)
@@ -78,7 +80,31 @@ namespace eka2l1::drivers {
 
     bool sensor_ios::get_property(const sensor_property prop, const std::int32_t item_index,
         const std::int32_t array_index, sensor_property_data &data) {
+        data = {};
         data.property_id_ = prop;
+        data.item_index_ = -1;
+        data.array_index_ = SENSOR_PROPERTY_SINGLE;
+
+        if (type_ == SENSOR_TYPE_ROTATION) {
+            switch (prop) {
+            case SENSOR_PROPERTY_MEASURE_RANGE:
+                data.set_double(359.0);
+                data.set_double_range(0.0, 359.0);
+                return true;
+            case SENSOR_PROPERTY_ACCURACY:
+                data.set_double(ROTATION_RESOLUTION_DEGREES / 360.0);
+                data.set_double_range(data.float_value_, data.float_value_);
+                return true;
+            case SENSOR_PROPERTY_AVAILABILITY:
+                data.set_int(1);
+                data.set_int_range(0, 1);
+                return true;
+            case SENSOR_PROPERTY_SAMPLE_RATE:
+                break;
+            default:
+                return false;
+            }
+        }
 
         switch (prop) {
         case SENSOR_PROPERTY_SAMPLE_RATE:
@@ -156,6 +182,9 @@ namespace eka2l1::drivers {
             return false;
 
         case SENSOR_PROPERTY_MEASURE_RANGE:
+            if (type_ == SENSOR_TYPE_ROTATION) {
+                return false;
+            }
             if (data.array_index_ == SENSOR_PROPERTY_ARRAY) {
                 if ((data.int_value_ >= ACCELEROMETER_MEASURE_RANGE_MAX_OPTION) || (data.int_value_ < 0)) {
                     LOG_ERROR(SERVICE_SENSOR, "Trying to set out-of-bound measure range!");
@@ -183,21 +212,29 @@ namespace eka2l1::drivers {
             return;
         }
 
-        const double measure_range = ACCELEROMETER_MEASURE_RANGE_AVAILABLE[active_accel_measure_range_];
-        auto scale = [measure_range](const double value_ms2) -> std::int32_t {
-            const double scaled = value_ms2 * ACCELEROMETER_SCALE_RANGE_MAX / measure_range;
-            return static_cast<std::int32_t>(std::clamp<double>(scaled, ACCELEROMETER_SCALE_RANGE_MIN,
-                ACCELEROMETER_SCALE_RANGE_MAX));
+        const auto timestamp = common::get_current_utc_time_in_microseconds_since_0ad();
+        auto append = [this](const auto &packet) {
+            const auto *bytes = reinterpret_cast<const std::uint8_t *>(&packet);
+            events_translated_.insert(events_translated_.end(), bytes, bytes + sizeof(packet));
         };
 
-        sensor_accelerometer_axis_data axis_data;
-        axis_data.timestamp_ = common::get_current_utc_time_in_microseconds_since_0ad();
-        axis_data.axis_x_ = scale(x_ms2);
-        axis_data.axis_y_ = scale(y_ms2);
-        axis_data.axis_z_ = scale(z_ms2);
+        if (type_ == SENSOR_TYPE_ROTATION) {
+            append(rotation_from_acceleration(timestamp, x_ms2, y_ms2, z_ms2));
+        } else {
+            const double measure_range = ACCELEROMETER_MEASURE_RANGE_AVAILABLE[active_accel_measure_range_];
+            auto scale = [measure_range](const double value_ms2) -> std::int32_t {
+                const double scaled = value_ms2 * ACCELEROMETER_SCALE_RANGE_MAX / measure_range;
+                return static_cast<std::int32_t>(std::clamp<double>(scaled, ACCELEROMETER_SCALE_RANGE_MIN,
+                    ACCELEROMETER_SCALE_RANGE_MAX));
+            };
 
-        events_translated_.insert(events_translated_.end(), reinterpret_cast<std::uint8_t *>(&axis_data),
-            reinterpret_cast<std::uint8_t *>(&axis_data + 1));
+            sensor_accelerometer_axis_data axis_data;
+            axis_data.timestamp_ = timestamp;
+            axis_data.axis_x_ = scale(x_ms2);
+            axis_data.axis_y_ = scale(y_ms2);
+            axis_data.axis_z_ = scale(z_ms2);
+            append(axis_data);
+        }
 
         packets_buffered_++;
     }
@@ -480,39 +517,35 @@ namespace eka2l1::drivers {
             return results;
         }
 
-        sensor_info info;
-        info.type_ = SENSOR_TYPE_ACCELEROMETER;
-        info.quantity_ = SENSOR_DATA_QUANTITY_ACCELERATION;
-        info.data_type_ = SENSOR_DATA_TYPE_ACCELOREMETER_AXIS;
-        info.item_size_ = sizeof(sensor_accelerometer_axis_data);
-        info.name_ = "iOS Accelerometer";
-        info.vendor_ = "Apple";
-        info.id_ = ACCELEROMETER_SENSOR_ID;
+        for (const auto type : { SENSOR_TYPE_ACCELEROMETER, SENSOR_TYPE_ROTATION }) {
+            sensor_info info;
+            info.type_ = type;
+            const bool rotation = type == SENSOR_TYPE_ROTATION;
+            info.quantity_ = rotation ? SENSOR_DATA_QUANTITY_ROTATION : SENSOR_DATA_QUANTITY_ACCELERATION;
+            info.data_type_ = rotation ? SENSOR_DATA_TYPE_ROTATION : SENSOR_DATA_TYPE_ACCELOREMETER_AXIS;
+            info.item_size_ = rotation ? sizeof(sensor_rotation_data) : sizeof(sensor_accelerometer_axis_data);
+            info.name_ = rotation ? "iOS Rotation" : "iOS Accelerometer";
+            info.vendor_ = "Apple";
+            info.id_ = rotation ? ROTATION_SENSOR_ID : ACCELEROMETER_SENSOR_ID;
 
-        // Unset (zero) fields in the search pattern match everything, the same
-        // filtering the null backend applies.
-        if (search_info.type_ && (search_info.type_ != info.type_)) {
-            return results;
+            if ((search_info.type_ && search_info.type_ != info.type_)
+                || (search_info.data_type_ && search_info.data_type_ != info.data_type_)
+                || (search_info.quantity_ && search_info.quantity_ != info.quantity_)) {
+                continue;
+            }
+
+            results.push_back(info);
         }
-
-        if (search_info.data_type_ && (search_info.data_type_ != info.data_type_)) {
-            return results;
-        }
-
-        if (search_info.quantity_ && (search_info.quantity_ != info.quantity_)) {
-            return results;
-        }
-
-        results.push_back(info);
         return results;
     }
 
     std::unique_ptr<sensor> sensor_driver_ios::new_sensor_controller(const std::uint32_t id) {
-        if ((id != ACCELEROMETER_SENSOR_ID) || !accelerometer_available()) {
+        if ((id != ACCELEROMETER_SENSOR_ID && id != ROTATION_SENSOR_ID) || !accelerometer_available()) {
             return nullptr;
         }
 
-        return std::make_unique<sensor_ios>(this);
+        return std::make_unique<sensor_ios>(this,
+            id == ROTATION_SENSOR_ID ? SENSOR_TYPE_ROTATION : SENSOR_TYPE_ACCELEROMETER);
     }
 
     bool sensor_driver_ios::pause() {
