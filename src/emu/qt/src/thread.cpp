@@ -156,6 +156,7 @@ static void on_ui_window_key_press(void *userdata, const int key) {
 namespace eka2l1::desktop {
     static constexpr const char *graphics_driver_thread_name = "Graphics thread";
     static constexpr const char *os_thread_name = "Symbian OS thread";
+    static constexpr const char *ui_thread_name = "UI thread";
 
     static int graphics_driver_thread_initialization(emulator &state) {
         // Halloween decoration breath of the graphics
@@ -353,6 +354,10 @@ namespace eka2l1::desktop {
     }
 
     int emulator_entry(QApplication &application, emulator &state, const int argc, const char **argv) {
+        // The other two threads name themselves as they start. This one is the process's
+        // first thread and never did, which left every line it logs unattributed.
+        eka2l1::common::set_thread_name(ui_thread_name);
+
         state.stage_one();
 
         // Instantiate UI and High-level interface threads

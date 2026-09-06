@@ -18,6 +18,7 @@
 
 #include <common/platform.h>
 #include <cstdint>
+#include <string>
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <windows.h>
@@ -81,7 +82,7 @@ namespace eka2l1::common {
         set_thread_description(GetCurrentThread(), reinterpret_cast<PCWSTR>(thread_name_sw.c_str()));
     }
 
-    void set_thread_name(const char *thread_name) {
+    static void set_thread_name_native(const char *thread_name) {
         if (!thread_funcs_loaded) {
             load_thread_funcs();
         }
@@ -117,7 +118,7 @@ namespace eka2l1::common {
 #endif
     }
 #else
-    void set_thread_name(const char *thread_name) {
+    static void set_thread_name_native(const char *thread_name) {
 #if EKA2L1_PLATFORM(DARWIN)
         pthread_setname_np(thread_name);
 #else
@@ -170,4 +171,20 @@ namespace eka2l1::common {
 #endif
     }
 #endif
+
+    // Kept next to the name the OS was given because that one is not portably
+    // readable and is heavily truncated where it can be read: Linux caps
+    // pthread_setname_np at 16 bytes including the terminator, which already
+    // rejects "Symbian OS thread". The log formatter reads this copy, so a log
+    // that stops can be attributed to the thread that stopped writing it.
+    static thread_local std::string thread_name_local;
+
+    void set_thread_name(const char *thread_name) {
+        thread_name_local = thread_name ? thread_name : "";
+        set_thread_name_native(thread_name);
+    }
+
+    const char *get_thread_name() {
+        return thread_name_local.empty() ? nullptr : thread_name_local.c_str();
+    }
 }

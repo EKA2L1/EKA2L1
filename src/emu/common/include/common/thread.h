@@ -29,6 +29,13 @@ namespace eka2l1::common {
      */
     void set_thread_name(const char *thread_name);
 
+    /**
+     * \brief Get the name set on the calling thread by set_thread_name.
+     *
+     * \returns The name, or nullptr if the thread was never named.
+     */
+    const char *get_thread_name();
+
     enum thread_priority {
         thread_priority_low,
         thread_priority_normal,
