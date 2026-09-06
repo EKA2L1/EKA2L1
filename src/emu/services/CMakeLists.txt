@@ -364,3 +364,7 @@ target_link_libraries(epocservs PRIVATE
 if (WIN32)
         target_link_libraries(epocservs PRIVATE Ws2_32.lib)
 endif()
+
+if (APPLE)
+        target_sources(epocservs PRIVATE src/bluetooth/protocols/bonjour.cpp)
+endif()

@@ -20,9 +20,72 @@
 #include <services/bluetooth/protocols/btmidman_inet.h>
 #include <services/bluetooth/protocols/common_inet.h>
 #include <common/log.h>
+#ifdef __APPLE__
+#include <services/bluetooth/protocols/bonjour.h>
+#endif
 
 namespace eka2l1::epoc::bt {
+#ifdef __APPLE__
+    void midman_inet::sync_bonjour_friends() {
+        if (!bonjour_) return;
+        const auto peers = bonjour_->peers();
+        std::vector<friend_info> discovered;
+        for (const auto &peer : peers) {
+            friend_info info{};
+            epoc::internet::sinet6_address endpoint{};
+            endpoint.family_ = epoc::internet::INET6_ADDRESS_FAMILY;
+            endpoint.port_ = peer.endpoint.port_;
+            endpoint.address_32x4()[2] = 0xFFFF0000;
+            endpoint.address_32x4()[3] = htonl(*reinterpret_cast<const std::uint32_t *>(peer.endpoint.user_data_));
+            info.real_addr_ = endpoint;
+            info.dvc_addr_ = peer.address;
+            discovered.push_back(info);
+        }
+
+        const std::lock_guard<std::mutex> guard(friends_lock_);
+        for (auto &friend_entry : friends_) {
+            const auto found = std::find_if(discovered.begin(), discovered.end(), [&](const friend_info &peer) {
+                return std::memcmp(&peer.real_addr_, &friend_entry.real_addr_, sizeof(epoc::socket::saddress)) == 0
+                    && std::memcmp(peer.dvc_addr_.addr_, friend_entry.dvc_addr_.addr_, 6) == 0;
+            });
+            if (found == discovered.end()) {
+                friend_device_address_mapping_.erase(friend_entry.dvc_addr_);
+                friend_entry.real_addr_.family_ = 0;
+            }
+        }
+        for (const auto &peer : discovered) {
+            auto found = std::find_if(friends_.begin(), friends_.end(), [&](const friend_info &entry) {
+                return std::memcmp(&peer.real_addr_, &entry.real_addr_, sizeof(epoc::socket::saddress)) == 0;
+            });
+            if (found == friends_.end()) {
+                found = std::find_if(friends_.begin(), friends_.end(), [](const friend_info &entry) {
+                    return entry.real_addr_.family_ == 0;
+                });
+                if (found == friends_.end()) {
+                    if (friends_.size() >= MAX_INET_DEVICE_AROUND) break;
+                    friends_.push_back(peer);
+                    found = std::prev(friends_.end());
+                } else {
+                    *found = peer;
+                }
+            }
+            const auto index = static_cast<std::uint32_t>(found - friends_.begin());
+            friend_device_address_mapping_[found->dvc_addr_] = index;
+            if (current_active_observer_ && !found->refreshed_) {
+                found->refreshed_ = true;
+                current_active_observer_->on_stranger_call(found->real_addr_, index);
+            }
+        }
+        friend_info_cached_ = true;
+    }
+#endif
+
     void midman_inet::setup_lan_discovery() {
+#ifdef __APPLE__
+        bonjour_ = std::make_unique<bonjour_discovery>(random_device_addr_, password_,
+            static_cast<std::uint16_t>(port_), [this]() { sync_bonjour_friends(); });
+        return;
+#else
         if (!epoc::internet::retrieve_local_ip_info(server_addr_, &local_addr_)) {
             LOG_ERROR(SERVICE_BLUETOOTH, "Can't find local LAN interface for BT netplay!");
             return;
@@ -57,6 +120,7 @@ namespace eka2l1::epoc::bt {
 
             lan_discovery_call_listener_socket_->recv();
         });
+#endif
     }
 
     void midman_inet::handle_lan_discovery_receive(const char *buf, std::int64_t nread, const sockaddr *addr) {

@@ -22,6 +22,10 @@
 #include <services/internet/protocols/common.h>
 #include <services/internet/protocols/inet.h>
 
+#ifdef __APPLE__
+#include <services/bluetooth/protocols/bonjour.h>
+#endif
+
 #include <common/random.h>
 #include <common/log.h>
 #include <common/algorithm.h>
@@ -62,7 +66,7 @@ namespace eka2l1::epoc::bt {
             return;
         }
 
-        if (discovery_mode_ == DISCOVERY_MODE_LAN) {
+        if ((discovery_mode_ == DISCOVERY_MODE_LAN) && !uses_bonjour_discovery()) {
             port_ = HARBOUR_PORT;
         }
 
@@ -162,6 +166,9 @@ namespace eka2l1::epoc::bt {
             // that reaches back into this object, which is already half torn down.
             device_addr_asker_.shutdown_handles();
 
+#ifdef __APPLE__
+            bonjour_.reset();
+#endif
             shutdown_uv_handle(lan_discovery_call_listener_socket_);
             shutdown_uv_handle(bluetooth_queries_server_socket_);
             shutdown_uv_handle(matching_server_socket_);
@@ -423,7 +430,7 @@ lookup:
             }
         }
 
-        if (!friend_info_cached_) {
+        if (!friend_info_cached_ && !uses_bonjour_discovery()) {
             // Try to refresh the local cache. It's not really ideal, but anyway resolver always redo
             // a full rescan...
             refresh_friend_infos();
@@ -457,7 +464,7 @@ lookup:
             return;
         }
 
-        if (!friend_info_cached_) {
+        if (!friend_info_cached_ && !uses_bonjour_discovery()) {
             // Try to refresh the local cache. It's not really ideal, but anyway resolver always redo
             // a full rescan...
             refresh_friend_infos_async([this, check_for_friend_and_run_cb]() {
@@ -497,6 +504,10 @@ lookup:
             return;
         }
 
+        if (uses_bonjour_discovery()) {
+            friend_info_cached_ = true;
+            return;
+        }
         if (friend_info_cached_) {
             return;
         }
@@ -688,12 +699,19 @@ lookup:
         return indicies;
     }
 
+    bool midman_inet::get_first_friend_device_address(device_address &result) {
+        for (std::uint32_t i = 0; i < friends_.size(); ++i) {
+            if (friends_[i].real_addr_.family_ != 0 && get_friend_device_address(i, result)) return true;
+        }
+        return false;
+    }
+
     bool midman_inet::get_friend_device_address(const std::uint32_t index, device_address &result) {
         if (index >= friends_.size()) {
             return false;
         }
 
-        if (!friend_info_cached_) {
+        if (!friend_info_cached_ && !uses_bonjour_discovery()) {
             // Try to refresh the local cache. It's not really ideal, but anyway resolver always redo
             // a full rescan...
             refresh_friend_infos();
@@ -737,6 +755,12 @@ lookup:
                 // failed. Only the timeout below must happen unconditionally --
                 // an observer that never gets on_no_more_strangers() leaves its
                 // guest request outstanding forever.
+#ifdef __APPLE__
+                if (uses_bonjour_discovery() && bonjour_) {
+                    if (retried_lan_discovery_times_ == 0) bonjour_->retry();
+                    sync_bonjour_friends();
+                } else
+#endif
                 if ((discovery_mode_ == DISCOVERY_MODE_LAN) && lan_discovery_call_listener_socket_) {
                     sockaddr_in6 server_addr_modded;
 

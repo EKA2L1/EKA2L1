@@ -86,7 +86,7 @@ namespace eka2l1::epoc::notifier {
         }
 
         epoc::bt::device_address selected_address{};
-        if (midman->get_friend_device_address(0, selected_address)) {
+        if (!midman->uses_bonjour_discovery() && midman->get_first_friend_device_address(selected_address)) {
             complete_info.complete(write_selected_device(kern_, response, complete_info, selected_address));
             return;
         }
@@ -154,7 +154,7 @@ namespace eka2l1::epoc::notifier {
             }
 
             epoc::bt::device_address selected_address{};
-            if (midman->get_friend_device_address(0, selected_address)) {
+            if (midman->get_first_friend_device_address(selected_address)) {
                 finish_request(state, generation);
                 return;
             }
@@ -179,7 +179,7 @@ namespace eka2l1::epoc::notifier {
         }
 
         epoc::bt::device_address selected_address{};
-        const bool found = state->midman && state->midman->get_friend_device_address(0, selected_address);
+        const bool found = state->midman && state->midman->get_first_friend_device_address(selected_address);
         const int result = found
             ? write_selected_device(state->kern, state->response, state->complete_info, selected_address)
             : epoc::error_not_found;
