@@ -1265,7 +1265,7 @@ APPLY_PENDING_ROUTES:
     }
 
     bool egl_context_es2::prepare_vertex_attributes(drivers::graphics_driver *drv, kernel::process *crr_process, const std::int32_t first_index, const std::int32_t vcount) {
-        if (attrib_changed_ || (first_index != previous_first_index_)) {
+        if (attrib_changed_ || (first_index != previous_first_index_) || (using_program_ != previous_using_program_)) {
             std::vector<drivers::input_descriptor> descs;
             std::vector<drivers::handle> vertex_buffers_alloc;
 
@@ -1274,7 +1274,27 @@ APPLY_PENDING_ROUTES:
 
             bool attrib_not_persistent = false;
 
-            for (std::uint32_t i = 0; i < GLES2_EMU_MAX_VERTEX_ATTRIBS_COUNT; i++) {
+            std::vector<std::pair<std::uint32_t, std::uint32_t>> attribute_locations;
+            const auto *metadata = using_program_->get_readonly_metadata();
+            for (std::uint32_t index = 0; index < metadata->get_attribute_count(); index++) {
+                std::string name;
+                std::int32_t location, array_size;
+                drivers::shader_var_type type;
+                metadata->get_attribute_info(index, name, location, type, array_size);
+
+                const std::uint32_t guest_location = using_program_->get_routed_attribute_num(location, true).value_or(location);
+                const std::uint32_t columns = type == drivers::shader_var_type::mat2 ? 2
+                    : type == drivers::shader_var_type::mat3 ? 3
+                    : type == drivers::shader_var_type::mat4 ? 4 : 1;
+                for (std::uint32_t column = 0; column < columns; column++) {
+                    if (guest_location + column < GLES2_EMU_MAX_VERTEX_ATTRIBS_COUNT) {
+                        attribute_locations.emplace_back(guest_location + column, location + column);
+                    }
+                }
+            }
+
+            // Inactive guest attributes can alias host locations assigned to active attributes.
+            for (const auto &[i, location] : attribute_locations) {
                 if ((attributes_enabled_ & (1 << i)) == 0) {
                     attributes_[i].use_constant_vcomp_ = true;
                 } else {
@@ -1297,12 +1317,7 @@ APPLY_PENDING_ROUTES:
                     return false;
                 }
 
-                auto route_ite = using_program_->get_routed_attribute_num(i);
-                if (route_ite.has_value()) {
-                    desc_temp.location = route_ite.value();
-                } else {
-                    desc_temp.location = static_cast<int>(i);
-                }
+                desc_temp.location = location;
 
                 if (attributes_[i].use_constant_vcomp_) {
                     desc_temp.set_normalized(false);
