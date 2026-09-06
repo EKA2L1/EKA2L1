@@ -39,7 +39,7 @@ namespace eka2l1::epoc::socket {
         socket_type_raw ///< Receive raw packet that is wrapped with protocol header, has not been extracted by any network layer.
     };
 
-    enum {
+    enum : std::uint32_t {
         INVALID_FAMILY_ID = 0xFFFFFFFF
     };
 

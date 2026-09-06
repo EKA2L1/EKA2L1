@@ -313,8 +313,6 @@ if(APPLE)
        MACOSX_BUNDLE_BUNDLE_VERSION 0.0.4.2
        MACOSX_BUNDLE_SHORT_VERSION_STRING 0.0.4.2
        MACOSX_BUNDLE_ICON_FILE duck.icns
-       # Carries NSCameraUsageDescription; without it macOS kills the process
-       # the moment the camera backend reaches AVFoundation.
        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/macos/Info.plist.in"
        XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS "${CMAKE_CURRENT_SOURCE_DIR}/EKA2L1.entitlements"
        XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS "--deep --options=runtime"

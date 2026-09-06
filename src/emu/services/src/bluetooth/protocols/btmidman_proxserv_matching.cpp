@@ -117,7 +117,7 @@ namespace eka2l1::epoc::bt {
             LOG_ERROR(SERVICE_BLUETOOTH, "Fail to send login request to server! Libuv's error code {}", event.code());
         });
         
-        int err = matching_server_socket_->write(login_package.data(), login_package.size());
+        int err = matching_server_socket_->write(copy_control_packet(login_package.data(), login_package.size()), login_package.size());
         
         if (err < 0) {
             LOG_ERROR(SERVICE_BLUETOOTH, "Fail to send login request to server! Libuv's error code {}", err);
@@ -135,7 +135,7 @@ namespace eka2l1::epoc::bt {
             LOG_ERROR(SERVICE_BLUETOOTH, "Fail to send logout request to server! Libuv's error code {}", event.code());
         });
         
-        int err = matching_server_socket_->write(&package, 1);
+        int err = matching_server_socket_->write(copy_control_packet(&package, 1), 1);
 
         if (err < 0) {
             LOG_ERROR(SERVICE_BLUETOOTH, "Fail to send logout request to server! Libuv's error code {}", err);
@@ -176,7 +176,7 @@ namespace eka2l1::epoc::bt {
                         static_cast<char>(advertised_port >> 8),
                         static_cast<char>(advertised_port & 0xFF)
                     };
-                    matching_server_socket_->write(package, sizeof(package));
+                    matching_server_socket_->write(copy_control_packet(package, sizeof(package)), sizeof(package));
                 }
                 matching_server_receive_buffer_.erase(matching_server_receive_buffer_.begin(),
                     matching_server_receive_buffer_.begin() + 2);
