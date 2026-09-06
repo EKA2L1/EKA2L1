@@ -21,11 +21,16 @@
 #include <common/log.h>
 #include <common/platform.h>
 #include <common/pystr.h>
+#include <common/thread.h>
 
 #include <spdlog/spdlog.h>
+#include <spdlog/pattern_formatter.h>
 
+#include <chrono>
+#include <cstring>
 #include <iostream>
 #include <memory>
+#include <string>
 
 #ifdef _MSC_VER
 #include <spdlog/sinks/msvc_sink.h>
@@ -196,6 +201,44 @@ namespace eka2l1 {
             }
         };
 
+        // Emits the calling thread's name for the "%*" pattern flag. A freeze shows up
+        // in the log as output simply stopping, which is only actionable if the lines
+        // before it say which thread produced them: the emulator runs the UI, the
+        // Symbian OS and the graphics driver on three threads that block on each other.
+        // Formatting happens on the thread that logged the message, so the thread-local
+        // read here belongs to the right thread; the periodic flusher only flushes.
+        class thread_name_flag_formatter : public spdlog::custom_flag_formatter {
+        public:
+            void format(const spdlog::details::log_msg &msg, const std::tm &,
+                spdlog::memory_buf_t &dest) override {
+                const char *name = common::get_thread_name();
+
+                if (name) {
+                    dest.append(name, name + std::strlen(name));
+                    return;
+                }
+
+                // Threads that never named themselves still need telling apart.
+                const std::string fallback = "tid " + std::to_string(msg.thread_id);
+                dest.append(fallback.data(), fallback.data() + fallback.size());
+            }
+
+            std::unique_ptr<spdlog::custom_flag_formatter> clone() const override {
+                return spdlog::details::make_unique<thread_name_flag_formatter>();
+            }
+        };
+
+        // Both the file and the console sink have to format the same way: the console is
+        // where a freeze is actually watched happening, so it is the one that most needs
+        // the timestamp. toggle_console() builds its sink long after setup_log() ran, so
+        // the pattern lives here rather than being set once on the logger.
+        static std::unique_ptr<spdlog::pattern_formatter> make_formatter() {
+            auto formatter = spdlog::details::make_unique<spdlog::pattern_formatter>();
+            formatter->add_flag<thread_name_flag_formatter>('*').set_pattern("%H:%M:%S.%e %L [%*] %^%v%$");
+
+            return formatter;
+        }
+
         void setup_log(std::shared_ptr<base_logger> gui_logger) {
             const char *log_file_name = "EKA2L1.log";
             const char *log_file_name_prev = "EKA2L1_TakeThis.log";
@@ -233,10 +276,22 @@ namespace eka2l1 {
                 std::cerr << "spdlog error: " << msg << std::endl;
             });
 
-            spdlog::set_pattern("%L %^%v%$");
+            // The timestamp and thread name carry no meaning for a single line, but
+            // they are what makes a stall readable after the fact: where the log ends,
+            // the gap in front of the last line says how long the emulator ran before
+            // it stopped, and the name says which thread went quiet.
+            spd_logger->set_formatter(make_formatter());
+
             spdlog::set_level(spdlog::level::trace);
 
             spd_logger->flush_on(spdlog::level::debug);
+
+            // A freeze is usually ended with a kill, which discards whatever spdlog has
+            // buffered -- and the lines immediately before the stall are the ones worth
+            // having. Flushing on every trace message would put an fsync in the middle
+            // of the emulator's hottest logging path, so flush on a timer instead and
+            // lose at most a second of tail.
+            spdlog::flush_every(std::chrono::seconds(1));
 
             // Setup the filterings
             filterings = std::make_unique<log_filterings>();
@@ -259,7 +314,7 @@ namespace eka2l1 {
 #endif
 
                 stdout_color_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-                stdout_color_sink->set_pattern("%L %^%v%$");
+                stdout_color_sink->set_formatter(make_formatter());
                 stdout_color_sink->set_level(spdlog::level::trace);
 
                 color_dist_sink->add_sink(stdout_color_sink);

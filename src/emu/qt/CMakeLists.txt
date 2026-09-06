@@ -76,6 +76,7 @@ set(PROJECT_SOURCES
         include/qt/launch_process_dialog.h
         include/qt/mainwindow.h
         include/qt/package_manager_dialog.h
+        include/qt/qt_log.h
         include/qt/seh_handler.h
         include/qt/settings_dialog.h
         include/qt/state.h
@@ -113,6 +114,7 @@ set(PROJECT_SOURCES
         src/mainwindow.ui
         src/package_manager_dialog.cpp
         src/package_manager_dialog.ui
+        src/qt_log.cpp
         src/seh_handler.cpp
         src/settings_dialog.cpp
         src/settings_dialog.ui
