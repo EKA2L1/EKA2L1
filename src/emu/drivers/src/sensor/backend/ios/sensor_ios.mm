@@ -18,8 +18,10 @@
  */
 
 #import <CoreMotion/CoreMotion.h>
+#import <GameController/GameController.h>
 
 #include "sensor_ios.h"
+#include <drivers/sensor/backend/ios/controller_motion.h>
 
 #include <common/log.h>
 #include <common/time.h>
@@ -44,10 +46,8 @@ namespace eka2l1::drivers {
     static constexpr std::uint32_t ACCELEROMETER_SENSOR_ID = 1;
     static constexpr std::uint32_t ROTATION_SENSOR_ID = 2;
 
-    // The CoreMotion handler runs on its own NSOperationQueue thread and may
-    // already be queued when the driver goes away, so it only reaches the
-    // driver through this guard: the driver's destructor (and the pause
-    // barrier) takes the lock and clears/blocks on it.
+    // Queued samples must pass this guard before accessing the driver;
+    // destruction clears the owner and pause waits out any callback in flight.
     struct core_motion_owner_guard {
         std::mutex lock_;
         sensor_driver_ios *owner_ = nullptr;
@@ -55,9 +55,9 @@ namespace eka2l1::drivers {
 
     struct core_motion_pump {
         CMMotionManager *manager_ = nil;
-        NSOperationQueue *queue_ = nil;
-        bool running_ = false;
-        std::uint32_t running_rate_hz_ = 0;
+        GCController *controller_ = nil;
+        dispatch_queue_t queue_ = nil;
+        dispatch_source_t timer_ = nil;
         std::shared_ptr<core_motion_owner_guard> guard_;
     };
 
@@ -329,9 +329,7 @@ namespace eka2l1::drivers {
         , paused_(false)
         , motion_rotation_deg_(0) {
         pump_->manager_ = [[CMMotionManager alloc] init];
-        pump_->queue_ = [[NSOperationQueue alloc] init];
-        pump_->queue_.maxConcurrentOperationCount = 1;
-        pump_->queue_.name = @"com.eka2l1.emulator.sensor";
+        pump_->queue_ = dispatch_queue_create("com.eka2l1.emulator.sensor", DISPATCH_QUEUE_SERIAL);
         pump_->guard_ = std::make_shared<core_motion_owner_guard>();
         pump_->guard_->owner_ = this;
     }
@@ -339,10 +337,8 @@ namespace eka2l1::drivers {
     sensor_driver_ios::~sensor_driver_ios() {
         {
             const std::lock_guard<std::mutex> hold(list_lock_);
-            if (pump_->running_) {
-                [pump_->manager_ stopAccelerometerUpdates];
-                pump_->running_ = false;
-            }
+            paused_ = true;
+            refresh_pump_locked();
         }
 
         // Barrier: a handler block already dequeued keeps the guard alive via
@@ -353,7 +349,30 @@ namespace eka2l1::drivers {
     }
 
     bool sensor_driver_ios::accelerometer_available() const {
-        return pump_->manager_.accelerometerAvailable;
+        return pump_->manager_.accelerometerAvailable || controller_motion_available_.load(std::memory_order_relaxed);
+    }
+
+    void set_controller_motion_source(sensor_driver *driver, void *controller) {
+        if (driver) static_cast<sensor_driver_ios *>(driver)->set_controller(controller);
+    }
+
+    void set_controller_motion_rotation(sensor_driver *driver, int degrees) {
+        if (driver) static_cast<sensor_driver_ios *>(driver)->set_controller_rotation(degrees);
+    }
+
+    void sensor_driver_ios::set_controller(void *controller) {
+        const std::lock_guard<std::mutex> hold(list_lock_);
+        GCController *source = (__bridge GCController *)controller;
+        if (source == pump_->controller_) return;
+        GCMotion *previous = pump_->controller_.motion;
+        if (previous.sensorsRequireManualActivation) previous.sensorsActive = NO;
+        pump_->controller_ = source;
+        controller_motion_available_.store(source.motion != nil, std::memory_order_relaxed);
+        refresh_pump_locked();
+    }
+
+    void sensor_driver_ios::set_controller_rotation(int degrees) {
+        controller_rotation_deg_.store(((degrees % 360) + 360) % 360, std::memory_order_relaxed);
     }
 
     std::uint32_t sensor_driver_ios::max_requested_sampling_rate_locked() {
@@ -378,48 +397,72 @@ namespace eka2l1::drivers {
 
     void sensor_driver_ios::refresh_pump_locked() {
         const bool want_running = !paused_ && !listening_list_.empty();
+        GCMotion *motion = pump_->controller_.motion;
+        if (motion.sensorsRequireManualActivation && motion.sensorsActive != want_running) {
+            motion.sensorsActive = want_running;
+        }
+
+        if (!want_running || motion) {
+            [pump_->manager_ stopAccelerometerUpdates];
+        } else if (!pump_->manager_.accelerometerActive) {
+            [pump_->manager_ startAccelerometerUpdates];
+        }
 
         if (!want_running) {
-            if (pump_->running_) {
-                [pump_->manager_ stopAccelerometerUpdates];
-                pump_->running_ = false;
-                pump_->running_rate_hz_ = 0;
+            if (pump_->timer_) {
+                dispatch_source_cancel(pump_->timer_);
+                pump_->timer_ = nil;
             }
             return;
         }
 
         const std::uint32_t rate_hz = max_requested_sampling_rate_locked();
         pump_->manager_.accelerometerUpdateInterval = 1.0 / static_cast<double>(rate_hz);
-
-        if (pump_->running_) {
-            pump_->running_rate_hz_ = rate_hz;
+        const std::uint64_t interval = NSEC_PER_SEC / rate_hz;
+        if (pump_->timer_) {
+            dispatch_source_set_timer(pump_->timer_, DISPATCH_TIME_NOW, interval, interval / 10);
             return;
         }
 
+        pump_->timer_ = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, pump_->queue_);
         std::shared_ptr<core_motion_owner_guard> guard = pump_->guard_;
-        [pump_->manager_ startAccelerometerUpdatesToQueue:pump_->queue_
-                                              withHandler:^(CMAccelerometerData *data, NSError *error) {
-            if (!data) {
-                return;
-            }
-
+        dispatch_source_set_event_handler(pump_->timer_, ^{
             const std::lock_guard<std::mutex> hold(guard->lock_);
-            if (!guard->owner_) {
-                return;
+            if (guard->owner_) guard->owner_->poll_sample();
+        });
+        dispatch_source_set_timer(pump_->timer_, DISPATCH_TIME_NOW, interval, interval / 10);
+        dispatch_resume(pump_->timer_);
+    }
+
+    void sensor_driver_ios::poll_sample() {
+        std::array<double, 3> acceleration;
+        std::array<double, 3> gravity;
+        int rotation;
+        {
+            const std::lock_guard<std::mutex> hold(list_lock_);
+            if (paused_ || listening_list_.empty()) return;
+            GCMotion *motion = pump_->controller_.motion;
+            if (motion) {
+                const GCAcceleration a = motion.acceleration;
+                const GCAcceleration g = motion.hasGravityAndUserAcceleration ? motion.gravity : a;
+                acceleration = { a.x, a.y, a.z };
+                gravity = { g.x, g.y, g.z };
+                rotation = controller_rotation_deg_.load(std::memory_order_relaxed);
+            } else {
+                CMAccelerometerData *data = pump_->manager_.accelerometerData;
+                if (!data) return;
+                acceleration = { data.acceleration.x, data.acceleration.y, data.acceleration.z };
+                gravity = acceleration;
+                rotation = motion_rotation_deg_.load(std::memory_order_relaxed);
             }
-
-            // CoreMotion reports in g with gravity measured along the negative
-            // axis (flat, screen up: z ~= -1). Symbian/Android channels report
-            // the reaction force in m/s^2 (flat, screen up: z ~= +9.81) with
-            // the same axis orientation — negate and rescale.
-            guard->owner_->dispatch_sample(
-                -data.acceleration.x * STANDARD_GRAVITY_MS2,
-                -data.acceleration.y * STANDARD_GRAVITY_MS2,
-                -data.acceleration.z * STANDARD_GRAVITY_MS2);
-        }];
-
-        pump_->running_ = true;
-        pump_->running_rate_hz_ = rate_hz;
+        }
+        // Apple reports gravity in g; Symbian reports reaction force in m/s².
+        for (int axis = 0; axis < 3; ++axis) {
+            acceleration[axis] *= -STANDARD_GRAVITY_MS2;
+            gravity[axis] *= -STANDARD_GRAVITY_MS2;
+            if (!std::isfinite(acceleration[axis]) || !std::isfinite(gravity[axis])) return;
+        }
+        dispatch_sample(acceleration, gravity, rotation);
     }
 
     void sensor_driver_ios::refresh_pump() {
@@ -431,34 +474,20 @@ namespace eka2l1::drivers {
         motion_rotation_deg_.store(((degrees % 360) + 360) % 360, std::memory_order_relaxed);
     }
 
-    void sensor_driver_ios::dispatch_sample(const double x_raw_ms2, const double y_raw_ms2, const double z_ms2) {
-        // CoreMotion reports in the iPhone's fixed frame, but the guest reads
-        // the emulated device's frame — the two coincide only when the player
-        // holds the iPhone the way the Symbian phone would be held for the
-        // current guest screen mode. Rotate X/Y into the emulated frame
-        // (components of a vector in a frame rotated CCW by θ pick up R(-θ)).
-        double x_ms2 = x_raw_ms2;
-        double y_ms2 = y_raw_ms2;
-
-        switch (motion_rotation_deg_.load(std::memory_order_relaxed)) {
-        case 90:
-            x_ms2 = y_raw_ms2;
-            y_ms2 = -x_raw_ms2;
-            break;
-
-        case 180:
-            x_ms2 = -x_raw_ms2;
-            y_ms2 = -y_raw_ms2;
-            break;
-
-        case 270:
-            x_ms2 = -y_raw_ms2;
-            y_ms2 = x_raw_ms2;
-            break;
-
-        default:
-            break;
-        }
+    void sensor_driver_ios::dispatch_sample(std::array<double, 3> acceleration,
+        std::array<double, 3> gravity, int rotation) {
+        auto rotate = [rotation](std::array<double, 3> &v) {
+            const double x = v[0];
+            const double y = v[1];
+            switch (rotation) {
+            case 90: v[0] = y; v[1] = -x; break;
+            case 180: v[0] = -x; v[1] = -y; break;
+            case 270: v[0] = -y; v[1] = x; break;
+            default: break;
+            }
+        };
+        rotate(acceleration);
+        rotate(gravity);
 
         // Collect completed batches under the list lock, but invoke the guest
         // callbacks outside it: they take the kernel lock, and SVC handlers
@@ -475,13 +504,14 @@ namespace eka2l1::drivers {
         {
             const std::lock_guard<std::mutex> hold(list_lock_);
 
-            if (!listening_list_.empty()) {
+            if (!paused_ && !listening_list_.empty()) {
                 common::double_linked_queue_element *first = listening_list_.first();
                 common::double_linked_queue_element *end = listening_list_.end();
 
                 do {
                     sensor_ios *sensor_obj = E_LOFF(first, sensor_ios, listening_link_);
-                    sensor_obj->push_sample(x_ms2, y_ms2, z_ms2);
+                    const auto &sample = sensor_obj->type_ == SENSOR_TYPE_ROTATION ? gravity : acceleration;
+                    sensor_obj->push_sample(sample[0], sample[1], sample[2]);
 
                     ready_batch batch;
                     if (sensor_obj->take_ready_batch(batch.callback_, batch.data_, batch.packet_count_)) {
@@ -559,7 +589,7 @@ namespace eka2l1::drivers {
             refresh_pump_locked();
         }
 
-        // Barrier: wait out a handler that already left the operation queue,
+        // Barrier: wait out a handler that already left the sampling queue,
         // so callers can tear down guest state (system reboot, backgrounding)
         // knowing no sensor callback is still in flight.
         const std::lock_guard<std::mutex> barrier(pump_->guard_->lock_);

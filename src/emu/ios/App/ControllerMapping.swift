@@ -15,18 +15,16 @@ import UIKit
 // Key mappings are per device. Storage is a nested UserDefaults dict
 // [device key: [host token: guest scan]] — keyboards share the "keyboard"
 // device key, controllers use their vendor name so the same model keeps its
-// mapping across reconnects. Within a device the relation is one-to-one:
+// mapping across reconnects:
 // a host input drives at most one guest key (re-capturing steals it, last
-// edit wins) and each guest key holds at most one binding.
+// edit wins). Rebinding a guest key replaces its previous bindings; the
+// default directions accept both the d-pad and the left stick.
 //
 // Host tokens: controller buttons use HostButton raw values; keyboard keys
 // use "kb.<HID usage>", the raw value GCKeyCode carries at both capture and
 // runtime input time.
 
-// Every bindable controller button on an extended gamepad. The left
-// thumbstick is deliberately not listed: it aliases the d-pad tokens at both
-// capture and input time, so a stick flick and a d-pad press are the same
-// binding.
+// Each stick direction has its own binding, independent of the d-pad.
 enum HostButton: String, CaseIterable {
     case buttonA, buttonB, buttonX, buttonY
     case leftShoulder, rightShoulder, leftTrigger, rightTrigger
@@ -36,6 +34,14 @@ enum HostButton: String, CaseIterable {
     case dpadDown = "dpad.down"
     case dpadLeft = "dpad.left"
     case dpadRight = "dpad.right"
+    case leftStickUp = "leftStick.up"
+    case rightStickUp = "rightStick.up"
+    case leftStickDown = "leftStick.down"
+    case rightStickDown = "rightStick.down"
+    case leftStickLeft = "leftStick.left"
+    case rightStickLeft = "rightStick.left"
+    case leftStickRight = "leftStick.right"
+    case rightStickRight = "rightStick.right"
 
     var genericName: String {
         switch self {
@@ -55,12 +61,26 @@ enum HostButton: String, CaseIterable {
         case .dpadDown: return "D-pad Down"
         case .dpadLeft: return "D-pad Left"
         case .dpadRight: return "D-pad Right"
+        case .leftStickUp: return String(localized: "controllerMapping.leftStickUp")
+        case .rightStickUp: return String(localized: "controllerMapping.rightStickUp")
+        case .leftStickDown: return String(localized: "controllerMapping.leftStickDown")
+        case .rightStickDown: return String(localized: "controllerMapping.rightStickDown")
+        case .leftStickLeft: return String(localized: "controllerMapping.leftStickLeft")
+        case .rightStickLeft: return String(localized: "controllerMapping.rightStickLeft")
+        case .leftStickRight: return String(localized: "controllerMapping.leftStickRight")
+        case .rightStickRight: return String(localized: "controllerMapping.rightStickRight")
         }
     }
 
     // Controller-specific name when a gamepad is available (e.g. "Cross
     // Button" on DualSense, "A Button" on Xbox), generic name otherwise.
     func displayName(on gamepad: GCExtendedGamepad?) -> String {
+        switch self {
+        case .leftStickUp, .leftStickDown, .leftStickLeft, .leftStickRight,
+             .rightStickUp, .rightStickDown, .rightStickLeft, .rightStickRight:
+            return genericName
+        default: break
+        }
         guard let gamepad, let name = buttonInput(on: gamepad)?.localizedName,
               !name.isEmpty else {
             return genericName
@@ -86,6 +106,14 @@ enum HostButton: String, CaseIterable {
         case .dpadDown: return gamepad.dpad.down
         case .dpadLeft: return gamepad.dpad.left
         case .dpadRight: return gamepad.dpad.right
+        case .leftStickUp: return gamepad.leftThumbstick.up
+        case .rightStickUp: return gamepad.rightThumbstick.up
+        case .leftStickDown: return gamepad.leftThumbstick.down
+        case .rightStickDown: return gamepad.rightThumbstick.down
+        case .leftStickLeft: return gamepad.leftThumbstick.left
+        case .rightStickLeft: return gamepad.rightThumbstick.left
+        case .leftStickRight: return gamepad.leftThumbstick.right
+        case .rightStickRight: return gamepad.rightThumbstick.right
         }
     }
 
@@ -95,6 +123,14 @@ enum HostButton: String, CaseIterable {
         // system's notion of "pressed".
         case .leftTrigger: return gamepad.leftTrigger.value > threshold
         case .rightTrigger: return gamepad.rightTrigger.value > threshold
+        case .leftStickUp: return gamepad.leftThumbstick.yAxis.value > threshold
+        case .rightStickUp: return gamepad.rightThumbstick.yAxis.value > threshold
+        case .leftStickDown: return gamepad.leftThumbstick.yAxis.value < -threshold
+        case .rightStickDown: return gamepad.rightThumbstick.yAxis.value < -threshold
+        case .leftStickLeft: return gamepad.leftThumbstick.xAxis.value < -threshold
+        case .rightStickLeft: return gamepad.rightThumbstick.xAxis.value < -threshold
+        case .leftStickRight: return gamepad.leftThumbstick.xAxis.value > threshold
+        case .rightStickRight: return gamepad.rightThumbstick.xAxis.value > threshold
         default: return buttonInput(on: gamepad)?.isPressed ?? false
         }
     }
@@ -359,12 +395,21 @@ final class PeripheralManager: ObservableObject, @unchecked Sendable {
 
 enum PeripheralMappingStore {
     static let storageKey = "ios.peripheralKeyMappings"
+    private static let independentSticksKey = "independentSticks"
 
     static let controllerDefaults: [String: UInt32] = [
         HostButton.dpadUp.rawValue: Scan.up,
+        HostButton.leftStickUp.rawValue: Scan.up,
         HostButton.dpadDown.rawValue: Scan.down,
+        HostButton.leftStickDown.rawValue: Scan.down,
         HostButton.dpadLeft.rawValue: Scan.left,
+        HostButton.leftStickLeft.rawValue: Scan.left,
         HostButton.dpadRight.rawValue: Scan.right,
+        HostButton.leftStickRight.rawValue: Scan.right,
+        HostButton.rightStickUp.rawValue: 0x32,
+        HostButton.rightStickDown.rawValue: 0x38,
+        HostButton.rightStickLeft.rawValue: 0x34,
+        HostButton.rightStickRight.rawValue: 0x36,
         HostButton.buttonA.rawValue: Scan.select,
         HostButton.buttonB.rawValue: Scan.clear,
         HostButton.buttonX.rawValue: 0x35,   // digit 5, common game action key
@@ -416,12 +461,23 @@ enum PeripheralMappingStore {
             }
             mapping[token] = scan
         }
+        // Unversioned layouts encode left-stick bindings through the d-pad entries.
+        if kind == .controller, stored[independentSticksKey] == nil {
+            for (stick, dpad) in [(HostButton.leftStickUp, HostButton.dpadUp),
+                                  (.leftStickDown, .dpadDown),
+                                  (.leftStickLeft, .dpadLeft),
+                                  (.leftStickRight, .dpadRight)] {
+                mapping[stick.rawValue] = mapping[dpad.rawValue]
+            }
+        }
         return mapping
     }
 
     static func save(_ mapping: [String: UInt32], forDeviceKey deviceKey: String) {
         var all = UserDefaults.standard.dictionary(forKey: storageKey) ?? [:]
-        all[deviceKey] = mapping.mapValues { Int($0) }
+        var stored = mapping.mapValues { Int($0) }
+        stored[independentSticksKey] = 1
+        all[deviceKey] = stored
         UserDefaults.standard.set(all, forKey: storageKey)
     }
 
@@ -442,9 +498,8 @@ enum PeripheralMappingStore {
         return result
     }
 
-    // Keeps the relation one-to-one: the captured host input is stolen from
-    // whatever guest key held it (last edit wins), and this guest key's old
-    // binding is dropped.
+    // Rebinding replaces this guest key's bindings and moves the host input
+    // away from any other guest key.
     static func bind(hostToken: String, toScan scan: UInt32, in mapping: inout [String: UInt32]) {
         unbind(scan: scan, in: &mapping)
         mapping[hostToken] = scan
@@ -576,34 +631,61 @@ private final class CaptureMonitor: ObservableObject {
 
     private nonisolated static func pressedTokens(on gamepad: GCExtendedGamepad,
                                                   threshold: Float) -> Set<String> {
-        var tokens = Set(
+        Set(
             HostButton.allCases
                 .filter { $0.isPressed(on: gamepad, threshold: threshold) }
                 .map(\.rawValue)
         )
-        // The left thumbstick captures as the d-pad, mirroring runtime input.
-        if gamepad.leftThumbstick.yAxis.value > threshold { tokens.insert(HostButton.dpadUp.rawValue) }
-        if gamepad.leftThumbstick.yAxis.value < -threshold { tokens.insert(HostButton.dpadDown.rawValue) }
-        if gamepad.leftThumbstick.xAxis.value < -threshold { tokens.insert(HostButton.dpadLeft.rawValue) }
-        if gamepad.leftThumbstick.xAxis.value > threshold { tokens.insert(HostButton.dpadRight.rawValue) }
-        return tokens
     }
 }
 
 // MARK: - Key mapping editor
+
+private enum MappingCaptureTarget: Identifiable {
+    case guest(GuestKey)
+    case pointer(ControllerPointerAction)
+
+    var id: String {
+        switch self {
+        case .guest(let key): return "guest.\(key.scan)"
+        case .pointer(let action): return "pointer.\(action.rawValue)"
+        }
+    }
+
+    var name: String {
+        switch self {
+        case .guest(let key): return key.name
+        case .pointer(let action): return action.name
+        }
+    }
+
+    var symbol: String? {
+        switch self {
+        case .guest(let key): return key.symbol
+        case .pointer(let action): return action.symbol
+        }
+    }
+
+    var symbolColor: Color? {
+        if case .guest(let key) = self { return key.symbolColor }
+        return nil
+    }
+}
 
 struct KeyMappingView: View {
     let peripheral: PeripheralManager.Peripheral
 
     @State private var mapping: [String: UInt32]
     @StateObject private var monitor: CaptureMonitor
-    @State private var captureTarget: GuestKey?
+    @State private var captureTarget: MappingCaptureTarget?
+    @State private var features: ControllerFeatures
 
     init(peripheral: PeripheralManager.Peripheral) {
         self.peripheral = peripheral
         _mapping = State(initialValue: PeripheralMappingStore.mapping(
             forDeviceKey: peripheral.deviceKey, kind: peripheral.kind))
         _monitor = StateObject(wrappedValue: CaptureMonitor(peripheral: peripheral))
+        _features = State(initialValue: ControllerFeatures.load(deviceKey: peripheral.deviceKey))
     }
 
     var body: some View {
@@ -627,10 +709,42 @@ struct KeyMappingView: View {
                 Button("controllerMapping.reset", role: .destructive) {
                     PeripheralMappingStore.reset(deviceKey: peripheral.deviceKey)
                     mapping = PeripheralMappingStore.defaults(for: peripheral.kind)
+                    features = ControllerFeatures()
                 }
             } footer: {
                 if !monitor.deviceConnected {
                     Text("controllerMapping.deviceDisconnected")
+                }
+            }
+            if peripheral.kind == .controller {
+                Section {
+                    Toggle("controllerPointer.enabled", isOn: $features.pointerEnabled)
+                    if features.pointerEnabled {
+                        ForEach(ControllerPointerAction.allCases) { action in
+                            Button {
+                                monitor.beginCapture()
+                                captureTarget = .pointer(action)
+                            } label: {
+                                Label {
+                                    HStack {
+                                        Text(action.name).foregroundStyle(Color.primary)
+                                        Spacer()
+                                        Text(pointerBindingText(for: action) ?? String(localized: "key.none"))
+                                            .foregroundStyle(Color.secondary)
+                                            .multilineTextAlignment(.trailing)
+                                    }
+                                } icon: {
+                                    Image(systemName: action.symbol)
+                                }
+                            }
+                        }
+                    }
+                    Toggle("controllerPointer.motion", isOn: $features.motionEnabled)
+                    Toggle("controllerPointer.vibration", isOn: $features.vibrationEnabled)
+                } header: {
+                    Text("controllerPointer.section")
+                } footer: {
+                    Text("controllerPointer.hint")
                 }
             }
         }
@@ -638,15 +752,26 @@ struct KeyMappingView: View {
         .hapticImpact(.medium, trigger: monitor.captures)
         .onAppear(perform: monitor.start)
         .onDisappear(perform: monitor.stop)
-        .sheet(item: $captureTarget, onDismiss: monitor.cancelCapture) { key in
+        .onChange(of: features) { value in
+            guard peripheral.kind == .controller else { return }
+            value.save(deviceKey: peripheral.deviceKey)
+        }
+        .sheet(item: $captureTarget, onDismiss: monitor.cancelCapture) { target in
             CaptureSheet(
-                key: key,
+                title: target.name,
+                symbol: target.symbol,
+                symbolColor: target.symbolColor,
                 kind: peripheral.kind,
-                currentBinding: bindingText(for: key),
+                currentBinding: bindingText(for: target),
                 monitor: monitor,
                 onClear: {
-                    PeripheralMappingStore.unbind(scan: key.scan, in: &mapping)
-                    PeripheralMappingStore.save(mapping, forDeviceKey: peripheral.deviceKey)
+                    switch target {
+                    case .guest(let key):
+                        PeripheralMappingStore.unbind(scan: key.scan, in: &mapping)
+                        PeripheralMappingStore.save(mapping, forDeviceKey: peripheral.deviceKey)
+                    case .pointer(let action):
+                        features.unbind(action)
+                    }
                     captureTarget = nil
                 },
                 onCancel: { captureTarget = nil }
@@ -654,16 +779,35 @@ struct KeyMappingView: View {
         }
         .onChange(of: monitor.capturedToken) { token in
             guard let token, let target = captureTarget else { return }
-            PeripheralMappingStore.bind(hostToken: token, toScan: target.scan, in: &mapping)
-            PeripheralMappingStore.save(mapping, forDeviceKey: peripheral.deviceKey)
+            switch target {
+            case .guest(let key):
+                PeripheralMappingStore.bind(hostToken: token, toScan: key.scan, in: &mapping)
+                PeripheralMappingStore.save(mapping, forDeviceKey: peripheral.deviceKey)
+            case .pointer(let action):
+                features.bind(token: token, to: action)
+            }
             captureTarget = nil
         }
+    }
+
+    private func bindingText(for target: MappingCaptureTarget) -> String? {
+        switch target {
+        case .guest(let key): return bindingText(for: key)
+        case .pointer(let action): return pointerBindingText(for: action)
+        }
+    }
+
+    private func pointerBindingText(for action: ControllerPointerAction) -> String? {
+        let tokens = HostButton.allCases.filter { features.pointerBindings[$0.rawValue] == action }
+        guard !tokens.isEmpty else { return nil }
+        let gamepad = PeripheralManager.shared.controller(peripheralID: peripheral.id)?.extendedGamepad
+        return tokens.map { $0.displayName(on: gamepad) }.joined(separator: " · ")
     }
 
     private func row(_ key: GuestKey) -> some View {
         Button {
             monitor.beginCapture()
-            captureTarget = key
+            captureTarget = .guest(key)
         } label: {
             Label {
                 HStack {
@@ -707,7 +851,9 @@ struct KeyMappingView: View {
 }
 
 private struct CaptureSheet: View {
-    let key: GuestKey
+    let title: String
+    let symbol: String?
+    let symbolColor: Color?
     let kind: PeripheralManager.Peripheral.Kind
     let currentBinding: String?
     @ObservedObject var monitor: CaptureMonitor
@@ -717,11 +863,11 @@ private struct CaptureSheet: View {
     var body: some View {
         VStack(spacing: 20) {
             Label {
-                Text(key.name)
+                Text(title)
             } icon: {
-                if let symbol = key.symbol {
+                if let symbol {
                     Image(systemName: symbol)
-                        .foregroundStyle(key.symbolColor ?? Color.accentColor)
+                        .foregroundStyle(symbolColor ?? Color.accentColor)
                 }
             }
             .font(.title3.weight(.semibold))

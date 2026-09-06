@@ -14,6 +14,9 @@
 #include <drivers/hwrm/vibration.h>
 
 namespace eka2l1::drivers::hwrm {
+    void set_controller_haptic_source(void *controller);
+    void set_vibration_suspended(bool suspended);
+
     class vibrator_ios final : public vibrator {
     public:
         vibrator_ios();
@@ -24,5 +27,9 @@ namespace eka2l1::drivers::hwrm {
 
     private:
         void *engine_ = nullptr;
+        void *player_ = nullptr;
+        std::uint64_t source_revision_ = 0;
+        void clear_engine_locked();
+        void stop_player_locked();
     };
 }

@@ -1,4 +1,5 @@
 import Foundation
+import GameController
 import QuartzCore
 
 // Sandbox Documents directory hosting the emulator's file tree (roms/, data/,
@@ -209,6 +210,12 @@ final class EKA2L1Bridge {
 
     func setExternalDisplay(layer: CAEAGLLayer?, enabled: Bool) {
         emulator.setExternalDisplay(layer: layer, enabled: enabled)
+    }
+
+    var guestDisplayRect: CGRect { emulator.guestDisplayRect() }
+
+    func setGameController(_ controller: GCController?, motion: Bool, vibration: Bool) {
+        emulator.setGameController(controller, motion: motion, vibration: vibration)
     }
 
     func detachLayer() {

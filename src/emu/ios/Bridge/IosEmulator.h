@@ -8,6 +8,8 @@
 // yet. Implemented on top of the C++ `eka2l1::ios::emulator` in IosEmulator.mm.
 
 #import <Foundation/Foundation.h>
+
+@class GCController;
 #import <QuartzCore/CAEAGLLayer.h>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -231,6 +233,8 @@ typedef NS_ENUM(NSInteger, EKA2L1PointerPhase) {
 
 - (void)submitRawKey:(uint32_t)scanCode pressed:(BOOL)pressed;
 - (void)tapRawKey:(uint32_t)scanCode;
+- (CGRect)guestDisplayRect;
+- (void)setGameController:(nullable GCController *)controller motion:(BOOL)motion vibration:(BOOL)vibration;
 
 // YES when the booted device's Symbian version drives its UI by touch
 // (S60v5 / Symbian^3 and later). The frontend uses it to pick the fullscreen
