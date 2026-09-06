@@ -51,6 +51,25 @@
          TestFlight build skips the manual export-compliance questionnaire. -->
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
+    <key>UIApplicationSceneManifest</key>
+    <dict>
+        <key>UIApplicationSupportsMultipleScenes</key>
+        <false/>
+        <key>UISceneConfigurations</key>
+        <dict>
+            <key>UIWindowSceneSessionRoleExternalDisplayNonInteractive</key>
+            <array>
+                <dict>
+                    <key>UISceneConfigurationName</key>
+                    <string>Game Display</string>
+                    <key>UISceneClassName</key>
+                    <string>UIWindowScene</string>
+                    <key>UISceneDelegateClassName</key>
+                    <string>$(PRODUCT_MODULE_NAME).ExternalDisplaySceneDelegate</string>
+                </dict>
+            </array>
+        </dict>
+    </dict>
     <key>UILaunchScreen</key>
     <dict/>
     <key>NSPhotoLibraryAddUsageDescription</key>

@@ -1483,6 +1483,16 @@
         }
       }
     },
+    "settings.airplay.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Control Center, choose Screen Mirroring, and select your TV or Mac."
+          }
+        }
+      }
+    },
     "settings.device" : {
       "localizations" : {
         "en" : {

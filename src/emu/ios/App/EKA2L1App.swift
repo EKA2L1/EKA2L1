@@ -19,24 +19,34 @@ extension UICollectionView {
 final class AppOrientationDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
-        lockedInterfaceOrientationMask
+        window?.windowScene?.session.role == .windowExternalDisplayNonInteractive
+            ? .all : lockedInterfaceOrientationMask
     }
 }
 
 @main
 struct EKA2L1App: App {
     @UIApplicationDelegateAdaptor(AppOrientationDelegate.self) private var appDelegate
-    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainSceneContent()
         }
+    }
+}
+
+private struct MainSceneContent: View {
+    @Environment(\.scenePhase) private var scenePhase
+
+    var body: some View {
+        ContentView()
         .onChange(of: scenePhase) { newPhase in
             switch newPhase {
             case .active:
                 EKA2L1Bridge.shared.resume()
+                ExternalDisplay.shared.setForeground(true)
             case .inactive, .background:
+                ExternalDisplay.shared.setForeground(false)
                 EKA2L1Bridge.shared.pause()
                 // pause() deactivates the audio session, which CoreHaptics
                 // shares; don't keep the iOS 16 fallback's generators alive

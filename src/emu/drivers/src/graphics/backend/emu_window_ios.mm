@@ -52,7 +52,7 @@ namespace eka2l1::drivers {
         window_system_info info;
         info.type = window_system_type::iOS;
         info.render_surface = layer_;
-        info.render_window = layer_;
+        info.render_window = &external_display;
         info.render_surface_scale = scale_;
         info.surface_width = static_cast<std::uint32_t>(fb_size_.x);
         info.surface_height = static_cast<std::uint32_t>(fb_size_.y);

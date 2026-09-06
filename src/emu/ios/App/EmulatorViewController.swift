@@ -417,6 +417,10 @@ final class EmulatorViewController: UIViewController {
         super.viewDidAppear(animated)
         gameView.setNeedsLayout()
         gameView.layoutIfNeeded()
+        ExternalDisplay.shared.onSurfaceChange = { [weak self] in
+            self?.view.setNeedsLayout()
+        }
+        ExternalDisplay.shared.setGameVisible(true)
         peripheralInput.start()
         EKA2L1Bridge.shared.resume()
         // Launch once: viewDidAppear can re-fire (e.g. returning frontmost),
@@ -434,6 +438,8 @@ final class EmulatorViewController: UIViewController {
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        ExternalDisplay.shared.onSurfaceChange = nil
+        ExternalDisplay.shared.setGameVisible(false)
         peripheralInput.stop()
         EKA2L1Bridge.shared.detachLayer()
     }

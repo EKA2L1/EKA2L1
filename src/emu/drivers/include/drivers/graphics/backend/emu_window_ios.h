@@ -5,6 +5,7 @@
 
 #include <common/vecx.h>
 #include <drivers/graphics/emu_window.h>
+#include <drivers/graphics/backend/ios_external_display.h>
 
 #include <atomic>
 #include <cstdint>
@@ -19,6 +20,8 @@ namespace eka2l1::drivers {
     class emu_window_ios final : public emu_window {
     public:
         emu_window_ios();
+
+        ios_external_display external_display;
 
         // Frontend hooks ----------------------------------------------------
         // Called by EAGLView whenever the bound CAEAGLLayer is created or

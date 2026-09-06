@@ -4,6 +4,7 @@
 #include "context_eagl.h"
 
 #include <common/log.h>
+#include <drivers/graphics/backend/ios_external_display.h>
 #include <drivers/graphics/backend/ogl/ios_gl_loader.h>
 
 #import <OpenGLES/EAGL.h>
@@ -12,6 +13,7 @@
 namespace eka2l1::drivers::graphics {
     gl_context_eagl::gl_context_eagl(const window_system_info &wsi, bool /*stereo*/, bool /*core*/) {
         m_opengl_mode = mode::opengl_es;
+        m_external_display = static_cast<ios_external_display *>(wsi.render_window);
 
         m_context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES3];
         if (!m_context) {
@@ -38,6 +40,10 @@ namespace eka2l1::drivers::graphics {
     }
 
     gl_context_eagl::~gl_context_eagl() {
+        make_current();
+        if (m_external_display) {
+            m_external_display->release();
+        }
         release_renderbuffers();
 
         if (m_framebuffer != 0) {
@@ -74,6 +80,10 @@ namespace eka2l1::drivers::graphics {
     }
 
     void gl_context_eagl::swap_buffers() {
+        if (m_external_display) {
+            m_external_display->present((__bridge void *)m_context,
+                (!m_paused && m_colorbuffer) ? m_framebuffer : 0);
+        }
         if (m_paused || !m_context || m_colorbuffer == 0) {
             return;
         }

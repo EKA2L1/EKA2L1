@@ -110,7 +110,8 @@ namespace eka2l1::drivers {
         const AVAudioSessionCategoryOptions options =
             AVAudioSessionCategoryOptionMixWithOthers |
             AVAudioSessionCategoryOptionAllowBluetoothHFP |
-            AVAudioSessionCategoryOptionAllowBluetoothA2DP;
+            AVAudioSessionCategoryOptionAllowBluetoothA2DP |
+            AVAudioSessionCategoryOptionAllowAirPlay;
         if (![session setCategory:AVAudioSessionCategoryPlayAndRecord
                               mode:AVAudioSessionModeDefault
                            options:options
