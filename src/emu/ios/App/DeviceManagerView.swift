@@ -2,7 +2,7 @@ import SwiftUI
 
 // Device management surface, pushed from the home title menu ("Manage
 // devices"): switch to a device by tapping it, add one through the shared
-// import sheet, remove one by swiping, or rebuild the list from drive Z
+// import sheet, rename or remove one by swiping, or rebuild the list from drive Z
 // ("Rescan devices", mirroring the Android device-list screen).
 //
 // The page holds no device state of its own: it observes the same DeviceStore
@@ -14,6 +14,11 @@ struct DeviceManagerView: View {
     @ObservedObject var store: DeviceStore
     let onInstall: () -> Void
 
+    @State private var renameTarget: EKA2L1DeviceItem?
+    @State private var deviceName = ""
+    @State private var showingRename = false
+    @State private var renameFailed = false
+
     var body: some View {
         List {
             Section {
@@ -24,10 +29,6 @@ struct DeviceManagerView: View {
                     ForEach(store.devices) { device in
                         deviceRow(device)
                     }
-                    .onDelete { offsets in
-                        Task { await store.deleteDevices(at: offsets) }
-                    }
-                    .deleteDisabled(store.busy)
                 }
             } header: {
                 Text("devices.installed")
@@ -60,6 +61,22 @@ struct DeviceManagerView: View {
         }
         .navigationTitle("devices.title")
         .navigationBarTitleDisplayMode(.inline)
+        .alert("devices.rename", isPresented: $showingRename) {
+            TextField("devices.name", text: $deviceName)
+            Button("common.cancel", role: .cancel) { renameTarget = nil }
+            Button("devices.rename") {
+                if let target = renameTarget {
+                    renameFailed = !store.renameDevice(target, to: deviceName)
+                }
+                renameTarget = nil
+            }
+            .disabled(store.busy || deviceName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        }
+        .alert("common.error", isPresented: $renameFailed) {
+            Button("common.done", role: .cancel) {}
+        } message: {
+            Text("devices.renameFailed")
+        }
     }
 
     // Tapping a row boots that device. The plain button style keeps the row
@@ -86,5 +103,23 @@ struct DeviceManagerView: View {
         }
         .buttonStyle(.plain)
         .disabled(store.busy)
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button(role: .destructive) {
+                guard let offset = store.devices.firstIndex(where: { $0.firmwareCode == device.firmwareCode }) else { return }
+                Task { await store.deleteDevices(at: IndexSet(integer: offset)) }
+            } label: {
+                Label("devices.delete", systemImage: "trash")
+            }
+            .disabled(store.busy)
+            Button {
+                renameTarget = device
+                deviceName = device.model
+                showingRename = true
+            } label: {
+                Label("devices.rename", systemImage: "pencil")
+            }
+            .tint(.blue)
+            .disabled(store.busy)
+        }
     }
 }

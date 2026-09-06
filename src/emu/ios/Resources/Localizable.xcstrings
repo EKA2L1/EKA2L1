@@ -371,12 +371,22 @@
         }
       }
     },
+    "devices.delete" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        }
+      }
+    },
     "devices.hint" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap a device to switch to it. Swipe left to remove it along with its data."
+            "value" : "Tap a device to switch to it. Swipe left to rename it or remove it along with its data."
           }
         }
       }
@@ -391,12 +401,42 @@
         }
       }
     },
+    "devices.name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device name"
+          }
+        }
+      }
+    },
     "devices.none" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "No devices installed."
+          }
+        }
+      }
+    },
+    "devices.rename" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename"
+          }
+        }
+      }
+    },
+    "devices.renameFailed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not rename the device. Please try again."
           }
         }
       }
@@ -1693,16 +1733,6 @@
         }
       }
     },
-    "settings.deviceName" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Device name"
-          }
-        }
-      }
-    },
     "settings.discord" : {
       "localizations" : {
         "en" : {
@@ -1729,6 +1759,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "FPS overlay"
+          }
+        }
+      }
+    },
+    "settings.friendlyPhoneName" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Friendly phone name"
           }
         }
       }

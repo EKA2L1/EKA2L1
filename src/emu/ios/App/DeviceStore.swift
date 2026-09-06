@@ -59,10 +59,19 @@ final class DeviceStore: ObservableObject {
         }
     }
 
-    // Titles only (a rename in Settings): the device set and booted device are
+    // Titles only (after a rename): the device set and booted device are
     // unchanged, so neither a reboot nor an app re-scan is needed.
     func reloadDevices() {
         devices = EKA2L1Bridge.shared.installedDevices()
+    }
+
+    func renameDevice(_ device: EKA2L1DeviceItem, to name: String) -> Bool {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !busy, !trimmed.isEmpty,
+              let current = self.device(withFirmwareCode: device.firmwareCode) else { return false }
+        guard EKA2L1Bridge.shared.renameDevice(at: current.index, to: trimmed) else { return false }
+        reloadDevices()
+        return true
     }
 
     // Run a blocking emulator operation off the main thread with the busy flag
