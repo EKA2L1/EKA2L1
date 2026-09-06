@@ -2499,9 +2499,7 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
     // emulator instances share one machine, which iOS never does. Edit
     // config.yml directly for that case.
     //
-    // Discovery port for direct IP mode (the other modes bind the fixed
-    // harbour port instead). Clamped so a stray value can never make the
-    // midman bind an out-of-range port at boot.
+    // Bonjour advertises this query port; Direct IP peers configure it explicitly.
     NSNumber *btnetListenPort = snapshot[@"btnetListenPort"];
     if (btnetListenPort) {
         _state->conf.internet_bluetooth_port = std::clamp(btnetListenPort.intValue, 1, 65535);
