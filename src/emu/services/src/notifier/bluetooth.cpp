@@ -28,7 +28,6 @@ namespace eka2l1::epoc::notifier {
     namespace {
         constexpr std::size_t bt_device_response_size = 544;
         constexpr std::size_t bt_device_name_offset = 8;
-        constexpr std::size_t bt_device_class_offset = 512;
 
         int write_selected_device(kernel_system *kern, epoc::des8 *response,
             epoc::notify_info &complete_info, const epoc::bt::device_address &selected_address) {
@@ -38,7 +37,9 @@ namespace eka2l1::epoc::notifier {
             constexpr std::u16string_view peer_name = u"EKA2L1 peer";
             const std::uint32_t name_info = (static_cast<std::uint32_t>(epoc::buf) << 28)
                 | static_cast<std::uint32_t>(peer_name.size());
-            const std::uint32_t name_capacity = 248;
+            // EPOC6 keeps a 256-character name; later ROMs use 248 characters.
+            const std::uint32_t name_capacity = kern->get_epoc_version() == epocver::epoc6 ? 256 : 248;
+            const std::size_t bt_device_class_offset = bt_device_name_offset + 8 + name_capacity * sizeof(char16_t);
             std::memcpy(result.data() + bt_device_name_offset, &name_info, sizeof(name_info));
             std::memcpy(result.data() + bt_device_name_offset + sizeof(name_info), &name_capacity, sizeof(name_capacity));
             std::memcpy(result.data() + bt_device_name_offset + sizeof(name_info) + sizeof(name_capacity),
