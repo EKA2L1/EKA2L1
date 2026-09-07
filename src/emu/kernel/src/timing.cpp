@@ -181,11 +181,15 @@ namespace eka2l1 {
     }
 
     void ntimer::schedule_event(int64_t us_into_future, int event_type, std::uint64_t userdata) {
+        schedule_event_at(teletimer_->microseconds() + us_into_future, event_type, userdata);
+    }
+
+    void ntimer::schedule_event_at(std::uint64_t deadline, int event_type, std::uint64_t userdata) {
         const std::lock_guard<std::mutex> guard(lock_);
 
         event evt;
 
-        evt.event_time = teletimer_->microseconds() + us_into_future;
+        evt.event_time = deadline;
         evt.event_type = event_type;
         evt.event_user_data = userdata;
 

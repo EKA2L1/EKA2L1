@@ -2891,7 +2891,17 @@ namespace eka2l1::epoc {
             return;
         }
 
-        timer->after(kern->crr_thread(), req_sts, us_after);
+        timer->after_tick_queue(kern->crr_thread(), req_sts, us_after);
+    }
+
+    BRIDGE_FUNC(void, timer_after_high_res, kernel::handle h, eka2l1::ptr<epoc::request_status> req_sts, std::int32_t us_after) {
+        timer_ptr timer = kern->get<kernel::timer>(h);
+
+        if (!timer) {
+            return;
+        }
+
+        timer->after_high_res(kern->crr_thread(), req_sts, us_after);
     }
 
     BRIDGE_FUNC(void, timer_lock, kernel::handle h, eka2l1::ptr<epoc::request_status> req_sts, std::uint32_t second_fraction_enum) {
@@ -2917,7 +2927,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        timer->after(kern->crr_thread(), req_sts, us_after);
+        timer->after_tick_queue(kern->crr_thread(), req_sts, us_after);
     }
     
     BRIDGE_FUNC(void, timer_after_ticks_eka1, eka2l1::ptr<epoc::request_status> req_sts, std::int32_t ticks_after, kernel::handle h) {
@@ -6017,7 +6027,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x83, logical_device_free),
         BRIDGE_REGISTER(0x84, logical_channel_create),
         BRIDGE_REGISTER(0x85, timer_create),
-        BRIDGE_REGISTER(0x86, timer_after), // Actually TimerHighRes
+        BRIDGE_REGISTER(0x86, timer_after_high_res), // Actually TimerHighRes
         BRIDGE_REGISTER(0x87, after), // Actually AfterHighRes
         BRIDGE_REGISTER(0x88, change_notifier_create),
         BRIDGE_REGISTER(0x8D, thread_get_cpu_time),
@@ -6199,7 +6209,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x7F, session_create),
         BRIDGE_REGISTER(0x80, session_create_from_handle),
         BRIDGE_REGISTER(0x84, timer_create),
-        BRIDGE_REGISTER(0x85, timer_after), // Actually TimerHighRes
+        BRIDGE_REGISTER(0x85, timer_after_high_res), // Actually TimerHighRes
         BRIDGE_REGISTER(0x86, after), // Actually AfterHighRes
         BRIDGE_REGISTER(0x87, change_notifier_create),
         BRIDGE_REGISTER(0x9C, wait_dll_lock),
@@ -6379,7 +6389,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x7E, session_create),
         BRIDGE_REGISTER(0x7F, session_create_from_handle),
         BRIDGE_REGISTER(0x83, timer_create),
-        BRIDGE_REGISTER(0x84, timer_after), // Actually TimerHighRes
+        BRIDGE_REGISTER(0x84, timer_after_high_res), // Actually TimerHighRes
         BRIDGE_REGISTER(0x85, after), // Actually AfterHighRes
         BRIDGE_REGISTER(0x86, change_notifier_create),
         BRIDGE_REGISTER(0x9B, wait_dll_lock),
