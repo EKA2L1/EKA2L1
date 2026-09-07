@@ -35,6 +35,7 @@ add_library(epockern
         include/kernel/session.h
         include/kernel/server.h
         include/kernel/thread.h
+        include/kernel/timer_deadline.h
         include/kernel/timer.h
         include/kernel/kernel.h
         include/kernel/reg.h

@@ -53,6 +53,9 @@ namespace eka2l1 {
             // yet made it active.
             bool fire_or_defer();
 
+            bool schedule_at(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts,
+                std::uint64_t deadline);
+
         public:
             timer(kernel_system *kern, ntimer *timing, std::string name,
                 kernel::access_type access = access_type::local_access);
@@ -61,8 +64,14 @@ namespace eka2l1 {
             bool after(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts,
                 std::uint64_t us_signal);
 
+            bool after_tick_queue(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts,
+                std::int32_t interval);
+
+            bool after_high_res(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts,
+                std::uint32_t us_signal);
+
             bool after_ticks(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts,
-                std::uint64_t tick_count);
+                std::uint32_t tick_count);
 
             bool request_finish();
             bool cancel_request();

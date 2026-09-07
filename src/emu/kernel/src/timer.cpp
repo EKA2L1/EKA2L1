@@ -25,6 +25,7 @@
 #include <kernel/kernel.h>
 #include <kernel/thread.h>
 #include <kernel/timer.h>
+#include <kernel/timer_deadline.h>
 #include <utils/err.h>
 #include <utils/reqsts.h>
 
@@ -72,31 +73,39 @@ namespace eka2l1 {
             timing->unschedule_event(callback_type, static_cast<std::uint64_t>(unique_id()));
         }
 
-        bool timer::after(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts, std::uint64_t us_signal) {
+        bool timer::schedule_at(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts,
+            std::uint64_t deadline) {
             if (outstanding) {
                 return false;
             }
 
             outstanding = true;
             activate_defer_count_ = 0;
-
             info.done_nof = epoc::notify_info(sts, requester);
             info.own_timer = this;
-
-            static constexpr std::uint64_t MINIMUM_US_AFTER = 30;
-
-            // Simulate some timeslice delay, and not finish immediately
-            // Some games just set the microseconds to signal to 1, and then when it's report superfast, it acts weird!
-            // For example: DDragon, which signals an object that has not yet been set to active in time! (cancel was called but ineffective cause finish got to it first)
-            timing->schedule_event(common::max<std::uint64_t>(MINIMUM_US_AFTER, us_signal),
-                callback_type, static_cast<std::uint64_t>(unique_id()));
+            timing->schedule_event_at(deadline, callback_type, static_cast<std::uint64_t>(unique_id()));
             return true;
         }
-        
+
+        bool timer::after(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts, std::uint64_t us_signal) {
+            static constexpr std::uint64_t MINIMUM_US_AFTER = 30;
+            return schedule_at(requester, sts,
+                timing->microseconds() + common::max<std::uint64_t>(MINIMUM_US_AFTER, us_signal));
+        }
+
+        bool timer::after_tick_queue(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts,
+            std::int32_t interval) {
+            return schedule_at(requester, sts, timer_after_deadline(timing->microseconds(), interval));
+        }
+
+        bool timer::after_high_res(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts,
+            std::uint32_t us_signal) {
+            return schedule_at(requester, sts, high_res_timer_deadline(timing->microseconds(), us_signal));
+        }
+
         bool timer::after_ticks(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts,
-            std::uint64_t tick_count) {
-            const std::uint64_t us_per_ticks = (common::microsecs_per_sec / epoc::TICK_TIMER_HZ);
-            return after(requester, sts, us_per_ticks * tick_count);
+            std::uint32_t tick_count) {
+            return schedule_at(requester, sts, tick_count_timer_deadline(timing->microseconds(), tick_count));
         }
 
         bool timer::request_finish() {
