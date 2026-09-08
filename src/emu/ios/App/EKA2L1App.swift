@@ -43,6 +43,7 @@ private struct MainSceneContent: View {
         .onChange(of: scenePhase) { newPhase in
             switch newPhase {
             case .active:
+                EKA2L1Bridge.shared.resumeNetworking()
                 EKA2L1Bridge.shared.resume()
                 ExternalDisplay.shared.setForeground(true)
             case .inactive, .background:
@@ -52,6 +53,12 @@ private struct MainSceneContent: View {
                 // shares; don't keep the iOS 16 fallback's generators alive
                 // across that. SwiftUI handles this itself on iOS 17+.
                 Haptics.release()
+                // Only .background gets the process suspended, and a suspended
+                // app's sockets come back defunct. A passing .inactive (control
+                // centre, a call banner) must not drop a live netplay search.
+                if newPhase == .background {
+                    EKA2L1Bridge.shared.suspendNetworking()
+                }
             @unknown default:
                 break
             }

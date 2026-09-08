@@ -70,39 +70,26 @@ namespace eka2l1::epoc::bt {
         std::memcpy(&meta_server_addr, ideal_result_info->ai_addr, sizeof(sockaddr_in6));
         meta_server_addr.sin6_port = htons(CENTRAL_SERVER_STANDARD_PORT);
 
-        auto matching_server_socket_copy = matching_server_socket_;
+        sockaddr_in6 addr_temp{};
+        addr_temp.sin6_family = meta_server_addr.sin6_family;
+        matching_server_socket_->bind(*reinterpret_cast<sockaddr*>(&addr_temp));
 
-        libuv::default_looper->one_shot([matching_server_socket_copy, meta_server_addr, this]() {
-            auto matching_server_socket_copy_copy = matching_server_socket_copy;
-
-            sockaddr_in6 addr_temp;
-            std::memset(&addr_temp, 0, sizeof(sockaddr_in6));
-            addr_temp.sin6_family = meta_server_addr.sin6_family;
-
-            matching_server_socket_copy_copy->bind(*reinterpret_cast<sockaddr*>(&addr_temp));
-
-            matching_server_socket_copy_copy->on<uvw::error_event>([](const uvw::error_event &event, uvw::tcp_handle &handle) {
-                LOG_ERROR(SERVICE_BLUETOOTH, "Error on the central Bluetooth Netplay server socket! Libuv error code={}", event.code());
-            });
-
-            matching_server_socket_copy_copy->on<uvw::connect_event>([matching_server_socket_copy_copy, this](const uvw::connect_event &event, uvw::tcp_handle &handle) {
-                matching_server_socket_copy_copy->on<uvw::data_event>([this](const uvw::data_event &event, uvw::tcp_handle &handle) {
-                    handle_matching_server_msg(static_cast<std::int64_t>(event.length), event.data.get());
-                });
-
-                matching_server_socket_copy_copy->read();
-
-                // The server puts us in the room named by our password, so it has to
-                // hear the login before it can answer any player query.
-                send_login();
-            });
-
-            int err = matching_server_socket_copy_copy->connect(*reinterpret_cast<const sockaddr *>(&meta_server_addr));
-
-            if (err < 0) {
-                LOG_ERROR(SERVICE_BLUETOOTH, "Fail to connect to central Bluetooth Netplay server! Libuv's error code {}", err);
-            }
+        matching_server_socket_->on<uvw::error_event>([](const uvw::error_event &event, uvw::tcp_handle &handle) {
+            LOG_ERROR(SERVICE_BLUETOOTH, "Error on the central Bluetooth Netplay server socket! Libuv error code={}", event.code());
         });
+
+        matching_server_socket_->on<uvw::connect_event>([this](const uvw::connect_event &event, uvw::tcp_handle &handle) {
+            handle.on<uvw::data_event>([this](const uvw::data_event &event, uvw::tcp_handle &handle) {
+                handle_matching_server_msg(static_cast<std::int64_t>(event.length), event.data.get());
+            });
+            handle.read();
+            send_login();
+        });
+
+        const int err = matching_server_socket_->connect(*reinterpret_cast<const sockaddr *>(&meta_server_addr));
+        if (err < 0) {
+            LOG_ERROR(SERVICE_BLUETOOTH, "Fail to connect to central Bluetooth Netplay server! Libuv's error code {}", err);
+        }
 
         freeaddrinfo(result_info);
     }
@@ -124,7 +111,7 @@ namespace eka2l1::epoc::bt {
         }
     }
 
-    void midman_inet::send_logout(const bool close_and_reset) {
+    void midman_inet::send_logout() {
         if (!matching_server_socket_) {
             return;
         }
@@ -139,12 +126,6 @@ namespace eka2l1::epoc::bt {
 
         if (err < 0) {
             LOG_ERROR(SERVICE_BLUETOOTH, "Fail to send logout request to server! Libuv's error code {}", err);
-        }
-
-        if (close_and_reset) {
-            auto matching_server_socket_copy = matching_server_socket_;
-            libuv::default_looper->one_shot([matching_server_socket_copy]() {
-            });
         }
     }
 

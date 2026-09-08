@@ -36,6 +36,7 @@ namespace eka2l1::epoc::bt {
         , retry_times_(0)
         , callback_(nullptr)
         , in_transfer_data_callback_(true)
+        , asker_dead_(false)
         , asker_id_(midman->new_asker_id())
         , alive_(std::make_shared<std::atomic<bool>>(true)) {
         request_done_evt_.set();
@@ -115,6 +116,14 @@ namespace eka2l1::epoc::bt {
                 return;
             }
 
+            // Retrying on a dead socket never recovers. Fail now and let the next
+            // request rebuild; closing here would destroy the listener we are in.
+            if (is_socket_dead_error(event.code())) {
+                handle.stop();
+                retry_times_ = MAX_RETRY_ATTEMPT;
+                asker_dead_ = true;
+            }
+
             handle_request_failure();
         });
 
@@ -179,6 +188,11 @@ namespace eka2l1::epoc::bt {
                 }
 
                 auto default_loop = uvw::loop::get_default();
+
+                if (asker_dead_) {
+                    asker_dead_ = false;
+                    shutdown_uv_handle(asker_);
+                }
 
                 if (!asker_) {
                     asker_ = default_loop->resource<uvw::udp_handle>();
