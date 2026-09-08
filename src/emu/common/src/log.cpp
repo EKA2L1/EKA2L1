@@ -24,8 +24,13 @@
 
 #include <spdlog/spdlog.h>
 
+#include <algorithm>
+#include <cstdio>
+#include <fstream>
 #include <iostream>
 #include <memory>
+#include <string>
+#include <vector>
 
 #ifdef _MSC_VER
 #include <spdlog/sinks/msvc_sink.h>
@@ -33,6 +38,7 @@
 #include "spdlog/sinks/android_sink.h"
 #endif
 
+#include <spdlog/details/file_helper.h>
 #include <spdlog/sinks/base_sink.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
@@ -166,6 +172,131 @@ namespace eka2l1 {
 
         bool console_shown = false;
 
+        // A file sink that stays within a line budget. Once the budget is reached the
+        // oldest half of the file is dropped: the newest lines are the ones worth
+        // keeping, and halving makes the rewrite rare enough not to matter.
+        class capped_file_sink final : public spdlog::sinks::base_sink<std::mutex> {
+        public:
+            capped_file_sink(const std::string &filename, const std::size_t max_lines)
+                : filename_(filename)
+                , max_lines_(max_lines) {
+                file_.open(filename_, true);
+            }
+
+            ~capped_file_sink() override {
+                file_.close();
+            }
+
+        protected:
+            void sink_it_(const spdlog::details::log_msg &msg) override {
+                spdlog::memory_buf_t formatted;
+                base_sink<std::mutex>::formatter_->format(msg, formatted);
+
+                file_.write(formatted);
+                lines_ += static_cast<std::size_t>(std::count(formatted.begin(), formatted.end(), '\n'));
+
+                if (lines_ >= max_lines_) {
+                    drop_oldest_lines();
+                }
+            }
+
+            void flush_() override {
+                file_.flush();
+            }
+
+        private:
+            std::string trim_notice(const std::size_t dropped_total) const {
+                return "--- log trimmed: " + std::to_string(dropped_total) + " oldest lines dropped so far ---\n";
+            }
+
+            void drop_oldest_lines() {
+                const std::string trimmed_path = filename_ + ".trim";
+
+                std::size_t dropped = lines_;
+                std::size_t kept_lines = 0;
+                bool rewritten = false;
+
+                file_.flush();
+                file_.close();
+
+                {
+                    std::ifstream source(filename_, std::ios::binary);
+
+                    if (source) {
+                        // Counting the dropped lines off rather than seeking to the middle
+                        // of the file keeps the budget exact whatever the lines measure.
+                        const std::size_t to_drop = (lines_ / 2) + 1;
+
+                        std::size_t skipped = 0;
+                        std::string line;
+
+                        while ((skipped < to_drop) && std::getline(source, line)) {
+                            skipped++;
+                        }
+
+                        std::ofstream kept(trimmed_path, std::ios::binary | std::ios::trunc);
+
+                        if (kept) {
+                            const std::string notice = trim_notice(dropped_ + skipped);
+                            kept.write(notice.data(), static_cast<std::streamsize>(notice.size()));
+                            kept_lines = 1;
+
+                            std::vector<char> buffer(64 * 1024);
+
+                            while (source) {
+                                source.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+
+                                const std::streamsize read_size = source.gcount();
+                                if (read_size <= 0) {
+                                    break;
+                                }
+
+                                kept.write(buffer.data(), read_size);
+                                kept_lines += static_cast<std::size_t>(std::count(buffer.data(), buffer.data() + read_size, '\n'));
+                            }
+
+                            rewritten = kept.good();
+                            dropped = skipped;
+                        }
+                    }
+                }
+
+                dropped_ += dropped;
+
+                if (rewritten) {
+                    std::remove(filename_.c_str());
+                    std::rename(trimmed_path.c_str(), filename_.c_str());
+
+                    file_.open(filename_, false);
+                    lines_ = kept_lines;
+
+                    return;
+                }
+
+                // The rewrite failed, but the budget still has to hold: start the file
+                // over rather than let it grow.
+                std::remove(trimmed_path.c_str());
+                file_.open(filename_, true);
+
+                const std::string notice = trim_notice(dropped_);
+                spdlog::memory_buf_t notice_buf;
+                notice_buf.append(notice.data(), notice.data() + notice.size());
+
+                file_.write(notice_buf);
+                lines_ = 1;
+            }
+
+            spdlog::details::file_helper file_;
+            std::string filename_;
+            std::size_t max_lines_;
+            std::size_t lines_ = 0;
+            std::size_t dropped_ = 0;
+        };
+
+        std::shared_ptr<spdlog::sinks::sink> make_capped_file_sink(const std::string &filename, const std::size_t max_lines) {
+            return std::make_shared<capped_file_sink>(filename, max_lines);
+        }
+
         struct imgui_logger_sink : public spdlog::sinks::base_sink<std::mutex> {
             explicit imgui_logger_sink(std::shared_ptr<base_logger> _logger)
                 : logger(_logger.get()) {}
@@ -215,7 +346,7 @@ namespace eka2l1 {
             color_dist_sink = std::make_shared<spdlog::sinks::dist_sink_mt>();
 
             sinks.push_back(color_dist_sink);
-            sinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_file_name));
+            sinks.push_back(make_capped_file_sink(log_file_name, LOG_FILE_MAX_LINES));
 
 #ifdef _MSC_VER
             sinks.push_back(std::make_shared<spdlog::sinks::msvc_sink_st>());
