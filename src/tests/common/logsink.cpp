@@ -35,6 +35,11 @@ namespace {
         std::string line;
 
         while (std::getline(stream, line)) {
+            // The file is read as binary, so a Windows line ending keeps its carriage return.
+            if (!line.empty() && (line.back() == '\r')) {
+                line.pop_back();
+            }
+
             lines.push_back(line);
         }
 
