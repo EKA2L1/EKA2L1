@@ -1381,7 +1381,7 @@ namespace eka2l1 {
         mem::vm_address chunk_base = addr;
         std::size_t rebase_offset = 0;
 
-        if ((kern_ver_ == epocver::epoc91) && (mem_->get_model_type() == mem::mem_model_type::multiple)) {
+        if (mem_->get_model_type() == mem::mem_model_type::multiple) {
             chunk_base = addr & ~mem_->get_control()->chunk_mask_;
             rebase_offset = addr - chunk_base;
         }
