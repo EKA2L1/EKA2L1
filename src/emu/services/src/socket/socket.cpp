@@ -349,30 +349,26 @@ namespace eka2l1::epoc::socket {
         kernel::process *requester = ctx->msg->own_thr->owning_process();
         epoc::des8 *packet_des = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[2]).get(requester);
         
-        // The reworked client packs RecvOneOrMore exactly like Recv --
-        // TIpcArgs(someFlags, &aLen, &aBuffer), esockserver/csock/CS_CLI.CPP -- so what the
-        // branch below distinguishes is client versions, not opcodes. Selecting it on
-        // one_or_more alone makes a pre-S^3 client, which still puts the transfer length
-        // package first, read that descriptor as flags and never get it written back.
+        // The reworked client passes the flags as a value and the transfer length package
+        // second -- TIpcArgs(someFlags, &aLen, &aBuffer), esockserver/csock/CS_CLI.CPP. The
+        // pre-S^3 client puts the package first and carries the flags inside it, which is
+        // also what the reworked client falls back to for RecvFrom, where the address takes
+        // the second slot.
         const bool length_package_first = (ctx->sys->get_symbian_version_use() < epocver::epoc95);
 
         std::uint32_t *size_return = nullptr;
-        if (has_return_length && (length_package_first || !one_or_more || has_addr)) {
+        if (has_return_length && (length_package_first || has_addr)) {
             size_return = reinterpret_cast<std::uint32_t*>(ctx->get_descriptor_argument_ptr(0));
             if (!size_return) {
                 ctx->complete(epoc::error_argument);
                 return;
             }
 
-            // Not in S^3 I think, but they store the flag in this variable in s60v5 and down
-            // Layout in S^3 makes more sense. They still do this in some case where things are not fit though in s^3.
             flags = *size_return;
         } else {
             flags = ctx->get_argument_value<std::uint32_t>(0);
 
-            // On S^3 and probably older version the layout is still the same like this.
-            // First is flags, second is length pointer and third is buffer
-            if (one_or_more && has_return_length) {
+            if (has_return_length) {
                 size_return = reinterpret_cast<std::uint32_t*>(ctx->get_descriptor_argument_ptr(1));
             }
         }
@@ -719,11 +715,11 @@ namespace eka2l1::epoc::socket {
                     return;
 
                 case socket_reform_so_recv:
-                    recv(ctx, false, false, false);
+                    recv(ctx, true, false, false);
                     return;
 
                 case socket_reform_so_recv_no_len:
-                    recv(ctx, true, false, false);
+                    recv(ctx, false, false, false);
                     return;
 
                 case socket_reform_so_recv_one_or_more:
@@ -838,11 +834,11 @@ namespace eka2l1::epoc::socket {
                     return;
 
                 case socket_so_recv:
-                    recv(ctx, false, false, false);
+                    recv(ctx, true, false, false);
                     return;
 
                 case socket_so_recv_no_len:
-                    recv(ctx, true, false, false);
+                    recv(ctx, false, false, false);
                     return;
 
                 case socket_so_recv_one_or_more:
