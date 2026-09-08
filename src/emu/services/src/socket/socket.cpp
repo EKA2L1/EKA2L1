@@ -113,7 +113,10 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket::shutdown(epoc::notify_info &complete_info, int reason) {
+        // The client waits on this request status, so an unimplemented backend must
+        // still answer it or the guest's shutdown active object never runs again.
         LOG_ERROR(SERVICE_ESOCK, "Shutdown not implemented!");
+        complete_info.complete(epoc::error_not_supported);
     }
 
     socket_socket::socket_socket(socket_client_session *parent, std::unique_ptr<socket> &sock)
@@ -781,6 +784,10 @@ namespace eka2l1::epoc::socket {
                     listen(ctx);
                     return;
 
+                case socket_reform_so_shutdown:
+                    shutdown(ctx);
+                    return;
+
                 default:
                     break;
                 }
@@ -870,6 +877,10 @@ namespace eka2l1::epoc::socket {
 
                 case socket_so_remote_name:
                     remote_name(ctx);
+                    return;
+
+                case socket_so_shutdown:
+                    shutdown(ctx);
                     return;
 
                 default:
