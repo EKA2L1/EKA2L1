@@ -78,6 +78,17 @@ namespace eka2l1 {
         void setup_log(std::shared_ptr<base_logger> extra_logger);
         void toggle_console();
         bool is_console_enabled();
+
+        /**
+         * \brief Make the log file sink, which drops its oldest lines once it holds
+         *        max_lines of them.
+         *
+         * The budget stands in for a size cap: log lines measure 110-160 bytes, so the
+         * default keeps the file near 100 MB.
+         */
+        std::shared_ptr<spdlog::sinks::sink> make_capped_file_sink(const std::string &filename, const std::size_t max_lines);
+
+        static constexpr std::size_t LOG_FILE_MAX_LINES = 640000;
     }
 }
 
