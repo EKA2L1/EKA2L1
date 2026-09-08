@@ -843,7 +843,12 @@ namespace eka2l1::dispatch {
 
     std::uint32_t egl_context_es1::bind_texture(const std::uint32_t target, const std::uint32_t tex) {
         auto *obj = objects_.get(tex);
-        if (obj && (*obj).get()) {
+        if (obj && !obj->get()) {
+            // Reviving a deleted name here rather than on first use is what gives the object its target.
+            *obj = std::make_unique<gles_driver_texture>(*this);
+        }
+
+        if (obj && (*obj).get() && ((*obj)->object_type() == GLES_OBJECT_TEXTURE)) {
             std::uint32_t bind_res = reinterpret_cast<gles_driver_texture*>((*obj).get())->try_bind(target);
             if (bind_res != 0) {
                 return bind_res;
@@ -1142,6 +1147,11 @@ namespace eka2l1::dispatch {
             return;
         }
 
+        // Avoid normalising a zero axis into NaNs; nonzero axes need not have unit length.
+        if (x == 0.0f && y == 0.0f && z == 0.0f) {
+            return;
+        }
+
         ctx->active_matrix() = glm::rotate(ctx->active_matrix(), glm::radians(angles), glm::vec3(x, y, z));
     }
 
@@ -1151,7 +1161,15 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        ctx->active_matrix() = glm::rotate(ctx->active_matrix(), glm::radians(FIXED_32_TO_FLOAT(angles)), glm::vec3(FIXED_32_TO_FLOAT(x), FIXED_32_TO_FLOAT(y), FIXED_32_TO_FLOAT(z)));
+        if (x == 0 && y == 0 && z == 0) {
+            return;
+        }
+
+        const float xf = FIXED_32_TO_FLOAT(x);
+        const float yf = FIXED_32_TO_FLOAT(y);
+        const float zf = FIXED_32_TO_FLOAT(z);
+
+        ctx->active_matrix() = glm::rotate(ctx->active_matrix(), glm::radians(FIXED_32_TO_FLOAT(angles)), glm::vec3(xf, yf, zf));
     }
     
     BRIDGE_FUNC_LIBRARY(void, gl_frustumf_emu, float left, float right, float bottom, float top, float near, float far) {
