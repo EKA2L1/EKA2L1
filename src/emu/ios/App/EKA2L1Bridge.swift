@@ -223,6 +223,14 @@ final class EKA2L1Bridge {
         emulator.resume()
     }
 
+    func suspendNetworking() {
+        emulator.suspendNetworking()
+    }
+
+    func resumeNetworking() {
+        emulator.resumeNetworking()
+    }
+
     func guestScreenModeSnapshot() -> (modes: [Int], current: Int) {
         let snapshot = emulator.guestScreenModeSnapshot()
         let modes = (snapshot["modes"] as? [NSNumber])?.map(\.intValue) ?? []

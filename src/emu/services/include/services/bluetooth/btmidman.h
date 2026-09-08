@@ -58,6 +58,14 @@ namespace eka2l1::epoc::bt {
         }
 
         virtual midman_type type() const = 0;
+
+        // Host suspension can invalidate sockets. The session owner reports each
+        // transition; implementations must not wait for network callbacks here.
+        virtual void suspend() {
+        }
+
+        virtual void resume() {
+        }
     };
 
     std::unique_ptr<midman> make_bluetooth_midman(const eka2l1::config::state &conf, const std::uint32_t reserved_stack_type = 0);

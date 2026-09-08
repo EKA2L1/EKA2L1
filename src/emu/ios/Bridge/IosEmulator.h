@@ -217,6 +217,11 @@ typedef NS_ENUM(NSInteger, EKA2L1InstallResult) {
 - (void)pause;
 - (void)resume;
 
+// Sockets do not survive the process being suspended, so the app reports a real
+// background transition (not a passing .inactive) around rebuilding them.
+- (void)suspendNetworking;
+- (void)resumeNetworking;
+
 // Input -------------------------------------------------------------------
 // Single-touch dispatch from EAGLView.
 typedef NS_ENUM(NSInteger, EKA2L1PointerPhase) {

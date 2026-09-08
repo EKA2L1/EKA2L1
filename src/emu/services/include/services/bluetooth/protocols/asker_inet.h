@@ -63,6 +63,7 @@ namespace eka2l1::epoc::bt {
         common::event request_done_evt_;
 
         bool in_transfer_data_callback_;
+        bool asker_dead_;
         std::uint32_t asker_id_;
         std::shared_ptr<std::atomic<bool>> alive_;
 

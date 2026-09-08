@@ -395,7 +395,11 @@ namespace eka2l1::ios {
         // Main-thread readers must try_lock only: while a boot holds this
         // lock the graphics thread dispatch_syncs onto the main queue, so a
         // blocked main thread would deadlock the boot.
-        std::recursive_mutex session_mutex;
+        std::recursive_mutex &session_mutex;
+
+        explicit emulator(std::recursive_mutex &session_mutex)
+            : session_mutex(session_mutex) {
+        }
 
         std::mutex layer_mutex;
         std::mutex display_geometry_mutex;
@@ -858,6 +862,7 @@ namespace eka2l1::ios {
                                fatalDetails:(nullable NSString *)fatalDetails;
 // Synchronous launch body, run off the main thread by launchAppWithUID:completion:.
 - (BOOL)runLaunchAppWithUID:(uint32_t)uid;
+- (void)applyNetworkingSuspended:(BOOL)suspended;
 // Uninstall path for apps with no package registry (N-Gage game cards).
 - (BOOL)removeUnpackagedAppWithUID:(uint32_t)uid;
 // Post-uninstall cleanup for a registration the package did not own.
@@ -865,7 +870,10 @@ namespace eka2l1::ios {
 @end
 
 @implementation EKA2L1Emulator {
+    // Queued work must be able to lock before reading a possibly torn-down state.
+    std::recursive_mutex _sessionMutex;
     std::unique_ptr<eka2l1::ios::emulator> _state;
+    std::atomic<bool> _networkingSuspended;
     // Host pointer identity (UITouch address) → guest pointer number. The guest
     // event's ptr_num is a uint8_t indexed pointer slot on Symbian^3 (advanced
     // pointers), so raw UITouch identities must be mapped to small stable
@@ -886,12 +894,23 @@ namespace eka2l1::ios {
     return instance;
 }
 
+- (instancetype)init {
+    self = [super init];
+    if (self) {
+        _networkingSuspended = false;
+    }
+    return self;
+}
+
 - (BOOL)startWithDocumentsPath:(NSString *)documentsPath {
     if (_state && _state->running) {
         return YES;
     }
 
-    _state = std::make_unique<eka2l1::ios::emulator>();
+    {
+        std::lock_guard<std::recursive_mutex> session_lock(_sessionMutex);
+        _state = std::make_unique<eka2l1::ios::emulator>(_sessionMutex);
+    }
     _state->documents_root = documentsPath.UTF8String;
 
     // Build the sandbox layout up front so later steps can rely on it.
@@ -1174,12 +1193,10 @@ namespace eka2l1::ios {
 }
 
 - (void)shutdown {
+    std::lock_guard<std::recursive_mutex> session_lock(_sessionMutex);
     if (!_state) {
         return;
     }
-    // Wait out any in-flight rescan/boot before tearing the whole state down.
-    // Released just before _state.reset() — the mutex lives inside _state.
-    std::unique_lock<std::recursive_mutex> session_lock(_state->session_mutex);
     // Quiesce sensor callbacks (pause doubles as an in-flight barrier) before
     // the kernel they complete into goes away below.
     if (_state->sensor_driver) {
@@ -1208,7 +1225,6 @@ namespace eka2l1::ios {
     _state->sensor_driver.reset();
     _state->window.reset();
     _state->settings.reset();
-    session_lock.unlock();
     _state.reset();
 }
 
@@ -1481,6 +1497,7 @@ namespace eka2l1::ios {
     _state->winserv = eka2l1::ios::get_window_server(sys->get_kernel_system());
 
     _state->mounted = true;
+    [self applyNetworkingSuspended:_networkingSuspended.load()];
     eka2l1::ios::bind_graphics_driver(_state.get());
 
     // Register a per-screen redraw callback so each frame produced by the
@@ -2160,6 +2177,46 @@ namespace eka2l1::ios {
     // Resume guest execution only after host devices have been restored, so
     // guest stream start/stop calls cannot race the AudioUnit restart above.
     _state->paused = false;
+}
+
+// Call with session_mutex held; the kernel and midman belong to that session.
+- (void)applyNetworkingSuspended:(BOOL)suspended {
+    if (!_state || !_state->mounted || !_state->symsys) {
+        return;
+    }
+
+    auto *kern = _state->symsys->get_kernel_system();
+    if (!kern) {
+        return;
+    }
+
+    eka2l1::kernel_lock lock(kern);
+    auto *server = kern->get_by_name<eka2l1::btman_server>(
+        eka2l1::get_btman_server_name_by_epocver(kern->get_epoc_version()));
+
+    if (auto *midman = server ? server->get_midman() : nullptr) {
+        if (suspended) {
+            midman->suspend();
+        } else {
+            midman->resume();
+        }
+    }
+}
+
+- (void)suspendNetworking {
+    _networkingSuspended = true;
+    dispatch_async(eka2l1::ios::emulator_control_queue(), ^{
+        std::lock_guard<std::recursive_mutex> session_lock(self->_sessionMutex);
+        [self applyNetworkingSuspended:YES];
+    });
+}
+
+- (void)resumeNetworking {
+    _networkingSuspended = false;
+    dispatch_async(eka2l1::ios::emulator_control_queue(), ^{
+        std::lock_guard<std::recursive_mutex> session_lock(self->_sessionMutex);
+        [self applyNetworkingSuspended:NO];
+    });
 }
 
 - (CGRect)guestDisplayRect {

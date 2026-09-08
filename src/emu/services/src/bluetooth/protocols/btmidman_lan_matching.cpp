@@ -96,30 +96,32 @@ namespace eka2l1::epoc::bt {
         local_addr_.port_ = static_cast<std::uint16_t>(LAN_DISCOVERY_PORT);
         lan_discovery_call_listener_socket_ = loop->resource<uvw::udp_handle>();
 
-        libuv::default_looper->one_shot([this]() {
-            sockaddr_in6 addr_bind;
-            std::memset(&addr_bind, 0, sizeof(sockaddr_in6));
-            addr_bind.sin6_family = AF_INET;
-            addr_bind.sin6_port = htons(static_cast<std::uint16_t>(LAN_DISCOVERY_PORT));
+        sockaddr_in6 addr_bind;
+        std::memset(&addr_bind, 0, sizeof(sockaddr_in6));
+        addr_bind.sin6_family = AF_INET;
+        addr_bind.sin6_port = htons(static_cast<std::uint16_t>(LAN_DISCOVERY_PORT));
 
-            if (const int bind_err = lan_discovery_call_listener_socket_->bind(*reinterpret_cast<sockaddr*>(&addr_bind)); bind_err < 0) {
-                LOG_ERROR(SERVICE_BLUETOOTH, "Can't bind the LAN discovery socket to port {}! Libuv error code={}", LAN_DISCOVERY_PORT, bind_err);
+        if (const int bind_err = lan_discovery_call_listener_socket_->bind(*reinterpret_cast<sockaddr*>(&addr_bind)); bind_err < 0) {
+            LOG_ERROR(SERVICE_BLUETOOTH, "Can't bind the LAN discovery socket to port {}! Libuv error code={}", LAN_DISCOVERY_PORT, bind_err);
+        }
+        lan_discovery_call_listener_socket_->on<uvw::error_event>([](const uvw::error_event &event, uvw::udp_handle &handle) {
+            LOG_ERROR(SERVICE_BLUETOOTH, "Error on the LAN discovery listener socket! Libuv error code={}", event.code());
+
+            if (is_socket_dead_error(event.code())) {
+                handle.stop();
             }
-            lan_discovery_call_listener_socket_->on<uvw::error_event>([](const uvw::error_event &event, uvw::udp_handle &handle) {
-                LOG_ERROR(SERVICE_BLUETOOTH, "Error on the LAN discovery listener socket! Libuv error code={}", event.code());
-            });
-
-            lan_discovery_call_listener_socket_->on<uvw::udp_data_event>([this](const uvw::udp_data_event &event, uvw::udp_handle &handle) {
-                std::optional<sockaddr_in6> sender_ced = libuv::from_ip_string(event.sender.ip.data(), event.sender.port);
-                if (!sender_ced.has_value()) {
-                    LOG_ERROR(SERVICE_BLUETOOTH, "Invalid sender address passed to callback!");
-                    return;
-                }
-                handle_lan_discovery_receive(event.data.get(), event.length, reinterpret_cast<sockaddr*>(&sender_ced.value()));
-            });
-
-            lan_discovery_call_listener_socket_->recv();
         });
+
+        lan_discovery_call_listener_socket_->on<uvw::udp_data_event>([this](const uvw::udp_data_event &event, uvw::udp_handle &handle) {
+            std::optional<sockaddr_in6> sender_ced = libuv::from_ip_string(event.sender.ip.data(), event.sender.port);
+            if (!sender_ced.has_value()) {
+                LOG_ERROR(SERVICE_BLUETOOTH, "Invalid sender address passed to callback!");
+                return;
+            }
+            handle_lan_discovery_receive(event.data.get(), event.length, reinterpret_cast<sockaddr*>(&sender_ced.value()));
+        });
+
+        lan_discovery_call_listener_socket_->recv();
 #endif
     }
 

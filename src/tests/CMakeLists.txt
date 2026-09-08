@@ -33,11 +33,19 @@ add_test(
   WORKING_DIRECTORY $<TARGET_FILE_DIR:ekatests>
 )
 
+# Discovery owns the default libuv loop on a worker thread for this process.
+add_test(
+  NAME bluetooth_netplay
+  COMMAND ekatests "[.btinet]"
+  WORKING_DIRECTORY $<TARGET_FILE_DIR:ekatests>
+)
+set_tests_properties(bluetooth_netplay PROPERTIES TIMEOUT 30 RUN_SERIAL TRUE)
+
 if (WIN32)
     # SDL2 and the other runtime DLLs are copied next to the frontend, which is
     # not where the test executable is built, so the loader has to be told.
     file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/bin" EKATESTS_RUNTIME_DLL_DIR)
-    set_tests_properties(ekatests PROPERTIES
+    set_tests_properties(ekatests bluetooth_netplay PROPERTIES
         ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${EKATESTS_RUNTIME_DLL_DIR}")
 endif()
 
