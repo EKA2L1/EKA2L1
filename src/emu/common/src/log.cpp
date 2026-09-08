@@ -39,6 +39,7 @@
 #endif
 
 #include <spdlog/details/file_helper.h>
+#include <spdlog/details/os.h>
 #include <spdlog/sinks/base_sink.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
@@ -206,7 +207,9 @@ namespace eka2l1 {
 
         private:
             std::string trim_notice(const std::size_t dropped_total) const {
-                return "--- log trimmed: " + std::to_string(dropped_total) + " oldest lines dropped so far ---\n";
+                // The rest of the file ends its lines the way spdlog does, so this one has to too.
+                return "--- log trimmed: " + std::to_string(dropped_total) + " oldest lines dropped so far ---"
+                    + spdlog::details::os::default_eol;
             }
 
             void drop_oldest_lines() {
