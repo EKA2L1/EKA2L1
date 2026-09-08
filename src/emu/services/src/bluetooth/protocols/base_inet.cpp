@@ -311,6 +311,12 @@ namespace eka2l1::epoc::bt {
     }
 
     void btinet_socket::shutdown(epoc::notify_info &complete_info, int reason) {
+        // Link-manager control sockets carry no host socket at all.
+        if (!inet_socket_) {
+            complete_info.complete(epoc::error_not_supported);
+            return;
+        }
+
         inet_socket_->shutdown(complete_info, reason);
     }
 

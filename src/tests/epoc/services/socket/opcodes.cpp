@@ -45,6 +45,10 @@ TEST_CASE("reformed_socket_opcodes_match_symbian_esock_message_table", "socket_o
     // end of the net database block.
     REQUIRE(socket_reform_so_open_with_conn == 0x46);
 
+    // ESoIoctl = 51, ESoGetDiscData = 52, ESoShutdown = 53.
+    REQUIRE(socket_reform_so_ioctl == 0x33);
+    REQUIRE(socket_reform_so_shutdown == 0x35);
+
     // The cancel/close variants live in a separate block from 128 up:
     // ESoCancelAccept = 141, EHRCancel = 145, EHRClose = 146,
     // ENDCancel = 149, ENDClose = 150.
@@ -105,4 +109,14 @@ TEST_CASE("legacy_net_database_block_fills_the_gap_before_open_with_connection",
     REQUIRE(socket_ndb_remove == 0x3A);
     REQUIRE(socket_ndb_cancel == 0x3B);
     REQUIRE(socket_ndb_close == 0x3C);
+}
+
+TEST_CASE("legacy_socket_shutdown_sits_between_close_and_the_cancel_run", "socket_opcodes") {
+    // The legacy table keeps every socket operation in one run, so it ends the way the
+    // EKA1 one does: Close, Shutdown, CancelIoctl, then the four cancels. Close and
+    // CancelRecv are values EKA2L1 already serves real guests with, and the two slots
+    // between them take Shutdown and CancelIoctl in that order.
+    REQUIRE(socket_so_close == 0x1D);
+    REQUIRE(socket_so_cancel_recv == 0x20);
+    REQUIRE(socket_so_shutdown == 0x1E);
 }

@@ -80,8 +80,26 @@ namespace eka2l1::epoc::bt {
 
     void l2cap_inet_socket::receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, epoc::socket::saddress *addr,
         std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback done_callback) {
+        // L2CAP is datagram-interfaced, so RSocket::Recv returns the octets of the datagram
+        // still unread in TSockXfrLength, not the amount just read (es_sock.h). Everything
+        // that arrived is handed over here, so nothing is ever left of it. RecvOneOrMore is
+        // documented the other way around and keeps the byte count.
+        epoc::socket::receive_done_callback done_wrapper = done_callback;
+
+        if (sent_size && !(flags & epoc::socket::SOCKET_FLAG_DONT_WAIT_FULL)) {
+            done_wrapper = [sent_size, done_callback](const std::int64_t length) {
+                if (length >= 0) {
+                    *sent_size = 0;
+                }
+
+                if (done_callback) {
+                    done_callback(length);
+                }
+            };
+        }
+
         btinet_socket::receive(data, data_size, sent_size, addr, flags | epoc::socket::SOCKET_FLAG_DONT_WAIT_FULL, complete_info,
-            done_callback);
+            done_wrapper);
     }
 
     std::int32_t l2cap_inet_protocol::message_size() const {
