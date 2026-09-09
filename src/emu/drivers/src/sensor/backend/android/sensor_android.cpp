@@ -118,11 +118,13 @@ namespace eka2l1::drivers {
 
         switch (prop) {
             case SENSOR_PROPERTY_SAMPLE_RATE:
-                if (array_index == -2) {
-                    data.set_as_array_status(sensor_property_data::DATA_TYPE_INT, SAMPLING_RATE_MAX_OPTION - 1,
+                // A client that has not picked an element yet queries with
+                // ESensrvSingleProperty and expects the array info back.
+                if (array_index < 0) {
+                    data.set_as_array_status(sensor_property_data::DATA_TYPE_INT, SAMPLING_RATE_MAX_OPTION,
                                              active_sampling_rate_);
                 } else {
-                    if ((array_index >= SAMPLING_RATE_MAX_OPTION) || (array_index < 0)) {
+                    if (array_index >= SAMPLING_RATE_MAX_OPTION) {
                         LOG_ERROR(SERVICE_SENSOR, "Trying to get out-of-bound sample rate!");
                         return false;
                     }
@@ -163,11 +165,13 @@ namespace eka2l1::drivers {
                     break;
 
                 case SENSOR_PROPERTY_MEASURE_RANGE:
-                    if (array_index == -2) {
-                        data.set_as_array_status(sensor_property_data::DATA_TYPE_DOUBLE, ACCELEROMETER_MEASURE_RANGE_MAX_OPTION - 1,
+                    // Array info carries the index range, so it is an int
+                    // property even though the elements are real values.
+                    if (array_index < 0) {
+                        data.set_as_array_status(sensor_property_data::DATA_TYPE_INT, ACCELEROMETER_MEASURE_RANGE_MAX_OPTION,
                                                  active_accel_measure_range_);
                     } else {
-                        if ((array_index >= ACCELEROMETER_MEASURE_RANGE_MAX_OPTION) || (array_index < 0)) {
+                        if (array_index >= ACCELEROMETER_MEASURE_RANGE_MAX_OPTION) {
                             LOG_ERROR(SERVICE_SENSOR, "Trying to get out-of-bound measure range!");
                             return false;
                         }
