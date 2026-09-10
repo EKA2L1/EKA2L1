@@ -32,6 +32,7 @@
 
 #include <cstdio>
 #include <fstream>
+#include <memory>
 
 using namespace eka2l1;
 
@@ -54,6 +55,16 @@ namespace {
     // assets/ifblock_sp.pkg: an augmentation of the same package UID, carrying only
     // C:\eka2l1test\addon.txt.
     static constexpr const char *IF_BLOCK_SP_SIS_PATH = "packageassets//ifblock_sp.sis";
+
+    // assets/casefold.pkg spells one directory two ways: it installs
+    // C:\EKA2L1Case\Sub\first.txt and C:\eka2l1case\sub\second.txt.
+    static constexpr const char *CASE_FOLD_SIS_PATH = "packageassets//casefold.sis";
+
+    // assets/nestedsis.pkg carries ifblock.sis as a plain file, installed to
+    // C:\eka2l1test\nested.sis, the way a SmartInstaller package ships the
+    // package it really installs.
+    static constexpr const char *NESTED_SIS_SIS_PATH = "packageassets//nestedsis.sis";
+    static constexpr manager::uid NESTED_SIS_PACKAGE_UID = 0xE1234573;
 
     // assets/embedder.pkg installs C:\eka2l1test\host.txt and embeds embedded.pkg,
     // which installs C:\eka2l1test\guest.txt under its own UID.
@@ -127,6 +138,26 @@ namespace {
 
             std::ofstream file(path, std::ios::binary);
             file << "data";
+        }
+
+        // Host entries directly under the drive that carry `name`, matched
+        // case-insensitively. More than one is the installer having created a
+        // second spelling of a single guest directory, which only a
+        // case-sensitive host keeps apart.
+        std::size_t host_spellings(const std::string &name) const {
+            std::unique_ptr<common::dir_iterator> ite = common::make_directory_iterator(root, name);
+            if (!ite) {
+                return 0;
+            }
+
+            std::size_t count = 0;
+            common::dir_entry entry;
+
+            while (ite->next_entry(entry) == 0) {
+                count++;
+            }
+
+            return count;
         }
 
         bool owns_file(package::object &pkg, const std::u16string &target) const {
@@ -557,6 +588,38 @@ TEST_CASE("invalid_target_paths_are_rejected", "package_manager") {
     // Executables are resolved by name system-wide; a non-ASCII one cannot be.
     REQUIRE_FALSE(package::is_valid_target_path(u"C:\\sys\\bin\\\u4e2d\u6587.exe"));
     REQUIRE(package::is_valid_target_path(u"C:\\resource\\apps\\\u4e2d\u6587.rsc"));
+}
+
+TEST_CASE("installing_folds_a_second_spelling_of_a_directory", "package_manager") {
+    package_test_env env("case_fold_target");
+    REQUIRE(env.install_sis(CASE_FOLD_SIS_PATH));
+
+    // Guest paths do not distinguish case, so one directory holds both files and
+    // either spelling reaches both. Resolving every target before the first file
+    // is written cannot get there -- a name only folds onto a directory already
+    // on disk -- and a case-sensitive host is left with "EKA2L1Case" beside
+    // "eka2l1case", each file reachable only through the spelling that made it.
+    // A case-insensitive host folds the two itself and notices nothing.
+    REQUIRE(env.io.exist(u"C:\\EKA2L1Case\\Sub\\first.txt"));
+    REQUIRE(env.io.exist(u"C:\\EKA2L1Case\\Sub\\second.txt"));
+    REQUIRE(env.io.exist(u"C:\\eka2l1case\\sub\\first.txt"));
+    REQUIRE(env.io.exist(u"C:\\eka2l1case\\sub\\second.txt"));
+
+    REQUIRE(env.host_spellings("eka2l1case") == 1);
+}
+
+TEST_CASE("a_packaged_sis_is_installed_with_its_carrier", "package_manager") {
+    package_test_env env("nested_sis");
+    REQUIRE(env.install_sis(NESTED_SIS_SIS_PATH));
+
+    REQUIRE(env.packages->package(NESTED_SIS_PACKAGE_UID, 0) != nullptr);
+    REQUIRE(env.io.exist(u"C:\\eka2l1test\\nested.sis"));
+
+    // A carried SIS is recognised by reading the file, which only says anything
+    // once the file is on the drive. The package it installs is the point of a
+    // SmartInstaller package.
+    REQUIRE(env.packages->package(IF_BLOCK_PACKAGE_UID, 0) != nullptr);
+    REQUIRE(env.io.exist(u"C:\\eka2l1test\\base.txt"));
 }
 
 TEST_CASE("uninstall_leaves_rom_files_alone", "package_manager") {
