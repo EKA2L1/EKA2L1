@@ -94,8 +94,12 @@ public class MainActivity extends BaseActivity {
     private void showAppList() {
         Emulator.initializeFolders();
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
-        AppsListFragment appsListFragment = new AppsListFragment();
         FragmentManager fragmentManager = getSupportFragmentManager();
+        // Keep the restored page and back stack together after activity recreation.
+        if (fragmentManager.findFragmentById(R.id.container) != null) {
+            return;
+        }
+        AppsListFragment appsListFragment = new AppsListFragment();
         fragmentManager.beginTransaction()
                 .replace(R.id.container, appsListFragment).commitNowAllowingStateLoss();
     }
