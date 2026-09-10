@@ -1,0 +1,13 @@
+; One directory spelled two ways, which is what a real N-Gage package does
+; ("!:\Sys\Bin\NAF.dll" beside "!:\sys\bin\ngifileaccess.dll"). On a
+; case-sensitive host the second spelling can only fold onto the first if the
+; first file is already written, so this fails only there.
+&EN
+
+#{"EKA2L1 Case Fold Test"}, (0xE1234572), 1, 0, 0
+
+%{"EKA2L1"}
+:"EKA2L1"
+
+"first.txt" - "!:\EKA2L1Case\Sub\first.txt"
+"second.txt" - "!:\eka2l1case\sub\second.txt"

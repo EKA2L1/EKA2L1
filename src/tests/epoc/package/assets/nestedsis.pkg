@@ -1,0 +1,11 @@
+; Carries another SIS as a plain file, the way SmartInstaller packages ship the
+; package they really install. The installer only spots one by reading the file
+; it just extracted.
+&EN
+
+#{"EKA2L1 Nested SIS Test"}, (0xE1234573), 1, 0, 0
+
+%{"EKA2L1"}
+:"EKA2L1"
+
+"ifblock.sis" - "!:\eka2l1test\nested.sis"

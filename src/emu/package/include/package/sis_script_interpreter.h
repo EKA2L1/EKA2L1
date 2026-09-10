@@ -66,6 +66,10 @@ namespace eka2l1 {
             std::vector<std::u16string> gathered_sis_paths;
 
             struct extract_target_info {
+                // The guest path, resolved to a host one only when the file is about to be
+                // written: a package may spell the same folder in two cases, and the resolver
+                // can only fold the second spelling onto a directory that already exists.
+                std::string install_path_;
                 std::string file_path_;
                 std::uint32_t data_unit_index_;
                 std::uint16_t data_unit_block_index_;
