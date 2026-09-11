@@ -23,6 +23,7 @@
 #include <services/applist/common.h>
 #include <services/framework.h>
 
+#include <common/vecx.h>
 #include <utils/des.h>
 #include <vfs/vfs.h>
 
@@ -348,7 +349,11 @@ namespace eka2l1 {
         bool launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter, kernel::uid *thread_id,
                         std::function<void(kernel::process*)> app_exit_callback = nullptr);
 
-        std::optional<apa_app_masked_icon_bitmap> get_icon(apa_app_registry &registry, const std::int8_t index);
+        std::optional<apa_app_masked_icon_bitmap> get_icon(apa_app_registry &registry, const std::size_t index);
+
+        // Exact dimensions win; otherwise choose the nearest area that does not exceed the request.
+        std::optional<apa_app_masked_icon_bitmap> get_icon_by_size(apa_app_registry &registry, const eka2l1::vec2 &size);
+        std::optional<apa_app_masked_icon_bitmap> get_list_icon(apa_app_registry &registry);
 
         std::mutex list_access_mut_;
 

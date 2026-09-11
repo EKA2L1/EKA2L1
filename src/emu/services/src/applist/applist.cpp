@@ -40,6 +40,7 @@
 #include <utils/des.h>
 #include <vfs/vfs.h>
 
+#include <algorithm>
 #include <functional>
 #include <utils/err.h>
 
@@ -1587,11 +1588,11 @@ namespace eka2l1 {
             environment_main.empty() ? nullptr : &environment_main);
     }
 
-    std::optional<apa_app_masked_icon_bitmap> applist_server::get_icon(apa_app_registry &registry, const std::int8_t index) {
+    std::optional<apa_app_masked_icon_bitmap> applist_server::get_icon(apa_app_registry &registry, const std::size_t index) {
         epoc::bitwise_bitmap *real_bmp = nullptr;
         epoc::bitwise_bitmap *real_mask_bmp = nullptr;
 
-        if (index * 2 >= registry.app_icons.size()) {
+        if (index >= registry.app_icons.size() / 2) {
             return std::nullopt;
         }
 
@@ -1610,6 +1611,60 @@ namespace eka2l1 {
             real_mask_bmp = eka2l1::ptr<epoc::bitwise_bitmap>(registry.app_icons[index * 2 + 1].bmp_rom_addr_).get(sys->get_memory_system());
 
         return std::make_optional(std::make_pair(real_bmp, real_mask_bmp));
+    }
+
+    std::optional<apa_app_masked_icon_bitmap> applist_server::get_icon_by_size(apa_app_registry &registry, const eka2l1::vec2 &size) {
+        const std::size_t pair_count = registry.app_icons.size() / 2;
+        std::optional<apa_app_masked_icon_bitmap> chosen;
+
+        for (std::size_t i = 0; i < pair_count; i++) {
+            std::optional<apa_app_masked_icon_bitmap> candidate = get_icon(registry, i);
+
+            if (candidate.has_value() && (candidate->first->header_.size_pixels == size)) {
+                chosen = candidate;
+            }
+        }
+
+        if (chosen.has_value()) {
+            return chosen;
+        }
+
+        const std::int64_t wanted_area = static_cast<std::int64_t>(size.x) * size.y;
+        std::int64_t smallest_diff = 0;
+
+        for (std::size_t i = 0; i < pair_count; i++) {
+            std::optional<apa_app_masked_icon_bitmap> candidate = get_icon(registry, i);
+
+            if (!candidate.has_value()) {
+                continue;
+            }
+
+            const eka2l1::vec2 candidate_size = candidate->first->header_.size_pixels;
+            const std::int64_t diff = wanted_area - static_cast<std::int64_t>(candidate_size.x) * candidate_size.y;
+
+            if ((diff >= 0) && (!chosen.has_value() || (diff < smallest_diff))) {
+                smallest_diff = diff;
+                chosen = candidate;
+            }
+        }
+
+        return chosen;
+    }
+
+    std::optional<apa_app_masked_icon_bitmap> applist_server::get_list_icon(apa_app_registry &registry) {
+        // S60 AIFs distinguish list and context icons by size, not by pair order.
+        static const eka2l1::vec2 LEGACY_LIST_ICON_SIZE(42, 29);
+
+        if (common::compare_ignore_case(eka2l1::path_extension(registry.rsc_path), u".aif") == 0) {
+            std::optional<apa_app_masked_icon_bitmap> icon = get_icon_by_size(registry, LEGACY_LIST_ICON_SIZE);
+
+            if (icon.has_value()) {
+                return icon;
+            }
+        }
+
+        // Preserve host launcher icons when no legacy list size fits or the resource is not an AIF.
+        return get_icon(registry, 0);
     }
 
     void applist_server::add_app_uid_to_host_launch_name(const epoc::uid app_uid, const std::u16string &host_launch_name) {
