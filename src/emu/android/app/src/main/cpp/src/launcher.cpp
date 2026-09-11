@@ -232,7 +232,7 @@ namespace eka2l1::android {
                 }
             }
         } else {
-            std::optional<eka2l1::apa_app_masked_icon_bitmap> icon_pair = alserv->get_icon(*reg, 0);
+            std::optional<eka2l1::apa_app_masked_icon_bitmap> icon_pair = alserv->get_list_icon(*reg);
 
             if (icon_pair.has_value()) {
                 eka2l1::epoc::bitwise_bitmap *main_bitmap = icon_pair->first;

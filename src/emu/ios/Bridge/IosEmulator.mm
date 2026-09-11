@@ -170,7 +170,7 @@ namespace eka2l1::ios {
     // Order of attempts matches the Android side:
     //   .mif → lunasvg (after svgb / nvg debinarization, cached to disk)
     //   .mbm → epoc::convert_to_rgba8888 against sbm header 0
-    //   anything else → applist_server::get_icon -> bitwise_bitmap pair
+    //   anything else → applist_server::get_list_icon -> bitwise_bitmap pair
     static NSData *encode_rgba_to_png(const std::uint8_t *pixels,
                                       std::size_t width, std::size_t height,
                                       std::size_t requested_side) {
@@ -327,7 +327,7 @@ namespace eka2l1::ios {
                                        eka2l1::applist_server *alserv,
                                        eka2l1::fbs_server *fbsserv,
                                        std::size_t side) {
-        auto icon_pair = alserv->get_icon(*reg, 0);
+        auto icon_pair = alserv->get_list_icon(*reg);
         if (!icon_pair.has_value() || !icon_pair->first) return nil;
         auto *bitmap = icon_pair->first;
         const std::size_t w = bitmap->header_.size_pixels.x;
