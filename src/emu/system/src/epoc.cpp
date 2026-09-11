@@ -849,6 +849,31 @@ namespace eka2l1 {
         io_->mount_physical_path(drv, media, attrib, common::utf8_to_ucs2(path));
     }
 
+    // Match complete path components, stripping any wrapper above the card's root marker.
+    static bool find_archive_root_by_marker(const std::vector<common::archive_entry_info> &entries,
+        const std::string &marker, std::string &prefix_out) {
+        bool found = false;
+
+        for (const common::archive_entry_info &entry : entries) {
+            const std::string lowered = common::lowercase_string(entry.path);
+
+            for (std::size_t pos = lowered.find(marker); pos != std::string::npos;
+                pos = lowered.find(marker, pos + 1)) {
+                if ((pos != 0) && (lowered[pos - 1] != '/')) {
+                    continue;
+                }
+
+                if (!found || (pos < prefix_out.size())) {
+                    prefix_out = entry.path.substr(0, pos);
+                    found = true;
+                }
+                break;
+            }
+        }
+
+        return found;
+    }
+
     zip_mount_error system_impl::mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t base_attrib, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         std::vector<common::archive_entry_info> entries;
 
@@ -856,14 +881,9 @@ namespace eka2l1 {
             return zip_mount_error_not_zip;
         }
 
-        // What is unpacked becomes the drive root, so `system` has to sit at the top of the archive.
-        const bool system_found = std::any_of(entries.begin(), entries.end(),
-            [](const common::archive_entry_info &entry) {
-                return (entry.path.size() >= 6)
-                    && (common::compare_ignore_case(entry.path.substr(0, 6).c_str(), "system") == 0);
-            });
+        std::string card_prefix;
 
-        if (!system_found) {
+        if (!find_archive_root_by_marker(entries, "system/", card_prefix)) {
             return zip_mount_error_no_system_folder;
         }
 
@@ -880,7 +900,11 @@ namespace eka2l1 {
 
         const bool unpacked = common::extract_archive(zip_path,
             [&](const common::archive_entry_info &entry) -> std::string {
-                return entry.path.empty() ? std::string() : eka2l1::add_path(temp_folder, entry.path);
+                if (entry.path.compare(0, card_prefix.size(), card_prefix) != 0) {
+                    return {};
+                }
+                const std::string relative = entry.path.substr(card_prefix.size());
+                return relative.empty() ? std::string() : eka2l1::add_path(temp_folder, relative);
             },
             progress_cb, cancel_cb);
 
@@ -1035,31 +1059,6 @@ namespace eka2l1 {
     // Unpacking is measured in bytes and installing in files, so progress needs a scale of its own.
     static constexpr std::size_t NGAGE_CARD_ARCHIVE_PROGRESS_TOTAL = 1000;
 
-    // Cards are packed both ways, with the card folder at the top or with its contents directly, so the
-    // `system/apps` tree anchors the search. Shallowest wins: a game's own "system" folder must not.
-    static bool find_ngage_card_root_in_archive(const std::vector<common::archive_entry_info> &entries,
-        std::string &prefix_out) {
-        static const std::string MARKER = "system/apps/";
-
-        bool found = false;
-
-        for (const common::archive_entry_info &entry : entries) {
-            const std::string lowered = common::lowercase_string(entry.path);
-            const std::size_t marker_pos = lowered.find(MARKER);
-
-            if ((marker_pos == std::string::npos) || ((marker_pos != 0) && (lowered[marker_pos - 1] != '/'))) {
-                continue;
-            }
-
-            if (!found || (marker_pos < prefix_out.size())) {
-                prefix_out = entry.path.substr(0, marker_pos);
-                found = true;
-            }
-        }
-
-        return found;
-    }
-
     ngage_game_card_install_error system_impl::install_ngage_game_card_archive(const std::string &archive_path,
         std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb) {
         std::vector<common::archive_entry_info> entries;
@@ -1071,7 +1070,7 @@ namespace eka2l1 {
 
         std::string card_prefix;
 
-        if (!find_ngage_card_root_in_archive(entries, card_prefix)) {
+        if (!find_archive_root_by_marker(entries, "system/apps/", card_prefix)) {
             return ngage_game_card_no_game_data_folder;
         }
 
