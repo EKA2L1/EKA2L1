@@ -63,3 +63,6 @@ add_assets(ekatests ${SERVICES_APPLIST_ASSETS_PATH} "applistassets")
 
 set(PACKAGE_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/epoc/package/assets/")
 add_assets(ekatests ${PACKAGE_ASSETS_PATH} "packageassets")
+
+set(SYSTEM_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/epoc/system/assets/")
+add_assets(ekatests ${SYSTEM_ASSETS_PATH} "systemassets")

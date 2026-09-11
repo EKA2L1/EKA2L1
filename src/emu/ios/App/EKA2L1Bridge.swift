@@ -40,6 +40,17 @@ struct EKA2L1NGageInstallItem {
     var succeeded: Bool { result == 0 }
 }
 
+// Outcome of mounting a memory-card dump on drive E.
+struct EKA2L1MountItem {
+    let result: EKA2L1MountResult
+    // MMC ID taken from the card's name, empty when it carries none.
+    let mmcId: String
+    // Whether drive E carries a card at all after the call (see IosEmulator.h).
+    let cardMounted: Bool
+
+    var succeeded: Bool { result == .success }
+}
+
 // A guest system language shipped by the current device's ROM.
 struct EKA2L1LanguageItem: Identifiable, Hashable {
     let code: Int
@@ -193,6 +204,22 @@ final class EKA2L1Bridge {
         return EKA2L1NGageInstallItem(result: report.result, gameName: report.gameName)
     }
 
+    // Extracting an archive can run for a while, so this one is off-main too.
+    nonisolated static func mountGameCard(path: String) -> EKA2L1MountItem {
+        let report = EKA2L1Emulator.shared().mountGameCard(atPath: path)
+        return EKA2L1MountItem(result: report.result, mmcId: report.mmcId,
+                              cardMounted: report.cardMounted)
+    }
+
+    @discardableResult
+    func unmountGameCard() -> Bool {
+        emulator.unmountGameCard()
+    }
+
+    func isGameCardMounted() -> Bool {
+        emulator.isGameCardMounted()
+    }
+
     func uninstallApp(uid: UInt32) -> Bool {
         emulator.uninstallApp(withUID: uid)
     }
@@ -259,6 +286,10 @@ final class EKA2L1Bridge {
     // those default to the fullscreen keypad layout.
     func currentDeviceIsTouchScreen() -> Bool {
         emulator.currentDeviceIsTouchScreen()
+    }
+
+    func currentDeviceIsEKA1() -> Bool {
+        emulator.currentDeviceIsEKA1()
     }
 
     // Anchor the presented guest picture's top edge at `pixels` from the top of

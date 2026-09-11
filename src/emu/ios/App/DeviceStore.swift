@@ -16,6 +16,12 @@ final class DeviceStore: ObservableObject {
     @Published private(set) var currentIndex = -1
     @Published private(set) var apps: [EKA2L1AppItem] = []
     @Published private(set) var busy = false
+    @Published private(set) var deviceIsEKA1 = false
+    // Nil when drive E uses the emulator's own storage.
+    @Published private(set) var mountedCardName: String?
+
+    // Keep the security scope open while the guest reads the picked folder.
+    private var mountedCardURL: URL?
 
     var currentDevice: EKA2L1DeviceItem? {
         devices.first { $0.index == currentIndex } ?? devices.first
@@ -32,10 +38,49 @@ final class DeviceStore: ObservableObject {
         reloadApps()
     }
 
-    // Re-scan the booted device's registry (after a package install/uninstall
-    // or a system-language switch).
+    // Refresh the registry and device traits after a boot or content change.
     func reloadApps() {
         apps = currentIndex >= 0 ? EKA2L1Bridge.shared.rescanApps() : []
+        deviceIsEKA1 = currentIndex >= 0 && EKA2L1Bridge.shared.currentDeviceIsEKA1()
+    }
+
+    func mountCard(at url: URL) async -> EKA2L1MountItem {
+        let scoped = url.startAccessingSecurityScopedResource()
+        let report = await perform { EKA2L1Bridge.mountGameCard(path: url.path) }
+        guard report.succeeded else {
+            if scoped { url.stopAccessingSecurityScopedResource() }
+            // Early failures retain the previous card and its security scope.
+            if !report.cardMounted {
+                releaseMountedCard()
+            }
+            reloadApps()
+            return report
+        }
+        releaseMountedCard()
+        mountedCardURL = scoped ? url : nil
+        mountedCardName = url.lastPathComponent
+        reloadApps()
+        return report
+    }
+
+    @discardableResult
+    func ejectCard() -> Bool {
+        guard EKA2L1Bridge.shared.unmountGameCard() else { return false }
+        releaseMountedCard()
+        reloadApps()
+        return true
+    }
+
+    private func releaseMountedCard() {
+        mountedCardURL?.stopAccessingSecurityScopedResource()
+        mountedCardURL = nil
+        mountedCardName = nil
+    }
+
+    // A same-device reboot retains the card and its security scope.
+    private func syncMountedCardAfterBoot() {
+        guard !EKA2L1Bridge.shared.isGameCardMounted() else { return }
+        releaseMountedCard()
     }
 
     // Pull-to-refresh on the home grid: re-read the device titles and re-scan
@@ -88,6 +133,7 @@ final class DeviceStore: ObservableObject {
     @discardableResult
     func boot(at index: Int) async -> Bool {
         let ok = await perform { EKA2L1Bridge.bootDevice(at: index) }
+        syncMountedCardAfterBoot()
         if ok {
             currentIndex = index
             reloadApps()
@@ -120,6 +166,7 @@ final class DeviceStore: ObservableObject {
         let bootedOK = await perform {
             EKA2L1Bridge.rescanDevices() && EKA2L1Bridge.bootDevice(at: 0)
         }
+        syncMountedCardAfterBoot()
         devices = EKA2L1Bridge.shared.installedDevices()
         if bootedOK {
             currentIndex = 0
