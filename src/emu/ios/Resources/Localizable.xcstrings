@@ -725,6 +725,106 @@
         }
       }
     },
+    "home.card.eject" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eject Card"
+          }
+        }
+      }
+    },
+    "home.card.ejected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Card ejected"
+          }
+        }
+      }
+    },
+    "home.card.error.corrupt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The card archive could not be extracted."
+          }
+        }
+      }
+    },
+    "home.card.error.generic" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The card could not be mounted."
+          }
+        }
+      }
+    },
+    "home.card.error.noSystemFolder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The card dump has no System folder at its root."
+          }
+        }
+      }
+    },
+    "home.card.error.notArchive" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsupported card archive format."
+          }
+        }
+      }
+    },
+    "home.card.error.notFound" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The card dump could not be found."
+          }
+        }
+      }
+    },
+    "home.card.mounted" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Card mounted on drive E"
+          }
+        }
+      }
+    },
+    "home.card.mountedWithId %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Card mounted on drive E, MMC ID %@"
+          }
+        }
+      }
+    },
+    "home.card.mounting" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mounting card…"
+          }
+        }
+      }
+    },
     "home.empty.hiddenSystemApps" : {
       "localizations" : {
         "en" : {
@@ -914,7 +1014,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Install N-Gage Card Game"
+            "value" : "Install N-Gage Game"
           }
         }
       }
@@ -924,7 +1024,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Requires N-Gage ROM"
+            "value" : "Copied onto drive E"
           }
         }
       }
@@ -955,6 +1055,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "More"
+          }
+        }
+      }
+    },
+    "home.mountCard" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mount MMC/SD Card"
+          }
+        }
+      }
+    },
+    "home.mountCard.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Becomes drive E until ejected"
           }
         }
       }

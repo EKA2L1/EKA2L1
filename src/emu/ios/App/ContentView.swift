@@ -9,8 +9,10 @@ import UniformTypeIdentifiers
 //     title doubles as a device menu (tap the title) holding the device
 //     switcher and, below a divider, "Install device" and "Manage devices";
 //     the ellipsis menu holds Settings, the system-apps toggle and help; the
-//     "+" menu installs a SIS, a classic N-Gage game card, or an N-Gage 2.0
-//     package onto the device. Pulling the grid down re-scans the registry.
+//     "+" menu installs a SIS package, and — depending on the booted device's
+//     kernel — either a classic N-Gage game card plus a memory-card mount
+//     (EKA1) or an N-Gage 2.0 package (EKA2).
+//     Pulling the grid down re-scans the registry.
 
 // SIS files only — device ROM / RPKG go through ImportDeviceView's own picker.
 private let sisTypes: [UTType] = {
@@ -22,9 +24,10 @@ private let sisTypes: [UTType] = {
     return types
 }()
 
-// Classic N-Gage game cards: a folder tree, but usually passed around packed.
-// The installer unpacks an archive itself, sniffing the container by content.
-private let ngageCardTypes: [UTType] = {
+// Card dumps — a classic N-Gage game card or a plain memory card — are folder
+// trees, but usually passed around packed. Both consumers unpack an archive
+// themselves, sniffing the container by content.
+private let gameCardTypes: [UTType] = {
     var types: [UTType] = [.folder, .zip]
     for type in archiveTypes + rarTypes where !types.contains(type) {
         types.append(type)
@@ -50,6 +53,7 @@ private enum HomeImportTarget {
     case sis
     case ngage    // classic N-Gage game card folder (installed onto E:)
     case ngage2   // N-Gage 2.0 .n-gage package (staged into E:\n-gage)
+    case card     // memory-card dump mounted as drive E
     case font     // .ttf copied into the user font folder
 }
 
@@ -143,8 +147,8 @@ struct ContentView: View {
         switch homeImportTarget {
         case .sis:
             return sisTypes
-        case .ngage:
-            return ngageCardTypes
+        case .ngage, .card:
+            return gameCardTypes
         case .ngage2:
             return ngage2Types
         case .font:
@@ -153,9 +157,9 @@ struct ContentView: View {
     }
 
     private var homeImporterAllowsMultipleSelection: Bool {
-        // A classic N-Gage install takes one game card at a time; SIS packages,
+        // A card is installed (or mounted) one at a time; SIS packages,
         // .n-gage packages and fonts can be batch-imported.
-        homeImportTarget != .ngage
+        homeImportTarget != .ngage && homeImportTarget != .card
     }
 
     var body: some View {
@@ -416,24 +420,46 @@ struct ContentView: View {
                     }
                     
                     // A second Text in a menu button's label renders as the item
-                    // subtitle (UIMenuElement.subtitle), spelling out the ROM /
-                    // launcher prerequisite for each N-Gage flavour.
-                    Button {
-                        homeImportTarget = .ngage
-                        showingHomeImporter = true
-                    } label: {
-                        Text("home.installNGage")
-                        Text("home.installNGage.subtitle")
-                        Image(systemName: "folder.badge.plus")
-                    }
-                    
-                    Button {
-                        homeImportTarget = .ngage2
-                        showingHomeImporter = true
-                    } label: {
-                        Text("home.installNGage2")
-                        Text("home.installNGage2.subtitle")
-                        Image(systemName: "arrow.down.doc")
+                    // subtitle (UIMenuElement.subtitle).
+                    if store.deviceIsEKA1 {
+                        Button {
+                            homeImportTarget = .ngage
+                            showingHomeImporter = true
+                        } label: {
+                            Text("home.installNGage")
+                            Text("home.installNGage.subtitle")
+                            Image(systemName: "gamecontroller")
+                        }
+
+                        Button {
+                            homeImportTarget = .card
+                            showingHomeImporter = true
+                        } label: {
+                            Text("home.mountCard")
+                            Text("home.mountCard.subtitle")
+                            Image(systemName: "sdcard")
+                        }
+
+                        if let card = store.mountedCardName {
+                            Button(role: .destructive) {
+                                if store.ejectCard() {
+                                    banner = String(localized: "home.card.ejected")
+                                }
+                            } label: {
+                                Text("home.card.eject")
+                                Text(card)
+                                Image(systemName: "eject")
+                            }
+                        }
+                    } else {
+                        Button {
+                            homeImportTarget = .ngage2
+                            showingHomeImporter = true
+                        } label: {
+                            Text("home.installNGage2")
+                            Text("home.installNGage2.subtitle")
+                            Image(systemName: "arrow.down.doc")
+                        }
                     }
 
                     Divider()
@@ -603,6 +629,8 @@ struct ContentView: View {
             handleNGageImport(result)
         case .ngage2:
             handleNGage2Import(result)
+        case .card:
+            handleCardMount(result)
         case .font:
             handleFontImport(result)
         }
@@ -660,6 +688,41 @@ struct ContentView: View {
                     banner = ngageErrorMessage(report.result)
                 }
             }
+        }
+    }
+
+    private func handleCardMount(_ result: Result<[URL], Error>) {
+        switch result {
+        case .failure(let err):
+            banner = String(localized: "home.banner.importFailed \(err.localizedDescription)")
+        case .success(let urls):
+            guard let url = urls.first else { return }
+            banner = String(localized: "home.card.mounting")
+            Task {
+                let report = await store.mountCard(at: url)
+                guard report.succeeded else {
+                    banner = cardMountErrorMessage(report.result)
+                    return
+                }
+                banner = report.mmcId.isEmpty
+                    ? String(localized: "home.card.mounted")
+                    : String(localized: "home.card.mountedWithId \(report.mmcId)")
+            }
+        }
+    }
+
+    private func cardMountErrorMessage(_ result: EKA2L1MountResult) -> String {
+        switch result {
+        case .noSystemFolder:
+            return String(localized: "home.card.error.noSystemFolder")
+        case .archiveCorrupt:
+            return String(localized: "home.card.error.corrupt")
+        case .notArchive:
+            return String(localized: "home.card.error.notArchive")
+        case .pathNotFound:
+            return String(localized: "home.card.error.notFound")
+        default:
+            return String(localized: "home.card.error.generic")
         }
     }
 

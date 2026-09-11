@@ -37,6 +37,26 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy) NSString *gameName;
 @end
 
+// Outcome of mounting a memory-card / game-card dump on drive E.
+typedef NS_ENUM(NSInteger, EKA2L1MountResult) {
+    EKA2L1MountResultSuccess = 0,
+    // No device is booted, or the drive refused the mount.
+    EKA2L1MountResultFailed,
+    EKA2L1MountResultPathNotFound,
+    // Archive failures, mirroring eka2l1::zip_mount_error.
+    EKA2L1MountResultNotArchive,
+    EKA2L1MountResultNoSystemFolder,
+    EKA2L1MountResultArchiveCorrupt,
+};
+
+@interface EKA2L1MountReport : NSObject
+@property(nonatomic, assign) EKA2L1MountResult result;
+// CID adopted from the folder/archive name, or empty when using the configured default.
+@property(nonatomic, copy) NSString *mmcId;
+// Early failures retain the old card; failures after unmounting restore internal E storage.
+@property(nonatomic, assign) BOOL cardMounted;
+@end
+
 // A guest system language the current device's ROM ships. `code` is the
 // Symbian TLanguage value stored in config.yml.
 @interface EKA2L1LanguageEntry : NSObject
@@ -199,6 +219,17 @@ typedef NS_ENUM(NSInteger, EKA2L1InstallResult) {
 // the detected game name when available. Heavy; call from a background queue.
 - (EKA2L1NGageInstallReport *)installNGageGameAtPath:(NSString *)cardPath;
 
+// Mount a folder read-only or unpack an archive into writable cache storage on drive E.
+// Survives same-device reboots until eject, device switch or host app exit. Call off-main.
+- (EKA2L1MountReport *)mountGameCardAtPath:(NSString *)path;
+
+// Put drive E back on the emulator's own storage folder. Returns NO when no
+// card is mounted.
+- (BOOL)unmountGameCard;
+
+// Nonblocking snapshot for the main thread; read after boot completes.
+- (BOOL)isGameCardMounted;
+
 // Uninstall a user-installed package by its app UID. Deletes the package's
 // files and registration; ROM/system apps cannot be uninstalled. Returns NO if
 // no matching installed package is found.
@@ -245,6 +276,9 @@ typedef NS_ENUM(NSInteger, EKA2L1PointerPhase) {
 // (S60v5 / Symbian^3 and later). The frontend uses it to pick the fullscreen
 // keypad layout by default for those ROMs.
 - (BOOL)currentDeviceIsTouchScreen;
+
+// YES for EKA1 devices (Symbian OS 6.1 … 8.1a).
+- (BOOL)currentDeviceIsEKA1;
 
 // Vertical anchor for the presented guest picture, in surface pixels.
 // Pass a negative value to centre it (default). >= 0 pins the picture's top
