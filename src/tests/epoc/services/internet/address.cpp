@@ -20,6 +20,7 @@
 #include <catch2/catch.hpp>
 
 #include <common/platform.h>
+#include <config/config.h>
 #include <services/internet/protocols/common.h>
 #include <services/internet/protocols/inet.h>
 
@@ -35,6 +36,20 @@
 #include <cstring>
 
 using namespace eka2l1;
+
+TEST_CASE("Host overrides match complete DNS names", "[internet][config]") {
+    config::state settings;
+    settings.hosts = {{"Game.Example.", "127.0.0.1"}, {"ipv6.example", "::1"}};
+
+    REQUIRE(settings.host_override("GAME.example") == "127.0.0.1");
+    REQUIRE(settings.host_override("game.example.") == "127.0.0.1");
+    REQUIRE(settings.host_override("IPV6.EXAMPLE.") == "::1");
+    REQUIRE_FALSE(settings.host_override("sub.game.example"));
+    REQUIRE_FALSE(settings.host_override("game.example.invalid"));
+    REQUIRE_FALSE(settings.host_override("other.example"));
+    settings.hosts.clear();
+    REQUIRE_FALSE(settings.host_override("game.example"));
+}
 
 namespace {
     // in_sock.h:

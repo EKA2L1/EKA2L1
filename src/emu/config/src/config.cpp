@@ -28,7 +28,23 @@
 #include <fstream>
 #include <yaml-cpp/yaml.h>
 
-namespace eka2l1::config {    
+namespace eka2l1::config {
+    std::optional<std::string> state::host_override(const std::string &hostname) const {
+        const auto normalize = [](std::string name) {
+            if (!name.empty() && name.back() == '.') {
+                name.pop_back();
+            }
+            return common::lowercase_string(name);
+        };
+        const std::string domain = normalize(hostname);
+        for (const auto &[host, address] : hosts) {
+            if (normalize(host) == domain) {
+                return address;
+            }
+        }
+        return std::nullopt;
+    }
+
     screen_buffer_sync_option get_screen_buffer_sync_option_from_string(std::string str) {
         str = common::lowercase_string(str);
 

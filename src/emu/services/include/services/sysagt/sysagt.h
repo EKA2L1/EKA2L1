@@ -44,9 +44,18 @@ namespace eka2l1 {
         system_agent_notify_on_any_event = 3,
         system_agent_notify_on_cond = 4,
         system_agent_notify_event_cancel = 5,
+        system_agent_set_conditions = 8,
         system_agent_set_state = 9,
         system_agent_set_event_buffer_enabled = 10
     };
+
+    struct system_agent_condition {
+        epoc::uid uid_;
+        std::int32_t state_;
+        std::int32_t type_;
+    };
+
+    static_assert(sizeof(system_agent_condition) == 12);
 
     struct system_agent_notify_info {
         epoc::notify_info woke_target_;
@@ -54,6 +63,11 @@ namespace eka2l1 {
         epoc::des8 *state_value_; ///< Descriptor to write state value of UID on event.
 
         std::uint32_t uid_nof_; ///< UID to notify. Unsigned -1 means any.
+        kernel_system *kern_ = nullptr;
+        std::vector<system_agent_condition> conditions_;
+        bool conditional_ = false;
+
+        bool conditions_met() const;
 
         explicit system_agent_notify_info()
             : target_uid_(nullptr)
@@ -85,6 +99,7 @@ namespace eka2l1 {
 
     public:
         explicit system_agent_server(eka2l1::system *sys);
+        ~system_agent_server() override;
 
         void connect(service::ipc_context &context) override;
 
@@ -100,11 +115,14 @@ namespace eka2l1 {
 
     public:
         explicit system_agent_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
+        ~system_agent_session() override;
 
         void get_state(service::ipc_context *ctx);
         void get_multiple_states(service::ipc_context *ctx);
         void notify_event(service::ipc_context *ctx, const bool any);
         void notify_event_cancel(service::ipc_context *ctx);
+        void set_conditions(service::ipc_context *ctx);
+        void notify_condition(service::ipc_context *ctx);
         void set_event_buffering(service::ipc_context *ctx);
         void set_state(service::ipc_context *ctx);
 
