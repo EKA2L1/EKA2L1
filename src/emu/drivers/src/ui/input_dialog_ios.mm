@@ -49,6 +49,7 @@ namespace {
 namespace eka2l1::drivers::ui {
     bool open_input_view(const std::u16string &initial_text, const int max_len,
         input_dialog_complete_callback complete_callback) {
+        const std::u16string initial_text_copy = initial_text;
         dispatch_async(dispatch_get_main_queue(), ^{
             close_input_view_on_main();
 
@@ -56,7 +57,7 @@ namespace eka2l1::drivers::ui {
                                                                            message:nil
                                                                     preferredStyle:UIAlertControllerStyleAlert];
             [alert addTextFieldWithConfigurationHandler:^(UITextField *field) {
-                field.text = to_ns_string(initial_text);
+                field.text = to_ns_string(initial_text_copy);
                 field.clearButtonMode = UITextFieldViewModeWhileEditing;
             }];
 
@@ -78,7 +79,7 @@ namespace eka2l1::drivers::ui {
                                                             style:UIAlertActionStyleCancel
                                                           handler:^(__unused UIAlertAction *action) {
                 if (complete_callback) {
-                    complete_callback(initial_text);
+                    complete_callback(initial_text_copy);
                 }
                 g_active_alert = nil;
             }];
@@ -99,13 +100,16 @@ namespace eka2l1::drivers::ui {
 
     void show_yes_no_dialog(const std::u16string &text, const std::u16string &button1_text,
         const std::u16string &button2_text, yes_no_dialog_complete_callback complete_callback) {
+        const std::u16string text_copy = text;
+        const std::u16string button1_text_copy = button1_text;
+        const std::u16string button2_text_copy = button2_text;
         dispatch_async(dispatch_get_main_queue(), ^{
             close_input_view_on_main();
 
             UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil
-                                                                           message:to_ns_string(text)
+                                                                           message:to_ns_string(text_copy)
                                                                     preferredStyle:UIAlertControllerStyleAlert];
-            [alert addAction:[UIAlertAction actionWithTitle:to_ns_string(button1_text)
+            [alert addAction:[UIAlertAction actionWithTitle:to_ns_string(button1_text_copy)
                                                       style:UIAlertActionStyleDefault
                                                     handler:^(__unused UIAlertAction *action) {
                 if (complete_callback) {
@@ -113,7 +117,7 @@ namespace eka2l1::drivers::ui {
                 }
                 g_active_alert = nil;
             }]];
-            [alert addAction:[UIAlertAction actionWithTitle:to_ns_string(button2_text)
+            [alert addAction:[UIAlertAction actionWithTitle:to_ns_string(button2_text_copy)
                                                       style:UIAlertActionStyleCancel
                                                     handler:^(__unused UIAlertAction *action) {
                 if (complete_callback) {

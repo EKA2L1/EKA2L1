@@ -29,6 +29,7 @@ namespace eka2l1::drivers::hwrm {
         void *engine_ = nullptr;
         void *player_ = nullptr;
         std::uint64_t source_revision_ = 0;
+        bool start_failure_logged_ = false;
         void clear_engine_locked();
         void stop_player_locked();
     };

@@ -11,6 +11,8 @@
 
 #include <drivers/hwrm/backend/vibration_ios.h>
 
+#include <common/log.h>
+
 #include <algorithm>
 #include <cmath>
 #include <mutex>
@@ -33,9 +35,23 @@ namespace eka2l1::drivers::hwrm {
             return state;
         }
 
+        // Isolate synchronous framework exceptions so a guest haptic request can fail safely.
+        template <typename callback>
+        bool guarded(const char *what, callback &&work) {
+            @try {
+                work();
+                return true;
+            } @catch (NSException *ex) {
+                LOG_WARN(SERVICE_HWRM, "iOS haptics: {} raised {} ({})", what,
+                    ex.name.UTF8String ? ex.name.UTF8String : "exception",
+                    ex.reason.UTF8String ? ex.reason.UTF8String : "no reason");
+            }
+            return false;
+        }
+
         void stop_engines_locked(haptic_routing &state) {
             for (CHHapticEngine *engine in state.engines) {
-                [engine stopWithCompletionHandler:nil];
+                guarded("engine stop", [engine]() { [engine stopWithCompletionHandler:nil]; });
             }
             ++state.revision;
         }
@@ -69,7 +85,10 @@ namespace eka2l1::drivers::hwrm {
     void vibrator_ios::stop_player_locked() {
         if (player_) {
             id<CHHapticPatternPlayer> player = (__bridge id<CHHapticPatternPlayer>)player_;
-            [player stopAtTime:CHHapticTimeImmediate error:nil];
+            guarded("player stop", [player]() {
+                NSError *error = nil;
+                [player stopAtTime:CHHapticTimeImmediate error:&error];
+            });
             CFRelease(player_);
             player_ = nullptr;
         }
@@ -79,7 +98,7 @@ namespace eka2l1::drivers::hwrm {
         stop_player_locked();
         if (engine_) {
             CHHapticEngine *engine = (__bridge CHHapticEngine *)engine_;
-            [engine stopWithCompletionHandler:nil];
+            guarded("engine stop", [engine]() { [engine stopWithCompletionHandler:nil]; });
             [routing().engines removeObject:engine];
             CFRelease(engine_);
             engine_ = nullptr;
@@ -92,43 +111,63 @@ namespace eka2l1::drivers::hwrm {
         stop_player_locked();
         if (state.suspended) return;
         if (source_revision_ != state.revision) clear_engine_locked();
-        if (!engine_) {
-            CHHapticEngine *engine = nil;
-            if (state.controller) {
-                engine = [state.controller.haptics createEngineWithLocality:GCHapticsLocalityDefault];
-            } else if (CHHapticEngine.capabilitiesForHardware.supportsHaptics) {
-                engine = [[CHHapticEngine alloc] initAndReturnError:nil];
-            }
-            if (!engine) return;
-            engine.playsHapticsOnly = YES;
-            engine_ = (__bridge_retained void *)engine;
-            source_revision_ = state.revision;
-            [state.engines addObject:engine];
-        }
 
-        CHHapticEngine *engine = (__bridge CHHapticEngine *)engine_;
-        if (![engine startAndReturnError:nil]) return;
-        // The driver API uses zero for default intensity; motor direction has no haptic equivalent.
-        const float normalized = intensity == 0 ? 0.5f
-            : std::min(1.0f, std::abs(static_cast<float>(intensity)) / 100.0f);
-        const NSTimeInterval duration = millisecs == 0 ? 1.0 : static_cast<NSTimeInterval>(millisecs) / 1000.0;
-        CHHapticEventParameter *intensity_param = [[CHHapticEventParameter alloc]
-            initWithParameterID:CHHapticEventParameterIDHapticIntensity value:normalized];
-        CHHapticEventParameter *sharpness_param = [[CHHapticEventParameter alloc]
-            initWithParameterID:CHHapticEventParameterIDHapticSharpness value:0.45f];
-        CHHapticEvent *event = [[CHHapticEvent alloc]
-            initWithEventType:CHHapticEventTypeHapticContinuous
-            parameters:@[ intensity_param, sharpness_param ] relativeTime:0.0 duration:duration];
-        CHHapticPattern *pattern = [[CHHapticPattern alloc] initWithEvents:@[ event ] parameters:@[] error:nil];
-        if (!pattern) return;
-        id<CHHapticAdvancedPatternPlayer> player = [engine createAdvancedPlayerWithPattern:pattern error:nil];
-        if (!player) return;
-        if (millisecs == 0) {
-            player.loopEnabled = YES;
-            player.loopEnd = duration;
-        }
-        if ([player startAtTime:CHHapticTimeImmediate error:nil]) {
-            player_ = (__bridge_retained void *)player;
+        const bool survived = guarded("vibrate", [this, &state, millisecs, intensity]() {
+            if (!engine_) {
+                CHHapticEngine *engine = nil;
+                if (state.controller) {
+                    engine = [state.controller.haptics createEngineWithLocality:GCHapticsLocalityDefault];
+                } else if (CHHapticEngine.capabilitiesForHardware.supportsHaptics) {
+                    NSError *error = nil;
+                    engine = [[CHHapticEngine alloc] initAndReturnError:&error];
+                }
+                if (!engine) return;
+                engine.playsHapticsOnly = YES;
+                engine_ = (__bridge_retained void *)engine;
+                source_revision_ = state.revision;
+                start_failure_logged_ = false;
+                [state.engines addObject:engine];
+            }
+
+            CHHapticEngine *engine = (__bridge CHHapticEngine *)engine_;
+            NSError *error = nil;
+            if (![engine startAndReturnError:&error]) {
+                // Keep the engine so a later request can retry after a transient start failure.
+                if (!start_failure_logged_) {
+                    start_failure_logged_ = true;
+                    LOG_WARN(SERVICE_HWRM, "iOS haptics: engine start failed ({})",
+                        error.localizedDescription.UTF8String ? error.localizedDescription.UTF8String : "unknown");
+                }
+                return;
+            }
+            start_failure_logged_ = false;
+            // The driver API uses zero for default intensity; motor direction has no haptic equivalent.
+            const float normalized = intensity == 0 ? 0.5f
+                : std::min(1.0f, std::abs(static_cast<float>(intensity)) / 100.0f);
+            const NSTimeInterval duration = millisecs == 0 ? 1.0 : static_cast<NSTimeInterval>(millisecs) / 1000.0;
+            CHHapticEventParameter *intensity_param = [[CHHapticEventParameter alloc]
+                initWithParameterID:CHHapticEventParameterIDHapticIntensity value:normalized];
+            CHHapticEventParameter *sharpness_param = [[CHHapticEventParameter alloc]
+                initWithParameterID:CHHapticEventParameterIDHapticSharpness value:0.45f];
+            CHHapticEvent *event = [[CHHapticEvent alloc]
+                initWithEventType:CHHapticEventTypeHapticContinuous
+                parameters:@[ intensity_param, sharpness_param ] relativeTime:0.0 duration:duration];
+            CHHapticPattern *pattern = [[CHHapticPattern alloc] initWithEvents:@[ event ] parameters:@[] error:&error];
+            if (!pattern) return;
+            id<CHHapticAdvancedPatternPlayer> player = [engine createAdvancedPlayerWithPattern:pattern error:&error];
+            if (!player) return;
+            if (millisecs == 0) {
+                player.loopEnabled = YES;
+                player.loopEnd = duration;
+            }
+            if ([player startAtTime:CHHapticTimeImmediate error:&error]) {
+                player_ = (__bridge_retained void *)player;
+            }
+        });
+
+        if (!survived) {
+            // Nothing is known about how far the engine got, so drop it and rebuild on the next request.
+            clear_engine_locked();
         }
     }
 
