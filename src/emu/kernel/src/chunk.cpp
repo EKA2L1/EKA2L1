@@ -114,7 +114,10 @@ namespace eka2l1 {
 
             int err = 0;
 
-            if (own_process && own_process->get_mem_model()) {
+            // Multiple-model global mappings must survive the creator's address space.
+            const bool independent_global = (chnk_access == chunk_access::global)
+                && (mem->get_model_type() == mem::mem_model_type::multiple);
+            if (own_process && own_process->get_mem_model() && !independent_global) {
                 mmp = own_process->get_mem_model();
                 err = mmp->create_chunk(mmc_impl_, create_info);
 
