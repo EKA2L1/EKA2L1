@@ -136,9 +136,9 @@ namespace eka2l1::epoc {
         , screen_redraw_callbacks(screen_redraw_callback_free_check_func, screen_redraw_callback_free_func)
         , screen_mode_change_callbacks(screen_mode_change_callback_free_check_func, screen_mode_change_callback_free_func) {
         root = std::make_unique<epoc::window>(nullptr, this, nullptr);
-        disp_mode = scr_conf.disp_mode;
-        dsa_disp_mode = scr_conf.dsa_disp_mode;
-        dsa_disp_mode_initial = scr_conf.dsa_disp_mode;
+        disp_mode = current_mode().disp_mode;
+        dsa_disp_mode = current_mode().dsa_disp_mode;
+        dsa_disp_mode_initial = current_mode().dsa_disp_mode;
 
         for (std::size_t i = 0; i < scr_config.modes.size(); i++) {
             if (scr_config.modes[i].rotation == 0) {
@@ -564,7 +564,13 @@ namespace eka2l1::epoc {
     }
 
     void screen::set_screen_mode(window_server *winserv, drivers::graphics_driver *drv, const int mode) {
+        const auto *new_mode = mode_info(mode);
+        if (!new_mode) {
+            return;
+        }
+
         const int old_mode = crr_mode;
+        const bool display_mode_changed = disp_mode != new_mode->disp_mode;
         bool really_changed = false;
 
         if (crr_mode != mode) {
@@ -572,8 +578,26 @@ namespace eka2l1::epoc {
             really_changed = true;
         }
 
+        if (display_mode_changed) {
+            abort_all_dsas(dsa_terminate_screen_display_mode_change);
+        }
+
         crr_mode = mode;
-        resize(drv, mode_info(mode)->size);
+        if (really_changed) {
+            disp_mode = new_mode->disp_mode;
+            dsa_disp_mode_initial = new_mode->dsa_disp_mode;
+            reset_dsa_depth_guess();
+
+            if (dsa_texture) {
+                drivers::graphics_command_builder builder;
+                builder.destroy_bitmap(dsa_texture);
+                auto commands = builder.retrieve_command_list();
+                drv->submit_command_list(commands);
+                dsa_texture = 0;
+            }
+        }
+
+        resize(drv, new_mode->size);
 
         if (really_changed) {
             fire_screen_mode_change_callbacks(old_mode);
@@ -585,8 +609,10 @@ namespace eka2l1::epoc {
             const epoc::config::screen_mode *modeinfo_n = mode_info(crr_mode);
 
             if (modeinfo_o && modeinfo_n) {
-                if (modeinfo_o->size != modeinfo_n->size) {
-                    abort_all_dsas(dsa_terminate_rotation_change);
+                if ((modeinfo_o->size != modeinfo_n->size) || display_mode_changed) {
+                    if (!display_mode_changed) {
+                        abort_all_dsas(dsa_terminate_rotation_change);
+                    }
                     
                     // Do it right now (when are we gonna redraw again to calculate the visible region clueless)
                     need_update_visible_regions(true);

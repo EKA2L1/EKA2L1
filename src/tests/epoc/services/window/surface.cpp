@@ -13,6 +13,8 @@
 #include <services/window/surface.h>
 #include <services/window/bitmap_cache.h>
 #include <services/window/classes/gstore.h>
+#include <services/window/classes/winbase.h>
+#include <services/window/screen.h>
 #include <services/fbs/bitmap.h>
 
 #include <algorithm>
@@ -155,6 +157,47 @@ namespace {
         auto commands = builder.retrieve_command_list();
         driver.submit_command_list(commands);
     }
+}
+
+TEST_CASE("Same-size screen modes switch color depth and discard the old DSA texture", "[screen_mode]") {
+    epoc::config::screen config{};
+    config.modes = {
+        { 0, 1, { 176, 208 }, 0, "", epoc::display_mode::color16mu, epoc::display_mode::color64k },
+        { 0, 2, { 176, 208 }, 0, "", epoc::display_mode::color64k, epoc::display_mode::color64k }
+    };
+    epoc::screen screen(0, config);
+    surface_driver driver;
+
+    CHECK(screen.disp_mode == epoc::display_mode::color16mu);
+    CHECK(screen.screen_buffer_byte_width() == 704);
+    CHECK(screen.dsa_disp_mode == epoc::display_mode::color64k);
+
+    screen.dsa_disp_mode = epoc::display_mode::color16mu;
+    const auto old_texture = drivers::create_bitmap(&driver, { 208, 208 }, 32);
+    screen.dsa_texture = old_texture;
+    screen.set_screen_mode(nullptr, &driver, 1);
+    CHECK(screen.crr_mode == 1);
+    CHECK(screen.disp_mode == epoc::display_mode::color64k);
+    CHECK(screen.screen_buffer_byte_width() == 352);
+    CHECK(screen.dsa_disp_mode == epoc::display_mode::color64k);
+    CHECK(screen.dsa_texture == 0);
+    CHECK(driver.images.count(old_texture) == 0);
+
+    screen.set_screen_mode(nullptr, &driver, 0);
+    CHECK(screen.disp_mode == epoc::display_mode::color16mu);
+    CHECK(screen.screen_buffer_byte_width() == 704);
+    CHECK(screen.dsa_disp_mode_initial == epoc::display_mode::color64k);
+
+    screen.dsa_disp_mode = epoc::display_mode::color16mu;
+    screen.set_screen_mode(nullptr, &driver, 0);
+    CHECK(screen.dsa_disp_mode == epoc::display_mode::color16mu);
+    screen.set_screen_mode(nullptr, &driver, -1);
+    screen.set_screen_mode(nullptr, &driver, 2);
+    CHECK(screen.crr_mode == 0);
+    CHECK(screen.disp_mode == epoc::display_mode::color16mu);
+
+    screen.deinit(&driver);
+    CHECK_FALSE(driver.invalid_use);
 }
 
 TEST_CASE("Window background replacement is independent of producer publication", "[window_surface]") {

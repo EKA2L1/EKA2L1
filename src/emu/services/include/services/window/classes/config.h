@@ -35,6 +35,8 @@ namespace eka2l1::epoc {
             int rotation;
 
             std::string style;
+            epoc::display_mode disp_mode;
+            epoc::display_mode dsa_disp_mode;
         };
 
         struct hardware_state {
@@ -46,13 +48,6 @@ namespace eka2l1::epoc {
 
         struct screen {
             int screen_number;
-            epoc::display_mode disp_mode;
-
-            // Depth of the physical framebuffer that direct screen access clients write
-            // into. WINDOWMODE only describes what WSERV composes in; on EKA1 panels the
-            // two differ, so keep them apart.
-            epoc::display_mode dsa_disp_mode;
-
             bool auto_clear;
             bool flicker_free;
             bool blt_offscreen;

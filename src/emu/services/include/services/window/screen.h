@@ -89,9 +89,8 @@ namespace eka2l1::epoc {
 
         epoc::display_mode disp_mode;
 
-        // Pixel format of the direct screen access framebuffer. Usually the same as
-        // disp_mode, but EKA1 panels expose a 16-bit framebuffer while WSERV composes
-        // in the deeper mode their wsini.ini declares.
+        // Some EKA1 clients hardcode 16-bit writes despite a deeper reported mode.
+        // Keep the detected DSA format separate from the screen device's mode.
         epoc::display_mode dsa_disp_mode;
         epoc::display_mode dsa_disp_mode_initial;
 
