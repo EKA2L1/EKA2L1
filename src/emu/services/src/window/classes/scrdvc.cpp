@@ -98,7 +98,12 @@ namespace eka2l1::epoc {
 
     void screen_device::set_screen_mode(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         const int mode = *reinterpret_cast<int *>(cmd.data_ptr);
+        if (!scr->mode_info(mode)) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
         scr->set_screen_mode(&client->get_ws(), client->get_ws().get_graphics_driver(), mode);
+        ctx.complete(epoc::error_none);
     }
 
     void screen_device::get_screen_size_mode_list(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
@@ -283,7 +288,6 @@ namespace eka2l1::epoc {
 
         case ws_sd_op_set_screen_mode: {
             set_screen_mode(ctx, cmd);
-            ctx.complete(epoc::error_none);
 
             break;
         }
@@ -316,10 +320,9 @@ namespace eka2l1::epoc {
         }
 
         case ws_sd_op_get_screen_mode_display_mode: {
-            int mode = *reinterpret_cast<int *>(cmd.data_ptr);
-
-            ctx.write_data_to_descriptor_argument(reply_slot, scr->disp_mode);
-            ctx.complete(epoc::error_none);
+            const int mode = *reinterpret_cast<int *>(cmd.data_ptr);
+            const auto *info = scr->mode_info(mode);
+            ctx.complete(info ? static_cast<int>(info->disp_mode) : epoc::error_argument);
 
             break;
         }

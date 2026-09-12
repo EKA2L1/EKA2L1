@@ -1370,7 +1370,6 @@ namespace eka2l1 {
 
         common::ini_node_ptr window_mode_node = ws_config.find("WINDOWMODE");
         epoc::display_mode scr_mode_global = epoc::display_mode::color16ma;
-        epoc::display_mode dsa_mode_global = epoc::display_mode::color16ma;
 
         if (window_mode_node) {
             common::ini_pair *window_mode_pair = window_mode_node->get_as<common::ini_pair>();
@@ -1399,22 +1398,6 @@ namespace eka2l1 {
                 scr_mode_global = epoc::string_to_display_mode(modes[0]);
             }
 
-            // NGA render stages report every 32bpp target as DisplayMode16M (EColor16MA).
-            if ((kern->get_epoc_version() >= epocver::epoc10)
-                && (epoc::get_bpp_from_display_mode(scr_mode_global) == 32)) {
-                scr_mode_global = epoc::display_mode::color16ma;
-            }
-
-            dsa_mode_global = scr_mode_global;
-
-            // WINDOWMODE is the mode WSERV composes in; it is not proof of what a direct
-            // screen access client writes into the panel buffer. Most EKA1 guests follow
-            // the reported mode, but some hardcode 16-bit pixels, so start narrow and let
-            // screen::promote_dsa_depth_if_deep_pixels_written() widen once the guest
-            // shows it writes deeper ones.
-            if (kern->is_eka1() && (epoc::get_bpp_from_display_mode(dsa_mode_global) > 16)) {
-                dsa_mode_global = epoc::display_mode::color64k;
-            }
         }
 
         bool is_auto_clear = false;
@@ -1470,8 +1453,6 @@ namespace eka2l1 {
             epoc::config::screen scr;
 
             scr.screen_number = total_screen - 1;
-            scr.disp_mode = scr_mode_global;
-            scr.dsa_disp_mode = dsa_mode_global;
             scr.auto_clear = is_auto_clear;
             scr.flicker_free = flicker_free;
             scr.blt_offscreen = blit_offscreen;
@@ -1520,6 +1501,27 @@ namespace eka2l1 {
                 }
 
                 current_mode_str = std::to_string(total_mode);
+
+                scr_mode.disp_mode = scr_mode_global;
+                const std::string display_mode_key = "SCR_WINDOWMODE" + current_mode_str;
+                auto display_mode_node = screen_node->get_as<common::ini_section>()->find(display_mode_key.c_str());
+                if (display_mode_node) {
+                    std::vector<std::string> mode_names(1);
+                    display_mode_node->get_as<common::ini_pair>()->get(mode_names);
+                    scr_mode.disp_mode = epoc::string_to_display_mode(mode_names[0]);
+                }
+
+                // NGA render stages expose 32-bit targets as EColor16MA.
+                if ((kern->get_epoc_version() >= epocver::epoc10)
+                    && (epoc::get_bpp_from_display_mode(scr_mode.disp_mode) == 32)) {
+                    scr_mode.disp_mode = epoc::display_mode::color16ma;
+                }
+
+                scr_mode.dsa_disp_mode = scr_mode.disp_mode;
+                // Start narrow for legacy DSA clients; actual writes can promote the format.
+                if (kern->is_eka1() && (epoc::get_bpp_from_display_mode(scr_mode.disp_mode) > 16)) {
+                    scr_mode.dsa_disp_mode = epoc::display_mode::color64k;
+                }
 
                 std::string screen_mode_rot_key = "SCR_ROTATION";
                 screen_mode_rot_key += current_mode_str;

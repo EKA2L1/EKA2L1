@@ -622,14 +622,14 @@ namespace eka2l1 {
         auto final_path = get_full_symbian_path(ss_path, path.value());
         symfile f = ctx->sys->get_io_system()->open_file(final_path, READ_MODE);
 
-        if (!f) {
-            ctx->complete(0);
-            return;
+        // The address must be written back even when the file does not exist at all: clients read it
+        // unconditionally on KErrNone, so leaving it untouched hands them uninitialised stack as a ROM address.
+        address addr = 0;
+
+        if (f) {
+            addr = f->rom_address();
+            f->close();
         }
-
-        address addr = f->rom_address();
-
-        f->close();
 
         ctx->write_data_to_descriptor_argument<address>(1, addr);
         ctx->complete(epoc::error_none);
