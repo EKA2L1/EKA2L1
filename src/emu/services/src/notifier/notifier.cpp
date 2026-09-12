@@ -28,6 +28,8 @@
 
 #include <common/cvt.h>
 
+#include <array>
+
 namespace eka2l1 {
     std::string get_notifier_server_name_by_epocver(const epocver ver) {
         if (ver < epocver::epoc7) {
@@ -111,58 +113,116 @@ namespace eka2l1 {
     }
 
     void notifier_client_session::notify(service::ipc_context *ctx) {
-        std::optional<std::uint32_t> length_text_line = ctx->get_argument_value<std::uint32_t>(2);
-        std::optional<std::uint32_t> length_two_buttons = ctx->get_argument_value<std::uint32_t>(3);
-
-        if (!length_text_line.has_value() || !length_two_buttons.has_value()) {
-            ctx->complete(epoc::error_argument);
+        if (pending_dialog_ && !pending_dialog_->empty()) {
+            ctx->complete(epoc::error_in_use);
             return;
         }
 
-        std::uint16_t length_line1 = length_text_line.value() >> 16;
-        std::uint16_t length_line2 = length_text_line.value() & 0xFFFF;
+        std::u16string line1, line2, button_text1, button_text2;
+        ptr<epoc::des8> result_address = ctx->msg->args.args[0];
+        int *status = nullptr;
 
-        std::uint16_t length_button_text1 = length_two_buttons.value() >> 16;
-        std::uint16_t length_button_text2 = length_two_buttons.value() & 0xFFFF;
+        if (ctx->sys->get_symbian_version_use() == epocver::epoc6) {
+            // EPOC 6 packages four text descriptor pointers and a result descriptor in slot 0.
+            if (ctx->get_argument_data_size(0) != 5 * sizeof(std::uint32_t)) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
 
-        std::optional<std::u16string> combined_text = ctx->get_argument_value<std::u16string>(1);
-        if (!combined_text.has_value()) {
-            ctx->complete(epoc::error_argument);
-            return;
+            const auto arguments = ctx->get_argument_data_from_descriptor<std::array<std::uint32_t, 5>>(0);
+            if (!arguments) {
+                ctx->complete(epoc::error_bad_descriptor);
+                return;
+            }
+
+            kernel::process *process = ctx->msg->own_thr->owning_process();
+            std::u16string *texts[] = { &line1, &line2, &button_text1, &button_text2 };
+            for (std::size_t i = 0; i < 4; ++i) {
+                auto *descriptor = ptr<epoc::desc16>((*arguments)[i]).get(process);
+                if (!descriptor || !descriptor->is_valid_descriptor()
+                    || (descriptor->get_length() && !descriptor->get_pointer(process))) {
+                    ctx->complete(epoc::error_bad_descriptor);
+                    return;
+                }
+                if (descriptor->get_length()) {
+                    *texts[i] = descriptor->to_std_string(process);
+                }
+            }
+
+            result_address = (*arguments)[4];
+            auto *result = result_address.get(process);
+            if (result && result->is_valid_descriptor() && result->get_max_length(process) >= sizeof(int)) {
+                status = reinterpret_cast<int *>(result->get_pointer(process));
+            }
+        } else {
+            const auto length_text_line = ctx->get_argument_value<std::uint32_t>(2);
+            const auto length_two_buttons = ctx->get_argument_value<std::uint32_t>(3);
+            const auto combined_text = ctx->get_argument_value<std::u16string>(1);
+            if (!length_text_line || !length_two_buttons || !combined_text) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+
+            const std::uint32_t length_line1 = *length_text_line >> 16;
+            const std::uint32_t length_line2 = *length_text_line & 0xFFFF;
+            const std::uint32_t length_button1 = *length_two_buttons >> 16;
+            const std::uint32_t length_button2 = *length_two_buttons & 0xFFFF;
+            if (combined_text->size() != length_line1 + length_line2 + length_button1 + length_button2) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+
+            line1 = combined_text->substr(0, length_line1);
+            line2 = combined_text->substr(length_line1, length_line2);
+            button_text1 = combined_text->substr(length_line1 + length_line2, length_button1);
+            button_text2 = combined_text->substr(length_line1 + length_line2 + length_button1, length_button2);
+            if (ctx->get_argument_max_data_size(0) >= sizeof(int)) {
+                status = reinterpret_cast<int *>(ctx->get_descriptor_argument_ptr(0));
+            }
         }
 
-        std::u16string line1 = combined_text->substr(0, length_line1);
-        std::u16string line2 = combined_text->substr(length_line1, length_line2);
-        std::u16string button_text1 = combined_text->substr(length_line1 + length_line2, length_button_text1);
-        std::u16string button_text2 = combined_text->substr(length_line1 + length_line2 + length_button_text1,
-            length_button_text2);
-
-        //LOG_TRACE(SERVICE_NOTIFIER, "Trying to display: {} {} {} {}", common::ucs2_to_utf8(line1),
-        //    common::ucs2_to_utf8(line2), common::ucs2_to_utf8(button_text1), common::ucs2_to_utf8(button_text2));
-
-        int *status = reinterpret_cast<int*>(ctx->get_descriptor_argument_ptr(0));
         if (!status) {
-            ctx->complete(epoc::error_argument);
+            ctx->complete(epoc::error_bad_descriptor);
             return;
         }
 
-        epoc::notify_info complete_info{ ctx->msg->request_sts, ctx->msg->own_thr };
-        drivers::ui::show_yes_no_dialog(line1 + u'\n' + line2, button_text1, button_text2, [status, complete_info](int value) {
-            *status = value;
+        pending_dialog_ = std::make_shared<epoc::notify_info>(ctx->msg->request_sts, ctx->msg->own_thr);
+        const std::weak_ptr<epoc::notify_info> pending = pending_dialog_;
+        kernel_system *kern = ctx->sys->get_kernel_system();
+        const kernel::uid requester_id = ctx->msg->own_thr->unique_id();
+        drivers::ui::show_yes_no_dialog(line1 + u'\n' + line2, button_text1, button_text2,
+            [kern, pending, requester_id, result_address](int value) {
+                if (pending.expired()) {
+                    return;
+                }
+                const std::lock_guard<kernel_system> guard(*kern);
+                const auto completion = pending.lock();
+                auto *requester = kern->get_by_id<kernel::thread>(requester_id);
+                if (!completion || completion->empty() || !requester) {
+                    return;
+                }
 
-            kernel_system *kern = complete_info.requester->get_kernel_object_owner();
-            epoc::notify_info complete_info_copy = complete_info;
-
-            kern->lock();
-            complete_info_copy.complete(epoc::error_none);
-            kern->unlock();
-        });
+                auto *process = requester->owning_process();
+                auto *result = result_address.get(process);
+                if (!result || !result->is_valid_descriptor() || !result->get_pointer(process)
+                    || result->get_max_length(process) < sizeof(value)) {
+                    completion->complete(epoc::error_bad_descriptor);
+                    return;
+                }
+                result->assign(process, reinterpret_cast<const std::uint8_t *>(&value), sizeof(value));
+                completion->complete(epoc::error_none);
+            });
     }
 
     void notifier_client_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case notifier_notify:
             notify(ctx);
+            break;
+
+        case notifier_notify_cancel:
+            // RNotifier::NotifyCancel is acknowledged without cancelling the dialog.
+            ctx->complete(epoc::error_none);
             break;
 
         case notifier_info_print:
