@@ -51,6 +51,8 @@ namespace eka2l1 {
     };
 
     struct notifier_client_session : public service::typical_session {
+        std::shared_ptr<epoc::notify_info> pending_dialog_;
+
         explicit notifier_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
 
         void fetch(service::ipc_context *ctx) override;

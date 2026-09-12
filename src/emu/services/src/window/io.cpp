@@ -156,11 +156,11 @@ namespace eka2l1::epoc {
             const std::uint32_t the_code = epoc::map_scancode_to_keycode(static_cast<std_scan_code>(
                 evt.key_evt_.scancode));
 
-            const std::uint64_t data_for_repeatable = extra_event.key_evt_.scancode | (static_cast<std::uint64_t>(extra_event.key_evt_.code) << 32);
+            const std::uint64_t data_for_repeatable = extra_event.key_evt_.scancode | (static_cast<std::uint64_t>(the_code) << 32);
 
             if (!dont_send_extra_key_event) {
                 extra_event.key_evt_.code = the_code;
-                extra_event.time = kern->home_time();
+                extra_event.time = kern->universal_time();
 
                 if (repeatable)
                     extra_event.key_evt_.modifiers = event_modifier_repeatable;
