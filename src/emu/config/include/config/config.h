@@ -25,6 +25,7 @@
 #include <array>
 #include <atomic>
 #include <cstdint>
+#include <map>
 #include <optional>
 #include <string>
 #include <vector>
@@ -35,6 +36,7 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::config {
+    using host_map = std::map<std::string, std::string>;
     static constexpr const char *KEYBIND_TYPE_KEY = "key";
     static constexpr const char *KEYBIND_TYPE_CONTROLLER = "controller";
     static constexpr const char *KEYBIND_TYPE_MOUSE = "mouse";
@@ -152,6 +154,7 @@ namespace eka2l1::config {
         std::string sf2_bank_path{ "resources/defaultbank.sf2" };
         std::string log_filter{ DEFAULT_LOG_FILTERING };
         std::string bt_central_server_url{ "btnetplay.12z1.com" };
+        host_map hosts;
         std::string background_image{ "" };
 
         screen_buffer_sync_option screen_buffer_sync{ screen_buffer_sync_option_preferred };
@@ -171,5 +174,6 @@ namespace eka2l1::config {
 
         void serialize(const bool with_bindings = true);
         void deserialize(const bool with_bindings = true);
+        std::optional<std::string> host_override(const std::string &hostname) const;
     };
 }

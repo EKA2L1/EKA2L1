@@ -28,6 +28,31 @@ namespace eka2l1 {
         : service::typical_server(sys, "SystemAgent") {
     }
 
+    system_agent_server::~system_agent_server() {
+        clear_all_sessions();
+    }
+
+    bool system_agent_notify_info::conditions_met() const {
+        if (conditions_.empty()) {
+            return false;
+        }
+        for (const auto &condition : conditions_) {
+            auto prop = kern_->get_prop(SYSTEM_AGENT_PROPERTY_CATEGORY, condition.uid_);
+            if (!prop) {
+                return false;
+            }
+            const auto state = prop->get_int();
+            switch (condition.type_) {
+            case 32: if (condition.state_ != state) return false; break;
+            case 33: if (condition.state_ == state) return false; break;
+            case 34: if (condition.state_ <= state) return false; break;
+            case 35: if (condition.state_ >= state) return false; break;
+            default: return false;
+            }
+        }
+        return true;
+    }
+
     void system_agent_server::connect(service::ipc_context &context) {
         create_session<system_agent_session>(&context);
         context.complete(epoc::error_none);
@@ -53,7 +78,7 @@ namespace eka2l1 {
     void system_agent_event_queue::listen(system_agent_notify_info &info) {
         const std::lock_guard<std::mutex> guard(mut_);
 
-        if (!info.woke_target_.empty()) {
+        if (info.woke_target_.empty() || std::find(infos_.begin(), infos_.end(), &info) != infos_.end()) {
             return;
         }
 
@@ -63,12 +88,21 @@ namespace eka2l1 {
     void system_agent_event_queue::notify(const std::uint32_t uid, const std::uint32_t state) {
         const std::lock_guard<std::mutex> guard(mut_);
 
-        for (system_agent_notify_info *info: infos_) {
-            if (info->woke_target_.empty()) {
+        for (auto it = infos_.begin(); it != infos_.end();) {
+            system_agent_notify_info *info = *it;
+            if (info->woke_target_.empty() || !info->kern_->is_thread_alive(info->woke_target_.requester)) {
+                it = infos_.erase(it);
                 continue;
             }
 
-            if ((info->uid_nof_ == 0xFFFFFFFF) || (info->uid_nof_ == uid)) {
+            if (info->conditional_) {
+                if (info->conditions_met()) {
+                    info->conditions_.clear();
+                    info->woke_target_.complete(epoc::error_none);
+                    it = infos_.erase(it);
+                    continue;
+                }
+            } else if ((info->uid_nof_ == 0xFFFFFFFF) || (info->uid_nof_ == uid)) {
                 kernel::process *pr = info->woke_target_.requester->owning_process();
                 if (!pr) {
                     LOG_ERROR(SERVICE_SYSAGT, "Awake target does not have a parent process!");
@@ -91,10 +125,11 @@ namespace eka2l1 {
                 }
 
                 info->woke_target_.complete(epoc::error_none);
+                it = infos_.erase(it);
+                continue;
             }
+            ++it;
         }
-
-        infos_.clear();
     }
     
     void system_agent_event_queue::deque(system_agent_notify_info &info) {
@@ -109,6 +144,13 @@ namespace eka2l1 {
     system_agent_session::system_agent_session(service::typical_server *serv, const kernel::uid ss_id,
         epoc::version client_version)
         : service::typical_session(serv, ss_id, client_version) {
+    }
+
+    system_agent_session::~system_agent_session() {
+        server<system_agent_server>()->deque(info_);
+        if (!info_.woke_target_.empty() && info_.kern_->is_thread_alive(info_.woke_target_.requester)) {
+            info_.woke_target_.complete(epoc::error_cancel);
+        }
     }
 
     void system_agent_session::get_state(service::ipc_context *ctx) {
@@ -211,6 +253,8 @@ namespace eka2l1 {
 
         info_.state_value_ = state_des;
         info_.target_uid_ = uid_des;
+        info_.kern_ = ctx->sys->get_kernel_system();
+        info_.conditional_ = false;
         info_.woke_target_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
 
         server<system_agent_server>()->listen(info_);
@@ -223,6 +267,35 @@ namespace eka2l1 {
         }
 
         ctx->complete(epoc::error_none);
+    }
+
+    void system_agent_session::set_conditions(service::ipc_context *ctx) {
+        const auto count = ctx->get_argument_value<std::uint32_t>(0);
+        const auto size = ctx->get_argument_data_size(1);
+        const auto data = ctx->get_descriptor_argument_ptr(1);
+        if (!count || !*count || !data || *count > size / sizeof(system_agent_condition)) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+        info_.conditions_.resize(*count);
+        std::memcpy(info_.conditions_.data(), data, *count * sizeof(system_agent_condition));
+        ctx->complete(epoc::error_none);
+    }
+
+    void system_agent_session::notify_condition(service::ipc_context *ctx) {
+        if (!info_.woke_target_.empty()) {
+            ctx->complete(epoc::error_in_use);
+            return;
+        }
+        info_.kern_ = ctx->sys->get_kernel_system();
+        info_.conditional_ = true;
+        info_.woke_target_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+        if (info_.conditions_met()) {
+            info_.conditions_.clear();
+            info_.woke_target_.complete(epoc::error_none);
+        } else {
+            server<system_agent_server>()->listen(info_);
+        }
     }
 
     void system_agent_session::set_event_buffering(service::ipc_context *ctx) {
@@ -280,6 +353,18 @@ namespace eka2l1 {
             notify_event(ctx, false);
             break;
 
+        case system_agent_notify_on_any_event:
+            notify_event(ctx, true);
+            break;
+
+        case system_agent_set_conditions:
+            set_conditions(ctx);
+            break;
+
+        case system_agent_notify_on_cond:
+            notify_condition(ctx);
+            break;
+
         case system_agent_notify_event_cancel:
             notify_event_cancel(ctx);
             break;
@@ -294,6 +379,7 @@ namespace eka2l1 {
 
         default:
             LOG_ERROR(SERVICE_SYSAGT, "Unimplemented opcode for System Agent server 0x{:X}", ctx->msg->function);
+            ctx->complete(epoc::error_not_supported);
             break;
         }
     }

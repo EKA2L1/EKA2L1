@@ -126,6 +126,10 @@ namespace eka2l1::epoc::socket {
     void socket_host_resolver::dispatch(service::ipc_context *ctx) {
         if (parent_->is_oldarch()) {
             switch (ctx->msg->function) {
+            case socket_old_hr_get_by_name:
+                get_by_name(ctx);
+                return;
+
             case socket_old_hr_get_host_name:
                 get_host_name(ctx);
                 return;

@@ -19,6 +19,8 @@
 
 #include <common/log.h>
 #include <common/platform.h>
+#include <config/config.h>
+#include <kernel/kernel.h>
 #include <services/internet/protocols/inet.h>
 
 #if EKA2L1_PLATFORM(WIN32)
@@ -133,11 +135,17 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_host_resolver::get_by_name(epoc::socket::name_entry *supply_and_result, epoc::notify_info &complete_info) {
-        const std::string name_utf8 = common::ucs2_to_utf8(supply_and_result->name_.to_std_string(nullptr));
+        std::string name_utf8 = common::ucs2_to_utf8(supply_and_result->name_.to_std_string(nullptr));
+        const auto overridden = papa_->get_kernel_system()->get_config()->host_override(name_utf8);
+        if (overridden) {
+            name_utf8 = *overridden;
+        }
     
         if (prev_info_) {
             freeaddrinfo(prev_info_);
+            prev_info_ = nullptr;
         }
+        iterating_info_ = nullptr;
 
         // Set hint
         addrinfo hint_info;
@@ -146,6 +154,7 @@ namespace eka2l1::epoc::internet {
         hint_info.ai_family = (addr_family_ == INET6_ADDRESS_FAMILY) ? AF_INET6 : AF_INET;
         hint_info.ai_socktype = (protocol_id_ == INET_UDP_PROTOCOL_ID) ? SOCK_DGRAM : SOCK_STREAM; 
         hint_info.ai_protocol = (protocol_id_ == INET_UDP_PROTOCOL_ID) ? IPPROTO_UDP : IPPROTO_TCP;
+        hint_info.ai_flags = overridden ? AI_NUMERICHOST : 0;
 
         addrinfo *result_info = nullptr;
         const int result_code = getaddrinfo(name_utf8.c_str(), nullptr, &hint_info, &result_info);

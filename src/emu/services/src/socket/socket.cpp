@@ -419,7 +419,16 @@ namespace eka2l1::epoc::socket {
 
         kernel::process *requester = ctx->msg->own_thr->owning_process();
         epoc::des8 *size_return_des = eka2l1::ptr<epoc::des8>(req_info->size_return_).get(requester);
-        saddress *optional_addr = (has_addr ? eka2l1::ptr<saddress>(req_info->sock_addr_).get(requester) : nullptr);
+        epoc::des8 *addr_des = has_addr ? eka2l1::ptr<epoc::des8>(req_info->sock_addr_).get(requester) : nullptr;
+        if (has_addr && (!addr_des || addr_des->get_max_length(requester) < sizeof(saddress))) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+        saddress *optional_addr = addr_des ? reinterpret_cast<saddress *>(addr_des->get_pointer_raw(requester)) : nullptr;
+        if (has_addr && !optional_addr) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
 
         epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
         sock_->send(packet_buffer, static_cast<std::uint32_t>(packet_size),
@@ -450,7 +459,16 @@ namespace eka2l1::epoc::socket {
         }
 
         epoc::des8 *size_return_des = eka2l1::ptr<epoc::des8>(req_info->size_return_).get(requester);
-        saddress *optional_addr = (has_addr ? eka2l1::ptr<saddress>(req_info->sock_addr_).get(requester) : nullptr);
+        epoc::des8 *addr_des = has_addr ? eka2l1::ptr<epoc::des8>(req_info->sock_addr_).get(requester) : nullptr;
+        if (has_addr && (!addr_des || addr_des->get_max_length(requester) < sizeof(saddress))) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+        saddress *optional_addr = addr_des ? reinterpret_cast<saddress *>(addr_des->get_pointer_raw(requester)) : nullptr;
+        if (has_addr && !optional_addr) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
 
         epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
         sock_->receive(packet_buffer, static_cast<std::uint32_t>(packet_size),
