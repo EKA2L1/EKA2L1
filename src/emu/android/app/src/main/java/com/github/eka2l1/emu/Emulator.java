@@ -753,6 +753,8 @@ public class Emulator {
 
     public static native void loadConfig();
 
+    public static native boolean validHostMapping(String hostname, String target);
+
     public static native void setLanguage(int languageId);
 
     public static native void setRtosLevel(int level);

@@ -179,6 +179,7 @@ namespace eka2l1::epoc::internet {
         void *opaque_write_info_;
 
         std::uint32_t protocol_;
+        std::uint32_t family_ = INET_ADDRESS_FAMILY;
         epoc::notify_info connect_done_info_;
         epoc::notify_info send_done_info_;
         epoc::notify_info recv_done_info_;
@@ -262,6 +263,7 @@ namespace eka2l1::epoc::internet {
 
         void bind_impl_async();
         void bind_callback_impl_async();
+        int bind_host();
 
     public:
         explicit inet_socket(inet_bridged_protocol *papa);
@@ -316,13 +318,14 @@ namespace eka2l1::epoc::internet {
     private:
         std::shared_ptr<libuv::looper> looper_;
         kernel_system *kern_;
+        std::uint32_t protocol_id_;
 
     public:
-        explicit inet_bridged_protocol(kernel_system *kern, const bool oldarch);
+        explicit inet_bridged_protocol(kernel_system *kern, const bool oldarch, std::uint32_t protocol_id);
         void initialize_looper();
 
         virtual std::u16string name() const override {
-            return u"INet";
+            return protocol_id_ == INET_TCP_PROTOCOL_ID ? u"tcp" : u"udp";
         }
 
         std::vector<std::uint32_t> family_ids() const override {
@@ -330,7 +333,15 @@ namespace eka2l1::epoc::internet {
         }
 
         virtual std::vector<std::uint32_t> supported_ids() const override {
-            return { INET_UDP_PROTOCOL_ID, INET_TCP_PROTOCOL_ID };
+            return { protocol_id_ };
+        }
+
+        std::uint32_t sock_type() const override {
+            return protocol_id_ == INET_TCP_PROTOCOL_ID ? socket::socket_type_stream : socket::socket_type_datagram;
+        }
+
+        std::int32_t message_size() const override {
+            return protocol_id_ == INET_TCP_PROTOCOL_ID ? socket::SOCKET_MESSAGE_SIZE_IS_STREAM : 65507;
         }
 
         virtual epoc::version ver() const override {
@@ -367,6 +378,9 @@ namespace eka2l1::epoc::internet {
 
     void host_sockaddr_to_guest_saddress(const sockaddr *addr, epoc::socket::saddress &dest_addr, std::uint32_t *data_len = nullptr,
         bool for_descriptor = false);
+
+    int guest_bind_address_to_host(const epoc::socket::saddress &addr, std::uint32_t socket_family,
+        sockaddr_in6 &result);
         
     void addrinfo_to_name_entry(epoc::socket::name_entry &supply_and_result, addrinfo *result_info);
 }

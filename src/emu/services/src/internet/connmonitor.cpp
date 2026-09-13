@@ -19,11 +19,27 @@
  */
 
 #include <services/internet/connmonitor.h>
+#include <services/centralrepo/centralrepo.h>
 #include <system/epoc.h>
 
 #include <utils/err.h>
 
 namespace eka2l1 {
+    connmonitor_iap_info connmonitor_available_iaps(const central_repo &repo) {
+        connmonitor_iap_info result;
+        // CommsDat identifies IAP records through their RecordName field; 0 and 255 are reserved.
+        for (std::uint32_t id = 1; id < 255 && result.count < result.ids.size(); id++) {
+            for (const auto &entry : repo.entries) {
+                if ((entry.key & 0x7FFFFF00) == (0x02820000 | (id << 8))
+                    && entry.data.etype == central_repo_entry_type::string && !entry.data.strd.empty()) {
+                    result.ids[result.count++] = id;
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
     connmonitor_server::connmonitor_server(eka2l1::system *sys)
         : service::typical_server(sys, "!ConnectionMonitorServer") {
     }
@@ -60,6 +76,11 @@ namespace eka2l1 {
             break;
         }
 
+        case connmonitor_get_pckg_attribute: {
+            get_pckg_attribute(ctx);
+            break;
+        }
+
         case connmonitor_receive_event: {
             receive_event(ctx);
             break;
@@ -77,9 +98,38 @@ namespace eka2l1 {
 
         default: {
             LOG_ERROR(SERVICE_INTERNET, "Unimplemented opcode for ConnectionMonitorServer 0x{:X}", ctx->msg->function);
+            ctx->complete(epoc::error_not_supported);
             break;
         }
         }
+    }
+
+    void connmonitor_client_session::get_pckg_attribute(service::ipc_context *ctx) {
+        const auto connection = ctx->get_argument_value<std::uint32_t>(0);
+        const auto attribute = ctx->get_argument_value<std::uint32_t>(2);
+        if (!connection || !attribute) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+        if (*attribute != 403 || *connection != bearer_id_all) {
+            ctx->complete(epoc::error_not_supported);
+            return;
+        }
+
+        auto *cenrep = reinterpret_cast<central_repo_server *>(ctx->sys->get_kernel_system()
+            ->get_by_name<service::server>(CENTRAL_REPO_SERVER_NAME));
+        auto *repo = cenrep ? cenrep->load_repo_with_lookup(ctx->sys->get_io_system(),
+            ctx->sys->get_device_manager(), 0xCCCCCC00) : nullptr;
+        if (!repo) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        // Internet sockets use the host network, so configured guest IAPs need no radio scan.
+        const auto iaps = connmonitor_available_iaps(*repo);
+        repo->access_count--;
+        ctx->complete(ctx->write_data_to_descriptor_argument(3, iaps)
+            ? epoc::error_none : epoc::error_argument);
     }
 
     void connmonitor_client_session::get_connection_count(eka2l1::service::ipc_context *ctx) {

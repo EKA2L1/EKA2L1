@@ -255,4 +255,13 @@
     <string name="install_ng_game_more_than_one_game">There is more than one game in the given card game folder!</string>
     <string name="install_ng_game_no_game_info_file">The game information file does not exist in the card game folder!</string>
     <string name="install_ng_game_corrupted_game_info">The game information file has been corrupted. Please check your data\'s validity!</string>
+    <string name="hosts_title">Hosts</string>
+    <string name="hosts_hint">Redirect guest hostnames to an IP address or another hostname. Changes affect new connections; restart the game if it has cached an address.</string>
+    <string name="hosts_add">Add host mapping</string>
+    <string name="hosts_mapping">Host mapping</string>
+    <string name="hosts_hostname">Hostname</string>
+    <string name="hosts_target">IP address or hostname</string>
+    <string name="hosts_invalid">Enter a valid hostname and target without a URL scheme or port.</string>
+    <string name="hosts_duplicate">This hostname already has a mapping. Edit the existing entry.</string>
+    <string name="hosts_save_error">Could not save host mappings.</string>
 </resources>

@@ -10,3 +10,7 @@ target_include_directories(config PUBLIC include)
 target_link_libraries(config PRIVATE
         common
         yaml-cpp)
+
+if (WIN32)
+    target_link_libraries(config PRIVATE ws2_32)
+endif()

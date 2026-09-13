@@ -44,6 +44,7 @@ add_library(epocservs
         include/services/internet/protocols/inet.h
         include/services/internet/protocols/overall.h
         include/services/internet/browser.h
+        include/services/internet/accesspoints.h
         include/services/internet/connmonitor.h
         include/services/internet/nifman.h
         include/services/domain/domain.h
@@ -200,6 +201,7 @@ add_library(epocservs
         src/internet/protocols/resolver.cpp
         src/internet/protocols/socket.cpp
         src/internet/browser.cpp
+        src/internet/accesspoints.cpp
         src/internet/connmonitor.cpp
         src/internet/nifman.cpp
         src/domain/domain.cpp

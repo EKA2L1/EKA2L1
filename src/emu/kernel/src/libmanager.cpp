@@ -429,54 +429,14 @@ namespace eka2l1::hle {
             common::ini_file map_file_parser;
             map_file_parser.load(patch_map_path.c_str());
 
-            std::string source_dll_name_from_patch = eka2l1::replace_extension(original_map_name, "_");
-            common::ini_node_ptr pair_source_node = map_file_parser.find("source");
-            if (pair_source_node != nullptr) {
-                common::ini_pair *pair = pair_source_node->get_as<common::ini_pair>();
-                if (pair != nullptr) {
-                    if (pair->get_value_count() >= 1) {
-                        std::vector<std::string> sources_dll_list(1);
-                        pair->get(sources_dll_list);
-
-                        if (sources_dll_list.size() >= 1) {
-                            source_dll_name_from_patch = sources_dll_list[0] + "_";
-                        }
-                    }
-                }
+            const auto requirements_node = map_file_parser.find("requirements");
+            auto *requirements = requirements_node && requirements_node->get_node_type() == common::INI_NODE_SECTION
+                ? requirements_node->get_as<common::ini_section>() : nullptr;
+            if (requirements && requirements->find("host-tls") &&
+                (!kern_->get_config()->host_tls || kern_->get_epoc_version() < epocver::epoc93fp1)) {
+                continue;
             }
 
-            while (true) {
-                if (start_ver >= epocver::epocverend) {
-                    break;
-                }
-
-                const std::string source_dll_name = source_dll_name_from_patch + epocver_to_plat_suffix(start_ver) + ".dll";
-                patch_dll_map = eka2l1::add_path(patch_folder, source_dll_name);
-
-                if (!common::exists(patch_dll_map)) {
-                    patch_dll_map.clear();
-                    start_ver++;
-
-                    continue;
-                }
-
-                LOG_TRACE(KERNEL, "Using dll {} as patch dll for map file {}", source_dll_name, original_map_name);
-                break;
-            }
-
-            if (patch_dll_map.empty()) {
-                const std::string source_dll_name = source_dll_name_from_patch + "general.dll";
-                patch_dll_map = eka2l1::add_path(patch_folder, source_dll_name);
-
-                if (!common::exists(patch_dll_map)) {
-                    LOG_ERROR(KERNEL, "Can't find suitable patch DLL for map {}", original_map_name);
-                    continue;
-                }
-
-                LOG_TRACE(KERNEL, "Using general DLL {} as patch DLL for map file {}", source_dll_name, original_map_name);
-            }
-
-            patch_image_paths.push_back(patch_dll_map);
             patch_info the_patch;
 
             the_patch.name_ = original_map_name;
@@ -528,6 +488,58 @@ namespace eka2l1::hle {
                 }
             }
 
+            if (the_patch.routes_.empty()) {
+                continue;
+            }
+
+            std::string source_dll_name_from_patch = eka2l1::replace_extension(original_map_name, "_");
+            common::ini_node_ptr pair_source_node = map_file_parser.find("source");
+            if (pair_source_node != nullptr) {
+                common::ini_pair *pair = pair_source_node->get_as<common::ini_pair>();
+                if (pair != nullptr) {
+                    if (pair->get_value_count() >= 1) {
+                        std::vector<std::string> sources_dll_list(1);
+                        pair->get(sources_dll_list);
+
+                        if (sources_dll_list.size() >= 1) {
+                            source_dll_name_from_patch = sources_dll_list[0] + "_";
+                        }
+                    }
+                }
+            }
+
+            while (true) {
+                if (start_ver >= epocver::epocverend) {
+                    break;
+                }
+
+                const std::string source_dll_name = source_dll_name_from_patch + epocver_to_plat_suffix(start_ver) + ".dll";
+                patch_dll_map = eka2l1::add_path(patch_folder, source_dll_name);
+
+                if (!common::exists(patch_dll_map)) {
+                    patch_dll_map.clear();
+                    start_ver++;
+
+                    continue;
+                }
+
+                LOG_TRACE(KERNEL, "Using dll {} as patch dll for map file {}", source_dll_name, original_map_name);
+                break;
+            }
+
+            if (patch_dll_map.empty()) {
+                const std::string source_dll_name = source_dll_name_from_patch + "general.dll";
+                patch_dll_map = eka2l1::add_path(patch_folder, source_dll_name);
+
+                if (!common::exists(patch_dll_map)) {
+                    LOG_ERROR(KERNEL, "Can't find suitable patch DLL for map {}", original_map_name);
+                    continue;
+                }
+
+                LOG_TRACE(KERNEL, "Using general DLL {} as patch DLL for map file {}", source_dll_name, original_map_name);
+            }
+
+            patch_image_paths.push_back(patch_dll_map);
             patches_.push_back(the_patch);
         }
 

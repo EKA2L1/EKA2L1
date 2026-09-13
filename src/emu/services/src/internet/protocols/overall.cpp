@@ -29,10 +29,11 @@
 #endif
 
 namespace eka2l1::epoc::internet {
-    inet_bridged_protocol::inet_bridged_protocol(kernel_system *kern, const bool oldarch)
+    inet_bridged_protocol::inet_bridged_protocol(kernel_system *kern, const bool oldarch, const std::uint32_t protocol_id)
         : socket::protocol(oldarch)
         , looper_(libuv::default_looper)
-        , kern_(kern) {
+        , kern_(kern)
+        , protocol_id_(protocol_id) {
 #if EKA2L1_PLATFORM(WIN32)
         WSADATA init_data;
         WSAStartup(MAKEWORD(2, 0), &init_data);
@@ -40,11 +41,13 @@ namespace eka2l1::epoc::internet {
     }
 
     void add_internet_stack_protocols(socket_server *sock, const bool oldarch) {
-        std::unique_ptr<epoc::socket::protocol> inet_br_pr = std::make_unique<inet_bridged_protocol>(
-            sock->get_kernel_object_owner(), oldarch);
+        for (const auto id : { INET_TCP_PROTOCOL_ID, INET_UDP_PROTOCOL_ID }) {
+            std::unique_ptr<epoc::socket::protocol> inet_br_pr = std::make_unique<inet_bridged_protocol>(
+                sock->get_kernel_object_owner(), oldarch, id);
 
-        if (!sock->add_protocol(inet_br_pr)) {
-            LOG_ERROR(SERVICE_BLUETOOTH, "Failed to add INET bridged protocol");
+            if (!sock->add_protocol(inet_br_pr)) {
+                LOG_ERROR(SERVICE_INTERNET, "Failed to add INET bridged protocol");
+            }
         }
     }
 }

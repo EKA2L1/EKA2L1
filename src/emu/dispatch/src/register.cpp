@@ -20,6 +20,7 @@
 #include <dispatch/audio.h>
 #include <dispatch/camera.h>
 #include <dispatch/hui.h>
+#include <dispatch/tls.h>
 #include <dispatch/register.h>
 #include <dispatch/screen.h>
 #include <dispatch/video.h>
@@ -117,6 +118,11 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER(0xA1, ehui_get_stored_input_text),
         BRIDGE_REGISTER_DISPATCHER(0xA2, ehui_close_input_view),
         BRIDGE_REGISTER_DISPATCHER(0xA3, ehui_is_keypad_based),
+        BRIDGE_REGISTER_DISPATCHER(0xA4, ehui_is_manual_input),
+        BRIDGE_REGISTER_DISPATCHER(0xA5, ehui_set_input_available),
+        BRIDGE_REGISTER_DISPATCHER(0xC0, etls_create),
+        BRIDGE_REGISTER_DISPATCHER(0xC1, etls_destroy),
+        BRIDGE_REGISTER_DISPATCHER(0xC2, etls_command),
         BRIDGE_REGISTER_DISPATCHER(0x1000, sysutils::sysstartup_get_state),
         BRIDGE_REGISTER_DISPATCHER(0x1010, featmgr::feature_manager_initialize_lib),
         BRIDGE_REGISTER_DISPATCHER(0x1011, featmgr::feature_manager_uninitialize_lib),

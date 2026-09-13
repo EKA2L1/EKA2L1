@@ -383,11 +383,7 @@ add_subdirectory(capstone EXCLUDE_FROM_ALL)
 add_subdirectory(libfat)
 
 # mbedtls
-# Nothing here links mbedcrypto/mbedtls/mbedx509 -- libarchive's mbedtls backend is
-# forced off above -- so keep it out of "all" like the other vendored libraries that
-# are only built on demand. The settings below keep it buildable if something ever
-# does link it: mbedtls builds its test helpers when either ENABLE_TESTING or
-# ENABLE_PROGRAMS is on, and its -Werror does not survive GCC 14+/Clang 16.
+# The TLS driver links these targets; bundled test programs stay disabled.
 set(ENABLE_TESTING OFF CACHE BOOL "Build mbed TLS tests." FORCE)
 set(ENABLE_PROGRAMS OFF CACHE BOOL "Build mbed TLS programs." FORCE)
 set(MBEDTLS_FATAL_WARNINGS OFF CACHE BOOL "Compiler warnings treated as errors" FORCE)

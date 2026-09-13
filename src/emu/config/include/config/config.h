@@ -37,6 +37,10 @@ namespace eka2l1 {
 
 namespace eka2l1::config {
     using host_map = std::map<std::string, std::string>;
+    std::string normalize_host_name(std::string name);
+    bool valid_host_name(const std::string &name);
+    bool numeric_host_address(const std::string &address);
+    bool valid_host_target(const std::string &target);
     static constexpr const char *KEYBIND_TYPE_KEY = "key";
     static constexpr const char *KEYBIND_TYPE_CONTROLLER = "controller";
     static constexpr const char *KEYBIND_TYPE_MOUSE = "mouse";
@@ -155,6 +159,8 @@ namespace eka2l1::config {
         std::string log_filter{ DEFAULT_LOG_FILTERING };
         std::string bt_central_server_url{ "btnetplay.12z1.com" };
         host_map hosts;
+        std::string tls_ca_file;
+        bool host_tls = false;
         std::string background_image{ "" };
 
         screen_buffer_sync_option screen_buffer_sync{ screen_buffer_sync_option_preferred };

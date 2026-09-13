@@ -51,9 +51,19 @@ namespace eka2l1 {
         return "!Loader";
     }
 
-    static std::vector<common::pystr16> get_additional_search_paths(const std::u16string &search_list) {
+    std::vector<std::u16string> get_library_search_paths(const std::u16string &search_list) {
         common::pystr16 str(search_list);
-        return str.split(u';');
+        std::vector<std::u16string> paths;
+        for (const auto &entry : str.split(u';')) {
+            auto path = entry.std_str();
+            if (!path.empty()) {
+                if (!eka2l1::is_separator(path.back())) {
+                    path += u'\\';
+                }
+                paths.push_back(std::move(path));
+            }
+        }
+        return paths;
     }
 
     void loader_server::load_process(eka2l1::service::ipc_context &ctx) {
@@ -193,16 +203,14 @@ namespace eka2l1 {
         hle::lib_manager *mngr = ctx.sys->get_lib_manager();
         kernel::process *own_pr = ctx.msg->own_thr->owning_process();
 
-        std::vector<common::pystr16> search_list;
+        std::vector<std::u16string> search_list;
 
         if (info_eka1) {
             std::u16string search_list_str = info_eka1->search_path_.to_std_string(own_pr);
-            search_list = get_additional_search_paths(search_list_str);
+            search_list = get_library_search_paths(search_list_str);
         }
 
-        for (auto &search_path : search_list) {
-            mngr->search_paths.insert(mngr->search_paths.begin(), search_path.std_str());
-        }
+        mngr->search_paths.insert(mngr->search_paths.begin(), search_list.begin(), search_list.end());
 
         codeseg_ptr cs = mngr->load(*lib_path);
 

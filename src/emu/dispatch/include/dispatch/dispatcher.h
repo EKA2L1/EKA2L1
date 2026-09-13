@@ -29,6 +29,7 @@
 #include <drivers/camera/camera.h>
 #include <dispatch/video.h>
 #include <dispatch/hui.h>
+#include <dispatch/tls.h>
 
 #include <drivers/itc.h>
 
@@ -298,6 +299,7 @@ namespace eka2l1::dispatch {
         screen_post_transferer post_transferer_;
         std::unique_ptr<egl_controller> egl_controller_;
         ehui_controller hui_controller_;
+        tls_controller tls_controller_;
 
         std::map<std::uint32_t, address> static_string_addrs_;
         std::map<std::string, address> symbol_lookup_;
@@ -396,6 +398,10 @@ namespace eka2l1::dispatch {
 
         ehui_controller &get_hui_controller() {
             return hui_controller_;
+        }
+
+        tls_controller &get_tls_controller() {
+            return tls_controller_;
         }
 
         address add_static_string(const std::uint32_t key, const std::string &value);

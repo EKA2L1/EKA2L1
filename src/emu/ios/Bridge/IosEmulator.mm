@@ -25,6 +25,7 @@
 #include <vector>
 
 #include <sys/stat.h>
+#include <arpa/inet.h>
 
 #include <common/algorithm.h>
 #include <common/buffer.h>
@@ -45,6 +46,8 @@
 #include <drivers/graphics/backend/emu_window_ios.h>
 #include <drivers/graphics/graphics.h>
 #include <drivers/input/common.h>
+#include <drivers/ui/input_dialog.h>
+#include <drivers/ui/input_dialog_ios.h>
 #include <drivers/itc.h>
 #include <drivers/hwrm/vibration.h>
 #include <drivers/hwrm/backend/vibration_ios.h>
@@ -862,6 +865,7 @@ namespace eka2l1::ios {
         }
 
         auto *io = state->symsys->get_io_system();
+        drivers::ui::set_automatic_input_view(state->symsys->get_symbian_version_use() >= epocver::epoc94);
         // Same folder lib_manager::load_patch_libraries scans, which the
         // frontend redirects into the read-only app bundle at startup.
         const std::string patch_dir = eka2l1::runtime_resource_path("patch");
@@ -1233,6 +1237,7 @@ namespace eka2l1::ios {
 }
 
 - (void)shutdown {
+    eka2l1::drivers::ui::reset_input_view();
     std::lock_guard<std::recursive_mutex> session_lock(_sessionMutex);
     if (!_state) {
         return;
@@ -1895,7 +1900,16 @@ namespace eka2l1::ios {
     }
 }
 
+- (void)presentTextInput {
+    eka2l1::drivers::ui::request_input_view([self] { [self tapRawKey:eka2l1::epoc::std_key_f20]; });
+}
+
+- (BOOL)isTextInputAvailable {
+    return eka2l1::drivers::ui::is_input_available();
+}
+
 - (void)closeRunningApp {
+    eka2l1::drivers::ui::reset_input_view();
     if (!_state || !_state->symsys) {
         return;
     }
@@ -2656,6 +2670,10 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
             @"port": @(address.port_)
         }];
     }
+    NSMutableDictionary<NSString *, NSString *> *hosts = [NSMutableDictionary dictionary];
+    for (const auto &[hostname, address] : _state->conf.hosts) {
+        hosts[@(hostname.c_str())] = @(address.c_str());
+    }
     return @{
         @"audioMasterVolume": @(_state->conf.audio_master_volume),
         @"integerScaling": @(_state->conf.integer_scaling),
@@ -2670,13 +2688,34 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
         @"btnetListenPort": @(_state->conf.internet_bluetooth_port),
         @"btnetPassword": [NSString stringWithUTF8String:_state->conf.btnet_password.c_str()],
         @"btCentralServerUrl": [NSString stringWithUTF8String:_state->conf.bt_central_server_url.c_str()],
-        @"btnetFriendAddresses": friends
+        @"btnetFriendAddresses": friends,
+        @"hosts": hosts
     };
 }
 
 - (BOOL)applyConfigSnapshot:(NSDictionary<NSString *, id> *)snapshot {
     if (!_state) {
         return NO;
+    }
+
+    std::optional<eka2l1::config::host_map> hosts;
+    if (id hostEntries = snapshot[@"hosts"]) {
+        if (![hostEntries isKindOfClass:NSDictionary.class]) {
+            return NO;
+        }
+        hosts.emplace();
+        for (id key in hostEntries) {
+            id value = hostEntries[key];
+            if (![key isKindOfClass:NSString.class] || ![value isKindOfClass:NSString.class]) {
+                return NO;
+            }
+            const auto hostname = eka2l1::config::normalize_host_name([key UTF8String]);
+            const auto address = eka2l1::config::normalize_host_name([value UTF8String]);
+            if (!eka2l1::config::valid_host_name(hostname) || !eka2l1::config::valid_host_target(address)
+                || !hosts->emplace(hostname, address).second) {
+                return NO;
+            }
+        }
     }
 
     NSNumber *volume = snapshot[@"audioMasterVolume"];
@@ -2783,6 +2822,14 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
         }
     }
 
+    if (hosts) {
+        std::lock_guard<std::recursive_mutex> session_lock(_state->session_mutex);
+        std::optional<eka2l1::kernel_lock> kernel_lock;
+        if (_state->symsys && _state->symsys->get_kernel_system()) {
+            kernel_lock.emplace(_state->symsys->get_kernel_system());
+        }
+        _state->conf.hosts = std::move(*hosts);
+    }
     _state->conf.serialize();
     return YES;
 }

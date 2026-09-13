@@ -25,7 +25,9 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <map>
 #include <string>
+#include <vector>
 
 namespace eka2l1 {
     class socket_server;
@@ -41,12 +43,39 @@ namespace eka2l1::epoc::socket {
 
     enum conn_progress_generic_stage {
         conn_progress_connection_opened = 3500,
-        conn_progress_connection_closed = 4500
+        conn_progress_connection_closed = 4500,
+        conn_progress_link_layer_open = 7000,
+        conn_progress_link_layer_closed = 8000
     };
 
     struct conn_progress {
         std::int32_t stage_;
         std::int32_t error_;
+    };
+
+    struct connection_info {
+        std::uint32_t version = 1;
+        std::uint32_t iap_id = 0;
+        std::uint32_t network_id = 0;
+    };
+
+    struct connection_state {
+        connection_info info;
+        bool active = false;
+        std::int32_t stage = 0;
+        std::map<const void *, std::function<void(std::int32_t)>> observers;
+
+        ~connection_state();
+        void advance(std::int32_t new_stage);
+    };
+
+    class connection_registry {
+        std::vector<std::weak_ptr<connection_state>> states_;
+
+    public:
+        std::shared_ptr<connection_state> create();
+        std::shared_ptr<connection_state> find(const connection_info &info);
+        std::vector<connection_info> enumerate();
     };
 
     using progress_advance_callback = std::function<void(conn_progress *)>;

@@ -53,6 +53,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         setPreferenceClickListener(new GeneralSettingsFragment(), PREF_GENERAL);
         setPreferenceClickListener(new SystemSettingsFragment(), PREF_SYSTEM);
         setPreferenceClickListener(new BTNetplaySettingsFragment(), PREF_BT_NETPLAY);
+        setPreferenceClickListener(new HostOverridesFragment(), "pref_hosts");
     }
 
     private void setPreferenceClickListener(Fragment fragment, String preferenceName) {

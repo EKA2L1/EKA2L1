@@ -30,6 +30,7 @@
 #include <aknextendedinputcapabilities.h>
 
 class CHostBridgedImeFEP;
+class CHostInputControl;
 
 class CHostDialogIme : public CActive {
 private:
@@ -51,12 +52,14 @@ class CHostBridgedImeFEP :
     public CAknExtendedInputCapabilities::MAknEventObserver,
     private MAknEdStateObserver {
 private:
+    friend class CHostInputControl;
     virtual void HandleGainingForeground();
     virtual void HandleLosingForeground();
     virtual void HandleChangeInFocus();
     virtual void HandleDestructionOfFocusedItem();
     
     void HandleChangeInFocusL();
+    void UpdateInputAvailability();
     void OpenDialogInputL(const TBool aTranstractRestart = EFalse);
 
     void RegisterObserver();
@@ -72,8 +75,10 @@ private:
     TBool iDialogPending;
     TBool iHasFep;
     TBool iInFEPWork;
+    TBool iForeground;
 
     CHostDialogIme iImeDialog;
+    CHostInputControl *iInputControl;
 
 public:
     CHostBridgedImeFEP(CCoeEnv &aConeEnvironment);

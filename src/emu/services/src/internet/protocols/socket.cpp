@@ -237,6 +237,7 @@ namespace eka2l1::epoc::internet {
         }
 
         protocol_ = protocol_id;
+        family_ = family_id;
         return true;
     }
 
@@ -416,9 +417,36 @@ namespace eka2l1::epoc::internet {
         looper_->post_task(connect_task_);
     }
 
-    void inet_socket::bind_impl_async() {
+    int guest_bind_address_to_host(const epoc::socket::saddress &addr, const std::uint32_t socket_family,
+        sockaddr_in6 &result) {
+        if (addr.port_ > 65535) {
+            return epoc::error_too_big;
+        }
+
+        epoc::socket::saddress local_addr = addr;
+        if (local_addr.family_ == 0) {
+            // RSocket::SetLocalPort supplies only the TSockAddr family and port.
+            local_addr.family_ = socket_family;
+            std::memset(local_addr.user_data_, 0, sizeof(local_addr.user_data_));
+        }
+
         sockaddr *ip_addr_ptr = nullptr;
-        GUEST_TO_BSD_ADDR(bind_addr_, ip_addr_ptr);
+        GUEST_TO_BSD_ADDR(local_addr, ip_addr_ptr);
+        if (!ip_addr_ptr) {
+            return epoc::error_argument;
+        }
+
+        std::memset(&result, 0, sizeof(result));
+        std::memcpy(&result, ip_addr_ptr, ip_addr_ptr->sa_family == AF_INET ? sizeof(sockaddr_in) : sizeof(sockaddr_in6));
+        return epoc::error_none;
+    }
+
+    int inet_socket::bind_host() {
+        sockaddr_in6 address;
+        const int conversion_result = guest_bind_address_to_host(bind_addr_, family_, address);
+        if (conversion_result != epoc::error_none) {
+            return conversion_result;
+        }
 
         if (reuse_addr_changed_) {
             // Set flags
@@ -437,16 +465,36 @@ namespace eka2l1::epoc::internet {
 #endif
         }
 
-        if (protocol_ == INET_UDP_PROTOCOL_ID) {
-            uv_udp_bind(reinterpret_cast<uv_udp_t*>(opaque_handle_), ip_addr_ptr, 0);
-        } else {
-            uv_tcp_bind(reinterpret_cast<uv_tcp_t*>(opaque_handle_), ip_addr_ptr, 0);
-        }
+        const sockaddr *ip_addr_ptr = reinterpret_cast<const sockaddr *>(&address);
+        const int result = protocol_ == INET_UDP_PROTOCOL_ID
+            ? uv_udp_bind(reinterpret_cast<uv_udp_t *>(opaque_handle_), ip_addr_ptr, 0)
+            : uv_tcp_bind(reinterpret_cast<uv_tcp_t *>(opaque_handle_), ip_addr_ptr, 0);
 
+        switch (result) {
+        case 0:
+            return epoc::error_none;
+        case UV_EADDRINUSE:
+            return epoc::error_in_use;
+        case UV_EADDRNOTAVAIL:
+            return epoc::error_not_found;
+        case UV_EACCES:
+        case UV_EPERM:
+            return epoc::error_permission_denied;
+        case UV_EAFNOSUPPORT:
+            return epoc::error_not_supported;
+        case UV_EINVAL:
+            return epoc::error_argument;
+        default:
+            return epoc::error_general;
+        }
+    }
+
+    void inet_socket::bind_impl_async() {
+        const int result = bind_host();
         kernel_system *kern = bind_done_info_.requester->get_kernel_object_owner();
 
         kern->lock();
-        bind_done_info_.complete(epoc::error_none);
+        bind_done_info_.complete(result);
         kern->unlock();
     }
 
@@ -468,16 +516,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::bind_callback_impl_async() {
-        sockaddr *ip_addr_ptr = nullptr;
-        GUEST_TO_BSD_ADDR(bind_addr_, ip_addr_ptr);
-
-        if (protocol_ == INET_UDP_PROTOCOL_ID) {
-            uv_udp_bind(reinterpret_cast<uv_udp_t*>(opaque_handle_), ip_addr_ptr, 0);
-        } else {
-            uv_tcp_bind(reinterpret_cast<uv_tcp_t*>(opaque_handle_), ip_addr_ptr, 0);
-        }
-
-        bind_callback_(epoc::error_none);
+        bind_callback_(bind_host());
     }
 
     void inet_socket::bind_callback(const epoc::socket::saddress &addr, std::function<void(int)> callback) {
@@ -503,6 +542,7 @@ namespace eka2l1::epoc::internet {
         if (!accept_socket_ptr_->opaque_handle_) {
             accept_socket_ptr_->opaque_handle_ = new uv_tcp_t;
             accept_socket_ptr_->protocol_ = INET_TCP_PROTOCOL_ID;
+            accept_socket_ptr_->family_ = family_;
             uv_tcp_init(uv_default_loop(), reinterpret_cast<uv_tcp_t*>(accept_socket_ptr_->opaque_handle_));
 
             reinterpret_cast<uv_tcp_t *>(accept_socket_ptr_->opaque_handle_)->data = accept_socket_ptr_;
@@ -590,6 +630,7 @@ namespace eka2l1::epoc::internet {
         if (!accept_socket_ptr_->opaque_handle_) {
             accept_socket_ptr_->opaque_handle_ = new uv_tcp_t;
             accept_socket_ptr_->protocol_ = INET_TCP_PROTOCOL_ID;
+            accept_socket_ptr_->family_ = family_;
             uv_tcp_init(uv_default_loop(), reinterpret_cast<uv_tcp_t*>(accept_socket_ptr_->opaque_handle_));
 
             reinterpret_cast<uv_tcp_t *>(accept_socket_ptr_->opaque_handle_)->data = accept_socket_ptr_;
@@ -913,6 +954,11 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::handle_tcp_delivery(const std::int64_t bytes_read_arg, const void *buf_ptr) {
+        // libuv reports EAGAIN as a zero-byte callback; the receive remains pending.
+        if (bytes_read_arg == 0) {
+            return;
+        }
+
         const uv_buf_t *buf = reinterpret_cast<const uv_buf_t*>(buf_ptr);
         kernel_system *kern = nullptr;
 
@@ -926,8 +972,8 @@ namespace eka2l1::epoc::internet {
         if (bytes_read_arg == UV_EOF) {
             // Not suppose to happen? But maybe maybe
             error_code = epoc::error_eof;
-        } else if (bytes_read_arg <= 0) {
-            if ((bytes_read_arg == UV_ECONNRESET) || (bytes_read_arg == 0)) {
+        } else if (bytes_read_arg < 0) {
+            if (bytes_read_arg == UV_ECONNRESET) {
                 error_code = epoc::error_disconnected;
             } else {
                 error_code = epoc::error_general;
@@ -1012,6 +1058,17 @@ namespace eka2l1::epoc::internet {
         std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback callback) {
         if (!recv_done_info_.empty()) {
             complete_info.complete(epoc::error_in_use);
+            return;
+        }
+
+        if (protocol_ == INET_TCP_PROTOCOL_ID && data_size == 0) {
+            if (recv_size) {
+                *recv_size = 0;
+            }
+            if (callback) {
+                callback(0);
+            }
+            complete_info.complete(epoc::error_none);
             return;
         }
 

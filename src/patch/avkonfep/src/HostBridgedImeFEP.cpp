@@ -22,6 +22,27 @@
 #include <aknedsts.h>
 #include <Dispatch.h>
 #include <Log.h>
+#include <coecntrl.h>
+
+class CHostInputControl : public CCoeControl {
+public:
+    CHostInputControl(CHostBridgedImeFEP &aHost) : iHost(aHost) {}
+
+    virtual TKeyResponse OfferKeyEventL(const TKeyEvent &aKeyEvent, TEventCode aEventCode) {
+        if (aKeyEvent.iScanCode != EStdKeyF20) {
+            return EKeyWasNotConsumed;
+        }
+        if (aEventCode == EEventKey && iHost.iForeground
+            && iHost.iInputCapabilities.FepAwareTextEditor() && !iHost.iDialogPending) {
+            iHost.OpenDialogInputL();
+            iHost.iDialogPending = ETrue;
+        }
+        return EKeyWasConsumed;
+    }
+
+private:
+    CHostBridgedImeFEP &iHost;
+};
 
 CHostDialogIme::CHostDialogIme(CHostBridgedImeFEP *aHost)
     : CActive(CActive::EPriorityHigh)
@@ -59,16 +80,23 @@ CHostBridgedImeFEP::CHostBridgedImeFEP(CCoeEnv &aConeEnvironment)
     , iDialogPending(EFalse)
     , iHasFep(EFalse)
     , iInFEPWork(EFalse)
-    , iImeDialog(this) {
+    , iForeground(ETrue)
+    , iImeDialog(this)
+    , iInputControl(NULL) {
     
 }
 
 CHostBridgedImeFEP::~CHostBridgedImeFEP() {
+    if (iInputControl) {
+        EHUISetInputAvailable(0, EFalse);
+        static_cast<CCoeAppUi*>(CCoeEnv::Static()->AppUi())->RemoveFromStack(iInputControl);
+        delete iInputControl;
+    }
     if (iDialogPending) {
         TRAP_IGNORE(CancelDialogL());
     }
 
-    if (EHUIIsKeypadBased(0)) {
+    if (!iInputControl && EHUIIsKeypadBased(0)) {
         UnregisterObserver();
         if (EditorState()) {
             EditorState()->SetObserver(NULL);
@@ -78,6 +106,11 @@ CHostBridgedImeFEP::~CHostBridgedImeFEP() {
 
 void CHostBridgedImeFEP::ConstructL(const CCoeFepParameters &aParameters) {
     BaseConstructL(aParameters);
+    if (EHUIIsManualInput(0)) {
+        iInputControl = new(ELeave) CHostInputControl(*this);
+        static_cast<CCoeAppUi*>(CCoeEnv::Static()->AppUi())->AddToStackL(iInputControl,
+            ECoeStackPriorityFep, ECoeStackFlagRefusesFocus | ECoeStackFlagSharable);
+    }
 }
 
 void CHostBridgedImeFEP::HandleChangeInFocus() {
@@ -193,8 +226,23 @@ void CHostBridgedImeFEP::UnregisterObserver() {
     }
 }
 
+void CHostBridgedImeFEP::UpdateInputAvailability() {
+    MCoeFepAwareTextEditor *editor = iInputCapabilities.FepAwareTextEditor();
+    EHUISetInputAvailable(0, iForeground && editor && !iInputCapabilities.IsNone()
+        && editor->DocumentMaximumLengthForFep() > 0);
+}
+
 void CHostBridgedImeFEP::HandleChangeInFocusL() {
     CCoeEnv* coeEnv = CCoeEnv::Static();
+    if (iInputControl) {
+        const TCoeInputCapabilities capabilities = static_cast<const CCoeAppUi*>(coeEnv->AppUi())->InputCapabilities();
+        if (capabilities != iInputCapabilities) {
+            CancelDialogL();
+            iInputCapabilities = capabilities;
+        }
+        UpdateInputAvailability();
+        return;
+    }
     iInputCapabilities = static_cast<const CCoeAppUi*>(coeEnv->AppUi())->InputCapabilities();
  
     MCoeFepAwareTextEditor *editor = iInputCapabilities.FepAwareTextEditor();
@@ -266,6 +314,11 @@ void CHostBridgedImeFEP::CommitChangedTextL() {
 }
 
 void CHostBridgedImeFEP::HandleGainingForeground() {
+    if (iInputControl) {
+        iForeground = ETrue;
+        HandleChangeInFocus();
+        return;
+    }
     // Reclaim dialog if still pending while exiting foreground
     if (iDialogPending) {
         TRAPD(err, OpenDialogInputL());
@@ -276,6 +329,12 @@ void CHostBridgedImeFEP::HandleGainingForeground() {
 }
 
 void CHostBridgedImeFEP::HandleLosingForeground() {
+    if (iInputControl) {
+        iForeground = EFalse;
+        EHUISetInputAvailable(0, EFalse);
+        CancelDialogL();
+        return;
+    }
     if (iDialogPending) {
         CancelDialogL();
         iDialogPending = ETrue;
@@ -283,6 +342,17 @@ void CHostBridgedImeFEP::HandleLosingForeground() {
 }
 
 void CHostBridgedImeFEP::HandleDestructionOfFocusedItem() {
+    if (iInputControl) {
+        const TCoeInputCapabilities capabilities = static_cast<const CCoeAppUi*>(CCoeEnv::Static()->AppUi())->InputCapabilities();
+        if (capabilities != iInputCapabilities) {
+            // The old editor may already be destroyed; only cancel the host request.
+            iImeDialog.Cancel();
+            iDialogPending = EFalse;
+            iInputCapabilities = capabilities;
+        }
+        UpdateInputAvailability();
+        return;
+    }
     MCoeFepAwareTextEditor *editor = iInputCapabilities.FepAwareTextEditor();
     if (!editor) {
         TRAP_IGNORE(CancelDialogL());
@@ -375,4 +445,3 @@ EXPORT_C const TImplementationProxy* ImplementationGroupProxy(TInt& aTableCount)
     aTableCount = sizeof(ImplementationTable) / sizeof(TImplementationProxy);
     return ImplementationTable;
 }
-

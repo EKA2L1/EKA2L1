@@ -81,6 +81,11 @@ struct SettingsView: View {
             } header: {
                 Text(verbatim: "AirPlay")
             }
+            Section("settings.network") {
+                NavigationLink("settings.hosts.title") {
+                    HostOverridesView()
+                }
+            }
             Section {
                 Picker("settings.netplay.discoveryMode", selection: $btDiscoveryMode) {
                     Text("settings.netplay.mode.off").tag(0)

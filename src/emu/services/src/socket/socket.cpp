@@ -276,14 +276,14 @@ namespace eka2l1::epoc::socket {
         std::uint8_t *packet_buffer = ctx->get_descriptor_argument_ptr(2);
         std::size_t packet_size = ctx->get_argument_max_data_size(2);
 
-        if (!packet_buffer || !packet_size) {
+        kernel::process *requester = ctx->msg->own_thr->owning_process();
+        epoc::des8 *packet_des = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[2]).get(requester);
+
+        if (!packet_des || (packet_size && !packet_buffer)) {
             ctx->complete(epoc::error_argument);
             return;
         }
-        
-        kernel::process *requester = ctx->msg->own_thr->owning_process();
-        epoc::des8 *packet_des = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[2]).get(requester);
-        
+
         epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
         sock_->receive(packet_buffer, static_cast<std::uint32_t>(packet_size), nullptr, nullptr, 0, info,
             [packet_des, requester](const std::int64_t length) {
@@ -341,14 +341,14 @@ namespace eka2l1::epoc::socket {
         std::uint8_t *packet_buffer = ctx->get_descriptor_argument_ptr(2);
         std::size_t packet_size = ctx->get_argument_max_data_size(2);
 
-        if (!packet_buffer || !packet_size) {
+        kernel::process *requester = ctx->msg->own_thr->owning_process();
+        epoc::des8 *packet_des = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[2]).get(requester);
+
+        if (!packet_des || (packet_size && !packet_buffer)) {
             ctx->complete(epoc::error_argument);
             return;
         }
 
-        kernel::process *requester = ctx->msg->own_thr->owning_process();
-        epoc::des8 *packet_des = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[2]).get(requester);
-        
         // The reworked client passes the flags as a value and the transfer length package
         // second -- TIpcArgs(someFlags, &aLen, &aBuffer), esockserver/csock/CS_CLI.CPP. The
         // pre-S^3 client puts the package first and carries the flags inside it, which is
@@ -440,7 +440,10 @@ namespace eka2l1::epoc::socket {
         std::uint8_t *packet_buffer = ctx->get_descriptor_argument_ptr(2);
         std::size_t packet_size = ctx->get_argument_max_data_size(2);
 
-        if (!packet_buffer || !packet_size) {
+        kernel::process *requester = ctx->msg->own_thr->owning_process();
+        epoc::des8 *packet_des = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[2]).get(requester);
+
+        if (!packet_des || (packet_size && !packet_buffer)) {
             ctx->complete(epoc::error_argument);
             return;
         }
@@ -450,9 +453,6 @@ namespace eka2l1::epoc::socket {
             ctx->complete(epoc::error_argument);
             return;
         }
-
-        kernel::process *requester = ctx->msg->own_thr->owning_process();
-        epoc::des8 *packet_des = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[2]).get(requester);
 
         if (one_or_more) {
             req_info->flags_ |= SOCKET_FLAG_DONT_WAIT_FULL;

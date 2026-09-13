@@ -23,6 +23,61 @@
 
 using namespace eka2l1;
 
+TEST_CASE("Pre-reform RConnection enumeration is distinct from string settings", "[internet][connection]") {
+    // rm-409 esock.dll exports 7, 9 and 6 send these operation IDs respectively.
+    REQUIRE(socket_cn_get_long_des_setting == 0x50);
+    REQUIRE(socket_cn_enumerate_connections == 0x51);
+    REQUIRE(socket_cn_get_connection_info == 0x52);
+    REQUIRE(socket_cn_attach == 0x54);
+}
+
+TEST_CASE("RConnection snapshots retain only active network connections", "[internet][connection]") {
+    epoc::socket::connection_registry registry;
+    auto first = registry.create();
+    auto second = registry.create();
+    REQUIRE(registry.enumerate().empty());
+    first->info = {1, 7, 3};
+    first->active = true;
+    second->info = {1, 7, 3};
+    second->active = true;
+    auto snapshot = registry.enumerate();
+    REQUIRE(snapshot.size() == 1);
+    REQUIRE(snapshot[0].iap_id == 7);
+    REQUIRE(snapshot[0].network_id == 3);
+    REQUIRE(snapshot[0].version == 1);
+    REQUIRE(sizeof(snapshot[0]) == 12);
+    second->info.iap_id = 8;
+    REQUIRE(registry.enumerate().size() == 2);
+    first.reset();
+    REQUIRE(registry.enumerate().size() == 1);
+    second->active = false;
+    REQUIRE(registry.enumerate().empty());
+    REQUIRE(snapshot[0].iap_id == 7);
+}
+
+TEST_CASE("RConnection attachment shares shutdown and monitor does not retain the interface", "[internet][connection]") {
+    epoc::socket::connection_registry registry;
+    auto starter = registry.create();
+    starter->info = {1, 7, 3};
+    starter->advance(epoc::socket::conn_progress_link_layer_open);
+    auto attached = registry.find({1, 7, 3});
+    REQUIRE(attached == starter);
+    REQUIRE_FALSE(registry.find({1, 7, 4}));
+    std::weak_ptr<epoc::socket::connection_state> monitor = attached;
+    std::vector<std::int32_t> stages;
+    attached->observers[&stages] = [&](std::int32_t stage) { stages.push_back(stage); };
+    starter.reset();
+    REQUIRE(registry.enumerate().size() == 1);
+    attached->advance(epoc::socket::conn_progress_link_layer_closed);
+    REQUIRE_FALSE(monitor.lock()->active);
+    REQUIRE(registry.enumerate().empty());
+    REQUIRE_FALSE(registry.find({1, 7, 3}));
+    attached->advance(epoc::socket::conn_progress_link_layer_open);
+    attached.reset();
+    REQUIRE(monitor.expired());
+    REQUIRE(stages == std::vector<std::int32_t>{8000, 7000, 8000, 4500});
+}
+
 // These are numbers on the wire: the guest's RSocketServ client sends the value,
 // so renumbering the enum silently routes requests to the wrong handler.
 //

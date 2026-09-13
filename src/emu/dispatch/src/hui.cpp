@@ -18,6 +18,7 @@
  */
 
 #include <common/log.h>
+#include <common/platform.h>
 #include <dispatch/dispatcher.h>
 #include <dispatch/hui.h>
 #include <drivers/ui/input_dialog.h>
@@ -26,21 +27,36 @@
 #include <system/epoc.h>
 #include <utils/err.h>
 
+#if EKA2L1_PLATFORM(IOS)
+#include <drivers/ui/input_dialog_ios.h>
+#endif
+
 namespace eka2l1::dispatch {
     void ehui_input_view_controller::set_notify_info(epoc::notify_info info) {
+        ++request_id_;
         info_ = std::move(info);
         result_.clear();
     }
-    
-    void ehui_input_view_controller::on_input_view_complete(const std::u16string &result_text) {
-        result_ = result_text;
 
-        if (!info_.empty()) {
-            kernel_system *kern = info_.requester->get_kernel_object_owner();
+    bool ehui_input_view_controller::is_another_input_dialog_active(kernel_system *kern) {
+        if (!info_.empty() && !kern->is_thread_alive(info_.requester)) {
+            info_.sts = 0;
+        }
+        return !info_.empty();
+    }
 
-            kern->lock();
+    void ehui_input_view_controller::cancel(kernel_system *kern) {
+        ++request_id_;
+        if (is_another_input_dialog_active(kern)) {
+            info_.complete(epoc::error_cancel);
+        }
+        result_.clear();
+    }
+
+    void ehui_input_view_controller::on_input_view_complete(kernel_system *kern, std::uint64_t request_id, const std::u16string &result_text) {
+        if (request_id == request_id_ && is_another_input_dialog_active(kern)) {
+            result_ = result_text;
             info_.complete(epoc::error_none);
-            kern->unlock();
         }
     }
 
@@ -50,14 +66,18 @@ namespace eka2l1::dispatch {
 
         ehui_input_view_controller &controller = dispatcher->get_hui_controller().input_view_controller();
 
-        if (controller.is_another_input_dialog_active()) {
+        if (controller.is_another_input_dialog_active(kern)) {
             return epoc::error_in_use;
         }
 
         controller.set_notify_info(epoc::notify_info(status, kern->crr_thread()));
-        if (!drivers::ui::open_input_view(initial_text->to_std_string(kern->crr_process()), max_length, [&controller](const std::u16string &result) {
-            controller.on_input_view_complete(result);
+        const auto request_id = controller.request_id();
+        if (!drivers::ui::open_input_view(initial_text->to_std_string(kern->crr_process()), max_length, [&controller, kern, request_id](const std::u16string &result) {
+            kern->lock();
+            controller.on_input_view_complete(kern, request_id, result);
+            kern->unlock();
         })) {
+            controller.cancel(kern);
             return epoc::error_in_use;
         }
 
@@ -79,10 +99,25 @@ namespace eka2l1::dispatch {
     }
 
     BRIDGE_FUNC_DISPATCHER(void, ehui_close_input_view) {
+        sys->get_dispatcher()->get_hui_controller().input_view_controller().cancel(sys->get_kernel_system());
         drivers::ui::close_input_view();
     }
     
     BRIDGE_FUNC_DISPATCHER(bool, ehui_is_keypad_based) {
         return sys->get_symbian_version_use() < epocver::epoc94;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(bool, ehui_is_manual_input) {
+#if EKA2L1_PLATFORM(IOS)
+        return sys->get_symbian_version_use() < epocver::epoc94;
+#else
+        return false;
+#endif
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, ehui_set_input_available, bool available) {
+#if EKA2L1_PLATFORM(IOS)
+        drivers::ui::set_input_available(sys->get_kernel_system()->crr_thread()->unique_id(), available);
+#endif
     }
 }

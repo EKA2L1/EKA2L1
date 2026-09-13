@@ -471,6 +471,16 @@
         }
       }
     },
+    "emulator.enterText" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter Text"
+          }
+        }
+      }
+    },
     "emulator.exit" : {
       "localizations" : {
         "en" : {
@@ -1913,6 +1923,116 @@
         }
       }
     },
+    "settings.hosts.add" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Host Mapping"
+          }
+        }
+      }
+    },
+    "settings.hosts.address" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IP Address or Hostname"
+          }
+        }
+      }
+    },
+    "settings.hosts.addressHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter an IPv4 address, IPv6 address or hostname without a port."
+          }
+        }
+      }
+    },
+    "settings.hosts.duplicate" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This hostname already has a mapping. Edit the existing entry."
+          }
+        }
+      }
+    },
+    "settings.hosts.entry" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Host Mapping"
+          }
+        }
+      }
+    },
+    "settings.hosts.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redirect guest hostnames to an IP address or another hostname. Changes affect new connections; restart the game if it has cached an address."
+          }
+        }
+      }
+    },
+    "settings.hosts.hostname" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostname (example.com)"
+          }
+        }
+      }
+    },
+    "settings.hosts.invalidAddress" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a valid IP address or hostname without a port."
+          }
+        }
+      }
+    },
+    "settings.hosts.invalidHostname" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a hostname using letters, numbers, hyphens, underscores and dots."
+          }
+        }
+      }
+    },
+    "settings.hosts.saveError" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The host mappings could not be saved."
+          }
+        }
+      }
+    },
+    "settings.hosts.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Host Overrides"
+          }
+        }
+      }
+    },
     "settings.integerScaling" : {
       "localizations" : {
         "en" : {
@@ -2119,6 +2239,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Server address"
+          }
+        }
+      }
+    },
+    "settings.network" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Network"
           }
         }
       }

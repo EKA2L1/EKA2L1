@@ -25,6 +25,7 @@
 
 #include <kernel/kernel.h>
 #include <services/centralrepo/centralrepo.h>
+#include <services/internet/accesspoints.h>
 #include <services/centralrepo/cre.h>
 #include <services/context.h>
 #include <system/devices.h>
@@ -1037,6 +1038,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
+        provide_host_access_point(repo);
         repos.emplace(key, std::make_unique<eka2l1::central_repo>(repo));
         return repos[key].get();
     }

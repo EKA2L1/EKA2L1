@@ -19,6 +19,7 @@
 
 #include "ui_settings_dialog.h"
 #include <qt/settings_dialog.h>
+#include <qt/host_overrides.h>
 #include <qt/utils.h>
 
 #include <common/algorithm.h>
@@ -228,6 +229,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     , ui_(new Ui::settings_dialog) {
     setAttribute(Qt::WA_DeleteOnClose);
     ui_->setupUi(this);
+    ui_->settings_tab->addTab(new host_overrides_widget(configuration_, system_, this), tr("Hosts"));
 
     std::string current_dir;
     eka2l1::common::get_current_directory(current_dir);

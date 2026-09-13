@@ -14,4 +14,8 @@
         android:key="pref_bt_netplay"
         android:title="@string/pref_bt_netplay" />
 
+    <Preference
+        android:key="pref_hosts"
+        android:title="@string/hosts_title" />
+
 </PreferenceScreen>

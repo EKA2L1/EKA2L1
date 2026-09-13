@@ -1,0 +1,6 @@
+EXPORTS
+    _ZN8CHostTls4NewLER7RSocketRK7TDesC16 @ 1 NONAME
+    _ZN8CHostTls9UnloadDllEPv @ 2 NONAME
+    _ZN8CHostTls4NewLER20MGenericSecureSocketRK7TDesC16 @ 3 NONAME
+    _ZTI8CHostTls @ 4 NONAME
+    _ZTV8CHostTls @ 5 NONAME
