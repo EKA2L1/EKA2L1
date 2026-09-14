@@ -1,0 +1,70 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "NSCameraUsageDescription" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbian apps running in the emulator can use the camera for their viewfinder and photo capture features."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在模拟器中运行的 Symbian 应用可以使用摄像头来取景和拍照。"
+          }
+        }
+      }
+    },
+    "NSLocalNetworkUsageDescription" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth Netplay emulates Symbian Bluetooth multiplayer over your local network to find and connect to other EKA2L1 players."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“蓝牙联机”通过局域网模拟 Symbian 蓝牙多人游戏，用于发现并连接其他 EKA2L1 玩家。"
+          }
+        }
+      }
+    },
+    "NSMicrophoneUsageDescription" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbian apps running in the emulator can use the microphone for recording and voice features."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在模拟器中运行的 Symbian 应用可以使用麦克风来录音和实现语音功能。"
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryAddUsageDescription" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EKA2L1 saves emulator screenshots to your photo library when you choose Save Screenshot."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当你选择“存储截屏”时，EKA2L1 会把模拟器截屏存储到你的照片图库。"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

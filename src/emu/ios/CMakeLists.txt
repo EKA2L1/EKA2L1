@@ -58,6 +58,7 @@ set(EKA2L1_IOS_SOURCES
     "${EKA2L1_IOS_RESOURCES_DIR}/Info.plist"
     "${EKA2L1_IOS_RESOURCES_DIR}/EKA2L1.entitlements"
     "${EKA2L1_IOS_RESOURCES_DIR}/Localizable.xcstrings"
+    "${EKA2L1_IOS_RESOURCES_DIR}/InfoPlist.xcstrings"
     "${EKA2L1_IOS_RESOURCES_DIR}/PrivacyInfo.xcprivacy"
 )
 
@@ -65,16 +66,20 @@ add_executable(${EKA2L1_IOS_APP} MACOSX_BUNDLE ${EKA2L1_IOS_SOURCES})
 
 set(EKA2L1_IOS_BUNDLE_RESOURCES
     "${EKA2L1_IOS_RESOURCES_DIR}/Localizable.xcstrings"
+    "${EKA2L1_IOS_RESOURCES_DIR}/InfoPlist.xcstrings"
     "${EKA2L1_IOS_RESOURCES_DIR}/PrivacyInfo.xcprivacy")
 target_sources(${EKA2L1_IOS_APP} PRIVATE ${EKA2L1_IOS_BUNDLE_RESOURCES})
 # "Resources" maps to Xcode's Copy Bundle Resources phase, which is what
-# compiles the string catalog into <lang>.lproj/Localizable.strings (a plain
-# copy-files phase like "." ships the raw .xcstrings and runtime lookups fall
-# back to the bare string keys). Xcode flattens the phase output to the bundle
-# root on iOS.
+# compiles the string catalogs into <lang>.lproj/Localizable.strings and
+# <lang>.lproj/InfoPlist.strings (a plain copy-files phase like "." ships the
+# raw .xcstrings and runtime lookups fall back to the bare string keys). Xcode
+# flattens the phase output to the bundle root on iOS. InfoPlist.xcstrings is
+# what localises the usage-description prompts Info.plist spells out in English.
 set_source_files_properties(${EKA2L1_IOS_BUNDLE_RESOURCES} PROPERTIES
     MACOSX_PACKAGE_LOCATION "Resources")
-set_source_files_properties("${EKA2L1_IOS_RESOURCES_DIR}/Localizable.xcstrings" PROPERTIES
+set_source_files_properties(
+    "${EKA2L1_IOS_RESOURCES_DIR}/Localizable.xcstrings"
+    "${EKA2L1_IOS_RESOURCES_DIR}/InfoPlist.xcstrings" PROPERTIES
     XCODE_LAST_KNOWN_FILE_TYPE "text.json.xcstrings")
 
 # The emulator reads its shipped resources through paths relative to the
