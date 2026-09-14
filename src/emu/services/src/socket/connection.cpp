@@ -183,8 +183,23 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket_connection_proxy::control(service::ipc_context *ctx) {
-        const auto level = ctx->get_argument_value<std::uint32_t>(0);
-        const auto option = ctx->get_argument_value<std::uint32_t>(1);
+        std::optional<std::uint32_t> level;
+        std::optional<std::uint32_t> option;
+        if (ctx->sys->get_symbian_version_use() < epocver::epoc95) {
+            // Pre-reform Control packages the option in slot 0 and puts the level in slot 1.
+            const auto data = ctx->get_argument_value<std::string>(0);
+            if (!data || data->size() != sizeof(connection_control_description)) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+            connection_control_description description;
+            std::memcpy(&description, data->data(), sizeof(description));
+            option = description.option;
+            level = ctx->get_argument_value<std::uint32_t>(1);
+        } else {
+            level = ctx->get_argument_value<std::uint32_t>(0);
+            option = ctx->get_argument_value<std::uint32_t>(1);
+        }
         if (level != 1 || (option != 0x20000005 && option != 0x20000006)) {
             ctx->complete(epoc::error_not_supported);
             return;

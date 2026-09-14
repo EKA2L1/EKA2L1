@@ -18,6 +18,7 @@
  */
 
 #include <catch2/catch.hpp>
+#include <cstddef>
 
 #include <services/socket/server.h>
 #include <utils/err.h>
@@ -32,6 +33,11 @@ TEST_CASE("RConnection named opens retain the client ABI", "[internet][connectio
     REQUIRE(socket_reform_cn_name == 152);
     REQUIRE(socket_reform_cn_control == 16);
     REQUIRE(sizeof(epoc::security_policy) == 8);
+    // rm-409 esock.dll export 56 packages these three words before sending opcode 83.
+    REQUIRE(sizeof(epoc::socket::connection_control_description) == 12);
+    REQUIRE(offsetof(epoc::socket::connection_control_description, option) == 0);
+    REQUIRE(offsetof(epoc::socket::connection_control_description, descriptor) == 4);
+    REQUIRE(offsetof(epoc::socket::connection_control_description, max_length) == 8);
 }
 
 TEST_CASE("Named connection clones require an enabled matching security policy", "[internet][connection]") {

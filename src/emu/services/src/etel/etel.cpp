@@ -106,6 +106,16 @@ namespace eka2l1 {
         call_type_info_prop_->second = epoc::ETEL_CALL_INFO_CALL_TYPE_KEY;
 
         call_type_info_prop_->set_int(epoc::ETEL_CALL_INFO_PROP_CALL_NONE);
+
+        // PSVariables.h packet status accompanies the GSM network exposed by the host TSY.
+        for (const auto key : {epoc::ETEL_GPRS_STATUS_UID, epoc::ETEL_WCDMA_STATUS_UID}) {
+            auto *status = kern->create<service::property>();
+            status->define(service::property_type::int_data, 4);
+            status->first = eka2l1::SYSTEM_AGENT_PROPERTY_CATEGORY;
+            status->second = key;
+            status->set_int(key == epoc::ETEL_GPRS_STATUS_UID
+                ? epoc::etel_packet_network_attached : epoc::etel_packet_network_unattached);
+        }
     }
 
     void etel_server::init2(kernel_system *kern, io_system *io) {

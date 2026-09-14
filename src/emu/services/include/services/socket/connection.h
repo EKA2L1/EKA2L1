@@ -60,6 +60,12 @@ namespace eka2l1::epoc::socket {
         std::uint32_t network_id = 0;
     };
 
+    struct connection_control_description {
+        std::uint32_t option;
+        std::uint32_t descriptor;
+        std::uint32_t max_length;
+    };
+
     struct connection_state {
         connection_info info;
         bool active = false;
