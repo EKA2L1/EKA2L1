@@ -178,6 +178,10 @@ namespace eka2l1 {
                     cn_open(ctx);
                     return;
 
+                case socket_reform_cn_open_with_name:
+                    cn_open(ctx, true);
+                    return;
+
                 case socket_reform_cn_get_long_des_setting:
                     cn_get_long_des_setting(ctx);
                     return;
@@ -234,6 +238,10 @@ namespace eka2l1 {
 
                 case socket_cn_open_with_cn_type:
                     cn_open(ctx);
+                    return;
+
+                case socket_cn_open_with_name:
+                    cn_open(ctx, true);
                     return;
 
                 case socket_cn_get_long_des_setting:
@@ -522,15 +530,30 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    void socket_client_session::cn_open(eka2l1::service::ipc_context *ctx) {
-        // TODO: Implement
-        socket_subsession_instance cn_inst = std::make_unique<epoc::socket::socket_connection_proxy>(this, nullptr);
+    void socket_client_session::cn_open(eka2l1::service::ipc_context *ctx, bool with_name) {
+        auto connection = std::make_unique<epoc::socket::socket_connection_proxy>(this, nullptr);
+        if (with_name) {
+            const auto name = ctx->get_argument_value<std::u16string>(0);
+            if (!name) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+            const auto result = connection->clone_from(*name, ctx->msg->own_thr->owning_process()->get_sec_info());
+            if (result != epoc::error_none) {
+                ctx->complete(result);
+                return;
+            }
+        }
+        socket_subsession_instance cn_inst = std::move(connection);
 
         const std::uint32_t id = static_cast<std::uint32_t>(subsessions_.add(cn_inst));
         subsessions_.get(id)->get()->set_id(id);
 
-        // Write the subsession handle
-        ctx->write_data_to_descriptor_argument<std::uint32_t>(3, id);
+        if (!ctx->write_data_to_descriptor_argument<std::uint32_t>(3, id)) {
+            subsessions_.remove(id);
+            ctx->complete(epoc::error_argument);
+            return;
+        }
         ctx->complete(epoc::error_none);
     }
 
