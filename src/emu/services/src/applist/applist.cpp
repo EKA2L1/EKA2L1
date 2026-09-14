@@ -957,6 +957,70 @@ namespace eka2l1 {
         ctx.complete(buf_size);
     }
 
+    static bool matches_data_type(const std::string &text, const std::string &pattern) {
+        std::size_t position = 0, token = 0, star = std::string::npos, retry = 0;
+        while (position < text.size()) {
+            if (token < pattern.size() && pattern[token] != '*'
+                && (pattern[token] == '?' || pattern[token] == text[position])) {
+                ++position;
+                ++token;
+            } else if (token < pattern.size() && pattern[token] == '*') {
+                star = token++;
+                retry = position;
+            } else if (star != std::string::npos) {
+                token = star + 1;
+                position = ++retry;
+            } else {
+                return false;
+            }
+        }
+        while (token < pattern.size() && pattern[token] == '*') {
+            ++token;
+        }
+        return token == pattern.size();
+    }
+
+    epoc::uid find_data_type_handler(const std::vector<apa_app_registry> &registries,
+        const std::string &mime_type, epoc::uid native_uid) {
+        epoc::uid result = 0;
+        std::int32_t highest_priority = -32768;
+        for (const auto &registry : registries) {
+            for (const auto &type : registry.data_types) {
+                std::int32_t priority = type.priority_;
+                if (type.type_ != mime_type) {
+                    if (!matches_data_type(mime_type, type.type_) && !matches_data_type(type.type_, mime_type)) {
+                        continue;
+                    }
+                    // AppArc lowers wildcard matches by one, except system-priority handlers.
+                    if (priority != 0xFFF9) {
+                        priority = static_cast<std::int16_t>(static_cast<std::uint32_t>(priority) - 1);
+                    }
+                }
+                if (priority > highest_priority) {
+                    highest_priority = priority;
+                    result = registry.mandatory_info.uid;
+                }
+                break;
+            }
+        }
+        return result ? result : native_uid;
+    }
+
+    void applist_server::get_app_for_data_type(service::ipc_context &ctx) {
+        if (ctx.get_argument_data_size(0) != sizeof(applist_data_type)) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+        const auto type = ctx.get_argument_data_from_descriptor<applist_data_type>(0);
+        if (!type || type->data_type.get_length() > sizeof(type->data_type.data)) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+        const std::string mime_type(type->data_type.data, type->data_type.get_length());
+        const epoc::uid uid = find_data_type_handler(regs, mime_type, type->uid);
+        ctx.complete(ctx.write_data_to_descriptor_argument(1, uid) ? epoc::error_none : epoc::error_argument);
+    }
+
     void applist_server::get_app_for_document_impl(service::ipc_context &ctx, const std::u16string &path) {
         applist_app_for_document app;
         app.uid = 0;
@@ -1370,6 +1434,10 @@ namespace eka2l1 {
 
             case applist_request_app_for_document:
                 server<applist_server>()->get_app_for_document(*ctx);
+                break;
+
+            case applist_request_app_for_data_type:
+                server<applist_server>()->get_app_for_data_type(*ctx);
                 break;
 
             case applist_request_app_for_document_passed_by_file_handle:
