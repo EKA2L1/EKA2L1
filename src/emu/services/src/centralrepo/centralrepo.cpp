@@ -25,7 +25,6 @@
 
 #include <kernel/kernel.h>
 #include <services/centralrepo/centralrepo.h>
-#include <services/internet/accesspoints.h>
 #include <services/centralrepo/cre.h>
 #include <services/context.h>
 #include <system/devices.h>
@@ -779,9 +778,11 @@ namespace eka2l1 {
         return true;
     }
 
-    central_repo_server::central_repo_server(eka2l1::system *sys)
+    central_repo_server::central_repo_server(eka2l1::system *sys,
+        std::function<void(central_repo &)> initializer)
         : service::server(sys->get_kernel_system(), sys, nullptr, CENTRAL_REPO_SERVER_NAME, true)
-        , id_counter(0) {
+        , id_counter(0)
+        , initialize_repo(std::move(initializer)) {
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_init, "CenRep::Init");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_create_int, "CenRep::CreateInt");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_create_real, "CenRep::CreateReal");
@@ -1038,7 +1039,9 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        provide_host_access_point(repo);
+        if (initialize_repo) {
+            initialize_repo(repo);
+        }
         repos.emplace(key, std::make_unique<eka2l1::central_repo>(repo));
         return repos[key].get();
     }

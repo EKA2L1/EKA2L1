@@ -4,6 +4,7 @@
 #include "dispatch.h"
 #include <ssl.h>
 #include <badesca.h>
+#include <in_sock.h>
 
 const TUint KHostServerNameIndication = 0x40a;
 
@@ -125,7 +126,15 @@ void CHostTls::Fail(TInt aError) {
 void CHostTls::StartClientHandshake(TRequestStatus& aStatus) {
     if (iHandle) { Reject(aStatus, KErrInUse); return; }
     if (!iHostname.Length()) { Reject(aStatus, KErrArgument); return; }
-    TInt handle = ETlsCreate(0, &iHostname);
+    TInetAddr peer;
+    if (iSocket) iSocket->RemoteName(peer);
+    else iGeneric->RemoteName(peer);
+    if (peer.Family() != KAfInet && peer.Family() != KAfInet6) { Reject(aStatus, KErrNotReady); return; }
+    TBuf<64> address;
+    peer.Output(address);
+    TBuf8<64> address8;
+    address8.Copy(address);
+    TInt handle = ETlsCreate(0, &iHostname, &address8);
     if (handle < 0) { Reject(aStatus, handle); return; }
     iHandle = handle;
     iEof = EFalse;

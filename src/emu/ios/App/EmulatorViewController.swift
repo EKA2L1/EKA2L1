@@ -282,7 +282,12 @@ private final class PeripheralInputBridge {
 
 private final class EKA2L1RenderView: UIView {
     var surfaceReady = false
-    var textInputEnabled = true
+    var textInputEnabled = true {
+        didSet { updateTextInputButton() }
+    }
+    var textInputAvailable = false {
+        didSet { updateTextInputButton() }
+    }
     private let textInputButton = UIButton(type: .system)
 
     // When true, the presented guest picture is pinned just below the top safe
@@ -369,18 +374,18 @@ private final class EKA2L1RenderView: UIView {
         updateTextInputButton()
     }
 
-    func updateTextInputButton() {
-        let display = EKA2L1Bridge.shared.guestDisplayRect
-            .applying(CGAffineTransform(scaleX: 1 / renderScale, y: 1 / renderScale))
-            .intersection(safeAreaLayoutGuide.layoutFrame)
-        textInputButton.isHidden = !textInputEnabled || !EKA2L1Bridge.shared.isTextInputAvailable
-            || display.isNull || display.isEmpty
+    private func updateTextInputButton() {
+        textInputButton.isHidden = !textInputEnabled || !textInputAvailable
         guard !textInputButton.isHidden else { return }
-        let size = textInputButton.sizeThatFits(display.size)
+        let rightInset = max(safeAreaInsets.right, 12)
+        let leftInset = max(safeAreaInsets.left, 12)
+        let availableWidth = max(0, bounds.width - leftInset - rightInset)
+        let size = textInputButton.sizeThatFits(CGSize(width: availableWidth, height: bounds.height))
+        let width = min(size.width, availableWidth)
         textInputButton.frame = CGRect(
-            x: max(display.minX, display.maxX - size.width - 8),
-            y: display.minY + 8,
-            width: min(size.width, display.width), height: max(44, size.height)
+            x: bounds.maxX - rightInset - width,
+            y: bounds.minY + max(safeAreaInsets.top, 12),
+            width: width, height: max(44, size.height)
         )
     }
 
@@ -497,7 +502,6 @@ final class EmulatorViewController: UIViewController {
         }
     }
     private var launched = false
-    private var textInputTimer: Timer?
     private let peripheralInput = PeripheralInputBridge()
     private var gameView: EKA2L1RenderView {
         view as! EKA2L1RenderView
@@ -542,7 +546,6 @@ final class EmulatorViewController: UIViewController {
     func setHardwareKeyboardCaptureEnabled(_ enabled: Bool) {
         peripheralInput.setKeyboardEnabled(enabled)
         gameView.textInputEnabled = enabled
-        gameView.updateTextInputButton()
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -554,12 +557,9 @@ final class EmulatorViewController: UIViewController {
         }
         ExternalDisplay.shared.setGameVisible(true)
         peripheralInput.start()
-        textInputTimer?.invalidate()
-        let timer = Timer(timeInterval: 0.15, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.gameView.updateTextInputButton() }
+        EKA2L1Bridge.shared.setTextInputAvailabilityHandler { [weak self] available in
+            self?.gameView.textInputAvailable = available
         }
-        RunLoop.main.add(timer, forMode: .common)
-        textInputTimer = timer
         EKA2L1Bridge.shared.resume()
         // Launch once: viewDidAppear can re-fire (e.g. returning frontmost),
         // and re-launching would spawn a second guest instance.
@@ -579,8 +579,8 @@ final class EmulatorViewController: UIViewController {
         ExternalDisplay.shared.onSurfaceChange = nil
         ExternalDisplay.shared.setGameVisible(false)
         peripheralInput.stop()
-        textInputTimer?.invalidate()
-        textInputTimer = nil
+        EKA2L1Bridge.shared.setTextInputAvailabilityHandler(nil)
+        gameView.textInputAvailable = false
         EKA2L1Bridge.shared.detachLayer()
     }
 

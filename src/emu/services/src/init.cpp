@@ -48,6 +48,7 @@
 #include <services/fs/fs.h>
 #include <services/goommonitor/goommonitor.h>
 #include <services/hwrm/hwrm.h>
+#include <services/internet/accesspoints.h>
 #include <services/internet/connmonitor.h>
 #include <services/internet/nifman.h>
 #include <services/loader/loader.h>
@@ -278,7 +279,7 @@ namespace eka2l1 {
 
             CREATE_SERVER(sys, fbs_server);
             CREATE_SERVER(sys, window_server);
-            CREATE_SERVER(sys, central_repo_server);
+            CREATE_SERVER(sys, central_repo_server, provide_host_access_point);
             CREATE_SERVER(sys, featmgr_server);
 
             if (cfg->enable_srv_rights)

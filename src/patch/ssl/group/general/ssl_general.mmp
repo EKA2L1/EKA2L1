@@ -6,7 +6,7 @@ USERINCLUDE ..\..\inc
 SYSTEMINCLUDE \epoc32\include ..\..\..\priv\inc
 SOURCEPATH ..\..\src
 SOURCE hosttls.cpp dispatch.s
-LIBRARY euser.lib esock.lib x509.lib
+LIBRARY euser.lib esock.lib insock.lib x509.lib
 STATICLIBRARY priv.lib
 DEFFILE ..\..\eabi\ssl_general.def
 nostrictdef

@@ -77,9 +77,25 @@ TEST_CASE("Host access points preserve existing records and other repositories",
     central_repo repo{};
     repo.uid = 0xCCCCCC00;
     add_integer(repo, 0x02840100, 8);
+    central_repo_entry original_name{};
+    original_name.key = 0x02820100;
+    original_name.data.etype = central_repo_entry_type::string;
+    const std::u16string name = u"Carrier";
+    original_name.data.strd.assign(reinterpret_cast<const char *>(name.data()), name.size() * sizeof(char16_t));
+    repo.entries.push_back(original_name);
     provide_host_access_point(repo);
-    REQUIRE(repo.entries.size() == 1);
+    const auto available = connmonitor_available_iaps(repo);
+    REQUIRE(available.count == 2);
+    REQUIRE(available.ids[0] == 1);
+    REQUIRE(available.ids[1] == 2);
+    REQUIRE(repo.find_entry(original_name.key)->data.strd == original_name.data.strd);
     REQUIRE(repo.entries.front().data.intd == 8);
+    REQUIRE_FALSE(repo.entries.front().transient);
+    REQUIRE(repo.find_entry(0x02820200));
+    REQUIRE(repo.find_entry(0x0A060100)->data.intd == 2);
+    const auto count = repo.entries.size();
+    provide_host_access_point(repo);
+    REQUIRE(repo.entries.size() == count);
 
     repo.entries.clear();
     repo.uid = 0x12345678;
@@ -90,15 +106,15 @@ TEST_CASE("Host access points preserve existing records and other repositories",
 TEST_CASE("Host access point links avoid occupied table records", "[host_access_point]") {
     central_repo repo{};
     repo.uid = 0xCCCCCC00;
-    for (const auto table : {0x01800000, 0x04800000, 0x08800000, 0x03000000, 0x0A000000}) {
+    for (const auto table : {0x01800000, 0x02800000, 0x04800000, 0x08800000, 0x03000000, 0x0A000000}) {
         add_integer(repo, table | 0x00010100, 1234);
     }
     provide_host_access_point(repo);
-    REQUIRE(repo.find_entry(0x02840100)->data.intd == 2);
-    REQUIRE(repo.find_entry(0x02860100)->data.intd == 2);
-    REQUIRE(repo.find_entry(0x02870100)->data.intd == 2);
+    REQUIRE(repo.find_entry(0x02840200)->data.intd == 2);
+    REQUIRE(repo.find_entry(0x02860200)->data.intd == 2);
+    REQUIRE(repo.find_entry(0x02870200)->data.intd == 2);
     REQUIRE(repo.find_entry(0x0A030200)->data.intd == 2);
-    REQUIRE(repo.find_entry(0x0A060200)->data.intd == 1);
+    REQUIRE(repo.find_entry(0x0A060200)->data.intd == 2);
     REQUIRE(repo.find_entry(0x04810100)->data.intd == 1234);
 }
 
@@ -107,6 +123,7 @@ TEST_CASE("Host access point records never enter the persisted repository", "[ho
     repo.ver = 2;
     repo.uid = 0xCCCCCC00;
     add_integer(repo, 0x00123456, 77);
+    add_integer(repo, 0x02840100, 8);
     const auto original = serialize(repo);
     provide_host_access_point(repo);
     REQUIRE(serialize(repo) == original);
@@ -116,18 +133,19 @@ TEST_CASE("Host access point records never enter the persisted repository", "[ho
     central_repo loaded{};
     common::chunkyseri reader(written.data(), written.size(), common::SERI_MODE_READ);
     REQUIRE(do_state_for_cre(reader, loaded) == 0);
-    REQUIRE(loaded.entries.size() == 2);
+    REQUIRE(loaded.entries.size() == 3);
     REQUIRE(loaded.find_entry(0x00123457)->data.intd == 88);
     REQUIRE(connmonitor_available_iaps(loaded).count == 0);
     provide_host_access_point(loaded);
     REQUIRE(connmonitor_available_iaps(loaded).count == 1);
 }
 
-TEST_CASE("A full bearer table prevents partial host records", "[host_access_point]") {
+TEST_CASE("Full access point or bearer tables prevent partial host records", "[host_access_point]") {
     central_repo repo{};
     repo.uid = 0xCCCCCC00;
+    const auto table = GENERATE(0x08810000, 0x02810000);
     for (std::uint32_t id = 1; id < 255; id++) {
-        add_integer(repo, 0x08810000 | (id << 8), id);
+        add_integer(repo, table | (id << 8), id);
     }
     provide_host_access_point(repo);
     REQUIRE(repo.entries.size() == 254);

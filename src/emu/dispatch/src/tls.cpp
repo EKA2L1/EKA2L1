@@ -3,7 +3,6 @@
 
 #include <dispatch/tls.h>
 #include <dispatch/dispatcher.h>
-#include <common/fileutils.h>
 #include <common/log.h>
 #include <config/config.h>
 #include <kernel/kernel.h>
@@ -12,18 +11,17 @@
 #include <utils/err.h>
 
 #include <algorithm>
-#include <array>
 #include <cstring>
 #include <limits>
 
 namespace eka2l1::dispatch {
-    std::int32_t tls_controller::create(std::uint64_t owner, const std::string &hostname, const std::string &ca_pem) {
+    std::int32_t tls_controller::create(std::uint64_t owner, const std::string &hostname, const std::string &peer_address) {
         if (sessions_.size() >= 256 || next_handle_ > static_cast<std::uint32_t>(std::numeric_limits<std::int32_t>::max()) ||
             std::count_if(sessions_.begin(), sessions_.end(), [owner](const auto &item) { return item.second.owner == owner; }) >= 64) {
             return epoc::error_no_memory;
         }
         auto session = std::make_unique<drivers::tls_session>();
-        if (!session->configure(hostname, ca_pem)) {
+        if (!session->configure(hostname, peer_address)) {
             LOG_ERROR(HLE_DISPATCHER, "Cannot initialize TLS for {}: {}", hostname, session->error());
             return epoc::error_not_ready;
         }
@@ -51,34 +49,21 @@ namespace eka2l1::dispatch {
         }
     }
 
-    BRIDGE_FUNC_DISPATCHER(std::int32_t, etls_create, epoc::desc8 *hostname) {
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, etls_create, epoc::desc8 *hostname, epoc::desc8 *peer_address) {
         auto *process = sys->get_kernel_system()->crr_process();
         if (!hostname || hostname->get_length() == 0 || hostname->get_length() > 253 || !hostname->get_pointer_raw(process)) {
             return epoc::error_argument;
         }
-        const auto &path = sys->get_config()->tls_ca_file;
-        std::unique_ptr<FILE, decltype(&fclose)> file(common::open_c_file(path, "rb"), fclose);
-        if (!file) {
-            LOG_ERROR(HLE_DISPATCHER, "TLS requires a readable CA bundle: {}", path);
-            return epoc::error_not_found;
-        }
-        std::string ca_pem;
-        std::array<char, 4096> buffer;
-        while (const auto count = fread(buffer.data(), 1, buffer.size(), file.get())) {
-            ca_pem.append(buffer.data(), count);
-            if (ca_pem.size() > 4 * 1024 * 1024) {
-                return epoc::error_too_big;
-            }
-        }
-        if (ferror(file.get())) {
-            return epoc::error_general;
+        if (!peer_address || peer_address->get_length() == 0 || peer_address->get_length() > 64
+            || !peer_address->get_pointer_raw(process)) {
+            return epoc::error_argument;
         }
         auto server_name = hostname->to_std_string(process);
         if (const auto target = sys->get_config()->host_override(server_name);
             target && config::valid_host_name(*target) && !config::numeric_host_address(*target)) {
             server_name = *target;
         }
-        return sys->get_dispatcher()->get_tls_controller().create(process->unique_id(), server_name, ca_pem);
+        return sys->get_dispatcher()->get_tls_controller().create(process->unique_id(), server_name, peer_address->to_std_string(process));
     }
 
     BRIDGE_FUNC_DISPATCHER(std::int32_t, etls_destroy, std::uint32_t handle) {

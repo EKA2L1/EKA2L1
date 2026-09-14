@@ -19,6 +19,8 @@ namespace eka2l1::drivers {
         failed = -30005
     };
 
+    bool is_local_tls_address(const std::string &address);
+
     // Serialized, nonblocking TLS over caller-owned byte streams; never opens a socket.
     class tls_session {
         struct implementation;
@@ -30,7 +32,7 @@ namespace eka2l1::drivers {
         tls_session(const tls_session &) = delete;
         tls_session &operator=(const tls_session &) = delete;
 
-        bool configure(const std::string &hostname, const std::string &ca_pem);
+        bool configure(const std::string &hostname, const std::string &peer_address);
         int handshake();
         int read(std::uint8_t *data, std::size_t size);
         int write(const std::uint8_t *data, std::size_t size);

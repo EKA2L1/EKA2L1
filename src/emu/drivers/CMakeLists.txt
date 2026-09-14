@@ -247,6 +247,21 @@ if (NOT MSVC)
 endif()
 
 target_link_libraries(drivers PRIVATE common glm miniBAE_EMU mbedtls)
+if (APPLE)
+    target_sources(drivers PRIVATE src/network/tls_trust_apple.cpp)
+    target_link_libraries(drivers PRIVATE "-framework Security" "-framework CoreFoundation")
+elseif (WIN32)
+    target_sources(drivers PRIVATE src/network/tls_trust_windows.cpp)
+    target_link_libraries(drivers PRIVATE crypt32)
+elseif (ANDROID)
+    target_sources(drivers PRIVATE src/network/tls_trust_android.cpp)
+else()
+    find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Network)
+    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Network)
+    target_sources(drivers PRIVATE src/network/tls_trust_qt.cpp)
+    target_link_libraries(drivers PRIVATE Qt${QT_VERSION_MAJOR}::Network)
+endif()
+
 if (EKA2L1_IOS)
     # glad is not linked on iOS — the ogl backend compiles against
     # OpenGLES.framework via ios_gl_loader.h. Audio goes

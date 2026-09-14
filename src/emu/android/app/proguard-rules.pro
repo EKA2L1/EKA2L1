@@ -22,6 +22,7 @@
 
 -keep class com.github.eka2l1.emu.Emulator { *; }
 -keep class com.github.eka2l1.emu.EmulatorCamera { *; }
+-keep class com.github.eka2l1.emu.TlsTrust { *; }
 -keep class com.github.eka2l1.util.SparseIntArrayAdapter { *; }
 
 # Gson

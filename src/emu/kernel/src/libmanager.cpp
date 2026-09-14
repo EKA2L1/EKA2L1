@@ -433,7 +433,7 @@ namespace eka2l1::hle {
             auto *requirements = requirements_node && requirements_node->get_node_type() == common::INI_NODE_SECTION
                 ? requirements_node->get_as<common::ini_section>() : nullptr;
             if (requirements && requirements->find("host-tls") &&
-                (!kern_->get_config()->host_tls || kern_->get_epoc_version() < epocver::epoc93fp1)) {
+                kern_->get_epoc_version() < epocver::epoc93fp1) {
                 continue;
             }
 
