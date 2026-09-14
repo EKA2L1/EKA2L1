@@ -38,13 +38,13 @@ jobs:
         working-directory: ./src/emu/android
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
         submodules: recursive
 
     - name: Set up JDK 17
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v6
       with:
         distribution: 'temurin'
         java-version: '17'
@@ -95,7 +95,7 @@ jobs:
         rm -f "${RUNNER_TEMP}/keystore.jks"
 
     - name: Upload APK
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: eka2l1-${{ steps.git_short_sha.outputs.value }}-android
         path: eka2l1-${{ steps.git_short_sha.outputs.value }}.apk
@@ -137,14 +137,14 @@ jobs:
       run: echo "CCACHE_DIR=${{ runner.temp }}/ccache" >> "$GITHUB_ENV"
       if: matrix.label != 'windows'
 
-    - uses: actions/cache@v4
+    - uses: actions/cache@v6
       with:
         path: ${{ runner.temp }}/ccache
         key: ccache-${{ env.cache-version }}-${{ matrix.label }}-${{ github.sha }}
         restore-keys: ccache-${{ env.cache-version }}-${{ matrix.label }}-
       if: matrix.label != 'windows'
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
         submodules: recursive
@@ -153,7 +153,7 @@ jobs:
     # arm64 ones, so those are built from its own script and cached.
     - name: Cache arm64 ffmpeg
       id: cache-ffmpeg
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: src/external/ffmpeg/macos/arm64
         key: ffmpeg-arm64-${{ hashFiles('.git/modules/src/external/ffmpeg/HEAD') }}
@@ -247,7 +247,7 @@ jobs:
       shell: pwsh
       if: matrix.label == 'windows'
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: eka2l1-${{ steps.git_short_sha.outputs.value }}-${{ matrix.label }}
         path: build/bin
@@ -255,13 +255,13 @@ jobs:
 
     # The bundle left in build/bin is what macdeployqt packed into the DMG, not
     # a second deliverable, and the DMG is what people install from.
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: eka2l1-${{ steps.git_short_sha.outputs.value }}-${{ matrix.label }}
         path: build/bin/EKA2L1.dmg
       if: matrix.label == 'macos'
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: eka2l1-${{ steps.git_short_sha.outputs.value }}-${{ matrix.label }}
         path: build/eka2l1-qt-x64.AppImage
@@ -285,7 +285,7 @@ jobs:
       EKA2L1_IOS_CONFIGURATION: Release
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
         submodules: recursive
@@ -294,7 +294,7 @@ jobs:
     # itself. The slices differ per platform, so they are cached per label.
     - name: Cache iOS ffmpeg
       id: cache-ffmpeg
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: src/external/ffmpeg/ios/device
         key: ffmpeg-ios-device-${{ hashFiles('.git/modules/src/external/ffmpeg/HEAD') }}
@@ -324,7 +324,7 @@ jobs:
         cp -R "${app}" build/ios-release/Payload/
         (cd build/ios-release && zip -qry EKA2L1-iOS-unsigned.ipa Payload && rm -rf Payload)
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: eka2l1-${{ steps.git_short_sha.outputs.value }}-ios-device
         path: build/ios-release/EKA2L1-iOS-unsigned.ipa
@@ -339,7 +339,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         submodules: recursive
 
@@ -373,7 +373,7 @@ jobs:
           qt6-base-private-dev qt6-tools-dev qt6-tools-dev-tools \
           qt6-l10n-tools libqt6svg6-dev qt6-multimedia-dev
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         submodules: recursive
 
@@ -432,11 +432,11 @@ jobs:
   roll-release:
    needs: [build-android, build-desktop, build-ios]
    runs-on: "ubuntu-latest"
-   if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+   if: github.repository_owner == 'EKA2L1' && github.ref == 'refs/heads/master'
    permissions:
      contents: write
    steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
 
@@ -445,29 +445,29 @@ jobs:
       run: echo "value=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
     - name: Download Windows artifact
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-windows"
         path: windows-files
 
     - name: Download macOS artifact
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-macos"
         path: mac-files
 
     - name: Download Linux artifact
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-linux"
 
     - name: Download Android artifact
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-android"
 
     - name: Download iOS artifact
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-ios-device"
 
@@ -488,7 +488,7 @@ jobs:
         git push -f origin refs/tags/continous
 
     - name: Create release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
         tag_name: continous
         name: "Automatic CI builds"
