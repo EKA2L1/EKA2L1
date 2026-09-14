@@ -58,6 +58,8 @@ namespace eka2l1::qt::btnmap {
             : executor_(exec) {
         }
 
+        virtual ~behaviour() = default;
+
         virtual void produce(const std::uint64_t key, const bool is_press) = 0;
         virtual void produce(const std::uint64_t key, const float axisx, const float axisy) {}
         virtual std::vector<std::uint64_t> mapped_keys() = 0;

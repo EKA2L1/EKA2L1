@@ -59,6 +59,7 @@ namespace eka2l1::qt::btnmap {
 
     public:
         explicit base(editor *editor_instace, const eka2l1::vec2 &position = eka2l1::vec2(0, 0));
+        virtual ~base() = default;
 
         virtual void draw(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder,
             const eka2l1::vec2f &scale_factor) {
