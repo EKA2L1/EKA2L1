@@ -187,6 +187,12 @@ final class EKA2L1Bridge {
         emulator.appExitHandler = handler
     }
 
+    func presentTextInput() {
+        emulator.presentTextInput()
+    }
+
+    var isTextInputAvailable: Bool { emulator.isTextInputAvailable() }
+
     // Kill the running app in lockstep with the frontend closing its screen.
     func closeRunningApp() {
         emulator.closeRunningApp()

@@ -50,6 +50,7 @@ set(EKA2L1_IOS_SOURCES
     "${EKA2L1_IOS_APP_DIR}/ControllerPointer.swift"
     "${EKA2L1_IOS_APP_DIR}/ControllerPointerDriver.swift"
     "${EKA2L1_IOS_APP_DIR}/SettingsView.swift"
+    "${EKA2L1_IOS_APP_DIR}/HostOverridesView.swift"
     "${EKA2L1_IOS_APP_DIR}/Toast.swift"
     "${EKA2L1_IOS_BRIDGE_DIR}/IosEmulator.h"
     "${EKA2L1_IOS_BRIDGE_DIR}/IosEmulator.mm"

@@ -91,6 +91,7 @@ namespace eka2l1::dispatch {
         if (!pr) {
             return;
         }
+        tls_controller_.erase_process(pr->unique_id());
 
         // Audio the process left playing must not outlive it: a killed or panicked app never
         // runs the guest destructor that would have stopped its player. Only orphan the

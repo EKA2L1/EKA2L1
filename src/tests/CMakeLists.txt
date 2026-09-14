@@ -21,6 +21,8 @@ target_link_libraries(ekatests PRIVATE
     epocpkg
     epocservs
     epocdispatch
+    drivers
+    mbedtls
     libtess2
     lunasvg)
 
@@ -66,3 +68,5 @@ add_assets(ekatests ${PACKAGE_ASSETS_PATH} "packageassets")
 
 set(SYSTEM_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/epoc/system/assets/")
 add_assets(ekatests ${SYSTEM_ASSETS_PATH} "systemassets")
+
+add_assets(ekatests "${CMAKE_CURRENT_SOURCE_DIR}/epoc/services/internet/tlsassets/" "tlsassets")

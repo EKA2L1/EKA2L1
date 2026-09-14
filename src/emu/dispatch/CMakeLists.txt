@@ -59,6 +59,7 @@ add_library(epocdispatch
         include/dispatch/def.h
         include/dispatch/dispatcher.h
         include/dispatch/hui.h
+        include/dispatch/tls.h
         include/dispatch/management.h
         include/dispatch/register.h
         include/dispatch/screen.h
@@ -78,6 +79,7 @@ add_library(epocdispatch
         src/camera.cpp
         src/dispatcher.cpp
         src/hui.cpp
+        src/tls.cpp
         src/register.cpp
         src/screen.cpp
         src/video.cpp

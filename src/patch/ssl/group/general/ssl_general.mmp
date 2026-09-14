@@ -1,0 +1,13 @@
+TARGET ssl_general.dll
+TARGETTYPE dll
+UID 0x1000183d 0xee000018
+CAPABILITY ALL -Tcb
+USERINCLUDE ..\..\inc
+SYSTEMINCLUDE \epoc32\include ..\..\..\priv\inc
+SOURCEPATH ..\..\src
+SOURCE hosttls.cpp dispatch.s
+LIBRARY euser.lib esock.lib x509.lib
+STATICLIBRARY priv.lib
+DEFFILE ..\..\eabi\ssl_general.def
+nostrictdef
+DEBUGGABLE_UDEBONLY

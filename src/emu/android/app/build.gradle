@@ -83,6 +83,14 @@ android {
     }
 }
 
+android.applicationVariants.all { variant ->
+    def variantName = variant.name.capitalize()
+    tasks.named("merge${variantName}Assets").configure {
+        // CMake stages the guest patch DLLs in the assets directory.
+        dependsOn("externalNativeBuild${variantName}")
+    }
+}
+
 dependencies {
     def camerax_version = "1.3.0-beta02"
 

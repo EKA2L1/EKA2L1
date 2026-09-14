@@ -24,14 +24,22 @@
 #include <utils/des.h>
 #include <utils/reqsts.h>
 
+namespace eka2l1 {
+    class kernel_system;
+}
+
 namespace eka2l1::dispatch {
     struct ehui_input_view_controller {
     private:
         std::u16string result_;
         epoc::notify_info info_;
+        std::uint64_t request_id_ = 0;
     public:
-        void on_input_view_complete(const std::u16string &result_text);
+        void on_input_view_complete(kernel_system *kern, std::uint64_t request_id, const std::u16string &result_text);
         void set_notify_info(epoc::notify_info info);
+        void cancel(kernel_system *kern);
+
+        std::uint64_t request_id() const { return request_id_; }
 
         std::u16string result_text() const {
             return result_;
@@ -41,9 +49,7 @@ namespace eka2l1::dispatch {
             return result_.length();
         }
         
-        bool is_another_input_dialog_active() const {
-            return !info_.empty();
-        }
+        bool is_another_input_dialog_active(kernel_system *kern);
     };
 
     struct ehui_controller {
@@ -60,4 +66,6 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_DISPATCHER(void, ehui_get_stored_input_text, std::int32_t *text_length, char16_t *text_ptr);
     BRIDGE_FUNC_DISPATCHER(void, ehui_close_input_view);
     BRIDGE_FUNC_DISPATCHER(bool, ehui_is_keypad_based);
+    BRIDGE_FUNC_DISPATCHER(bool, ehui_is_manual_input);
+    BRIDGE_FUNC_DISPATCHER(void, ehui_set_input_available, bool available);
 }

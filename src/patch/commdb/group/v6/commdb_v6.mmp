@@ -1,0 +1,9 @@
+TARGET          commdb_v6.dll
+TARGETTYPE      dll
+UID             0x1000008d 0xee000015
+SYSTEMINCLUDE   \epoc32\include
+SOURCEPATH      ..\..\src
+SOURCE          commdb.cpp
+LIBRARY         euser.lib commdb.lib
+DEFFILE         ..\..\eabi\commdb_v6.def
+NOSTRICTDEF

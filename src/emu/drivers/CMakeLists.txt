@@ -65,6 +65,8 @@ if (EKA2L1_IOS)
 endif ()
 
 add_library(drivers
+        include/drivers/network/tls.h
+        src/network/tls.cpp
         include/drivers/itc.h
         include/drivers/driver.h
         include/drivers/audio/audio.h
@@ -244,7 +246,7 @@ if (NOT MSVC)
     target_compile_options(miniBAE_EMU PRIVATE -Wno-int-conversion -Wno-implicit-function-declaration)
 endif()
 
-target_link_libraries(drivers PRIVATE common glm miniBAE_EMU)
+target_link_libraries(drivers PRIVATE common glm miniBAE_EMU mbedtls)
 if (EKA2L1_IOS)
     # glad is not linked on iOS — the ogl backend compiles against
     # OpenGLES.framework via ios_gl_loader.h. Audio goes

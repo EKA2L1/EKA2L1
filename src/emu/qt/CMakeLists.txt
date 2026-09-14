@@ -78,6 +78,7 @@ set(PROJECT_SOURCES
         include/qt/package_manager_dialog.h
         include/qt/seh_handler.h
         include/qt/settings_dialog.h
+        include/qt/host_overrides.h
         include/qt/state.h
         include/qt/symbian_input_dialog.h
         include/qt/thread.h
@@ -115,6 +116,7 @@ set(PROJECT_SOURCES
         src/package_manager_dialog.ui
         src/seh_handler.cpp
         src/settings_dialog.cpp
+        src/host_overrides.cpp
         src/settings_dialog.ui
         src/state.cpp
         src/symbian_input_dialog.cpp
@@ -246,7 +248,15 @@ add_dependencies(eka2l1_qt
     vibractrl
     backlightctrl
     postingsurfacefactory
-    goommonitor)
+    goommonitor
+    ssl
+    commdb)
+
+set_property(TARGET eka2l1_qt APPEND PROPERTY LINK_DEPENDS
+    "${PROJECT_SOURCE_DIR}/src/patch/ssl/group/ssl_general.dll"
+    "${PROJECT_SOURCE_DIR}/src/patch/ssl/group/ssl.dll.map"
+    "${PROJECT_SOURCE_DIR}/src/patch/commdb/group/commdb_v6.dll"
+    "${PROJECT_SOURCE_DIR}/src/patch/commdb/group/commdb.dll.map")
 
 add_custom_command(
         TARGET eka2l1_qt

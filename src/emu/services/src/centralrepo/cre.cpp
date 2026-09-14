@@ -21,6 +21,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <common/chunkyseri.h>
 #include <common/cvt.h>
 #include <common/log.h>
@@ -134,7 +135,8 @@ namespace eka2l1 {
         seri.absorb(repo.time_stamp);
 
         // Start to read entries
-        std::uint32_t num_entries = static_cast<std::uint32_t>(repo.entries.size());
+        std::uint32_t num_entries = static_cast<std::uint32_t>(std::count_if(repo.entries.begin(), repo.entries.end(),
+            [](const central_repo_entry &entry) { return !entry.transient; }));
         seri.absorb(num_entries);
 
         if (seri.get_seri_mode() == common::SERI_MODE_READ) {
@@ -142,6 +144,11 @@ namespace eka2l1 {
         }
 
         for (auto &entry : repo.entries) {
+            if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+                entry.transient = false;
+            } else if (entry.transient) {
+                continue;
+            }
             seri.absorb(entry.key);
             seri.absorb(entry.metadata_val);
 

@@ -62,6 +62,10 @@ namespace eka2l1::epoc::socket {
         virtual epoc::version ver() const = 0;
         virtual byte_order get_byte_order() const = 0;
 
+        virtual std::uint32_t sock_type() const {
+            return 0;
+        }
+
         virtual std::int32_t message_size() const {
             return SOCKET_MESSAGE_SIZE_UNDEFINED;
         }

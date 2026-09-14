@@ -120,6 +120,10 @@ namespace eka2l1 {
                 pr_find(ctx);
                 return;
 
+            case socket_old_pr_start:
+                pr_start(ctx);
+                return;
+
             case socket_old_so_create:
                 so_create(ctx);
                 return;
@@ -144,6 +148,10 @@ namespace eka2l1 {
                 switch (ctx->msg->function) {
                 case socket_reform_pr_find:
                     pr_find(ctx);
+                    return;
+
+                case socket_reform_pr_start:
+                    pr_start(ctx);
                     return;
 
                 case socket_reform_so_create:
@@ -194,6 +202,10 @@ namespace eka2l1 {
                 switch (ctx->msg->function) {
                 case socket_pr_find:
                     pr_find(ctx);
+                    return;
+
+                case socket_pr_start:
+                    pr_start(ctx);
                     return;
 
                 case socket_so_create:
@@ -272,13 +284,11 @@ namespace eka2l1 {
     }
 
     static void fill_protocol_description(epoc::socket::protocol *pr, protocol_description &des) {
-        // NOTE: On emulator some protocols are merged for feasable implementation
-        // TODO: Make them separable for this fill
         des.addr_fam_ = pr->family_ids()[0];
         des.protocol_ = pr->supported_ids()[0];
         des.ver_ = pr->ver();
         des.bord_ = pr->get_byte_order();
-        //des.sock_type_ = pr->sock_type();
+        des.sock_type_ = pr->sock_type();
         des.message_size_ = pr->message_size();
 
         des.name_.assign(nullptr, pr->name());
@@ -287,6 +297,25 @@ namespace eka2l1 {
         des.service_info_ = 0;
         des.naming_services_ = 0;
         des.service_sec_ = 0;
+    }
+
+    void socket_client_session::pr_start(service::ipc_context *ctx) {
+        const auto family = ctx->get_argument_value<std::uint32_t>(0);
+        const auto type = ctx->get_argument_value<std::uint32_t>(1);
+        const auto id = ctx->get_argument_value<std::uint32_t>(2);
+        if (!family || !type || !id) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        const auto protocol = server<socket_server>()->find_protocol(*family, *id);
+        if (!protocol || (protocol->sock_type() && protocol->sock_type() != *type)) {
+            ctx->complete(epoc::error_not_supported);
+            return;
+        }
+
+        // HLE protocols are registered eagerly; StartProtocol only preloads them.
+        ctx->complete(epoc::error_none);
     }
 
     void socket_client_session::pr_find(service::ipc_context *ctx) {
@@ -304,7 +333,7 @@ namespace eka2l1 {
             return;
         }
 
-        protocol_description description_to_return;
+        protocol_description description_to_return{};
         fill_protocol_description(result_pr, description_to_return);
 
         ctx->write_data_to_descriptor_argument<protocol_description>(0, description_to_return);

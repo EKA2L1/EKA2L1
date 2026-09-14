@@ -193,13 +193,8 @@ namespace eka2l1::epoc {
         if (complete_request) {
             dsa_must_stop_notify_.complete(epoc::error_cancel);
         } else {
-            // A client-initiated cancel is completed on the client side: ws32's
-            // CDirectScreenAccess::DoCancel() calls User::RequestComplete(iStatus, KErrCancel)
-            // right after sending EWsDirectOpCancel, and CActive::Cancel() then consumes exactly
-            // that one signal. Completing here as well leaves the request semaphore one signal
-            // richer than the guest will ever wait for, and that surplus is what eventually wakes
-            // CActiveScheduler with no ready active object (E32USER-CBase 46). Drop the request
-            // instead so nothing completes it later either.
+            // Newer ws32 clients complete their own cancellation; a second signal
+            // would wake CActiveScheduler without a ready active object.
             dsa_must_stop_notify_.sts = 0;
         }
     }
@@ -231,7 +226,8 @@ namespace eka2l1::epoc {
     }
 
     void dsa::cancel(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
-        do_cancel(false);
+        // The old DSA protocol relies on the server to complete the pending request.
+        do_cancel(cmd.header.op == ws_dsa_old_cancel);
         ctx.complete(epoc::error_none);
     }
 

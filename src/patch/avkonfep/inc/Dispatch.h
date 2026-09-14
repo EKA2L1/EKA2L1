@@ -32,6 +32,8 @@ HLE_DISPATCH_FUNC(TInt, EHUIOpenGlobalTextView, const TDesC *aInitialText, const
 HLE_DISPATCH_FUNC(void, EHUIGetStoredText, TInt *aLength, const void *aPtr);
 HLE_DISPATCH_FUNC(void, EHUICancelGlobalTextView);
 HLE_DISPATCH_FUNC(TBool, EHUIIsKeypadBased);
+HLE_DISPATCH_FUNC(TBool, EHUIIsManualInput);
+HLE_DISPATCH_FUNC(void, EHUISetInputAvailable, TBool aAvailable);
 }
 
 #endif

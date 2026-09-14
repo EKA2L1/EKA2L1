@@ -51,6 +51,7 @@ namespace eka2l1 {
         std::uint32_t key;
         central_repo_entry_variant data;
         std::uint32_t metadata_val;
+        bool transient = false;
     };
 
     class central_repo_client;

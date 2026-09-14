@@ -254,6 +254,8 @@ typedef NS_ENUM(NSInteger, EKA2L1InstallResult) {
 - (void)resumeNetworking;
 
 // Input -------------------------------------------------------------------
+- (void)presentTextInput;
+- (BOOL)isTextInputAvailable;
 // Single-touch dispatch from EAGLView.
 typedef NS_ENUM(NSInteger, EKA2L1PointerPhase) {
     EKA2L1PointerPhaseBegan = 0,

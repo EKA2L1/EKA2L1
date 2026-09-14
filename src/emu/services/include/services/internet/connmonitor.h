@@ -22,8 +22,17 @@
 
 #include <kernel/server.h>
 #include <services/framework.h>
+#include <array>
 
 namespace eka2l1 {
+    struct central_repo;
+
+    struct connmonitor_iap_info {
+        std::uint32_t count = 0;
+        std::array<std::uint32_t, 25> ids{};
+    };
+
+    connmonitor_iap_info connmonitor_available_iaps(const central_repo &repo);
 
     enum connmonitor_opcode {
         connmonitor_get_connection_count = 0,
@@ -74,6 +83,7 @@ namespace eka2l1 {
         void receive_event(eka2l1::service::ipc_context *ctx);
         void get_int_attribute(eka2l1::service::ipc_context *ctx);
         void get_uint_attribute(eka2l1::service::ipc_context *ctx);
+        void get_pckg_attribute(eka2l1::service::ipc_context *ctx);
         void get_connection_info(eka2l1::service::ipc_context *ctx);
         void cancel_async_request(eka2l1::service::ipc_context *ctx);
         void cancel_receive_event(eka2l1::service::ipc_context *ctx);

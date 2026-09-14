@@ -23,12 +23,14 @@
 #include <config/config.h>
 #include <services/internet/protocols/common.h>
 #include <services/internet/protocols/inet.h>
+#include <utils/err.h>
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <ws2tcpip.h>
 #else
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <netdb.h>
 
 #include <netinet/in.h>
 #endif
@@ -36,6 +38,22 @@
 #include <cstring>
 
 using namespace eka2l1;
+
+TEST_CASE("Internet protocol descriptions distinguish TCP and UDP", "[internet]") {
+    // in_sock.h and es_sock.h define the IDs and socket types returned by FindProtocol.
+    epoc::internet::inet_bridged_protocol tcp(nullptr, true, 6);
+    epoc::internet::inet_bridged_protocol udp(nullptr, true, 17);
+
+    REQUIRE(tcp.name() == u"tcp");
+    REQUIRE(tcp.supported_ids() == std::vector<std::uint32_t>{6});
+    REQUIRE(tcp.sock_type() == 1);
+    REQUIRE(tcp.message_size() == 0);
+    REQUIRE(tcp.family_ids().front() == 0x800);
+    REQUIRE(udp.name() == u"udp");
+    REQUIRE(udp.supported_ids() == std::vector<std::uint32_t>{17});
+    REQUIRE(udp.sock_type() == 2);
+    REQUIRE(udp.family_ids().front() == 0x800);
+}
 
 TEST_CASE("Host overrides match complete DNS names", "[internet][config]") {
     config::state settings;
@@ -49,6 +67,33 @@ TEST_CASE("Host overrides match complete DNS names", "[internet][config]") {
     REQUIRE_FALSE(settings.host_override("other.example"));
     settings.hosts.clear();
     REQUIRE_FALSE(settings.host_override("game.example"));
+}
+
+TEST_CASE("Host mappings accept DNS targets without recursive rewriting", "[internet][config]") {
+    config::state settings;
+    settings.hosts = {{"Arena.Example.", " Private.Example. "}, {"private.example", "127.0.0.1"}};
+    REQUIRE(settings.host_override("ARENA.EXAMPLE") == "private.example");
+    REQUIRE(settings.host_override("private.example") == "127.0.0.1");
+    REQUIRE(config::normalize_host_name(" \tGame.Example.\r\n") == "game.example");
+    REQUIRE(config::normalize_host_name(" \t\r\n").empty());
+}
+
+TEST_CASE("Host mapping validation accepts addresses and bounds DNS labels", "[internet][config]") {
+    for (const auto *target : {"127.0.0.1", "2001:db8::1", "::1", "private.example", "localhost", "xn--bcher-kva.example"}) {
+        INFO(target);
+        CHECK(config::valid_host_target(target));
+    }
+    for (const auto *target : {"", "https://private.example", "private.example:8192", "[::1]", "1.2.3.999",
+            "private..example", "private/example", "private example", "::invalid"}) {
+        INFO(target);
+        CHECK_FALSE(config::valid_host_target(target));
+    }
+    CHECK(config::valid_host_name(std::string(63, 'a') + ".example"));
+    CHECK_FALSE(config::valid_host_name(std::string(64, 'a') + ".example"));
+    CHECK_FALSE(config::valid_host_name(std::string(254, 'a')));
+    CHECK_FALSE(config::valid_host_target(std::string("127.0.0.1\0.example", 18)));
+    CHECK(config::numeric_host_address("::ffff:192.0.2.1"));
+    CHECK_FALSE(config::numeric_host_address("localhost"));
 }
 
 namespace {
@@ -111,4 +156,74 @@ TEST_CASE("An address a guest built with INET_ADDR goes out to the host correctl
     REQUIRE(converted_v4->sin_family == AF_INET);
     REQUIRE(ntohs(converted_v4->sin_port) == 8080);
     REQUIRE(converted_v4->sin_addr.s_addr == htonl(K_INET_ADDR_LOOP));
+}
+
+TEST_CASE("DNS results contain a complete copyable TSockAddr", "[internet]") {
+    sockaddr_in address = make_host_v4(K_INET_ADDR_LOOP, 0);
+    addrinfo resolved{};
+    resolved.ai_family = AF_INET;
+    resolved.ai_addr = reinterpret_cast<sockaddr *>(&address);
+    epoc::socket::name_entry entry;
+    entry.length_ = 0x30000008;
+    entry.flags_ = epoc::socket::name_entry::FLAG_ALIAS_NAME;
+
+    epoc::internet::addrinfo_to_name_entry(entry, &resolved);
+
+    // TSockAddr starts with just its family and port; copying the descriptor must include the IPv4 word.
+    REQUIRE(entry.length_ == 0x3000000C);
+    REQUIRE(entry.max_length_ == 32);
+    REQUIRE(entry.flags_ == 0);
+    REQUIRE(*static_cast<epoc::internet::sinet_address &>(entry.addr_).addr_long() == K_INET_ADDR_LOOP);
+
+    sockaddr_in6 address6{};
+    address6.sin6_family = AF_INET6;
+    address6.sin6_addr.s6_addr[15] = 1;
+    resolved.ai_family = AF_INET6;
+    resolved.ai_addr = reinterpret_cast<sockaddr *>(&address6);
+    epoc::internet::addrinfo_to_name_entry(entry, &resolved);
+    REQUIRE(entry.length_ == 0x30000020);
+    REQUIRE(entry.addr_.family_ == epoc::internet::INET6_ADDRESS_FAMILY);
+}
+
+TEST_CASE("SetLocalPort binds an unspecified TSockAddr to the socket family", "[internet]") {
+    epoc::socket::saddress guest_addr;
+    std::memset(&guest_addr, 0xA5, sizeof(guest_addr));
+    guest_addr.family_ = 0;
+    guest_addr.port_ = 2000;
+    sockaddr_in6 host_addr;
+
+    REQUIRE(epoc::internet::guest_bind_address_to_host(guest_addr, 0x800, host_addr) == epoc::error_none);
+    const auto &ipv4 = reinterpret_cast<const sockaddr_in &>(host_addr);
+    REQUIRE(ipv4.sin_family == AF_INET);
+    REQUIRE(ntohs(ipv4.sin_port) == 2000);
+    REQUIRE(ipv4.sin_addr.s_addr == htonl(INADDR_ANY));
+
+    REQUIRE(epoc::internet::guest_bind_address_to_host(guest_addr, 0x806, host_addr) == epoc::error_none);
+    REQUIRE(host_addr.sin6_family == AF_INET6);
+    REQUIRE(ntohs(host_addr.sin6_port) == 2000);
+    REQUIRE(IN6_IS_ADDR_UNSPECIFIED(&host_addr.sin6_addr));
+    REQUIRE(host_addr.sin6_flowinfo == 0);
+    REQUIRE(host_addr.sin6_scope_id == 0);
+
+    guest_addr.port_ = 0;
+    REQUIRE(epoc::internet::guest_bind_address_to_host(guest_addr, 0x800, host_addr) == epoc::error_none);
+    REQUIRE(reinterpret_cast<const sockaddr_in &>(host_addr).sin_port == 0);
+}
+
+TEST_CASE("Bind retains explicit addresses and rejects invalid arguments", "[internet]") {
+    epoc::socket::saddress guest_addr{};
+    guest_addr.family_ = 0x800;
+    guest_addr.port_ = 65535;
+    *static_cast<epoc::internet::sinet_address &>(guest_addr).addr_long() = K_INET_ADDR_LOOP;
+    sockaddr_in6 host_addr;
+
+    REQUIRE(epoc::internet::guest_bind_address_to_host(guest_addr, 0x800, host_addr) == epoc::error_none);
+    REQUIRE(reinterpret_cast<const sockaddr_in &>(host_addr).sin_addr.s_addr == htonl(K_INET_ADDR_LOOP));
+    REQUIRE(ntohs(reinterpret_cast<const sockaddr_in &>(host_addr).sin_port) == 65535);
+
+    guest_addr.port_ = 65536;
+    REQUIRE(epoc::internet::guest_bind_address_to_host(guest_addr, 0x800, host_addr) == epoc::error_too_big);
+    guest_addr.port_ = 2000;
+    guest_addr.family_ = epoc::socket::INVALID_FAMILY_ID;
+    REQUIRE(epoc::internet::guest_bind_address_to_host(guest_addr, 0x800, host_addr) == epoc::error_argument);
 }

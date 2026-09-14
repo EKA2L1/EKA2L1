@@ -26,6 +26,16 @@
 #include <utils/err.h>
 
 namespace eka2l1 {
+    // Symbian 6.1 reports EConnectionOpen before EIfProgressLinkUp.
+    static constexpr std::int32_t nifman_connection_open = 14;
+    static constexpr std::int32_t nifman_interface_up = 1000;
+
+    static bool write_progress(service::ipc_context *ctx, const epoc::socket::conn_progress &progress) {
+        const bool written = ctx->write_data_to_descriptor_argument(0, progress);
+        ctx->complete(written ? epoc::error_none : epoc::error_argument);
+        return written;
+    }
+
     nifman_server::nifman_server(eka2l1::system *sys)
         : service::typical_server(sys, "NifmanServer")
         , sock_serv_(nullptr) {
@@ -46,6 +56,61 @@ namespace eka2l1 {
         : service::typical_session(serv, ss_id, client_version)
         , agent_(nullptr)
         , conn_(nullptr) {
+    }
+
+    nifman_client_session::~nifman_client_session() {
+        if (progress_notification_
+            && progress_notification_->sys->get_kernel_system()->is_thread_alive(progress_notification_->msg->own_thr)) {
+            progress_notification_->complete(epoc::error_cancel);
+        }
+    }
+
+    void nifman_client_session::set_progress(const std::int32_t stage) {
+        if (progress_.stage_ == stage) {
+            return;
+        }
+
+        progress_.stage_ = stage;
+        if (progress_notification_) {
+            auto notification = std::move(progress_notification_);
+            if (notification->sys->get_kernel_system()->is_thread_alive(notification->msg->own_thr)) {
+                deliver_progress(notification.get());
+            }
+        }
+    }
+
+    void nifman_client_session::deliver_progress(service::ipc_context *ctx) {
+        // Retain agent readiness until observed before exposing interface readiness.
+        if (write_progress(ctx, progress_) && progress_.stage_ == nifman_connection_open) {
+            set_progress(nifman_interface_up);
+        }
+    }
+
+    void nifman_client_session::progress_notification(service::ipc_context *ctx) {
+        if (progress_notification_) {
+            ctx->complete(epoc::error_in_use);
+            return;
+        }
+
+        if (ctx->get_argument_data_size(0) != sizeof(progress_)
+            || ctx->get_argument_max_data_size(0) < sizeof(progress_)) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        const auto previous = ctx->get_argument_data_from_descriptor<epoc::socket::conn_progress>(0);
+        if (!previous) {
+            ctx->complete(epoc::error_argument);
+        } else {
+            if (previous->stage_ == nifman_connection_open && progress_.stage_ == nifman_connection_open) {
+                set_progress(nifman_interface_up);
+            }
+            if (previous->stage_ != progress_.stage_ || previous->error_ != progress_.error_) {
+                deliver_progress(ctx);
+            } else {
+                progress_notification_ = ctx->move_to_new();
+            }
+        }
     }
 
     void nifman_client_session::open(service::ipc_context *ctx) {
@@ -116,8 +181,56 @@ namespace eka2l1 {
 
     void nifman_client_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
+        case nifman_start:
+            if (!agent_) {
+                ctx->complete(epoc::error_not_ready);
+            } else if (progress_.stage_ == nifman_connection_open || progress_.stage_ == nifman_interface_up) {
+                ctx->complete(epoc::error_already_exists);
+            } else {
+                // Internet sockets already use the host network; no guest dial-up is required.
+                set_progress(nifman_connection_open);
+                ctx->complete(epoc::error_none);
+            }
+            break;
+
         case nifman_open:
             open(ctx);
+            break;
+
+        case nifman_stop:
+            set_progress(0);
+            ctx->complete(epoc::error_none);
+            break;
+
+        case nifman_progress:
+            deliver_progress(ctx);
+            break;
+
+        case nifman_progress_notification:
+            progress_notification(ctx);
+            break;
+
+        case nifman_cancel_progress_notification:
+            if (progress_notification_) {
+                if (ctx->sys->get_kernel_system()->is_thread_alive(progress_notification_->msg->own_thr)) {
+                    progress_notification_->complete(epoc::error_cancel);
+                }
+                progress_notification_.reset();
+            }
+            ctx->complete(epoc::error_none);
+            break;
+
+        case nifman_last_progress_error:
+            write_progress(ctx, {});
+            break;
+
+        case nifman_network_active:
+            ctx->complete(progress_.stage_ == nifman_connection_open || progress_.stage_ == nifman_interface_up);
+            break;
+
+        case nifman_set_overrides:
+            // CommsDB dial-up preferences do not change the host network connection.
+            ctx->complete(agent_ ? epoc::error_none : epoc::error_not_ready);
             break;
 
         case nifman_get_active_int_setting:

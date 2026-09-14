@@ -26,6 +26,7 @@ private final class PeripheralInputBridge {
     // Cleared while a host panel is up (see setKeyboardEnabled). Survives
     // start()/stop() so a panel open across a re-appear stays in control.
     private var keyboardEnabled = true
+    private weak var hostTextInput: UIResponder?
 
     func start() {
         guard !running else { return }
@@ -36,6 +37,25 @@ private final class PeripheralInputBridge {
         // registered ahead of ours and refresh() reads updated state.
         refresh()
         let center = NotificationCenter.default
+        for name in [UITextField.textDidBeginEditingNotification, UITextView.textDidBeginEditingNotification] {
+            observers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                let responder = note.object as? UIResponder
+                MainActor.assumeIsolated {
+                    self?.hostTextInput = responder
+                    self?.releaseKeyboard()
+                }
+            })
+        }
+        for name in [UITextField.textDidEndEditingNotification, UITextView.textDidEndEditingNotification] {
+            observers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                let responder = note.object as? UIResponder
+                MainActor.assumeIsolated {
+                    if self?.hostTextInput === responder {
+                        self?.hostTextInput = nil
+                    }
+                }
+            })
+        }
         for name: Notification.Name in [.GCControllerDidConnect, .GCControllerDidDisconnect,
                                         .GCKeyboardDidConnect, .GCKeyboardDidDisconnect] {
             observers.append(center.addObserver(forName: name, object: nil,
@@ -63,6 +83,7 @@ private final class PeripheralInputBridge {
         pointer.setEnabled(false)
         observers.forEach(NotificationCenter.default.removeObserver)
         observers.removeAll()
+        hostTextInput = nil
         controllers.forEach { $0.extendedGamepad?.valueChangedHandler = nil }
         controllers.removeAll()
         GCKeyboard.coalesced?.keyboardInput?.keyChangedHandler = nil
@@ -176,7 +197,8 @@ private final class PeripheralInputBridge {
     // releaseAll(), and its release must still be forwarded if it arrives
     // later, so it cannot stay stuck down in the guest.
     private func handleKey(usage: Int, pressed: Bool) {
-        if pressed, !running || !foreground || !keyboardEnabled || !PeripheralManager.shared.keyboardCanDrive {
+        if pressed, !running || !foreground || !keyboardEnabled || hostTextInput?.isFirstResponder == true
+            || !PeripheralManager.shared.keyboardCanDrive {
             return
         }
         updateInput(token: KeyboardKey.token(forUsage: usage),
@@ -260,6 +282,8 @@ private final class PeripheralInputBridge {
 
 private final class EKA2L1RenderView: UIView {
     var surfaceReady = false
+    var textInputEnabled = true
+    private let textInputButton = UIButton(type: .system)
 
     // When true, the presented guest picture is pinned just below the top safe
     // area instead of centred, so a bottom keypad overlay covers letterbox
@@ -303,6 +327,25 @@ private final class EKA2L1RenderView: UIView {
         isOpaque = true
         backgroundColor = .black
         eaglLayer.isOpaque = true
+        var configuration = UIButton.Configuration.plain()
+        configuration.title = String(localized: "emulator.enterText")
+        configuration.image = UIImage(systemName: "keyboard")
+        configuration.imagePadding = 6
+        configuration.baseForegroundColor = .white
+        configuration.background.backgroundColor = .black.withAlphaComponent(0.72)
+        configuration.background.cornerRadius = 8
+        configuration.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10)
+        configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributes in
+            var result = attributes
+            result.font = .systemFont(ofSize: 13, weight: .semibold)
+            return result
+        }
+        textInputButton.configuration = configuration
+        textInputButton.isHidden = true
+        textInputButton.addAction(UIAction { _ in
+            EKA2L1Bridge.shared.presentTextInput()
+        }, for: .touchUpInside)
+        addSubview(textInputButton)
     }
 
     @available(*, unavailable)
@@ -323,6 +366,22 @@ private final class EKA2L1RenderView: UIView {
             pixels: anchorsDisplayTop ? Int(safeAreaInsets.top * scale) : -1)
         pushInterfaceRotation()
         surfaceReady = true
+        updateTextInputButton()
+    }
+
+    func updateTextInputButton() {
+        let display = EKA2L1Bridge.shared.guestDisplayRect
+            .applying(CGAffineTransform(scaleX: 1 / renderScale, y: 1 / renderScale))
+            .intersection(safeAreaLayoutGuide.layoutFrame)
+        textInputButton.isHidden = !textInputEnabled || !EKA2L1Bridge.shared.isTextInputAvailable
+            || display.isNull || display.isEmpty
+        guard !textInputButton.isHidden else { return }
+        let size = textInputButton.sizeThatFits(display.size)
+        textInputButton.frame = CGRect(
+            x: max(display.minX, display.maxX - size.width - 8),
+            y: display.minY + 8,
+            width: min(size.width, display.width), height: max(44, size.height)
+        )
     }
 
     // CoreMotion reports accelerometer samples in the physical device frame;
@@ -438,6 +497,7 @@ final class EmulatorViewController: UIViewController {
         }
     }
     private var launched = false
+    private var textInputTimer: Timer?
     private let peripheralInput = PeripheralInputBridge()
     private var gameView: EKA2L1RenderView {
         view as! EKA2L1RenderView
@@ -481,6 +541,8 @@ final class EmulatorViewController: UIViewController {
     // handles the hardware keyboard on its own.
     func setHardwareKeyboardCaptureEnabled(_ enabled: Bool) {
         peripheralInput.setKeyboardEnabled(enabled)
+        gameView.textInputEnabled = enabled
+        gameView.updateTextInputButton()
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -492,6 +554,12 @@ final class EmulatorViewController: UIViewController {
         }
         ExternalDisplay.shared.setGameVisible(true)
         peripheralInput.start()
+        textInputTimer?.invalidate()
+        let timer = Timer(timeInterval: 0.15, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.gameView.updateTextInputButton() }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        textInputTimer = timer
         EKA2L1Bridge.shared.resume()
         // Launch once: viewDidAppear can re-fire (e.g. returning frontmost),
         // and re-launching would spawn a second guest instance.
@@ -511,6 +579,8 @@ final class EmulatorViewController: UIViewController {
         ExternalDisplay.shared.onSurfaceChange = nil
         ExternalDisplay.shared.setGameVisible(false)
         peripheralInput.stop()
+        textInputTimer?.invalidate()
+        textInputTimer = nil
         EKA2L1Bridge.shared.detachLayer()
     }
 
