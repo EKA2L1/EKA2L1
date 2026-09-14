@@ -23,6 +23,13 @@
 
 using namespace eka2l1;
 
+TEST_CASE("RSocket CancelAll retains its ROM-specific request numbers", "socket_opcodes") {
+    // rm-409 esock.dll RSocket::CancelAll sends 0x24; SOCKMES.H defines the reformed 142.
+    REQUIRE(socket_so_cancel_all == 0x24);
+    REQUIRE(socket_reform_so_cancel_all == 142);
+    REQUIRE(socket_old_so_cancel_all == 0x20);
+}
+
 TEST_CASE("Pre-reform RConnection enumeration is distinct from string settings", "[internet][connection]") {
     // rm-409 esock.dll exports 7, 9 and 6 send these operation IDs respectively.
     REQUIRE(socket_cn_get_long_des_setting == 0x50);

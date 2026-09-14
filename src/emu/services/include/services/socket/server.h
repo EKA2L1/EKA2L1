@@ -179,6 +179,7 @@ namespace eka2l1 {
         socket_so_cancel_send = 0x21,
         socket_so_cancel_connect = 0x22,
         socket_so_cancel_accept = 0x23,
+        socket_so_cancel_all = 0x24,
         socket_hr_open = 0x28,
         socket_hr_get_by_name = 0x29,
         socket_hr_next = 0x2A,
