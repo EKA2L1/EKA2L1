@@ -8,6 +8,12 @@
             "state" : "translated",
             "value" : "Cancel"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
         }
       }
     },
@@ -17,6 +23,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Completed!"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成！"
           }
         }
       }
@@ -28,6 +40,12 @@
             "state" : "translated",
             "value" : "Done"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成"
+          }
         }
       }
     },
@@ -37,6 +55,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Error"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "错误"
           }
         }
       }
@@ -48,6 +72,12 @@
             "state" : "translated",
             "value" : "Install"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装"
+          }
         }
       }
     },
@@ -57,6 +87,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "OK"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "好"
           }
         }
       }
@@ -68,6 +104,12 @@
             "state" : "translated",
             "value" : "Function keys"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "功能键"
+          }
         }
       }
     },
@@ -77,6 +119,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Clear Binding"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除绑定"
           }
         }
       }
@@ -88,6 +136,12 @@
             "state" : "translated",
             "value" : "Currently bound: %@"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前绑定：%@"
+          }
         }
       }
     },
@@ -97,6 +151,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Device disconnected."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设备已断开连接。"
           }
         }
       }
@@ -108,6 +168,12 @@
             "state" : "translated",
             "value" : "Directions"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "方向键"
+          }
         }
       }
     },
@@ -117,6 +183,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The d-pad and both thumbsticks can be mapped independently."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "十字键与左右摇杆可以分别映射。"
           }
         }
       }
@@ -128,6 +200,12 @@
             "state" : "translated",
             "value" : "Left Stick Down"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左摇杆下"
+          }
         }
       }
     },
@@ -137,6 +215,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Left Stick Left"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左摇杆左"
           }
         }
       }
@@ -148,6 +232,12 @@
             "state" : "translated",
             "value" : "Left Stick Right"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左摇杆右"
+          }
         }
       }
     },
@@ -157,6 +247,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Left Stick Up"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左摇杆上"
           }
         }
       }
@@ -168,6 +264,12 @@
             "state" : "translated",
             "value" : "No game controller or keyboard connected."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未连接游戏手柄或键盘。"
+          }
         }
       }
     },
@@ -177,6 +279,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Number keys"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "数字键"
           }
         }
       }
@@ -188,6 +296,12 @@
             "state" : "translated",
             "value" : "Press a button on the controller…"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请按手柄上的一个按键…"
+          }
         }
       }
     },
@@ -197,6 +311,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Press a key on the keyboard…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请按键盘上的一个按键…"
           }
         }
       }
@@ -208,6 +328,12 @@
             "state" : "translated",
             "value" : "Reset to Defaults"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复默认设置"
+          }
         }
       }
     },
@@ -217,6 +343,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Right Stick Down"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右摇杆下"
           }
         }
       }
@@ -228,6 +360,12 @@
             "state" : "translated",
             "value" : "Right Stick Left"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右摇杆左"
+          }
         }
       }
     },
@@ -237,6 +375,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Right Stick Right"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右摇杆右"
           }
         }
       }
@@ -248,6 +392,12 @@
             "state" : "translated",
             "value" : "Right Stick Up"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右摇杆上"
+          }
         }
       }
     },
@@ -257,6 +407,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pointer down"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指针下移"
           }
         }
       }
@@ -268,6 +424,12 @@
             "state" : "translated",
             "value" : "Controller pointer"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手柄指针"
+          }
         }
       }
     },
@@ -277,6 +439,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pointer controls require an external display and Full Screen. Hold Touch while moving to drag. Hidden pointers restore game key bindings. Motion and vibration use the controller when supported."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指针控制需要外接显示器并开启全屏。移动时按住“触摸”即可拖动。隐藏指针后会恢复游戏按键映射。体感与震动在手柄支持时使用手柄。"
           }
         }
       }
@@ -288,6 +456,12 @@
             "state" : "translated",
             "value" : "Pointer left"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指针左移"
+          }
         }
       }
     },
@@ -297,6 +471,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Controller motion"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手柄体感"
           }
         }
       }
@@ -308,6 +488,12 @@
             "state" : "translated",
             "value" : "Pointer right"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指针右移"
+          }
         }
       }
     },
@@ -317,6 +503,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "AirPlay & Full Screen"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirPlay 与全屏"
           }
         }
       }
@@ -328,6 +520,12 @@
             "state" : "translated",
             "value" : "Show / hide pointer"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示/隐藏指针"
+          }
         }
       }
     },
@@ -337,6 +535,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Touch / drag"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "触摸/拖动"
           }
         }
       }
@@ -348,6 +552,12 @@
             "state" : "translated",
             "value" : "Pointer up"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指针上移"
+          }
         }
       }
     },
@@ -357,6 +567,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Controller vibration"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手柄震动"
           }
         }
       }
@@ -368,6 +584,12 @@
             "state" : "translated",
             "value" : "Rescan devices"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新扫描设备"
+          }
         }
       }
     },
@@ -377,6 +599,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Delete"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除"
           }
         }
       }
@@ -388,6 +616,12 @@
             "state" : "translated",
             "value" : "Tap a device to switch to it. Swipe left to rename it or remove it along with its data."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点按设备即可切换。向左轻扫可重命名，或连同其数据一并删除。"
+          }
         }
       }
     },
@@ -397,6 +631,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Installed Devices"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已安装的设备"
           }
         }
       }
@@ -408,6 +648,12 @@
             "state" : "translated",
             "value" : "Device name"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设备名称"
+          }
         }
       }
     },
@@ -417,6 +663,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No devices installed."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未安装任何设备。"
           }
         }
       }
@@ -428,6 +680,12 @@
             "state" : "translated",
             "value" : "Rename"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重命名"
+          }
         }
       }
     },
@@ -437,6 +695,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Could not rename the device. Please try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法重命名该设备，请重试。"
           }
         }
       }
@@ -448,6 +712,12 @@
             "state" : "translated",
             "value" : "Rescanning rebuilds the list from the device files already on disk — use it if an installed device went missing."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新扫描会根据磁盘上已有的设备文件重建列表——如果已安装的设备不见了，可以用它找回。"
+          }
         }
       }
     },
@@ -457,6 +727,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Manage Devices"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "管理设备"
           }
         }
       }
@@ -468,6 +744,12 @@
             "state" : "translated",
             "value" : "Working…"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "处理中…"
+          }
         }
       }
     },
@@ -477,6 +759,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Enter Text"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入文字"
           }
         }
       }
@@ -488,6 +776,12 @@
             "state" : "translated",
             "value" : "Exit Game"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "退出游戏"
+          }
         }
       }
     },
@@ -497,6 +791,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Game FPS"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "游戏帧率"
           }
         }
       }
@@ -508,6 +808,12 @@
             "state" : "translated",
             "value" : "Unlimited"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不限制"
+          }
         }
       }
     },
@@ -517,6 +823,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Guest error"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "客户机错误"
           }
         }
       }
@@ -528,6 +840,12 @@
             "state" : "translated",
             "value" : "Game menu"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "游戏菜单"
+          }
         }
       }
     },
@@ -537,6 +855,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Frame Rate Limit"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帧率限制"
           }
         }
       }
@@ -548,6 +872,12 @@
             "state" : "translated",
             "value" : "Full Screen"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全屏"
+          }
         }
       }
     },
@@ -557,6 +887,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Game Settings"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "游戏设置"
           }
         }
       }
@@ -568,6 +904,12 @@
             "state" : "translated",
             "value" : "Guest Screen Mode"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "客户机屏幕模式"
+          }
         }
       }
     },
@@ -577,6 +919,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Orientation Lock"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "方向锁定"
           }
         }
       }
@@ -588,6 +936,12 @@
             "state" : "translated",
             "value" : "Game"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "游戏"
+          }
         }
       }
     },
@@ -597,6 +951,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Save Screenshot"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "存储截屏"
           }
         }
       }
@@ -608,6 +968,12 @@
             "state" : "translated",
             "value" : "Could not capture the screen."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法截取屏幕。"
+          }
         }
       }
     },
@@ -617,6 +983,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Screenshot saved to Photos."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "截屏已存储到“照片”。"
           }
         }
       }
@@ -628,6 +1000,12 @@
             "state" : "translated",
             "value" : "Apps (%lld)"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "应用（%lld）"
+          }
         }
       }
     },
@@ -637,6 +1015,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Booted %1$@ (%2$@)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已启动 %1$@（%2$@）。"
           }
         }
       }
@@ -648,6 +1032,12 @@
             "state" : "translated",
             "value" : "Copied %@."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已复制 %@。"
+          }
         }
       }
     },
@@ -658,6 +1048,12 @@
             "state" : "translated",
             "value" : "Import failed: %@"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入失败：%@"
+          }
         }
       }
     },
@@ -667,6 +1063,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Install a device (ROM) first, then re-open the SIS file."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先安装一个设备（ROM），然后重新打开该 SIS 文件。"
           }
         }
       }
@@ -686,6 +1088,18 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "Installed %lld packages."
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "已安装 %lld 个软件包。"
                 }
               }
             }
@@ -712,6 +1126,18 @@
               }
             }
           }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "正在安装 %lld 个软件包…"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -721,6 +1147,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Failed to uninstall %@."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卸载 %@ 失败。"
           }
         }
       }
@@ -732,6 +1164,12 @@
             "state" : "translated",
             "value" : "Uninstalled %@."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已卸载 %@。"
+          }
         }
       }
     },
@@ -741,6 +1179,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eject Card"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "弹出存储卡"
           }
         }
       }
@@ -752,6 +1196,12 @@
             "state" : "translated",
             "value" : "Card ejected"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "存储卡已弹出"
+          }
         }
       }
     },
@@ -761,6 +1211,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The card archive could not be extracted."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法解压存储卡压缩包。"
           }
         }
       }
@@ -772,6 +1228,12 @@
             "state" : "translated",
             "value" : "The card could not be mounted."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法挂载存储卡。"
+          }
         }
       }
     },
@@ -781,6 +1243,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The card dump has no System folder at its root."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "存储卡转储的根目录下没有 System 文件夹。"
           }
         }
       }
@@ -792,6 +1260,12 @@
             "state" : "translated",
             "value" : "Unsupported card archive format."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不支持的存储卡压缩包格式。"
+          }
         }
       }
     },
@@ -801,6 +1275,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The card dump could not be found."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到存储卡转储。"
           }
         }
       }
@@ -812,6 +1292,12 @@
             "state" : "translated",
             "value" : "Card mounted on drive E"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "存储卡已挂载为 E 盘"
+          }
         }
       }
     },
@@ -821,6 +1307,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Card mounted on drive E, MMC ID %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "存储卡已挂载为 E 盘，MMC ID 为 %@"
           }
         }
       }
@@ -832,6 +1324,12 @@
             "state" : "translated",
             "value" : "Mounting card…"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在挂载存储卡…"
+          }
         }
       }
     },
@@ -841,6 +1339,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No installed apps. Tap + to install a SIS / SISX package, or enable Show System Apps."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未安装应用。点按 + 安装 SIS / SISX 软件包，或开启“显示系统应用”。"
           }
         }
       }
@@ -852,6 +1356,12 @@
             "state" : "translated",
             "value" : "No apps yet. Tap + to install a SIS / SISX package."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有应用。点按 + 安装 SIS / SISX 软件包。"
+          }
         }
       }
     },
@@ -861,6 +1371,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Failed to boot ROM code %@."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动 ROM 代号 %@ 失败。"
           }
         }
       }
@@ -872,6 +1388,12 @@
             "state" : "translated",
             "value" : "Check Console for details."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "详情请查看“控制台”。"
+          }
         }
       }
     },
@@ -881,6 +1403,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ took the app down while it was starting up, so it was skipped this time. Its ROM (or RPKG) dump is likely damaged — delete the device and install it again from a good dump."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 在启动过程中导致应用崩溃，因此本次已跳过。它的 ROM（或 RPKG）转储很可能已损坏——请删除该设备，再用完好的转储重新安装。"
           }
         }
       }
@@ -892,6 +1420,12 @@
             "state" : "translated",
             "value" : "Device could not be started"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法启动设备"
+          }
         }
       }
     },
@@ -902,6 +1436,12 @@
             "state" : "translated",
             "value" : "Emulator failed to initialise"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模拟器初始化失败"
+          }
         }
       }
     },
@@ -911,6 +1451,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Launch ROM code %@ is missing."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到启动用的 ROM 代号 %@。"
           }
         }
       }
@@ -930,6 +1476,18 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "Installed %lld fonts. Restart the device to use them."
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "已安装 %lld 个字体，重新启动设备后即可使用。"
                 }
               }
             }
@@ -956,6 +1514,18 @@
               }
             }
           }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "正在安装 %lld 个字体…"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -965,6 +1535,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No supported font selected. Pick a .ttf file."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未选择受支持的字体，请选择 .ttf 文件。"
           }
         }
       }
@@ -976,6 +1552,12 @@
             "state" : "translated",
             "value" : "Hide System Apps"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐藏系统应用"
+          }
         }
       }
     },
@@ -985,6 +1567,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Install"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装"
           }
         }
       }
@@ -996,6 +1584,12 @@
             "state" : "translated",
             "value" : "Install SIS/SISX Package"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装 SIS/SISX 软件包"
+          }
         }
       }
     },
@@ -1005,6 +1599,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Install Fonts"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装字体"
           }
         }
       }
@@ -1016,6 +1616,12 @@
             "state" : "translated",
             "value" : "TrueType (TTF) files"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TrueType（TTF）文件"
+          }
         }
       }
     },
@@ -1025,6 +1631,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Install N-Gage Game"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装 N-Gage 游戏"
           }
         }
       }
@@ -1036,6 +1648,12 @@
             "state" : "translated",
             "value" : "Copied onto drive E"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制到 E 盘"
+          }
         }
       }
     },
@@ -1045,6 +1663,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Import N-Gage 2.0 Game"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入 N-Gage 2.0 游戏"
           }
         }
       }
@@ -1056,6 +1680,12 @@
             "state" : "translated",
             "value" : "Requires S60v3 ROM and N-Gage launcher"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要 S60v3 ROM 与 N-Gage 启动器"
+          }
         }
       }
     },
@@ -1065,6 +1695,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "More"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更多"
           }
         }
       }
@@ -1076,6 +1712,12 @@
             "state" : "translated",
             "value" : "Mount MMC/SD Card"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "挂载 MMC/SD 卡"
+          }
         }
       }
     },
@@ -1085,6 +1727,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Becomes drive E until ejected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "弹出前作为 E 盘使用"
           }
         }
       }
@@ -1096,6 +1744,12 @@
             "state" : "translated",
             "value" : "N-Gage import failed: choose the game card folder or archive that contains the system folder."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "N-Gage 导入失败：请选择包含 system 文件夹的游戏卡文件夹或压缩包。"
+          }
         }
       }
     },
@@ -1105,6 +1759,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "N-Gage import failed (error %lld)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "N-Gage 导入失败（错误 %lld）。"
           }
         }
       }
@@ -1116,6 +1776,12 @@
             "state" : "translated",
             "value" : "N-Gage import failed: that game card contains more than one game."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "N-Gage 导入失败：该游戏卡包含多个游戏。"
+          }
         }
       }
     },
@@ -1125,6 +1791,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "N-Gage import failed: the registration file is corrupted."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "N-Gage 导入失败：注册文件已损坏。"
           }
         }
       }
@@ -1136,6 +1808,12 @@
             "state" : "translated",
             "value" : "N-Gage import failed: the registration file is missing."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "N-Gage 导入失败：缺少注册文件。"
+          }
         }
       }
     },
@@ -1145,6 +1823,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "N-Gage import failed: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "N-Gage 导入失败：%@"
           }
         }
       }
@@ -1156,6 +1840,12 @@
             "state" : "translated",
             "value" : "Installed N-Gage game."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已安装 N-Gage 游戏。"
+          }
         }
       }
     },
@@ -1166,6 +1856,12 @@
             "state" : "translated",
             "value" : "Installed N-Gage game: %@."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已安装 N-Gage 游戏：%@。"
+          }
         }
       }
     },
@@ -1175,6 +1871,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Installing N-Gage game..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在安装 N-Gage 游戏…"
           }
         }
       }
@@ -1194,6 +1896,18 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "Imported %lld packages. Open the N-Gage launcher to continue."
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "已导入 %lld 个软件包。打开 N-Gage 启动器以继续。"
                 }
               }
             }
@@ -1220,6 +1934,18 @@
               }
             }
           }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "正在导入 %lld 个 N-Gage 2.0 软件包…"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -1229,6 +1955,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No device installed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未安装设备"
           }
         }
       }
@@ -1240,6 +1972,12 @@
             "state" : "translated",
             "value" : "Show System Apps"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示系统应用"
+          }
         }
       }
     },
@@ -1249,6 +1987,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Uninstall"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卸载"
           }
         }
       }
@@ -1260,6 +2004,12 @@
             "state" : "translated",
             "value" : "Uninstall"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卸载"
+          }
         }
       }
     },
@@ -1269,6 +2019,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "This removes the package and its files from the device."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这会从设备上删除该软件包及其文件。"
           }
         }
       }
@@ -1280,6 +2036,12 @@
             "state" : "translated",
             "value" : "Uninstall %@?"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要卸载 %@ 吗？"
+          }
         }
       }
     },
@@ -1289,6 +2051,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "7z archive"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7z 压缩包"
           }
         }
       }
@@ -1300,6 +2068,12 @@
             "state" : "translated",
             "value" : "Choose a .7z holding a device. Both common packagings work: a ROM image with its RPKG, or a device someone already unpacked into the emulator's folder layout (data/roms and data/drives/z).\n\nAnything else in the archive is ignored, so a pack meant to be dropped into the EKA2L1 folder by hand installs as-is."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择一个包含设备的 .7z 文件。两种常见打包方式都支持：ROM 镜像连同它的 RPKG，或别人已经按模拟器目录结构解包好的设备（data/roms 与 data/drives/z）。\n\n压缩包里的其他内容会被忽略，因此原本打算手动放进 EKA2L1 文件夹的包可以直接安装。"
+          }
         }
       }
     },
@@ -1309,6 +2083,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Install cancelled."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装已取消。"
           }
         }
       }
@@ -1320,6 +2100,12 @@
             "state" : "translated",
             "value" : "Cancelling…"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在取消…"
+          }
         }
       }
     },
@@ -1329,6 +2115,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Device to install already exists!"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要安装的设备已存在！"
           }
         }
       }
@@ -1340,6 +2132,12 @@
             "state" : "translated",
             "value" : "The archive could not be read. It may be incomplete, or use a compression method this build does not support."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法读取该压缩包。它可能不完整，或使用了此版本不支持的压缩方式。"
+          }
         }
       }
     },
@@ -1349,6 +2147,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The archive holds no device: it needs either a ROM image (with its RPKG, if the ROM needs one) or an unpacked drive Z tree."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "压缩包里没有设备：它需要包含 ROM 镜像（如果该 ROM 需要，还要有对应的 RPKG），或者已解包的 Z 盘目录树。"
           }
         }
       }
@@ -1360,6 +2164,12 @@
             "state" : "translated",
             "value" : "Failed to determine product information!"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法确定产品信息！"
+          }
         }
       }
     },
@@ -1369,6 +2179,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "FPSX file is corrupted!"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FPSX 文件已损坏！"
           }
         }
       }
@@ -1380,6 +2196,12 @@
             "state" : "translated",
             "value" : "RPKG file is too small; the dump might be unfinished!"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RPKG 文件过小，转储可能尚未完成！"
+          }
         }
       }
     },
@@ -1389,6 +2211,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "This ROM requires an additional RPKG file. Please choose one and try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "该 ROM 需要额外的 RPKG 文件，请选择一个后重试。"
           }
         }
       }
@@ -1400,6 +2228,12 @@
             "state" : "translated",
             "value" : "RPKG file specified cannot be opened!"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法打开指定的 RPKG 文件！"
+          }
         }
       }
     },
@@ -1409,6 +2243,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ROFS file is corrupted!"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ROFS 文件已损坏！"
           }
         }
       }
@@ -1420,6 +2260,12 @@
             "state" : "translated",
             "value" : "Failed to copy ROM to target destination!"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法将 ROM 复制到目标位置！"
+          }
         }
       }
     },
@@ -1429,6 +2275,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ROM file is corrupted!"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ROM 文件已损坏！"
           }
         }
       }
@@ -1440,6 +2292,12 @@
             "state" : "translated",
             "value" : "The RPKG file provided is corrupt!"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提供的 RPKG 文件已损坏！"
+          }
         }
       }
     },
@@ -1449,6 +2307,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The firmware description file (VPL) is invalid!"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "固件描述文件（VPL）无效！"
           }
         }
       }
@@ -1460,6 +2324,12 @@
             "state" : "translated",
             "value" : "Please choose a %@ file."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请选择 %@ 文件。"
+          }
         }
       }
     },
@@ -1469,6 +2339,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unpacking the dump… %lld%%"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在解包转储… %lld%%"
           }
         }
       }
@@ -1480,6 +2356,12 @@
             "state" : "translated",
             "value" : "Please install a device. Files and ROM of a Symbian device are needed for the installation.\n\nNote: Each app needs a suitable Symbian device to run."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先安装设备。安装过程需要 Symbian 设备的文件和 ROM。\n\n注意：每个应用都需要合适的 Symbian 设备才能运行。"
+          }
         }
       }
     },
@@ -1489,6 +2371,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tap to choose..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点按以选择…"
           }
         }
       }
@@ -1500,6 +2388,12 @@
             "state" : "translated",
             "value" : "Recommended devices to install:\n\nS60v1: N-Gage\nS60v2: Nokia N70\nS60v3: Nokia 5320 XpressMusic, Nokia E5\nS60v5: Nokia 5800 XpressMusic, Nokia 5230\n\nFor S60v2 devices or higher, you may need to provide an additional file called RPKG.\n\nFor more info about device install, please check out our wiki: [eka2l1.miraheze.org](https://eka2l1.miraheze.org/wiki/Main_Page)"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "推荐安装的设备：\n\nS60v1：N-Gage\nS60v2：Nokia N70\nS60v3：Nokia 5320 XpressMusic、Nokia E5\nS60v5：Nokia 5800 XpressMusic、Nokia 5230\n\nS60v2 及更高版本的设备可能还需要提供一个名为 RPKG 的额外文件。\n\n关于设备安装的更多信息，请查看我们的 wiki：[eka2l1.miraheze.org](https://eka2l1.miraheze.org/wiki/Main_Page)"
+          }
         }
       }
     },
@@ -1509,6 +2403,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ROM file"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ROM 文件"
           }
         }
       }
@@ -1520,6 +2420,12 @@
             "state" : "translated",
             "value" : "RPKG file (optional)"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RPKG 文件（可选）"
+          }
         }
       }
     },
@@ -1529,6 +2435,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Install from"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装来源"
           }
         }
       }
@@ -1540,12 +2452,24 @@
             "state" : "translated",
             "value" : "7z archive"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7z 压缩包"
+          }
         }
       }
     },
     "import.source.looseFiles" : {
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ROM / RPKG"
+          }
+        },
+        "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "ROM / RPKG"
@@ -1560,6 +2484,12 @@
             "state" : "translated",
             "value" : "Stop installing"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止安装"
+          }
         }
       }
     },
@@ -1569,6 +2499,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Install Device"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装设备"
           }
         }
       }
@@ -1580,6 +2516,12 @@
             "state" : "translated",
             "value" : "Call (green)"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拨号键（绿色）"
+          }
         }
       }
     },
@@ -1589,6 +2531,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Clear (C)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除键（C）"
           }
         }
       }
@@ -1600,6 +2548,12 @@
             "state" : "translated",
             "value" : "Down"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下"
+          }
         }
       }
     },
@@ -1609,6 +2563,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "End (red)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "挂断键（红色）"
           }
         }
       }
@@ -1620,6 +2580,12 @@
             "state" : "translated",
             "value" : "Left"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左"
+          }
         }
       }
     },
@@ -1629,6 +2595,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Left soft key"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左软键"
           }
         }
       }
@@ -1640,6 +2612,12 @@
             "state" : "translated",
             "value" : "Not bound"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未绑定"
+          }
         }
       }
     },
@@ -1649,6 +2627,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Right"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右"
           }
         }
       }
@@ -1660,6 +2644,12 @@
             "state" : "translated",
             "value" : "Right soft key"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右软键"
+          }
         }
       }
     },
@@ -1669,6 +2659,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "OK (Select)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "确认键（选择）"
           }
         }
       }
@@ -1680,6 +2676,12 @@
             "state" : "translated",
             "value" : "Up"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上"
+          }
         }
       }
     },
@@ -1689,6 +2691,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Clear"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除"
           }
         }
       }
@@ -1700,6 +2708,12 @@
             "state" : "translated",
             "value" : "Drag to reposition this control"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖动以调整此控件的位置"
+          }
         }
       }
     },
@@ -1709,6 +2723,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Edit Keypad Layout"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑键盘布局"
           }
         }
       }
@@ -1720,6 +2740,12 @@
             "state" : "translated",
             "value" : "Drag controls to adjust the layout"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖动控件以调整布局"
+          }
         }
       }
     },
@@ -1729,6 +2755,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Number pad"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "数字键盘"
           }
         }
       }
@@ -1740,6 +2772,12 @@
             "state" : "translated",
             "value" : "Reset layout"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置布局"
+          }
         }
       }
     },
@@ -1749,6 +2787,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Start by importing a ROM dump from a device you own. Some newer S60 devices also need the matching RPKG file."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先从你拥有的设备导入 ROM 转储开始。部分较新的 S60 设备还需要配套的 RPKG 文件。"
           }
         }
       }
@@ -1760,6 +2804,12 @@
             "state" : "translated",
             "value" : "Install a Device"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装设备"
+          }
         }
       }
     },
@@ -1769,6 +2819,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Get Started"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始使用"
           }
         }
       }
@@ -1780,6 +2836,12 @@
             "state" : "translated",
             "value" : "After a device is installed, use the + button to add SIS, SISX, or supported N-Gage content to the current device."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装设备后，用 + 按钮把 SIS、SISX 或受支持的 N-Gage 内容添加到当前设备。"
+          }
         }
       }
     },
@@ -1789,6 +2851,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add Your Apps"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加你的应用"
           }
         }
       }
@@ -1800,6 +2868,12 @@
             "state" : "translated",
             "value" : "EKA2L1 does not include firmware, ROMs, or games. Use only content you own and dumped yourself."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EKA2L1 不含固件、ROM 或游戏。请只使用你自己拥有并亲自转储的内容。"
+          }
         }
       }
     },
@@ -1809,6 +2883,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bring Your Own Content"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自备内容"
           }
         }
       }
@@ -1820,6 +2900,12 @@
             "state" : "translated",
             "value" : "Next"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下一步"
+          }
         }
       }
     },
@@ -1829,6 +2915,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Getting Started"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速上手"
           }
         }
       }
@@ -1840,6 +2932,12 @@
             "state" : "translated",
             "value" : "Keyboard"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "键盘"
+          }
         }
       }
     },
@@ -1849,6 +2947,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Open Control Center, choose Screen Mirroring, and select your TV or Mac."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开“控制中心”，选择“屏幕镜像”，然后选择你的电视或 Mac。"
           }
         }
       }
@@ -1860,6 +2964,12 @@
             "state" : "translated",
             "value" : "Device"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设备"
+          }
         }
       }
     },
@@ -1869,6 +2979,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Discord Server"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discord 服务器"
           }
         }
       }
@@ -1880,6 +2996,12 @@
             "state" : "translated",
             "value" : "Export Log"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出日志"
+          }
         }
       }
     },
@@ -1889,6 +3011,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "FPS overlay"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帧率显示"
           }
         }
       }
@@ -1900,6 +3028,12 @@
             "state" : "translated",
             "value" : "Friendly phone name"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手机显示名称"
+          }
         }
       }
     },
@@ -1909,6 +3043,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Graphics"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图形"
           }
         }
       }
@@ -1920,6 +3060,12 @@
             "state" : "translated",
             "value" : "Hide system apps"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐藏系统应用"
+          }
         }
       }
     },
@@ -1929,6 +3075,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add Host Mapping"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加主机名映射"
           }
         }
       }
@@ -1940,6 +3092,12 @@
             "state" : "translated",
             "value" : "IP Address or Hostname"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IP 地址或主机名"
+          }
         }
       }
     },
@@ -1949,6 +3107,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Enter an IPv4 address, IPv6 address or hostname without a port."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请输入不带端口的 IPv4 地址、IPv6 地址或主机名。"
           }
         }
       }
@@ -1960,6 +3124,12 @@
             "state" : "translated",
             "value" : "This hostname already has a mapping. Edit the existing entry."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "该主机名已有映射，请编辑现有条目。"
+          }
         }
       }
     },
@@ -1969,6 +3139,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Host Mapping"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主机名映射"
           }
         }
       }
@@ -1980,6 +3156,12 @@
             "state" : "translated",
             "value" : "Redirect guest hostnames to an IP address or another hostname. Changes affect new connections; restart the game if it has cached an address."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "把客户机访问的主机名重定向到某个 IP 地址或另一个主机名。更改对新建立的连接生效；如果游戏已缓存地址，请重新启动它。"
+          }
         }
       }
     },
@@ -1989,6 +3171,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hostname (example.com)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主机名（example.com）"
           }
         }
       }
@@ -2000,6 +3188,12 @@
             "state" : "translated",
             "value" : "Enter a valid IP address or hostname without a port."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请输入有效的 IP 地址或主机名，且不要带端口号。"
+          }
         }
       }
     },
@@ -2009,6 +3203,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Enter a hostname using letters, numbers, hyphens, underscores and dots."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主机名只能使用字母、数字、连字符、下划线和点。"
           }
         }
       }
@@ -2020,6 +3220,12 @@
             "state" : "translated",
             "value" : "The host mappings could not be saved."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法保存主机名映射。"
+          }
         }
       }
     },
@@ -2029,6 +3235,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Host Overrides"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主机名覆盖"
           }
         }
       }
@@ -2040,6 +3252,12 @@
             "state" : "translated",
             "value" : "Integer scaling"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "整数倍缩放"
+          }
         }
       }
     },
@@ -2049,6 +3267,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "JIT recompiler (dynarmic)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JIT 重编译器（dynarmic）"
           }
         }
       }
@@ -2060,6 +3284,12 @@
             "state" : "translated",
             "value" : "Faster CPU emulation. Applies on the next app launch. Experimental: some apps may crash — turn it off if games misbehave."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更快的 CPU 模拟，在下次启动应用时生效。实验性功能：部分应用可能崩溃——如果游戏异常请关闭它。"
+          }
         }
       }
     },
@@ -2069,6 +3299,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "JIT permission is not active for this process. Enable JIT (debugger or a JIT enabler such as SideStore/StikDebug) and relaunch; otherwise the interpreter is used."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前进程未获得 JIT 权限。请启用 JIT（使用调试器，或 SideStore/StikDebug 等 JIT 启用工具）后重新启动应用；否则将使用解释器。"
           }
         }
       }
@@ -2080,6 +3316,12 @@
             "state" : "translated",
             "value" : "Keypad opacity"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "键盘不透明度"
+          }
         }
       }
     },
@@ -2089,6 +3331,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Library"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "应用库"
           }
         }
       }
@@ -2100,6 +3348,12 @@
             "state" : "translated",
             "value" : "Licensed under GPLv3"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基于 GPLv3 授权"
+          }
         }
       }
     },
@@ -2109,6 +3363,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nearest filtering"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "邻近过滤"
           }
         }
       }
@@ -2120,6 +3380,12 @@
             "state" : "translated",
             "value" : "Bluetooth Netplay"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "蓝牙联机"
+          }
         }
       }
     },
@@ -2129,6 +3395,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Peers reach this device at its IP address and the discovery port above, so enter that pair on their side."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其他玩家通过本机的 IP 地址和上面的发现端口连接，请把这两项告诉他们。"
           }
         }
       }
@@ -2140,6 +3412,12 @@
             "state" : "translated",
             "value" : "Discovery mode"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发现模式"
+          }
         }
       }
     },
@@ -2149,6 +3427,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "IP address"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IP 地址"
           }
         }
       }
@@ -2160,6 +3444,12 @@
             "state" : "translated",
             "value" : "Port"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "端口"
+          }
         }
       }
     },
@@ -2169,6 +3459,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Emulates Symbian Bluetooth multiplayer over the network. Changes apply from the next app launch. iOS will ask for Local Network permission on first use."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通过网络模拟 Symbian 蓝牙多人游戏。更改将在下次启动应用时生效。首次使用时 iOS 会请求本地网络权限。"
           }
         }
       }
@@ -2180,6 +3476,12 @@
             "state" : "translated",
             "value" : "Discovery port"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发现端口"
+          }
         }
       }
     },
@@ -2189,6 +3491,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Direct IP"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直连 IP"
           }
         }
       }
@@ -2200,6 +3508,12 @@
             "state" : "translated",
             "value" : "Local network"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "局域网"
+          }
         }
       }
     },
@@ -2209,6 +3523,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Off"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭"
           }
         }
       }
@@ -2220,6 +3540,12 @@
             "state" : "translated",
             "value" : "Central server"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中央服务器"
+          }
         }
       }
     },
@@ -2229,6 +3555,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Password"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "密码"
           }
         }
       }
@@ -2240,6 +3572,12 @@
             "state" : "translated",
             "value" : "Server address"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器地址"
+          }
         }
       }
     },
@@ -2249,6 +3587,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Network"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网络"
           }
         }
       }
@@ -2260,6 +3604,12 @@
             "state" : "translated",
             "value" : "No log file yet"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无日志文件"
+          }
         }
       }
     },
@@ -2269,6 +3619,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Connected devices"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已连接的设备"
           }
         }
       }
@@ -2280,6 +3636,12 @@
             "state" : "translated",
             "value" : "Support"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支持"
+          }
         }
       }
     },
@@ -2289,6 +3651,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "System"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系统"
           }
         }
       }
@@ -2300,6 +3668,12 @@
             "state" : "translated",
             "value" : "System language"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系统语言"
+          }
         }
       }
     },
@@ -2310,6 +3684,12 @@
             "state" : "translated",
             "value" : "Settings"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置"
+          }
         }
       }
     },
@@ -2319,6 +3699,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Emulator Wiki"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模拟器 Wiki"
           }
         }
       }
