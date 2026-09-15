@@ -24,7 +24,7 @@
         android:defaultValue="true"
         android:key="enable-vibration"
         android:title="@string/pref_enable_vibration" />
-    <Preference
+    <com.github.eka2l1.settings.LongClickPreference
         android:key="emulator-dir"
         android:title="@string/pref_emulator_dir"
         tools:summary="/sdcard/EKA2L1" />

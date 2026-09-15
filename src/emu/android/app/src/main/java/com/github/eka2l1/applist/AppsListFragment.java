@@ -23,10 +23,8 @@ import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
@@ -69,6 +67,7 @@ import com.github.eka2l1.emu.EmulatorActivity;
 import com.github.eka2l1.info.AboutDialogFragment;
 import com.github.eka2l1.settings.AppDataStore;
 import com.github.eka2l1.settings.SettingsFragment;
+import com.github.eka2l1.util.AppUtils;
 import com.github.eka2l1.util.FileUtils;
 import com.github.eka2l1.util.LogUtils;
 import com.github.eka2l1.util.ZipUtils;
@@ -116,10 +115,10 @@ public class AppsListFragment extends Fragment {
             FileUtils.getFilePicker(),
             this::onSisResult);
     private final ActivityResultLauncher<Void> openSDCardLauncher = registerForActivityResult(
-            FileUtils.getDirPicker(),
+            FileUtils.getNativeDirPicker(),
             this::onSDCardResult);
     private final ActivityResultLauncher<Void> openNGageGameLauncher = registerForActivityResult(
-            FileUtils.getDirPicker(),
+            FileUtils.getNativeDirPicker(),
             this::onNGageGameResult
     );
     private final ActivityResultLauncher<String[]> openPreconfiguredPackZIPLauncher = registerForActivityResult(
@@ -275,12 +274,7 @@ public class AppsListFragment extends Fragment {
     }
 
     private void restart() {
-        PackageManager packageManager = requireContext().getPackageManager();
-        Intent intent = packageManager.getLaunchIntentForPackage(requireContext().getPackageName());
-        ComponentName componentName = intent.getComponent();
-        Intent mainIntent = Intent.makeRestartActivityTask(componentName);
-        startActivity(mainIntent);
-        Runtime.getRuntime().exit(0);
+        AppUtils.restart(requireContext());
     }
 
     @Override

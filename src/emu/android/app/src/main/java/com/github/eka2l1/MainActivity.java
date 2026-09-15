@@ -114,7 +114,8 @@ public class MainActivity extends BaseActivity {
     }
 
     private void showScopedStorageDialog() {
-        String message = getString(R.string.scoped_storage_warning) + Emulator.getEmulatorDir();
+        String message = getString(R.string.scoped_storage_warning) + Emulator.getEmulatorDir()
+                + getString(R.string.scoped_storage_move_hint);
         new AlertDialog.Builder(this)
                 .setTitle(R.string.warning)
                 .setCancelable(false)

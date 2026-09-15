@@ -25,6 +25,7 @@
     <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
     <string name="warning">Warning</string>
     <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
+    <string name="scoped_storage_move_hint">\n\nTo keep it somewhere reachable, long press \"Working directory\" in the settings and choose a folder.</string>
     <string name="install_ng_game">Install N-Gage game</string>
     <string name="notify_dialog_title">Notification</string>
     <string name="grid_app_list_mode">Grid mode</string>
@@ -90,6 +91,13 @@
     <string name="pref_emulator_dir">Working directory</string>
     <string name="pref_launch_file_dir">Launch file directory</string>
     <string name="pref_emulator_dir_cant_change">The working directory can\'t be changed!</string>
+    <string name="pref_emulator_dir_hint">Tap to browse, long press to move it elsewhere</string>
+    <string name="pref_emulator_dir_needs_all_files_access">Moving the working directory outside of the app storage needs the \"All files access\" permission. Grant it in the system settings, then long press again.</string>
+    <string name="pref_emulator_dir_not_writable">This folder can\'t be written to.</string>
+    <string name="pref_emulator_dir_inside_current">Choose a folder outside of the current working directory.</string>
+    <string name="pref_emulator_dir_move_confirm">Move the content of the working directory to:\n\n%1$s\n\nThe app will restart afterwards.</string>
+    <string name="pref_emulator_dir_move_replaces">The chosen folder is not empty. Items with the same name will be replaced.</string>
+    <string name="pref_emulator_dir_move_failed">Failed to move the content of the working directory.</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Enable nearest neighbor filtering</string>
     <string name="pref_system_language_option_name">Language</string>
     <string name="pref_system_real_time_accuracy_str">Real-time accuracy</string>

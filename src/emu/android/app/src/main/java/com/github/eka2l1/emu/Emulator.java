@@ -133,16 +133,18 @@ public class Emulator {
     public static void initializePath(Context context) {
         Emulator.context = context;
 
-        if (FileUtils.isExternalStorageLegacy()) {
-            String defaultEmulatorDir = Environment.getExternalStorageDirectory() + "/EKA2L1/";
+        final String defaultEmulatorDir = FileUtils.isExternalStorageLegacy()
+                ? Environment.getExternalStorageDirectory() + "/EKA2L1/"
+                : context.getExternalFilesDir(null).getPath() + "/";
 
-            // Order is important :)
-            persistentDataDir = defaultEmulatorDir;
-            emulatorDir = AppDataStore.getAndroidStore().getString(PREF_EMULATOR_DIR, defaultEmulatorDir);
-        } else {
-            emulatorDir = context.getExternalFilesDir(null).getPath() + "/";
-            persistentDataDir = emulatorDir;
-        }
+        // Order is important :) The settings store holds the working directory
+        // override, so it stays in the default directory, which is always reachable.
+        persistentDataDir = defaultEmulatorDir;
+
+        final String customDir = AppDataStore.getAndroidStore().getString(PREF_EMULATOR_DIR, null);
+        emulatorDir = FileUtils.isUsableWorkingDir(customDir)
+                ? FileUtils.ensureTrailingSeparator(customDir)
+                : defaultEmulatorDir;
 
         compatDir = emulatorDir + "compat/";
         configsDir = emulatorDir + "android/configs/";

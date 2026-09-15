@@ -25,19 +25,25 @@ import static com.github.eka2l1.emu.Constants.PREF_LAUNCH_FILE_DIR;
 import static com.github.eka2l1.emu.Constants.PREF_THEME;
 import static com.github.eka2l1.emu.Constants.PREF_VIBRATION;
 
+import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
+import android.provider.Settings;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 import android.content.Intent;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
@@ -47,17 +53,24 @@ import androidx.preference.SwitchPreferenceCompat;
 
 import com.github.eka2l1.R;
 import com.github.eka2l1.emu.Emulator;
+import com.github.eka2l1.util.AppUtils;
 import com.github.eka2l1.util.FileUtils;
 
 import java.io.File;
+import java.io.IOException;
+
+import io.reactivex.Completable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.observers.DisposableCompletableObserver;
+import io.reactivex.schedulers.Schedulers;
 
 public class AndroidSettingsFragment extends PreferenceFragmentCompat {
     private AppDataStore dataStore;
-    private Preference emulatorDirPreference;
+    private LongClickPreference emulatorDirPreference;
     private Preference launchFileDirPreference;
 
     private final ActivityResultLauncher pickEmulatorDirectory = registerForActivityResult(
-            FileUtils.getDirPicker(),
+            FileUtils.getNativeDirPicker(),
             this::onEmulatorDirPickResult);
 
     private final ActivityResultLauncher pickLaunchFileDirectory = registerForActivityResult(
@@ -81,7 +94,7 @@ public class AndroidSettingsFragment extends PreferenceFragmentCompat {
             return true;
         });
         emulatorDirPreference = findPreference(PREF_EMULATOR_DIR);
-        emulatorDirPreference.setSummary(Emulator.getEmulatorDir());
+        updateEmulatorDirSummary(Emulator.getEmulatorDir());
 
         emulatorDirPreference.setOnPreferenceClickListener(preference -> {
             if (FileUtils.isExternalStorageLegacy()) {
@@ -93,7 +106,12 @@ public class AndroidSettingsFragment extends PreferenceFragmentCompat {
             return true;
         });
 
-        String previousLaunchFileDir = dataStore.getString(PREF_EMULATOR_DIR, null);
+        emulatorDirPreference.setOnPreferenceLongClickListener(preference -> {
+            requestWorkingDirectoryChange();
+            return true;
+        });
+
+        String previousLaunchFileDir = dataStore.getString(PREF_LAUNCH_FILE_DIR, null);
 
         launchFileDirPreference = findPreference(PREF_LAUNCH_FILE_DIR);
         launchFileDirPreference.setSummary(previousLaunchFileDir);
@@ -170,11 +188,118 @@ public class AndroidSettingsFragment extends PreferenceFragmentCompat {
         return super.onOptionsItemSelected(item);
     }
 
-    private void onEmulatorDirPickResult(String newPath) {
-        dataStore.putString(PREF_EMULATOR_DIR, newPath);
-        emulatorDirPreference.setSummary(newPath);
+    private void updateEmulatorDirSummary(String path) {
+        emulatorDirPreference.setSummary(path + "\n" + getString(R.string.pref_emulator_dir_hint));
+    }
 
-        getParentFragmentManager().setFragmentResult(KEY_RESTART, new Bundle());
+    private void requestWorkingDirectoryChange() {
+        if (FileUtils.hasDirectStorageAccess()) {
+            pickEmulatorDirectory.launch(null);
+            return;
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            Toast.makeText(getContext(), R.string.pref_emulator_dir_cant_change, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.pref_emulator_dir)
+                .setMessage(R.string.pref_emulator_dir_needs_all_files_access)
+                .setPositiveButton(android.R.string.ok, (d, w) -> openAllFilesAccessSettings())
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void openAllFilesAccessSettings() {
+        Uri packageUri = Uri.parse("package:" + requireContext().getPackageName());
+        try {
+            startActivity(new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, packageUri));
+            return;
+        } catch (ActivityNotFoundException ignored) {
+        }
+
+        try {
+            startActivity(new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION));
+        } catch (ActivityNotFoundException ignored) {
+            Toast.makeText(getContext(), R.string.error, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void onEmulatorDirPickResult(String newPath) {
+        if (newPath == null) {
+            return;
+        }
+        if (!FileUtils.isUsableWorkingDir(newPath)) {
+            Toast.makeText(getContext(), R.string.pref_emulator_dir_not_writable, Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        String targetPath = FileUtils.ensureTrailingSeparator(newPath);
+        String currentPath = FileUtils.ensureTrailingSeparator(Emulator.getEmulatorDir());
+
+        if (targetPath.equals(currentPath)) {
+            return;
+        }
+        if (targetPath.startsWith(currentPath)) {
+            Toast.makeText(getContext(), R.string.pref_emulator_dir_inside_current, Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        String message = getString(R.string.pref_emulator_dir_move_confirm, targetPath);
+        String[] targetContent = new File(targetPath).list();
+        if (targetContent != null && targetContent.length != 0) {
+            message = message + "\n\n" + getString(R.string.pref_emulator_dir_move_replaces);
+        }
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.pref_emulator_dir)
+                .setMessage(message)
+                .setPositiveButton(android.R.string.ok, (d, w) -> moveWorkingDirectory(currentPath, targetPath))
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @SuppressLint("CheckResult")
+    private void moveWorkingDirectory(String currentPath, String targetPath) {
+        ProgressDialog dialog = new ProgressDialog(getActivity());
+        dialog.setIndeterminate(true);
+        dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        dialog.setCancelable(false);
+        dialog.setMessage(getText(R.string.processing));
+        dialog.show();
+
+        File source = new File(currentPath);
+        File target = new File(targetPath);
+
+        // The settings file stays in the persistent directory: it is what names the
+        // working directory in the first place.
+        String[] excluded = currentPath.equals(FileUtils.ensureTrailingSeparator(Emulator.getPersistentDataDir()))
+                ? new String[] { AppDataStore.ANDROID_STORE_FILE_NAME } : new String[0];
+
+        Completable.fromAction(() -> {
+            if (!FileUtils.moveContents(source, target, excluded)) {
+                throw new IOException("Failed to move " + currentPath + " to " + targetPath);
+            }
+        }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(new DisposableCompletableObserver() {
+                    @Override
+                    public void onComplete() {
+                        dialog.cancel();
+                        dataStore.putString(PREF_EMULATOR_DIR, targetPath);
+                        dataStore.save();
+                        updateEmulatorDirSummary(targetPath);
+                        AppUtils.restart(requireContext());
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+                        e.printStackTrace();
+                        dialog.cancel();
+                        Toast.makeText(getContext(), R.string.pref_emulator_dir_move_failed,
+                                Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 
     private void onLaunchFileDirPickResult(String newPath) {
