@@ -42,6 +42,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class AppDataStore extends PreferenceDataStore {
+    public static final String ANDROID_STORE_FILE_NAME = "android.yml";
+
     private final Yaml yaml;
     private final File configFile;
     private Map<String, Object> configMap = new HashMap<>();
@@ -72,7 +74,7 @@ public class AppDataStore extends PreferenceDataStore {
     }
 
     public static AppDataStore getAndroidStore() {
-        File file = new File(Emulator.getPersistentDataDir(), "android.yml");
+        File file = new File(Emulator.getPersistentDataDir(), ANDROID_STORE_FILE_NAME);
         return new AppDataStore(file);
     }
 

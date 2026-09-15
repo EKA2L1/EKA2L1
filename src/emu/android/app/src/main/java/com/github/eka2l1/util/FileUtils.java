@@ -45,6 +45,7 @@ import java.io.OutputStreamWriter;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 
 public class FileUtils {
 
@@ -214,6 +215,102 @@ public class FileUtils {
         return Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || Environment.isExternalStorageLegacy();
     }
 
+    /**
+     * Whether the emulator may work with plain filesystem paths outside of its own
+     * private directory. Everything below the JNI layer takes paths, not content URIs.
+     */
+    public static boolean hasDirectStorageAccess() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Environment.isExternalStorageManager()) {
+            return true;
+        }
+        return isExternalStorageLegacy();
+    }
+
+    public static String ensureTrailingSeparator(String path) {
+        return path.endsWith("/") ? path : path + "/";
+    }
+
+    public static boolean isDirectoryWritable(File dir) {
+        if (!dir.isDirectory()) {
+            return false;
+        }
+        // canWrite() reports the mode bits, which stay permissive under scoped
+        // storage even when the write itself is denied.
+        try {
+            File probe = File.createTempFile("eka2l1", null, dir);
+            probe.delete();
+            return true;
+        } catch (IOException | SecurityException e) {
+            return false;
+        }
+    }
+
+    public static boolean isUsableWorkingDir(String path) {
+        if (path == null || path.isEmpty() || !path.startsWith("/")) {
+            return false;
+        }
+        File dir = new File(path);
+        if (!dir.isDirectory() && !dir.mkdirs()) {
+            return false;
+        }
+        return isDirectoryWritable(dir);
+    }
+
+    /**
+     * Moves every entry of {@code src} into {@code dst}, replacing entries of the same
+     * name. Entries already moved are gone from {@code src}, so a failed run can be
+     * repeated without touching what went over.
+     */
+    public static boolean moveContents(File src, File dst, String... excludedNames) {
+        File[] children = src.listFiles();
+        if (children == null) {
+            return false;
+        }
+        if (!dst.isDirectory() && !dst.mkdirs()) {
+            return false;
+        }
+        boolean result = true;
+        for (File child : children) {
+            if (Arrays.asList(excludedNames).contains(child.getName())) {
+                continue;
+            }
+            File target = new File(dst, child.getName());
+            if (target.exists() && !deleteDirectory(target)) {
+                result = false;
+                continue;
+            }
+            if (child.renameTo(target)) {
+                continue;
+            }
+            result &= copyRecursively(child, target) && deleteDirectory(child);
+        }
+        return result;
+    }
+
+    private static boolean copyRecursively(File src, File dst) {
+        if (src.isDirectory()) {
+            if (!dst.isDirectory() && !dst.mkdirs()) {
+                return false;
+            }
+            File[] children = src.listFiles();
+            if (children == null) {
+                return false;
+            }
+            boolean result = true;
+            for (File child : children) {
+                result &= copyRecursively(child, new File(dst, child.getName()));
+            }
+            return result;
+        }
+        try {
+            copyFileUsingChannel(src, dst);
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public static ActivityResultContract<String[],String> getFilePicker() {
         if (isExternalStorageLegacy()) {
             return new PickFileResultContract();
@@ -236,5 +333,14 @@ public class FileUtils {
         } else {
             return new SAFDirResultContract(returnsRawPath);
         }
+    }
+
+    /**
+     * Directory picker for folders handed to the emulator core: it returns a filesystem
+     * path whenever the app is allowed to use one, because the storage access framework
+     * cannot even offer the shared storage root or {@code Android/data}.
+     */
+    public static ActivityResultContract<Void,String> getNativeDirPicker() {
+        return new NativeDirResultContract();
     }
 }

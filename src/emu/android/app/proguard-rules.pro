@@ -25,6 +25,11 @@
 -keep class com.github.eka2l1.emu.TlsTrust { *; }
 -keep class com.github.eka2l1.util.SparseIntArrayAdapter { *; }
 
+# Inflated by name from res/xml/preferences_android.xml
+-keep class com.github.eka2l1.settings.LongClickPreference {
+  <init>(android.content.Context, android.util.AttributeSet);
+}
+
 # Gson
 ### The following rules are needed for R8 in "full mode" which only adheres to `-keepattribtues` if
 ### the corresponding class or field is matches by a `-keep` rule as well, see

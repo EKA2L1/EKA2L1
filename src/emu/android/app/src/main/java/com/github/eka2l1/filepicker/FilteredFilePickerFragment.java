@@ -93,6 +93,11 @@ public class FilteredFilePickerFragment extends FilePickerFragment {
     }
 
     public static String getLastPath() {
+        // Mount points such as /storage/emulated are traversable but not listable,
+        // so a remembered directory can leave the picker with an empty listing.
+        if (currentDir.list() == null) {
+            currentDir = Environment.getExternalStorageDirectory();
+        }
         return currentDir.getPath();
     }
 
