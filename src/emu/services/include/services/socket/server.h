@@ -43,6 +43,7 @@ namespace eka2l1 {
             bool progress_reported_;
             std::shared_ptr<connection_state> state_;
             std::weak_ptr<connection_state> observed_state_;
+            std::shared_ptr<connection_reference> reference_;
             std::vector<connection_info> snapshot_;
             conn_progress progress_{};
             std::unique_ptr<service::ipc_context> progress_request_;
@@ -56,6 +57,8 @@ namespace eka2l1 {
             void get_info(service::ipc_context *ctx);
             void get_int_setting(service::ipc_context *ctx);
             void get_des_setting(service::ipc_context *ctx);
+            void name(service::ipc_context *ctx);
+            void control(service::ipc_context *ctx);
 
         public:
             explicit socket_connection_proxy(socket_client_session *parent, connection *conn);
@@ -67,6 +70,7 @@ namespace eka2l1 {
 
             void dispatch(service::ipc_context *ctx) override;
             void progress_notify(service::ipc_context *ctx);
+            std::int32_t clone_from(const std::u16string &name, const security_info &caller);
 
             socket_subsession_type type() const override {
                 return socket_subsession_type_connection;
@@ -179,6 +183,7 @@ namespace eka2l1 {
         socket_so_cancel_send = 0x21,
         socket_so_cancel_connect = 0x22,
         socket_so_cancel_accept = 0x23,
+        socket_so_cancel_all = 0x24,
         socket_hr_open = 0x28,
         socket_hr_get_by_name = 0x29,
         socket_hr_next = 0x2A,
@@ -197,7 +202,9 @@ namespace eka2l1 {
         socket_so_open_with_connection = 0x3D,
         socket_hr_open_with_connection = 0x3E,
         socket_cn_open_with_cn_type = 0x3F,
+        socket_cn_open_with_name = 0x40,
         socket_cn_close = 0x41,
+        socket_cn_name = 0x42,
         socket_cn_start_default = 0x43,
         socket_cn_start = 0x44,
         socket_cn_stop = 0x45,
@@ -210,6 +217,7 @@ namespace eka2l1 {
         socket_cn_get_long_des_setting = 0x50,
         socket_cn_enumerate_connections = 0x51,
         socket_cn_get_connection_info = 0x52,
+        socket_cn_control = 0x53,
         socket_cn_attach = 0x54,
         socket_so_open_with_subconnection = 0x71,
         socket_ss_request_optimal_dealer = 0x3EE,
@@ -251,6 +259,9 @@ namespace eka2l1 {
         socket_reform_so_open_with_conn = 0x46,
         socket_reform_hr_open_with_connection = 0x47,
         socket_reform_cn_open_with_cn_type = 0x48,
+        socket_reform_cn_open_with_name = 0x49,
+        socket_reform_cn_name = 0x98,
+        socket_reform_cn_control = 0x10,
         socket_reform_cn_get_long_des_setting = 0x51,
         socket_reform_pr_find = 0x82,
         socket_reform_pr_start = 0x83,
@@ -391,7 +402,7 @@ namespace eka2l1 {
         void pr_find(service::ipc_context *ctx);
         void pr_start(service::ipc_context *ctx);
         void sr_get_by_number(eka2l1::service::ipc_context *ctx);
-        void cn_open(eka2l1::service::ipc_context *ctx);
+        void cn_open(eka2l1::service::ipc_context *ctx, bool with_name = false);
         void cn_get_long_des_setting(eka2l1::service::ipc_context *ctx);
         void ndb_create(service::ipc_context *ctx);
         void ss_request_optimal_dealer(eka2l1::service::ipc_context *ctx);

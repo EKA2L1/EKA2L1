@@ -21,6 +21,7 @@
 
 #include <common/container.h>
 #include <services/socket/common.h>
+#include <utils/sec.h>
 
 #include <cstdint>
 #include <functional>
@@ -59,6 +60,12 @@ namespace eka2l1::epoc::socket {
         std::uint32_t network_id = 0;
     };
 
+    struct connection_control_description {
+        std::uint32_t option;
+        std::uint32_t descriptor;
+        std::uint32_t max_length;
+    };
+
     struct connection_state {
         connection_info info;
         bool active = false;
@@ -69,13 +76,27 @@ namespace eka2l1::epoc::socket {
         void advance(std::int32_t new_stage);
     };
 
+    struct connection_reference {
+        std::u16string name;
+        std::weak_ptr<connection_state> state;
+        bool clone_enabled = false;
+        security_policy clone_policy;
+
+        bool enable_clone(const std::string &policy);
+    };
+
     class connection_registry {
         std::vector<std::weak_ptr<connection_state>> states_;
+        std::map<std::u16string, std::weak_ptr<connection_reference>> references_;
+        std::uint64_t next_reference_ = 0;
 
     public:
         std::shared_ptr<connection_state> create();
         std::shared_ptr<connection_state> find(const connection_info &info);
         std::vector<connection_info> enumerate();
+        std::shared_ptr<connection_reference> create_reference();
+        std::int32_t clone(const std::u16string &name, const security_info &caller,
+            std::shared_ptr<connection_state> &state);
     };
 
     using progress_advance_callback = std::function<void(conn_progress *)>;

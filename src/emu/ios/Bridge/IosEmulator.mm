@@ -1904,8 +1904,13 @@ namespace eka2l1::ios {
     eka2l1::drivers::ui::request_input_view([self] { [self tapRawKey:eka2l1::epoc::std_key_f20]; });
 }
 
-- (BOOL)isTextInputAvailable {
-    return eka2l1::drivers::ui::is_input_available();
+- (void)setTextInputAvailabilityHandler:(void (^)(BOOL available))handler {
+    if (handler) {
+        void (^callback)(BOOL) = [handler copy];
+        eka2l1::drivers::ui::set_input_available_callback([callback](bool available) { callback(available); });
+    } else {
+        eka2l1::drivers::ui::set_input_available_callback({});
+    }
 }
 
 - (void)closeRunningApp {

@@ -12,5 +12,6 @@ namespace eka2l1::drivers::ui {
     void request_input_view(std::function<void()> activate_editor);
     void set_input_available(std::uint64_t owner, bool available);
     bool is_input_available();
+    void set_input_available_callback(std::function<void(bool)> callback);
     void reset_input_view();
 }

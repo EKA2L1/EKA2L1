@@ -18,10 +18,96 @@
  */
 
 #include <catch2/catch.hpp>
+#include <cstddef>
 
 #include <services/socket/server.h>
+#include <utils/err.h>
 
 using namespace eka2l1;
+
+TEST_CASE("RConnection named opens retain the client ABI", "[internet][connection]") {
+    REQUIRE(socket_cn_open_with_name == 64);
+    REQUIRE(socket_cn_name == 66);
+    REQUIRE(socket_cn_control == 83);
+    REQUIRE(socket_reform_cn_open_with_name == 73);
+    REQUIRE(socket_reform_cn_name == 152);
+    REQUIRE(socket_reform_cn_control == 16);
+    REQUIRE(sizeof(epoc::security_policy) == 8);
+    // rm-409 esock.dll export 56 packages these three words before sending opcode 83.
+    REQUIRE(sizeof(epoc::socket::connection_control_description) == 12);
+    REQUIRE(offsetof(epoc::socket::connection_control_description, option) == 0);
+    REQUIRE(offsetof(epoc::socket::connection_control_description, descriptor) == 4);
+    REQUIRE(offsetof(epoc::socket::connection_control_description, max_length) == 8);
+}
+
+TEST_CASE("Named connection clones require an enabled matching security policy", "[internet][connection]") {
+    epoc::socket::connection_registry registry;
+    auto source = registry.create();
+    auto reference = registry.create_reference();
+    reference->state = source;
+    epoc::security_info caller{};
+    std::shared_ptr<epoc::socket::connection_state> clone;
+    REQUIRE(registry.clone(u"missing", caller, clone) == epoc::error_not_found);
+    REQUIRE(registry.clone(reference->name, caller, clone) == epoc::error_permission_denied);
+
+    epoc::security_policy policy({epoc::cap_network_srv});
+    policy.type = epoc::security_policy::s3;
+    policy.sec_id = 0x20003B78;
+    REQUIRE(reference->enable_clone(std::string(reinterpret_cast<const char *>(&policy), sizeof(policy))));
+    caller.secure_id = policy.sec_id;
+    REQUIRE(registry.clone(reference->name, caller, clone) == epoc::error_permission_denied);
+    caller.caps.set(epoc::cap_network_srv);
+    REQUIRE(registry.clone(reference->name, caller, clone) == epoc::error_not_ready);
+    source->advance(epoc::socket::conn_progress_link_layer_open);
+    REQUIRE(registry.clone(reference->name, caller, clone) == epoc::error_none);
+    REQUIRE(clone == source);
+    caller.secure_id++;
+    REQUIRE(registry.clone(reference->name, caller, clone) == epoc::error_permission_denied);
+    REQUIRE_FALSE(clone);
+    caller.secure_id--;
+    reference->clone_enabled = false;
+    REQUIRE(registry.clone(reference->name, caller, clone) == epoc::error_permission_denied);
+}
+
+TEST_CASE("Closing a named handle invalidates its name without closing clones", "[internet][connection]") {
+    epoc::socket::connection_registry registry;
+    auto source = registry.create();
+    source->info = {1, 7, 3};
+    source->advance(epoc::socket::conn_progress_link_layer_open);
+    auto reference = registry.create_reference();
+    reference->state = source;
+    epoc::security_policy policy;
+    REQUIRE(reference->enable_clone(std::string(reinterpret_cast<const char *>(&policy), sizeof(policy))));
+    auto name = reference->name;
+    std::shared_ptr<epoc::socket::connection_state> clone, another;
+    REQUIRE(registry.clone(name, {}, clone) == epoc::error_none);
+    source.reset();
+    reference.reset();
+    REQUIRE(registry.enumerate().size() == 1);
+    REQUIRE(registry.clone(name, {}, another) == epoc::error_not_found);
+    REQUIRE(registry.create_reference()->name != name);
+    clone.reset();
+    REQUIRE(registry.enumerate().empty());
+}
+
+TEST_CASE("Malformed clone policies do not enable connection sharing", "[internet][connection]") {
+    epoc::socket::connection_reference reference;
+    REQUIRE_FALSE(reference.enable_clone(std::string(7, '\0')));
+    REQUIRE_FALSE(reference.enable_clone(std::string(9, '\0')));
+    REQUIRE_FALSE(reference.enable_clone(std::string(8, '\xFF')));
+    std::string bad_cap(8, '\xFF');
+    bad_cap[0] = epoc::security_policy::c3;
+    bad_cap[1] = epoc::cap_limit;
+    REQUIRE_FALSE(reference.enable_clone(bad_cap));
+    REQUIRE_FALSE(reference.clone_enabled);
+}
+
+TEST_CASE("RSocket CancelAll retains its ROM-specific request numbers", "socket_opcodes") {
+    // rm-409 esock.dll RSocket::CancelAll sends 0x24; SOCKMES.H defines the reformed 142.
+    REQUIRE(socket_so_cancel_all == 0x24);
+    REQUIRE(socket_reform_so_cancel_all == 142);
+    REQUIRE(socket_old_so_cancel_all == 0x20);
+}
 
 TEST_CASE("Pre-reform RConnection enumeration is distinct from string settings", "[internet][connection]") {
     // rm-409 esock.dll exports 7, 9 and 6 send these operation IDs respectively.

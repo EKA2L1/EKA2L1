@@ -22,6 +22,7 @@ set(CORE_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/services/applist/language.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/applist/registeration.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/applist/recognize.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/services/applist/data_type.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/fbs/bitmap.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/fbs/fontmatch.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/fbs/linkedfont.cpp

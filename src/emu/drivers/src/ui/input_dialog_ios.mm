@@ -21,6 +21,18 @@ namespace {
     std::atomic<std::uint64_t> g_input_generation{0};
     bool g_present_next_input = false;
     std::uint64_t g_input_owner = 0;
+    std::function<void(bool)> g_input_available_callback;
+    bool g_last_input_available = false;
+
+    void notify_input_available() {
+        const bool available = eka2l1::drivers::ui::is_input_available();
+        if (available != g_last_input_available) {
+            g_last_input_available = available;
+            if (g_input_available_callback) {
+                g_input_available_callback(available);
+            }
+        }
+    }
 
     NSString *to_ns_string(const std::u16string &str) {
         return [[NSString alloc] initWithCharacters:reinterpret_cast<const unichar *>(str.data())
@@ -58,6 +70,7 @@ namespace {
             [g_active_alert dismissViewControllerAnimated:YES completion:nil];
             g_active_alert = nil;
         }
+        notify_input_available();
     }
 }
 
@@ -65,6 +78,7 @@ namespace eka2l1::drivers::ui {
     void set_automatic_input_view(bool automatic) {
         dispatch_async(dispatch_get_main_queue(), ^{
             g_automatic_input = automatic;
+            notify_input_available();
         });
     }
 
@@ -93,6 +107,17 @@ namespace eka2l1::drivers::ui {
                 g_input_owner = 0;
                 g_present_next_input = false;
             }
+            notify_input_available();
+        });
+    }
+
+    void set_input_available_callback(std::function<void(bool)> callback) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            g_input_available_callback = callback;
+            g_last_input_available = is_input_available();
+            if (g_input_available_callback) {
+                g_input_available_callback(g_last_input_available);
+            }
         });
     }
 
@@ -105,6 +130,7 @@ namespace eka2l1::drivers::ui {
         dispatch_async(dispatch_get_main_queue(), ^{
             g_input_owner = 0;
             g_present_next_input = false;
+            notify_input_available();
         });
     }
 
@@ -157,6 +183,7 @@ namespace eka2l1::drivers::ui {
                 const std::u16string result = to_u16_string(text);
                 g_input.reset();
                 g_active_alert = nil;
+                notify_input_available();
                 if (request->complete) {
                     request->complete(result);
                 }
@@ -168,6 +195,7 @@ namespace eka2l1::drivers::ui {
                     return;
                 }
                 g_active_alert = nil;
+                notify_input_available();
                 if (g_automatic_input) {
                     g_input.reset();
                     if (request->complete) {
@@ -179,6 +207,7 @@ namespace eka2l1::drivers::ui {
             [alert addAction:ok];
 
             g_active_alert = alert;
+            notify_input_available();
             [top_view_controller() presentViewController:alert animated:YES completion:nil];
         });
     }
@@ -210,6 +239,7 @@ namespace eka2l1::drivers::ui {
                     complete_callback(0);
                 }
                 g_active_alert = nil;
+                notify_input_available();
             }]];
             [alert addAction:[UIAlertAction actionWithTitle:to_ns_string(button2_text_copy)
                                                       style:UIAlertActionStyleCancel
@@ -218,9 +248,11 @@ namespace eka2l1::drivers::ui {
                     complete_callback(1);
                 }
                 g_active_alert = nil;
+                notify_input_available();
             }]];
 
             g_active_alert = alert;
+            notify_input_available();
             [top_view_controller() presentViewController:alert animated:YES completion:nil];
         });
     }

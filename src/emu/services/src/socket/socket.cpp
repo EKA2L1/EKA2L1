@@ -885,6 +885,10 @@ namespace eka2l1::epoc::socket {
                     cancel_accept(ctx);
                     return;
 
+                case socket_so_cancel_all:
+                    cancel_all(ctx);
+                    return;
+
                 case socket_so_local_name:
                     local_name(ctx);
                     return;

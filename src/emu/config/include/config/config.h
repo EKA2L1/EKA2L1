@@ -159,8 +159,6 @@ namespace eka2l1::config {
         std::string log_filter{ DEFAULT_LOG_FILTERING };
         std::string bt_central_server_url{ "btnetplay.12z1.com" };
         host_map hosts;
-        std::string tls_ca_file;
-        bool host_tls = false;
         std::string background_image{ "" };
 
         screen_buffer_sync_option screen_buffer_sync{ screen_buffer_sync_option_preferred };

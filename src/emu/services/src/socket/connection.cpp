@@ -28,6 +28,7 @@
 #include <system/epoc.h>
 #include <algorithm>
 #include <cstring>
+#include <iterator>
 
 namespace eka2l1::epoc::socket {
     connection_state::~connection_state() {
@@ -79,6 +80,56 @@ namespace eka2l1::epoc::socket {
         return nullptr;
     }
 
+    bool connection_reference::enable_clone(const std::string &data) {
+        if (data.size() != sizeof(security_policy)) {
+            return false;
+        }
+        security_policy policy;
+        std::memcpy(&policy, data.data(), sizeof(policy));
+        if (policy.type > security_policy::v3) {
+            return false;
+        }
+        const auto valid_cap = [](std::uint8_t cap) { return cap < cap_limit || cap == 0xFF; };
+        if ((policy.type >= security_policy::c3 && !std::all_of(policy.caps, policy.caps + 3, valid_cap))
+            || (policy.type == security_policy::c7 && !std::all_of(policy.extra_caps, policy.extra_caps + 4, valid_cap))) {
+            return false;
+        }
+        clone_policy = policy;
+        clone_enabled = true;
+        return true;
+    }
+
+    std::shared_ptr<connection_reference> connection_registry::create_reference() {
+        for (auto it = references_.begin(); it != references_.end();) {
+            it = it->second.expired() ? references_.erase(it) : std::next(it);
+        }
+        auto reference = std::make_shared<connection_reference>();
+        const auto number = std::to_string(++next_reference_);
+        reference->name = u"Connection_" + std::u16string(number.begin(), number.end());
+        references_[reference->name] = reference;
+        return reference;
+    }
+
+    std::int32_t connection_registry::clone(const std::u16string &name, const security_info &caller,
+        std::shared_ptr<connection_state> &state) {
+        state.reset();
+        const auto found = references_.find(name);
+        auto reference = found == references_.end() ? nullptr : found->second.lock();
+        if (!reference) {
+            return epoc::error_not_found;
+        }
+        security_info missing;
+        if (!reference->clone_enabled || !reference->clone_policy.check(caller, missing)) {
+            return epoc::error_permission_denied;
+        }
+        auto source = reference->state.lock();
+        if (!source || !source->active) {
+            return epoc::error_not_ready;
+        }
+        state = std::move(source);
+        return epoc::error_none;
+    }
+
     connection::connection(protocol *pr, saddress dest)
         : pr_(pr)
         , sock_(nullptr)
@@ -97,6 +148,7 @@ namespace eka2l1::epoc::socket {
         : socket_subsession(parent)
         , conn_(conn)
         , progress_reported_(false) {
+        reference_ = parent_->server<socket_server>()->connections().create_reference();
     }
 
     socket_connection_proxy::~socket_connection_proxy() {
@@ -111,9 +163,57 @@ namespace eka2l1::epoc::socket {
             previous->observers.erase(this);
         }
         observed_state_ = state;
+        reference_->state = state;
         state_ = monitor ? nullptr : state;
         state->observers[this] = [this](std::int32_t stage) { set_progress(stage); };
         set_progress(state->stage);
+    }
+
+    std::int32_t socket_connection_proxy::clone_from(const std::u16string &name, const security_info &caller) {
+        std::shared_ptr<connection_state> state;
+        const auto result = parent_->server<socket_server>()->connections().clone(name, caller, state);
+        if (result == epoc::error_none) {
+            bind_state(state);
+        }
+        return result;
+    }
+
+    void socket_connection_proxy::name(service::ipc_context *ctx) {
+        ctx->complete(ctx->write_arg(0, reference_->name) ? epoc::error_none : epoc::error_argument);
+    }
+
+    void socket_connection_proxy::control(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> level;
+        std::optional<std::uint32_t> option;
+        if (ctx->sys->get_symbian_version_use() < epocver::epoc95) {
+            // Pre-reform Control packages the option in slot 0 and puts the level in slot 1.
+            const auto data = ctx->get_argument_value<std::string>(0);
+            if (!data || data->size() != sizeof(connection_control_description)) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+            connection_control_description description;
+            std::memcpy(&description, data->data(), sizeof(description));
+            option = description.option;
+            level = ctx->get_argument_value<std::uint32_t>(1);
+        } else {
+            level = ctx->get_argument_value<std::uint32_t>(0);
+            option = ctx->get_argument_value<std::uint32_t>(1);
+        }
+        if (level != 1 || (option != 0x20000005 && option != 0x20000006)) {
+            ctx->complete(epoc::error_not_supported);
+            return;
+        }
+        if (option == 0x20000006) {
+            reference_->clone_enabled = false;
+        } else {
+            const auto policy = ctx->get_argument_value<std::string>(2);
+            if (!policy || !reference_->enable_clone(*policy)) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+        }
+        ctx->complete(epoc::error_none);
     }
 
     void socket_connection_proxy::attach(service::ipc_context *ctx) {
@@ -311,6 +411,14 @@ namespace eka2l1::epoc::socket {
         } else {
             if (ctx->sys->get_symbian_version_use() >= epocver::epoc95) {
                 switch (ctx->msg->function) {
+                case socket_reform_cn_name:
+                    name(ctx);
+                    break;
+
+                case socket_reform_cn_control:
+                    control(ctx);
+                    break;
+
                 default:
                     LOG_ERROR(SERVICE_ESOCK, "Unimplemented socket connection opcode: {}", ctx->msg->function);
                     ctx->complete(epoc::error_none);
@@ -319,6 +427,14 @@ namespace eka2l1::epoc::socket {
                 }
             } else {
                 switch (ctx->msg->function) {
+                case socket_cn_name:
+                    name(ctx);
+                    break;
+
+                case socket_cn_control:
+                    control(ctx);
+                    break;
+
                 case socket_cn_close:
                     parent_->subsessions_.remove(id_);
                     ctx->complete(epoc::error_none);

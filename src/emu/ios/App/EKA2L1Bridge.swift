@@ -191,7 +191,9 @@ final class EKA2L1Bridge {
         emulator.presentTextInput()
     }
 
-    var isTextInputAvailable: Bool { emulator.isTextInputAvailable() }
+    func setTextInputAvailabilityHandler(_ handler: ((Bool) -> Void)?) {
+        emulator.setTextInputAvailabilityHandler(handler)
+    }
 
     // Kill the running app in lockstep with the frontend closing its screen.
     func closeRunningApp() {

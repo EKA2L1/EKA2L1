@@ -92,12 +92,12 @@ namespace eka2l1 {
         if (repo.uid != 0xCCCCCC00) {
             return;
         }
-        const auto iaps = used_records(repo, iap_table);
-        for (const bool used : iaps) {
-            if (used) {
+        for (const auto &entry : repo.entries) {
+            if (entry.transient && (entry.key & 0x7F800000) == iap_table) {
                 return;
             }
         }
+        const auto iap = free_record(repo, iap_table);
 
         std::uint32_t packet_bearer = 0;
         const std::u16string packet_nif = u"genericnif";
@@ -115,7 +115,7 @@ namespace eka2l1 {
         const auto bearer = packet_bearer ? packet_bearer : free_record(repo, lan_bearer_table);
         const auto wap = free_record(repo, wap_table);
         const auto wap_bearer = free_record(repo, wap_bearer_table);
-        if (!network || !service || !bearer || !wap || !wap_bearer) {
+        if (!iap || !network || !service || !bearer || !wap || !wap_bearer) {
             return;
         }
 
@@ -138,13 +138,13 @@ namespace eka2l1 {
                 {1, bearer}, {2, name}, {3, u"lan"}, {4, u""}, {5, u""}, {6, u""}, {7, u""},
                 {8, u""}, {9, 0U}, {10, 0U}, {11, 0U}});
         }
-        add_record(repo, iap_table, 1, {
-            {1, 1U}, {2, name}, {3, packet_bearer ? u"OutgoingGPRS" : u"LANService"},
+        add_record(repo, iap_table, iap, {
+            {1, iap}, {2, name}, {3, packet_bearer ? u"OutgoingGPRS" : u"LANService"},
             {4, service}, {5, packet_bearer ? u"ModemBearer" : u"LANBearer"},
             {6, bearer}, {7, network}, {8, 0U}, {9, 0U}});
         add_record(repo, wap_table, wap, {{1, wap}, {2, name}, {3, u"WAPIPBearer"}, {4, u""}});
         add_record(repo, wap_bearer_table, wap_bearer, {
             {1, wap_bearer}, {2, name}, {3, wap}, {4, u"0.0.0.0"}, {5, 0U},
-            {6, 1U}, {7, 0U}, {8, 0U}, {9, 0U}, {10, u""}, {11, u""}});
+            {6, iap}, {7, 0U}, {8, 0U}, {9, 0U}, {10, u""}, {11, u""}});
     }
 }

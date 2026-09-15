@@ -110,10 +110,10 @@ namespace {
     };
 }
 
-TEST_CASE("Host TLS authenticates modern certificates across fragmented records", "[tls]") {
+TEST_CASE("Host TLS exchanges fragmented records with a self-signed local server", "[tls]") {
     const auto version = GENERATE(MBEDTLS_SSL_VERSION_TLS1_2, MBEDTLS_SSL_VERSION_TLS1_3);
     tls_session client;
-    REQUIRE(client.configure("arena.test", fixture("server.pem")));
+    REQUIRE(client.configure("arena.test", "127.0.0.1"));
     peer server(version);
     REQUIRE(server.handshake(client) == 0);
     REQUIRE(client.protocol() == (version == MBEDTLS_SSL_VERSION_TLS1_3 ? "TLSv1.3" : "TLSv1.2"));
@@ -161,7 +161,7 @@ TEST_CASE("Host TLS authenticates modern certificates across fragmented records"
 TEST_CASE("Host TLS rejects a mismatched identity or untrusted issuer", "[tls]") {
     const bool wrong_name = GENERATE(false, true);
     tls_session client;
-    REQUIRE(client.configure(wrong_name ? "wrong.test" : "arena.test", fixture(wrong_name ? "server.pem" : "untrusted.pem")));
+    REQUIRE(client.configure(wrong_name ? "wrong.test" : "arena.test", "203.0.113.1"));
     peer server(MBEDTLS_SSL_VERSION_TLS1_3);
     REQUIRE(server.handshake(client) == static_cast<int>(tls_result::verification_failed));
     REQUIRE(client.peer_certificate().empty());
@@ -169,8 +169,8 @@ TEST_CASE("Host TLS rejects a mismatched identity or untrusted issuer", "[tls]")
 
 TEST_CASE("TLS handles belong to their creating process and expire on exit", "[tls]") {
     eka2l1::dispatch::tls_controller controller;
-    const int first = controller.create(10, "arena.test", fixture("server.pem"));
-    const int second = controller.create(20, "arena.test", fixture("server.pem"));
+    const int first = controller.create(10, "arena.test", "127.0.0.1");
+    const int second = controller.create(20, "arena.test", "127.0.0.1");
     REQUIRE(first > 0);
     REQUIRE(second > first);
     REQUIRE(controller.get(20, first) == nullptr);
@@ -181,4 +181,34 @@ TEST_CASE("TLS handles belong to their creating process and expire on exit", "[t
     REQUIRE(controller.get(20, second) != nullptr);
     REQUIRE(controller.erase(20, second));
     REQUIRE_FALSE(controller.erase(20, second));
+}
+
+TEST_CASE("TLS local trust uses numeric loopback and private network peers", "[tls]") {
+    using eka2l1::drivers::is_local_tls_address;
+    for (const auto *address : {"127.0.0.1", "127.255.255.254", "10.0.0.1", "172.16.0.1", "172.31.255.254",
+        "192.168.1.1", "169.254.1.1", "::1", "fc00::1", "fdff::1", "fe80::1", "::ffff:192.168.1.1"}) {
+        INFO(address);
+        REQUIRE(is_local_tls_address(address));
+    }
+    for (const auto *address : {"localhost", "arena.test", "127.0.0.1.evil.test", "127.1", "0.0.0.0", "::",
+        "172.15.255.255", "172.32.0.0", "192.169.0.1", "100.64.0.1", "8.8.8.8", "224.0.0.1",
+        "2001:db8::1", "fec0::1", "ff02::1", "::ffff:8.8.8.8"}) {
+        INFO(address);
+        REQUIRE_FALSE(is_local_tls_address(address));
+    }
+    REQUIRE_FALSE(is_local_tls_address(std::string("127.0.0.1\0.evil", 15)));
+}
+
+TEST_CASE("Local TLS accepts a mismatched self-signed identity without a CA file", "[tls]") {
+    const auto *address = GENERATE("192.168.1.2", "fd00::2", "::ffff:127.0.0.1");
+    tls_session client;
+    REQUIRE(client.configure("different.test", address));
+    peer server(MBEDTLS_SSL_VERSION_TLS1_3);
+    REQUIRE(server.handshake(client) == 0);
+}
+
+TEST_CASE("TLS cannot initialize without a numeric connected peer", "[tls]") {
+    tls_session client;
+    REQUIRE_FALSE(client.configure("arena.test", "localhost"));
+    REQUIRE_FALSE(client.configure("arena.test", ""));
 }
