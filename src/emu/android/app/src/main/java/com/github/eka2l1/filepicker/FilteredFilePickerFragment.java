@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.eka2l1.R;
+import com.github.eka2l1.util.FileUtils;
 import com.nononsenseapps.filepicker.FilePickerFragment;
 import com.nononsenseapps.filepicker.LogicHandler;
 
@@ -59,6 +60,24 @@ public class FilteredFilePickerFragment extends FilePickerFragment {
                 v = LayoutInflater.from(getActivity()).inflate(R.layout.listitem_dir,
                         parent, false);
                 return new DirViewHolder(v);
+        }
+    }
+
+    @Override
+    protected boolean hasPermission(@NonNull File path) {
+        // WRITE_EXTERNAL_STORAGE grants nothing from Android 10 on and cannot be
+        // requested at all from 13 on, where asking only yields an instant denial
+        // that closes the picker. All files access is what opens the tree there.
+        if (FileUtils.isExternalStorageLegacy()) {
+            return super.hasPermission(path);
+        }
+        return FileUtils.hasDirectStorageAccess();
+    }
+
+    @Override
+    protected void handlePermission(@NonNull File path) {
+        if (FileUtils.isExternalStorageLegacy()) {
+            super.handlePermission(path);
         }
     }
 
