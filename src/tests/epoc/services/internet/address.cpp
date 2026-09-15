@@ -120,6 +120,40 @@ TEST_CASE("Port-mapped DNS results retain their target after the guest replaces 
     REQUIRE(guest_addr.port_ == 8124);
 }
 
+TEST_CASE("A mapped socket reports the address the guest connected to", "[internet][config]") {
+    // RSocket::RemoteName and the datagram source address must stay inside the synthetic
+    // address space the resolver handed out, or the guest sees an endpoint it never asked for.
+    const auto mapper = std::make_shared<epoc::internet::host_port_mapper>();
+    epoc::internet::inet_bridged_protocol protocol(nullptr, true, 6, mapper);
+    sockaddr_in host_addr{};
+    host_addr.sin_family = AF_INET;
+    host_addr.sin_addr.s_addr = htonl(0x7F000001);
+
+    epoc::socket::saddress guest_endpoint{};
+    protocol.map_host_port(reinterpret_cast<sockaddr *>(&host_addr), 8124, guest_endpoint);
+    guest_endpoint.port_ = 80;
+
+    epoc::socket::saddress host_endpoint = guest_endpoint;
+    REQUIRE(protocol.apply_host_port(host_endpoint));
+
+    epoc::socket::saddress reported = host_endpoint;
+    REQUIRE(epoc::internet::restore_mapped_endpoint(guest_endpoint, host_endpoint, reported));
+    REQUIRE(*static_cast<epoc::internet::sinet_address &>(reported).addr_long()
+        == *static_cast<epoc::internet::sinet_address &>(guest_endpoint).addr_long());
+    REQUIRE(reported.port_ == 80);
+
+    // An unrelated peer keeps whatever the host reported.
+    epoc::socket::saddress other{};
+    other.family_ = epoc::internet::INET_ADDRESS_FAMILY;
+    *static_cast<epoc::internet::sinet_address &>(other).addr_long() = 0x08080808;
+    other.port_ = 53;
+
+    epoc::socket::saddress untouched = other;
+    REQUIRE_FALSE(epoc::internet::restore_mapped_endpoint(guest_endpoint, host_endpoint, untouched));
+    REQUIRE(*static_cast<epoc::internet::sinet_address &>(untouched).addr_long() == 0x08080808);
+    REQUIRE(untouched.port_ == 53);
+}
+
 namespace {
     // in_sock.h:
     //   #define INET_ADDR(a,b,c,d) (TUint32)((((TUint32)(a))<<24)|((b)<<16)|((c)<<8)|(d))

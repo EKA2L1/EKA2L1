@@ -55,6 +55,32 @@ namespace eka2l1::epoc::internet {
             const auto size = left.family_ == INET_ADDRESS_FAMILY ? sizeof(std::uint32_t) : sizeof(left.user_data_);
             return std::memcmp(left.user_data_, right.user_data_, size) == 0;
         }
+
+        bool same_endpoint(const socket::saddress &left, const socket::saddress &right) {
+            return (left.port_ == right.port_) && same_host_address(left, right);
+        }
+    }
+
+    bool restore_mapped_endpoint(const socket::saddress &guest_endpoint, const socket::saddress &host_endpoint,
+        socket::saddress &address) {
+        if (!same_endpoint(host_endpoint, address)) {
+            return false;
+        }
+
+        address = guest_endpoint;
+        return true;
+    }
+
+    void inet_socket::remember_host_port_mapping(const epoc::socket::saddress &guest_addr,
+        const epoc::socket::saddress &host_addr) {
+        mapped_peer_guest_ = guest_addr;
+        mapped_peer_host_ = host_addr;
+    }
+
+    void inet_socket::restore_guest_peer(epoc::socket::saddress &address) const {
+        if (mapped_peer_guest_ && mapped_peer_host_) {
+            restore_mapped_endpoint(*mapped_peer_guest_, *mapped_peer_host_, address);
+        }
     }
 
     void inet_bridged_protocol::map_host_port(const sockaddr *target, const std::uint16_t port,
@@ -455,7 +481,9 @@ namespace eka2l1::epoc::internet {
         }
 
         auto target_addr = addr;
-        papa_->apply_host_port(target_addr);
+        if (papa_->apply_host_port(target_addr)) {
+            remember_host_port_mapping(addr, target_addr);
+        }
         sockaddr *ip_addr_ptr = nullptr;
         GUEST_TO_BSD_ADDR(target_addr, ip_addr_ptr);
 
@@ -789,6 +817,7 @@ namespace eka2l1::epoc::internet {
         }
 
         host_sockaddr_to_guest_saddress(reinterpret_cast<sockaddr*>(&sock_max), result, &result_len);
+        restore_guest_peer(result);
         return epoc::error_none;
     }
 
@@ -879,7 +908,9 @@ namespace eka2l1::epoc::internet {
 
         if (addr_ptr != nullptr) {
             addr_guest_temp = *addr_ptr;
-            papa_->apply_host_port(addr_guest_temp);
+            if (papa_->apply_host_port(addr_guest_temp)) {
+                remember_host_port_mapping(*addr_ptr, addr_guest_temp);
+            }
             // The special broadcast address has been broken even on Android since who knows when
             // In here we pick the most likely one that is running.
             // On Windows it just sends it to the top one active
@@ -960,9 +991,10 @@ namespace eka2l1::epoc::internet {
         const uv_buf_t *buf = reinterpret_cast<const uv_buf_t*>(buf_ptr);
         const sockaddr *recv_addr = reinterpret_cast<const sockaddr*>(addr);
 
-        if (recv_addr_) {
+        if (recv_addr_ && recv_addr) {
             // sorry...
             host_sockaddr_to_guest_saddress(const_cast<sockaddr*>(recv_addr), *recv_addr_);
+            restore_guest_peer(*recv_addr_);
         }
 
         // No need, you should stop for now
