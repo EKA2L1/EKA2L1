@@ -24,7 +24,6 @@
     <string name="take_screenshot_fail">Failed to take screenshot!</string>
     <string name="opengl_required">L\'application nécessite OpenGL ES 3.0+.</string>
     <string name="warning">ATTENTION</string>
-    <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
     <string name="install_ng_game">Installer un jeu N-GAGE</string>
     <string name="notify_dialog_title">Notification</string>
     <string name="grid_app_list_mode">Grid mode</string>

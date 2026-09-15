@@ -24,7 +24,6 @@
     <string name="take_screenshot_fail">Chụp màn hình thất bại!</string>
     <string name="opengl_required">Ứng dụng yêu cầu OpenGL ES 3.0+.</string>
     <string name="warning">Cảnh báo</string>
-    <string name="scoped_storage_warning">Dữ liệu người dùng của bạn đang được lưu trữ ở nơi mà <b>sẽ bị xóa</b> sau khi bạn gỡ ứng dụng:\n</string>
     <string name="install_ng_game">Install N-Gage game</string>
     <string name="notify_dialog_title">Thông báo</string>
     <string name="grid_app_list_mode">Chế độ lưới</string>
