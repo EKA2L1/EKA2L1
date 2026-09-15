@@ -93,14 +93,13 @@ private struct HostOverrideEditor: View {
     }
 
     private var validationError: LocalizedStringKey? {
-        if !Self.validHostname(hostname) {
+        if !Self.validHostPattern(hostname) {
             return "settings.hosts.invalidHostname"
         }
         if existing.contains(where: { $0.id != entry.id && Self.normalize($0.hostname) == hostname }) {
             return "settings.hosts.duplicate"
         }
-        if IPv4Address(address) == nil && IPv6Address(address) == nil
-            && (!Self.validHostname(address) || address.allSatisfy({ "0123456789.".contains($0) })) {
+        if !Self.validTarget(address) {
             return "settings.hosts.invalidAddress"
         }
         return nil
@@ -160,6 +159,33 @@ private struct HostOverrideEditor: View {
         return !hostname.isEmpty && hostname.utf8.count <= 253 && labels.allSatisfy {
             !$0.isEmpty && $0.utf8.count <= 63 && $0.unicodeScalars.allSatisfy(allowed.contains)
         }
+    }
+
+    private static func validHostPattern(_ hostname: String) -> Bool {
+        if hostname.hasPrefix("*.") {
+            return validHostname(String(hostname.dropFirst(2)))
+        }
+        return validHostname(hostname)
+    }
+
+    private static func validTarget(_ target: String) -> Bool {
+        var hostname = target
+        var port: String?
+        if target.hasPrefix("[") {
+            guard let end = target.firstIndex(of: "]"), end != target.index(after: target.startIndex),
+                  target.index(after: end) < target.endIndex,
+                  target[target.index(after: end)] == ":" else { return false }
+            hostname = String(target[target.index(after: target.startIndex)..<end])
+            port = String(target[target.index(end, offsetBy: 2)...])
+        } else if IPv6Address(target) == nil, let colon = target.lastIndex(of: ":") {
+            hostname = String(target[..<colon])
+            port = String(target[target.index(after: colon)...])
+        }
+        if let port {
+            guard !port.isEmpty, port.allSatisfy(\.isNumber), let value = UInt16(port), value != 0 else { return false }
+        }
+        return IPv4Address(hostname) != nil || IPv6Address(hostname) != nil
+            || (validHostname(hostname) && !hostname.allSatisfy({ "0123456789.".contains($0) }))
     }
 
     private static func normalize(_ value: String) -> String {

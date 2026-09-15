@@ -37,10 +37,20 @@ namespace eka2l1 {
 
 namespace eka2l1::config {
     using host_map = std::map<std::string, std::string>;
+    struct host_target {
+        std::string hostname;
+        std::optional<std::uint16_t> port;
+
+        bool operator==(const host_target &other) const {
+            return hostname == other.hostname && port == other.port;
+        }
+    };
     std::string normalize_host_name(std::string name);
     bool valid_host_name(const std::string &name);
+    bool valid_host_pattern(const std::string &pattern);
     bool numeric_host_address(const std::string &address);
     bool valid_host_target(const std::string &target);
+    std::optional<host_target> parse_host_target(const std::string &target);
     static constexpr const char *KEYBIND_TYPE_KEY = "key";
     static constexpr const char *KEYBIND_TYPE_CONTROLLER = "controller";
     static constexpr const char *KEYBIND_TYPE_MOUSE = "mouse";
@@ -178,6 +188,6 @@ namespace eka2l1::config {
 
         void serialize(const bool with_bindings = true);
         void deserialize(const bool with_bindings = true);
-        std::optional<std::string> host_override(const std::string &hostname) const;
+        std::optional<host_target> host_override(const std::string &hostname) const;
     };
 }

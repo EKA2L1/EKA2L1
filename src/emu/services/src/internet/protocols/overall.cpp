@@ -29,11 +29,13 @@
 #endif
 
 namespace eka2l1::epoc::internet {
-    inet_bridged_protocol::inet_bridged_protocol(kernel_system *kern, const bool oldarch, const std::uint32_t protocol_id)
+    inet_bridged_protocol::inet_bridged_protocol(kernel_system *kern, const bool oldarch, const std::uint32_t protocol_id,
+        std::shared_ptr<host_port_mapper> shared_mapper)
         : socket::protocol(oldarch)
         , looper_(libuv::default_looper)
         , kern_(kern)
-        , protocol_id_(protocol_id) {
+        , protocol_id_(protocol_id)
+        , host_port_mapper_(shared_mapper ? std::move(shared_mapper) : std::make_shared<host_port_mapper>()) {
 #if EKA2L1_PLATFORM(WIN32)
         WSADATA init_data;
         WSAStartup(MAKEWORD(2, 0), &init_data);
@@ -41,9 +43,10 @@ namespace eka2l1::epoc::internet {
     }
 
     void add_internet_stack_protocols(socket_server *sock, const bool oldarch) {
+        const auto host_port_mapper = std::make_shared<internet::host_port_mapper>();
         for (const auto id : { INET_TCP_PROTOCOL_ID, INET_UDP_PROTOCOL_ID }) {
             std::unique_ptr<epoc::socket::protocol> inet_br_pr = std::make_unique<inet_bridged_protocol>(
-                sock->get_kernel_object_owner(), oldarch, id);
+                sock->get_kernel_object_owner(), oldarch, id, host_port_mapper);
 
             if (!sock->add_protocol(inet_br_pr)) {
                 LOG_ERROR(SERVICE_INTERNET, "Failed to add INET bridged protocol");

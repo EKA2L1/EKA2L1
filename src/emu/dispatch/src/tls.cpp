@@ -59,11 +59,15 @@ namespace eka2l1::dispatch {
             return epoc::error_argument;
         }
         auto server_name = hostname->to_std_string(process);
-        if (const auto target = sys->get_config()->host_override(server_name);
-            target && config::valid_host_name(*target) && !config::numeric_host_address(*target)) {
-            server_name = *target;
+        auto transport_address = peer_address->to_std_string(process);
+        if (const auto target = sys->get_config()->host_override(server_name); target) {
+            if (config::numeric_host_address(target->hostname)) {
+                transport_address = target->hostname;
+            } else if (config::valid_host_name(target->hostname)) {
+                server_name = target->hostname;
+            }
         }
-        return sys->get_dispatcher()->get_tls_controller().create(process->unique_id(), server_name, peer_address->to_std_string(process));
+        return sys->get_dispatcher()->get_tls_controller().create(process->unique_id(), server_name, transport_address);
     }
 
     BRIDGE_FUNC_DISPATCHER(std::int32_t, etls_destroy, std::uint32_t handle) {
