@@ -277,7 +277,7 @@ Java_com_github_eka2l1_emu_Emulator_validHostMapping(JNIEnv *env, jclass clazz, 
     if (!address) {
         return JNI_FALSE;
     }
-    const bool valid = eka2l1::config::valid_host_name(name_copy) && eka2l1::config::valid_host_target(address);
+    const bool valid = eka2l1::config::valid_host_pattern(name_copy) && eka2l1::config::valid_host_target(address);
     env->ReleaseStringUTFChars(target, address);
     return valid;
 }

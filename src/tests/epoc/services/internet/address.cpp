@@ -55,16 +55,17 @@ TEST_CASE("Internet protocol descriptions distinguish TCP and UDP", "[internet]"
     REQUIRE(udp.family_ids().front() == 0x800);
 }
 
-TEST_CASE("Host overrides match complete DNS names", "[internet][config]") {
+TEST_CASE("Host overrides prefer exact names then the longest wildcard suffix", "[internet][config]") {
     config::state settings;
-    settings.hosts = {{"Game.Example.", "127.0.0.1"}, {"ipv6.example", "::1"}};
+    settings.hosts = {{"Game.Example.", "127.0.0.1"}, {"*.example", "private.example:8192"},
+        {"*.game.example", "[::1]:8193"}};
 
-    REQUIRE(settings.host_override("GAME.example") == "127.0.0.1");
-    REQUIRE(settings.host_override("game.example.") == "127.0.0.1");
-    REQUIRE(settings.host_override("IPV6.EXAMPLE.") == "::1");
-    REQUIRE_FALSE(settings.host_override("sub.game.example"));
+    REQUIRE(settings.host_override("GAME.example") == config::host_target{"127.0.0.1", std::nullopt});
+    REQUIRE(settings.host_override("game.example.") == config::host_target{"127.0.0.1", std::nullopt});
+    REQUIRE(settings.host_override("sub.game.example") == config::host_target{"::1", 8193});
+    REQUIRE(settings.host_override("other.example") == config::host_target{"private.example", 8192});
+    REQUIRE_FALSE(settings.host_override("example"));
     REQUIRE_FALSE(settings.host_override("game.example.invalid"));
-    REQUIRE_FALSE(settings.host_override("other.example"));
     settings.hosts.clear();
     REQUIRE_FALSE(settings.host_override("game.example"));
 }
@@ -72,28 +73,51 @@ TEST_CASE("Host overrides match complete DNS names", "[internet][config]") {
 TEST_CASE("Host mappings accept DNS targets without recursive rewriting", "[internet][config]") {
     config::state settings;
     settings.hosts = {{"Arena.Example.", " Private.Example. "}, {"private.example", "127.0.0.1"}};
-    REQUIRE(settings.host_override("ARENA.EXAMPLE") == "private.example");
-    REQUIRE(settings.host_override("private.example") == "127.0.0.1");
+    REQUIRE(settings.host_override("ARENA.EXAMPLE") == config::host_target{"private.example", std::nullopt});
+    REQUIRE(settings.host_override("private.example") == config::host_target{"127.0.0.1", std::nullopt});
     REQUIRE(config::normalize_host_name(" \tGame.Example.\r\n") == "game.example");
     REQUIRE(config::normalize_host_name(" \t\r\n").empty());
 }
 
 TEST_CASE("Host mapping validation accepts addresses and bounds DNS labels", "[internet][config]") {
-    for (const auto *target : {"127.0.0.1", "2001:db8::1", "::1", "private.example", "localhost", "xn--bcher-kva.example"}) {
+    for (const auto *target : {"127.0.0.1", "127.0.0.1:8192", "2001:db8::1", "[::1]:8192",
+            "private.example", "private.example:8192", "localhost", "xn--bcher-kva.example"}) {
         INFO(target);
         CHECK(config::valid_host_target(target));
     }
-    for (const auto *target : {"", "https://private.example", "private.example:8192", "[::1]", "1.2.3.999",
-            "private..example", "private/example", "private example", "::invalid"}) {
+    for (const auto *target : {"", "https://private.example", "private.example:", "private.example:0",
+            "private.example:65536", "[::1]", "[::1]:", "1.2.3.999", "private..example",
+            "private/example", "private example", "::invalid"}) {
         INFO(target);
         CHECK_FALSE(config::valid_host_target(target));
     }
     CHECK(config::valid_host_name(std::string(63, 'a') + ".example"));
+    CHECK(config::valid_host_pattern("*.n-gage.com"));
+    CHECK_FALSE(config::valid_host_pattern("*n-gage.com"));
+    CHECK_FALSE(config::valid_host_pattern("*.*.n-gage.com"));
     CHECK_FALSE(config::valid_host_name(std::string(64, 'a') + ".example"));
     CHECK_FALSE(config::valid_host_name(std::string(254, 'a')));
     CHECK_FALSE(config::valid_host_target(std::string("127.0.0.1\0.example", 18)));
     CHECK(config::numeric_host_address("::ffff:192.0.2.1"));
     CHECK_FALSE(config::numeric_host_address("localhost"));
+}
+
+TEST_CASE("Port-mapped DNS results retain their target after the guest replaces the port", "[internet][config]") {
+    const auto mapper = std::make_shared<epoc::internet::host_port_mapper>();
+    epoc::internet::inet_bridged_protocol resolver_protocol(nullptr, true, 17, mapper);
+    epoc::internet::inet_bridged_protocol socket_protocol(nullptr, true, 6, mapper);
+    sockaddr_in host_addr{};
+    host_addr.sin_family = AF_INET;
+    host_addr.sin_addr.s_addr = htonl(0x7F000001);
+    epoc::socket::saddress guest_addr{};
+
+    resolver_protocol.map_host_port(reinterpret_cast<sockaddr *>(&host_addr), 8124, guest_addr);
+    const auto proxy = *static_cast<epoc::internet::sinet_address &>(guest_addr).addr_long();
+    REQUIRE(proxy != 0x7F000001);
+    guest_addr.port_ = 80;
+    REQUIRE(socket_protocol.apply_host_port(guest_addr));
+    REQUIRE(*static_cast<epoc::internet::sinet_address &>(guest_addr).addr_long() == 0x7F000001);
+    REQUIRE(guest_addr.port_ == 8124);
 }
 
 namespace {

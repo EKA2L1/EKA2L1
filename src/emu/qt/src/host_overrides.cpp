@@ -19,11 +19,11 @@
 host_overrides_widget::host_overrides_widget(eka2l1::config::state &config, eka2l1::system *system, QWidget *parent)
     : QWidget(parent), config_(config), system_(system), entries_(new QTreeWidget(this)) {
     auto *layout = new QVBoxLayout(this);
-    auto *hint = new QLabel(tr("Redirect guest hostnames to an IP address or another hostname. Changes affect new connections; restart the game if it has cached an address."), this);
+    auto *hint = new QLabel(tr("Redirect guest hostnames or wildcard suffixes to an IP address or another hostname, optionally with a port. Changes affect new connections; restart the game if it has cached an address."), this);
     hint->setWordWrap(true);
     layout->addWidget(hint);
     entries_->setObjectName("host_mappings");
-    entries_->setHeaderLabels({tr("Hostname"), tr("IP address or hostname")});
+    entries_->setHeaderLabels({tr("Hostname or *.suffix"), tr("Target and optional port")});
     entries_->setRootIsDecorated(false);
     entries_->header()->setSectionResizeMode(QHeaderView::Stretch);
     layout->addWidget(entries_);
@@ -69,8 +69,8 @@ void host_overrides_widget::edit(bool create) {
     auto *target = new QLineEdit(create ? QString{} : selected->text(1), &dialog);
     name->setObjectName("host_name");
     target->setObjectName("host_target");
-    layout->addRow(tr("Hostname"), name);
-    layout->addRow(tr("IP address or hostname"), target);
+    layout->addRow(tr("Hostname or *.suffix"), name);
+    layout->addRow(tr("Target and optional port"), target);
     auto *error = new QLabel(&dialog);
     error->setWordWrap(true);
     layout->addRow(error);
@@ -80,8 +80,8 @@ void host_overrides_widget::edit(bool create) {
     connect(buttons, &QDialogButtonBox::accepted, &dialog, [&] {
         const auto hostname = eka2l1::config::normalize_host_name(name->text().toStdString());
         const auto address = eka2l1::config::normalize_host_name(target->text().toStdString());
-        if (!eka2l1::config::valid_host_name(hostname) || !eka2l1::config::valid_host_target(address)) {
-            error->setText(tr("Enter a valid hostname and target without a URL scheme or port."));
+        if (!eka2l1::config::valid_host_pattern(hostname) || !eka2l1::config::valid_host_target(address)) {
+            error->setText(tr("Enter a valid hostname or *.suffix and an IP address or hostname with an optional port."));
             return;
         }
         for (const auto &[existing, value] : config_.hosts) {

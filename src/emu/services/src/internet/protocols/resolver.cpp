@@ -44,7 +44,8 @@ namespace eka2l1::epoc::internet {
         , addr_family_(address_family)
         , protocol_id_(protocol_id)
         , prev_info_(nullptr)
-        , iterating_info_(nullptr) {
+        , iterating_info_(nullptr)
+        , mapped_port_(std::nullopt) {
     }
 
     inet_host_resolver::~inet_host_resolver() {
@@ -125,6 +126,9 @@ namespace eka2l1::epoc::internet {
         }
 
         addrinfo_to_name_entry(*result, iterating_info_);
+        if (mapped_port_) {
+            papa_->map_host_port(iterating_info_->ai_addr, *mapped_port_, result->addr_);
+        }
         iterating_info_ = iterating_info_->ai_next;
 
         complete_info.complete(epoc::error_none);
@@ -138,8 +142,9 @@ namespace eka2l1::epoc::internet {
     void inet_host_resolver::get_by_name(epoc::socket::name_entry *supply_and_result, epoc::notify_info &complete_info) {
         std::string name_utf8 = common::ucs2_to_utf8(supply_and_result->name_.to_std_string(nullptr));
         const auto overridden = papa_->get_kernel_system()->get_config()->host_override(name_utf8);
+        mapped_port_ = overridden ? overridden->port : std::nullopt;
         if (overridden) {
-            name_utf8 = *overridden;
+            name_utf8 = overridden->hostname;
         }
     
         if (prev_info_) {
@@ -175,6 +180,9 @@ namespace eka2l1::epoc::internet {
         }
 
         addrinfo_to_name_entry(*supply_and_result, result_info);
+        if (overridden && overridden->port) {
+            papa_->map_host_port(result_info->ai_addr, *overridden->port, supply_and_result->addr_);
+        }
 
         prev_info_ = result_info;
         iterating_info_ = result_info->ai_next;

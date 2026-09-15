@@ -3090,13 +3090,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "IP Address or Hostname"
+            "value" : "Target and Optional Port"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "IP 地址或主机名"
+            "value" : "目标及可选端口"
           }
         }
       }
@@ -3106,13 +3106,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enter an IPv4 address, IPv6 address or hostname without a port."
+            "value" : "Enter an IPv4 address, IPv6 address or hostname, optionally followed by a port."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请输入不带端口的 IPv4 地址、IPv6 地址或主机名。"
+            "value" : "请输入 IPv4 地址、IPv6 地址或主机名，并可指定端口。"
           }
         }
       }
@@ -3154,13 +3154,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Redirect guest hostnames to an IP address or another hostname. Changes affect new connections; restart the game if it has cached an address."
+            "value" : "Redirect guest hostnames or wildcard suffixes to an IP address or another hostname, optionally with a port. Changes affect new connections; restart the game if it has cached an address."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "把客户机访问的主机名重定向到某个 IP 地址或另一个主机名。更改对新建立的连接生效；如果游戏已缓存地址，请重新启动它。"
+            "value" : "将客户机主机名或通配后缀重定向到 IP 地址或另一个主机名，并可指定端口。更改对新连接生效；如果游戏已缓存地址，请重新启动。"
           }
         }
       }
@@ -3170,13 +3170,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hostname (example.com)"
+            "value" : "Hostname or *.suffix"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "主机名（example.com）"
+            "value" : "主机名或 *.后缀"
           }
         }
       }
@@ -3186,13 +3186,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enter a valid IP address or hostname without a port."
+            "value" : "Enter a valid IP address or hostname with an optional port."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请输入有效的 IP 地址或主机名，且不要带端口号。"
+            "value" : "请输入有效的 IP 地址或主机名，并可指定端口。"
           }
         }
       }
@@ -3202,13 +3202,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enter a hostname using letters, numbers, hyphens, underscores and dots."
+            "value" : "Enter a hostname or *.suffix using letters, numbers, hyphens, underscores and dots."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "主机名只能使用字母、数字、连字符、下划线和点。"
+            "value" : "请输入主机名或 *.后缀，可使用字母、数字、连字符、下划线和点。"
           }
         }
       }
