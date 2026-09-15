@@ -24,6 +24,7 @@
     <string name="take_screenshot_fail">Captură de ecran eșuată!</string>
     <string name="opengl_required">Aplicația necesită OpenGL ES 3.0+.</string>
     <string name="warning">Atenţie</string>
+    <string name="scoped_storage_warning">Datele dvs. de utilizator sunt stocate într-o locație care <b>va fi ștearsă</b> atunci când dezinstalați aplicația:\n</string>
     <string name="install_ng_game">Instalați jocul N-Gage</string>
     <string name="notify_dialog_title">Notificare</string>
     <string name="grid_app_list_mode">Mod grilă</string>

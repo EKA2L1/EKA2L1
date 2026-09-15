@@ -24,6 +24,7 @@
     <string name="take_screenshot_fail">Impossibile eseguire lo screenshot!</string>
     <string name="opengl_required">Questa applicazione richiede OpenGL ES 3.0+.</string>
     <string name="warning">Attenzione</string>
+    <string name="scoped_storage_warning">I tuoi dati utente vengono memorizzati in una posizione che <b>verrà cancellata</b> quando disinstalli l\'app:\n</string>
     <string name="install_ng_game">Installa gioco N-Gage</string>
     <string name="notify_dialog_title">Notifiche</string>
     <string name="grid_app_list_mode">Modalità Griglia</string>

@@ -24,6 +24,7 @@
     <string name="take_screenshot_fail">Failed to take screenshot!</string>
     <string name="opengl_required">このアプリには OpenGL ES 3.0+ が必要です。</string>
     <string name="warning">注意</string>
+    <string name="scoped_storage_warning">あなたのユーザーデータは <b>アプリのアンインストール時に</b> 削除される場所に保存されます\n</string>
     <string name="install_ng_game">Install N-Gage game</string>
     <string name="notify_dialog_title">Notification</string>
     <string name="grid_app_list_mode">Grid mode</string>

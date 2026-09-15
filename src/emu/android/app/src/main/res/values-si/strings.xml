@@ -24,6 +24,7 @@
     <string name="take_screenshot_fail">Failed to take screenshot!</string>
     <string name="opengl_required">යෙදුමට OpenGL ES 3.0+ අවශ්‍ය වේ.</string>
     <string name="warning">අවවාදයයි</string>
+    <string name="scoped_storage_warning">ඔබගේ පරිශීලක දත්ත ගබඩා කර ඇති ස්ථානයක <b>මකා දමනු ලැබේ</b> ඔබ යෙදුම අස්ථාපනය කරන විට:\n</string>
     <string name="install_ng_game">Install N-Gage game</string>
     <string name="notify_dialog_title">Notification</string>
     <string name="grid_app_list_mode">Grid mode</string>
