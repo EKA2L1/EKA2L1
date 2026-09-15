@@ -24,7 +24,6 @@
     <string name="take_screenshot_fail">فشل في التقاط لقطة الشاشة!</string>
     <string name="opengl_required">يتطلب التطبيق OpenGL ES 3.0+.</string>
     <string name="warning">تحذير</string>
-    <string name="scoped_storage_warning">يتم تخزين بيانات المستخدم في مسار <b>سيتم حذفه</b> عند إلغاء تثبيت التطبيق:\n</string>
     <string name="install_ng_game">تثبيت لعبة N-Gage</string>
     <string name="notify_dialog_title">الإشعارات</string>
     <string name="grid_app_list_mode">وضع الشبكة</string>

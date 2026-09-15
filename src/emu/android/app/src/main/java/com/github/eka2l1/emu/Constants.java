@@ -47,7 +47,6 @@ public class Constants {
     public static final String KEY_APP_IS_SHORTCUT = "appIsShortcut";
 
     public static final String PREF_DEFAULT_PROFILE = "default_profile";
-    public static final String PREF_STORAGE_WARNING_SHOWN = "storage-warning-shown";
     public static final String PREF_KEEP_SCREEN = "enable-wakelock";
     public static final String PREF_STATUSBAR = "enable-statusbar";
     public static final String PREF_THEME = "theme";

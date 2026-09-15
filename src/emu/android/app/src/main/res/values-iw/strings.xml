@@ -24,7 +24,6 @@
     <string name="take_screenshot_fail">צילום מסך נכשל</string>
     <string name="opengl_required">האפליקציה דורשת OpenGL ES 3.0+</string>
     <string name="warning">אזהרה</string>
-    <string name="scoped_storage_warning">Your user data is stored in a location which <b>will be deleted</b> when you uninstall the app:\n</string>
     <string name="install_ng_game">התקן משחק N-Gage</string>
     <string name="notify_dialog_title">הודעה</string>
     <string name="grid_app_list_mode">מצב רשת</string>
