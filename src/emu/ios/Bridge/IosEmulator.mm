@@ -2716,7 +2716,7 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
             }
             const auto hostname = eka2l1::config::normalize_host_name([key UTF8String]);
             const auto address = eka2l1::config::normalize_host_name([value UTF8String]);
-            if (!eka2l1::config::valid_host_name(hostname) || !eka2l1::config::valid_host_target(address)
+            if (!eka2l1::config::valid_host_pattern(hostname) || !eka2l1::config::valid_host_target(address)
                 || !hosts->emplace(hostname, address).second) {
                 return NO;
             }
