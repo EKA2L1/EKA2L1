@@ -51,14 +51,11 @@ struct HoldableRawKey<Label: View>: View {
             .accessibilityAction {
                 EKA2L1Bridge.shared.tapRawKey(scan)
             }
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { _ in
-                        press()
-                    }
-                    .onEnded { _ in
-                        release()
-                    }
+            // SwiftUI's zero-distance DragGesture fires late on iOS 27; UIKit
+            // touchesBegan reports the press as soon as the finger lands.
+            .overlay(
+                KeyTouchSurface(hitShape: hitShape, onPress: press, onRelease: release)
+                    .accessibilityHidden(true)
             )
             .onDisappear(perform: release)
             .hapticImpact(.light, trigger: impacts)
@@ -77,6 +74,92 @@ struct HoldableRawKey<Label: View>: View {
         sentDown = false
         pressed = false
         EKA2L1Bridge.shared.submitRawKey(scan, pressed: false)
+    }
+}
+
+private struct KeyTouchSurface: UIViewRepresentable {
+    let hitShape: AnyShape
+    let onPress: () -> Void
+    let onRelease: () -> Void
+
+    func makeUIView(context: Context) -> KeyTouchView {
+        let view = KeyTouchView()
+        configure(view)
+        return view
+    }
+
+    func updateUIView(_ view: KeyTouchView, context: Context) {
+        configure(view)
+    }
+
+    static func dismantleUIView(_ view: KeyTouchView, coordinator: ()) {
+        view.reset()
+    }
+
+    private func configure(_ view: KeyTouchView) {
+        view.hitShape = hitShape
+        view.onPress = onPress
+        view.onRelease = onRelease
+    }
+}
+
+private final class KeyTouchView: UIView {
+    var hitShape: AnyShape = AnyShape(Rectangle())
+    var onPress: (() -> Void)?
+    var onRelease: (() -> Void)?
+
+    // The key stays held until every finger that landed on it has lifted,
+    // even if those fingers slide outside the key.
+    private var activeTouches: Set<ObjectIdentifier> = []
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        backgroundColor = .clear
+        isMultipleTouchEnabled = true
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        backgroundColor = .clear
+        isMultipleTouchEnabled = true
+    }
+
+    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        hitShape.path(in: bounds).contains(point)
+    }
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        let wasIdle = activeTouches.isEmpty
+        for touch in touches {
+            activeTouches.insert(ObjectIdentifier(touch))
+        }
+        if wasIdle && !activeTouches.isEmpty {
+            onPress?()
+        }
+    }
+
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        remove(touches)
+    }
+
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        remove(touches)
+    }
+
+    func reset() {
+        guard !activeTouches.isEmpty else { return }
+        activeTouches.removeAll()
+        onRelease?()
+    }
+
+    private func remove(_ touches: Set<UITouch>) {
+        guard !activeTouches.isEmpty else { return }
+        for touch in touches {
+            activeTouches.remove(ObjectIdentifier(touch))
+        }
+        if activeTouches.isEmpty {
+            onRelease?()
+        }
     }
 }
 
