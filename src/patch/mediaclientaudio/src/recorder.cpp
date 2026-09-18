@@ -212,7 +212,7 @@ CMdaAudioClipUtility::TState CMdaAudioRecorderUtility::State() {
 }
 
 void CMdaAudioRecorderUtility::Close() {
-    Stop();
+    iProperties->Close();
 }
 
 void CMdaAudioRecorderUtility::PlayL() {

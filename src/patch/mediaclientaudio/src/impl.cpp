@@ -236,20 +236,17 @@ void CMMFMdaAudioUtility::Play() {
 }
 
 void CMMFMdaAudioUtility::Stop() {
-    TransitionState(EMdaStateReady, EAudioPlayerStop(0, iDispatchInstance) ? 2 : 1);
+    if ((iState == EMdaStatePlay) || (iState == EMdaStateRecord) || (iState == EMdaStatePause)) {
+        EAudioPlayerStop(0, iDispatchInstance);
+        iState = EMdaStateReady;
+    }
 
-    // Do cancel
     Cancel();
 }
 
 void CMMFMdaAudioUtility::Close() {
-    // Closing a clip will of course first will put a stop to playing
-    // The emulator side will auto handle closing when open a new URL. Here we are just complying
-    // with the rules...
-    TransitionState(EMdaStateIdle, KErrNone);
+    iState = EMdaStateIdle;
     EAudioPlayerStop(0, iDispatchInstance);
-
-    // Do cancel
     Cancel();
 }
 
