@@ -429,7 +429,7 @@ namespace eka2l1::epoc::adapter {
             info[i].xadv = ft_convention_to_float(glyph->metrics.horiAdvance);
             info[i].xoff = static_cast<float>(glyph->bitmap_left);
             info[i].yoff = static_cast<float>(-glyph->bitmap_top);
-            info[i].xoff2 = info[i].xoff + info[i].xadv;
+            info[i].xoff2 = info[i].xoff + static_cast<float>(bitmap.width / 3);
             info[i].yoff2 = info[i].yoff + static_cast<float>(bitmap.rows);
         }
 
