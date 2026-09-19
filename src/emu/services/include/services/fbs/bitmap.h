@@ -139,6 +139,9 @@ namespace eka2l1::epoc {
         int compressed_in_ram_;
         bool offset_from_me_;
 
+        // EKA1 ROM bitmaps only carry the initial display mode.
+        epoc::display_mode current_display_mode() const;
+
         void construct(loader::sbm_header &info, epoc::display_mode disp_mode, void *data, const void *base,
             const bool support_current_display_mode_flag, const bool white_fill = false);
 
@@ -156,20 +159,10 @@ namespace eka2l1::epoc {
     bool convert_to_rgba8888(fbs_server *serv, common::ro_stream &source, common::wo_stream &dest, loader::sbm_header &header, std::int32_t byte_width, const bitmap_file_compression comp, const bool make_standard_mask = false);
     bool convert_to_rgba8888(fbs_server *serv, bitwise_bitmap *bmp, common::wo_stream &dest, const bool make_standard_mask = false);
     bool convert_to_rgba8888(fbs_server *serv, loader::mbm_file &file, const std::size_t index, common::wo_stream &dest, const bool make_standard_mask = false);
-    /**
-     * @brief Composite a Symbian icon mask onto the icon's alpha channel.
-     *
-     * Both buffers must be RGBA8888 of the same dimensions, and the mask must have
-     * been produced by convert_to_rgba8888 with make_standard_mask set. The mask's
-     * polarity is worked out from its colour depth and its content; see the
-     * implementation for the two families involved.
-     *
-     * @param icon_rgba     Icon pixels, alpha channel overwritten in place.
-     * @param mask_rgba     Mask pixels, read only.
-     * @param width         Width in pixels of both buffers.
-     * @param height        Height in pixels of both buffers.
-     * @param mask_bpp      Colour depth the mask was stored at.
-     */
+    bitmap_color get_bitmap_color_from_display_mode(const display_mode mode);
+
+    // Buffers must be equal-sized RGBA8888; decode the mask with make_standard_mask.
+    // EGray256 supplies opacity; other modes are stencils with white transparent.
     void apply_icon_mask_alpha(std::uint8_t *icon_rgba, const std::uint8_t *mask_rgba,
-        const std::size_t width, const std::size_t height, const std::uint32_t mask_bpp);
+        const std::size_t width, const std::size_t height, const epoc::display_mode mask_mode);
 }

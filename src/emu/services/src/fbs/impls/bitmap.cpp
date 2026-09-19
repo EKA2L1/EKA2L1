@@ -48,19 +48,6 @@
 #include <cassert>
 
 namespace eka2l1 {
-    static epoc::bitmap_color get_bitmap_color_type_from_display_mode(const epoc::display_mode bpp) {
-        switch (bpp) {
-        case epoc::display_mode::gray2:
-            return epoc::monochrome_bitmap;
-        case epoc::display_mode::color16ma:
-        case epoc::display_mode::color16map:
-            return epoc::color_bitmap_with_alpha;
-        default:
-            break;
-        }
-
-        return epoc::color_bitmap;
-    }
 
     fbs_bitmap_data_info::fbs_bitmap_data_info()
         : dpm_(epoc::display_mode::none)
@@ -93,6 +80,29 @@ namespace eka2l1 {
         void bitwise_bitmap::settings::initial_display_mode(const display_mode &mode) {
             flags_ &= 0xFFFFFF00;
             flags_ |= static_cast<std::uint32_t>(mode);
+        }
+
+        bitmap_color get_bitmap_color_from_display_mode(const display_mode mode) {
+            // SEpocBitmapHeader::TColor distinguishes grayscale, colour and alpha
+            // (Symbian bmconv/PBMCOMP.CPP and CBitwiseBitmap::IsColor()).
+            if (is_display_mode_mono(mode)) {
+                return monochrome_bitmap;
+            }
+
+            if (mode == display_mode::color16map) {
+                return color_bitmap_with_alpha_pm;
+            }
+
+            if (mode == display_mode::color16ma) {
+                return color_bitmap_with_alpha;
+            }
+
+            return color_bitmap;
+        }
+
+        display_mode bitwise_bitmap::current_display_mode() const {
+            const display_mode mode = settings_.current_display_mode();
+            return (mode == display_mode::none) ? settings_.initial_display_mode() : mode;
         }
 
         bool bitwise_bitmap::settings::dirty_bitmap() const {
@@ -993,7 +1003,7 @@ namespace eka2l1 {
         header.compression = info.comp_;
         header.bitmap_size = static_cast<std::uint32_t>(original_bytes + sizeof(loader::sbm_header));
         header.size_pixels = info.size_;
-        header.color = get_bitmap_color_type_from_display_mode(info.dpm_);
+        header.color = epoc::get_bitmap_color_from_display_mode(info.dpm_);
         header.header_len = sizeof(loader::sbm_header);
         header.palette_size = 0;
         header.size_twips = info.size_ * epoc::get_approximate_pixel_to_twips_mul(kern->get_epoc_version());
@@ -1776,7 +1786,8 @@ namespace eka2l1 {
                         dest.write(&pixel, 1);
                         dest.write(&pixel, 1);
                         dest.write(&pixel, 1);
-                        dest.write(&pixel, 1);
+                        const std::uint8_t alpha = make_standard_mask ? pixel : 255;
+                        dest.write(&alpha, 1);
                     }
                 }
 
@@ -1834,97 +1845,16 @@ namespace eka2l1 {
             return convert_to_rgba8888(serv, buf_stream, dest, file.sbm_headers[index], -1, static_cast<bitmap_file_compression>(file.sbm_headers[index].compression), make_standard_mask);
         }
 
-        // Symbian icon masks come in two families with opposite polarities. BITGDI's
-        // CFbsBitGc::BitBltMasked (bitgdi/sbit/BITBLT.CPP) picks between them:
-        //
-        //     if (aMaskBitmap->DisplayMode() == EGray256)
-        //         DoBitBltAlpha(..., EFalse);          // alpha blend, aInvertMask ignored
-        //     ...
-        //     const TDrawMode drawMode = aInvertMask ? EDrawModeAND : EDrawModeANDNOT;
-        //
-        // So only an EGray256 mask is a real alpha/soft mask, where luminance is the
-        // alpha and white is opaque. Every other display mode is a binary stencil
-        // whose polarity comes from the caller, and Avkon passes aInvertMask=ETrue
-        // almost everywhere (EIKCLBD.CPP, EIKMENUB.CPP, Aknscind.cpp, ...), which
-        // ANDs the mask in as-is: white keeps the destination, so white is
-        // transparent.
-        //
-        // We keep classifying by depth rather than by that display mode, because
-        // some S60v2 icons carry gray-valued opacity in a mask the header flags as
-        // colour, and treating those as stencils inverts them. Depth alone gets
-        // every mask in the 6680 ROM right except the handful covered below.
-        static bool mask_depth_is_soft(const std::uint32_t bpp) {
-            return (bpp > 1) && (bpp <= 8);
-        }
-
-        // The exception: a few S60v2 AIF icons store a *binary* stencil at 8bpp, in
-        // the colour-key polarity the contract above describes, so the soft reading
-        // turns them inside out - the shape goes fully transparent while the backdrop
-        // stays opaque, which reads as a blank icon.
-        // The mask content settles it. An icon's outer frame is transparent by
-        // definition, so a mask that holds only white plus one other level, has a
-        // solid white border and some non-white interior, can only be colour-key.
-        // Masks with a real alpha ramp, with an already-transparent black border, or
-        // fully opaque ones (a full-bleed icon) keep the soft reading.
-        static bool soft_mask_reads_inside_out(const std::uint8_t *mask_rgba, const std::size_t width,
-            const std::size_t height) {
-            static constexpr std::uint8_t WHITE_MIN = 250;
-
-            if ((width < 3) || (height < 3)) {
-                return false;
-            }
-
-            std::uint8_t other_level = 0;
-            bool has_other_level = false;
-
-            for (std::size_t i = 0; i < width * height; i++) {
-                const std::uint8_t level = mask_rgba[i * 4];
-
-                if (level >= WHITE_MIN) {
-                    continue;
-                }
-
-                if (!has_other_level) {
-                    other_level = level;
-                    has_other_level = true;
-                } else if (level != other_level) {
-                    // Three or more levels: a genuine alpha ramp.
-                    return false;
-                }
-            }
-
-            if (!has_other_level) {
-                return false;
-            }
-
-            for (std::size_t x = 0; x < width; x++) {
-                if ((mask_rgba[x * 4] < WHITE_MIN) || (mask_rgba[((height - 1) * width + x) * 4] < WHITE_MIN)) {
-                    return false;
-                }
-            }
-
-            for (std::size_t y = 0; y < height; y++) {
-                if ((mask_rgba[(y * width) * 4] < WHITE_MIN) || (mask_rgba[(y * width + width - 1) * 4] < WHITE_MIN)) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
+        // BITGDI treats only EGray256 as alpha; Avkon uses inverted stencils otherwise
+        // (BITBLT.CPP, EIKCLBD.CPP), so a stencil's white preserves the destination.
         void apply_icon_mask_alpha(std::uint8_t *icon_rgba, const std::uint8_t *mask_rgba,
-            const std::size_t width, const std::size_t height, const std::uint32_t mask_bpp) {
+            const std::size_t width, const std::size_t height, const epoc::display_mode mask_mode) {
             if (!icon_rgba || !mask_rgba) {
                 return;
             }
 
-            const bool soft = mask_depth_is_soft(mask_bpp) && !soft_mask_reads_inside_out(mask_rgba, width, height);
+            const bool soft = (mask_mode == epoc::display_mode::gray256);
 
-            // A soft mask maps its gray value straight to alpha (white opaque). The
-            // mask is gray-valued, so its red channel carries the luminance directly
-            // and anti-aliased edges are preserved. A colour-key mask instead inverts
-            // the pure-white test that make_standard_mask left in the alpha channel,
-            // so only the white backdrop becomes transparent.
             for (std::size_t i = 0; i < width * height; i++) {
                 icon_rgba[i * 4 + 3] = soft
                     ? mask_rgba[i * 4]
