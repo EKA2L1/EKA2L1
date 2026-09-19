@@ -345,21 +345,28 @@ namespace eka2l1 {
         const auto localised_path = utils::get_nearest_lang_file(io, reg.localised_info_rsc_path,
             ideal_lang, land_drive);
 
-        if (localised_path.empty()) {
-            return true;
+        // A registration without a localisable resource file is valid (SDK
+        // driveinfo_reg.rss): keep the registration and fall back to the app name
+        // as caption, instead of dropping it.
+        if (!localised_path.empty()) {
+            f = io->open_file(localised_path, READ_MODE | BIN_MODE);
+            dat = f ? read_rsc_from_file(f, reg.localised_info_rsc_id, true, nullptr) : std::vector<std::uint8_t>{};
+
+            // Read localised info. Ignore result
+            if (!dat.empty()) {
+                common::ro_buf_stream localised_app_info_resource_stream(&dat[0], dat.size());
+                if (localised_app_info_resource_stream.valid()) {
+                    read_localised_registration_info(reinterpret_cast<common::ro_stream *>(&localised_app_info_resource_stream),
+                        reg, land_drive);
+                }
+            }
         }
 
-        f = io->open_file(localised_path, READ_MODE | BIN_MODE);
-
-        dat = read_rsc_from_file(f, reg.localised_info_rsc_id, true, nullptr);
-
-        common::ro_buf_stream localised_app_info_resource_stream(&dat[0], dat.size());
-
-        // Read localised info
-        // Ignore result
-        if (localised_app_info_resource_stream.valid()) {
-            read_localised_registration_info(reinterpret_cast<common::ro_stream *>(&localised_app_info_resource_stream),
-                reg, land_drive);
+        if (reg.mandatory_info.long_caption.get_length() == 0) {
+            const std::u16string caption_to_use = eka2l1::replace_extension(
+                eka2l1::filename(reg.mandatory_info.app_path.to_std_string(nullptr), true), u"");
+            reg.mandatory_info.short_caption.assign(nullptr, caption_to_use);
+            reg.mandatory_info.long_caption.assign(nullptr, caption_to_use);
         }
 
         LOG_INFO(SERVICE_APPLIST, "Found app: {}, uid: 0x{:X}",
