@@ -60,7 +60,9 @@ bool app_install_option_handler(eka2l1::common::arg_parser *parser, void *userda
     // Since it's inconvenient for user to specify the drive (they are all the same on computer),
     // and it's better to install in C since there is many apps required
     // to be in it and hardcoded the drive, just hardcode drive E here.
-    bool result = emu->symsys->install_package(common::utf8_to_ucs2(path), drive_e);
+    // installation_result_success is 0: compare, don't convert the enum to bool.
+    const bool result = emu->symsys->install_package(common::utf8_to_ucs2(path), drive_e)
+        == package::installation_result_success;
 
     if (!result) {
         *err = "Installation of SIS failed";
