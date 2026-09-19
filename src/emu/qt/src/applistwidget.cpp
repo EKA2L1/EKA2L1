@@ -699,11 +699,16 @@ void applist_widget::add_registeration_item_native(eka2l1::apa_app_registry &reg
         final_icon = QIcon(":/assets/duck_tank.png");
     } else {
         if ((final_pixmap.size().width() < ICON_GRID_SIZE.width()) && (final_pixmap.size().height() < ICON_GRID_SIZE.height())) {
-            QRect position_to_draw = QRect(0, 0, ICON_GRID_SIZE.width(), ICON_GRID_SIZE.height());
+            // Centered aspect fit: S60 AIF list icons are 42x29, and stretching them
+            // over the square grid cell squashes every legacy icon.
+            QSize scaled_size = final_pixmap.size().scaled(ICON_GRID_SIZE, Qt::KeepAspectRatio);
+            QRect position_to_draw = QRect(QPoint((ICON_GRID_SIZE.width() - scaled_size.width()) / 2,
+                (ICON_GRID_SIZE.height() - scaled_size.height()) / 2), scaled_size);
             QPixmap another_pixmap(ICON_GRID_SIZE);
             another_pixmap.fill(Qt::transparent);
 
             QPainter another_pixmap_painter(&another_pixmap);
+            another_pixmap_painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
             another_pixmap_painter.drawPixmap(position_to_draw, final_pixmap);
 
             final_icon = QIcon(another_pixmap);

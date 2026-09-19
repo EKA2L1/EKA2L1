@@ -200,6 +200,8 @@ namespace eka2l1::ios {
         // SwiftUI list cells get a predictable canvas; lunasvg renders at the
         // SVG's intrinsic size (often 88×88 or 176×176) and MBM dimensions
         // vary by app. Skip rescale if it already matches to save one draw.
+        // The source aspect ratio must be kept: S60 AIF list icons are 42×29,
+        // and filling the square would squash every legacy icon.
         UIImage *image = nil;
         if (requested_side == width && requested_side == height) {
             image = [UIImage imageWithCGImage:src_image];
@@ -208,8 +210,13 @@ namespace eka2l1::ios {
                 requested_side, requested_side, 8, requested_side * 4,
                 color_space, bitmap_info);
             if (dst_ctx) {
+                const double scale = std::min(static_cast<double>(requested_side) / width,
+                    static_cast<double>(requested_side) / height);
+                const double draw_w = width * scale;
+                const double draw_h = height * scale;
                 CGContextSetInterpolationQuality(dst_ctx, kCGInterpolationHigh);
-                CGContextDrawImage(dst_ctx, CGRectMake(0, 0, requested_side, requested_side), src_image);
+                CGContextDrawImage(dst_ctx, CGRectMake((requested_side - draw_w) / 2.0,
+                    (requested_side - draw_h) / 2.0, draw_w, draw_h), src_image);
                 CGImageRef dst_image = CGBitmapContextCreateImage(dst_ctx);
                 CGContextRelease(dst_ctx);
                 if (dst_image) {
@@ -319,7 +326,7 @@ namespace eka2l1::ios {
                 eka2l1::common::wo_buf_stream mask_dst(mask_rgba.data(), mask_rgba.size());
                 if (eka2l1::epoc::convert_to_rgba8888(fbsserv, parser, 1, mask_dst, true)) {
                     eka2l1::epoc::apply_icon_mask_alpha(rgba.data(), mask_rgba.data(), w, h,
-                        mask_hdr.bit_per_pixels);
+                        eka2l1::epoc::get_display_mode_from_bpp(mask_hdr.bit_per_pixels, mask_hdr.color));
                 }
             }
         }
@@ -349,7 +356,7 @@ namespace eka2l1::ios {
                 eka2l1::common::wo_buf_stream mask_dst(mask_rgba.data(), mask_rgba.size());
                 if (eka2l1::epoc::convert_to_rgba8888(fbsserv, mask_bitmap, mask_dst, true)) {
                     eka2l1::epoc::apply_icon_mask_alpha(rgba.data(), mask_rgba.data(), w, h,
-                        mask_bitmap->header_.bit_per_pixels);
+                        mask_bitmap->current_display_mode());
                 }
             }
         }
