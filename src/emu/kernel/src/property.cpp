@@ -29,6 +29,7 @@ namespace eka2l1 {
     namespace service {
         property::property(kernel_system *kern)
             : kernel::kernel_obj(kern, "", nullptr, kernel::access_type::global_access)
+            , ndata(0)
             , data_len(0)
             , data_type(service::property_type::unk) {
             obj_type = kernel::object_type::prop;
@@ -52,6 +53,8 @@ namespace eka2l1 {
         }
 
         void property::define(service::property_type pt, uint32_t pre_allocated) {
+            ndata = 0;
+
             data_type = pt;
             data_len = pre_allocated;
 
@@ -60,7 +63,7 @@ namespace eka2l1 {
                 data_len = 512;
             }
 
-            bindata.resize(data_len);
+            bindata.assign(data_len, 0);
         }
 
         bool property::set_int(int val) {
