@@ -69,6 +69,17 @@ bool app_install_option_handler(eka2l1::common::arg_parser *parser, void *userda
         return false;
     }
 
+    // The app list was loaded at boot. Rescan so a following --run sees the app
+    // this package just registered, as the GUI install path does.
+    kernel_system *kern = emu->symsys->get_kernel_system();
+    if (kern) {
+        auto *svr = reinterpret_cast<eka2l1::applist_server *>(kern->get_by_name<service::server>(
+            get_app_list_server_name_by_epocver(kern->get_epoc_version())));
+        if (svr) {
+            svr->rescan_registries(emu->symsys->get_io_system());
+        }
+    }
+
     return true;
 }
 
