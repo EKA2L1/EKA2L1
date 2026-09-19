@@ -63,7 +63,8 @@ namespace eka2l1 {
     }
     
     void scale_rectangle(eka2l1::rect &r, const float scale_factor) {
-        r.top *= scale_factor;
-        r.size *= scale_factor;
+        const eka2l1::vec2 bottom_right = r.top + r.size;
+        r.top = r.top * scale_factor;
+        r.size = (bottom_right * scale_factor) - r.top;
     }
 }
