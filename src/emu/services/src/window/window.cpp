@@ -1784,6 +1784,28 @@ namespace eka2l1 {
         scr->screen_mutex.unlock();
     }
 
+    // A Symbian digitiser only reports a pointer when it actually moves, while host
+    // frontends resample every active pointer at a fixed rate. Returns false when the
+    // event merely repeats the guest pixel the pointer is already at, so that a still
+    // finger does not turn a tap into a drag gesture.
+    bool window_server::update_pointer_position(const epoc::event &guest_evt_) {
+        const std::uint8_t ptr_num = guest_evt_.adv_pointer_evt_.ptr_num;
+
+        if (ptr_num >= last_pointer_pos_.size()) {
+            return true;
+        }
+
+        const epoc::event_type type = guest_evt_.adv_pointer_evt_.evtype;
+        const bool is_move = (type == epoc::event_type::drag) || (type == epoc::event_type::move);
+
+        if (is_move && (last_pointer_pos_[ptr_num] == guest_evt_.adv_pointer_evt_.pos)) {
+            return false;
+        }
+
+        last_pointer_pos_[ptr_num] = guest_evt_.adv_pointer_evt_.pos;
+        return true;
+    }
+
     void window_server::queue_input_from_driver(drivers::input_event &evt) {
         if (!loaded) {
             return;
@@ -1889,9 +1911,11 @@ namespace eka2l1 {
                 if (!make_key_event(input_mapping.key_input_map, input_event, guest_event)) {
                     make_mouse_event(original_input_evt, guest_event, get_current_focus_screen());
 
-                    touch_shipper.add_new_event(guest_event);
-                    root_current->walk_tree(&touch_shipper, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
-                    touch_shipper.clear();
+                    if (update_pointer_position(guest_event)) {
+                        touch_shipper.add_new_event(guest_event);
+                        root_current->walk_tree(&touch_shipper, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
+                        touch_shipper.clear();
+                    }
                 } else {
                     if (input_event.key_.state_ != drivers::key_state::repeat) {
                         key_shipper.add_new_event(guest_event);
