@@ -25,6 +25,7 @@
 #include <cassert>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <queue>
 #include <set>
 #include <type_traits>
@@ -52,6 +53,7 @@
 #include <utils/des.h>
 #include <utils/version.h>
 
+#include <drivers/graphics/emu_window.h>
 #include <drivers/input/common.h>
 
 namespace eka2l1 {
@@ -421,6 +423,9 @@ namespace eka2l1 {
         epoc::window_pointer_focus_walker touch_shipper;
         epoc::window_key_shipper key_shipper;
 
+        /// Last guest position each pointer was reported at; a repeat of it is a host resample.
+        std::array<std::optional<eka2l1::vec2>, MAX_SYMBIAN_SUPPORTED_POINTERS> last_pointer_pos_;
+
         void handle_input_from_driver(drivers::input_event input_event);
         void init_screens();
         void init_ws_mem();
@@ -428,6 +433,7 @@ namespace eka2l1 {
         void emit_ws_thread_code();
 
         void make_mouse_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_, epoc::screen *scr);
+        bool update_pointer_position(const epoc::event &guest_evt_);
 
     public:
         explicit window_server(system *sys);
