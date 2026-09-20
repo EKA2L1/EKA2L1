@@ -1952,7 +1952,10 @@ namespace eka2l1::drivers {
             std::optional<command_list> list = list_queue.pop();
 
             if (!list) {
-                LOG_ERROR(DRIVER_GRAPHICS, "Corrupted graphics command list! Emulation halt.");
+                if (!should_stop) {
+                    LOG_ERROR(DRIVER_GRAPHICS, "Corrupted graphics command list! Emulation halt.");
+                }
+
                 break;
             }
 
