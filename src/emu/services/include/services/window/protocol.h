@@ -62,5 +62,10 @@ namespace eka2l1::epoc {
         bool legacy_dsa() const {
             return client_.build <= WS_OLDARCH_VER || os_ <= epocver::epoc80;
         }
+
+        // A sync-thread client of this table reads GetRegion's result as a rect count and expects 0.
+        bool legacy_dsa_region() const {
+            return legacy_opcodes();
+        }
     };
 }

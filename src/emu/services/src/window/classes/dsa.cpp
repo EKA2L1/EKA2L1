@@ -157,7 +157,7 @@ namespace eka2l1::epoc {
 
         state_ = state_running;
 
-        if ((sync_thread_) && (client->client_version().build <= WS_OLDARCH_VER)) {
+        if (sync_thread_ && client->protocol().legacy_dsa_region()) {
             // Old DSA want 0
             ctx.complete(0);
         } else {
