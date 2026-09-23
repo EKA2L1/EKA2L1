@@ -288,7 +288,17 @@ namespace eka2l1::epoc {
     }
 
     bool canvas_base::is_visible() const {
-        return ((flags & flags_active) && (flags & flags_visible));
+        if (!(flags & flags_active) || !(flags & flags_visible)) {
+            return false;
+        }
+
+        // WSERV folds the parent's state into the child's hidden flag: a client window
+        // whose client parent is hidden is hidden too (CWsClientWindow::ResetHiddenFlag).
+        if (parent && (parent->type == window_kind::client)) {
+            return reinterpret_cast<const canvas_base *>(parent)->is_visible();
+        }
+
+        return true;
     }
 
     eka2l1::rect canvas_base::bounding_rect() const {

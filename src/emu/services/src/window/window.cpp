@@ -740,6 +740,19 @@ namespace eka2l1::epoc {
         ctx.complete(win->priority);
     }
 
+    void window_server_client::get_window_group_handle(service::ipc_context &ctx, ws_cmd &cmd) {
+        const std::uint32_t group_id = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
+        epoc::window_group *win = get_ws().get_group_from_id(group_id);
+
+        if (!win || (win->type != window_kind::group)) {
+            LOG_TRACE(SERVICE_WINDOW, "Can't find group with id {}", group_id);
+            ctx.complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx.complete(static_cast<int>(win->get_client_handle()));
+    }
+
     void window_server_client::get_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
         auto evt = redraws.get_evt_opt();
 
@@ -782,6 +795,32 @@ namespace eka2l1::epoc {
         }
 
         ctx.complete(scr->focus->id);
+    }
+
+    void window_server_client::get_default_owning_window(service::ipc_context &ctx, ws_cmd &cmd) {
+        epoc::screen *scr = primary_device ? primary_device->scr : get_ws().get_current_focus_screen();
+
+        if (cmd.header.cmd_len >= sizeof(int)) {
+            const int screen_num = *reinterpret_cast<int *>(cmd.data_ptr);
+
+            // A dummy screen number asks for the screen this client is bound to.
+            if (screen_num >= 0) {
+                scr = get_ws().get_screen(screen_num);
+
+                if (!scr) {
+                    LOG_ERROR(SERVICE_WINDOW, "Invalid screen number {}", screen_num);
+                    ctx.complete(epoc::error_argument);
+                    return;
+                }
+            }
+        }
+
+        if (!scr) {
+            ctx.complete(0);
+            return;
+        }
+
+        ctx.complete(scr->default_owning_group ? scr->default_owning_group->id : 0);
     }
 
     void window_server_client::get_window_group_name_from_id(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -1031,20 +1070,12 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_none);
     }
 
-    // This handle both sync and async
-    void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
-        // LOG_TRACE(SERVICE_WINDOW, "Window client op: {}", (int)cmd.header.op);
-        epoc::version cli_ver = client_version();
+    window_server_protocol window_server_client::protocol() {
+        return { get_ws().get_kernel_system()->get_epoc_version(), client_version() };
+    }
 
-        // Patching out user opcode.
-        if (cli_ver.major == 1 && cli_ver.minor == 0) {
-            if (cli_ver.build <= WS_OLDARCH_VER) {
-                // Skip start and end custom text cursor, they does not exist
-                if (cmd.header.op >= ws_cl_op_start_custom_text_cursor) {
-                    cmd.header.op += 2;
-                }
-            }
-        }
+    void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
+        cmd.header.op = protocol().session_opcode(cmd.header.op);
 
         switch (cmd.header.op) {
         // Gets the total number of window groups with specified priority currently running
@@ -1057,6 +1088,10 @@ namespace eka2l1::epoc {
 
         case ws_cl_op_get_window_group_ordinal_priority:
             get_window_group_ordinal_priority(ctx, cmd);
+            break;
+
+        case ws_cl_op_get_window_group_handle:
+            get_window_group_handle(ctx, cmd);
             break;
 
         case ws_cl_op_send_event_to_window_group: {
@@ -1168,6 +1203,11 @@ namespace eka2l1::epoc {
 
         case ws_cl_op_get_focus_window_group: {
             get_focus_window_group(ctx, cmd);
+            break;
+        }
+
+        case ws_cl_op_get_default_owning_window: {
+            get_default_owning_window(ctx, cmd);
             break;
         }
 
@@ -1628,6 +1668,11 @@ namespace eka2l1 {
     }
 
     window_server::~window_server() {
+        if (direct_framebuffer_refresh_evt_ >= 0) {
+            get_ntimer()->unschedule_event(direct_framebuffer_refresh_evt_, 0);
+            get_ntimer()->remove_event(direct_framebuffer_refresh_evt_);
+        }
+
         if (!clients.empty()) {
             LOG_WARN(SERVICE_WINDOW, "Kernel is having a leakage with window server!");
             clients.clear();
@@ -1648,6 +1693,70 @@ namespace eka2l1 {
         timer->remove_event(deliver_report_visibility_evt_);
 
         bmp_cache.clean(drv);
+    }
+
+    // UIQ 2 has a five-way jog dial instead of a d-pad. Left and right become its pull and push,
+    // which Mophun titles read as right and left.
+    static std::int32_t uiq_2_scancode(const std::int32_t scancode) {
+        switch (scancode) {
+        case epoc::std_key_up_arrow:
+            return epoc::std_key_device_1;
+
+        case epoc::std_key_down_arrow:
+            return epoc::std_key_device_2;
+
+        case epoc::std_key_device_3:
+            return epoc::std_key_device_8;
+
+        case epoc::std_key_left_arrow:
+            return epoc::std_key_device_e;
+
+        case epoc::std_key_right_arrow:
+            return epoc::std_key_device_d;
+
+        default:
+            break;
+        }
+
+        return scancode;
+    }
+
+    bool window_server::is_uiq_2_device() {
+        if (!uiq_2_device_) {
+            uiq_2_device_ = get_system()->is_uiq_2_device_active();
+        }
+
+        return uiq_2_device_.value();
+    }
+
+    static constexpr std::uint64_t DIRECT_FRAMEBUFFER_REFRESH_INTERVAL_US = 1000000 / 60;
+
+    void window_server::map_direct_framebuffer(epoc::screen *scr) {
+        if (!kern->is_eka1() || !scr->screen_buffer_chunk) {
+            return;
+        }
+        scr->mark_direct_framebuffer_mapped();
+        if (direct_framebuffer_refresh_evt_ >= 0) {
+            return;
+        }
+
+        direct_framebuffer_refresh_evt_ = get_ntimer()->register_event("directFramebufferRefresh",
+            [this](std::uint64_t, int) { refresh_direct_framebuffers(); });
+        get_ntimer()->schedule_event(DIRECT_FRAMEBUFFER_REFRESH_INTERVAL_US, direct_framebuffer_refresh_evt_, 0);
+    }
+
+    void window_server::refresh_direct_framebuffers() {
+        const std::lock_guard<kernel_system> guard(*kern);
+        if (auto *driver = get_graphics_driver()) {
+            for (epoc::screen *scr = screens; scr; scr = scr->next) {
+                if (scr->direct_framebuffer_mapped && scr->update_direct_framebuffer()) {
+                    std::uint64_t next_vsync = 0;
+                    scr->vsync(get_ntimer(), next_vsync);
+                    scr->present_framebuffer(driver, kern);
+                }
+            }
+        }
+        get_ntimer()->schedule_event(DIRECT_FRAMEBUFFER_REFRESH_INTERVAL_US, direct_framebuffer_refresh_evt_, 0);
     }
 
     drivers::graphics_driver *window_server::get_graphics_driver() {
@@ -1842,6 +1951,8 @@ namespace eka2l1 {
                     } else if (scancode == '5') {
                         guest_event.key_evt_.scancode = epoc::std_key_space;
                     }
+                } else if (is_uiq_2_device()) {
+                    guest_event.key_evt_.scancode = uiq_2_scancode(guest_event.key_evt_.scancode);
                 }
 
                 key_shipper.add_new_event(guest_event);
@@ -1854,6 +1965,9 @@ namespace eka2l1 {
 
         case drivers::input_event_type::button:
             if (make_button_event(input_mapping.button_input_map, input_event, guest_event)) {
+                if (is_uiq_2_device()) {
+                    guest_event.key_evt_.scancode = uiq_2_scancode(guest_event.key_evt_.scancode);
+                }
                 key_shipper.add_new_event(guest_event);
                 key_shipper.start_shipping();
 

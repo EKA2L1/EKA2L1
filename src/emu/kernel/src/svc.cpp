@@ -4903,7 +4903,7 @@ namespace eka2l1::epoc {
 
         const epocver kver = kern->get_epoc_version();
 
-        if (kver == epocver::epoc6) {
+        if ((kver == epocver::epoc6) || (kver == epocver::epoc70)) {
             switch (attribute & 0xFF) {
             case epoc::eka1_executor::execute_v6_create_chunk_normal:
             case epoc::eka1_executor::execute_v6_create_chunk_double_ended:
@@ -4950,6 +4950,9 @@ namespace eka2l1::epoc {
 
             case epoc::eka1_executor::execute_v6_logon_thread:
                 return thread_logon_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v6_logon_cancel_thread:
+                return thread_logon_cancel_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
             case epoc::eka1_executor::execute_v6_open_thread:
                 return thread_open_eka1(kern, attribute, create_info, finish_signal, crr_thread);

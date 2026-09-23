@@ -128,6 +128,9 @@ const char *epocver_to_string(const epocver ver) {
     case epocver::epoc6:
         return "epoc6";
 
+    case epocver::epoc70:
+        return "epoc70";
+
     case epocver::epoc7:
         return "epoc7";
 
@@ -178,6 +181,10 @@ const epocver string_to_epocver(const char *str) {
 
     if (str_std == "epoc80") {
         return epocver::epoc80;
+    }
+
+    if (str_std == "epoc70") {
+        return epocver::epoc70;
     }
 
     if (str_std == "epoc7") {

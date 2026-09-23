@@ -529,7 +529,7 @@ namespace eka2l1 {
             const std::size_t crr_pos = stream->tell();
             stream->seek(view_data_offset, common::seek_where::beg);
 
-            view_data the_view_data;
+            view_data the_view_data{};
 
             if (stream->read(&the_view_data.uid_, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
                 return false;
@@ -539,16 +539,31 @@ namespace eka2l1 {
                 return false;
             }
 
-            if (stream->read(&the_view_data.icon_count_, sizeof(std::uint16_t)) != sizeof(std::uint16_t)) {
+            utils::cardinality caption_count;
+            if (!caption_count.internalize(*stream)) {
                 return false;
             }
 
-            std::optional<std::u16string> cap_string = read_caption_list_and_find_best();
-            if (!cap_string) {
+            // View captions are inline descriptors followed by their language code.
+            for (std::uint32_t caption_index = 0; caption_index < caption_count.value(); caption_index++) {
+                std::u16string caption;
+                std::uint16_t language_code = 0;
+                if (!epoc::read_des_string(caption, stream, true)
+                    || stream->read(&language_code, sizeof(language_code)) != sizeof(language_code)) {
+                    return false;
+                }
+                if (the_view_data.caption_.empty() || static_cast<language>(language_code) == lang) {
+                    the_view_data.caption_ = std::move(caption);
+                }
+            }
+
+            utils::cardinality icon_count;
+            if (!icon_count.internalize(*stream)) {
                 return false;
             }
 
-            the_view_data.caption_ = std::move(cap_string.value());
+            the_view_data.icon_count_ = icon_count.value();
+            reg.view_datas.push_back(std::move(the_view_data));
 
             stream->seek(crr_pos, common::seek_where::beg);
         }

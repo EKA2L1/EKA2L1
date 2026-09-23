@@ -24,11 +24,14 @@ import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.content.res.AppCompatResources;
+import com.github.eka2l1.R;
 
 import com.github.eka2l1.emu.Emulator;
 import com.github.eka2l1.emu.Keycode;
@@ -63,6 +66,8 @@ public class VirtualKeyboard implements Overlay, Runnable {
         private boolean visible;
         private boolean opaque = true;
         private int corners = 0;
+        private Drawable icon;
+        private int iconColor;
 
         VirtualKey(int keyCode, String label) {
             this.keyCode = keyCode;
@@ -74,6 +79,12 @@ public class VirtualKeyboard implements Overlay, Runnable {
         VirtualKey(int keyCode, int secondKeyCode, String label) {
             this(keyCode, label);
             this.secondKeyCode = secondKeyCode;
+        }
+
+        // Drawn in place of the label, which still names the key in the settings.
+        void setIcon(Drawable icon, int color) {
+            this.icon = icon == null ? null : icon.mutate();
+            this.iconColor = color;
         }
 
         int getKeyCode() {
@@ -143,7 +154,16 @@ public class VirtualKeyboard implements Overlay, Runnable {
                     g.drawArc(rect, 0, 360, false, drawPaint);
                     break;
             }
-            g.drawText(label, rect.centerX(), rect.centerY() - textCenterOffset, textPaint);
+            if (icon != null) {
+                int half = (int) (Math.min(rect.width(), rect.height()) * 0.3f);
+                int cx = (int) rect.centerX();
+                int cy = (int) rect.centerY();
+                icon.setBounds(cx - half, cy - half, cx + half, cy + half);
+                icon.setTint((fgColor & 0xFF000000) | (iconColor & 0x00FFFFFF));
+                icon.draw(g);
+            } else {
+                g.drawText(label, rect.centerX(), rect.centerY() - textCenterOffset, textPaint);
+            }
         }
 
         public String getLabel() {
@@ -164,7 +184,7 @@ public class VirtualKeyboard implements Overlay, Runnable {
         }
     }
 
-    private static final int KEYBOARD_SIZE = 25;
+    private static final int KEYBOARD_SIZE = 27;
     static final int SCREEN = -1;
 
     static final int KEY_NUM1 = 0;
@@ -192,6 +212,8 @@ public class VirtualKeyboard implements Overlay, Runnable {
     static final int KEY_DOWN = 22;
     static final int KEY_DOWN_RIGHT = 23;
     static final int KEY_FIRE = 24;
+    static final int KEY_CALL = 25;
+    static final int KEY_END = 26;
 
     private static final int LAYOUT_SIGNATURE = 0x564B4C00;
     private static final int LAYOUT_OLD_VERSION = 1;
@@ -263,6 +285,8 @@ public class VirtualKeyboard implements Overlay, Runnable {
             {
                     KEY_DIAL,
                     KEY_CANCEL,
+                    KEY_CALL,
+                    KEY_END,
             },
             {
                     KEY_NUM1,
@@ -354,6 +378,11 @@ public class VirtualKeyboard implements Overlay, Runnable {
 
         keypad[KEY_FIRE] = new VirtualKey(Keycode.KEY_FIRE, "F");
 
+        keypad[KEY_CALL] = new VirtualKey(Keycode.KEY_CALL, "Call");
+        keypad[KEY_CALL].setIcon(AppCompatResources.getDrawable(context, R.drawable.ic_vk_call), 0x34C759);
+        keypad[KEY_END] = new VirtualKey(Keycode.KEY_END, "End");
+        keypad[KEY_END].setIcon(AppCompatResources.getDrawable(context, R.drawable.ic_vk_call_end), 0xFF3B30);
+
         snapOrigins = new int[keypad.length];
         snapModes = new int[keypad.length];
         snapOffsets = new PointF[keypad.length];
@@ -420,6 +449,7 @@ public class VirtualKeyboard implements Overlay, Runnable {
                 }
                 keypad[KEY_DIAL].setVisible(false);
                 keypad[KEY_CANCEL].setVisible(false);
+                resetPhoneKeys();
                 break;
             case 1:
                 keyScales[SCALE_JOYSTICK] = 1;
@@ -460,6 +490,7 @@ public class VirtualKeyboard implements Overlay, Runnable {
                 }
                 keypad[KEY_DIAL].setVisible(false);
                 keypad[KEY_CANCEL].setVisible(false);
+                resetPhoneKeys();
                 break;
             case 2:
                 keyScales[SCALE_JOYSTICK] = 1;
@@ -488,6 +519,7 @@ public class VirtualKeyboard implements Overlay, Runnable {
                 }
                 keypad[KEY_DIAL].setVisible(false);
                 keypad[KEY_CANCEL].setVisible(false);
+                resetPhoneKeys();
                 break;
             case 3:
                 keyScales[SCALE_JOYSTICK] = 1;
@@ -518,8 +550,18 @@ public class VirtualKeyboard implements Overlay, Runnable {
                 for (int i = KEY_DIAL; i < KEYBOARD_SIZE; i++) {
                     keypad[i].setVisible(false);
                 }
+                resetPhoneKeys();
                 break;
         }
+    }
+
+    // Green call and red end keys, hidden by default. They sit above the soft keys,
+    // where every layout leaves room.
+    protected void resetPhoneKeys() {
+        setSnap(KEY_CALL, KEY_SOFT_LEFT, RectSnap.EXT_NORTH);
+        setSnap(KEY_END, KEY_SOFT_RIGHT, RectSnap.EXT_NORTH);
+        keypad[KEY_CALL].setVisible(false);
+        keypad[KEY_END].setVisible(false);
     }
 
     protected int getLayoutNum() {

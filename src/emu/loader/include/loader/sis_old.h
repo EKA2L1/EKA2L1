@@ -127,6 +127,7 @@ namespace eka2l1 {
         };
 
         struct sis_old_file_record {
+            virtual ~sis_old_file_record() = default;
             std::uint32_t file_record_type;
         };
 

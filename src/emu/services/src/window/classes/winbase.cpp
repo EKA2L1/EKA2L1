@@ -284,28 +284,7 @@ namespace eka2l1::epoc {
     }
 
     bool window::execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
-        epoc::version cli_ver = client->client_version();
-        kernel_system *kern = client->get_ws().get_kernel_system();
-
-        // Patching out user opcode.
-        if ((cli_ver.major == WS_MAJOR_VER) && (cli_ver.minor == WS_MINOR_VER)) {
-            // The window-server client version determines this opcode table.
-            // Some EKA1/EPOC 8.0 releases report a newer build and already
-            // include EWsWinOpAbsPosition.
-            if (cli_ver.build <= WS_OLDARCH_VER) {
-                // Skip absolute position opcode
-                if (cmd.header.op >= EWsWinOpAbsPosition) {
-                    cmd.header.op += 1;
-                }
-            }
-
-            if (cli_ver.build <= WS_NEWARCH_VER) {
-                if ((cmd.header.op >= EWsWinOpSendAdvancedPointerEvent) && (kern->get_epoc_version() <= epocver::epoc94)) {
-                    // Send advanced pointer event opcode does not exist in the version.
-                    cmd.header.op += 1;
-                }
-            }
-        }
+        cmd.header.op = client->protocol().window_opcode(cmd.header.op);
 
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 

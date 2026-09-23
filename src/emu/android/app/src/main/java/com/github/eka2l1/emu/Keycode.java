@@ -42,4 +42,6 @@ public class Keycode {
     public static final int KEY_SOFT_RIGHT = 0xA5;
     public static final int KEY_CLEAR = 0x01;
     public static final int KEY_SEND = 10;
+    public static final int KEY_CALL = 0xB4;
+    public static final int KEY_END = 0xB5;
 }

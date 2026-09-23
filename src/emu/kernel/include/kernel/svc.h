@@ -138,6 +138,7 @@ namespace eka2l1::epoc {
             execute_v6_kill_thread = 0x2D,
             execute_v6_panic_thread = 0x2F,
             execute_v6_logon_thread = 0x30,
+            execute_v6_logon_cancel_thread = 0x31,
             execute_v6_get_heap_thread = 0x32,
             execute_v6_set_tls = 0x34,
             execute_v6_free_tls = 0x35,

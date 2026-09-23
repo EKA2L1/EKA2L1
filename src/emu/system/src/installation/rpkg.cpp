@@ -57,10 +57,11 @@ namespace eka2l1::loader {
             return true;
         }
 
-        // Device information usually resides in ROFS. If it's in ROM likely there's no ROFS
-        std::optional<rom_entry> rentry = rom_parse->burn_tree_find_entry("z:\\system\\versions\\sw.txt");
-        if (rentry.has_value()) {
-            return false;
+        // A core-only EKA1 dump leaves the device naming files in ROFS.
+        for (const std::string &naming_file : device_naming_files()) {
+            if (rom_parse->burn_tree_find_entry("z:\\" + naming_file).has_value()) {
+                return false;
+            }
         }
 
         return true;
@@ -170,11 +171,16 @@ namespace eka2l1::loader {
             return device_installation_already_exist;
         }
 
+        // Only an RPKG carries the machine UID in its header; a bare ROM has to be
+        // asked for it, or every guest that branches on the model sees a zero.
+        const std::uint32_t machine_uid = determine_rpkg_machine_uid(temp_z_path);
+
         auto firmcode_low = common::lowercase_string(firmcode);
 
         // Rename temp folder to its product code
         eka2l1::common::move_file(temp_z_path, add_path(drives_z_resident_path, firmcode_low + "\\"));
-        const add_device_error err_adddvc = dvcmngr->add_new_device(firmcode, model, manufacturer, ver, 0);
+        const add_device_error err_adddvc = dvcmngr->add_new_device(firmcode, model, manufacturer, ver,
+            machine_uid);
 
         if (err_adddvc != add_device_none) {
             LOG_ERROR(SYSTEM, "This device ({}) failed to be install, revert all changes", firmcode);

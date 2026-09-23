@@ -1341,6 +1341,11 @@ namespace eka2l1 {
             old_header.size_pixels.y = new_size.y;
             old_header.size_twips = old_header.size_pixels * epoc::get_approximate_pixel_to_twips_mul(fbss->kern->get_epoc_version());
 
+            // data_pointer() re-derives which chunk the pixels live in from this size, so a
+            // resize that leaves it describing the old data sends the next read to the wrong base.
+            old_header.bitmap_size = old_header.header_len + epoc::get_byte_width(new_size.x,
+                static_cast<std::uint8_t>(old_header.bit_per_pixels)) * new_size.y;
+
             // Free old data
             std::uint8_t *data = new_bmp->original_pointer(fbss);
             if (new_bmp->bitmap_->offset_from_me_) {

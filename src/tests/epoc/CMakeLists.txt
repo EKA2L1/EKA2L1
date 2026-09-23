@@ -10,6 +10,7 @@ set(CORE_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/kernel/timer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/e32img.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/gdr.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/loader/sis_old.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/mbm.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/mif.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/loader/nvg.cpp
@@ -31,6 +32,7 @@ set(CORE_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/services/sensor/rotation.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/window/surface.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/window/scale.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/services/window/protocol.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/centralrepo/crebinloader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/domain/domain.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/framework/objects.cpp

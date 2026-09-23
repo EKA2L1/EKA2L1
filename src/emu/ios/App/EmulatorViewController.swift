@@ -290,14 +290,21 @@ private final class EKA2L1RenderView: UIView {
     }
     private let textInputButton = UIButton(type: .system)
 
-    // When true, the presented guest picture is pinned just below the top safe
-    // area instead of centred, so a bottom keypad overlay covers letterbox
-    // rather than gameplay. Pushed to the bridge on every layout pass (the
-    // anchor is in surface pixels, so it depends on renderScale and insets).
-    var anchorsDisplayTop = false {
+    // Pushed to the bridge on every layout pass: it is in surface pixels, so it also
+    // depends on renderScale and the safe-area insets.
+    var displayLayout = DisplayLayoutConfiguration.standard(landscape: false) {
         didSet {
-            if anchorsDisplayTop != oldValue {
-                setNeedsLayout()
+            if displayLayout != oldValue {
+                pushDisplayLayout()
+            }
+        }
+    }
+
+    // Fullscreen ignores the stored layout entirely; see pushDisplayLayout.
+    var fullscreenLayout = false {
+        didSet {
+            if fullscreenLayout != oldValue {
+                pushDisplayLayout()
             }
         }
     }
@@ -358,6 +365,30 @@ private final class EKA2L1RenderView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    // The presented guest picture in this view's coordinate space, for the
+    // layout editor's outline. Empty until the first frame is presented.
+    var guestPictureFrame: CGRect {
+        let scale = renderScale
+        guard scale > 0 else { return .zero }
+        return EKA2L1Bridge.shared.guestDisplayRect.applying(
+            CGAffineTransform(scaleX: 1 / scale, y: 1 / scale))
+    }
+
+    // Fullscreen takes the whole surface and ignores the stored layout; otherwise the
+    // picture is fitted into the safe area.
+    private func pushDisplayLayout() {
+        let scale = renderScale
+        guard bounds.width > 0, bounds.height > 0, scale > 0 else { return }
+        let layout = fullscreenLayout ? .fullscreen : displayLayout
+        let content = fullscreenLayout ? bounds : bounds.inset(by: safeAreaInsets)
+        EKA2L1Bridge.shared.setDisplayLayout(
+            content: content.applying(CGAffineTransform(scaleX: scale, y: scale)),
+            scale: layout.scale,
+            gravity: layout.gravity.rawIndex,
+            offset: CGPoint(x: layout.offsetX * bounds.width * scale,
+                            y: layout.offsetY * bounds.height * scale))
+    }
+
     override func layoutSubviews() {
         super.layoutSubviews()
 
@@ -367,8 +398,7 @@ private final class EKA2L1RenderView: UIView {
         guard pixels.width > 0, pixels.height > 0 else { return }
 
         EKA2L1Bridge.shared.attach(layer: eaglLayer, pixelSize: pixels, scale: scale)
-        EKA2L1Bridge.shared.setDisplayAnchorTop(
-            pixels: anchorsDisplayTop ? Int(safeAreaInsets.top * scale) : -1)
+        pushDisplayLayout()
         pushInterfaceRotation()
         surfaceReady = true
         updateTextInputButton()
@@ -484,12 +514,21 @@ final class EmulatorViewController: UIViewController {
     // Invoked when the guest app exits on its own (Exit soft key / panic /
     // normal termination) so the SwiftUI host can pop this screen.
     var onAppExit: ((String?) -> Void)?
-    // Forwarded to the render view; see EKA2L1RenderView.anchorsDisplayTop.
-    var anchorsDisplayTop = false {
+    // Whether the keypad overlay is hidden: it enables the on-screen controller
+    // pointer and takes the picture fullscreen.
+    var fullscreenLayout = false {
         didSet {
-            peripheralInput.setFullscreen(!anchorsDisplayTop)
+            peripheralInput.setFullscreen(fullscreenLayout)
             if isViewLoaded {
-                gameView.anchorsDisplayTop = anchorsDisplayTop
+                gameView.fullscreenLayout = fullscreenLayout
+            }
+        }
+    }
+    // Forwarded to the render view; see EKA2L1RenderView.displayLayout.
+    var displayLayout = DisplayLayoutConfiguration.standard(landscape: false) {
+        didSet {
+            if isViewLoaded {
+                gameView.displayLayout = displayLayout
             }
         }
     }
@@ -500,6 +539,11 @@ final class EmulatorViewController: UIViewController {
                 gameView.keypadHitRegions = keypadHitRegions
             }
         }
+    }
+    // Where the guest picture currently lands, for the display-layout editor's
+    // outline; see EKA2L1RenderView.guestPictureFrame.
+    var guestPictureFrame: CGRect {
+        isViewLoaded ? gameView.guestPictureFrame : .zero
     }
     private var launched = false
     private let peripheralInput = PeripheralInputBridge()
@@ -531,7 +575,8 @@ final class EmulatorViewController: UIViewController {
     override func loadView() {
         let renderView = EKA2L1RenderView(frame: UIScreen.main.bounds)
         renderView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        renderView.anchorsDisplayTop = anchorsDisplayTop
+        renderView.displayLayout = displayLayout
+        renderView.fullscreenLayout = fullscreenLayout
         renderView.keypadHitRegions = keypadHitRegions
         view = renderView
     }

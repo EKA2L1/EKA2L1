@@ -58,6 +58,8 @@
 #include <services/redir/redir.h>
 #include <services/remcon/remcon.h>
 #include <services/sensor/sensor.h>
+#include <services/memorymanager/memorymanager.h>
+#include <services/linnea/linnea.h>
 #include <services/shutdown/shutdown.h>
 #include <services/sisregistry/sisregistry.h>
 #include <services/sms/settings.h>
@@ -270,6 +272,12 @@ namespace eka2l1 {
             CREATE_SERVER_D(sys, fs_server);
             CREATE_SERVER(sys, loader_server);
             CREATE_SERVER(sys, shutdown_server);
+
+            if (sys->get_symbian_version_use() == epocver::epoc70) {
+                // Platform services UIQ applications block on; the ROM starts them at boot.
+                CREATE_SERVER(sys, memory_manager_server);
+                CREATE_SERVER(sys, linnea_server);
+            }
 
             if (sys->get_kernel_system()->is_eka1()) {
                 CREATE_SERVER(sys, camera_server);

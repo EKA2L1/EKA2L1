@@ -24,6 +24,7 @@
 #include <kernel/kernel.h>
 #include <loader/common.h>
 #include <xxHash/xxhash.h>
+#include <utils/consts.h>
 
 #include <algorithm>
 
@@ -675,7 +676,7 @@ namespace eka2l1::kernel {
         return attach_info->get()->code_chunk->base(pr).ptr_address() + lookup_res - code_base;
     }
 
-    void codeseg::queries_call_list(kernel::process *pr, std::vector<std::uint32_t> &call_list, const bool for_init) {
+    void codeseg::queries_call_list(kernel::process *pr, std::vector<std::uint32_t> &call_list, const bool for_init, const bool include_entry) {
         // Add forced entry points
         call_list.insert(call_list.end(), premade_eps.begin(), premade_eps.end());
 
@@ -683,12 +684,13 @@ namespace eka2l1::kernel {
         for (auto &dependency : dependencies) {
             if (!dependency.dep_->mark) {
                 dependency.dep_->mark = true;
-                dependency.dep_->queries_call_list(pr, call_list, for_init);
+                // An imported executable supplies exports, not a DLL entry point.
+                dependency.dep_->queries_call_list(pr, call_list, for_init, dependency.dep_->uids[0] != epoc::EXECUTABLE_UID);
             }
         }
 
         // Add our last. Don't change order, this is how it supposed to be
-        if (!ep_disabled_) {
+        if (!ep_disabled_ && include_entry) {
             auto attach_info = common::find_and_ret_if(attaches, [=](const std::unique_ptr<attached_info> &info) {
                 return info->attached_process == pr;
             });

@@ -14,6 +14,8 @@ struct EmulatorView: View {
     @AppStorage(KeypadDefaults.portraitLayoutKey) private var portraitKeypadLayout = ""
     @AppStorage(KeypadDefaults.landscapeLayoutKey) private var landscapeKeypadLayout = ""
     @AppStorage(KeypadDefaults.opacityKey) private var keypadOpacity = KeypadDefaults.opacity
+    @AppStorage(DisplayLayoutDefaults.portraitKey) private var portraitDisplayLayout = ""
+    @AppStorage(DisplayLayoutDefaults.landscapeKey) private var landscapeDisplayLayout = ""
     @AppStorage("ios.showFPSOverlay") private var showFPSOverlay = true
     @AppStorage("ios.fpsOverlayX") private var fpsOverlayX = -1.0
     @AppStorage("ios.fpsOverlayY") private var fpsOverlayY = -1.0
@@ -39,13 +41,21 @@ struct EmulatorView: View {
     @State private var screenSize: CGSize = .zero
     @State private var screenSafeAreaInsets = EdgeInsets()
     @State private var isEditingKeypad = false
+    @State private var isEditingDisplay = false
     @State private var editingLandscape = false
     @State private var editingKeypadLayout: KeypadLayoutConfiguration?
+    @State private var editingDisplayLayout: DisplayLayoutConfiguration?
     @State private var layoutResetImpacts = 0
     @State private var launchFullscreenOverride: Bool?
     // The -LaunchKeypadLayout testing argument seeds the layout only for the
     // first emulator screen of the process; later screens use stored settings.
     @MainActor private static var launchLayoutApplied = false
+
+    // Either editor takes over the whole screen: guest touch input and the FPS
+    // readout step aside for it.
+    private var isEditingLayout: Bool {
+        isEditingKeypad || isEditingDisplay
+    }
 
     private var isFullscreen: Bool {
         if UserDefaults.standard.bool(forKey: "EKA2L1RegressionMode") {
@@ -112,6 +122,7 @@ struct EmulatorView: View {
             fullScreen: fullscreenSelection,
             locksOrientation: orientationLockSelection,
             editKeypadLayout: { beginEditingKeypadLayout() },
+            editDisplayLayout: { beginEditingDisplayLayout() },
             guestScreenModes: guestScreenModes,
             guestScreenMode: guestScreenModeSelection,
             frameLimit: frameLimitSelection,
@@ -129,8 +140,9 @@ struct EmulatorView: View {
                 EmulatorControllerView(
                     uid: uid,
                     host: hostProxy,
-                    anchorsDisplayTop: !isFullscreen,
-                    keypadHitRegions: isEditingKeypad
+                    fullscreenLayout: isFullscreen,
+                    displayLayout: displayConfiguration(in: proxy.size),
+                    keypadHitRegions: isEditingLayout
                         ? [CGRect(origin: .zero, size: proxy.size)]
                         : keypadHitRegions,
                     onAppLaunch: { success in
@@ -147,7 +159,7 @@ struct EmulatorView: View {
                 )
                 .ignoresSafeArea()
 
-                if showFPSOverlay && !isEditingKeypad {
+                if showFPSOverlay && !isEditingLayout {
                     FPSOverlay()
                         .position(
                             x: overlayPosition(in: proxy.size).x,
@@ -233,6 +245,7 @@ struct EmulatorView: View {
             EKA2L1Bridge.shared.closeRunningApp()
             UIApplication.shared.isIdleTimerDisabled = wasIdleTimerDisabled
             isEditingKeypad = false
+            isEditingDisplay = false
             DisplayOrientation.unlock()
         }
         .alert("emulator.guestFatal", isPresented: Binding(
@@ -281,7 +294,22 @@ struct EmulatorView: View {
             height: size.height + safeAreaInsets.top + safeAreaInsets.bottom
         )
 
-        if isEditingKeypad {
+        if isEditingDisplay {
+            // The keypad is hidden while the picture is being placed: it would
+            // sit on top of what the user is trying to see.
+            DisplayLayoutEditor(
+                size: size,
+                safeAreaInsets: safeAreaInsets,
+                configuration: editingDisplayBinding(in: size),
+                pictureFrame: { hostProxy.viewController?.guestPictureFrame ?? .zero },
+                onReset: {
+                    editingDisplayLayout = .standard(landscape: size.width > size.height)
+                    layoutResetImpacts += 1
+                },
+                onDone: finishEditingDisplayLayout
+            )
+            .hapticImpact(.medium, trigger: layoutResetImpacts)
+        } else if isEditingKeypad {
             KeypadLayoutEditor(
                 size: size,
                 controlSize: controlSize,
@@ -348,6 +376,46 @@ struct EmulatorView: View {
             },
             set: { editingKeypadLayout = $0 }
         )
+    }
+
+    private func displayConfiguration(in size: CGSize) -> DisplayLayoutConfiguration {
+        if isEditingDisplay, let editingDisplayLayout {
+            return editingDisplayLayout
+        }
+        let landscape = size.width > size.height
+        return .decoded(landscape ? landscapeDisplayLayout : portraitDisplayLayout,
+                        landscape: landscape)
+    }
+
+    private func editingDisplayBinding(in size: CGSize) -> Binding<DisplayLayoutConfiguration> {
+        Binding(
+            get: { editingDisplayLayout ?? displayConfiguration(in: size) },
+            set: { editingDisplayLayout = $0 }
+        )
+    }
+
+    private func beginEditingDisplayLayout() {
+        let size = screenSize
+        guard !isFullscreen, size.width > 0, size.height > 0 else { return }
+        editingLandscape = size.width > size.height
+        editingDisplayLayout = displayConfiguration(in: size)
+        isEditingDisplay = true
+        hostProxy.viewController?.setHardwareKeyboardCaptureEnabled(false)
+        DisplayOrientation.lockCurrent()
+    }
+
+    private func finishEditingDisplayLayout() {
+        guard let configuration = editingDisplayLayout else { return }
+        if editingLandscape {
+            landscapeDisplayLayout = configuration.encoded()
+        } else {
+            portraitDisplayLayout = configuration.encoded()
+        }
+        editingDisplayLayout = nil
+        isEditingDisplay = false
+        keypadHitRegions = []
+        hostProxy.viewController?.setHardwareKeyboardCaptureEnabled(true)
+        DisplayOrientation.apply(isLocked: lockGameOrientation)
     }
 
     private func beginEditingKeypadLayout() {
@@ -615,7 +683,8 @@ final class EmulatorHostProxy {
 private struct EmulatorControllerView: UIViewControllerRepresentable {
     let uid: UInt32
     let host: EmulatorHostProxy
-    let anchorsDisplayTop: Bool
+    let fullscreenLayout: Bool
+    let displayLayout: DisplayLayoutConfiguration
     // Screen-space regions covered by keypad elements; the render view yields
     // touches there so the keys (drawn above it) receive them.
     let keypadHitRegions: [CGRect]
@@ -626,7 +695,8 @@ private struct EmulatorControllerView: UIViewControllerRepresentable {
         let controller = EmulatorViewController(uid: uid)
         controller.onAppLaunch = onAppLaunch
         controller.onAppExit = onAppExit
-        controller.anchorsDisplayTop = anchorsDisplayTop
+        controller.fullscreenLayout = fullscreenLayout
+        controller.displayLayout = displayLayout
         controller.keypadHitRegions = keypadHitRegions
         host.viewController = controller
         return controller
@@ -635,7 +705,8 @@ private struct EmulatorControllerView: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: EmulatorViewController, context: Context) {
         uiViewController.onAppLaunch = onAppLaunch
         uiViewController.onAppExit = onAppExit
-        uiViewController.anchorsDisplayTop = anchorsDisplayTop
+        uiViewController.fullscreenLayout = fullscreenLayout
+        uiViewController.displayLayout = displayLayout
         uiViewController.keypadHitRegions = keypadHitRegions
         host.viewController = uiViewController
     }

@@ -29,6 +29,7 @@
 #include <cwctype>
 
 #include <stack>
+#include <vector>
 
 namespace eka2l1::loader {
     void sis_old_block::add_record(std::unique_ptr<sis_old_file_record> &record) {
@@ -58,6 +59,9 @@ namespace eka2l1::loader {
             std::unique_ptr<sis_old_expression> lhs = parse_sis_old_expression(stream);
             std::unique_ptr<sis_old_expression> rhs = parse_sis_old_expression(stream);
 
+            if (!lhs || !rhs) {
+                return nullptr;
+            }
             return std::make_unique<sis_old_binary_expression>(cond, lhs, rhs);
         }
 
@@ -65,6 +69,9 @@ namespace eka2l1::loader {
         case sis_old_file_expression_type_devcap:
         case sis_old_file_expression_type_not: {
             std::unique_ptr<sis_old_expression> single = parse_sis_old_expression(stream);
+            if (!single) {
+                return nullptr;
+            }
             return std::make_unique<sis_old_unary_expression>(cond, single);
         }
 
@@ -136,8 +143,9 @@ namespace eka2l1::loader {
         sold.epoc_ver = (sold.header.uid2 == static_cast<uint32_t>(epoc_sis_type::epocu6)) ? epocver::epocu6 : epocver::epoc6;
         stream.seek(sold.header.file_ptr, common::seek_where::beg);
 
-        std::stack<sis_old_block*> active_blocks;
-        active_blocks.push(&sold.root_block);
+        // The file records are stored in reverse of the order the package declares them,
+        // so collect them flat first and only then rebuild the IF/ELSE nesting backwards.
+        std::vector<std::unique_ptr<sis_old_file_record>> flat_records;
 
         for (uint32_t i = 0; i < sold.header.num_files; i++) {
             std::uint32_t file_record_type = 0;
@@ -246,56 +254,106 @@ namespace eka2l1::loader {
                 }
 
                 std::unique_ptr<sis_old_file_record> record = std::make_unique<sis_old_file>(old_file);
-                active_blocks.top()->add_record(record);
+                flat_records.push_back(std::move(record));
             } else if ((file_record_type == file_record_type_if) || (file_record_type == file_record_type_elseif)) {
                 std::uint32_t cond_expression_size = 0;
                 if (stream.read(&cond_expression_size, 4) != 4) {
                     return std::nullopt;
                 }
 
-                if (file_record_type == file_record_type_if) {
-                    if (active_blocks.top()->recording_mode == 1)
-                        LOG_WARN(PACKAGE, "Trying to add IF command when ELSE command is already called!");
-                    else
-                        active_blocks.top()->recording_mode = 0;
-                }
-                
-                if (file_record_type == file_record_type_elseif) {
-                    active_blocks.top()->recording_mode = 1;
-                }
-
                 const std::uint64_t crr = stream.tell();
 
                 std::unique_ptr<sis_old_file_record> new_if_block = std::make_unique<sis_old_block>();
-                sis_old_block *new_if_block_raw_ptr = reinterpret_cast<sis_old_block*>(new_if_block.get());
+                sis_old_block *new_if_block_raw_ptr = static_cast<sis_old_block*>(new_if_block.get());
                 new_if_block_raw_ptr->condition = parse_sis_old_expression(stream);
+                new_if_block_raw_ptr->file_record_type = file_record_type;
 
-                if ((stream.tell() - crr) != cond_expression_size) {
+                if (!new_if_block_raw_ptr->condition || (stream.tell() - crr) != cond_expression_size) {
                     LOG_WARN(PACKAGE, "Parsed conditional expression type consumed read size does not match! (consumed={}, ideal={})",
                         stream.tell() - crr, cond_expression_size);
+                    return std::nullopt;
                 }
 
-                active_blocks.top()->add_record(new_if_block);
-                active_blocks.push(new_if_block_raw_ptr);
-            } else if (file_record_type == file_record_type_else) {
-                if (active_blocks.size() <= 1) {
-                    LOG_WARN(PACKAGE, "Trying to add an ELSE when there's no active IF command!");
+                flat_records.push_back(std::move(new_if_block));
+            } else if ((file_record_type == file_record_type_else) || (file_record_type == file_record_type_endif)) {
+                std::unique_ptr<sis_old_file_record> marker = std::make_unique<sis_old_file_record>();
+                marker->file_record_type = file_record_type;
+
+                flat_records.push_back(std::move(marker));
+            } else {
+                LOG_ERROR(PACKAGE, "Unrecognised file record type {}", file_record_type);
+            }
+        }
+
+        std::stack<sis_old_block*> active_blocks;
+        active_blocks.push(&sold.root_block);
+
+        // Every ELSEIF nests one more block inside the IF it continues, and the single
+        // ENDIF that follows has to close all of them.
+        std::stack<std::uint32_t> blocks_per_condition;
+
+        for (auto ite = flat_records.rbegin(); ite != flat_records.rend(); ite++) {
+            std::unique_ptr<sis_old_file_record> &record = *ite;
+
+            switch (record->file_record_type) {
+            case file_record_type_if:
+            case file_record_type_elseif: {
+                bool is_elseif = (record->file_record_type == file_record_type_elseif);
+
+                if (is_elseif && (blocks_per_condition.empty() || active_blocks.top()->recording_mode != 0)) {
+                    return std::nullopt;
+                }
+
+                sis_old_block *block = static_cast<sis_old_block *>(record.get());
+                block->file_record_type = file_record_type_block;
+
+                if (is_elseif) {
+                    active_blocks.top()->recording_mode = 1;
+                    blocks_per_condition.top()++;
+                } else {
+                    blocks_per_condition.push(1);
+                }
+
+                active_blocks.top()->add_record(record);
+                active_blocks.push(block);
+
+                break;
+            }
+
+            case file_record_type_else:
+                if (blocks_per_condition.empty()) {
+                    return std::nullopt;
                 } else {
                     if (active_blocks.top()->recording_mode == 1) {
-                        LOG_INFO(PACKAGE, "The active block already use ELSE command once, the next commands will be merged to previous block!");
+                        return std::nullopt;
                     }
 
                     active_blocks.top()->recording_mode = 1;
                 }
-            } else if (file_record_type == file_record_type_endif) {
-                if (active_blocks.size() <= 1) {
-                    LOG_ERROR(PACKAGE, "If/endif expression in the SIS package mismatched. Still proceed!");
+
+                break;
+
+            case file_record_type_endif:
+                if (blocks_per_condition.empty()) {
+                    return std::nullopt;
                 } else {
-                    active_blocks.pop();
+                    for (std::uint32_t left = blocks_per_condition.top(); left != 0; left--) {
+                        active_blocks.pop();
+                    }
+
+                    blocks_per_condition.pop();
                 }
-            } else {
-                LOG_ERROR(PACKAGE, "Unrecognised file record type {}", file_record_type);
+
+                break;
+
+            default:
+                active_blocks.top()->add_record(record);
+                break;
             }
+        }
+
+        if (!blocks_per_condition.empty()) {
+            return std::nullopt;
         }
 
         for (std::uint32_t i = 0; i < sold.header.num_langs; i++) {

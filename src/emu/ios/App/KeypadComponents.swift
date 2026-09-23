@@ -228,6 +228,7 @@ struct CapKey: View {
     let scan: UInt32
     var title: String?
     var symbol: String?
+    var tint: Color?
     var size: CGSize = CGSize(width: 58, height: 38)
 
     var body: some View {
@@ -241,6 +242,7 @@ struct CapKey: View {
                 } else if let symbol {
                     Image(systemName: symbol)
                         .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(tint ?? .white)
                 }
             }
             .frame(width: size.width, height: size.height)
@@ -264,6 +266,25 @@ struct SoftKey: View {
                title: side == .left ? "L" : "R",
                size: size)
             .accessibilityLabel(Text(verbatim: side == .left ? "LSK" : "RSK"))
+    }
+}
+
+// Green and red phone keys: EStdKeyApplication0 and EStdKeyApplication1.
+struct PhoneKey: View {
+    enum Side {
+        case call, end
+    }
+
+    let side: Side
+    var size: CGSize = CGSize(width: 58, height: 38)
+
+    var body: some View {
+        CapKey(scan: side == .call ? Scan.call : Scan.end,
+               symbol: side == .call ? "phone.fill" : "phone.down.fill",
+               tint: side == .call ? .green : .red,
+               size: size)
+            .accessibilityLabel(Text(side == .call ? LocalizedStringKey("keypad.accessibility.call")
+                                                   : LocalizedStringKey("keypad.accessibility.end")))
     }
 }
 

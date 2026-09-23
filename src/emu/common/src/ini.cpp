@@ -31,10 +31,9 @@
 
 namespace eka2l1::common {
     ini_node_ptr ini_section::find(const char *name) {
-        const std::size_t len = strlen(name);
-
         for (auto node : nodes) {
-            if (strncmp(name, node->name(), len) == 0) {
+            // Prefix matching would let a lookup of "epoc7" hit an "epoc70" section.
+            if (strcmp(name, node->name()) == 0) {
                 return node;
             }
         }
@@ -57,10 +56,8 @@ namespace eka2l1::common {
     }
 
     bool ini_section::node_exists(const char *name) {
-        const std::size_t len = strlen(name);
-
         for (auto node : nodes) {
-            if (strncmp(name, node->name(), len) == 0) {
+            if (strcmp(name, node->name()) == 0) {
                 return true;
             }
         }

@@ -207,6 +207,24 @@ namespace eka2l1 {
         }
     }
 
+    void view_session::notify_next_transition(service::ipc_context *ctx, const bool activation) {
+        const auto id = ctx->get_argument_data_from_descriptor<ui::view::view_id>(0);
+        if (!id) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        if (activation) {
+            outstanding_activation_notify_ = true;
+            next_activation_id_ = *id;
+        } else {
+            outstanding_deactivation_notify_ = true;
+            next_deactivation_id_ = *id;
+        }
+
+        ctx->complete(epoc::error_none);
+    }
+
     void view_session::add_view(service::ipc_context *ctx) {
         std::optional<ui::view::view_id> id = ctx->get_argument_data_from_descriptor<ui::view::view_id>(0);
 
@@ -434,6 +452,14 @@ namespace eka2l1 {
 
         case view_opcode_create_deactivate_view_event:
             deactive_view(ctx, false);
+            break;
+
+        case view_opcode_notify_next_activation:
+            notify_next_transition(ctx, true);
+            break;
+
+        case view_opcode_notify_next_deactivation:
+            notify_next_transition(ctx, false);
             break;
 
         case view_opcode_request_custom_message:

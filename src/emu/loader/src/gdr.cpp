@@ -22,6 +22,9 @@
 #include <utils/des.h>
 
 namespace eka2l1::loader::gdr {
+    // fnttran 40 (Symbian 7.0) stores each character's metrics inline, next to its bitmap offset.
+    static constexpr std::uint32_t FNTTRAN_VERSION_INLINE_METRICS = 40;
+
     static void scan_coverage(const code_section &range, std::uint32_t &coverage_flags, std::uint32_t &coverage_flags_add) {
         // 0000-024F (including extended), 1E02-1EF3
         if (((range.header_.start_ <= 0x24F) && (range.header_.end_ >= 0x00)) ||
@@ -222,7 +225,7 @@ namespace eka2l1::loader::gdr {
         return (read == sizeof(code_section_header));
     }
 
-    bool parse_font_bitmap_header(common::ro_stream *stream, font_bitmap_header &header, code_section_header_list &section_header_list) {
+    bool parse_font_bitmap_header(common::ro_stream *stream, font_bitmap_header &header, code_section_header_list &section_header_list, const bool inline_metrics) {
         std::size_t read = 0;
         read += stream->read(&header.uid_, sizeof(header.uid_));
         read += stream->read(&header.posture_, sizeof(header.posture_));
@@ -233,11 +236,15 @@ namespace eka2l1::loader::gdr {
         read += stream->read(&header.max_char_width_in_pixels_, sizeof(header.max_char_width_in_pixels_));
         read += stream->read(&header.max_normal_char_width_in_pixels_, sizeof(header.max_normal_char_width_in_pixels_));
         read += stream->read(&header.bitmap_encoding_, sizeof(header.bitmap_encoding_));
-        read += stream->read(&header.metric_offset_, sizeof(header.metric_offset_));
-        read += stream->read(&header.metric_count_, sizeof(header.metric_count_));
+        header.metric_offset_ = 0;
+        header.metric_count_ = 0;
+        if (!inline_metrics) {
+            read += stream->read(&header.metric_offset_, sizeof(header.metric_offset_));
+            read += stream->read(&header.metric_count_, sizeof(header.metric_count_));
+        }
         read += stream->read(&header.code_section_count_, sizeof(header.code_section_count_));
 
-        if (read != sizeof(font_bitmap_header)) {
+        if (read != sizeof(font_bitmap_header) - (inline_metrics ? 8 : 0)) {
             return false;
         }
 
@@ -255,7 +262,7 @@ namespace eka2l1::loader::gdr {
         return true;
     }
 
-    bool parse_font_bitmap_headers(common::ro_stream *stream, std::vector<font_bitmap_header> &headers, std::vector<code_section_header_list> &code_sections) {
+    bool parse_font_bitmap_headers(common::ro_stream *stream, std::vector<font_bitmap_header> &headers, std::vector<code_section_header_list> &code_sections, const bool inline_metrics) {
         std::uint32_t count = 0;
         if (stream->read(&count, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
             return false;
@@ -265,7 +272,7 @@ namespace eka2l1::loader::gdr {
             font_bitmap_header new_header;
             code_section_header_list section_header_list;
 
-            if (!parse_font_bitmap_header(stream, new_header, section_header_list)) {
+            if (!parse_font_bitmap_header(stream, new_header, section_header_list, inline_metrics)) {
                 return false;
             }
 
@@ -362,11 +369,6 @@ namespace eka2l1::loader::gdr {
         read += stream->read(&metric.move_in_pixels_, sizeof(metric.move_in_pixels_));
         read += stream->read(&metric.right_adjust_in_pixels_, sizeof(metric.right_adjust_in_pixels_));
 
-        // Im scared of this being a hack.
-        if (metric.right_adjust_in_pixels_ == 0xFF) {
-            metric.right_adjust_in_pixels_ = 0;
-        }
-
         return (read == sizeof(character_metric));
     }
 
@@ -387,7 +389,7 @@ namespace eka2l1::loader::gdr {
         return true;
     }
 
-    bool parse_font_code_section_comps(common::ro_stream *stream, std::vector<character_metric> &metrics, character_metric &filler_metric, code_section &section) {
+    bool parse_font_code_section_comps(common::ro_stream *stream, std::vector<character_metric> &metrics, character_metric &filler_metric, code_section &section, const bool inline_metrics) {
         std::vector<std::uint16_t> offsets;
         std::uint32_t num_offset = 0;
 
@@ -395,11 +397,26 @@ namespace eka2l1::loader::gdr {
             return false;
         }
 
+        if (section.header_.start_ > section.header_.end_) {
+            return false;
+        }
+        if (num_offset != static_cast<std::uint32_t>(section.header_.end_) - section.header_.start_ + 1) {
+            return false;
+        }
         offsets.resize(num_offset);
+        const std::size_t metrics_start = metrics.size();
 
         for (std::uint32_t i = 0; i < num_offset; i++) {
             if (stream->read(&offsets[i], sizeof(std::uint16_t)) != sizeof(std::uint16_t)) {
                 return false;
+            }
+            if (inline_metrics) {
+                character_metric metric{};
+                std::uint8_t padding = 0;
+                if (!parse_font_bitmap_character_metric(stream, metric) || stream->read(&padding, 1) != 1) {
+                    return false;
+                }
+                metrics.push_back(metric);
             }
         }
 
@@ -411,16 +428,16 @@ namespace eka2l1::loader::gdr {
         std::vector<std::uint8_t> byte_list;
         byte_list.resize(len_byte_list);
 
-        if (stream->read(&byte_list[0], len_byte_list) != len_byte_list) {
+        if (stream->read(byte_list.data(), len_byte_list) != len_byte_list) {
             return false;
         }
 
         // Parse this byte list
-        for (std::uint16_t i = section.header_.start_; i <= section.header_.end_; i++) {
+        for (std::uint32_t i = section.header_.start_; i <= section.header_.end_; i++) {
             character c;
             c.metric_ = nullptr;
 
-            if (offsets[i - section.header_.start_] >= 0x7FFF) {
+            if (offsets[i - section.header_.start_] >= (inline_metrics ? 0xFFFF : 0x7FFF)) {
                 // This character is filler
                 c.metric_ = &filler_metric;
 
@@ -428,35 +445,57 @@ namespace eka2l1::loader::gdr {
                 c.data_.resize((filler_metric.move_in_pixels_ * filler_metric.height_in_pixels_ + 31) >> 5);
                 std::fill(c.data_.begin(), c.data_.end(), 0);
             } else {
-                std::uint8_t *byte_start = byte_list.data() + offsets[i - section.header_.start_];
+                const std::size_t byte_offset = offsets[i - section.header_.start_];
+                if (byte_offset >= byte_list.size()) {
+                    return false;
+                }
+                const std::size_t available_bits = (byte_list.size() - byte_offset) * 8;
+                const std::uint8_t *byte_start = byte_list.data() + byte_offset;
                 std::uint32_t bitoffset = 0;
                 std::uint16_t metric_index = 0;
                 std::uint8_t total_bit_for_index = 0;
 
 #define GET_BIT_8(offset) ((byte_start[offset >> 3] >> (offset & 7)) & 1)
-                if (GET_BIT_8(bitoffset) == 0) {
-                    total_bit_for_index = 7;
+                if (inline_metrics) {
+                    c.metric_ = &metrics[metrics_start + i - section.header_.start_];
                 } else {
-                    total_bit_for_index = 15;
-                }
+                    if (GET_BIT_8(bitoffset) == 0) {
+                        total_bit_for_index = 7;
+                    } else {
+                        total_bit_for_index = 15;
+                    }
 
-                bitoffset++;
-
-                for (std::uint8_t idx = 0; idx < total_bit_for_index; idx++) {
-                    metric_index |= GET_BIT_8(bitoffset) << idx;
                     bitoffset++;
-                }
+                    if (bitoffset + total_bit_for_index > available_bits) {
+                        return false;
+                    }
 
-                c.metric_ = &metrics[metric_index];
+                    for (std::uint8_t idx = 0; idx < total_bit_for_index; idx++) {
+                        metric_index |= GET_BIT_8(bitoffset) << idx;
+                        bitoffset++;
+                    }
+
+                    if (metric_index >= metrics.size()) {
+                        return false;
+                    }
+                    c.metric_ = &metrics[metric_index];
+                }
 
                 const std::uint16_t target_height = c.metric_->height_in_pixels_;
-                const std::uint16_t content_width = c.metric_->move_in_pixels_ - c.metric_->left_adj_in_pixels_ - ((c.metric_->right_adjust_in_pixels_ == 0xFF) ? 0 : c.metric_->right_adjust_in_pixels_);
+                const int content_width = c.metric_->move_in_pixels_ - c.metric_->left_adj_in_pixels_
+                    - c.metric_->right_adjust_in_pixels_;
+                if (content_width < 0) {
+                    return false;
+                }
                 std::uint16_t height_read = 0;
 
                 c.data_.resize((target_height * content_width + 31) >> 5);
                 std::fill(c.data_.begin(), c.data_.end(), 0);
 
                 while (height_read < target_height) {
+                    if (bitoffset + 5 > available_bits) {
+                        return false;
+                    }
                     bool repeat_line = !GET_BIT_8(bitoffset);
                     bitoffset++;
 
@@ -466,6 +505,10 @@ namespace eka2l1::loader::gdr {
                         bitoffset++;
                     }
 
+                    if (line_count == 0 || line_count > target_height - height_read
+                        || bitoffset + static_cast<std::size_t>(content_width) * (repeat_line ? 1 : line_count) > available_bits) {
+                        return false;
+                    }
                     for (std::uint16_t y = 0; y < (repeat_line ? 1 : line_count); y++) {
                         for (std::uint16_t x = 0; x < content_width; x++) {
                             std::uint32_t current_pixel = ((y + height_read) * content_width + x);
@@ -514,7 +557,8 @@ namespace eka2l1::loader::gdr {
         std::vector<code_section_header_list> code_section_header_list_list;
         std::vector<typeface_header> typeface_headers;
 
-        if (!parse_font_bitmap_headers(stream, font_bitmap_headers, code_section_header_list_list)) {
+        const bool inline_metrics = store.header_.fnt_tran_version_ == FNTTRAN_VERSION_INLINE_METRICS;
+        if (!parse_font_bitmap_headers(stream, font_bitmap_headers, code_section_header_list_list, inline_metrics)) {
             return false;
         }
 
@@ -531,7 +575,18 @@ namespace eka2l1::loader::gdr {
 
             std::fill(store.font_bitmaps_[i].coverage_, store.font_bitmaps_[i].coverage_ + 4, 0);
 
-            if (!parse_font_bitmap_character_metrics(stream, store.font_bitmaps_[i].metrics_)) {
+            std::size_t total_characters = 0;
+            for (const auto &section : code_section_header_list_list[i]) {
+                if (section.start_ > section.end_) {
+                    return false;
+                }
+                total_characters += static_cast<std::size_t>(section.end_) - section.start_ + 1;
+            }
+            if (inline_metrics) {
+                store.font_bitmaps_[i].metrics_.reserve(total_characters);
+            }
+
+            if (!inline_metrics && !parse_font_bitmap_character_metrics(stream, store.font_bitmaps_[i].metrics_)) {
                 return false;
             }
 
@@ -541,7 +596,7 @@ namespace eka2l1::loader::gdr {
                 store.font_bitmaps_[i].code_sections_[j].header_ = std::move(code_section_header_list_list[i][j]);
 
                 if (!parse_font_code_section_comps(stream, store.font_bitmaps_[i].metrics_, store.font_bitmaps_[i].filler_metric_,
-                        store.font_bitmaps_[i].code_sections_[j])) {
+                        store.font_bitmaps_[i].code_sections_[j], inline_metrics)) {
                     return false;
                 }
 

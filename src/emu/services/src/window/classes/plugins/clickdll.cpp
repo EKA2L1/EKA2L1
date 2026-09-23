@@ -20,6 +20,7 @@
 
 #include <services/window/classes/plugins/clickdll.h>
 #include <services/window/op.h>
+#include <services/window/window.h>
 
 #include <common/cvt.h>
 #include <common/log.h>
@@ -56,6 +57,32 @@ namespace eka2l1::epoc {
 
             break;
         }
+
+        case ws_click_unload:
+            loaded = false;
+            ctx.complete(epoc::error_none);
+
+            break;
+
+        case ws_click_set_key_click:
+        case ws_click_set_pen_click:
+            // The plugin itself is stubbed out, so there is no click to toggle.
+            ctx.complete(epoc::error_none);
+
+            break;
+
+        case ws_click_key_click_enabled:
+        case ws_click_pen_click_enabled:
+            ctx.complete(0);
+
+            break;
+
+        case ws_click_free:
+            ctx.complete(epoc::error_none);
+            client->delete_object(cmd.obj_handle);
+
+            quit = true;
+            break;
 
         default: {
             LOG_ERROR(SERVICE_WINDOW, "Unimplemented ClickDll opcode: 0x{:x}", cmd.header.op);

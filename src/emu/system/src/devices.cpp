@@ -144,6 +144,7 @@ namespace eka2l1 {
         { "rm-670", 0x2002C12C }, // Nokia 700
         { "rm-779", 0x20035565 }, // Nokia 603
         { "rm-750", 0x20035566 }, // Nokia 500
+        { "p900", 0x101FB2AE }, // Sony Ericsson P900
     };
 
     static std::array<std::string, 3> S80_DEVICES_FIRMCODE = {

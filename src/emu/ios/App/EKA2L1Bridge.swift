@@ -300,11 +300,9 @@ final class EKA2L1Bridge {
         emulator.currentDeviceIsEKA1()
     }
 
-    // Anchor the presented guest picture's top edge at `pixels` from the top of
-    // the render surface (negative = centred). Used to keep the picture clear
-    // of a bottom keypad overlay.
-    func setDisplayAnchorTop(pixels: Int) {
-        emulator.setDisplayAnchorTopPixels(pixels)
+    // Place the guest picture on the render surface; see IosEmulator.h.
+    func setDisplayLayout(content: CGRect, scale: CGFloat, gravity: Int, offset: CGPoint) {
+        emulator.setDisplayLayoutContentRect(content, scale: scale, gravity: gravity, offset: offset)
     }
 
     // Report the emulator screen's interface orientation so accelerometer
