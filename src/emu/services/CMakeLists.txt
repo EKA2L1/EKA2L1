@@ -110,6 +110,8 @@ add_library(epocservs
         include/services/remcon/remcon.h
         include/services/remcon/target.h
         include/services/sensor/sensor.h
+        include/services/memorymanager/memorymanager.h
+        include/services/linnea/linnea.h
         include/services/shutdown/shutdown.h
         include/services/sisregistry/common.h
         include/services/sisregistry/sisregistry.h
@@ -264,6 +266,8 @@ add_library(epocservs
         src/remcon/remcon.cpp
         src/remcon/target.cpp
         src/sensor/sensor.cpp
+        src/memorymanager/memorymanager.cpp
+        src/linnea/linnea.cpp
         src/shutdown/shutdown.cpp
         src/sisregistry/sisregistry.cpp
         src/sms/mtm/factory.cpp

@@ -212,139 +212,22 @@ namespace eka2l1::dispatch {
 
     BRIDGE_FUNC_DISPATCHER(void, update_screen, const std::uint32_t screen_number, const std::uint32_t num_rects, const eka2l1::rect *rect_list) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
-        drivers::graphics_driver *driver = sys->get_graphics_driver();
-        kernel_system *kern = sys->get_kernel_system();
 
         // TODO: Update only some regions specified. Rotation makes it complicated
         epoc::screen *scr = dispatcher->winserv_->get_screens();
 
         while (scr != nullptr) {
-            if (scr->number == screen_number) {
-                // Update the DSA screen texture
-                const epoc::config::screen_mode &mode_info = scr->current_mode();
-                const eka2l1::vec2 screen_size = mode_info.size;
-
-                const char *data_ptr = reinterpret_cast<const char *>(scr->screen_buffer_ptr());
-
-                // WINDOWMODE tells us what WSERV composes in, not what a direct screen
-                // access client writes into the panel buffer. Most EKA1 guests take the
-                // reported mode and write that many bytes per pixel, but a few hardcode
-                // 16-bit pixels and would be shredded by a 32-bit upload. The two cases
-                // are distinguishable: at 16 bits the guest only ever fills the first
-                // half of the (always 32-bit sized) buffer. Start narrow and widen the
-                // moment anything lands in the upper half.
-                const bool dsa_depth_changed = scr->promote_dsa_depth_if_deep_pixels_written();
-
-                // Every writer lays its rows out at the pitch the screen reports, so read
-                // it back with that one. Only a 32-bit framebuffer is ever padded.
-                const std::uint32_t bits_per_pixel = epoc::get_bpp_from_display_mode(scr->dsa_disp_mode);
-                const std::size_t tight_screen_pitch = mode_info.size.x * sizeof(std::uint32_t);
-                const std::size_t framebuffer_pitch = scr->screen_buffer_byte_width(scr->dsa_disp_mode);
-                const std::size_t screen_pitch = common::max(framebuffer_pitch, tight_screen_pitch);
-                const std::size_t buffer_size = screen_pitch * mode_info.size.y;
-                const std::size_t pixels_per_line = (screen_pitch != tight_screen_pitch)
-                    ? screen_pitch / sizeof(std::uint32_t)
-                    : 0;
-
+            if (scr->number == static_cast<int>(screen_number)) {
                 std::uint64_t next_vsync_us = 0;
                 scr->vsync(sys->get_ntimer(), next_vsync_us);
-
                 if (next_vsync_us) {
-                    kern->crr_thread()->sleep(static_cast<std::uint32_t>(next_vsync_us));
+                    sys->get_kernel_system()->crr_thread()->sleep(static_cast<std::uint32_t>(next_vsync_us));
                 }
-
-                std::unique_lock<std::mutex> guard(scr->screen_mutex);
-
-                if (dsa_depth_changed && scr->dsa_texture) {
-                    // The transfer texture was made for the old depth; drop it and let the
-                    // block below build one that matches.
-                    drivers::graphics_command_builder discard_builder;
-                    discard_builder.destroy_bitmap(scr->dsa_texture);
-
-                    drivers::command_list discard_list = discard_builder.retrieve_command_list();
-                    driver->submit_command_list(discard_list);
-
-                    scr->dsa_texture = 0;
+                if (scr->direct_framebuffer_mapped) {
+                    scr->update_direct_framebuffer();
                 }
-
-                if (!scr->dsa_texture) {
-                    const int max_square_width = common::max<int>(screen_size.x, screen_size.y);
-
-                    kern->unlock();
-                    guard.unlock();
-
-                    drivers::handle bitmap_handle = drivers::create_bitmap(driver, eka2l1::vec2(max_square_width, max_square_width), bits_per_pixel);
-
-                    kern->lock();
-                    guard.lock();
-
-                    scr->dsa_texture = bitmap_handle;
-                }
-
-                if (!scr->screen_texture) {
-                    scr->set_screen_mode(nullptr, driver, scr->crr_mode);
-                }
-
-                eka2l1::drivers::filter_option filter = (kern->get_config()->nearest_neighbor_filtering ? eka2l1::drivers::filter_option::nearest : eka2l1::drivers::filter_option::linear);
-                drivers::graphics_command_builder builder;
-
-                // Only one rectangle for now!
-                builder.update_bitmap(scr->dsa_texture, data_ptr, buffer_size, { 0, 0 }, screen_size,
-                    pixels_per_line);
-
-                // NOTE: This is a hack for some apps that dont fill alpha
-                // TODO: Figure out why or better solution (maybe the display mode is not really correct?)
-                switch (scr->dsa_disp_mode) {
-                case epoc::display_mode::color16m:
-                case epoc::display_mode::color16mu:
-                case epoc::display_mode::color16ma:
-                    builder.set_swizzle(scr->dsa_texture, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
-                        drivers::channel_swizzle::blue, drivers::channel_swizzle::one);
-
-                    break;
-
-                default:
-                    break;
-                }
-
-                // 270 rotation clock-wise makes screen content comes from the top where camera lies, to down where the ports reside.
-                // That makes it a standard, non-flip landscape. 0 is obviously standard too. Therefore mode 90 and 180 needs flip.
-                const float rotation_draw = ((mode_info.rotation == 90) || (mode_info.rotation == 180)) ? 180.0f : 0.0f;
-
-                eka2l1::rect source_rect { eka2l1::vec2(0, 0), mode_info.size };
-                eka2l1::rect dest_rect = source_rect;
-                if (rotation_draw != 0.0f) {
-                    // Advance position for rotation origin. We can't gurantee the origin to be exactly div by 2.
-                    // So do this for safety and soverginity.
-                    dest_rect.top = dest_rect.size;
-                }
-
-                dest_rect.scale(scr->display_scale_factor);
-
-                builder.bind_bitmap(scr->screen_texture);
-                builder.set_feature(drivers::graphics_feature::clipping, false);
-
-                builder.set_texture_filter(scr->dsa_texture, true, filter);
-                builder.set_texture_filter(scr->dsa_texture, false, filter);
-
-                builder.draw_bitmap(scr->dsa_texture, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), rotation_draw, 0);
-                builder.bind_bitmap(0);
-
-                drivers::command_list retrieved = builder.retrieve_command_list();
-                driver->submit_command_list(retrieved);
-
-                if (((scr->flags_ & epoc::screen::FLAG_SCREEN_UPSCALE_FACTOR_LOCK) == 0) && scr->sync_screen_buffer) {    
-                    // The app/game updates normally, try to avoid upscaling it
-                    // Sometimes UI are mixed in, and these syncs need to sync UI's data too!
-                    // Automatically flag and save this settings
-                    if (scr->focus) {
-                        scr->focus->saved_setting.screen_upscale_method = 1;
-                        scr->restore_from_config(driver, scr->focus->saved_setting, nullptr);
-                        scr->try_change_display_rescale(driver, scr->display_scale_factor);
-                    }
-                }
-
-                scr->fire_screen_redraw_callbacks(true);
+                scr->present_framebuffer(sys->get_graphics_driver(), sys->get_kernel_system());
+                break;
             }
 
             scr = scr->next;

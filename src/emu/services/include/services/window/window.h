@@ -45,6 +45,7 @@
 #include <services/window/fifo.h>
 #include <services/window/io.h>
 #include <services/window/opheader.h>
+#include <services/window/protocol.h>
 #include <services/window/scheduler.h>
 #include <services/window/screen.h>
 
@@ -227,6 +228,8 @@ namespace eka2l1::epoc {
         void get_redraw(service::ipc_context &ctx, ws_cmd &cmd);
         void get_event(service::ipc_context &ctx, ws_cmd &cmd);
         void get_focus_window_group(service::ipc_context &ctx, ws_cmd &cmd);
+        void get_default_owning_window(service::ipc_context &ctx, ws_cmd &cmd);
+        void get_window_group_handle(service::ipc_context &ctx, ws_cmd &cmd);
         void get_window_group_name_from_id(service::ipc_context &ctx, ws_cmd &cmd);
         void clear_all_redraw_stores(service::ipc_context &ctx, ws_cmd &cmd);
         void set_window_group_ordinal_position(service::ipc_context &ctx, ws_cmd &cmd);
@@ -261,6 +264,8 @@ namespace eka2l1::epoc {
         epoc::version client_version() {
             return cli_version;
         }
+
+        window_server_protocol protocol();
 
         void get_ready(service::ipc_context &ctx, ws_cmd *cmd, const event_listener_type type);
 
@@ -368,6 +373,9 @@ namespace eka2l1 {
 
         common::ini_file ws_config;
         bool loaded{ false };
+        // Answered on first input: the frontend may mount drive Z only after this server exists.
+        std::optional<bool> uiq_2_device_;
+        bool is_uiq_2_device();
 
         std::atomic<epoc::ws::uid> key_capture_uid_counter{ 0 };
         std::atomic<epoc::ws::uid> obj_uid{ 0 };
@@ -396,6 +404,9 @@ namespace eka2l1 {
 
         std::uint64_t initial_repeat_delay_; ///< Time before first repeat event generated after the key event.
         std::uint64_t next_repeat_delay_; ///< Time that the next repeat event after the previous being generated.
+
+        int direct_framebuffer_refresh_evt_ = -1;
+        void refresh_direct_framebuffers();
 
         int repeatable_event_;
         int deliver_report_visibility_evt_;
@@ -438,6 +449,8 @@ namespace eka2l1 {
     public:
         explicit window_server(system *sys);
         ~window_server();
+
+        void map_direct_framebuffer(epoc::screen *scr);
 
         epoc::ws::uid next_uid() {
             return ++obj_uid;

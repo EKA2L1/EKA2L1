@@ -121,6 +121,10 @@ namespace eka2l1::epoc {
             scr->update_focus(&client->get_ws(), this);
         }
 
+        if (scr && (this == scr->default_owning_group)) {
+            scr->default_owning_group = nullptr;
+        }
+
         if (scr) {
             scr->need_update_visible_regions(true);
         }
@@ -314,6 +318,11 @@ namespace eka2l1::epoc {
 
         case EWsWinOpAddPriorityKey:
             add_priority_key(ctx, cmd);
+            break;
+
+        case EWsWinOpDefaultOwningWindow:
+            scr->default_owning_group = this;
+            ctx.complete(epoc::error_none);
             break;
 
         default: {

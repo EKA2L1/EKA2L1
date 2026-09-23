@@ -368,6 +368,7 @@ namespace eka2l1::hle {
     static std::string epocver_to_plat_suffix(const epocver ver) {
         switch (ver) {
         case epocver::epoc6:
+        case epocver::epoc70:
             return "v6";
 
         case epocver::epoc81b:
@@ -1235,7 +1236,7 @@ namespace eka2l1::hle {
         const std::uint32_t TOTAL_EP_TO_ALLOC = 100;
 
         /* CODE FOR DLL's ENTRY POINTS INVOKE */
-        emitter.PUSH(4, common::armgen::R3, common::armgen::R4, common::armgen::R5, common::armgen::R_LR);
+        emitter.PUSH(6, common::armgen::R3, common::armgen::R4, common::armgen::R5, common::armgen::R6, common::armgen::R7, common::armgen::R_LR);
 
         // Allocate entry point addresses on stack, plus also allocate the total entry point count
         emitter.MOVI2R(common::armgen::R3, TOTAL_EP_TO_ALLOC * sizeof(address) + sizeof(std::uint32_t));
@@ -1251,38 +1252,36 @@ namespace eka2l1::hle {
         emitter.MOV(common::armgen::R_LR, common::armgen::R_PC); // This PC will skip forwards to the POP, no need to add or sub more thing.
         emitter.SVC(STATIC_CALL_LIST_SVC_FAKE); // Call SVC StaticCallList, our own SVC :D
 
-        emitter.MOV(common::armgen::R3, 0); // R3 is iterator
+        emitter.MOV(common::armgen::R6, 0);
         emitter.LDR(common::armgen::R4, common::armgen::R_SP); // R4 is total of entry point to iterate.
         emitter.SUB(common::armgen::R4, common::armgen::R4, 1);
         emitter.ADD(common::armgen::R_SP, common::armgen::R_SP, sizeof(std::uint32_t)); // Free our count variable
 
         std::uint8_t *loop_continue_ptr = emitter.get_writeable_code_ptr();
-        emitter.CMP(common::armgen::R3, common::armgen::R4);
+        emitter.CMP(common::armgen::R6, common::armgen::R4);
 
         common::armgen::fixup_branch entry_point_call_loop_done = emitter.B_CC(common::cc_flags::CC_GE);
 
         emitter.MOV(common::armgen::R0, common::armgen::R5); // Move in the entry point invoke reason, in case other function trashed this out.
-        emitter.LSL(common::armgen::R12, common::armgen::R3, 2); // Calculate the offset of this entry point, 4 bytes
+        emitter.LSL(common::armgen::R12, common::armgen::R6, 2); // Calculate the offset of this entry point, 4 bytes
         emitter.ADD(common::armgen::R12, common::armgen::R12, common::armgen::R_SP);
         emitter.LDR(common::armgen::R12, common::armgen::R12); // Jump
         emitter.BL(common::armgen::R12);
-        emitter.ADD(common::armgen::R3, common::armgen::R3, 1);
+        emitter.ADD(common::armgen::R6, common::armgen::R6, 1);
         emitter.B(loop_continue_ptr);
 
         emitter.set_jump_target(entry_point_call_loop_done);
 
         emitter.MOVI2R(common::armgen::R3, TOTAL_EP_TO_ALLOC * sizeof(address));
         emitter.ADD(common::armgen::R_SP, common::armgen::R_SP, common::armgen::R3);
-        emitter.POP(4, common::armgen::R3, common::armgen::R4, common::armgen::R5, common::armgen::R_PC);
+        emitter.POP(6, common::armgen::R3, common::armgen::R4, common::armgen::R5, common::armgen::R6, common::armgen::R7, common::armgen::R_PC);
 
         emitter.flush_lit_pool();
 
         /* CODE FOR THREAD INITIALIZATION */
         thread_entry_routine_ = emitter.get_code_pointer();
 
-        emitter.MOV(common::armgen::R0, kernel::dll_reason_thread_attach); // Set the first argument the DLL reason
         emitter.MOV(common::armgen::R4, common::armgen::R1); // Info struct in R1 to R4
-        emitter.BL(entry_points_call_routine_);
 
         // Check the allocator in the thread create info
         emitter.LDR(common::armgen::R0, common::armgen::R4, offsetof(kernel::epoc9_std_epoc_thread_create_info, allocator));
@@ -1308,6 +1307,10 @@ namespace eka2l1::hle {
         emitter.BL(common::armgen::R12);
 
         emitter.set_jump_target(allocator_setup_done);
+
+        // DLL entry points may allocate from the thread heap.
+        emitter.MOV(common::armgen::R0, kernel::dll_reason_thread_attach);
+        emitter.BL(entry_points_call_routine_);
 
         // Jump to our friend
         // Load userdata to first argument.
@@ -1358,6 +1361,7 @@ namespace eka2l1::hle {
 
         switch (kern_->get_epoc_version()) {
         case epocver::epoc6:
+        case epocver::epoc70:
             epoc::register_epocv6(*this);
             break;
 

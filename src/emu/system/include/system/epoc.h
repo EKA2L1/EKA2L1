@@ -143,6 +143,7 @@ namespace eka2l1 {
         loader::rom *get_rom_info();
         epocver get_symbian_version_use() const;
         bool is_s80_device_active();
+        bool is_uiq_2_device_active();
 
         void prepare_reschedule();
 

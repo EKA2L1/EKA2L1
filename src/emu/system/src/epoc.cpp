@@ -305,6 +305,7 @@ namespace eka2l1 {
             case epocver::epocu6:
                 return preset::SYSTEM_CPU_HZ_S60V1;
 
+            case epocver::epoc70:
             case epocver::epoc7:
             case epocver::epoc80:
             case epocver::epoc81a:
@@ -1646,5 +1647,10 @@ namespace eka2l1 {
 
     bool system::is_s80_device_active() {
         return impl->is_s80_device_active();
+    }
+
+    bool system::is_uiq_2_device_active() {
+        return (impl->get_symbian_version_use() == epocver::epoc70)
+            && impl->get_io_system()->exist(u"Z:\\System\\Libs\\qikctl.dll");
     }
 }

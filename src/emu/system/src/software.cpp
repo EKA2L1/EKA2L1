@@ -19,6 +19,12 @@
 
 #include <system/software.h>
 
+#include <algorithm>
+#include <cstring>
+#include <map>
+#include <vector>
+
+#include <common/buffer.h>
 #include <common/dynamicfile.h>
 #include <common/fileutils.h>
 #include <common/ini.h>
@@ -200,6 +206,10 @@ namespace eka2l1::loader {
     }
 
     epocver determine_rpkg_symbian_version(const std::string &extracted_path) {
+        if (common::exists(add_path(extracted_path, "system\\install\\uiq21platform.sis"))) {
+            return epocver::epoc70;
+        }
+
         epocver target_ver = epocver::epoc94;
 
         // Some shipped s60v3 firmware some reason includes series60v5 SIS into install directory
@@ -331,7 +341,106 @@ namespace eka2l1::loader {
         return false;
     }
 
+    std::uint32_t determine_rpkg_machine_uid(const std::string &extracted_path) {
+        // hal.dll stores its attribute defaults, indexed by HALData number, right after the
+        // "HAL-UserHal" name descriptor. Attribute 5 is EMachineUid.
+        static const char *HAL_PATHS[] = { "system\\libs\\hal.dll", "sys\\bin\\hal.dll" };
+        static const std::uint8_t HAL_NAME[] = {
+            0x0B, 0x00, 0x00, 0x00,
+            'H', 0, 'A', 0, 'L', 0, '-', 0, 'U', 0, 's', 0, 'e', 0, 'r', 0, 'H', 0, 'a', 0, 'l', 0,
+            0x00, 0x00
+        };
+        static constexpr std::size_t MACHINE_UID_ATTRIBUTE = 5;
+
+        for (const char *hal_path : HAL_PATHS) {
+            common::ro_std_file_stream hal_file(add_path(extracted_path, hal_path), true);
+
+            if (!hal_file.valid()) {
+                continue;
+            }
+
+            std::vector<std::uint8_t> content(static_cast<std::size_t>(hal_file.left()));
+            if (hal_file.read(content.data(), content.size()) != content.size()) {
+                continue;
+            }
+
+            const auto attributes = std::search(content.begin(), content.end(),
+                std::begin(HAL_NAME), std::end(HAL_NAME));
+
+            if (attributes == content.end()) {
+                continue;
+            }
+
+            const std::size_t uid_offset = std::distance(content.begin(), attributes)
+                + sizeof(HAL_NAME) + MACHINE_UID_ATTRIBUTE * sizeof(std::uint32_t);
+
+            if (uid_offset + sizeof(std::uint32_t) > content.size()) {
+                continue;
+            }
+
+            std::uint32_t machine_uid = 0;
+            std::memcpy(&machine_uid, content.data() + uid_offset, sizeof(machine_uid));
+
+            return machine_uid;
+        }
+
+        LOG_WARN(SYSTEM, "Unable to read the machine UID from this dump's HAL library");
+        return 0;
+    }
+
+    const std::vector<std::string> &device_naming_files() {
+        // Keep in step with determine_rpkg_product_info().
+        static const std::vector<std::string> files = {
+            "resource\\versions\\product.txt",
+            "resource\\versions\\sw.txt",
+            "resource\\versions\\langsw.txt",
+            "system\\versions\\sw.txt",
+            "system\\versions\\langsw.txt",
+            "system\\install\\sonyericssonp90xplatform.sis"
+        };
+
+        return files;
+    }
+
+    static bool determine_product_info_from_machine_uid(const std::string &extracted_path,
+        std::string &manufacturer, std::string &firmcode, std::string &model) {
+        // UIQ has no naming file (devinf still says P800 on a P900 ROM), so name it by machine
+        // UID. The pairs are the ones MOPHUN.DLL tests.
+        struct device_name {
+            const char *manufacturer_;
+            const char *firmcode_;
+            const char *model_;
+        };
+
+        static const std::map<std::uint32_t, device_name> NAMES = {
+            { 0x101F408B, { "Sony Ericsson", "P800", "Sony Ericsson P800" } },
+            { 0x101FB2AE, { "Sony Ericsson", "P900", "Sony Ericsson P900" } }
+        };
+
+        const auto named = NAMES.find(determine_rpkg_machine_uid(extracted_path));
+
+        if (named == NAMES.end()) {
+            return false;
+        }
+
+        manufacturer = named->second.manufacturer_;
+        firmcode = named->second.firmcode_;
+        model = named->second.model_;
+
+        return true;
+    }
+
     bool determine_rpkg_product_info(const std::string &extracted_path, std::string &manufacturer, std::string &firmcode, std::string &model) {
+        if (common::exists(add_path(extracted_path, "system\\install\\sonyericssonp90xplatform.sis"))) {
+            if (determine_product_info_from_machine_uid(extracted_path, manufacturer, firmcode, model)) {
+                return true;
+            }
+            manufacturer = "Sony Ericsson";
+            firmcode = "P90x";
+            model = "Sony Ericsson P90x";
+            return true;
+        }
+
         if (!determine_rpkg_product_info_from_platform_txt(extracted_path, manufacturer, firmcode, model)) {
             LOG_WARN(SYSTEM, "First method of determining product info failed, start the second one.");
 

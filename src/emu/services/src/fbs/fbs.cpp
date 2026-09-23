@@ -315,7 +315,7 @@ namespace eka2l1 {
     }
 
     int fbs_server::legacy_level() const {
-        if (kern->get_epoc_version() <= epocver::epoc6) {
+        if (kern->get_epoc_version() <= epocver::epoc70) {
             return FBS_LEGACY_LEVEL_S60V1;
         }
 

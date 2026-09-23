@@ -440,12 +440,30 @@ namespace eka2l1::ios {
         int present_slot = 0;
         std::atomic<std::uint64_t> rendered_frame_count{0};
 
-        // Vertical anchor for the presented guest picture, in surface pixels.
-        // -1 centres it (default). >= 0 pins the picture's top edge at that
-        // offset (clamped so it stays on screen) — the frontend uses this to
-        // top-align the picture when a keypad overlays the bottom of the view,
-        // so the keys cover letterbox instead of gameplay.
-        std::atomic<int> display_anchor_top_px{-1};
+        // Where the guest picture is placed on the render surface, in surface
+        // pixels. Guarded by display_geometry_mutex.
+        struct display_layout {
+            // Area the picture is fitted into; an empty size means the whole
+            // surface.
+            eka2l1::rect content;
+            // Multiplies the fitted size, so the user can shrink the picture
+            // clear of the keypad or blow it past the surface edges.
+            float scale = 1.0f;
+            // 0 left, 1 top, 2 centre, 3 right, 4 bottom — the alignment the
+            // frontend's picker offers, matching the Android frontend's order.
+            int gravity = 2;
+            eka2l1::vec2 offset{ 0, 0 };
+        };
+
+        display_layout display_layout_;
+
+        // Set while a re-present scheduled by a layout change is still queued,
+        // so dragging the picture around coalesces into one pending frame.
+        std::atomic<bool> display_layout_represent_pending{false};
+
+        // Set when a queued layout change also resizes the screen texture, so
+        // the coalesced frame knows it must ask the window server to repaint.
+        std::atomic<bool> display_layout_repaint_pending{false};
 
         // CCW rotation of on-screen content relative to the iPhone's natural
         // (portrait) orientation: 0 portrait, 90 landscapeLeft, 180 upside
@@ -774,26 +792,62 @@ namespace eka2l1::ios {
             std::swap(display_size.x, display_size.y);
         }
 
+        emulator::display_layout layout;
+        {
+            std::lock_guard<std::mutex> geometry_lock(state->display_geometry_mutex);
+            layout = state->display_layout_;
+        }
+
+        eka2l1::rect content = layout.content;
+        if ((content.size.x <= 0) || (content.size.y <= 0)) {
+            content.top = eka2l1::vec2(0, 0);
+            content.size = swapchain_size;
+        }
+
         float scale = std::min(
-            static_cast<float>(swapchain_size.x) / static_cast<float>(display_size.x),
-            static_cast<float>(swapchain_size.y) / static_cast<float>(display_size.y));
+            static_cast<float>(content.size.x) / static_cast<float>(display_size.x),
+            static_cast<float>(content.size.y) / static_cast<float>(display_size.y));
+        scale *= std::max(0.05f, layout.scale);
         if (scale <= 0.0f) {
             return;
         }
         const float width = display_size.x * scale;
         const float height = display_size.y * scale;
 
+        const float center_x = content.top.x + (content.size.x - width) / 2.0f;
+        const float center_y = content.top.y + (content.size.y - height) / 2.0f;
+
         eka2l1::rect dest;
-        dest.top.x = static_cast<int>((swapchain_size.x - width) / 2.0f);
-        dest.top.y = static_cast<int>((swapchain_size.y - height) / 2.0f);
         dest.size.x = static_cast<int>(width);
         dest.size.y = static_cast<int>(height);
+        dest.top.x = static_cast<int>(center_x);
+        dest.top.y = static_cast<int>(center_y);
 
-        const int anchor_top = state->display_anchor_top_px.load(std::memory_order_relaxed);
-        if (anchor_top >= 0) {
-            const int max_top = std::max(0, swapchain_size.y - static_cast<int>(height));
-            dest.top.y = std::min(anchor_top, max_top);
+        switch (layout.gravity) {
+        case 0:
+            dest.top.x = content.top.x;
+            break;
+        case 1:
+            dest.top.y = content.top.y;
+            break;
+        case 3:
+            dest.top.x = content.top.x + content.size.x - dest.size.x;
+            break;
+        case 4:
+            dest.top.y = content.top.y + content.size.y - dest.size.y;
+            break;
+        default:
+            break;
         }
+
+        dest.top += layout.offset;
+
+        // Keep at least the picture's centre on the surface, so a stored offset
+        // can never leave the user with a blank screen and no way back.
+        dest.top.x = std::min(std::max(dest.top.x, -dest.size.x / 2),
+            swapchain_size.x - dest.size.x / 2);
+        dest.top.y = std::min(std::max(dest.top.y, -dest.size.y / 2),
+            swapchain_size.y - dest.size.y / 2);
 
         const eka2l1::rect external_crop = dest;
         {
@@ -2527,11 +2581,56 @@ namespace eka2l1::ios {
     return _state->device_is_eka1.load(std::memory_order_relaxed) ? YES : NO;
 }
 
-- (void)setDisplayAnchorTopPixels:(NSInteger)anchorTop {
+- (void)setDisplayLayoutContentRect:(CGRect)content
+                              scale:(CGFloat)scale
+                            gravity:(NSInteger)gravity
+                             offset:(CGPoint)offset {
     if (!_state) {
         return;
     }
-    _state->display_anchor_top_px.store(static_cast<int>(anchorTop), std::memory_order_relaxed);
+    eka2l1::ios::emulator::display_layout layout;
+    layout.content.top = eka2l1::vec2(static_cast<int>(content.origin.x),
+        static_cast<int>(content.origin.y));
+    layout.content.size = eka2l1::vec2(static_cast<int>(content.size.width),
+        static_cast<int>(content.size.height));
+    layout.scale = static_cast<float>(scale);
+    layout.gravity = static_cast<int>(gravity);
+    layout.offset = eka2l1::vec2(static_cast<int>(offset.x), static_cast<int>(offset.y));
+
+    {
+        std::lock_guard<std::mutex> lock(_state->display_geometry_mutex);
+        if ((_state->display_layout_.content == layout.content)
+            && (_state->display_layout_.scale == layout.scale)
+            && (_state->display_layout_.gravity == layout.gravity)
+            && (_state->display_layout_.offset == layout.offset)) {
+            return;
+        }
+        // A new presented size resizes the screen texture, so the window server must repaint it.
+        if ((_state->display_layout_.content != layout.content)
+            || (_state->display_layout_.scale != layout.scale)) {
+            _state->display_layout_repaint_pending.store(true, std::memory_order_relaxed);
+        }
+        _state->display_layout_ = layout;
+    }
+
+    // A paused or menu-static guest produces no frame of its own, so the move
+    // would not show until it next draws.
+    if (!_state->display_layout_represent_pending.exchange(true)) {
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+            std::lock_guard<std::recursive_mutex> session_lock(self->_sessionMutex);
+            auto *state = self->_state.get();
+            if (!state) {
+                return;
+            }
+            state->display_layout_represent_pending.store(false);
+            // This present is what hands the new scale factor to the screen,
+            // resizing its texture; the repaint has to follow it.
+            eka2l1::ios::re_present_screen(state);
+            if (state->display_layout_repaint_pending.exchange(false, std::memory_order_relaxed)) {
+                eka2l1::ios::kick_screen_redraw(state);
+            }
+        });
+    }
 }
 
 - (NSDictionary<NSString *, id> *)guestScreenModeSnapshot {

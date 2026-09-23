@@ -11,17 +11,29 @@ enum KeypadElement: String, CaseIterable, Hashable {
     case numeric
     case menu
     case clear
+    case call
+    case end
 
     var title: String {
         switch self {
-        case .dpad: return "D-pad"
-        case .leftSoft: return "LSK"
-        case .rightSoft: return "RSK"
+        case .dpad: return String(localized: "keypad.editor.dpad")
+        case .leftSoft: return String(localized: "key.leftSoft")
+        case .rightSoft: return String(localized: "key.rightSoft")
         case .numeric: return String(localized: "keypad.editor.numberPad")
         case .menu: return String(localized: "emulator.menu")
         case .clear: return String(localized: "keypad.accessibility.clear")
+        case .call: return String(localized: "keypad.accessibility.call")
+        case .end: return String(localized: "keypad.accessibility.end")
         }
     }
+
+    // Every key the user may switch off. Menu stays: it is the only way back into
+    // this editor once the keypad is off.
+    static var hideable: [KeypadElement] {
+        allCases.filter { $0 != .menu }
+    }
+
+    static let hiddenByDefault: [String] = [KeypadElement.call, .end].map(\.rawValue).sorted()
 
     func size(in canvasSize: CGSize) -> CGSize {
         // Base both orientations on the display's physical short edge so a
@@ -34,7 +46,7 @@ enum KeypadElement: String, CaseIterable, Hashable {
         switch self {
         case .dpad:
             return CGSize(width: majorWidth - 4, height: majorWidth - 4)
-        case .leftSoft, .rightSoft, .menu, .clear:
+        case .leftSoft, .rightSoft, .menu, .clear, .call, .end:
             return CGSize(width: 56 * scale, height: 36 * scale)
         case .numeric:
             return CGSize(width: majorWidth, height: majorWidth * 190 / 150)
@@ -68,6 +80,27 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
     var numeric: NormalizedKeypadPoint
     var menu: NormalizedKeypadPoint
     var clear: NormalizedKeypadPoint
+    // Added after the format shipped: absent in stored layouts, filled in from the
+    // reset layout when one is decoded.
+    var call: NormalizedKeypadPoint?
+    var end: NormalizedKeypadPoint?
+    // Nil for layouts saved before the setting existed; they take the reset layout's default.
+    var hiddenElements: [String]?
+
+    func isHidden(_ element: KeypadElement) -> Bool {
+        hiddenElements?.contains(element.rawValue) ?? false
+    }
+
+    mutating func setHidden(_ hidden: Bool, for element: KeypadElement) {
+        guard element != .menu else { return }
+        var current = Set(hiddenElements ?? [])
+        if hidden {
+            current.insert(element.rawValue)
+        } else {
+            current.remove(element.rawValue)
+        }
+        hiddenElements = current.sorted()
+    }
 
     func point(for element: KeypadElement, in size: CGSize) -> CGPoint {
         normalizedPoint(for: element).point(in: size)
@@ -82,6 +115,8 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
         case .numeric: numeric = normalized
         case .menu: menu = normalized
         case .clear: clear = normalized
+        case .call: call = normalized
+        case .end: end = normalized
         }
     }
 
@@ -126,7 +161,11 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
         safeAreaInsets: EdgeInsets = EdgeInsets()
     ) -> KeypadLayoutConfiguration {
         if let data = rawValue.data(using: .utf8),
-           let configuration = try? JSONDecoder().decode(KeypadLayoutConfiguration.self, from: data) {
+           var configuration = try? JSONDecoder().decode(KeypadLayoutConfiguration.self, from: data) {
+            let fallback = classicDefault(in: size, safeAreaInsets: safeAreaInsets)
+            configuration.call = configuration.call ?? fallback.call
+            configuration.end = configuration.end ?? fallback.end
+            configuration.hiddenElements = configuration.hiddenElements ?? fallback.hiddenElements
             return configuration
         }
         return classicDefault(in: size, safeAreaInsets: safeAreaInsets)
@@ -180,13 +219,20 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
                 y: numericCenter.y + numericSize.height / 2 + 12 + clearSize.height / 2
             )
 
+            let softRowCenterX = (leftSoft.x + rightSoft.x) / 2
+            let call = CGPoint(x: softRowCenterX - softKeySize.width / 2 - 4, y: leftSoft.y)
+            let end = CGPoint(x: softRowCenterX + softKeySize.width / 2 + 4, y: rightSoft.y)
+
             return KeypadLayoutConfiguration(
                 dpad: .make(dpadCenter, in: size),
                 leftSoft: .make(leftSoft, in: size),
                 rightSoft: .make(rightSoft, in: size),
                 numeric: .make(numericCenter, in: size),
                 menu: .make(menu, in: size),
-                clear: .make(clear, in: size)
+                clear: .make(clear, in: size),
+                call: .make(call, in: size),
+                end: .make(end, in: size),
+                hiddenElements: KeypadElement.hiddenByDefault
             )
         }
 
@@ -223,13 +269,22 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
             y: bottomEdge - clearSize.height / 2
         )
 
+        // Off by default: the middle of the soft-key row is where guests draw their own
+        // middle soft-key label.
+        let softRowCenterX = (leftSoft.x + rightSoft.x) / 2
+        let call = CGPoint(x: softRowCenterX - softKeySize.width / 2 - 4, y: softCenterY)
+        let end = CGPoint(x: softRowCenterX + softKeySize.width / 2 + 4, y: softCenterY)
+
         return KeypadLayoutConfiguration(
             dpad: .make(CGPoint(x: dpadCenterX, y: dpadCenterY), in: size),
             leftSoft: .make(leftSoft, in: size),
             rightSoft: .make(rightSoft, in: size),
             numeric: .make(CGPoint(x: numericCenterX, y: numericCenterY), in: size),
             menu: .make(menu, in: size),
-            clear: .make(clear, in: size)
+            clear: .make(clear, in: size),
+            call: .make(call, in: size),
+            end: .make(end, in: size),
+            hiddenElements: KeypadElement.hiddenByDefault
         )
     }
 
@@ -241,6 +296,8 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
         case .numeric: return numeric
         case .menu: return menu
         case .clear: return clear
+        case .call: return call ?? NormalizedKeypadPoint(x: 0.5, y: 0.5)
+        case .end: return end ?? NormalizedKeypadPoint(x: 0.5, y: 0.5)
         }
     }
 
@@ -263,7 +320,7 @@ private struct KeypadElementBackdrop: View {
         switch element {
         case .dpad:
             Circle().fill(.black)
-        case .leftSoft, .rightSoft, .numeric, .menu, .clear:
+        case .leftSoft, .rightSoft, .numeric, .menu, .clear, .call, .end:
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(.black)
         }
@@ -295,6 +352,7 @@ struct KeypadMenuActions {
     var fullScreen: Binding<Bool>
     var locksOrientation: Binding<Bool>
     var editKeypadLayout: () -> Void
+    var editDisplayLayout: () -> Void
     var guestScreenModes: [Int]
     var guestScreenMode: Binding<Int>
     var frameLimit: Binding<Int>
@@ -326,6 +384,16 @@ struct SystemMenuKey: View {
             actions.editKeypadLayout()
         } label: {
             Label("keypad.editor.editLayout", systemImage: "move.3d")
+        }
+
+        // Fullscreen presents the picture centred over the whole screen, so
+        // there is no stored layout to edit.
+        if !actions.fullScreen.wrappedValue {
+            Button {
+                actions.editDisplayLayout()
+            } label: {
+                Label("display.editor.editLayout", systemImage: "rectangle.inset.filled")
+            }
         }
 
         Toggle(isOn: actions.locksOrientation) {
@@ -409,20 +477,40 @@ struct VirtualKeypad: View {
     var body: some View {
         ZStack {
             if !fullScreen {
-                runtimeElement(.dpad) {
-                    SlidingDPad(diameter: KeypadElement.dpad.size(in: controlSize).width)
+                if shows(.dpad) {
+                    runtimeElement(.dpad) {
+                        SlidingDPad(diameter: KeypadElement.dpad.size(in: controlSize).width)
+                    }
                 }
-                runtimeElement(.leftSoft) {
-                    SoftKey(side: .left, size: KeypadElement.leftSoft.size(in: controlSize))
+                if shows(.leftSoft) {
+                    runtimeElement(.leftSoft) {
+                        SoftKey(side: .left, size: KeypadElement.leftSoft.size(in: controlSize))
+                    }
                 }
-                runtimeElement(.rightSoft) {
-                    SoftKey(side: .right, size: KeypadElement.rightSoft.size(in: controlSize))
+                if shows(.rightSoft) {
+                    runtimeElement(.rightSoft) {
+                        SoftKey(side: .right, size: KeypadElement.rightSoft.size(in: controlSize))
+                    }
                 }
-                runtimeElement(.numeric) {
-                    CapsNumericPad(size: KeypadElement.numeric.size(in: controlSize))
+                if shows(.numeric) {
+                    runtimeElement(.numeric) {
+                        CapsNumericPad(size: KeypadElement.numeric.size(in: controlSize))
+                    }
                 }
-                runtimeElement(.clear) {
-                    ClearKey(size: KeypadElement.clear.size(in: controlSize))
+                if shows(.clear) {
+                    runtimeElement(.clear) {
+                        ClearKey(size: KeypadElement.clear.size(in: controlSize))
+                    }
+                }
+                if shows(.call) {
+                    runtimeElement(.call) {
+                        PhoneKey(side: .call, size: KeypadElement.call.size(in: controlSize))
+                    }
+                }
+                if shows(.end) {
+                    runtimeElement(.end) {
+                        PhoneKey(side: .end, size: KeypadElement.end.size(in: controlSize))
+                    }
                 }
             }
 
@@ -435,6 +523,10 @@ struct VirtualKeypad: View {
         .onPreferenceChange(KeypadElementFramesKey.self) { frames in
             onFramesChange(Array(frames.values))
         }
+    }
+
+    private func shows(_ element: KeypadElement) -> Bool {
+        !configuration.isHidden(element)
     }
 
     private func position(for element: KeypadElement) -> CGPoint {
@@ -499,20 +591,86 @@ struct KeypadLayoutEditor: View {
     }
 
     private var editorElements: [KeypadElement] {
-        fullScreen ? [.menu] : KeypadElement.allCases
+        fullScreen ? [.menu] : KeypadElement.allCases.filter { !configuration.isHidden($0) }
     }
 
     private var editorSettings: some View {
         ViewThatFits(in: .horizontal) {
             HStack(spacing: 8) {
                 opacityBar
-                    .frame(minWidth: 260, maxWidth: 300)
-                fullScreenToggle
+                    .frame(minWidth: 240, maxWidth: 300)
+                visibilityMenu
             }
 
             VStack(spacing: 8) {
                 opacityBar
-                fullScreenToggle
+                visibilityMenu
+            }
+        }
+    }
+
+    // Fullscreen hides every key and switching a key back on leaves it. The menu stays
+    // open so several keys can be toggled at once.
+    @ViewBuilder
+    private var visibilityMenu: some View {
+        let menu = Menu {
+            visibilityItem(
+                title: String(localized: "emulator.menu.fullScreen"),
+                on: fullScreen
+            ) {
+                fullScreen.toggle()
+            }
+
+            Divider()
+
+            ForEach(KeypadElement.hideable, id: \.self) { element in
+                let shown = !fullScreen && !configuration.isHidden(element)
+                visibilityItem(title: element.title, on: shown) {
+                    if fullScreen {
+                        fullScreen = false
+                        configuration.setHidden(false, for: element)
+                    } else {
+                        configuration.setHidden(shown, for: element)
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "square.grid.2x2")
+                Text("keypad.editor.visibleControls")
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption2.weight(.bold))
+            }
+            .font(.callout.weight(.semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 16)
+            .frame(height: 50)
+            .fixedSize(horizontal: true, vertical: false)
+            .background(.black.opacity(0.72), in: Capsule())
+            .overlay(Capsule().strokeBorder(.white.opacity(0.16), lineWidth: 1))
+        }
+
+        if #available(iOS 16.4, *) {
+            menu.menuActionDismissBehavior(.disabled)
+        } else {
+            menu
+        }
+    }
+
+    private func visibilityItem(
+        title: String,
+        on: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            if on {
+                Label {
+                    Text(verbatim: title)
+                } icon: {
+                    Image(systemName: "checkmark")
+                }
+            } else {
+                Text(verbatim: title)
             }
         }
     }
@@ -555,18 +713,6 @@ struct KeypadLayoutEditor: View {
         .background(.black.opacity(0.72), in: Capsule())
         .overlay(Capsule().strokeBorder(.white.opacity(0.16), lineWidth: 1))
         .accessibilityLabel("settings.keypadOpacity")
-    }
-
-    private var fullScreenToggle: some View {
-        Toggle("emulator.menu.fullScreen", isOn: $fullScreen)
-            .font(.callout.weight(.semibold))
-            .foregroundStyle(.white)
-            .tint(.white)
-            .padding(.horizontal, 16)
-            .frame(height: 50)
-            .fixedSize(horizontal: true, vertical: false)
-            .background(.black.opacity(0.72), in: Capsule())
-            .overlay(Capsule().strokeBorder(.white.opacity(0.16), lineWidth: 1))
     }
 
     private func draggableElement(_ element: KeypadElement) -> some View {
@@ -629,6 +775,10 @@ struct KeypadLayoutEditor: View {
             SystemMenuKey(actions: actions, size: elementSize)
         case .clear:
             ClearKey(size: elementSize)
+        case .call:
+            PhoneKey(side: .call, size: elementSize)
+        case .end:
+            PhoneKey(side: .end, size: elementSize)
         }
     }
 

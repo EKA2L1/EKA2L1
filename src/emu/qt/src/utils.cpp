@@ -143,6 +143,9 @@ QString epocver_to_symbian_readable_name(const epocver ver) {
     case epocver::epoc6:
         return QString("S60v1");
 
+    case epocver::epoc70:
+        return QString("UIQ - 7.0");
+
     case epocver::epoc7:
         return QString("S60 - 7.0");
 

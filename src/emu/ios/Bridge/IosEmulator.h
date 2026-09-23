@@ -282,11 +282,12 @@ typedef NS_ENUM(NSInteger, EKA2L1PointerPhase) {
 // YES for EKA1 devices (Symbian OS 6.1 … 8.1a).
 - (BOOL)currentDeviceIsEKA1;
 
-// Vertical anchor for the presented guest picture, in surface pixels.
-// Pass a negative value to centre it (default). >= 0 pins the picture's top
-// edge at that offset (clamped) — used to top-align the picture when a keypad
-// overlays the bottom of the screen.
-- (void)setDisplayAnchorTopPixels:(NSInteger)anchorTop;
+// Fits the guest picture into `content` (empty = whole surface), times `scale`, aligned by
+// `gravity` (0 left, 1 top, 2 centre, 3 right, 4 bottom), then shifted by `offset`; surface pixels.
+- (void)setDisplayLayoutContentRect:(CGRect)content
+                              scale:(CGFloat)scale
+                            gravity:(NSInteger)gravity
+                             offset:(CGPoint)offset;
 
 // Available Window Server screen-mode indices plus the current mode. The
 // snapshot keys are `modes` ([NSNumber]) and `current` (NSNumber).

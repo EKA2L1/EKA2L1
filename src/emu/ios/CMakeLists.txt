@@ -43,6 +43,7 @@ set(EKA2L1_IOS_SOURCES
     "${EKA2L1_IOS_APP_DIR}/EKA2L1Bridge.swift"
     "${EKA2L1_IOS_APP_DIR}/EmulatorView.swift"
     "${EKA2L1_IOS_APP_DIR}/VirtualKeypad.swift"
+    "${EKA2L1_IOS_APP_DIR}/DisplayLayout.swift"
     "${EKA2L1_IOS_APP_DIR}/KeypadComponents.swift"
     "${EKA2L1_IOS_APP_DIR}/Haptics.swift"
     "${EKA2L1_IOS_APP_DIR}/EmulatorViewController.swift"

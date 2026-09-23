@@ -64,7 +64,8 @@ enum class epocver {
     eka1, ///< Mark for EKA1
     epocu6,
     epoc6,     ///< S60v1
-    epoc7,
+    epoc70,    ///< Symbian OS 7.0 (UIQ 2.x), before the 7.0s IPC transition
+    epoc7,     ///< Symbian OS 7.0s
     epoc80,
     epoc81a,
     eka2,      ///< Mark for EKA2

@@ -451,6 +451,10 @@ namespace eka2l1::loader {
             apply_packaged_device_name(packaged_devices_yml, firmcode, manufacturer, model, machine_uid);
         }
 
+        if (machine_uid == 0) {
+            machine_uid = determine_rpkg_machine_uid(temp_z_path);
+        }
+
         const std::string firmcode_low = common::lowercase_string(firmcode);
         const std::string final_z_path = add_path(drives_z_resident_path, firmcode_low + "\\");
         const std::string final_rom_folder = add_path(rom_resident_path, firmcode_low + "\\");

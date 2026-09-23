@@ -106,3 +106,64 @@ TEST_CASE("gdr_rejects_a_truncated_header", "gdr_file") {
 
     REQUIRE(!parse(buf));
 }
+
+static std::vector<std::uint8_t> make_inline_font() {
+    auto buf = make_empty_store();
+    buf.resize(40);
+    buf[20] = 40;
+    append32(buf, 1);
+    append32(buf, 0x10000001);
+    buf.insert(buf.end(), {0, 0, 0, 2, 2, 3, 3});
+    append32(buf, 0);
+    append32(buf, 1);
+    buf.insert(buf.end(), {65, 0, 66, 0});
+    append32(buf, 0);
+    append32(buf, 0);
+    append32(buf, 0);
+    append32(buf, 2);
+    // UIQ SDK CharacterMetrics: offset, ascent, height, bearings, advance, spare.
+    buf.insert(buf.end(), {0, 0, 2, 2, 0, 3, 0, 0});
+    buf.insert(buf.end(), {0xff, 0xff, 0, 0, 0, 0, 0, 0});
+    append32(buf, 1);
+    buf.push_back(0xa4); // Repeat the 101 row twice.
+
+    return buf;
+}
+
+TEST_CASE("gdr_version_40_has_inline_character_metrics", "gdr_file") {
+    auto buf = make_inline_font();
+    common::ro_buf_stream stream(buf.data(), buf.size());
+    loader::gdr::file_store store;
+    REQUIRE(loader::gdr::parse_store(&stream, store));
+    REQUIRE(store.font_bitmaps_.size() == 1);
+    const auto &font = store.font_bitmaps_[0];
+    const auto &chars = font.code_sections_[0].chars_;
+    REQUIRE(chars.size() == 2);
+    REQUIRE(chars[0].metric_->move_in_pixels_ == 3);
+    REQUIRE(chars[0].metric_->height_in_pixels_ == 2);
+    REQUIRE(chars[0].data_ == loader::gdr::bitmap{0x2d});
+    REQUIRE(chars[1].metric_->move_in_pixels_ == 3);
+}
+
+TEST_CASE("gdr_inline_glyph_rejects_invalid_runs_and_offsets", "gdr_file") {
+    auto buf = make_inline_font();
+    SECTION("zero line run") { buf.back() = 0; }
+    SECTION("run exceeds glyph height") { buf.back() = 0xa6; }
+    SECTION("missing bitmap bits") { buf.back() = 5; }
+    SECTION("offset past bitmap") { buf[83] = 2; }
+    REQUIRE_FALSE(parse(buf));
+}
+
+TEST_CASE("gdr_preserves_signed_character_bearings", "gdr_file") {
+    auto buf = make_inline_font();
+    buf[89] = 0xff; // Right bearing -1 makes the bitmap four pixels wide.
+    buf[buf.size() - 5] = 2;
+    buf.push_back(0x01);
+
+    common::ro_buf_stream stream(buf.data(), buf.size());
+    loader::gdr::file_store store;
+    REQUIRE(loader::gdr::parse_store(&stream, store));
+    const auto &glyph = store.font_bitmaps_[0].code_sections_[0].chars_[0];
+    REQUIRE(glyph.metric_->right_adjust_in_pixels_ == -1);
+    REQUIRE(glyph.data_ == loader::gdr::bitmap{0xdd});
+}

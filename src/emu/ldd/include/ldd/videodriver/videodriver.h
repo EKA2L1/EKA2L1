@@ -31,11 +31,25 @@ namespace eka2l1::ldd {
         video_driver_control_op_get_screen_extra_info = 16      // Same as 15, just fill other fields
     };
 
+    // Each base port numbers the display LDD's control functions itself. Symbian 7.0
+    // (UIQ 2.x) uses a different table from the Series 80 one above.
+    enum video_driver_control_op_epoc70 {
+        video_driver_control_op_epoc70_get_backlight_state = 6,
+        video_driver_control_op_epoc70_get_display_mode = 11,
+        video_driver_control_op_epoc70_get_mode_count = 12,
+        video_driver_control_op_epoc70_get_screen_display_state = 16,
+        video_driver_control_op_epoc70_get_screen_num_of_colors = 17,
+        video_driver_control_op_epoc70_get_current_mode_info = 18,
+        video_driver_control_op_epoc70_get_specified_mode_info = 19
+    };
+
     class video_driver_channel : public channel {
     private:
         std::int32_t get_screen_number_of_colors(kernel::thread *r, const std::uint32_t n, const eka2l1::ptr<void> arg1,
             const eka2l1::ptr<void> arg2);
         std::int32_t get_screen_info(kernel::thread *r, const std::uint32_t n, const eka2l1::ptr<void> arg1,
+            const eka2l1::ptr<void> arg2);
+        std::int32_t do_control_epoc70(kernel::thread *r, const std::uint32_t n, const eka2l1::ptr<void> arg1,
             const eka2l1::ptr<void> arg2);
     public:
         explicit video_driver_channel(kernel_system *kern, system *sys, epoc::version ver);
