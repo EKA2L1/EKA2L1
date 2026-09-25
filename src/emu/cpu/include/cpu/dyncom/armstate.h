@@ -402,7 +402,7 @@ public:
     }
 
     static std::size_t block_l1_index(std::uint64_t key) {
-        return (key ^ (key >> 32)) & (BLOCK_L1_COUNT - 1);
+        return ((key ^ (key >> 32)) >> 1) & (BLOCK_L1_COUNT - 1);
     }
 
 private:
