@@ -457,6 +457,145 @@ std::uint32_t run_vfp_mac_differential(diff_env &env_a, diff_env &env_b,
     return failures;
 }
 
+std::uint32_t random_edge_f32(rng &r) {
+    const std::uint32_t sign = r.u32() & 0x80000000u;
+    const std::uint32_t mantissa = r.u32() & 0x007FFFFFu;
+    switch (r.range(12)) {
+    case 0: return sign;                                               // +-0
+    case 1: return sign | (mantissa | 1u);                             // denormal
+    case 2: return sign | 0x7F800000u;                                 // +-inf
+    case 3: return sign | 0x7FC00000u | (mantissa & 0x003FFFFFu);      // qNaN
+    case 4: return sign | 0x7F800000u | ((mantissa & 0x003FFFFFu) | 1u); // sNaN
+    case 5: {                                                          // overflow/underflow edges
+        const std::uint32_t exponent = r.flip() ? 1u + r.range(24u) : 230u + r.range(24u);
+        return sign | (exponent << 23) | mantissa;
+    }
+    case 6: {                                                          // small integers
+        const float value = static_cast<float>(static_cast<std::int32_t>(r.range(4001u)) - 2000);
+        std::uint32_t bits;
+        std::memcpy(&bits, &value, sizeof(bits));
+        return bits;
+    }
+    case 7: return r.u32();                                            // raw bits / integers
+    case 8: {                                                          // conversion range edges
+        static constexpr std::uint32_t edges[] = { 0x4F000000u, 0xCF000000u, 0x4F7FFFFFu, 0x4F800000u,
+            0x4EFFFFFFu, 0xCEFFFFFFu, 0x3F000000u, 0xBF000000u, 0x3F7FFFFFu, 0xBF7FFFFFu, 0x3F800000u };
+        return edges[r.range(sizeof(edges) / sizeof(edges[0]))];
+    }
+    default: {
+        const std::uint32_t exponent = 1u + r.range(254u);
+        return sign | (exponent << 23) | mantissa;
+    }
+    }
+}
+
+std::uint32_t random_fpscr(rng &r) {
+    if (r.range(4) != 0)
+        return 0;
+    std::uint32_t fpscr = 0;
+    fpscr |= r.range(4) << 22;                 // RMode
+    if (r.flip()) fpscr |= 1u << 24;           // FZ
+    if (r.flip()) fpscr |= 1u << 25;           // DN
+    if (r.range(4) == 0) fpscr |= 1u << (8 + r.range(5)); // a trap enable
+    if (r.flip()) fpscr |= r.range(8) << 16;   // LEN
+    return fpscr;
+}
+
+// Every single-precision CDP op, fast path vs softfloat, over edge-heavy inputs
+// and random FPSCR modes. Encodings compute s0 = s1 op s2 (EXT ops: s0 = op s2);
+// vector variants retarget the destination to s8 so LEN takes effect.
+std::uint32_t run_vfp_single_differential(diff_env &env_a, diff_env &env_b,
+    dyncom_core &core_a, dyncom_core &core_b, std::uint32_t base_seed,
+    std::uint32_t count) {
+    struct single_op {
+        const char *name;
+        std::uint32_t inst;
+        bool vector_capable;
+    };
+    static constexpr single_op ops[] = {
+        { "vmla.f32", 0xEE000A81u, true }, { "vmls.f32", 0xEE000AC1u, true },
+        { "vnmls.f32", 0xEE100A81u, true }, { "vnmla.f32", 0xEE100AC1u, true },
+        { "vmul.f32", 0xEE200A81u, true }, { "vnmul.f32", 0xEE200AC1u, true },
+        { "vadd.f32", 0xEE300A81u, true }, { "vsub.f32", 0xEE300AC1u, true },
+        { "vdiv.f32", 0xEE800A81u, true },
+        { "vmov.f32", 0xEEB00A41u, true }, { "vabs.f32", 0xEEB00AC1u, true },
+        { "vneg.f32", 0xEEB10A41u, true }, { "vsqrt.f32", 0xEEB10AC1u, true },
+        { "vcmp.f32", 0xEEB40A41u, false }, { "vcmpe.f32", 0xEEB40AC1u, false },
+        { "vcmp.f32 #0", 0xEEB50A40u, false }, { "vcmpe.f32 #0", 0xEEB50AC0u, false },
+        { "vcvt.f32.u32", 0xEEB80A41u, false }, { "vcvt.f32.s32", 0xEEB80AC1u, false },
+        { "vcvtr.u32.f32", 0xEEBC0A41u, false }, { "vcvt.u32.f32", 0xEEBC0AC1u, false },
+        { "vcvtr.s32.f32", 0xEEBD0A41u, false }, { "vcvt.s32.f32", 0xEEBD0AC1u, false },
+    };
+    constexpr std::uint32_t VD_S8 = 4u << 12;
+    constexpr std::uint32_t IXC = 0x10u;
+
+    const std::uint32_t cases = count < 20000u ? count : 20000u;
+    std::uint32_t failures = 0;
+    vfp_reset_single_host_fast_hits_for_test();
+
+    for (const single_op &op : ops) {
+        for (std::uint32_t i = 0; i < cases && failures < 20; ++i) {
+            const std::uint32_t case_seed = base_seed ^ (0x85EBCA6Bu * (i + 1u)) ^ op.inst;
+            rng r(case_seed);
+            std::uint32_t regs[32];
+            for (std::uint32_t &reg : regs)
+                reg = random_edge_f32(r);
+            if (r.range(4) == 0)
+                regs[2] = r.flip() ? regs[1] : (regs[1] ^ 0x80000000u); // exact cancellation
+            const std::uint32_t fpscr = random_fpscr(r);
+            std::uint32_t inst = op.inst;
+            if (op.vector_capable && r.range(4) == 0)
+                inst |= VD_S8;
+
+            std::memcpy(env_a.mem.data(), &inst, 4);
+            std::memcpy(env_b.mem.data(), &inst, 4);
+            core_a.imb_range(0, 8);
+            core_b.imb_range(0, 8);
+            for (dyncom_core *core : { &core_a, &core_b }) {
+                core->set_cpsr(0x10);
+                core->set_pc(0);
+                core->set_fpscr(fpscr);
+                for (int reg = 0; reg < 32; ++reg)
+                    core->set_vfp(reg, regs[reg]);
+            }
+
+            vfp_set_single_host_fast_for_test(false);
+            core_a.run(1);
+            vfp_set_single_host_fast_for_test(true);
+            core_b.run(1);
+
+            bool same = (core_a.get_fpscr() & ~IXC) == (core_b.get_fpscr() & ~IXC);
+            int bad_reg = -1;
+            for (int reg = 0; reg < 32 && same; ++reg) {
+                if (core_a.get_vfp(reg) != core_b.get_vfp(reg)) {
+                    same = false;
+                    bad_reg = reg;
+                }
+            }
+            if (!same) {
+                std::printf("[DIVERGENCE] %s host-fast != softfloat seed=%u inst=%08X fpscr=%08X "
+                            "s0=%08X s1=%08X s2=%08X reg=%d slow=%08X fast=%08X "
+                            "slow_fpscr=%08X fast_fpscr=%08X\n",
+                    op.name, case_seed, inst, fpscr, regs[0], regs[1], regs[2], bad_reg,
+                    bad_reg >= 0 ? core_a.get_vfp(bad_reg) : 0u, bad_reg >= 0 ? core_b.get_vfp(bad_reg) : 0u,
+                    core_a.get_fpscr(), core_b.get_fpscr());
+                ++failures;
+            }
+        }
+    }
+
+    const std::uint64_t hits = vfp_single_host_fast_hits_for_test();
+    if (hits == 0) {
+        std::printf("[HARNESS BUG] VFP single host-fast envelope was never exercised\n");
+        ++failures;
+    } else {
+        std::printf("dyncom_difftest: VFP single host-fast %llu hits across %u ops x %u inputs\n",
+            static_cast<unsigned long long>(hits), static_cast<unsigned>(sizeof(ops) / sizeof(ops[0])), cases);
+    }
+    vfp_set_single_host_fast_for_test(true);
+    return failures;
+}
+
 std::uint32_t benchmark_vfp_mac(diff_env &env_a, diff_env &env_b,
     dyncom_core &core_a, dyncom_core &core_b) {
     constexpr std::uint32_t inst = 0xEE000A81u; // vmla.f32 s0, s1, s2
@@ -2070,6 +2209,8 @@ int main(int argc, char **argv) {
     }
 
     failures += run_vfp_mac_differential(env_a, env_b, *core_a, *core_b,
+        base_seed, count);
+    failures += run_vfp_single_differential(env_a, env_b, *core_a, *core_b,
         base_seed, count);
     failures += benchmark_vfp_mac(env_a, env_b, *core_a, *core_b);
 

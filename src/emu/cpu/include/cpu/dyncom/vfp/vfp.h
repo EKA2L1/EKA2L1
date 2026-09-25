@@ -30,7 +30,9 @@
 
 #define VFP_DEBUG_UNTESTED(x) VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "in func {}, " #x " untested", __FUNCTION__);
 #define CHECK_VFP_ENABLED
-#define CHECK_VFP_CDP_RET vfp_raise_exceptions(cpu, ret, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+#define CHECK_VFP_CDP_RET              \
+    if (ret)                           \
+        vfp_raise_exceptions(cpu, ret, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 void VFPInit(ARMul_State *state);
 
