@@ -52,7 +52,6 @@
  */
 
 #include <algorithm>
-#include <bit>
 #include <cstdlib>
 #include <cstring>
 #include <common/log.h>
@@ -1261,18 +1260,9 @@ static struct op fops[] = {
 #define FREG_BANK(x) ((x)&0x18)
 #define FREG_IDX(x) ((x)&7)
 
-// Host fast path for VFP single-precision arithmetic. The interpreter's
-// VFP is the bit-accurate ARM softfloat reference (vfp_single_f*), which is the
-// dominant cost for float-heavy guest code. The host is arm64 / IEEE-754, so for
-// the common case -- scalar op, default FPSCR mode (round-to-nearest, no
-// flush-to-zero / default-NaN), and *normalized* finite operands AND result --
-// a native float op is bit-identical to the reference (both are IEEE-754 RN),
-// at a fraction of the cost. Anything outside that envelope (NaN/Inf/denormal/
-// zero in or out, non-default mode, vectors) falls back to softfloat, which
-// keeps exact flag/special-value semantics. VFPv3 VMLA/VMLS retain extra
-// product precision, but are not IEEE fused-FMA; their packed fast helper below
-// mirrors that guard/sticky sequence directly. The differential
-// harness covers both paths (see scripts/cpu_difftest.sh).
+// Host fast path: for scalar ops in the default FPSCR mode whose operands and
+// result can raise at most INEXACT (not tracked here), a native IEEE op matches
+// the softfloat reference bit for bit; anything else falls back to softfloat.
 #if defined(EKA2L1_DYNCOM_DIFFTEST)
 static bool g_vfp_host_fast = true;
 static std::uint64_t g_vfp_host_fast_hits = 0;
@@ -1288,49 +1278,214 @@ void vfp_reset_single_host_fast_hits_for_test() {
 std::uint64_t vfp_single_host_fast_hits_for_test() {
     return g_vfp_host_fast_hits;
 }
+#define VFP_HOST_FAST_HIT() (++g_vfp_host_fast_hits)
 #else
 static constexpr bool g_vfp_host_fast = true;
+#define VFP_HOST_FAST_HIT() ((void)0)
 #endif
 
-static inline bool vfp_f32_normalized(std::int32_t bits) {
-    const std::uint32_t e = static_cast<std::uint32_t>(bits) & 0x7F800000u;
-    return e != 0u && e != 0x7F800000u; // exclude zero/denormal (e==0) and Inf/NaN (e==0xFF)
+static constexpr std::uint32_t VFP_HOST_FAST_MODE_MASK = FPSCR_RMODE_MASK | FPSCR_FLUSH_TO_ZERO | FPSCR_DEFAULT_NAN
+    | FPSCR_IDE | FPSCR_IXE | FPSCR_UFE | FPSCR_OFE | FPSCR_DZE | FPSCR_IOE;
+
+static inline bool vfp_f32_normalized(std::uint32_t bits) {
+    const std::uint32_t e = bits & 0x7F800000u;
+    return e != 0u && e != 0x7F800000u;
 }
 
-// Host fast path for the multiply-accumulate family. Because VMLA/VMLS are
-// chained, the architectural result is exactly two correctly-rounded
-// single-precision operations, which is what the host gives natively -- no
-// significand bookkeeping needed. The envelope is the same as for the plain
-// arithmetic ops, extended to the rounded product: everything in and out must
-// be a normalized finite number, so the softfloat reference keeps every
-// denormal / overflow / underflow / NaN case along with its exception flags.
-// Like the other fast-path operations it does not raise the INEXACT cumulative
-// flag; the reference path does. (The previous packed implementation raised it
-// for MAC only, which was inconsistent with add/sub/mul/div.)
-static inline bool vfp_host_f32_mac(std::int32_t nb, std::int32_t mb,
-    std::int32_t ab, std::uint32_t negate, std::int32_t &rb) {
-    float fn, fm, fa;
-    std::memcpy(&fn, &nb, sizeof(float));
-    std::memcpy(&fm, &mb, sizeof(float));
-    std::memcpy(&fa, &ab, sizeof(float));
+static inline bool vfp_f32_zero(std::uint32_t bits) {
+    return (bits & 0x7FFFFFFFu) == 0u;
+}
 
-    float product = fn * fm;
-    std::int32_t pb;
-    std::memcpy(&pb, &product, sizeof(float));
-    if (!vfp_f32_normalized(pb))
+static inline bool vfp_f32_normal_or_zero(std::uint32_t bits) {
+    return vfp_f32_normalized(bits) || vfp_f32_zero(bits);
+}
+
+static inline float vfp_bits_to_f32(std::uint32_t bits) {
+    float value;
+    std::memcpy(&value, &bits, sizeof(value));
+    return value;
+}
+
+static inline std::uint32_t vfp_f32_to_bits(float value) {
+    std::uint32_t bits;
+    std::memcpy(&bits, &value, sizeof(bits));
+    return bits;
+}
+
+// A zero result is exact (so flag-free) only for add/sub, or when an input
+// was already zero; a zero product of two non-zero operands is an underflow.
+static inline bool vfp_host_result_ok(std::uint32_t result, bool zero_allowed) {
+    return vfp_f32_normalized(result) || (zero_allowed && vfp_f32_zero(result));
+}
+
+// VMLA/VMLS/VNMLA/VNMLS are chained: two correctly rounded operations.
+static inline bool vfp_host_f32_mac(std::uint32_t nb, std::uint32_t mb, std::uint32_t ab,
+    std::uint32_t negate, std::uint32_t &rb) {
+    if (!vfp_f32_normal_or_zero(ab))
         return false;
 
+    float product = vfp_bits_to_f32(nb) * vfp_bits_to_f32(mb);
+    if (!vfp_host_result_ok(vfp_f32_to_bits(product), vfp_f32_zero(nb) || vfp_f32_zero(mb)))
+        return false;
+
+    float acc = vfp_bits_to_f32(ab);
     if (negate & NEG_MULTIPLY)
         product = -product;
     if (negate & NEG_SUBTRACT)
-        fa = -fa;
+        acc = -acc;
 
-    const float result = fa + product;
-    std::memcpy(&rb, &result, sizeof(float));
-    return vfp_f32_normalized(rb);
+    rb = vfp_f32_to_bits(acc + product);
+    return vfp_host_result_ok(rb, true);
+}
+
+static inline bool vfp_single_host_fast(ARMul_State *state, std::uint32_t inst, std::uint32_t fpscr,
+    std::uint32_t &ret) {
+    const std::uint32_t sd = vfp_get_sd(inst);
+    const std::uint32_t sm = vfp_get_sm(inst);
+    const bool scalar = FREG_BANK(sd) == 0 || (fpscr & FPSCR_LENGTH_MASK) == 0;
+    const std::uint32_t mb = state->ExtReg[sm];
+    std::uint32_t rb;
+    ret = 0;
+
+    if ((inst & FOP_MASK) == FOP_EXT) {
+        switch (FEXT_TO_IDX(inst)) {
+        case FEXT_TO_IDX(FEXT_FCPY):
+            if (!scalar)
+                return false;
+            rb = mb;
+            break;
+        case FEXT_TO_IDX(FEXT_FABS):
+            if (!scalar)
+                return false;
+            rb = mb & 0x7FFFFFFFu;
+            break;
+        case FEXT_TO_IDX(FEXT_FNEG):
+            if (!scalar)
+                return false;
+            rb = mb ^ 0x80000000u;
+            break;
+        case FEXT_TO_IDX(FEXT_FCMP):
+            ret = vfp_compare(state, sd, 0, mb, fpscr);
+            VFP_HOST_FAST_HIT();
+            return true;
+        case FEXT_TO_IDX(FEXT_FCMPE):
+            ret = vfp_compare(state, sd, 1, mb, fpscr);
+            VFP_HOST_FAST_HIT();
+            return true;
+        case FEXT_TO_IDX(FEXT_FCMPZ):
+            ret = vfp_compare(state, sd, 0, 0, fpscr);
+            VFP_HOST_FAST_HIT();
+            return true;
+        case FEXT_TO_IDX(FEXT_FCMPEZ):
+            ret = vfp_compare(state, sd, 1, 0, fpscr);
+            VFP_HOST_FAST_HIT();
+            return true;
+        case FEXT_TO_IDX(FEXT_FSITO):
+            if (fpscr & VFP_HOST_FAST_MODE_MASK)
+                return false;
+            rb = vfp_f32_to_bits(static_cast<float>(static_cast<std::int32_t>(mb)));
+            break;
+        case FEXT_TO_IDX(FEXT_FUITO):
+            if (fpscr & VFP_HOST_FAST_MODE_MASK)
+                return false;
+            rb = vfp_f32_to_bits(static_cast<float>(mb));
+            break;
+        case FEXT_TO_IDX(FEXT_FTOSIZ): {
+            if ((fpscr & VFP_HOST_FAST_MODE_MASK) || !vfp_f32_normal_or_zero(mb))
+                return false;
+            const float value = vfp_bits_to_f32(mb);
+            if (!(value > -2147483648.0f && value < 2147483648.0f))
+                return false;
+            rb = static_cast<std::uint32_t>(static_cast<std::int32_t>(value));
+            break;
+        }
+        case FEXT_TO_IDX(FEXT_FTOUIZ): {
+            if ((fpscr & VFP_HOST_FAST_MODE_MASK) || (mb & 0x80000000u) || !vfp_f32_normal_or_zero(mb))
+                return false;
+            const float value = vfp_bits_to_f32(mb);
+            if (!(value < 4294967296.0f))
+                return false;
+            rb = static_cast<std::uint32_t>(value);
+            break;
+        }
+        default:
+            return false;
+        }
+
+        state->ExtReg[sd] = rb;
+        VFP_HOST_FAST_HIT();
+        return true;
+    }
+
+    if (!scalar || (fpscr & VFP_HOST_FAST_MODE_MASK))
+        return false;
+
+    const std::uint32_t nb = state->ExtReg[vfp_get_sn(inst)];
+    if (!vfp_f32_normal_or_zero(nb) || !vfp_f32_normal_or_zero(mb))
+        return false;
+
+    const float fn = vfp_bits_to_f32(nb);
+    const float fm = vfp_bits_to_f32(mb);
+    const bool zero_input = vfp_f32_zero(nb) || vfp_f32_zero(mb);
+
+    switch (FOP_TO_IDX(inst & FOP_MASK)) {
+    case FOP_TO_IDX(FOP_FMAC):
+        if (!vfp_host_f32_mac(nb, mb, state->ExtReg[sd], 0, rb))
+            return false;
+        break;
+    case FOP_TO_IDX(FOP_FNMAC):
+        if (!vfp_host_f32_mac(nb, mb, state->ExtReg[sd], NEG_MULTIPLY, rb))
+            return false;
+        break;
+    case FOP_TO_IDX(FOP_FMSC):
+        if (!vfp_host_f32_mac(nb, mb, state->ExtReg[sd], NEG_SUBTRACT, rb))
+            return false;
+        break;
+    case FOP_TO_IDX(FOP_FNMSC):
+        if (!vfp_host_f32_mac(nb, mb, state->ExtReg[sd], NEG_MULTIPLY | NEG_SUBTRACT, rb))
+            return false;
+        break;
+    case FOP_TO_IDX(FOP_FMUL):
+        rb = vfp_f32_to_bits(fn * fm);
+        if (!vfp_host_result_ok(rb, zero_input))
+            return false;
+        break;
+    case FOP_TO_IDX(FOP_FNMUL):
+        rb = vfp_f32_to_bits(-(fn * fm));
+        if (!vfp_host_result_ok(rb, zero_input))
+            return false;
+        break;
+    case FOP_TO_IDX(FOP_FADD):
+        rb = vfp_f32_to_bits(fn + fm);
+        if (!vfp_host_result_ok(rb, true))
+            return false;
+        break;
+    case FOP_TO_IDX(FOP_FSUB):
+        rb = vfp_f32_to_bits(fn - fm);
+        if (!vfp_host_result_ok(rb, true))
+            return false;
+        break;
+    case FOP_TO_IDX(FOP_FDIV):
+        if (vfp_f32_zero(mb))
+            return false;
+        rb = vfp_f32_to_bits(fn / fm);
+        if (!vfp_host_result_ok(rb, vfp_f32_zero(nb)))
+            return false;
+        break;
+    default:
+        return false;
+    }
+
+    state->ExtReg[sd] = rb;
+    VFP_HOST_FAST_HIT();
+    return true;
 }
 
 std::uint32_t vfp_single_cpdo(ARMul_State *state, std::uint32_t inst, std::uint32_t fpscr) {
+    std::uint32_t fast_ret;
+    if (g_vfp_host_fast && vfp_single_host_fast(state, inst, fpscr, fast_ret))
+        return fast_ret;
+
     std::uint32_t op = inst & FOP_MASK;
     std::uint32_t exceptions = 0;
     unsigned int dest;
@@ -1372,71 +1527,6 @@ std::uint32_t vfp_single_cpdo(ARMul_State *state, std::uint32_t inst, std::uint3
         goto invalid;
     }
 
-    // Host-float fast path (see vfp_f32_normalized comment above).
-    if (g_vfp_host_fast && veclen == 0 && op != FOP_EXT
-        && (fpscr & (FPSCR_RMODE_MASK | FPSCR_FLUSH_TO_ZERO | FPSCR_DEFAULT_NAN
-               | FPSCR_IDE | FPSCR_IXE | FPSCR_UFE | FPSCR_OFE | FPSCR_DZE | FPSCR_IOE)) == 0) {
-        const std::int32_t nb = state->ExtReg[sn];
-        const std::int32_t mb = state->ExtReg[sm];
-        if (vfp_f32_normalized(nb) && vfp_f32_normalized(mb)) {
-            float fn, fm, fr = 0.0f;
-            std::memcpy(&fn, &nb, sizeof(float));
-            std::memcpy(&fm, &mb, sizeof(float));
-            bool handled = true;
-            if (fop->fn == vfp_single_fadd)
-                fr = fn + fm;
-            else if (fop->fn == vfp_single_fsub)
-                fr = fn - fm;
-            else if (fop->fn == vfp_single_fmul)
-                fr = fn * fm;
-            else if (fop->fn == vfp_single_fdiv)
-                fr = fn / fm;
-            else if (fop->fn == vfp_single_fmac || fop->fn == vfp_single_fnmac
-                || fop->fn == vfp_single_fmsc || fop->fn == vfp_single_fnmsc) {
-                const std::int32_t ab = state->ExtReg[dest];
-                if (!vfp_f32_normalized(ab)) {
-                    handled = false;
-                } else {
-                    std::uint32_t negate = 0;
-                    if (fop->fn == vfp_single_fmac)
-                        negate = 0;
-                    else if (fop->fn == vfp_single_fnmac)
-                        negate = NEG_MULTIPLY;
-                    else if (fop->fn == vfp_single_fmsc)
-                        negate = NEG_SUBTRACT;
-                    else
-                        negate = NEG_MULTIPLY | NEG_SUBTRACT;
-
-                    std::int32_t rb;
-                    if (vfp_host_f32_mac(nb, mb, ab, negate, rb)) {
-                        state->ExtReg[dest] = rb;
-#if defined(EKA2L1_DYNCOM_DIFFTEST)
-                        ++g_vfp_host_fast_hits;
-#endif
-                        return 0;
-                    }
-                    handled = false;
-                }
-            } else {
-                handled = false;
-            }
-
-            if (handled) {
-                std::int32_t rb;
-                std::memcpy(&rb, &fr, sizeof(float));
-                // Only commit when the result is also normalized -- otherwise the
-                // reference would set overflow/underflow/inexact + apply FZ, which
-                // we don't replicate here.
-                if (vfp_f32_normalized(rb)) {
-                    state->ExtReg[dest] = rb;
-#if defined(EKA2L1_DYNCOM_DIFFTEST)
-                    ++g_vfp_host_fast_hits;
-#endif
-                    return 0;
-                }
-            }
-        }
-    }
 
     for (vecitr = 0; vecitr <= veclen; vecitr += 1 << FPSCR_LENGTH_BIT) {
         std::int32_t m = vfp_get_float(state, sm);
