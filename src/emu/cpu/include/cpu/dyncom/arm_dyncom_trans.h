@@ -83,7 +83,16 @@ struct eor_inst {
     shtop_fp_t shtop_func;
 };
 
+// Cached successor of a block exit. Valid only while gen matches
+// ARMul_State::trans_gen and the exit PC equals pc.
+struct block_link {
+    std::uint32_t pc;
+    std::uint32_t gen;
+    std::size_t ptr;
+};
+
 struct bbl_inst {
+    block_link link[2];
     unsigned int L;
     int signed_immed_24;
     unsigned int next_addr;
@@ -91,6 +100,7 @@ struct bbl_inst {
 };
 
 struct bx_inst {
+    block_link link[1];
     unsigned int Rm;
 };
 
@@ -450,9 +460,11 @@ struct setend_inst {
 };
 
 struct b_2_thumb {
+    block_link link[1];
     unsigned int imm;
 };
 struct b_cond_thumb {
+    block_link link[2];
     unsigned int imm;
     unsigned int cond;
 };
@@ -461,6 +473,7 @@ struct bl_1_thumb {
     unsigned int imm;
 };
 struct bl_2_thumb {
+    block_link link[1];
     unsigned int imm;
 };
 struct blx_1_thumb {

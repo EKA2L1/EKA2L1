@@ -98,6 +98,8 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(bbl)(ARMul_State *state, unsigned int 
     inst_cream->L = BIT(inst, 24);
     inst_cream->signed_immed_24 = BIT(inst, 23) ? NEGBRANCH : POSBRANCH;
 
+    for (block_link &l : inst_cream->link)
+        l.gen = 0;
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(bic)(ARMul_State *state, unsigned int inst, int index) {
@@ -160,6 +162,8 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(bx)(ARMul_State *state, unsigned int i
 
     inst_cream->Rm = BITS(inst, 0, 3);
 
+    for (block_link &l : inst_cream->link)
+        l.gen = 0;
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(bxj)(ARMul_State *state, unsigned int inst, int index) {
@@ -1648,6 +1652,8 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(b_2_thumb)(ARMul_State *state, unsigne
     inst_base->idx = index;
     inst_base->br = TransExtData::DIRECT_BRANCH;
 
+    for (block_link &l : inst_cream->link)
+        l.gen = 0;
     return inst_base;
 }
 
@@ -1660,6 +1666,8 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(b_cond_thumb)(ARMul_State *state, unsi
     inst_base->idx = index;
     inst_base->br = TransExtData::DIRECT_BRANCH;
 
+    for (block_link &l : inst_cream->link)
+        l.gen = 0;
     return inst_base;
 }
 
@@ -1681,6 +1689,8 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(bl_2_thumb)(ARMul_State *state, unsign
 
     inst_base->idx = index;
     inst_base->br = TransExtData::DIRECT_BRANCH;
+    for (block_link &l : inst_cream->link)
+        l.gen = 0;
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(blx_1_thumb)(ARMul_State *state, unsigned int tinst, int index) {

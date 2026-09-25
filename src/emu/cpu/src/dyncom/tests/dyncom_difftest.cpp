@@ -2062,6 +2062,60 @@ std::uint32_t check_breakpoint_resume(backend_env &dc) {
     return failures;
 }
 
+// Block links must not survive an IMB issued from an SVC. The SVC does not end
+// its block, so the branch after it still reads that block's link slot after
+// the flush and has to re-resolve its target instead of running the stale
+// translation.
+std::uint32_t check_block_link_invalidation(backend_env &dc) {
+    static constexpr std::uint32_t ADD_ONE = 0xE2800001u;     // add r0, r0, #1
+    static constexpr std::uint32_t ADD_SIXTEEN = 0xE2800010u; // add r0, r0, #16
+
+    program p;
+    p.addr = PROG_CODE_LO;
+    p.thumb = false;
+    p.kind = "block-link-imb";
+    p.budget = 1000;
+
+    const std::uint32_t target = PROG_CODE_LO + 12;
+
+    push32(p.code, 0xEF000000u); // svc #0
+    push32(p.code, 0xEA000000u); // b target
+    push32(p.code, 0xE1A00000u); // nop
+    push32(p.code, ADD_ONE);     // target
+    push32(p.code, 0xEAFFFFFAu); // b PROG_CODE_LO
+
+    install(dc, p);
+    core *cpu = dc.cpu.get();
+    std::uint8_t *mem = dc.mem.data();
+    std::uint32_t calls = 0;
+
+    // The first two passes link the branch; the third rewrites the target; the
+    // sixth stops before its add.
+    auto previous_handler = cpu->system_call_handler;
+    cpu->system_call_handler = [cpu, mem, target, &calls](const std::uint32_t) {
+        calls++;
+        if (calls == 3) {
+            std::memcpy(mem + target, &ADD_SIXTEEN, sizeof(ADD_SIXTEEN));
+            cpu->imb_range(target, sizeof(ADD_SIXTEEN));
+        } else if (calls == 6) {
+            cpu->stop();
+        }
+    };
+
+    cpu->clear_instruction_cache();
+    execute(dc, p);
+    cpu->system_call_handler = previous_handler;
+
+    const std::uint32_t r0 = cpu->get_reg(0);
+    if (calls != 6 || r0 != 2 * 1 + 3 * 16) {
+        std::printf("[DIVERGENCE] block-link-imb: r0=%u after %u SVCs, expected %u -- a branch "
+                    "reused a link into a flushed translation\n",
+            r0, calls, 2 * 1 + 3 * 16);
+        return 1;
+    }
+    return 0;
+}
+
 // VFP: the host-float fast path against dynarmic's own VFP implementation.
 std::uint32_t suite_vfp(backend_env &dc, backend_env &da, std::uint32_t base_seed,
     std::uint32_t count, coverage &cov) {
@@ -2250,6 +2304,7 @@ int main(int argc, char **argv) {
     failures += check_vfp_mac_cancellation(*dc, *da);
     failures += check_undefined_instructions(*dc);
     failures += check_breakpoint_resume(*dc);
+    failures += check_block_link_invalidation(*dc);
     for (const suite_result &sr : results) {
         std::printf("  %s %s\n", sr.name, sr.failures ? "FAIL" : "ok");
         failures += sr.failures;
@@ -2280,7 +2335,7 @@ int main(int argc, char **argv) {
     if (failures == 0) {
         std::printf("dyncom_difftest: PASS (%u single-instruction cases vs golden, "
                     "%llu programs vs dynarmic, VFP soft/host A/B, undefined-instruction "
-                    "reporting, breakpoint resume, negative control)\n",
+                    "reporting, breakpoint resume, block-link invalidation, negative control)\n",
             count, static_cast<unsigned long long>(cov.programs));
         return 0;
     }

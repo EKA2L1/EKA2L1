@@ -2658,6 +2658,11 @@ unsigned InterpreterMainLoop(ARMul_State *cpu, std::uint32_t &num_instrs) {
 
     std::size_t ptr;
 
+    // Exit slot of the block that just branched, and the translation
+    // generation that block was entered under.
+    block_link *link = nullptr;
+    std::uint32_t link_gen = 0;
+
     LOAD_NZCVT;
 DISPATCH : {
     PROF_BLOCK_ENTER(cpu);
@@ -2671,6 +2676,14 @@ DISPATCH : {
         cpu->Reg[15] &= 0xfffffffe;
     else
         cpu->Reg[15] &= 0xfffffffc;
+
+    const std::uint32_t gen = cpu->trans_gen;
+    if (link && link_gen == gen && link->gen == gen && link->pc == cpu->Reg[15]) {
+        ptr = link->ptr;
+        link = nullptr;
+        inst_base = (arm_inst *)&cpu->trans_cache_buf[ptr];
+        GOTO_NEXT_INST;
+    }
 
     // Find the cached instruction cream, otherwise translate it...
     const std::uint64_t block_key = cpu->make_instruction_cache_key(cpu->Reg[15]);
@@ -2711,6 +2724,15 @@ DISPATCH : {
         slot.key = block_key;
         slot.ptr = ptr;
     }
+
+    // Skip the fill if translation flushed the buffer the slot lives in.
+    if (link && link_gen == gen && cpu->trans_gen == gen) {
+        link->pc = cpu->Reg[15];
+        link->gen = gen;
+        link->ptr = ptr;
+    }
+    link = nullptr;
+    link_gen = cpu->trans_gen;
 
     inst_base = (arm_inst *)&cpu->trans_cache_buf[ptr];
     GOTO_NEXT_INST;
@@ -2865,10 +2887,12 @@ BBL_INST : {
             LINK_RTN_ADDR;
         }
         SET_PC;
+        link = &inst_cream->link[0];
         INC_PC(sizeof(bbl_inst));
         goto DISPATCH;
     }
     cpu->Reg[15] += cpu->GetInstructionSize();
+    link = &((bbl_inst *)inst_base->component)->link[1];
     INC_PC(sizeof(bbl_inst));
     goto DISPATCH;
 }
@@ -2980,6 +3004,7 @@ BXJ_INST : {
 
         cpu->TFlag = address & 1;
         cpu->Reg[15] = address & 0xfffffffe;
+        link = &inst_cream->link[0];
         INC_PC(sizeof(bx_inst));
         goto DISPATCH;
     }
@@ -5413,16 +5438,20 @@ UMULL_INST : {
 B_2_THUMB : {
     b_2_thumb *inst_cream = (b_2_thumb *)inst_base->component;
     cpu->Reg[15] = cpu->Reg[15] + 4 + inst_cream->imm;
+    link = &inst_cream->link[0];
     INC_PC(sizeof(b_2_thumb));
     goto DISPATCH;
 }
 B_COND_THUMB : {
     b_cond_thumb *inst_cream = (b_cond_thumb *)inst_base->component;
 
-    if (CondPassed(cpu, inst_cream->cond))
+    if (CondPassed(cpu, inst_cream->cond)) {
         cpu->Reg[15] = cpu->Reg[15] + 4 + inst_cream->imm;
-    else
+        link = &inst_cream->link[0];
+    } else {
         cpu->Reg[15] += 2;
+        link = &inst_cream->link[1];
+    }
 
     INC_PC(sizeof(b_cond_thumb));
     goto DISPATCH;
@@ -5440,6 +5469,7 @@ BL_2_THUMB : {
     int tmp = ((cpu->Reg[15] + 2) | 1);
     cpu->Reg[15] = (cpu->Reg[14] + inst_cream->imm);
     cpu->Reg[14] = tmp;
+    link = &inst_cream->link[0];
     INC_PC(sizeof(bl_2_thumb));
     goto DISPATCH;
 }
