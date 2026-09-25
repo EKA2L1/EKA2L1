@@ -395,14 +395,18 @@ public:
     };
     block_l1_entry block_l1_cache[BLOCK_L1_COUNT];
 
+    // Bumped on every translation flush; invalidates all block_link entries.
+    std::uint32_t trans_gen = 1;
+
     void flush_block_l1_cache() {
+        trans_gen++;
         for (std::size_t i = 0; i < BLOCK_L1_COUNT; i++) {
             block_l1_cache[i].key = BLOCK_L1_EMPTY;
         }
     }
 
     static std::size_t block_l1_index(std::uint64_t key) {
-        return (key ^ (key >> 32)) & (BLOCK_L1_COUNT - 1);
+        return ((key ^ (key >> 32)) >> 1) & (BLOCK_L1_COUNT - 1);
     }
 
 private:

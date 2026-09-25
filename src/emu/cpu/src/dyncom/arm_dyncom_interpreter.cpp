@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <bit>
+#include <cassert>
 #include <cinttypes>
 #include <common/log.h>
 #include <common/types.h>
@@ -280,6 +281,14 @@ namespace {
 // fallback); 205 is the first free slot and is only ever produced by the
 // emitter below, never by the decoder.
 static constexpr unsigned int LOOP_ACCEL_IDX = 205;
+
+// Decoder indices of CMP and the branches it is fused with, and the synthetic
+// fused ops that follow LOOP_ACCEL_IDX. Checked against InstLabel in debug.
+static constexpr unsigned int CMP_IDX = 130;
+static constexpr unsigned int BBL_IDX = 196;
+static constexpr unsigned int B_COND_THUMB_IDX = 198;
+static constexpr unsigned int CMP_BBL_IDX = 206;
+static constexpr unsigned int CMP_B_COND_THUMB_IDX = 207;
 
 enum accel_chain_op : std::uint8_t {
     ACC_SHL,
@@ -1891,12 +1900,22 @@ static int InterpreterTranslateBlock(ARMul_State *cpu, std::size_t &bb_start, st
         }
     }
 
+    ARM_INST_PTR prev_base = nullptr;
     while (ret == TransExtData::NON_BRANCH) {
         unsigned int inst_size = InterpreterTranslateInstruction(cpu, phys_addr, inst_base);
 
         if (!inst_base) {
             return FETCH_EXCEPTION;
         }
+
+        // Fuse CMP with the branch that ends the block.
+        if (prev_base && prev_base->idx == CMP_IDX) {
+            if (inst_base->idx == BBL_IDX)
+                prev_base->idx = CMP_BBL_IDX;
+            else if (inst_base->idx == B_COND_THUMB_IDX)
+                prev_base->idx = CMP_B_COND_THUMB_IDX;
+        }
+        prev_base = inst_base;
 
         size++;
 
@@ -2423,6 +2442,10 @@ unsigned InterpreterMainLoop(ARMul_State *cpu, std::uint32_t &num_instrs) {
         goto END;                              \
     case 205:                                  \
         goto LOOP_ACCEL_INST;                  \
+    case 206:                                  \
+        goto CMP_BBL_INST;                     \
+    case 207:                                  \
+        goto CMP_B_COND_THUMB_INST;            \
     }
 #endif
 
@@ -2650,13 +2673,23 @@ unsigned InterpreterMainLoop(ARMul_State *cpu, std::uint32_t &num_instrs) {
         &&DISPATCH,
         &&INIT_INST_LENGTH,
         &&END,
-        &&LOOP_ACCEL_INST };
+        &&LOOP_ACCEL_INST,
+        &&CMP_BBL_INST,
+        &&CMP_B_COND_THUMB_INST };
+    assert(InstLabel[CMP_IDX] == &&CMP_INST && InstLabel[BBL_IDX] == &&BBL_INST
+        && InstLabel[B_COND_THUMB_IDX] == &&B_COND_THUMB && InstLabel[CMP_BBL_IDX] == &&CMP_BBL_INST
+        && InstLabel[CMP_B_COND_THUMB_IDX] == &&CMP_B_COND_THUMB_INST);
 #endif
     arm_inst *inst_base;
     unsigned int addr;
     unsigned int undef_inst = 0;
 
     std::size_t ptr;
+
+    // Exit slot of the block that just branched, and the translation
+    // generation that block was entered under.
+    block_link *link = nullptr;
+    std::uint32_t link_gen = 0;
 
     LOAD_NZCVT;
 DISPATCH : {
@@ -2671,6 +2704,14 @@ DISPATCH : {
         cpu->Reg[15] &= 0xfffffffe;
     else
         cpu->Reg[15] &= 0xfffffffc;
+
+    const std::uint32_t gen = cpu->trans_gen;
+    if (link && link_gen == gen && link->gen == gen && link->pc == cpu->Reg[15]) {
+        ptr = link->ptr;
+        link = nullptr;
+        inst_base = (arm_inst *)&cpu->trans_cache_buf[ptr];
+        GOTO_NEXT_INST;
+    }
 
     // Find the cached instruction cream, otherwise translate it...
     const std::uint64_t block_key = cpu->make_instruction_cache_key(cpu->Reg[15]);
@@ -2711,6 +2752,15 @@ DISPATCH : {
         slot.key = block_key;
         slot.ptr = ptr;
     }
+
+    // Skip the fill if translation flushed the buffer the slot lives in.
+    if (link && link_gen == gen && cpu->trans_gen == gen) {
+        link->pc = cpu->Reg[15];
+        link->gen = gen;
+        link->ptr = ptr;
+    }
+    link = nullptr;
+    link_gen = cpu->trans_gen;
 
     inst_base = (arm_inst *)&cpu->trans_cache_buf[ptr];
     GOTO_NEXT_INST;
@@ -2865,10 +2915,12 @@ BBL_INST : {
             LINK_RTN_ADDR;
         }
         SET_PC;
+        link = &inst_cream->link[0];
         INC_PC(sizeof(bbl_inst));
         goto DISPATCH;
     }
     cpu->Reg[15] += cpu->GetInstructionSize();
+    link = &((bbl_inst *)inst_base->component)->link[1];
     INC_PC(sizeof(bbl_inst));
     goto DISPATCH;
 }
@@ -2980,6 +3032,7 @@ BXJ_INST : {
 
         cpu->TFlag = address & 1;
         cpu->Reg[15] = address & 0xfffffffe;
+        link = &inst_cream->link[0];
         INC_PC(sizeof(bx_inst));
         goto DISPATCH;
     }
@@ -3040,27 +3093,49 @@ CMN_INST : {
     FETCH_INST;
     GOTO_NEXT_INST;
 }
+#define CMP_EXEC                                                                              \
+    if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {           \
+        cmp_inst *const inst_cream = (cmp_inst *)inst_base->component;                        \
+                                                                                              \
+        std::uint32_t rn_val = RN;                                                            \
+        if (inst_cream->Rn == 15)                                                             \
+            rn_val += 2 * cpu->GetInstructionSize();                                          \
+                                                                                              \
+        bool carry;                                                                           \
+        bool overflow;                                                                        \
+        std::uint32_t result = AddWithCarry(rn_val, ~SHIFTER_OPERAND, 1, &carry, &overflow); \
+                                                                                              \
+        UPDATE_NFLAG(result);                                                                 \
+        UPDATE_ZFLAG(result);                                                                 \
+        cpu->CFlag = carry;                                                                   \
+        cpu->VFlag = overflow;                                                                \
+    }                                                                                         \
+    cpu->Reg[15] += cpu->GetInstructionSize();                                                \
+    INC_PC(sizeof(cmp_inst))
+
+// Steps onto the fused branch with the same accounting as GOTO_NEXT_INST, so
+// quantum and single-step exits still land between the two instructions.
+#define ENTER_FUSED_BRANCH                          \
+    inst_base = (arm_inst *)&cpu->trans_cache_buf[ptr]; \
+    PROF_STEP(cpu, inst_base->idx);                 \
+    if (num_instrs >= cpu->NumInstrsToExecute)      \
+        goto END;                                   \
+    num_instrs++
+
 CMP_INST : {
-    if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
-        cmp_inst *const inst_cream = (cmp_inst *)inst_base->component;
-
-        std::uint32_t rn_val = RN;
-        if (inst_cream->Rn == 15)
-            rn_val += 2 * cpu->GetInstructionSize();
-
-        bool carry;
-        bool overflow;
-        std::uint32_t result = AddWithCarry(rn_val, ~SHIFTER_OPERAND, 1, &carry, &overflow);
-
-        UPDATE_NFLAG(result);
-        UPDATE_ZFLAG(result);
-        cpu->CFlag = carry;
-        cpu->VFlag = overflow;
-    }
-    cpu->Reg[15] += cpu->GetInstructionSize();
-    INC_PC(sizeof(cmp_inst));
+    CMP_EXEC;
     FETCH_INST;
     GOTO_NEXT_INST;
+}
+CMP_BBL_INST : {
+    CMP_EXEC;
+    ENTER_FUSED_BRANCH;
+    goto BBL_INST;
+}
+CMP_B_COND_THUMB_INST : {
+    CMP_EXEC;
+    ENTER_FUSED_BRANCH;
+    goto B_COND_THUMB;
 }
 CPS_INST : {
     cps_inst *inst_cream = (cps_inst *)inst_base->component;
@@ -5413,16 +5488,20 @@ UMULL_INST : {
 B_2_THUMB : {
     b_2_thumb *inst_cream = (b_2_thumb *)inst_base->component;
     cpu->Reg[15] = cpu->Reg[15] + 4 + inst_cream->imm;
+    link = &inst_cream->link[0];
     INC_PC(sizeof(b_2_thumb));
     goto DISPATCH;
 }
 B_COND_THUMB : {
     b_cond_thumb *inst_cream = (b_cond_thumb *)inst_base->component;
 
-    if (CondPassed(cpu, inst_cream->cond))
+    if (CondPassed(cpu, inst_cream->cond)) {
         cpu->Reg[15] = cpu->Reg[15] + 4 + inst_cream->imm;
-    else
+        link = &inst_cream->link[0];
+    } else {
         cpu->Reg[15] += 2;
+        link = &inst_cream->link[1];
+    }
 
     INC_PC(sizeof(b_cond_thumb));
     goto DISPATCH;
@@ -5440,6 +5519,7 @@ BL_2_THUMB : {
     int tmp = ((cpu->Reg[15] + 2) | 1);
     cpu->Reg[15] = (cpu->Reg[14] + inst_cream->imm);
     cpu->Reg[14] = tmp;
+    link = &inst_cream->link[0];
     INC_PC(sizeof(bl_2_thumb));
     goto DISPATCH;
 }
