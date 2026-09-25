@@ -120,6 +120,9 @@ namespace eka2l1::config {
         // "dynarmic" from the desktop default, which must not silently enable
         // the JIT on iOS.
         bool ios_use_jit{ false };
+        // iOS emulator thread QoS: "high-performance" (user-initiated) or
+        // "balanced" (default).
+        std::string ios_performance_mode{ "balanced" };
         int device{ 0 };
         int language{ -1 };
         int emulator_language{ -1 };
