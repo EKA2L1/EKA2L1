@@ -16,6 +16,7 @@ struct SettingsView: View {
     @State private var nearestNeighborFiltering = true
     @State private var hideSystemApps = true
     @State private var useJIT = false
+    @State private var performanceMode = "balanced"
     @State private var availableLanguages: [EKA2L1LanguageItem] = []
     @State private var systemLanguageCode = -1
 
@@ -53,6 +54,10 @@ struct SettingsView: View {
                             Text(language.name).tag(language.code)
                         }
                     }
+                }
+                Picker("settings.performanceMode", selection: $performanceMode) {
+                    Text("settings.performanceMode.high").tag("high-performance")
+                    Text("settings.performanceMode.balanced").tag("balanced")
                 }
             }
             // Only sideload/simulator builds carry the dynarmic JIT; App Store /
@@ -201,6 +206,7 @@ struct SettingsView: View {
         }
         .onChange(of: friendlyPhoneName) { _ in save() }
         .onChange(of: useJIT) { _ in save() }
+        .onChange(of: performanceMode) { _ in save() }
         .onChange(of: integerScaling) { _ in save() }
         .onChange(of: nearestNeighborFiltering) { _ in save() }
         .onChange(of: hideSystemApps) { _ in save() }
@@ -261,6 +267,8 @@ struct SettingsView: View {
         if let value = snapshot["jitEnabled"] as? NSNumber {
             useJIT = value.boolValue
         }
+        // Anything the bridge doesn't recognise runs as balanced.
+        performanceMode = snapshot["performanceMode"] as? String == "high-performance" ? "high-performance" : "balanced"
         friendlyPhoneName = snapshot["deviceDisplayName"] as? String ?? ""
         availableLanguages = EKA2L1Bridge.shared.availableLanguages()
         systemLanguageCode = EKA2L1Bridge.shared.currentLanguageCode()
@@ -292,6 +300,7 @@ struct SettingsView: View {
             "nearestNeighborFiltering": nearestNeighborFiltering,
             "hideSystemApps": hideSystemApps,
             "jitEnabled": useJIT && EKA2L1Bridge.shared.jitCompiledIn,
+            "performanceMode": performanceMode,
             "btnetDiscoveryMode": btDiscoveryMode,
             "btnetListenPort": min(max(btListenPort, 1), 65535),
             "btnetPassword": btPassword,

@@ -481,6 +481,10 @@ namespace eka2l1::ios {
         // Read by the main thread while a boot may be rebuilding symsys.
         std::atomic<bool> device_is_eka1{false};
 
+        // conf.ios_performance_mode latched at device boot; the emulator
+        // threads pick it up through sync_thread_qos().
+        std::atomic<int> thread_priority{ eka2l1::common::thread_priority_normal };
+
         // Guarded by session_mutex; firmware identity survives device-list reordering.
         std::string mounted_card_path;
         std::string mounted_card_firmware;
@@ -651,6 +655,21 @@ namespace eka2l1::ios {
             : state->symsys->get_device_manager()->get_current();
         state->mounted_card_firmware = device ? device->firmware_code : std::string();
         state->card_mounted.store(!state->mounted_card_path.empty(), std::memory_order_relaxed);
+    }
+
+    static eka2l1::common::thread_priority performance_mode_priority(const std::string &mode) {
+        return (mode == "high-performance") ? eka2l1::common::thread_priority_high
+                                            : eka2l1::common::thread_priority_normal;
+    }
+
+    // QoS can only be set by the thread itself. `applied` is the caller's last
+    // applied priority, -1 before the first call.
+    static void sync_thread_qos(const emulator *state, int &applied) {
+        const int wanted = state->thread_priority.load(std::memory_order_relaxed);
+        if (wanted != applied) {
+            eka2l1::common::set_thread_priority(static_cast<eka2l1::common::thread_priority>(wanted));
+            applied = wanted;
+        }
     }
 
     static bool wait_for_graphics_driver(emulator *state, const std::chrono::milliseconds timeout) {
@@ -1178,7 +1197,8 @@ namespace eka2l1::ios {
     auto *state = _state.get();
     _state->graphics_thread = std::make_unique<std::thread>([state]() {
         eka2l1::common::set_thread_name("Graphics thread");
-        eka2l1::common::set_thread_priority(eka2l1::common::thread_priority_high);
+        int qos_applied = -1;
+        eka2l1::ios::sync_thread_qos(state, qos_applied);
 
         // Wait for the EAGLView to publish its CAEAGLLayer; the EAGL context
         // can't be created without a drawable. attachLayer:pixelSize:scale:
@@ -1220,10 +1240,10 @@ namespace eka2l1::ios {
         }
         state->layer_cv.notify_all();
 
-        state->graphics_driver->set_display_hook([]() {
-            // CAEAGLLayer presentation is implicit in gl_context_eagl::
-            // swap_buffers; nothing extra to poll here. iOS lifecycle hooks
-            // gate pause/resume via context::pause()/resume().
+        // Runs on this thread after every present; CAEAGLLayer presentation
+        // itself is implicit in gl_context_eagl::swap_buffers.
+        state->graphics_driver->set_display_hook([state, qos_applied]() mutable {
+            eka2l1::ios::sync_thread_qos(state, qos_applied);
         });
 
         state->graphics_driver->run();
@@ -1231,9 +1251,10 @@ namespace eka2l1::ios {
 
     _state->os_thread = std::make_unique<std::thread>([state]() {
         eka2l1::common::set_thread_name("Symbian OS thread");
-        eka2l1::common::set_thread_priority(eka2l1::common::thread_priority_high);
+        int qos_applied = -1;
 
         while (state->running) {
+            eka2l1::ios::sync_thread_qos(state, qos_applied);
             if (state->paused || !state->mounted.load()) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(16));
                 continue;
@@ -1620,6 +1641,8 @@ namespace eka2l1::ios {
 
     _state->winserv = eka2l1::ios::get_window_server(sys->get_kernel_system());
 
+    _state->thread_priority.store(eka2l1::ios::performance_mode_priority(_state->conf.ios_performance_mode),
+        std::memory_order_relaxed);
     _state->mounted = true;
     [self applyNetworkingSuspended:_networkingSuspended.load()];
     eka2l1::ios::bind_graphics_driver(_state.get());
@@ -2793,6 +2816,7 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
         @"extensiveLogging": @(_state->conf.extensive_logging),
         @"cpuBackend": [NSString stringWithUTF8String:_state->conf.cpu_backend.c_str()],
         @"jitEnabled": @(_state->conf.ios_use_jit),
+        @"performanceMode": [NSString stringWithUTF8String:_state->conf.ios_performance_mode.c_str()],
         @"deviceDisplayName": [NSString stringWithUTF8String:_state->conf.device_display_name.c_str()],
         @"logFilter": [NSString stringWithUTF8String:_state->conf.log_filter.c_str()],
         @"btnetDiscoveryMode": @(_state->conf.btnet_discovery_mode),
@@ -2862,6 +2886,11 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
         // The CPU core is instantiated when the system is (re)built, so a
         // backend switch takes effect on the next app launch's rebuild.
         _state->needs_reboot_before_launch = true;
+    }
+    // Latched into the emulator threads at the next device boot.
+    NSString *performanceMode = snapshot[@"performanceMode"];
+    if ([performanceMode isKindOfClass:NSString.class]) {
+        _state->conf.ios_performance_mode = performanceMode.UTF8String;
     }
     NSString *deviceDisplayName = snapshot[@"deviceDisplayName"];
     if ([deviceDisplayName isKindOfClass:NSString.class]) {
