@@ -126,9 +126,16 @@ static void EnsureHostAccessPointL(CCommsDatabase& db) {
 extern "C" EXPORT_C CCommsDatabase* HostCommsDatabaseNewL(TCommDbDatabaseType type) {
     // The two-argument factory remains native and does not call the patched overload.
     TCommDbOpeningMethod openingMethod;
-    CCommsDatabase* db = CCommsDatabase::NewL(type, openingMethod);
+    CCommsDatabase* db = NULL;
+    TRAPD(err, db = CCommsDatabase::NewL(type, openingMethod));
+    // An unspecified type cannot open an untyped database; phones ship one already typed as IAP.
+    if ((err == KErrNotFound) && (type == EDatabaseTypeUnspecified)) {
+        db = CCommsDatabase::NewL(EDatabaseTypeIAP, openingMethod);
+    } else {
+        User::LeaveIfError(err);
+    }
     CleanupStack::PushL(db);
-    if (type == EDatabaseTypeIAP) {
+    if (type != EDatabaseTypeISP) {
         TRAP_IGNORE(EnsureHostAccessPointL(*db));
     }
     CleanupStack::Pop(db);
