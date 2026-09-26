@@ -365,12 +365,15 @@ target_link_libraries(epocservs PRIVATE
         xxHash
         pugixml
         sqlite3
-        re2::re2)
+        re2::re2
+        mbedcrypto)
 
 if (WIN32)
         target_link_libraries(epocservs PRIVATE Ws2_32.lib)
 endif()
 
 if (APPLE)
-        target_sources(epocservs PRIVATE src/bluetooth/protocols/bonjour.cpp)
+        target_sources(epocservs PRIVATE src/bluetooth/protocols/mdns_dnssd.cpp)
+else()
+        target_sources(epocservs PRIVATE src/bluetooth/protocols/mdns_socket.cpp)
 endif()

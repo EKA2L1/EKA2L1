@@ -1,20 +1,18 @@
-#include <services/bluetooth/protocols/bonjour.h>
+#include "mdns_common.h"
+
+#include <services/bluetooth/protocols/mdns.h>
 #include <services/internet/protocols/inet.h>
 #include <common/log.h>
 
-#include <CommonCrypto/CommonDigest.h>
 #include <dns_sd.h>
 #include <uv.h>
 
-#include <array>
 #include <cstring>
-#include <cstdio>
 #include <map>
 #include <tuple>
 
 namespace eka2l1::epoc::bt {
     namespace {
-        constexpr const char *service_type = "_eka2l1._udp";
         constexpr std::size_t max_services = 64;
 
         void release(DNSServiceRef &ref) {
@@ -25,7 +23,7 @@ namespace eka2l1::epoc::bt {
         }
     }
 
-    struct bonjour_discovery::impl {
+    struct mdns_discovery::impl {
         struct service {
             impl *owner;
             DNSServiceRef resolve = nullptr;
@@ -50,17 +48,13 @@ namespace eka2l1::epoc::bt {
         std::string name;
         device_address address;
         std::function<void()> changed;
-        std::array<unsigned char, CC_SHA256_DIGEST_LENGTH> room;
+        mdns::room_digest room;
         std::uint16_t port;
         bool failed = false;
 
         impl(const device_address &address, const std::string &password, std::uint16_t port, std::function<void()> changed)
-            : address(address), changed(std::move(changed)), port(port) {
-            char instance[32];
-            std::snprintf(instance, sizeof(instance), "EKA2L1-%02x%02x%02x%02x%02x%02x",
-                address.addr_[0], address.addr_[1], address.addr_[2], address.addr_[3], address.addr_[4], address.addr_[5]);
-            name = instance;
-            CC_SHA256(password.data(), static_cast<CC_LONG>(password.size()), room.data());
+            : name(mdns::make_instance_name(address)), address(address), changed(std::move(changed))
+            , room(mdns::make_room_digest(password)), port(port) {
             start();
         }
 
@@ -68,7 +62,7 @@ namespace eka2l1::epoc::bt {
 
         void error(const char *operation, int code) {
             if (!failed) {
-                LOG_ERROR(SERVICE_BLUETOOTH, "Bonjour {} failed: {}", operation, code);
+                LOG_ERROR(SERVICE_BLUETOOTH, "DNS-SD {} failed: {}", operation, code);
             }
             failed = true;
         }
@@ -99,13 +93,13 @@ namespace eka2l1::epoc::bt {
 
             TXTRecordRef txt;
             TXTRecordCreate(&txt, 0, nullptr);
-            TXTRecordSetValue(&txt, "version", 1, "1");
+            TXTRecordSetValue(&txt, "version", 1, mdns::RECORD_VERSION);
             TXTRecordSetValue(&txt, "room", room.size(), room.data());
             TXTRecordSetValue(&txt, "address", 6, address.addr_);
             registration = connection;
             result = DNSServiceRegister(&registration,
                 kDNSServiceFlagsShareConnection | kDNSServiceFlagsNoAutoRename,
-                kDNSServiceInterfaceIndexAny, name.c_str(), service_type, "local.", nullptr,
+                kDNSServiceInterfaceIndexAny, name.c_str(), mdns::SERVICE_TYPE, "local.", nullptr,
                 htons(port), TXTRecordGetLength(&txt), TXTRecordGetBytesPtr(&txt),
                 [](DNSServiceRef, DNSServiceFlags, DNSServiceErrorType error,
                     const char *, const char *, const char *, void *context) {
@@ -120,7 +114,7 @@ namespace eka2l1::epoc::bt {
 
             browser = connection;
             result = DNSServiceBrowse(&browser, kDNSServiceFlagsShareConnection,
-                kDNSServiceInterfaceIndexAny, service_type, "local.", browse_reply, this);
+                kDNSServiceInterfaceIndexAny, mdns::SERVICE_TYPE, "local.", browse_reply, this);
             if (result) {
                 browser = nullptr;
                 error("browse", result);
@@ -175,7 +169,7 @@ namespace eka2l1::epoc::bt {
                 interface, name, type, domain, resolve_reply, peer.get());
             if (result) {
                 peer->resolve = nullptr;
-                LOG_ERROR(SERVICE_BLUETOOTH, "Bonjour resolve failed: {}", result);
+                LOG_ERROR(SERVICE_BLUETOOTH, "DNS-SD resolve failed: {}", result);
                 return;
             }
             self->services.emplace(key, std::move(peer));
@@ -190,7 +184,7 @@ namespace eka2l1::epoc::bt {
             if (error) return;
             std::uint8_t length = 0;
             const void *version = TXTRecordGetValuePtr(txt_size, txt, "version", &length);
-            if (!version || length != 1 || std::memcmp(version, "1", 1)) return;
+            if (!version || length != 1 || std::memcmp(version, mdns::RECORD_VERSION, 1)) return;
             const void *room = TXTRecordGetValuePtr(txt_size, txt, "room", &length);
             if (!room || length != peer->owner->room.size()
                 || std::memcmp(room, peer->owner->room.data(), length) || !port) return;
@@ -204,7 +198,7 @@ namespace eka2l1::epoc::bt {
                 interface, kDNSServiceProtocol_IPv4, host, address_reply, peer);
             if (result) {
                 peer->addresses = nullptr;
-                LOG_ERROR(SERVICE_BLUETOOTH, "Bonjour address lookup failed: {}", result);
+                LOG_ERROR(SERVICE_BLUETOOTH, "DNS-SD address lookup failed: {}", result);
             }
         }
 
@@ -224,20 +218,20 @@ namespace eka2l1::epoc::bt {
         }
     };
 
-    bonjour_discovery::bonjour_discovery(const device_address &address, const std::string &password, std::uint16_t port, std::function<void()> changed)
+    mdns_discovery::mdns_discovery(const device_address &address, const std::string &password, std::uint16_t port, std::function<void()> changed)
         : impl_(std::make_unique<impl>(address, password, port, std::move(changed))) {}
 
-    bonjour_discovery::~bonjour_discovery() = default;
+    mdns_discovery::~mdns_discovery() = default;
 
-    void bonjour_discovery::retry() {
+    void mdns_discovery::refresh() {
         if (impl_->failed) {
             impl_->stop();
             impl_->start();
         }
     }
 
-    std::vector<bonjour_peer> bonjour_discovery::peers() const {
-        std::vector<bonjour_peer> result;
+    std::vector<mdns_peer> mdns_discovery::peers() const {
+        std::vector<mdns_peer> result;
         if (!impl_->failed) {
             for (const auto &entry : impl_->services) {
                 for (const auto &address : entry.second->endpoints) result.push_back({address.second, entry.second->address});

@@ -86,7 +86,7 @@ namespace eka2l1::epoc::notifier {
         }
 
         epoc::bt::device_address selected_address{};
-        if (!midman->uses_bonjour_discovery() && midman->get_first_friend_device_address(selected_address)) {
+        if (!midman->uses_mdns_discovery() && midman->get_first_friend_device_address(selected_address)) {
             complete_info.complete(write_selected_device(kern_, response, complete_info, selected_address));
             return;
         }

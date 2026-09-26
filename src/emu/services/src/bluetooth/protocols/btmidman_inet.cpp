@@ -22,9 +22,7 @@
 #include <services/internet/protocols/common.h>
 #include <services/internet/protocols/inet.h>
 
-#ifdef __APPLE__
-#include <services/bluetooth/protocols/bonjour.h>
-#endif
+#include <services/bluetooth/protocols/mdns.h>
 
 #include <common/random.h>
 #include <common/log.h>
@@ -44,7 +42,6 @@ namespace eka2l1::epoc::bt {
         , port_offset_(conf.btnet_port_offset)
         , enable_upnp_(conf.enable_upnp)
         , friend_info_cached_(false)
-        , lan_discovery_call_listener_socket_(nullptr)
         , bluetooth_queries_server_socket_(nullptr)
         , matching_server_socket_(nullptr)
         , hearing_timeout_timer_(nullptr)
@@ -66,10 +63,6 @@ namespace eka2l1::epoc::bt {
 
         if (discovery_mode_ == DISCOVERY_MODE_OFF) {
             return;
-        }
-
-        if ((discovery_mode_ == DISCOVERY_MODE_LAN) && !uses_bonjour_discovery()) {
-            port_ = HARBOUR_PORT;
         }
 
         std::vector<std::uint64_t> errs;
@@ -157,10 +150,7 @@ namespace eka2l1::epoc::bt {
     // The asker is left out on purpose: closing it would strand a synchronous
     // requester waiting on a completion that can no longer arrive.
     void midman_inet::shutdown_discovery_sockets() {
-#ifdef __APPLE__
-        bonjour_.reset();
-#endif
-        shutdown_uv_handle(lan_discovery_call_listener_socket_);
+        mdns_.reset();
         shutdown_uv_handle(bluetooth_queries_server_socket_);
         shutdown_uv_handle(matching_server_socket_);
         matching_server_receive_buffer_.clear();
@@ -481,7 +471,7 @@ lookup:
             }
         }
 
-        if (!friend_info_cached_ && !uses_bonjour_discovery()) {
+        if (!friend_info_cached_ && !uses_mdns_discovery()) {
             // Try to refresh the local cache. It's not really ideal, but anyway resolver always redo
             // a full rescan...
             refresh_friend_infos();
@@ -515,7 +505,7 @@ lookup:
             return;
         }
 
-        if (!friend_info_cached_ && !uses_bonjour_discovery()) {
+        if (!friend_info_cached_ && !uses_mdns_discovery()) {
             // Try to refresh the local cache. It's not really ideal, but anyway resolver always redo
             // a full rescan...
             refresh_friend_infos_async([this, check_for_friend_and_run_cb]() {
@@ -555,7 +545,7 @@ lookup:
             return;
         }
 
-        if (uses_bonjour_discovery()) {
+        if (uses_mdns_discovery()) {
             friend_info_cached_ = true;
             return;
         }
@@ -762,7 +752,7 @@ lookup:
             return false;
         }
 
-        if (!friend_info_cached_ && !uses_bonjour_discovery()) {
+        if (!friend_info_cached_ && !uses_mdns_discovery()) {
             // Try to refresh the local cache. It's not really ideal, but anyway resolver always redo
             // a full rescan...
             refresh_friend_infos();
@@ -796,52 +786,18 @@ lookup:
     void midman_inet::send_call_for_strangers() {
         if (!send_strangers_call_task_) {
             send_strangers_call_task_ = libuv::create_task([this]() {
-                sockaddr *server_addr_sock_ptr = nullptr;
-                GUEST_TO_BSD_ADDR(server_addr_, server_addr_sock_ptr);
-
                 char request_friends = QUERY_OPCODE_GET_PLAYERS;
 
                 // Direct IP has no network-wide search: its peers come from the
-                // config list. Either socket can also be null when its setup
+                // config list. Discovery can also be null when its setup
                 // failed. Only the timeout below must happen unconditionally --
                 // an observer that never gets on_no_more_strangers() leaves its
                 // guest request outstanding forever.
-#ifdef __APPLE__
-                if (uses_bonjour_discovery() && bonjour_) {
-                    if (retried_lan_discovery_times_ == 0) bonjour_->retry();
-                    sync_bonjour_friends();
-                } else
-#endif
-                if ((discovery_mode_ == DISCOVERY_MODE_LAN) && lan_discovery_call_listener_socket_) {
-                    sockaddr_in6 server_addr_modded;
-
-                    // A bit of overflow would be ok, I guess))
-                    std::memcpy(&server_addr_modded, server_addr_sock_ptr, sizeof(sockaddr_in6));
-                    server_addr_modded.sin6_port = htons(LAN_DISCOVERY_PORT);
-
-                    std::vector<char> broadcast_buf;
-                    broadcast_buf.push_back(request_friends);
-                    broadcast_buf.push_back(static_cast<char>(password_.length()));
-                    broadcast_buf.insert(broadcast_buf.end(), password_.begin(), password_.end());
-
-                    // uvw keeps one listener per event type, so this replaces the one
-                    // the socket was set up with and has to stop a dead socket too.
-                    lan_discovery_call_listener_socket_->on<uvw::error_event>([](const uvw::error_event &event, uvw::udp_handle &handle) {
-                        if (event.code() < 0) {
-                            LOG_ERROR(SERVICE_BLUETOOTH, "Fail to send broadcast message to find nearby playable devices! Libuv error code={}", event.code());
-                        }
-
-                        if (is_socket_dead_error(event.code())) {
-                            handle.stop();
-                        }
-                    });
-
-                    lan_discovery_call_listener_socket_->on<uvw::send_event>([](const uvw::send_event &event, uvw::udp_handle &handle) {
-                        LOG_TRACE(SERVICE_BLUETOOTH, "Sent lan discovery call!");
-                    });
-
-                    lan_discovery_call_listener_socket_->broadcast(true);
-                    lan_discovery_call_listener_socket_->send(*reinterpret_cast<sockaddr*>(&server_addr_modded), copy_control_packet(broadcast_buf.data(), broadcast_buf.size()), static_cast<std::uint32_t>(broadcast_buf.size()));
+                if (uses_mdns_discovery()) {
+                    if (mdns_) {
+                        if (retried_lan_discovery_times_ == 0) mdns_->refresh();
+                        sync_lan_friends();
+                    }
                 } else if ((discovery_mode_ == DISCOVERY_MODE_PROXY_SERVER) && matching_server_socket_) {
                     matching_server_socket_->write(copy_control_packet(&request_friends, 1), 1);
                 }
