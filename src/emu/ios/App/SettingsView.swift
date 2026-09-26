@@ -98,8 +98,8 @@ struct SettingsView: View {
                     Text("settings.netplay.mode.lan").tag(2)
                     Text("settings.netplay.mode.server").tag(3)
                 }
-                // LAN discovery uses its fixed harbour port. Direct IP and a
-                // current central server can advertise a configurable port.
+                // LAN discovery advertises its port over mDNS. Direct IP
+                // and a current central server can use a configurable port.
                 if btDiscoveryMode == 1 || btDiscoveryMode == 3 {
                     LabeledContent("settings.netplay.listenPort") {
                         TextField(String("35689"), value: $btListenPort, format: .number.grouping(.never))

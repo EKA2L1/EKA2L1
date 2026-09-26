@@ -61,7 +61,6 @@ namespace eka2l1::epoc::bt {
     static constexpr std::uint32_t TIMEOUT_HEARING_STRANGER_MS = 2000;
     static constexpr std::uint16_t CENTRAL_SERVER_STANDARD_PORT = 27138;
     static constexpr std::uint16_t HARBOUR_PORT = 35689;
-    static constexpr std::uint16_t LAN_DISCOVERY_PORT = 35690;
     static constexpr std::uint32_t TIMEOUT_HEARING_STRANGER_LAN_MS = 400;
     static constexpr std::uint16_t RETRY_LAN_DISCOVERY_TIME_MAX = 5;
 
@@ -91,7 +90,7 @@ namespace eka2l1::epoc::bt {
         virtual void on_no_more_strangers() = 0;
     };
 
-    class bonjour_discovery;
+    class mdns_discovery;
 
     class midman_inet: public midman {
     private:
@@ -112,7 +111,6 @@ namespace eka2l1::epoc::bt {
 
         bool friend_info_cached_;
 
-        std::shared_ptr<uvw::udp_handle> lan_discovery_call_listener_socket_;
         std::shared_ptr<uvw::tcp_handle> matching_server_socket_;
         std::vector<char> matching_server_receive_buffer_;
 
@@ -134,7 +132,6 @@ namespace eka2l1::epoc::bt {
         bool suspended_; // Loop thread only.
 
         epoc::socket::saddress server_addr_{};
-        epoc::socket::saddress local_addr_{};
 
         std::shared_ptr<libuv::task> send_strangers_call_task_;
         std::shared_ptr<libuv::task> reset_timeout_timer_task_;
@@ -149,13 +146,9 @@ namespace eka2l1::epoc::bt {
         void shutdown_discovery_sockets();
 
         // LAN
-#ifdef __APPLE__
-        std::unique_ptr<bonjour_discovery> bonjour_;
-        void sync_bonjour_friends();
-#endif
+        std::unique_ptr<mdns_discovery> mdns_;
         void setup_lan_discovery();
-        void add_lan_friend(const sockaddr *replier);
-        void handle_lan_discovery_receive(const char *buf, std::int64_t nread, const sockaddr *addr);
+        void sync_lan_friends();
 
         // Proxy server
         void setup_proxy_server_discovery(const std::string &base_server);
@@ -185,12 +178,9 @@ namespace eka2l1::epoc::bt {
 
         std::vector<std::uint32_t> get_friend_index_with_address(epoc::socket::saddress &addr);
         bool get_first_friend_device_address(device_address &result);
-        bool uses_bonjour_discovery() const {
-#ifdef __APPLE__
+        // LAN peers carry their virtual address in the mDNS record instead of being asked for it.
+        bool uses_mdns_discovery() const {
             return discovery_mode_ == DISCOVERY_MODE_LAN;
-#else
-            return false;
-#endif
         }
 
         bool get_friend_device_address(const std::uint32_t index, device_address &result);

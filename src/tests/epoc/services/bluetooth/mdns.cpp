@@ -1,6 +1,5 @@
-#ifdef __APPLE__
 #include <catch2/catch.hpp>
-#include <services/bluetooth/protocols/bonjour.h>
+#include <services/bluetooth/protocols/mdns.h>
 #include <uv.h>
 
 #include <algorithm>
@@ -10,7 +9,7 @@
 
 namespace {
     template <typename Predicate>
-    bool await_bonjour(Predicate predicate) {
+    bool await_mdns(Predicate predicate) {
         const auto end = std::chrono::steady_clock::now() + std::chrono::seconds(12);
         do {
             uv_run(uv_default_loop(), UV_RUN_NOWAIT);
@@ -21,7 +20,7 @@ namespace {
     }
 }
 
-TEST_CASE("Bonjour discovers matching rooms and withdraws departed peers", "[.bonjour]") {
+TEST_CASE("mDNS discovers matching rooms and withdraws departed peers", "[.mdns]") {
     using namespace eka2l1::epoc::bt;
     const auto nonce = std::chrono::steady_clock::now().time_since_epoch().count();
     const std::string room = "eka2l1-test-" + std::to_string(nonce);
@@ -31,11 +30,11 @@ TEST_CASE("Bonjour discovers matching rooms and withdraws departed peers", "[.bo
     device_address third = first;
     second.addr_[0] ^= 0x40;
     third.addr_[0] ^= 0x80;
-    auto observer = std::make_unique<bonjour_discovery>(first, room, 35681, [] {});
-    auto peer = std::make_unique<bonjour_discovery>(second, room, 35682, [] {});
-    auto other_room = std::make_unique<bonjour_discovery>(third, room + "-other", 35683, [] {});
+    auto observer = std::make_unique<mdns_discovery>(first, room, 35681, [] {});
+    auto peer = std::make_unique<mdns_discovery>(second, room, 35682, [] {});
+    auto other_room = std::make_unique<mdns_discovery>(third, room + "-other", 35683, [] {});
 
-    REQUIRE(await_bonjour([&] { return !observer->peers().empty() && !peer->peers().empty(); }));
+    REQUIRE(await_mdns([&] { return !observer->peers().empty() && !peer->peers().empty(); }));
     for (const auto &found : observer->peers()) {
         CHECK(std::memcmp(found.address.addr_, second.addr_, 6) == 0);
         CHECK(found.endpoint.port_ == 35682);
@@ -43,9 +42,9 @@ TEST_CASE("Bonjour discovers matching rooms and withdraws departed peers", "[.bo
     CHECK(other_room->peers().empty());
 
     peer.reset();
-    REQUIRE(await_bonjour([&] { return observer->peers().empty(); }));
+    REQUIRE(await_mdns([&] { return observer->peers().empty(); }));
     for (int i = 0; i < 10; ++i) {
-        auto cancelled = std::make_unique<bonjour_discovery>(second, room, 35682, [] {});
+        auto cancelled = std::make_unique<mdns_discovery>(second, room, 35682, [] {});
         cancelled.reset();
         uv_run(uv_default_loop(), UV_RUN_NOWAIT);
     }
@@ -53,4 +52,3 @@ TEST_CASE("Bonjour discovers matching rooms and withdraws departed peers", "[.bo
     observer.reset();
     uv_run(uv_default_loop(), UV_RUN_NOWAIT);
 }
-#endif

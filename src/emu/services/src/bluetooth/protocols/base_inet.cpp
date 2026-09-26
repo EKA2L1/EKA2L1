@@ -63,7 +63,7 @@ namespace eka2l1::epoc::bt {
                 uv_tcp_getpeername(reinterpret_cast<uv_tcp_t*>(opaque_handle), reinterpret_cast<sockaddr*>(&addr), &addr_structlen);                
                 uv_tcp_nodelay(reinterpret_cast<uv_tcp_t*>(opaque_handle), 1);
 
-                if (mid->uses_bonjour_discovery()) return;
+                if (mid->uses_mdns_discovery()) return;
 
                 epoc::internet::host_sockaddr_to_guest_saddress(reinterpret_cast<const sockaddr*>(&addr), addr_dest);
 
