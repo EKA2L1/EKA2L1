@@ -271,12 +271,25 @@ namespace eka2l1::epoc {
                 data.mask_drv_ = bcache->add_or_get(drv, mask_bitmap_bw, nullptr, &new_update_command_mask);
             }
 
+            // Upload now: the cache already records these textures as current, and this window's
+            // pending segment may be discarded or never built (hidden or destroyed window).
+            gdi_store_command_segment uploads;
             if (new_update_command_main.opcode_ != gdi_store_command_invalid) {
-                pending_segment_->add_command(new_update_command_main);
+                uploads.add_command(new_update_command_main);
             }
 
             if (new_update_command_mask.opcode_ != gdi_store_command_invalid) {
-                pending_segment_->add_command(new_update_command_mask);
+                uploads.add_command(new_update_command_mask);
+            }
+
+            if (!uploads.commands_.empty()) {
+                drivers::graphics_command_builder upload_builder;
+                gdi_command_builder upload_gdi(drv, upload_builder, *bcache, drivers::filter_option::linear, eka2l1::vec2(0, 0),
+                    1.0f, common::region{});
+                upload_gdi.build_texture_updates(uploads);
+
+                drivers::command_list upload_list = upload_builder.retrieve_command_list();
+                drv->submit_command_list(upload_list);
             }
         }
 
@@ -459,6 +472,7 @@ namespace eka2l1::epoc {
 
         if (vis) {
             flags |= flags_visible;
+            on_shown();
         } else {
             // Purge all queued events now that the window is not visible anymore
             client->walk_event(should_purge_canvas_base, this);
@@ -687,12 +701,44 @@ namespace eka2l1::epoc {
         invalidate(bounding_rect());
     }
 
+    struct pending_redraw_walker : public window_tree_walker {
+        bool do_it(epoc::window *win) override {
+            if (win->type == window_kind::client) {
+                reinterpret_cast<canvas_base *>(win)->requeue_pending_redraw();
+            }
+
+            return false;
+        }
+    };
+
+    void canvas_base::on_shown() {
+        // Invalidations made while this window or a parent was hidden never reached the client.
+        // WSERV queues them when the hidden state clears (CWsRedrawMsgWindow::VisibleRegionChange).
+        requeue_pending_redraw();
+
+        pending_redraw_walker walker;
+        walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children);
+    }
+
+    void redraw_msg_canvas::requeue_pending_redraw() {
+        if (!is_visible() || redraw_region.rects_.empty()) {
+            return;
+        }
+
+        for (const auto &rect : redraw_region.rects_) {
+            client->queue_redraw(this, rect);
+        }
+
+        client->trigger_redraw();
+    }
+
     void canvas_base::activate(service::ipc_context &context, ws_cmd &cmd) {
         flags |= flags_active;
         on_activate();
 
         if (is_visible()) {
             scr->need_update_visible_regions(true);
+            on_shown();
         }
 
         context.complete(epoc::error_none);
