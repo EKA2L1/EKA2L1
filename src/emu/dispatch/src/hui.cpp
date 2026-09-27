@@ -109,7 +109,7 @@ namespace eka2l1::dispatch {
 
     BRIDGE_FUNC_DISPATCHER(bool, ehui_is_manual_input) {
 #if EKA2L1_PLATFORM(IOS)
-        return sys->get_symbian_version_use() < epocver::epoc94;
+        return true;
 #else
         return false;
 #endif
