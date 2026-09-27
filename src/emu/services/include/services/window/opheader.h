@@ -217,6 +217,17 @@ namespace eka2l1 {
         std::uint32_t invert_mask;
     };
 
+    struct ws_cmd_draw_poly_line {
+        std::int32_t num_points;
+        std::int32_t more;
+        eka2l1::point last;
+    };
+
+    struct ws_cmd_draw_polygon {
+        std::int32_t num_points;
+        std::int32_t fill_rule;
+    };
+
     struct ws_cmd_gdi_blt_masked {
         eka2l1::vec2 pos;
         std::uint32_t source_handle;

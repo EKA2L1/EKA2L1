@@ -101,6 +101,9 @@ namespace eka2l1::epoc {
         void do_submit_clipping();
 
         void draw_mask_impl(void *source_bitmap, void *mask_bitmap, eka2l1::rect dest_rect, eka2l1::rect source_rect, const std::uint8_t flags);
+        void fill_polygon_impl(const eka2l1::point *points, const std::size_t count, const bool winding, const eka2l1::vec4 &color);
+        void stroke_polyline_impl(const eka2l1::point *points, const std::size_t count);
+        void draw_poly_line_impl(service::ipc_context &context, ws_cmd &cmd, const bool continued);
 
         void active(service::ipc_context &context, ws_cmd cmd);
         void deactive(service::ipc_context &context, ws_cmd &cmd);
@@ -108,6 +111,10 @@ namespace eka2l1::epoc {
         void draw_bitmap_2(service::ipc_context &context, ws_cmd &cmd);
         void draw_bitmap_3(service::ipc_context &context, ws_cmd &cmd);
         void ws_draw_bitmap_masked(service::ipc_context &context, ws_cmd &cmd);
+        void draw_bitmap_masked(service::ipc_context &context, ws_cmd &cmd);
+        void draw_poly_line(service::ipc_context &context, ws_cmd &cmd);
+        void draw_poly_line_continued(service::ipc_context &context, ws_cmd &cmd);
+        void draw_polygon(service::ipc_context &context, ws_cmd &cmd);
         void set_brush_color(service::ipc_context &context, ws_cmd &cmd);
         void set_brush_style(service::ipc_context &context, ws_cmd &cmd);
         void set_pen_color(service::ipc_context &context, ws_cmd &cmd);
