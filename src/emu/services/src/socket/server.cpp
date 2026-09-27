@@ -110,7 +110,8 @@ namespace eka2l1 {
     }
 
     bool socket_client_session::is_oldarch() {
-        return server<socket_server>()->get_kernel_object_owner()->get_epoc_version() < epocver::epoc81a;
+        // 8.0a esock already uses the 8.1a request codes (e.g. RHostResolver::Open is 0x28, not 0x24).
+        return server<socket_server>()->get_kernel_object_owner()->get_epoc_version() < epocver::epoc80;
     }
 
     void socket_client_session::fetch(service::ipc_context *ctx) {
