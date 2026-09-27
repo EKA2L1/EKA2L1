@@ -98,7 +98,7 @@ namespace eka2l1 {
     }
 
     static device_installation_error dump_data_from_fpsx(loader::firmware::fpsx_header &header, common::ro_stream &stream, const std::string &drives_c_path,
-        const std::string &drives_e_path, const std::string &drives_z_path, const std::string &rom_resident_path,
+        const std::string &drives_z_path, const std::string &rom_resident_path,
         progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         if (header.type_ == loader::firmware::FPSX_TYPE_INVALID) {
             if (progress_cb)
@@ -288,9 +288,9 @@ namespace eka2l1 {
     }
 
     device_installation_error install_firmware(device_manager *dvcmngr, const std::string &vpl_path,
-        const std::string &drives_c_path, const std::string &drives_e_path, const std::string &drives_z_path,
-        const std::string &rom_resident_path, device_firmware_choose_variant_callback choose_callback,
-        progress_changed_callback progress_callback, cancel_requested_callback cancel_callback) {
+        const std::string &storage_path, const std::string &rom_resident_path, const bool isolate_drives,
+        device_firmware_choose_variant_callback choose_callback, progress_changed_callback progress_callback,
+        cancel_requested_callback cancel_callback) {
         std::string cur_dir;
         if (!common::get_current_directory(cur_dir)) {
             LOG_ERROR(SYSTEM, "Can't get current directory!");
@@ -419,8 +419,21 @@ namespace eka2l1 {
             return device_installation_vpl_file_invalid;
         }
 
-        std::string drives_z_temp_path = eka2l1::add_path(drives_z_path, "temp\\");
+        const std::string drives_z_path = eka2l1::add_path(storage_path, "drives\\z\\");
+        const std::string drives_z_temp_path = eka2l1::add_path(drives_z_path, "temp\\");
+
+        // Which folder drive C ends up in depends on the firmware code, known only
+        // once drive Z has been dumped.
+        const std::string drives_c_temp_path = eka2l1::add_path(storage_path, "drives\\temp_c\\");
         std::size_t so_far = 0;
+
+        auto revert_temp = [&]() {
+            common::delete_folder(drives_z_temp_path);
+            common::delete_folder(drives_c_temp_path);
+        };
+
+        // Left over by an install that was interrupted; it would end up on the new device.
+        common::delete_folder(drives_c_temp_path);
 
         for (auto &fpsx_filename : filenames) {
             common::ro_std_file_stream fpsx_file_stream(fpsx_filename, true);
@@ -439,11 +452,11 @@ namespace eka2l1 {
                 };
             }
 
-            const auto result = dump_data_from_fpsx(fpsx_head.value(), fpsx_file_stream, drives_c_path, drives_e_path, drives_z_temp_path,
+            const auto result = dump_data_from_fpsx(fpsx_head.value(), fpsx_file_stream, drives_c_temp_path, drives_z_temp_path,
                 rom_resident_path, wrapped_progress, cancel_callback);
 
             if (result != device_installation_none) {
-                common::delete_folder(drives_z_temp_path);
+                revert_temp();
                 return result;
             }
 
@@ -459,7 +472,7 @@ namespace eka2l1 {
 
         if (!loader::determine_rpkg_product_info(drives_z_temp_path, manufacturer, firmcode, model)) {
             LOG_ERROR(SYSTEM, "Revert all changes");
-            eka2l1::common::delete_folder(drives_z_temp_path);
+            revert_temp();
 
             return device_installation_determine_product_failure;
         }
@@ -468,7 +481,7 @@ namespace eka2l1 {
 
         if (dvcmngr->get(firmcode)) {
             LOG_ERROR(SYSTEM, "The device already exists, revert all changes");
-            eka2l1::common::delete_folder(drives_z_temp_path);
+            revert_temp();
             eka2l1::common::remove(current_temp_rom);
 
             return device_installation_already_exist;
@@ -478,14 +491,23 @@ namespace eka2l1 {
 
         // Rename temp folder to its product code
         common::move_file(drives_z_temp_path, add_path(drives_z_path, firmcode_low + "\\"));
-        const add_device_error err_adddvc = dvcmngr->add_new_device(firmcode, model, manufacturer, ver, 0);
+        const add_device_error err_adddvc = dvcmngr->add_new_device(firmcode, model, manufacturer, ver, 0, isolate_drives);
 
         if (err_adddvc != add_device_none) {
             LOG_ERROR(SYSTEM, "This device ({}) failed to be install, revert all changes", firmcode);
             eka2l1::common::delete_folder(add_path(drives_z_path, firmcode_low + "\\"));
+            common::delete_folder(drives_c_temp_path);
             eka2l1::common::remove(current_temp_rom);
 
             return device_installation_general_failure;
+        }
+
+        if (common::exists(drives_c_temp_path)) {
+            const std::string drives_c_final_path = eka2l1::add_path(storage_path,
+                device_drive_folder(firmcode, isolate_drives, drive_c));
+
+            common::copy_folder(drives_c_temp_path, drives_c_final_path, 0);
+            common::delete_folder(drives_c_temp_path);
         }
 
         const std::string target_rom_path = eka2l1::add_path(rom_resident_path, firmcode_low + "\\SYM.ROM");

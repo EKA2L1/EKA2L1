@@ -175,6 +175,14 @@ namespace eka2l1 {
         void set_config(config::state *conf);
 
         void mount(drive_number drv, const drive_media media, std::string path, const std::uint32_t attrib = io_attrib_none);
+
+        // Mount C, D and E on the current device's folders. They follow later device
+        // switches, unless replaced in the meantime (a game card on E, for instance).
+        void mount_device_drives();
+        bool mount_device_drive(const drive_number drv);
+
+        // Host folder backing drive C, D or E of the current device; empty without a device.
+        std::string get_device_drive_path(const drive_number drv);
         zip_mount_error mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t base_attrib = io_attrib_none,
             progress_changed_callback progress_cb = nullptr, cancel_requested_callback cancel_cb = nullptr);
 

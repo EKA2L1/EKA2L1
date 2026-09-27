@@ -110,10 +110,15 @@ typedef NS_ENUM(NSInteger, EKA2L1InstallResult) {
 // Index of the currently-booted device, or -1 if none is booted yet.
 - (NSInteger)currentDeviceIndex;
 
+// Host folder of the booted device's own drive E, ignoring any game card mounted
+// over it. nil when no device is booted.
+- (nullable NSString *)currentDeviceDriveEPath;
+
 // Install a device from a raw ROM dump (and optionally an RPKG file). Mirrors
 // the Android launcher::install_device path: install_rpkg when the ROM needs
 // it, else install_rom. Writes into the sandbox storage and persists
 // devices.yml. Does NOT boot the device — call bootDeviceAtIndex: after.
+// `isolateDrives` gives the device drives C, D and E of its own.
 //
 // Unpacking a firmware runs for minutes on a large dump, so both installer
 // callbacks are wired: `progress` reports 0…1 completion (throttled, delivered
@@ -122,9 +127,10 @@ typedef NS_ENUM(NSInteger, EKA2L1InstallResult) {
 // call it off the main thread.
 - (EKA2L1InstallResult)installDeviceWithRomPath:(NSString *)romPath
                                        rpkgPath:(nullable NSString *)rpkgPath
+                                  isolateDrives:(BOOL)isolateDrives
                                        progress:(nullable void (^)(double fraction))progress
                                     cancelCheck:(nullable BOOL (^)(void))cancelCheck
-    NS_SWIFT_NAME(installDevice(romPath:rpkgPath:progress:cancelCheck:));
+    NS_SWIFT_NAME(installDevice(romPath:rpkgPath:isolateDrives:progress:cancelCheck:));
 
 // Install a device from a .7z archive. Two packagings are understood, since
 // both are what gets shared: a ROM image with the RPKG that goes with it, or an
@@ -135,9 +141,10 @@ typedef NS_ENUM(NSInteger, EKA2L1InstallResult) {
 // Same contract as installDeviceWithRomPath: above — progress/cancel callbacks,
 // synchronous, does not boot the device.
 - (EKA2L1InstallResult)installDeviceWithArchivePath:(NSString *)archivePath
+                                      isolateDrives:(BOOL)isolateDrives
                                            progress:(nullable void (^)(double fraction))progress
                                         cancelCheck:(nullable BOOL (^)(void))cancelCheck
-    NS_SWIFT_NAME(installDevice(archivePath:progress:cancelCheck:));
+    NS_SWIFT_NAME(installDevice(archivePath:isolateDrives:progress:cancelCheck:));
 
 // Boot a previously-installed device by index: (re)builds the system, sets
 // the device, mounts drives, binds the graphics driver. Returns YES on

@@ -609,6 +609,38 @@
         }
       }
     },
+    "devices.delete.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device's data will be deleted along with it."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此设备的数据会一并删除。"
+          }
+        }
+      }
+    },
+    "devices.delete.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Device?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除设备？"
+          }
+        }
+      }
+    },
     "devices.hint" : {
       "localizations" : {
         "en" : {
@@ -2489,6 +2521,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在解包转储… %lld%%"
+          }
+        }
+      }
+    },
+    "import.isolateDrives" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Separate storage for this device"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "为此设备使用独立存储"
+          }
+        }
+      }
+    },
+    "import.isolateDrives.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drives C, D and E of this device are kept apart from other devices."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此设备的 C、D、E 盘与其他设备互相隔离。"
           }
         }
       }

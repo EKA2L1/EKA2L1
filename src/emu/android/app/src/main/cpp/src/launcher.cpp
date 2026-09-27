@@ -391,6 +391,22 @@ namespace eka2l1::android {
         }
     }
 
+    bool launcher::delete_device(std::uint32_t id) {
+        device_manager *dvc_mngr = sys->get_device_manager();
+        auto &dvcs = dvc_mngr->get_devices();
+
+        // The running device cannot be torn down here; the caller restarts the app, and
+        // the deletion happens while the device list loads again.
+        if ((id >= dvcs.size()) || !dvc_mngr->mark_for_deletion(dvcs[id].firmware_code)) {
+            return false;
+        }
+
+        conf->device = (id > 0) ? (id - 1) : 0;
+        conf->serialize();
+
+        return true;
+    }
+
     void launcher::rescan_devices() {
         sys->rescan_devices(drive_z);
     }
@@ -403,13 +419,11 @@ namespace eka2l1::android {
         return loader::should_install_requires_additional_rpkg(rom_path);
     }
 
-    device_installation_error launcher::install_device(std::string &rpkg_path, std::string &rom_path, bool install_rpkg) {
+    device_installation_error launcher::install_device(std::string &rpkg_path, std::string &rom_path, bool install_rpkg, bool isolate_drives) {
         std::string firmware_code;
         device_manager *dvc_mngr = sys->get_device_manager();
         device_installation_error result;
 
-        std::string root_c_path = add_path(conf->storage, "drives/c/");
-        std::string root_e_path = add_path(conf->storage, "drives/e/");
         std::string root_z_path = add_path(conf->storage, "drives/z/");
         std::string rom_resident_path = add_path(conf->storage, "roms/");
 
@@ -419,14 +433,14 @@ namespace eka2l1::android {
 
         if (install_rpkg) {
             if (eka2l1::loader::should_install_requires_additional_rpkg(rom_path)) {
-                result = eka2l1::loader::install_rpkg(dvc_mngr, rpkg_path, root_z_path, firmware_code, nullptr, nullptr);
+                result = eka2l1::loader::install_rpkg(dvc_mngr, rpkg_path, root_z_path, firmware_code, isolate_drives, nullptr, nullptr);
                 need_add_rpkg = true;
             } else {
-                result = eka2l1::loader::install_rom(dvc_mngr, rom_path, rom_resident_path, root_z_path, nullptr, nullptr);
+                result = eka2l1::loader::install_rom(dvc_mngr, rom_path, rom_resident_path, root_z_path, isolate_drives, nullptr, nullptr);
             }
         } else {
             result = eka2l1::install_firmware(
-                dvc_mngr, rom_path, root_c_path, root_e_path, root_z_path, rom_resident_path,
+                dvc_mngr, rom_path, conf->storage, rom_resident_path, isolate_drives,
                 [](const std::vector<std::string> &variants) -> int { return 0; }, nullptr, nullptr);
         }
 

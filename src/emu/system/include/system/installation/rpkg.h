@@ -34,8 +34,8 @@ namespace eka2l1 {
 
         bool should_install_requires_additional_rpkg(const std::string &path);
 
-        device_installation_error install_rom(device_manager *dvc, const std::string &path, const std::string &rom_resident_path, const std::string &drives_z_resident_path, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb);
-        device_installation_error install_rpkg(device_manager *dvc, const std::string &path, const std::string &devices_rom_path, std::string &firmware_code, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb);
+        device_installation_error install_rom(device_manager *dvc, const std::string &path, const std::string &rom_resident_path, const std::string &drives_z_resident_path, const bool isolate_drives, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb);
+        device_installation_error install_rpkg(device_manager *dvc, const std::string &path, const std::string &devices_rom_path, std::string &firmware_code, const bool isolate_drives, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb);
 
         /**
          * @brief Install a device from a raw ROM image, plus the RPKG that goes with it if one is needed.
@@ -50,6 +50,6 @@ namespace eka2l1 {
          */
         device_installation_error install_rom_with_optional_rpkg(device_manager *dvc, const std::string &rom_path,
             const std::string &rpkg_path, const std::string &rom_resident_path, const std::string &drives_z_resident_path,
-            progress_changed_callback progress_cb, cancel_requested_callback cancel_cb);
+            const bool isolate_drives, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb);
     }
 }

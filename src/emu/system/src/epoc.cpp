@@ -45,6 +45,7 @@
 
 #include <services/applist/applist.h>
 
+#include <array>
 #include <atomic>
 #include <fstream>
 #include <string>
@@ -137,6 +138,15 @@ namespace eka2l1 {
         std::unique_ptr<dispatch::dispatcher> dispatcher_;
         std::unique_ptr<manager::packages> packages_;
         std::unique_ptr<j2me::app_list> j2me_applist_;
+
+        // What mount_device_drive() put under C, D and E. The real path tells them apart
+        // from drives the frontend has mounted over them since.
+        struct device_drive_mount {
+            std::string folder;
+            std::string real_path;
+        };
+
+        std::array<device_drive_mount, 3> device_drive_mounts_;
 
 #if ENABLE_SCRIPTING
         std::unique_ptr<manager::scripts> scripting_;
@@ -436,7 +446,11 @@ namespace eka2l1 {
 
                         LOG_INFO(SYSTEM, "Found a device: {} ({})", model, firm_name);
 
-                        if (dvcmngr_->add_new_device(firm_name, model, manu, ver, 0) != add_device_none) {
+                        // devices.yml is rebuilt from scratch, so the folder is the only record left.
+                        const bool isolated_drives = common::is_dir(eka2l1::add_path(storage_path,
+                            device_isolated_drives_folder(firm_name)));
+
+                        if (dvcmngr_->add_new_device(firm_name, model, manu, ver, 0, isolated_drives) != add_device_none) {
                             LOG_ERROR(SYSTEM, "Unable to add this device, silently ignore!");
                         } else {
                             actually_found = true;
@@ -588,6 +602,10 @@ namespace eka2l1 {
         }
 
         void mount(drive_number drv, const drive_media media, std::string path, const std::uint32_t attrib = io_attrib_none);
+        void mount_device_drives();
+        bool mount_device_drive(const drive_number drv);
+        std::string get_device_drive_path(const drive_number drv);
+        bool remount_device_drives();
         zip_mount_error mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t attrib = io_attrib_none, progress_changed_callback progress_cb = nullptr, cancel_requested_callback cancel_cb = nullptr);
         ngage_game_card_install_error install_ngage_game_card(const std::string &card_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb = nullptr);
         ngage_game_card_install_error install_ngage_game_card_archive(const std::string &archive_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb);
@@ -848,6 +866,80 @@ namespace eka2l1 {
     void system_impl::mount(drive_number drv, const drive_media media, std::string path,
         const std::uint32_t attrib) {
         io_->mount_physical_path(drv, media, attrib, common::utf8_to_ucs2(path));
+    }
+
+    static constexpr drive_number DEVICE_DRIVES[] = { drive_c, drive_d, drive_e };
+
+    static std::size_t device_drive_slot(const drive_number drv) {
+        return static_cast<std::size_t>(drv - drive_c);
+    }
+
+    std::string system_impl::get_device_drive_path(const drive_number drv) {
+        device *dvc = dvcmngr_->get_current();
+        if (!dvc || (drv < drive_c) || (drv > drive_e)) {
+            return {};
+        }
+
+        return add_path(conf_->storage, device_drive_folder(dvc->firmware_code, dvc->isolated_drives, drv));
+    }
+
+    bool system_impl::mount_device_drive(const drive_number drv) {
+        const std::string path = get_device_drive_path(drv);
+        if (path.empty()) {
+            return false;
+        }
+
+        common::create_directories(path);
+
+        device_drive_mount &mounted = device_drive_mounts_[device_drive_slot(drv)];
+        mounted = {};
+
+        io_->unmount(drv);
+
+        const std::uint32_t attrib = (drv == drive_e) ? io_attrib_removeable : io_attrib_internal;
+        if (!io_->mount_physical_path(drv, drive_media::physical, attrib, common::utf8_to_ucs2(path))) {
+            return false;
+        }
+
+        if (std::optional<drive> entry = io_->get_drive_entry(drv)) {
+            mounted.folder = path;
+            mounted.real_path = entry->real_path;
+        }
+
+        return true;
+    }
+
+    void system_impl::mount_device_drives() {
+        for (const drive_number drv : DEVICE_DRIVES) {
+            mount_device_drive(drv);
+        }
+    }
+
+    bool system_impl::remount_device_drives() {
+        bool remounted = false;
+
+        for (const drive_number drv : DEVICE_DRIVES) {
+            device_drive_mount &mounted = device_drive_mounts_[device_drive_slot(drv)];
+            if (mounted.real_path.empty()) {
+                continue;
+            }
+
+            std::optional<drive> entry = io_->get_drive_entry(drv);
+            if (!entry || (entry->real_path != mounted.real_path)) {
+                // Replaced by something the frontend mounted itself; that stays.
+                mounted = {};
+                continue;
+            }
+
+            const std::string wanted_path = get_device_drive_path(drv);
+            if (wanted_path.empty() || (wanted_path == mounted.folder)) {
+                continue;
+            }
+
+            remounted |= mount_device_drive(drv);
+        }
+
+        return remounted;
     }
 
     // Match complete path components, stripping any wrapper above the card's root marker.
@@ -1409,8 +1501,17 @@ namespace eka2l1 {
             gdriver->set_upscale_shader("");
         }
 
+        const bool drives_remounted = remount_device_drives();
+
         // Setup outsiders
         setup_outsider();
+
+        // The package registry lives on drive C, so a device with drives of its own
+        // brings a different set of installed packages along.
+        if (drives_remounted) {
+            packages_->load_registries();
+        }
+
         invoke_system_reset_callbacks();
 
         if (lock_sys) {
@@ -1575,6 +1676,18 @@ namespace eka2l1 {
     void system::mount(drive_number drv, const drive_media media, std::string path,
         const std::uint32_t attrib) {
         return impl->mount(drv, media, path, attrib);
+    }
+
+    void system::mount_device_drives() {
+        impl->mount_device_drives();
+    }
+
+    bool system::mount_device_drive(const drive_number drv) {
+        return impl->mount_device_drive(drv);
+    }
+
+    std::string system::get_device_drive_path(const drive_number drv) {
+        return impl->get_device_drive_path(drv);
     }
 
     zip_mount_error system::mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t base_attrib, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {

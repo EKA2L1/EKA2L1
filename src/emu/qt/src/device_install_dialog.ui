@@ -104,7 +104,7 @@
      </layout>
     </widget>
    </item>
-   <item row="5" column="0">
+   <item row="6" column="0">
     <widget class="QWidget" name="opinion_widget" native="true">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -209,6 +209,19 @@
        </widget>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QCheckBox" name="isolate_drives_checkbox">
+     <property name="toolTip">
+      <string>Drives C, D and E of this device are kept apart from other devices.</string>
+     </property>
+     <property name="text">
+      <string>Separate storage for this device</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
     </widget>
    </item>
    <item row="4" column="0">

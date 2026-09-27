@@ -152,8 +152,8 @@ namespace eka2l1::loader {
 
         if (find_z_drive_prefix(entries, z_prefix, code)) {
             // `data/drives/z/<code>/` -> `data/roms/<code>/`. Anything the pack keeps elsewhere (drive C
-            // contents, readme files, its own devices.yml) is left alone: drive C is shared between every
-            // installed device, so writing into it would be a side effect the user never asked for.
+            // contents, readme files, its own devices.yml) is left alone: drive C may be shared between
+            // installed devices, so writing into it would be a side effect the user never asked for.
             const std::string data_prefix = z_prefix.substr(0, z_prefix.find(Z_DRIVE_MARKER));
             const std::string rom_prefix = data_prefix + "roms/" + code + "/";
             const std::string devices_yml_path = data_prefix + "devices.yml";
@@ -269,7 +269,7 @@ namespace eka2l1::loader {
     static device_installation_error install_archive_rom_and_rpkg(device_manager *dvcmngr,
         const std::string &archive_path, const std::vector<common::archive_entry_info> &entries,
         const archive_device_layout &layout, const std::string &rom_resident_path,
-        const std::string &drives_z_resident_path, progress_changed_callback progress_cb,
+        const std::string &drives_z_resident_path, const bool isolate_drives, progress_changed_callback progress_cb,
         cancel_requested_callback cancel_cb) {
         // The ROM and the RPKG are read several times over by the installers (the ROM is parsed, then
         // copied; the RPKG is streamed through), so they are unpacked to a scratch folder first rather
@@ -312,7 +312,7 @@ namespace eka2l1::loader {
         }
 
         const device_installation_error result = install_rom_with_optional_rpkg(dvcmngr, rom_path, rpkg_path,
-            rom_resident_path, drives_z_resident_path, install_cb, cancel_cb);
+            rom_resident_path, drives_z_resident_path, isolate_drives, install_cb, cancel_cb);
 
         common::delete_folder(staging);
 
@@ -371,7 +371,7 @@ namespace eka2l1::loader {
     static device_installation_error install_archive_data_dump(device_manager *dvcmngr,
         const std::string &archive_path, const std::vector<common::archive_entry_info> &entries,
         const archive_device_layout &layout, const std::string &rom_resident_path,
-        const std::string &drives_z_resident_path, progress_changed_callback progress_cb,
+        const std::string &drives_z_resident_path, const bool isolate_drives, progress_changed_callback progress_cb,
         cancel_requested_callback cancel_cb) {
         // Same staging convention as install_rom/install_rpkg: unpack into a temp folder, and only rename
         // it to the firmware code once the dump has proven to describe a device we can register. A run
@@ -467,7 +467,7 @@ namespace eka2l1::loader {
         }
 
         const add_device_error err_adddvc = dvcmngr->add_new_device(firmcode, model, manufacturer, ver,
-            machine_uid);
+            machine_uid, isolate_drives);
 
         if (err_adddvc != add_device_none) {
             LOG_ERROR(SYSTEM, "This device ({}) failed to be install, revert all changes", firmcode);
@@ -500,7 +500,7 @@ namespace eka2l1::loader {
 
     device_installation_error install_archive(device_manager *dvcmngr, const std::string &path,
         const std::string &rom_resident_path, const std::string &drives_z_resident_path,
-        progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
+        const bool isolate_drives, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         if (!common::exists(path)) {
             return device_installation_not_exist;
         }
@@ -519,13 +519,13 @@ namespace eka2l1::loader {
                 layout.z_files.size());
 
             return install_archive_data_dump(dvcmngr, path, entries, layout, rom_resident_path,
-                drives_z_resident_path, progress_cb, cancel_cb);
+                drives_z_resident_path, isolate_drives, progress_cb, cancel_cb);
 
         case archive_device_layout::rom_and_rpkg:
             LOG_INFO(SYSTEM, "Installing device from a ROM{} in {}", layout.has_rpkg ? " and RPKG" : "", path);
 
             return install_archive_rom_and_rpkg(dvcmngr, path, entries, layout, rom_resident_path,
-                drives_z_resident_path, progress_cb, cancel_cb);
+                drives_z_resident_path, isolate_drives, progress_cb, cancel_cb);
 
         default:
             break;

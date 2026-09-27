@@ -24,6 +24,7 @@
 
 #include <common/algorithm.h>
 #include <common/dynamicfile.h>
+#include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
 #include <common/types.h>
@@ -220,7 +221,12 @@ namespace eka2l1 {
                 }
             }
 
-            add_new_device(firmcode, model, manufacturer, ver, machine_uid);
+            if (device_node.second["pending-deletion"].as<bool>(false)) {
+                delete_device_storage(conf->storage, firmcode);
+                continue;
+            }
+
+            add_new_device(firmcode, model, manufacturer, ver, machine_uid, device_node.second["isolated-drives"].as<bool>(false));
         }
 
         // Save any additions we add it during deserialize
@@ -240,6 +246,11 @@ namespace eka2l1 {
             emitter << YAML::Key << "firmcode" << YAML::Value << device.firmware_code;
             emitter << YAML::Key << "model" << YAML::Value << device.model;
             emitter << YAML::Key << "machine-uid" << YAML::Value << device.machine_uid;
+            emitter << YAML::Key << "isolated-drives" << YAML::Value << device.isolated_drives;
+
+            if (device.pending_deletion) {
+                emitter << YAML::Key << "pending-deletion" << YAML::Value << true;
+            }
 
             emitter << YAML::EndMap;
         }
@@ -308,7 +319,8 @@ namespace eka2l1 {
         return true;
     }
 
-    add_device_error device_manager::add_new_device(const std::string &firmcode, const std::string &model, const std::string &manufacturer, const epocver ver, const std::uint32_t machine_uid) {
+    add_device_error device_manager::add_new_device(const std::string &firmcode, const std::string &model, const std::string &manufacturer, const epocver ver, const std::uint32_t machine_uid,
+        const bool isolated_drives) {
         const std::lock_guard<std::mutex> guard(lock);
 
         if (get(firmcode)) {
@@ -351,10 +363,25 @@ namespace eka2l1 {
         dvc.languages = languages;
         dvc.default_language_code = default_language;
         dvc.machine_uid = machine_uid;
+        dvc.isolated_drives = isolated_drives;
+
+        // rescan_devices() recognises isolated drives by this folder, so it must exist before the first boot.
+        if (isolated_drives) {
+            common::create_directories(eka2l1::add_path(conf->storage, device_isolated_drives_folder(firmcode)));
+        }
 
         devices.push_back(dvc);
 
         return add_device_none;
+    }
+
+    std::string device_isolated_drives_folder(const std::string &firmware_code) {
+        return "drives/" + common::lowercase_string(firmware_code) + "/";
+    }
+
+    std::string device_drive_folder(const std::string &firmware_code, const bool isolated_drives, const drive_number drv) {
+        const std::string drive_name(1, static_cast<char>('a' + static_cast<int>(drv)));
+        return (isolated_drives ? device_isolated_drives_folder(firmware_code) : "drives/") + drive_name + "/";
     }
 
     std::vector<std::string> per_device_storage_paths(const std::string &firmware_code) {
@@ -362,6 +389,7 @@ namespace eka2l1 {
 
         std::vector<std::string> paths{
             "drives/z/" + firmcode + "/",
+            device_isolated_drives_folder(firmcode),
             "roms/" + firmcode + "/"
         };
 
@@ -383,6 +411,26 @@ namespace eka2l1 {
         }
 
         return paths;
+    }
+
+    void delete_device_storage(const std::string &storage, const std::string &firmware_code) {
+        for (const std::string &path : per_device_storage_paths(firmware_code)) {
+            common::delete_folder(eka2l1::add_path(storage, path));
+        }
+    }
+
+    bool device_manager::mark_for_deletion(const std::string &firmcode) {
+        const std::lock_guard<std::mutex> guard(lock);
+
+        device *dvc = get(firmcode);
+        if (!dvc) {
+            return false;
+        }
+
+        dvc->pending_deletion = true;
+        save_devices();
+
+        return true;
     }
 
     bool device_manager::delete_device(const std::string &firmcode) {

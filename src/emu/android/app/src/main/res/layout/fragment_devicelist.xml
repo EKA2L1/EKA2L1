@@ -30,6 +30,15 @@
                 android:layout_weight="2"
                 android:gravity="center"
                 android:text="@string/rename" />
+
+            <Button
+                android:id="@+id/bt_delete_device"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="2"
+                android:gravity="center"
+                android:text="@string/action_context_delete" />
         </LinearLayout>
 
         <Button
@@ -160,6 +169,14 @@
                 android:text="@string/path_to_rpkg" />
 
         </LinearLayout>
+
+        <CheckBox
+            android:id="@+id/cb_isolate_drives"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:checked="true"
+            android:text="@string/isolate_drives" />
 
         <Button
             android:id="@+id/bt_device_install"

@@ -198,6 +198,11 @@ Java_com_github_eka2l1_emu_Emulator_setDeviceName(JNIEnv *env, jclass clazz, jin
     env->ReleaseStringUTFChars(new_name, cstr);
 }
 
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_github_eka2l1_emu_Emulator_deleteDevice(JNIEnv *env, jclass clazz, jint id) {
+    return state->launcher->delete_device(id);
+}
+
 extern "C" JNIEXPORT void JNICALL
 Java_com_github_eka2l1_emu_Emulator_rescanDevices(JNIEnv *env, jclass clazz) {
     state->launcher->rescan_devices();
@@ -210,7 +215,7 @@ Java_com_github_eka2l1_emu_Emulator_getCurrentDevice(JNIEnv *env, jclass clazz) 
 
 extern "C" JNIEXPORT jint JNICALL
 Java_com_github_eka2l1_emu_Emulator_installDevice(JNIEnv *env, jclass clazz, jstring rpkg_path,
-    jstring rom_path, jboolean install_rpkg) {
+    jstring rom_path, jboolean install_rpkg, jboolean isolate_drives) {
     const char *cstr = env->GetStringUTFChars(rpkg_path, nullptr);
     std::string crpkg_path = std::string(cstr);
     env->ReleaseStringUTFChars(rpkg_path, cstr);
@@ -218,7 +223,7 @@ Java_com_github_eka2l1_emu_Emulator_installDevice(JNIEnv *env, jclass clazz, jst
     std::string crom_path = std::string(cstr);
     env->ReleaseStringUTFChars(rom_path, cstr);
 
-    return state->launcher->install_device(crpkg_path, crom_path, install_rpkg);
+    return state->launcher->install_device(crpkg_path, crom_path, install_rpkg, isolate_drives);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL

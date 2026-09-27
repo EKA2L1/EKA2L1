@@ -726,11 +726,12 @@ struct ContentView: View {
         }
     }
 
-    // N-Gage 2.0 install directory on the E drive. The mounted physical path is
-    // <Documents>/data/drives/e/ (see IosEmulator mount), and the N-Gage
-    // launcher reads packages from E:\n-gage.
-    private static func ngage2StagingDir() -> String {
-        (documentsRoot() as NSString).appendingPathComponent("data/drives/e/n-gage")
+    // N-Gage 2.0 install directory on the booted device's own drive E (a mounted
+    // game card aside); the N-Gage launcher reads packages from E:\n-gage.
+    nonisolated private static func ngage2StagingDir() -> String {
+        let driveE = EKA2L1Bridge.currentDeviceDriveEPath()
+            ?? (documentsRoot() as NSString).appendingPathComponent("data/drives/e")
+        return (driveE as NSString).appendingPathComponent("n-gage")
     }
 
     // N-Gage 2.0 packages aren't installed by us — they're just copied onto the
@@ -742,9 +743,9 @@ struct ContentView: View {
             banner = String(localized: "home.ngage.importFailed \(err.localizedDescription)")
         case .success(let urls):
             banner = String(localized: "home.ngage2.importing \(urls.count)")
-            let dir = Self.ngage2StagingDir()
             Task {
                 let outcome = await store.perform { () -> Result<Int, Error> in
+                    let dir = Self.ngage2StagingDir()
                     let fm = FileManager.default
                     var imported = 0
                     do {
@@ -919,6 +920,7 @@ struct ImportDeviceView: View {
     @State private var rom: PickedFile?
     @State private var rpkg: PickedFile?
     @State private var archive: PickedFile?
+    @State private var isolateDrives = true
     // A single fileImporter driven by which row was tapped. Stacking two
     // .fileImporter modifiers on one view makes SwiftUI drop one of them, so
     // we multiplex through this instead. `pickTarget` is read in the
@@ -968,6 +970,13 @@ struct ImportDeviceView: View {
                     } else {
                         Text("import.archiveHint")
                     }
+                }
+
+                Section {
+                    Toggle("import.isolateDrives", isOn: $isolateDrives)
+                        .disabled(installing)
+                } footer: {
+                    Text("import.isolateDrives.footer")
                 }
 
                 if let errorMessage {
@@ -1069,6 +1078,7 @@ struct ImportDeviceView: View {
         // synchronous install on a background queue, then report on the main one.
         // Only which bridge call sits in the middle differs.
         let urls: [URL]
+        let isolate = isolateDrives
         let run: @Sendable (@escaping @Sendable (Double) -> Void,
                             @escaping @Sendable () -> Bool) -> EKA2L1InstallResult
 
@@ -1079,7 +1089,7 @@ struct ImportDeviceView: View {
             let rpkgPath = rpkg?.url.path
             urls = [rom.url] + (rpkg.map { [$0.url] } ?? [])
             run = { progress, cancel in
-                EKA2L1Bridge.installDevice(romPath: romPath, rpkgPath: rpkgPath,
+                EKA2L1Bridge.installDevice(romPath: romPath, rpkgPath: rpkgPath, isolateDrives: isolate,
                                            progress: progress, cancelCheck: cancel)
             }
 
@@ -1088,7 +1098,8 @@ struct ImportDeviceView: View {
             let archivePath = archive.url.path
             urls = [archive.url]
             run = { progress, cancel in
-                EKA2L1Bridge.installDevice(archivePath: archivePath, progress: progress, cancelCheck: cancel)
+                EKA2L1Bridge.installDevice(archivePath: archivePath, isolateDrives: isolate,
+                                           progress: progress, cancelCheck: cancel)
             }
         }
 

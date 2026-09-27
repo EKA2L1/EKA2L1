@@ -17,6 +17,8 @@
     <string name="no_devices_found">No devices found</string>
     <string name="exit">Exit</string>
     <string name="rename">Rename</string>
+    <string name="delete_device_title">Delete device?</string>
+    <string name="delete_device_message">This device\'s data will be deleted along with it. The app will restart to finish.</string>
     <string name="save_log">Save log</string>
     <string name="take_screenshot">Take screenshot</string>
     <string name="screenshot">Screenshot</string>
@@ -74,6 +76,7 @@
     <string name="install_device_vpl_invalid_msg">The firmware description file (VPL) file is invalid!</string>
     <string name="install_device_rofs_corrupt_msg">ROFS file is corrupted!</string>
     <string name="install_device_rom_corrupt_msg">ROM file is corrupted!</string>
+    <string name="isolate_drives">Separate storage for this device (drives C, D and E are not shared with other devices)</string>
     <string name="install_device_fpsx_corrupt_msg">FPSX file is corrupted!</string>
 
     <string name="pref_general_title">General</string>
