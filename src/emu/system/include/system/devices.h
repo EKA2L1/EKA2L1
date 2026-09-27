@@ -54,6 +54,9 @@ namespace eka2l1 {
         // folders every other device shares.
         bool isolated_drives;
 
+        // Set by device_manager::mark_for_deletion().
+        bool pending_deletion;
+
         explicit device(epocver ver, std::string firmware_code, std::string manufacturer, std::string model)
             : ver(ver)
             , firmware_code(firmware_code)
@@ -61,7 +64,8 @@ namespace eka2l1 {
             , model(model)
             , machine_uid(0)
             , default_language_code(-1)
-            , isolated_drives(false) {
+            , isolated_drives(false)
+            , pending_deletion(false) {
         }
 
         bool is_s80();
@@ -125,6 +129,10 @@ namespace eka2l1 {
 
         bool delete_device(const std::string &firmcode);
 
+        // Delete a device and its storage on the next load, before anything can boot it. For
+        // frontends that cannot stop the running device on the spot; they restart afterwards.
+        bool mark_for_deletion(const std::string &firmcode);
+
         /*! \brief Get the device with the given firmware code.
          *
          * You should avoid method that involves comparing firmware code, since
@@ -171,4 +179,7 @@ namespace eka2l1 {
      *          trailing separator. They are not guaranteed to exist.
     */
     std::vector<std::string> per_device_storage_paths(const std::string &firmware_code);
+
+    // Delete every folder per_device_storage_paths() lists under the given data root.
+    void delete_device_storage(const std::string &storage, const std::string &firmware_code);
 }

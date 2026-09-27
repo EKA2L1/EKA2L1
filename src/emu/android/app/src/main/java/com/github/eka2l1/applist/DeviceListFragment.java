@@ -51,6 +51,7 @@ import androidx.fragment.app.Fragment;
 
 import com.github.eka2l1.R;
 import com.github.eka2l1.emu.Emulator;
+import com.github.eka2l1.util.AppUtils;
 import com.github.eka2l1.util.FileUtils;
 import com.skydoves.expandablelayout.ExpandableLayout;
 
@@ -155,6 +156,18 @@ public class DeviceListFragment extends Fragment {
 
             inputNameBuilder.show();
         });
+
+        Button deleteButton = view.findViewById(R.id.bt_delete_device);
+        deleteButton.setOnClickListener(v -> new AlertDialog.Builder(getContext())
+                .setTitle(R.string.delete_device_title)
+                .setMessage(R.string.delete_device_message)
+                .setPositiveButton(R.string.action_context_delete, (dialogInterface, i) -> {
+                    if (Emulator.deleteDevice(Emulator.getCurrentDevice())) {
+                        AppUtils.restart(requireContext());
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show());
 
         Button rescanButton = view.findViewById(R.id.bt_rescan_devices);
         rescanButton.setOnClickListener(v -> {

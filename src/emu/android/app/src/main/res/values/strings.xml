@@ -17,6 +17,8 @@
     <string name="no_devices_found">No devices found</string>
     <string name="exit">Exit</string>
     <string name="rename">Rename</string>
+    <string name="delete_device_title">Delete device?</string>
+    <string name="delete_device_message">This device\'s data will be deleted along with it. The app will restart to finish.</string>
     <string name="save_log">Save log</string>
     <string name="take_screenshot">Take screenshot</string>
     <string name="screenshot">Screenshot</string>

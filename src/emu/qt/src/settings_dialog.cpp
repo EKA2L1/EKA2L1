@@ -58,6 +58,8 @@
 #include <QSettings>
 #include <QtConcurrent/QtConcurrent>
 
+#include <algorithm>
+
 static constexpr qsizetype RTA_LOW_INDEX = 0;
 static constexpr qsizetype RTA_MID_INDEX = 1;
 static constexpr qsizetype RTA_HIGH_INDEX = 2;
@@ -404,6 +406,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
 
     connect(ui_->system_device_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_device_combo_choose);
     connect(ui_->system_device_current_rename_btn, &QPushButton::clicked, this, &settings_dialog::on_device_rename_requested);
+    connect(ui_->system_device_current_delete_btn, &QPushButton::clicked, this, &settings_dialog::on_device_delete_requested);
     connect(ui_->system_he_rta_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_rta_combo_choose);
     connect(ui_->system_he_cpu_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_cpu_backend_changed);
     connect(ui_->system_prop_lang_combobox, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_system_language_choose);
@@ -575,6 +578,34 @@ void settings_dialog::on_device_rename_requested() {
             }
         }
     }
+}
+
+void settings_dialog::on_device_delete_requested() {
+    eka2l1::device_manager *device_mngr = system_->get_device_manager();
+    if (!device_mngr) {
+        return;
+    }
+
+    // The combo always shows the running device, which cannot be torn down from here,
+    // so the deletion is left to the relaunch.
+    const int index = ui_->system_device_combo->currentIndex();
+    eka2l1::device *dvc = device_mngr->get(static_cast<std::uint8_t>(index));
+    if (!dvc) {
+        return;
+    }
+
+    if (QMessageBox::question(this, tr("Delete device?"), tr("This device's data will be deleted along with it.<br>The emulator will relaunch to finish.")) != QMessageBox::Yes) {
+        return;
+    }
+
+    if (!device_mngr->mark_for_deletion(dvc->firmware_code)) {
+        return;
+    }
+
+    configuration_.device = std::max(0, index - 1);
+    configuration_.serialize();
+
+    emit relaunch();
 }
 
 void settings_dialog::on_rta_combo_choose(const int index) {

@@ -762,6 +762,8 @@ public class Emulator {
 
     public static native void rescanDevices();
 
+    public static native boolean deleteDevice(int id);
+
     public static native int getCurrentDevice();
 
     public static native int installDevice(String rpkgPath, String romPath, boolean installRPKG, boolean isolateDrives);

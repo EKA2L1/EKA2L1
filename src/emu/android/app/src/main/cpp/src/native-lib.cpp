@@ -198,6 +198,11 @@ Java_com_github_eka2l1_emu_Emulator_setDeviceName(JNIEnv *env, jclass clazz, jin
     env->ReleaseStringUTFChars(new_name, cstr);
 }
 
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_github_eka2l1_emu_Emulator_deleteDevice(JNIEnv *env, jclass clazz, jint id) {
+    return state->launcher->delete_device(id);
+}
+
 extern "C" JNIEXPORT void JNICALL
 Java_com_github_eka2l1_emu_Emulator_rescanDevices(JNIEnv *env, jclass clazz) {
     state->launcher->rescan_devices();

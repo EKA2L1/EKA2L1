@@ -103,9 +103,7 @@ namespace {
         }
 
         void delete_device_state(const std::string &firmcode) {
-            for (const std::string &path : per_device_storage_paths(firmcode)) {
-                common::delete_folder(add_path(root, path));
-            }
+            delete_device_storage(root, firmcode);
         }
     };
 }
@@ -211,4 +209,42 @@ TEST_CASE("devices_yml_without_isolation_key_is_shared", "devices") {
     device_manager manager(&conf);
     REQUIRE(manager.total() == 1);
     REQUIRE_FALSE(manager.get("RM-409")->isolated_drives);
+}
+
+TEST_CASE("device_marked_for_deletion_goes_on_next_load", "devices") {
+    storage_test_env env("marked_for_deletion");
+
+    config::state conf;
+    conf.storage = env.root;
+
+    {
+        device_manager manager(&conf);
+        REQUIRE(manager.add_new_device("RM-707", "X7-00", "Nokia", epocver::epoc10, 0, true) == add_device_none);
+        REQUIRE(manager.add_new_device("RM-409", "5320", "Nokia", epocver::epoc94, 0, false) == add_device_none);
+        manager.save_devices();
+
+        env.write_file("drives/z/rm-707/sys/bin/euser.dll");
+        env.write_file("roms/rm-707/SYM.ROM");
+        env.write_file("drives/rm-707/e/sys/bin/game.exe");
+        env.write_file("drives/z/rm-409/sys/bin/euser.dll");
+
+        REQUIRE(manager.mark_for_deletion("RM-707"));
+        REQUIRE_FALSE(manager.mark_for_deletion("RM-000"));
+
+        // Nothing goes while the device may still be running.
+        REQUIRE(env.has("drives/rm-707/e/sys/bin/game.exe"));
+    }
+
+    device_manager reloaded(&conf);
+    REQUIRE(reloaded.total() == 1);
+    REQUIRE(reloaded.get("RM-409"));
+
+    REQUIRE_FALSE(env.has("drives/z/rm-707/sys/bin/euser.dll"));
+    REQUIRE_FALSE(env.has("roms/rm-707/SYM.ROM"));
+    REQUIRE_FALSE(env.has("drives/rm-707/"));
+    REQUIRE(env.has("drives/z/rm-409/sys/bin/euser.dll"));
+
+    // The reload rewrote devices.yml without the device.
+    device_manager again(&conf);
+    REQUIRE(again.total() == 1);
 }

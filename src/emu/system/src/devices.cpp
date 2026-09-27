@@ -221,17 +221,12 @@ namespace eka2l1 {
                 }
             }
 
-            bool isolated_drives = false;
-
-            try {
-                if (device_node.second["isolated-drives"]) {
-                    isolated_drives = device_node.second["isolated-drives"].as<bool>();
-                }
-            } catch (YAML::Exception exception) {
-                isolated_drives = false;
+            if (device_node.second["pending-deletion"].as<bool>(false)) {
+                delete_device_storage(conf->storage, firmcode);
+                continue;
             }
 
-            add_new_device(firmcode, model, manufacturer, ver, machine_uid, isolated_drives);
+            add_new_device(firmcode, model, manufacturer, ver, machine_uid, device_node.second["isolated-drives"].as<bool>(false));
         }
 
         // Save any additions we add it during deserialize
@@ -252,6 +247,10 @@ namespace eka2l1 {
             emitter << YAML::Key << "model" << YAML::Value << device.model;
             emitter << YAML::Key << "machine-uid" << YAML::Value << device.machine_uid;
             emitter << YAML::Key << "isolated-drives" << YAML::Value << device.isolated_drives;
+
+            if (device.pending_deletion) {
+                emitter << YAML::Key << "pending-deletion" << YAML::Value << true;
+            }
 
             emitter << YAML::EndMap;
         }
@@ -412,6 +411,26 @@ namespace eka2l1 {
         }
 
         return paths;
+    }
+
+    void delete_device_storage(const std::string &storage, const std::string &firmware_code) {
+        for (const std::string &path : per_device_storage_paths(firmware_code)) {
+            common::delete_folder(eka2l1::add_path(storage, path));
+        }
+    }
+
+    bool device_manager::mark_for_deletion(const std::string &firmcode) {
+        const std::lock_guard<std::mutex> guard(lock);
+
+        device *dvc = get(firmcode);
+        if (!dvc) {
+            return false;
+        }
+
+        dvc->pending_deletion = true;
+        save_devices();
+
+        return true;
     }
 
     bool device_manager::delete_device(const std::string &firmcode) {

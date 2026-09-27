@@ -391,6 +391,22 @@ namespace eka2l1::android {
         }
     }
 
+    bool launcher::delete_device(std::uint32_t id) {
+        device_manager *dvc_mngr = sys->get_device_manager();
+        auto &dvcs = dvc_mngr->get_devices();
+
+        // The running device cannot be torn down here; the caller restarts the app, and
+        // the deletion happens while the device list loads again.
+        if ((id >= dvcs.size()) || !dvc_mngr->mark_for_deletion(dvcs[id].firmware_code)) {
+            return false;
+        }
+
+        conf->device = (id > 0) ? (id - 1) : 0;
+        conf->serialize();
+
+        return true;
+    }
+
     void launcher::rescan_devices() {
         sys->rescan_devices(drive_z);
     }

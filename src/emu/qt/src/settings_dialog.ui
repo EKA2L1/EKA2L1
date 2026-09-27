@@ -844,6 +844,19 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</string>
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QPushButton" name="system_device_current_delete_btn">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Delete</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
           <item row="1" column="0">

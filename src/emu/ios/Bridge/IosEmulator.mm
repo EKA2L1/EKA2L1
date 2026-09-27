@@ -1723,22 +1723,13 @@ namespace eka2l1::ios {
     // scoped lock above held.
     const bool removed = dvc->delete_device(firmcode);
 
-    // Drop everything on disk that belongs to this device alone: its ROM filesystem
-    // and image, plus the folders the central repository and the message store keep
-    // per device on the shared C, D and E drives. Leaving the latter behind is what
-    // makes "delete the device and install it again" fail to repair anything.
-    const std::string firmcode_low = eka2l1::common::lowercase_string(firmcode);
-    const std::string storage = _state->conf.storage;
-
-    for (const std::string &per_device : eka2l1::per_device_storage_paths(firmcode)) {
-        eka2l1::common::delete_folder(eka2l1::add_path(storage, per_device));
-    }
+    eka2l1::delete_device_storage(_state->conf.storage, firmcode);
 
     // The debinarized-SVG icon cache is keyed by firmware code as well (the same app
     // UID ships different art per device), so it would otherwise feed stale icons to
     // a reinstalled device.
     if (!_state->caches_root.empty()) {
-        eka2l1::common::delete_folder(eka2l1::add_path(_state->caches_root, "icons/" + firmcode_low + "/"));
+        eka2l1::common::delete_folder(eka2l1::add_path(_state->caches_root, "icons/" + eka2l1::common::lowercase_string(firmcode) + "/"));
     }
 
     // Keep conf.device in step with device_manager's adjusted current index so
