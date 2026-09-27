@@ -57,6 +57,7 @@
 #include <services/posix/posix.h>
 #include <services/redir/redir.h>
 #include <services/remcon/remcon.h>
+#include <services/lbs/lbs.h>
 #include <services/sensor/sensor.h>
 #include <services/memorymanager/memorymanager.h>
 #include <services/linnea/linnea.h>
@@ -310,6 +311,11 @@ namespace eka2l1 {
             CREATE_SERVER(sys, msv_server);
 
             CREATE_SERVER(sys, sensor_server);
+
+            if (!sys->get_kernel_system()->is_eka1()) {
+                CREATE_SERVER(sys, lbs_server);
+            }
+
             CREATE_SERVER(sys, connmonitor_server);
             CREATE_SERVER(sys, nifman_server);
             CREATE_SERVER(sys, drm_notifier_server);
