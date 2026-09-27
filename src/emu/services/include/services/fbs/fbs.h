@@ -295,7 +295,7 @@ namespace eka2l1 {
         fbsbitmap *final_clean();
 
         std::uint8_t *original_pointer(fbs_server *serv) {
-            return bitmap_->data_pointer(serv) - bitmap_->byte_width_ * reserved_height_each_side_;
+            return bitmap_->data_block_pointer(serv) - bitmap_->byte_width_ * reserved_height_each_side_;
         }
     };
 
@@ -364,6 +364,9 @@ namespace eka2l1 {
 
         eka2l1::ptr<void> bmp_font_vtab;
         codeseg_ptr fntstr_seg;
+
+        // Bytes the client library expects between a large bitmap's data offset and its pixels.
+        std::uint32_t bitmap_data_header_size_ = 0;
 
         std::u16string default_system_font;
 
@@ -566,6 +569,17 @@ namespace eka2l1 {
          * \returns  True on success.
          */
         bool free_large_data(const void *ptr);
+
+        /**
+         * \brief    Allocate pixel storage for a bitmap in the large chunk.
+         *
+         * Reserves bitmap_data_header_size() bytes in front of the returned pointer.
+         */
+        void *allocate_bitmap_pixels(const std::size_t s);
+
+        std::uint32_t bitmap_data_header_size() const {
+            return bitmap_data_header_size_;
+        }
 
         /*! \brief Use to Allocate structure from server side.
          *

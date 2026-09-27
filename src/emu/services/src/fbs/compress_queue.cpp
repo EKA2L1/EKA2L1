@@ -166,7 +166,7 @@ namespace eka2l1 {
         const bool is_large = serv_->is_large_bitmap(static_cast<std::uint32_t>(estimated_size));
 
         if (is_large) {
-            new_data = reinterpret_cast<std::uint8_t *>(serv_->allocate_large_data(estimated_size));
+            new_data = reinterpret_cast<std::uint8_t *>(serv_->allocate_bitmap_pixels(estimated_size));
         } else {
             new_data = reinterpret_cast<std::uint8_t *>(serv_->allocate_general_data_impl(estimated_size));
         }
@@ -178,7 +178,7 @@ namespace eka2l1 {
 
             // Cleanup
             if (is_large)
-                serv_->free_large_data(new_data);
+                serv_->free_large_data(new_data - serv_->bitmap_data_header_size());
             else
                 serv_->free_general_data_impl(new_data);
 
@@ -206,7 +206,8 @@ namespace eka2l1 {
         clean_bitmap->bitmap_->compressed_in_ram_ = true;
 
         if (is_large) {
-            clean_bitmap->bitmap_->data_offset_ = static_cast<int>(new_data - serv_->get_large_chunk_base());
+            clean_bitmap->bitmap_->data_offset_ = static_cast<int>(new_data - serv_->get_large_chunk_base()
+                - serv_->bitmap_data_header_size());
             clean_bitmap->bitmap_->offset_from_me_ = false;
         } else {
             clean_bitmap->bitmap_->data_offset_ = static_cast<int>(new_data - reinterpret_cast<std::uint8_t *>(clean_bitmap->bitmap_));

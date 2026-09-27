@@ -41,6 +41,8 @@
 
 #include <config/config.h>
 
+#include <cstring>
+
 namespace eka2l1 {
     namespace epoc {
         bool does_client_use_pointer_instead_of_offset(fbscli *cli) {
@@ -391,6 +393,10 @@ namespace eka2l1 {
         base_shared_chunk = reinterpret_cast<std::uint8_t *>(shared_chunk->host_base());
         base_large_chunk = reinterpret_cast<std::uint8_t *>(large_chunk->host_base());
 
+        // Belle fbscli keeps an 8-byte header (touch count, volatile flag) in front of plain large
+        // bitmap pixels, because clients can no longer write the read-only shared heap.
+        bitmap_data_header_size_ = (kern->get_epoc_version() >= epocver::epoc10) ? 8 : 0;
+
         shared_chunk_allocator = std::make_unique<epoc::chunk_allocator>(shared_chunk);
         large_chunk_allocator = std::make_unique<epoc::chunk_allocator>(large_chunk);
 
@@ -514,6 +520,16 @@ namespace eka2l1 {
 
         const std::lock_guard<std::recursive_mutex> guard(allocator_lock_);
         return large_chunk_allocator->freep(ptr);
+    }
+
+    void *fbs_server::allocate_bitmap_pixels(const std::size_t s) {
+        std::uint8_t *block = reinterpret_cast<std::uint8_t *>(allocate_large_data(s + bitmap_data_header_size_));
+        if (!block) {
+            return nullptr;
+        }
+
+        std::memset(block, 0, bitmap_data_header_size_);
+        return block + bitmap_data_header_size_;
     }
 
     fbs_server::~fbs_server() {
