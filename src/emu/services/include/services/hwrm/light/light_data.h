@@ -47,6 +47,7 @@ namespace eka2l1 {
         private:
             std::array<target_info, MAXIMUM_LIGHT> infos_; ///< Light brief info array.
             property_ptr infos_prop_; ///< Pointer to the property
+            bool packed_status_ = false; ///< Status published as one integer, 4 bits per target.
 
             /**
              * \brief   Initialise internal light resource components.
@@ -60,6 +61,7 @@ namespace eka2l1 {
              * \internal
              */
             bool initialise_components(kernel_system *kern);
+            bool publish_infos();
 
         public:
             explicit resource_data(kernel_system *kern);
