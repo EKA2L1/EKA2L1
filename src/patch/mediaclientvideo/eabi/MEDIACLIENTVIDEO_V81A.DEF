@@ -1,0 +1,53 @@
+EXPORTS
+	Volume__C19CVideoPlayerUtility @ 1 NONAME R3UNUSED ; CVideoPlayerUtility::Volume(void) const
+	AudioEnabledL__C19CVideoPlayerUtility @ 2 NONAME R3UNUSED ; CVideoPlayerUtility::AudioEnabledL(void) const
+	AudioTypeL__C19CVideoPlayerUtility @ 3 NONAME R3UNUSED ; CVideoPlayerUtility::AudioTypeL(void) const
+	Balance__C19CVideoPlayerUtility @ 4 NONAME R3UNUSED ; CVideoPlayerUtility::Balance(void) const
+	Close__19CVideoPlayerUtility @ 5 NONAME R3UNUSED ; CVideoPlayerUtility::Close(void)
+	ControllerImplementationInformationL__19CVideoPlayerUtility @ 6 NONAME R3UNUSED ; CVideoPlayerUtility::ControllerImplementationInformationL(void)
+	CustomCommandAsync__19CVideoPlayerUtilityRCt8TPckgBuf1Z22TMMFMessageDestinationiRC6TDesC8T3R14TRequestStatus @ 7 NONAME ; CVideoPlayerUtility::CustomCommandAsync(TPckgBuf<TMMFMessageDestination> const &, int, TDesC8 const &, TDesC8 const &, TRequestStatus &)
+	CustomCommandAsync__19CVideoPlayerUtilityRCt8TPckgBuf1Z22TMMFMessageDestinationiRC6TDesC8T3R5TDes8R14TRequestStatus @ 8 NONAME ; CVideoPlayerUtility::CustomCommandAsync(TPckgBuf<TMMFMessageDestination> const &, int, TDesC8 const &, TDesC8 const &, TDes8 &, TRequestStatus &)
+	CustomCommandSync__19CVideoPlayerUtilityRCt8TPckgBuf1Z22TMMFMessageDestinationiRC6TDesC8T3 @ 9 NONAME ; CVideoPlayerUtility::CustomCommandSync(TPckgBuf<TMMFMessageDestination> const &, int, TDesC8 const &, TDesC8 const &)
+	CustomCommandSync__19CVideoPlayerUtilityRCt8TPckgBuf1Z22TMMFMessageDestinationiRC6TDesC8T3R5TDes8 @ 10 NONAME ; CVideoPlayerUtility::CustomCommandSync(TPckgBuf<TMMFMessageDestination> const &, int, TDesC8 const &, TDesC8 const &, TDes8 &)
+	DurationL__C19CVideoPlayerUtility @ 11 NONAME R3UNUSED ; CVideoPlayerUtility::DurationL(void) const
+	E32Dll__F10TDllReason @ 12 NONAME R3UNUSED ; E32Dll(TDllReason)
+	GetCropRegionL__C19CVideoPlayerUtilityR5TRect @ 13 NONAME R3UNUSED ; CVideoPlayerUtility::GetCropRegionL(TRect &) const
+	GetFrameL__19CVideoPlayerUtility12TDisplayMode @ 14 NONAME R3UNUSED ; CVideoPlayerUtility::GetFrameL(TDisplayMode)
+	GetFrameL__19CVideoPlayerUtility12TDisplayModeQ213ContentAccess7TIntent @ 15 NONAME R3UNUSED ; CVideoPlayerUtility::GetFrameL(TDisplayMode, ContentAccess::TIntent)
+	GetScaleFactorL__C19CVideoPlayerUtilityRfT1Ri @ 16 NONAME ; CVideoPlayerUtility::GetScaleFactorL(float &, float &, int &) const
+	GetVideoLoadingProgressL__19CVideoPlayerUtilityRi @ 17 NONAME R3UNUSED ; CVideoPlayerUtility::GetVideoLoadingProgressL(int &)
+	MaxVolume__C19CVideoPlayerUtility @ 18 NONAME R3UNUSED ; CVideoPlayerUtility::MaxVolume(void) const
+	MetaDataEntryL__C19CVideoPlayerUtilityi @ 19 NONAME R3UNUSED ; CVideoPlayerUtility::MetaDataEntryL(int) const
+	NewL__19CVideoPlayerUtilityR27MVideoPlayerUtilityObserveri22TMdaPriorityPreferenceR10RWsSessionR15CWsScreenDeviceR11RWindowBaseRC5TRectT7 @ 20 NONAME ; CVideoPlayerUtility::NewL(MVideoPlayerUtilityObserver &, int, TMdaPriorityPreference, RWsSession &, CWsScreenDevice &, RWindowBase &, TRect const &, TRect const &)
+	NumberOfMetaDataEntriesL__C19CVideoPlayerUtility @ 21 NONAME R3UNUSED ; CVideoPlayerUtility::NumberOfMetaDataEntriesL(void) const
+	OpenDesL__19CVideoPlayerUtilityRC6TDesC8G4TUid @ 22 NONAME R3UNUSED ; CVideoPlayerUtility::OpenDesL(TDesC8 const &, TUid)
+	OpenFileL__19CVideoPlayerUtilityRC5RFileG4TUid @ 23 NONAME R3UNUSED ; CVideoPlayerUtility::OpenFileL(RFile const &, TUid)
+	OpenFileL__19CVideoPlayerUtilityRC7TDesC16G4TUid @ 24 NONAME R3UNUSED ; CVideoPlayerUtility::OpenFileL(TDesC16 const &, TUid)
+	OpenUrlL__19CVideoPlayerUtilityRC7TDesC16iRC6TDesC8G4TUid @ 25 NONAME ; CVideoPlayerUtility::OpenUrlL(TDesC16 const &, int, TDesC8 const &, TUid)
+	PauseL__19CVideoPlayerUtility @ 26 NONAME R3UNUSED ; CVideoPlayerUtility::PauseL(void)
+	Play__19CVideoPlayerUtility @ 27 NONAME R3UNUSED ; CVideoPlayerUtility::Play(void)
+	Play__19CVideoPlayerUtilityRC25TTimeIntervalMicroSecondsT1 @ 28 NONAME R3UNUSED ; CVideoPlayerUtility::Play(TTimeIntervalMicroSeconds const &, TTimeIntervalMicroSeconds const &)
+	PositionL__C19CVideoPlayerUtility @ 29 NONAME R3UNUSED ; CVideoPlayerUtility::PositionL(void) const
+	Prepare__19CVideoPlayerUtility @ 30 NONAME R3UNUSED ; CVideoPlayerUtility::Prepare(void)
+	PriorityL__C19CVideoPlayerUtilityRiR22TMdaPriorityPreference @ 31 NONAME R3UNUSED ; CVideoPlayerUtility::PriorityL(int &, TMdaPriorityPreference &) const
+	RefreshFrameL__19CVideoPlayerUtility @ 32 NONAME R3UNUSED ; CVideoPlayerUtility::RefreshFrameL(void)
+	RegisterForVideoLoadingNotification__19CVideoPlayerUtilityR21MVideoLoadingObserver @ 33 NONAME R3UNUSED ; CVideoPlayerUtility::RegisterForVideoLoadingNotification(MVideoLoadingObserver &)
+	Reserved1__Fv @ 34 NONAME R3UNUSED ; Reserved1(void)
+	Reserved2__Fv @ 35 NONAME R3UNUSED ; Reserved2(void)
+	RotationL__C19CVideoPlayerUtility @ 36 NONAME R3UNUSED ; CVideoPlayerUtility::RotationL(void) const
+	SetBalanceL__19CVideoPlayerUtilityi @ 37 NONAME R3UNUSED ; CVideoPlayerUtility::SetBalanceL(int)
+	SetCropRegionL__19CVideoPlayerUtilityRC5TRect @ 38 NONAME R3UNUSED ; CVideoPlayerUtility::SetCropRegionL(TRect const &)
+	SetDisplayWindowL__19CVideoPlayerUtilityR10RWsSessionR15CWsScreenDeviceR11RWindowBaseRC5TRectT4 @ 39 NONAME ; CVideoPlayerUtility::SetDisplayWindowL(RWsSession &, CWsScreenDevice &, RWindowBase &, TRect const &, TRect const &)
+	SetPositionL__19CVideoPlayerUtilityRC25TTimeIntervalMicroSeconds @ 40 NONAME R3UNUSED ; CVideoPlayerUtility::SetPositionL(TTimeIntervalMicroSeconds const &)
+	SetPriorityL__19CVideoPlayerUtilityi22TMdaPriorityPreference @ 41 NONAME R3UNUSED ; CVideoPlayerUtility::SetPriorityL(int, TMdaPriorityPreference)
+	SetRotationL__19CVideoPlayerUtility14TVideoRotation @ 42 NONAME R3UNUSED ; CVideoPlayerUtility::SetRotationL(TVideoRotation)
+	SetScaleFactorL__19CVideoPlayerUtilityffi @ 43 NONAME ; CVideoPlayerUtility::SetScaleFactorL(float, float, int)
+	SetVideoFrameRateL__19CVideoPlayerUtilityf @ 44 NONAME ; CVideoPlayerUtility::SetVideoFrameRateL(float)
+	SetVolumeL__19CVideoPlayerUtilityi @ 45 NONAME R3UNUSED ; CVideoPlayerUtility::SetVolumeL(int)
+	Stop__19CVideoPlayerUtility @ 46 NONAME R3UNUSED ; CVideoPlayerUtility::Stop(void)
+	VideoBitRateL__C19CVideoPlayerUtility @ 47 NONAME R3UNUSED ; CVideoPlayerUtility::VideoBitRateL(void) const
+	VideoFormatMimeType__C19CVideoPlayerUtility @ 48 NONAME R3UNUSED ; CVideoPlayerUtility::VideoFormatMimeType(void) const
+	VideoFrameRateL__C19CVideoPlayerUtility @ 49 NONAME R3UNUSED ; CVideoPlayerUtility::VideoFrameRateL(void) const
+	VideoFrameSizeL__C19CVideoPlayerUtilityR5TSize @ 50 NONAME R3UNUSED ; CVideoPlayerUtility::VideoFrameSizeL(TSize &) const
+	AudioBitRateL__C19CVideoPlayerUtility @ 51 NONAME R3UNUSED ; CVideoPlayerUtility::AudioBitRateL(void) const
+
