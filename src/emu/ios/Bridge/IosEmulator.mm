@@ -1388,6 +1388,22 @@ namespace eka2l1::ios {
     return static_cast<NSInteger>(dvc->get_current_index());
 }
 
+- (NSString *)currentDeviceDriveEPath {
+    if (!_state || !_state->mounted || !_state->symsys) {
+        return nil;
+    }
+    auto *dvc = _state->symsys->get_device_manager();
+    if (!dvc) {
+        return nil;
+    }
+    std::lock_guard<std::mutex> dvc_lock(dvc->lock);
+    const std::string path = _state->symsys->get_device_drive_path(drive_e);
+    if (path.empty()) {
+        return nil;
+    }
+    return [NSString stringWithUTF8String:path.c_str()];
+}
+
 // Shared body of the two install entry points below. `installer` is handed the
 // device manager plus the two storage folders every installer writes into, and
 // does the format-specific work; everything around it (freezing the emulator,
@@ -1473,6 +1489,7 @@ namespace eka2l1::ios {
 
 - (EKA2L1InstallResult)installDeviceWithRomPath:(NSString *)romPath
                                        rpkgPath:(NSString *)rpkgPath
+                                  isolateDrives:(BOOL)isolateDrives
                                        progress:(void (^)(double))progress
                                     cancelCheck:(BOOL (^)(void))cancelCheck {
     if (![NSFileManager.defaultManager fileExistsAtPath:romPath]) {
@@ -1486,11 +1503,12 @@ namespace eka2l1::ios {
                                      const std::string &root_z_path, progress_changed_callback progress_cb,
                                      cancel_requested_callback cancel_cb) {
         return eka2l1::loader::install_rom_with_optional_rpkg(dvc, rom_std, rpkg_std, rom_resident_path,
-            root_z_path, progress_cb, cancel_cb);
+            root_z_path, isolateDrives == YES, progress_cb, cancel_cb);
     } progress:progress cancelCheck:cancelCheck];
 }
 
 - (EKA2L1InstallResult)installDeviceWithArchivePath:(NSString *)archivePath
+                                      isolateDrives:(BOOL)isolateDrives
                                            progress:(void (^)(double))progress
                                         cancelCheck:(BOOL (^)(void))cancelCheck {
     if (![NSFileManager.defaultManager fileExistsAtPath:archivePath]) {
@@ -1502,8 +1520,8 @@ namespace eka2l1::ios {
     return [self runDeviceInstall:^(eka2l1::device_manager *dvc, const std::string &rom_resident_path,
                                      const std::string &root_z_path, progress_changed_callback progress_cb,
                                      cancel_requested_callback cancel_cb) {
-        return eka2l1::loader::install_archive(dvc, archive_std, rom_resident_path, root_z_path, progress_cb,
-            cancel_cb);
+        return eka2l1::loader::install_archive(dvc, archive_std, rom_resident_path, root_z_path,
+            isolateDrives == YES, progress_cb, cancel_cb);
     } progress:progress cancelCheck:cancelCheck];
 }
 
@@ -1606,8 +1624,8 @@ namespace eka2l1::ios {
         eka2l1::ios::mark_boot_attempt(_state.get(), firmware_code);
     }
 
-    sys->mount(drive_c, drive_media::physical, eka2l1::add_path(storage, "/drives/c/"), io_attrib_internal);
-    sys->mount(drive_d, drive_media::physical, eka2l1::add_path(storage, "/drives/d/"), io_attrib_internal);
+    sys->mount_device_drive(drive_c);
+    sys->mount_device_drive(drive_d);
     // Guest relaunches reboot the same device; retain its card, attributes and CID.
     if (!card_path.empty() && card_firmware == firmware_code
         && eka2l1::common::is_dir(card_path)
@@ -1616,7 +1634,7 @@ namespace eka2l1::ios {
         eka2l1::ios::set_mounted_card(_state.get(), card_path, card_attrib);
         _state->conf.current_mmc_id = card_mmc_id;
     } else {
-        sys->mount(drive_e, drive_media::physical, eka2l1::add_path(storage, "/drives/e/"), io_attrib_removeable);
+        sys->mount_device_drive(drive_e);
     }
     sys->mount(drive_z, drive_media::rom, eka2l1::add_path(storage, "/drives/z/"),
         io_attrib_internal | io_attrib_write_protected);
@@ -2171,8 +2189,7 @@ namespace eka2l1::ios {
     if (report.result != EKA2L1MountResultSuccess) {
         // A failed replacement restores the emulator's own E storage.
         eka2l1::ios::set_mounted_card(_state.get(), {}, 0);
-        io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable,
-            eka2l1::common::utf8_to_ucs2(eka2l1::add_path(_state->conf.storage, "/drives/e/")));
+        _state->symsys->mount_device_drive(drive_e);
     }
 
     // Cards without a CID and failed replacements use the configured default.
@@ -2201,10 +2218,7 @@ namespace eka2l1::ios {
     const bool was_mounted = _state->mounted;
     auto loop_lock = eka2l1::ios::pause_loop_and_lock(_state.get());
 
-    eka2l1::io_system *io = _state->symsys->get_io_system();
-    io->unmount(drive_e);
-    io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable,
-        eka2l1::common::utf8_to_ucs2(eka2l1::add_path(_state->conf.storage, "/drives/e/")));
+    _state->symsys->mount_device_drive(drive_e);
 
     eka2l1::ios::set_mounted_card(_state.get(), {}, 0);
     _state->conf.current_mmc_id = _state->conf.mmc_id;

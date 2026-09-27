@@ -88,7 +88,7 @@ namespace eka2l1::android {
         void set_device_name(std::uint32_t id, const char *name);
         void rescan_devices();
         std::uint32_t get_current_device();
-        device_installation_error install_device(std::string &rpkg_path, std::string &rom_path, bool install_rpkg);
+        device_installation_error install_device(std::string &rpkg_path, std::string &rom_path, bool install_rpkg, bool isolate_drives);
         bool does_rom_need_rpkg(const std::string &rom_path);
         std::vector<std::string> get_packages();
         void uninstall_package(std::uint32_t uid, std::int32_t ext_index);

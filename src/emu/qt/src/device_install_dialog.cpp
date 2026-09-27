@@ -131,12 +131,13 @@ int device_install_dialog::on_firmware_variant_selects(const std::vector<std::st
 
 void device_install_dialog::on_install_triggered() {
     ui->installation_choose_widget->setVisible(false);
+    ui->isolate_drives_checkbox->setVisible(false);
     ui->install_progress_bar->setVisible(true);
     ui->confirmation_install_btn->setDisabled(true);
 
-    QFuture<eka2l1::device_installation_error> install_future = QtConcurrent::run([this]() {
-        const std::string root_c_path = eka2l1::add_path(conf_.storage, "drives/c/");
-        const std::string root_e_path = eka2l1::add_path(conf_.storage, "drives/e/");
+    const bool isolate_drives = ui->isolate_drives_checkbox->isChecked();
+
+    QFuture<eka2l1::device_installation_error> install_future = QtConcurrent::run([this, isolate_drives]() {
         const std::string root_z_path = eka2l1::add_path(conf_.storage, "drives/z/");
         const std::string rom_resident_path = eka2l1::add_path(conf_.storage, "roms/");
 
@@ -160,15 +161,15 @@ void device_install_dialog::on_install_triggered() {
 
         if (ui->rom_browse_widget->isVisible()) {
             if (ui->rpkg_browse_widget->isVisible()) {
-                error = eka2l1::loader::install_rpkg(device_mngr_, ui->rpkg_path_line_edit->text().toStdString(), root_z_path, firmware_code, progress_update_cb_func, cancel_cb_func);
+                error = eka2l1::loader::install_rpkg(device_mngr_, ui->rpkg_path_line_edit->text().toStdString(), root_z_path, firmware_code, isolate_drives, progress_update_cb_func, cancel_cb_func);
                 need_copy_rom = true;
             } else {
-                error = eka2l1::loader::install_rom(device_mngr_, ui->rom_path_line_edit->text().toStdString(), rom_resident_path, root_z_path, progress_update_cb_func, cancel_cb_func);
+                error = eka2l1::loader::install_rom(device_mngr_, ui->rom_path_line_edit->text().toStdString(), rom_resident_path, root_z_path, isolate_drives, progress_update_cb_func, cancel_cb_func);
             }
         }
 
         if (ui->vpl_browse_widget->isVisible()) {
-            error = eka2l1::install_firmware(device_mngr_, ui->vpl_path_line_edit->text().toStdString(), root_c_path, root_e_path, root_z_path, rom_resident_path, select_variant_cb_func, progress_update_cb_func, cancel_cb_func);
+            error = eka2l1::install_firmware(device_mngr_, ui->vpl_path_line_edit->text().toStdString(), conf_.storage, rom_resident_path, isolate_drives, select_variant_cb_func, progress_update_cb_func, cancel_cb_func);
         }
 
         if (error != eka2l1::device_installation_none) {

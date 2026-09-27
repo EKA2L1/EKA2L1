@@ -161,6 +161,14 @@
 
         </LinearLayout>
 
+        <CheckBox
+            android:id="@+id/cb_isolate_drives"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:checked="true"
+            android:text="@string/isolate_drives" />
+
         <Button
             android:id="@+id/bt_device_install"
             android:layout_width="wrap_content"

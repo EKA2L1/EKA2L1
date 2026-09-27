@@ -283,9 +283,10 @@ public class Emulator {
         return items;
     }
 
-    public static Completable subscribeInstallDevice(String rpkgPath, String romPath, boolean installRPKG) {
+    public static Completable subscribeInstallDevice(String rpkgPath, String romPath, boolean installRPKG,
+                                                     boolean isolateDrives) {
         return Completable.create(emitter -> {
-            int installResult = installDevice(rpkgPath, romPath, installRPKG);
+            int installResult = installDevice(rpkgPath, romPath, installRPKG, isolateDrives);
 
             if (installResult == 0) {
                 emitter.onComplete();
@@ -763,7 +764,7 @@ public class Emulator {
 
     public static native int getCurrentDevice();
 
-    public static native int installDevice(String rpkgPath, String romPath, boolean installRPKG);
+    public static native int installDevice(String rpkgPath, String romPath, boolean installRPKG, boolean isolateDrives);
 
     public static native boolean doesRomNeedRPKG(String romPath);
 

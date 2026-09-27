@@ -45,9 +45,10 @@ namespace eka2l1 {
          * @param path                    Path to the archive.
          * @param rom_resident_path       The emulator's `roms/` folder.
          * @param drives_z_resident_path  The emulator's `drives/z/` folder.
+         * @param isolate_drives          Give the device drives C, D and E of its own.
          */
         device_installation_error install_archive(device_manager *dvc, const std::string &path,
             const std::string &rom_resident_path, const std::string &drives_z_resident_path,
-            progress_changed_callback progress_cb, cancel_requested_callback cancel_cb);
+            const bool isolate_drives, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb);
     }
 }

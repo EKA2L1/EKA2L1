@@ -34,6 +34,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
@@ -73,6 +74,7 @@ public class DeviceListFragment extends Fragment {
     private TextView tvROM;
     private TextView tvVPL;
     private TextView tvRPKGNote;
+    private CheckBox cbIsolateDrives;
 
     private boolean firmwareSet, rpkgSet, romSet, needRpkg;
     private ArrayAdapter<String> deviceAdapter;
@@ -212,6 +214,7 @@ public class DeviceListFragment extends Fragment {
         } else {
             btFirmware.setOnClickListener(v -> openVplFolderLauncher.launch(null));
         }
+        cbIsolateDrives = view.findViewById(R.id.cb_isolate_drives);
         Button btInstall = view.findViewById(R.id.bt_device_install);
         btInstall.setOnClickListener(v -> installDevice());
     }
@@ -298,13 +301,14 @@ public class DeviceListFragment extends Fragment {
         dialog.setMessage(getText(R.string.processing));
         dialog.show();
         Completable completable;
+        boolean isolateDrives = cbIsolateDrives.isChecked();
         if (mode == INSTALL_MODE.DEVICE_DUMP) {
             String rpkg = tvRPKG.getText().toString();
             String rom = tvROM.getText().toString();
-            completable = Emulator.subscribeInstallDevice(rpkg, rom, true);
+            completable = Emulator.subscribeInstallDevice(rpkg, rom, true, isolateDrives);
         } else {
             String vplPath = tvVPL.getText().toString();
-            completable = Emulator.subscribeInstallDevice("", vplPath, false);
+            completable = Emulator.subscribeInstallDevice("", vplPath, false, isolateDrives);
         }
         completable.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

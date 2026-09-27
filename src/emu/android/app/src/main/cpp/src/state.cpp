@@ -140,9 +140,7 @@ namespace eka2l1::android {
                 symsys->set_device(0);
             }
 
-            symsys->mount(drive_c, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/c/"), io_attrib_internal);
-            symsys->mount(drive_d, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/d/"), io_attrib_internal);
-            symsys->mount(drive_e, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/e/"), io_attrib_removeable);
+            symsys->mount_device_drives();
 
             on_system_reset(symsys.get());
         }

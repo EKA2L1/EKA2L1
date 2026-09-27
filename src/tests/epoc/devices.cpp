@@ -21,6 +21,7 @@
 
 #include <common/fileutils.h>
 #include <common/path.h>
+#include <config/config.h>
 #include <system/devices.h>
 
 #include <algorithm>
@@ -35,8 +36,9 @@ static bool lists_path(const std::vector<std::string> &paths, const std::string 
 TEST_CASE("per_device_paths_cover_rom_and_shared_drive_state", "devices") {
     const std::vector<std::string> paths = per_device_storage_paths("rm-320");
 
-    // The device's own drive Z and ROM image.
+    // The device's own drive Z, ROM image and isolated drives.
     REQUIRE(lists_path(paths, "drives/z/rm-320/"));
+    REQUIRE(lists_path(paths, "drives/rm-320/"));
     REQUIRE(lists_path(paths, "roms/rm-320/"));
 
     // What the servers leave on the drives every device shares. Drive C is where
@@ -48,6 +50,14 @@ TEST_CASE("per_device_paths_cover_rom_and_shared_drive_state", "devices") {
     REQUIRE(lists_path(paths, "drives/c/private/1000484b/mail2/rm-320/"));
     REQUIRE(lists_path(paths, "drives/c/system/mail/rm-320/"));
     REQUIRE(lists_path(paths, "drives/c/system/mtm/rm-320/"));
+}
+
+TEST_CASE("device_drive_folder_follows_isolation", "devices") {
+    REQUIRE(device_drive_folder("RM-707", false, drive_c) == "drives/c/");
+    REQUIRE(device_drive_folder("RM-707", false, drive_e) == "drives/e/");
+    REQUIRE(device_drive_folder("RM-707", true, drive_c) == "drives/rm-707/c/");
+    REQUIRE(device_drive_folder("RM-707", true, drive_d) == "drives/rm-707/d/");
+    REQUIRE(device_drive_folder("RM-707", true, drive_e) == "drives/rm-707/e/");
 }
 
 TEST_CASE("per_device_paths_lowercase_the_firmware_code", "devices") {
@@ -144,4 +154,61 @@ TEST_CASE("deleting_a_device_that_wrote_nothing_is_fine", "devices") {
     env.delete_device_state("rm-320");
 
     REQUIRE_FALSE(env.has("drives/z/rm-320/sys/bin/euser.dll"));
+}
+
+TEST_CASE("deleting_an_isolated_device_takes_its_drives", "devices") {
+    storage_test_env env("delete_isolated_device");
+
+    env.write_file("drives/z/rm-707/sys/bin/euser.dll");
+    env.write_file("drives/rm-707/c/private/10202be9/persists/101f876f.cre");
+    env.write_file("drives/rm-707/e/system/apps/mygame/mygame.exe");
+    env.write_file("drives/rm-409/e/system/apps/othergame/othergame.exe");
+    env.write_file("drives/e/system/apps/sharedgame/sharedgame.exe");
+
+    env.delete_device_state("rm-707");
+
+    REQUIRE_FALSE(env.has("drives/rm-707/c/private/10202be9/persists/101f876f.cre"));
+    REQUIRE_FALSE(env.has("drives/rm-707/e/system/apps/mygame/mygame.exe"));
+
+    REQUIRE(env.has("drives/rm-409/e/system/apps/othergame/othergame.exe"));
+    REQUIRE(env.has("drives/e/system/apps/sharedgame/sharedgame.exe"));
+}
+
+TEST_CASE("isolated_drives_persist_in_devices_yml", "devices") {
+    storage_test_env env("isolated_drives_yml");
+
+    config::state conf;
+    conf.storage = env.root;
+
+    {
+        device_manager manager(&conf);
+        REQUIRE(manager.add_new_device("RM-707", "X7-00", "Nokia", epocver::epoc10, 0, true) == add_device_none);
+        REQUIRE(manager.add_new_device("RM-409", "5320", "Nokia", epocver::epoc94, 0, false) == add_device_none);
+        manager.save_devices();
+    }
+
+    // The folder is how a rescan tells the device apart, so it exists from the start.
+    REQUIRE(common::is_dir(add_path(env.root, "drives/rm-707/")));
+    REQUIRE_FALSE(common::exists(add_path(env.root, "drives/rm-409/")));
+
+    device_manager reloaded(&conf);
+    REQUIRE(reloaded.total() == 2);
+    REQUIRE(reloaded.get("RM-707")->isolated_drives);
+    REQUIRE_FALSE(reloaded.get("RM-409")->isolated_drives);
+}
+
+TEST_CASE("devices_yml_without_isolation_key_is_shared", "devices") {
+    storage_test_env env("legacy_devices_yml");
+
+    {
+        std::ofstream stream(add_path(env.root, "devices.yml"), std::ios::binary | std::ios::trunc);
+        stream << "RM-409:\n  platver: epoc94\n  manufacturer: Nokia\n  firmcode: RM-409\n  model: \"5320\"\n  machine-uid: 536926810\n";
+    }
+
+    config::state conf;
+    conf.storage = env.root;
+
+    device_manager manager(&conf);
+    REQUIRE(manager.total() == 1);
+    REQUIRE_FALSE(manager.get("RM-409")->isolated_drives);
 }

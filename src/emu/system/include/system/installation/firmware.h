@@ -33,8 +33,13 @@ namespace eka2l1 {
 
     class device_manager;
 
+    /**
+     * @param storage_path    The emulator's data root. Drive Z goes to `drives/z/<firmware code>/`, and the
+     *                        firmware's drive C content to the device's drive C folder.
+     * @param isolate_drives  Give the device drives C, D and E of its own.
+     */
     device_installation_error install_firmware(device_manager *dvc, const std::string &vpl_path,
-        const std::string &drives_c_path, const std::string &drives_e_path, const std::string &drives_z_path,
-        const std::string &rom_resident_path, device_firmware_choose_variant_callback choose_callback, progress_changed_callback progress_callback,
+        const std::string &storage_path, const std::string &rom_resident_path, const bool isolate_drives,
+        device_firmware_choose_variant_callback choose_callback, progress_changed_callback progress_callback,
         cancel_requested_callback cancel_cb);
 }

@@ -97,6 +97,8 @@ namespace eka2l1 {
             static constexpr const char16_t *STUB_CACHED_PATH_FORMAT = u"{}:\\stubcached";
             const std::u16string stub_cached_path = fmt::format(STUB_CACHED_PATH_FORMAT, drive_to_char16(drive_z));
 
+            objects_.clear();
+
             std::unique_ptr<directory> registry_dir = sys->open_dir(get_virtual_registry_parent_folder(residing_), {}, io_attrib_include_dir);
             if (!registry_dir) {
                 LOG_INFO(PACKAGE, "Registry folder is unavailable!");

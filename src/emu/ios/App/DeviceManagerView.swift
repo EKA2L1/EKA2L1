@@ -18,6 +18,7 @@ struct DeviceManagerView: View {
     @State private var deviceName = ""
     @State private var showingRename = false
     @State private var renameFailed = false
+    @State private var deleteTarget: EKA2L1DeviceItem?
 
     var body: some View {
         List {
@@ -77,6 +78,17 @@ struct DeviceManagerView: View {
         } message: {
             Text("devices.renameFailed")
         }
+        .alert("devices.delete.title",
+               isPresented: Binding(get: { deleteTarget != nil }, set: { if !$0 { deleteTarget = nil } }),
+               presenting: deleteTarget) { device in
+            Button("common.cancel", role: .cancel) {}
+            Button("devices.delete", role: .destructive) {
+                guard let offset = store.devices.firstIndex(where: { $0.firmwareCode == device.firmwareCode }) else { return }
+                Task { await store.deleteDevices(at: IndexSet(integer: offset)) }
+            }
+        } message: { _ in
+            Text("devices.delete.message")
+        }
     }
 
     // Tapping a row boots that device. The plain button style keeps the row
@@ -104,12 +116,13 @@ struct DeviceManagerView: View {
         .buttonStyle(.plain)
         .disabled(store.busy)
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            Button(role: .destructive) {
-                guard let offset = store.devices.firstIndex(where: { $0.firmwareCode == device.firmwareCode }) else { return }
-                Task { await store.deleteDevices(at: IndexSet(integer: offset)) }
+            // Not role: .destructive, which removes the row before the alert is answered.
+            Button {
+                deleteTarget = device
             } label: {
                 Label("devices.delete", systemImage: "trash")
             }
+            .tint(.red)
             .disabled(store.busy)
             Button {
                 renameTarget = device
