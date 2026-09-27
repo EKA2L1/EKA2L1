@@ -1,7 +1,11 @@
 #ifndef MEDIACLIENTVIDEO_VIDEO_PLAYER_BODY_H
 #define MEDIACLIENTVIDEO_VIDEO_PLAYER_BODY_H
 
+#ifdef MCV_EKA1
+#include <videoplayer.h>
+#else
 #include "VideoPlayer1P2.h"
+#endif
 #include "dispatch.h"
 
 enum TVideoPlayerState {

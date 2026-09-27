@@ -2,6 +2,12 @@
 #include <dispatch.h>
 #include <Log.h>
 
+#ifndef EKA2
+EXPORT_C TInt E32Dll(TDllReason) {
+    return 0;
+}
+#endif
+
 CVideoPlayerFeedbackHandler::CVideoPlayerFeedbackHandler(MVideoPlayerUtilityObserver &aObserver)
     : iObserver(aObserver)
     , iCurrentState(EVideoPlayerStateIdle) {
@@ -424,6 +430,7 @@ EXPORT_C CVideoPlayerUtility* CVideoPlayerUtility::NewL(MVideoPlayerUtilityObser
     return self;
 }
 
+#ifndef MCV_EKA1
 EXPORT_C CVideoPlayerUtility2* CVideoPlayerUtility2::NewL(MVideoPlayerUtilityObserver& aObserver, TInt aPriority, TInt aPref) {
     CVideoPlayerUtility2 *self = new (ELeave) CVideoPlayerUtility2;
     CleanupStack::PushL(self);
@@ -434,21 +441,31 @@ EXPORT_C CVideoPlayerUtility2* CVideoPlayerUtility2::NewL(MVideoPlayerUtilityObs
     return self;
 }
 
+#endif
+
 EXPORT_C void CVideoPlayerUtility::OpenFileL(const TDesC& aFileName,TUid aControllerUid) {
     iBody->OpenFileL(aFileName);
 }
 
 EXPORT_C void CVideoPlayerUtility::OpenFileL(const RFile& aFileName, TUid aControllerUid) {
-    TBufC<512> nameFull;
-    TDes nameFullDesc = nameFull.Des();
-    aFileName.FullName(nameFullDesc);
-    
+#ifdef MCV_EKA1
+    // EKA1 RFile cannot report its full path.
+    LogOut(KMcvCat, _L("Video Player's open file through RFile is not supported on EKA1!"));
+    User::Leave(KErrNotSupported);
+#else
+    TFileName nameFull;
+    User::LeaveIfError(aFileName.FullName(nameFull));
+
     iBody->OpenFileL(nameFull);
+#endif
 }
 
+#ifndef MCV_EKA1
 EXPORT_C void CVideoPlayerUtility::OpenFileL(const TMMSource& aSource, TUid aControllerUid) {
     LogOut(KMcvCat, _L("Video Player's open file through MMSource is not yet implemented!"));
 }
+
+#endif
 
 EXPORT_C void CVideoPlayerUtility::OpenDesL(const TDesC8& aDescriptor,TUid aControllerUid) {
     iBody->OpenDesL(aDescriptor);
@@ -480,6 +497,7 @@ EXPORT_C void CVideoPlayerUtility::Play(const TTimeIntervalMicroSeconds& aStartP
 
 EXPORT_C TInt CVideoPlayerUtility::Stop() {
     iBody->Stop();
+    return KErrNone;
 }
 
 EXPORT_C void CVideoPlayerUtility::PauseL() {
@@ -651,6 +669,7 @@ EXPORT_C void CVideoPlayerUtility::CustomCommandAsync(const TMMFMessageDestinati
     User::RequestComplete(statusPtr, KErrNone);
 }
 
+#ifndef MCV_EKA1
 EXPORT_C MMMFDRMCustomCommand* CVideoPlayerUtility::GetDRMCustomCommand() {
     LogOut(KMcvCat, _L("Video Player's get drm custom command is not yet implemented!"));
     return NULL;
@@ -720,10 +739,13 @@ EXPORT_C void CVideoPlayerUtility::SetAutoScaleL(TAutoScaleType aScaleType, TInt
     LogOut(KMcvCat, _L("Video Player's set video scale is not yet implemented!"));    
 }
 
+#endif
+
 CVideoPlayerUtility::~CVideoPlayerUtility() {
     delete iBody;
 }
 
+#ifndef MCV_EKA1
 CVideoPlayerUtility2::~CVideoPlayerUtility2() {
     
 }
@@ -749,6 +771,8 @@ EXPORT_C void CVideoPlayerUtility2::SetVideoExtentL(const RWindow& aWindow, cons
 EXPORT_C void CVideoPlayerUtility2::SetWindowClipRectL(const RWindow& aWindow, const TRect& aWindowClipRect) {
     iBody->SetDisplayRectForWindowL(aWindow, aWindowClipRect);
 }
+
+#endif
 
 EXPORT_C void Reserved1() {
     
