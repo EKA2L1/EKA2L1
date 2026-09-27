@@ -863,6 +863,22 @@ namespace eka2l1::epoc::socket {
                     recv(ctx, true, true, false);
                     return;
 
+                case socket_so_send_to:
+                    send(ctx, true, true);
+                    return;
+
+                case socket_so_send_to_no_len:
+                    send(ctx, false, true);
+                    return;
+
+                case socket_so_recv_from:
+                    recv(ctx, true, false, true);
+                    return;
+
+                case socket_so_recv_from_no_len:
+                    recv(ctx, false, false, true);
+                    return;
+
                 case socket_so_ioctl:
                     ioctl(ctx);
                     return;
