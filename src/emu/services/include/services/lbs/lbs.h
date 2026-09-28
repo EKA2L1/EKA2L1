@@ -20,12 +20,15 @@
 
 #pragma once
 
+#include <drivers/location/location.h>
 #include <kernel/server.h>
 #include <services/framework.h>
 
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <mutex>
+#include <optional>
 
 namespace eka2l1 {
     class kernel_system;
@@ -43,17 +46,17 @@ namespace eka2l1 {
         lbs_update_options options_;
 
         std::unique_ptr<service::ipc_context> update_msg_;
-        bool update_times_out_ = false;
+        std::uint64_t update_deadline_ = 0;
 
         std::uint64_t last_update_time_ = 0;
         bool has_updated_ = false;
     };
 
     /**
-     * @brief Location server (PosServer, !PosServer from Symbian^3) exposing one GPS module that never gets a fix.
+     * @brief Location server (PosServer, !PosServer from Symbian^3) exposing the host location as one GPS module.
      *
-     * Position requests complete like a GPS receiver searching for satellites: partial updates
-     * carrying only a timestamp, or KErrTimedOut when the client does not accept them.
+     * Without a host fix, requests complete like a GPS receiver searching for satellites: partial
+     * updates carrying only a timestamp, or KErrTimedOut when the client does not accept them.
      */
     class lbs_server : public service::typical_server {
         kernel_system *kern_;
@@ -63,7 +66,15 @@ namespace eka2l1 {
         std::map<std::uint64_t, lbs_positioner *> positioners_;
         std::uint64_t positioner_id_counter_ = 0;
 
-        void complete_update(const std::uint64_t id);
+        std::unique_ptr<drivers::location_driver> location_;
+        bool location_started_ = false;
+
+        std::mutex fix_lock_;
+        std::optional<drivers::location_fix> fix_; ///< Received since the host updates last started.
+        std::optional<drivers::location_fix> last_fix_;
+
+        void schedule_check(lbs_positioner *positioner, std::uint64_t due);
+        void check_update(const std::uint64_t id);
 
     public:
         explicit lbs_server(eka2l1::system *sys);
@@ -74,6 +85,8 @@ namespace eka2l1 {
         std::unique_ptr<lbs_positioner> new_positioner();
         void close_positioner(lbs_positioner *positioner);
 
+        void start_location();
+        std::optional<drivers::location_fix> last_known_fix();
         void schedule_update(lbs_positioner *positioner);
         void cancel_update(lbs_positioner *positioner, const int code);
     };
@@ -102,6 +115,7 @@ namespace eka2l1 {
         void set_update_options(service::ipc_context *ctx);
         void get_update_options(service::ipc_context *ctx);
         void notify_position_update(service::ipc_context *ctx);
+        void get_last_known_position(service::ipc_context *ctx);
 
     public:
         explicit lbs_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);

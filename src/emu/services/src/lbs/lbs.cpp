@@ -22,6 +22,7 @@
 #include <services/context.h>
 
 #include <common/log.h>
+#include <drivers/location/location.h>
 #include <kernel/kernel.h>
 #include <kernel/timing.h>
 #include <system/epoc.h>
@@ -81,7 +82,7 @@ namespace eka2l1 {
         constexpr char16_t MODULE_NAME[] = u"EKA2L1 GPS";
 
         // A GPS receiver reports once per second whether it has a fix or not.
-        constexpr std::int64_t RECEIVER_EPOCH_US = 1000000;
+        constexpr std::uint64_t RECEIVER_EPOCH_US = 1000000;
 
         // Offsets into the published LBS data classes, checked against the S60 3.2 and
         // Belle lbs.dll accessors.
@@ -114,17 +115,30 @@ namespace eka2l1 {
         constexpr std::size_t POSITION_LATITUDE_OFFSET = 32;
         constexpr std::size_t POSITION_LONGITUDE_OFFSET = 40;
         constexpr std::size_t POSITION_ALTITUDE_OFFSET = 48;
+        constexpr std::size_t POSITION_HORIZONTAL_ACCURACY_OFFSET = 60;
+        constexpr std::size_t POSITION_VERTICAL_ACCURACY_OFFSET = 64;
         constexpr std::size_t POSITION_TIME_OFFSET = 88;
         constexpr std::size_t POSITION_INFO_SIZE = 112;
 
+        // TCourse follows TPosition in TPositionCourseInfo. Course and its accuracy were
+        // reserved bytes before Symbian^3, so writing them is harmless there.
+        constexpr std::size_t COURSE_SPEED_OFFSET = 112;
+        constexpr std::size_t COURSE_HEADING_OFFSET = 116;
+        constexpr std::size_t COURSE_SPEED_ACCURACY_OFFSET = 120;
+        constexpr std::size_t COURSE_HEADING_ACCURACY_OFFSET = 124;
+        constexpr std::size_t COURSE_COURSE_OFFSET = 128;
+        constexpr std::size_t COURSE_COURSE_ACCURACY_OFFSET = 132;
+        constexpr std::size_t COURSE_INFO_SIZE = 152;
+
         constexpr std::uint32_t POSITION_INFO_CLASS = 0x01;
         constexpr std::uint32_t POSITION_GENERIC_INFO_CLASS = 0x02;
+        constexpr std::uint32_t POSITION_COURSE_INFO_CLASS = 0x04;
         constexpr std::uint32_t POSITION_UPDATE_GENERAL = 0x01;
 
         constexpr std::size_t CLASS_FAMILY_COUNT = 7;
         constexpr std::uint32_t TECHNOLOGY_TERMINAL = 0x01;
         constexpr std::uint32_t DEVICE_INTERNAL = 0x01;
-        constexpr std::uint32_t CAPABILITY_HORIZONTAL_VERTICAL = 0x03;
+        constexpr std::uint32_t CAPABILITY_POSITION_AND_COURSE = 0x0F;
         constexpr std::uint32_t DEVICE_STATUS_READY = 6;
         constexpr std::uint32_t DATA_QUALITY_LOSS = 1;
 
@@ -153,6 +167,36 @@ namespace eka2l1 {
             return ctx->write_data_to_descriptor_argument(idx, buf.data(), static_cast<std::uint32_t>(buf.size()));
         }
 
+        // A null fix writes a partial update, which only guarantees the timestamp.
+        void write_position_info(std::vector<std::uint8_t> &info, const drivers::location_fix *fix, const std::uint64_t time) {
+            constexpr double NAN_DOUBLE = std::numeric_limits<double>::quiet_NaN();
+            constexpr float NAN_FLOAT = std::numeric_limits<float>::quiet_NaN();
+
+            put_value<std::uint32_t>(info, POSITION_INFO_MODULE_ID_OFFSET, MODULE_UID);
+            put_value<std::uint32_t>(info, POSITION_INFO_UPDATE_TYPE_OFFSET, POSITION_UPDATE_GENERAL);
+
+            const std::uint32_t class_type = get_value<std::uint32_t>(info, CLASS_TYPE_OFFSET);
+
+            if ((class_type & POSITION_INFO_CLASS) && (info.size() >= POSITION_INFO_SIZE)) {
+                put_value<double>(info, POSITION_LATITUDE_OFFSET, fix ? fix->latitude_ : NAN_DOUBLE);
+                put_value<double>(info, POSITION_LONGITUDE_OFFSET, fix ? fix->longitude_ : NAN_DOUBLE);
+                put_value<float>(info, POSITION_ALTITUDE_OFFSET, fix ? fix->altitude_ : NAN_FLOAT);
+                put_value<float>(info, POSITION_HORIZONTAL_ACCURACY_OFFSET, fix ? fix->horizontal_accuracy_ : NAN_FLOAT);
+                put_value<float>(info, POSITION_VERTICAL_ACCURACY_OFFSET, fix ? fix->vertical_accuracy_ : NAN_FLOAT);
+                put_value<std::uint64_t>(info, POSITION_TIME_OFFSET, time);
+            }
+
+            if ((class_type & POSITION_COURSE_INFO_CLASS) && (info.size() >= COURSE_INFO_SIZE)) {
+                // Symbian's heading is the direction of travel, which is what the host reports as course.
+                put_value<float>(info, COURSE_SPEED_OFFSET, fix ? fix->speed_ : NAN_FLOAT);
+                put_value<float>(info, COURSE_HEADING_OFFSET, fix ? fix->course_ : NAN_FLOAT);
+                put_value<float>(info, COURSE_SPEED_ACCURACY_OFFSET, fix ? fix->speed_accuracy_ : NAN_FLOAT);
+                put_value<float>(info, COURSE_HEADING_ACCURACY_OFFSET, fix ? fix->course_accuracy_ : NAN_FLOAT);
+                put_value<float>(info, COURSE_COURSE_OFFSET, fix ? fix->course_ : NAN_FLOAT);
+                put_value<float>(info, COURSE_COURSE_ACCURACY_OFFSET, fix ? fix->course_accuracy_ : NAN_FLOAT);
+            }
+        }
+
         bool is_our_module(service::ipc_context *ctx) {
             std::optional<std::uint32_t> module_id = ctx->get_argument_data_from_descriptor<std::uint32_t>(0);
             return module_id && (module_id.value() == MODULE_UID);
@@ -162,12 +206,13 @@ namespace eka2l1 {
     lbs_server::lbs_server(eka2l1::system *sys)
         : service::typical_server(sys, (sys->get_symbian_version_use() >= epocver::epoc95) ? "!PosServer" : "PosServer")
         , kern_(sys->get_kernel_system())
-        , timing_(sys->get_ntimer()) {
+        , timing_(sys->get_ntimer())
+        , location_(drivers::make_location_driver()) {
         update_evt_ = timing_->register_event("LbsPositionUpdate", [this](std::uint64_t userdata, int) {
             kern_->lock();
 
             if (!kern_->is_wiping()) {
-                complete_update(userdata);
+                check_update(userdata);
             }
 
             kern_->unlock();
@@ -175,6 +220,10 @@ namespace eka2l1 {
     }
 
     lbs_server::~lbs_server() {
+        if (location_) {
+            location_->stop();
+        }
+
         timing_->remove_event(update_evt_);
     }
 
@@ -194,35 +243,56 @@ namespace eka2l1 {
     void lbs_server::close_positioner(lbs_positioner *positioner) {
         timing_->unschedule_event(update_evt_, positioner->id_);
         positioners_.erase(positioner->id_);
+
+        if (positioners_.empty() && location_started_) {
+            location_->stop();
+            location_started_ = false;
+
+            const std::lock_guard<std::mutex> guard(fix_lock_);
+            fix_.reset();
+        }
+    }
+
+    void lbs_server::start_location() {
+        // Started on the first position request, so merely probing the server does not
+        // make the host ask for location permission.
+        if (!location_ || location_started_) {
+            return;
+        }
+
+        location_started_ = true;
+        location_->start([this](const drivers::location_fix &fix) {
+            const std::lock_guard<std::mutex> guard(fix_lock_);
+            fix_ = fix;
+            last_fix_ = fix;
+        });
+    }
+
+    std::optional<drivers::location_fix> lbs_server::last_known_fix() {
+        const std::lock_guard<std::mutex> guard(fix_lock_);
+        return last_fix_;
     }
 
     void lbs_server::schedule_update(lbs_positioner *positioner) {
         const lbs_update_options &options = positioner->options_;
-        const std::int64_t now = static_cast<std::int64_t>(timing_->microseconds());
+        const std::uint64_t now = timing_->microseconds();
 
-        std::int64_t start = now;
+        std::uint64_t start = now;
         if (positioner->has_updated_ && (options.interval_ > 0)) {
-            start = std::max(start, static_cast<std::int64_t>(positioner->last_update_time_) + options.interval_);
+            start = std::max(start, positioner->last_update_time_ + options.interval_);
         }
 
-        std::int64_t due = 0;
+        positioner->update_deadline_ = (options.timeout_ > 0) ? start + options.timeout_ : 0;
+        schedule_check(positioner, std::max(start, now + RECEIVER_EPOCH_US));
+    }
 
-        if (options.accept_partial_) {
-            due = std::max(start, now + RECEIVER_EPOCH_US);
-            positioner->update_times_out_ = (options.timeout_ > 0) && (now + options.timeout_ < due);
-
-            if (positioner->update_times_out_) {
-                due = now + options.timeout_;
-            }
-        } else if (options.timeout_ > 0) {
-            due = start + options.timeout_;
-            positioner->update_times_out_ = true;
-        } else {
-            // Without partial updates or a timeout the request waits for a fix that never comes.
-            return;
+    void lbs_server::schedule_check(lbs_positioner *positioner, std::uint64_t due) {
+        if (positioner->update_deadline_ != 0) {
+            due = std::min(due, positioner->update_deadline_);
         }
 
-        timing_->schedule_event(due - now, update_evt_, positioner->id_);
+        const std::uint64_t now = timing_->microseconds();
+        timing_->schedule_event((due > now) ? static_cast<std::int64_t>(due - now) : 0, update_evt_, positioner->id_);
     }
 
     void lbs_server::cancel_update(lbs_positioner *positioner, const int code) {
@@ -234,24 +304,48 @@ namespace eka2l1 {
         }
     }
 
-    void lbs_server::complete_update(const std::uint64_t id) {
+    void lbs_server::check_update(const std::uint64_t id) {
         auto positioner_ite = positioners_.find(id);
         if (positioner_ite == positioners_.end()) {
             return;
         }
 
         lbs_positioner *positioner = positioner_ite->second;
-        std::unique_ptr<service::ipc_context> msg = std::move(positioner->update_msg_);
-
-        positioner->last_update_time_ = timing_->microseconds();
-        positioner->has_updated_ = true;
-
-        if (!msg || !msg->msg || !kern_->is_thread_alive(msg->msg->own_thr)) {
+        if (!positioner->update_msg_) {
             return;
         }
 
-        if (positioner->update_times_out_) {
-            msg->complete(epoc::error_timed_out);
+        std::optional<drivers::location_fix> fix;
+        {
+            const std::lock_guard<std::mutex> guard(fix_lock_);
+            fix = fix_;
+        }
+
+        const std::uint64_t now = timing_->microseconds();
+        int result = epoc::error_none;
+
+        if (!fix) {
+            if ((positioner->update_deadline_ != 0) && (now >= positioner->update_deadline_)) {
+                result = epoc::error_timed_out;
+            } else if (positioner->options_.accept_partial_) {
+                result = POSITION_PARTIAL_UPDATE;
+            } else {
+                schedule_check(positioner, now + RECEIVER_EPOCH_US);
+                return;
+            }
+        }
+
+        std::unique_ptr<service::ipc_context> msg = std::move(positioner->update_msg_);
+
+        positioner->last_update_time_ = now;
+        positioner->has_updated_ = true;
+
+        if (!msg->msg || !kern_->is_thread_alive(msg->msg->own_thr)) {
+            return;
+        }
+
+        if (result == epoc::error_timed_out) {
+            msg->complete(result);
             return;
         }
 
@@ -261,19 +355,10 @@ namespace eka2l1 {
             return;
         }
 
-        put_value<std::uint32_t>(info, POSITION_INFO_MODULE_ID_OFFSET, MODULE_UID);
-        put_value<std::uint32_t>(info, POSITION_INFO_UPDATE_TYPE_OFFSET, POSITION_UPDATE_GENERAL);
-
-        if ((get_value<std::uint32_t>(info, CLASS_TYPE_OFFSET) & POSITION_INFO_CLASS) && (info.size() >= POSITION_INFO_SIZE)) {
-            // A partial update only guarantees the timestamp.
-            put_value<double>(info, POSITION_LATITUDE_OFFSET, std::numeric_limits<double>::quiet_NaN());
-            put_value<double>(info, POSITION_LONGITUDE_OFFSET, std::numeric_limits<double>::quiet_NaN());
-            put_value<float>(info, POSITION_ALTITUDE_OFFSET, std::numeric_limits<float>::quiet_NaN());
-            put_value<std::uint64_t>(info, POSITION_TIME_OFFSET, kern_->universal_time());
-        }
+        write_position_info(info, fix ? &fix.value() : nullptr, kern_->universal_time());
 
         write_descriptor(msg.get(), 0, info);
-        msg->complete(POSITION_PARTIAL_UPDATE);
+        msg->complete(result);
     }
 
     lbs_client_session::lbs_client_session(service::typical_server *serv, const kernel::uid ss_id,
@@ -389,9 +474,11 @@ namespace eka2l1 {
             break;
 
         case lbs_positioner_get_last_known_position:
+            get_last_known_position(ctx);
+            break;
+
         case lbs_positioner_get_last_known_position_area:
-            // Nothing has ever been fixed.
-            ctx->complete(epoc::error_unknown);
+            ctx->complete(epoc::error_not_supported);
             break;
 
         case lbs_positioner_notify_position_update:
@@ -467,12 +554,12 @@ namespace eka2l1 {
 
         put_value<std::uint32_t>(info, MODULE_INFO_TECHNOLOGY_OFFSET, TECHNOLOGY_TERMINAL);
         put_value<std::uint32_t>(info, MODULE_INFO_DEVICE_LOCATION_OFFSET, DEVICE_INTERNAL);
-        put_value<std::uint32_t>(info, MODULE_INFO_CAPABILITIES_OFFSET, CAPABILITY_HORIZONTAL_VERTICAL);
+        put_value<std::uint32_t>(info, MODULE_INFO_CAPABILITIES_OFFSET, CAPABILITY_POSITION_AND_COURSE);
 
-        // Every class family supports its standard class; position info also has the generic one.
+        // Every class family supports its standard class; position info also has generic and course.
         for (std::size_t i = 0; i < CLASS_FAMILY_COUNT; i++) {
             put_value<std::uint32_t>(info, MODULE_INFO_CLASSES_OFFSET + i * 4, (i == 0)
-                ? (POSITION_INFO_CLASS | POSITION_GENERIC_INFO_CLASS) : 1u);
+                ? (POSITION_INFO_CLASS | POSITION_GENERIC_INFO_CLASS | POSITION_COURSE_INFO_CLASS) : 1u);
         }
 
         put_value<std::uint32_t>(info, MODULE_INFO_VERSION_OFFSET, 1);
@@ -617,7 +704,29 @@ namespace eka2l1 {
             return;
         }
 
+        lbs_server *serv = server<lbs_server>();
+        serv->start_location();
+
         positioner->update_msg_ = ctx->move_to_new();
-        server<lbs_server>()->schedule_update(positioner);
+        serv->schedule_update(positioner);
+    }
+
+    void lbs_client_session::get_last_known_position(service::ipc_context *ctx) {
+        std::optional<drivers::location_fix> fix = server<lbs_server>()->last_known_fix();
+        if (!fix) {
+            ctx->complete(epoc::error_unknown);
+            return;
+        }
+
+        std::vector<std::uint8_t> info = read_descriptor(ctx, 0);
+        if (info.size() < POSITION_INFO_BASE_SIZE) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        // A fix carries no time of its own, so it is stamped with the time it is read.
+        write_position_info(info, &fix.value(), ctx->sys->get_kernel_system()->universal_time());
+        write_descriptor(ctx, 0, info);
+        ctx->complete(epoc::error_none);
     }
 }
