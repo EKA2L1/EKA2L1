@@ -114,6 +114,7 @@ namespace eka2l1::epoc {
         void draw_bitmap_masked(service::ipc_context &context, ws_cmd &cmd);
         void draw_poly_line(service::ipc_context &context, ws_cmd &cmd);
         void draw_poly_line_continued(service::ipc_context &context, ws_cmd &cmd);
+        void draw_ellipse(service::ipc_context &context, ws_cmd &cmd);
         void draw_polygon(service::ipc_context &context, ws_cmd &cmd);
         void set_brush_color(service::ipc_context &context, ws_cmd &cmd);
         void set_brush_style(service::ipc_context &context, ws_cmd &cmd);

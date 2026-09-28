@@ -679,6 +679,42 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
+    void graphic_context::draw_ellipse(service::ipc_context &context, ws_cmd &cmd) {
+        eka2l1::rect area = *reinterpret_cast<eka2l1::rect *>(cmd.data_ptr);
+        area.transform_from_symbian_rectangle();
+
+        if (!area.valid()) {
+            context.complete(epoc::error_none);
+            return;
+        }
+
+        // The ellipse is inscribed in the rectangle, whose bottom-right edge is exclusive.
+        const float radius_x = (area.size.x - 1) / 2.0f;
+        const float radius_y = (area.size.y - 1) / 2.0f;
+        const float center_x = area.top.x + radius_x;
+        const float center_y = area.top.y + radius_y;
+
+        constexpr float PI = 3.14159265358979f;
+        const int segment_count = std::clamp(static_cast<int>(radius_x + radius_y) * 2, 8, 128);
+        std::vector<eka2l1::point> points(segment_count + 1);
+
+        for (int i = 0; i < segment_count; i++) {
+            const float angle = 2.0f * PI * i / segment_count;
+            points[i] = eka2l1::point(static_cast<int>(std::lround(center_x + radius_x * std::cos(angle))),
+                static_cast<int>(std::lround(center_y + radius_y * std::sin(angle))));
+        }
+
+        points[segment_count] = points[0];
+
+        eka2l1::vec4 brush;
+        if (get_brush_color(brush)) {
+            fill_polygon_impl(points.data(), segment_count, true, brush);
+        }
+
+        stroke_polyline_impl(points.data(), points.size());
+        context.complete(epoc::error_none);
+    }
+
     void graphic_context::gdi_blt_masked(service::ipc_context &context, ws_cmd &cmd) {
         ws_cmd_gdi_blt_masked *blt_cmd = reinterpret_cast<ws_cmd_gdi_blt_masked *>(cmd.data_ptr);
         fbsbitmap *bmp = client->get_ws().get_raw_fbsbitmap(blt_cmd->source_handle);
@@ -1209,6 +1245,7 @@ namespace eka2l1::epoc {
             { ws_gc_u151m2_draw_poly_line, { &graphic_context::draw_poly_line, true, false } },
             { ws_gc_u151m2_draw_poly_line_continued, { &graphic_context::draw_poly_line_continued, true, false } },
             { ws_gc_u151m2_draw_polygon, { &graphic_context::draw_polygon, true, false } },
+            { ws_gc_u151m2_draw_ellipse, { &graphic_context::draw_ellipse, true, false } },
             { ws_gc_u151m2_draw_text, { &graphic_context::draw_text, true, false } },
             { ws_gc_u151m2_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1, true, false } },
             { ws_gc_u151m2_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2, true, false } },
@@ -1255,6 +1292,7 @@ namespace eka2l1::epoc {
             { ws_gc_curr_draw_poly_line, { &graphic_context::draw_poly_line, true, false } },
             { ws_gc_curr_draw_poly_line_continued, { &graphic_context::draw_poly_line_continued, true, false } },
             { ws_gc_curr_draw_polygon, { &graphic_context::draw_polygon, true, false } },
+            { ws_gc_curr_draw_ellipse, { &graphic_context::draw_ellipse, true, false } },
             { ws_gc_curr_draw_text, { &graphic_context::draw_text, true, false } },
             { ws_gc_curr_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1, true, false } },
             { ws_gc_curr_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2, true, false } },
