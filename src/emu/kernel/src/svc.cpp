@@ -2641,7 +2641,7 @@ namespace eka2l1::epoc {
             return return_code;
         }
 
-        return datlength;
+        return static_cast<std::int32_t>(data_vec.size());
     }
 
     BRIDGE_FUNC(std::int32_t, property_attach, std::int32_t cage, std::int32_t val, epoc::owner_type owner) {
@@ -2674,6 +2674,11 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, property_define, std::int32_t cage, std::int32_t key, eka2l1::ptr<epoc::property_info> prop_info_ptr) {
         process_ptr pr = kern->crr_process();
+
+        // KMaxTUint means the calling process's own SID (RProperty::Define overloads without a category).
+        if (static_cast<std::uint32_t>(cage) == 0xFFFFFFFFU) {
+            cage = static_cast<std::int32_t>(pr->get_sec_info().secure_id);
+        }
 
         epoc::property_info *info = prop_info_ptr.get(pr);
 
@@ -2717,6 +2722,10 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, property_delete, std::int32_t cage, std::int32_t key) {
+        if (static_cast<std::uint32_t>(cage) == 0xFFFFFFFFU) {
+            cage = static_cast<std::int32_t>(kern->crr_process()->get_sec_info().secure_id);
+        }
+
         property_ptr prop = kern->delete_prop(cage, key);
 
         if (!prop || !prop->is_defined()) {
@@ -2826,7 +2835,7 @@ namespace eka2l1::epoc {
             return return_code;
         }
 
-        return buffer_size;
+        return static_cast<std::int32_t>(dat.size());
     }
 
     BRIDGE_FUNC(std::int32_t, property_find_set_int, std::int32_t cage, std::int32_t key, std::int32_t value) {
@@ -2836,7 +2845,7 @@ namespace eka2l1::epoc {
             return epoc::error_not_found;
         }
 
-        const bool res = prop->set(value);
+        const bool res = prop->set_int(value);
 
         if (!res) {
             return epoc::error_argument;

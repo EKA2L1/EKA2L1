@@ -37,6 +37,11 @@
 
 #include <utils/err.h>
 
+#include <algorithm>
+#include <cmath>
+#include <cstring>
+#include <vector>
+
 namespace eka2l1::epoc {
     static void *decide_bitmap_pointer_to_pass(wsbitmap *server_bmp, std::uint8_t &affected_flags, const bool is_mask) {
         if (server_bmp->parent_) {
@@ -465,6 +470,248 @@ namespace eka2l1::epoc {
         }
 
         draw_mask_impl(source_bmp_to_pass, mask_bmp_to_pass, dest_rect, source_rect, flags);
+        context.complete(epoc::error_none);
+    }
+
+    void graphic_context::draw_bitmap_masked(service::ipc_context &context, ws_cmd &cmd) {
+        ws_cmd_draw_ws_bitmap_masked *blt_cmd = reinterpret_cast<ws_cmd_draw_ws_bitmap_masked *>(cmd.data_ptr);
+        fbsbitmap *bmp = client->get_ws().get_raw_fbsbitmap(blt_cmd->source_handle);
+        fbsbitmap *masked = client->get_ws().get_raw_fbsbitmap(blt_cmd->mask_handle);
+
+        if (!bmp || !masked) {
+            context.complete(epoc::error_bad_handle);
+            return;
+        }
+
+        eka2l1::rect source_rect = blt_cmd->source_rect;
+        eka2l1::rect dest_rect = blt_cmd->dest_rect;
+
+        source_rect.transform_from_symbian_rectangle();
+        dest_rect.transform_from_symbian_rectangle();
+
+        if (source_rect.empty() || dest_rect.empty()) {
+            context.complete(epoc::error_none);
+            return;
+        }
+
+        std::uint8_t flags = 0;
+        if (static_cast<bool>(blt_cmd->invert_mask)) {
+            flags |= GDI_STORE_COMMAND_INVERT_MASK;
+        }
+
+        draw_mask_impl(bmp, masked, dest_rect, source_rect, flags);
+        context.complete(epoc::error_none);
+    }
+
+    void graphic_context::fill_polygon_impl(const eka2l1::point *points, const std::size_t count, const bool winding, const eka2l1::vec4 &color) {
+        if (count < 3) {
+            return;
+        }
+
+        int min_y = points[0].y;
+        int max_y = points[0].y;
+
+        for (std::size_t i = 1; i < count; i++) {
+            min_y = std::min(min_y, points[i].y);
+            max_y = std::max(max_y, points[i].y);
+        }
+
+        // Nothing outside the window can show; this also bounds the span count for huge polygons.
+        min_y = std::max(min_y, 0);
+        max_y = std::min(max_y, attached_window->size().y);
+
+        struct crossing {
+            float x;
+            int dir;
+        };
+
+        std::vector<crossing> crossings;
+        epoc::gdi_store_command gdi_cmd;
+        epoc::gdi_store_command_draw_rect_data &rect_data = gdi_cmd.get_data_struct<epoc::gdi_store_command_draw_rect_data>();
+        gdi_cmd.opcode_ = epoc::gdi_store_command_draw_rect;
+        rect_data.color_ = color;
+
+        // Scanline conversion into one-pixel-high spans, sampled at pixel centres.
+        for (int y = min_y; y < max_y; y++) {
+            const float sample_y = static_cast<float>(y) + 0.5f;
+            crossings.clear();
+
+            for (std::size_t i = 0; i < count; i++) {
+                const eka2l1::point &a = points[i];
+                const eka2l1::point &b = points[(i + 1) % count];
+
+                if ((a.y == b.y) || (sample_y < std::min(a.y, b.y)) || (sample_y >= std::max(a.y, b.y))) {
+                    continue;
+                }
+
+                const float t = (sample_y - static_cast<float>(a.y)) / static_cast<float>(b.y - a.y);
+                crossings.push_back({ static_cast<float>(a.x) + t * static_cast<float>(b.x - a.x), (b.y > a.y) ? 1 : -1 });
+            }
+
+            std::sort(crossings.begin(), crossings.end(), [](const crossing &lhs, const crossing &rhs) {
+                return lhs.x < rhs.x;
+            });
+
+            int inside = 0;
+            for (std::size_t i = 0; i + 1 < crossings.size(); i++) {
+                inside += winding ? crossings[i].dir : 1;
+                const bool filled = winding ? (inside != 0) : ((inside & 1) != 0);
+
+                if (!filled) {
+                    continue;
+                }
+
+                const int x_start = static_cast<int>(std::lround(crossings[i].x));
+                const int x_end = static_cast<int>(std::lround(crossings[i + 1].x));
+
+                if (x_end > x_start) {
+                    rect_data.rect_ = eka2l1::rect({ x_start, y }, { x_end - x_start, 1 });
+                    attached_window->add_draw_command(gdi_cmd);
+                }
+            }
+        }
+    }
+
+    void graphic_context::stroke_polyline_impl(const eka2l1::point *points, const std::size_t count) {
+        eka2l1::vec4 color;
+        drivers::pen_style style;
+
+        if ((count < 2) || !get_pen_color_and_style(color, style)) {
+            return;
+        }
+
+        const int width = std::max(pen_size.x, pen_size.y);
+
+        if ((width <= 1) || (style != drivers::pen_style_solid)) {
+            epoc::gdi_store_command gdi_cmd;
+            epoc::gdi_store_command_draw_polygon_data &cmd_data = gdi_cmd.get_data_struct<epoc::gdi_store_command_draw_polygon_data>();
+
+            gdi_cmd.opcode_ = epoc::gdi_store_command_draw_polygon;
+            cmd_data.point_count_ = static_cast<std::uint32_t>(count);
+            cmd_data.color_ = color;
+            cmd_data.style_ = style;
+            cmd_data.points_ = reinterpret_cast<eka2l1::point *>(gdi_cmd.allocate_dynamic_data(count * sizeof(eka2l1::point)));
+
+            std::memcpy(cmd_data.points_, points, count * sizeof(eka2l1::point));
+            attached_window->add_draw_command(gdi_cmd);
+            return;
+        }
+
+        // The line primitive is one pixel wide, so thick segments are filled as quads.
+        const float half = static_cast<float>(width) / 2.0f;
+
+        for (std::size_t i = 0; i + 1 < count; i++) {
+            const float dx = static_cast<float>(points[i + 1].x - points[i].x);
+            const float dy = static_cast<float>(points[i + 1].y - points[i].y);
+            const float len = std::sqrt(dx * dx + dy * dy);
+
+            if (len == 0.0f) {
+                continue;
+            }
+
+            const float nx = -dy / len * half;
+            const float ny = dx / len * half;
+            const float ex = dx / len * half;
+            const float ey = dy / len * half;
+
+            const eka2l1::point quad[4] = {
+                { static_cast<int>(std::lround(points[i].x - ex + nx)), static_cast<int>(std::lround(points[i].y - ey + ny)) },
+                { static_cast<int>(std::lround(points[i + 1].x + ex + nx)), static_cast<int>(std::lround(points[i + 1].y + ey + ny)) },
+                { static_cast<int>(std::lround(points[i + 1].x + ex - nx)), static_cast<int>(std::lround(points[i + 1].y + ey - ny)) },
+                { static_cast<int>(std::lround(points[i].x - ex - nx)), static_cast<int>(std::lround(points[i].y - ey - ny)) }
+            };
+
+            fill_polygon_impl(quad, 4, true, color);
+        }
+    }
+
+    void graphic_context::draw_poly_line_impl(service::ipc_context &context, ws_cmd &cmd, const bool continued) {
+        const ws_cmd_draw_poly_line *poly_cmd = reinterpret_cast<const ws_cmd_draw_poly_line *>(cmd.data_ptr);
+        const std::size_t available = (cmd.header.cmd_len > sizeof(ws_cmd_draw_poly_line))
+            ? (cmd.header.cmd_len - sizeof(ws_cmd_draw_poly_line)) / sizeof(eka2l1::point) : 0;
+
+        if ((poly_cmd->num_points < 0) || (static_cast<std::size_t>(poly_cmd->num_points) > available)) {
+            context.complete(epoc::error_argument);
+            return;
+        }
+
+        // A continued segment starts from the last point of the previous one, stored just before the new points.
+        const eka2l1::point *points = continued ? &poly_cmd->last : reinterpret_cast<const eka2l1::point *>(poly_cmd + 1);
+        const std::size_t count = static_cast<std::size_t>(poly_cmd->num_points) + (continued ? 1 : 0);
+
+        stroke_polyline_impl(points, count);
+        context.complete(epoc::error_none);
+    }
+
+    void graphic_context::draw_poly_line(service::ipc_context &context, ws_cmd &cmd) {
+        draw_poly_line_impl(context, cmd, false);
+    }
+
+    void graphic_context::draw_poly_line_continued(service::ipc_context &context, ws_cmd &cmd) {
+        draw_poly_line_impl(context, cmd, true);
+    }
+
+    void graphic_context::draw_polygon(service::ipc_context &context, ws_cmd &cmd) {
+        const ws_cmd_draw_polygon *poly_cmd = reinterpret_cast<const ws_cmd_draw_polygon *>(cmd.data_ptr);
+        const std::size_t available = (cmd.header.cmd_len > sizeof(ws_cmd_draw_polygon))
+            ? (cmd.header.cmd_len - sizeof(ws_cmd_draw_polygon)) / sizeof(eka2l1::point) : 0;
+
+        if ((poly_cmd->num_points < 0) || (static_cast<std::size_t>(poly_cmd->num_points) > available)) {
+            context.complete(epoc::error_argument);
+            return;
+        }
+
+        const eka2l1::point *points = reinterpret_cast<const eka2l1::point *>(poly_cmd + 1);
+        const std::size_t count = static_cast<std::size_t>(poly_cmd->num_points);
+
+        // CGraphicsContext::EWinding is 1; EAlternate (even-odd) is 0.
+        eka2l1::vec4 brush;
+        if (get_brush_color(brush)) {
+            fill_polygon_impl(points, count, poly_cmd->fill_rule == 1, brush);
+        }
+
+        if (count >= 2) {
+            std::vector<eka2l1::point> closed(points, points + count);
+            closed.push_back(points[0]);
+            stroke_polyline_impl(closed.data(), closed.size());
+        }
+
+        context.complete(epoc::error_none);
+    }
+
+    void graphic_context::draw_ellipse(service::ipc_context &context, ws_cmd &cmd) {
+        eka2l1::rect area = *reinterpret_cast<eka2l1::rect *>(cmd.data_ptr);
+        area.transform_from_symbian_rectangle();
+
+        if (!area.valid()) {
+            context.complete(epoc::error_none);
+            return;
+        }
+
+        // The ellipse is inscribed in the rectangle, whose bottom-right edge is exclusive.
+        const float radius_x = (area.size.x - 1) / 2.0f;
+        const float radius_y = (area.size.y - 1) / 2.0f;
+        const float center_x = area.top.x + radius_x;
+        const float center_y = area.top.y + radius_y;
+
+        constexpr float PI = 3.14159265358979f;
+        const int segment_count = std::clamp(static_cast<int>(radius_x + radius_y) * 2, 8, 128);
+        std::vector<eka2l1::point> points(segment_count + 1);
+
+        for (int i = 0; i < segment_count; i++) {
+            const float angle = 2.0f * PI * i / segment_count;
+            points[i] = eka2l1::point(static_cast<int>(std::lround(center_x + radius_x * std::cos(angle))),
+                static_cast<int>(std::lround(center_y + radius_y * std::sin(angle))));
+        }
+
+        points[segment_count] = points[0];
+
+        eka2l1::vec4 brush;
+        if (get_brush_color(brush)) {
+            fill_polygon_impl(points.data(), segment_count, true, brush);
+        }
+
+        stroke_polyline_impl(points.data(), points.size());
         context.complete(epoc::error_none);
     }
 
@@ -994,6 +1241,11 @@ namespace eka2l1::epoc {
             { ws_gc_u151m2_draw_bitmap2, { &graphic_context::draw_bitmap_2, true, false } },
             { ws_gc_u151m2_draw_bitmap3, { &graphic_context::draw_bitmap_3, true, false } },
             { ws_gc_u151m2_ws_draw_bitmap_masked, { &graphic_context::ws_draw_bitmap_masked, true, false } },
+            { ws_gc_u151m2_draw_bitmap_masked, { &graphic_context::draw_bitmap_masked, true, false } },
+            { ws_gc_u151m2_draw_poly_line, { &graphic_context::draw_poly_line, true, false } },
+            { ws_gc_u151m2_draw_poly_line_continued, { &graphic_context::draw_poly_line_continued, true, false } },
+            { ws_gc_u151m2_draw_polygon, { &graphic_context::draw_polygon, true, false } },
+            { ws_gc_u151m2_draw_ellipse, { &graphic_context::draw_ellipse, true, false } },
             { ws_gc_u151m2_draw_text, { &graphic_context::draw_text, true, false } },
             { ws_gc_u151m2_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1, true, false } },
             { ws_gc_u151m2_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2, true, false } },
@@ -1036,6 +1288,11 @@ namespace eka2l1::epoc {
             { ws_gc_curr_draw_bitmap2, { &graphic_context::draw_bitmap_2, true, false } },
             { ws_gc_curr_draw_bitmap3, { &graphic_context::draw_bitmap_3, true, false } },
             { ws_gc_curr_ws_draw_bitmap_masked, { &graphic_context::ws_draw_bitmap_masked, true, false } },
+            { ws_gc_curr_draw_bitmap_masked, { &graphic_context::draw_bitmap_masked, true, false } },
+            { ws_gc_curr_draw_poly_line, { &graphic_context::draw_poly_line, true, false } },
+            { ws_gc_curr_draw_poly_line_continued, { &graphic_context::draw_poly_line_continued, true, false } },
+            { ws_gc_curr_draw_polygon, { &graphic_context::draw_polygon, true, false } },
+            { ws_gc_curr_draw_ellipse, { &graphic_context::draw_ellipse, true, false } },
             { ws_gc_curr_draw_text, { &graphic_context::draw_text, true, false } },
             { ws_gc_curr_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1, true, false } },
             { ws_gc_curr_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2, true, false } },

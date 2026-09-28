@@ -143,7 +143,8 @@ namespace eka2l1::epoc {
         epoc::display_mode current_display_mode() const;
 
         void construct(loader::sbm_header &info, epoc::display_mode disp_mode, void *data, const void *base,
-            const bool support_current_display_mode_flag, const bool white_fill = false);
+            const bool support_current_display_mode_flag, const bool white_fill = false,
+            const std::uint32_t data_header_size = 0);
 
         void post_construct(fbs_server *serv);
         int copy_to(std::uint8_t *dest, const eka2l1::vec2 &dest_size, fbs_server *serv);
@@ -151,6 +152,9 @@ namespace eka2l1::epoc {
         bitmap_file_compression compression_type() const;
 
         std::uint8_t *data_pointer(fbs_server *serv);
+
+        // Start of the data region, before any header the client expects in front of plain pixels.
+        std::uint8_t *data_block_pointer(fbs_server *serv);
         std::uint32_t data_size() const;
     };
 

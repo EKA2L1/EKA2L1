@@ -120,6 +120,8 @@ namespace eka2l1::epoc {
         virtual bool draw(drivers::graphics_command_builder &builder) = 0;
 
         virtual void on_activate() = 0;
+        virtual void requeue_pending_redraw() {}
+        void on_shown();
         virtual void handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) = 0;
         virtual void add_draw_command(gdi_store_command &command);
         virtual void prepare_for_draw() {}
@@ -290,6 +292,7 @@ namespace eka2l1::epoc {
 
         void invalidate(const eka2l1::rect &irect);
         void on_activate() override;
+        void requeue_pending_redraw() override;
         void handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) override;
         void add_draw_command(gdi_store_command &command) override;
         bool scroll(eka2l1::rect clip_space, const eka2l1::vec2 offset, eka2l1::rect source_rect) override;

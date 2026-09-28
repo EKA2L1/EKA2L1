@@ -167,7 +167,8 @@ namespace eka2l1 {
             std::fill(dest, dest + size, 0xFF);
         }
 
-        void bitwise_bitmap::construct(loader::sbm_header &info, epoc::display_mode disp_mode, void *data, const void *base, const bool support_current_display_mode_flag, const bool white_fill) {
+        void bitwise_bitmap::construct(loader::sbm_header &info, epoc::display_mode disp_mode, void *data, const void *base, const bool support_current_display_mode_flag, const bool white_fill,
+            const std::uint32_t data_header_size) {
             uid_ = epoc::BITWISE_BITMAP_UID;
             allocator_ = MAGIC_FBS_HEAP_PTR;
             pile_ = MAGIC_FBS_PILE_PTR;
@@ -192,6 +193,10 @@ namespace eka2l1 {
                 } else {
                     data_offset_ = static_cast<int>(reinterpret_cast<const std::uint8_t *>(data) - reinterpret_cast<const std::uint8_t *>(base));
                 }
+
+                // The header sits right before the pixels, which may be inside reserved rows.
+                data_offset_ -= static_cast<int>(data_header_size);
+                std::memset(reinterpret_cast<std::uint8_t *>(data) - data_header_size, 0, data_header_size);
             } else {
                 data_offset_ = 0;
             }
@@ -374,13 +379,22 @@ namespace eka2l1 {
             return static_cast<bitmap_file_compression>(header_.compression);
         }
 
-        std::uint8_t *bitwise_bitmap::data_pointer(fbs_server *ss) {
+        std::uint8_t *bitwise_bitmap::data_block_pointer(fbs_server *ss) {
             // Use traditional method for on-rom bitmap that does not have additional info
             if (!allocator_ || !pile_ || !ss->is_large_bitmap(header_.bitmap_size - sizeof(loader::sbm_header))) {
                 return reinterpret_cast<std::uint8_t *>(this) + data_offset_;
             }
 
             return ss->get_large_chunk_base() + data_offset_;
+        }
+
+        std::uint8_t *bitwise_bitmap::data_pointer(fbs_server *ss) {
+            std::uint8_t *block = data_block_pointer(ss);
+            if ((uid_ == epoc::BITWISE_BITMAP_UID) && (block == ss->get_large_chunk_base() + data_offset_)) {
+                return block + ss->bitmap_data_header_size();
+            }
+
+            return block;
         }
 
         std::uint32_t bitwise_bitmap::data_size() const {
@@ -478,7 +492,7 @@ namespace eka2l1 {
             const std::lock_guard<std::recursive_mutex> guard(allocator_lock_);
 
             if (is_large_bitmap(static_cast<std::uint32_t>(avail_dest_size))) {
-                data = large_chunk_allocator->allocate(avail_dest_size);
+                data = allocate_bitmap_pixels(avail_dest_size);
             } else {
                 data = shared_chunk_allocator->allocate(avail_dest_size);
                 *err_code = fbs_load_data_err_small_bitmap;
@@ -749,7 +763,8 @@ namespace eka2l1 {
             loader::sbm_header &header_to_give = mbmf_.sbm_headers[load_options->bitmap_id];
             const epoc::display_mode dpm = epoc::get_display_mode_from_bpp(header_to_give.bit_per_pixels, header_to_give.color);
 
-            bws_bmp->construct(header_to_give, dpm, bmp_data, bmp_data_base, support_current_display_mode, false);
+            bws_bmp->construct(header_to_give, dpm, bmp_data, bmp_data_base, support_current_display_mode, false,
+                (err_code == fbs_load_data_err_small_bitmap) ? 0 : fbss->bitmap_data_header_size());
             bws_bmp->offset_from_me_ = (err_code == fbs_load_data_err_small_bitmap);
 
             bws_bmp->header_.bitmap_size = static_cast<std::uint32_t>(bws_bmp->header_.header_len + size_when_decomp);
@@ -881,6 +896,11 @@ namespace eka2l1 {
         const int bpp = epoc::get_bpp_from_display_mode(dpm);
         const int byte_width = bws->byte_width_;
 
+        // Once plain, large-chunk pixels move behind the client-side data header allocated with the block.
+        const std::uint32_t header_size = bws->offset_from_me_ ? 0 : bitmap_data_header_size_;
+        std::memset(data, 0, header_size);
+        data += header_size;
+
         // Scanlines are word aligned, so an odd width leaves padding pixels the loop
         // below never touches. Clear the whole raster region first: leftover vector
         // bytes there show up as a stray column of noise once BitGDI blits the bitmap.
@@ -990,7 +1010,7 @@ namespace eka2l1 {
                 smol = true;
             } else {
                 base = base_large_chunk;
-                data = large_chunk_allocator->allocate(avail_dest_size);
+                data = allocate_bitmap_pixels(avail_dest_size);
             }
 
             if (!data) {
@@ -1016,7 +1036,8 @@ namespace eka2l1 {
             data = reinterpret_cast<std::uint8_t *>(data) + reserved_bytes;
         }
 
-        bws_bmp->construct(header, info.dpm_, data, base, support_current_display_mode_flag, true);
+        bws_bmp->construct(header, info.dpm_, data, base, support_current_display_mode_flag, true,
+            (data && !smol) ? bitmap_data_header_size_ : 0);
         bws_bmp->offset_from_me_ = smol;
         bws_bmp->post_construct(this);
 
@@ -1046,7 +1067,7 @@ namespace eka2l1 {
                 shared_chunk_allocator->freep(bmp->bitmap_->data_pointer(this) - reserved_bytes);
                 no_failure = true;
             } else {
-                large_chunk_allocator->freep(bmp->bitmap_->data_pointer(this) - reserved_bytes);
+                free_large_data(bmp->bitmap_->data_block_pointer(this) - reserved_bytes);
                 no_failure = true;
             }
         }
@@ -1178,7 +1199,7 @@ namespace eka2l1 {
         if ((force_size > vector_size) && bmp->bitmap_) {
             // The client only fills the vector part; keep the padding deterministic so a
             // reader that trusts the (now larger) data size never sees stale heap.
-            if (std::uint8_t *data = reinterpret_cast<std::uint8_t *>(bmp->bitmap_->data_pointer(fbss))) {
+            if (std::uint8_t *data = reinterpret_cast<std::uint8_t *>(bmp->bitmap_->data_block_pointer(fbss))) {
                 std::memset(data + vector_size, 0, force_size - vector_size);
             }
         }
@@ -1275,7 +1296,7 @@ namespace eka2l1 {
                 const int size_added_reserve = size_total + reserved_each_size * dest_byte_width * 2;
 
                 if (fbss->is_large_bitmap(size_total)) {
-                    dest_data = reinterpret_cast<std::uint8_t *>(fbss->allocate_large_data(size_added_reserve));
+                    dest_data = reinterpret_cast<std::uint8_t *>(fbss->allocate_bitmap_pixels(size_added_reserve));
                     base = fbss->get_large_chunk_base();
                 } else {
                     dest_data = reinterpret_cast<std::uint8_t *>(fbss->allocate_general_data_impl(size_added_reserve));
@@ -1356,7 +1377,7 @@ namespace eka2l1 {
 
             new_bmp->reserved_height_each_side_ = reserved_each_size;
             new_bmp->bitmap_->construct(old_header, new_bmp->bitmap_->settings_.initial_display_mode(),
-                dest_data, base, support_current_display_mode, false);
+                dest_data, base, support_current_display_mode, false, offset_from_me_now ? 0 : fbss->bitmap_data_header_size());
             new_bmp->bitmap_->post_construct(fbss);
         }
 

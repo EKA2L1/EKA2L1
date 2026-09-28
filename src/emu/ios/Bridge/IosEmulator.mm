@@ -945,7 +945,7 @@ namespace eka2l1::ios {
         }
 
         auto *io = state->symsys->get_io_system();
-        drivers::ui::set_automatic_input_view(state->symsys->get_symbian_version_use() >= epocver::epoc94);
+        drivers::ui::set_automatic_input_view(false);
         // Same folder lib_manager::load_patch_libraries scans, which the
         // frontend redirects into the read-only app bundle at startup.
         const std::string patch_dir = eka2l1::runtime_resource_path("patch");

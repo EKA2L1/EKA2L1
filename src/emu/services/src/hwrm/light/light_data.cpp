@@ -38,8 +38,14 @@ namespace eka2l1::epoc::hwrm::light {
         infos_prop_->first = eka2l1::epoc::hwrm::SERVICE_UID;
         infos_prop_->second = eka2l1::epoc::hwrm::light::LIGHT_STATUS_PROP_KEY;
 
-        // Define and allocate the size that fit our maximum need.
-        infos_prop_->define(service::property_type::bin_data, MAXIMUM_LIGHT * sizeof(target_info));
+        // Up to S60 3.1 clients read the status as one integer with 4 bits per target.
+        packed_status_ = kern->get_epoc_version() <= epocver::epoc93fp1;
+
+        if (packed_status_) {
+            infos_prop_->define(service::property_type::int_data, 0);
+        } else {
+            infos_prop_->define(service::property_type::bin_data, MAXIMUM_LIGHT * sizeof(target_info));
+        }
 
         // Initialise all the light with default value
         for (std::size_t i = 0; i < infos_.size(); i++) {
@@ -48,7 +54,7 @@ namespace eka2l1::epoc::hwrm::light {
         }
 
         // Publish the default value of the property
-        if (!infos_prop_->set(reinterpret_cast<std::uint8_t *>(&infos_[0]), MAXIMUM_LIGHT * sizeof(target_info))) {
+        if (!publish_infos()) {
             LOG_ERROR(SERVICE_HWRM, "Failed to publish default value of light infos to created property. Abort.");
             return false;
         }
@@ -72,13 +78,26 @@ namespace eka2l1::epoc::hwrm::light {
         find_result->status_ = sts;
 
         // Publish the resource to property.
-        if (!infos_prop_->set(reinterpret_cast<std::uint8_t *>(&infos_[0]), MAXIMUM_LIGHT * sizeof(target_info))) {
+        if (!publish_infos()) {
             LOG_ERROR(SERVICE_HWRM, "Failed to publish updated value of light infos to light status property. Abort.");
             return false;
         }
 
         // We done all things good now. Return. Again.
         return true;
+    }
+
+    bool resource_data::publish_infos() {
+        if (!packed_status_) {
+            return infos_prop_->set(reinterpret_cast<std::uint8_t *>(&infos_[0]), MAXIMUM_LIGHT * sizeof(target_info));
+        }
+
+        std::uint32_t packed = 0;
+        for (std::size_t i = 0; i < sizeof(packed) * 2; i++) {
+            packed |= (infos_[i].status_ & 0xF) << (i * 4);
+        }
+
+        return infos_prop_->set_int(static_cast<int>(packed));
     }
 
     resource_data::resource_data(kernel_system *sys) {
