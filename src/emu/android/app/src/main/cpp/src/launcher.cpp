@@ -285,8 +285,17 @@ namespace eka2l1::android {
         return nullptr;
     }
 
-    void launcher::launch_app(std::uint32_t uid) {
+    bool launcher::launch_app(std::uint32_t uid) {
+        if (!alserv) {
+            LOG_ERROR(eka2l1::FRONTEND_UI, "Application list server is not available, can't launch app 0x{:X}", uid);
+            return false;
+        }
+
         apa_app_registry *reg = alserv->get_registration(uid);
+        if (!reg) {
+            LOG_ERROR(eka2l1::FRONTEND_UI, "App 0x{:X} is not registered in the current device (wrong device profile?)", uid);
+            return false;
+        }
 
         epoc::apa::command_line cmdline;
         cmdline.launch_cmd_ = epoc::apa::command_create;
@@ -301,6 +310,7 @@ namespace eka2l1::android {
         });
 
         kern->unlock();
+        return true;
     }
 
     package::installation_result launcher::install_app(std::string &path) {

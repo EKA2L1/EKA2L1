@@ -738,7 +738,10 @@ public class Emulator {
 
     private static native String[] getApps();
 
-    public static native void launchApp(int uid);
+    public static native boolean launchApp(int uid);
+
+    /** Must be called before the native side starts (startNative). Selects the device by firmware code. */
+    public static native void setBootDeviceCode(String code);
 
     public static native void surfaceChanged(Surface surface, int width, int height);
 

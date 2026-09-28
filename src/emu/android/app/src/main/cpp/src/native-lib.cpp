@@ -71,6 +71,19 @@ Java_com_github_eka2l1_emu_Emulator_setDirectory(
     eka2l1::common::set_current_directory(executable_directory);
 }
 
+static std::string s_pending_boot_device_code;
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_github_eka2l1_emu_Emulator_setBootDeviceCode(JNIEnv *env, jclass clazz, jstring code) {
+    if (!code) {
+        s_pending_boot_device_code.clear();
+        return;
+    }
+    const char *cstr = env->GetStringUTFChars(code, nullptr);
+    s_pending_boot_device_code = cstr;
+    env->ReleaseStringUTFChars(code, cstr);
+}
+
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_github_eka2l1_emu_Emulator_startNative(
     JNIEnv *env,
@@ -80,6 +93,7 @@ Java_com_github_eka2l1_emu_Emulator_startNative(
     eka2l1::drivers::android::register_camera_callbacks(env);
 
     state = std::make_unique<eka2l1::android::emulator>();
+    state->boot_device_code = s_pending_boot_device_code;
     return emulator_entry(*state);
 }
 
@@ -111,10 +125,10 @@ static void redraw_screens_immediately() {
     state->graphics_driver->submit_command_list(retrieved);
 }
 
-extern "C" JNIEXPORT void JNICALL
+extern "C" JNIEXPORT jboolean JNICALL
 Java_com_github_eka2l1_emu_Emulator_launchApp(JNIEnv *env, jclass clazz, jint uid) {
     // Launch the real app...
-    state->launcher->launch_app(uid);
+    return state->launcher->launch_app(uid) ? JNI_TRUE : JNI_FALSE;
 }
 
 extern "C" JNIEXPORT void JNICALL

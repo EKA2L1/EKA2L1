@@ -1,0 +1,16 @@
+TARGET        avkonfep_general.dll
+TARGETTYPE    PLUGIN
+UID 0x10009D8D 0x100056DE
+
+USERINCLUDE	    ..\..\inc ..\..\..\priv\inc
+SYSTEMINCLUDE   \epoc32\include
+
+SOURCEPATH	    ..\..\src
+
+SOURCE		    HostBridgedImeFEP.cpp Dispatch.s
+nostrictdef
+
+LIBRARY	        euser.lib fepbase.lib ecom.lib avkon.lib cone.lib eikcoctl.lib eikctl.lib uiklaf.lib form.lib
+STATICLIBRARY   priv.lib
+
+DEBUGGABLE_UDEBONLY

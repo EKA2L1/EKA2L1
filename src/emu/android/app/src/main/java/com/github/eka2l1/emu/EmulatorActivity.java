@@ -121,8 +121,43 @@ public class EmulatorActivity extends AppCompatActivity {
 
         boolean launchFromFile = intent.getData() != null;
 
+        String name;
+        String deviceCode;
+
+        // Read the launch info first: the device must be known before the native side boots.
+        if (intent.getData() != null) {
+            AppLaunchInfo launchInfo = null;
+            try (InputStream inputStream = getContentResolver().openInputStream(intent.getData())) {
+                launchInfo = gson.fromJson(new InputStreamReader(inputStream), AppLaunchInfo.class);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            if (launchInfo == null || launchInfo.appName == null || launchInfo.appUid == 0) {
+                super.onCreate(savedInstanceState);
+                showLaunchError(getString(R.string.error));
+                return;
+            }
+
+            uid = launchInfo.appUid;
+            name = launchInfo.appName;
+            deviceCode = launchInfo.deviceCode;
+        } else {
+            uid = intent.getLongExtra(KEY_APP_UID, -1);
+            name = intent.getStringExtra(KEY_APP_NAME);
+            deviceCode = intent.getStringExtra(KEY_DEVICE_CODE);
+        }
+
         if (externalIntent) {
+            // Only has effect if the native side has not started yet in this process.
+            Emulator.setBootDeviceCode(deviceCode);
             Emulator.initializeForShortcutLaunch(this);
+
+            if (!applyLaunchDevice(deviceCode, name)) {
+                // Process is being restarted with the right device
+                super.onCreate(savedInstanceState);
+                return;
+            }
         }
 
         AppDataStore dataStore = AppDataStore.getAndroidStore();
@@ -130,33 +165,6 @@ public class EmulatorActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emulator);
         overlayView = findViewById(R.id.overlay);
-
-        String name;
-        String deviceCode;
-
-        if (intent.getData() != null) {
-            InputStream inputStream = null;
-
-            try {
-                inputStream = getContentResolver().openInputStream(intent.getData());
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-
-            AppLaunchInfo launchInfo = gson.fromJson(new InputStreamReader(inputStream), AppLaunchInfo.class);
-
-            uid = launchInfo.appUid;
-            name = launchInfo.appName;
-            deviceCode = launchInfo.deviceCode;
-
-            if (name == null || uid == 0) {
-                throw new RuntimeException("Invalid launch info");
-            }
-        } else {
-            uid = intent.getLongExtra(KEY_APP_UID, -1);
-            name = intent.getStringExtra(KEY_APP_NAME);
-            deviceCode = intent.getStringExtra(KEY_DEVICE_CODE);
-        }
 
         String uidStr = Long.toHexString(uid).toUpperCase();
         File configDir = new File(Emulator.getConfigsDir(), uidStr);
@@ -209,16 +217,6 @@ public class EmulatorActivity extends AppCompatActivity {
         EmulatorCamera.setActivity(this);
         EmulatorLocation.setActivity(this);
 
-        if (deviceCode != null) {
-            String []availableDevices = Emulator.getDeviceFirmwareCodes();
-            for (int id = 0; id < availableDevices.length; id++) {
-                if (availableDevices[id].compareToIgnoreCase(deviceCode) == 0) {
-                    Emulator.setCurrentDevice(id, true);
-                    break;
-                }
-            }
-        }
-
         setActionBar(name);
         hideSystemUI();
 
@@ -251,6 +249,55 @@ public class EmulatorActivity extends AppCompatActivity {
                 hasBackground ? ProfilesManager.getBackgroundPath(configDir.getAbsolutePath()) : "",
                 Math.max(0.0f, Math.min(params.screenBackgroundImageOpacity / 100.0f, 1.0f)),
                 params.screenBackgroundImageKeepAspectRatio);
+    }
+
+    private void showLaunchError(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        finish();
+    }
+
+    /**
+     * Makes sure the device requested by the launch info is the one running.
+     * @return true if it is fine to continue; false if the process is being restarted.
+     */
+    private boolean applyLaunchDevice(String deviceCode, String name) {
+        if (deviceCode == null || deviceCode.isEmpty()) {
+            return true;
+        }
+
+        String[] codes = Emulator.getDeviceFirmwareCodes();
+        int wanted = -1;
+        for (int i = 0; i < codes.length; i++) {
+            if (codes[i].compareToIgnoreCase(deviceCode) == 0) {
+                wanted = i;
+                break;
+            }
+        }
+
+        if (wanted < 0) {
+            Toast.makeText(this, "Device " + deviceCode + " is not installed. Using the current device.",
+                    Toast.LENGTH_LONG).show();
+            return true;
+        }
+
+        if (Emulator.getCurrentDevice() == wanted) {
+            return true;
+        }
+
+        // The process was already alive with another device: save the new one and cold restart,
+        // same as the Devices menu does.
+        Emulator.setCurrentDevice(wanted, false);
+
+        Intent restart = new Intent(this, EmulatorActivity.class);
+        restart.putExtra(KEY_APP_IS_SHORTCUT, true);
+        restart.putExtra(KEY_APP_UID, uid);
+        restart.putExtra(KEY_APP_NAME, name);
+        restart.putExtra(KEY_DEVICE_CODE, deviceCode);
+        restart.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(restart);
+        finish();
+        Runtime.getRuntime().exit(0);
+        return false;
     }
 
     @Override
@@ -543,8 +590,10 @@ public class EmulatorActivity extends AppCompatActivity {
 
             Emulator.surfaceChanged(holder.getSurface(), width, height);
             if (!launched) {
-                Emulator.launchApp((int) uid);
                 launched = true;
+                if (!Emulator.launchApp((int) uid)) {
+                    showLaunchError(getString(R.string.error));
+                }
             }
         }
 

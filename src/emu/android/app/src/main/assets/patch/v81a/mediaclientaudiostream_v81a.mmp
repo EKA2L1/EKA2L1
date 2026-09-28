@@ -1,0 +1,30 @@
+/*
+============================================================================
+ Name		: mmfdevsound.mmp
+ Author	  : 
+ Copyright   : 
+ Description : This is the project specification file for mmfdevsound.
+============================================================================
+*/
+
+TARGET		  mediaclientaudiostream_v81a.dll
+TARGETTYPE	  dll
+UID			 0x10003B19 0xee000001
+
+USERINCLUDE	    ..\..\inc
+SYSTEMINCLUDE   \epoc32\include  ..\..\..\priv\inc
+
+SOURCEPATH	  ..\..\src
+
+SOURCE        main.cpp
+SOURCE        dispatch.s
+SOURCE        impl.cpp
+
+nostrictdef
+
+DEFFILE         ..\..\eabi\mediaclientaudiostream_v81a.def
+
+LIBRARY		    euser.lib efsrv.lib
+STATICLIBRARY   priv.lib
+MACRO            __SERIES80__
+

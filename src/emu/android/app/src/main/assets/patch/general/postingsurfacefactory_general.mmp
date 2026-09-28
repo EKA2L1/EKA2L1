@@ -1,0 +1,19 @@
+TARGET		  postingsurfacefactory_general.dll
+TARGETTYPE	  dll
+UID			 0x10003B19 0xee000007
+
+USERINCLUDE	    ..\..\inc
+SYSTEMINCLUDE   \epoc32\include ..\..\..\priv\inc
+
+SOURCEPATH	    ..\..\src
+
+SOURCE          PostingSurfaceImpl.cpp Dispatch.s
+
+nostrictdef
+
+LIBRARY		    euser.lib hal.lib
+STATICLIBRARY   priv.lib
+
+DEFFILE         ..\..\eabi\postingsurface_general.def
+
+DEBUGGABLE_UDEBONLY

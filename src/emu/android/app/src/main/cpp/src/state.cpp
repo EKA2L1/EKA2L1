@@ -17,6 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
+
 #include <android/input_dialog.h>
 #include <android/state.h>
 #include <common/algorithm.h>
@@ -129,6 +131,23 @@ namespace eka2l1::android {
         device_manager *dvcmngr = symsys->get_device_manager();
 
         if (dvcmngr->total() > 0) {
+            // A frontend launch (.json / shortcut) may request a specific device. Select it now,
+            // before the first set_device, so no hot-swap is needed later. Not saved to config.
+            if (!boot_device_code.empty()) {
+                const auto &dvcs = dvcmngr->get_devices();
+                bool found = false;
+                for (std::size_t i = 0; i < dvcs.size(); i++) {
+                    if (common::compare_ignore_case(dvcs[i].firmware_code.c_str(), boot_device_code.c_str()) == 0) {
+                        conf.device = static_cast<int>(i);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    LOG_WARN(FRONTEND_CMDLINE, "Requested boot device {} is not installed, using device index {}", boot_device_code, conf.device);
+                }
+            }
+
             symsys->startup();
 
             if (!symsys->set_device(conf.device)) {
@@ -153,6 +172,17 @@ namespace eka2l1::android {
 
         launcher = std::make_unique<eka2l1::android::launcher>(symsys.get());
         eka2l1::drivers::ui::launcher_instance = launcher.get();
+
+        if (!boot_device_code.empty() && dvcmngr->total() > 0) {
+            // Same language fallback that launcher::set_current_device does
+            const auto &dvcs = dvcmngr->get_devices();
+            if (static_cast<std::size_t>(conf.device) < dvcs.size()) {
+                const auto &langs = dvcs[conf.device].languages;
+                if (std::find(langs.begin(), langs.end(), conf.language) == langs.end()) {
+                    launcher->set_language_current(static_cast<language>(dvcs[conf.device].default_language_code));
+                }
+            }
+        }
 
         stage_two_inited = false;
     }

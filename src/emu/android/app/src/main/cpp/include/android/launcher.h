@@ -72,15 +72,15 @@ namespace eka2l1::android {
         std::vector<std::uint8_t> screenshot_buffer_;
 
         void set_language_to_property(const language new_one);
-        void set_language_current(const language lang);
         void retrieve_servers();
 
     public:
         explicit launcher(eka2l1::system *sys);
+        void set_language_current(const language lang);
 
         std::vector<std::string> get_apps();
         jobjectArray get_app_icon(JNIEnv *env, std::uint32_t uid);
-        void launch_app(std::uint32_t uid);
+        bool launch_app(std::uint32_t uid);
         package::installation_result install_app(std::string &path);
         std::vector<std::string> get_devices();
         std::vector<std::string> get_device_firwmare_codes();

@@ -1,0 +1,26 @@
+/*
+============================================================================
+ Name		: mmfdevsound.mmp
+ Author	  : 
+ Copyright   : 
+ Description : This is the project specification file for mmfdevsound.
+============================================================================
+*/
+
+TARGET		  goommonitor_general.dll
+TARGETTYPE	  dll
+UID			 0x10003B19 0xee000008
+
+USERINCLUDE	    ..\..\inc
+SYSTEMINCLUDE   \epoc32\include
+
+SOURCEPATH	    ..\..\src
+
+SOURCE		    goommonitor.cpp
+nostrictdef
+
+LIBRARY		    euser.lib
+
+DEBUGGABLE_UDEBONLY
+
+DEFFILE ..\..\eabi\goommonitor_general.def

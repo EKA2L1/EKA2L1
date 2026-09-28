@@ -77,6 +77,9 @@ namespace eka2l1::android {
 
         bool first_time;
 
+        // Firmware code of the device that should be used at boot (empty = use the one in config).
+        std::string boot_device_code;
+
         common::semaphore graphics_sema;
         common::semaphore pause_sema;
         common::semaphore pause_graphics_sema;
