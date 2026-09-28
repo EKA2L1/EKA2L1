@@ -1,0 +1,48 @@
+/*
+============================================================================
+ Name        : qjpeg_general.mmp
+ Description : Project specification for qjpeg_general, a replacement for Qt's
+               JPEG image format plugin that decodes on the host.
+============================================================================
+*/
+
+TARGET          qjpeg_general.dll
+TARGETTYPE      dll
+// Stands in for Qt's qjpeg.dll, so it carries that image's identity.
+UID             0x1000008D 0x2001E61B
+CAPABILITY      ALL -TCB
+
+USERINCLUDE     ..\..\inc
+SYSTEMINCLUDE   \epoc32\include
+SYSTEMINCLUDE   \epoc32\include\mw
+SYSTEMINCLUDE   \epoc32\include\mw\qt
+SYSTEMINCLUDE   \epoc32\include\mw\qtcore
+SYSTEMINCLUDE   \epoc32\include\mw\qtgui
+SYSTEMINCLUDE   \epoc32\include\stdapis
+SYSTEMINCLUDE   \epoc32\include\stdapis\stlportv5
+SYSTEMINCLUDE   ..\..\..\priv\inc
+
+MACRO           QT_CORE_LIB
+MACRO           QT_GUI_LIB
+MACRO           QT_NO_DEBUG
+MACRO           UNICODE
+
+STDCPP
+
+// Q_EXPORT_PLUGIN2 caches the plugin instance in a static, and Qt's own
+// Symbian plugins are built the same way.
+EPOCALLOWDLLDATA
+
+SOURCEPATH      ..\..\src
+
+SOURCE          qjpeghandler.cpp
+SOURCE          dispatch.s
+
+nostrictdef
+
+LIBRARY         euser.lib QtCore.lib QtGui.lib libstdcppv5.lib libc.lib
+STATICLIBRARY   priv.lib
+
+DEFFILE ..\..\eabi\qjpeg_general.def
+
+DEBUGGABLE_UDEBONLY

@@ -353,7 +353,12 @@ namespace eka2l1::drivers {
     }
 
     bool sensor_driver_ios::accelerometer_available() const {
+#if TARGET_OS_SIMULATOR
+        // The simulator has no accelerometer; poll_sample() stands in a device lying flat.
+        return true;
+#else
         return pump_->manager_.accelerometerAvailable || controller_motion_available_.load(std::memory_order_relaxed);
+#endif
     }
 
     void set_controller_motion_source(sensor_driver *driver, void *controller) {
@@ -454,8 +459,13 @@ namespace eka2l1::drivers {
                 rotation = controller_rotation_deg_.load(std::memory_order_relaxed);
             } else {
                 CMAccelerometerData *data = pump_->manager_.accelerometerData;
+#if TARGET_OS_SIMULATOR
+                acceleration = data ? std::array<double, 3>{ data.acceleration.x, data.acceleration.y, data.acceleration.z }
+                                    : std::array<double, 3>{ 0.0, 0.0, -1.0 };
+#else
                 if (!data) return;
                 acceleration = { data.acceleration.x, data.acceleration.y, data.acceleration.z };
+#endif
                 gravity = acceleration;
                 rotation = motion_rotation_deg_.load(std::memory_order_relaxed);
             }

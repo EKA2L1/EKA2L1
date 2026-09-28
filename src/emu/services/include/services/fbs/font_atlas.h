@@ -48,6 +48,9 @@ namespace eka2l1::epoc {
      */
     struct font_atlas {
         std::map<char16_t, adapter::character_info> characters_;
+
+        // Advances at the guest's own font size, keyed by character, for laying out scaled glyphs.
+        std::map<char16_t, std::uint32_t> layout_advances_;
         drivers::handle atlas_handle_;
         adapter::font_file_adapter_base *adapter_;
         std::uint32_t metric_identifier_;
@@ -100,7 +103,8 @@ namespace eka2l1::epoc {
         }
 
         bool draw_text(const std::u16string &text, const eka2l1::rect &box, const epoc::text_alignment alignment, drivers::graphics_driver *driver,
-            drivers::graphics_command_builder &builder, const eka2l1::vec2f scale_vector, bool source_over_alpha = false);
+            drivers::graphics_command_builder &builder, const eka2l1::vec2f scale_vector, bool source_over_alpha = false,
+            const std::uint32_t layout_metric_identifier = 0, const float layout_scale = 1.0f);
 
         int get_char_size() const {
             return size_;

@@ -206,6 +206,7 @@ namespace gnuVG {
 		void destroy(eka2l1::drivers::graphics_driver *driver, eka2l1::drivers::graphics_command_builder &builder) override;
         void flush_to_driver(eka2l1::dispatch::egl_controller &controller, eka2l1::drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) override;
         void on_surface_changed(eka2l1::drivers::graphics_driver *driver, eka2l1::dispatch::egl_surface *prev_read, eka2l1::dispatch::egl_surface *prev_draw) override;
+        void on_draw_surface_resized(eka2l1::drivers::graphics_driver *driver) override;
         void init_context_state() override;
 
 		void register_object(std::shared_ptr<Object> object);

@@ -70,6 +70,10 @@ namespace gnuVG {
 		resize(temp, draw_surface_->dimension_.x, draw_surface_->dimension_.y);
 	}
 
+	void Context::on_draw_surface_resized(eka2l1::drivers::graphics_driver *driver) {
+		on_surface_changed(driver, draw_surface_, draw_surface_);
+	}
+
 	void Context::destroy(eka2l1::drivers::graphics_driver *driver, eka2l1::drivers::graphics_command_builder &builder) {
         vertex_buffer_pusher.destroy(builder);
         index_buffer_pusher.destroy(builder);

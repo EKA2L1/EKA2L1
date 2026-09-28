@@ -95,6 +95,13 @@ namespace eka2l1::manager {
         skip_empty_avkon_menu(0x12C);
     }
 
+    // --- Qt font extras fix (qt_font_extras_fix.lua) ---
+    // Qt 4.7.4+ dereferences QApplication::instance() on the first font lookup,
+    // which is NULL in apps that paint text without a QApplication.
+    static void qt_skip_font_extras_thread_check() {
+        scripting::cpu::set_register(15, scripting::cpu::get_pc() + 0x74);
+    }
+
     void scripts::register_builtin_patches() {
         // The kernel-level hooks must be live for breakpoints to fire.
         register_kernel_hooks();
@@ -152,6 +159,10 @@ namespace eka2l1::manager {
             0x182, 0, 0x1000489E, rm409_skip_empty_avkon_menu);
         register_rom_export_breakpoint("eikcoctl.dll", 70, 0x1595EE13,
             0x17E, 0, 0x1000489E, rm320_skip_empty_avkon_menu);
+
+        // QSymbianFontDatabaseExtrasImplementation::extras() in Qt 4.7.4 and 4.8.0
+        register_breakpoint("qtgui.dll", 0x001570B5, 0, 0x2001B2DD, 0x8E4B3F71, qt_skip_font_extras_thread_check);
+        register_breakpoint("qtgui.dll", 0x0015DC71, 0, 0x2001B2DD, 0xAA4C4DCA, qt_skip_font_extras_thread_check);
 
         current_module = nullptr;
 

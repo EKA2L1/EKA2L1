@@ -333,7 +333,8 @@ namespace eka2l1 {
             return FBS_LEGACY_LEVEL_SYMBIAN_92;
         }
 
-        if (large_bitmap_access_mutex->get_access_count() > 0) {
+        // The server holds one reference itself; only an older client opening the mutex adds more.
+        if (large_bitmap_access_mutex->get_access_count() > 1) {
             return FBS_LEGACY_LEVEL_EARLY_EKA2;
         }
 

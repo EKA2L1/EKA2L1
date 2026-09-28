@@ -39,6 +39,7 @@ namespace YAML {
 namespace eka2l1 {
     class io_system;
     class memory_system;
+    struct file;
     class kernel_system;
     class system;
 
@@ -103,6 +104,16 @@ namespace eka2l1 {
             std::vector<patch_route_info> routes_;
         };
 
+        // A patch image loaded in place of the original whenever the original is loaded.
+        struct image_replacement {
+            std::string name_;
+            std::string image_path_;
+            std::uint32_t req_uid2_ = 0;
+            std::uint32_t req_uid3_ = 0;
+            bool need_dest_rom_ = false;
+            bool qt_plugin_ = false;
+        };
+
         enum load_patch_infos_state {
             PATCH_IDLE = 0,
             PATCH_IMPORT_IMAGES = 1,
@@ -134,6 +145,7 @@ namespace eka2l1 {
 
             std::vector<patch_info> patches_;
             std::vector<patch_pending_entry> patch_pendings_;
+            std::vector<image_replacement> replacements_;
             std::map<address, address> trampoline_lookup_;
 
         protected:
@@ -145,6 +157,8 @@ namespace eka2l1 {
             void apply_pending_patches();
             void apply_trick_or_treat_algo();
             void jump_trampoline_through_svc();
+
+            std::optional<loader::e32img> load_replacement_image(const std::u16string &path, file *original);
 
         public:
             std::unordered_map<sid, epoc_import_func> svc_funcs_;

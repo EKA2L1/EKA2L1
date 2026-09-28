@@ -81,14 +81,32 @@ namespace eka2l1::dispatch {
         EGL_DEPTH_SIZE_EMU = 0x3025,
         EGL_STENCIL_SIZE_EMU = 0x3026,
         EGL_CONFIG_CAVEAT_EMU = 0x3027,
+        EGL_CONFIG_ID_EMU = 0x3028,
+        EGL_LEVEL_EMU = 0x3029,
         EGL_MAX_PBUFFER_HEIGHT_EMU = 0x302A,
+        EGL_MAX_PBUFFER_PIXELS_EMU = 0x302B,
         EGL_MAX_PBUFFER_WIDTH_EMU = 0x302C,
+        EGL_NATIVE_RENDERABLE_EMU = 0x302D,
+        EGL_NATIVE_VISUAL_ID_EMU = 0x302E,
+        EGL_NATIVE_VISUAL_TYPE_EMU = 0x302F,
+        EGL_SAMPLES_EMU = 0x3031,
         EGL_SAMPLE_BUFFERS_EMU = 0x3032,
         EGL_SURFACE_TYPE_EMU = 0x3033,
+        EGL_TRANSPARENT_TYPE_EMU = 0x3034,
+        EGL_TRANSPARENT_BLUE_VALUE_EMU = 0x3035,
+        EGL_TRANSPARENT_GREEN_VALUE_EMU = 0x3036,
+        EGL_TRANSPARENT_RED_VALUE_EMU = 0x3037,
         EGL_NONE_EMU = 0x3038,
         EGL_BIND_TO_TEXTURE_RGB_EMU = 0x3039,
         EGL_BIND_TO_TEXTURE_RGBA_EMU = 0x303A,
+        EGL_MIN_SWAP_INTERVAL_EMU = 0x303B,
+        EGL_MAX_SWAP_INTERVAL_EMU = 0x303C,
+        EGL_LUMINANCE_SIZE_EMU = 0x303D,
+        EGL_ALPHA_MASK_SIZE_EMU = 0x303E,
+        EGL_COLOR_BUFFER_TYPE_EMU = 0x303F,
         EGL_RENDERABLE_TYPE_EMU = 0x3040,
+        EGL_CONFORMANT_EMU = 0x3042,
+        EGL_RGB_BUFFER_EMU = 0x308E,
         EGL_VENDOR_EMU = 0x3053,
         EGL_VERSION_EMU = 0x3054,
         EGL_EXTENSIONS_EMU = 0x3055,
@@ -563,6 +581,9 @@ namespace eka2l1::dispatch {
         virtual egl_context_type context_type() const = 0;
         virtual void init_context_state() = 0;
         virtual void on_surface_changed(drivers::graphics_driver *driver, egl_surface *prev_read, egl_surface *prev_draw) {}
+
+        // The current draw surface was reallocated at a new size (window resize or display rescale).
+        virtual void on_draw_surface_resized(drivers::graphics_driver *driver) {}
         virtual void on_being_set_current() {}
     };
 

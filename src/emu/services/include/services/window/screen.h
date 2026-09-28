@@ -241,8 +241,10 @@ namespace eka2l1::epoc {
          */
         void mark_direct_framebuffer_mapped();
 
-        // Caller holds the kernel lock.
-        void present_framebuffer(drivers::graphics_driver *driver, kernel_system *kern);
+        // Caller holds the kernel lock. Rects are Symbian TRects in screen coordinates; with none
+        // the whole buffer is presented.
+        void present_framebuffer(drivers::graphics_driver *driver, kernel_system *kern,
+            const eka2l1::rect *symbian_rects = nullptr, const std::uint32_t rect_count = 0);
 
         /**
          * @brief Snapshot the directly mapped framebuffer. True if the guest wrote to it

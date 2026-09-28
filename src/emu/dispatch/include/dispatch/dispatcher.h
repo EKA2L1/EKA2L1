@@ -147,6 +147,8 @@ namespace eka2l1::dispatch {
         std::uint32_t stored_repeat_times;
         std::uint32_t stored_trailing_silence_us;
 
+        std::uint64_t last_position_query_us_ = 0;
+
         explicit dsp_epoc_player(dsp_manager *manager, const std::uint32_t init_flags);
         ~dsp_epoc_player() override;
 

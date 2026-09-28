@@ -86,6 +86,21 @@ namespace eka2l1::epoc {
         }
     };
 
+    struct window_dsa_region_walker : public window_tree_walker {
+        common::region region_;
+
+        bool do_it(window *win) override {
+            if (win->type == window_kind::client) {
+                canvas_base *user = reinterpret_cast<canvas_base *>(win);
+                if (user->is_dsa_active()) {
+                    region_.add_region(user->visible_region);
+                }
+            }
+
+            return false;
+        }
+    };
+
     bool focus_callback_free_check_func(screen::focus_change_callback &data) {
         return !data.second;
     }
@@ -206,7 +221,8 @@ namespace eka2l1::epoc {
             screen_buffer_byte_width(dsa_disp_mode), current_mode().size.y);
     }
 
-    void screen::present_framebuffer(drivers::graphics_driver *driver, kernel_system *kern) {
+    void screen::present_framebuffer(drivers::graphics_driver *driver, kernel_system *kern,
+        const eka2l1::rect *symbian_rects, const std::uint32_t rect_count) {
         // Update the DSA screen texture
         const epoc::config::screen_mode &mode_info = current_mode();
         const eka2l1::vec2 screen_size = mode_info.size;
@@ -296,14 +312,17 @@ namespace eka2l1::epoc {
         builder.set_texture_filter(dsa_texture, true, filter);
         builder.set_texture_filter(dsa_texture, false, filter);
 
-        auto draw_rows = [&](int first, int end) {
-            eka2l1::rect source_rect { eka2l1::vec2(0, first), eka2l1::vec2(screen_size.x, end - first) };
+        auto draw_area = [&](const eka2l1::rect &source_rect) {
             eka2l1::rect dest_rect = source_rect;
             if (rotation_draw != 0.0f) {
-                dest_rect.top = eka2l1::vec2(screen_size.x, screen_size.y - first);
+                dest_rect.top = screen_size - source_rect.top;
             }
             dest_rect.scale(display_scale_factor);
             builder.draw_bitmap(dsa_texture, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), rotation_draw, 0);
+        };
+
+        auto draw_rows = [&](int first, int end) {
+            draw_area(eka2l1::rect(eka2l1::vec2(0, first), eka2l1::vec2(screen_size.x, end - first)));
         };
 
         if (direct_framebuffer_mapped) {
@@ -318,6 +337,29 @@ namespace eka2l1::epoc {
                     ++y;
                 }
                 draw_rows(first, y);
+            }
+        } else if (symbian_rects && rect_count) {
+            // A DSA client only writes inside its region; elsewhere the buffer holds stale pixels
+            // that must not cover the windows now on top of it.
+            std::vector<eka2l1::rect> clip_rects;
+            if (active_dsa_count_ > 0) {
+                window_dsa_region_walker dsa_walker;
+                root->walk_tree(&dsa_walker, epoc::window_tree_walk_style::bonjour_children);
+                clip_rects = std::move(dsa_walker.region_.rects_);
+            } else {
+                clip_rects.push_back(eka2l1::rect(eka2l1::vec2(0, 0), screen_size));
+            }
+
+            for (std::uint32_t i = 0; i < rect_count; i++) {
+                eka2l1::rect area = symbian_rects[i];
+                area.transform_from_symbian_rectangle();
+
+                for (const eka2l1::rect &clip : clip_rects) {
+                    const eka2l1::rect clipped = area.intersect(clip);
+                    if (clipped.valid()) {
+                        draw_area(clipped);
+                    }
+                }
             }
         } else {
             draw_rows(0, screen_size.y);

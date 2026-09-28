@@ -53,9 +53,10 @@ namespace eka2l1::epoc {
         return epoc::graphics_orientation::normal;
     }
 
-    screen_device::screen_device(window_server_client_ptr client, epoc::screen *scr)
+    screen_device::screen_device(window_server_client_ptr client, epoc::screen *scr, const std::uint32_t client_pointer)
         : window_client_obj(client, scr)
-        , local_screen_mode_(scr->crr_mode) {
+        , local_screen_mode_(scr->crr_mode)
+        , client_pointer_(client_pointer) {
     }
 
     void screen_device::set_screen_mode_and_rotation(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
