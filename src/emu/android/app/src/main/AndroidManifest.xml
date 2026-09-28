@@ -61,6 +61,13 @@
                 <data android:pathPattern=".*.json" />
             </intent-filter>
         </activity>
+        <!-- The applicationId differs from the Java namespace in this fork. Launchers such as
+             ES-DE / IISU use the short name ".emu.EmulatorActivity", which Android expands
+             using the applicationId. This alias makes that name resolve. -->
+        <activity-alias
+            android:name="com.github.eka2l1.fe.emu.EmulatorActivity"
+            android:exported="true"
+            android:targetActivity="com.github.eka2l1.emu.EmulatorActivity" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

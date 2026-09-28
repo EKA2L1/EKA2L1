@@ -1,3 +1,9 @@
+> **This is EKA2L1 FE, an unofficial fork of [EKA2L1](https://github.com/EKA2L1/EKA2L1).**
+> It fixes launching games from frontends such as ES-DE and IISU when a different device profile is active.
+> See [FORK.md](FORK.md) for the changes. The rest of this README is the upstream one.
+
+---
+
 <div class="header">
   <p align="center">
      <img src="https://i.imgur.com/FasrbKV.png" width="256">

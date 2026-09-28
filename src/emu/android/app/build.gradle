@@ -9,6 +9,12 @@ def getGitHash = { ->
     return stdout.toString().trim()
 }
 
+def keystoreProps = new Properties()
+def keystorePropsFile = rootProject.file("keystore.properties")
+if (keystorePropsFile.exists()) {
+    keystorePropsFile.withInputStream { keystoreProps.load(it) }
+}
+
 def ciArg = '-DCI=OFF'
 if (project.hasProperty('ciArg')) {
     ciArg = project.property('ciArg').toString()
@@ -19,11 +25,11 @@ android {
     namespace 'com.github.eka2l1'
 
     defaultConfig {
-        applicationId "com.github.eka2l1"
+        applicationId "com.github.eka2l1.fe"
         minSdkVersion 21
         targetSdkVersion 34
-        versionCode 12
-        versionName "0.1.0"
+        versionCode 13
+        versionName "0.1.0-fe.1"
         ndkVersion = '25.1.8937393'
         buildConfigField "String", "GIT_HASH", "\"${getGitHash()}\""
         ndk {
@@ -40,8 +46,22 @@ android {
         }
     }
 
+    signingConfigs {
+        release {
+            if (keystorePropsFile.exists()) {
+                storeFile file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (keystorePropsFile.exists()) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             externalNativeBuild {
