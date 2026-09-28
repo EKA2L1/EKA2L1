@@ -91,6 +91,7 @@ add_library(drivers
         include/drivers/graphics/texture.h
         include/drivers/graphics/backend/graphics_driver_shared.h
         include/drivers/input/emu_controller.h
+        include/drivers/location/location.h
         include/drivers/sensor/sensor.h
         include/drivers/video/video.h
         src/driver.cpp
@@ -109,6 +110,7 @@ add_library(drivers
         src/hwrm/backend/vibration_null.cpp
         src/hwrm/vibration.cpp
         src/input/common.cpp
+        src/location/location.cpp
         src/graphics/buffer.cpp
         src/graphics/context.cpp
         src/graphics/fb.cpp
@@ -136,6 +138,8 @@ if (ANDROID)
         src/camera/backend/android/emulator_camera_jni.cpp
         src/camera/backend/android/emulator_camera_jni.h
         src/hwrm/backend/vibration_jdk.cpp
+        include/drivers/location/backend/android/location_android.h
+        src/location/backend/android/location_android.cpp
         src/sensor/backend/android/sensor_android.cpp
         src/sensor/backend/android/sensor_android.h)
 elseif (EKA2L1_IOS)
@@ -149,6 +153,8 @@ elseif (EKA2L1_IOS)
         src/camera/backend/ios/camera_ios.mm
         src/camera/backend/ios/camera_pixel_ios.mm
         src/camera/backend/ios/camera_simulator.mm
+        src/location/backend/ios/location_ios.h
+        src/location/backend/ios/location_ios.mm
         src/sensor/backend/ios/sensor_ios.h
         include/drivers/sensor/backend/ios/controller_motion.h
         src/sensor/backend/ios/sensor_ios.mm)
@@ -275,6 +281,7 @@ if (EKA2L1_IOS)
         "-framework AudioToolbox"
         "-framework CoreAudio"
         "-framework CoreHaptics"
+        "-framework CoreLocation"
         "-framework CoreMotion"
         "-framework GameController"
         "-framework CoreMedia"

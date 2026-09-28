@@ -31,6 +31,7 @@
 #include <drivers/camera/camera_collection.h>
 #include <drivers/camera/backend/android/camera_collection_android.h>
 #include <drivers/graphics/graphics.h>
+#include <drivers/location/backend/android/location_android.h>
 
 #include <common/android/jniutils.h>
 
@@ -478,4 +479,27 @@ Java_com_github_eka2l1_emu_Emulator_saveScreenshotTo(JNIEnv *env, jclass clazz, 
     env->ReleaseStringUTFChars(file_path, cstr);
 
     return state->launcher->save_screenshot_to(file_path_std);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_github_eka2l1_emu_EmulatorLocation_onLocationChanged(JNIEnv *env, jclass clazz,
+                                                              jdouble latitude, jdouble longitude,
+                                                              jfloat altitude,
+                                                              jfloat horizontal_accuracy,
+                                                              jfloat vertical_accuracy,
+                                                              jfloat speed, jfloat speed_accuracy,
+                                                              jfloat course, jfloat course_accuracy) {
+    eka2l1::drivers::location_fix fix;
+    fix.latitude_ = latitude;
+    fix.longitude_ = longitude;
+    fix.altitude_ = altitude;
+    fix.horizontal_accuracy_ = horizontal_accuracy;
+    fix.vertical_accuracy_ = vertical_accuracy;
+    fix.speed_ = speed;
+    fix.speed_accuracy_ = speed_accuracy;
+    fix.course_ = course;
+    fix.course_accuracy_ = course_accuracy;
+
+    eka2l1::drivers::android::deliver_host_location(fix);
 }

@@ -207,6 +207,7 @@ public class EmulatorActivity extends AppCompatActivity {
 
         Emulator.setContext(this);
         EmulatorCamera.setActivity(this);
+        EmulatorLocation.setActivity(this);
 
         if (deviceCode != null) {
             String []availableDevices = Emulator.getDeviceFirmwareCodes();

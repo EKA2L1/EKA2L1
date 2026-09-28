@@ -264,6 +264,8 @@
     </array>
     <key>NSCameraUsageDescription</key>
     <string>Symbian apps running in the emulator can use the camera for their viewfinder and photo capture features.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Symbian apps running in the emulator can use your location for their maps and positioning features.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>Symbian apps running in the emulator can use the microphone for recording and voice features.</string>
     <key>NSBonjourServices</key>

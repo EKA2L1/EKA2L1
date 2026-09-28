@@ -33,6 +33,22 @@
         }
       }
     },
+    "NSLocationWhenInUseUsageDescription" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbian apps running in the emulator can use your location for their maps and positioning features."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在模拟器中运行的 Symbian 应用可以使用你的位置来提供地图和定位功能。"
+          }
+        }
+      }
+    },
     "NSMicrophoneUsageDescription" : {
       "localizations" : {
         "en" : {
