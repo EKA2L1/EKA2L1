@@ -198,6 +198,12 @@ namespace eka2l1::epoc {
          */
         virtual std::uint64_t try_update(kernel::thread *drawer);
 
+        /**
+         * @param recomposite_if_occluded Recomposite the whole screen when occluded, so this
+         *                                window's client draws cannot bleed over the windows above.
+         */
+        std::uint64_t schedule_update(kernel::thread *drawer, const bool recomposite_if_occluded);
+
         void queue_event(const epoc::event &evt) override;
 
         void set_non_fading(service::ipc_context &context, ws_cmd &cmd);

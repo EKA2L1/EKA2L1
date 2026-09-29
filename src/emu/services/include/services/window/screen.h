@@ -20,6 +20,7 @@
 #pragma once
 
 #include <common/container.h>
+#include <common/region.h>
 #include <common/vecx.h>
 
 #include <drivers/graphics/common.h>
@@ -143,6 +144,10 @@ namespace eka2l1::epoc {
             FLAG_SCREEN_UPSCALE_FACTOR_LOCK = 1 << 5,
             FLAG_IS_SCREENPLAY = 1 << 6
         };
+
+        // Screen area to repaint without clearing it first, the way an NGA EndRedraw schedules one.
+        common::region server_redraw_region_;
+        bool region_redraw_active_ = false;
 
         using focus_change_callback = std::pair<void *, focus_change_callback_handler>;
         using screen_redraw_callback = std::pair<void *, screen_redraw_callback_handler>;
@@ -317,6 +322,18 @@ namespace eka2l1::epoc {
 
         void set_client_draw_pending() {
             flags_ |= FLAG_CLIENT_REDRAW_PENDING;
+        }
+
+        bool region_redraw_supported() const {
+            return is_screenplay_architecture() && !auto_clear_enabled();
+        }
+
+        void add_server_redraw_region(const eka2l1::rect &area) {
+            server_redraw_region_.add_rect(area);
+        }
+
+        common::region server_redraw_clip(const common::region &visible) const {
+            return region_redraw_active_ ? visible.intersect(server_redraw_region_) : visible;
         }
         
         void set_is_screenplay_architecture(bool is_screenplay) {
