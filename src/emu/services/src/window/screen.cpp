@@ -168,7 +168,7 @@ namespace eka2l1::epoc {
         }
 
         if (scr_conf.auto_clear) {
-            flags_ = FLAG_AUTO_CLEAR_BACKGROUND;
+            flags_ |= FLAG_AUTO_CLEAR_BACKGROUND;
         }
     }
 
@@ -473,8 +473,15 @@ namespace eka2l1::epoc {
         builder.set_feature(eka2l1::drivers::graphics_feature::clipping, false);
         builder.set_feature(eka2l1::drivers::graphics_feature::stencil_test, false);
 
+        const bool full_redraw = flags_ & FLAG_SERVER_REDRAW_PENDING;
+        region_redraw_active_ = !full_redraw && !server_redraw_region_.empty();
+        if (region_redraw_active_) {
+            // Windows replay their stores over what is on screen, clipped to the region.
+            flags_ |= FLAG_SERVER_REDRAW_PENDING;
+        }
+
         builder.clear(eka2l1::vecx<float, 6>({ 0.0, 0.0, 0.0, 0.0, 1.0, 0.0 }), drivers::draw_buffer_bit_depth_buffer
-            | drivers::draw_buffer_bit_stencil_buffer | ((flags_ & FLAG_SERVER_REDRAW_PENDING) ? drivers::draw_buffer_bit_color_buffer : 0));
+            | drivers::draw_buffer_bit_stencil_buffer | (full_redraw ? drivers::draw_buffer_bit_color_buffer : 0));
 
         builder.blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
             drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
@@ -491,6 +498,8 @@ namespace eka2l1::epoc {
 
         // Remove pending draw flags...
         flags_ &= ~(FLAG_SERVER_REDRAW_PENDING | FLAG_CLIENT_REDRAW_PENDING);
+        server_redraw_region_.make_empty();
+        region_redraw_active_ = false;
 
         // Keep consuming visible decoder mailboxes at display boundaries.
         if (adrawwalker.streaming_window_) {

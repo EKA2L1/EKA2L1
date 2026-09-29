@@ -527,6 +527,10 @@ namespace eka2l1::epoc {
     }
 
     std::uint64_t canvas_base::try_update(kernel::thread *drawer) {
+        return schedule_update(drawer, true);
+    }
+
+    std::uint64_t canvas_base::schedule_update(kernel::thread *drawer, const bool recomposite_if_occluded) {
         if (scr->need_update_visible_regions()) {
             scr->recalculate_visible_regions();
         }
@@ -578,7 +582,7 @@ namespace eka2l1::epoc {
             }
             onscreen_region.clip(eka2l1::rect({ 0, 0 }, scr->current_mode().size));
 
-            if (!visible_region.empty() && !visible_region.identical(onscreen_region)) {
+            if (recomposite_if_occluded && !visible_region.empty() && !visible_region.identical(onscreen_region)) {
                 scr->flags_ |= screen::FLAG_SERVER_REDRAW_PENDING;
             }
 
@@ -1182,8 +1186,9 @@ namespace eka2l1::epoc {
         if (size().x <= 0 || size().y <= 0) {
             return false;
         }
-        if (!surface_changed() && !pending_segment_
-            && !(scr->flags_ & screen::FLAG_SERVER_REDRAW_PENDING) && surface_ui_) {
+        const bool server_redraw = (scr->flags_ & screen::FLAG_SERVER_REDRAW_PENDING)
+            && !scr->server_redraw_clip(visible_region).empty();
+        if (!surface_changed() && !pending_segment_ && !server_redraw && surface_ui_) {
             return false;
         }
 
@@ -1298,6 +1303,7 @@ namespace eka2l1::epoc {
     }
 
     void redraw_msg_canvas::end_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
+        const eka2l1::rect redrawn_rect = redraw_rect_curr;
         redraw_rect_curr.make_empty();
         redraw_segments_.promote_last_segment();
 
@@ -1305,9 +1311,16 @@ namespace eka2l1::epoc {
             // Newly completed redraw content must be composited in correct z-order:
             // an incremental client-path update can be overdrawn by later updates of
             // windows behind this one (or was skipped entirely if a full server pass
-            // ran before this content arrived). Request a full server recomposite.
-            scr->flags_ |= screen::FLAG_SERVER_REDRAW_PENDING;
-            try_update(ctx.msg->own_thr);
+            // ran before this content arrived). Request a server recomposite.
+            const bool region_redraw = scr->region_redraw_supported();
+            if (region_redraw) {
+                // NGA only repaints the redrawn area and, with AUTOCLEAR off, keeps what it
+                // does not draw; clients may redraw the whole window but blit only what moved.
+                scr->add_server_redraw_region(eka2l1::rect(abs_rect.top + redrawn_rect.top, redrawn_rect.size));
+            } else {
+                scr->flags_ |= screen::FLAG_SERVER_REDRAW_PENDING;
+            }
+            schedule_update(ctx.msg->own_thr, !region_redraw);
         }
 
         flags &= ~flags_in_redraw;
@@ -1462,10 +1475,18 @@ namespace eka2l1::epoc {
             return false;
         }
 
+        const common::region server_clip = scr->server_redraw_clip(visible_region);
+
         // If it does not have content drawn to it, it makes no sense to draw the background
         // Else, there's a flag in window server that enables clear on any siutation
         auto draw_background_color = [&]() {
-            if ((scr->is_screenplay_architecture() || !scr->scr_config.blt_offscreen) && clear_color_enable && !background_region.empty()) {        
+            // NGA fills the background only with AUTOCLEAR on (CWsRedrawMsgWindow::DrawWindow).
+            const bool fills_background = scr->is_screenplay_architecture() ? scr->auto_clear_enabled()
+                : !scr->scr_config.blt_offscreen;
+            if (!fills_background) {
+                background_region.make_empty();
+            }
+            if (fills_background && clear_color_enable && !background_region.empty()) {
                 background_region.advance(abs_rect.top);
                 background_region = background_region.intersect(visible_region);
 
@@ -1506,12 +1527,12 @@ namespace eka2l1::epoc {
 
             draw_surface(builder, background_surface_);
 
-            if (!segments.empty()) {
-                builder.clip_bitmap_region(visible_region, scr->display_scale_factor);
+            if (!segments.empty() && !server_clip.empty()) {
+                builder.clip_bitmap_region(server_clip, scr->display_scale_factor);
 
                 gdi_command_builder gdi_builder(client->get_ws().get_graphics_driver(), builder,
                     *client->get_ws().get_bitmap_cache(), filter, abs_rect.top, scr->display_scale_factor,
-                    visible_region);
+                    server_clip);
 
                 for (std::size_t i = 0; i < segments.size(); i++) {
                     if (segments[i]->type_ != gdi_store_command_segment_pending_redraw) {

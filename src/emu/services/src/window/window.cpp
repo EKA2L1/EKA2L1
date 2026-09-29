@@ -1449,7 +1449,8 @@ namespace eka2l1 {
 
         }
 
-        bool is_auto_clear = false;
+        // WSERV's default when the ini leaves it out.
+        bool is_auto_clear = true;
         bool flicker_free = kern->is_eka1() ? false : true;
         bool blit_offscreen = kern->is_eka1() ? false : true;
 
