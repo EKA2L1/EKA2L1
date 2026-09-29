@@ -1,0 +1,4 @@
+EXPORTS
+	qt_plugin_query_verification_data @ 1 NONAME
+	qt_plugin_instance @ 2 NONAME
+

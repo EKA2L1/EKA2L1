@@ -583,7 +583,8 @@ namespace eka2l1::dispatch {
         egl_config parser(config);
 
         switch (attribute) {
-        case EGL_RENDERABLE_TYPE_EMU: {
+        case EGL_RENDERABLE_TYPE_EMU:
+        case EGL_CONFORMANT_EMU: {
             const auto ver = parser.get_target_context_version();
             if (ver == egl_config::EGL_TARGET_CONTEXT_ES11) {
                 *value = EGL_OPENGL_ES1_BIT;
@@ -640,6 +641,45 @@ namespace eka2l1::dispatch {
         case EGL_BIND_TO_TEXTURE_RGB_EMU:
         case EGL_BIND_TO_TEXTURE_RGBA_EMU:
             *value = EGL_TRUE;
+            break;
+
+        case EGL_MIN_SWAP_INTERVAL_EMU:
+        case EGL_MAX_SWAP_INTERVAL_EMU:
+            *value = 1;
+            break;
+
+        case EGL_BUFFER_SIZE_EMU:
+            *value = parser.red_bits() + parser.green_bits() + parser.blue_bits() + parser.alpha_bits();
+            break;
+
+        case EGL_CONFIG_ID_EMU:
+            *value = config;
+            break;
+
+        case EGL_MAX_PBUFFER_PIXELS_EMU:
+            *value = MAX_EGL_FB_WIDTH * MAX_EGL_FB_HEIGHT;
+            break;
+
+        case EGL_NATIVE_VISUAL_TYPE_EMU:
+        case EGL_TRANSPARENT_TYPE_EMU:
+            *value = EGL_NONE_EMU;
+            break;
+
+        case EGL_COLOR_BUFFER_TYPE_EMU:
+            *value = EGL_RGB_BUFFER_EMU;
+            break;
+
+        case EGL_LEVEL_EMU:
+        case EGL_NATIVE_RENDERABLE_EMU:
+        case EGL_NATIVE_VISUAL_ID_EMU:
+        case EGL_SAMPLES_EMU:
+        case EGL_SAMPLE_BUFFERS_EMU:
+        case EGL_TRANSPARENT_RED_VALUE_EMU:
+        case EGL_TRANSPARENT_GREEN_VALUE_EMU:
+        case EGL_TRANSPARENT_BLUE_VALUE_EMU:
+        case EGL_LUMINANCE_SIZE_EMU:
+        case EGL_ALPHA_MASK_SIZE_EMU:
+            *value = 0;
             break;
 
         default:

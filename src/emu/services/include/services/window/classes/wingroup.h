@@ -46,6 +46,9 @@ namespace eka2l1::epoc {
         kernel::process *uid_owner_change_process;
         ws::uid screen_change_event_handle;
 
+        // Client-side CWsScreenDevice this group was constructed with.
+        std::uint32_t client_device_pointer = 0;
+
         bool can_receive_focus() {
             return flags & flag_focus_receiveable;
         }

@@ -59,10 +59,11 @@ add_library(epocdispatch
         include/dispatch/def.h
         include/dispatch/dispatcher.h
         include/dispatch/hui.h
-        include/dispatch/tls.h
+        include/dispatch/image.h
         include/dispatch/management.h
         include/dispatch/register.h
         include/dispatch/screen.h
+        include/dispatch/tls.h
         include/dispatch/video.h
         src/libraries/egl/def.cpp
         src/libraries/egl/egl.cpp
@@ -79,9 +80,10 @@ add_library(epocdispatch
         src/camera.cpp
         src/dispatcher.cpp
         src/hui.cpp
-        src/tls.cpp
+        src/image.cpp
         src/register.cpp
         src/screen.cpp
+        src/tls.cpp
         src/video.cpp
         ${GNUVG_SOURCES})
 
@@ -95,6 +97,7 @@ target_link_libraries(epocdispatch PRIVATE
         drivers
         epoc
         epockern
+        stb
         epocpkg
         epocservs
         glm

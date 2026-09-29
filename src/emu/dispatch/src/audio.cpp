@@ -611,6 +611,20 @@ namespace eka2l1::dispatch {
         }
 
         *pos_get = eplayer->impl_->position();
+
+        // On a device this is a round trip to the MMF controller. Answering a tight poll instantly
+        // lets Qt spin its event loop fast enough for its 8-bit iteration count to strand timers.
+        static constexpr std::uint64_t MIN_POSITION_POLL_INTERVAL_US = 2000;
+
+        const std::uint64_t now = sys->get_ntimer()->microseconds();
+        const std::uint64_t next_poll = eplayer->last_position_query_us_ + MIN_POSITION_POLL_INTERVAL_US;
+
+        if ((eplayer->last_position_query_us_ != 0) && (now < next_poll)) {
+            sys->get_kernel_system()->crr_thread()->sleep(static_cast<std::uint32_t>(next_poll - now));
+            eplayer->last_position_query_us_ = next_poll;
+        } else {
+            eplayer->last_position_query_us_ = now;
+        }
         return epoc::error_none;
     }
 

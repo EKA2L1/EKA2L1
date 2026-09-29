@@ -323,9 +323,11 @@ namespace eka2l1::epoc {
         
         std::int16_t scaled_font_size = text_font->of_info.metrics.max_height;
         std::uint32_t metric_identifier = text_font->of_info.metric_identifier;
+        std::uint32_t layout_metric_identifier = 0;
         float scale_to_pass = 1.0f;
 
         if (text_font->of_info.adapter->vectorizable()) {
+            layout_metric_identifier = metric_identifier;
             scaled_font_size = static_cast<std::int16_t>(scaled_font_size * scale_factor_);
             metric_identifier = scaled_font_size;       // Vectorizable font metric identifier is font size
 
@@ -347,7 +349,7 @@ namespace eka2l1::epoc {
         scale_rectangle(scaled_text_box, scale_factor_);
 
         text_font->atlas.draw_text(cmd.string_, scaled_text_box, static_cast<epoc::text_alignment>(cmd.alignment_),
-            driver_, builder_, { scale_to_pass, scale_to_pass }, premultiplied_target_);
+            driver_, builder_, { scale_to_pass, scale_to_pass }, premultiplied_target_, layout_metric_identifier, scale_factor_);
     }
 
     void gdi_command_builder::build_command_draw_raw_texture(const gdi_store_command_draw_raw_texture_data &cmd) {
@@ -497,11 +499,7 @@ namespace eka2l1::epoc {
         clipped.add_rect(rect_advanced);
         clipped = clipped.intersect(clip_);
 
-        if ((clipped.rects_.size() == 1) && (clipped.rects_[0].size == eka2l1::vec2(1, 1))) {
-            LOG_TRACE(KERNEL, "HI!");
-        }
-        
-        builder_.clip_bitmap_region(clipped, scale_factor_);
+        clip_to_region(clipped);
     }
 
     void gdi_command_builder::build_command_set_clip_rect_multiple(const gdi_store_command_set_clip_rect_multiple_data &cmd) {
@@ -509,6 +507,17 @@ namespace eka2l1::epoc {
         clipped.rects_.insert(clipped.rects_.begin(), cmd.rects_, cmd.rects_ + cmd.rect_count_);
         clipped.advance(position_);
         clipped = clipped.intersect(clip_);
+
+        clip_to_region(clipped);
+    }
+
+    void gdi_command_builder::clip_to_region(const common::region &clipped) {
+        if (clipped.empty()) {
+            builder_.set_feature(drivers::graphics_feature::stencil_test, false);
+            builder_.set_feature(drivers::graphics_feature::clipping, true);
+            builder_.clip_bitmap_rect(eka2l1::rect({ 0, 0 }, { 0, 0 }));
+            return;
+        }
 
         builder_.clip_bitmap_region(clipped, scale_factor_);
     }

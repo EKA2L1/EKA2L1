@@ -100,6 +100,10 @@ namespace eka2l1::dispatch {
 
             handle_ = new_surface;
             current_scale_ = backed_screen_->display_scale_factor;
+
+            if (context->draw_surface_ == this) {
+                context->on_draw_surface_resized(drv);
+            }
         }
     }
 

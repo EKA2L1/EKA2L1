@@ -58,6 +58,14 @@ namespace eka2l1 {
         return sgc.get();
     }
 
+    epoc::cap::eik_server *oom_ui_app_server::get_eik_server() {
+        if (!eik) {
+            init(sys->get_kernel_system(), sys->get_io_system(), sys->get_device_manager());
+        }
+
+        return eik.get();
+    }
+
     oom_ui_app_session::oom_ui_app_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version, const bool is_old_layout)
         : service::typical_session(svr, client_ss_uid, client_version)
         , blank_count(0)
@@ -267,7 +275,7 @@ namespace eka2l1 {
             return;
         }
 
-        eik->key_block_mode(!static_cast<bool>(disable_it.value()));
+        get_eik_server()->key_block_mode(!static_cast<bool>(disable_it.value()));
         ctx.complete(epoc::error_none);
     }
 

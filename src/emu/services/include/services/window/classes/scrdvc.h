@@ -36,6 +36,9 @@ namespace eka2l1::epoc {
     private:
         std::int32_t local_screen_mode_;
 
+        // Address of the client's CWsScreenDevice, handed back when a GC is activated.
+        std::uint32_t client_pointer_;
+
     public:
         bool execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) override;
 
@@ -53,6 +56,10 @@ namespace eka2l1::epoc {
         void get_rotation_list(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
         void set_app_screen_mode(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
 
-        explicit screen_device(window_server_client_ptr client, epoc::screen *scr);
+        explicit screen_device(window_server_client_ptr client, epoc::screen *scr, const std::uint32_t client_pointer);
+
+        std::uint32_t client_pointer() const {
+            return client_pointer_;
+        }
     };
 }

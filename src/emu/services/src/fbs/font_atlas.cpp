@@ -80,6 +80,7 @@ namespace eka2l1::epoc {
 
         last_use_.clear();
         characters_.clear();
+        layout_advances_.clear();
     }
 
     int font_atlas::get_atlas_width() const {
@@ -137,7 +138,8 @@ namespace eka2l1::epoc {
             atlas_data_.get(), { pack_state_->width_, pack_state_->width_ }, positions.data(), infos);
     }
 
-    bool font_atlas::draw_text(const std::u16string &text, const eka2l1::rect &text_box, const epoc::text_alignment alignment, drivers::graphics_driver *driver, drivers::graphics_command_builder &builder, const eka2l1::vec2f scale_vector, bool source_over_alpha) {
+    bool font_atlas::draw_text(const std::u16string &text, const eka2l1::rect &text_box, const epoc::text_alignment alignment, drivers::graphics_driver *driver, drivers::graphics_command_builder &builder, const eka2l1::vec2f scale_vector, bool source_over_alpha,
+        const std::uint32_t layout_metric_identifier, const float layout_scale) {
         // Clamp the atlas to what the GPU can actually allocate. Large fonts
         // (e.g. high display-scale rendering) would otherwise request an atlas
         // bigger than GL_MAX_TEXTURE_SIZE; the create then fails and the
@@ -244,6 +246,23 @@ namespace eka2l1::epoc {
                 width * width * adapter_->get_atlas_bitmap_bits_per_pixel() / 8, { 0, 0 }, { width, width });
         }
 
+        // The guest measured this string with advances at its own font size, and hinting does not
+        // scale linearly, so glyphs rasterised larger must still be placed by those advances.
+        auto advance_of = [&](const char16_t chr) -> float {
+            if (layout_metric_identifier != 0) {
+                auto ite = layout_advances_.find(chr);
+                if (ite == layout_advances_.end()) {
+                    ite = layout_advances_.emplace(chr, adapter_->get_glyph_advance(typeface_idx_, chr, layout_metric_identifier)).first;
+                }
+
+                if (ite->second != 0xFFFFFFFF) {
+                    return static_cast<float>(ite->second) * layout_scale;
+                }
+            }
+
+            return characters_[chr].xadv * scale_vector[0];
+        };
+
         eka2l1::vec2 cur_pos = text_box.top;
 
         // Calculate size of the text to know where to put them
@@ -252,7 +271,7 @@ namespace eka2l1::epoc {
             float size_length = 0;
 
             for (auto &chr : text) {
-                size_length += static_cast<int>(characters_[chr].xadv * scale_vector[0]);
+                size_length += static_cast<int>(std::round(advance_of(chr)));
             }
 
             if (alignment == epoc::text_alignment::right) {
@@ -294,7 +313,7 @@ namespace eka2l1::epoc {
             }
 
             // TODO: Newline
-            cur_pos.x += static_cast<int>(std::round(info.xadv * scale_vector[0]));
+            cur_pos.x += static_cast<int>(std::round(advance_of(chr)));
         }
 
         builder.set_feature(drivers::graphics_feature::blend, false);

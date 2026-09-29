@@ -43,7 +43,10 @@
 #include <kernel/codeseg.h>
 #include <kernel/kernel.h>
 
+#include <algorithm>
 #include <cctype>
+#include <cstdio>
+#include <string_view>
 
 namespace eka2l1::hle {
     static std::array<std::u16string, 2> LDD_SKIP_LOAD_LIST = {
@@ -414,6 +417,7 @@ namespace eka2l1::hle {
         common::dir_entry entry;
 
         patches_.clear();
+        replacements_.clear();
 
         std::vector<std::string> patch_image_paths;
 
@@ -467,30 +471,35 @@ namespace eka2l1::hle {
                 LOG_TRACE(KERNEL, "Patch {} has no hard requirements", entry.name);
             }
 
-            // Patch out the shared segment first
-            common::ini_section *shared_section = map_file_parser.find("shared")->get_as<common::ini_section>();
+            // A replacing patch stands in for the whole image, so it has no routes.
+            const bool replace_image = req_section && req_section->find("replace");
 
-            if (shared_section) {
-                get_route_from_ini_section(*shared_section, the_patch.routes_);
-            } else {
-                LOG_TRACE(KERNEL, "Shared section not found for patch DLL {}", entry.name);
-            }
+            if (!replace_image) {
+                // Patch out the shared segment first
+                common::ini_section *shared_section = map_file_parser.find("shared")->get_as<common::ini_section>();
 
-            const char *alone_section_name = epocver_to_string(kern_->get_epoc_version());
-
-            if (alone_section_name) {
-                common::ini_section *indi_section = map_file_parser.find(alone_section_name)->get_as<common::ini_section>();
-
-                if (indi_section) {
-                    get_route_from_ini_section(*indi_section, the_patch.routes_);
+                if (shared_section) {
+                    get_route_from_ini_section(*shared_section, the_patch.routes_);
                 } else {
-                    LOG_TRACE(KERNEL, "Seperate section not found for epoc version {} of patch DLL {}", static_cast<int>(kern_->get_epoc_version()),
-                        entry.name);
+                    LOG_TRACE(KERNEL, "Shared section not found for patch DLL {}", entry.name);
                 }
-            }
 
-            if (the_patch.routes_.empty()) {
-                continue;
+                const char *alone_section_name = epocver_to_string(kern_->get_epoc_version());
+
+                if (alone_section_name) {
+                    common::ini_section *indi_section = map_file_parser.find(alone_section_name)->get_as<common::ini_section>();
+
+                    if (indi_section) {
+                        get_route_from_ini_section(*indi_section, the_patch.routes_);
+                    } else {
+                        LOG_TRACE(KERNEL, "Seperate section not found for epoc version {} of patch DLL {}", static_cast<int>(kern_->get_epoc_version()),
+                            entry.name);
+                    }
+                }
+
+                if (the_patch.routes_.empty()) {
+                    continue;
+                }
             }
 
             std::string source_dll_name_from_patch = eka2l1::replace_extension(original_map_name, "_");
@@ -538,6 +547,19 @@ namespace eka2l1::hle {
                 }
 
                 LOG_TRACE(KERNEL, "Using general DLL {} as patch DLL for map file {}", source_dll_name, original_map_name);
+            }
+
+            if (replace_image) {
+                image_replacement replacement;
+                replacement.name_ = the_patch.name_;
+                replacement.image_path_ = patch_dll_map;
+                replacement.req_uid2_ = the_patch.req_uid2_;
+                replacement.req_uid3_ = the_patch.req_uid3_;
+                replacement.need_dest_rom_ = the_patch.need_dest_rom_;
+                replacement.qt_plugin_ = (req_section->find("qt-plugin") != nullptr);
+
+                replacements_.push_back(std::move(replacement));
+                continue;
             }
 
             patch_image_paths.push_back(patch_dll_map);
@@ -610,6 +632,145 @@ namespace eka2l1::hle {
 
         apply_pending_patches();
         apply_trick_or_treat_algo();
+    }
+
+    struct qt_plugin_verification {
+        std::uint32_t version = 0;
+        bool debug = false;
+        std::string build_key;
+    };
+
+    // The block Q_EXPORT_PLUGIN2 embeds in every Qt 4 plugin; see qt_parse_pattern() in qlibrary.cpp.
+    static std::optional<qt_plugin_verification> find_qt_plugin_verification(const char *data, const std::size_t size) {
+        static constexpr std::string_view PATTERN = "pattern=QT_PLUGIN_VERIFICATION_DATA\n";
+
+        const std::string_view image(data, size);
+        const std::size_t start = image.find(PATTERN);
+        if (start == std::string_view::npos) {
+            return std::nullopt;
+        }
+
+        std::string_view block = image.substr(start + PATTERN.size());
+        block = block.substr(0, block.find('\0'));
+
+        qt_plugin_verification result;
+
+        while (!block.empty()) {
+            const std::size_t line_end = block.find('\n');
+            const std::string_view line = block.substr(0, line_end);
+            block = (line_end == std::string_view::npos) ? std::string_view() : block.substr(line_end + 1);
+
+            const std::size_t equal = line.find('=');
+            if (equal == std::string_view::npos) {
+                continue;
+            }
+
+            const std::string_view key = line.substr(0, equal);
+            const std::string value(line.substr(equal + 1));
+
+            if (key == "version") {
+                unsigned int major = 0, minor = 0, patch = 0;
+                std::sscanf(value.c_str(), "%u.%u.%u", &major, &minor, &patch);
+                result.version = (major << 16) | (minor << 8) | patch;
+            } else if (key == "debug") {
+                result.debug = (value == "true");
+            } else if (key == "buildkey") {
+                result.build_key = value;
+            }
+        }
+
+        return result;
+    }
+
+    // The checks QLibraryPrivate::isPlugin() runs, with the original plugin standing in for the Qt it was built with.
+    static bool qt_accepts_plugin(const qt_plugin_verification &host, const qt_plugin_verification &plugin) {
+        return ((plugin.version & 0xFF0000) == (host.version & 0xFF0000)) && ((plugin.version & 0xFF00) <= (host.version & 0xFF00))
+            && (plugin.debug == host.debug) && (plugin.build_key == host.build_key);
+    }
+
+    std::optional<loader::e32img> lib_manager::load_replacement_image(const std::u16string &path, file *original) {
+        const std::string name = common::ucs2_to_utf8(eka2l1::filename(path));
+
+        auto replacement = std::find_if(replacements_.begin(), replacements_.end(), [&](const image_replacement &candidate) {
+            return common::compare_ignore_case(name.c_str(), candidate.name_.c_str()) == 0;
+        });
+
+        if (replacement == replacements_.end()) {
+            return std::nullopt;
+        }
+
+        if (replacement->need_dest_rom_ && (path.empty() || (char16_to_drive(path[0]) != get_drive_rom()))) {
+            return std::nullopt;
+        }
+
+        std::uint32_t original_uid2 = 0;
+        std::uint32_t original_uid3 = 0;
+        std::optional<qt_plugin_verification> host_qt;
+
+        original->seek(0, file_seek_mode::beg);
+        eka2l1::ro_file_stream original_stream(original);
+
+        if (loader::is_e32img(&original_stream)) {
+            auto image = loader::parse_e32img(&original_stream, false);
+            if (!image) {
+                return std::nullopt;
+            }
+
+            original_uid2 = image->header.uid2;
+            original_uid3 = image->header.uid3;
+
+            if (replacement->qt_plugin_) {
+                host_qt = find_qt_plugin_verification(image->data.data(), image->data.size());
+            }
+        } else {
+            auto image = loader::parse_romimg(&original_stream, mem_, kern_->get_epoc_version());
+            if (!image) {
+                return std::nullopt;
+            }
+
+            original_uid2 = image->header.uid2;
+            original_uid3 = image->header.uid3;
+
+            if (replacement->qt_plugin_) {
+                const char *code = reinterpret_cast<const char *>(mem_->get_real_pointer(image->header.code_address));
+                if (code) {
+                    host_qt = find_qt_plugin_verification(code, image->header.code_size);
+                }
+            }
+        }
+
+        original->seek(0, file_seek_mode::beg);
+
+        if ((replacement->req_uid2_ && (replacement->req_uid2_ != original_uid2)) || (replacement->req_uid3_ && (replacement->req_uid3_ != original_uid3))) {
+            return std::nullopt;
+        }
+
+        if (replacement->qt_plugin_ && !host_qt) {
+            return std::nullopt;
+        }
+
+        symfile replacement_file = eka2l1::physical_file_proxy(replacement->image_path_, READ_MODE | BIN_MODE);
+        if (!replacement_file) {
+            return std::nullopt;
+        }
+
+        eka2l1::ro_file_stream replacement_stream(replacement_file.get());
+        auto image = loader::parse_e32img(&replacement_stream);
+
+        if (!image) {
+            return std::nullopt;
+        }
+
+        if (replacement->qt_plugin_) {
+            const auto plugin_qt = find_qt_plugin_verification(image->data.data(), image->data.size());
+            if (!plugin_qt || !qt_accepts_plugin(*host_qt, *plugin_qt)) {
+                LOG_INFO(KERNEL, "Qt of {} would reject its replacement plugin, keeping the original", name);
+                return std::nullopt;
+            }
+        }
+
+        LOG_TRACE(KERNEL, "Loading {} in place of {}", replacement->image_path_, common::ucs2_to_utf8(path));
+        return image;
     }
 
     static bool does_condition_meet_for_patch(codeseg_ptr original, patch_info &patch, const bool check_name) {
@@ -1019,6 +1180,10 @@ namespace eka2l1::hle {
             if (!f) {
                 LOG_ERROR(KERNEL, "Can't open {}", common::ucs2_to_utf8(lib_path));
                 return nullptr;
+            }
+
+            if (auto replacement = load_replacement_image(lib_path, f.get())) {
+                return load_as_e32img(*replacement, lib_path);
             }
 
             eka2l1::ro_file_stream image_data_stream(f.get());

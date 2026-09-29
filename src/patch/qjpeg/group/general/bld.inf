@@ -1,0 +1,15 @@
+/*
+============================================================================
+ Name        : bld.inf
+ Description : Build information for the host-decoding Qt JPEG image format
+               plugin replacement.
+============================================================================
+*/
+
+PRJ_PLATFORMS
+DEFAULT
+
+PRJ_EXPORTS
+
+PRJ_MMPFILES
+qjpeg_general.mmp

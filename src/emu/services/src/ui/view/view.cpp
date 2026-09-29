@@ -127,7 +127,8 @@ namespace eka2l1 {
         }
     }
 
-    void view_server::make_view_active(view_session *activator, const ui::view::view_id &active_id, const ui::view::custom_message &msg) {
+    void view_server::make_view_active(view_session *activator, const ui::view::view_id &active_id, const ui::view::custom_message &msg,
+        const epoc::notify_info &on_activated) {
         view_session *deactivate_ss = active_view_session();
         std::optional<ui::view::view_id> old_id = std::nullopt;
 
@@ -144,7 +145,7 @@ namespace eka2l1 {
 
         activator->set_active_view(active_id);
         activator->queue_event({ ui::view::view_event::event_active_view, active_id, old_id.value(),
-            msg.id_, static_cast<std::int32_t>(msg.data_.size()) }, msg);
+            msg.id_, static_cast<std::int32_t>(msg.data_.size()) }, msg, on_activated);
 
         call_activation_listener(active_id);
     }
@@ -353,8 +354,15 @@ namespace eka2l1 {
             return;
         }
 
-        server<view_server>()->make_view_active(this, id.value(), { custom_message_buf_cop, custom_message_id.value() });
-        ctx->complete(epoc::error_none);
+        // EVwsActivateView finishes once the view has taken the activation, which the client
+        // waits for; EVwsCreateActivateViewEvent only queues it.
+        if (should_complete) {
+            server<view_server>()->make_view_active(this, id.value(), { custom_message_buf_cop, custom_message_id.value() },
+                epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr));
+        } else {
+            server<view_server>()->make_view_active(this, id.value(), { custom_message_buf_cop, custom_message_id.value() });
+            ctx->complete(epoc::error_none);
+        }
     }
 
     void view_session::deactive_view(service::ipc_context *ctx, const bool should_complete) {
@@ -372,6 +380,18 @@ namespace eka2l1 {
     void view_session::get_priority(service::ipc_context *ctx) {
         const std::uint32_t priority = server<view_server>()->priority();
         ctx->write_data_to_descriptor_argument(0, &priority);
+        ctx->complete(epoc::error_none);
+    }
+
+    void view_session::get_current_active_view_id(service::ipc_context *ctx) {
+        view_session *active_session = server<view_server>()->active_view_session();
+        ui::view::view_id id = ui::view::EMPTY_VIEW_ID;
+
+        if (active_session) {
+            id = active_session->active_view().value();
+        }
+
+        ctx->write_data_to_descriptor_argument<ui::view::view_id>(0, id);
         ctx->complete(epoc::error_none);
     }
 
@@ -471,6 +491,10 @@ namespace eka2l1 {
             ctx->complete(epoc::error_none);
             break;
         }
+
+        case view_opcode_current_active_view_id:
+            get_current_active_view_id(ctx);
+            break;
 
         case view_opcode_request_view_event_cancel:
             request_view_event_cancel(ctx);

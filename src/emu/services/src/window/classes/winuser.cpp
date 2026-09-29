@@ -136,6 +136,7 @@ namespace eka2l1::epoc {
         }
 
         client->remove_redraws(this);
+        client->get_ws().release_pointer_grab(this);
     }
 
     void canvas_base::add_canvas_observer(canvas_observer *ob) {

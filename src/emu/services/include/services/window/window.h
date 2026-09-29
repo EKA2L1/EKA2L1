@@ -560,5 +560,9 @@ namespace eka2l1 {
         int get_deliver_delay_report_visiblity_event() const {
             return deliver_report_visibility_evt_;
         }
+
+        void release_pointer_grab(epoc::window *win) {
+            touch_shipper.release_grab(win);
+        }
     };
 }

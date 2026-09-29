@@ -941,10 +941,10 @@ namespace eka2l1 {
                 info.size = common::file_size(real_path_utf8);
             }
 
-            /* TODO: Recover this code with new EKA2L1's common code.
-            auto last_mod = fs::last_write_time(*real_path);
-            info.last_write = static_cast<uint64_t>(last_mod.time_since_epoch().count());
-            */
+            info.last_write = common::get_last_modifiy_since_ad(*real_path);
+            if (info.last_write == 0xFFFFFFFFFFFFFFFFULL) {
+                info.last_write = 0;
+            }
 
             std::string path_utf8 = common::ucs2_to_utf8(path);
 
@@ -1155,6 +1155,8 @@ namespace eka2l1 {
             info.size = entry->size;
             info.name = common::ucs2_to_utf8(entry->name);
             info.full_path = common::ucs2_to_utf8(path);
+            info.last_write = (rom_cache->header.rom_base == loader::EKA1_ROM_BASE) ? rom_cache->header.eka1_diff0.time
+                                                                                    : rom_cache->header.eka2_diff0.time;
 
             return info;
         }

@@ -209,10 +209,7 @@ namespace eka2l1 {
         explicit oom_ui_app_server(eka2l1::system *sys);
         void init(kernel_system *kern, io_system *io, device_manager *mngr);
 
-        epoc::cap::eik_server *get_eik_server() {
-            return eik.get();
-        }
-
+        epoc::cap::eik_server *get_eik_server();
         epoc::cap::sgc_server *get_sgc_server();
     };
 }

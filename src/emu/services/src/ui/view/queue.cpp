@@ -36,7 +36,7 @@ namespace eka2l1::ui::view {
         }
     }
 
-    void event_queue::queue_event(const view_event &evt, const custom_message &msg) {
+    void event_queue::queue_event(const view_event &evt, const custom_message &msg, const epoc::notify_info &on_acknowledged) {
         const std::lock_guard<std::mutex> guard(lock_);
 
         if (!nof_info_.empty()) {
@@ -44,12 +44,13 @@ namespace eka2l1::ui::view {
 
             current_custom_ = std::move(msg);
             buffer_ = nullptr;
+            awaiting_acknowledgement_ = on_acknowledged;
 
             return;
         }
 
         // Queue the event
-        events_.push({ evt, msg });
+        events_.push({ evt, msg, on_acknowledged });
     }
 
     bool event_queue::hear(epoc::notify_info info, std::uint8_t *buffer) {
@@ -60,12 +61,16 @@ namespace eka2l1::ui::view {
             return false;
         }
 
+        // Asking for the next event is how the client reports it has handled the last one.
+        awaiting_acknowledgement_.complete(epoc::error_none);
+
         if (!events_.empty()) {
             auto evt = std::move(events_.front());
             events_.pop();
 
             complete_write_and_notify_event(info, buffer, evt.evt_);
             current_custom_ = std::move(evt.custom_);
+            awaiting_acknowledgement_ = evt.on_acknowledged_;
 
             return true;
         }

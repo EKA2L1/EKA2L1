@@ -63,9 +63,9 @@ namespace eka2l1::epoc {
         // Attach context with window
         attached_window->attached_contexts.push(&context_attach_link);
 
-        // Afaik that the pointer to CWsScreenDevice is internal, so not so scared of general users touching
-        // this.
-        context.complete(attached_window->scr->number);
+        // The client stores the reply as the GC's device (CWindowGc::Device()).
+        epoc::window_group *group = attached_window->get_group();
+        context.complete(group ? static_cast<int>(group->client_device_pointer) : 0);
 
         if (no_building()) {
             return;
@@ -280,13 +280,7 @@ namespace eka2l1::epoc {
             *clip_region_temp = clip_region_temp->intersect(personal_clipping);
 
             if (clip_region_temp->rects_.size() <= 1) {
-                if (clip_region_temp->empty()) {
-                    cmd.opcode_ = gdi_store_command_disable_clip;
-                    attached_window->add_draw_command(cmd);
-
-                    return;
-                }
-                // We can use clipping directly
+                // An empty intersection leaves nothing drawable, not the whole window.
                 use_clipping = true;
                 the_clip = clip_region_temp->empty() ? eka2l1::rect({ 0, 0 }, { 0, 0 }) : clip_region_temp->rects_[0];
             } else {
@@ -367,6 +361,9 @@ namespace eka2l1::epoc {
 
         attached_window = nullptr;
         recording = false;
+
+        // The client drops its cached state here too, so it will not resend what it believes is default.
+        reset_internal_status();
 
         context.complete(epoc::error_none);
     }
@@ -995,10 +992,8 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
-    void graphic_context::reset_context() {
-        if (text_font) {
-            text_font = nullptr;
-        }
+    void graphic_context::reset_internal_status() {
+        text_font = nullptr;
 
         fill_mode = brush_style::null;
         line_mode = pen_style::solid;
@@ -1009,7 +1004,10 @@ namespace eka2l1::epoc {
 
         clipping_rect.make_empty();
         clipping_region.make_empty();
+    }
 
+    void graphic_context::reset_context() {
+        reset_internal_status();
         do_submit_clipping();
     }
 

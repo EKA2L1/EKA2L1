@@ -213,7 +213,6 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_DISPATCHER(void, update_screen, const std::uint32_t screen_number, const std::uint32_t num_rects, const eka2l1::rect *rect_list) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
 
-        // TODO: Update only some regions specified. Rotation makes it complicated
         epoc::screen *scr = dispatcher->winserv_->get_screens();
 
         while (scr != nullptr) {
@@ -226,7 +225,7 @@ namespace eka2l1::dispatch {
                 if (scr->direct_framebuffer_mapped) {
                     scr->update_direct_framebuffer();
                 }
-                scr->present_framebuffer(sys->get_graphics_driver(), sys->get_kernel_system());
+                scr->present_framebuffer(sys->get_graphics_driver(), sys->get_kernel_system(), rect_list, num_rects);
                 break;
             }
 

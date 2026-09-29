@@ -87,6 +87,7 @@ namespace eka2l1::epoc {
             pen
         };
 
+        void reset_internal_status();
         void reset_context();
         bool no_building() const;
 

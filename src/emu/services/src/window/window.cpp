@@ -281,7 +281,8 @@ namespace eka2l1::epoc {
             return;
         }
 
-        window_client_obj_ptr device = std::make_unique<epoc::screen_device>(this, target_screen);
+        const std::uint32_t client_pointer = (cmd.header.cmd_len >= sizeof(ws_cmd_screen_device_header)) ? header->screen_dvc_ptr : 0;
+        window_client_obj_ptr device = std::make_unique<epoc::screen_device>(this, target_screen, client_pointer);
 
         if (!primary_device) {
             primary_device = reinterpret_cast<epoc::screen_device *>(device.get());
@@ -339,6 +340,14 @@ namespace eka2l1::epoc {
 
         window_client_obj_ptr group = std::make_unique<epoc::window_group>(this, target_screen, parent_group, header->client_handle);
         epoc::window_group *group_casted = reinterpret_cast<epoc::window_group *>(group.get());
+
+        if (!device_ptr) {
+            device_ptr = primary_device;
+        }
+
+        if (device_ptr) {
+            group_casted->client_device_pointer = device_ptr->client_pointer();
+        }
 
         // If no window group is being focused on the screen, we force the screen to receive this window as focus
         // Else rely on the focus flag.
@@ -2025,7 +2034,7 @@ namespace eka2l1 {
                 if (!make_key_event(input_mapping.key_input_map, input_event, guest_event)) {
                     make_mouse_event(original_input_evt, guest_event, get_current_focus_screen());
 
-                    if (update_pointer_position(guest_event)) {
+                    if (update_pointer_position(guest_event) && !touch_shipper.deliver_to_grab_window(kern, guest_event)) {
                         touch_shipper.add_new_event(guest_event);
                         root_current->walk_tree(&touch_shipper, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
                         touch_shipper.clear();
@@ -2333,15 +2342,15 @@ namespace eka2l1 {
             [this](std::uint64_t userdata, std::uint64_t microsecs_late) {
                 epoc::canvas_base *cv = reinterpret_cast<epoc::canvas_base *>(userdata);
                 if (cv) {
+                    // Kernel lock first: SVC handlers already hold it when they take screen_mutex.
+                    const std::lock_guard<kernel_system> kern_guard(*kern);
                     const std::lock_guard<std::mutex> guard(cv->scr->screen_mutex);
-                    kern->lock();
 
                     if (cv->scr->need_update_visible_regions()) {
                         cv->scr->recalculate_visible_regions();
                     }
 
                     cv->report_visiblity_change(true);
-                    kern->unlock();
                 }
             });
     }

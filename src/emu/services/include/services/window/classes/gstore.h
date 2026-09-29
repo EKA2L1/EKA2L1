@@ -262,6 +262,7 @@ namespace eka2l1::epoc {
         void build_command_draw_bitmap(const gdi_store_command_draw_bitmap_data &cmd);
         void build_command_set_clip_rect_single(const gdi_store_command_set_clip_rect_single_data &cmd);
         void build_command_set_clip_rect_multiple(const gdi_store_command_set_clip_rect_multiple_data &cmd);
+        void clip_to_region(const common::region &clipped);
         void build_command_disable_clip();
         void build_command_update_texture(const gdi_store_command_update_texture_data &cmd);
     };

@@ -214,7 +214,7 @@ namespace eka2l1 {
 
         io_component_type type;
         std::size_t size;
-        std::uint64_t last_write;
+        std::uint64_t last_write = 0;
     };
 
     struct directory : public io_component {
