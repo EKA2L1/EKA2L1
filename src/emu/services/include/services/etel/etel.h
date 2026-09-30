@@ -39,6 +39,10 @@ namespace eka2l1 {
 
     std::string get_etel_server_name_by_epocver(const epocver ver);
 
+    // Stands in for ConSvr.exe, which on UIQ 2.x seeds C:\System\plpvar.ini (the
+    // PlpVariant::GetMachineIdL value) with the phone serial at boot.
+    void supply_plpvariant_machine_id(system *sys);
+
     struct etel_session : public service::typical_session {
         std::vector<etel_subsession_instance> subsessions_;
 

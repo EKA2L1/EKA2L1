@@ -379,6 +379,7 @@ namespace eka2l1 {
         
         void init_services_post_bootup(system *sys) {
             epoc::sms::supply_sim_settings(sys);
+            supply_plpvariant_machine_id(sys);
         }
     }
 }
