@@ -28,10 +28,24 @@
 
 #define SCRDVC_IMPL(name, base)                                                   \
     void name::Update(const TRegion &aRegion) {                                   \
-        UpdateScreen(1, iScreenNumber, aRegion.Count(), aRegion.RectangleList()); \
+        if (!aRegion.CheckError()) {                                             \
+            for (TInt i = 0; i < aRegion.Count(); ++i) {                          \
+                UpdateRegion(aRegion[i]);                                        \
+            }                                                                     \
+        }                                                                         \
+        Update();                                                                 \
     }                                                                             \
     void name::UpdateRegion(const TRect &aRect) {                                 \
-        UpdateScreen(1, iScreenNumber, 1, &aRect);                                \
+        if (aRect.IsEmpty()) {                                                    \
+            return;                                                               \
+        }                                                                         \
+        TRect bounds = iUpdateRegion.BoundingRect();                             \
+        iUpdateRegion.AddRect(aRect);                                             \
+        if (iUpdateRegion.CheckError()) {                                         \
+            bounds.BoundingRect(aRect);                                           \
+            iUpdateRegion.Clear();                                                \
+            iUpdateRegion.AddRect(bounds);                                        \
+        }                                                                         \
     }                                                                             \
     TInt name::Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride) {  \
         iScreenNumber = aScreenNumber;                                            \
@@ -42,10 +56,11 @@
         return 0;                                                                 \
     }                                                                             \
     void name::Update() {                                                         \
-        TRect updateRect;                                                         \
-        updateRect.iTl = TPoint(0, 0);                                            \
-        updateRect.iBr = updateRect.iTl + iSize;                                  \
-        UpdateScreen(1, iScreenNumber, 1, &updateRect);                           \
+        if (!iUpdateRegion.IsEmpty()) {                                           \
+            UpdateScreen(1, iScreenNumber, iUpdateRegion.Count(),                 \
+                iUpdateRegion.RectangleList());                                   \
+            iUpdateRegion.Clear();                                                \
+        }                                                                         \
     }                                                                             \
     TInt name::GetInterface(TInt aInterfaceId, TAny *&aInterface) {               \
         if (aInterfaceId == KSurfaceInterfaceID) {                                \

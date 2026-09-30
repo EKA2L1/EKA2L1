@@ -29,6 +29,7 @@
 #define SCRDVC_DECL()                                                     \
     TUint32 iScreenNumber;                                                \
     TUint iDeviceOrientation;                                             \
+    TRegionFix<10> iUpdateRegion;                                          \
                                                                           \
 public:                                                                   \
     TInt Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride); \
