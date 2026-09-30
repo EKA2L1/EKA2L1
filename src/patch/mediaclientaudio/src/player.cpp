@@ -162,8 +162,8 @@ EXPORT_C TInt CMdaAudioPlayerUtility::GetBalance(TInt &aBalance) {
 
 #if (MCA_NEW == 3)
 EXPORT_C TMMFDurationInfo CMdaAudioPlayerUtility::Duration(TTimeIntervalMicroSeconds &aDuration) {
-    LogOut(KMcaCat, _L("Unimplemented function to get duration with state!"));
-    return EMMFDurationInfoUnknown;
+    aDuration = Duration();
+    return iProperties->State() == EMdaStateIdle ? EMMFDurationInfoUnknown : EMMFDurationInfoValid;
 }
 
 EXPORT_C void CMdaAudioPlayerUtility::OpenFileL(const RFile &aFile) {
