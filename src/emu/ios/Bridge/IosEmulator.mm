@@ -29,6 +29,7 @@
 
 #include <common/algorithm.h>
 #include <common/buffer.h>
+#include <common/crypt.h>
 #include <common/cvt.h>
 #include <common/fileutils.h>
 #include <common/language.h>
@@ -63,6 +64,7 @@
 #include <package/manager.h>
 #include <services/applist/applist.h>
 #include <services/bluetooth/btman.h>
+#include <services/etel/etel.h>
 #include <services/fbs/bitmap.h>
 #include <services/fbs/fbs.h>
 #include <services/window/window.h>
@@ -2823,6 +2825,7 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
         @"jitEnabled": @(_state->conf.ios_use_jit),
         @"performanceMode": [NSString stringWithUTF8String:_state->conf.ios_performance_mode.c_str()],
         @"deviceDisplayName": [NSString stringWithUTF8String:_state->conf.device_display_name.c_str()],
+        @"imei": [NSString stringWithUTF8String:_state->conf.imei.c_str()],
         @"logFilter": [NSString stringWithUTF8String:_state->conf.log_filter.c_str()],
         @"btnetDiscoveryMode": @(_state->conf.btnet_discovery_mode),
         @"btnetListenPort": @(_state->conf.internet_bluetooth_port),
@@ -2911,6 +2914,18 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
             }
         }
     }
+    NSString *imei = snapshot[@"imei"];
+    if ([imei isKindOfClass:NSString.class] && (imei.length > 0)) {
+        std::lock_guard<std::recursive_mutex> session_lock(_state->session_mutex);
+        std::optional<eka2l1::kernel_lock> kernel_lock;
+        if (_state->symsys && _state->symsys->get_kernel_system()) {
+            kernel_lock.emplace(_state->symsys->get_kernel_system());
+        }
+        _state->conf.imei = imei.UTF8String;
+        if (_state->symsys && _state->mounted) {
+            eka2l1::supply_plpvariant_machine_id(_state->symsys.get());
+        }
+    }
     NSString *logFilter = snapshot[@"logFilter"];
     if ([logFilter isKindOfClass:NSString.class]) {
         _state->conf.log_filter = logFilter.UTF8String;
@@ -2977,6 +2992,10 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
     }
     _state->conf.serialize();
     return YES;
+}
+
+- (NSInteger)validateIMEI:(NSString *)imei {
+    return eka2l1::crypt::is_imei_valid(imei.UTF8String ? imei.UTF8String : "");
 }
 
 - (NSArray<EKA2L1LanguageEntry *> *)availableLanguages {

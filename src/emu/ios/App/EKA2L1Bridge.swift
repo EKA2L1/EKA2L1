@@ -336,6 +336,10 @@ final class EKA2L1Bridge {
         emulator.applyConfigSnapshot(snapshot)
     }
 
+    func validateIMEI(_ imei: String) -> Int {
+        emulator.validateIMEI(imei)
+    }
+
     // YES when this build carries the dynarmic JIT (sideload/simulator builds
     // only; App Store / TestFlight builds compile without it).
     var jitCompiledIn: Bool {
