@@ -3517,6 +3517,38 @@
         }
       }
     },
+    "settings.imei.invalidChecksum" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The IMEI check digit doesn't match. The value is still saved."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IMEI 校验位不正确。仍会保存当前值。"
+          }
+        }
+      }
+    },
+    "settings.imei.invalidLength" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An IMEI has 15 digits. The value is still saved."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IMEI 应为 15 位数字。仍会保存当前值。"
+          }
+        }
+      }
+    },
     "settings.integerScaling" : {
       "localizations" : {
         "en" : {

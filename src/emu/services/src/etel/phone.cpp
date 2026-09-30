@@ -174,7 +174,8 @@ namespace eka2l1 {
         phoneid.revision_id_.assign(nullptr, EXAMPLE_VALID_REVISION);
         phoneid.serial_num_.assign(nullptr, common::utf8_to_ucs2(conf_state->imei));
 
-        if (legacy_level_ == ETEL_LEGACY_LEVEL_LEGACY) {
+        // RBasicGsmPhone takes the bare TGsmPhoneId; RMobilePhone's V1 adds the extension header.
+        if (ctx->msg->function == epoc::etel_old_gsm_phone_get_phone_id) {
             ctx->write_data_to_descriptor_argument<epoc::etel_phone_id_v0>(0, phoneid);
         } else {
             epoc::etel_phone_id_v1 phoneid_new;
@@ -378,6 +379,15 @@ namespace eka2l1 {
 
             case epoc::etel_mobile_phone_transition_get_identity_caps:
                 get_identity_caps(ctx);
+                break;
+
+            // Symbian 7.0 still ships the etelbgsm/etelagsm clients (Gsmbas.dll, Gsmadv.dll).
+            case epoc::etel_old_gsm_phone_get_phone_id:
+                get_phone_id(ctx);
+                break;
+
+            case epoc::etel_old_gsm_adv_phone_get_subscriber_id:
+                get_subscriber_id(ctx);
                 break;
 
             default:

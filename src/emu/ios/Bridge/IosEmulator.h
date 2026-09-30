@@ -332,6 +332,9 @@ typedef NS_ENUM(NSInteger, EKA2L1PointerPhase) {
 - (NSDictionary<NSString *, id> *)currentConfigSnapshot;
 - (BOOL)applyConfigSnapshot:(NSDictionary<NSString *, id> *)snapshot;
 
+// 0 when valid, otherwise one of common::crypt's IMEI_ERROR_* codes.
+- (NSInteger)validateIMEI:(NSString *)imei;
+
 // System language -----------------------------------------------------------
 // Languages shipped by the currently-selected device's ROM. Empty until a
 // device is installed. Mirrors the Android frontend's language picker source.

@@ -18,6 +18,7 @@
  */
 
 #include <common/cvt.h>
+#include <config/config.h>
 #include <kernel/kernel.h>
 #include <kernel/property.h>
 #include <services/etel/common.h>
@@ -26,6 +27,7 @@
 #include <services/sysagt/sysagt.h>
 #include <system/epoc.h>
 #include <utils/err.h>
+#include <vfs/vfs.h>
 
 namespace eka2l1 {
     std::string get_etel_server_name_by_epocver(const epocver ver) {
@@ -34,6 +36,23 @@ namespace eka2l1 {
         }
 
         return "!EtelServer";
+    }
+
+    void supply_plpvariant_machine_id(system *sys) {
+        io_system *io = sys->get_io_system();
+        if (!io->exist(u"Z:\\System\\Libs\\ConSvr.exe")) {
+            return;
+        }
+
+        const std::string &imei = sys->get_config()->imei;
+        symfile machine_id = io->open_file(u"C:\\System\\plpvar.ini", WRITE_MODE | BIN_MODE);
+        if (!machine_id) {
+            LOG_ERROR(SERVICE_ETEL, "Unable to write the PlpVariant machine ID file");
+            return;
+        }
+
+        machine_id->write_file(imei.data(), static_cast<std::uint32_t>(imei.size()), 1);
+        machine_id->close();
     }
 
     etel_server::etel_server(eka2l1::system *sys)

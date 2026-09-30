@@ -21,6 +21,7 @@ struct SettingsView: View {
     @State private var systemLanguageCode = -1
 
     @State private var friendlyPhoneName = ""
+    @State private var imei = ""
 
     // BT netplay. Mirrors the Android BTNetplaySettingsFragment surface; the
     // bluetooth midman reads these at device boot, so edits apply from the
@@ -39,7 +40,7 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("settings.device") {
+            Section {
                 HStack {
                     Text("settings.friendlyPhoneName")
                     Spacer()
@@ -47,6 +48,15 @@ struct SettingsView: View {
                         .multilineTextAlignment(.trailing)
                         .foregroundStyle(.secondary)
                         .submitLabel(.done)
+                }
+                HStack {
+                    Text(verbatim: "IMEI")
+                    Spacer()
+                    TextField(String("540806859904945"), text: $imei)
+                        .multilineTextAlignment(.trailing)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                        .keyboardType(.numberPad)
                 }
                 if !availableLanguages.isEmpty {
                     Picker("settings.systemLanguage", selection: $systemLanguageCode) {
@@ -58,6 +68,19 @@ struct SettingsView: View {
                 Picker("settings.performanceMode", selection: $performanceMode) {
                     Text("settings.performanceMode.high").tag("high-performance")
                     Text("settings.performanceMode.balanced").tag("balanced")
+                }
+            } header: {
+                Text("settings.device")
+            } footer: {
+                // Like the desktop frontend, an invalid IMEI is flagged but still saved,
+                // since some registration schemes expect a specific serial.
+                switch EKA2L1Bridge.shared.validateIMEI(imei) {
+                case 0:
+                    EmptyView()
+                case -1:
+                    Text("settings.imei.invalidLength")
+                default:
+                    Text("settings.imei.invalidChecksum")
                 }
             }
             // Only sideload/simulator builds carry the dynarmic JIT; App Store /
@@ -204,7 +227,20 @@ struct SettingsView: View {
         .onAppear {
             load()
         }
+        .onDisappear {
+            // Committed once rather than per keystroke: on UIQ each write also
+            // rewrites the guest's PlpVariant machine ID file.
+            if !imei.isEmpty {
+                _ = EKA2L1Bridge.shared.applyConfigSnapshot(["imei": imei])
+            }
+        }
         .onChange(of: friendlyPhoneName) { _ in save() }
+        .onChange(of: imei) { newValue in
+            let digits = String(newValue.filter { $0.isASCII && $0.isNumber }.prefix(15))
+            if digits != newValue {
+                imei = digits
+            }
+        }
         .onChange(of: useJIT) { _ in save() }
         .onChange(of: performanceMode) { _ in save() }
         .onChange(of: integerScaling) { _ in save() }
@@ -270,6 +306,7 @@ struct SettingsView: View {
         // Anything the bridge doesn't recognise runs as balanced.
         performanceMode = snapshot["performanceMode"] as? String == "high-performance" ? "high-performance" : "balanced"
         friendlyPhoneName = snapshot["deviceDisplayName"] as? String ?? ""
+        imei = snapshot["imei"] as? String ?? ""
         availableLanguages = EKA2L1Bridge.shared.availableLanguages()
         systemLanguageCode = EKA2L1Bridge.shared.currentLanguageCode()
         if let value = snapshot["btnetDiscoveryMode"] as? NSNumber {
