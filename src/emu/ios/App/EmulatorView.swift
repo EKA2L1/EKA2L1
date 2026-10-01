@@ -35,9 +35,6 @@ struct EmulatorView: View {
     // Whether the booted ROM is touch-driven (S60v5 / Symbian^3+); those use a
     // separate layout preference that defaults to the fullscreen layout.
     @State private var isTouchDevice = false
-    // Individual screen-space keypad frames. Keeping them separate lets guest
-    // touch input continue in the empty space between customized controls.
-    @State private var keypadHitRegions: [CGRect] = []
     @State private var screenSize: CGSize = .zero
     @State private var screenSafeAreaInsets = EdgeInsets()
     @State private var isEditingKeypad = false
@@ -136,6 +133,14 @@ struct EmulatorView: View {
 
     var body: some View {
         GeometryReader { proxy in
+            let controlSize = CGSize(
+                width: proxy.size.width + proxy.safeAreaInsets.leading + proxy.safeAreaInsets.trailing,
+                height: proxy.size.height + proxy.safeAreaInsets.top + proxy.safeAreaInsets.bottom
+            )
+            let keypadConfiguration = keypadConfiguration(
+                in: proxy.size,
+                safeAreaInsets: proxy.safeAreaInsets
+            )
             ZStack(alignment: .topLeading) {
                 EmulatorControllerView(
                     uid: uid,
@@ -144,7 +149,11 @@ struct EmulatorView: View {
                     displayLayout: displayConfiguration(in: proxy.size),
                     keypadHitRegions: isEditingLayout
                         ? [CGRect(origin: .zero, size: proxy.size)]
-                        : keypadHitRegions,
+                        : keypadConfiguration.hitRegions(
+                            in: proxy.size,
+                            controlSize: controlSize,
+                            fullScreen: isFullscreen
+                        ),
                     onAppLaunch: { success in
                         guard success else { return }
                         refreshGuestScreenModes()
@@ -194,7 +203,12 @@ struct EmulatorView: View {
                 }
             }
             .overlay {
-                keypadOverlay(in: proxy.size, safeAreaInsets: proxy.safeAreaInsets)
+                keypadOverlay(
+                    in: proxy.size,
+                    safeAreaInsets: proxy.safeAreaInsets,
+                    controlSize: controlSize,
+                    configuration: keypadConfiguration
+                )
             }
             .onAppear {
                 screenSize = proxy.size
@@ -287,13 +301,10 @@ struct EmulatorView: View {
 
     @ViewBuilder private func keypadOverlay(
         in size: CGSize,
-        safeAreaInsets: EdgeInsets
+        safeAreaInsets: EdgeInsets,
+        controlSize: CGSize,
+        configuration: KeypadLayoutConfiguration
     ) -> some View {
-        let controlSize = CGSize(
-            width: size.width + safeAreaInsets.leading + safeAreaInsets.trailing,
-            height: size.height + safeAreaInsets.top + safeAreaInsets.bottom
-        )
-
         if isEditingDisplay {
             // The keypad is hidden while the picture is being placed: it would
             // sit on top of what the user is trying to see.
@@ -335,17 +346,9 @@ struct EmulatorView: View {
             VirtualKeypad(
                 size: size,
                 controlSize: controlSize,
-                configuration: keypadConfiguration(
-                    in: size,
-                    safeAreaInsets: safeAreaInsets
-                ),
+                configuration: configuration,
                 fullScreen: isFullscreen,
-                actions: menuActions,
-                onFramesChange: { frames in
-                    if frames != keypadHitRegions {
-                        keypadHitRegions = frames
-                    }
-                }
+                actions: menuActions
             )
             .opacity(keypadOpacity)
         }
@@ -413,7 +416,6 @@ struct EmulatorView: View {
         }
         editingDisplayLayout = nil
         isEditingDisplay = false
-        keypadHitRegions = []
         hostProxy.viewController?.setHardwareKeyboardCaptureEnabled(true)
         DisplayOrientation.apply(isLocked: lockGameOrientation)
     }
@@ -440,7 +442,6 @@ struct EmulatorView: View {
         }
         editingKeypadLayout = nil
         isEditingKeypad = false
-        keypadHitRegions = []
         hostProxy.viewController?.setHardwareKeyboardCaptureEnabled(true)
         DisplayOrientation.apply(isLocked: lockGameOrientation)
     }

@@ -106,6 +106,25 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
         normalizedPoint(for: element).point(in: size)
     }
 
+    func visibleElements(fullScreen: Bool) -> [KeypadElement] {
+        fullScreen ? [.menu] : KeypadElement.hideable.filter { !isHidden($0) } + [.menu]
+    }
+
+    // Keep hit regions in the same local geometry as the controls, without
+    // retaining transient navigation frames through preference callbacks.
+    func hitRegions(in size: CGSize, controlSize: CGSize, fullScreen: Bool) -> [CGRect] {
+        visibleElements(fullScreen: fullScreen).map { element in
+            let center = point(for: element, in: size)
+            let elementSize = element.size(in: controlSize)
+            return CGRect(
+                x: center.x - elementSize.width / 2,
+                y: center.y - elementSize.height / 2,
+                width: elementSize.width,
+                height: elementSize.height
+            )
+        }
+    }
+
     mutating func setPoint(_ point: CGPoint, for element: KeypadElement, in size: CGSize) {
         let normalized = NormalizedKeypadPoint.make(point, in: size)
         switch element {
@@ -457,76 +476,40 @@ struct SystemMenuKey: View {
 
 // MARK: - Runtime keypad
 
-private struct KeypadElementFramesKey: PreferenceKey {
-    static let defaultValue: [KeypadElement: CGRect] = [:]
-
-    static func reduce(value: inout [KeypadElement: CGRect],
-                       nextValue: () -> [KeypadElement: CGRect]) {
-        value.merge(nextValue(), uniquingKeysWith: { _, new in new })
-    }
-}
-
 struct VirtualKeypad: View {
     let size: CGSize
     let controlSize: CGSize
     let configuration: KeypadLayoutConfiguration
     let fullScreen: Bool
     let actions: KeypadMenuActions
-    let onFramesChange: ([CGRect]) -> Void
 
     var body: some View {
         ZStack {
-            if !fullScreen {
-                if shows(.dpad) {
-                    runtimeElement(.dpad) {
+            ForEach(configuration.visibleElements(fullScreen: fullScreen), id: \.self) { element in
+                runtimeElement(element) {
+                    switch element {
+                    case .dpad:
                         SlidingDPad(diameter: KeypadElement.dpad.size(in: controlSize).width)
-                    }
-                }
-                if shows(.leftSoft) {
-                    runtimeElement(.leftSoft) {
+                    case .leftSoft:
                         SoftKey(side: .left, size: KeypadElement.leftSoft.size(in: controlSize))
-                    }
-                }
-                if shows(.rightSoft) {
-                    runtimeElement(.rightSoft) {
+                    case .rightSoft:
                         SoftKey(side: .right, size: KeypadElement.rightSoft.size(in: controlSize))
-                    }
-                }
-                if shows(.numeric) {
-                    runtimeElement(.numeric) {
+                    case .numeric:
                         CapsNumericPad(size: KeypadElement.numeric.size(in: controlSize))
-                    }
-                }
-                if shows(.clear) {
-                    runtimeElement(.clear) {
+                    case .menu:
+                        SystemMenuKey(actions: actions, size: KeypadElement.menu.size(in: controlSize))
+                    case .clear:
                         ClearKey(size: KeypadElement.clear.size(in: controlSize))
-                    }
-                }
-                if shows(.call) {
-                    runtimeElement(.call) {
+                    case .call:
                         PhoneKey(side: .call, size: KeypadElement.call.size(in: controlSize))
-                    }
-                }
-                if shows(.end) {
-                    runtimeElement(.end) {
+                    case .end:
                         PhoneKey(side: .end, size: KeypadElement.end.size(in: controlSize))
                     }
                 }
             }
-
-            runtimeElement(.menu) {
-                SystemMenuKey(actions: actions, size: KeypadElement.menu.size(in: controlSize))
-            }
         }
         .frame(width: size.width, height: size.height)
         .ignoresSafeArea()
-        .onPreferenceChange(KeypadElementFramesKey.self) { frames in
-            onFramesChange(Array(frames.values))
-        }
-    }
-
-    private func shows(_ element: KeypadElement) -> Bool {
-        !configuration.isHidden(element)
     }
 
     private func position(for element: KeypadElement) -> CGPoint {
@@ -541,14 +524,6 @@ struct VirtualKeypad: View {
         return content()
             .frame(width: elementSize.width, height: elementSize.height)
             .background(KeypadElementBackdrop(element: element))
-            .background(
-                GeometryReader { proxy in
-                    Color.clear.preference(
-                        key: KeypadElementFramesKey.self,
-                        value: [element: proxy.frame(in: .global)]
-                    )
-                }
-            )
             .position(position(for: element))
     }
 }
