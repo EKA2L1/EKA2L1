@@ -2546,13 +2546,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Drives C, D and E of this device are kept apart from other devices."
+            "value" : "If enabled, apps and data installed on this device are kept separate from other devices."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此设备的 C、D、E 盘与其他设备互相隔离。"
+            "value" : "若开启，此设备安装的应用和数据与其他设备互相隔离。"
           }
         }
       }

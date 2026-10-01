@@ -920,7 +920,7 @@ struct ImportDeviceView: View {
     @State private var rom: PickedFile?
     @State private var rpkg: PickedFile?
     @State private var archive: PickedFile?
-    @State private var isolateDrives = true
+    @State private var isolateDrives = false
     // A single fileImporter driven by which row was tapped. Stacking two
     // .fileImporter modifiers on one view makes SwiftUI drop one of them, so
     // we multiplex through this instead. `pickTarget` is read in the
