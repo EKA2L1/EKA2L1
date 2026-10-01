@@ -282,7 +282,6 @@ namespace eka2l1::epoc {
 
         case EWsWinOpEnableGroupListChangeEvents:
         case EWsWinOpDisableScreenChangeEvents:
-        case EWsWinOpDisableModifierChangedEvents:
         case EWsWinOpDisableErrorMessages:
         case EWsWinOpDisableOnEvents:
         case EWsWinOpDisableGroupChangeEvents:

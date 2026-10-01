@@ -159,7 +159,7 @@ public class VirtualKeyboard implements Overlay, Runnable {
                 int cx = (int) rect.centerX();
                 int cy = (int) rect.centerY();
                 icon.setBounds(cx - half, cy - half, cx + half, cy + half);
-                icon.setTint((fgColor & 0xFF000000) | (iconColor & 0x00FFFFFF));
+                icon.setTint(iconColor == 0 ? fgColor : (fgColor & 0xFF000000) | (iconColor & 0x00FFFFFF));
                 icon.draw(g);
             } else {
                 g.drawText(label, rect.centerX(), rect.centerY() - textCenterOffset, textPaint);
@@ -184,7 +184,7 @@ public class VirtualKeyboard implements Overlay, Runnable {
         }
     }
 
-    private static final int KEYBOARD_SIZE = 27;
+    private static final int KEYBOARD_SIZE = 28;
     static final int SCREEN = -1;
 
     static final int KEY_NUM1 = 0;
@@ -214,6 +214,7 @@ public class VirtualKeyboard implements Overlay, Runnable {
     static final int KEY_FIRE = 24;
     static final int KEY_CALL = 25;
     static final int KEY_END = 26;
+    static final int KEY_EDIT = 27;
 
     private static final int LAYOUT_SIGNATURE = 0x564B4C00;
     private static final int LAYOUT_OLD_VERSION = 1;
@@ -287,6 +288,7 @@ public class VirtualKeyboard implements Overlay, Runnable {
                     KEY_CANCEL,
                     KEY_CALL,
                     KEY_END,
+                    KEY_EDIT,
             },
             {
                     KEY_NUM1,
@@ -382,6 +384,8 @@ public class VirtualKeyboard implements Overlay, Runnable {
         keypad[KEY_CALL].setIcon(AppCompatResources.getDrawable(context, R.drawable.ic_vk_call), 0x34C759);
         keypad[KEY_END] = new VirtualKey(Keycode.KEY_END, "End");
         keypad[KEY_END].setIcon(AppCompatResources.getDrawable(context, R.drawable.ic_vk_call_end), 0xFF3B30);
+        keypad[KEY_EDIT] = new VirtualKey(Keycode.KEY_EDIT, context.getString(R.string.virtual_key_edit));
+        keypad[KEY_EDIT].setIcon(AppCompatResources.getDrawable(context, R.drawable.ic_vk_edit), 0);
 
         snapOrigins = new int[keypad.length];
         snapModes = new int[keypad.length];
@@ -449,7 +453,7 @@ public class VirtualKeyboard implements Overlay, Runnable {
                 }
                 keypad[KEY_DIAL].setVisible(false);
                 keypad[KEY_CANCEL].setVisible(false);
-                resetPhoneKeys();
+                resetOptionalKeys();
                 break;
             case 1:
                 keyScales[SCALE_JOYSTICK] = 1;
@@ -490,7 +494,7 @@ public class VirtualKeyboard implements Overlay, Runnable {
                 }
                 keypad[KEY_DIAL].setVisible(false);
                 keypad[KEY_CANCEL].setVisible(false);
-                resetPhoneKeys();
+                resetOptionalKeys();
                 break;
             case 2:
                 keyScales[SCALE_JOYSTICK] = 1;
@@ -519,7 +523,7 @@ public class VirtualKeyboard implements Overlay, Runnable {
                 }
                 keypad[KEY_DIAL].setVisible(false);
                 keypad[KEY_CANCEL].setVisible(false);
-                resetPhoneKeys();
+                resetOptionalKeys();
                 break;
             case 3:
                 keyScales[SCALE_JOYSTICK] = 1;
@@ -550,18 +554,18 @@ public class VirtualKeyboard implements Overlay, Runnable {
                 for (int i = KEY_DIAL; i < KEYBOARD_SIZE; i++) {
                     keypad[i].setVisible(false);
                 }
-                resetPhoneKeys();
+                resetOptionalKeys();
                 break;
         }
     }
 
-    // Green call and red end keys, hidden by default. They sit above the soft keys,
-    // where every layout leaves room.
-    protected void resetPhoneKeys() {
+    protected void resetOptionalKeys() {
         setSnap(KEY_CALL, KEY_SOFT_LEFT, RectSnap.EXT_NORTH);
         setSnap(KEY_END, KEY_SOFT_RIGHT, RectSnap.EXT_NORTH);
         keypad[KEY_CALL].setVisible(false);
         keypad[KEY_END].setVisible(false);
+        setSnap(KEY_EDIT, KEY_CALL, RectSnap.EXT_NORTH);
+        keypad[KEY_EDIT].setVisible(false);
     }
 
     protected int getLayoutNum() {
@@ -702,6 +706,9 @@ public class VirtualKeyboard implements Overlay, Runnable {
     }
 
     public void setKeyVisibility(int id, boolean hidden) {
+        if (hidden) {
+            releaseKey(keypad[id]);
+        }
         keypad[id].setVisible(!hidden);
         snapKeys();
         repaint();
@@ -710,6 +717,26 @@ public class VirtualKeyboard implements Overlay, Runnable {
 
     public void setLayoutListener(LayoutListener listener) {
         this.listener = listener;
+    }
+
+    protected void releaseKey(VirtualKey key) {
+        for (int i = 0; i < associatedKeys.length; i++) {
+            if (associatedKeys[i] == key) {
+                Emulator.pressKey(key.getKeyCode(), 1);
+                if (key.getSecondKeyCode() != 0) {
+                    Emulator.pressKey(key.getSecondKeyCode(), 1);
+                }
+                associatedKeys[i] = null;
+            }
+        }
+        key.setSelected(false);
+    }
+
+    public void releaseKeys() {
+        for (VirtualKey key : keypad) {
+            releaseKey(key);
+        }
+        repaint();
     }
 
     protected void setSnap(int key, int origin, int mode) {

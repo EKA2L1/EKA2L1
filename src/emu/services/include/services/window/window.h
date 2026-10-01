@@ -315,6 +315,8 @@ namespace eka2l1::epoc {
 
         void send_screen_change_events(epoc::screen *scr);
         void send_focus_group_change_events(epoc::screen *scr);
+        void send_modifier_changed_events(std::uint32_t changed, std::uint32_t modifiers);
+        void remove_modifier_changed_events(epoc::window *win);
 
         // We have been blessed with so much reflection that it's actually seems evil now.
         template <typename T>
@@ -322,6 +324,7 @@ namespace eka2l1::epoc {
             const std::lock_guard guard_(ws_client_lock);
 
             if constexpr (std::is_same_v<T, epoc::event_mod_notifier_user>) {
+                mod_notifies.erase(evt);
                 mod_notifies.emplace(std::move(evt));
                 return static_cast<ws::uid>(mod_notifies.size());
             } else if constexpr (std::is_same_v<T, epoc::event_screen_change_user>) {

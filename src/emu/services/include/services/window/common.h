@@ -441,6 +441,11 @@ namespace eka2l1::epoc {
         only_when_visible
     };
 
+    struct modifier_changed_event {
+        std::uint32_t changed_modifiers;
+        std::uint32_t modifiers;
+    };
+
     struct event {
         event_code type;
         std::uint32_t handle;
@@ -451,6 +456,7 @@ namespace eka2l1::epoc {
         union {
             adv_pointer_event adv_pointer_evt_;
             key_event key_evt_;
+            modifier_changed_event modifier_evt_;
             message_ready_event msg_ready_evt_;
             window_visiblity_changed_event win_visibility_change_evt_;
         };

@@ -1,4 +1,5 @@
 <resources>
+    <string name="virtual_key_edit">Edit Key</string>
     <string name="app_name" translatable="false">EKA2L1</string>
     <string name="error">Error</string>
     <string name="no_data">No data</string>

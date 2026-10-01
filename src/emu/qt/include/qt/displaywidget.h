@@ -22,6 +22,7 @@
 
 #include <QOpenGLContext>
 #include <QWidget>
+#include <set>
 
 #include <drivers/graphics/emu_window.h>
 
@@ -33,6 +34,7 @@ class display_widget : public QWidget, public eka2l1::drivers::emu_window {
 private:
     std::array<int, eka2l1::MAX_SYMBIAN_SUPPORTED_POINTERS> active_pointers_;
     void *userdata_;
+    std::set<int> pressed_keys_;
 
     void reset_active_pointers();
 

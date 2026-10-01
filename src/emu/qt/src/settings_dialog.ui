@@ -1363,6 +1363,24 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</string>
         </widget>
        </item>
        <item>
+        <layout class="QHBoxLayout" name="control_bind_edit_layout">
+         <item>
+          <widget class="QLabel" name="control_bind_edit_label">
+           <property name="text">
+            <string>Edit Key</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="control_bind_edit_btn">
+           <property name="text">
+            <string notr="true">PushButton</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
         <layout class="QHBoxLayout" name="control_bind_row1_layout">
          <item>
           <widget class="QWidget" name="control_bind_left_softkey_widget" native="true">

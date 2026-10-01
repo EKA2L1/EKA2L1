@@ -1310,9 +1310,10 @@ namespace eka2l1::epoc {
             break;
 
         case ws_cl_op_get_modifier_state:
+            ctx.complete(get_ws().key_shipper.translator_.modifiers());
+            break;
+
         case ws_cl_op_set_modifier_state:
-            // No modifiers (Ctrl, Alt, ...) are considered yet.
-            // Apps known to use this: Frogger (Lonely Cat Games)
             ctx.complete(epoc::error_none);
             break;
 
@@ -1361,6 +1362,54 @@ namespace eka2l1::epoc {
 
                 queue_event(evt);
             }
+        }
+    }
+
+    void window_server_client::remove_modifier_changed_events(epoc::window *win) {
+        const std::lock_guard guard(ws_client_lock);
+        epoc::event_mod_notifier_user notifier{};
+        notifier.user = win;
+        mod_notifies.erase(notifier);
+    }
+
+    void window_server_client::send_modifier_changed_events(std::uint32_t changed, std::uint32_t modifiers) {
+        for (const auto &request : mod_notifies) {
+            const std::uint32_t matching = changed & request.notifier.what;
+            if (!matching) {
+                continue;
+            }
+            epoc::window *group = request.user;
+            while (group && group->type != epoc::window_kind::group) {
+                group = group->parent;
+            }
+            if (request.notifier.when == epoc::event_control::only_with_keyboard_focus
+                && group != get_ws().get_focus()) {
+                continue;
+            }
+            if (request.notifier.when == epoc::event_control::only_when_visible) {
+                epoc::window *win = request.user;
+                if (win->type == epoc::window_kind::group) {
+                    win = win->child;
+                }
+                bool visible = false;
+                for (; win; win = win->sibling) {
+                    if ((win->type == epoc::window_kind::client || win->type == epoc::window_kind::top_client)
+                        && reinterpret_cast<epoc::canvas_base *>(win)->can_be_physically_seen()) {
+                        visible = true;
+                        break;
+                    }
+                    if (request.user->type != epoc::window_kind::group) {
+                        break;
+                    }
+                }
+                if (!visible) {
+                    continue;
+                }
+            }
+            epoc::event evt(request.user->client_handle, epoc::event_code::modifier_change);
+            evt.time = get_ws().get_kernel_system()->universal_time();
+            evt.modifier_evt_ = {matching, modifiers};
+            queue_event(evt);
         }
     }
 }
@@ -1834,7 +1883,7 @@ namespace eka2l1 {
         guest_evt_.type = epoc::event_code::touch;
         guest_evt_.adv_pointer_evt_.pos_z = driver_evt_.mouse_.pos_z_;
         guest_evt_.adv_pointer_evt_.ptr_num = driver_evt_.mouse_.mouse_id;
-        guest_evt_.adv_pointer_evt_.modifier = epoc::event_modifier_adv_pointer;
+        guest_evt_.adv_pointer_evt_.modifier = epoc::event_modifier_adv_pointer | key_shipper.translator_.modifiers();
 
         switch (driver_evt_.mouse_.button_) {
         case drivers::mouse_button_left: {
@@ -1941,7 +1990,9 @@ namespace eka2l1 {
         epoc::window *root_current = get_current_focus_screen()->root->child;
         guest_event.time = kern->universal_time();
 
-        if (!root_current) {
+        if (!root_current && input_event.type_ != drivers::input_event_type::key
+            && input_event.type_ != drivers::input_event_type::key_raw
+            && input_event.type_ != drivers::input_event_type::button) {
             return;
         }
 
@@ -2317,9 +2368,7 @@ namespace eka2l1 {
                     repeatable_evt.key_evt_.scancode = scancode;
                     repeatable_evt.key_evt_.repeats = 1;
 
-                    // TODO: Mark the modifiers currently being held in the server,
-                    // and add them to the flags here!
-                    repeatable_evt.key_evt_.modifiers = epoc::event_modifier_repeatable;
+                    repeatable_evt.key_evt_.modifiers = epoc::event_modifier_repeatable | key_shipper.translator_.modifiers();
 
                     kern->reset_inactivity_time();
 

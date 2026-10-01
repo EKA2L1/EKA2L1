@@ -74,6 +74,9 @@ public class ProfileModel {
     @SerializedName("VirtualKeyboardType")
     public int vkType;
 
+    @SerializedName("VirtualKeyboardShowEditKey")
+    public boolean vkShowEditKey;
+
     @SerializedName("ButtonShape")
     public int vkButtonShape;
 

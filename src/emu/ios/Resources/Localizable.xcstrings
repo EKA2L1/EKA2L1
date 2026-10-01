@@ -2765,6 +2765,22 @@
         }
       }
     },
+    "key.edit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Key"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑键"
+          }
+        }
+      }
+    },
     "key.end" : {
       "localizations" : {
         "en" : {

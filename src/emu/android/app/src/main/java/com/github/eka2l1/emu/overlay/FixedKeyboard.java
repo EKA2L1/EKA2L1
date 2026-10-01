@@ -34,6 +34,16 @@ public class FixedKeyboard extends VirtualKeyboard {
 	public final static float KEY_HEIGHT_RATIO = 2.7f;
 
 	private static final int NUM_VARIANTS = 2;
+	private boolean editVisible;
+
+	public void setEditKeyVisible(boolean visible) {
+		if (!visible) {
+			releaseKey(keypad[KEY_EDIT]);
+		}
+		editVisible = visible;
+		keypad[KEY_EDIT].setVisible(visible);
+		repaint();
+	}
 
 	public FixedKeyboard(Context context) {
 		super(context);
@@ -105,6 +115,8 @@ public class FixedKeyboard extends VirtualKeyboard {
 				keypad[KEY_FIRE].setVisible(true);
 				break;
 		}
+		setSnap(KEY_EDIT, KEY_FIRE, RectSnap.EXT_NORTH);
+		keypad[KEY_EDIT].setVisible(editVisible);
 	}
 
 	@Override

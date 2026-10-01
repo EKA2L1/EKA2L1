@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="virtual_key_edit">编辑键</string>
     <string name="error">错误</string>
     <string name="no_data">无数据</string>
     <string name="search">搜索</string>
