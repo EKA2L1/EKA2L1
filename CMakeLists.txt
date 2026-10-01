@@ -106,12 +106,6 @@ if (MSVC)
     add_definitions(-D_DISABLE_VECTOR_ANNOTATION)
 endif(MSVC)
 
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    # Limit to C-family languages so that swiftc (enabled for the iOS target)
-    # does not reject the clang-only flag.
-    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX,OBJC,OBJCXX>:-Wno-error>)
-endif()
-
 if (EKA2L1_SANITIZER)
     if (CMAKE_GENERATOR STREQUAL "Xcode")
         # Let Xcode drive it: the build setting instruments C/ObjC/C++/Swift and

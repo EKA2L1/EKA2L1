@@ -165,7 +165,7 @@ namespace eka2l1::drivers {
 
                     // Create new audio stream. Don't play yet
                     stream_ = aud_driver_->new_output_stream(audio_stream->codecpar->sample_rate,
-                        audio_stream->codecpar->channels, [this](std::int16_t *output, std::size_t frames) {
+                        audio_stream->codecpar->ch_layout.nb_channels, [this](std::int16_t *output, std::size_t frames) {
                             return this->video_audio_callback(output, frames);
                         });
 
@@ -356,14 +356,14 @@ namespace eka2l1::drivers {
 
             while (avcodec_receive_frame(audio_codec_ctx_, temp_audio_frame_) >= 0) {
                 if (!resample_context_) {
-                    const int dest_channel_type = (channel_count == 2) ? AV_CH_LAYOUT_STEREO : AV_CH_LAYOUT_MONO;
-                    AVStream *audio_stream = format_ctx_->streams[audio_stream_index_];
-
-                    resample_context_ = swr_alloc_set_opts(nullptr, dest_channel_type, AV_SAMPLE_FMT_S16, stream_->get_sample_rate(),
-                        audio_stream->codecpar->channel_layout, static_cast<AVSampleFormat>(audio_stream->codecpar->format), audio_stream->codecpar->sample_rate,
+                    AVChannelLayout output_layout{};
+                    av_channel_layout_default(&output_layout, channel_count);
+                    result = swr_alloc_set_opts2(&resample_context_, &output_layout, AV_SAMPLE_FMT_S16, stream_->get_sample_rate(),
+                        &temp_audio_frame_->ch_layout, static_cast<AVSampleFormat>(temp_audio_frame_->format), temp_audio_frame_->sample_rate,
                         0, nullptr);
+                    av_channel_layout_uninit(&output_layout);
 
-                    if (swr_init(resample_context_) < 0) {
+                    if (result < 0 || swr_init(resample_context_) < 0) {
                         LOG_ERROR(DRIVER_AUD, "Error initializing audio resample context!");
                         swr_free(&resample_context_);
 

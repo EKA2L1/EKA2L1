@@ -114,4 +114,19 @@ TEST_CASE("EPOC Record custom audio decodes and can be reopened", "[audio]") {
     REQUIRE(std::all_of(output.begin() + 4000, output.begin() + 4008, [](auto sample) { return sample == 0; }));
     REQUIRE(std::all_of(output.begin() + 4008, output.end(), [](auto sample) { return sample == 8; }));
 }
+
+TEST_CASE("PCM encoder accepts unrestricted sample rates and channel layouts", "[audio]") {
+    eka2l1::drivers::player_ffmpeg player(nullptr);
+    REQUIRE(player.set_dest_encoding(eka2l1::drivers::AUDIO_PCM16_CODEC_4CC));
+    REQUIRE(player.set_dest_freq(8000));
+    REQUIRE(player.set_dest_channel_count(1));
+    REQUIRE(player.get_dest_freq() == 8000);
+    REQUIRE(player.get_dest_channel_count() == 1);
+    REQUIRE(player.set_dest_freq(44100));
+    REQUIRE(player.set_dest_channel_count(2));
+    REQUIRE(player.get_dest_freq() == 44100);
+    REQUIRE(player.get_dest_channel_count() == 2);
+    REQUIRE_FALSE(player.set_dest_freq(0));
+    REQUIRE_FALSE(player.set_dest_channel_count(0));
+}
 #endif
