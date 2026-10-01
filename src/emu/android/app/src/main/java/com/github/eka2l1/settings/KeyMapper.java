@@ -48,6 +48,7 @@ public class KeyMapper {
         intDict.put(KeyEvent.KEYCODE_SOFT_RIGHT, Keycode.KEY_SOFT_RIGHT);
         intDict.put(KeyEvent.KEYCODE_CALL, Keycode.KEY_SEND);
         intDict.put(KeyEvent.KEYCODE_ENDCALL, Keycode.KEY_CLEAR);
+        intDict.put(KeyEvent.KEYCODE_SHIFT_LEFT, Keycode.KEY_EDIT);
         return intDict;
     }
 }

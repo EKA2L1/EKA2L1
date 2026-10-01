@@ -225,6 +225,8 @@ enum GuestKeys {
                  symbol: "phone.down.circle", symbolColor: .red),
         GuestKey(scan: Scan.clear, name: String(localized: "key.clear"),
                  symbol: "delete.left"),
+        GuestKey(scan: Scan.edit, name: String(localized: "key.edit"),
+                 symbol: "pencil"),
     ]
 
     static let digits: [GuestKey] = [
@@ -434,6 +436,7 @@ enum PeripheralMappingStore {
         KeyboardKey.token(forUsage: 0x3C): Scan.call,       // F3
         KeyboardKey.token(forUsage: 0x3D): Scan.end,        // F4
         KeyboardKey.token(forUsage: 0x2A): Scan.clear,      // Delete/Backspace
+        KeyboardKey.token(forUsage: 0xE1): Scan.edit,     // Left Shift
         KeyboardKey.token(forUsage: 0x1E): 0x31, KeyboardKey.token(forUsage: 0x1F): 0x32,
         KeyboardKey.token(forUsage: 0x20): 0x33, KeyboardKey.token(forUsage: 0x21): 0x34,
         KeyboardKey.token(forUsage: 0x22): 0x35, KeyboardKey.token(forUsage: 0x23): 0x36,

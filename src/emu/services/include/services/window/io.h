@@ -21,6 +21,7 @@
 
 #include <common/vecx.h>
 #include <services/window/classes/winbase.h>
+#include <services/window/keyboard.h>
 
 #include <map>
 #include <tuple>
@@ -66,6 +67,7 @@ namespace eka2l1::epoc {
         eka2l1::window_server *serv_; ///< Pointer to window server.
 
         std::vector<epoc::event> evts_;
+        key_event_translator translator_;
 
         explicit window_key_shipper(window_server *serv);
 

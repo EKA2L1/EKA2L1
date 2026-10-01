@@ -13,6 +13,7 @@ enum KeypadElement: String, CaseIterable, Hashable {
     case clear
     case call
     case end
+    case edit
 
     var title: String {
         switch self {
@@ -24,6 +25,7 @@ enum KeypadElement: String, CaseIterable, Hashable {
         case .clear: return String(localized: "keypad.accessibility.clear")
         case .call: return String(localized: "keypad.accessibility.call")
         case .end: return String(localized: "keypad.accessibility.end")
+        case .edit: return String(localized: "key.edit")
         }
     }
 
@@ -33,7 +35,7 @@ enum KeypadElement: String, CaseIterable, Hashable {
         allCases.filter { $0 != .menu }
     }
 
-    static let hiddenByDefault: [String] = [KeypadElement.call, .end].map(\.rawValue).sorted()
+    static let hiddenByDefault: [String] = [KeypadElement.call, .end, .edit].map(\.rawValue).sorted()
 
     func size(in canvasSize: CGSize) -> CGSize {
         // Base both orientations on the display's physical short edge so a
@@ -46,7 +48,7 @@ enum KeypadElement: String, CaseIterable, Hashable {
         switch self {
         case .dpad:
             return CGSize(width: majorWidth - 4, height: majorWidth - 4)
-        case .leftSoft, .rightSoft, .menu, .clear, .call, .end:
+        case .leftSoft, .rightSoft, .menu, .clear, .call, .end, .edit:
             return CGSize(width: 56 * scale, height: 36 * scale)
         case .numeric:
             return CGSize(width: majorWidth, height: majorWidth * 190 / 150)
@@ -84,6 +86,7 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
     // reset layout when one is decoded.
     var call: NormalizedKeypadPoint?
     var end: NormalizedKeypadPoint?
+    var edit: NormalizedKeypadPoint?
     // Nil for layouts saved before the setting existed; they take the reset layout's default.
     var hiddenElements: [String]?
 
@@ -136,6 +139,7 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
         case .clear: clear = normalized
         case .call: call = normalized
         case .end: end = normalized
+        case .edit: edit = normalized
         }
     }
 
@@ -185,6 +189,10 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
             configuration.call = configuration.call ?? fallback.call
             configuration.end = configuration.end ?? fallback.end
             configuration.hiddenElements = configuration.hiddenElements ?? fallback.hiddenElements
+            if configuration.edit == nil {
+                configuration.edit = fallback.edit
+                configuration.setHidden(true, for: .edit)
+            }
             return configuration
         }
         return classicDefault(in: size, safeAreaInsets: safeAreaInsets)
@@ -251,6 +259,7 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
                 clear: .make(clear, in: size),
                 call: .make(call, in: size),
                 end: .make(end, in: size),
+                edit: .make(CGPoint(x: softRowCenterX, y: menu.y), in: size),
                 hiddenElements: KeypadElement.hiddenByDefault
             )
         }
@@ -303,6 +312,7 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
             clear: .make(clear, in: size),
             call: .make(call, in: size),
             end: .make(end, in: size),
+            edit: .make(CGPoint(x: softRowCenterX, y: softCenterY - softKeySize.height - 12), in: size),
             hiddenElements: KeypadElement.hiddenByDefault
         )
     }
@@ -317,6 +327,7 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
         case .clear: return clear
         case .call: return call ?? NormalizedKeypadPoint(x: 0.5, y: 0.5)
         case .end: return end ?? NormalizedKeypadPoint(x: 0.5, y: 0.5)
+        case .edit: return edit ?? NormalizedKeypadPoint(x: 0.5, y: 0.5)
         }
     }
 
@@ -339,7 +350,7 @@ private struct KeypadElementBackdrop: View {
         switch element {
         case .dpad:
             Circle().fill(.black)
-        case .leftSoft, .rightSoft, .numeric, .menu, .clear, .call, .end:
+        case .leftSoft, .rightSoft, .numeric, .menu, .clear, .call, .end, .edit:
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(.black)
         }
@@ -504,6 +515,8 @@ struct VirtualKeypad: View {
                         PhoneKey(side: .call, size: KeypadElement.call.size(in: controlSize))
                     case .end:
                         PhoneKey(side: .end, size: KeypadElement.end.size(in: controlSize))
+                    case .edit:
+                        EditKey(size: KeypadElement.edit.size(in: controlSize))
                     }
                 }
             }
@@ -754,6 +767,8 @@ struct KeypadLayoutEditor: View {
             PhoneKey(side: .call, size: elementSize)
         case .end:
             PhoneKey(side: .end, size: elementSize)
+        case .edit:
+            EditKey(size: elementSize)
         }
     }
 

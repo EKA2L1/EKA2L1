@@ -19,6 +19,7 @@ enum Scan {
     static let star: UInt32 = 0x2A
     static let call: UInt32 = 0xB4       // std_key_application_0 (green call)
     static let end: UInt32 = 0xB5        // std_key_application_1 (red end)
+    static let edit: UInt32 = 0x12     // std_key_left_shift
 }
 
 // Digit, the phone-style letters under it, and the raw scan code. Shared by
@@ -285,6 +286,15 @@ struct PhoneKey: View {
                size: size)
             .accessibilityLabel(Text(side == .call ? LocalizedStringKey("keypad.accessibility.call")
                                                    : LocalizedStringKey("keypad.accessibility.end")))
+    }
+}
+
+struct EditKey: View {
+    var size: CGSize = CGSize(width: 58, height: 38)
+
+    var body: some View {
+        CapKey(scan: Scan.edit, symbol: "pencil", size: size)
+            .accessibilityLabel(Text("key.edit"))
     }
 }
 

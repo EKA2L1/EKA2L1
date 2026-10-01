@@ -94,6 +94,9 @@ namespace eka2l1::epoc {
     }
 
     window::~window() {
+        if (client) {
+            client->remove_modifier_changed_events(this);
+        }
         while (child != nullptr) {
             child->parent = nullptr;
             child = child->sibling;
@@ -289,6 +292,11 @@ namespace eka2l1::epoc {
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {
+        case EWsWinOpDisableModifierChangedEvents:
+            client->remove_modifier_changed_events(this);
+            ctx.complete(epoc::error_none);
+            return true;
+
         case EWsWinOpEnableModifierChangedEvents: {
             epoc::event_mod_notifier_user nof;
             nof.notifier = *reinterpret_cast<event_mod_notifier *>(cmd.data_ptr);

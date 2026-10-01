@@ -219,6 +219,10 @@ void make_default_keybind_profile(eka2l1::config::keybind_profile &profile) {
     bind.source.data.keycode = Qt::Key_Backspace;
 
     profile.keybinds.push_back(bind);
+
+    bind.target = eka2l1::epoc::std_key_left_shift;
+    bind.source.data.keycode = Qt::Key_Shift;
+    profile.keybinds.push_back(bind);
 }
 
 settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::drivers::emu_controller *controller, eka2l1::config::app_settings *app_settings, eka2l1::config::state &configuration)
@@ -361,6 +365,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
         { ui_->control_bind_nine_btn, '9' },
         { ui_->control_bind_star_btn, '*' },
         { ui_->control_bind_tag_btn, eka2l1::epoc::std_key_hash },
+        { ui_->control_bind_edit_btn, eka2l1::epoc::std_key_left_shift },
     };
 
     QList<QPushButton *> need_buttons = target_bind_codes_.keys();

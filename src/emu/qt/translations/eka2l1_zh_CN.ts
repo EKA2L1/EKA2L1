@@ -1610,6 +1610,10 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
       <translation>注意：其中一个绑定与鼠标按钮相关联，触摸屏功能将被禁用。</translation>
     </message>
     <message>
+      <source>Edit Key</source>
+      <translation>编辑键</translation>
+    </message>
+    <message>
       <location filename="../src/settings_dialog.ui" line="1340"/>
       <source>Left softkey</source>
       <translation>左软键</translation>

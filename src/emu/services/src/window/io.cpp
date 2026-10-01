@@ -164,84 +164,65 @@ namespace eka2l1::epoc {
         evts_.push_back(evt);
     }
 
-    static const bool is_device_std_key_not_repeatable(const std_scan_code code) {
-        return (code >= std_key_device_0) && (code <= std_key_device_1);
-    }
-
     void window_key_shipper::start_shipping() {
         if (evts_.empty()) {
             return;
         }
 
+        kernel_system *kern = serv_->get_kernel_system();
+        const std::lock_guard<kernel_system> guard(*kern);
         epoc::window_group *focus = serv_->get_focus();
-
-        if (!focus) {
-            return;
-        }
-
-        int ui_rotation = focus->scr->ui_rotation;
+        ntimer *timing = kern->get_ntimer();
 
         for (auto &evt : evts_) {
-            evt.key_evt_.scancode = epoc::post_processing_scancode(static_cast<epoc::std_scan_code>(evt.key_evt_.scancode),
-                ui_rotation);
+            if (focus) {
+                evt.key_evt_.scancode = epoc::post_processing_scancode(static_cast<epoc::std_scan_code>(evt.key_evt_.scancode),
+                    focus->scr->ui_rotation);
+            }
 
-            bool dont_send_extra_key_event = (evt.type != epoc::event_code::key_down);
+            const auto previous_modifiers = translator_.modifiers();
+            const auto translated = translator_.translate(evt);
+            const auto changed_modifiers = previous_modifiers ^ translator_.modifiers();
+            if (changed_modifiers) {
+                for (auto &[uid, client] : serv_->clients) {
+                    client->send_modifier_changed_events(changed_modifiers, translator_.modifiers());
+                }
+            }
 
-            // TODO: My assumption... For now.
-            // Actually this smells like a hack
-            const bool repeatable = !is_device_std_key_not_repeatable(static_cast<epoc::std_scan_code>(evt.key_evt_.scancode));
+            const bool dont_send_extra_key_event = !translated.has_value();
+            const bool repeatable = key_event_translator::is_repeatable(evt.key_evt_.scancode);
+            epoc::event extra_event = translated.value_or(evt);
+            const auto the_code = epoc::map_scancode_to_keycode(static_cast<std_scan_code>(evt.key_evt_.scancode));
+            const std::uint64_t data_for_repeatable = evt.key_evt_.scancode | (static_cast<std::uint64_t>(the_code) << 32);
 
-            epoc::event extra_event = evt;
-            extra_event.type = epoc::event_code::key;
-
-            kernel_system *kern = focus->client->get_ws().get_kernel_system();
-            ntimer *timing = kern->get_ntimer();
-
-            const std::uint32_t the_code = epoc::map_scancode_to_keycode(static_cast<std_scan_code>(
-                evt.key_evt_.scancode));
-
-            const std::uint64_t data_for_repeatable = extra_event.key_evt_.scancode | (static_cast<std::uint64_t>(the_code) << 32);
-
-            if (!dont_send_extra_key_event) {
-                extra_event.key_evt_.code = the_code;
-                extra_event.time = kern->universal_time();
-
-                if (repeatable)
-                    extra_event.key_evt_.modifiers = event_modifier_repeatable;
+            if ((evt.type == epoc::event_code::key_up) && repeatable) {
+                if (!timing->unschedule_event(serv_->repeatable_event_, data_for_repeatable)) {
+                    serv_->cancel_repeatable_list.insert(data_for_repeatable);
+                }
+            }
+            if (!focus) {
+                continue;
             }
 
             evt.handle = focus->get_client_handle();
             extra_event.handle = focus->get_client_handle();
 
-            kern->lock();
             focus->queue_event(evt);
-            kern->unlock();
 
             if (!dont_send_extra_key_event) {
                 // Give it a single key event also
-                kern->lock();
                 focus->queue_event(extra_event);
-                kern->unlock();
 
                 if ((evt.type == epoc::event_code::key_down) && repeatable) {
                     timing->schedule_event(serv_->initial_repeat_delay_, serv_->repeatable_event_, data_for_repeatable);
                 }
             }
 
-            if ((evt.type == epoc::event_code::key_up) && repeatable) {
-                kern->lock();
-
-                if (!timing->unschedule_event(serv_->repeatable_event_, data_for_repeatable)) {    
-                    serv_->cancel_repeatable_list.insert(data_for_repeatable);
-                }
-
-                kern->unlock();
-            }
-
             // Iterates through key capture requests and deliver those in needs.key_capture_request_queue &rqueue = key_capture_requests[extra_key_evt.key_evt_.code];
             window_server::key_capture_request_queue &rqueue = serv_->key_capture_requests[evt.key_evt_.code];
 
-            for (auto ite = rqueue.end(); ite != rqueue.begin(); ite--) {
+            for (auto ite = rqueue.end(); ite != rqueue.begin();) {
+                --ite;
                 // No need to deliver twice.
                 if (ite->user->id == focus->id) {
                     break;
@@ -249,20 +230,19 @@ namespace eka2l1::epoc {
 
                 switch (ite->type_) {
                 case epoc::event_key_capture_type::normal:
+                    if (dont_send_extra_key_event) {
+                        break;
+                    }
                     extra_event.handle = ite->user->get_client_handle();
 
-                    kern->lock();
                     ite->user->queue_event(extra_event);
-                    kern->unlock();
 
                     break;
 
                 case epoc::event_key_capture_type::up_and_downs:
                     evt.handle = ite->user->get_client_handle();
 
-                    kern->lock();
                     ite->user->queue_event(evt);
-                    kern->unlock();
 
                     break;
 

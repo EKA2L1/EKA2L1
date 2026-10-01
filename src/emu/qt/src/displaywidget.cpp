@@ -180,6 +180,7 @@ void display_widget::keyPressEvent(QKeyEvent *event) {
     }
 
     if (button_pressed) {
+        pressed_keys_.insert(event->key());
         button_pressed(userdata_, event->key());
     }
 }
@@ -189,7 +190,7 @@ void display_widget::keyReleaseEvent(QKeyEvent *event) {
         return;
     }
 
-    if (button_released) {
+    if (pressed_keys_.erase(event->key()) && button_released) {
         button_released(userdata_, event->key());
     }
 }
@@ -238,6 +239,18 @@ void display_widget::reset_active_pointers() {
 
 bool display_widget::event(QEvent *event) {
     switch (event->type()) {
+    case QEvent::FocusOut:
+    case QEvent::WindowDeactivate: {
+        const auto pressed = std::move(pressed_keys_);
+        pressed_keys_.clear();
+        for (const int key : pressed) {
+            if (button_released) {
+                button_released(userdata_, key);
+            }
+        }
+        break;
+    }
+
     case QEvent::TouchBegin: {
         QTouchEvent *touch_event = reinterpret_cast<QTouchEvent*>(event);
         const QList<QTouchEvent::TouchPoint> &points = touch_event->touchPoints();

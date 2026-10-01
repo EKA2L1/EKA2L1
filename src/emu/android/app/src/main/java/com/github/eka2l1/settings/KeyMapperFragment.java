@@ -29,6 +29,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -36,6 +37,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.widget.ImageViewCompat;
 import androidx.fragment.app.Fragment;
 
 import com.github.eka2l1.R;
@@ -79,6 +81,7 @@ public class KeyMapperFragment extends Fragment implements View.OnClickListener 
         setupButton(R.id.virtual_key_right_soft, Keycode.KEY_SOFT_RIGHT);
         setupButton(R.id.virtual_key_d, Keycode.KEY_SEND);
         setupButton(R.id.virtual_key_c, Keycode.KEY_CLEAR);
+        setupButton(R.id.virtual_key_edit, Keycode.KEY_EDIT);
         setupButton(R.id.virtual_key_left, Keycode.KEY_LEFT);
         setupButton(R.id.virtual_key_right, Keycode.KEY_RIGHT);
         setupButton(R.id.virtual_key_up, Keycode.KEY_UP);
@@ -96,13 +99,16 @@ public class KeyMapperFragment extends Fragment implements View.OnClickListener 
         setupButton(R.id.virtual_key_0, Keycode.KEY_NUM0);
         setupButton(R.id.virtual_key_star, Keycode.KEY_STAR);
         setupButton(R.id.virtual_key_pound, Keycode.KEY_POUND);
+        ImageView editKey = view.findViewById(R.id.virtual_key_edit);
+        Button referenceKey = view.findViewById(R.id.virtual_key_f);
+        ImageViewCompat.setImageTintList(editKey, referenceKey.getTextColors());
         SparseIntArray keyMap = params.keyMappings;
         androidToSymbian = keyMap == null ? defaultKeyMap.clone() : keyMap.clone();
     }
 
     private void setupButton(int resId, int index) {
         idToSymbianKey.put(resId, index);
-        Button button = requireView().findViewById(resId);
+        View button = requireView().findViewById(resId);
         button.setOnClickListener(this);
     }
 
