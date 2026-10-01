@@ -54,6 +54,9 @@ namespace eka2l1::epoc {
         : fbss_(nullptr)
         , kern(kern_) {
         std::fill(driver_textures.begin(), driver_textures.end(), 0);
+        std::fill(bitmaps.begin(), bitmaps.end(), nullptr);
+        std::fill(timestamps.begin(), timestamps.end(), 0);
+        std::fill(bitmap_sizes.begin(), bitmap_sizes.end(), sizes_array::value_type{});
         std::fill(hashes.begin(), hashes.end(), 0);
     }
 
@@ -64,14 +67,26 @@ namespace eka2l1::epoc {
 
         drivers::graphics_command_builder builder;
 
-        for (const auto tex_handle : driver_textures) {
-            if (tex_handle) {
-                builder.destroy_bitmap(tex_handle);
+        for (std::size_t i = 0; i < driver_textures.size(); ++i) {
+            if (texture_snapshots[i]) {
+                texture_snapshots[i].reset();
+            } else if (driver_textures[i]) {
+                builder.destroy_bitmap(driver_textures[i]);
             }
+            driver_textures[i] = 0;
         }
 
+        flush_retired(builder);
         eka2l1::drivers::command_list retrieved = builder.retrieve_command_list();
         drv->submit_command_list(retrieved);
+    }
+
+    void bitmap_cache::flush_retired(drivers::graphics_command_builder &builder) {
+        const std::lock_guard<std::mutex> lock(retired_->mutex);
+        for (const auto handle : retired_->handles) {
+            builder.destroy_bitmap(handle);
+        }
+        retired_->handles.clear();
     }
 
     bool is_palette_bitmap(epoc::bitwise_bitmap *bw_bmp) {
@@ -271,8 +286,9 @@ namespace eka2l1::epoc {
     }
 
     drivers::handle bitmap_cache::add_or_get(drivers::graphics_driver *driver, epoc::bitwise_bitmap *bmp, 
-        drivers::graphics_command_builder *builder, gdi_store_command *update_cmd) {
-        if (!fbss_) {
+        drivers::graphics_command_builder *builder, gdi_store_command *update_cmd,
+        std::shared_ptr<drivers::handle> *snapshot) {
+        if (!fbss_ && kern) {
             server_ptr ss = kern->get_by_name<service::server>(epoc::get_fbs_server_name_by_epocver(
                 kern->get_epoc_version()));
 
@@ -307,8 +323,13 @@ namespace eka2l1::epoc {
             }
 
             bitmaps[idx] = bmp;
+            if (driver_textures[idx] && !texture_snapshots[idx]) {
+                const std::lock_guard<std::mutex> lock(retired_->mutex);
+                retired_->handles.push_back(driver_textures[idx]);
+            }
+            texture_snapshots[idx].reset();
             driver_textures[idx] = 0;
-            hash = (hashes[idx] == 0) ? hash_bitwise_bitmap(bmp) : hashes[idx];
+            hash = hash_bitwise_bitmap(bmp);
         } else {
             // Else, get the index
             idx = std::distance(bitmaps.begin(), bitmap_ite);
@@ -322,6 +343,12 @@ namespace eka2l1::epoc {
 
             should_recreate = (bmp->header_.size_pixels != bitmap_stored_size) || (bitmap_bpp != suit_bpp);
         }
+
+        // Queued draws retain immutable texture versions while the guest edits its bitmap.
+        if ((texture_snapshots[idx].use_count() > 1 && should_upload) || (snapshot && !texture_snapshots[idx])) {
+            should_recreate = true;
+            should_upload = true;
+        }
         
         if (update_cmd) {
             gdi_store_command_update_texture_data &data = update_cmd->get_data_struct<gdi_store_command_update_texture_data>();
@@ -330,23 +357,25 @@ namespace eka2l1::epoc {
         }
 
         if (should_recreate) {
-            if (driver_textures[idx]) {
-                if (builder) {
-                    builder->destroy_bitmap(driver_textures[idx]);
-                }
-
-                if (update_cmd) {
-                    gdi_store_command_update_texture_data &data = update_cmd->get_data_struct<gdi_store_command_update_texture_data>();
-            
-                    update_cmd->opcode_ = gdi_store_command_update_texture;
-                    data.destroy_handle_ = driver_textures[idx];
-                }
+            if (texture_snapshots[idx]) {
+                texture_snapshots[idx].reset();
+            } else if (driver_textures[idx]) {
+                const std::lock_guard<std::mutex> lock(retired_->mutex);
+                retired_->handles.push_back(driver_textures[idx]);
             }
 
             driver_textures[idx] = drivers::create_bitmap(driver, bmp->header_.size_pixels, suit_bpp);
+            if (snapshot) {
+                texture_snapshots[idx] = std::shared_ptr<drivers::handle>(new drivers::handle(driver_textures[idx]),
+                    [retired = retired_](drivers::handle *handle) {
+                        const std::lock_guard<std::mutex> lock(retired->mutex);
+                        retired->handles.push_back(*handle);
+                        delete handle;
+                    });
+            }
         }
 
-        if (should_upload) {
+        if (should_upload || should_recreate) {
             char *data_pointer = reinterpret_cast<char *>(bmp->data_pointer(fbss_));
             std::uint32_t raw_size = 0;
             std::size_t pixels_per_line = 0;
@@ -467,7 +496,8 @@ namespace eka2l1::epoc {
                         new_pointer = converted_gray_four_bpp_to_twenty_four_bpp_bitmap(bmp, reinterpret_cast<const std::uint8_t *>(data_pointer), raw_size_big);
                     } else {
                         new_pointer = converted_palette_bitmap_to_twenty_four_bitmap(bmp, reinterpret_cast<const std::uint8_t *>(data_pointer),
-                            epoc::get_suitable_palette_256(kern->get_epoc_version(), kern->get_system()->is_s80_device_active()),
+                            epoc::get_suitable_palette_256(kern->get_epoc_version(), kern->get_system()->is_s80_device_active(),
+                                kern->get_system()->is_uiq_2_device_active()),
                             epoc::color_16_palette, raw_size_big);
                     }
 
@@ -577,6 +607,10 @@ namespace eka2l1::epoc {
 
         bitmap_sizes[idx].first = static_cast<std::uint64_t>(bmp->header_.size_pixels.x) | (static_cast<std::uint64_t>(suit_bpp) << 32);
         bitmap_sizes[idx].second = static_cast<std::uint32_t>(bmp->header_.size_pixels.y);
+
+        if (snapshot) {
+            *snapshot = texture_snapshots[idx];
+        }
 
         return driver_textures[idx];
     }

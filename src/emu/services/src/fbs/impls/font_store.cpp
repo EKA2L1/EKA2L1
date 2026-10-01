@@ -383,8 +383,14 @@ namespace eka2l1::epoc {
         open_font_info *best = nullptr;
         int best_score = 0;
         std::uint32_t best_extent = 0;
+        bool best_symbol_match = false;
 
         for (auto &info : open_font_store) {
+            // Bitmap typeface fallback keeps symbol faces separate (GetNearestTypeface).
+            const bool symbol_match = info.adapter->vectorizable()
+                || (static_cast<bool>(info.face_attrib.style & open_font_face_attrib::symbol)
+                    == static_cast<bool>(spec.tf.flags & typeface_info::tf_symbol));
+
             std::optional<open_font_metrics> target_metric = info.adapter->get_nearest_supported_metric(info.idx,
                 static_cast<std::uint16_t>(spec.height));
 
@@ -403,10 +409,13 @@ namespace eka2l1::epoc {
             // because the directory happened to list it first.
             const std::uint32_t extent = coverage_extent(info.face_attrib);
 
-            if (!best || (score > best_score) || ((score == best_score) && (extent > best_extent))) {
+            if (!best || (symbol_match && !best_symbol_match)
+                || ((symbol_match == best_symbol_match)
+                    && ((score > best_score) || ((score == best_score) && (extent > best_extent))))) {
                 best = &info;
                 best_score = score;
                 best_extent = extent;
+                best_symbol_match = symbol_match;
             }
         }
 

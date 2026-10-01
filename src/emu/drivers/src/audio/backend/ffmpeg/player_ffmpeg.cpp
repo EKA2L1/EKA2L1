@@ -31,28 +31,24 @@ namespace eka2l1::drivers {
     void player_ffmpeg::deinit() {
         if (format_context_) {
             avformat_close_input(&format_context_);
-            avformat_free_context(format_context_);
-        }
-
-        if (custom_io_buffer_) {
-            av_freep(&custom_io_buffer_);
         }
 
         if (custom_io_) {
+            // libavformat may replace the buffer supplied to avio_alloc_context.
+            av_freep(&custom_io_->buffer);
             avio_context_free(&custom_io_);
         }
 
         if (codec_) {
             avcodec_free_context(&codec_);
         }
+        av_packet_unref(&packet_);
+        duration_us_ = 0;
     }
 
     bool player_ffmpeg::open_ffmpeg_stream() {
         if (avformat_find_stream_info(format_context_, nullptr) < 0) {
             LOG_ERROR(DRIVER_AUD, "Error while finding stream info of input {}", url_);
-            avformat_free_context(format_context_);
-            format_context_ = nullptr;
-
             return false;
         }
 
@@ -83,9 +79,6 @@ namespace eka2l1::drivers {
 
         if (avcodec_open2(codec_, nice_codec, nullptr) < 0) {
             LOG_ERROR(DRIVER_AUD, "Unable to open codec of stream url {}", url_);
-
-            avformat_free_context(format_context_);
-            format_context_ = nullptr;
 
             return false;
         }
@@ -136,6 +129,7 @@ namespace eka2l1::drivers {
             return;
         }
 
+        av_packet_unref(&packet_);
         if (av_read_frame(format_context_, &packet_) < 0) {
             flags_ |= 1;
             return;
@@ -190,14 +184,12 @@ namespace eka2l1::drivers {
                     return;
                 }
             } else {
-                // Just gonna copy smh
-                std::memcpy(&data_[base_ptr], frame->data[0], data_.size());
+                std::memcpy(&data_[base_ptr], frame->data[0], data_.size() - base_ptr);
             }
 
             av_frame_free(&frame);
+            data_pointer_ = base_ptr;
         }
-
-        data_pointer_ = 0;
     }
 
     static int ffmpeg_custom_rw_io_read(void *opaque, std::uint8_t *buf, int buf_size) {
@@ -231,7 +223,9 @@ namespace eka2l1::drivers {
             pos_seek_mode = common::seek_where::end;
             break;
 
-        // Missing SEEK_SIZE support
+        case AVSEEK_SIZE:
+            return static_cast<common::rw_stream *>(opaque)->size();
+
         default:
             return -1;
         }
@@ -253,19 +247,21 @@ namespace eka2l1::drivers {
         flags_ &= ~1;
         deinit();
 
+        the_stream->seek(0, common::seek_where::beg);
+
         static constexpr std::uint32_t CUSTOM_IO_BUFFER_SIZE = 8192;
 
-        custom_io_buffer_ = reinterpret_cast<std::uint8_t *>(av_malloc(CUSTOM_IO_BUFFER_SIZE));
+        auto *custom_io_buffer = reinterpret_cast<std::uint8_t *>(av_malloc(CUSTOM_IO_BUFFER_SIZE));
 
-        if (!custom_io_buffer_) {
+        if (!custom_io_buffer) {
             return false;
         }
 
-        custom_io_ = avio_alloc_context(custom_io_buffer_, CUSTOM_IO_BUFFER_SIZE,
+        custom_io_ = avio_alloc_context(custom_io_buffer, CUSTOM_IO_BUFFER_SIZE,
             0, the_stream, ffmpeg_custom_rw_io_read, ffmpeg_custom_rw_io_write, ffmpeg_custom_rw_io_seek);
 
         if (!custom_io_) {
-            av_freep(&custom_io_buffer_);
+            av_freep(&custom_io_buffer);
             return false;
         }
 
@@ -285,6 +281,7 @@ namespace eka2l1::drivers {
             LOG_ERROR(DRIVER_AUD, "Error seeking the stream!");
             return false;
         }
+        avcodec_flush_buffers(codec_);
 
         return true;
     }
@@ -384,46 +381,25 @@ namespace eka2l1::drivers {
     }
 
     bool player_ffmpeg::make_backend_source() {
-        if (format_context_) {
-            avformat_free_context(format_context_);
-        }
-
         format_context_ = avformat_alloc_context();
+        if (!format_context_) {
+            deinit();
+            return false;
+        }
 
         if (custom_io_) {
             format_context_->pb = custom_io_;
             format_context_->flags |= AVFMT_FLAG_CUSTOM_IO;
-
-            url_ = "Dummy";
         }
 
-        auto do_free_custom = [&]() {
-            if (custom_io_buffer_) {
-                av_freep(&custom_io_buffer_);
-            }
-
-            if (custom_io_) {
-                avio_context_free(&custom_io_);
-            }
-        };
-
-        if (avformat_open_input(&format_context_, url_.c_str(), nullptr, nullptr) < 0) {
+        if (avformat_open_input(&format_context_, custom_io_ ? nullptr : url_.c_str(), nullptr, nullptr) < 0) {
             LOG_ERROR(DRIVER_AUD, "Error while opening AVFormat Input!");
-            avformat_free_context(format_context_);
-
-            format_context_ = nullptr;
-            do_free_custom();
-
+            deinit();
             return false;
         }
 
-        // The open input above already freed the custom IO buffer
-        custom_io_buffer_ = nullptr;
-
         if (!open_ffmpeg_stream()) {
-            format_context_ = nullptr;
-            do_free_custom();
-    
+            deinit();
             return false;
         }
 
@@ -434,10 +410,10 @@ namespace eka2l1::drivers {
         : player_shared(driver)
         , codec_(nullptr)
         , format_context_(nullptr)
+        , packet_{}
         , output_encoder_(nullptr)
         , channel_layout_dest_(0)
         , custom_io_(nullptr)
-        , custom_io_buffer_(nullptr)
         , duration_us_(0) {
         av_init_packet(&packet_);
     }

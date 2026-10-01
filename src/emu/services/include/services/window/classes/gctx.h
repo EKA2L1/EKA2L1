@@ -76,6 +76,7 @@ namespace eka2l1::epoc {
         common::rgba pen_color;
 
         eka2l1::vec2 pen_size;
+        eka2l1::vec2 origin;
         eka2l1::rect clipping_rect;
         common::region clipping_region;
 
@@ -87,6 +88,9 @@ namespace eka2l1::epoc {
             pen
         };
 
+        void apply_origin(gdi_store_command &cmd) const;
+        void add_draw_command(gdi_store_command &cmd);
+        void set_origin(service::ipc_context &context, ws_cmd &cmd);
         void reset_internal_status();
         void reset_context();
         bool no_building() const;

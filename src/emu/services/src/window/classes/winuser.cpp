@@ -262,14 +262,30 @@ namespace eka2l1::epoc {
                 source_bitmap_bw = reinterpret_cast<fbsbitmap*>(data.main_fbs_bitmap_)->final_clean()->bitmap_;
             }
 
-            data.main_drv_ = bcache->add_or_get(drv, source_bitmap_bw, nullptr, &new_update_command_main);
+            struct bitmap_snapshot {
+                bitwise_bitmap metadata;
+                std::shared_ptr<drivers::handle> texture;
+            };
+            auto main_snapshot = std::make_shared<bitmap_snapshot>();
+            main_snapshot->metadata = *source_bitmap_bw;
+            data.main_drv_ = bcache->add_or_get(drv, source_bitmap_bw, nullptr, &new_update_command_main,
+                &main_snapshot->texture);
+            data.main_fbs_bitmap_ = &main_snapshot->metadata;
+            data.gdi_flags_ |= GDI_STORE_COMMAND_MAIN_RAW;
+            command.resources_.push_back(main_snapshot);
             
             if (mask_bitmap_bw) {
                 if ((data.gdi_flags_ & GDI_STORE_COMMAND_MASK_RAW) == 0) {
                     mask_bitmap_bw = reinterpret_cast<fbsbitmap*>(data.mask_fbs_bitmap_)->final_clean()->bitmap_;
                 }
 
-                data.mask_drv_ = bcache->add_or_get(drv, mask_bitmap_bw, nullptr, &new_update_command_mask);
+                auto mask_snapshot = std::make_shared<bitmap_snapshot>();
+                mask_snapshot->metadata = *mask_bitmap_bw;
+                data.mask_drv_ = bcache->add_or_get(drv, mask_bitmap_bw, nullptr, &new_update_command_mask,
+                    &mask_snapshot->texture);
+                data.mask_fbs_bitmap_ = &mask_snapshot->metadata;
+                data.gdi_flags_ |= GDI_STORE_COMMAND_MASK_RAW;
+                command.resources_.push_back(mask_snapshot);
             }
 
             // Upload now: the cache already records these textures as current, and this window's
@@ -1431,13 +1447,19 @@ namespace eka2l1::epoc {
         }
 
         gdi_store_command_segment *current_segment = redraw_segments_.get_current_segment();
-        current_segment->add_command(command);
+        const bool retains_pixels = client->get_ws().no_redraw_storing_enabled();
+        if (!retains_pixels) {
+            // Symbian redraw stores retain bitmap handles, not copies of their pixels.
+            current_segment->add_command(command);
+        }
+        canvas_base::add_draw_command(command);
+        if (retains_pixels) {
+            current_segment->add_command(command);
+        }
         // Without redraw storing, earlier pixels may exist only in the screen bitmap.
         if ((created_non_redraw_segment && !client->get_ws().no_redraw_storing_enabled()) || (flags & flags_enable_alpha)) {
             scr->flags_ |= screen::FLAG_SERVER_REDRAW_PENDING;
         }
-
-        canvas_base::add_draw_command(command);
     }
 
     bool redraw_msg_canvas::scroll(eka2l1::rect clip_space, const eka2l1::vec2 offset, eka2l1::rect source_rect) {

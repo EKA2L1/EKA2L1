@@ -37,7 +37,6 @@ namespace eka2l1::drivers {
         std::uint64_t channel_layout_dest_;
 
         AVIOContext *custom_io_;
-        std::uint8_t *custom_io_buffer_;
         std::uint64_t duration_us_;
 
     protected:

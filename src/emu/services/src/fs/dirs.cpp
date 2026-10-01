@@ -95,7 +95,9 @@ namespace eka2l1 {
 
         if (attrib_raw & epoc::fs::entry_att_allow_uid) {
             attrib |= io_attrib_allow_uid;
-            attrib &= ~io_attrib_include_dir;
+            if (!(attrib_raw & epoc::fs::entry_att_dir)) {
+                attrib &= ~io_attrib_include_dir;
+            }
         }
 
         fs_server *serv = server<fs_server>();

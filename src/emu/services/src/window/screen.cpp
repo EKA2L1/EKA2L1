@@ -39,6 +39,7 @@ namespace eka2l1::epoc {
         drivers::graphics_command_builder &builder_;
         std::uint32_t total_redrawed_;
         canvas_base *streaming_window_ = nullptr;
+        bitmap_cache *bitmap_cache_ = nullptr;
 
         explicit window_drawer_walker(drivers::graphics_command_builder &builder)
             : builder_(builder)
@@ -51,6 +52,7 @@ namespace eka2l1::epoc {
             }
 
             epoc::canvas_base *cv = reinterpret_cast<epoc::canvas_base*>(win);
+            bitmap_cache_ = cv->client->get_ws().get_bitmap_cache();
 
             if (cv->can_be_physically_seen() && cv->surface_streaming()) {
                 streaming_window_ = cv;
@@ -492,6 +494,10 @@ namespace eka2l1::epoc {
         // just not really worth the time, since GPU draws so fast. Symbian code still has it though.
         window_drawer_walker adrawwalker(builder);
         root->walk_tree_back_to_front(&adrawwalker);
+
+        if (adrawwalker.bitmap_cache_) {
+            adrawwalker.bitmap_cache_->flush_retired(builder);
+        }
 
         // Done! Unbind and submit this to the driver
         builder.bind_bitmap(0);

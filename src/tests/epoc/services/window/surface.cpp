@@ -449,3 +449,83 @@ TEST_CASE("Retained GDI accepts both straight and premultiplied alpha bitmaps", 
         REQUIRE(driver.images[ui] == std::vector<std::uint8_t>{ 128, 0, 0, 128 });
     }
 }
+
+
+TEST_CASE("Deferred bitmap versions survive mutation eviction and queued draws", "[window_surface]") {
+    struct bitmap_fixture {
+        epoc::bitwise_bitmap bitmap{};
+        std::uint8_t pixels[8]{ 12, 34, 56, 255, 78, 90, 12, 255 };
+
+        bitmap_fixture() {
+            bitmap.header_.header_len = sizeof(loader::sbm_header);
+            bitmap.header_.bitmap_size = sizeof(loader::sbm_header) + 4;
+            bitmap.header_.size_pixels = vec2(1, 1);
+            bitmap.header_.bit_per_pixels = 32;
+            bitmap.header_.color = epoc::color_bitmap_with_alpha;
+            bitmap.byte_width_ = 4;
+            bitmap.data_offset_ = offsetof(bitmap_fixture, pixels);
+            bitmap.settings_.initial_display_mode(epoc::display_mode::color16ma);
+        }
+    };
+    surface_driver driver;
+    epoc::bitmap_cache cache(nullptr);
+    bitmap_fixture source;
+    drivers::graphics_command_builder builder;
+    std::shared_ptr<drivers::handle> first;
+    const auto first_handle = cache.add_or_get(&driver, &source.bitmap, &builder, nullptr, &first);
+    submit(driver, builder);
+    REQUIRE(first);
+    REQUIRE(*first == first_handle);
+    REQUIRE(driver.images[first_handle] == std::vector<std::uint8_t>{ 12, 34, 56, 255 });
+
+    std::shared_ptr<drivers::handle> same;
+    REQUIRE(cache.add_or_get(&driver, &source.bitmap, &builder, nullptr, &same) == first_handle);
+    REQUIRE(same == first);
+    REQUIRE(driver.uploads == 1);
+    same.reset();
+
+    source.pixels[0] = 99;
+    std::shared_ptr<drivers::handle> second;
+    const auto second_handle = cache.add_or_get(&driver, &source.bitmap, &builder, nullptr, &second);
+    REQUIRE(second_handle != first_handle);
+    submit(driver, builder);
+    REQUIRE(driver.images[first_handle][0] == 12);
+    REQUIRE(driver.images[second_handle][0] == 99);
+
+    // The store may release a version after recording a draw but before submitting it.
+    const auto target = drivers::create_bitmap(&driver, { 1, 1 }, 32);
+    builder.bind_bitmap(target);
+    builder.draw_bitmap(first_handle, 0, rect({ 0, 0 }, { 1, 1 }), {});
+    first.reset();
+    cache.flush_retired(builder);
+    submit(driver, builder);
+    REQUIRE(driver.images[target][0] == 12);
+    REQUIRE(driver.images.count(first_handle) == 0);
+
+    SECTION("a resize retains the old dimensions and pixels") {
+        source.bitmap.header_.size_pixels = vec2(2, 1);
+        source.bitmap.header_.bitmap_size += 4;
+        source.bitmap.byte_width_ = 8;
+        std::shared_ptr<drivers::handle> resized;
+        const auto handle = cache.add_or_get(&driver, &source.bitmap, &builder, nullptr, &resized);
+        REQUIRE(handle != second_handle);
+        submit(driver, builder);
+        REQUIRE(driver.images[handle].size() == 8);
+        REQUIRE(driver.images[second_handle].size() == 4);
+    }
+    SECTION("eviction retains a version still owned by a command") {
+        std::vector<bitmap_fixture> bitmaps(epoc::MAX_CACHE_SIZE);
+        for (auto &bitmap : bitmaps) {
+            cache.add_or_get(&driver, &bitmap.bitmap, &builder);
+        }
+        cache.flush_retired(builder);
+        submit(driver, builder);
+        REQUIRE(driver.images.count(second_handle) == 1);
+    }
+    second.reset();
+    cache.clean(&driver);
+    REQUIRE(driver.images.size() == 1);
+    REQUIRE_FALSE(driver.invalid_use);
+    builder.destroy_bitmap(target);
+    submit(driver, builder);
+}
