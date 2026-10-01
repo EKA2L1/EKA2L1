@@ -301,69 +301,12 @@ endif()
 
 
 # FFMPEG
-if (EKA2L1_IOS)
-    option(EKA2L1_IOS_ENABLE_FFMPEG "Link iOS builds against a prebuilt bundled FFmpeg output" OFF)
-    # The ffmpeg submodule ships prebuilt libraries for the desktop platforms and
-    # Android, but not for iOS: its ios-build.sh produces them into ios/<slice>.
-    if (EKA2L1_IOS_SIMULATOR)
-        set(EKA2L1_IOS_FFMPEG_SLICE "simulator")
-    else()
-        set(EKA2L1_IOS_FFMPEG_SLICE "device")
-    endif()
-
-    set(EKA2L1_IOS_FFMPEG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/ios/${EKA2L1_IOS_FFMPEG_SLICE}"
-        CACHE PATH "Path to an iOS FFmpeg install prefix with include/ and lib/")
-
-    if (EKA2L1_IOS_ENABLE_FFMPEG)
-        if (NOT EXISTS "${EKA2L1_IOS_FFMPEG_ROOT}/lib/libavcodec.a")
-            message(FATAL_ERROR
-                "An iOS build needs ffmpeg: run `./ios-build.sh ${EKA2L1_IOS_FFMPEG_SLICE}` "
-                "in src/external/ffmpeg.")
-        endif()
-
-        add_library(ffmpeg INTERFACE)
-        target_include_directories(ffmpeg INTERFACE
-            "${EKA2L1_IOS_FFMPEG_ROOT}/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include")
-        target_link_libraries(ffmpeg INTERFACE
-            "${EKA2L1_IOS_FFMPEG_ROOT}/lib/libavformat.a"
-            "${EKA2L1_IOS_FFMPEG_ROOT}/lib/libavcodec.a"
-            "${EKA2L1_IOS_FFMPEG_ROOT}/lib/libswscale.a"
-            "${EKA2L1_IOS_FFMPEG_ROOT}/lib/libavutil.a"
-            "${EKA2L1_IOS_FFMPEG_ROOT}/lib/libswresample.a"
-            "z" "iconv"
-            "-framework CoreVideo"
-            "-framework VideoToolbox"
-            "-framework CoreMedia")
-        set(EKA2L1_HAVE_FFMPEG ON CACHE INTERNAL "FFmpeg is available for this build" FORCE)
-    else()
-        set(EKA2L1_HAVE_FFMPEG OFF CACHE INTERNAL "FFmpeg is available for this build" FORCE)
-    endif()
-else()
+option(EKA2L1_IOS_ENABLE_FFMPEG "Build FFmpeg audio/video support on iOS" ON)
+if(NOT EKA2L1_IOS OR EKA2L1_IOS_ENABLE_FFMPEG)
+    add_subdirectory(ffmpeg)
     set(EKA2L1_HAVE_FFMPEG ON CACHE INTERNAL "FFmpeg is available for this build" FORCE)
-    if (APPLE AND CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
-        # The prebuilt libraries in the submodule are x86_64 only; its own
-        # macos_arm64-build.sh produces the arm64 set from the same source.
-        set(FFMPEG_ARM64_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/macos/arm64/lib")
-        if (NOT EXISTS "${FFMPEG_ARM64_LIB_DIR}/libavcodec.a")
-            message(FATAL_ERROR "An Apple Silicon build needs ffmpeg: run macos_arm64-build.sh in src/external/ffmpeg")
-        endif()
-
-        add_library(ffmpeg INTERFACE)
-        target_include_directories(ffmpeg INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include")
-        target_link_libraries(ffmpeg INTERFACE
-                "${FFMPEG_ARM64_LIB_DIR}/libavformat.a"
-                "${FFMPEG_ARM64_LIB_DIR}/libavcodec.a"
-                "${FFMPEG_ARM64_LIB_DIR}/libswscale.a"
-                "${FFMPEG_ARM64_LIB_DIR}/libavutil.a"
-                "${FFMPEG_ARM64_LIB_DIR}/libswresample.a"
-                "z" "-framework CoreVideo" "iconv")
-    else()
-        add_subdirectory(ffmpeg)
-        if (APPLE)
-            target_link_libraries(ffmpeg INTERFACE "-framework CoreVideo" "iconv")
-        endif()
-    endif()
+else()
+    set(EKA2L1_HAVE_FFMPEG OFF CACHE INTERNAL "FFmpeg is available for this build" FORCE)
 endif()
 
 option(CAPSTONE_BUILD_SHARED "Build shared library" OFF)

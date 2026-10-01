@@ -50,9 +50,6 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT_DIR}"
 
 DEPLOYMENT_TARGET="${EKA2L1_IOS_DEPLOYMENT_TARGET:-16.0}"
-# Propagate the resolved target to the FFmpeg sub-build so its prebuilt static
-# libs carry the same min-version (otherwise ld warns about a 18.0/16.0 mismatch).
-export EKA2L1_IOS_DEPLOYMENT_TARGET="${DEPLOYMENT_TARGET}"
 CONFIGURATION="${EKA2L1_IOS_CONFIGURATION:-Debug}"
 SCHEME="${EKA2L1_IOS_SCHEME:-EKA2L1}"
 # Set EKA2L1_IOS_DEVELOPMENT_TEAM=<team id> to build a code-signed device
@@ -67,12 +64,6 @@ configure_one() {
     local team="$4"
     local jit="${5:-OFF}"
     local build_dir="build/ios-${label}"
-
-    # ffmpeg is not shipped prebuilt for iOS; its own script produces the slice.
-    if [ ! -f "src/external/ffmpeg/ios/${label}/lib/libavcodec.a" ]; then
-        (cd src/external/ffmpeg && EKA2L1_IOS_DEPLOYMENT_TARGET="${EKA2L1_IOS_DEPLOYMENT_TARGET:-16.0}" sh ios-build.sh "${label}")
-    fi
-
 
     echo "==> Configuring ${label} (PLATFORM=${platform}, sdk=${sdk})"
     # CMake 4.x dropped compatibility with cmake_minimum_required < 3.5, and
