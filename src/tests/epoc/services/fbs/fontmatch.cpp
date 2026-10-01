@@ -105,3 +105,45 @@ TEST_CASE("font_match_ignores_name_when_none_was_asked_for", "fbs") {
 
     REQUIRE(epoc::match_font_spec(unnamed, u"", spec, 20) == epoc::match_font_spec(named, u"Nokia Sans S60", spec, 20));
 }
+
+namespace {
+    std::vector<std::uint8_t> bitmap_typeface_store() {
+        std::vector<std::uint8_t> data;
+        auto word = [&](std::uint32_t value) {
+            for (int i = 0; i < 4; ++i) data.push_back(static_cast<std::uint8_t>(value >> (i * 8)));
+        };
+        for (std::uint32_t value : {0x10000037U, 0x10000039U, 0U, 0x47393853U,
+                 0U, 40U, 0U, 0U, 0U, 0U, 0U, 2U}) word(value);
+        auto face = [&](const std::string &name, std::uint8_t flags) {
+            data.push_back(static_cast<std::uint8_t>(name.size() << 2));
+            data.insert(data.end(), name.begin(), name.end());
+            data.push_back(flags);
+            word(0);
+        };
+        face("Calculator", epoc::typeface_info::tf_symbol);
+        face("Courier", epoc::typeface_info::tf_serif);
+        return data;
+    }
+}
+
+TEST_CASE("bitmap_font_fallback_preserves_symbol_and_monospace_flags", "fbs") {
+    auto data = bitmap_typeface_store();
+    epoc::font_store store(nullptr);
+    REQUIRE(store.add_fonts(data, epoc::adapter::font_file_adapter_kind::gdr));
+    auto spec = make_spec(u"Missing face", 13, 0, 0);
+    auto *normal = store.seek_the_open_font(spec);
+    REQUIRE(normal != nullptr);
+    REQUIRE(normal->family == u"Courier");
+    REQUIRE(normal->face_attrib.style & epoc::open_font_face_attrib::mono_width);
+    REQUIRE(normal->face_attrib.style & epoc::open_font_face_attrib::serif);
+
+    spec.tf.flags = epoc::typeface_info::tf_symbol;
+    auto *symbol = store.seek_the_open_font(spec);
+    REQUIRE(symbol != nullptr);
+    REQUIRE(symbol->family == u"Calculator");
+    REQUIRE(symbol->face_attrib.style & epoc::open_font_face_attrib::symbol);
+
+    spec.tf.name.assign(nullptr, u"Calculator");
+    spec.tf.flags = 0;
+    REQUIRE(store.seek_the_open_font(spec) == symbol);
+}

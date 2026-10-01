@@ -262,14 +262,30 @@ namespace eka2l1::epoc {
                 source_bitmap_bw = reinterpret_cast<fbsbitmap*>(data.main_fbs_bitmap_)->final_clean()->bitmap_;
             }
 
-            data.main_drv_ = bcache->add_or_get(drv, source_bitmap_bw, nullptr, &new_update_command_main);
+            struct bitmap_snapshot {
+                bitwise_bitmap metadata;
+                std::shared_ptr<drivers::handle> texture;
+            };
+            auto main_snapshot = std::make_shared<bitmap_snapshot>();
+            main_snapshot->metadata = *source_bitmap_bw;
+            data.main_drv_ = bcache->add_or_get(drv, source_bitmap_bw, nullptr, &new_update_command_main,
+                &main_snapshot->texture);
+            data.main_fbs_bitmap_ = &main_snapshot->metadata;
+            data.gdi_flags_ |= GDI_STORE_COMMAND_MAIN_RAW;
+            command.resources_.push_back(main_snapshot);
             
             if (mask_bitmap_bw) {
                 if ((data.gdi_flags_ & GDI_STORE_COMMAND_MASK_RAW) == 0) {
                     mask_bitmap_bw = reinterpret_cast<fbsbitmap*>(data.mask_fbs_bitmap_)->final_clean()->bitmap_;
                 }
 
-                data.mask_drv_ = bcache->add_or_get(drv, mask_bitmap_bw, nullptr, &new_update_command_mask);
+                auto mask_snapshot = std::make_shared<bitmap_snapshot>();
+                mask_snapshot->metadata = *mask_bitmap_bw;
+                data.mask_drv_ = bcache->add_or_get(drv, mask_bitmap_bw, nullptr, &new_update_command_mask,
+                    &mask_snapshot->texture);
+                data.mask_fbs_bitmap_ = &mask_snapshot->metadata;
+                data.gdi_flags_ |= GDI_STORE_COMMAND_MASK_RAW;
+                command.resources_.push_back(mask_snapshot);
             }
 
             // Upload now: the cache already records these textures as current, and this window's
@@ -750,12 +766,11 @@ namespace eka2l1::epoc {
     }
 
     void canvas_base::scroll(service::ipc_context &context, ws_cmd &cmd) {
-        eka2l1::rect clip_rect;
-        eka2l1::point offset;
-        eka2l1::rect source_rect;
-
-        ws_cmd_scroll *scroll_data = reinterpret_cast<ws_cmd_scroll*>(cmd.data_ptr);
-        offset = scroll_data->offset;
+        const auto *scroll_data = reinterpret_cast<const ws_cmd_scroll *>(cmd.data_ptr);
+        const eka2l1::point offset = scroll_data->offset;
+        eka2l1::rect clip_rect = bounding_rect();
+        // WSERV defines an omitted source so its destination covers the whole window.
+        eka2l1::rect source_rect(eka2l1::point(0, 0) - offset, size());
 
         if ((cmd.header.op == EWsWinOpScrollClip) || (cmd.header.op == EWsWinOpScrollClipRect)) {
             clip_rect = scroll_data->clip_rect;
@@ -1431,13 +1446,19 @@ namespace eka2l1::epoc {
         }
 
         gdi_store_command_segment *current_segment = redraw_segments_.get_current_segment();
-        current_segment->add_command(command);
+        const bool retains_pixels = client->get_ws().no_redraw_storing_enabled();
+        if (!retains_pixels) {
+            // Symbian redraw stores retain bitmap handles, not copies of their pixels.
+            current_segment->add_command(command);
+        }
+        canvas_base::add_draw_command(command);
+        if (retains_pixels) {
+            current_segment->add_command(command);
+        }
         // Without redraw storing, earlier pixels may exist only in the screen bitmap.
         if ((created_non_redraw_segment && !client->get_ws().no_redraw_storing_enabled()) || (flags & flags_enable_alpha)) {
             scr->flags_ |= screen::FLAG_SERVER_REDRAW_PENDING;
         }
-
-        canvas_base::add_draw_command(command);
     }
 
     bool redraw_msg_canvas::scroll(eka2l1::rect clip_space, const eka2l1::vec2 offset, eka2l1::rect source_rect) {
@@ -1528,14 +1549,18 @@ namespace eka2l1::epoc {
             draw_surface(builder, background_surface_);
 
             if (!segments.empty() && !server_clip.empty()) {
-                builder.clip_bitmap_region(server_clip, scr->display_scale_factor);
-
-                gdi_command_builder gdi_builder(client->get_ws().get_graphics_driver(), builder,
-                    *client->get_ws().get_bitmap_cache(), filter, abs_rect.top, scr->display_scale_factor,
-                    server_clip);
-
                 for (std::size_t i = 0; i < segments.size(); i++) {
                     if (segments[i]->type_ != gdi_store_command_segment_pending_redraw) {
+                        common::region segment_clip = segments[i]->region_;
+                        segment_clip.advance(abs_rect.top);
+                        segment_clip = segment_clip.intersect(server_clip);
+                        if (segment_clip.empty()) {
+                            continue;
+                        }
+                        builder.clip_bitmap_region(segment_clip, scr->display_scale_factor);
+                        gdi_command_builder gdi_builder(client->get_ws().get_graphics_driver(), builder,
+                            *client->get_ws().get_bitmap_cache(), filter, abs_rect.top, scr->display_scale_factor,
+                            segment_clip);
                         gdi_builder.build_segment(*segments[i]);
                     }
                 }
@@ -1866,6 +1891,12 @@ namespace eka2l1::epoc {
             return false;
         }
 
+        clip_space = clip_space.intersect(bounding_rect());
+        source_rect = source_rect.intersect(clip_space);
+        if (source_rect.empty()) {
+            return false;
+        }
+
         drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
         drivers::graphics_command_builder cmd_builder;
 
@@ -1878,12 +1909,7 @@ namespace eka2l1::epoc {
             ping_pong_driver_win_id = drivers::create_bitmap(drv, abs_rect.size, 32);
         }
 
-        if (source_rect.empty()) {
-            source_rect.top = eka2l1::vec2(0, 0);
-            source_rect.size = abs_rect.size;
-        }
-        
-        eka2l1::rect dest_rect(offset, source_rect.size);
+        eka2l1::rect dest_rect(source_rect.top + offset, source_rect.size);
 
         cmd_builder.bind_bitmap(ping_pong_driver_win_id);
         cmd_builder.draw_bitmap(driver_win_id, 0, dest_rect, source_rect);

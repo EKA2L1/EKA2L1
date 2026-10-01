@@ -103,6 +103,14 @@ namespace eka2l1::epoc::adapter {
             face_attrib.style |= open_font_face_attrib::serif;
         }
 
+        if (!(the_typeface.header_.flags_ & epoc::typeface_info::tf_propotional)) {
+            face_attrib.style |= open_font_face_attrib::mono_width;
+        }
+
+        if (the_typeface.header_.flags_ & epoc::typeface_info::tf_symbol) {
+            face_attrib.style |= open_font_face_attrib::symbol;
+        }
+
         if (the_typeface.analysed_style_ & loader::gdr::typeface::FLAG_BOLD) {
             face_attrib.style |= open_font_face_attrib::bold;
         }

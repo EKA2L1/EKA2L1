@@ -150,6 +150,8 @@ namespace eka2l1::epoc {
         gdi_store_command_opcode opcode_ = gdi_store_command_invalid;
         alignas(std::max_align_t) std::uint8_t data_[MAX_COMMAND_STORE_DATA_SIZE];
         std::shared_ptr<std::vector<std::uint8_t>> dynamic_data_;
+        // Own resources referenced by deferred drawing commands.
+        std::vector<std::shared_ptr<void>> resources_;
 
         std::uint8_t *allocate_dynamic_data(const std::size_t size) {
             if (!dynamic_data_) {

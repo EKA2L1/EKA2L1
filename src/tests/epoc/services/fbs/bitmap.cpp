@@ -19,13 +19,34 @@
 
 #include <common/buffer.h>
 #include <services/fbs/bitmap.h>
+#include <services/fbs/palette.h>
 
 #include <catch2/catch.hpp>
 
 #include <cstdint>
+#include <tuple>
 #include <vector>
 
 using namespace eka2l1;
+
+TEST_CASE("color256_palette_matches_the_device_gdi_contract", "[fbs],[palette]") {
+    const auto [version, s80, uiq2, reference] = GENERATE(
+        std::make_tuple(epocver::epoc70, false, true, true),
+        std::make_tuple(epocver::epoc70, false, false, false),
+        std::make_tuple(epocver::epoc80, true, false, true),
+        std::make_tuple(epocver::epoc94, false, false, false),
+        std::make_tuple(epocver::epoc95, false, false, true));
+    const auto &palette = epoc::get_suitable_palette_256(version, s80, uiq2);
+
+    // P900 GDI.DLL ordinal 164 indexes the Symbian reference Color256 table.
+    // The legacy S60 table assigns different colours to the same indices.
+    REQUIRE(palette[0x01] == (reference ? 0x000033 : 0xCCFFFF));
+    REQUIRE(palette[0x24] == (reference ? 0x330000 : 0xFFFFCC));
+    REQUIRE(palette[0x6C] == (reference ? 0x111111 : 0xFFFF66));
+    REQUIRE(palette[0xE1] == (reference ? 0xFF00FF : 0x111111));
+    REQUIRE(palette[0x00] == 0x000000);
+    REQUIRE(palette[0xFF] == 0xFFFFFF);
+}
 
 TEST_CASE("gray256_decode_distinguishes_colour_from_mask_opacity", "icon_mask") {
     // TRgb::Gray256() uses the opaque RGB constructor; BITGDI alone treats

@@ -30,6 +30,9 @@
 #include <services/fbs/bitmap.h>
 
 #include <array>
+#include <memory>
+#include <mutex>
+#include <vector>
 
 namespace eka2l1 {
     class kernel_system;
@@ -49,7 +52,13 @@ namespace eka2l1::epoc {
         using sizes_array = std::array<std::pair<std::uint64_t, std::uint32_t>, MAX_CACHE_SIZE>;
 
     private:
+        struct retired_textures {
+            std::mutex mutex;
+            std::vector<drivers::handle> handles;
+        };
+        std::shared_ptr<retired_textures> retired_ = std::make_shared<retired_textures>();
         driver_texture_handle_array driver_textures;
+        std::array<std::shared_ptr<drivers::handle>, MAX_CACHE_SIZE> texture_snapshots;
         bitmap_array bitmaps;
         timestamps_array timestamps;
         hashes_array hashes;
@@ -95,7 +104,8 @@ namespace eka2l1::epoc {
          * @returns Handle to driver's texture associated with this bitmap.
          */
         drivers::handle add_or_get(drivers::graphics_driver *driver, epoc::bitwise_bitmap *bmp,
-            drivers::graphics_command_builder *builder = nullptr, gdi_store_command *update_cmd = nullptr);
+            drivers::graphics_command_builder *builder = nullptr, gdi_store_command *update_cmd = nullptr,
+            std::shared_ptr<drivers::handle> *snapshot = nullptr);
 
         /**
          * \brief   Remove the bitmap from cache.
@@ -105,5 +115,7 @@ namespace eka2l1::epoc {
         bool remove(epoc::bitwise_bitmap *bmp);
 
         void clean(drivers::graphics_driver *drv);
+        // Append destruction after all draws recorded for this screen update.
+        void flush_retired(drivers::graphics_command_builder &builder);
     };
 }

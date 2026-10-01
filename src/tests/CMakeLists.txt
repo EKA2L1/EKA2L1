@@ -26,6 +26,11 @@ target_link_libraries(ekatests PRIVATE
     libtess2
     lunasvg)
 
+if (EKA2L1_HAVE_FFMPEG)
+    target_link_libraries(ekatests PRIVATE ffmpeg)
+    target_compile_definitions(ekatests PRIVATE EKA2L1_HAS_FFMPEG=1)
+endif()
+
 # The fixtures are copied next to the executable, and the tests open them by a
 # relative path. Multi-config generators put the executable in a per-config
 # subdirectory, which is not where CTest would otherwise run it from.

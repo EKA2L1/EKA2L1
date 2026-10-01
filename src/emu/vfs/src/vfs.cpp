@@ -20,6 +20,7 @@
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
+#include <common/crypt.h>
 #include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
@@ -586,16 +587,17 @@ namespace eka2l1 {
                 std::optional<entry_info> info = inst->get_entry_info(path_to_retinfo);
 
                 if (info.has_value()) {
-                    if ((attribute & io_attrib_include_file) && (attribute & io_attrib_allow_uid)) {
-                        epoc::uid_type temp_uid;
-
+                    if ((info->type == io_component_type::file) && (attribute & io_attrib_allow_uid)
+                        && (utype.uid1 || utype.uid2 || utype.uid3)) {
+                        std::array<std::uint32_t, 4> checked_uid{};
                         common::ro_std_file_stream temp_file_holder(eka2l1::add_path(iterator->dir_name, entry.name), true);
-                        if (temp_file_holder.read(reinterpret_cast<char *>(&temp_uid), sizeof(temp_uid))) {
-                            if (((utype.uid1 != 0) && (utype.uid1 != temp_uid.uid1)) || ((utype.uid2 != 0) && (utype.uid2 != temp_uid.uid2))
-                                || ((utype.uid3 != 0) && (utype.uid3 != temp_uid.uid3))) {
-                                continue;
-                            }
-                        } else {
+                        if (temp_file_holder.read(checked_uid.data(), sizeof(checked_uid)) != sizeof(checked_uid)
+                            || crypt::calculate_checked_uid_checksum(checked_uid.data()) != checked_uid[3]) {
+                            continue;
+                        }
+                        if ((utype.uid1 && utype.uid1 != checked_uid[0])
+                            || (utype.uid2 && utype.uid2 != checked_uid[1])
+                            || (utype.uid3 && utype.uid3 != checked_uid[2])) {
                             continue;
                         }
                     }

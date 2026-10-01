@@ -54,6 +54,18 @@ jobs:
         sudo apt-get update
         sudo apt-get -y install build-essential libc6-dev
 
+    - name: Identify FFmpeg cache
+      id: ffmpeg
+      run: |
+        echo "revision=$(git -C ../../external/ffmpeg rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+        echo "image=$ImageVersion" >> "$GITHUB_OUTPUT"
+
+    - name: Cache FFmpeg
+      uses: actions/cache@v6
+      with:
+        path: build/ffmpeg-cache
+        key: ffmpeg-android-${{ steps.ffmpeg.outputs.image }}-${{ steps.ffmpeg.outputs.revision }}-${{ hashFiles('src/emu/android/app/build.gradle', '.github/workflows/build.yml') }}
+
     - name: Build with Gradle
       run: ./gradlew assembleRelease -PciArg='-DCI=ON'
 
@@ -149,20 +161,12 @@ jobs:
         fetch-depth: 0
         submodules: recursive
 
-    # The ffmpeg submodule ships prebuilt x86_64 libraries for macOS but not
-    # arm64 ones, so those are built from its own script and cached.
-    - name: Cache arm64 ffmpeg
-      id: cache-ffmpeg
-      uses: actions/cache@v6
+    - name: Set up FFmpeg build tools (Windows)
+      id: msys2
+      uses: msys2/setup-msys2@v2
       with:
-        path: src/external/ffmpeg/macos/arm64
-        key: ffmpeg-arm64-${{ hashFiles('.git/modules/src/external/ffmpeg/HEAD') }}
-      if: matrix.label == 'macos'
-
-    - name: Build arm64 ffmpeg
-      run: sh macos_arm64-build.sh
-      working-directory: src/external/ffmpeg
-      if: matrix.label == 'macos' && steps.cache-ffmpeg.outputs.cache-hit != 'true'
+        install: make
+      if: matrix.label == 'windows'
 
     - name: Install Qt6 (macOS)
       uses: jurplel/install-qt-action@v4
@@ -194,12 +198,18 @@ jobs:
       if: matrix.label == 'macos'
 
     - name: CMake configure (Windows)
-      run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_NO_TERMINAL=ON -DEKA2L1_ENABLE_DISCORD_RICH_PRESENCE=ON -DCMAKE_PREFIX_PATH=${{ env.QT_ROOT_DIR }} -DCMAKE_BUILD_TYPE=${{ env.config }}
+      run: cmake -B build -DEKA2L1_FFMPEG_BASH="${{ steps.msys2.outputs.msys2-location }}/usr/bin/bash.exe" -DEKA2L1_FFMPEG_MAKE="${{ steps.msys2.outputs.msys2-location }}/usr/bin/make.exe" -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_NO_TERMINAL=ON -DEKA2L1_ENABLE_DISCORD_RICH_PRESENCE=ON -DCMAKE_PREFIX_PATH=${{ env.QT_ROOT_DIR }} -DCMAKE_BUILD_TYPE=${{ env.config }}
       if: matrix.label == 'windows'
 
     - name: CMake configure (Linux)
       run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DEKA2L1_NO_TERMINAL=ON -DEKA2L1_ENABLE_DISCORD_RICH_PRESENCE=ON -DCMAKE_BUILD_TYPE=${{ env.config }}
       if: matrix.label == 'linux'
+
+    - name: Cache FFmpeg
+      uses: actions/cache@v6
+      with:
+        path: build/ffmpeg-cache
+        key: ffmpeg-${{ matrix.label }}-${{ runner.arch }}-${{ hashFiles('build/src/external/ffmpeg/ffmpeg-build-config.cmake') }}
 
     - name: CMake build
       run: cmake --build build --config ${{ env.config }} --parallel 4 --target eka2l1_qt ekatests
@@ -290,14 +300,17 @@ jobs:
         fetch-depth: 0
         submodules: recursive
 
-    # ffmpeg ships no iOS slice, and building one takes longer than the app
-    # itself. The slices differ per platform, so they are cached per label.
-    - name: Cache iOS ffmpeg
-      id: cache-ffmpeg
+    - name: Identify FFmpeg cache
+      id: ffmpeg
+      run: |
+        echo "revision=$(git -C src/external/ffmpeg rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+        echo "image=$ImageVersion" >> "$GITHUB_OUTPUT"
+
+    - name: Cache FFmpeg
       uses: actions/cache@v6
       with:
-        path: src/external/ffmpeg/ios/device
-        key: ffmpeg-ios-device-${{ hashFiles('.git/modules/src/external/ffmpeg/HEAD') }}
+        path: build/ffmpeg-cache
+        key: ffmpeg-ios-device-${{ steps.ffmpeg.outputs.image }}-${{ steps.ffmpeg.outputs.revision }}-${{ hashFiles('scripts/build_ios.sh', 'cmake/ios.toolchain.cmake', '.github/workflows/build.yml') }}
 
     - name: Build
       run: ./scripts/build_ios.sh device

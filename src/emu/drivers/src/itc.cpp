@@ -281,7 +281,7 @@ namespace eka2l1::drivers {
             set_feature(graphics_feature::stencil_test, false);
 
             eka2l1::rect to_scale = region.rects_[0];
-            to_scale.scale(scale_factor);
+            scale_rectangle(to_scale, scale_factor);
 
             clip_bitmap_rect(to_scale);
         } else {

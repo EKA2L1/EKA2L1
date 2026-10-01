@@ -196,10 +196,6 @@ namespace eka2l1::epoc {
 
         void set_initial_state() {
             set_position(0);
-
-            if (parent && ((parent->flags & flags_visible) == 0)) {
-                flags &= ~flags_visible;
-            }
         }
 
         virtual ~window() override;

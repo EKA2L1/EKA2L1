@@ -81,7 +81,7 @@ namespace eka2l1::epoc {
         0x339900, 0xCC3300, 0xFFFFFF
     };
 
-    // From Symbian Source code. BMCONV. Found in S^3 and above
+    // Symbian reference palette, also used by UIQ 2 and Series 80 ROMs.
     static palette_256 color_256_palette_new = {
         0x00000000, 0x00000033, 0x00000066, 0x00000099, 0x000000cc, 0x000000ff,
         0x00003300, 0x00003333, 0x00003366, 0x00003399, 0x000033cc, 0x000033ff,
@@ -136,8 +136,8 @@ namespace eka2l1::epoc {
         0x00ffff00, 0x00ffff33, 0x00ffff66, 0x00ffff99, 0x00ffffcc, 0x00ffffff
     };
 
-    inline palette_256 &get_suitable_palette_256(const epocver ver, bool is_s80) {
-        if ((ver >= epocver::epoc95) || is_s80) {
+    inline palette_256 &get_suitable_palette_256(const epocver ver, bool is_s80, bool is_uiq_2 = false) {
+        if ((ver >= epocver::epoc95) || is_s80 || is_uiq_2) {
             return color_256_palette_new;
         }
 

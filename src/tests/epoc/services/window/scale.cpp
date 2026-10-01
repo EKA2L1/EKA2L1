@@ -9,7 +9,10 @@
  */
 
 #include <catch2/catch.hpp>
+#include <drivers/graphics/graphics.h>
+#include <drivers/itc.h>
 #include <services/window/util.h>
+#include <vector>
 
 using namespace eka2l1;
 
@@ -41,4 +44,33 @@ TEST_CASE("scale_rectangle_integer_scale_is_exact", "[window]") {
 
     REQUIRE(r.top == eka2l1::vec2(24, 14));
     REQUIRE(r.size == eka2l1::vec2(8, 14));
+}
+
+TEST_CASE("Adjacent redraw clips cover the same pixels as the scaled drawing", "[window]") {
+    for (const float scale : { 1.5f, 2.0089433f, 2.7f }) {
+        drivers::graphics_command_builder builder;
+        for (const rect area : { rect({ 88, 289 }, { 41, 10 }), rect({ 129, 289 }, { 54, 10 }) }) {
+            common::region region;
+            region.add_rect(area);
+            builder.clip_bitmap_region(region, scale);
+        }
+
+        auto commands = builder.retrieve_command_list();
+        std::vector<rect> clips;
+        for (std::size_t i = 0; i < commands.size_; ++i) {
+            const auto &command = commands.base_[i];
+            if (command.opcode_ == drivers::graphics_driver_clip_bitmap_rect) {
+                rect clip;
+                drivers::unpack_u64_to_2u32(command.data_[0], clip.top.x, clip.top.y);
+                drivers::unpack_u64_to_2u32(command.data_[1], clip.size.x, clip.size.y);
+                clips.push_back(clip);
+            }
+        }
+        delete[] commands.base_;
+
+        REQUIRE(clips.size() == 2);
+        REQUIRE(clips[0].bottom_right().x == clips[1].top.x);
+        REQUIRE(clips[0].top == vec2(88, 289) * scale);
+        REQUIRE(clips[1].bottom_right() == vec2(183, 299) * scale);
+    }
 }
