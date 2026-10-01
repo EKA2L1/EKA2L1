@@ -19,10 +19,12 @@
  */
 
 #import <CoreLocation/CoreLocation.h>
+#import <UIKit/UIKit.h>
 
 #include "location_ios.h"
 
 #include <cmath>
+#include <cstdint>
 #include <limits>
 #include <mutex>
 
@@ -33,10 +35,15 @@ namespace eka2l1::drivers {
     struct location_ios_state {
         std::mutex lock_;
         location_update_callback callback_;
+        std::uint64_t generation_ = 0;
 
         CLLocationManager *manager_ = nil;
         EKA2L1LocationDelegate *delegate_ = nil;
-        bool running_ = false;
+        bool updating_ = false;
+        bool authorization_pending_ = false;
+
+        void update_authorization();
+        void stop_updates();
     };
 }
 
@@ -47,30 +54,53 @@ static float value_or_nan(const double value, const bool valid) {
 }
 
 @interface EKA2L1LocationDelegate : NSObject <CLLocationManagerDelegate>
-- (instancetype)initWithState:(location_ios_state *)state;
+- (instancetype)initWithState:(const std::shared_ptr<location_ios_state> &)state;
 @end
 
 @implementation EKA2L1LocationDelegate {
-    location_ios_state *state_;
+    std::weak_ptr<location_ios_state> state_;
 }
 
-- (instancetype)initWithState:(location_ios_state *)state {
+- (instancetype)initWithState:(const std::shared_ptr<location_ios_state> &)state {
     if (self = [super init]) {
         state_ = state;
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidBecomeActive:)
+            name:UIApplicationDidBecomeActiveNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationWillResignActive:)
+            name:UIApplicationWillResignActiveNotification object:nil];
     }
 
     return self;
 }
 
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void)applicationDidBecomeActive:(NSNotification *)notification {
+    if (auto state = state_.lock()) {
+        state->update_authorization();
+    }
+}
+
+- (void)applicationWillResignActive:(NSNotification *)notification {
+    if (auto state = state_.lock()) {
+        state->authorization_pending_ = false;
+    }
+}
+
 - (void)locationManagerDidChangeAuthorization:(CLLocationManager *)manager {
-    // Updates requested before the user answered the prompt do not start by themselves.
-    const CLAuthorizationStatus status = manager.authorizationStatus;
-    if (state_->running_ && ((status == kCLAuthorizationStatusAuthorizedWhenInUse) || (status == kCLAuthorizationStatusAuthorizedAlways))) {
-        [manager startUpdatingLocation];
+    if (auto state = state_.lock()) {
+        state->update_authorization();
     }
 }
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray<CLLocation *> *)locations {
+    auto state = state_.lock();
+    if (!state) {
+        return;
+    }
+
     CLLocation *location = locations.lastObject;
     if (!location || (location.horizontalAccuracy < 0)) {
         return;
@@ -87,15 +117,51 @@ static float value_or_nan(const double value, const bool valid) {
     fix.course_ = value_or_nan(location.course, location.course >= 0);
     fix.course_accuracy_ = value_or_nan(location.courseAccuracy, location.courseAccuracy >= 0);
 
-    const std::lock_guard<std::mutex> guard(state_->lock_);
-    if (state_->callback_) {
-        state_->callback_(fix);
+    const std::lock_guard<std::mutex> guard(state->lock_);
+    if (state->callback_ && state->updating_) {
+        state->callback_(fix);
     }
 }
 
 @end
 
 namespace eka2l1::drivers {
+    void location_ios_state::stop_updates() {
+        if (updating_) {
+            updating_ = false;
+            [manager_ stopUpdatingLocation];
+        }
+    }
+
+    void location_ios_state::update_authorization() {
+        const CLAuthorizationStatus status = manager_.authorizationStatus;
+        if (status != kCLAuthorizationStatusNotDetermined) {
+            authorization_pending_ = false;
+        }
+
+        {
+            const std::lock_guard<std::mutex> guard(lock_);
+            if (!callback_) {
+                return;
+            }
+        }
+
+        const bool active = UIApplication.sharedApplication.applicationState == UIApplicationStateActive;
+        if ((status == kCLAuthorizationStatusAuthorizedWhenInUse) || (status == kCLAuthorizationStatusAuthorizedAlways)) {
+            if (!updating_ && active) {
+                updating_ = true;
+                [manager_ startUpdatingLocation];
+            }
+        } else {
+            stop_updates();
+            // A prompt requested while another permission alert is active can be ignored.
+            if ((status == kCLAuthorizationStatusNotDetermined) && !authorization_pending_ && active) {
+                authorization_pending_ = true;
+                [manager_ requestWhenInUseAuthorization];
+            }
+        }
+    }
+
     location_driver_ios::location_driver_ios()
         : state_(std::make_shared<location_ios_state>()) {
     }
@@ -113,28 +179,31 @@ namespace eka2l1::drivers {
     }
 
     void location_driver_ios::start(location_update_callback callback) {
+        std::uint64_t generation;
         {
             const std::lock_guard<std::mutex> guard(state_->lock_);
             state_->callback_ = std::move(callback);
+            generation = ++state_->generation_;
         }
 
         std::shared_ptr<location_ios_state> state = state_;
         dispatch_async(dispatch_get_main_queue(), ^{
+            {
+                const std::lock_guard<std::mutex> guard(state->lock_);
+                if ((state->generation_ != generation) || !state->callback_) {
+                    return;
+                }
+            }
+
             if (!state->manager_) {
-                state->delegate_ = [[EKA2L1LocationDelegate alloc] initWithState:state.get()];
+                state->delegate_ = [[EKA2L1LocationDelegate alloc] initWithState:state];
                 state->manager_ = [[CLLocationManager alloc] init];
                 state->manager_.desiredAccuracy = kCLLocationAccuracyBest;
                 state->manager_.distanceFilter = kCLDistanceFilterNone;
                 state->manager_.delegate = state->delegate_;
             }
 
-            state->running_ = true;
-
-            if (state->manager_.authorizationStatus == kCLAuthorizationStatusNotDetermined) {
-                [state->manager_ requestWhenInUseAuthorization];
-            }
-
-            [state->manager_ startUpdatingLocation];
+            state->update_authorization();
         });
     }
 
@@ -142,12 +211,12 @@ namespace eka2l1::drivers {
         {
             const std::lock_guard<std::mutex> guard(state_->lock_);
             state_->callback_ = nullptr;
+            ++state_->generation_;
         }
 
         std::shared_ptr<location_ios_state> state = state_;
         dispatch_async(dispatch_get_main_queue(), ^{
-            state->running_ = false;
-            [state->manager_ stopUpdatingLocation];
+            state->stop_updates();
         });
     }
 }
