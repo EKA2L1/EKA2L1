@@ -962,7 +962,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::clear(service::ipc_context &context, ws_cmd &cmd) {
-        eka2l1::rect area(attached_window->pos, attached_window->size());
+        eka2l1::rect area = attached_window->bounding_rect();
 
         if (!area.valid()) {
             context.complete(epoc::error_none);
@@ -980,7 +980,7 @@ namespace eka2l1::epoc {
             rect_draw_data.color_.w = 255;
         }
 
-        attached_window->add_draw_command(gdi_cmd);
+        add_draw_command(gdi_cmd);
 
         // Draw rectangle
         context.complete(epoc::error_none);

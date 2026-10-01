@@ -810,7 +810,7 @@ namespace eka2l1::drivers {
             glDisable(GL_STENCIL_TEST);
 
             eka2l1::rect clip_rect = to_clip.rects_[0];
-            clip_rect.scale(scale);
+            scale_rectangle(clip_rect, scale);
 
             glScissor(clip_rect.top.x, ((binding != nullptr) ? clip_rect.top.y : (current_fb_height - (clip_rect.top.y + clip_rect.size.y))),
                 clip_rect.size.x, clip_rect.size.y);
@@ -834,7 +834,7 @@ namespace eka2l1::drivers {
 
         for (std::size_t i = 0; i < to_clip.rects_.size(); i++) {
             if (to_clip.rects_[i].valid()) {
-                to_clip.rects_[i].scale(scale);
+                scale_rectangle(to_clip.rects_[i], scale);
                 draw_rectangle(to_clip.rects_[i]);
             }
         }
