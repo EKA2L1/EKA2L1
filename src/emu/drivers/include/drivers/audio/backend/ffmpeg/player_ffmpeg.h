@@ -31,10 +31,9 @@ namespace eka2l1::drivers {
     private:        
         AVCodecContext *codec_;
         AVFormatContext *format_context_;
-        AVPacket packet_;
+        AVPacket *packet_;
 
         const AVCodec *output_encoder_;
-        std::uint64_t channel_layout_dest_;
 
         AVIOContext *custom_io_;
         std::uint64_t duration_us_;
