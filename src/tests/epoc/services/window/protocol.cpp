@@ -39,6 +39,20 @@ TEST_CASE("Window protocol extensions do not shift other platform tables", "[win
     REQUIRE_FALSE(belle.legacy_dsa());
 }
 
+TEST_CASE("Series 90 keeps new session opcodes and old window opcodes", "[window]") {
+    epoc::window_server_protocol s90(epocver::epoc7, {1, 0, 151});
+    REQUIRE(s90.session_opcode(49) == ws_cl_op_claim_system_pointer_cursor_list);
+    REQUIRE(s90.session_opcode(80) == ws_cl_op_prepare_for_switch_off);
+    REQUIRE(s90.session_opcode(85) == ws_cl_op_send_event_to_one_window_group_per_cli);
+    REQUIRE(s90.window_opcode(12) == EWsWinOpSize);
+    REQUIRE(s90.window_opcode(24) == EWsWinOpInquireOffset);
+    REQUIRE(s90.window_opcode(25) == EWsWinOpPointerFilter);
+    REQUIRE(s90.window_opcode(61) == EWsWinOpSetName);
+    REQUIRE(s90.window_opcode(94) == EWsWinOpEnableScreenChangeEvents);
+    REQUIRE(s90.window_opcode(97) == EWsWinOpGetDisplayMode);
+    REQUIRE(s90.window_opcode(105) == EWsWinOpEnableGroupListChangeEvents);
+}
+
 TEST_CASE("Mapped framebuffer tracks writes without a sentinel pixel value", "[window]") {
     epoc::framebuffer_observer observer;
     std::vector<std::uint8_t> pixels(16, 255);

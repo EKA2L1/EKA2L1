@@ -23,6 +23,7 @@
 #include <common/path.h>
 #include <config/config.h>
 #include <system/devices.h>
+#include <system/software.h>
 
 #include <algorithm>
 #include <fstream>
@@ -152,6 +153,14 @@ TEST_CASE("deleting_a_device_that_wrote_nothing_is_fine", "devices") {
     env.delete_device_state("rm-320");
 
     REQUIRE_FALSE(env.has("drives/z/rm-320/sys/bin/euser.dll"));
+}
+
+TEST_CASE("Series 90 markers select the OS 7.0s contracts", "devices") {
+    for (const std::string marker : { "series90v10.sis", "series90v11.sis" }) {
+        storage_test_env env(marker);
+        env.write_file("system/install/" + marker);
+        REQUIRE(loader::determine_rpkg_symbian_version(env.root) == epocver::epoc7);
+    }
 }
 
 TEST_CASE("deleting_an_isolated_device_takes_its_drives", "devices") {

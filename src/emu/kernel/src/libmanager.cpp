@@ -519,7 +519,7 @@ namespace eka2l1::hle {
             }
 
             while (true) {
-                if (start_ver >= epocver::epocverend) {
+                if (start_ver >= epocver::epocverend || (kern_->is_eka1() && start_ver >= epocver::eka2)) {
                     break;
                 }
 
@@ -538,6 +538,12 @@ namespace eka2l1::hle {
             }
 
             if (patch_dll_map.empty()) {
+                // General patches use the EKA2 ABI and cannot bind against EKA1 imports.
+                if (kern_->is_eka1()) {
+                    LOG_TRACE(KERNEL, "No EKA1 patch DLL for {}", original_map_name);
+                    continue;
+                }
+
                 const std::string source_dll_name = source_dll_name_from_patch + "general.dll";
                 patch_dll_map = eka2l1::add_path(patch_folder, source_dll_name);
 

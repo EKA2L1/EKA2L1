@@ -1530,7 +1530,12 @@ namespace eka2l1 {
         static const eka2l1::vec2 ASSUMED_SCREEN_SIZE = { 176, 208 };
         static const eka2l1::vec2 ASSUMED_SCREEN_SIZE_S80 = { 640, 200 };
 
-        bool is_s80_device = sys->is_s80_device_active();
+        eka2l1::vec2 default_screen_size = sys->is_s80_device_active() ? ASSUMED_SCREEN_SIZE_S80 : ASSUMED_SCREEN_SIZE;
+        // HAL display attributes are driver-derived; its InitialValue table is not panel geometry.
+        const auto *device = sys->get_device_manager()->get_current();
+        if (device && device->machine_uid == 0x101FBE09) {
+            default_screen_size = { 640, 320 }; // Nokia 7710
+        }
 
         do {
             std::string screen_key = "SCREEN";
@@ -1584,7 +1589,7 @@ namespace eka2l1 {
                     if (total_mode > 1)
                         break;
 
-                    scr_mode.size.x = is_s80_device ? ASSUMED_SCREEN_SIZE_S80.x : ASSUMED_SCREEN_SIZE.x;
+                    scr_mode.size.x = default_screen_size.x;
                     one_mode_only = true;
                 }
 
@@ -1595,7 +1600,7 @@ namespace eka2l1 {
                     if (total_mode > 1)
                         break;
 
-                    scr_mode.size.y = is_s80_device ? ASSUMED_SCREEN_SIZE_S80.y : ASSUMED_SCREEN_SIZE.y;
+                    scr_mode.size.y = default_screen_size.y;
                     one_mode_only = true;
                 }
 
