@@ -14,6 +14,8 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <string>
+#include <vector>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -94,6 +96,30 @@ namespace eka2l1 {
 
     using breakpoint_map = std::map<std::uint32_t, breakpoint>;
 
+    /// A loaded image, as GDB's library list describes it.
+    struct gdb_library {
+        std::string name; ///< Path of the image in the emulated file system.
+        address code_run_addr; ///< Address the image's code runs at.
+        address data_run_addr; ///< Address its .data and .bss run at, or 0 if it has neither.
+    };
+
+    /**
+     * Build the library-list document that answers qXfer:libraries:read.
+     *
+     * Each library lists the run address of its code segment, then that of its data segment
+     * when it has one, so GDB relocates the matching loadable segments of the ELF file.
+     */
+    std::string make_gdb_library_list(const std::vector<gdb_library> &libraries);
+
+    /**
+     * Build the reply to a qXfer read of a document.
+     *
+     * The reply is 'm' (more data follows) or 'l' (last part), then up to length bytes of the
+     * document starting at offset, binary-escaped. Fewer bytes are returned when the escaped
+     * reply would grow past max_size.
+     */
+    std::string make_gdb_xfer_reply(const std::string &document, const std::size_t offset, const std::size_t length, const std::size_t max_size);
+
     class gdbstub {
         int gdbserver_socket = -1;
 
@@ -160,6 +186,7 @@ namespace eka2l1 {
         void handle_vfile();
         void handle_command_get_thread_infos();
         void handle_command_read_threads();
+        void handle_command_read_libraries();
         void handle_vcont_query();
 
         void step();

@@ -23,6 +23,7 @@
 
 #include <cpu/arm_interface.h>
 #include <gdbstub/gdbstub.h>
+#include <kernel/codeseg.h>
 #include <kernel/kernel.h>
 #include <kernel/process.h>
 #include <kernel/thread.h>
@@ -507,6 +508,139 @@ namespace eka2l1 {
         send_reply(buffer.c_str());
     }
 
+    std::string make_gdb_library_list(const std::vector<gdb_library> &libraries) {
+        std::string document = "<?xml version=\"1.0\"?><library-list version=\"1.0\">";
+
+        for (const gdb_library &library : libraries) {
+            document += "<library name=\"";
+
+            for (const char c : library.name) {
+                switch (c) {
+                case '&':
+                    document += "&amp;";
+                    break;
+
+                case '<':
+                    document += "&lt;";
+                    break;
+
+                case '>':
+                    document += "&gt;";
+                    break;
+
+                case '"':
+                    document += "&quot;";
+                    break;
+
+                case '\'':
+                    document += "&apos;";
+                    break;
+
+                default:
+                    document += c;
+                    break;
+                }
+            }
+
+            // GDB relocates the n-th loadable segment of the ELF file to the n-th address.
+            document += fmt::format("\"><segment address=\"0x{:x}\"/>", library.code_run_addr);
+
+            if (library.data_run_addr != 0) {
+                document += fmt::format("<segment address=\"0x{:x}\"/>", library.data_run_addr);
+            }
+
+            document += "</library>";
+        }
+
+        document += "</library-list>";
+        return document;
+    }
+
+    std::string make_gdb_xfer_reply(const std::string &document, const std::size_t offset, const std::size_t length, const std::size_t max_size) {
+        std::string reply = "l";
+
+        std::size_t pos = std::min(offset, document.size());
+        const std::size_t end = pos + std::min(length, document.size() - pos);
+
+        while (pos < end) {
+            const char c = document[pos];
+
+            // Binary data in a reply escapes these as '}' followed by the byte XOR 0x20.
+            const bool escaped = (c == '#') || (c == '$') || (c == '}') || (c == '*');
+
+            if (reply.size() + (escaped ? 2 : 1) > max_size) {
+                break;
+            }
+
+            if (escaped) {
+                reply += '}';
+                reply += static_cast<char>(c ^ 0x20);
+            } else {
+                reply += c;
+            }
+
+            pos++;
+        }
+
+        if (pos < document.size()) {
+            reply[0] = 'm';
+        }
+
+        return reply;
+    }
+
+    void gdbstub::handle_command_read_libraries() {
+        // qXfer:libraries:read:annex:offset,length. This object only has the empty annex.
+        const std::uint8_t *args = command_buffer + strlen("qXfer:libraries:read:");
+        const std::uint8_t *args_end = command_buffer + command_length;
+
+        if ((args >= args_end) || (*args != ':')) {
+            send_reply("E00");
+            return;
+        }
+
+        const std::uint8_t *comma = std::find(args + 1, args_end, ',');
+
+        if (comma == args_end) {
+            send_reply("E00");
+            return;
+        }
+
+        const std::uint32_t offset = hex_to_int(args + 1, static_cast<std::size_t>(comma - (args + 1)));
+        const std::uint32_t length = hex_to_int(comma + 1, static_cast<std::size_t>(args_end - (comma + 1)));
+
+        // Memory reads go through the current thread's process, so report the code segments
+        // loaded in that process, at the addresses they run at there.
+        kernel::process *target_process = current_thread ? current_thread->owning_process() : kern->crr_process();
+        std::vector<gdb_library> libraries;
+
+        if (target_process) {
+            for (const auto &seg_obj : kern->get_codeseg_list()) {
+                codeseg_ptr seg = reinterpret_cast<codeseg_ptr>(seg_obj.get());
+
+                if (!seg || (seg->state_with(target_process) == kernel::codeseg_state_detached)) {
+                    continue;
+                }
+
+                gdb_library library;
+                library.name = common::ucs2_to_utf8(seg->get_full_path());
+                library.code_run_addr = seg->get_code_run_addr(target_process);
+                library.data_run_addr = seg->get_data_run_addr(target_process);
+
+                if (library.name.empty()) {
+                    library.name = seg->name();
+                }
+
+                if (library.code_run_addr != 0) {
+                    libraries.push_back(std::move(library));
+                }
+            }
+        }
+
+        const std::string document = make_gdb_library_list(libraries);
+        send_reply(make_gdb_xfer_reply(document, offset, length, sizeof(command_buffer) - 4).c_str());
+    }
+
     /// Handle query command from gdb client.
     void gdbstub::handle_query() {
         LOG_DEBUG(GDBSTUB, "gdb: query '{}'", fmt::ptr(command_buffer + 1));
@@ -527,6 +661,8 @@ namespace eka2l1 {
             send_reply("l");
         } else if (strncmp(query, "Xfer:threads:read", strlen("Xfer:threads:read")) == 0) {
             handle_command_read_threads();
+        } else if (strncmp(query, "Xfer:libraries:read:", strlen("Xfer:libraries:read:")) == 0) {
+            handle_command_read_libraries();
         } else {
             send_reply("");
         }
