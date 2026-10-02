@@ -399,7 +399,7 @@ bool keybind_profile_option_handler(eka2l1::common::arg_parser *parser, void *us
     }
 
     // Check if profile exists
-    const std::string profile_path = fmt::format("bindings//{}.yml", profile);
+    const std::string profile_path = eka2l1::data_path(fmt::format("bindings//{}.yml", profile));
     if (!eka2l1::common::exists(profile_path)) {
         *err = "No profile with name {} exists";
         return true;
@@ -457,6 +457,16 @@ bool run_ngage_game_option_handler(eka2l1::common::arg_parser *parser, void *use
     }
 
     emu->app_launch_from_command_line = true;
+    return true;
+}
+
+bool data_dir_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
+    // main() already set the data root from this value, before anything was read from the folder.
+    if (!parser->next_token()) {
+        *err = "No data folder specified";
+        return false;
+    }
+
     return true;
 }
 
