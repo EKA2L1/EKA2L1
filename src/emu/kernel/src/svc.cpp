@@ -2920,13 +2920,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        second_fraction_enum += 1;
-
-        if (second_fraction_enum >= 12) {
-            second_fraction_enum = 12;
-        }
-        
-        timer->after(kern->crr_thread(), req_sts, common::microsecs_per_sec * second_fraction_enum / 12);
+        timer->lock(kern->crr_thread(), req_sts, common::min<std::uint32_t>(second_fraction_enum, 11));
     }
 
     BRIDGE_FUNC(void, timer_after_eka1, eka2l1::ptr<epoc::request_status> req_sts, std::int32_t us_after, kernel::handle h) {
@@ -2937,6 +2931,10 @@ namespace eka2l1::epoc {
         }
 
         timer->after_tick_queue(kern->crr_thread(), req_sts, us_after);
+    }
+
+    BRIDGE_FUNC(void, timer_lock_eka1, eka2l1::ptr<epoc::request_status> req_sts, std::uint32_t second_fraction_enum, kernel::handle h) {
+        timer_lock(kern, h, req_sts, second_fraction_enum);
     }
     
     BRIDGE_FUNC(void, timer_after_ticks_eka1, eka2l1::ptr<epoc::request_status> req_sts, std::int32_t ticks_after, kernel::handle h) {
@@ -5581,6 +5579,13 @@ namespace eka2l1::epoc {
         thr->set_priority(static_cast<eka2l1::kernel::thread_priority>(thread_pri));
     }
 
+    BRIDGE_FUNC(void, thread_set_process_priority_eka1, std::int32_t process_pri, kernel::handle thr_handle) {
+        thread_ptr thr = kern->get<kernel::thread>(thr_handle);
+        if (thr) {
+            thr->owning_process()->set_priority(static_cast<kernel::process_priority>(process_pri));
+        }
+    }
+
     BRIDGE_FUNC(std::int32_t, process_find_next, epoc::des16 *found_result, std::int32_t *next_con_handle, epoc::desc16 *match) {
         return object_next_eka1(kern, found_result, next_con_handle, match, kernel::object_type::process);
     }
@@ -5717,6 +5722,51 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::uint32_t, user_language) {
         return static_cast<std::uint32_t>(kern->get_current_language());
+    }
+
+    static void locale_name_eka1(kernel_system *kern, const std::int32_t index, epoc::desc16 *destination,
+        eka2l1::ptr<char> epoc::locale_language::*member, const std::int32_t count, const std::int32_t panic_code) {
+        if (index < 0 || index >= count) {
+            kern->crr_thread()->kill(kernel::entity_exit_type::panic, u"USER", panic_code);
+            return;
+        }
+
+        const auto property = kern->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY);
+        const auto language = property ? property->get_pkg<epoc::locale_language>() : std::nullopt;
+        if (!language || !destination) {
+            return;
+        }
+
+        auto *process = kern->crr_process();
+        const auto table = eka2l1::ptr<eka2l1::ptr<char16_t>>((language.value().*member).ptr_address()).get(process);
+        const auto name = table ? table[index].get(process) : nullptr;
+        if (name) {
+            destination->assign(process, std::u16string(name));
+        }
+    }
+
+    BRIDGE_FUNC(void, locale_day_name_eka1, const std::int32_t index, epoc::desc16 *destination) {
+        locale_name_eka1(kern, index, destination, &epoc::locale_language::day_table, 7, 184);
+    }
+
+    BRIDGE_FUNC(void, locale_day_name_abb_eka1, const std::int32_t index, epoc::desc16 *destination) {
+        locale_name_eka1(kern, index, destination, &epoc::locale_language::day_abb_table, 7, 184);
+    }
+
+    BRIDGE_FUNC(void, locale_month_name_eka1, const std::int32_t index, epoc::desc16 *destination) {
+        locale_name_eka1(kern, index, destination, &epoc::locale_language::month_table, 12, 184);
+    }
+
+    BRIDGE_FUNC(void, locale_month_name_abb_eka1, const std::int32_t index, epoc::desc16 *destination) {
+        locale_name_eka1(kern, index, destination, &epoc::locale_language::month_abb_table, 12, 184);
+    }
+
+    BRIDGE_FUNC(void, locale_date_suffix_eka1, const std::int32_t index, epoc::desc16 *destination) {
+        locale_name_eka1(kern, index, destination, &epoc::locale_language::date_suffix_table, 31, 69);
+    }
+
+    BRIDGE_FUNC(void, locale_am_pm_eka1, const std::int32_t index, epoc::desc16 *destination) {
+        locale_name_eka1(kern, index, destination, &epoc::locale_language::am_pm_table, 2, 69);
     }
 
     BRIDGE_FUNC(void, locale_refresh, epoc::locale *loc) {
@@ -6473,6 +6523,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x29, semaphore_count_eka1),
         BRIDGE_REGISTER(0x2A, semaphore_wait_eka1),
         BRIDGE_REGISTER(0x32, thread_id),
+        BRIDGE_REGISTER(0x36, thread_priority),
         BRIDGE_REGISTER(0x3C, thread_request_count),
         BRIDGE_REGISTER(0x3D, thread_exit_type),
         BRIDGE_REGISTER(0x4D, wait_for_any_request),
@@ -6522,6 +6573,12 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x80005A, handle_name_eka1),
         BRIDGE_REGISTER(0x80005C, handle_info_eka1),
         BRIDGE_REGISTER(0x800060, user_language),
+        BRIDGE_REGISTER(0x800061, locale_day_name_eka1),
+        BRIDGE_REGISTER(0x800062, locale_day_name_abb_eka1),
+        BRIDGE_REGISTER(0x800063, locale_month_name_eka1),
+        BRIDGE_REGISTER(0x800064, locale_month_name_abb_eka1),
+        BRIDGE_REGISTER(0x800065, locale_date_suffix_eka1),
+        BRIDGE_REGISTER(0x800066, locale_am_pm_eka1),
         BRIDGE_REGISTER(0x800068, locale_refresh),
         BRIDGE_REGISTER(0x80006E, time_now),
         BRIDGE_REGISTER(0x80007C, user_svr_screen_info),
@@ -6561,10 +6618,13 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC00034, thread_resume),
         BRIDGE_REGISTER(0xC00035, thread_suspend),
         BRIDGE_REGISTER(0xC00037, thread_set_priority_eka1),
+        BRIDGE_REGISTER(0xC00039, thread_set_process_priority_eka1),
         BRIDGE_REGISTER(0xC0003B, thread_set_flags_eka1),
         BRIDGE_REGISTER(0xC00046, thread_request_complete_eka1),
         BRIDGE_REGISTER(0xC00047, timer_cancel),
         BRIDGE_REGISTER(0xC00048, timer_after_eka1),
+        BRIDGE_REGISTER(0xC00049, timer_at_eka1),
+        BRIDGE_REGISTER(0xC0004A, timer_lock_eka1),
         BRIDGE_REGISTER(0xC0004E, request_signal),
         BRIDGE_REGISTER(0xC0005E, after),
         BRIDGE_REGISTER(0xC0006B, message_complete_eka1),
@@ -6593,6 +6653,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x29, semaphore_count_eka1),
         BRIDGE_REGISTER(0x2A, semaphore_wait_eka1),
         BRIDGE_REGISTER(0x32, thread_id),
+        BRIDGE_REGISTER(0x36, thread_priority),
         BRIDGE_REGISTER(0x3C, thread_request_count),
         BRIDGE_REGISTER(0x3D, thread_exit_type),
         BRIDGE_REGISTER(0x4D, wait_for_any_request),
@@ -6642,6 +6703,12 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x80005A, handle_name_eka1),
         BRIDGE_REGISTER(0x80005C, handle_info_eka1),
         BRIDGE_REGISTER(0x800060, user_language),
+        BRIDGE_REGISTER(0x800061, locale_day_name_eka1),
+        BRIDGE_REGISTER(0x800062, locale_day_name_abb_eka1),
+        BRIDGE_REGISTER(0x800063, locale_month_name_eka1),
+        BRIDGE_REGISTER(0x800064, locale_month_name_abb_eka1),
+        BRIDGE_REGISTER(0x800065, locale_date_suffix_eka1),
+        BRIDGE_REGISTER(0x800066, locale_am_pm_eka1),
         BRIDGE_REGISTER(0x800068, locale_refresh),
         BRIDGE_REGISTER(0x80006E, time_now),
         BRIDGE_REGISTER(0x80007C, user_svr_screen_info),
@@ -6683,11 +6750,13 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC00034, thread_resume),
         BRIDGE_REGISTER(0xC00035, thread_suspend),
         BRIDGE_REGISTER(0xC00037, thread_set_priority_eka1),
+        BRIDGE_REGISTER(0xC00039, thread_set_process_priority_eka1),
         BRIDGE_REGISTER(0xC0003B, thread_set_flags_eka1),
         BRIDGE_REGISTER(0xC00046, thread_request_complete_eka1),
         BRIDGE_REGISTER(0xC00047, timer_cancel),
         BRIDGE_REGISTER(0xC00048, timer_after_eka1),
         BRIDGE_REGISTER(0xC00049, timer_at_eka1),
+        BRIDGE_REGISTER(0xC0004A, timer_lock_eka1),
         BRIDGE_REGISTER(0xC0004E, request_signal),
         BRIDGE_REGISTER(0xC0005E, after),
         BRIDGE_REGISTER(0xC0006B, message_complete_eka1),
@@ -6715,6 +6784,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x29, semaphore_count_eka1),
         BRIDGE_REGISTER(0x2A, semaphore_wait_eka1),
         BRIDGE_REGISTER(0x32, thread_id),
+        BRIDGE_REGISTER(0x36, thread_priority),
         BRIDGE_REGISTER(0x3C, thread_request_count),
         BRIDGE_REGISTER(0x3D, thread_exit_type),
         BRIDGE_REGISTER(0x4D, wait_for_any_request),
@@ -6765,6 +6835,12 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x80005A, handle_name_eka1),
         BRIDGE_REGISTER(0x80005C, handle_info_eka1),
         BRIDGE_REGISTER(0x800060, user_language),
+        BRIDGE_REGISTER(0x800061, locale_day_name_eka1),
+        BRIDGE_REGISTER(0x800062, locale_day_name_abb_eka1),
+        BRIDGE_REGISTER(0x800063, locale_month_name_eka1),
+        BRIDGE_REGISTER(0x800064, locale_month_name_abb_eka1),
+        BRIDGE_REGISTER(0x800065, locale_date_suffix_eka1),
+        BRIDGE_REGISTER(0x800066, locale_am_pm_eka1),
         BRIDGE_REGISTER(0x800068, locale_refresh),
         BRIDGE_REGISTER(0x80006E, time_now),
         BRIDGE_REGISTER(0x80007C, user_svr_screen_info),
@@ -6798,11 +6874,13 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC00034, thread_resume),
         BRIDGE_REGISTER(0xC00035, thread_suspend),
         BRIDGE_REGISTER(0xC00037, thread_set_priority_eka1),
+        BRIDGE_REGISTER(0xC00039, thread_set_process_priority_eka1),
         BRIDGE_REGISTER(0xC0003B, thread_set_flags_eka1),
         BRIDGE_REGISTER(0xC00046, thread_request_complete_eka1),
         BRIDGE_REGISTER(0xC00047, timer_cancel),
         BRIDGE_REGISTER(0xC00048, timer_after_eka1),
         BRIDGE_REGISTER(0xC00049, timer_at_eka1),
+        BRIDGE_REGISTER(0xC0004A, timer_lock_eka1),
         BRIDGE_REGISTER(0xC0004E, request_signal),
         BRIDGE_REGISTER(0xC0005E, after),
         BRIDGE_REGISTER(0xC0006B, message_complete_eka1),

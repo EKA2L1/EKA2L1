@@ -50,6 +50,8 @@ namespace eka2l1 {
 
         etel_session *session_;
 
+        void dispatch_unhandled(service::ipc_context *ctx);
+
     public:
         explicit etel_subsession(etel_session *session, const etel_legacy_level lvl);
 

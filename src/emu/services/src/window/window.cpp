@@ -349,12 +349,8 @@ namespace eka2l1::epoc {
             group_casted->client_device_pointer = device_ptr->client_pointer();
         }
 
-        // If no window group is being focused on the screen, we force the screen to receive this window as focus
-        // Else rely on the focus flag.
-        if (!target_screen->focus || (header->focus)) {
-            group_casted->set_receive_focus(true);
-            target_screen->update_focus(&get_ws(), nullptr);
-        }
+        group_casted->set_receive_focus(header->focus != 0);
+        target_screen->update_focus(&get_ws(), nullptr);
 
         // Give it a nice name.
         // We can give it name with id, but too much hassle
@@ -632,6 +628,9 @@ namespace eka2l1::epoc {
         const std::u16string win_group_name(win_group_name_ptr, find_info->length);
         std::wstring win_group_name_w = common::ucs2_to_wstr(win_group_name);
         for (; group; group = reinterpret_cast<epoc::window_group *>(group->sibling)) {
+            if (!group->client) {
+                continue;
+            }
             // Prevent null \0 character from being trimmed by substr
             std::wstring name_copy_raw_w;
   
@@ -690,7 +689,7 @@ namespace eka2l1::epoc {
         }
 
         for (; group; group = reinterpret_cast<epoc::window_group *>(group->sibling)) {
-            if (group->client->get_client()->unique_id() == thr_id) {
+            if (group->client && group->client->get_client()->unique_id() == thr_id) {
                 ctx.complete(group->id);
                 return;
             }
@@ -790,7 +789,8 @@ namespace eka2l1::epoc {
     void window_server_client::get_focus_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
         // TODO: Epoc < 9
         if (cmd.header.cmd_len == 0) {
-            ctx.complete(get_ws().get_current_focus_screen()->focus->id);
+            auto *focus = get_ws().get_current_focus_screen()->focus;
+            ctx.complete(focus ? focus->id : 0);
             return;
         }
 
@@ -803,7 +803,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        ctx.complete(scr->focus->id);
+        ctx.complete(scr->focus ? scr->focus->id : 0);
     }
 
     void window_server_client::get_default_owning_window(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -857,7 +857,7 @@ namespace eka2l1::epoc {
 
     struct window_clear_store_walker : public epoc::window_tree_walker {
         bool do_it(epoc::window *win) {
-            if (win->type == window_kind::group) {
+            if (win->type == window_kind::group && win->client) {
                 win->client->trigger_redraw();
             }
 
@@ -2144,7 +2144,7 @@ namespace eka2l1 {
         const bool is_screenplay = (kern->get_epoc_version() >= epocver::epoc10);
 
         // Create first screen
-        screens = new epoc::screen(0, get_screen_config(0));
+        screens = new epoc::screen(0, get_screen_config(0), kern->is_eka1());
         screens->set_is_screenplay_architecture(is_screenplay);
 
         epoc::screen *crr = screens;
@@ -2152,7 +2152,7 @@ namespace eka2l1 {
 
         // Create other available screens. Plugged in screen later will be created explicitly
         for (std::size_t i = 0; i < screen_configs.size() - 1; i++) {
-            crr->next = new epoc::screen(1, get_screen_config(1));
+            crr->next = new epoc::screen(1, get_screen_config(1), kern->is_eka1());
             crr->next->set_is_screenplay_architecture(is_screenplay);
 
             crr = crr->next;
@@ -2204,7 +2204,7 @@ namespace eka2l1 {
 
         while (current) {
             epoc::window_group *group = reinterpret_cast<epoc::window_group *>(current->root->child);
-            while (group && (group->id != id)) {
+            while (group && (!group->client || group->id != id)) {
                 group = reinterpret_cast<epoc::window_group *>(group->sibling);
             }
 
@@ -2223,6 +2223,9 @@ namespace eka2l1 {
 
         while (current) {
             epoc::window_group *group = reinterpret_cast<epoc::window_group *>(current->root->child);
+            while (group && !group->client) {
+                group = reinterpret_cast<epoc::window_group *>(group->sibling);
+            }
             if (group) {
                 return group;
             }
@@ -2513,7 +2516,7 @@ namespace eka2l1 {
         }
 
         bool do_it(epoc::window *win) {
-            if (win && (win->type != epoc::window_kind::group)) {
+            if (!win || !win->client || win->type != epoc::window_kind::group) {
                 return false;
             }
 
@@ -2652,6 +2655,9 @@ namespace eka2l1 {
 
     void window_server::send_event_to_window_group(epoc::window_group *group, const epoc::event &evt) {
         epoc::window_server_client *cli = group->client;
+        if (!cli) {
+            return;
+        }
 
         epoc::event evt_copy = evt;
         evt_copy.handle = group->client_handle;

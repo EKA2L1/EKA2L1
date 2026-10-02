@@ -85,3 +85,24 @@ TEST_CASE("absolute timer deadlines survive queue insertion", "[timer]") {
     REQUIRE_FALSE(timing.advance().has_value());
     REQUIRE(completed == 42);
 }
+
+TEST_CASE("locked timers synchronize before following clock marks", "[timer]") {
+    const auto initial = timer_lock_deadline(250000, std::nullopt, 0);
+    REQUIRE(initial.synchronize);
+    REQUIRE(initial.deadline == 1000000);
+
+    constexpr std::uint64_t marks[] = { 5, 11, 16, 21, 27, 32, 37, 43, 48, 53, 59, 64 };
+    for (std::uint32_t mark = 0; mark < 12; mark++) {
+        const auto next = timer_lock_deadline(1000000, 64, mark);
+        REQUIRE_FALSE(next.synchronize);
+        REQUIRE(next.deadline == 1000000 + marks[mark] * 15625);
+    }
+
+    const auto repeated = timer_lock_deadline(1078125, 69, 0);
+    REQUIRE_FALSE(repeated.synchronize);
+    REQUIRE(repeated.deadline == 2078125);
+
+    const auto missed = timer_lock_deadline(2078125, 69, 0);
+    REQUIRE(missed.synchronize);
+    REQUIRE(missed.deadline == 3000000);
+}

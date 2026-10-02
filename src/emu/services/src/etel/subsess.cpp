@@ -17,11 +17,24 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <services/context.h>
 #include <services/etel/subsess.h>
+#include <utils/err.h>
 
 namespace eka2l1 {
     etel_subsession::etel_subsession(etel_session *session, const etel_legacy_level lvl)
         : session_(session)
         , legacy_level_(lvl) {
+    }
+
+    void etel_subsession::dispatch_unhandled(service::ipc_context *ctx) {
+        // EIsaCancelMessage for a request absent from the active list is a successful no-op.
+        if (ctx->get_argument_value<std::uint32_t>(1) == 5) {
+            ctx->complete(epoc::error_none);
+            return;
+        }
+
+        LOG_ERROR(SERVICE_ETEL, "Unimplemented etel subsession opcode {}", ctx->msg->function);
+        ctx->complete(epoc::error_not_supported);
     }
 }

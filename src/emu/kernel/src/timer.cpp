@@ -74,11 +74,15 @@ namespace eka2l1 {
         }
 
         bool timer::schedule_at(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts,
-            std::uint64_t deadline) {
+            std::uint64_t deadline, bool lock_request) {
             if (outstanding) {
                 return false;
             }
 
+            lock_request_ = lock_request;
+            if (!lock_request_) {
+                last_lock_tick_.reset();
+            }
             outstanding = true;
             activate_defer_count_ = 0;
             info.done_nof = epoc::notify_info(sts, requester);
@@ -108,6 +112,17 @@ namespace eka2l1 {
             return schedule_at(requester, sts, tick_count_timer_deadline(timing->microseconds(), tick_count));
         }
 
+        bool timer::lock(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts,
+            std::uint32_t fraction) {
+            const std::uint64_t now = kern->universal_time();
+            const timer_lock_result next = timer_lock_deadline(now, last_lock_tick_, fraction);
+            if (!schedule_at(requester, sts, timing->microseconds() + next.deadline - now, true)) {
+                return false;
+            }
+            lock_synchronizing_ = next.synchronize;
+            return true;
+        }
+
         bool timer::request_finish() {
             if (!outstanding) {
                 return false;
@@ -118,6 +133,7 @@ namespace eka2l1 {
         }
 
         bool timer::cancel_request() {
+            last_lock_tick_.reset();
             if (!outstanding) {
                 // Do a signal so that the semaphore won't lock the thread up next time it waits
                 // info.own_thread->signal_request();
@@ -173,7 +189,10 @@ namespace eka2l1 {
                 return;
             }
 
-            info.done_nof.complete(epoc::error_none);
+            if (lock_request_) {
+                last_lock_tick_ = kern->universal_time() / (common::microsecs_per_sec / epoc::TICK_TIMER_HZ);
+            }
+            info.done_nof.complete(lock_request_ && lock_synchronizing_ ? epoc::error_general : epoc::error_none);
         }
 
         void timer_callback(kernel_system *kern, uint64_t user, int ns_late) {

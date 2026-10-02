@@ -22,6 +22,7 @@
 #include <common/common.h>
 
 #include <limits>
+#include <optional>
 
 namespace eka2l1::kernel {
     // Model the nominal 64 Hz queue; hardware also has nanokernel rounding jitter.
@@ -49,6 +50,25 @@ namespace eka2l1::kernel {
             return tick_count_timer_deadline(now, static_cast<std::uint32_t>(-static_cast<std::int64_t>(interval)));
         }
         return tick_timer_deadline(now, static_cast<std::uint64_t>(interval));
+    }
+
+    struct timer_lock_result {
+        std::uint64_t deadline;
+        bool synchronize;
+    };
+
+    // TTickLink::GetNextLock rounds clock marks to 64 Hz and resynchronizes at twelve.
+    constexpr timer_lock_result timer_lock_deadline(std::uint64_t now,
+        std::optional<std::uint64_t> last_lock_tick, std::uint32_t fraction) {
+        constexpr std::uint64_t period = 1000000 / epoc::TICK_TIMER_HZ;
+        const std::uint64_t tick = now / period;
+        const std::uint64_t second = tick / 64 * 64;
+        std::uint64_t next = second + ((fraction + 1) * 64 + 6) / 12;
+        if (next <= tick) {
+            next += 64;
+        }
+        const bool synchronize = !last_lock_tick || next > *last_lock_tick + 64;
+        return { (synchronize ? second + 64 : next) * period, synchronize };
     }
 
     constexpr std::uint64_t high_res_timer_deadline(std::uint64_t now, std::uint32_t interval_us) {

@@ -55,6 +55,9 @@ namespace eka2l1 {
         PMgetsockopt,
         PMsetsockopt,
         PMioctlcomplete,
+        PMcancel,
+        PMterminateprocess,
+        PMgetenv,
         PMsetenv,
         PMunsetenv,
         PMpopen3,
@@ -62,6 +65,7 @@ namespace eka2l1 {
         PMisparent,
         PMrendezvous,
         PMpipewrite,
+        PMpiperead,
         PMpipeioctl,
         PMpipeclose,
         PMpipecancel

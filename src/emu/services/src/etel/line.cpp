@@ -63,7 +63,7 @@ namespace eka2l1 {
                 break;
 
             default:
-                LOG_ERROR(SERVICE_ETEL, "Unimplemented etel line opcode {}", ctx->msg->function);
+                dispatch_unhandled(ctx);
                 break;
             }
         } else {
@@ -90,7 +90,7 @@ namespace eka2l1 {
                 break;
 
             default:
-                LOG_ERROR(SERVICE_ETEL, "Unimplemented etel line opcode {}", ctx->msg->function);
+                dispatch_unhandled(ctx);
                 break;
             }
         }
