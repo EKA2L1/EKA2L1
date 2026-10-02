@@ -129,4 +129,20 @@ TEST_CASE("PCM encoder accepts unrestricted sample rates and channel layouts", "
     REQUIRE_FALSE(player.set_dest_freq(0));
     REQUIRE_FALSE(player.set_dest_channel_count(0));
 }
+
+TEST_CASE("8-bit PCM WAV uses unsigned samples with silence at 128", "[audio]") {
+    memory_audio_stream stream;
+    const std::uint8_t wav[] = {
+        'R', 'I', 'F', 'F', 40, 0, 0, 0, 'W', 'A', 'V', 'E',
+        'f', 'm', 't', ' ', 16, 0, 0, 0, 1, 0, 1, 0,
+        0x40, 0x1F, 0, 0, 0x40, 0x1F, 0, 0, 1, 0, 8, 0,
+        'd', 'a', 't', 'a', 4, 0, 0, 0, 0, 128, 255, 128
+    };
+    std::copy(std::begin(wav), std::end(wav), stream.data.begin());
+    eka2l1::drivers::player_ffmpeg player(nullptr);
+    REQUIRE(player.open_custom(&stream));
+    std::vector<std::int16_t> output(4);
+    REQUIRE(player.data_supply_callback(output.data(), output.size()) == output.size());
+    REQUIRE(output == std::vector<std::int16_t>{-32768, 0, 32512, 0});
+}
 #endif

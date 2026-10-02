@@ -44,6 +44,7 @@ set(CORE_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/services/internet/connmonitor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/internet/tls.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/loader.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/services/posix.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/timezone/rules.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/centralrepo/creiniloader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/sms/common.cpp

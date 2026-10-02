@@ -91,6 +91,9 @@ namespace eka2l1::epoc {
         , uid_owner_change_callback_handle(0)
         , uid_owner_change_process(nullptr)
         , screen_change_event_handle(0) {
+        if (!client) {
+            return;
+        }
         set_initial_state();
 
         // Create window group as child
@@ -115,6 +118,10 @@ namespace eka2l1::epoc {
         }
         
         remove_from_sibling_list();
+
+        if (!client) {
+            return;
+        }
 
         if (this == scr->focus) {
             set_receive_focus(false);

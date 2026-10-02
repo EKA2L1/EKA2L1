@@ -107,6 +107,7 @@ namespace eka2l1 {
         size_t write(const fid id, const size_t len, char *buf, int &terrno);
 
         void stat(const fid id, posix_stat *filestat, int &terrno);
+        void stat(const std::u16string &path, posix_stat *filestat, int &terrno);
     };
 
     class posix_server : public service::server {
@@ -119,6 +120,8 @@ namespace eka2l1 {
         void close(service::ipc_context &ctx);
         void lseek(service::ipc_context &ctx);
         void fstat(service::ipc_context &ctx);
+        void stat(service::ipc_context &ctx);
+        void getenv(service::ipc_context &ctx);
 
         void read(service::ipc_context &ctx);
         void write(service::ipc_context &ctx);

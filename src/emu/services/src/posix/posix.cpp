@@ -20,6 +20,7 @@
 
 #include <services/posix/op.h>
 #include <services/posix/posix.h>
+#include <services/fs/std.h>
 
 #include <common/cvt.h>
 #include <common/log.h>
@@ -66,7 +67,9 @@ namespace eka2l1 {
     namespace {
         constexpr std::size_t POSIX_MAX_PATH = 256;
         constexpr std::int32_t POSIX_S_IFREG = 0100000;
-        constexpr std::int32_t POSIX_BLOCK_SIZE = 1024;
+        constexpr std::int32_t POSIX_S_IFDIR = 0040000;
+        constexpr std::int32_t POSIX_S_IWUSR = 0200;
+        constexpr std::int32_t POSIX_BLOCK_SIZE = 512;
 
         // S60 2nd Edition's libc/sys/fcntl.h values. Host O_* constants are an
         // ABI detail of the build machine and cannot be used for guest IPC.
@@ -265,17 +268,24 @@ namespace eka2l1 {
             return;
         }
 
-        const std::shared_ptr<file> &file_handle = files[id - 1]->handle;
-        const std::u16string full_path = file_handle->file_name();
+        stat(files[id - 1]->handle->file_name(), filestat, terrno);
+    }
 
-        const std::optional<entry_info> info = io->get_entry_info(full_path);
+    void posix_file_manager::stat(const std::u16string &path, posix_stat *filestat, int &terrno) {
+        std::optional<entry_info> info = io->get_entry_info(path);
         if (!info) {
             terrno = ENOENT;
             return;
         }
 
         *filestat = {};
-        filestat->mode = POSIX_S_IFREG | 0777;
+        const auto attributes = epoc::fs::build_attribute_from_entry_info(*info);
+        filestat->mode = (attributes & epoc::fs::entry_att_dir) ? POSIX_S_IFDIR : POSIX_S_IFREG;
+        if (!(attributes & epoc::fs::entry_att_read_only)) {
+            filestat->mode |= POSIX_S_IWUSR;
+        }
+        filestat->device = filestat->special_device = static_cast<std::int16_t>(
+            char16_to_drive(path[0]));
         filestat->link_count = 1;
         filestat->size = static_cast<std::int32_t>(std::min<std::size_t>(
             info->size, static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max())));
@@ -534,6 +544,21 @@ namespace eka2l1 {
         POSIX_REQUEST_FINISH(ctx);
     }
 
+    void posix_server::stat(service::ipc_context &ctx) {
+        POSIX_REQUEST_INIT(ctx);
+
+        const auto path = read_guest_path(own_process, params->cwptr[0]);
+        if (!path || !valid_guest_range(own_process, params->ptr[0].ptr_address(), sizeof(posix_stat))) {
+            params->ret = -1;
+            POSIX_REQUEST_FINISH_WITH_ERR(ctx, EFAULT);
+        }
+
+        auto *file_stat = params->ptr[0].cast<posix_stat>().get(own_process);
+        file_manager.stat(eka2l1::absolute_path(*path, working_dir, true), file_stat, *errnoptr);
+        params->ret = *errnoptr ? -1 : 0;
+        POSIX_REQUEST_FINISH(ctx);
+    }
+
     void posix_server::read(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
 
@@ -549,6 +574,15 @@ namespace eka2l1 {
             params->ret = -1;
         }
 
+        POSIX_REQUEST_FINISH(ctx);
+    }
+
+    void posix_server::getenv(service::ipc_context &ctx) {
+        POSIX_REQUEST_INIT(ctx);
+
+        // Top-level STDLIB processes start with an empty environment. Process
+        // inheritance and setenv are not supported by this server yet.
+        params->ret = 0;
         POSIX_REQUEST_FINISH(ctx);
     }
 
@@ -616,6 +650,8 @@ namespace eka2l1 {
         REGISTER_IPC(posix_server, write, PMwrite, "Posix::Write");
         REGISTER_IPC(posix_server, lseek, PMlseek, "Posix::LSeek");
         REGISTER_IPC(posix_server, fstat, PMfstat, "Posix::Fstat");
+        REGISTER_IPC(posix_server, stat, PMstat, "Posix::Stat");
+        REGISTER_IPC(posix_server, getenv, PMgetenv, "Posix::Getenv");
         REGISTER_IPC(posix_server, dup, PMdup, "Posix::Dup");
         REGISTER_IPC(posix_server, dup2, PMdup2, "Posix::Dup2");
     }

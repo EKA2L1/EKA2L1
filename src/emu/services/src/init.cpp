@@ -22,7 +22,10 @@
 #include <common/path.h>
 #include <common/platform.h>
 
+#include <initializer_list>
 #include <memory>
+#include <string_view>
+#include <vector>
 #include <unordered_map>
 
 #include <services/accessory/accessory.h>
@@ -177,12 +180,25 @@ namespace eka2l1::epoc {
             }
         }
 
-        address am_pm_names_addr[] = {
-            kern->put_global_kernel_string("am"),
-            kern->put_global_kernel_string("pm"),
+        const auto put_names = [kern](std::initializer_list<std::u16string_view> names) {
+            std::vector<address> addresses;
+            for (const auto name : names) {
+                addresses.push_back(kern->put_global_kernel_binary(
+                    reinterpret_cast<const std::uint8_t *>(name.data()), (name.size() + 1) * sizeof(char16_t)));
+            }
+            return eka2l1::ptr<char>(kern->put_static_array(addresses.data(), addresses.size()));
         };
 
-        lang.am_pm_table = eka2l1::ptr<char>(kern->put_static_array(am_pm_names_addr, 2));
+        lang.day_table = put_names({ u"Monday", u"Tuesday", u"Wednesday", u"Thursday", u"Friday", u"Saturday", u"Sunday" });
+        lang.day_abb_table = put_names({ u"Mon", u"Tue", u"Wed", u"Thu", u"Fri", u"Sat", u"Sun" });
+        lang.month_table = put_names({ u"January", u"February", u"March", u"April", u"May", u"June",
+            u"July", u"August", u"September", u"October", u"November", u"December" });
+        lang.month_abb_table = put_names({ u"Jan", u"Feb", u"Mar", u"Apr", u"May", u"Jun",
+            u"Jul", u"Aug", u"Sep", u"Oct", u"Nov", u"Dec" });
+        lang.date_suffix_table = put_names({ u"st", u"nd", u"rd", u"th", u"th", u"th", u"th", u"th", u"th", u"th",
+            u"th", u"th", u"th", u"th", u"th", u"th", u"th", u"th", u"th", u"th",
+            u"st", u"nd", u"rd", u"th", u"th", u"th", u"th", u"th", u"th", u"th", u"st" });
+        lang.am_pm_table = put_names({ u"am", u"pm" });
 
         epoc::locale_locale_settings locale_settings;
         locale_settings.locale_extra_settings_dll_ptr = 0;

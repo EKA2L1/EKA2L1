@@ -348,7 +348,7 @@ namespace eka2l1 {
                 break;
 
             default:
-                LOG_ERROR(SERVICE_ETEL, "Unimplemented etel phone opcode {}", ctx->msg->function);
+                dispatch_unhandled(ctx);
                 break;
             }
         } else if (legacy_level_ == ETEL_LEGACY_LEVEL_TRANSITION) {
@@ -391,7 +391,7 @@ namespace eka2l1 {
                 break;
 
             default:
-                LOG_ERROR(SERVICE_ETEL, "Unimplemented etel phone opcode {}", ctx->msg->function);
+                dispatch_unhandled(ctx);
                 break;
             }
         } else {
@@ -524,7 +524,7 @@ namespace eka2l1 {
                 break;
 
             default:
-                LOG_ERROR(SERVICE_ETEL, "Unimplemented etel phone opcode {}", ctx->msg->function);
+                dispatch_unhandled(ctx);
                 break;
             }
         }

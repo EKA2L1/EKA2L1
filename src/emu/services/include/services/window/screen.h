@@ -87,6 +87,7 @@ namespace eka2l1::epoc {
         // The root window, used to traverse window tree
         // Draw order will be child in front of parent, newer in front of older.
         std::unique_ptr<epoc::window> root;
+        std::unique_ptr<epoc::window> host_launcher_group;
         drivers::handle screen_texture; ///< Server handle to texture of the screen
         drivers::handle dsa_texture;    ///< Texture use for temporary DSA transfer
 
@@ -172,7 +173,7 @@ namespace eka2l1::epoc {
 
         void vsync(ntimer *timing, std::uint64_t &next_vsync_us);
 
-        explicit screen(const int number, epoc::config::screen &scr_conf);
+        explicit screen(const int number, epoc::config::screen &scr_conf, bool reserve_host_focus = false);
 
         void set_rotation(window_server *winserv, drivers::graphics_driver *drv, int rot);
         void set_orientation_lock(drivers::graphics_driver *drv, const bool lock);
