@@ -21,6 +21,7 @@
 #include <catch2/catch.hpp>
 #include <common/fileutils.h>
 #include <common/path.h>
+#include <common/platform.h>
 #include <cstring>
 
 TEST_CASE("root_name", "path_resolving_test") {
@@ -145,4 +146,105 @@ TEST_CASE("copy_folder_lowercases_destination_without_lowercasing_source", "path
         eka2l1::add_path(destination, "mixedcasedirectory/marker.txt")));
 
     REQUIRE(eka2l1::common::delete_folder(destination));
+}
+
+namespace {
+    // The roots are process-wide: put them back so later tests see the default.
+    struct runtime_roots_reset {
+        ~runtime_roots_reset() {
+            eka2l1::set_data_root("");
+            eka2l1::set_runtime_resource_root("");
+        }
+    };
+}
+
+TEST_CASE("data_path_is_unchanged_without_a_data_root", "path_resolving_test") {
+    runtime_roots_reset reset;
+    eka2l1::set_data_root("");
+
+    REQUIRE(eka2l1::data_path("config.yml") == "config.yml");
+    REQUIRE(eka2l1::data_path("compat//panicBlackList.json") == "compat//panicBlackList.json");
+    REQUIRE(eka2l1::data_path("") == "");
+}
+
+TEST_CASE("data_path_resolves_relative_paths_against_the_data_root", "path_resolving_test") {
+    runtime_roots_reset reset;
+    eka2l1::set_data_root("/srv/eka2l1/instance-a/");
+
+    REQUIRE(eka2l1::data_path("config.yml") == "/srv/eka2l1/instance-a/config.yml");
+    REQUIRE(eka2l1::data_path("bindings/default.yml") == "/srv/eka2l1/instance-a/bindings/default.yml");
+    REQUIRE(eka2l1::data_path("./cache/") == "/srv/eka2l1/instance-a/cache/");
+
+    // An empty path joined to the working directory named that directory, so an
+    // empty storage folder is the data folder itself.
+    REQUIRE(eka2l1::data_path("") == "/srv/eka2l1/instance-a/");
+
+    eka2l1::set_data_root("/srv/eka2l1/instance-b");
+    REQUIRE(eka2l1::data_path("") == "/srv/eka2l1/instance-b");
+}
+
+TEST_CASE("data_path_appends_the_path_as_written", "path_resolving_test") {
+    runtime_roots_reset reset;
+    eka2l1::set_data_root("/srv/eka2l1/instance-a/");
+
+    // The root stands in for the working directory, so the path must name the
+    // same file it named relative to that directory, separators and all.
+    REQUIRE(eka2l1::data_path("cache\\") == "/srv/eka2l1/instance-a/cache\\");
+    REQUIRE(eka2l1::data_path("patch\\avkonfep_general.dll") == "/srv/eka2l1/instance-a/patch\\avkonfep_general.dll");
+
+    eka2l1::set_data_root("/srv/eka2l1/instance-b");
+    REQUIRE(eka2l1::data_path("config.yml") == std::string("/srv/eka2l1/instance-b") + eka2l1::get_separator() + "config.yml");
+}
+
+TEST_CASE("data_path_leaves_absolute_paths_alone", "path_resolving_test") {
+    runtime_roots_reset reset;
+    eka2l1::set_data_root("/srv/eka2l1/instance-a/");
+
+    REQUIRE(eka2l1::data_path("/home/user/banks/my.sf2") == "/home/user/banks/my.sf2");
+
+#if EKA2L1_PLATFORM(WIN32)
+    REQUIRE(eka2l1::data_path("\\\\server\\share\\data") == "\\\\server\\share\\data");
+    REQUIRE(eka2l1::data_path("\\EKA2L1\\data") == "\\EKA2L1\\data");
+    REQUIRE(eka2l1::data_path("D:\\EKA2L1\\data") == "D:\\EKA2L1\\data");
+#endif
+}
+
+TEST_CASE("data_path_follows_the_host_on_what_is_relative", "path_resolving_test") {
+    runtime_roots_reset reset;
+    eka2l1::set_data_root("/srv/eka2l1/instance-a/");
+
+#if EKA2L1_PLATFORM(WIN32)
+    // On Windows ".\" names the working directory just as "./" does.
+    REQUIRE(eka2l1::data_path(".\\cache\\") == "/srv/eka2l1/instance-a/cache\\");
+#else
+    // Outside Windows these are file names relative to the working directory,
+    // so the root has to stand in for it here too.
+    REQUIRE(eka2l1::data_path("\\EKA2L1\\data") == "/srv/eka2l1/instance-a/\\EKA2L1\\data");
+    REQUIRE(eka2l1::data_path("D:\\EKA2L1\\data") == "/srv/eka2l1/instance-a/D:\\EKA2L1\\data");
+
+    // And ".\" starts a name there, it does not name the working directory.
+    REQUIRE(eka2l1::data_path(".\\cache\\") == "/srv/eka2l1/instance-a/.\\cache\\");
+#endif
+}
+
+TEST_CASE("runtime_resource_path_falls_back_to_the_data_root", "path_resolving_test") {
+    runtime_roots_reset reset;
+    eka2l1::set_data_root("/srv/eka2l1/instance-a/");
+
+    // Desktop frontends copy the shipped resources into the data folder.
+    REQUIRE(eka2l1::runtime_resource_path("resources//brush.vert") == "/srv/eka2l1/instance-a/resources//brush.vert");
+}
+
+TEST_CASE("runtime_resource_root_wins_over_the_data_root", "path_resolving_test") {
+    runtime_roots_reset reset;
+    eka2l1::set_data_root("/srv/eka2l1/instance-a/");
+    eka2l1::set_runtime_resource_root("/opt/eka2l1/bundle/");
+
+    REQUIRE(eka2l1::runtime_resource_path(".//patch//") == eka2l1::add_path("/opt/eka2l1/bundle/", "patch//"));
+    REQUIRE(eka2l1::runtime_resource_path(".\\patch\\") == eka2l1::add_path("/opt/eka2l1/bundle/", "patch\\"));
+
+    // A path rooted on any host is left alone, whichever host this is.
+    REQUIRE(eka2l1::runtime_resource_path("\\EKA2L1\\data") == "\\EKA2L1\\data");
+    REQUIRE(eka2l1::runtime_resource_path("D:\\EKA2L1\\data") == "D:\\EKA2L1\\data");
+    REQUIRE(eka2l1::data_path("config.yml") == "/srv/eka2l1/instance-a/config.yml");
 }
