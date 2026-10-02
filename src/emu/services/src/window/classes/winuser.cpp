@@ -1770,9 +1770,11 @@ namespace eka2l1::epoc {
         }
 
         if (pending_segment_) {
+            common::region bitmap_region;
+            bitmap_region.add_rect(bounding_rect());
             gdi_command_builder gdi_builder(client->get_ws().get_graphics_driver(), driver_builder_,
                 *client->get_ws().get_bitmap_cache(), drivers::filter_option::linear, eka2l1::vec2(0, 0),
-                1.0f, common::region{});
+                1.0f, bitmap_region);
 
             gdi_builder.build_segment(*pending_segment_);
             pending_segment_.reset();
@@ -1821,6 +1823,11 @@ namespace eka2l1::epoc {
 
             if (driver_win_id == 0) {
                 driver_win_id = drivers::create_bitmap(drv, abs_rect.size, 32);
+                // Symbian initializes backup bitmaps with the default white background.
+                cmd_builder.bind_bitmap(driver_win_id);
+                cmd_builder.set_feature(drivers::graphics_feature::clipping, false);
+                cmd_builder.set_feature(drivers::graphics_feature::stencil_test, false);
+                cmd_builder.clear(eka2l1::vecx<float, 6>({ 1, 1, 1, 1, 1, 0 }), drivers::draw_buffer_bit_color_buffer);
             } else {
                 cmd_builder.resize_bitmap(driver_win_id, abs_rect.size);
             }
