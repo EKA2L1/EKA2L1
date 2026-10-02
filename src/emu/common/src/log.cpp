@@ -438,8 +438,8 @@ namespace eka2l1 {
         };
 
         void setup_log(std::shared_ptr<base_logger> gui_logger) {
-            const char *log_file_name = "EKA2L1.log";
-            const char *log_file_name_prev = "EKA2L1_TakeThis.log";
+            const std::string log_file_name = eka2l1::data_path("EKA2L1.log");
+            const std::string log_file_name_prev = eka2l1::data_path("EKA2L1_TakeThis.log");
 
             if (common::exists(log_file_name)) {
                 common::move_file(log_file_name, log_file_name_prev);

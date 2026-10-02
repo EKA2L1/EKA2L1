@@ -1,6 +1,7 @@
 set(CORE_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/services/bluetooth/mdns.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/bluetooth/suspend.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dataroot.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/devices.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/drivers/audio.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/graphics/openvg.cpp

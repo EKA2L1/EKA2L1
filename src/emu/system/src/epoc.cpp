@@ -409,7 +409,7 @@ namespace eka2l1 {
 
                 std::string storage_path;
                 common::get_current_directory(storage_path);
-                storage_path = eka2l1::absolute_path(conf_->storage, storage_path);
+                storage_path = eka2l1::absolute_path(conf_->storage_path(), storage_path);
 
                 std::string root_z_path = add_path(storage_path, "drives/" + rom_drive_name + "/");
                 auto ite = common::make_directory_iterator(root_z_path, "");
@@ -880,7 +880,7 @@ namespace eka2l1 {
             return {};
         }
 
-        return add_path(conf_->storage, device_drive_folder(dvc->firmware_code, dvc->isolated_drives, drv));
+        return add_path(conf_->storage_path(), device_drive_folder(dvc->firmware_code, dvc->isolated_drives, drv));
     }
 
     bool system_impl::mount_device_drive(const drive_number drv) {
@@ -984,7 +984,7 @@ namespace eka2l1 {
         common::get_current_directory(current_dir);
 
         const std::string cache_root = cache_root_.empty()
-            ? eka2l1::absolute_path("cache/", current_dir)
+            ? eka2l1::absolute_path(eka2l1::data_path("cache/"), current_dir)
             : cache_root_;
         const std::string temp_folder = eka2l1::add_path(cache_root, "temp/");
 
@@ -1171,7 +1171,7 @@ namespace eka2l1 {
         common::get_current_directory(current_dir);
 
         const std::string cache_root = cache_root_.empty()
-            ? eka2l1::absolute_path("cache/", current_dir)
+            ? eka2l1::absolute_path(eka2l1::data_path("cache/"), current_dir)
             : cache_root_;
         const std::string staging = eka2l1::add_path(cache_root, "ngagecard/");
 
@@ -1483,7 +1483,7 @@ namespace eka2l1 {
         cpu->clear_instruction_cache();
 
         // Load ROM
-        const std::string rom_path = add_path(conf_->storage, add_path(preset::ROM_FOLDER_PATH, add_path(common::lowercase_string(dvc->firmware_code), preset::ROM_FILENAME)));
+        const std::string rom_path = add_path(conf_->storage_path(), add_path(preset::ROM_FOLDER_PATH, add_path(common::lowercase_string(dvc->firmware_code), preset::ROM_FILENAME)));
 
         if (!load_rom(rom_path)) {
             if (lock_sys) {
