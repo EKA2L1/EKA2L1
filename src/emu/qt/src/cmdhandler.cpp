@@ -231,7 +231,14 @@ bool list_app_option_handler(eka2l1::common::arg_parser *parser, void *userdata,
         return false;
     }
 
-    [[maybe_unused]] const auto &regs = svr->get_registerations();
+    std::vector<apa_app_registry> &regs = svr->get_registerations();
+
+    // The caption and the UID are the two forms --run accepts.
+    for (std::size_t i = 0; i < regs.size(); i++) {
+        const std::string name = common::ucs2_to_utf8(regs[i].mandatory_info.long_caption.to_std_string(nullptr));
+        std::cout << fmt::format("{} : {} (0x{:08X})", i, name, regs[i].mandatory_info.uid) << std::endl;
+    }
+
     return false;
 }
 
