@@ -228,6 +228,7 @@ add_library(epocservs
         src/fbs/adapter/stb_font_adapter.cpp
         src/fbs/compress_queue.cpp
         src/fbs/fbs.cpp
+        src/fbs/palette.cpp
         src/fbs/font_atlas.cpp
         src/fbs/impls/bitmap.cpp
         src/fbs/impls/font.cpp
