@@ -134,7 +134,7 @@ namespace eka2l1::desktop {
             // Mount the drive Z after the ROM was loaded. The ROM load than a new FS will be
             // created for ROM purpose.
             symsys->mount(drive_z, drive_media::rom,
-                eka2l1::add_path(conf.storage, "/drives/z/"), io_attrib_internal | io_attrib_write_protected);
+                eka2l1::add_path(conf.storage_path(), "/drives/z/"), io_attrib_internal | io_attrib_write_protected);
 
             drivers::player_type player_be = drivers::player_type_tsf;
             switch (conf.midi_backend) {
@@ -170,7 +170,7 @@ namespace eka2l1::desktop {
             io_system *io = symsys->get_io_system();
 
             if (!conf.svg_icon_cache_reset) {
-                common::delete_folder("cache\\");
+                common::delete_folder(eka2l1::data_path("cache\\"));
 
                 conf.svg_icon_cache_reset = true;
                 conf.serialize(false);
@@ -197,7 +197,7 @@ namespace eka2l1::desktop {
                     if (common::exists(where_to_copy_u8) && !common::exists(where_to_backup_u8)) {
                         common::move_file(where_to_copy_u8, where_to_copy_u8 + ".bak");
                     }
-                    common::copy_file(std::get<1>(dlls_need_to_copy[i]), where_to_copy_u8, true);
+                    common::copy_file(eka2l1::runtime_resource_path(std::get<1>(dlls_need_to_copy[i])), where_to_copy_u8, true);
                 }
             }
 

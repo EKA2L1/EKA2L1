@@ -138,8 +138,8 @@ void device_install_dialog::on_install_triggered() {
     const bool isolate_drives = ui->isolate_drives_checkbox->isChecked();
 
     QFuture<eka2l1::device_installation_error> install_future = QtConcurrent::run([this, isolate_drives]() {
-        const std::string root_z_path = eka2l1::add_path(conf_.storage, "drives/z/");
-        const std::string rom_resident_path = eka2l1::add_path(conf_.storage, "roms/");
+        const std::string root_z_path = eka2l1::add_path(conf_.storage_path(), "drives/z/");
+        const std::string rom_resident_path = eka2l1::add_path(conf_.storage_path(), "roms/");
 
         eka2l1::common::create_directories(rom_resident_path);
         eka2l1::device_installation_error error = eka2l1::device_installation_none;
@@ -169,7 +169,7 @@ void device_install_dialog::on_install_triggered() {
         }
 
         if (ui->vpl_browse_widget->isVisible()) {
-            error = eka2l1::install_firmware(device_mngr_, ui->vpl_path_line_edit->text().toStdString(), conf_.storage, rom_resident_path, isolate_drives, select_variant_cb_func, progress_update_cb_func, cancel_cb_func);
+            error = eka2l1::install_firmware(device_mngr_, ui->vpl_path_line_edit->text().toStdString(), conf_.storage_path(), rom_resident_path, isolate_drives, select_variant_cb_func, progress_update_cb_func, cancel_cb_func);
         }
 
         if (error != eka2l1::device_installation_none) {
@@ -179,7 +179,7 @@ void device_install_dialog::on_install_triggered() {
         device_mngr_->save_devices();
 
         if (need_copy_rom) {
-            const std::string rom_directory = eka2l1::add_path(conf_.storage, eka2l1::add_path("roms", firmware_code + "\\"));
+            const std::string rom_directory = eka2l1::add_path(conf_.storage_path(), eka2l1::add_path("roms", firmware_code + "\\"));
             eka2l1::common::create_directories(rom_directory);
             eka2l1::common::copy_file(ui->rom_path_line_edit->text().toStdString(), eka2l1::add_path(rom_directory, "SYM.ROM"), true);
         }

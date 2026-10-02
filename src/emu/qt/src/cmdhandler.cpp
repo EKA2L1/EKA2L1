@@ -96,6 +96,10 @@ void register_command_line_options(eka2l1::common::arg_parser &parser) {
         keybind_profile_option_handler);
     parser.add("--mmcid, --cid, -cid", "Set the MMC-ID for the mounted card", set_mmcid_option_handler);
     parser.add("--runng, --appng, -rng, -ang", "Run a single N-Gage game inside the E drive", run_ngage_game_option_handler);
+    parser.add("--data-dir", "Keep this instance's data (configuration, devices, drives, logs) in the given folder\n"
+                             "\t\t\t  instead of the default one, so several emulators can run side by side.\n"
+                             "\t\t\t  Example: eka2l1 --data-dir /tmp/eka2l1-a",
+        data_dir_option_handler);
 
 #if ENABLE_PYTHON_SCRIPTING
     parser.add("--gendocs", "Generate Python documentation", python_docgen_option_handler);
@@ -477,7 +481,7 @@ bool keybind_profile_option_handler(eka2l1::common::arg_parser *parser, void *us
     }
 
     // Check if profile exists
-    const std::string profile_path = fmt::format("bindings//{}.yml", profile);
+    const std::string profile_path = eka2l1::data_path(fmt::format("bindings//{}.yml", profile));
     if (!eka2l1::common::exists(profile_path)) {
         *err = "No profile with name {} exists";
         return true;
@@ -535,6 +539,16 @@ bool run_ngage_game_option_handler(eka2l1::common::arg_parser *parser, void *use
     }
 
     emu->app_launch_from_command_line = true;
+    return true;
+}
+
+bool data_dir_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
+    // main() already set the data root from this value, before anything was read from the folder.
+    if (!parser->next_token()) {
+        *err = "No data folder specified";
+        return false;
+    }
+
     return true;
 }
 

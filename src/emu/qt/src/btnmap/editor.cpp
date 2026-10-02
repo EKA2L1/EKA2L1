@@ -23,6 +23,7 @@
 #include <qt/btnmap/executor.h>
 #include <common/fileutils.h>
 #include <common/cvt.h>
+#include <common/path.h>
 
 #include <vector>
 
@@ -59,7 +60,7 @@ namespace eka2l1::qt::btnmap {
     void editor::draw_text(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder, const eka2l1::rect &draw_rect, epoc::text_alignment alignment, const std::string &str, const eka2l1::vec2f &scale_factor) {
         static const char *FONT_OVERLAY_PATH = "resources\\overlay_font.ttf";
         if (!adapter_) {
-            FILE *f = common::open_c_file(FONT_OVERLAY_PATH, "rb");
+            FILE *f = common::open_c_file(eka2l1::runtime_resource_path(FONT_OVERLAY_PATH), "rb");
             if (!f) {
                 return;
             }
