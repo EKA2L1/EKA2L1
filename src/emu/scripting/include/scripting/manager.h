@@ -143,6 +143,17 @@ namespace eka2l1::manager {
 
     static constexpr std::uint32_t INVALID_HOOK_HANDLE = 0xFFFFFFFF;
 
+#ifdef ENABLE_SCRIPTING_LUA
+    /**
+     * \brief Let require() in a Lua state find modules in the given scripts folder.
+     *
+     * The folder is searched right after package.path, before the C module paths, by a
+     * searcher that takes any folder name and opens the module file through the
+     * emulator's own file helpers.
+     */
+    void add_scripts_folder_searcher(lua_State *state, const std::string &folder);
+#endif
+
     /**
      * \brief A manager for all custom Python scripts of EKA2L1 
      *
