@@ -1454,7 +1454,8 @@ namespace eka2l1 {
     }
 
     void kernel_system::stop_cores_idling() {
-        if (should_core_idle_when_inactive()) {
+        // There is no scheduler until a device has been booted.
+        if (thr_sch_ && should_core_idle_when_inactive()) {
             thr_sch_->stop_idling();
         }
     }
