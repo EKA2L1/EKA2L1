@@ -184,6 +184,8 @@ namespace eka2l1::epoc {
             return epoc::display_mode::color16mu;
         if (disp_str_lower == "color64k")
             return epoc::display_mode::color64k;
+        if (disp_str_lower == "color4k")
+            return epoc::display_mode::color4k;
 
         LOG_TRACE(SERVICE_WINDOW, "Unhandled string to convert to display mode: {}", disp_str);
         return epoc::display_mode::color16ma;
