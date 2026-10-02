@@ -228,6 +228,10 @@ namespace eka2l1::epoc {
             build_command_draw_rect(command.get_data_struct_const<gdi_store_command_draw_rect_data>());
             break;
 
+        case gdi_store_command_xor_rect:
+            build_command_draw_rect(command.get_data_struct_const<gdi_store_command_draw_rect_data>(), true);
+            break;
+
         case gdi_store_command_draw_line:
             build_command_draw_line(command.get_data_struct_const<gdi_store_command_draw_line_data>());
             break;
@@ -265,14 +269,23 @@ namespace eka2l1::epoc {
         }
     }
 
-    void gdi_command_builder::build_command_draw_rect(const gdi_store_command_draw_rect_data &cmd) {
+    void gdi_command_builder::build_command_draw_rect(const gdi_store_command_draw_rect_data &cmd, const bool exclusive_or) {
         eka2l1::rect scaled_rect = cmd.rect_;
         scaled_rect.top += position_;
 
         scale_rectangle(scaled_rect, scale_factor_);
 
         builder_.set_brush_color_detail(cmd.color_);
+        if (exclusive_or) {
+            builder_.set_feature(drivers::graphics_feature::blend, true);
+            builder_.blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
+                drivers::blend_factor::one_minus_current_color, drivers::blend_factor::one_minus_frag_out_color,
+                drivers::blend_factor::zero, drivers::blend_factor::one);
+        }
         builder_.draw_rectangle(scaled_rect);
+        if (exclusive_or) {
+            builder_.set_feature(drivers::graphics_feature::blend, false);
+        }
     }
 
     void gdi_command_builder::build_command_draw_line(const gdi_store_command_draw_line_data &cmd) {
@@ -478,8 +491,19 @@ namespace eka2l1::epoc {
             builder_.set_texture_filter(mask_bitmap_drv, true, texture_filter_);
         }
 
+        const bool brush_pattern = (cmd.gdi_flags_ & GDI_STORE_COMMAND_BRUSH_PATTERN) != 0;
+        if (brush_pattern) {
+            builder_.set_texture_addressing_mode(source_bitmap_drv, drivers::addressing_direction::s, drivers::addressing_option::repeat);
+            builder_.set_texture_addressing_mode(source_bitmap_drv, drivers::addressing_direction::t, drivers::addressing_option::repeat);
+        }
+
         builder_.draw_bitmap(source_bitmap_drv, mask_bitmap_drv, scaled_dest_rect, adjusted_source_rect,
             eka2l1::vec2(0, 0), 0.0f, flags);
+
+        if (brush_pattern) {
+            builder_.set_texture_addressing_mode(source_bitmap_drv, drivers::addressing_direction::s, drivers::addressing_option::clamp_to_edge);
+            builder_.set_texture_addressing_mode(source_bitmap_drv, drivers::addressing_direction::t, drivers::addressing_option::clamp_to_edge);
+        }
 
         if (mask_bitmap_bw) {
             builder_.set_feature(drivers::graphics_feature::blend, false);
